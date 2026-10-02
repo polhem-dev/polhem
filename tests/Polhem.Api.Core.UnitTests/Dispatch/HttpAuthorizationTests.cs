@@ -1,11 +1,9 @@
 using System.ComponentModel;
-using System.Text;
 using System.Text.Json;
 using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Security;
 using Polhem.JsonRpc.Server;
@@ -52,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
             var services = new TestOverrideServiceProvider(_fx.Provider, (typeof(IApiKeyValidator), validator));
             var transport = new JsonRpcTransportInfo(JsonRpcTransportKind.Http, services, headers, "127.0.0.1");
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = method,
                 Params = new JsonRpcParams { Value = new PingRequest { ClientName = "unit", TraceId = "T-1" } },
@@ -60,7 +58,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             };
 
             var result = await new JsonRpcDispatcher(PolhemJsonRpc.CreateServerOptions())
-                .DispatchMessageAsync(Encoding.UTF8.GetBytes(request.ToJson()), transport);
+                .DispatchMessageAsync(TestDispatcher.Serialize(request), transport);
             using var document = JsonDocument.Parse(result.Serialize()!);
             return document.RootElement.Clone();
         }
@@ -174,7 +172,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
                 JsonRpcTransportKind.InProcess,
                 _fx.Provider,
                 items: new Dictionary<string, object?> { [PolhemJsonRpc.AccessTokenItem] = Guid.Empty });
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.CreateSession",
                 Params = new JsonRpcParams { Value = new CreateSessionRequest { UserId = "local-only-check" } },
@@ -182,7 +180,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             };
 
             var result = await new JsonRpcDispatcher(PolhemJsonRpc.CreateServerOptions())
-                .DispatchMessageAsync(Encoding.UTF8.GetBytes(request.ToJson()), transport);
+                .DispatchMessageAsync(TestDispatcher.Serialize(request), transport);
             using var answer = JsonDocument.Parse(result.Serialize()!);
 
             if (answer.RootElement.TryGetProperty("error", out var error))

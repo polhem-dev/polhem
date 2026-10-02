@@ -5,15 +5,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that <c>DeleteRequest.RowId</c> of
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: confirms that <c>DeleteRequest.RowId</c> of
     /// <c>Employee.Delete</c> is copied to <c>DeleteArgs.RowId</c> by ApiInputConverter, and that the
     /// <c>RowsAffected</c> returned by the stub is copied back to the wire response by ApiOutputConverter.
     /// </summary>
@@ -24,7 +24,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public DeleteJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.Delete through JsonRpcExecutor passes RowId through and returns RowsAffected")]
+        [DisplayName("Employee.Delete through the JSON-RPC dispatcher passes RowId through and returns RowsAffected")]
         public async Task Delete_ThroughJsonRpc_PreservesRowIdAndReturnsRowsAffected()
         {
             var rowId = Guid.NewGuid();
@@ -42,16 +42,13 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.Delete}",
                 Params = new JsonRpcParams { Value = new DeleteRequest { RowId = rowId } },

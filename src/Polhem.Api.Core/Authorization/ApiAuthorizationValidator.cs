@@ -11,8 +11,8 @@ namespace Polhem.Api.Core.Authorization
     /// Once <c>st_api_key</c> holds an enabled key, <see cref="IApiKeyValidator"/> has already
     /// compared the supplied key against its stored hash and this validator enforces the verdict.
     /// Until then a non-empty <c>X-Api-Key</c> passes, so a deployment works before its first key
-    /// is issued, and <c>UsePolhemFramework</c> logs a startup error pointing at key management (a
-    /// warning when the host runs in the Development environment).
+    /// is issued, and a host that calls <c>AddPolhemApiKeyGateCheck</c> logs a startup error pointing at key
+    /// management (a warning when the host runs in the Development environment).
     /// <para>
     /// Either way, user authentication is the Bearer access token's job: the API key identifies the
     /// calling application, not the user.
@@ -35,7 +35,7 @@ namespace Polhem.Api.Core.Authorization
         /// </summary>
         /// <remarks>
         /// This is the application-identity axis only. Whether a method needs a signed-in caller is
-        /// not decided here at all: that is <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/>'s job, read by <see cref="JsonRpcExecutor"/>.
+        /// not decided here at all: that is <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/>'s job, read by the access check of the JSON-RPC pipeline (<see cref="Polhem.Api.Core.Dispatch.PolhemAccessFilter"/>).
         /// <para>
         /// <c>System.Ping</c> is exempt because a health check must still answer when the database
         /// is unavailable — the key lookup cannot be consulted then, and every other method fails
@@ -56,7 +56,7 @@ namespace Polhem.Api.Core.Authorization
         /// <remarks>
         /// <para>
         /// The default demands it for no method. A request without the header proceeds as an
-        /// anonymous call, with an empty access token, and the executor's access check — which reads
+        /// anonymous call, with an empty access token, and the pipeline's access check — which reads
         /// the method's <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/> — refuses it unless the method is declared
         /// <c>Anonymous</c>. That declaration is therefore the single source for which methods need
         /// a session; a second list here used to disagree with it, demanding a header for
@@ -67,7 +67,7 @@ namespace Polhem.Api.Core.Authorization
         /// The header was never authentication at this layer: it is only parsed, and any well-formed
         /// token — the empty one included — passes. When it is present it must still be a well-formed
         /// <c>Bearer</c> token. Override this to have the transport refuse a header-less request
-        /// before it reaches the executor.
+        /// before it reaches the access check.
         /// </para>
         /// </remarks>
         protected virtual bool IsAuthorizationRequired(string method)
@@ -109,7 +109,7 @@ namespace Polhem.Api.Core.Authorization
             }
 
             // No header: an anonymous call, unless this deployment demands the header for the method.
-            // Whether the method admits anonymous callers is the executor's decision, from the
+            // Whether the method admits anonymous callers is the access check's decision, from the
             // method's own access declaration.
             if (string.IsNullOrWhiteSpace(context.Authorization))
             {

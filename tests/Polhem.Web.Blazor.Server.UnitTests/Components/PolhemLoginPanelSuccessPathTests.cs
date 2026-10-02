@@ -11,8 +11,6 @@ using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Polhem.Tests.Shared;
-using JsonRpcRequest = Polhem.JsonRpc.JsonRpcRequest;
-using JsonRpcResponse = Polhem.JsonRpc.JsonRpcResponse;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {

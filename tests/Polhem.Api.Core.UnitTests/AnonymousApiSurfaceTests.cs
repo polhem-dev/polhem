@@ -103,7 +103,7 @@ namespace Polhem.Api.Core.UnitTests
             var actions = typeof(BusinessObject).Assembly.GetTypes()
                 .Where(t => typeof(BusinessObject).IsAssignableFrom(t))
                 .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                .Where(Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction)
+                .Where(Polhem.JsonRpc.Server.JsonRpcMethod.IsResolvableAction)
                 .Select(m => (Method: m, Attr: ApiAccessValidator.FindAccessControl(m)))
                 .Where(x => x.Attr != null && x.Attr.ProtectionLevel != ApiProtectionLevel.LocalOnly)
                 .ToList();

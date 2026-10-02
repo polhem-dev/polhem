@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Client;
 using Polhem.Db;
 using Polhem.Definition.Database;
@@ -14,6 +13,7 @@ using Polhem.LoadTests.Reporting;
 using Polhem.LoadTests.Running;
 using Polhem.LoadTests.Scenarios;
 using Polhem.LoadTests.Serving;
+using Polhem.JsonRpc.Server;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Polhem.LoadTests
@@ -87,13 +87,13 @@ namespace Polhem.LoadTests
                     "(assembly not loadable; falls back to the framework implementation)");
             }
 
-            // Resolving these proves the chain a Local call actually walks: the executor is what
+            // Resolving these proves the chain a Local call actually walks: the dispatcher is what
             // LocalApiProvider reaches for, and it is useless without definitions and database
             // access behind it.
-            var executor = host.Services.GetRequiredService<JsonRpcExecutor>();
+            var dispatcher = host.Services.GetRequiredService<JsonRpcDispatcher>();
             var defineAccess = host.Services.GetRequiredService<IDefineAccess>();
             host.Services.GetRequiredService<IDbAccessFactory>();
-            Console.WriteLine($"Executor     : {executor.GetType().Name}");
+            Console.WriteLine($"Dispatcher   : {dispatcher.GetType().Name}");
 
             // Reading a schema proves the definition copy is not merely present but usable.
             var schema = defineAccess.GetFormSchema("Order");

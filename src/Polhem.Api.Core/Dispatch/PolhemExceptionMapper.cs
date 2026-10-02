@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.Dispatch
             return (JsonRpcErrorCode.InternalError, SysInfo.IsDebugMode ? ex.Message : "Internal server error");
         }
 
-        private static string Localize(Exception ex, string message, IServiceProvider? services, Guid accessToken)
+        internal static string Localize(Exception ex, string message, IServiceProvider? services, Guid accessToken)
         {
             var languageService = services?.GetService<ILanguageService>();
             if (languageService is null

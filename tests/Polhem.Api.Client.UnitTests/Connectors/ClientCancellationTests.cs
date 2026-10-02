@@ -7,7 +7,6 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.JsonRpc;
 using Polhem.Definition;
 using Polhem.Tests.Shared;
-using JsonRpcRequest = Polhem.JsonRpc.JsonRpcRequest;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {

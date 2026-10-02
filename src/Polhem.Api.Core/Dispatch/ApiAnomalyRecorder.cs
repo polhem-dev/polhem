@@ -11,8 +11,7 @@ namespace Polhem.Api.Core.Dispatch
     /// Writes the API anomaly log entries of a call: a slow call, and a failed one.
     /// </summary>
     /// <remarks>
-    /// The rules are the ones the JSON-RPC executor applied: recording needs an anomaly writer, a session service and
-    /// audit options with both <c>Enabled</c> and <c>AnomalyEnabled</c> set.
+    /// Recording needs an anomaly writer, a session service and audit options with both <c>Enabled</c> and <c>AnomalyEnabled</c> set.
     /// </remarks>
     internal static class ApiAnomalyRecorder
     {

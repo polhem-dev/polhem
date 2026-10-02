@@ -8,17 +8,17 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Paging;
-using Polhem.Definition.Security;
 using Polhem.Definition.Sorting;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// A round trip through <see cref="JsonRpcExecutor"/>: dispatches <c>Employee.GetLookup</c> to
+    /// A round trip through the JSON-RPC dispatcher: dispatches <c>Employee.GetLookup</c> to
     /// <c>FormBusinessObject.GetLookup</c>, with a stub <c>IDataFormRepository</c> returning a known DataTable, and
     /// verifies the server-side lookup field set resolution (Employee declares no LookupFields, so the default
     /// <c>sys_rowid,sys_id,sys_name</c> applies), the OR Contains filter built from SearchText, and the default paging
@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetLookupJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetLookup through JsonRpcExecutor queries with the default field set and returns the stub DataTable")]
+        [DisplayName("Employee.GetLookup through the JSON-RPC dispatcher queries with the default field set and returns the stub DataTable")]
         public async Task GetLookup_ThroughJsonRpc_UsesDefaultLookupFieldSet()
         {
             var table = new DataTable("Employee");
@@ -43,7 +43,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var stubRepository = new StubDataFormRepository(table);
             var executor = CreateExecutor(stubRepository);
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetLookup}",
                 Params = new JsonRpcParams
@@ -93,7 +93,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var stubRepository = new StubDataFormRepository(table);
             var executor = CreateExecutor(stubRepository);
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetLookup}",
                 Params = new JsonRpcParams
@@ -116,7 +116,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.True(stubRepository.LastPaging.IncludeTotalCount);
         }
 
-        private JsonRpcExecutor CreateExecutor(IDataFormRepository stubRepository)
+        private TestDispatcher CreateExecutor(IDataFormRepository stubRepository)
         {
             var stubFactory = new StubFormRepositoryFactory(stubRepository);
             var overrideServices = new TestOverrideServiceProvider(
@@ -130,10 +130,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            return new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            return new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,

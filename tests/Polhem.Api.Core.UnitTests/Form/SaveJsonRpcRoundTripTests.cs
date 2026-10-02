@@ -6,15 +6,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that the row state of
+    /// End-to-end round-trip through the JSON-RPC dispatcher: confirms that the row state of
     /// <c>SaveRequest.DataSet</c> for <c>Employee.Save</c> is kept when ApiInputConverter copies it to
     /// <c>SaveArgs.DataSet</c>, and that the refreshed DataSet and AffectedRows returned by the stub are copied back
     /// to the wire response by ApiOutputConverter.
@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public SaveJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.Save through JsonRpcExecutor keeps the RowState and returns the refreshed DataSet and AffectedRows")]
+        [DisplayName("Employee.Save through the JSON-RPC dispatcher keeps the RowState and returns the refreshed DataSet and AffectedRows")]
         public async Task Save_ThroughJsonRpc_PreservesRowStatesAndReturnsRefreshed()
         {
             var input = new DataSet("Employee");
@@ -67,16 +67,13 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.Save}",
                 Params = new JsonRpcParams { Value = new SaveRequest { DataSet = input } },

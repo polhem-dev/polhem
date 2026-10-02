@@ -4,26 +4,25 @@ using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Api.Core.Transformers;
 using Polhem.Definition;
-using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 
-namespace Polhem.Api.Core.UnitTests
+namespace Polhem.Api.Core.UnitTests.Dispatch
 {
     /// <summary>
     /// Guards the core invariant of codec negotiation: <b>the server answers with the codec the request declared</b>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The whole mechanism (ADR-044) rests on one assignment in <c>JsonRpcExecutor</c>:
-    /// <c>response.Result = new JsonRpcResult { Value = value, Codec = request.Params.Codec }</c>.
+    /// The whole mechanism (ADR-044) rests on one assignment in <c>PolhemPayloadFilter</c>, which builds the result
+    /// envelope with the codec the request's parameters declared.
     /// Without that line, a client that negotiated json receives a MessagePack body it cannot decode, and
     /// **before 2026-09-04 the whole test suite was still green**.
     /// </para>
     /// <para>
     /// The existing <c>ApiConnectorExecuteTests</c> seems to cover this, but its fake provider writes back
-    /// <c>Codec = req.Params.Codec</c> <b>itself</b>, so it proves the stub's behavior, not the executor's.
-    /// <c>JsonPayloadCodecTests</c> stops at the <c>ApiPayloadConverter</c> layer and never reaches the executor.
+    /// <c>Codec = req.Params.Codec</c> <b>itself</b>, so it proves the stub's behavior, not the server's.
+    /// <c>JsonPayloadCodecTests</c> stops at the <c>ApiPayloadConverter</c> layer and never reaches the dispatcher.
     /// </para>
     /// <para>
     /// So this test asserts two things, and needs both: the response's <c>Codec</c> field equals the request's (the
@@ -32,11 +31,11 @@ namespace Polhem.Api.Core.UnitTests
     /// </para>
     /// </remarks>
     [Collection(ApiServiceOptionsStateCollection.Name)]
-    public class JsonRpcExecutorCodecSymmetryTests : IClassFixture<PolhemTestFixture>
+    public class DispatchCodecSymmetryTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;
 
-        public JsonRpcExecutorCodecSymmetryTests(PolhemTestFixture fx) { _fx = fx; }
+        public DispatchCodecSymmetryTests(PolhemTestFixture fx) { _fx = fx; }
 
         /// <summary>
         /// Resets the payload pipeline to the framework defaults and returns a disposable that restores the previous state.
@@ -63,12 +62,12 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(PayloadCodecNames.MessagePack)]
         [InlineData("")]   // Undeclared: the compatibility constant (MessagePack), and the response declares nothing either.
         [DisplayName("The response codec equals the one the request declared, and the body really decodes")]
-        public async Task Execute_EncodedRequest_AnswersWithTheDeclaredCodec(string codec)
+        public async Task EncodedRequest_AnswersWithTheDeclaredCodec(string codec)
         {
             using var _ = UseDefaultPipeline();
 
             var args = new PingRequest { ClientName = "codec-symmetry", TraceId = "sym-001" };
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
                 Params = new JsonRpcParams { Codec = codec, Value = args },
@@ -76,10 +75,7 @@ namespace Polhem.Api.Core.UnitTests
             };
             ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
 
-            var executor = new JsonRpcExecutor(
-                _fx.GetRequiredService<IBusinessObjectFactory>(),
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider)
             {
                 AccessToken = Guid.Empty,
                 IsLocalCall = true,

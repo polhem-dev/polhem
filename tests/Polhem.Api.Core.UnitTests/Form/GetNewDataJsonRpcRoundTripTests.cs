@@ -6,16 +6,16 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>Employee.GetNewData</c> is dispatched by the
-    /// executor to the BO, and a stub repository returns a known skeleton DataSet. It verifies the name-convention
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: <c>Employee.GetNewData</c> is dispatched by the
+    /// dispatcher to the BO, and a stub repository returns a known skeleton DataSet. It verifies the name-convention
     /// copy and the DataSet restore.
     /// </summary>
     public class GetNewDataJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetNewDataJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetNewData through JsonRpcExecutor dispatches to the BO and returns the stub skeleton DataSet")]
+        [DisplayName("Employee.GetNewData through the JSON-RPC dispatcher dispatches to the BO and returns the stub skeleton DataSet")]
         public async Task GetNewData_ThroughJsonRpc_DispatchesAndReturnsDataSet()
         {
             var skeleton = new DataSet("Employee");
@@ -50,16 +50,13 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetNewData}",
                 Params = new JsonRpcParams { Value = new GetNewDataRequest() },

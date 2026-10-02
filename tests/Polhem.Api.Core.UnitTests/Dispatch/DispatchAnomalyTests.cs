@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Polhem.Core.Security;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
+using Polhem.Core.Security;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
@@ -9,31 +9,36 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 
-namespace Polhem.Api.Core.UnitTests.JsonRpc
+namespace Polhem.Api.Core.UnitTests.Dispatch
 {
     /// <summary>
-    /// Coverage tests for JsonRpcExecutor: constructor null guards, the anomaly detection paths (slow successful
-    /// calls, failed calls, the AnomalyEnabled combinations) and the encryption key branch.
+    /// The anomaly records the framework's JSON-RPC pipeline writes (slow successful calls, failed calls, the
+    /// AnomalyEnabled combinations) and the encryption key branch of a remote call.
     /// </summary>
     /// <remarks>
-    /// <see cref="PolhemTestFixture"/> is enough because no test here reaches the database. Every executor runs under
+    /// <see cref="PolhemTestFixture"/> is enough because no test here reaches the database. Every call runs under
     /// either <see cref="Guid.Empty"/> (no session to look up) or a token planted with
     /// <see cref="TestSessionFactory.CreateAccessToken"/>. A bare <c>Guid.NewGuid()</c> would miss the session cache,
     /// and both <see cref="IAccessTokenValidator"/> and the business object factory would then rebuild the session
     /// from <c>st_session</c>, which this fixture does not create.
     /// </remarks>
-    public class JsonRpcExecutorCoverageTests : IClassFixture<PolhemTestFixture>
+    public class DispatchAnomalyTests : IClassFixture<PolhemTestFixture>
     {
+        /// <summary>
+        /// A Ping whose body cannot be read into its parameter, so the call fails inside the pipeline, where the
+        /// exception mapper sees it. An unknown action is answered by the dispatcher itself and leaves no record.
+        /// </summary>
+        private const string UnreadablePing =
+            """{"jsonrpc":"2.0","method":"System.Ping","params":{"format":0,"value":{"clientName":5}},"id":"1"}""";
+
         private readonly PolhemTestFixture _fx;
 
-        public JsonRpcExecutorCoverageTests(PolhemTestFixture fx)
+        public DispatchAnomalyTests(PolhemTestFixture fx)
         {
             _fx = fx;
         }
 
         private IBusinessObjectFactory BoFactory => _fx.GetRequiredService<IBusinessObjectFactory>();
-        private IAccessTokenValidator TokenValidator => _fx.GetRequiredService<IAccessTokenValidator>();
-        private IApiEncryptionKeyProvider KeyProvider => _fx.GetRequiredService<IApiEncryptionKeyProvider>();
 
         /// <summary>
         /// A fake writer that captures anomaly writes.
@@ -61,6 +66,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             public void Remove(Guid accessToken) { }
         }
 
+        private sealed class FixedApiKeyValidator(ApiKeyValidationResult result) : IApiKeyValidator
+        {
+            public ApiKeyValidationResult Validate(string? apiKey) => result;
+        }
+
         private static SessionInfo NewSession() => new()
         {
             UserId = "u1",
@@ -68,28 +78,20 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             CompanyId = "C1",
         };
 
-        private JsonRpcExecutor NewAuditExecutor(
+        private IServiceProvider AuditServices(IAnomalyLogWriter? writer, AuditLogOptions? options, ISessionInfoService? session)
+            => new TestOverrideServiceProvider(_fx.Provider,
+                (typeof(IAnomalyLogWriter), writer),
+                (typeof(AuditLogOptions), options),
+                (typeof(ISessionInfoService), session));
+
+        private TestDispatcher NewAuditDispatcher(
             IAnomalyLogWriter? writer,
             AuditLogOptions? options,
             ISessionInfoService? session,
-            Guid accessToken,
-            bool isLocalCall = true)
-        {
-            return new JsonRpcExecutor(BoFactory, TokenValidator, KeyProvider, writer, options, session)
-            {
-                AccessToken = accessToken,
-                IsLocalCall = isLocalCall,
-            };
-        }
+            Guid accessToken)
+            => new(AuditServices(writer, options, session)) { AccessToken = accessToken };
 
-        private static JsonRpcRequest UnknownActionRequest() => new()
-        {
-            Method = $"{SysProgIds.System}.DefinitelyNotAMethod",
-            Params = new JsonRpcParams(),
-            Id = "1",
-        };
-
-        private static JsonRpcRequest PingRequest() => new()
+        private static TestRpcRequest PingRequest() => new()
         {
             Method = $"{SysProgIds.System}.Ping",
             Params = new JsonRpcParams { Value = new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" } },
@@ -97,7 +99,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         };
 
         /// <summary>
-        /// Delays every business object creation, which happens after the executor starts timing the call, so a
+        /// Delays every business object creation, which happens after the pipeline starts timing the call, so a
         /// successful call reliably exceeds a small slow threshold without depending on how fast the machine is.
         /// </summary>
         private sealed class DelayingBusinessObjectFactory : IBusinessObjectFactory
@@ -125,55 +127,26 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             ApiSlowThresholdMs = slowThresholdMs,
         };
 
-        // ---- Constructor null guards ----
-
-        [Fact]
-        [DisplayName("Constructor throws ArgumentNullException for a null boFactory")]
-        public void Constructor_NullBoFactory_ThrowsArgumentNullException()
-        {
-            var ex = Assert.Throws<ArgumentNullException>(
-                () => new JsonRpcExecutor(null!, TokenValidator, KeyProvider));
-            Assert.Equal("boFactory", ex.ParamName);
-        }
-
-        [Fact]
-        [DisplayName("Constructor throws ArgumentNullException for a null tokenValidator")]
-        public void Constructor_NullTokenValidator_ThrowsArgumentNullException()
-        {
-            var ex = Assert.Throws<ArgumentNullException>(
-                () => new JsonRpcExecutor(BoFactory, null!, KeyProvider));
-            Assert.Equal("tokenValidator", ex.ParamName);
-        }
-
-        [Fact]
-        [DisplayName("Constructor throws ArgumentNullException for a null keyProvider")]
-        public void Constructor_NullKeyProvider_ThrowsArgumentNullException()
-        {
-            var ex = Assert.Throws<ArgumentNullException>(
-                () => new JsonRpcExecutor(BoFactory, TokenValidator, null!));
-            Assert.Equal("keyProvider", ex.ParamName);
-        }
-
-        // ---- Anomaly records for failures (`LogApiFailureAnomaly`) ----
+        // ---- Anomaly records for failures ----
 
         [Fact]
         [DisplayName("A failed call with anomaly logging enabled writes an Error anomaly")]
-        public async Task Execute_AnomalyEnabledFailure_WritesErrorAnomaly()
+        public async Task AnomalyEnabledFailure_WritesErrorAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             // A planted session instead of a bare `Guid`: a bare token makes token validation take the rebuild path
             // and read `st_session`, which would turn a test about the anomaly fields into one that needs a database container.
             var token = TestSessionFactory.CreateAccessToken(_fx);
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), token);
+            var dispatcher = NewAuditDispatcher(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), token);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             var entry = Assert.Single(writer.Entries);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(entry);
             Assert.Equal(AnomalyKind.Error, anomaly.Kind);
-            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
-            Assert.Equal($"{SysProgIds.System}.DefinitelyNotAMethod", anomaly.Method);
+            Assert.Equal(nameof(InvalidParamsException), anomaly.ErrorType);
+            Assert.Equal($"{SysProgIds.System}.Ping", anomaly.Method);
             Assert.NotNull(anomaly.ErrorMessage);
             Assert.Null(anomaly.ThresholdMs);
             // A non-empty access token is recorded as its fingerprint, never as the token itself.
@@ -183,12 +156,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure record with anomaly logging enabled and an empty AccessToken keeps no fingerprint")]
-        public async Task Execute_AnomalyEnabledFailureEmptyToken_WritesNullFingerprint()
+        public async Task AnomalyEnabledFailureEmptyToken_WritesNullFingerprint()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
@@ -200,49 +173,51 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("The anomaly record carries the caller's application identity (api_key_id / api_key_name)")]
-        public async Task Execute_AnomalyEnabled_CarriesApiKeyIdentity()
+        public async Task AnomalyEnabled_CarriesApiKeyIdentity()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()),
-                TestSessionFactory.CreateAccessToken(_fx));
-            executor.ApiKeyValidation = new ApiKeyValidationResult(
-                ApiKeyStatus.Valid, "northwind-desktop", "Northwind Desktop");
+            var dispatcher = new TestDispatcher(AuditServices(writer, EnabledOptions(), new StubSessionInfoService(NewSession())))
+            {
+                IsLocalCall = false,
+                ApiKeyValidator = new FixedApiKeyValidator(new ApiKeyValidationResult(
+                    ApiKeyStatus.Valid, "northwind-desktop", "Northwind Desktop")),
+            };
 
-            await executor.ExecuteAsync(UnknownActionRequest());
+            await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
-            // Pins the failure to the unknown action, not to a session lookup that reached a database.
-            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
+            // Pins the failure to the unreadable body, not to a session lookup that reached a database.
+            Assert.Equal(nameof(InvalidParamsException), anomaly.ErrorType);
             Assert.Equal("northwind-desktop", anomaly.ApiKeyId);
             Assert.Equal("Northwind Desktop", anomaly.ApiKeyName);
         }
 
         [Fact]
         [DisplayName("For a call that did not pass the API key gate, the anomaly record's application identity is null")]
-        public async Task Execute_AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
+        public async Task AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()),
+            var dispatcher = NewAuditDispatcher(writer, EnabledOptions(), new StubSessionInfoService(NewSession()),
                 TestSessionFactory.CreateAccessToken(_fx));
 
-            await executor.ExecuteAsync(UnknownActionRequest());
+            await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
-            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
+            Assert.Equal(nameof(InvalidParamsException), anomaly.ErrorType);
             Assert.Null(anomaly.ApiKeyId);
             Assert.Null(anomaly.ApiKeyName);
         }
 
-        // ---- Anomaly records for successful calls (`LogApiSlowAnomaly`) ----
+        // ---- Anomaly records for successful calls ----
 
         [Fact]
         [DisplayName("A successful call under the slow threshold with anomaly logging enabled writes no record")]
-        public async Task Execute_AnomalyEnabledFastSuccess_WritesNoAnomaly()
+        public async Task AnomalyEnabledFastSuccess_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(slowThresholdMs: 3000), new StubSessionInfoService(NewSession()), Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, EnabledOptions(slowThresholdMs: 3000), new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = await executor.ExecuteAsync(PingRequest());
+            var response = await dispatcher.ExecuteAsync(PingRequest());
 
             Assert.Null(response.Error);
             Assert.NotNull(response.Result);
@@ -251,20 +226,15 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A successful call that exceeds the slow threshold writes exactly one Slow anomaly carrying the threshold and elapsed time")]
-        public async Task Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomaly()
+        public async Task AnomalyEnabledSlowSuccess_WritesSlowAnomaly()
         {
             const int thresholdMs = 10;
             var writer = new CapturingAnomalyLogWriter();
-            var executor = new JsonRpcExecutor(
-                new DelayingBusinessObjectFactory(BoFactory, TimeSpan.FromMilliseconds(thresholdMs * 5)),
-                TokenValidator, KeyProvider, writer, EnabledOptions(slowThresholdMs: thresholdMs),
-                new StubSessionInfoService(NewSession()))
-            {
-                AccessToken = Guid.Empty,
-                IsLocalCall = true,
-            };
+            var dispatcher = new TestDispatcher(
+                AuditServices(writer, EnabledOptions(slowThresholdMs: thresholdMs), new StubSessionInfoService(NewSession())),
+                new DelayingBusinessObjectFactory(BoFactory, TimeSpan.FromMilliseconds(thresholdMs * 5)));
 
-            var response = await executor.ExecuteAsync(PingRequest());
+            var response = await dispatcher.ExecuteAsync(PingRequest());
 
             Assert.Null(response.Error);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
@@ -276,17 +246,17 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal("u1", anomaly.UserId);
         }
 
-        // ---- AnomalyEnabled combinations (`AnomalyEnabled`) ----
+        // ---- AnomalyEnabled combinations ----
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but auditOptions is disabled")]
-        public async Task Execute_AuditOptionsDisabled_WritesNoAnomaly()
+        public async Task AuditOptionsDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var options = new AuditLogOptions { Enabled = false, AnomalyEnabled = true };
-            var executor = NewAuditExecutor(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -294,13 +264,13 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but AnomalyEnabled is false")]
-        public async Task Execute_AnomalyFlagDisabled_WritesNoAnomaly()
+        public async Task AnomalyFlagDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var options = new AuditLogOptions { Enabled = true, AnomalyEnabled = false };
-            var executor = NewAuditExecutor(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -308,12 +278,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but auditOptions is null")]
-        public async Task Execute_AuditOptionsNull_WritesNoAnomaly()
+        public async Task AuditOptionsNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, options: null, session: new StubSessionInfoService(NewSession()), accessToken: Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, options: null, session: new StubSessionInfoService(NewSession()), accessToken: Guid.Empty);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -321,40 +291,34 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer and enabled options exist but sessionService is null")]
-        public async Task Execute_SessionServiceNull_WritesNoAnomaly()
+        public async Task SessionServiceNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), session: null, accessToken: Guid.Empty);
+            var dispatcher = NewAuditDispatcher(writer, EnabledOptions(), session: null, accessToken: Guid.Empty);
 
-            var response = await executor.ExecuteAsync(UnknownActionRequest());
+            var response = await dispatcher.ExecuteJsonAsync(UnreadablePing);
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
         }
 
-        // ---- Encryption key branch (`GetApiEncryptionKey`) ----
+        // ---- Encryption key branch ----
 
         [Fact]
         [DisplayName("A remote call in Encrypted format enters the encryption key branch")]
-        public async Task Execute_EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
+        public async Task EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
         {
-            // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key
-            // (the Encrypted branch of `GetApiEncryptionKey`). Decrypting the unencrypted payload then fails and an
-            // error is returned. The point is to cover the Encrypted branch.
-            var request = new JsonRpcRequest
+            // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key.
+            // Decrypting the unencrypted payload then fails and an error is returned. The point is to cover the
+            // Encrypted branch.
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
                 Params = new JsonRpcParams { Format = PayloadFormat.Encrypted, Value = new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" } },
                 Id = "1",
             };
 
-            var executor = new JsonRpcExecutor(BoFactory, TokenValidator, KeyProvider)
-            {
-                AccessToken = Guid.Empty,
-                IsLocalCall = false,
-            };
-
-            var response = await executor.ExecuteAsync(request);
+            var response = await new TestDispatcher(_fx.Provider) { IsLocalCall = false }.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
         }

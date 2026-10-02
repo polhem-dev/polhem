@@ -7,7 +7,7 @@ namespace Polhem.Definition.Language
     /// <remarks>
     /// <para>
     /// A throw site passes one of these keys with the English text to an exception that implements
-    /// <see cref="Polhem.Core.Exceptions.ILocalizableMessage"/>; the JSON-RPC executor then resolves
+    /// <see cref="Polhem.Core.Exceptions.ILocalizableMessage"/>; the JSON-RPC server then resolves
     /// the key in the session's culture. Translations are looked up in the host's own
     /// language resource of that namespace first, then in the ones shipped inside the framework
     /// (<see cref="FrameworkLanguageService"/>); the English text is the fall-back.

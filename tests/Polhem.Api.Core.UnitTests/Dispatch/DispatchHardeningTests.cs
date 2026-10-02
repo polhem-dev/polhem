@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
@@ -10,11 +11,11 @@ using Polhem.Definition.Attributes;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Security;
 
-namespace Polhem.Api.Core.UnitTests.JsonRpc
+namespace Polhem.Api.Core.UnitTests.Dispatch
 {
     /// <summary>
     /// End-to-end tests of what an action name may reach, what an encoded body is decoded into, and what a failure
-    /// tells the caller, through <see cref="JsonRpcExecutor"/> with a business object the test controls.
+    /// tells the caller, through the framework's JSON-RPC pipeline with a business object the test controls.
     /// </summary>
     /// <remarks>
     /// The business object carries a type-level <see cref="ApiAccessControlAttribute"/>, the shape the security rule
@@ -22,22 +23,27 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// stands between a caller and it.
     /// </remarks>
     [Collection(SysInfoStaticCollection.Name)]
-    public class JsonRpcExecutorHardeningTests
+    public class DispatchHardeningTests
     {
-        private static JsonRpcExecutor NewExecutor(ExposedBusinessObject businessObject, ILogger? logger = null)
-            => new(new SingleObjectFactory(businessObject), new RejectAllTokens(), new NoKeys())
+        private static TestDispatcher NewExecutor(ExposedBusinessObject businessObject, ILogger? logger = null)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<IBusinessObjectFactory>(new SingleObjectFactory(businessObject));
+            services.AddSingleton<IAccessTokenValidator>(new RejectAllTokens());
+            services.AddSingleton<IApiEncryptionKeyProvider>(new NoKeys());
+            if (logger != null)
             {
-                AccessToken = Guid.Empty,
-                IsLocalCall = false,
-                Logger = logger,
-            };
+                services.AddSingleton<ILoggerFactory>(new SingleLoggerFactory(logger));
+            }
+            return new TestDispatcher(services.BuildServiceProvider()) { IsLocalCall = false };
+        }
 
-        private static JsonRpcRequest Request(string action, object value, PayloadFormat format = PayloadFormat.Plain)
+        private static TestRpcRequest Request(string action, object value, PayloadFormat format = PayloadFormat.Plain)
         {
             var parameters = new JsonRpcParams { Value = value };
             if (format != PayloadFormat.Plain)
                 ApiPayloadConverter.TransformTo(parameters, format);
-            return new JsonRpcRequest { Method = $"Exposed.{action}", Params = parameters, Id = "1" };
+            return new TestRpcRequest { Method = $"Exposed.{action}", Params = parameters, Id = "1" };
         }
 
         [Fact]
@@ -222,6 +228,15 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             public byte[] GenerateKeyForLogin(Guid accessToken) => [];
 
             public bool SupportsSessionRebuild => false;
+        }
+
+        private sealed class SingleLoggerFactory(ILogger logger) : ILoggerFactory
+        {
+            public ILogger CreateLogger(string categoryName) => logger;
+
+            public void AddProvider(ILoggerProvider provider) { }
+
+            public void Dispose() { }
         }
 
         private sealed class ListLogger : ILogger

@@ -12,7 +12,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// real server.
     /// </summary>
     /// <remarks>
-    /// <c>FinalizeResponse</c> and <c>PrepareRequest</c> are both private and are deliberately not called through
+    /// <c>FinalizeResult</c> and <c>PrepareParams</c> are both private and are deliberately not called through
     /// reflection: the tests check behavior the caller can see, and the order between steps can only be checked by
     /// going through the whole call path.
     /// </remarks>

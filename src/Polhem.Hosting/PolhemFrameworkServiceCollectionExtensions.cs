@@ -1,5 +1,4 @@
 using Polhem.Api.Core.Dispatch;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Core.Expressions;
 using Polhem.Business;
 using Polhem.Business.Form;
@@ -31,7 +30,6 @@ using Polhem.Repository.Factories;
 using Polhem.JsonRpc.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 
 namespace Polhem.Hosting
 {
@@ -352,26 +350,7 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<IDepartmentTreeService>(),
                     sp.GetRequiredService<IDefineAccess>()));
 
-            // 10. JsonRpcExecutor — transient (per request); its dependencies (factories,
-            //     validators, key providers) are resolved from the container at construction.
-            //     Built explicitly rather than by the activator, so the constructor that carries
-            //     anomaly logging is the one used, not whichever overload the activator prefers.
-            //     The logger is a property, so it is assigned here rather than by the activator.
-            services.AddTransient(sp =>
-            {
-                var executor = new JsonRpcExecutor(
-                    sp.GetRequiredService<IBusinessObjectFactory>(),
-                    sp.GetRequiredService<IAccessTokenValidator>(),
-                    sp.GetRequiredService<IApiEncryptionKeyProvider>(),
-                    sp.GetService<IAnomalyLogWriter>(),
-                    sp.GetService<AuditLogOptions>(),
-                    sp.GetService<ISessionInfoService>());
-                executor.Logger = sp.GetService<ILoggerFactory>()?.CreateLogger<JsonRpcExecutor>();
-                executor.LanguageService = sp.GetService<ILanguageService>();
-                return executor;
-            });
-
-            // 11. The JSON-RPC dispatcher (Polhem.JsonRpc.Server), set up the way the framework serves its API.
+            // 10. The JSON-RPC dispatcher (Polhem.JsonRpc.Server), set up the way the framework serves its API.
             //     The options are registered as an instance, so an HTTP host's AddJsonRpcServer adds its own
             //     settings and filters to these instead of starting over; the framework's filters run first.
             //     Every Polhem component resolves its services from the call's scope, so the options need none here.

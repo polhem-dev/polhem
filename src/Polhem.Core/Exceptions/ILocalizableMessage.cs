@@ -6,7 +6,7 @@ namespace Polhem.Core.Exceptions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The framework's user-facing exceptions implement this. The JSON-RPC executor resolves
+    /// The framework's user-facing exceptions implement this. The JSON-RPC server resolves
     /// <see cref="MessageKey"/> in the session's culture before the message leaves the server,
     /// formats the translation with <see cref="MessageArguments"/>, and falls back to
     /// <see cref="Exception.Message"/> when no culture of the fall-back chain translates the key.

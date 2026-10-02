@@ -79,7 +79,7 @@ namespace Polhem.Api.Core.UnitTests
         };
 
         /// <summary>
-        /// Scans the actual access control declarations with the same resolution rules as <see cref="Polhem.Api.Core.JsonRpc.JsonRpcExecutor"/>.
+        /// Scans the actual access control declarations with the same resolution rule as the dispatcher, <see cref="Polhem.JsonRpc.Server.JsonRpcMethod.IsResolvableAction"/>.
         /// </summary>
         /// <remarks>
         /// Goes through <see cref="ApiAccessValidator.FindAccessControl"/> instead of reading the attribute directly:

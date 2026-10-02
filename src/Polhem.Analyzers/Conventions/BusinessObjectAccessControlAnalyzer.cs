@@ -9,7 +9,7 @@ namespace Polhem.Analyzers.Conventions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A business object's public methods are its API surface: the JSON-RPC executor resolves an action
+    /// A business object's public methods are its API surface: the JSON-RPC dispatcher resolves an action
     /// name straight to a public method. Before invoking it the framework demands an access-control
     /// declaration and throws <c>UnauthorizedAccessException</c> when none is found, so an unmarked
     /// method is not an open one — it is one that cannot be called at all, and only says so at run time
@@ -24,7 +24,7 @@ namespace Polhem.Analyzers.Conventions
     /// </para>
     /// <para>
     /// The methods considered are the ones an action name can resolve to, by the same rule as
-    /// <c>JsonRpcExecutor.IsResolvableAction</c>: public, non-static, non-generic, ordinary (not an
+    /// <c>JsonRpcMethod.IsResolvableAction</c> (Polhem.JsonRpc.Server): public, non-static, non-generic, ordinary (not an
     /// accessor, operator or constructor), taking exactly one parameter, and not an override of a
     /// <see cref="object"/> member. Reporting anything else would be noise about methods that cannot be
     /// called; missing any of them would leave a callable method unreported.
@@ -108,14 +108,14 @@ namespace Polhem.Analyzers.Conventions
         }
 
         /// <summary>
-        /// Determines whether the method is one the JSON-RPC executor could resolve as an action.
+        /// Determines whether the method is one the JSON-RPC dispatcher could resolve as an action.
         /// </summary>
         /// <param name="method">The method to test.</param>
         /// <returns><c>true</c> when the method forms part of the API surface.</returns>
         /// <remarks>
-        /// Mirrors <c>JsonRpcExecutor.IsResolvableAction</c>, which the executor applies before it looks
-        /// for an access declaration. Static methods, accessors and generic methods are excluded because
-        /// the executor refuses to resolve an action name to them, not because they happen to be rare.
+        /// Mirrors <c>JsonRpcMethod.IsResolvableAction</c>, which the dispatcher applies before the framework
+        /// looks for an access declaration. Static methods, accessors and generic methods are excluded because
+        /// the dispatcher refuses to resolve an action name to them, not because they happen to be rare.
         /// </remarks>
         private static bool IsApiCandidate(IMethodSymbol method)
             => method.MethodKind == MethodKind.Ordinary

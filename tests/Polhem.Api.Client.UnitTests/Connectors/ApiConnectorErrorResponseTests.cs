@@ -6,19 +6,19 @@ using Polhem.Core.Exceptions;
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// Tests for the response-finalization branch of <see cref="ApiConnector"/>,
-    /// covering the mapping from <see cref="JsonRpcError.Code"/> back to client-side
-    /// exception types (round-trip with <c>JsonRpcExecutor.MapException</c>).
+    /// Tests for the error branch of <see cref="ApiConnector"/>,
+    /// covering the mapping from <see cref="Polhem.JsonRpc.JsonRpcError.Code"/> back to client-side
+    /// exception types (round-trip with <c>PolhemExceptionMapper.MapCode</c>).
     /// </summary>
     /// <remarks>
     /// This file checks the behavior and message shape of individual error codes one by one. Whether the two ends
     /// map consistently, and whether a new code is missed, is guarded by <see cref="ErrorContractDriftTests"/>.
     /// </remarks>
-    public class ApiConnectorFinalizeResponseTests
+    public class ApiConnectorErrorResponseTests
     {
         [Fact]
-        [DisplayName("FinalizeResponse throws UserMessageException for the UserMessage code with a clean, unprefixed message")]
-        public async Task FinalizeResponse_UserMessageCode_ThrowsUserMessageException()
+        [DisplayName("An error response throws UserMessageException for the UserMessage code with a clean, unprefixed message")]
+        public async Task ErrorResponse_UserMessageCode_ThrowsUserMessageException()
         {
             var ex = await Assert.ThrowsAsync<UserMessageException>(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(JsonRpcErrorCode.UserMessage, "欄位不能為空"));
@@ -28,8 +28,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse throws ForbiddenException for the PermissionDenied code with a clean, unprefixed message")]
-        public async Task FinalizeResponse_PermissionDeniedCode_ThrowsForbiddenException()
+        [DisplayName("An error response throws ForbiddenException for the PermissionDenied code with a clean, unprefixed message")]
+        public async Task ErrorResponse_PermissionDeniedCode_ThrowsForbiddenException()
         {
             const string message = "Permission denied: 'Delete' on model 'PurchaseOrder'.";
 
@@ -41,8 +41,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse throws ReplayRejectedException for the ReplayRejected code with a clean, unprefixed message")]
-        public async Task FinalizeResponse_ReplayRejectedCode_ThrowsReplayRejectedException()
+        [DisplayName("An error response throws ReplayRejectedException for the ReplayRejected code with a clean, unprefixed message")]
+        public async Task ErrorResponse_ReplayRejectedCode_ThrowsReplayRejectedException()
         {
             const string message = "The request timestamp is 90 seconds away from server time, outside the accepted window.";
 
@@ -54,8 +54,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse throws InvalidOperationException for the InternalError code and keeps the prefixed format")]
-        public async Task FinalizeResponse_InternalErrorCode_ThrowsInvalidOperationException()
+        [DisplayName("An error response throws InvalidOperationException for the InternalError code and keeps the prefixed format")]
+        public async Task ErrorResponse_InternalErrorCode_ThrowsInvalidOperationException()
         {
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(JsonRpcErrorCode.InternalError, "Internal server error"));
@@ -66,8 +66,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse throws InvalidOperationException for other protocol codes such as MethodNotFound (regression)")]
-        public async Task FinalizeResponse_OtherProtocolCode_ThrowsInvalidOperationException()
+        [DisplayName("An error response throws InvalidOperationException for other protocol codes such as MethodNotFound (regression)")]
+        public async Task ErrorResponse_OtherProtocolCode_ThrowsInvalidOperationException()
         {
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(JsonRpcErrorCode.MethodNotFound, "Method not found"));
@@ -78,7 +78,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
         [Fact]
         [DisplayName("UserMessageException can be caught by catch (Exception) (regression: existing broad catches still work)")]
-        public async Task FinalizeResponse_UserMessageException_StillCaughtAsException()
+        public async Task ErrorResponse_UserMessageException_StillCaughtAsException()
         {
             Exception? caught = null;
             try
@@ -95,8 +95,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse returns the result for a successful response (regression)")]
-        public async Task FinalizeResponse_NoError_ReturnsValue()
+        [DisplayName("A successful response returns the result (regression)")]
+        public async Task SuccessResponse_ReturnsValue()
         {
             var result = await ApiConnectorTestHost.ExecuteWithResultAsync();
 

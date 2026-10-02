@@ -42,8 +42,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.Api.Core.UnitTests" />
-    <!-- The error contract has two halves: JsonRpcExecutor.MapException maps an exception to a
-         code, and ApiConnector.FinalizeResponse maps that code back to an exception. Only a test
+    <!-- The error contract has two halves: PolhemExceptionMapper.MapCode maps an exception to a
+         code, and ApiConnector maps that code back to an exception. Only a test
          that sees both can assert they agree, and the client test project is the one that already
          references both assemblies. -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />

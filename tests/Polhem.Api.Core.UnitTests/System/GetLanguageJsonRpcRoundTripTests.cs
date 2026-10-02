@@ -6,15 +6,15 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.GetLanguage</c> through the
-    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.GetLanguage"/> and verifies that:
+    /// End-to-end round-trip through the JSON-RPC dispatcher: dispatches <c>System.GetLanguage</c> through the
+    /// dispatcher to <see cref="Polhem.Business.System.SystemBusinessObject.GetLanguage"/> and verifies that:
     /// <list type="bullet">
     /// <item>action routing (the progId.action reflection lookup) finds the method</item>
     /// <item>ApiInputConverter (GetLanguageRequest → GetLanguageArgs) keeps Lang / Namespace</item>
@@ -30,7 +30,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetLanguageJsonRpcRoundTripTests(LangFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetLanguage dispatches through JsonRpcExecutor and returns the LanguageResource seeded by the fixture")]
+        [DisplayName("System.GetLanguage dispatches through the JSON-RPC dispatcher and returns the LanguageResource seeded by the fixture")]
         public async Task GetLanguage_ThroughJsonRpc_DispatchesAndReturnsResource()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -42,16 +42,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
                 Params = new JsonRpcParams
@@ -93,16 +90,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
                 Params = new JsonRpcParams
@@ -132,16 +126,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
                 Params = new JsonRpcParams

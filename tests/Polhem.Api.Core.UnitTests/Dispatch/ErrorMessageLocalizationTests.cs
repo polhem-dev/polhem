@@ -1,20 +1,19 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
+using Microsoft.Extensions.DependencyInjection;
+using Polhem.Api.Core.Dispatch;
 using Polhem.Core.Exceptions;
-using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 
-namespace Polhem.Api.Core.UnitTests.JsonRpc
+namespace Polhem.Api.Core.UnitTests.Dispatch
 {
     /// <summary>
-    /// Tests for <see cref="JsonRpcExecutor.LocalizeMessage"/>: a keyed user-facing message is
+    /// Tests for <see cref="PolhemExceptionMapper.Localize"/>: a keyed user-facing message is
     /// translated in the session's culture before it leaves the server, and falls back to its English
     /// text whenever a translation does not apply.
     /// </summary>
     [Collection(SysInfoStaticCollection.Name)]
-    public class JsonRpcExecutorMessageLocalizationTests
+    public class ErrorMessageLocalizationTests
     {
         private static readonly Guid s_token = Guid.NewGuid();
 
@@ -131,21 +130,31 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal("The request could not be completed.", executor.LocalizeMessage(ex, "The request could not be completed."));
         }
 
-        private static JsonRpcExecutor CreateExecutor(string? sessionCulture, string defaultLanguage = "")
+        private static Localizer CreateExecutor(string? sessionCulture, string defaultLanguage = "")
             => CreateExecutor(new StubSessionInfoService(sessionCulture),
                 new FrameworkLanguageService(null, () => defaultLanguage));
 
-        private static JsonRpcExecutor CreateExecutor(StubSessionInfoService sessions, string defaultLanguage)
+        private static Localizer CreateExecutor(StubSessionInfoService sessions, string defaultLanguage)
             => CreateExecutor(sessions, new FrameworkLanguageService(null, () => defaultLanguage));
 
-        private static JsonRpcExecutor CreateExecutor(StubSessionInfoService sessions, ILanguageService? languageService)
+        private static Localizer CreateExecutor(StubSessionInfoService sessions, ILanguageService? languageService)
         {
-            var executor = new JsonRpcExecutor(new NoObjects(), new AcceptAllTokens(), new NoKeys(), null, null, sessions)
+            var services = new ServiceCollection();
+            services.AddSingleton<ISessionInfoService>(sessions);
+            if (languageService != null)
             {
-                AccessToken = s_token,
-                LanguageService = languageService,
-            };
-            return executor;
+                services.AddSingleton(languageService);
+            }
+            return new Localizer(services.BuildServiceProvider());
+        }
+
+        /// <summary>
+        /// Localizes the way the exception mapper does for a call that carries <see cref="s_token"/>.
+        /// </summary>
+        private sealed class Localizer(IServiceProvider services)
+        {
+            public string LocalizeMessage(Exception ex, string message)
+                => PolhemExceptionMapper.Localize(ex, message, services, s_token);
         }
 
         private sealed class StubSessionInfoService(string? culture) : ISessionInfoService
@@ -182,25 +191,6 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             public LanguageEnum? GetLangEnum(string lang, string fullName) => null;
             public LanguageEnum? GetLangEnum(string lang, string @namespace, string enumName) => null;
             public string? GetLangEnumText(string lang, string fullName, string code) => null;
-        }
-
-        private sealed class NoObjects : IBusinessObjectFactory
-        {
-            public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall) => throw new NotSupportedException();
-        }
-
-        private sealed class AcceptAllTokens : IAccessTokenValidator
-        {
-            public bool Validate(Guid accessToken) => true;
-        }
-
-        private sealed class NoKeys : IApiEncryptionKeyProvider
-        {
-            public byte[] GetKey(Guid accessToken) => [];
-
-            public byte[] GenerateKeyForLogin(Guid accessToken) => [];
-
-            public bool SupportsSessionRebuild => false;
         }
     }
 }

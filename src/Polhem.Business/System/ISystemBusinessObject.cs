@@ -11,7 +11,7 @@ namespace Polhem.Business.System
     /// host-side BO customisation does not break callers).
     ///
     /// This surface and the API surface are independent: <c>[ApiAccessControl]</c> marks what a
-    /// client may call through <c>JsonRpcExecutor</c>, while this interface is what server-side
+    /// client may call over JSON-RPC, while this interface is what server-side
     /// code calls. Neither implies the other.
     ///
     /// A member belongs here when something inside the process resolves it through
@@ -21,8 +21,8 @@ namespace Polhem.Business.System
     /// operation on their behalf.
     ///
     /// The definition operations are the counter-example. <c>GetDefine</c> / <c>SaveDefine</c> are
-    /// still public on <see cref="SystemBusinessObject"/> and still reachable by a client through
-    /// <c>JsonRpcExecutor</c>, but they are deliberately not on this interface: server-side code
+    /// still public on <see cref="SystemBusinessObject"/> and still reachable by a client over
+    /// JSON-RPC, but they are deliberately not on this interface: server-side code
     /// reads and writes definitions through <see cref="Polhem.Definition.Storage.IDefineAccess"/> directly, so routing that through
     /// another business object would buy nothing. The same reasoning covers the rest of the
     /// definition family (<c>GetFormSchema</c>, <c>GetFormLayout</c>, <c>GetLanguage</c>,

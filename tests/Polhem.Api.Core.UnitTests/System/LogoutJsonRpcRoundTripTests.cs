@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.UnitTests.Dispatch;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
@@ -13,8 +13,7 @@ using Polhem.Definition.Database;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.Logout</c> through the
-    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.Logout"/> and verifies that the SessionInfo
+    /// End-to-end round-trip through the JSON-RPC dispatcher: dispatches <c>System.Logout</c> to <see cref="Polhem.Business.System.SystemBusinessObject.Logout"/> and verifies that the SessionInfo
     /// disappears from the cache and the call succeeds.
     /// <para>
     /// Needs <see cref="SharedDbFixture"/> (not <c>PolhemTestFixture</c>): since sessions are persisted, Logout
@@ -29,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         public LogoutJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
-        private JsonRpcExecutor BuildExecutor(Guid accessToken)
+        private TestDispatcher BuildExecutor(Guid accessToken)
         {
             var boFactory = new BusinessObjectFactory(
                 _fx.Provider,
@@ -38,17 +37,14 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            return new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            return new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
         }
 
-        private static JsonRpcRequest BuildRequest()
+        private static TestRpcRequest BuildRequest()
             => new()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Logout}",

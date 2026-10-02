@@ -1,8 +1,8 @@
 namespace Polhem.Api.Core.JsonRpc
 {
     /// <summary>
-    /// Thrown by <see cref="JsonRpcExecutor"/> when a <c>Plain</c> request body cannot be read into
-    /// the type the addressed method takes.
+    /// Thrown by the JSON-RPC pipeline when the request parameters are not a Polhem payload, or a
+    /// <c>Plain</c> body cannot be read into the type the addressed method takes.
     /// </summary>
     /// <remarks>
     /// Maps to <see cref="JsonRpcErrorCode.InvalidParams"/> through <see cref="JsonRpcErrorContract"/>,

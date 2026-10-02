@@ -107,7 +107,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// <para>
         /// The target type is resolved from <see cref="ApiPayload.TypeName"/>, after the name has
         /// passed the type allow-list. That suits a client reading a response. The server does not
-        /// decode requests this way: <see cref="JsonRpcExecutor"/> decodes into the type the
+        /// decode requests this way: <see cref="Polhem.Api.Core.Dispatch.PolhemPayloadFilter"/> decodes into the type the
         /// addressed method takes, and treats the name only as a consistency check.
         /// </para>
         /// </remarks>
@@ -147,7 +147,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// </exception>
         /// <remarks>
         /// The server-side counterpart of <see cref="RestoreFrom"/>, which resolves the type from the
-        /// name and so suits only a reader that trusts the writer. Internal: the executor is its only
+        /// name and so suits only a reader that trusts the writer. Internal: the payload filter is its only
         /// caller.
         /// </remarks>
         internal static void RestoreRequest(ApiPayload payload, PayloadFormat sourceFormat, byte[]? encryptionKey, Type targetType)

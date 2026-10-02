@@ -5,12 +5,10 @@ namespace Polhem.Api.Core.JsonRpc
     /// Defines standard JSON-RPC error codes used to indicate error conditions during request processing.
     /// </summary>
     /// <remarks>
-    /// The HTTP status says where a code was raised, not which code it is. Every code the
-    /// <see cref="JsonRpcExecutor"/> raises reaches the caller in a response with HTTP status 200.
-    /// The ASP.NET Core transport answers on its own only for a request it refuses before the executor
-    /// runs, and picks the status there: <see cref="ParseError"/> and <see cref="InvalidRequest"/> for an
-    /// unreadable request (400 or 415) or a rejected API key or <c>Authorization</c> header (401), and
-    /// <see cref="InternalError"/> (500) for a failure outside the executor.
+    /// The HTTP status says nothing about the code. Every code, a rejected API key or
+    /// <c>Authorization</c> header included, reaches the caller in a response with HTTP status 200.
+    /// The HTTP endpoint answers with another status only for a request it does not read at all: a
+    /// body that is not JSON, or one larger than the endpoint accepts.
     /// </remarks>
     public enum JsonRpcErrorCode
     {

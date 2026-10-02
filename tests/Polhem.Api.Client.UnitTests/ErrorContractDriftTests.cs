@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using Polhem.Api.Client.UnitTests.Connectors;
+using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core.Exceptions;
 
@@ -10,8 +11,8 @@ namespace Polhem.Api.Client.UnitTests
     /// Guards against drift between the two ends of the error contract.
     /// </summary>
     /// <remarks>
-    /// On the server, <c>JsonRpcExecutor.MapException</c> maps exceptions to error codes; on the caller,
-    /// <c>ApiConnector.FinalizeResponse</c> maps the codes back to exceptions. The two are inverses of each other,
+    /// On the server, <c>PolhemExceptionMapper.MapCode</c> maps exceptions to error codes; on the caller,
+    /// <c>ApiConnector</c> maps the codes back to exceptions. The two are inverses of each other,
     /// but **the compiler does not tie them together**: if the server returns a new code and the caller does not
     /// follow, that code silently falls into the generic branch, the <c>catch</c> promised by the exception type's
     /// doc is never entered again, and it still compiles and may well pass the tests.
@@ -222,7 +223,7 @@ namespace Polhem.Api.Client.UnitTests
             const string message = "contract probe message";
             var exception = (Exception)Activator.CreateInstance(exceptionType, message)!;
 
-            var (code, mappedMessage) = JsonRpcExecutor.MapException(exception);
+            var (code, mappedMessage) = PolhemExceptionMapper.MapCode(exception);
 
             Assert.Equal(expectedCode, code);
             Assert.Equal(message, mappedMessage);
@@ -231,7 +232,7 @@ namespace Polhem.Api.Client.UnitTests
         [Theory]
         [MemberData(nameof(ReconstructedCodes))]
         [DisplayName("The caller rebuilds each declared error code into its declared exception type without prefixing the message")]
-        public async Task FinalizeResponse_DeclaredCode_RebuildsDeclaredExceptionType(
+        public async Task ErrorResponse_DeclaredCode_RebuildsDeclaredExceptionType(
             JsonRpcErrorCode code, Type expectedExceptionType)
         {
             const string message = "contract probe message";
@@ -247,7 +248,7 @@ namespace Polhem.Api.Client.UnitTests
         [Theory]
         [MemberData(nameof(TransportOnlyCodes))]
         [DisplayName("The caller sends deliberately unrebuilt error codes to the generic branch and keeps the code and the original message")]
-        public async Task FinalizeResponse_TransportOnlyCode_FallsBackToGenericBranch(JsonRpcErrorCode code)
+        public async Task ErrorResponse_TransportOnlyCode_FallsBackToGenericBranch(JsonRpcErrorCode code)
         {
             const string message = "transport level failure";
 
@@ -268,21 +269,21 @@ namespace Polhem.Api.Client.UnitTests
             const string message = "whitelisted bcl message";
             var exception = (Exception)Activator.CreateInstance(exceptionType, message)!;
 
-            var (code, _) = JsonRpcExecutor.MapException(exception);
+            var (code, _) = PolhemExceptionMapper.MapCode(exception);
 
             Assert.Equal(JsonRpcErrorCode.UserMessage, code);
         }
 
         [Fact]
         [DisplayName("Many-to-one is irreversible: a whitelisted BCL exception crosses the wire and is rebuilt as UserMessageException")]
-        public async Task FinalizeResponse_UserMessageCode_AlwaysRebuildsUserMessageException()
+        public async Task ErrorResponse_UserMessageCode_AlwaysRebuildsUserMessageException()
         {
             // The server throws `InvalidOperationException`, but only an integer reaches the caller, and all it can
             // restore is the type that integer identifies. This is a deliberate trade-off, not a defect. The text
             // is whatever the server sent: outside debug mode that is the contract's fixed message, not the
-            // exception's own (pinned in JsonRpcExecutorUserMessageExceptionTests), so this compares against the
+            // exception's own (pinned in the user-message exception tests), so this compares against the
             // mapped message rather than against either literal.
-            var (code, message) = JsonRpcExecutor.MapException(new InvalidOperationException("state is wrong"));
+            var (code, message) = PolhemExceptionMapper.MapCode(new InvalidOperationException("state is wrong"));
 
             var exception = await Record.ExceptionAsync(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(code, message));
@@ -295,7 +296,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("An authentication failure crosses the wire as Unauthorized (-32001) and is rebuilt as an UnauthorizedAccessException carrying its message")]
         public async Task AuthenticationFailure_RoundTripsAsUnauthorized()
         {
-            var (code, message) = JsonRpcExecutor.MapException(
+            var (code, message) = PolhemExceptionMapper.MapCode(
                 new AuthenticationRequiredException("AccessToken is required or invalid."));
 
             Assert.Equal(JsonRpcErrorCode.Unauthorized, code);
@@ -314,7 +315,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("A permission failure keeps its own code and is not reported as an authentication failure")]
         public void PermissionFailure_IsNotUnauthorized()
         {
-            var (code, _) = JsonRpcExecutor.MapException(new ForbiddenException("Permission denied."));
+            var (code, _) = PolhemExceptionMapper.MapCode(new ForbiddenException("Permission denied."));
 
             Assert.Equal(JsonRpcErrorCode.PermissionDenied, code);
         }

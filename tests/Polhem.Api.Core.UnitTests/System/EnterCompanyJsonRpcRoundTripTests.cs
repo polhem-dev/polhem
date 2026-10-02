@@ -5,16 +5,16 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.EnterCompany</c> through the
-    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.EnterCompany"/> and verifies that:
+    /// End-to-end round-trip through the JSON-RPC dispatcher: dispatches <c>System.EnterCompany</c> through the
+    /// dispatcher to <see cref="Polhem.Business.System.SystemBusinessObject.EnterCompany"/> and verifies that:
     /// <list type="bullet">
     /// <item>action routing (the progId.action reflection lookup) finds the method</item>
     /// <item>ApiInputConverter (EnterCompanyRequest → EnterCompanyArgs) keeps CompanyId</item>
@@ -29,7 +29,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public EnterCompanyJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("System.EnterCompany dispatches through JsonRpcExecutor and writes SessionInfo.CompanyId")]
+        [DisplayName("System.EnterCompany dispatches through the JSON-RPC dispatcher and writes SessionInfo.CompanyId")]
         public async Task EnterCompany_ThroughJsonRpc_DispatchesAndBindsCompany()
         {
             // Arrange: uses the user '001' and company 'C001' mapping already seeded by `SharedDatabaseState`, so the
@@ -43,16 +43,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.EnterCompany}",
                 Params = new JsonRpcParams
@@ -93,16 +90,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.EnterCompany}",
                 Params = new JsonRpcParams
@@ -115,7 +109,8 @@ namespace Polhem.Api.Core.UnitTests.System
             var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
-            Assert.Contains("Company access denied", response.Error!.Message);
+            // The code, not the text: the message is translated into the session's language.
+            Assert.Equal((int)JsonRpcErrorCode.CompanyAccessDenied, response.Error!.Code);
 
             var session = _fx.GetRequiredService<ISessionInfoService>().Get(accessToken);
             Assert.NotNull(session);

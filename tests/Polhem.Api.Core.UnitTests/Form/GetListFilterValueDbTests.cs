@@ -1,13 +1,10 @@
 using System.ComponentModel;
 using System.Data;
-using System.Text.Json;
-using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Transformers;
 using Polhem.Core.Data;
-using Polhem.Core.Serialization;
 using Polhem.Business;
 using Polhem.Business.Form;
 using Polhem.Definition;
@@ -16,12 +13,12 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Sorting;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
@@ -151,7 +148,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                     isDebugMode: true);
                 try
                 {
-                    var request = new JsonRpcRequest
+                    var request = new TestRpcRequest
                     {
                         Method = $"{progId}.{FormActions.GetList}",
                         Params = new JsonRpcParams
@@ -187,22 +184,18 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         /// <summary>
-        /// Runs a <c>Plain</c> request the way it travels: the body is parsed from JSON as the controller parses it,
+        /// Runs a <c>Plain</c> request the way it travels: the body is parsed from JSON as the HTTP endpoint parses it,
         /// and the response is written to JSON and read back as the client reads it.
         /// </summary>
-        private static async Task<DataTable> ExecutePlain(JsonRpcExecutor executor, string progId, string body)
+        private static async Task<DataTable> ExecutePlain(TestDispatcher executor, string progId, string body)
         {
             var requestJson = $$"""
                 {"jsonrpc":"2.0","method":"{{progId}}.{{FormActions.GetList}}","params":{"format":0,"value":{{body}}},"id":"plain-1"}
                 """;
-            var request = JsonCodec.Deserialize<JsonRpcRequest>(requestJson)!;
-
-            var response = await executor.ExecuteAsync(request);
+            var response = await executor.ExecuteJsonAsync(requestJson);
 
             Assert.Null(response.Error);
-            var received = JsonCodec.Deserialize<JsonRpcResponse>(JsonCodec.Serialize(response))!;
-            var element = Assert.IsType<JsonElement>(received.Result!.Value);
-            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(element)!;
+            var result = Assert.IsType<GetListResponse>(response.Result!.Value);
             Assert.NotNull(result.Table);
             return result.Table!;
         }
@@ -212,9 +205,9 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         /// <summary>
         /// Creates a transient form with a text, an integer and a decimal column, seeds three rows, and hands the test
-        /// an executor whose business objects read that form.
+        /// a dispatcher whose business objects read that form.
         /// </summary>
-        private async Task WithSeededForm(DatabaseType databaseType, Func<JsonRpcExecutor, string, Task> test)
+        private async Task WithSeededForm(DatabaseType databaseType, Func<TestDispatcher, string, Task> test)
         {
             string progId = TransientForm.NewTableName("tb_glf_");
             var schema = new FormSchema(progId, "Filter values") { CategoryId = TransientForm.CategoryId };
@@ -244,10 +237,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                     _fx.GetRequiredService<ILanguageService>(),
                     new FormBoTypeResolver());
 
-                var executor = new JsonRpcExecutor(
-                    boFactory,
-                    _fx.GetRequiredService<IAccessTokenValidator>(),
-                    _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+                var executor = new TestDispatcher(_fx.Provider, boFactory)
                 {
                     AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                     IsLocalCall = true,

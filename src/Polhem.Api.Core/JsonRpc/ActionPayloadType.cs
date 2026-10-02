@@ -47,7 +47,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// Returns the type an encoded body addressed to <paramref name="method"/> is decoded into.
         /// </summary>
         /// <param name="method">
-        /// A resolved action; <see cref="JsonRpcExecutor.IsResolvableAction"/> guarantees it takes
+        /// A resolved action; <see cref="Polhem.JsonRpc.Server.JsonRpcMethod.IsResolvableAction"/> guarantees it takes
         /// exactly one parameter.
         /// </param>
         /// <returns>The request counterpart of the parameter type when one exists; otherwise the parameter type.</returns>

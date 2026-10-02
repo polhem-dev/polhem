@@ -7,15 +7,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>System.GetFormLayout</c> is dispatched by
-    /// the executor to <see cref="Polhem.Business.System.SystemBusinessObject.GetFormLayout"/>, verifying that:
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: <c>System.GetFormLayout</c> is dispatched by
+    /// the dispatcher to <see cref="Polhem.Business.System.SystemBusinessObject.GetFormLayout"/>, verifying that:
     /// <list type="bullet">
     /// <item>action routing (the reflection lookup of progId.action) finds the method</item>
     /// <item>ApiInputConverter (GetFormLayoutRequest → GetFormLayoutArgs) keeps ProgId / LayoutId</item>
@@ -30,7 +30,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         public GetFormLayoutJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private JsonRpcExecutor NewExecutor(Guid accessToken)
+        private TestDispatcher NewExecutor(Guid accessToken)
         {
             var boFactory = new BusinessObjectFactory(
                 _fx.Provider,
@@ -39,10 +39,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            return new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            return new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
@@ -50,13 +47,13 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("System.GetFormLayout dispatches through JsonRpcExecutor and returns the default layout")]
+        [DisplayName("System.GetFormLayout dispatches through the JSON-RPC dispatcher and returns the default layout")]
         public async Task GetFormLayout_ThroughJsonRpc_DispatchesAndReturnsLayout()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewExecutor(accessToken);
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
                 Params = new JsonRpcParams
@@ -87,7 +84,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewExecutor(accessToken);
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
                 Params = new JsonRpcParams

@@ -10,7 +10,7 @@ namespace Polhem.Business.UnitTests.Contracts
     /// <remarks>
     /// <para>
     /// <b>Why this needs a gate.</b> Conversion in both directions between API types and BO types is done by
-    /// <c>ApiInputConverter.Convert</c> (called by <c>JsonRpcExecutor</c> inbound and by
+    /// <c>ApiInputConverter.Convert</c> (called by the dispatcher's parameter binder inbound and by
     /// <c>ApiOutputConverter</c> outbound), and it <b>copies by matching property names through reflection</b>.
     /// A name that does not match is skipped silently: no exception and no warning, so the call looks successful but the field is empty.
     /// </para>

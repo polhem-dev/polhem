@@ -5,8 +5,8 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
-using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
+using Polhem.Api.Core.UnitTests.Dispatch;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests
@@ -247,7 +247,7 @@ namespace Polhem.Api.Core.UnitTests
         /// Sends one Encoded Ping call with the given frame (Ping declares no sequence check).
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
-        private Task<JsonRpcResponse> ExecutePing(ApiPayloadFrame frame)
+        private Task<TestRpcResponse> ExecutePing(ApiPayloadFrame frame)
             => Execute("Ping", new PingRequest { ClientName = "replay-test" }, frame, Guid.Empty);
 
         /// <summary>
@@ -257,12 +257,9 @@ namespace Polhem.Api.Core.UnitTests
         /// <param name="value">The value passed in.</param>
         /// <param name="frame">The replay protection frame to attach.</param>
         /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> means an anonymous call.</param>
-        private async Task<JsonRpcResponse> Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
+        private async Task<TestRpcResponse> Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
         {
-            var executor = new JsonRpcExecutor(
-                _fx.GetRequiredService<IBusinessObjectFactory>(),
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider)
             {
                 AccessToken = accessToken,
                 // A local call skips token validation, so the test need not create a session first (that would
@@ -270,7 +267,7 @@ namespace Polhem.Api.Core.UnitTests
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{action}",
                 Params = new JsonRpcParams { Value = value, Frame = frame },
@@ -287,25 +284,19 @@ namespace Polhem.Api.Core.UnitTests
             => new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sequence);
 
         /// <summary>
-        /// Sends one call through an executor with anomaly logging enabled and returns the captured anomaly entries.
+        /// Sends one call with anomaly logging enabled and returns the captured anomaly entries.
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
         private async Task<List<AnomalyEntry>> ExecuteAndCaptureAnomalies(ApiPayloadFrame frame)
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = new JsonRpcExecutor(
-                _fx.GetRequiredService<IBusinessObjectFactory>(),
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>(),
-                writer,
-                new AuditLogOptions { Enabled = true, AnomalyEnabled = true, ApiSlowThresholdMs = 60_000 },
-                new StubSessionInfoService())
-            {
-                AccessToken = Guid.Empty,
-                IsLocalCall = true,
-            };
+            var services = new TestOverrideServiceProvider(_fx.Provider,
+                (typeof(IAnomalyLogWriter), writer),
+                (typeof(AuditLogOptions), new AuditLogOptions { Enabled = true, AnomalyEnabled = true, ApiSlowThresholdMs = 60_000 }),
+                (typeof(ISessionInfoService), new StubSessionInfoService()));
+            var executor = new TestDispatcher(services);
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
                 Params = new JsonRpcParams

@@ -7,15 +7,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// An end-to-end round trip through <see cref="JsonRpcExecutor"/>: dispatches
-    /// <c>System.GetFormSchema</c> through the executor to
+    /// An end-to-end round trip through the JSON-RPC dispatcher: dispatches
+    /// <c>System.GetFormSchema</c> through the dispatcher to
     /// <see cref="Polhem.Business.System.SystemBusinessObject.GetFormSchema"/> and verifies that:
     /// <list type="bullet">
     /// <item>action routing (the progId.action reflection lookup) finds the method</item>
@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetFormSchemaJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetFormSchema dispatches through JsonRpcExecutor and returns the Employee schema seeded by the fixture")]
+        [DisplayName("System.GetFormSchema dispatches through the JSON-RPC dispatcher and returns the Employee schema seeded by the fixture")]
         public async Task GetFormSchema_ThroughJsonRpc_DispatchesAndReturnsSchema()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -44,16 +44,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormSchema}",
                 Params = new JsonRpcParams
@@ -89,16 +86,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormSchema}",
                 Params = new JsonRpcParams

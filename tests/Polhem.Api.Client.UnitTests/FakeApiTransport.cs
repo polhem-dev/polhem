@@ -5,8 +5,6 @@ using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Core.Serialization;
 using Polhem.JsonRpc;
-using JsonRpcRequest = Polhem.JsonRpc.JsonRpcRequest;
-using JsonRpcResponse = Polhem.JsonRpc.JsonRpcResponse;
 
 namespace Polhem.Api.Client.UnitTests
 {

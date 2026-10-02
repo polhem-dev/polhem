@@ -3,57 +3,33 @@ using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Core.Serialization;
 using Polhem.Definition;
-using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 using Polhem.Api.Core.Messages;
 
-namespace Polhem.Api.Core.UnitTests
+namespace Polhem.Api.Core.UnitTests.Dispatch
 {
-    public class JsonRpcExecutorTests : IClassFixture<PolhemTestFixture>
+    /// <summary>
+    /// Calls through the framework's JSON-RPC pipeline: the system actions, cancellation, and Plain bodies written by
+    /// hand as a JavaScript client sends them.
+    /// </summary>
+    public class DispatchTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;
         private Guid _accessToken;
 
-        public JsonRpcExecutorTests(PolhemTestFixture fx)
+        public DispatchTests(PolhemTestFixture fx)
         {
             _fx = fx;
         }
 
-        private JsonRpcExecutor NewExecutor(Guid accessToken, bool isLocalCall = true)
-        {
-            var executor = new JsonRpcExecutor(
-                _fx.GetRequiredService<IBusinessObjectFactory>(),
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
-            {
-                AccessToken = accessToken,
-                IsLocalCall = isLocalCall,
-            };
-            return executor;
-        }
-
-        [Fact]
-        [DisplayName("JsonRpcExecutor.IsLocalCall defaults to false (the basis of LocalOnly protection)")]
-        public void IsLocalCall_Default_IsFalse()
-        {
-            // The whole protection of LocalOnly methods (such as `SystemBusinessObject.CreateSession` and `SaveDefine`) rests on
-            // this default: `ApiAccessValidator` blocks remote calls only when `IsLocalCall` is false.
-            // A false default means "forgot to set it" lands on the safe side. Changing it to true or removing the
-            // initial value would give local call rights to any call path that does not set it explicitly.
-            var executor = new JsonRpcExecutor(
-                _fx.GetRequiredService<IBusinessObjectFactory>(),
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>());
-
-            Assert.False(executor.IsLocalCall);
-        }
+        private TestDispatcher NewExecutor(Guid accessToken) => new(_fx.Provider) { AccessToken = accessToken };
 
         [Fact]
         [DisplayName("ExecuteAsync with a cancelled token throws OperationCanceledException instead of returning an error envelope")]
         public async Task ExecuteAsync_CancelledToken_ThrowsOperationCanceled()
         {
-            var request = new JsonRpcRequest()
+            var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Ping}",
                 Params = new JsonRpcParams() { Value = new PingRequest() },
@@ -62,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();
 
-            // A caller that cancelled is not waiting for an answer, so the executor must not turn the cancellation
+            // A caller that cancelled is not waiting for an answer, so the dispatcher must not turn the cancellation
             // into an ordinary failure response the way it does for every other exception.
             await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 () => NewExecutor(Guid.Empty).ExecuteAsync(request, cts.Token));
@@ -72,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("ExecuteAsync with a token that is never cancelled still answers normally")]
         public async Task ExecuteAsync_LiveToken_ReturnsResult()
         {
-            var request = new JsonRpcRequest()
+            var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Ping}",
                 Params = new JsonRpcParams() { Value = new PingRequest() },
@@ -95,7 +71,7 @@ namespace Polhem.Api.Core.UnitTests
         /// <param name="value">The value passed in.</param>
         private async Task<T> ApiExecute<T>(Guid accessToken, string progId, string action, object value)
         {
-            var request = new JsonRpcRequest()
+            var request = new TestRpcRequest()
             {
                 Method = $"{progId}.{action}",
                 Params = new JsonRpcParams()
@@ -175,13 +151,7 @@ namespace Polhem.Api.Core.UnitTests
                 }
                 """;
 
-            var request = JsonCodec.Deserialize<JsonRpcRequest>(json);
-            Assert.NotNull(request);
-            Assert.Equal(PayloadFormat.Plain, request.Params.Format);
-            Assert.Equal(string.Empty, request.Params.TypeName); // An unsent type defaults to an empty string.
-
-            var executor = NewExecutor(Guid.Empty);
-            var response = await executor.ExecuteAsync(request);
+            var response = await NewExecutor(Guid.Empty).ExecuteJsonAsync(json);
 
             Assert.Null(response.Error);
             var result = response.Result!.Value as PingResponse;
@@ -211,11 +181,7 @@ namespace Polhem.Api.Core.UnitTests
                 }
                 """;
 
-            var request = JsonCodec.Deserialize<JsonRpcRequest>(json);
-            Assert.NotNull(request);
-
-            var executor = NewExecutor(Guid.Empty);
-            var response = await executor.ExecuteAsync(request);
+            var response = await NewExecutor(Guid.Empty).ExecuteJsonAsync(json);
 
             Assert.Null(response.Error);
             var result = response.Result!.Value as PingResponse;
@@ -225,7 +191,7 @@ namespace Polhem.Api.Core.UnitTests
 
         /// <summary>
         /// Simulates a JS front end sending Plain format with a bogus type string in params.type, and verifies that the
-        /// Plain path never reads the type field (RestoreFrom returns early before the Plain branch).
+        /// Plain path never reads the type field (the payload restore returns early for Plain).
         /// </summary>
         [Fact]
         [DisplayName("The server ignores a bogus type string in Plain format and deserializes normally")]
@@ -244,12 +210,7 @@ namespace Polhem.Api.Core.UnitTests
                 }
                 """;
 
-            var request = JsonCodec.Deserialize<JsonRpcRequest>(json);
-            Assert.NotNull(request);
-            Assert.Equal("NonExistent.Type.That.Should.Be.Ignored, FakeAssembly", request.Params.TypeName);
-
-            var executor = NewExecutor(Guid.Empty);
-            var response = await executor.ExecuteAsync(request);
+            var response = await NewExecutor(Guid.Empty).ExecuteJsonAsync(json);
 
             // If the Plain path read the type, this would fail (whitelist rejection or a type that cannot load).
             // Not failing means the framework ignores the type entirely and gets `PingRequest` by reflection on the BO method.
@@ -268,7 +229,7 @@ namespace Polhem.Api.Core.UnitTests
         {
             Guid accessToken = GetAccessToken();
 
-            var request = new JsonRpcRequest()
+            var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
                 Params = new JsonRpcParams()
@@ -278,7 +239,6 @@ namespace Polhem.Api.Core.UnitTests
                 Id = Guid.NewGuid().ToString()
             };
 
-            _ = request.ToJson();
             var executor = NewExecutor(accessToken);
             var response = await executor.ExecuteAsync(request);
             var execFuncResult = Assert.IsType<ExecFuncResponse>(response.Result!.Value);

@@ -6,15 +6,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that the <c>RowId</c> of
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: confirms that the <c>RowId</c> of
     /// <c>Employee.GetData</c> is copied to <c>GetDataArgs</c> by ApiInputConverter, that the DataSet returned by the
     /// stub is copied back into the wire response by ApiOutputConverter, and that the framework invariant
     /// <c>DataSetName == ProgId</c> holds.
@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetDataJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetData through JsonRpcExecutor passes RowId through and returns the full DataSet")]
+        [DisplayName("Employee.GetData through the JSON-RPC dispatcher passes RowId through and returns the full DataSet")]
         public async Task GetData_ThroughJsonRpc_PreservesRowIdAndReturnsDataSet()
         {
             var rowId = Guid.NewGuid();
@@ -52,16 +52,13 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetData}",
                 Params = new JsonRpcParams { Value = new GetDataRequest { RowId = rowId } },

@@ -8,18 +8,18 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Paging;
-using Polhem.Definition.Security;
 using Polhem.Definition.Sorting;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>Employee.GetList</c> is dispatched by the
-    /// executor to <c>FormBusinessObject.GetList</c>, and a stub <c>IDataFormRepository</c> returns a known
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: <c>Employee.GetList</c> is dispatched by the
+    /// dispatcher to <c>FormBusinessObject.GetList</c>, and a stub <c>IDataFormRepository</c> returns a known
     /// DataTable. It verifies that:
     /// <list type="bullet">
     /// <item>action routing (the reflection lookup of progId.action) finds the method</item>
@@ -36,7 +36,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetListJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetList through JsonRpcExecutor dispatches to FormBusinessObject.GetList and returns the stub DataTable")]
+        [DisplayName("Employee.GetList through the JSON-RPC dispatcher dispatches to FormBusinessObject.GetList and returns the stub DataTable")]
         public async Task GetList_ThroughJsonRpc_DispatchesAndReturnsTable()
         {
             // Arrange
@@ -62,17 +62,14 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
             var rowId = Guid.NewGuid();
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetList}",
                 Params = new JsonRpcParams
@@ -102,7 +99,9 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Equal("sys_id,sys_name", stubRepository.LastSelectFields);
             var condition = Assert.IsType<FilterCondition>(stubRepository.LastFilter);
             Assert.Equal("sys_rowid", condition.FieldName);
-            Assert.Equal(rowId, condition.Value);
+            // A Plain body travels as JSON, so the value arrives as text; the repository converts it by the field's
+            // type (GetListFilterValueDbTests runs that against each database).
+            Assert.Equal(rowId.ToString(), condition.Value?.ToString());
             Assert.NotNull(stubRepository.LastSortFields);
             Assert.Single(stubRepository.LastSortFields!);
             Assert.Equal("sys_id", stubRepository.LastSortFields![0].FieldName);
@@ -143,16 +142,13 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetList}",
                 Params = new JsonRpcParams

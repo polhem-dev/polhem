@@ -10,18 +10,18 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Paging;
-using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.AuditLog;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.AuditLog
 {
     /// <summary>
-    /// An end-to-end round trip through <see cref="JsonRpcExecutor"/>: the <c>AuditLog.*</c> actions are dispatched
+    /// An end-to-end round trip through the JSON-RPC dispatcher: the <c>AuditLog.*</c> actions are dispatched
     /// through the dispatch branch to <see cref="Polhem.Business.AuditLog.AuditLogBusinessObject"/>, and a stub repository
     /// returns known data, verifying the axis routing and the input/output converters. A fake
     /// ICompanyAuthorizationService grants permission; no real database is involved.
@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         public AuditLogJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private async Task<JsonRpcResponse> Dispatch(StubAuditLogRepository repo, string action, object request)
+        private async Task<TestRpcResponse> Dispatch(StubAuditLogRepository repo, string action, object request)
         {
             var overrideServices = new TestOverrideServiceProvider(
                 _fx.Provider,
@@ -47,16 +47,13 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = TestSessionFactory.CreateAccessToken(_fx),
                 IsLocalCall = true,
             };
 
-            return await executor.ExecuteAsync(new JsonRpcRequest
+            return await executor.ExecuteAsync(new TestRpcRequest
             {
                 Method = $"{SysProgIds.AuditLog}.{action}",
                 Params = new JsonRpcParams { Value = request },

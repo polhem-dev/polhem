@@ -5,16 +5,16 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>System.LeaveCompany</c> is dispatched by the
-    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.LeaveCompany"/>, and the test verifies that
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: <c>System.LeaveCompany</c> is dispatched by the
+    /// dispatcher to <see cref="Polhem.Business.System.SystemBusinessObject.LeaveCompany"/>, and the test verifies that
     /// SessionInfo.CompanyId is cleared and the call succeeds.
     /// <para>
     /// It needs <see cref="SharedDbFixture"/> (not <c>PolhemTestFixture</c>): since sessions are persisted,
@@ -29,7 +29,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         public LeaveCompanyJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
-        private JsonRpcExecutor BuildExecutor(Guid accessToken)
+        private TestDispatcher BuildExecutor(Guid accessToken)
         {
             var boFactory = new BusinessObjectFactory(
                 _fx.Provider,
@@ -38,17 +38,14 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            return new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            return new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
         }
 
-        private static JsonRpcRequest BuildRequest()
+        private static TestRpcRequest BuildRequest()
             => new()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.LeaveCompany}",

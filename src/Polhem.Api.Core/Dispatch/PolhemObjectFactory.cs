@@ -21,7 +21,7 @@ namespace Polhem.Api.Core.Dispatch
     /// A call that arrives over HTTP is checked first: the <c>X-Api-Key</c> header against the registered
     /// <see cref="IApiKeyValidator"/>, then the whole request against <see cref="ApiServiceOptions.AuthorizationValidator"/>,
     /// which also yields the access token from the <c>Authorization</c> header. Only a call that passes gets a business
-    /// object, as it did when the controller ran these checks before the executor. An in-process call takes its access
+    /// object, the order the HTTP checks have always run in. An in-process call takes its access
     /// token from <see cref="PolhemJsonRpc.AccessTokenItem"/> and is not checked, as a local call never was.
     /// </remarks>
     public sealed class PolhemObjectFactory : IJsonRpcObjectFactory

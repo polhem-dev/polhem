@@ -93,16 +93,12 @@ namespace Polhem.Api.Core.UnitTests
             table.Rows.Add("E001");
             table.Rows.Add("E002");
             table.AcceptChanges();
-            var response = new JsonRpcResponse
-            {
-                Id = "1",
-                Result = new JsonRpcResult { Value = new GetListResponse { Table = table } },
-            };
+            var sent = new JsonRpcResult { Value = new GetListResponse { Table = table } };
 
-            // The Plain wire: the server writes the response with `JsonCodec`, the client reads it back and converts
+            // The Plain wire: the server writes the result with `JsonCodec`, the client reads it back and converts
             // the value, which arrives as a `JsonElement`.
-            var received = JsonCodec.Deserialize<JsonRpcResponse>(JsonCodec.Serialize(response))!;
-            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(received.Result!.Value!);
+            var received = JsonCodec.Deserialize<JsonRpcResult>(JsonCodec.Serialize(sent))!;
+            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(received.Value!);
 
             Assert.NotNull(result?.Table);
             Assert.Equal(2, result!.Table!.Rows.Count);

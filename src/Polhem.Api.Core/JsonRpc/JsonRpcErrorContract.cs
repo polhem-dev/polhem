@@ -5,14 +5,14 @@ namespace Polhem.Api.Core.JsonRpc
 {
     /// <summary>
     /// The single declaration of which exception carries which JSON-RPC error code, consumed by
-    /// both ends of the wire: the executor maps an exception to a code, and the client rebuilds
+    /// both ends of the wire: the server maps an exception to a code, and the client rebuilds
     /// an exception from that code.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The two directions used to be two hand-written chains of <c>if</c> in two assemblies, kept
     /// in step by nothing but the habit of remembering. That is a structural problem rather than a
-    /// discipline one, and it failed exactly as predicted: the executor learned to produce
+    /// discipline one, and it failed exactly as predicted: the server learned to produce
     /// <see cref="JsonRpcErrorCode.ReplayRejected"/> while the client never learned to rebuild it,
     /// so the <c>catch</c> that <see cref="ReplayRejectedException"/> documents was unreachable for as long
     /// as the code compiled and the tests passed.
@@ -71,7 +71,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// parser output. Treating the whole family as "safe to show" is what used to put that
         /// detail in front of any caller. The real message is logged on the server instead, and a
         /// throw site whose text is meant for the end user throws
-        /// <see cref="UserMessageException"/>. <c>JsonRpcExecutorUserMessageExceptionTests</c> pins
+        /// <see cref="UserMessageException"/>. <c>ExceptionMappingTests</c> pins
         /// both halves.
         /// </para>
         /// <para>
@@ -92,7 +92,7 @@ namespace Polhem.Api.Core.JsonRpc
             new(typeof(ReplayRejectedException), JsonRpcErrorCode.ReplayRejected,
                 message => new ReplayRejectedException(message)),
 
-            // Protocol errors the executor raises itself. The caller gets a fixed message and no
+            // Protocol errors the server raises itself. The caller gets a fixed message and no
             // rebuilt type: the code alone says what went wrong, and the real text names server types.
             new(typeof(MethodNotFoundException), JsonRpcErrorCode.MethodNotFound, null, "Method not found."),
             new(typeof(InvalidParamsException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
@@ -137,7 +137,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// apply its own fallback.
         /// </returns>
         /// <remarks>
-        /// Internal because the executor is the only mapper in this direction. Widening it later is
+        /// Internal because the server's exception mapper is the only mapper in this direction. Widening it later is
         /// additive, so it stays closed until something outside this assembly needs it.
         /// </remarks>
         internal static bool TryGetCode(Exception exception, out JsonRpcErrorCode code, out string? fixedMessage)
