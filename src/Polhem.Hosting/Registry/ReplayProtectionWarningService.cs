@@ -1,6 +1,6 @@
 using System.Reflection;
 using Polhem.Api.Core;
-using Polhem.Api.Core.JsonRpc;
+using Polhem.JsonRpc.Server;
 using Polhem.Api.Core.Validator;
 using Polhem.Business;
 using Polhem.Definition.Security;
@@ -86,7 +86,7 @@ namespace Polhem.Hosting.Registry
                 if (type == null) { continue; }
 
                 result.AddRange(type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(JsonRpcExecutor.IsResolvableAction)
+                    .Where(JsonRpcMethod.IsResolvableAction)
                     .Where(m => ApiAccessValidator.FindAccessControl(m)?.ReplayProtection == ApiReplayProtection.UniqueSequence)
                     .Select(m => $"{progId}.{m.Name}")
                     .OrderBy(name => name, StringComparer.Ordinal));

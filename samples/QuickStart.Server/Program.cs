@@ -1,4 +1,5 @@
-using Polhem.Api.AspNetCore;
+using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 using Polhem.Samples.Shared;
 
 namespace QuickStart.Server;
@@ -28,16 +29,15 @@ internal static class Program
                 .AllowAnyHeader());
         });
 
-        builder.Services.AddControllers();
+        // The JSON-RPC endpoint, on the options AddPolhemFramework registered, and the startup log while no API key
+        // has been issued. The check runs when the host starts, after UsePolhemBackend has seeded st_api_key.
+        builder.Services.AddJsonRpcServer();
+        builder.Services.AddPolhemApiKeyGateCheck();
 
         var app = builder.Build();
         app.UsePolhemBackend();
-
-        // Host-side framework startup checks. After UsePolhemBackend, because the API key check
-        // reads st_api_key, which the demo seeder creates.
-        app.UsePolhemFramework();
         app.UseCors();
-        app.MapControllers();
+        app.MapJsonRpc("/api");
         app.Run();
     }
 }

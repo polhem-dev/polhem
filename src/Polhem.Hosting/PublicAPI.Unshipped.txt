@@ -1,1 +1,2 @@
 #nullable enable
+static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

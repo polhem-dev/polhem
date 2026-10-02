@@ -44,7 +44,7 @@ Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 
 | Project | Role | Default port | Launch | Library focus |
 |---------|------|--------------|--------|---------------|
-| [`QuickStart.Server`](QuickStart.Server/README.md) | API host | `5050` | `dotnet run` | Polhem.Api.AspNetCore + Polhem.Hosting + Polhem.Business + Polhem.Db |
+| [`QuickStart.Server`](QuickStart.Server/README.md) | API host | `5050` | `dotnet run` | Polhem.JsonRpc.AspNetCore + Polhem.Hosting + Polhem.Business + Polhem.Db |
 | [`QuickStart.Console`](QuickStart.Console/README.md) | API client | — | `dotnet run` | Polhem.Api.Client |
 | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) | Full-stack Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) | Desktop Avalonia control demo center | — (no backend) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
@@ -110,7 +110,7 @@ To reset demo data: delete `samples/<Host>/quickstart.db` and re-run. Changing t
 | Mode | Path | Used by | Sample demo |
 |------|------|---------|-------------|
 | **Local** | client → `LocalApiProvider` → `JsonRpcExecutor` → BO (same process) | Blazor Server, in-process tooling, BO-to-BO calls | `Blazor.Server.Demo` |
-| **Remote** | client → `RemoteApiProvider` → HTTP POST → `ApiServiceController` → `JsonRpcExecutor` → BO | Console, desktop, mobile, cross-machine | `QuickStart.Console` |
+| **Remote** | client → `RemoteApiProvider` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console, desktop, mobile, cross-machine | `QuickStart.Console` |
 
 In a Blazor Server host, switching modes is one line in `AddPolhemBlazor`; elsewhere it is the choice of connector constructor (an endpoint for Remote, the backend's `IServiceProvider` for Local, as in [`QuickStart.Console`](QuickStart.Console/README.md#local-vs-remote-modes)):
 

@@ -1,3 +1,5 @@
+using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 using Polhem.Northwind.Server;
 
 const string DevWasmCorsPolicy = "PolhemDevWasm";
@@ -10,7 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 // EnterCompany.
 builder.AddNorthwindBackend();
 
-builder.Services.AddControllers();
+// The JSON-RPC endpoint, on the options AddPolhemFramework registered, and the startup log while no API key has
+// been issued. The check runs when the host starts, after UseNorthwindBackend has seeded st_api_key.
+builder.Services.AddJsonRpcServer();
+builder.Services.AddPolhemApiKeyGateCheck();
 
 // Dev-only CORS so the Avalonia WASM head (served by its own dev server on a different
 // localhost port) can call this JSON-RPC API cross-origin. Production should serve the WASM
@@ -30,5 +35,5 @@ if (app.Environment.IsDevelopment())
     app.UseCors(DevWasmCorsPolicy);
 
 app.UseNorthwindBackend();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();

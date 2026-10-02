@@ -325,7 +325,7 @@ namespace Polhem.Hosting
             services.AddSingleton<IApiKeyValidator>(sp =>
                 new ApiKeyValidator(sp.GetRequiredService<ICacheContainer>()));
             // The gate state as a question the API layer can ask without referencing the cache
-            // implementation. UsePolhemFramework's startup check is the only caller today.
+            // implementation. The startup check of AddPolhemApiKeyGateCheck is the only caller today.
             services.AddSingleton<IApiKeyGateStateProvider>(sp =>
                 new ApiKeyGateStateProvider(sp.GetRequiredService<ICacheContainer>()));
 
