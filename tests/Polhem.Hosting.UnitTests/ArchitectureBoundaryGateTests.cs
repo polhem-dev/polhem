@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
 
-namespace Polhem.Api.AspNetCore.UnitTests
+namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
     /// Turns the hard constraints of the architecture documents into executable checks.
@@ -18,9 +18,8 @@ namespace Polhem.Api.AspNetCore.UnitTests
     /// <para>
     /// <b>Why it lives in this test project.</b> The assertions read the test assembly's own <c>.deps.json</c>,
     /// so the nodes visible in the graph are the nodes in this project's transitive closure.
-    /// <c>Polhem.Api.AspNetCore.UnitTests</c> is the only project that sees both the whole backend (through
-    /// <c>Polhem.Api.AspNetCore</c> → <c>Polhem.Hosting</c>) and <c>Polhem.Api.Client</c> (through
-    /// <c>Polhem.Tests.Shared</c>). The latter is essential: **the forbidden node must exist in the graph**,
+    /// <c>Polhem.Hosting.UnitTests</c> sees both the whole backend (through <c>Polhem.Hosting</c>, the composition
+    /// root) and <c>Polhem.Api.Client</c> (through <c>Polhem.Tests.Shared</c>). The latter is essential: **the forbidden node must exist in the graph**,
     /// otherwise "not in the closure" is always true simply because the node is not in the graph at all.
     /// </para>
     /// <para>
@@ -46,7 +45,6 @@ namespace Polhem.Api.AspNetCore.UnitTests
 
             // 2. The backend must not depend on the client library. `Polhem.Web.Blazor.Server` depending on it is
             //    correct (it is a front-end RCL), so it is not listed.
-            { "Polhem.Api.AspNetCore", "Polhem.Api.Client" },
             { "Polhem.Hosting", "Polhem.Api.Client" },
             { "Polhem.Api.Core", "Polhem.Api.Client" },
             { "Polhem.Business", "Polhem.Api.Client" },
@@ -72,12 +70,12 @@ namespace Polhem.Api.AspNetCore.UnitTests
         /// </remarks>
         public static TheoryData<string, string> ForbiddenAssemblyUsages() => new()
         {
-            // The API layer must not know how the cache is implemented. It asks "does this deployment have an
-            // API key gate in force", and that question goes through `IApiKeyGateStateProvider` in
-            // `Polhem.Definition`. The "Cross-Layer Forbidden Practices" table in development-constraints lists
+            // The API layer must not know how the cache is implemented. It validates API keys through
+            // `IApiKeyValidator` in `Polhem.Definition`, and the composition layer injects the cached
+            // implementation. The "Cross-Layer Forbidden Practices" table in development-constraints lists
             // "the API layer references the Repository layer directly". This entry is outside that table but has
             // the same shape.
-            { "Polhem.Api.AspNetCore", "Polhem.ObjectCaching" },
+            { "Polhem.Api.Core", "Polhem.ObjectCaching" },
         };
 
         [Theory]

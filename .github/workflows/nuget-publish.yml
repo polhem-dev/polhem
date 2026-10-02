@@ -71,7 +71,6 @@ jobs:
           'src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj'
           'src/Polhem.Repository/Polhem.Repository.csproj'
           'src/Polhem.Hosting/Polhem.Hosting.csproj'
-          'src/Polhem.Api.AspNetCore/Polhem.Api.AspNetCore.csproj'
           'src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj'
           # Framework CLI (dotnet tool) — lock-stepped to framework version.
           'tools/Polhem.Cli/Polhem.Cli.csproj'

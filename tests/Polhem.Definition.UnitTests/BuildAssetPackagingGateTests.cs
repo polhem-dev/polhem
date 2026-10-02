@@ -11,7 +11,7 @@ namespace Polhem.Definition.UnitTests
     /// <para>
     /// NuGet imports the <c>build/</c> folder only for a **direct** <c>PackageReference</c>. This targets file
     /// injects the consumer's definition files into <c>AdditionalFiles</c> for POLHEM1xxx / POLHEM2xxx to read. In
-    /// <c>build/</c>, every project that references only <c>Polhem.Business</c> / <c>Polhem.Db</c> / <c>Polhem.Api.AspNetCore</c> /
+    /// <c>build/</c>, every project that references only <c>Polhem.Business</c> / <c>Polhem.Db</c> /
     /// <c>Polhem.Hosting</c> (with <c>Polhem.Definition</c> as a transitive dependency) does not get it.
     /// </para>
     /// <para>
