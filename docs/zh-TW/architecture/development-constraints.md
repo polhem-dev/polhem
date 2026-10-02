@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: dcb0117ffcb6f372902d04550165959011206409 -->
+<!-- source: en/architecture/development-constraints.md blob: 20d5998e3ce0e010ecad2b46bbc2953ff37c0d80 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -179,7 +179,7 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 - **框架自有的例外會把訊息帶給呼叫端。** `UserMessageException`（凡是要給終端使用者看的訊息，**優先選用**）與 `JsonRpcException` 以 `JsonRpcErrorCode.UserMessage`（`-32099`）傳送；`AuthenticationRequiredException`、`CompanyNotEnteredException`、`CompanyAccessDeniedException`、`ForbiddenException` 與 `ReplayRejectedException` 各自使用專屬的錯誤碼。用戶端若假設「所有 user-facing 失敗都是 `-32099`」，會誤判這些例外。
 - **BCL 例外保留錯誤碼、不保留訊息。** `UnauthorizedAccessException`、`ArgumentException`、`InvalidOperationException`、`NotSupportedException` 與 `FormatException`（含各自的子類別）以 `-32099` 傳送，但訊息換成固定的通用文字，例如「The request is not valid.」；真正的訊息由 `PolhemExceptionMapper` 記錄在伺服端。這些型別正是 BCL、資料庫驅動程式與基礎設施拋出時會在文字中夾帶表名、參數名與伺服器細節的例外，所以一律不給遠端呼叫者看。
-- **其他所有例外**遮蔽為 `"Internal server error"`，錯誤碼為 `JsonRpcErrorCode.InternalError`（`-32000`），真正的訊息記錄在伺服端。
+- **其他所有例外**遮蔽為 `"Internal server error"`，錯誤碼為 `JsonRpcErrorCode.InternalError`（`-32603`），真正的訊息記錄在伺服端。
 
 debug 模式開啟時（`SysInfo.IsDebugMode`，由 `CommonConfiguration.IsDebugMode` 設定），改為透傳原始訊息，取代固定或遮蔽的訊息；錯誤碼不變。兩種模式都不含堆疊追蹤。
 

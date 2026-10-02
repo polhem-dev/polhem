@@ -66,3 +66,5 @@ static Polhem.Api.Core.Dispatch.PolhemJsonRpc.CreateServerOptions() -> Polhem.Js
 *REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.get -> Polhem.Api.Core.JsonRpc.JsonRpcResult?
 *REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.set -> void
 *REMOVED*static Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction(System.Reflection.MethodInfo! method) -> bool
+*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InternalError = -32000 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InternalError = -32603 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode

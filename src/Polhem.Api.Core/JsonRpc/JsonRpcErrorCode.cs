@@ -36,9 +36,10 @@ namespace Polhem.Api.Core.JsonRpc
         InvalidParams = -32602,
 
         /// <summary>
-        /// An internal server error occurred that prevented the request from being completed (-32000).
+        /// An internal server error occurred that prevented the request from being completed (-32603, the JSON-RPC 2.0
+        /// internal error). Before 1.2.0 the framework sent -32000.
         /// </summary>
-        InternalError = -32000,
+        InternalError = -32603,
 
         /// <summary>
         /// The call needs a signed-in caller and arrived without a usable access token — none, or one
@@ -93,8 +94,8 @@ namespace Polhem.Api.Core.JsonRpc
         /// <remarks>
         /// The value -32099 is deliberately placed at the tail of the server-defined
         /// range (-32000 to -32099) to visually separate generic business messages from
-        /// concrete protocol/system errors (-32000) and specific business categories
-        /// (-32001 to -32003). Future specific categories may fill the gap in between.
+        /// the specific business categories at its head (-32001 onwards). Future specific categories may fill the
+        /// gap in between.
         /// </remarks>
         UserMessage = -32099
     }

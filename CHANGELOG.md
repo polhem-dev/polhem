@@ -10,8 +10,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 > JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and
 > `Polhem.Api.AspNetCore` is removed. That removal breaks the hosts that referenced it, in a minor version: a second
-> exception within 1.x, after the one in 1.1.0. Successful requests and responses on the wire are unchanged. The
-> reasons, and the framework types this release treats as internal plumbing, are in
+> exception within 1.x, after the one in 1.1.0. On the wire, the parameters and the result envelope are unchanged;
+> the internal error code and the `method` member of responses are aligned with JSON-RPC 2.0, so a non-.NET client
+> has to move with the server. The reasons, and the framework types this release treats as internal plumbing, are in
 > [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
 
 ### Breaking API changes
@@ -51,6 +52,9 @@ added with `AddJsonRpcServer(options => options.Filters.Add(...))`.
 
 ### Changed behaviour
 
+- An internal error is answered with code -32603 instead of -32000, and `JsonRpcErrorCode.InternalError` has that
+  value. Responses no longer carry a `method` member. A [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)
+  client needs the release that targets 1.2.0.
 - A rejected API key or `Authorization` header is answered with HTTP 200 and a JSON-RPC error instead of 401, so the
   .NET client throws the error contract's exception instead of `HttpRequestException`.
 - A malformed method name is answered with `MethodNotFound` (-32601) instead of `UserMessage`. An unknown method name

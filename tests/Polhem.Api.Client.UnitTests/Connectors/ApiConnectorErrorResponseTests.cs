@@ -61,7 +61,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
                 ApiConnectorTestHost.ExecuteWithErrorAsync(JsonRpcErrorCode.InternalError, "Internal server error"));
 
             Assert.Contains("API error", ex.Message);
-            Assert.Contains("-32000", ex.Message);
+            Assert.Contains("-32603", ex.Message);
             Assert.Contains("Internal server error", ex.Message);
         }
 

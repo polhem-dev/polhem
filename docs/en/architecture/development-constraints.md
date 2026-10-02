@@ -190,7 +190,7 @@ The server maps an exception to a JSON-RPC error code (`PolhemExceptionMapper`) 
 
 - **The framework's own exceptions carry their message to the caller.** `UserMessageException` (**preferred** for anything an end user should read) and `JsonRpcException` travel as `JsonRpcErrorCode.UserMessage` (`-32099`); `AuthenticationRequiredException`, `CompanyNotEnteredException`, `CompanyAccessDeniedException`, `ForbiddenException` and `ReplayRejectedException` each travel under a code of their own. Client-side error handling that assumes every user-facing failure arrives as `-32099` will misclassify these.
 - **BCL exceptions keep a code but not their message.** `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and `FormatException` (each with its subclasses) travel as `-32099` with a fixed, generic message such as "The request is not valid."; the real message is logged on the server (by `PolhemExceptionMapper`). These types are what the BCL, database drivers and infrastructure throw with table names, parameter names and server details in the text, so none of it is shown to a remote caller.
-- **Everything else** is masked as `"Internal server error"` under `JsonRpcErrorCode.InternalError` (`-32000`), and the real message is logged.
+- **Everything else** is masked as `"Internal server error"` under `JsonRpcErrorCode.InternalError` (`-32603`), and the real message is logged.
 
 When debug mode is on (`SysInfo.IsDebugMode`, set from `CommonConfiguration.IsDebugMode`), the original message is passed through instead of the fixed or masked one; the codes stay the same. The stack trace is never included, in either mode.
 

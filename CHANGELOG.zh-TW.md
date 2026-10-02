@@ -10,7 +10,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 > JSON-RPC 改建在 [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) 套件上，並移除
 > `Polhem.Api.AspNetCore`。這項移除會讓參考它的 host 編譯失敗，卻在次版號發佈：繼 1.1.0 之後，1.x 內的第二次例外。
-> 成功呼叫的請求與回應在線路上沒有改變。理由，以及本版視為框架內部管線的型別，見
+> 線路上的參數與結果外殼沒有改變；內部錯誤碼與回應的 `method` 成員改為符合 JSON-RPC 2.0，因此非 .NET 的用戶端
+> 要與伺服器一起升級。理由，以及本版視為框架內部管線的型別，見
 > [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
 
 ### 破壞性 API 變更
@@ -48,6 +49,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ### 行為變更
 
+- 內部錯誤改回錯誤碼 -32603（原為 -32000），`JsonRpcErrorCode.InternalError` 也改為此值。回應不再帶 `method` 成員。
+  [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) 用戶端需要對應 1.2.0 的版本。
 - API key 或 `Authorization` header 被拒時，回 HTTP 200 與 JSON-RPC 錯誤，不再回 401；因此 .NET 用戶端丟出的是錯誤合約重建的
   例外，而不是 `HttpRequestException`。
 - 方法名稱格式錯誤時回 `MethodNotFound`（-32601），不再回 `UserMessage`。找不到的方法以固定訊息回應，debug 模式也一樣，

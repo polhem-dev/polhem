@@ -8,9 +8,9 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
     /// Pins the JSON a successful call answers with, member for member.
     /// </summary>
     /// <remarks>
-    /// Clients in other languages read this shape, including the <c>method</c> member that JSON-RPC 2.0 does not
-    /// define. The expected text is what the executor the dispatcher replaced wrote for the same request, captured
-    /// when the two paths ran side by side; any change to it is a change to the wire.
+    /// Clients in other languages read this shape. It is the JSON-RPC 2.0 response and nothing else: up to 1.1.0 the
+    /// framework also echoed the method name in a <c>method</c> member, which 1.2.0 dropped (ADR-049). Any change to the
+    /// expected text is a change to the wire.
     /// </remarks>
     public class WireShapeTests : IClassFixture<PolhemTestFixture>
     {
@@ -28,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         public async Task HandWrittenPlainPing_AnswersInPinnedShape()
         {
             const string Request = """{"jsonrpc":"2.0","method":"System.Ping","params":{"format":0,"value":{"clientName":"app","traceId":"t-1"}},"id":"1"}""";
-            const string Expected = """{"jsonrpc":"2.0","method":"System.Ping","result":{"format":0,"value":{"status":"ok","serverTime":"*","version":"1.0.0","traceId":"t-1"},"type":""},"id":"1"}""";
+            const string Expected = """{"jsonrpc":"2.0","result":{"format":0,"value":{"status":"ok","serverTime":"*","version":"1.0.0","traceId":"t-1"},"type":""},"id":"1"}""";
 
             var response = await new TestDispatcher(_fx.Provider).ExecuteJsonAsync(Request);
 

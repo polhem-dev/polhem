@@ -133,8 +133,8 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         }
 
         [Fact]
-        [DisplayName("The answer echoes the method and the id")]
-        public async Task Response_EchoesMethodAndId()
+        [DisplayName("The answer echoes the id and carries no method member")]
+        public async Task Response_EchoesIdWithoutMethod()
         {
             var id = Guid.NewGuid().ToString();
             var request = new TestRpcRequest
@@ -146,7 +146,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
             var response = await NewDispatcher(Guid.Empty).ExecuteAsync(request);
 
-            Assert.Equal(request.Method, response.Method);
+            Assert.Null(response.Method);
             Assert.Equal(id, response.Id);
         }
     }

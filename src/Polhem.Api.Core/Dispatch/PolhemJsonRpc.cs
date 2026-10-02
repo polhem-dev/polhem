@@ -1,4 +1,3 @@
-using Polhem.Api.Core.JsonRpc;
 using Polhem.JsonRpc.Server;
 
 namespace Polhem.Api.Core.Dispatch
@@ -19,10 +18,6 @@ namespace Polhem.Api.Core.Dispatch
         /// binder and error contract.
         /// </summary>
         /// <returns>The options.</returns>
-        /// <remarks>
-        /// The internal error code is the Polhem framework's <see cref="JsonRpcErrorCode.InternalError"/>, which its
-        /// clients expect.
-        /// </remarks>
         public static JsonRpcServerOptions CreateServerOptions()
         {
             var options = new JsonRpcServerOptions
@@ -31,7 +26,6 @@ namespace Polhem.Api.Core.Dispatch
                 MethodPolicy = new PolhemMethodPolicy(),
                 ParameterBinder = new PolhemParameterBinder(),
                 ExceptionMapper = PolhemExceptionMapper.Map,
-                InternalErrorCode = (int)JsonRpcErrorCode.InternalError,
             };
             options.Filters.Add(new PolhemAccessFilter());
             options.Filters.Add(new PolhemPayloadFilter());

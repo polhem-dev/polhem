@@ -115,18 +115,30 @@ To migrate a host:
 5. Move a check that overrode a controller member into a filter, added through `AddJsonRpcServer(options =>
    options.Filters.Add(...))`.
 
-### 4. The wire stays as it was for successful calls
+### 4. The wire keeps its payload and drops two departures from JSON-RPC 2.0
 
-Requests carry the same parameters, and a successful response carries the same members in the same order, the
-non-standard `method` member included. `WireShapeTests` pins the answer to a plain Ping as the executor wrote it; the
-executor and the dispatcher answered it identically before the executor was removed. Error responses may differ in
-their codes and messages; the differences are listed under Consequences.
+Requests carry the same parameters, and a successful response carries the same `result` envelope. Two things that
+were Polhem's own are aligned with the specification in the same release:
+
+- **An internal error is -32603**, the code JSON-RPC 2.0 defines for it. Polhem sent -32000, from the range the
+  specification leaves to the server. `JsonRpcErrorCode.InternalError` changes its value; it is not a pipeline type,
+  so this is part of the breaking change of this release.
+- **A response no longer echoes the method name** in a `method` member, which JSON-RPC 2.0 does not define.
+
+Neither broke the specification, which reserves -32000 to -32099 for the server and does not forbid extra members.
+They are aligned because a client written against the specification should not need to know about them, and the
+release that already changes Polhem's hosts is the cheapest one to change them in.
+
+`WireShapeTests` pins the answer to a plain Ping. Before the two changes, the executor and the dispatcher answered it
+identically; the test now pins it without the `method` member. A client that compares the error code against -32000
+or reads `method` has to be updated with the server: for [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js),
+that is the release that moves its framework tag to 1.2.0.
 
 ### 5. Released as 1.2.0, and ADR-048 is amended
 
 Decision 5 of ADR-048 said the rename to `Polhem.Core` was the only exception in 1.x. This ADR is a second one, for
-decision 3. Decision 5 of ADR-048 now points here. Further breaking changes within 1.x need an ADR of their own; this
-one is not a precedent for skipping that.
+decisions 3 and 4. Decision 5 of ADR-048 now points here. Further breaking changes within 1.x need an ADR of their
+own; this one is not a precedent for skipping that.
 
 ## Consequences
 

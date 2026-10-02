@@ -28,9 +28,6 @@ namespace Polhem.Api.Core.Dispatch
                 ?? throw new InvalidOperationException("A Polhem call needs the services of its scope.");
             var state = PolhemCallState.Get(context);
 
-            // The Polhem wire format echoes the method name in every response.
-            context.ResponseMembers["method"] = JsonSerializer.SerializeToElement(context.Request.Method);
-
             ApiAccessValidator.ValidateAccess(
                 context.Method!.MethodInfo,
                 new ApiCallContext(state.AccessToken, state.IsLocalCall, ReadFormat(context)),
