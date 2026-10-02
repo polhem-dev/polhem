@@ -27,7 +27,7 @@
                       PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The JSON-RPC dispatcher. PolhemJsonRpcSource switches to a local checkout; see src/Directory.Build.props. -->
+  <!-- The JSON-RPC dispatcher. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
     <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
   </ItemGroup>

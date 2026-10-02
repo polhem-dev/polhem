@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
-using Polhem.Api.Core.Validator;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Security;
 using Polhem.JsonRpc.Server;
@@ -11,12 +10,14 @@ using Polhem.JsonRpc.Server;
 namespace Polhem.Api.Core.Dispatch
 {
     /// <summary>
-    /// Reads and writes the Polhem payload envelope (<see cref="ApiPayload"/>) around every call: checks that the caller
-    /// may use the method with the payload format it chose, restores the request payload (decryption, decompression,
-    /// replay protection), and wraps the method's result in the same format and codec.
+    /// Reads and writes the Polhem payload envelope (<see cref="ApiPayload"/>) around every call: restores the request
+    /// payload (decryption, decompression, replay protection) and wraps the method's result in the same format and
+    /// codec.
     /// </summary>
     /// <remarks>
-    /// Access is checked before anything is decrypted, so an unauthorized request costs no decryption work.
+    /// It runs after <see cref="PolhemAccessFilter"/>, which has already checked that the caller may use the method
+    /// with this payload format. It holds nothing else, so that it can move to a package of its own with the client
+    /// half of the envelope.
     /// </remarks>
     public sealed class PolhemPayloadFilter : IJsonRpcFilter
     {
@@ -31,16 +32,11 @@ namespace Polhem.Api.Core.Dispatch
             var method = context.Method!.MethodInfo;
             var cancellationToken = context.CancellationToken;
 
-            // The Polhem wire format echoes the method name in every response.
-            context.ResponseMembers["method"] = JsonSerializer.SerializeToElement(context.Request.Method);
-
             var payload = ReadPayload(context);
             var format = payload.Format;
-            ApiAccessValidator.ValidateAccess(method, new ApiCallContext(state.AccessToken, state.IsLocalCall, format),
-                services.GetRequiredService<IAccessTokenValidator>());
 
-            // Access confirmed: retrieve the encryption key and restore the payload. The frame rides inside the
-            // envelope, so the replay gate can only run once the payload is decrypted.
+            // Retrieve the encryption key and restore the payload. The frame rides inside the envelope, so the replay
+            // gate can only run once the payload is decrypted.
             state.EncryptionKey = format == PayloadFormat.Encrypted
                 ? services.GetRequiredService<IApiEncryptionKeyProvider>().GetKey(state.AccessToken)
                 : null;
@@ -58,8 +54,6 @@ namespace Polhem.Api.Core.Dispatch
             ApiPayloadConverter.TransformTo(result, format, state.EncryptionKey);
             using var document = JsonDocument.Parse(JsonCodec.Serialize(result));
             context.Result = document.RootElement.Clone();
-
-            ApiAnomalyRecorder.RecordSlow(services, context.Request.Method, state);
         }
 
         private static JsonRpcParams ReadPayload(JsonRpcRequestContext context)

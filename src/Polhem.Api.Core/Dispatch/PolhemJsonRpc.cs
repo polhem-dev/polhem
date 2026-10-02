@@ -15,8 +15,8 @@ namespace Polhem.Api.Core.Dispatch
         public const string AccessTokenItem = "Polhem.AccessToken";
 
         /// <summary>
-        /// Creates server options with the Polhem object factory, method policy, payload filter, parameter binder and
-        /// error contract.
+        /// Creates server options with the Polhem object factory, method policy, access and payload filters, parameter
+        /// binder and error contract.
         /// </summary>
         /// <returns>The options.</returns>
         /// <remarks>
@@ -33,6 +33,7 @@ namespace Polhem.Api.Core.Dispatch
                 ExceptionMapper = PolhemExceptionMapper.Map,
                 InternalErrorCode = (int)JsonRpcErrorCode.InternalError,
             };
+            options.Filters.Add(new PolhemAccessFilter());
             options.Filters.Add(new PolhemPayloadFilter());
             return options;
         }

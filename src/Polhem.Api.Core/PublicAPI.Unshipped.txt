@@ -1,4 +1,7 @@
 #nullable enable
+Polhem.Api.Core.Dispatch.PolhemAccessFilter
+Polhem.Api.Core.Dispatch.PolhemAccessFilter.InvokeAsync(Polhem.JsonRpc.Server.JsonRpcRequestContext! context, Polhem.JsonRpc.Server.JsonRpcFilterDelegate! next) -> System.Threading.Tasks.ValueTask
+Polhem.Api.Core.Dispatch.PolhemAccessFilter.PolhemAccessFilter() -> void
 Polhem.Api.Core.Dispatch.PolhemExceptionMapper
 Polhem.Api.Core.Dispatch.PolhemJsonRpc
 Polhem.Api.Core.Dispatch.PolhemMethodPolicy
