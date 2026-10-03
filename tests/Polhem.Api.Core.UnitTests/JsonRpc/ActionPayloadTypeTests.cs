@@ -98,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var processor = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions());
             var envelope = processor.Seal(new FilterGroup(LogicalOperator.And), Polhem.JsonRpc.Payload.PayloadFormat.Encoded);
 
-            var ex = Assert.Throws<InvalidOperationException>(() => processor.Open(envelope, typeof(PingRequest), null, out _));
+            var ex = Assert.Throws<InvalidOperationException>(() => processor.OpenRequest(envelope, typeof(PingRequest), null, out _));
 
             Assert.Contains("does not match", ex.Message, StringComparison.Ordinal);
         }
@@ -110,7 +110,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var processor = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions());
             var envelope = processor.Seal(new GetListRequest { SelectFields = "sys_id" }, Polhem.JsonRpc.Payload.PayloadFormat.Encoded);
 
-            var request = Assert.IsType<GetListRequest>(processor.Open(envelope, typeof(GetListRequest), null, out _));
+            var request = Assert.IsType<GetListRequest>(processor.OpenRequest(envelope, typeof(GetListRequest), null, out _));
 
             Assert.Equal("sys_id", request.SelectFields);
         }

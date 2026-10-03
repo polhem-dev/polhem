@@ -224,7 +224,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             if (root.TryGetProperty("result", out var resultElement) && resultElement.ValueKind != JsonValueKind.Null)
             {
                 var envelope = PayloadEnvelope.Read(resultElement.Clone());
-                var value = ResolvePlainValue(payload.Open(envelope, key, out _));
+                var value = ResolvePlainValue(payload.OpenResult(envelope, key, out _));
                 if (envelope.Format == Polhem.JsonRpc.Payload.PayloadFormat.Plain && value is JsonElement && resultType != null)
                 {
                     value = ConvertPlain(value, resultType);

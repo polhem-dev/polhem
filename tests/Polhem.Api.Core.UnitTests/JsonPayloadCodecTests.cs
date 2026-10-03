@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.UnitTests
         {
             var processor = CreateProcessor();
             var envelope = processor.Seal(value, PayloadFormat.Encoded, codec);
-            return processor.Open(envelope, null, out _);
+            return processor.OpenResult(envelope, null, out _);
         }
 
         [Fact]
@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.NotNull(envelope.Body);
             Assert.Equal(PayloadCodecNames.Json, envelope.Codec);
 
-            var restored = Assert.IsType<Parameter>(processor.Open(envelope, null, out _));
+            var restored = Assert.IsType<Parameter>(processor.OpenResult(envelope, null, out _));
             Assert.Equal("greeting", restored.Name);
             Assert.Equal("hello", restored.Value);
         }
@@ -141,7 +141,7 @@ namespace Polhem.Api.Core.UnitTests
                 Codec = PayloadCodecNames.Json,
             };
 
-            Assert.ThrowsAny<Exception>(() => processor.Open(mislabeled, null, out _));
+            Assert.ThrowsAny<Exception>(() => processor.OpenResult(mislabeled, null, out _));
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Polhem.Api.Core.UnitTests
             var processor = new PayloadProcessor(Options(requireFrame: false));
 
             var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
-            var value = processor.Open(envelope, key, out var frame);
+            var value = processor.OpenResult(envelope, key, out var frame);
 
             Assert.Null(frame);
             Assert.IsType<PingRequest>(value);
@@ -83,7 +83,7 @@ namespace Polhem.Api.Core.UnitTests
             var processor = new PayloadProcessor(Options(requireFrame: true));
 
             var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
-            var value = processor.Open(envelope, key, out var frame);
+            var value = processor.OpenResult(envelope, key, out var frame);
 
             Assert.NotNull(frame);
             Assert.Equal(PayloadFrame.CurrentVersion, frame!.Version);
@@ -114,7 +114,7 @@ namespace Polhem.Api.Core.UnitTests
                 .Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
 
             Assert.Throws<InvalidOperationException>(() =>
-                new PayloadProcessor(Options(requireFrame: false)).Open(envelope, key, out _));
+                new PayloadProcessor(Options(requireFrame: false)).OpenResult(envelope, key, out _));
         }
 
         [Fact]

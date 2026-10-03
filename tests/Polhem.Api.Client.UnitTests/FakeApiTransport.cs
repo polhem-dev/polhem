@@ -98,7 +98,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         public T SentValue<T>()
         {
-            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).Open(Params.Envelope, typeof(T), null, out _);
+            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).OpenRequest(Params.Envelope, typeof(T), null, out _);
             // A Plain body stays a `JsonElement` until the parameter binder reads it.
             if (value is JsonElement element)
                 value = element.Deserialize<T>(ApiInputConverter.PlainReadOptions);
