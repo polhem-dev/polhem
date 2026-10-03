@@ -59,6 +59,7 @@ How to actually do a thing.
 | [DatabaseSettings & DbCategorySettings Guide](database/database-settings-guide.md) | Guide | Structure, access patterns and runtime behaviour of the two database-related settings files |
 | [Database Schema Upgrade](database/database-schema-upgrade.md) | Guide | Synchronising definition changes to a live database: the diff → plan → execute pipeline, ALTER vs rebuild, dry runs |
 | [Platform Support](getting-started/platform-support.md) | Guide | The supported heads (desktop, browser, iOS, Android, Blazor Server), the trim and AOT configurations that work, and the checklist for a browser or mobile head |
+| [Migrating from Bee.NET](guides/migrating-from-bee-net.md) | Guide | Upgrading an application from the `Bee.*` packages: renamed packages, namespaces and types, names the compiler does not check, settings, and what changes at the switch |
 
 ## 4. Reference
 
