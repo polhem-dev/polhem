@@ -13,13 +13,20 @@ they follow.
 
 ## Workflow
 
-1. Fork the repository, or create a branch if you have write access, from the latest `main`.
+1. Fork the repository and create a branch from the latest `main` in your fork.
 2. Make the change, with tests.
 3. Build and test locally (see below).
 4. Open a pull request against `main`.
 
 `main` only accepts changes through pull requests. The `build` and `docs` checks must pass before a pull request can
 merge, and review is requested from the code owners listed in [`.github/CODEOWNERS`](.github/CODEOWNERS).
+
+## Who merges
+
+The repository has one maintainer, [@jeff377](https://github.com/jeff377). Other contributors are not given write
+access: they work from a fork, and the maintainer reviews every pull request from a fork before merging it. The
+maintainer's own pull requests merge once the required checks pass, because GitHub does not let an author approve
+their own pull request.
 
 ## Build and test
 
