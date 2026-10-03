@@ -51,10 +51,16 @@ public partial class FormsViewModel : ViewModelBase
     /// </summary>
     public FormsViewModel()
     {
-        // Fire-and-forget: the menu populates the bound ObservableCollection when the fetch
-        // completes. ConfigureAwait(true) keeps the continuation on the UI thread.
-        _ = LoadNavItemsAsync();
+        // The menu populates the bound ObservableCollection when the fetch completes.
+        // ConfigureAwait(true) keeps the continuation on the UI thread.
+        MenuLoaded = LoadNavItemsAsync();
     }
+
+    /// <summary>
+    /// Completes once <see cref="NavItems"/> holds the menu. A failed fetch does not fault it:
+    /// <see cref="LoadNavItemsAsync"/> catches the failure and shows it as a menu header instead.
+    /// </summary>
+    public Task MenuLoaded { get; }
 
     /// <summary>
     /// Builds the menu from the server's <see cref="MenuSettings"/>: each folder becomes a header
