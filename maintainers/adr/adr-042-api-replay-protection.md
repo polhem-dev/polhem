@@ -2,7 +2,8 @@
 
 ## Status
 
-**Accepted (2026-09-01)**
+**Accepted (2026-09-01)**. The implementation moved to the Polhem.JsonRpc.Payload packages in 1.2.0, unchanged on
+the wire ([ADR-049](adr-049-jsonrpc-packages-in-1-2.md), decision 5); the links below point to it as it was.
 
 ## Context
 
@@ -35,8 +36,8 @@ The correct approach is to prepend the frame to the bytes after `Encode` (serial
 ```
 
 All three are big-endian, and version 1 is a fixed 17 bytes. For the implementation see
-[`ApiPayloadFrame`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadFrame.cs) and
-[`ApiPayloadConverter`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadConverter.cs).
+[`ApiPayloadFrame`](https://github.com/polhem-dev/polhem/blob/57607b6/src/Polhem.Api.Core/JsonRpc/ApiPayloadFrame.cs) and
+[`ApiPayloadConverter`](https://github.com/polhem-dev/polhem/blob/57607b6/src/Polhem.Api.Core/JsonRpc/ApiPayloadConverter.cs).
 The frame hangs on `ApiPayload.Frame` (`[JsonIgnore]`) so callers can access it, but it is not serialized with the
 envelope.
 
@@ -78,7 +79,7 @@ A nonce set needs unbounded storage or a database round trip every time. Instead
 increasing sequence number plus a 64-bit bitmap is used (the IPsec anti-replay window, the approach of RFC 6479): each
 session stores only `highest` and the bitmap, 16 bytes in total, the check is a few bit operations, and there are
 **zero database round trips**. For the implementation see
-[`ReplayWindow`](../../src/Polhem.Api.Core/JsonRpc/ReplayWindow.cs).
+[`ReplayWindow`](https://github.com/polhem-dev/polhem/blob/57607b6/src/Polhem.Api.Core/JsonRpc/ReplayWindow.cs).
 
 Tolerating out-of-order arrival is a requirement, not an extra benefit: taking a number is atomic, but concurrent
 requests do not arrive in a fixed order, and strictly increasing numbers would reject normal traffic by mistake.

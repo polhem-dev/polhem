@@ -139,14 +139,14 @@ var paths = new PathOptions { DefinePath = "./Define" };
 var settings = SystemSettingsLoader.Load(paths);
 
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(
-    settings.CommonConfiguration.ApiPayloadOptions,
-    settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(
     settings.BackendConfiguration,
     paths,
     autoCreateMasterKey: true);
+builder.Services.AddPolhemPayload(
+    settings.CommonConfiguration.ApiPayloadOptions,
+    settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
@@ -165,8 +165,9 @@ app.MapJsonRpc("/api");
 app.Run();
 ```
 
-- `SysInfo.Initialize` and `ApiServiceOptions.Initialize` set process-wide values (the debug flag, the allowed type
-  namespaces, the payload compressor and encryptor) that requests read. Call them before the host starts serving.
+- `SysInfo.Initialize` sets process-wide values (the debug flag, the allowed type namespaces) that requests read; call
+  it before the host starts serving. `AddPolhemPayload` registers the payload compressor and encryptor the settings
+  name.
 - **The framework does not create its tables.** Even an anonymous call reads `st_api_key` to check the `X-Api-Key`
   header, and a lookup that fails because the table is missing rejects the call; the cache-notify poller reads
   `st_cache_notify`. The loop creates every table `DbCategorySettings.xml` registers under `common`, and on later

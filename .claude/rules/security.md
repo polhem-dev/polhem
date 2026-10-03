@@ -83,8 +83,9 @@ No step may be skipped or reordered.
 - Never write **plaintext keys, tokens or passwords** to logs or exception messages
 - Never use `MD5` or `SHA1` for security hashing (SHA-256 or stronger only)
 - Never hardcode any key or credential in source code
-- Never select the `none` encryptor (the internal `NoEncryptionEncryptor`) outside tests and development;
-  `ApiPayloadOptionsFactory.CreateEncryptor` rejects it unless the host runs in debug mode
+- Never select the `none` encryptor (`NoPayloadEncryptor` of Polhem.JsonRpc.Payload) outside tests and development;
+  `PolhemPayload` rejects it unless the host runs in debug mode, and the package refuses it unless
+  `PayloadOptions.AllowNoEncryption` is set
 - Never compare HMAC / hash results directly with `==`
 
 ## File integrity

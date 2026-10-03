@@ -58,8 +58,8 @@ builds on the options the framework registered, so an application's own filters 
 Whether a call is local is decided by the transport alone: `InProcessTransport` marks it local, the HTTP endpoint
 never does, and no header or parameter can change that. `HttpAuthorizationTests` pins it.
 
-The payload envelope stays in Polhem for now. It may later move into an optional package of its own; until then
-`PolhemPayloadFilter` is the only place it is applied on the server.
+The payload envelope, its encryption and its replay frame are applied through the optional payload packages of the
+same repository (decision 5): `PolhemPayloadFilter` on the server and `ApiConnector` on the client.
 
 ### 2. Framework pipeline types are outside the 1.x compatibility promise
 
@@ -74,8 +74,9 @@ attribute marks them in the code.
 
 Pipeline types in 1.2.0:
 
-- In `Polhem.Api.Core.JsonRpc`: `JsonRpcParams`, `JsonRpcResult`, `ApiPayload` and `ApiPayloadConverter`, and the
-  removed `JsonRpcExecutor`, `JsonRpcRequest`, `JsonRpcResponse` and `JsonRpcError`.
+- In `Polhem.Api.Core.JsonRpc`: the removed `JsonRpcExecutor`, `JsonRpcRequest`, `JsonRpcResponse` and
+  `JsonRpcError`, and the removed envelope types `JsonRpcParams`, `JsonRpcResult`, `ApiPayload` and
+  `ApiPayloadConverter` (decision 5).
 - Everything in `Polhem.Api.Core.Dispatch`.
 - In `Polhem.Api.Client.Providers`: the removed `IJsonRpcProvider`, and the transport members of
   `RemoteApiProvider` and `LocalApiProvider`. `ApiConnector.Provider`, typed as the package's
@@ -134,10 +135,63 @@ identically; the test now pins it without the `method` member. A client that com
 or reads `method` has to be updated with the server: for [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js),
 that is the release that moves its framework tag to 1.2.0.
 
-### 5. Released as 1.2.0, and ADR-048 is amended
+### 5. The payload moves to `Polhem.JsonRpc.Payload`, and `ApiServiceOptions` is removed
+
+The envelope, its codecs, compression, encryption and the replay frame were Polhem's own code in `Polhem.Api.Core`,
+configured through the static `ApiServiceOptions`. They are a protocol of their own, which polhem-connector-js also
+speaks, so they move to the optional packages `Polhem.JsonRpc.Payload` and `Polhem.JsonRpc.Payload.Server`, extracted
+as they were (their design is that repository's ADR-002). The wire does not change: the wire fixtures, the wire-shape
+tests and polhem-connector-js read the same bytes as before.
+
+What stays in Polhem is the policy: the session key, the access token as the scope a sequence number is unique in,
+`ApiReplayProtection.UniqueSequence`, the wire message type a method takes, the wire type allow-list behind the
+`type` member, MessagePack with the framework's formatters as the codec a payload that names none is read with, and
+the rule that the encryptor `none` is allowed only in debug mode.
+
+`ApiServiceOptions` and the transformer types were not pipeline types: hosts called
+`ApiServiceOptions.Initialize`, set `RequireWireFrame` and registered codecs. Removing them is part of the breaking
+change of this release, made with it rather than kept as a second configuration surface that would have to mirror the
+package's options.
+
+- **Removed**: `ApiServiceOptions`; `IApiPayloadSerializer`, `IApiPayloadCompressor`, `IApiPayloadEncryptor`,
+  `IApiPayloadTransformer`, `ApiPayloadTransformer`, `GzipPayloadCompressor`, `AesPayloadEncryptor`,
+  `JsonPayloadSerializer` and `ApiPayloadOptionsFactory`; `ApiPayloadFrame`, `IReplayWindowStore`,
+  `MemoryReplayWindowStore` and Polhem's `ReplayRejectedException`, replaced by the package's of the same name in
+  `Polhem.JsonRpc.Payload`. `PublicAPI.Unshipped.txt` of `Polhem.Api.Core` records each one.
+- **Renamed**: `MessagePackPayloadSerializer` becomes `MessagePackPayloadCodec`, implementing the package's
+  `IPayloadCodec`. `PayloadCodecNames` stays.
+- **Added**: `PolhemPayload` builds the package's `PayloadOptions` the framework's way; `AddPolhemPayload` (Polhem.Hosting)
+  registers them for a server; `ApiClientInfo.PayloadOptions` holds them for a client, and
+  `SystemApiConnector.InitializeAsync` applies the server's compressor and encryptor to it.
+- **`IApiAuthorizationValidator` comes from the service collection.** It was the one member of `ApiServiceOptions`
+  unrelated to the payload. `AddPolhemFramework` registers the default `ApiAuthorizationValidator`, and a host replaces
+  it by registering its own.
+
+To migrate a host:
+
+1. Replace `ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, isDebugMode)` with
+   `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, isDebugMode)`. A host that also calls
+   the API in-process through `Polhem.Api.Client` applies the same settings to the client with
+   `PolhemPayload.Apply(ApiClientInfo.PayloadOptions, settings.CommonConfiguration.ApiPayloadOptions, isDebugMode)`.
+2. Replace `ApiServiceOptions.RequireWireFrame = true` with `options.RequireFrame = true` in the `configure` argument
+   of `AddPolhemPayload`, and `ApiServiceOptions.WireFrameTimestampTolerance` with `options.FrameTimestampTolerance`.
+   A .NET client sets `ApiClientInfo.PayloadOptions.RequireFrame`; both ends must agree.
+3. Replace `ApiServiceOptions.RegisterPayloadCodec(codec)` with `options.RegisterCodec(codec)`, where the codec
+   implements the package's `IPayloadCodec`.
+4. Replace `ApiServiceOptions.ReplayWindowStore = store` by registering an `IPayloadReplayStore` of the package; its
+   scope is a string, which Polhem sets to the access token.
+5. Replace `ApiServiceOptions.AuthorizationValidator = validator` by registering the validator as
+   `IApiAuthorizationValidator`.
+6. A client that catches `Polhem.Api.Core.JsonRpc.ReplayRejectedException` catches
+   `Polhem.JsonRpc.Payload.ReplayRejectedException` instead.
+
+The package's `PayloadFormat` has the same name as Polhem's `Polhem.Api.Core.Messages.PayloadFormat`, which
+applications pass to connectors and which stays. Code that imports both namespaces names one of them in full.
+
+### 6. Released as 1.2.0, and ADR-048 is amended
 
 Decision 5 of ADR-048 said the rename to `Polhem.Core` was the only exception in 1.x. This ADR is a second one, for
-decisions 3 and 4. Decision 5 of ADR-048 now points here. Further breaking changes within 1.x need an ADR of their
+decisions 3, 4 and 5. Decision 5 of ADR-048 now points here. Further breaking changes within 1.x need an ADR of their
 own; this one is not a precedent for skipping that.
 
 ## Consequences
@@ -158,6 +212,12 @@ own; this one is not a precedent for skipping that.
   - Masked failures are logged under the category `Polhem.Api.Core.Dispatch.PolhemExceptionMapper` instead of the
     executor's, and the startup check logs under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` instead of
     `Polhem.Api.AspNetCore`. A logging configuration that filtered the old categories must be updated.
+- Behaviour that differs because the payload moved (decision 5):
+  - An envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters; it used to be accepted and fail
+    further on.
+  - A client reads a result in the format the response states, rather than the format its request used.
+  - A server resolves the payload options, the replay store and the authorization validator from the call's
+    services; a service collection built by hand, without `AddPolhemFramework`, has to register them.
 - Polhem now releases against versions of packages from another repository. The version it depends on is set in
   `PolhemJsonRpc.props` at the repository root, which also describes the local switch for building against a
   checkout of that repository.

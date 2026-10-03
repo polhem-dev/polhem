@@ -11,8 +11,8 @@ The framework registers itself in the standard `IServiceCollection` DI container
 
 1. `var paths = new PathOptions { DefinePath = "..." }` — locate definition files
 2. `var settings = SystemSettingsLoader.Load(paths)` — read `SystemSettings.xml` (boot-time only; runtime cached access goes through DI-resolved `IDefineAccess`)
-3. `SysInfo.Initialize(settings.CommonConfiguration)` — process-wide debug flag and allowed type namespaces (a host that serves the API also runs `ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` for the payload compressor and encryptor; a remote client adopts the server's options in `SystemApiConnector.InitializeAsync`)
-4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — register framework services (extension from `Polhem.Hosting`)
+3. `SysInfo.Initialize(settings.CommonConfiguration)` — process-wide debug flag and allowed type namespaces (a remote client adopts the server's payload compressor and encryptor in `SystemApiConnector.InitializeAsync`)
+4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — register framework services (extension from `Polhem.Hosting`), and `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` for the payload compressor and encryptor
 5. Build the service provider, then:
    - **ASP.NET Core hosts** call `services.AddJsonRpcServer()` and `services.AddPolhemApiKeyGateCheck()` before building, and `app.MapJsonRpc("/api")` on the built application. The gate check runs when the host starts (see [API Key Management](../security/api-key-management.md)).
    - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: the `Polhem.Api.Client` connectors take it as a constructor argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.Core`).
@@ -333,19 +333,20 @@ from it. Three constraints follow:
 
 ## API Replay Protection Constraints
 
-With `ApiServiceOptions.RequireWireFrame` enabled (it is off by default), Encoded and Encrypted
-requests carry a wire frame (timestamp + sequence number) inside the payload. The server refuses a
-frame whose timestamp is further from server time than `ApiServiceOptions.WireFrameTimestampTolerance`
-(five minutes by default), and, for a method whose `[ApiAccessControl]` declares
+With the wire frame enabled (`PayloadOptions.RequireFrame`, set in the `configure` argument of
+`AddPolhemPayload`; it is off by default), Encoded and Encrypted requests carry a wire frame
+(timestamp + sequence number) inside the payload. The server refuses a frame whose timestamp is
+further from server time than `PayloadOptions.FrameTimestampTolerance` (five minutes by default), and, for a method whose `[ApiAccessControl]` declares
 `ReplayProtection = ApiReplayProtection.UniqueSequence`, a sequence number the session has already
-used. Both refusals are `ReplayRejectedException` (`-32005`). See
+used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`-32005`). See
 [ADR-042](../../../maintainers/adr/adr-042-api-replay-protection.md) for the reasoning. These constraints follow:
 
 - **Both ends must be set to the same value.** Whether a frame is present is a deployment-level
   fact and is never read from the packet — were the server to "detect" it, an attacker could turn
   the protection off simply by removing the frame. A mismatched pair therefore fails, deliberately.
-  Rollout order: **upgrade the package on both ends first, then enable the switch on both**.
-- **`UniqueSequence` needs the switch.** While `RequireWireFrame` is off, nothing is checked; a host
+  Rollout order: **upgrade the package on both ends first, then enable the switch on both** (a .NET
+  client sets `ApiClientInfo.PayloadOptions.RequireFrame`).
+- **`UniqueSequence` needs the switch.** While `RequireFrame` is off, nothing is checked; a host
   built with `AddPolhemFramework` logs a startup warning naming the methods that declare
   `UniqueSequence` in that state.
 - **The Plain path is unprotected.** Plaintext offers no binding an attacker cannot forge: any
@@ -355,12 +356,12 @@ used. Both refusals are `ReplayRejectedException` (`-32005`). See
   is not checked. `Encoded` carries a frame but has no HMAC, so a captured Encoded call can be
   re-framed with a fresh sequence number. Only inside an Encrypted payload does the payload HMAC
   cover the frame, so `UniqueSequence` protects Encrypted calls only.
-- **The default window is per process.** The accept-or-reject decision is made by
-  `ApiServiceOptions.ReplayWindowStore`, an `IReplayWindowStore`. The default,
-  `MemoryReplayWindowStore`, keeps it in process memory: with several nodes behind a load balancer
+- **The default window is per process.** The accept-or-reject decision is made by the
+  `IPayloadReplayStore` registered in the service collection. The default,
+  `MemoryPayloadReplayStore`, keeps it in process memory: with several nodes behind a load balancer
   and no token affinity, a captured request can be replayed once per node. A deployment that cannot
-  accept that implements `IReplayWindowStore.TryAcceptAsync` over a shared store (a cache or a
-  database), with the check and the record made as one atomic step.
+  accept that registers an implementation of `IPayloadReplayStore.TryAcceptAsync` over a shared store
+  (a cache or a database), with the check and the record made as one atomic step.
 - **A timed-out request fails on resend rather than retrying successfully.** Sequence numbers reject
   replays; idempotency keys make retries safe. Neither substitutes for the other. The framework has
   no automatic retry, but a retry loop in your own code — or a user pressing "submit" again — will

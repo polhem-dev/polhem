@@ -28,8 +28,8 @@ but dropped on the way back in (a hand-written formatter's `Deserialize` skips u
 MessagePack codecs carry differently, is caught by `WireCodecParityTests`, which round-trips every registered contract
 through both codecs with every member set to a non-default value.
 
-**The JSON codec (adr-044) does not need any of this.** `JsonPayloadSerializer` goes through System.Text.Json, with
-the same shape as a `Plain` body. But the two wires **share the same set of `WireValueCode` discriminators**
+**The JSON codec (adr-044) does not need any of this.** It is the payload package's `JsonPayloadCodec` with the options
+of `Transformers/JsonBodyOptions.cs`, going through System.Text.Json, with the same shape as a `Plain` body. But the two wires **share the same set of `WireValueCode` discriminators**
 (`Wire/WireValueCode.cs`; `WireValueCodePinTests` pins both), and the raw JSON body is pinned by the golden samples
 in `wire-fixtures/`. When you change the envelope of an `object` member or the shape of a `DataTable` / enum,
 `WireFixtureTests` turns red, and **that diff is the description of the wire change**.

@@ -39,6 +39,7 @@ this package. A head that runs the backend in its own process references both: i
 |----------------|---------|
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, the hosted services, …) into the supplied `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `ApiClientInfo.PayloadOptions` |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
 
 ## Usage
@@ -48,7 +49,6 @@ Register the database providers first (see the `Polhem.Db` README).
 ### ASP.NET Core host
 
 ```csharp
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -59,9 +59,9 @@ var builder = WebApplication.CreateBuilder(args);
 var paths = new PathOptions { DefinePath = Path.Combine(AppContext.BaseDirectory, "Define") };
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
+builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
 
@@ -83,7 +83,6 @@ the background audit writer), so build a generic host and start it. This needs t
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -91,10 +90,10 @@ using Polhem.Hosting;
 var paths = new PathOptions { DefinePath = definePath };
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 var builder = Host.CreateApplicationBuilder();
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
+builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 using var host = builder.Build();
 await host.StartAsync();
 

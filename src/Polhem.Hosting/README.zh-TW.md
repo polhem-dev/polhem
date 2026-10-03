@@ -36,6 +36,7 @@
 |------------|------|
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、JSON-RPC dispatcher 與其選項、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | 尚未發行 API key 時於啟動時記錄 log。供以 HTTP 提供 API 的宿主使用 |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `ApiClientInfo.PayloadOptions` |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |
 
 ## 使用方式
@@ -45,7 +46,6 @@
 ### ASP.NET Core 宿主
 
 ```csharp
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -56,9 +56,9 @@ var builder = WebApplication.CreateBuilder(args);
 var paths = new PathOptions { DefinePath = Path.Combine(AppContext.BaseDirectory, "Define") };
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
+builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
 
@@ -79,7 +79,6 @@ generic host 並啟動它。這需要 `Microsoft.Extensions.Hosting` 套件。
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -87,10 +86,10 @@ using Polhem.Hosting;
 var paths = new PathOptions { DefinePath = definePath };
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 var builder = Host.CreateApplicationBuilder();
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
+builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 using var host = builder.Build();
 await host.StartAsync();
 

@@ -26,7 +26,6 @@ app.Run();
 ## XxxBackend.cs
 
 ```csharp
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers.Sqlite;
@@ -81,13 +80,13 @@ public static class XxxBackend
 
         var settings = SystemSettingsLoader.Load(paths);
         SysInfo.Initialize(settings.CommonConfiguration);
+        builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
+
         // Applies the compressor and encryptor named in SystemSettings.xml. The body codec is not configured here:
         // each request declares it (adr-044).
-        ApiServiceOptions.Initialize(
+        builder.Services.AddPolhemPayload(
             settings.CommonConfiguration.ApiPayloadOptions,
             settings.CommonConfiguration.IsDebugMode);
-
-        builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
 
         // Nothing else to register: Define/ProgramSettings.xml binds each progId (the reserved "System" included)
         // to its business object, and the framework's resolver reads it.

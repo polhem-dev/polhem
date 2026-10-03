@@ -22,21 +22,25 @@
   by `JsonRpcMethod.IsResolvableAction` there.
 - `Dispatch/` plugs Polhem into it: `PolhemObjectFactory` checks the API key and the `Authorization` header of an HTTP
   call and obtains the business object from `IBusinessObjectFactory`; `PolhemAccessFilter` applies
-  `[ApiAccessControl]`; `PolhemPayloadFilter` restores and writes the payload envelope; `PolhemParameterBinder` binds
-  the argument; `PolhemExceptionMapper` maps errors. `PolhemJsonRpc.CreateServerOptions` assembles them.
-- `ApiPayload` / `ApiPayloadConverter` -- payload wrapping and conversion for JSON-RPC transport.
+  `[ApiAccessControl]`; `PolhemPayloadFilter` opens and writes the payload envelope through
+  `Polhem.JsonRpc.Payload.Server`; `PolhemParameterBinder` binds the argument; `PolhemExceptionMapper` maps errors.
+  `PolhemJsonRpc.CreateServerOptions` assembles them.
 - Error responses -- a framework exception meant for the end user (`UserMessageException` and related types)
   reaches the caller with its message; other exceptions answer a fixed message per error code, and the real
   message is logged by `PolhemExceptionMapper`.
 
 ### Payload Security Pipeline
 
-- `ApiPayloadTransformer` -- orchestrates the Serialize -> Compress -> Encrypt pipeline (and the reverse on inbound payloads).
-- `IApiPayloadSerializer` -- the body codec. `MessagePackPayloadSerializer` and `JsonPayloadSerializer` ship with
-  the framework (names in `PayloadCodecNames`); others are added with `ApiServiceOptions.RegisterPayloadCodec`.
-- `IApiPayloadCompressor` / `GzipPayloadCompressor` -- pluggable Gzip compression.
-- `IApiPayloadEncryptor` / `AesPayloadEncryptor` -- pluggable AES-CBC-HMAC encryption.
-- `ApiPayloadOptionsFactory` -- creates the compressor and encryptor named in the deployment's `ApiPayloadOptions`.
+The envelope, the Serialize -> Compress -> Encrypt pipeline, the replay frame and the replay store are in
+[`Polhem.JsonRpc.Payload`](https://github.com/polhem-dev/polhem-jsonrpc). This package supplies Polhem's side of it:
+
+- `PolhemPayload` -- builds the package's `PayloadOptions` the framework's way: MessagePack as the default codec,
+  the framework's JSON spellings and type names, and the compressor and encryptor named in the deployment's
+  `ApiPayloadOptions` (the encryptor `none` only in debug mode). A server registers them with `AddPolhemPayload`
+  (`Polhem.Hosting`); a client keeps them in `ApiClientInfo.PayloadOptions` (`Polhem.Api.Client`).
+- `MessagePackPayloadCodec` -- the `messagepack` body codec over the framework's formatters. The `json` codec is the
+  package's, with the framework's options; others are registered with `PayloadOptions.RegisterCodec`.
+- `PayloadCodecNames` -- the codec names a payload declares.
 
 ### Body Codec Negotiation
 
@@ -47,11 +51,12 @@ which is what every client that predates negotiation sends. On the client, `ApiC
 
 ### Anti-Replay (optional, off by default)
 
-- `ApiPayloadFrame` -- timestamp and sequence number carried inside the envelope, ahead of the payload body.
-- `IReplayWindowStore` -- decides per session, in one atomic call, whether a sequence number may be accepted.
-  The default `MemoryReplayWindowStore` keeps a sliding window in process memory; a multi-node deployment can
-  implement the interface over a shared store and assign it to `ApiServiceOptions.ReplayWindowStore`.
-- `ApiServiceOptions.RequireWireFrame` -- the master switch; **client and server must be set to the same value**.
+- The frame (timestamp and sequence number, inside the envelope ahead of the body) and the replay store are the
+  payload package's: `PayloadFrame`, `IPayloadReplayStore` and the in-memory default `MemoryPayloadReplayStore`. A
+  multi-node deployment registers an `IPayloadReplayStore` over a shared store; Polhem uses the access token as the
+  scope a sequence number is unique in.
+- `PayloadOptions.RequireFrame` -- the master switch, set through `AddPolhemPayload` on the server and
+  `ApiClientInfo.PayloadOptions` on a .NET client; **client and server must be set to the same value**.
 - `ApiReplayProtection` -- third dimension of `ApiAccessControlAttribute`, declaring per method whether sequences
   are checked. A host built with `AddPolhemFramework` logs a startup warning when methods declare it while the
   frame is off.
@@ -64,6 +69,7 @@ and the details.
 ### Authorization & Access Control
 
 - `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- validates authorization context for incoming requests.
+  `AddPolhemFramework` registers the default; a host replaces it by registering its own.
 - `ApiAuthorizationContext` / `ApiAuthorizationResult` -- authorization input and outcome types.
 - `ApiAccessValidator` -- enforces method-level protection via `ApiAccessControlAttribute`.
 - `ApiCallContext` -- per-call metadata (token, protection level, caller identity).
@@ -80,7 +86,7 @@ and the details.
 ### MessagePack Infrastructure
 
 > These types are `internal`. They are documented here because they define the wire behaviour, but
-> they are not part of the package's public surface — use `MessagePackPayloadSerializer` (public)
+> they are not part of the package's public surface — use `MessagePackPayloadCodec` (public)
 > to reach the same pipeline.
 
 - `SafeMessagePackSerializerOptions` / `WireTypeWhitelist` -- restrict deserialization to an allow-list of types.
@@ -103,18 +109,17 @@ and the details.
 | Class / Interface | Purpose |
 |-------------------|---------|
 | `PolhemJsonRpc` | Creates the JSON-RPC server options the framework serves its API with |
-| `ApiServiceOptions` | Process-wide configuration of the pipeline components, codecs, authorization validator and replay store |
-| `ApiPayloadTransformer` | Serialize -> Compress -> Encrypt pipeline |
+| `PolhemPayload` | Builds the payload options the framework's way |
+| `MessagePackPayloadCodec` | The `messagepack` body codec |
 | `ApiAccessValidator` | Method-level protection via `ApiAccessControlAttribute` |
 | `PayloadFormat` | Payload format enum (`Plain`, `Encoded`, `Encrypted`) |
 | `ApiAuthorizationValidator` | Request authorization validation |
 | `ApiCallContext` | Per-call metadata (token, protection, identity) |
-| `IReplayWindowStore` | Replaceable per-session sequence check |
 
 ## Design Conventions
 
-- **Strategy Pattern** -- serializer, compressor, and encryptor are injected via interfaces (`IApiPayloadSerializer`, `IApiPayloadCompressor`, `IApiPayloadEncryptor`), allowing each stage to be replaced independently.
-- **Strict pipeline ordering** -- the payload transformer runs Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
+- **Strategy Pattern** -- the codec, compressor and encryptor are interfaces of the payload package (`IPayloadCodec`, `IPayloadCompressor`, `IPayloadEncryptor`), each replaceable on `PayloadOptions`.
+- **Strict pipeline ordering** -- the payload package runs Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
 - **Type whitelist** -- MessagePack deserialization accepts only an explicit allow-list of types.
 - **Reflection-based dispatch** -- the dispatcher resolves and invokes business object methods by name, decoupling the transport layer from concrete BO types.
 - **Protection levels** -- `ApiAccessControlAttribute` declares a method's `ApiProtectionLevel` and `ApiAccessRequirement`; the members and their meaning are in the XML documentation of those enums (`Polhem.Definition.Security`).
@@ -126,15 +131,14 @@ and the details.
 - `Conversion/` -- .NET object-model conversion between API and BO types (`ApiOutputConverter`)
 - `Json/` -- JSON converters for `object`-typed members
 - `Dispatch/` -- the components that plug Polhem into the `Polhem.JsonRpc.Server` dispatcher
-- `JsonRpc/` -- the payload envelope (`ApiPayload`, `JsonRpcParams`, `JsonRpcResult`), `ApiPayloadFrame`, `IReplayWindowStore`, `DateTimeWireGuard`, the error codes and the error contract
+- `JsonRpc/` -- `ActionPayloadType`, `DateTimeWireGuard`, the error codes and the error contract
 - `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `PayloadFormat`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
 - `MessagePack/` -- the internal MessagePack infrastructure and formatters
-- `Transformers/` -- the byte-level payload pipeline (serializers, compressor, encryptor, `ApiPayloadOptionsFactory`, `PayloadCodecNames`)
+- `Transformers/` -- Polhem's side of the payload pipeline (`PolhemPayload`, `MessagePackPayloadCodec`, `PayloadCodecNames`)
 - `Validator/` -- `ApiAccessValidator`, `ApiCallContext`
 - `Wire/` -- `WireValueCode` (the discriminator both wires share)
-- project root -- `ApiServiceOptions` (startup configuration)
 
 The namespace layout follows the design principles in [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md):
 contracts grouped by responsibility (`Messages` for message types, `Conversion` for type
-conversion, `Transformers` for the byte-level pipeline, etc.); the root reserved for cross-cutting
-infrastructure (here, only `ApiServiceOptions`).
+conversion, `Transformers` for the byte-level pipeline, etc.); the root is reserved for cross-cutting
+infrastructure, and holds none at present.

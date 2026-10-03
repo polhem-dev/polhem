@@ -60,8 +60,8 @@ The practical consequence: **ordinary CRUD requires no code**. A FormSchema, its
 Three settings files underpin every data access, and the first must load before the other two:
 
 ```text
-SystemSettings.xml          ──▶ SysInfo.Initialize + ApiServiceOptions.Initialize
-   (master key, payload)         (process-wide state)
+SystemSettings.xml          ──▶ SysInfo.Initialize + AddPolhemPayload
+   (master key, payload)         (process-wide state, payload options)
         │
         ▼
 DatabaseSettings.xml        ──▶ physical databases + connection strings

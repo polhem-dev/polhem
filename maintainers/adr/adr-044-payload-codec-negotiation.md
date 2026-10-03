@@ -2,7 +2,9 @@
 
 ## Status
 
-**Accepted (2026-09-03)**
+**Accepted (2026-09-03)**. The negotiation is unchanged in 1.2.0, but the code moved to the Polhem.JsonRpc.Payload
+packages and `ApiServiceOptions` is gone; codecs are registered on `PayloadOptions`
+([ADR-049](adr-049-jsonrpc-packages-in-1-2.md), decision 5).
 
 ## Context
 

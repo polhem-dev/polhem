@@ -21,21 +21,23 @@
   `ProgId.Action` 方法識別碼並呼叫目標方法。一個 action 名稱能呼叫到哪些方法，由該套件的
   `JsonRpcMethod.IsResolvableAction` 決定。
 - `Dispatch/` 把 Polhem 接上它：`PolhemObjectFactory` 檢查 HTTP 呼叫的 API key 與 `Authorization` header，並從
-  `IBusinessObjectFactory` 取得商業物件；`PolhemAccessFilter` 套用 `[ApiAccessControl]`；`PolhemPayloadFilter` 還原與
-  寫出 payload 外殼；`PolhemParameterBinder` 繫結參數；`PolhemExceptionMapper` 對應錯誤。
+  `IBusinessObjectFactory` 取得商業物件；`PolhemAccessFilter` 套用 `[ApiAccessControl]`；`PolhemPayloadFilter` 經
+  `Polhem.JsonRpc.Payload.Server` 開啟與寫出 payload 外殼；`PolhemParameterBinder` 繫結參數；`PolhemExceptionMapper` 對應錯誤。
   `PolhemJsonRpc.CreateServerOptions` 把它們組起來。
-- `ApiPayload` / `ApiPayloadConverter` -- JSON-RPC 傳輸的 Payload 包裝與轉換。
 - 錯誤回應 -- 給終端使用者看的框架例外（`UserMessageException` 及相關型別）會帶著訊息回到呼叫端；
   其他例外則依錯誤碼回應固定訊息，實際訊息由 `PolhemExceptionMapper` 寫入 log。
 
 ### Payload 安全管線
 
-- `ApiPayloadTransformer` -- 協調「序列化 -> 壓縮 -> 加密」管線（入站時反向執行）。
-- `IApiPayloadSerializer` -- body codec。框架內建 `MessagePackPayloadSerializer` 與 `JsonPayloadSerializer`
-  （名稱見 `PayloadCodecNames`）；其他 codec 以 `ApiServiceOptions.RegisterPayloadCodec` 加入。
-- `IApiPayloadCompressor` / `GzipPayloadCompressor` -- 可插拔的 Gzip 壓縮。
-- `IApiPayloadEncryptor` / `AesPayloadEncryptor` -- 可插拔的 AES-CBC-HMAC 加密。
-- `ApiPayloadOptionsFactory` -- 依部署的 `ApiPayloadOptions` 建立指定的壓縮器與加密器。
+外殼、「序列化 -> 壓縮 -> 加密」管線、重放 frame 與重放紀錄都在
+[`Polhem.JsonRpc.Payload`](https://github.com/polhem-dev/polhem-jsonrpc)。本套件提供 Polhem 這一側：
+
+- `PolhemPayload` -- 以框架的方式組出套件的 `PayloadOptions`：MessagePack 為預設 codec、框架的 JSON 拼法與型別名稱，
+  以及部署的 `ApiPayloadOptions` 指名的壓縮器與加密器（加密器 `none` 只限 debug 模式）。伺服器以 `AddPolhemPayload`
+  （`Polhem.Hosting`）註冊；用戶端存放在 `ApiClientInfo.PayloadOptions`（`Polhem.Api.Client`）。
+- `MessagePackPayloadCodec` -- 以框架 formatter 實作的 `messagepack` body codec。`json` codec 是套件的，使用框架的選項；
+  其他 codec 以 `PayloadOptions.RegisterCodec` 登錄。
+- `PayloadCodecNames` -- payload 宣告的 codec 名稱。
 
 ### Body codec 協商
 
@@ -45,11 +47,11 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 ### 防重放（選用，預設關閉）
 
-- `ApiPayloadFrame` -- 放在封套內、payload body 之前的時間戳記與序號。
-- `IReplayWindowStore` -- 以單一原子呼叫、依 session 決定某個序號可否接受。預設的
-  `MemoryReplayWindowStore` 在行程記憶體中維護滑動視窗；多節點部署可以在共用儲存上實作此介面，
-  並指派給 `ApiServiceOptions.ReplayWindowStore`。
-- `ApiServiceOptions.RequireWireFrame` -- 總開關；**用戶端與伺服端必須設為相同值**。
+- frame（放在外殼內、body 之前的時間戳記與序號）與重放紀錄屬於 payload 套件：`PayloadFrame`、`IPayloadReplayStore`
+  與記憶體內的預設實作 `MemoryPayloadReplayStore`。多節點部署註冊一個以共用儲存實作的 `IPayloadReplayStore`；Polhem
+  以 access token 作為序號唯一的範圍。
+- `PayloadOptions.RequireFrame` -- 總開關，伺服器經 `AddPolhemPayload`、.NET 用戶端經 `ApiClientInfo.PayloadOptions`
+  設定；**用戶端與伺服端必須設為相同值**。
 - `ApiReplayProtection` -- `ApiAccessControlAttribute` 的第三個維度，逐方法宣告是否檢查序號。以
   `AddPolhemFramework` 建立的 host 在方法宣告了它、但 frame 關閉時，會記錄一則啟動警告。
 
@@ -59,7 +61,8 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 ### 授權與存取控制
 
-- `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- 驗證傳入請求的授權上下文。
+- `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- 驗證傳入請求的授權上下文。`AddPolhemFramework` 註冊預設值，
+  host 註冊自己的實作即可替換。
 - `ApiAuthorizationContext` / `ApiAuthorizationResult` -- 授權輸入與結果型別。
 - `ApiAccessValidator` -- 透過 `ApiAccessControlAttribute` 強制方法層級保護。
 - `ApiCallContext` -- 每次呼叫的中繼資料（Token、保護等級、呼叫者身分）。
@@ -75,7 +78,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 ### MessagePack 基礎設施
 
 > 這些型別皆為 `internal`。之所以在此說明，是因為它們定義了 wire 的行為，
-> 但它們不屬於本套件的公開介面——要走同一條管線，請使用 `MessagePackPayloadSerializer`（公開）。
+> 但它們不屬於本套件的公開介面——要走同一條管線，請使用 `MessagePackPayloadCodec`（公開）。
 
 - `SafeMessagePackSerializerOptions` / `WireTypeWhitelist` -- 將反序列化限制在允許清單內的型別。
 - `MessagePackCodec` -- MessagePack 序列化的編碼器/解碼器。
@@ -95,18 +98,17 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 | 類別 / 介面 | 用途 |
 |-------------|------|
 | `PolhemJsonRpc` | 建立框架提供 API 用的 JSON-RPC 伺服器選項 |
-| `ApiServiceOptions` | 管線元件、codec、授權驗證器與重放儲存的行程層級設定 |
-| `ApiPayloadTransformer` | 序列化 -> 壓縮 -> 加密管線 |
+| `PolhemPayload` | 以框架的方式組出 payload 選項 |
+| `MessagePackPayloadCodec` | `messagepack` body codec |
 | `ApiAccessValidator` | 透過 `ApiAccessControlAttribute` 的方法層級保護 |
 | `PayloadFormat` | Payload 格式列舉（`Plain`、`Encoded`、`Encrypted`） |
 | `ApiAuthorizationValidator` | 請求授權驗證 |
 | `ApiCallContext` | 每次呼叫的中繼資料（Token、保護、身分） |
-| `IReplayWindowStore` | 可替換的每 session 序號檢查 |
 
 ## 設計慣例
 
-- **策略模式（Strategy Pattern）** -- 序列化器、壓縮器、加密器皆透過介面注入（`IApiPayloadSerializer`、`IApiPayloadCompressor`、`IApiPayloadEncryptor`），每個階段可獨立替換。
-- **嚴格管線順序** -- Payload 轉換器在出站時執行「序列化 -> 壓縮 -> 加密」，入站時執行「解密 -> 解壓縮 -> 反序列化」；此順序不可更動。
+- **策略模式（Strategy Pattern）** -- codec、壓縮器、加密器是 payload 套件的介面（`IPayloadCodec`、`IPayloadCompressor`、`IPayloadEncryptor`），各自可在 `PayloadOptions` 上替換。
+- **嚴格管線順序** -- payload 套件在出站時執行「序列化 -> 壓縮 -> 加密」，入站時執行「解密 -> 解壓縮 -> 反序列化」；此順序不可更動。
 - **型別白名單** -- MessagePack 反序列化只接受明確允許清單內的型別。
 - **反射式分派** -- dispatcher 依名稱解析並呼叫商業物件方法，將傳輸層與具體 BO 型別解耦。
 - **保護等級** -- `ApiAccessControlAttribute` 宣告方法的 `ApiProtectionLevel` 與 `ApiAccessRequirement`；成員與意義見這兩個列舉的 XML 文件（`Polhem.Definition.Security`）。
@@ -118,14 +120,13 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `Conversion/` -- API 型別與 BO 型別之間的 .NET 物件模型轉換（`ApiOutputConverter`）
 - `Json/` -- `object` 型別成員的 JSON converter
 - `Dispatch/` -- 把 Polhem 接上 `Polhem.JsonRpc.Server` dispatcher 的元件
-- `JsonRpc/` -- payload 外殼（`ApiPayload`、`JsonRpcParams`、`JsonRpcResult`）、`ApiPayloadFrame`、`IReplayWindowStore`、`DateTimeWireGuard`、錯誤碼與錯誤合約
+- `JsonRpc/` -- `ActionPayloadType`、`DateTimeWireGuard`、錯誤碼與錯誤合約
 - `Messages/` -- `ApiRequest`、`ApiResponse`、`ApiHeaders`、`PayloadFormat`、`ExecFunc*`，以及 `System/`、`Form/`、`AuditLog/` 訊息
 - `MessagePack/` -- 內部的 MessagePack 基礎設施與 formatter
-- `Transformers/` -- 位元組層級的 payload 管線（序列化器、壓縮器、加密器、`ApiPayloadOptionsFactory`、`PayloadCodecNames`）
+- `Transformers/` -- payload 管線中 Polhem 這一側（`PolhemPayload`、`MessagePackPayloadCodec`、`PayloadCodecNames`）
 - `Validator/` -- `ApiAccessValidator`、`ApiCallContext`
 - `Wire/` -- `WireValueCode`（兩種 wire 共用的鑑別碼）
-- 專案根目錄 -- `ApiServiceOptions`（啟動設定）
 
 命名空間佈局遵循 [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md) 的設計原則：
 依職責分組（`Messages` 放訊息型別、`Conversion` 放型別轉換、`Transformers` 放位元組層級管線等）；
-根層保留給跨切面基礎設施（在此僅有 `ApiServiceOptions`）。
+根層保留給跨切面基礎設施，目前沒有。

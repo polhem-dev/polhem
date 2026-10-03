@@ -1,4 +1,4 @@
-<!-- source: en/definitions/definition-files-overview.md blob: 5876f0e2f71169ccf83702c231ebc1a107a8da4c -->
+<!-- source: en/definitions/definition-files-overview.md blob: 64f5e63e0d77429bc54f426afa1840cb634720a9 -->
 # 定義檔全景
 
 [English](../../en/definitions/definition-files-overview.md) · [← 文件索引](../README.md)
@@ -60,8 +60,8 @@ Polhem 是定義驅動的：`DefinePath` 下的 XML 不是外掛在應用上的�
 三個設定檔是所有資料存取的基礎，而第一個必須先於另外兩個載入：
 
 ```text
-SystemSettings.xml          ──▶ SysInfo.Initialize + ApiServiceOptions.Initialize
-   （主金鑰、payload）            （行程層級狀態）
+SystemSettings.xml          ──▶ SysInfo.Initialize + AddPolhemPayload
+   （主金鑰、payload）            （行程層級狀態、payload 選項）
         │
         ▼
 DatabaseSettings.xml        ──▶ 實體資料庫 + 連線字串

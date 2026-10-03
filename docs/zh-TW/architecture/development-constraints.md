@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 20d5998e3ce0e010ecad2b46bbc2953ff37c0d80 -->
+<!-- source: en/architecture/development-constraints.md blob: 4690cf0bcd17af6074ddfab1cc253dfcb7a07425 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -12,8 +12,8 @@
 
 1. `var paths = new PathOptions { DefinePath = "..." }` — 指向定義檔目錄
 2. `var settings = SystemSettingsLoader.Load(paths)` — 讀取 `SystemSettings.xml`（boot-time only；runtime 快取存取走 DI 注入的 `IDefineAccess`）
-3. `SysInfo.Initialize(settings.CommonConfiguration)` — process-wide 的 debug 旗標與允許的型別命名空間（提供 API 的宿主另外執行 `ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)`，設定 payload 的壓縮器與加密器；遠端用戶端則在 `SystemApiConnector.InitializeAsync` 中採用伺服端的設定）
-4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — 註冊框架服務（擴充方法來自 `Polhem.Hosting`）
+3. `SysInfo.Initialize(settings.CommonConfiguration)` — process-wide 的 debug 旗標與允許的型別命名空間（遠端用戶端在 `SystemApiConnector.InitializeAsync` 中採用伺服端的 payload 壓縮器與加密器）
+4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — 註冊框架服務（擴充方法來自 `Polhem.Hosting`），並以 `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` 設定 payload 的壓縮器與加密器
 5. 建立 service provider，接著：
    - **ASP.NET Core 宿主**在建置前呼叫 `services.AddJsonRpcServer()` 與 `services.AddPolhemApiKeyGateCheck()`，並在建好的應用程式上呼叫 `app.MapJsonRpc("/api")`。閘門檢查在宿主啟動時執行（見 [API 金鑰管理](../security/api-key-management.md)）。
    - 在行程內執行後端的**非 web 宿主**，把產出的 `IServiceProvider` 交給用戶端：`Polhem.Api.Client` 的 connector 以建構子參數接收它，原生 UI head 則指派給 `ClientInfo.LocalServiceProvider`（`Polhem.UI.Core`）。
@@ -315,28 +315,27 @@ API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOut
 
 ## API 重放防護限制
 
-啟用 `ApiServiceOptions.RequireWireFrame`（預設關閉）後，Encoded 與 Encrypted 的請求會在 payload
-內夾帶一段 wire frame（時間戳 + 序號）。伺服端會拒絕時間戳與伺服器時間相差超過
-`ApiServiceOptions.WireFrameTimestampTolerance`（預設五分鐘）的 frame；對於 `[ApiAccessControl]`
+啟用 wire frame（`PayloadOptions.RequireFrame`，在 `AddPolhemPayload` 的 `configure` 引數設定；預設關閉）後，
+Encoded 與 Encrypted 的請求會在 payload 內夾帶一段 wire frame（時間戳 + 序號）。伺服端會拒絕時間戳與伺服器時間
+相差超過 `PayloadOptions.FrameTimestampTolerance`（預設五分鐘）的 frame；對於 `[ApiAccessControl]`
 宣告 `ReplayProtection = ApiReplayProtection.UniqueSequence` 的方法，也會拒絕該 session 已用過的
-序號。兩種拒絕都是 `ReplayRejectedException`（`-32005`）。設計背景見
+序號。兩種拒絕都是 `Polhem.JsonRpc.Payload` 的 `ReplayRejectedException`（`-32005`）。設計背景見
 [ADR-042](../../../maintainers/adr/adr-042-api-replay-protection.md)。由此衍生以下限制：
 
 - **兩端必須設成同一個值。** frame 的有無是部署層級的事實，不由封包自述——伺服器若「偵測」
   frame 在不在，攻擊者只要把 frame 拿掉就能關閉防護。因此兩端設定不一致必然失敗，這是刻意的。
-  啟用順序：**兩端先升套件，再同時開啟兩端開關**。
-- **`UniqueSequence` 需要開關。** `RequireWireFrame` 關閉時什麼都不檢查；以 `AddPolhemFramework`
+  啟用順序：**兩端先升套件，再同時開啟兩端開關**（.NET 用戶端設定 `ApiClientInfo.PayloadOptions.RequireFrame`）。
+- **`UniqueSequence` 需要開關。** `RequireFrame` 關閉時什麼都不檢查；以 `AddPolhemFramework`
   建立的宿主會在這種狀態下記錄啟動警告，列出宣告了 `UniqueSequence` 的方法。
 - **Plain 路徑不受保護。** 明文沒有攻擊者無法偽造的綁定，任何防重放欄位他都能改寫（改成當下
   時間、改成更大的序號），那就是一個全新的合法請求。`ApiProtectionLevel.Public` 的方法
   （含 `Save` / `Delete` / `ExecFunc`）仍允許以 Plain 呼叫，該路徑不帶 frame、不受檢查。
   `Encoded` 帶 frame 但無 HMAC，攔截到的 Encoded 呼叫可以換上新序號重新封裝。只有在 Encrypted
   payload 內，payload 的 HMAC 才涵蓋 frame，所以 `UniqueSequence` 只保護 Encrypted 呼叫。
-- **預設的序號窗口依行程分開。** 接受或拒絕由 `ApiServiceOptions.ReplayWindowStore`（一個
-  `IReplayWindowStore`）決定。預設的 `MemoryReplayWindowStore` 存在行程記憶體中：多個節點位於
-  負載平衡器之後、且沒有依 token 黏著時，攔截到的請求可以在每個節點各重放一次。無法接受這點的
-  部署，請以共用儲存體（快取或資料庫）實作 `IReplayWindowStore.TryAcceptAsync`，並把檢查與記錄
-  做成單一的原子操作。
+- **預設的序號窗口依行程分開。** 接受或拒絕由註冊在 service collection 的 `IPayloadReplayStore`
+  決定。預設的 `MemoryPayloadReplayStore` 存在行程記憶體中：多個節點位於負載平衡器之後、且沒有依
+  token 黏著時，攔截到的請求可以在每個節點各重放一次。無法接受這點的部署，請註冊一個以共用儲存體
+  （快取或資料庫）實作 `IPayloadReplayStore.TryAcceptAsync` 的實作，並把檢查與記錄做成單一的原子操作。
 - **逾時重送會失敗，而非重試成功。** 序號解的是「拒絕重放」，冪等鍵解的是「安全重試」，
   兩者不可互相取代。框架本身沒有自動重試，但應用層自己包的重試迴圈、以及使用者手動
   「重新送出」都會踩到；需要安全重試的場景請自行實作冪等鍵。
