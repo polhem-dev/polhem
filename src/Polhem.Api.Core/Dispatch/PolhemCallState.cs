@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Definition.Security;
 using Polhem.JsonRpc.Server;
 
@@ -20,10 +19,6 @@ namespace Polhem.Api.Core.Dispatch
         public ApiKeyValidationResult ApiKeyValidation { get; set; } = ApiKeyValidationResult.NotChecked;
 
         public Stopwatch? Stopwatch { get; set; }
-
-        public JsonRpcParams? Payload { get; set; }
-
-        public byte[]? EncryptionKey { get; set; }
 
         public static PolhemCallState Create(JsonRpcRequestContext context)
         {

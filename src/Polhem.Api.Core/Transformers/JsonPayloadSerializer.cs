@@ -68,6 +68,9 @@ namespace Polhem.Api.Core.Transformers
         /// </summary>
         private static readonly JsonSerializerOptions s_options = CreateOptions();
 
+        /// <summary>Gets the options bodies on the <c>json</c> codec are serialized with.</summary>
+        internal static JsonSerializerOptions Options => s_options;
+
         private static JsonSerializerOptions CreateOptions()
         {
             var options = new JsonSerializerOptions

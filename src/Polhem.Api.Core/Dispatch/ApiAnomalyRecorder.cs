@@ -44,7 +44,7 @@ namespace Polhem.Api.Core.Dispatch
 
         private static AnomalyKind Classify(Exception rootEx)
         {
-            if (rootEx is ReplayRejectedException) { return AnomalyKind.Replay; }
+            if (rootEx is ReplayRejectedException or Polhem.JsonRpc.Payload.ReplayRejectedException) { return AnomalyKind.Replay; }
             return rootEx is TimeoutException || rootEx.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
                 ? AnomalyKind.Timeout
                 : AnomalyKind.Error;

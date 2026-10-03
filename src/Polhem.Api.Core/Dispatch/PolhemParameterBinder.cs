@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.JsonRpc;
+using Polhem.JsonRpc.Payload.Server;
 using Polhem.JsonRpc.Server;
 
 namespace Polhem.Api.Core.Dispatch
@@ -20,7 +21,7 @@ namespace Polhem.Api.Core.Dispatch
         {
             ArgumentNullException.ThrowIfNull(context);
             var method = context.Method!.MethodInfo;
-            object? value = PolhemCallState.Get(context).Payload?.Value;
+            object? value = PayloadRequest.Find(context)?.Value;
 
             if (value is JsonElement element)
             {

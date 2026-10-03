@@ -117,6 +117,16 @@ namespace Polhem.Core.Serialization
         }
 
         /// <summary>
+        /// Gets the options <see cref="Serialize(object, bool, bool)"/> uses by default: compact, camel case, leaving out
+        /// default and null values.
+        /// </summary>
+        /// <remarks>
+        /// For code that serializes through System.Text.Json directly and must spell values the way this codec does.
+        /// The instance is shared and read-only once used; do not modify it.
+        /// </remarks>
+        public static JsonSerializerOptions Options => s_compactIgnoreDefault;
+
+        /// <summary>
         /// Serializes an object to a compact JSON string.
         /// </summary>
         /// <param name="value">The object to serialize.</param>

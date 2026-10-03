@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Validator;
 using Polhem.Definition.Security;
@@ -39,19 +37,6 @@ namespace Polhem.Api.Core.Dispatch
         }
 
         private static PayloadFormat ReadFormat(JsonRpcRequestContext context)
-        {
-            if (context.Request.Params is not { ValueKind: JsonValueKind.Object } payload
-                || !payload.TryGetProperty("format", out var format))
-            {
-                return PayloadFormat.Plain;
-            }
-            if (format.ValueKind != JsonValueKind.Number || !format.TryGetInt32(out var value))
-            {
-                throw new InvalidParamsException(
-                    $"The params of '{context.Request.Method}' are not a Polhem payload.",
-                    new FormatException("The format member of the payload is not a number."));
-            }
-            return (PayloadFormat)value;
-        }
+            => (PayloadFormat)Polhem.JsonRpc.Payload.PayloadEnvelope.ReadFormat(context.Request.Params);
     }
 }
