@@ -93,7 +93,7 @@ graph BT
 | Polhem.Definition | Microsoft.Extensions.Localization.Abstractions 10.x |
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
-| Polhem.Api.Core | MessagePack 3.x, Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server |
+| Polhem.Api.Core | MessagePack 3.x, Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Hosting.Abstractions 10.x |
