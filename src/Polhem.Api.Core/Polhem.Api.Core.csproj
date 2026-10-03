@@ -27,12 +27,15 @@
                       PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The JSON-RPC dispatcher. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
+  <!-- The JSON-RPC dispatcher and the payload envelope. PolhemJsonRpcSource switches to a local checkout; see
+       PolhemJsonRpc.props. -->
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
     <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload.Server" Version="$(PolhemJsonRpcVersion)" />
   </ItemGroup>
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
     <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload.Server/Polhem.JsonRpc.Payload.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Business;
 using Polhem.Definition;
@@ -46,7 +45,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetLookup}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetLookupRequest { SearchText = "甲" },
                 },
@@ -96,7 +95,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.GetLookup}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetLookupRequest
                     {

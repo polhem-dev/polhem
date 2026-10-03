@@ -87,7 +87,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static DataSet OverJson(DataSet dataSet)
         {
-            var serializer = new JsonPayloadSerializer();
+            var serializer = new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options);
             var bytes = serializer.Serialize(new GetDataResponse { DataSet = dataSet }, typeof(GetDataResponse));
             return ((GetDataResponse)serializer.Deserialize(bytes, typeof(GetDataResponse))!).DataSet!;
         }

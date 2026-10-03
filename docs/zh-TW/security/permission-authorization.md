@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: bb387981c8e0429b72fd925512e4c9ba8d9e5303 -->
+<!-- source: en/security/permission-authorization.md blob: a864e6e64b7c9a417fe38194891cbe33adf762ac -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -313,7 +313,7 @@ if (errors.Count > 0)
 ## 傳輸與憑證強化（正式環境）
 
 - **強制 HTTPS。** `Login` 宣告為 `ApiProtectionLevel.Public`：`SystemApiConnector.LoginAsync` 以 `PayloadFormat.Encoded`（序列化 + 壓縮 + Base64，**非加密**）承載密碼，JavaScript 用戶端也可能以 Plain 送出。RSA 握手只保護 server 回傳的 session key，而瀏覽器（WebAssembly）用戶端會略過它。因此傳輸機密性完全仰賴 TLS。正式環境所有端點務必以 HTTPS 提供（並啟用 HSTS），切勿以純 HTTP 暴露 JSON-RPC 端點。
-- **發放 API 金鑰。** 在 `st_api_key` 有任一把啟用中的金鑰之前，預設 `ApiAuthorizationValidator` 接受任何非空的 `X-Api-Key`；有了之後，只有已發放、啟用中、未到期的金鑰能通過。呼叫了 `AddPolhemApiKeyGateCheck` 的宿主會在啟動時回報閘門未生效，在 Development 以外的環境以錯誤等級記錄。API 金鑰識別的是呼叫的應用程式；使用者認證無論如何都走 Bearer access token。見 [API 金鑰管理](api-key-management.md)。需要不同傳輸層檢查的宿主，仍可替換 `ApiServiceOptions.AuthorizationValidator`。
+- **發放 API 金鑰。** 在 `st_api_key` 有任一把啟用中的金鑰之前，預設 `ApiAuthorizationValidator` 接受任何非空的 `X-Api-Key`；有了之後，只有已發放、啟用中、未到期的金鑰能通過。呼叫了 `AddPolhemApiKeyGateCheck` 的宿主會在啟動時回報閘門未生效，在 Development 以外的環境以錯誤等級記錄。API 金鑰識別的是呼叫的應用程式；使用者認證無論如何都走 Bearer access token。見 [API 金鑰管理](api-key-management.md)。需要不同傳輸層檢查的宿主，在 service collection 註冊自己的 `IApiAuthorizationValidator`。
 
 ## 非目標
 

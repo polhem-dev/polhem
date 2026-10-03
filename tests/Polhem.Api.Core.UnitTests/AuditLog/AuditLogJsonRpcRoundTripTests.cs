@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Xml;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Business;
 using Polhem.Definition;
@@ -56,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             return await executor.ExecuteAsync(new TestRpcRequest
             {
                 Method = $"{SysProgIds.AuditLog}.{action}",
-                Params = new JsonRpcParams { Value = request },
+                Params = new TestPayload { Value = request },
                 Id = Guid.NewGuid().ToString(),
             });
         }

@@ -6,9 +6,9 @@ namespace Polhem.Definition.Security
     /// application is calling, the access token decides which user.
     /// </summary>
     /// <remarks>
-    /// Resolved from the host container per call by the API controller, because the check needs
-    /// backend services (the key cache, and through it the database) that the static
-    /// <c>AuthorizationValidator</c> cannot reach.
+    /// Resolved per call from the call's services by Polhem's object factory, because the check
+    /// needs backend services (the key cache, and through it the database); the factory hands the
+    /// result to <c>IApiAuthorizationValidator</c> with the rest of the request.
     /// <para>
     /// WARNING: only a definitive answer from the store may produce
     /// <see cref="ApiKeyStatus.NotConfigured"/>. A lookup failure must propagate rather than being

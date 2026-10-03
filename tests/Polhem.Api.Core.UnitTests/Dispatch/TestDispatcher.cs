@@ -1,13 +1,18 @@
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Polhem.Api.Core.Authorization;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Dispatch;
-using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Transformers;
 using Polhem.Api.Core.Messages;
-using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Security;
 using Polhem.JsonRpc;
+using PayloadEnvelope = Polhem.JsonRpc.Payload.PayloadEnvelope;
+using PayloadOptions = Polhem.JsonRpc.Payload.PayloadOptions;
+using PayloadProcessor = Polhem.JsonRpc.Payload.PayloadProcessor;
+using Polhem.JsonRpc.Payload.Server;
 using Polhem.JsonRpc.Server;
 using Polhem.Tests.Shared;
 
@@ -64,15 +69,31 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// Sends the request and returns the answer.
         /// </summary>
         public Task<TestRpcResponse> ExecuteAsync(TestRpcRequest request, CancellationToken cancellationToken = default)
-            => DispatchAsync(Serialize(request), cancellationToken);
+            => DispatchAsync(Serialize(request, PayloadOptions), request.Params.Key, cancellationToken);
 
         /// <summary>
         /// Sends a request written as JSON, as a client in another language sends it, and returns the answer.
         /// </summary>
         public Task<TestRpcResponse> ExecuteJsonAsync(string requestJson, CancellationToken cancellationToken = default)
-            => DispatchAsync(Encoding.UTF8.GetBytes(requestJson), cancellationToken);
+            => DispatchAsync(Encoding.UTF8.GetBytes(requestJson), null, cancellationToken);
 
-        private async Task<TestRpcResponse> DispatchAsync(byte[] body, CancellationToken cancellationToken)
+        /// <summary>
+        /// Registers what the framework's dispatcher resolves from a call's services and <c>AddPolhemFramework</c>
+        /// otherwise registers, for a test that builds its own service collection: the request authorization, the
+        /// payload options and the replay store.
+        /// </summary>
+        internal static IServiceCollection AddDispatchDefaults(IServiceCollection services)
+        {
+            services.AddSingleton<IApiAuthorizationValidator, ApiAuthorizationValidator>();
+            services.AddSingleton(PolhemPayload.CreateOptions());
+            services.AddSingleton<IPayloadReplayStore>(new MemoryPayloadReplayStore());
+            return services;
+        }
+
+        /// <summary>Gets the payload options the backend's services carry, which the call is sealed and opened with.</summary>
+        private PayloadOptions PayloadOptions => (PayloadOptions?)_services.GetService(typeof(PayloadOptions)) ?? PolhemPayload.CreateOptions();
+
+        private async Task<TestRpcResponse> DispatchAsync(byte[] body, byte[]? key, CancellationToken cancellationToken)
         {
             var resultType = new ResultTypeFilter();
             var options = PolhemJsonRpc.CreateServerOptions();
@@ -80,7 +101,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
             var result = await new JsonRpcDispatcher(options).DispatchMessageAsync(body, CreateTransport(), cancellationToken);
             var json = Encoding.UTF8.GetString(result.Serialize() ?? []);
-            return TestRpcResponse.Read(json, resultType.ResultType);
+            return TestRpcResponse.Read(json, resultType.ResultType, new PayloadProcessor(PayloadOptions), key);
         }
 
         private JsonRpcTransportInfo CreateTransport()
@@ -102,12 +123,14 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             return new JsonRpcTransportInfo(JsonRpcTransportKind.Http, services, headers, "127.0.0.1");
         }
 
-        internal static byte[] Serialize(TestRpcRequest request)
+        /// <summary>Writes a request as the client sends it, sealing its payload with <paramref name="options"/>.</summary>
+        internal static byte[] Serialize(TestRpcRequest request, PayloadOptions? options = null)
         {
-            using var parameters = JsonDocument.Parse(JsonCodec.Serialize(request.Params));
+            var payload = request.Params;
+            var parameters = request.RawParams ?? new PayloadProcessor(options ?? PolhemPayload.CreateOptions()).Wrap(
+                payload.Value, (Polhem.JsonRpc.Payload.PayloadFormat)payload.Format, payload.Codec, payload.Key, payload.Sequence);
             var id = request.Id == null ? JsonRpcId.Null : JsonRpcId.FromString(request.Id);
-            return JsonRpcSerializer.SerializeRequest(
-                new Polhem.JsonRpc.JsonRpcRequest(request.Method, parameters.RootElement.Clone(), id));
+            return JsonRpcSerializer.SerializeRequest(new Polhem.JsonRpc.JsonRpcRequest(request.Method, parameters, id));
         }
 
         /// <summary>
@@ -133,11 +156,38 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// <summary>Gets or sets the method, <c>ProgId.Action</c>.</summary>
         public string Method { get; set; } = string.Empty;
 
-        /// <summary>Gets or sets the parameters.</summary>
-        public JsonRpcParams Params { get; set; } = new();
+        /// <summary>Gets or sets the parameters, sealed into the payload envelope on the way out.</summary>
+        public TestPayload Params { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the <c>params</c> element exactly as it is sent, for a test that builds the envelope itself;
+        /// <see cref="Params"/> is ignored then.
+        /// </summary>
+        public JsonElement? RawParams { get; set; }
 
         /// <summary>Gets or sets the request id, or <c>null</c> for a JSON <c>null</c> id.</summary>
         public string? Id { get; set; } = "test";
+    }
+
+    /// <summary>
+    /// A payload for <see cref="TestDispatcher"/>: the value and how it is carried.
+    /// </summary>
+    internal sealed class TestPayload
+    {
+        /// <summary>Gets or sets the format.</summary>
+        public PayloadFormat Format { get; set; } = PayloadFormat.Plain;
+
+        /// <summary>Gets or sets the value.</summary>
+        public object? Value { get; set; }
+
+        /// <summary>Gets or sets the codec to name; blank for the default.</summary>
+        public string Codec { get; set; } = string.Empty;
+
+        /// <summary>Gets or sets the key of an encrypted payload.</summary>
+        public byte[]? Key { get; set; }
+
+        /// <summary>Gets or sets the sequence number written to the frame when frames are on.</summary>
+        public long Sequence { get; set; }
     }
 
     /// <summary>
@@ -154,7 +204,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         public string Json { get; private init; } = string.Empty;
 
         /// <summary>Gets the result, or <c>null</c> for an error.</summary>
-        public JsonRpcResult? Result { get; private init; }
+        public TestPayload? Result { get; private init; }
 
         /// <summary>Gets the error, or <c>null</c> for a result.</summary>
         public TestRpcError? Error { get; private init; }
@@ -165,19 +215,21 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// <summary>Gets the id of the answer, or <c>null</c> for a JSON <c>null</c> id.</summary>
         public string? Id { get; private init; }
 
-        internal static TestRpcResponse Read(string json, Type? resultType)
+        internal static TestRpcResponse Read(string json, Type? resultType, PayloadProcessor payload, byte[]? key)
         {
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
 
-            JsonRpcResult? result = null;
+            TestPayload? result = null;
             if (root.TryGetProperty("result", out var resultElement) && resultElement.ValueKind != JsonValueKind.Null)
             {
-                result = JsonCodec.Deserialize<JsonRpcResult>(resultElement.GetRawText());
-                if (result is { Format: PayloadFormat.Plain, Value: JsonElement } && resultType != null)
+                var envelope = PayloadEnvelope.Read(resultElement.Clone());
+                var value = ResolvePlainValue(payload.OpenResult(envelope, key, out _));
+                if (envelope.Format == Polhem.JsonRpc.Payload.PayloadFormat.Plain && value is JsonElement && resultType != null)
                 {
-                    result.Value = ConvertPlain(result.Value, resultType);
+                    value = ConvertPlain(value, resultType);
                 }
+                result = new TestPayload { Format = (PayloadFormat)envelope.Format, Value = value, Codec = envelope.Codec };
             }
 
             TestRpcError? error = null;
@@ -197,6 +249,17 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
                 Id = root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String ? id.GetString() : null,
             };
         }
+
+        // A plain value's JSON primitives read as the .NET values they spell, as the client connector reads them.
+        private static object? ResolvePlainValue(object? value) => value is not JsonElement element ? value : element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.TryGetInt64(out var number) ? number : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null or JsonValueKind.Undefined => null,
+            _ => element,
+        };
 
         private static object? ConvertPlain(object value, Type resultType)
             => typeof(ApiOutputConverter).GetMethod(nameof(ApiOutputConverter.ConvertResultValue))!

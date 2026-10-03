@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// </summary>
     /// <remarks>
     /// <para>
-    /// IMPORTANT: the envelope's <see cref="ApiPayload.TypeName"/> is chosen by the caller. Decoding
+    /// IMPORTANT: the envelope's <see cref="Polhem.JsonRpc.Payload.PayloadEnvelope.TypeName"/> is chosen by the caller. Decoding
     /// into whatever it names let a caller have the server construct any public type in the
     /// allow-listed namespaces, through its constructor and setters, before anything checked that
     /// the type suited the method. The method is resolved and its access checked before the body is

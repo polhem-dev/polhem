@@ -115,9 +115,9 @@ DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(Sqlit
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions,   // compressor + encryptor
-                             settings.CommonConfiguration.IsDebugMode);
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
+builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions,   // compressor + encryptor
+                                  settings.CommonConfiguration.IsDebugMode);
 // Nothing else to register: ProgramSettings.xml decides which class serves each progId.
 ```
 
@@ -204,9 +204,9 @@ var r = await new XxxApiConnector(endpoint, Guid.Empty).GetLevelsAsync();
 
 ## Pitfalls (these will stall you for a long time)
 
-- **`ApiServiceOptions.Initialize` is easy to miss**: it applies the compressor and encryptor named in
-  `SystemSettings.xml`, and `AddPolhemFramework` does not call it. Miss it and the built-in defaults apply whatever
-  the file says. It does **not** choose the body codec: each request declares that, and a request that declares none
+- **`AddPolhemPayload` is easy to miss**: it applies the compressor and encryptor named in `SystemSettings.xml`, and
+  `AddPolhemFramework` does not read them. Miss it and the built-in defaults (gzip, aes-cbc-hmac) apply whatever the
+  file says. It does **not** choose the body codec: each request declares that, and a request that declares none
   is MessagePack (adr-044, `rules/serialization.md`).
 - **Every action must be marked `[ApiAccessControl]`**: `ApiAccessValidator` rejects a method with no attribute on
   itself, its base definition or its class with `UnauthorizedAccessException`. `POLHEM3001`, an analyzer that ships

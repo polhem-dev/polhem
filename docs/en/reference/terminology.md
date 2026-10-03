@@ -166,8 +166,8 @@ This document provides a standard term reference for technical writing, ensuring
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `ApiPayload` | API 傳遞資料結構 | Wraps transmission data, supporting compression and encryption |
-| `JsonRpcParams` / `JsonRpcResult` | JSON-RPC 參數／結果外殼 | The payload envelope a call's `params` and `result` carry; the JSON-RPC messages themselves come from `Polhem.JsonRpc` |
+| `PayloadEnvelope` | Payload 外殼 | The envelope a call's `params` and `result` carry (`format`, `value`, `type`, `codec`), from `Polhem.JsonRpc.Payload`; the JSON-RPC messages themselves come from `Polhem.JsonRpc` |
+| `PolhemPayload` | Polhem payload 設定 | Builds the payload options the framework's way: MessagePack as the default codec, the framework's type names, and the compressor and encryptor `ApiPayloadOptions` names |
 | `ExecFuncArgs` | 自訂函式執行參數 | Parameter object passed when invoking custom business functions |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | Declares the protection level and authentication requirement of API endpoints |
 
@@ -177,10 +177,10 @@ This document provides a standard term reference for technical writing, ensuring
 |---------|------|-------------|
 | `ApiProtectionLevel` | API 保護等級 | API Payload protection level (`Public` / `Encoded` / `Encrypted` / `LocalOnly`), located in `Polhem.Definition.Security` |
 | `ApiAccessRequirement` | API 存取授權需求 | Authentication requirement for API endpoints (`Anonymous` / `Authenticated`), located in `Polhem.Definition.Security` |
-| `IApiPayloadEncryptor` | API Payload 加密介面 | Defines payload encryption / decryption behavior |
+| `IPayloadEncryptor` | Payload 加密介面 | Defines payload encryption / decryption behavior, from `Polhem.JsonRpc.Payload` |
 | `AesCbcHmacCryptor` | AES-CBC-HMAC 加密器 | Standard encryption implementation using AES-256-CBC + HMAC-SHA256 |
 | `RsaCryptor` | RSA 加密器 | RSA asymmetric encryption implementation |
-| `NoEncryptionEncryptor` | 無加密器 | Internal no-encryption implementation (not public API). `ApiPayloadOptionsFactory.CreateEncryptor` returns it for the encryptor name `none` (or empty) only in debug mode, and throws otherwise |
+| `NoPayloadEncryptor` | 無加密器 | No-encryption implementation from `Polhem.JsonRpc.Payload`. `PolhemPayload` selects it for the encryptor name `none` (or empty) only in debug mode, and throws otherwise |
 
 ---
 

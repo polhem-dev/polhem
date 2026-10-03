@@ -1,12 +1,11 @@
 using System.ComponentModel;
 using System.Data;
 using System.Text.Json;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Core.Serialization;
 using Polhem.Business.System;
 using Polhem.Api.Core.Conversion;
+using Polhem.Api.Core.Transformers;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -93,12 +92,13 @@ namespace Polhem.Api.Core.UnitTests
             table.Rows.Add("E001");
             table.Rows.Add("E002");
             table.AcceptChanges();
-            var sent = new JsonRpcResult { Value = new GetListResponse { Table = table } };
+            var payload = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions());
 
-            // The Plain wire: the server writes the result with `JsonCodec`, the client reads it back and converts
-            // the value, which arrives as a `JsonElement`.
-            var received = JsonCodec.Deserialize<JsonRpcResult>(JsonCodec.Serialize(sent))!;
-            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(received.Value!);
+            // The Plain wire: the server writes the result with the framework's plain JSON options, the client reads
+            // it back and converts the value, which arrives as a `JsonElement`.
+            var sent = payload.Wrap(new GetListResponse { Table = table }, Polhem.JsonRpc.Payload.PayloadFormat.Plain);
+            var received = payload.Unwrap(JsonDocument.Parse(sent.GetRawText()).RootElement)!;
+            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(received);
 
             Assert.NotNull(result?.Table);
             Assert.Equal(2, result!.Table!.Rows.Count);

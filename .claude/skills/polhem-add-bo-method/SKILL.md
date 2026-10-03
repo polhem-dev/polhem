@@ -417,7 +417,7 @@ public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
         var request = new TestRpcRequest
         {
             Method = $"<ProgId>.{<Axis>Actions.<Action>}",
-            Params = new JsonRpcParams { Value = new <Action>Request { /* ... */ } },
+            Params = new TestPayload { Value = new <Action>Request { /* ... */ } },
             Id = Guid.NewGuid().ToString(),
         };
 
@@ -468,7 +468,7 @@ Easy to hit while writing:
    Register a formatter per static type the wire can see (`FilterConditionFormatter` / `FilterGroupFormatter`)
 6. **Calling `MessagePackSerializer.Serialize(..., ContractlessStandardResolver.Options)` directly and
    bypassing the framework**: the registered formatters are skipped. Always go through `MessagePackCodec` (tests) or
-   `MessagePackPayloadSerializer`
+   `MessagePackPayloadCodec`
 7. **`ApiInputConverter` matches by property name**: if BO Args property names do not match the wire DTO →
    that field is silently lost, with no compile error. The shared `I*` interface is the guard
 8. **Types outside the `SysInfo.AllowedTypeNamespaces` allowlist**: the envelope's type name and every named `object`

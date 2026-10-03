@@ -52,7 +52,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.EnterCompany}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new EnterCompanyRequest { CompanyId = "C001" },
                 },
@@ -99,7 +99,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.EnterCompany}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new EnterCompanyRequest { CompanyId = "NO_SUCH_COMPANY" },
                 },

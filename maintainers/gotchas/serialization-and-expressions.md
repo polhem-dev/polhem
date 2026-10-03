@@ -10,9 +10,9 @@ What the investigation found (2026-07-22):
 - **`PayloadFormat` (Plain / Encoded / Encrypted) = the encryption / compression dimension**, not JSON-vs-MessagePack.
 - At the time, the body serializer was decided by `ApiPayloadOptions.Serializer`, and a factory switch had only one
   case, `messagepack`. ⚠️ **This half has been out of date since Bee.NET 4.27.0**: that setting was removed, the codec
-  is now declared per request, and a JSON body codec exists (adr-044). The factory method is gone on purpose (see the
-  remarks of `ApiPayloadOptionsFactory`); the codec names live in `PayloadCodecNames`, and a declared name is resolved
-  by `ApiServiceOptions.ResolvePayloadSerializer`. **The conclusion above that "the dimensions are orthogonal" holds
+  is now declared per request, and a JSON body codec exists (adr-044). The settings name no codec on purpose; the
+  codec names live in `PayloadCodecNames`, and a declared name is resolved by `PayloadOptions.ResolveCodec` of
+  Polhem.JsonRpc.Payload (since 1.2.0, ADR-049). **The conclusion above that "the dimensions are orthogonal" holds
   even more strongly now**: `PayloadFormat` governs encryption / compression and `codec` governs how the body is
   spelled, each on its own.
 - `FormApiConnector` defaults to `Encrypted` and `Login` uses `Encoded` → the body of such a call goes through
@@ -244,5 +244,5 @@ the type's default value" policy.
 - On the client, "all live computation suddenly stops" → check `FormLiveComputation.IsDegraded` first (an evaluation /
   coerce failure latches off **the whole session**, so the symptom is "nothing moves", not "one cell does not move").
 - The failure mode of definition responses on the MessagePack wire is a **silent empty shell**: no exception, scalar
-  fields intact, nested collections emptied. External probing goes through the public `MessagePackPayloadSerializer`
+  fields intact, nested collections emptied. External probing goes through the public `MessagePackPayloadCodec`
   (`MessagePackCodec` is internal; test projects rely on `InternalsVisibleTo`).

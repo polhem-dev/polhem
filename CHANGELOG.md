@@ -8,9 +8,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
-> JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and
-> `Polhem.Api.AspNetCore` is removed. That removal breaks the hosts that referenced it, in a minor version: a second
-> exception within 1.x, after the one in 1.1.0. On the wire, the parameters and the result envelope are unchanged;
+> JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and the payload
+> envelope, its encryption and its replay frame on their optional payload packages. `Polhem.Api.AspNetCore` and
+> `ApiServiceOptions` are removed. That breaks hosts, in a minor version: a second exception within 1.x, after the one
+> in 1.1.0. On the wire, the parameters and the result envelope are unchanged;
 > the internal error code and the `method` member of responses are aligned with JSON-RPC 2.0, so a non-.NET client
 > has to move with the server. The reasons, and the framework types this release treats as internal plumbing, are in
 > [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
@@ -23,6 +24,14 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   `IJsonRpcTransport`, and `ApiConnector.Provider` has that type.
 - `JsonRpcExecutor` and the message types `JsonRpcRequest`, `JsonRpcResponse` and `JsonRpcError` of
   `Polhem.Api.Core.JsonRpc` are removed.
+- `ApiServiceOptions` is removed, with the payload types of `Polhem.Api.Core`: the transformer, serializer,
+  compressor and encryptor interfaces and their implementations, `ApiPayloadOptionsFactory`, the envelope types
+  (`ApiPayload`, `JsonRpcParams`, `JsonRpcResult`, `ApiPayloadConverter`), `ApiPayloadFrame`, `IReplayWindowStore`,
+  `MemoryReplayWindowStore` and `ReplayRejectedException`. Their replacements are in `Polhem.JsonRpc.Payload`; the
+  exception a client catches for a replayed call is now `Polhem.JsonRpc.Payload.ReplayRejectedException`.
+- `MessagePackPayloadSerializer` is renamed `MessagePackPayloadCodec` and implements the package's `IPayloadCodec`.
+- `IApiAuthorizationValidator` is resolved from the service collection instead of
+  `ApiServiceOptions.AuthorizationValidator`; register your own to replace the default.
 
 To upgrade a host that serves the API over HTTP:
 
@@ -45,10 +54,25 @@ To upgrade a host that serves the API over HTTP:
 Delete the controller derived from `ApiServiceController`. A check that overrode one of its members becomes a filter,
 added with `AddJsonRpcServer(options => options.Filters.Add(...))`.
 
+Every host replaces its `ApiServiceOptions` calls:
+
+```diff
+- ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+- ApiServiceOptions.RequireWireFrame = true;
++ builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode,
++     options => options.RequireFrame = true);
+```
+
+A .NET client sets `ApiClientInfo.PayloadOptions.RequireFrame` to match the server. The rest of the migration (codecs,
+the replay store, the authorization validator, a host that also calls the API in-process) is in decision 5 of
+[ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
+
 ### Added
 
 - `AddPolhemApiKeyGateCheck()` in `Polhem.Hosting`: the startup log while no API key has been issued, for hosts that
   serve the API over HTTP.
+- `AddPolhemPayload()` in `Polhem.Hosting`, `ApiClientInfo.PayloadOptions` in `Polhem.Api.Client`, and `PolhemPayload`
+  in `Polhem.Api.Core`, which builds the payload options the framework's way.
 
 ### Changed behaviour
 
@@ -60,6 +84,7 @@ added with `AddJsonRpcServer(options => options.Filters.Add(...))`.
 - A malformed method name is answered with `MethodNotFound` (-32601) instead of `UserMessage`. An unknown method name
   is answered with a fixed message, also in debug mode, and leaves no anomaly record.
 - In-process calls serialize their parameters, like remote calls.
+- A payload envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters.
 - Log categories: masked failures log under `Polhem.Api.Core.Dispatch.PolhemExceptionMapper`, and the API key startup
   check under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`.
 

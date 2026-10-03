@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
+using Polhem.Api.Core.Transformers;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
@@ -89,34 +90,29 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("RestoreRequest refuses a body whose declared type is not the method's, without decoding it")]
-        public void RestoreRequest_MismatchedTypeName_ThrowsBeforeDecoding()
+        [DisplayName("The server refuses a body whose declared type is not the method's, without decoding it")]
+        public void Open_MismatchedTypeName_ThrowsBeforeDecoding()
         {
             // A whitelisted type the caller used to be able to choose freely — and the carrier of the nested
             // filter that once crashed the server from an anonymous call to Ping.
-            var payload = new JsonRpcParams { Value = new FilterGroup(LogicalOperator.And) };
-            ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encoded);
-            var body = Assert.IsType<byte[]>(payload.Value);
+            var processor = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions());
+            var envelope = processor.Seal(new FilterGroup(LogicalOperator.And), Polhem.JsonRpc.Payload.PayloadFormat.Encoded);
 
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-                ApiPayloadConverter.RestoreRequest(payload, PayloadFormat.Encoded, null, typeof(PingRequest)));
+            var ex = Assert.Throws<InvalidOperationException>(() => processor.OpenRequest(envelope, typeof(PingRequest), null, out _));
 
             Assert.Contains("does not match", ex.Message, StringComparison.Ordinal);
-            Assert.Same(body, payload.Value);
         }
 
         [Fact]
-        [DisplayName("RestoreRequest decodes a matching body into the server-chosen type")]
-        public void RestoreRequest_MatchingTypeName_DecodesIntoTargetType()
+        [DisplayName("The server decodes a matching body into the type it chose")]
+        public void Open_MatchingTypeName_DecodesIntoTargetType()
         {
-            var payload = new JsonRpcParams { Value = new GetListRequest { SelectFields = "sys_id" } };
-            ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encoded);
+            var processor = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions());
+            var envelope = processor.Seal(new GetListRequest { SelectFields = "sys_id" }, Polhem.JsonRpc.Payload.PayloadFormat.Encoded);
 
-            ApiPayloadConverter.RestoreRequest(payload, PayloadFormat.Encoded, null, typeof(GetListRequest));
+            var request = Assert.IsType<GetListRequest>(processor.OpenRequest(envelope, typeof(GetListRequest), null, out _));
 
-            var request = Assert.IsType<GetListRequest>(payload.Value);
             Assert.Equal("sys_id", request.SelectFields);
-            Assert.Equal(PayloadFormat.Plain, payload.Format);
         }
 
         private sealed class TakesRequest

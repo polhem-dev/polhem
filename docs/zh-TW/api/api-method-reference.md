@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: 6591c1183a5abc73ef4e73d07d15d4a3ed3bf1b0 -->
+<!-- source: en/api/api-method-reference.md blob: b748100ab1e5d18326c9712c4ce140e993e359a6 -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -28,7 +28,7 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 
 下列方法另外宣告了 `ReplayProtection = UniqueSequence`：每次呼叫都必須帶一個該 session 沒用過的
 序號，否則伺服端回 `-32005 ReplayRejected`。此檢查只作用於已登入 session 的 Encrypted 呼叫，且 host 須開啟
-wire frame（`ApiServiceOptions.RequireWireFrame`，預設關閉）；Plain 呼叫不帶 frame，不受檢查。
+wire frame（`AddPolhemPayload` 的 `RequireFrame`，預設關閉）；Plain 呼叫不帶 frame，不受檢查。
 其他格式為何無法防護，見 `ApiReplayProtection` 的 XML doc。
 
 - `CreateApiKey`

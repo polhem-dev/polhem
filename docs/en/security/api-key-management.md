@@ -68,7 +68,7 @@ management is gated on the deployment-level axis instead:
 The rule covers every key management method: `CreateApiKey`, `ListApiKeys`, `SetApiKeyEnabled` and
 `SetApiKeyExpiry`. All of them require an Encrypted call, and `CreateApiKey`, `SetApiKeyEnabled` and
 `SetApiKeyExpiry` also declare replay protection (`ApiReplayProtection.UniqueSequence`): when the
-deployment turns on `ApiServiceOptions.RequireWireFrame`, a replayed copy of such a call is refused.
+deployment turns on the wire frame (`RequireFrame` in `AddPolhemPayload`), a replayed copy of such a call is refused.
 The limits of that check are in
 [Development Constraints § API Replay Protection](../architecture/development-constraints.md#api-replay-protection-constraints).
 

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Business;
 using Polhem.Definition;
@@ -76,7 +75,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.Save}",
-                Params = new JsonRpcParams { Value = new SaveRequest { DataSet = input } },
+                Params = new TestPayload { Value = new SaveRequest { DataSet = input } },
                 Id = Guid.NewGuid().ToString(),
             };
 

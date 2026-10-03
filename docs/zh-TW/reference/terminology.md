@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 2950aa3b3a87f024fa7e5fd0073e4ced8d725ac7 -->
+<!-- source: en/reference/terminology.md blob: d6d6c14afc698c1046923b627ff02d0d17c70515 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -167,8 +167,8 @@
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
-| `ApiPayload` | API 傳遞資料結構 | 包裝傳輸資料，支援壓縮與加密 |
-| `JsonRpcParams` / `JsonRpcResult` | JSON-RPC 參數／結果外殼 | 一次呼叫的 `params` 與 `result` 所帶的 payload 外殼；JSON-RPC 訊息本身來自 `Polhem.JsonRpc` |
+| `PayloadEnvelope` | Payload 外殼 | 一次呼叫的 `params` 與 `result` 所帶的外殼（`format`、`value`、`type`、`codec`），來自 `Polhem.JsonRpc.Payload`；JSON-RPC 訊息本身來自 `Polhem.JsonRpc` |
+| `PolhemPayload` | Polhem payload 設定 | 以框架的方式組出 payload 選項：MessagePack 為預設 codec、框架的型別名稱，以及 `ApiPayloadOptions` 指名的壓縮器與加密器 |
 | `ExecFuncArgs` | 自訂函式執行參數 | 呼叫自訂業務函式時傳遞的參數物件 |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | 宣告 API 端點的保護等級與認證需求 |
 
@@ -178,10 +178,10 @@
 |----------|----------|------|
 | `ApiProtectionLevel` | API 保護等級 | API Payload 的保護層級（`Public` / `Encoded` / `Encrypted` / `LocalOnly`），位於 `Polhem.Definition.Security` |
 | `ApiAccessRequirement` | API 存取授權需求 | API 端點的認證要求（`Anonymous` / `Authenticated`），位於 `Polhem.Definition.Security` |
-| `IApiPayloadEncryptor` | API Payload 加密介面 | 定義 Payload 加解密行為的介面 |
+| `IPayloadEncryptor` | Payload 加密介面 | 定義 Payload 加解密行為的介面，來自 `Polhem.JsonRpc.Payload` |
 | `AesCbcHmacCryptor` | AES-CBC-HMAC 加密器 | 使用 AES-256-CBC + HMAC-SHA256 的標準加密實作 |
 | `RsaCryptor` | RSA 加密器 | RSA 非對稱加密實作 |
-| `NoEncryptionEncryptor` | 無加密器 | 內部的不加密實作（非公開 API）。`ApiPayloadOptionsFactory.CreateEncryptor` 只在 debug 模式下對加密器名稱 `none`（或空白）回傳它，其餘情況拋出例外 |
+| `NoPayloadEncryptor` | 無加密器 | `Polhem.JsonRpc.Payload` 的不加密實作。`PolhemPayload` 只在 debug 模式下對加密器名稱 `none`（或空白）選用它，其餘情況拋出例外 |
 
 ---
 

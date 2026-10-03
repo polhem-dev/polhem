@@ -1,4 +1,4 @@
-<!-- source: en/security/api-key-management.md blob: 1a97b175faa142c0b393b7476f6539e9765614e9 -->
+<!-- source: en/security/api-key-management.md blob: 4adbf7e5d4a902286ea92cf0478fbd86e476ac71 -->
 # API 金鑰管理
 
 [English](../../en/security/api-key-management.md) · [← 文件索引](../README.md)
@@ -62,7 +62,7 @@ Console.WriteLine(response.ApiKey);    // "acme-portal.<secret>"
 這條規則涵蓋所有金鑰管理方法：`CreateApiKey`、`ListApiKeys`、`SetApiKeyEnabled` 與
 `SetApiKeyExpiry`。它們全都要求 Encrypted 呼叫，其中 `CreateApiKey`、`SetApiKeyEnabled` 與
 `SetApiKeyExpiry` 另外宣告了重放防護（`ApiReplayProtection.UniqueSequence`）：部署開啟
-`ApiServiceOptions.RequireWireFrame` 後，這類呼叫被重放的副本會遭拒絕。這道檢查的限制見
+wire frame（`AddPolhemPayload` 的 `RequireFrame`）後，這類呼叫被重放的副本會遭拒絕。這道檢查的限制見
 [開發限制 § API 重放防護](../architecture/development-constraints.md#api-重放防護限制)。
 
 部署層模型與第一位管理員的指派方式，見[權限與授權指南第三部分](permission-authorization.md)。

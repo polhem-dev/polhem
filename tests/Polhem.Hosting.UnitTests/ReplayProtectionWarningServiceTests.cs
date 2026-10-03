@@ -1,11 +1,11 @@
 using System.ComponentModel;
-using Polhem.Api.Core;
 using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Storage;
 using Polhem.Hosting.Registry;
 using Polhem.ObjectCaching;
 using Microsoft.Extensions.Logging;
+using Polhem.Api.Core.Transformers;
 
 namespace Polhem.Hosting.UnitTests
 {
@@ -14,8 +14,7 @@ namespace Polhem.Hosting.UnitTests
     /// off, because the declaration reads as a guarantee that no call then honours.
     /// </summary>
     /// <remarks>
-    /// Reads <see cref="ApiServiceOptions.RequireWireFrame"/> at its default and never writes it; no test in this
-    /// assembly changes it.
+    /// Each service gets its own payload options with the frame off, so no process-wide setting is involved.
     /// </remarks>
     public sealed class ReplayProtectionWarningServiceTests : IDisposable
     {
@@ -52,14 +51,13 @@ namespace Polhem.Hosting.UnitTests
         [DisplayName("StartAsync logs one warning naming the replay-protected methods while the wire frame is off")]
         public async Task StartAsync_WireFrameOff_LogsOneWarning()
         {
-            Assert.False(ApiServiceOptions.RequireWireFrame);
             var logger = new ListLogger();
 
             await CreateService(logger).StartAsync(CancellationToken.None);
 
             var warning = Assert.Single(logger.Entries);
             Assert.Equal(LogLevel.Warning, warning.Level);
-            Assert.Contains("RequireWireFrame", warning.Message, StringComparison.Ordinal);
+            Assert.Contains("RequireFrame", warning.Message, StringComparison.Ordinal);
             Assert.Contains($"{SysProgIds.System}.EnterCompany", warning.Message, StringComparison.Ordinal);
         }
 
@@ -68,7 +66,9 @@ namespace Polhem.Hosting.UnitTests
             var storage = new FileDefineStorage(_paths);
             var cache = new CacheContainerService(storage, _paths, "replay_" + Guid.NewGuid().ToString("N"));
             var access = new CacheDefineAccess(storage, _paths, cache, Array.Empty<byte>());
-            return new ReplayProtectionWarningService(access, new ProgramSettingsBoTypeResolver(access), logger);
+            // The framework's default payload options, which leave the frame off.
+            return new ReplayProtectionWarningService(access, new ProgramSettingsBoTypeResolver(access), logger,
+                PolhemPayload.CreateOptions());
         }
 
         private sealed class ListLogger : ILogger<ReplayProtectionWarningService>

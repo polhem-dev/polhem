@@ -68,3 +68,120 @@ static Polhem.Api.Core.Dispatch.PolhemJsonRpc.CreateServerOptions() -> Polhem.Js
 *REMOVED*static Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction(System.Reflection.MethodInfo! method) -> bool
 *REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InternalError = -32000 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InternalError = -32603 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+*REMOVED*Polhem.Api.Core.ApiServiceOptions
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.ApiPayload() -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Codec.get -> string!
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Codec.set -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Frame.get -> Polhem.Api.Core.JsonRpc.ApiPayloadFrame?
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Frame.set -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.get -> string!
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.set -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Value.get -> object?
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayload.Value.set -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadConverter
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame.ApiPayloadFrame(long timestampMs, long sequence) -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Prepend(byte[]! body) -> byte[]!
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Sequence.get -> long
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame.TimestampMs.get -> long
+*REMOVED*Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version.get -> byte
+*REMOVED*Polhem.Api.Core.JsonRpc.IReplayWindowStore
+*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcParams
+*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcParams.JsonRpcParams() -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcResult
+*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcResult.JsonRpcResult() -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore
+*REMOVED*Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.Count.get -> int
+*REMOVED*Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MemoryReplayWindowStore() -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ReplayRejectedException
+*REMOVED*Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message) -> void
+*REMOVED*Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message, System.Exception! innerException) -> void
+*REMOVED*Polhem.Api.Core.Transformers.AesPayloadEncryptor
+*REMOVED*Polhem.Api.Core.Transformers.AesPayloadEncryptor.AesPayloadEncryptor() -> void
+*REMOVED*Polhem.Api.Core.Transformers.AesPayloadEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.AesPayloadEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.AesPayloadEncryptor.EncryptionMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.ApiPayloadTransformer() -> void
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decode(object! payload, System.Type! type) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decrypt(byte[]! encryptedBytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encode(object! payload, System.Type! type) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encrypt(byte[]! rawBytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.GzipPayloadCompressor
+*REMOVED*Polhem.Api.Core.Transformers.GzipPayloadCompressor.Compress(byte[]! bytes) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.GzipPayloadCompressor.CompressionMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.GzipPayloadCompressor.Decompress(byte[]! bytes) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.GzipPayloadCompressor.GzipPayloadCompressor() -> void
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadCompressor
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadCompressor.Compress(byte[]! bytes) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadCompressor.CompressionMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadCompressor.Decompress(byte[]! bytes) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadEncryptor
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadEncryptor.EncryptionMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadSerializer
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadSerializer.SerializationMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decode(object! payload, System.Type! type) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decrypt(byte[]! encryptedBytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encode(object! payload, System.Type! type) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encrypt(byte[]! rawBytes, byte[]! encryptionKey) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.JsonPayloadSerializer
+*REMOVED*Polhem.Api.Core.Transformers.JsonPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.JsonPayloadSerializer.JsonPayloadSerializer() -> void
+*REMOVED*Polhem.Api.Core.Transformers.JsonPayloadSerializer.SerializationMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.JsonPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+*REMOVED*Polhem.Api.Core.Transformers.MessagePackPayloadSerializer
+*REMOVED*Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+*REMOVED*Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.MessagePackPayloadSerializer() -> void
+*REMOVED*Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.SerializationMethod.get -> string!
+*REMOVED*Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+*REMOVED*const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.CurrentVersion = 1 -> byte
+*REMOVED*const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version1Size = 17 -> int
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.AcceptedPayloadCodecs.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.get -> Polhem.Api.Core.Authorization.IApiAuthorizationValidator!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Definition.Settings.ApiPayloadOptions! payloadOptions, bool isDebugMode) -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.get -> Polhem.Api.Core.Transformers.IApiPayloadCompressor!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.get -> Polhem.Api.Core.Transformers.IApiPayloadEncryptor!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadSerializer.get -> Polhem.Api.Core.Transformers.IApiPayloadSerializer!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.get -> Polhem.Api.Core.Transformers.IApiPayloadTransformer!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.ReplayWindowStore.get -> Polhem.Api.Core.JsonRpc.IReplayWindowStore!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.ReplayWindowStore.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.RequireWireFrame.get -> bool
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.RequireWireFrame.set -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.ResolvePayloadSerializer(string? codec) -> Polhem.Api.Core.Transformers.IApiPayloadSerializer!
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.get -> System.TimeSpan
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.set -> void
+*REMOVED*static Polhem.Api.Core.JsonRpc.ApiPayloadConverter.RestoreFrom(Polhem.Api.Core.JsonRpc.ApiPayload! payload, Polhem.Api.Core.Messages.PayloadFormat sourceFormat, byte[]? encryptionKey = null) -> void
+*REMOVED*static Polhem.Api.Core.JsonRpc.ApiPayloadConverter.TransformTo(Polhem.Api.Core.JsonRpc.ApiPayload! payload, Polhem.Api.Core.Messages.PayloadFormat targetFormat, byte[]? encryptionKey = null) -> void
+*REMOVED*static Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Extract(byte[]! framed, out byte[]! body) -> Polhem.Api.Core.JsonRpc.ApiPayloadFrame!
+*REMOVED*static Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateCompressor(string! name) -> Polhem.Api.Core.Transformers.IApiPayloadCompressor!
+*REMOVED*static Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateEncryptor(string! name, bool isDebugMode) -> Polhem.Api.Core.Transformers.IApiPayloadEncryptor!
+*REMOVED*Polhem.Api.Core.JsonRpc.IReplayWindowStore.TryAcceptAsync(System.Guid accessToken, long sequence, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+*REMOVED*Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.TryAcceptAsync(System.Guid accessToken, long sequence, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+*REMOVED*const Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.WindowSize = 64 -> int
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadCompressor! compressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor! encryptor) -> void
+*REMOVED*static Polhem.Api.Core.ApiServiceOptions.RegisterPayloadCodec(Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> void
+*REMOVED*static readonly Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MaxForwardJump -> long
+Polhem.Api.Core.Transformers.MessagePackPayloadCodec
+Polhem.Api.Core.Transformers.MessagePackPayloadCodec.Deserialize(byte[]! bytes, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.MessagePackPayloadCodec.MessagePackPayloadCodec() -> void
+Polhem.Api.Core.Transformers.MessagePackPayloadCodec.Name.get -> string!
+Polhem.Api.Core.Transformers.MessagePackPayloadCodec.Serialize(object! value, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.PolhemPayload
+static Polhem.Api.Core.Transformers.PolhemPayload.Apply(Polhem.JsonRpc.Payload.PayloadOptions! options, Polhem.Definition.Settings.ApiPayloadOptions! settings, bool isDebugMode) -> void
+static Polhem.Api.Core.Transformers.PolhemPayload.CreateOptions(Polhem.Definition.Settings.ApiPayloadOptions? settings = null, bool isDebugMode = false) -> Polhem.JsonRpc.Payload.PayloadOptions!

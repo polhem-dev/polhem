@@ -80,7 +80,7 @@ Three things to put in place:
 > **For the complete order and copy-paste templates see the `polhem-jsonrpc-backend` skill's
 > `references/backend-bootstrap.md`** (master key fallback, `ResolveDefinePath` walk-up,
 > `Defaults.MaterializeTo` laying down framework tables, provider/dialect registration, `SystemSettingsLoader` →
-> `SysInfo` → `ApiServiceOptions` → `AddPolhemFramework`, empty controller).
+> `SysInfo` → `AddPolhemFramework` → `AddPolhemPayload`, `MapJsonRpc`).
 > That file is the single authoritative source; this file does not duplicate it.
 
 On top of that template, **this scenario (company scope + seeder) adds no service overrides**. Northwind registers

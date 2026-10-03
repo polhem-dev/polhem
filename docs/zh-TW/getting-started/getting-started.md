@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 3d162a9f0eb2a393c97cbd73ca431200fd19201a -->
+<!-- source: en/getting-started/getting-started.md blob: fe7ee52176791c2545c552ac01cee71398be6080 -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -138,14 +138,14 @@ var paths = new PathOptions { DefinePath = "./Define" };
 var settings = SystemSettingsLoader.Load(paths);
 
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(
-    settings.CommonConfiguration.ApiPayloadOptions,
-    settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(
     settings.BackendConfiguration,
     paths,
     autoCreateMasterKey: true);
+builder.Services.AddPolhemPayload(
+    settings.CommonConfiguration.ApiPayloadOptions,
+    settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
@@ -164,8 +164,8 @@ app.MapJsonRpc("/api");
 app.Run();
 ```
 
-- `SysInfo.Initialize` 與 `ApiServiceOptions.Initialize` 設定的是請求處理時會讀的全程序值（除錯旗標、允許的型別
-  命名空間、payload 的壓縮器與加密器），要在 host 開始服務之前呼叫。
+- `SysInfo.Initialize` 設定的是請求處理時會讀的全程序值（除錯旗標、允許的型別命名空間），要在 host 開始服務之前
+  呼叫。`AddPolhemPayload` 註冊設定檔指名的 payload 壓縮器與加密器。
 - **框架不會替你建資料表。** 即使是匿名呼叫，也會讀 `st_api_key` 來檢查 `X-Api-Key` 標頭，而因資料表不存在
   而查詢失敗時，呼叫會被拒絕；cache-notify 輪詢器則會讀 `st_cache_notify`。上面的迴圈建立
   `DbCategorySettings.xml` 在 `common` 底下登記的每一張表，之後每次啟動再依 TableSchema 把它們調整一致。

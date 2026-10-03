@@ -53,7 +53,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest
             {
                 Method = method,
-                Params = new JsonRpcParams { Value = new PingRequest { ClientName = "unit", TraceId = "T-1" } },
+                Params = new TestPayload { Value = new PingRequest { ClientName = "unit", TraceId = "T-1" } },
                 Id = Guid.NewGuid().ToString(),
             };
 
@@ -175,7 +175,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.CreateSession",
-                Params = new JsonRpcParams { Value = new CreateSessionRequest { UserId = "local-only-check" } },
+                Params = new TestPayload { Value = new CreateSessionRequest { UserId = "local-only-check" } },
                 Id = "1",
             };
 

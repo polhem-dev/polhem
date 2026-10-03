@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Business;
 using Polhem.Definition;
@@ -51,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             var request = new TestRpcRequest
             {
                 Method = $"Employee.{FormActions.Delete}",
-                Params = new JsonRpcParams { Value = new DeleteRequest { RowId = rowId } },
+                Params = new TestPayload { Value = new DeleteRequest { RowId = rowId } },
                 Id = Guid.NewGuid().ToString(),
             };
 

@@ -4,7 +4,9 @@
 
 Accepted (2026-05-13)
 
-Supersedes [ADR-003](adr-003-static-service-locator.md).
+Supersedes [ADR-003](adr-003-static-service-locator.md). `ApiServiceOptions`, which the addendum below keeps static,
+is removed in 1.2.0: its payload settings and its authorization validator come from the service collection
+([ADR-049](adr-049-jsonrpc-packages-in-1-2.md), decision 5).
 
 ## Context
 

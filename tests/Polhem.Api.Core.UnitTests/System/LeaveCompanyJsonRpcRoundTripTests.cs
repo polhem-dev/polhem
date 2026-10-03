@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -49,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests.System
             => new()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.LeaveCompany}",
-                Params = new JsonRpcParams { Value = new LeaveCompanyRequest() },
+                Params = new TestPayload { Value = new LeaveCompanyRequest() },
                 Id = Guid.NewGuid().ToString(),
             };
 

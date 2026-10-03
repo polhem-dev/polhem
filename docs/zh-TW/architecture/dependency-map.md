@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: df109ac771649cbdce6f0313df5d249971b77b8c -->
+<!-- source: en/architecture/dependency-map.md blob: 0af40d2ad9059483ca5bcdb0e92f081e9b4f8595 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -93,7 +93,7 @@ graph BT
 | Polhem.Definition | Microsoft.Extensions.Localization.Abstractions 10.x |
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
-| Polhem.Api.Core | MessagePack 3.x、Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server |
+| Polhem.Api.Core | MessagePack 3.x、Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Hosting.Abstractions 10.x |

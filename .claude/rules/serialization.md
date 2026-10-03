@@ -10,10 +10,10 @@
 The body codec **is not a deployment setting**. Each request declares it in the `codec` field of the payload
 envelope, and the server **responds with the same codec**. **Undeclared means MessagePack**: that is a compatibility
 constant, not a chosen default (every client that predates negotiation declares nothing and sends MessagePack).
-The built-in names are in `PayloadCodecNames`; the registry that maps a name to its implementation is
-`ApiServiceOptions` (`ResolvePayloadSerializer`, `AcceptedPayloadCodecs`, and `RegisterPayloadCodec` for a codec the
-framework does not ship). **This file does not copy that list.** `ApiPayloadOptionsFactory` deliberately has no
-serializer factory: its remarks explain why.
+The built-in names are in `PayloadCodecNames`; the registry that maps a name to its implementation is the
+`PayloadOptions` of Polhem.JsonRpc.Payload (`ResolveCodec`, `CodecNames`, and `RegisterCodec` for a codec the framework
+does not ship), which `PolhemPayload.CreateOptions` fills the framework's way. **This file does not copy that list.**
+The settings name only the compressor and the encryptor, never the codec.
 
 `PayloadFormat` (Plain/Encoded/Encrypted) is **the encryption/compression dimension**, orthogonal to the codec: a
 `Plain` body is always the envelope's own System.Text.Json; only `Encoded` / `Encrypted` bodies are spelled by the

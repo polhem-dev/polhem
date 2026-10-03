@@ -1,5 +1,5 @@
 using Polhem.Definition.Settings;
-using Polhem.Api.Core;
+using Polhem.Api.Core.Transformers;
 using Polhem.Core;
 using Polhem.Core.Security;
 using Polhem.Core.Serialization;
@@ -199,8 +199,8 @@ namespace Polhem.Api.Client.Connectors
             var configuration = AdoptServerConfiguration(serverConfiguration, SysInfo.IsDebugMode, SysInfo.AllowedTypeNamespaces);
             SysInfo.Initialize(configuration);
             ApiClientInfo.DefaultLanguage = configuration.DefaultLanguage;
-            // Initialize API service options: configure serializer, compressor, and encryptor implementations
-            ApiServiceOptions.Initialize(configuration.ApiPayloadOptions, configuration.IsDebugMode);
+            // The server decides the compressor and the encryptor; the rest of the client's payload options stay.
+            PolhemPayload.Apply(ApiClientInfo.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace Polhem.Api.Client.Connectors
 
         /// <summary>
         /// Says whether an encryptor name selects no encryption, by the same names
-        /// <see cref="Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateEncryptor"/> accepts for it.
+        /// <see cref="PolhemPayload.Apply"/> accepts for it.
         /// </summary>
         private static bool IsNoEncryption(string? encryptor)
             => string.IsNullOrEmpty(encryptor) || string.Equals(encryptor, "none", StringComparison.Ordinal);

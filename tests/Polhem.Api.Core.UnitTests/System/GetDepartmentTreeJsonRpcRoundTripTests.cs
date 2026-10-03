@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -44,7 +43,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetDepartmentTree}",
-                Params = new JsonRpcParams { Value = new GetDepartmentTreeRequest() },
+                Params = new TestPayload { Value = new GetDepartmentTreeRequest() },
                 Id = Guid.NewGuid().ToString(),
             };
 

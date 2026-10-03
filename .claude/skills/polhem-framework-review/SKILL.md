@@ -138,7 +138,7 @@ judgement.
 - Anonymous surface: everything reachable before authentication (the decoder, anonymous actions, replay protection)
   is a denial-of-service surface; `AnonymousApiSurfaceTests` pins the anonymous action list.
 - Hardcoding: keys/certificates/passwords in connection strings; MD5/SHA1 used for security hashing; whether
-  `NoEncryptionEncryptor` can be enabled outside debug.
+  the `none` encryptor (`NoPayloadEncryptor`) can be enabled outside debug.
 
 ### 4. Maintainability (rule sources: `.claude/rules/code-style.md` + `.claude/rules/sonarcloud.md`)
 - **Culture-sensitive comparison misused on identifier strings** (high-value check): grep `CurrentCultureIgnoreCase`,
@@ -403,7 +403,7 @@ This round "the content of definition-type responses is completely wiped out on 
 theoretical inference. Only after building a standalone console project in the scratchpad (ProjectReference to the
 target package, going through the **public** serialization entry point) and measuring it was the failure mode pinned
 down as **a silent empty shell rather than a thrown exception**, and the choice of fix depended on exactly that answer.
-Note that `MessagePackCodec` is internal; external probing must go through `MessagePackPayloadSerializer`.
+Note that `MessagePackCodec` is internal; external probing must go through `MessagePackPayloadCodec`.
 
 **4. Cross-check agents' conclusions, especially any judgement that "this is dead code".**
 This round an agent marked the `LocalOnly` check in `ApiAccessValidator` as dead code, when actually only the second

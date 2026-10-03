@@ -24,8 +24,7 @@ namespace Polhem.Definition.UnitTests
     /// <para>
     /// NOTE: Since 2026-09-04 this collection is **redundant**: the whole assembly is serialized by
     /// <c>DisableTestParallelization</c> in <c>AssemblyInfo.cs</c>, so **new test classes need not be added here**. It is
-    /// kept as a record of which classes touch process-wide state and why (the same approach as
-    /// <c>ApiServiceOptionsStateCollection</c> in <c>Polhem.Api.Core</c>). <b>Do not remove
+    /// kept as a record of which classes touch process-wide state and why. <b>Do not remove
     /// <c>DisableTestParallelization</c> and switch back to this collection because it is redundant</b>: that would trade a
     /// structural guarantee for "remember to add it", a requirement that is bound to be missed, with no signal when it is.
     /// </para>

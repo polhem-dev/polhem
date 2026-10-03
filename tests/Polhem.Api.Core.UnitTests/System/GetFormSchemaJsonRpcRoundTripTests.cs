@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -53,7 +52,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormSchema}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetFormSchemaRequest { ProgId = "Employee" },
                 },
@@ -95,7 +94,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormSchema}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetFormSchemaRequest { ProgId = "" },
                 },

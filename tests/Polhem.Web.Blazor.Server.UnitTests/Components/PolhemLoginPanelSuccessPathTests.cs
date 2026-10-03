@@ -2,9 +2,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using System.Text.Json;
-using Polhem.Api.Core.JsonRpc;
-using Polhem.Core.Serialization;
 using Polhem.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Web.Blazor.Server.Components;
@@ -43,11 +40,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
             {
-                var parameters = JsonCodec.Deserialize<JsonRpcParams>(request.Params!.Value.GetRawText())!;
-                var result = new JsonRpcResult { Value = response, Codec = parameters.Codec };
-                ApiPayloadConverter.TransformTo(result, parameters.Format);
-                using var document = JsonDocument.Parse(JsonCodec.Serialize(result));
-                return Task.FromResult<JsonRpcResponse?>(JsonRpcResponse.Success(request.Id, document.RootElement.Clone()));
+                var parameters = Polhem.JsonRpc.Payload.PayloadEnvelope.Read(request.Params);
+                var result = new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions)
+                    .Seal(response, parameters.Format, parameters.Codec);
+                return Task.FromResult<JsonRpcResponse?>(JsonRpcResponse.Success(request.Id, result.ToElement()));
             }
 
             public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)

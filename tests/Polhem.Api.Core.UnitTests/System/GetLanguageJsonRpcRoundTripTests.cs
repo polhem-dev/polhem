@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Language;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -51,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetLanguageRequest
                     {
@@ -99,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetLanguageRequest { Lang = "zh-TW", Namespace = "Nonexistent" },
                 },
@@ -135,7 +134,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetLanguage}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetLanguageRequest { Lang = "", Namespace = "Common" },
                 },

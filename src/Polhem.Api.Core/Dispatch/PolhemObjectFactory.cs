@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.Dispatch
     /// </summary>
     /// <remarks>
     /// A call that arrives over HTTP is checked first: the <c>X-Api-Key</c> header against the registered
-    /// <see cref="IApiKeyValidator"/>, then the whole request against <see cref="ApiServiceOptions.AuthorizationValidator"/>,
+    /// <see cref="IApiKeyValidator"/>, then the whole request against the registered <see cref="IApiAuthorizationValidator"/>,
     /// which also yields the access token from the <c>Authorization</c> header. Only a call that passes gets a business
     /// object, the order the HTTP checks have always run in. An in-process call takes its access
     /// token from <see cref="PolhemJsonRpc.AccessTokenItem"/> and is not checked, as a local call never was.
@@ -71,7 +71,7 @@ namespace Polhem.Api.Core.Dispatch
             headers.TryGetValue(ApiHeaders.Authorization, out var authorization);
 
             state.ApiKeyValidation = ValidateApiKey(apiKey, services);
-            var result = ApiServiceOptions.AuthorizationValidator.Validate(new ApiAuthorizationContext
+            var result = services.GetRequiredService<IApiAuthorizationValidator>().Validate(new ApiAuthorizationContext
             {
                 ApiKey = apiKey ?? string.Empty,
                 Authorization = authorization ?? string.Empty,

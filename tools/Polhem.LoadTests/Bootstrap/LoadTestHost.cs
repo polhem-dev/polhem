@@ -1,4 +1,5 @@
-using Polhem.Api.Core;
+using Polhem.Api.Client;
+using Polhem.Api.Core.Transformers;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -159,9 +160,9 @@ namespace Polhem.LoadTests.Bootstrap
             var settings = SystemSettingsLoader.Load(paths);
 
             SysInfo.Initialize(settings.CommonConfiguration);
-            ApiServiceOptions.Initialize(
-                settings.CommonConfiguration.ApiPayloadOptions,
-                settings.CommonConfiguration.IsDebugMode);
+            services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+            // The same process also calls the API through a local client, which must speak the same payload.
+            PolhemPayload.Apply(ApiClientInfo.PayloadOptions, settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
             // autoCreateMasterKey generates a key when POLHEM_MASTER_KEY is unset, so a run needs no
             // key material of its own and none is hard-coded here.
