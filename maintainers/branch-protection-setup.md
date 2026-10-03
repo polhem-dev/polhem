@@ -69,3 +69,4 @@ gh api repos/polhem-dev/polhem --method PATCH \
 - **The push that created `main` did not start `build-ci.yml`.** On 2026-09-26 the first push of this repository
   started `docs-check.yml`, which has no `paths` filter, but not `build-ci.yml`, whose `push` trigger has one.
   The full run was started with `workflow_dispatch` (`db_scope=all`) instead.
+
