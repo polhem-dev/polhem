@@ -9,6 +9,12 @@ the `pull_request` trigger deliberately has none, because `build` is a required 
 `main` and a required check that never starts would leave a documentation-only pull request waiting forever (the
 reason is also written next to the trigger).
 
+A pull request whose changes are **all `.md` files** still starts the `build` job, but the job skips every build,
+test, pack and SonarCloud step and reports success (the "Detect documentation-only pull request" step). Only the
+`sqlserver` service container starts anyway, because `services:` has no `if:`. **One `.md` file next to any other file
+builds normally**, and `[all-db]` in the title of a documentation-only pull request has no effect. The documents
+themselves are checked by `docs-check.yml`, which always runs.
+
 **Why the push filter exists**: samples/ are demos and docs/ are documents; changes to either do not affect the
 correctness of the NuGet packages, and this saves runner time.
 

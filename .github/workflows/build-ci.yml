@@ -12,7 +12,10 @@ on:
       - '.github/workflows/build-ci.yml'
       - 'SonarQube.Analysis.xml'
   # No paths filter on pull requests: `build` is a required check of the branch protection on `main`, and a
-  # required check that never starts leaves a documentation-only pull request waiting forever.
+  # required check that never starts leaves a documentation-only pull request waiting forever. A pull request that
+  # changes only `.md` files is recognized inside the job instead (the "Detect documentation-only pull request"
+  # step), so the job still starts and reports success without building. The documents themselves are checked by
+  # `docs-check.yml`.
   pull_request:
     branches:
       - main
@@ -50,12 +53,44 @@ jobs:
       with:
         fetch-depth: 0
 
+    # Decides whether this run builds at all. Only a pull request whose changes are all `.md` files skips the
+    # build; a push or a manual dispatch always builds. The skip is done step by step rather than on the job:
+    # GitHub reports a job skipped by `if:` as a passing check, so if the detection lived in a separate job, a
+    # failure there would skip `build` and let the pull request merge. Inside this job, a failed detection fails
+    # `build`. Every later step is gated on `build == 'true'`, either directly or through "Resolve database scope",
+    # whose outputs stay empty when it is skipped.
+    # HEAD is the merge commit GitHub creates for the pull request, so `HEAD^1..HEAD` is exactly what the pull
+    # request would change on the current `main`, even when the branch is behind it. `--no-renames` lists both
+    # sides of a rename, so renaming a `.cs` file to `.md` still builds. Anything unexpected (no merge commit, an
+    # empty list) builds.
+    # The `sqlserver` service above still starts on a documentation-only pull request, because `services:` has no
+    # `if:`. That costs the image pull and start, well under the cost of the build and tests.
+    - name: Detect documentation-only pull request
+      id: changes
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        build=true
+        if [ "$EVENT_NAME" = "pull_request" ] && git rev-parse -q --verify HEAD^2 > /dev/null; then
+          files=$(git diff --name-only --no-renames HEAD^1 HEAD)
+          echo "Changed files:"
+          printf '%s\n' "$files"
+          if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qv '\.md$'; then
+            build=false
+          fi
+        fi
+        echo "build=$build" >> "$GITHUB_OUTPUT"
+        if [ "$build" = false ]; then
+          echo "Only .md files changed: skipping the build, tests and SonarCloud (docs-check.yml checks the documents)"
+        fi
+
     # Decides which database tests run. The default is lite (SQL Server + SQLite).
     # Full mode must be requested explicitly: a manual dispatch with db_scope=all, or [all-db] in the commit message.
     # The commit message is always passed through env. It is a user-controlled string, and expanding it with
     # ${{ }} directly inside run: would allow script injection (the S7636 reason in .claude/rules/sonarcloud.md).
     - name: Resolve database scope
       id: scope
+      if: steps.changes.outputs.build == 'true'
       env:
         DISPATCH_SCOPE: ${{ github.event.inputs.db_scope }}
         # head_commit only exists on push events. Pull request events look at the PR title instead; otherwise [all-db] would not work on a PR.
@@ -106,6 +141,7 @@ jobs:
           gvenzl/oracle-free@sha256:c9803db54238b5be268c7f5916e3c5811ef106e58aeb2f1f9b690c135ed50672
 
     - name: Setup .NET
+      if: steps.changes.outputs.build == 'true'
       uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
         dotnet-version: 10.0.x
@@ -130,6 +166,7 @@ jobs:
       run: dotnet tool install --global dotnet-sonarscanner
 
     - name: Install sqlcmd
+      if: steps.changes.outputs.build == 'true'
       run: |
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
         curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
@@ -138,6 +175,7 @@ jobs:
         echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
 
     - name: Wait for SQL Server
+      if: steps.changes.outputs.build == 'true'
       env:
         SA_PASSWORD: PolhemTest_Password123!
       run: |
@@ -152,6 +190,7 @@ jobs:
         exit 1
 
     - name: Create SQL Server test databases (common + company + log)
+      if: steps.changes.outputs.build == 'true'
       env:
         SA_PASSWORD: PolhemTest_Password123!
       run: |
@@ -162,6 +201,7 @@ jobs:
     # in .editorconfig really fail the build. The Sonar-wrapped build weakens that protection, so this separate
     # build is the gate.
     - name: Strict build (analyzer gate)
+      if: steps.changes.outputs.build == 'true'
       run: dotnet build Polhem.slnx --configuration Release
 
     # Placed after the strict build: the containers have been starting in the background for about a minute since
@@ -246,6 +286,7 @@ jobs:
     # Coverage is collected only in full mode: lite mode does not run SonarScanner, so nobody would collect it,
     # and a report without three providers would only push the SonarCloud numbers down.
     - name: Test with coverage
+      if: steps.changes.outputs.build == 'true'
       env:
         # SharedDatabaseState replaces {@DbName} with common / company for each DatabaseItem, matching the two
         # physical databases created in the previous step. Oracle is the exception (it is not separated by DbName).
@@ -266,6 +307,7 @@ jobs:
       run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
     - name: Pack NuGet packages (verification only, not pushed)
+      if: steps.changes.outputs.build == 'true'
       run: |
         dotnet pack src/Polhem.Core/Polhem.Core.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Expressions/Polhem.Expressions.csproj --configuration Release --output ./nupkgs --no-build
@@ -307,6 +349,7 @@ jobs:
     # so that kind of failure is covered by the static closure in WireContractDriftTests. Each gate covers one
     # half, and both are needed.
     - name: Mobile AOT gate (wire + XmlSerializer reflection-only path)
+      if: steps.changes.outputs.build == 'true'
       env:
         # As in the Test step, the other three come from $GITHUB_ENV and exist only in full mode.
         POLHEM_TEST_CONNSTR_SQLSERVER: "Server=localhost,1433;Database={@DbName};User Id=sa;Password=PolhemTest_Password123!;Encrypt=True;TrustServerCertificate=True;"
