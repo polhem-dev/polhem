@@ -60,6 +60,10 @@ gh api repos/polhem-dev/polhem --method PATCH \
 - **A required check must start on every pull request.** A required workflow with a `paths` filter on
   `pull_request` never reports on a pull request outside those paths, and that pull request waits forever.
   This is why the `pull_request` trigger of `build-ci.yml` has no `paths` filter; its `push` trigger still has one.
+  A pull request that changes only `.md` files is recognized inside the `build` job instead: the job starts,
+  skips the build, tests and SonarCloud, and reports success. The detection is a step of `build`, not a job of its
+  own: GitHub reports a job skipped by `if:` as passing, so a failed detection job would let the pull request merge.
+  The step and its reasons are in the workflow file.
 - **The check names are the job names** (`build`, `docs`). Renaming a job requires changing the protection too;
   otherwise every pull request waits for a check that no longer exists.
 - **The push that created `main` did not start `build-ci.yml`.** On 2026-09-26 the first push of this repository
