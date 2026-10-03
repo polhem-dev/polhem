@@ -86,7 +86,7 @@ public partial class ConnectionViewModel : ViewModelBase
 
         try
         {
-            // ClientInfo.InitializeAsync runs ApiConnectValidator (HTTP reachability + ping)
+            // ClientInfo.InitializeAsync runs ApiConnectValidator (a ping)
             // then stores the endpoint via EndpointStorage — fully async, so it does not block
             // the UI thread. The async path is required on browser WASM, whose single-threaded
             // runtime throws "Cannot wait on monitors" if any await is bridged synchronously.

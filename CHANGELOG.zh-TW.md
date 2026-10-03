@@ -8,6 +8,11 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 行為變更
+
+- 連線到遠端端點時（`ApiConnectValidator`，以及 UI head 透過它呼叫的 `ClientInfo`）只以 ping 檢查端點，不再先送 HTTP
+  `HEAD` 請求；端點每次連線都以 405 回應那個請求。連不上的主機仍回報為 `Endpoint not reachable`。
+
 ## [1.2.0] - 2026-10-03
 
 > JSON-RPC 改建在 [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) 套件上，payload 外殼、加密與重放 frame
