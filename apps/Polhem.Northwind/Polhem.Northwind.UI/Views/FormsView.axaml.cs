@@ -44,7 +44,27 @@ public partial class FormsView : UserControl
         if (_initialSelectionDone) return;
         _initialSelectionDone = true;
 
-        var first = NavList.Items.OfType<NavItem>().FirstOrDefault(n => !n.IsHeader);
+        if (DataContext is FormsViewModel vm)
+        {
+            _ = OpenFirstFormAsync(vm);
+        }
+    }
+
+    /// <summary>
+    /// Opens the first form once the menu has arrived from the server.
+    /// </summary>
+    /// <remarks>
+    /// The menu is fetched after sign-in and can still be empty when the view loads. On the browser and
+    /// iOS heads it was, so reading the menu as the view loaded opened nothing.
+    /// </remarks>
+    private async Task OpenFirstFormAsync(FormsViewModel vm)
+    {
+        await vm.MenuLoaded.ConfigureAwait(true);
+
+        // The user may have opened a form in the meantime; do not take the tab away from them.
+        if (Tabs.Items.Count > 0) return;
+
+        var first = vm.NavItems.FirstOrDefault(n => !n.IsHeader);
         if (first is not null)
         {
             NavList.SelectedItem = first;
