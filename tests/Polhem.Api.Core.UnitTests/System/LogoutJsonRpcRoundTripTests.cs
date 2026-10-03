@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.UnitTests.Dispatch;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
@@ -48,7 +47,7 @@ namespace Polhem.Api.Core.UnitTests.System
             => new()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Logout}",
-                Params = new JsonRpcParams { Value = new LogoutRequest() },
+                Params = new TestPayload { Value = new LogoutRequest() },
                 Id = Guid.NewGuid().ToString(),
             };
 

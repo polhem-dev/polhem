@@ -4,8 +4,8 @@ using System.Text;
 using System.Text.Json;
 using MessagePack;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Api.Core.Transformers;
 using Polhem.Definition.Filters;
+using Polhem.Api.Core.Transformers;
 
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {
@@ -86,7 +86,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
             for (var i = 0; i < NestedGroups; i++)
                 json.Append("]}");
 
-            var serializer = new JsonPayloadSerializer();
+            var serializer = new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options);
 
             Assert.ThrowsAny<JsonException>(() =>
                 serializer.Deserialize(Encoding.UTF8.GetBytes(json.ToString()), typeof(FilterGroup)));

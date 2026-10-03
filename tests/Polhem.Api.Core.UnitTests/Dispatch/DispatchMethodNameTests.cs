@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             => NewDispatcher(Guid.Empty).ExecuteAsync(new TestRpcRequest
             {
                 Method = method,
-                Params = new JsonRpcParams { Value = value },
+                Params = new TestPayload { Value = value },
                 Id = "1",
             });
 
@@ -109,7 +109,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest
             {
                 Method = "NoSuchForm" + Guid.NewGuid().ToString("N")[..8] + ".GetList",
-                Params = new JsonRpcParams { Value = new Polhem.Api.Core.Messages.Form.GetListRequest() },
+                Params = new TestPayload { Value = new Polhem.Api.Core.Messages.Form.GetListRequest() },
                 Id = "1"
             };
             string definePath = _fx.GetRequiredService<PathOptions>().DefinePath;
@@ -140,7 +140,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
-                Params = new JsonRpcParams { Value = new PingRequest { ClientName = "C", TraceId = "T" } },
+                Params = new TestPayload { Value = new PingRequest { ClientName = "C", TraceId = "T" } },
                 Id = id
             };
 

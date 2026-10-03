@@ -4,7 +4,6 @@ using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
-using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
@@ -175,7 +174,7 @@ namespace Polhem.Api.Client.Connectors
             T result;
             using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
             {
-                var payload = new Polhem.JsonRpc.Payload.PayloadProcessor(LegacyPayloadBridge.CreateOptions());
+                var payload = new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions);
                 var parameters = WrapRequest(payload, value, format);
 
                 // Invoke the JSON-RPC method (remote or local)

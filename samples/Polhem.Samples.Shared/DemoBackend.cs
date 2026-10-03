@@ -1,4 +1,5 @@
-using Polhem.Api.Core;
+using Polhem.Api.Client;
+using Polhem.Api.Core.Transformers;
 using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;
@@ -99,9 +100,9 @@ public static class DemoBackend
 
         var settings = SystemSettingsLoader.Load(paths);
         SysInfo.Initialize(settings.CommonConfiguration);
-        ApiServiceOptions.Initialize(
-            settings.CommonConfiguration.ApiPayloadOptions,
-            settings.CommonConfiguration.IsDebugMode);
+        builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+        // The same process also calls the API through a local client, which must speak the same payload.
+        PolhemPayload.Apply(ApiClientInfo.PayloadOptions, settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
         builder.Services.AddPolhemFramework(
             settings.BackendConfiguration,

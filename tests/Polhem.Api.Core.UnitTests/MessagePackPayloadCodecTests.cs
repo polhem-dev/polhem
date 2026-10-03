@@ -4,24 +4,24 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// Tests for MessagePackPayloadSerializer.
+    /// Tests for MessagePackPayloadCodec.
     /// </summary>
-    public class MessagePackPayloadSerializerTests
+    public class MessagePackPayloadCodecTests
     {
         [Fact]
-        [DisplayName("SerializationMethod is \"messagepack\"")]
+        [DisplayName("Name is \"messagepack\"")]
         public void SerializationMethod_IsMessagePack()
         {
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
 
-            Assert.Equal("messagepack", serializer.SerializationMethod);
+            Assert.Equal("messagepack", serializer.Name);
         }
 
         [Fact]
         [DisplayName("Serialize/Deserialize round-trips a string")]
         public void SerializeDeserialize_String_RoundTrip()
         {
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
             const string original = "Hello, MessagePack!";
 
             var bytes = serializer.Serialize(original, typeof(string));
@@ -34,7 +34,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Serialize/Deserialize round-trips an integer")]
         public void SerializeDeserialize_Int_RoundTrip()
         {
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
             const int original = 123456;
 
             var bytes = serializer.Serialize(original, typeof(int));

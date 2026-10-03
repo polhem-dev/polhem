@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -56,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetFormLayoutRequest { ProgId = "Employee", LayoutId = "" },
                 },
@@ -87,7 +86,7 @@ namespace Polhem.Api.Core.UnitTests.System
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
-                Params = new JsonRpcParams
+                Params = new TestPayload
                 {
                     Value = new GetFormLayoutRequest { ProgId = "", LayoutId = "default" },
                 },

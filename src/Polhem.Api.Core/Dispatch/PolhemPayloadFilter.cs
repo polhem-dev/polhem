@@ -1,4 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Core.Conversion;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Payload.Server;
 using Polhem.JsonRpc.Server;
 
@@ -22,8 +24,10 @@ namespace Polhem.Api.Core.Dispatch
             ArgumentNullException.ThrowIfNull(context);
             ArgumentNullException.ThrowIfNull(next);
 
-            var filter = new PayloadFilter(LegacyPayloadBridge.CreateOptions(), PolhemPayloadPolicy.Instance,
-                LegacyPayloadBridge.ReplayStore);
+            var services = context.Services
+                ?? throw new InvalidOperationException("A Polhem call needs the services of its scope.");
+            var filter = new PayloadFilter(services.GetRequiredService<PayloadOptions>(), PolhemPayloadPolicy.Instance,
+                services.GetRequiredService<IPayloadReplayStore>());
             return filter.InvokeAsync(context, async inner =>
             {
                 await next(inner).ConfigureAwait(false);

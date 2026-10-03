@@ -1,3 +1,5 @@
+using Polhem.Api.Core.Transformers;
+
 namespace Polhem.Api.Client
 {
     /// <summary>
@@ -40,5 +42,16 @@ namespace Polhem.Api.Client
         /// settings; the signed-in user's own culture arrives with the login response.
         /// </remarks>
         public static string DefaultLanguage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the payload options every connector of this client reads and writes the payload envelope with.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Connectors.SystemApiConnector.InitializeAsync"/> applies the server's compressor and encryptor to this
+        /// instance and leaves the rest as it is, so a setting made before it, such as
+        /// <see cref="Polhem.JsonRpc.Payload.PayloadOptions.RequireFrame"/>, survives. The server must use the same frame
+        /// setting.
+        /// </remarks>
+        public static Polhem.JsonRpc.Payload.PayloadOptions PayloadOptions { get; set; } = PolhemPayload.CreateOptions();
     }
 }

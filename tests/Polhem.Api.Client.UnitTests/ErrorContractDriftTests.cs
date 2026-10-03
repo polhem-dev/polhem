@@ -4,6 +4,7 @@ using Polhem.Api.Client.UnitTests.Connectors;
 using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core.Exceptions;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Client.UnitTests
 {

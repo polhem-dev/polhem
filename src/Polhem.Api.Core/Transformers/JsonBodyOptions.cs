@@ -6,11 +6,11 @@ using Polhem.Core.Serialization;
 namespace Polhem.Api.Core.Transformers
 {
     /// <summary>
-    /// API payload serializer that uses JSON.
+    /// The options bodies on the <c>json</c> payload codec are serialized with.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This codec exists for clients that cannot reasonably speak the framework's MessagePack
+    /// The codec exists for clients that cannot reasonably speak the framework's MessagePack
     /// wire — a browser, above all. That wire is assembled from hand-written per-type formatters,
     /// and mirroring them in another language would create a second authority for the same
     /// contract with nothing to catch the two drifting apart.
@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.Transformers
     /// <item>
     /// <b><c>object</c>-typed members carry a discriminated envelope</b> (<c>[code, value]</c>) via
     /// <see cref="WireValueJsonConverter"/>, which Plain has always lacked. Plain writes and reads
-    /// the bare value, read by <see cref="PlainValueJsonConverter"/>. Sending this codec's shape as
+    /// the bare value, read by <see cref="PlainValueJsonConverter"/>. Sending this shape as
     /// Plain does <b>not</b> fail reliably — the member deserializes to a two-element
     /// <c>object[]</c> and travels on, so an <c>In</c> filter would match against the code and the
     /// quoted value with no exception and no log line. The envelope converter cannot simply be added
@@ -42,14 +42,14 @@ namespace Polhem.Api.Core.Transformers
     /// <item>
     /// <b>Empty collections are written, not omitted.</b> Plain goes through
     /// <see cref="Polhem.Core.Serialization.JsonCodec"/>, which honours <c>{Property}Specified</c>
-    /// properties; this codec's options do not, so a member such as <c>parameters</c> appears as <c>[]</c>.
+    /// properties; these options do not, so a member such as <c>parameters</c> appears as <c>[]</c>.
     /// </item>
     /// </list>
     /// The fixtures under <c>wire-fixtures/</c> are bodies for <b>this</b> codec — the
     /// <c>Encoded</c> and <c>Encrypted</c> paths — and are not Plain request bodies.
     /// </para>
     /// </remarks>
-    public sealed class JsonPayloadSerializer : IApiPayloadSerializer
+    internal static class JsonBodyOptions
     {
         /// <summary>
         /// The maximum nesting depth accepted from the wire.
@@ -67,9 +67,6 @@ namespace Polhem.Api.Core.Transformers
         /// away and pays full reflection again on every request.
         /// </summary>
         private static readonly JsonSerializerOptions s_options = CreateOptions();
-
-        /// <summary>Gets the options bodies on the <c>json</c> codec are serialized with.</summary>
-        internal static JsonSerializerOptions Options => s_options;
 
         private static JsonSerializerOptions CreateOptions()
         {
@@ -92,29 +89,6 @@ namespace Polhem.Api.Core.Transformers
             return options;
         }
 
-        /// <summary>
-        /// Gets the identifier string for the serialization format.
-        /// </summary>
-        public string SerializationMethod => PayloadCodecNames.Json;
-
-        /// <summary>
-        /// Serializes the object to a byte array.
-        /// </summary>
-        /// <param name="value">The object to serialize.</param>
-        /// <param name="type">The type of the object.</param>
-        public byte[] Serialize(object value, Type type)
-        {
-            return JsonSerializer.SerializeToUtf8Bytes(value, type, s_options);
-        }
-
-        /// <summary>
-        /// Deserializes a byte array to an object.
-        /// </summary>
-        /// <param name="bytes">The byte array to deserialize.</param>
-        /// <param name="type">The type of the deserialized object.</param>
-        public object? Deserialize(byte[] bytes, Type type)
-        {
-            return JsonSerializer.Deserialize(bytes, type, s_options);
-        }
+        public static JsonSerializerOptions Options => s_options;
     }
 }

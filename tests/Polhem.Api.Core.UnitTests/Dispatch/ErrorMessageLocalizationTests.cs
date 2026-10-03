@@ -139,7 +139,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
         private static Localizer CreateExecutor(StubSessionInfoService sessions, ILanguageService? languageService)
         {
-            var services = new ServiceCollection();
+            var services = TestDispatcher.AddDispatchDefaults(new ServiceCollection());
             services.AddSingleton<ISessionInfoService>(sessions);
             if (languageService != null)
             {

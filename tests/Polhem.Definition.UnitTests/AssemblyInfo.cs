@@ -8,8 +8,7 @@
 // keep growing as tests are added. Such a requirement is bound to be missed, and when it is, the tests look
 // serialized but are not, with no compile or test signal.
 // Serializing once at the assembly level makes it structural. `ProcessWideStateCollection` is therefore
-// redundant, but it is kept as a record of which classes touch process-wide state (the same approach as
-// `ApiServiceOptionsStateCollection` in Polhem.Api.Core).
+// redundant, but it is kept as a record of which classes touch process-wide state.
 //
 // Measured cost (2026-09-04, 1,086 tests): 352-634 ms before serializing, 723-823 ms after.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]

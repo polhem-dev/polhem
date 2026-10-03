@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Conversion;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
-using Polhem.Core.Serialization;
 using Polhem.JsonRpc;
+using PayloadEnvelope = Polhem.JsonRpc.Payload.PayloadEnvelope;
+using PayloadProcessor = Polhem.JsonRpc.Payload.PayloadProcessor;
 
 namespace Polhem.Api.Client.UnitTests
 {
@@ -12,18 +12,18 @@ namespace Polhem.Api.Client.UnitTests
     /// A transport that answers in place of a server, for tests that replace <see cref="ApiConnector.Provider"/>.
     /// </summary>
     /// <remarks>
-    /// It reads the parameters with <see cref="JsonCodec"/> as the server does, so a test sees the envelope that
-    /// went onto the wire. The answer is a <see cref="JsonRpcResult"/>; throwing <see cref="JsonRpcErrorException"/>
-    /// answers with an error instead.
+    /// It reads the parameters as the server's payload filter does, with the client's own payload options, so a test
+    /// sees the envelope that went onto the wire. The answer is a payload envelope; throwing
+    /// <see cref="JsonRpcErrorException"/> answers with an error instead.
     /// </remarks>
     internal sealed class FakeApiTransport : IJsonRpcTransport
     {
-        private readonly Func<FakeApiCall, JsonRpcResult> _respond;
+        private readonly Func<FakeApiCall, PayloadEnvelope> _respond;
 
         /// <summary>
         /// Initializes a new instance that answers with <paramref name="respond"/>, or echoes <c>"ok"</c>.
         /// </summary>
-        public FakeApiTransport(Func<FakeApiCall, JsonRpcResult>? respond = null)
+        public FakeApiTransport(Func<FakeApiCall, PayloadEnvelope>? respond = null)
         {
             _respond = respond ?? (call => Answer(call, "ok"));
         }
@@ -40,30 +40,20 @@ namespace Polhem.Api.Client.UnitTests
         /// <summary>
         /// Answers with <paramref name="value"/> in the format and codec the call was sent in, as the server does.
         /// </summary>
-        public static JsonRpcResult Answer(FakeApiCall call, object? value)
-        {
-            var result = new JsonRpcResult { Value = value, Codec = call.Params.Codec };
-            if (call.Params.Format != PayloadFormat.Plain)
-            {
-                ApiPayloadConverter.TransformTo(result, call.Params.Format);
-            }
-            return result;
-        }
+        public static PayloadEnvelope Answer(FakeApiCall call, object? value)
+            => new PayloadProcessor(ApiClientInfo.PayloadOptions)
+                .Seal(value, call.Params.Envelope.Format, call.Params.Codec);
 
         public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         {
             LastToken = cancellationToken;
-            var parameters = request.Params is { } element
-                ? JsonCodec.Deserialize<JsonRpcParams>(element.GetRawText()) ?? new JsonRpcParams()
-                : new JsonRpcParams();
-            var call = new FakeApiCall(request.Method, parameters, request.Id);
+            var call = new FakeApiCall(request.Method, new FakeParams(PayloadEnvelope.Read(request.Params)), request.Id);
             Calls.Add(call);
 
             JsonRpcResponse response;
             try
             {
-                using var document = JsonDocument.Parse(JsonCodec.Serialize(_respond(call)));
-                response = JsonRpcResponse.Success(request.Id, document.RootElement.Clone());
+                response = JsonRpcResponse.Success(request.Id, _respond(call).ToElement());
             }
             catch (JsonRpcErrorException ex)
             {
@@ -77,23 +67,41 @@ namespace Polhem.Api.Client.UnitTests
     }
 
     /// <summary>
+    /// The parameters a <see cref="FakeApiTransport"/> received, as the server reads them before the payload is opened.
+    /// </summary>
+    /// <param name="Envelope">The envelope as it arrived.</param>
+    internal sealed record FakeParams(PayloadEnvelope Envelope)
+    {
+        /// <summary>Gets the format the call was sent in.</summary>
+        public PayloadFormat Format => (PayloadFormat)Envelope.Format;
+
+        /// <summary>Gets the codec the call named.</summary>
+        public string Codec => Envelope.Codec;
+
+        /// <summary>Gets the type name the call wrote.</summary>
+        public string TypeName => Envelope.TypeName;
+
+        /// <summary>Gets the body bytes of an encoded call, or the JSON value of a plain one.</summary>
+        public object? Value => Envelope.Body is { } body ? body : Envelope.Value;
+    }
+
+    /// <summary>
     /// One call a <see cref="FakeApiTransport"/> received.
     /// </summary>
     /// <param name="Method">The method name.</param>
-    /// <param name="Params">The parameters as the server reads them, before the payload is restored.</param>
+    /// <param name="Params">The parameters as the server reads them, before the payload is opened.</param>
     /// <param name="Id">The request id.</param>
-    internal sealed record FakeApiCall(string Method, JsonRpcParams Params, JsonRpcId Id)
+    internal sealed record FakeApiCall(string Method, FakeParams Params, JsonRpcId Id)
     {
         /// <summary>
-        /// Restores the sent value into <typeparamref name="T"/> as the server does, and returns it.
+        /// Opens the sent value into <typeparamref name="T"/> as the server does, and returns it.
         /// </summary>
         public T SentValue<T>()
         {
-            ApiPayloadConverter.RestoreRequest(Params, Params.Format, null, typeof(T));
+            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).Open(Params.Envelope, typeof(T), null, out _);
             // A Plain body stays a `JsonElement` until the parameter binder reads it.
-            var value = Params.Value is JsonElement element
-                ? element.Deserialize<T>(ApiInputConverter.PlainReadOptions)
-                : Params.Value;
+            if (value is JsonElement element)
+                value = element.Deserialize<T>(ApiInputConverter.PlainReadOptions);
             return Assert.IsType<T>(value);
         }
     }

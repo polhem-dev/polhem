@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <!-- Lets the tests check how a server's unauthenticated configuration is adopted without
-         touching the process-wide SysInfo and ApiServiceOptions statics. -->
+         touching the process-wide SysInfo and ApiClientInfo statics. -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
   </ItemGroup>
 

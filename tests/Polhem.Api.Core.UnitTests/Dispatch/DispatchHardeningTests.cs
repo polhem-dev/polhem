@@ -27,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
     {
         private static TestDispatcher NewExecutor(ExposedBusinessObject businessObject, ILogger? logger = null)
         {
-            var services = new ServiceCollection();
+            var services = TestDispatcher.AddDispatchDefaults(new ServiceCollection());
             services.AddSingleton<IBusinessObjectFactory>(new SingleObjectFactory(businessObject));
             services.AddSingleton<IAccessTokenValidator>(new RejectAllTokens());
             services.AddSingleton<IApiEncryptionKeyProvider>(new NoKeys());
@@ -40,9 +40,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
         private static TestRpcRequest Request(string action, object value, PayloadFormat format = PayloadFormat.Plain)
         {
-            var parameters = new JsonRpcParams { Value = value };
-            if (format != PayloadFormat.Plain)
-                ApiPayloadConverter.TransformTo(parameters, format);
+            var parameters = new TestPayload { Value = value, Format = format };
             return new TestRpcRequest { Method = $"Exposed.{action}", Params = parameters, Id = "1" };
         }
 

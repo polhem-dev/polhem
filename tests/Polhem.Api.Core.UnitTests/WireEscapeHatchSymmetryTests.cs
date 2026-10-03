@@ -6,6 +6,7 @@ using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
+using Polhem.JsonRpc.Payload;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests
@@ -86,7 +87,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("JSON body codec: a parameter value either fails on the writer or round-trips; it never passes the writer and fails the reader")]
         public void JsonCodec_ParameterValue_FailsOnTheWriterOrRoundTrips(string label, object value)
         {
-            AssertWriterFailsOrRoundTrips(new JsonPayloadSerializer(), label, value);
+            AssertWriterFailsOrRoundTrips(new JsonPayloadCodec(JsonBodyOptions.Options), label, value);
         }
 
         [Theory]
@@ -94,14 +95,14 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("MessagePack: a parameter value either fails on the writer or round-trips; it never passes the writer and fails the reader")]
         public void MessagePack_ParameterValue_FailsOnTheWriterOrRoundTrips(string label, object value)
         {
-            AssertWriterFailsOrRoundTrips(new MessagePackPayloadSerializer(), label, value);
+            AssertWriterFailsOrRoundTrips(new MessagePackPayloadCodec(), label, value);
         }
 
         [Fact]
         [DisplayName("JSON body codec: an int[] parameter value round-trips as an int[]")]
         public void JsonCodec_IntArrayParameter_RoundTrips()
         {
-            var restored = RoundTrip(new JsonPayloadSerializer(), s_ints);
+            var restored = RoundTrip(new JsonPayloadCodec(JsonBodyOptions.Options), s_ints);
 
             Assert.Equal(s_ints, Assert.IsType<int[]>(restored));
         }
@@ -112,12 +113,12 @@ namespace Polhem.Api.Core.UnitTests
         {
             // The named escape hatch serializes through the non-generic overload, which needs dynamic code; on the
             // mobile heads the writer refuses an array loudly instead (`WireValueFormatter.EnsureDynamicCode`).
-            var restored = RoundTrip(new MessagePackPayloadSerializer(), s_ints);
+            var restored = RoundTrip(new MessagePackPayloadCodec(), s_ints);
 
             Assert.Equal(s_ints, Assert.IsType<int[]>(restored));
         }
 
-        private static void AssertWriterFailsOrRoundTrips(IApiPayloadSerializer codec, string label, object value)
+        private static void AssertWriterFailsOrRoundTrips(IPayloadCodec codec, string label, object value)
         {
             var request = CreateRequest(value);
 
@@ -146,10 +147,10 @@ namespace Polhem.Api.Core.UnitTests
             var restored = (ExecFuncRequest)codec.Deserialize(bytes, typeof(ExecFuncRequest))!;
             var restoredValue = restored.Parameters!["p"].Value;
             Assert.True(restoredValue != null && restoredValue.GetType() == value.GetType(),
-                $"{codec.SerializationMethod}: {label} passed the writer but came back as {restoredValue?.GetType().Name ?? "null"}.");
+                $"{codec.Name}: {label} passed the writer but came back as {restoredValue?.GetType().Name ?? "null"}.");
         }
 
-        private static object? RoundTrip(IApiPayloadSerializer codec, object value)
+        private static object? RoundTrip(IPayloadCodec codec, object value)
         {
             var bytes = codec.Serialize(CreateRequest(value), typeof(ExecFuncRequest));
             var restored = (ExecFuncRequest)codec.Deserialize(bytes, typeof(ExecFuncRequest))!;

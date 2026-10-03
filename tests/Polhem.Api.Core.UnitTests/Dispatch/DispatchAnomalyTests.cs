@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Api.Core.Messages;
 using Polhem.Core.Security;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
@@ -8,6 +7,7 @@ using Polhem.Definition.Logging;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.Transformers;
 
 namespace Polhem.Api.Core.UnitTests.Dispatch
 {
@@ -94,7 +94,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         private static TestRpcRequest PingRequest() => new()
         {
             Method = $"{SysProgIds.System}.Ping",
-            Params = new JsonRpcParams { Value = new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" } },
+            Params = new TestPayload { Value = new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" } },
             Id = "1",
         };
 
@@ -311,10 +311,19 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key.
             // Decrypting the unencrypted payload then fails and an error is returned. The point is to cover the
             // Encrypted branch.
+            var encoded = new Polhem.JsonRpc.Payload.PayloadProcessor(PolhemPayload.CreateOptions())
+                .Seal(new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" },
+                    Polhem.JsonRpc.Payload.PayloadFormat.Encoded);
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
-                Params = new JsonRpcParams { Format = PayloadFormat.Encrypted, Value = new Polhem.Api.Core.Messages.System.PingRequest { ClientName = "C", TraceId = "T" } },
+                // Marked encrypted, but the body is only encoded.
+                RawParams = new Polhem.JsonRpc.Payload.PayloadEnvelope
+                {
+                    Format = Polhem.JsonRpc.Payload.PayloadFormat.Encrypted,
+                    Body = encoded.Body,
+                    TypeName = encoded.TypeName,
+                }.ToElement(),
                 Id = "1",
             };
 

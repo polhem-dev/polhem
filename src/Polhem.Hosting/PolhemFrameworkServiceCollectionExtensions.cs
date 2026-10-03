@@ -1,3 +1,4 @@
+using Polhem.Api.Core.Authorization;
 using Polhem.Api.Core.Dispatch;
 using Polhem.Core.Expressions;
 using Polhem.Business;
@@ -354,6 +355,10 @@ namespace Polhem.Hosting
             //     The options are registered as an instance, so an HTTP host's AddJsonRpcServer adds its own
             //     settings and filters to these instead of starting over; the framework's filters run first.
             //     Every Polhem component resolves its services from the call's scope, so the options need none here.
+            //     The payload options, the replay store and the request authorization they rely on are resolved from
+            //     the call's services, so a host can replace each one (AddPolhemPayload for the payload options).
+            AddPayloadDefaults(services);
+            services.TryAddSingleton<IApiAuthorizationValidator, ApiAuthorizationValidator>();
             var jsonRpcOptions = PolhemJsonRpc.CreateServerOptions();
             services.AddSingleton(jsonRpcOptions);
             services.TryAddSingleton(_ => new JsonRpcDispatcher(jsonRpcOptions));

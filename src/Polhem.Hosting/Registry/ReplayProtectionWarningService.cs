@@ -1,5 +1,5 @@
 using System.Reflection;
-using Polhem.Api.Core;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Server;
 using Polhem.Api.Core.Validator;
 using Polhem.Business;
@@ -13,7 +13,7 @@ namespace Polhem.Hosting.Registry
 {
     /// <summary>
     /// Hosted service that logs, once at startup, when API methods declare
-    /// <see cref="ApiReplayProtection.UniqueSequence"/> while <see cref="ApiServiceOptions.RequireWireFrame"/>
+    /// <see cref="ApiReplayProtection.UniqueSequence"/> while <see cref="PayloadOptions.RequireFrame"/>
     /// is off.
     /// </summary>
     /// <remarks>
@@ -36,6 +36,7 @@ namespace Polhem.Hosting.Registry
         private readonly IDefineAccess _defineAccess;
         private readonly IBoTypeResolver _resolver;
         private readonly ILogger<ReplayProtectionWarningService> _logger;
+        private readonly PayloadOptions _payloadOptions;
 
         /// <summary>
         /// Initializes a new <see cref="ReplayProtectionWarningService"/>.
@@ -43,27 +44,30 @@ namespace Polhem.Hosting.Registry
         /// <param name="defineAccess">Reads the registry.</param>
         /// <param name="resolver">Resolves each progId to its business object type.</param>
         /// <param name="logger">Logger.</param>
+        /// <param name="payloadOptions">The server's payload options; the warning applies only while frames are off.</param>
         public ReplayProtectionWarningService(
             IDefineAccess defineAccess,
             IBoTypeResolver resolver,
-            ILogger<ReplayProtectionWarningService> logger)
+            ILogger<ReplayProtectionWarningService> logger,
+            PayloadOptions payloadOptions)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _payloadOptions = payloadOptions ?? throw new ArgumentNullException(nameof(payloadOptions));
         }
 
         /// <inheritdoc/>
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (ApiServiceOptions.RequireWireFrame || !_logger.IsEnabled(LogLevel.Warning))
+            if (_payloadOptions.RequireFrame || !_logger.IsEnabled(LogLevel.Warning))
                 return Task.CompletedTask;
 
             var methods = FindReplayProtectedMethods();
             if (methods.Count > 0)
             {
                 _logger.LogWarning(
-                    "ApiServiceOptions.RequireWireFrame is off, so methods declaring ReplayProtection = UniqueSequence are not checked for replayed calls: {Methods}. "
+                    "PayloadOptions.RequireFrame is off, so methods declaring ReplayProtection = UniqueSequence are not checked for replayed calls: {Methods}. "
                     + "Enable the wire frame on server and clients to turn the check on; it protects Encrypted payloads only.",
                     string.Join(", ", methods));
             }

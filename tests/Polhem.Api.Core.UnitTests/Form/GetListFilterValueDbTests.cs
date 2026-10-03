@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Transformers;
@@ -39,7 +38,6 @@ namespace Polhem.Api.Core.UnitTests.Form
     /// <c>Plain</c> path has to match.
     /// </para>
     /// </remarks>
-    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class GetListFilterValueDbTests : IClassFixture<SharedDbFixture>
     {
         private const string Qty = "qty";
@@ -141,45 +139,31 @@ namespace Polhem.Api.Core.UnitTests.Form
         {
             return WithSeededForm(databaseType, async (executor, progId) =>
             {
-                var compressor = ApiServiceOptions.PayloadCompressor;
-                var encryptor = ApiServiceOptions.PayloadEncryptor;
-                ApiServiceOptions.Initialize(
-                    new ApiPayloadOptions { Compressor = "gzip", Encryptor = "aes-cbc-hmac" },
-                    isDebugMode: true);
-                try
+                var request = new TestRpcRequest
                 {
-                    var request = new TestRpcRequest
+                    Method = $"{progId}.{FormActions.GetList}",
+                    Params = new TestPayload
                     {
-                        Method = $"{progId}.{FormActions.GetList}",
-                        Params = new JsonRpcParams
+                        Format = PayloadFormat.Encoded,
+                        Codec = PayloadCodecNames.Json,
+                        Value = new GetListRequest
                         {
-                            Codec = PayloadCodecNames.Json,
-                            Value = new GetListRequest
-                            {
-                                SelectFields = "sys_id,qty,amount",
-                                Filter = FilterGroup.All(
-                                    FilterCondition.In(SysFields.Id, ["A", "B", "C"]),
-                                    FilterCondition.Between(Qty, 2, 3),
-                                    new FilterCondition(Amount, ComparisonOperator.GreaterThanOrEqual, 10.5m),
-                                    FilterCondition.NotEqual(SysFields.Id, "Z")),
-                                SortFields = [new SortField(SysFields.Id, SortDirection.Asc)],
-                            },
+                            SelectFields = "sys_id,qty,amount",
+                            Filter = FilterGroup.All(
+                                FilterCondition.In(SysFields.Id, ["A", "B", "C"]),
+                                FilterCondition.Between(Qty, 2, 3),
+                                new FilterCondition(Amount, ComparisonOperator.GreaterThanOrEqual, 10.5m),
+                                FilterCondition.NotEqual(SysFields.Id, "Z")),
+                            SortFields = [new SortField(SysFields.Id, SortDirection.Asc)],
                         },
-                        Id = Guid.NewGuid().ToString(),
-                    };
-                    ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
+                    },
+                    Id = Guid.NewGuid().ToString(),
+                };
+                var response = await executor.ExecuteAsync(request);
 
-                    var response = await executor.ExecuteAsync(request);
-
-                    Assert.Null(response.Error);
-                    ApiPayloadConverter.RestoreFrom(response.Result!, PayloadFormat.Encoded);
-                    var result = Assert.IsType<GetListResponse>(response.Result!.Value);
-                    Assert.Equal(["B", "C"], SysIds(result.Table!));
-                }
-                finally
-                {
-                    ApiServiceOptions.Initialize(compressor, encryptor);
-                }
+                Assert.Null(response.Error);
+                var result = Assert.IsType<GetListResponse>(response.Result!.Value);
+                Assert.Equal(["B", "C"], SysIds(result.Table!));
             });
         }
 

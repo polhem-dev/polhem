@@ -29,8 +29,8 @@ namespace Polhem.Definition.Security
         /// which this setting cannot close.
         /// </para>
         /// <para>
-        /// It also requires the wire frame to be switched on (<c>ApiServiceOptions.RequireWireFrame</c>
-        /// in <c>Polhem.Api.Core</c>), which is off by default; a host built with
+        /// It also requires the wire frame to be switched on (<c>PayloadOptions.RequireFrame</c>
+        /// of Polhem.JsonRpc.Payload, set with <c>AddPolhemPayload</c>), which is off by default; a host built with
         /// <c>AddPolhemFramework</c> logs a startup warning when methods declare this setting while
         /// the frame is off. Anonymous callers are not checked
         /// either: sequence numbers are per session, and calls made without one have no session to

@@ -6,10 +6,10 @@ using System.Text.Json;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Api.Core.Transformers;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
+using Polhem.Api.Core.Transformers;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -37,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests
         {
             var sortField = new SortField { FieldName = "a", Direction = SortDirection.Asc };
 
-            var codecJson = Encoding.UTF8.GetString(new JsonPayloadSerializer().Serialize(sortField, typeof(SortField)));
+            var codecJson = Encoding.UTF8.GetString(new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options).Serialize(sortField, typeof(SortField)));
             var plainJson = JsonCodec.Serialize(sortField);
 
             // If either wire starts writing defaults, the rule below is no longer needed there; revisit it rather than
@@ -144,7 +144,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static T ViaJsonCodec<T>(T value) where T : class
         {
-            var codec = new JsonPayloadSerializer();
+            var codec = new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options);
             return (T)codec.Deserialize(codec.Serialize(value, typeof(T)), typeof(T))!;
         }
 
@@ -157,7 +157,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static T ViaMessagePack<T>(T value) where T : class
         {
-            var codec = new MessagePackPayloadSerializer();
+            var codec = new MessagePackPayloadCodec();
             return (T)codec.Deserialize(codec.Serialize(value, typeof(T)), typeof(T))!;
         }
     }

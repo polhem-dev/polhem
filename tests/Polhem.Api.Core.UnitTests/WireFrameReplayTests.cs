@@ -1,13 +1,18 @@
 using System.ComponentModel;
+using System.Text.Json;
+using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
+using Polhem.Api.Core.Transformers;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;
 using Polhem.Api.Core.UnitTests.Dispatch;
+using Polhem.JsonRpc.Payload;
 using Polhem.Tests.Shared;
+using PayloadFormat = Polhem.JsonRpc.Payload.PayloadFormat;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -15,13 +20,13 @@ namespace Polhem.Api.Core.UnitTests
     /// Behavior tests for the replay protection frame going through the full payload pipeline.
     /// </summary>
     /// <remarks>
-    /// These tests change the process-wide static switch <see cref="ApiServiceOptions.RequireWireFrame"/>,
-    /// so the class carries the ApiServiceOptionsState collection marker and always restores it with try/finally.
+    /// The frame setting is <see cref="PayloadOptions.RequireFrame"/> on the options the server resolves from its
+    /// services; each test hands the dispatcher its own options, so nothing process-wide changes.
     /// <para>
     /// This class **never touches the database**. Tests that need a token get it from
     /// <see cref="TestSessionFactory.CreateAccessToken"/>, which writes the SessionInfo straight into the
     /// session cache, so the server finds it without taking the rebuild path that queries <c>st_session</c>.
-    /// What is verified here is the replay sequence check (<c>ReplayWindowStore</c>, in memory only), which does not
+    /// What is verified here is the replay sequence check (the replay store, in memory only), which does not
     /// depend on where the session comes from.
     /// </para>
     /// <para>
@@ -33,7 +38,6 @@ namespace Polhem.Api.Core.UnitTests
     /// must not be skipped with <c>[DbFact]</c>, and such a red light is to be fixed directly.
     /// </para>
     /// </remarks>
-    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class WireFrameReplayTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;
@@ -50,133 +54,100 @@ namespace Polhem.Api.Core.UnitTests
             return key;
         }
 
-        private static void WithFrameRequired(bool value, Action action)
+        private static PayloadOptions Options(bool requireFrame)
         {
-            bool original = ApiServiceOptions.RequireWireFrame;
-            ApiServiceOptions.RequireWireFrame = value;
-            try { action(); }
-            finally { ApiServiceOptions.RequireWireFrame = original; }
-        }
-
-        private static async Task WithFrameRequiredAsync(bool value, Func<Task> action)
-        {
-            bool original = ApiServiceOptions.RequireWireFrame;
-            ApiServiceOptions.RequireWireFrame = value;
-            try { await action(); }
-            finally { ApiServiceOptions.RequireWireFrame = original; }
+            var options = PolhemPayload.CreateOptions();
+            options.RequireFrame = requireFrame;
+            return options;
         }
 
         [Fact]
         [DisplayName("Encrypted round-trip produces no frame when the switch is off")]
-        public void RestoreFrom_FrameNotRequired_LeavesFrameNull()
+        public void Open_FrameNotRequired_LeavesFrameNull()
         {
-            WithFrameRequired(false, () =>
-            {
-                var key = MakeKey();
-                var payload = new JsonRpcParams { Value = new PingRequest { ClientName = "a" } };
+            var key = MakeKey();
+            var processor = new PayloadProcessor(Options(requireFrame: false));
 
-                ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encrypted, key);
-                ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encrypted, key);
+            var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
+            var value = processor.Open(envelope, key, out var frame);
 
-                Assert.Null(payload.Frame);
-                Assert.IsType<PingRequest>(payload.Value);
-            });
+            Assert.Null(frame);
+            Assert.IsType<PingRequest>(value);
         }
 
         [Fact]
         [DisplayName("Encrypted round-trip restores the frame and the body when the switch is on")]
-        public void RestoreFrom_FrameRequired_RoundTripsFrameAndBody()
+        public void Open_FrameRequired_RoundTripsFrameAndBody()
         {
-            WithFrameRequired(true, () =>
-            {
-                var key = MakeKey();
-                var payload = new JsonRpcParams { Value = new PingRequest { ClientName = "a" } };
+            var key = MakeKey();
+            var processor = new PayloadProcessor(Options(requireFrame: true));
 
-                ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encrypted, key);
-                ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encrypted, key);
+            var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
+            var value = processor.Open(envelope, key, out var frame);
 
-                Assert.NotNull(payload.Frame);
-                Assert.Equal(ApiPayloadFrame.CurrentVersion, payload.Frame!.Version);
-                Assert.Equal("a", Assert.IsType<PingRequest>(payload.Value).ClientName);
-            });
+            Assert.NotNull(frame);
+            Assert.Equal(PayloadFrame.CurrentVersion, frame!.Version);
+            Assert.Equal("a", Assert.IsType<PingRequest>(value).ClientName);
         }
 
         [Fact]
         [DisplayName("Plain format carries no frame even when the switch is on")]
-        public void TransformTo_PlainWithFrameRequired_WritesNoFrame()
+        public void Seal_PlainWithFrameRequired_WritesNoFrame()
         {
-            // Plain has no envelope, so a frame would be plaintext that an attacker can rewrite freely and would protect nothing.
-            WithFrameRequired(true, () =>
-            {
-                var payload = new JsonRpcParams { Value = "hello" };
+            // Plain has no envelope body, so a frame would be plaintext that an attacker can rewrite freely and would
+            // protect nothing.
+            var envelope = new PayloadProcessor(Options(requireFrame: true)).Seal("hello", PayloadFormat.Plain);
 
-                ApiPayloadConverter.TransformTo(payload, PayloadFormat.Plain);
-
-                Assert.Null(payload.Frame);
-                Assert.Equal("hello", payload.Value);
-            });
+            Assert.Null(envelope.Body);
+            Assert.Equal("hello", envelope.Value!.Value.GetString());
         }
 
         [Fact]
         [DisplayName("Decoding fails when the writer adds a frame the reader does not expect (both ends must agree)")]
-        public void RestoreFrom_FrameWrittenButNotExpected_FailsToDecode()
+        public void Open_FrameWrittenButNotExpected_FailsToDecode()
         {
             // Whether a frame is present is not declared by the packet itself (that would be a downgrade attack
             // surface), so mismatched settings on the two ends fail. This is expected, and it is why an upgrade
             // deploys both ends before turning the switch on.
             var key = MakeKey();
-            var payload = new JsonRpcParams { Value = new PingRequest { ClientName = "a" } };
+            var envelope = new PayloadProcessor(Options(requireFrame: true))
+                .Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
 
-            bool original = ApiServiceOptions.RequireWireFrame;
-            try
-            {
-                ApiServiceOptions.RequireWireFrame = true;
-                ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encrypted, key);
-
-                ApiServiceOptions.RequireWireFrame = false;
-                Assert.Throws<InvalidOperationException>(() =>
-                    ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encrypted, key));
-            }
-            finally
-            {
-                ApiServiceOptions.RequireWireFrame = original;
-            }
+            Assert.Throws<InvalidOperationException>(() =>
+                new PayloadProcessor(Options(requireFrame: false)).Open(envelope, key, out _));
         }
 
         [Fact]
         [DisplayName("A frame timestamp outside the allowed window returns ReplayRejected")]
         public async Task Execute_FrameTimestampOutsideWindow_ReturnsReplayRejected()
         {
-            await WithFrameRequiredAsync(true, async () =>
             {
                 var staleMs = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
 
-                var response = await ExecutePing(new ApiPayloadFrame(staleMs, sequence: 0));
+                var response = await ExecutePing(new PayloadFrame(staleMs, sequence: 0));
 
                 Assert.NotNull(response.Error);
                 Assert.Equal((int)JsonRpcErrorCode.ReplayRejected, response.Error!.Code);
-            });
+            }
         }
 
         [Fact]
         [DisplayName("A frame timestamp within the allowed window executes normally")]
         public async Task Execute_FrameTimestampWithinWindow_Succeeds()
         {
-            await WithFrameRequiredAsync(true, async () =>
             {
                 var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                var response = await ExecutePing(new ApiPayloadFrame(nowMs, sequence: 0));
+                var response = await ExecutePing(new PayloadFrame(nowMs, sequence: 0));
 
                 Assert.Null(response.Error);
-            });
+            }
         }
 
         [Fact]
         [DisplayName("A repeated sequence on a method that declares UniqueSequence returns ReplayRejected")]
         public async Task Execute_RepeatedSequenceOnGuardedMethod_ReturnsReplayRejected()
         {
-            await WithFrameRequiredAsync(true, async () =>
             {
                 // Each test uses its own token so that its window does not interfere with other tests.
                 var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -191,7 +162,7 @@ namespace Polhem.Api.Core.UnitTests
                 Assert.Equal((int)JsonRpcErrorCode.ReplayRejected, replay.Error!.Code);
                 // A different sequence still passes, which shows the rejection targets repeats rather than blocking everything.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, nextSequence.Error!.Code);
-            });
+            }
         }
 
         [Fact]
@@ -199,14 +170,13 @@ namespace Polhem.Api.Core.UnitTests
         public async Task Execute_RepeatedSequenceOnUnguardedMethod_Succeeds()
         {
             // Replaying a query method is harmless, and applying the check everywhere would only add work to every call.
-            await WithFrameRequiredAsync(true, async () =>
             {
                 var token = TestSessionFactory.CreateAccessToken(_fx);
                 var value = new PingRequest { ClientName = "replay-test" };
 
                 Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
                 Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
-            });
+            }
         }
 
         [Fact]
@@ -215,7 +185,6 @@ namespace Polhem.Api.Core.UnitTests
         {
             // Sequences are per session. Anonymous calls all share `Guid.Empty`, so checking them would let
             // different clients use up each other's sequences and cause many false rejections.
-            await WithFrameRequiredAsync(true, async () =>
             {
                 var first = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
                 var replay = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
@@ -223,7 +192,7 @@ namespace Polhem.Api.Core.UnitTests
                 // As above, InternalError means both calls passed the sequence gate and reached the BO.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, replay.Error!.Code);
-            });
+            }
         }
 
         [Fact]
@@ -232,34 +201,33 @@ namespace Polhem.Api.Core.UnitTests
         {
             // Folded into the generic Error kind, the signal "one session is rejected repeatedly" would disappear,
             // and that signal is exactly how client clock skew or resent packets are told apart.
-            await WithFrameRequiredAsync(true, async () =>
             {
                 var staleMs = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
 
-                var entries = await ExecuteAndCaptureAnomalies(new ApiPayloadFrame(staleMs, sequence: 0));
+                var entries = await ExecuteAndCaptureAnomalies(new PayloadFrame(staleMs, sequence: 0));
 
                 var entry = Assert.IsType<ApiAnomalyEntry>(Assert.Single(entries));
                 Assert.Equal(AnomalyKind.Replay, entry.Kind);
-            });
+            }
         }
 
         /// <summary>
         /// Sends one Encoded Ping call with the given frame (Ping declares no sequence check).
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
-        private Task<TestRpcResponse> ExecutePing(ApiPayloadFrame frame)
+        private Task<TestRpcResponse> ExecutePing(PayloadFrame frame)
             => Execute("Ping", new PingRequest { ClientName = "replay-test" }, frame, Guid.Empty);
 
         /// <summary>
-        /// Sends one Encoded SystemBO call with the given frame and token.
+        /// Sends one Encoded SystemBO call with the given frame and token, to a server that requires frames.
         /// </summary>
         /// <param name="action">The action name.</param>
         /// <param name="value">The value passed in.</param>
         /// <param name="frame">The replay protection frame to attach.</param>
         /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> means an anonymous call.</param>
-        private async Task<TestRpcResponse> Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
+        private async Task<TestRpcResponse> Execute(string action, object value, PayloadFrame frame, Guid accessToken)
         {
-            var executor = new TestDispatcher(_fx.Provider)
+            var executor = new TestDispatcher(WithFrames(_fx.Provider))
             {
                 AccessToken = accessToken,
                 // A local call skips token validation, so the test need not create a session first (that would
@@ -270,27 +238,45 @@ namespace Polhem.Api.Core.UnitTests
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{action}",
-                Params = new JsonRpcParams { Value = value, Frame = frame },
+                RawParams = EncodedWithFrame(value, frame),
                 Id = Guid.NewGuid().ToString(),
             };
-
-            // Encoded rather than Encrypted: reading the frame is unrelated to encryption, and Encoded needs no transport key.
-            ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
 
             return await executor.ExecuteAsync(request);
         }
 
-        private static ApiPayloadFrame FrameWith(long sequence)
+        private static PayloadFrame FrameWith(long sequence)
             => new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sequence);
+
+        /// <summary>The services, with payload options that require a frame.</summary>
+        private static IServiceProvider WithFrames(IServiceProvider services)
+            => new TestOverrideServiceProvider(services, (typeof(PayloadOptions), Options(requireFrame: true)));
+
+        /// <summary>
+        /// Builds an Encoded envelope carrying <paramref name="frame"/> as it is, which the processor cannot do because
+        /// it always stamps the current time. Encoded rather than Encrypted: reading the frame is unrelated to
+        /// encryption, and Encoded needs no transport key.
+        /// </summary>
+        private static JsonElement EncodedWithFrame(object value, PayloadFrame frame)
+        {
+            var options = PolhemPayload.CreateOptions();
+            var body = options.Compressor.Compress(options.ResolveCodec(null).Serialize(value, value.GetType()));
+            return new PayloadEnvelope
+            {
+                Format = PayloadFormat.Encoded,
+                Body = frame.Prepend(body),
+                TypeName = PolhemPayloadTypeResolver.Instance.GetTypeName(value.GetType()),
+            }.ToElement();
+        }
 
         /// <summary>
         /// Sends one call with anomaly logging enabled and returns the captured anomaly entries.
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
-        private async Task<List<AnomalyEntry>> ExecuteAndCaptureAnomalies(ApiPayloadFrame frame)
+        private async Task<List<AnomalyEntry>> ExecuteAndCaptureAnomalies(PayloadFrame frame)
         {
             var writer = new CapturingAnomalyLogWriter();
-            var services = new TestOverrideServiceProvider(_fx.Provider,
+            var services = new TestOverrideServiceProvider(WithFrames(_fx.Provider),
                 (typeof(IAnomalyLogWriter), writer),
                 (typeof(AuditLogOptions), new AuditLogOptions { Enabled = true, AnomalyEnabled = true, ApiSlowThresholdMs = 60_000 }),
                 (typeof(ISessionInfoService), new StubSessionInfoService()));
@@ -299,14 +285,9 @@ namespace Polhem.Api.Core.UnitTests
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
-                Params = new JsonRpcParams
-                {
-                    Value = new PingRequest { ClientName = "replay-test" },
-                    Frame = frame,
-                },
+                RawParams = EncodedWithFrame(new PingRequest { ClientName = "replay-test" }, frame),
                 Id = Guid.NewGuid().ToString(),
             };
-            ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
             await executor.ExecuteAsync(request);
 
             return writer.Entries;

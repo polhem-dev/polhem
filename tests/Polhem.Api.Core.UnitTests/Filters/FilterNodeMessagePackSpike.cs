@@ -20,7 +20,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
                 )
             );
 
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
             byte[] bytes = serializer.Serialize(original, typeof(FilterNode));
             var restored = (FilterNode)serializer.Deserialize(bytes, typeof(FilterNode))!;
 
@@ -57,7 +57,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
         {
             FilterNode original = FilterCondition.In("sys_id", new object[] { "E001", "E002", "E003" });
 
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
             byte[] bytes = serializer.Serialize(original, typeof(FilterNode));
             var restored = (FilterCondition)serializer.Deserialize(bytes, typeof(FilterNode))!;
 
@@ -77,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
                 new SortField("ref_dept_name", SortDirection.Desc),
             };
 
-            var serializer = new MessagePackPayloadSerializer();
+            var serializer = new MessagePackPayloadCodec();
             byte[] bytes = serializer.Serialize(original, typeof(SortFieldCollection));
             var restored = (SortFieldCollection)serializer.Deserialize(bytes, typeof(SortFieldCollection))!;
 

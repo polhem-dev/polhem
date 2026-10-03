@@ -192,7 +192,7 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         private static string EncodeBody(object value, Type type)
         {
-            var bytes = new JsonPayloadSerializer().Serialize(value, type);
+            var bytes = new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options).Serialize(value, type);
             return global::System.Text.Encoding.UTF8.GetString(bytes);
         }
 
@@ -267,7 +267,7 @@ namespace Polhem.Api.Core.UnitTests
                 using var doc = JsonDocument.Parse(File.ReadAllText(path));
                 var body = doc.RootElement.GetProperty("body").GetRawText();
 
-                var serializer = new JsonPayloadSerializer();
+                var serializer = new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options);
                 var restored = serializer.Deserialize(global::System.Text.Encoding.UTF8.GetBytes(body), type);
                 Assert.NotNull(restored);
 

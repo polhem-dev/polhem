@@ -29,7 +29,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         /// </summary>
         private static TestDispatcher NewDispatcher(object businessObject)
         {
-            var services = new ServiceCollection();
+            var services = TestDispatcher.AddDispatchDefaults(new ServiceCollection());
             services.AddSingleton<IBusinessObjectFactory>(new SingleObjectFactory(businessObject));
             services.AddSingleton<IAccessTokenValidator>(new RejectAllTokens());
             services.AddSingleton<IApiEncryptionKeyProvider>(new NoKeys());
@@ -45,7 +45,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var request = new TestRpcRequest
             {
                 Method = $"Probe.{nameof(ProbeBusinessObject.Probe)}",
-                Params = new JsonRpcParams { Value = document.RootElement.Clone() },
+                Params = new TestPayload { Value = document.RootElement.Clone() },
                 Id = "1",
             };
             var executor = NewDispatcher(bo);
@@ -67,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var request = new TestRpcRequest
             {
                 Method = $"Probe.{nameof(ProbeBusinessObject.Probe)}",
-                Params = new JsonRpcParams { Value = document.RootElement.Clone() },
+                Params = new TestPayload { Value = document.RootElement.Clone() },
                 Id = "1",
             };
             var executor = NewDispatcher(bo);

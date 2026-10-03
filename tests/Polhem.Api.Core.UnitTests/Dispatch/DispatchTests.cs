@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Core.Serialization;
 using Polhem.Definition;
@@ -32,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Ping}",
-                Params = new JsonRpcParams() { Value = new PingRequest() },
+                Params = new TestPayload() { Value = new PingRequest() },
                 Id = Guid.NewGuid().ToString()
             };
             using var cts = new CancellationTokenSource();
@@ -51,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.{SystemActions.Ping}",
-                Params = new JsonRpcParams() { Value = new PingRequest() },
+                Params = new TestPayload() { Value = new PingRequest() },
                 Id = Guid.NewGuid().ToString()
             };
             using var cts = new CancellationTokenSource();
@@ -74,7 +73,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest()
             {
                 Method = $"{progId}.{action}",
-                Params = new JsonRpcParams()
+                Params = new TestPayload()
                 {
                     Value = value
                 },
@@ -232,7 +231,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             var request = new TestRpcRequest()
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
-                Params = new JsonRpcParams()
+                Params = new TestPayload()
                 {
                     Value = new ExecFuncRequest("Hello")
                 },

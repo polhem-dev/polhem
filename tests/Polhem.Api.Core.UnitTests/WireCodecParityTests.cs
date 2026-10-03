@@ -64,12 +64,12 @@ namespace Polhem.Api.Core.UnitTests
                 .ToList();
             Assert.True(unset.Count == 0, $"The sample for {type.Name} leaves these members at their default: {string.Join(", ", unset)}");
 
-            var codecs = new IApiPayloadSerializer[] { new MessagePackPayloadSerializer(), new JsonPayloadSerializer() };
+            var codecs = new Polhem.JsonRpc.Payload.IPayloadCodec[] { new MessagePackPayloadCodec(), new Polhem.JsonRpc.Payload.JsonPayloadCodec(JsonBodyOptions.Options) };
             var differences = new List<string>();
             foreach (var codec in codecs)
             {
                 var restored = codec.Deserialize(codec.Serialize(original, type), type);
-                Compare(original, restored, $"{codec.SerializationMethod}:{type.Name}", differences);
+                Compare(original, restored, $"{codec.Name}:{type.Name}", differences);
             }
 
             Assert.True(

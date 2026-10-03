@@ -1,4 +1,3 @@
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Business;
 using Polhem.Db;
@@ -87,9 +86,7 @@ public static class NorthwindBackend
 
         var settings = SystemSettingsLoader.Load(paths);
         SysInfo.Initialize(settings.CommonConfiguration);
-        ApiServiceOptions.Initialize(
-            settings.CommonConfiguration.ApiPayloadOptions,
-            settings.CommonConfiguration.IsDebugMode);
+        builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
         builder.Services.AddPolhemFramework(
             settings.BackendConfiguration,

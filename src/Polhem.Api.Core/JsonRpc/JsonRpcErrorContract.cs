@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Polhem.Core.Exceptions;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.JsonRpc
 {
@@ -91,14 +92,12 @@ namespace Polhem.Api.Core.JsonRpc
                 message => new ForbiddenException(message)),
             new(typeof(ReplayRejectedException), JsonRpcErrorCode.ReplayRejected,
                 message => new ReplayRejectedException(message)),
-            // The payload package's replay check. The row above rebuilds the code on the client.
-            new(typeof(Polhem.JsonRpc.Payload.ReplayRejectedException), JsonRpcErrorCode.ReplayRejected, null),
 
             // Protocol errors the server raises itself. The caller gets a fixed message and no
             // rebuilt type: the code alone says what went wrong, and the real text names server types.
             new(typeof(MethodNotFoundException), JsonRpcErrorCode.MethodNotFound, null, "Method not found."),
             new(typeof(InvalidParamsException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
-            new(typeof(Polhem.JsonRpc.Payload.InvalidPayloadException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
+            new(typeof(InvalidPayloadException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
 
             // Ahead of the UnauthorizedAccessException row it derives from, which would otherwise
             // swallow it into UserMessage with a fixed message.
