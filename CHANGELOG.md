@@ -8,6 +8,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-03
+
 > JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and the payload
 > envelope, its encryption and its replay frame on their optional payload packages. `Polhem.Api.AspNetCore` and
 > `ApiServiceOptions` are removed. That breaks hosts, in a minor version: a second exception within 1.x, after the one
@@ -16,28 +18,30 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 > has to move with the server. The reasons, and the framework types this release treats as internal plumbing, are in
 > [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
 
+📄 Full notes and background: [docs/en/changelogs/1.2.0.md](docs/en/changelogs/1.2.0.md)
+
 ### Breaking API changes
 
 - The `Polhem.Api.AspNetCore` package is removed, with `ApiServiceController` and `UsePolhemFramework()`. A host
-  serves the API with `Polhem.JsonRpc.AspNetCore`.
+  serves the API with `Polhem.JsonRpc.AspNetCore`. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - `IJsonRpcProvider` is removed. `RemoteApiProvider` and `LocalApiProvider` implement the package's
-  `IJsonRpcTransport`, and `ApiConnector.Provider` has that type.
+  `IJsonRpcTransport`, and `ApiConnector.Provider` has that type. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - `JsonRpcExecutor` and the message types `JsonRpcRequest`, `JsonRpcResponse` and `JsonRpcError` of
-  `Polhem.Api.Core.JsonRpc` are removed.
+  `Polhem.Api.Core.JsonRpc` are removed. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - `ApiServiceOptions` is removed, with the payload types of `Polhem.Api.Core`: the transformer, serializer,
   compressor and encryptor interfaces and their implementations, `ApiPayloadOptionsFactory`, the envelope types
   (`ApiPayload`, `JsonRpcParams`, `JsonRpcResult`, `ApiPayloadConverter`), `ApiPayloadFrame`, `IReplayWindowStore`,
   `MemoryReplayWindowStore` and `ReplayRejectedException`. Their replacements are in `Polhem.JsonRpc.Payload`; the
-  exception a client catches for a replayed call is now `Polhem.JsonRpc.Payload.ReplayRejectedException`.
-- `MessagePackPayloadSerializer` is renamed `MessagePackPayloadCodec` and implements the package's `IPayloadCodec`.
+  exception a client catches for a replayed call is now `Polhem.JsonRpc.Payload.ReplayRejectedException`. ([#47](https://github.com/polhem-dev/polhem/pull/47))
+- `MessagePackPayloadSerializer` is renamed `MessagePackPayloadCodec` and implements the package's `IPayloadCodec`. ([#47](https://github.com/polhem-dev/polhem/pull/47))
 - `IApiAuthorizationValidator` is resolved from the service collection instead of
-  `ApiServiceOptions.AuthorizationValidator`; register your own to replace the default.
+  `ApiServiceOptions.AuthorizationValidator`; register your own to replace the default. ([#47](https://github.com/polhem-dev/polhem/pull/47))
 
 To upgrade a host that serves the API over HTTP:
 
 ```diff
 - <PackageReference Include="Polhem.Api.AspNetCore" Version="1.1.0" />
-+ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="…" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.0.0" />
 ```
 
 ```diff
@@ -70,23 +74,23 @@ the replay store, the authorization validator, a host that also calls the API in
 ### Added
 
 - `AddPolhemApiKeyGateCheck()` in `Polhem.Hosting`: the startup log while no API key has been issued, for hosts that
-  serve the API over HTTP.
+  serve the API over HTTP. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - `AddPolhemPayload()` in `Polhem.Hosting`, `ApiClientInfo.PayloadOptions` in `Polhem.Api.Client`, and `PolhemPayload`
-  in `Polhem.Api.Core`, which builds the payload options the framework's way.
+  in `Polhem.Api.Core`, which builds the payload options the framework's way. ([#47](https://github.com/polhem-dev/polhem/pull/47))
 
 ### Changed behaviour
 
 - An internal error is answered with code -32603 instead of -32000, and `JsonRpcErrorCode.InternalError` has that
   value. Responses no longer carry a `method` member. A [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)
-  client needs the release that targets 1.2.0.
+  client needs the release that targets 1.2.0. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - A rejected API key or `Authorization` header is answered with HTTP 200 and a JSON-RPC error instead of 401, so the
-  .NET client throws the error contract's exception instead of `HttpRequestException`.
+  .NET client throws the error contract's exception instead of `HttpRequestException`. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 - A malformed method name is answered with `MethodNotFound` (-32601) instead of `UserMessage`. An unknown method name
-  is answered with a fixed message, also in debug mode, and leaves no anomaly record.
-- In-process calls serialize their parameters, like remote calls.
-- A payload envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters.
+  is answered with a fixed message, also in debug mode, and leaves no anomaly record. ([#46](https://github.com/polhem-dev/polhem/pull/46))
+- In-process calls serialize their parameters, like remote calls. ([#46](https://github.com/polhem-dev/polhem/pull/46))
+- A payload envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters. ([#47](https://github.com/polhem-dev/polhem/pull/47))
 - Log categories: masked failures log under `Polhem.Api.Core.Dispatch.PolhemExceptionMapper`, and the API key startup
-  check under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`.
+  check under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`. ([#46](https://github.com/polhem-dev/polhem/pull/46))
 
 ## [1.1.0] - 2026-09-30
 
@@ -469,6 +473,7 @@ The renaming was done before the repository took pull requests, so these entries
   ([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
 [1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0

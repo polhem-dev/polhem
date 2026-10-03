@@ -1,6 +1,8 @@
 #nullable enable
-Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions
 Polhem.Hosting.Audit.IAuditLogSink
 Polhem.Hosting.Audit.IAuditLogSink.WriteBatch(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditEntry!>! entries) -> void
+Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions
+static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions, bool autoCreateMasterKey) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.ApiPayloadOptions! settings, bool isDebugMode, System.Action<Polhem.JsonRpc.Payload.PayloadOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

@@ -11,78 +11,6 @@ Polhem.Api.Client.ApiSessionContext.UserTimeZoneId.set -> void
 Polhem.Api.Client.ClientDefineAccess
 Polhem.Api.Client.ClientDefineAccess.ClearCache() -> void
 Polhem.Api.Client.ClientDefineAccess.ClientDefineAccess(Polhem.Api.Client.Connectors.SystemApiConnector! connector) -> void
-Polhem.Api.Client.ConnectType
-Polhem.Api.Client.ConnectType.Local = 0 -> Polhem.Api.Client.ConnectType
-Polhem.Api.Client.ConnectType.Remote = 1 -> Polhem.Api.Client.ConnectType
-Polhem.Api.Client.Connectors.ApiConnector
-Polhem.Api.Client.Connectors.ApiConnector.AccessToken.get -> System.Guid
-Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.get -> string!
-Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.set -> void
-Polhem.Api.Client.Connectors.ApiConnector.Provider.get -> Polhem.Api.Client.Providers.IJsonRpcProvider!
-Polhem.Api.Client.Connectors.ApiConnector.Session.get -> Polhem.Api.Client.ApiSessionContext!
-Polhem.Api.Client.Connectors.FormApiConnector
-Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId) -> void
-Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Connectors.FormApiConnector.ProgId.get -> string!
-Polhem.Api.Client.Connectors.SystemApiConnector
-Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Definitions.FormDefinitionLoader
-Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.get -> System.Func<Polhem.Definition.Identity.CompanyInfo?>?
-Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.init -> void
-Polhem.Api.Client.Definitions.LanguageLayers
-Polhem.Api.Client.Definitions.LanguageLayers.Base.get -> Polhem.Definition.Language.LanguageResource?
-Polhem.Api.Client.Definitions.LanguageLayers.Base.init -> void
-Polhem.Api.Client.Definitions.LanguageLayers.Customize.get -> Polhem.Definition.Language.LanguageResource?
-Polhem.Api.Client.Definitions.LanguageLayers.Customize.init -> void
-Polhem.Api.Client.Definitions.LanguageLayers.Deconstruct(out Polhem.Definition.Language.LanguageResource? Base, out Polhem.Definition.Language.LanguageResource? Customize) -> void
-Polhem.Api.Client.Definitions.LanguageLayers.Equals(Polhem.Api.Client.Definitions.LanguageLayers other) -> bool
-Polhem.Api.Client.Definitions.LanguageLayers.LanguageLayers() -> void
-Polhem.Api.Client.Definitions.LanguageLayers.LanguageLayers(Polhem.Definition.Language.LanguageResource? Base, Polhem.Definition.Language.LanguageResource? Customize) -> void
-Polhem.Api.Client.Definitions.SnapshotLanguageService
-Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnum(string! lang, string! fullName) -> Polhem.Definition.Language.LanguageEnum?
-Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnum(string! lang, string! namespace, string! enumName) -> Polhem.Definition.Language.LanguageEnum?
-Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnumText(string! lang, string! fullName, string! code) -> string?
-Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! fullKey) -> string!
-Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! namespace, string! subKey) -> string!
-Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! fullKey, out string! text) -> bool
-Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
-Polhem.Api.Client.FormDataGuard
-Polhem.Api.Client.FormValueBinding
-Polhem.Api.Client.Providers.IJsonRpcProvider
-Polhem.Api.Client.Providers.LocalApiProvider
-Polhem.Api.Client.Providers.LocalApiProvider.AccessToken.get -> System.Guid
-Polhem.Api.Client.Providers.RemoteApiProvider
-Polhem.Api.Client.Providers.RemoteApiProvider.AccessToken.get -> System.Guid
-Polhem.Api.Client.Providers.RemoteApiProvider.Endpoint.get -> string!
-Polhem.Api.Client.Providers.RemoteApiProvider.RemoteApiProvider(string! endpoint, System.Guid accessToken) -> void
-Polhem.Api.Client.SupportedConnectTypes
-Polhem.Api.Client.SupportedConnectTypes.Both = Polhem.Api.Client.SupportedConnectTypes.Local | Polhem.Api.Client.SupportedConnectTypes.Remote -> Polhem.Api.Client.SupportedConnectTypes
-Polhem.Api.Client.SupportedConnectTypes.Local = 1 -> Polhem.Api.Client.SupportedConnectTypes
-Polhem.Api.Client.SupportedConnectTypes.Remote = 2 -> Polhem.Api.Client.SupportedConnectTypes
-override Polhem.Api.Client.Definitions.LanguageLayers.GetHashCode() -> int
-static Polhem.Api.Client.ApiClientInfo.ApiKey.get -> string!
-static Polhem.Api.Client.ApiClientInfo.ApiKey.set -> void
-static Polhem.Api.Client.ApiClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
-static Polhem.Api.Client.ApiClientInfo.ConnectType.set -> void
-static Polhem.Api.Client.ApiClientInfo.Endpoint.get -> string!
-static Polhem.Api.Client.ApiClientInfo.Endpoint.set -> void
-static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
-static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.set -> void
-static Polhem.Api.Client.ApiSessionContext.Ambient.get -> Polhem.Api.Client.ApiSessionContext!
-static Polhem.Api.Client.Definitions.LanguageLayers.operator !=(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
-static Polhem.Api.Client.Definitions.LanguageLayers.operator ==(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
-static Polhem.Api.Client.Definitions.SnapshotLanguageService.BuildKey(string! lang, string! ns) -> string!
-static Polhem.Api.Client.FormDataGuard.RequireConnector(Polhem.Api.Client.Connectors.FormApiConnector? connector, string! operation) -> Polhem.Api.Client.Connectors.FormApiConnector!
-static Polhem.Api.Client.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
-static Polhem.Api.Client.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Forms.FormSchema! schema) -> System.Data.DataSet!
-static Polhem.Api.Client.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
-static Polhem.Api.Client.FormValueBinding.ToBindingString(object? raw) -> string!
-static Polhem.Api.Client.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
-~override Polhem.Api.Client.Definitions.LanguageLayers.Equals(object obj) -> bool
-~override Polhem.Api.Client.Definitions.LanguageLayers.ToString() -> string
 Polhem.Api.Client.ClientDefineAccess.GetCurrencySettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.CurrencySettings!>!
 Polhem.Api.Client.ClientDefineAccess.GetCustomizeFormLayoutAsync(string! progId, string! layoutId = "", System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout?>!
 Polhem.Api.Client.ClientDefineAccess.GetCustomizeLanguageAsync(string! lang, string! ns, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Language.LanguageResource?>!
@@ -106,29 +34,69 @@ Polhem.Api.Client.ClientDefineAccess.SavePermissionModelsAsync(Polhem.Definition
 Polhem.Api.Client.ClientDefineAccess.SaveProgramSettingsAsync(Polhem.Definition.Settings.ProgramSettings! settings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Api.Client.ClientDefineAccess.SaveSystemSettingsAsync(Polhem.Definition.Settings.SystemSettings! settings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Api.Client.ClientDefineAccess.SaveTableSchemaAsync(string! categoryId, Polhem.Definition.Database.TableSchema! tableSchema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Api.Client.ConnectType
+Polhem.Api.Client.ConnectType.Local = 0 -> Polhem.Api.Client.ConnectType
+Polhem.Api.Client.ConnectType.Remote = 1 -> Polhem.Api.Client.ConnectType
+Polhem.Api.Client.Connectors.ApiConnector
+Polhem.Api.Client.Connectors.ApiConnector.AccessToken.get -> System.Guid
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ExecuteAsync<T>(string! progId, string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.get -> string!
+Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.set -> void
+Polhem.Api.Client.Connectors.ApiConnector.Provider.get -> Polhem.JsonRpc.IJsonRpcTransport!
+Polhem.Api.Client.Connectors.ApiConnector.Session.get -> Polhem.Api.Client.ApiSessionContext!
 Polhem.Api.Client.Connectors.AuditLogApiConnector
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.FormApiConnector
 Polhem.Api.Client.Connectors.FormApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId) -> void
+Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.FormApiConnector.ProgId.get -> string!
+Polhem.Api.Client.Connectors.SystemApiConnector
 Polhem.Api.Client.Connectors.SystemApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.SystemApiConnector.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Definitions.FormDefinitionLoader
+Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.get -> System.Func<Polhem.Definition.Identity.CompanyInfo?>?
+Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.init -> void
 Polhem.Api.Client.Definitions.FormDefinitionLoader.FormDefinitionLoader(Polhem.Api.Client.ClientDefineAccess! defineAccess, string? defaultLanguage = null) -> void
 Polhem.Api.Client.Definitions.FormDefinitionLoader.GetLocalizedSchemaAsync(string! progId, string! lang, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema!>!
 Polhem.Api.Client.Definitions.FormDefinitionLoader.GetMenuLocalizerAsync(string! lang, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Language.MenuLocalizer!>!
 Polhem.Api.Client.Definitions.FormDefinitionLoader.GetRuntimeLayoutAsync(string! progId, Polhem.Definition.Forms.FormSchema! localizedSchema, string! layoutId = "", System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+Polhem.Api.Client.Definitions.LanguageLayers
+Polhem.Api.Client.Definitions.LanguageLayers.Base.get -> Polhem.Definition.Language.LanguageResource?
+Polhem.Api.Client.Definitions.LanguageLayers.Base.init -> void
+Polhem.Api.Client.Definitions.LanguageLayers.Customize.get -> Polhem.Definition.Language.LanguageResource?
+Polhem.Api.Client.Definitions.LanguageLayers.Customize.init -> void
+Polhem.Api.Client.Definitions.LanguageLayers.Deconstruct(out Polhem.Definition.Language.LanguageResource? Base, out Polhem.Definition.Language.LanguageResource? Customize) -> void
+Polhem.Api.Client.Definitions.LanguageLayers.Equals(Polhem.Api.Client.Definitions.LanguageLayers other) -> bool
+Polhem.Api.Client.Definitions.LanguageLayers.LanguageLayers() -> void
+Polhem.Api.Client.Definitions.LanguageLayers.LanguageLayers(Polhem.Definition.Language.LanguageResource? Base, Polhem.Definition.Language.LanguageResource? Customize) -> void
+Polhem.Api.Client.Definitions.SnapshotLanguageService
 Polhem.Api.Client.Definitions.SnapshotLanguageService.DefaultLanguage.get -> string!
+Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnum(string! lang, string! fullName) -> Polhem.Definition.Language.LanguageEnum?
+Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnum(string! lang, string! namespace, string! enumName) -> Polhem.Definition.Language.LanguageEnum?
+Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnumText(string! lang, string! fullName, string! code) -> string?
+Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! fullKey) -> string!
+Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! namespace, string! subKey) -> string!
 Polhem.Api.Client.Definitions.SnapshotLanguageService.SnapshotLanguageService(System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Api.Client.Definitions.LanguageLayers>! snapshot, string! defaultLanguage) -> void
+Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! fullKey, out string! text) -> bool
+Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Api.Client.FormDataGuard
+Polhem.Api.Client.FormValueBinding
 Polhem.Api.Client.Permissions.ElementCapabilityResolver
 Polhem.Api.Client.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
 Polhem.Api.Client.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
@@ -145,16 +113,48 @@ Polhem.Api.Client.Permissions.FieldCapability.Visible.init -> void
 Polhem.Api.Client.Permissions.IElementCapabilityResolver
 Polhem.Api.Client.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
 Polhem.Api.Client.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
-Polhem.Api.Client.Providers.IJsonRpcProvider.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
-Polhem.Api.Client.Providers.LocalApiProvider.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
+Polhem.Api.Client.Providers.LocalApiProvider
+Polhem.Api.Client.Providers.LocalApiProvider.AccessToken.get -> System.Guid
 Polhem.Api.Client.Providers.LocalApiProvider.LocalApiProvider(System.IServiceProvider! services, System.Guid accessToken) -> void
-Polhem.Api.Client.Providers.RemoteApiProvider.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
+Polhem.Api.Client.Providers.LocalApiProvider.SendAsync(Polhem.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.JsonRpc.JsonRpcResponse?>!
+Polhem.Api.Client.Providers.LocalApiProvider.SendBatchAsync(System.Collections.Generic.IReadOnlyList<Polhem.JsonRpc.JsonRpcRequest!>! requests, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Polhem.JsonRpc.JsonRpcResponse!>!>!
+Polhem.Api.Client.Providers.RemoteApiProvider
+Polhem.Api.Client.Providers.RemoteApiProvider.AccessToken.get -> System.Guid
+Polhem.Api.Client.Providers.RemoteApiProvider.Endpoint.get -> string!
+Polhem.Api.Client.Providers.RemoteApiProvider.RemoteApiProvider(string! endpoint, System.Guid accessToken) -> void
+Polhem.Api.Client.Providers.RemoteApiProvider.SendAsync(Polhem.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.JsonRpc.JsonRpcResponse?>!
+Polhem.Api.Client.Providers.RemoteApiProvider.SendBatchAsync(System.Collections.Generic.IReadOnlyList<Polhem.JsonRpc.JsonRpcRequest!>! requests, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Polhem.JsonRpc.JsonRpcResponse!>!>!
+Polhem.Api.Client.SupportedConnectTypes
+Polhem.Api.Client.SupportedConnectTypes.Both = Polhem.Api.Client.SupportedConnectTypes.Local | Polhem.Api.Client.SupportedConnectTypes.Remote -> Polhem.Api.Client.SupportedConnectTypes
+Polhem.Api.Client.SupportedConnectTypes.Local = 1 -> Polhem.Api.Client.SupportedConnectTypes
 Polhem.Api.Client.SupportedConnectTypes.None = 0 -> Polhem.Api.Client.SupportedConnectTypes
+Polhem.Api.Client.SupportedConnectTypes.Remote = 2 -> Polhem.Api.Client.SupportedConnectTypes
+override Polhem.Api.Client.Definitions.LanguageLayers.GetHashCode() -> int
 override Polhem.Api.Client.Permissions.FieldCapability.GetHashCode() -> int
+static Polhem.Api.Client.ApiClientInfo.ApiKey.get -> string!
+static Polhem.Api.Client.ApiClientInfo.ApiKey.set -> void
+static Polhem.Api.Client.ApiClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
+static Polhem.Api.Client.ApiClientInfo.ConnectType.set -> void
 static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.get -> string!
 static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.set -> void
+static Polhem.Api.Client.ApiClientInfo.Endpoint.get -> string!
+static Polhem.Api.Client.ApiClientInfo.Endpoint.set -> void
+static Polhem.Api.Client.ApiClientInfo.PayloadOptions.get -> Polhem.JsonRpc.Payload.PayloadOptions!
+static Polhem.Api.Client.ApiClientInfo.PayloadOptions.set -> void
+static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
+static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.set -> void
 static Polhem.Api.Client.ApiConnectValidator.ValidateAsync(string! endpoint, bool allowGenerateSettings = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Client.ConnectType>!
+static Polhem.Api.Client.ApiSessionContext.Ambient.get -> Polhem.Api.Client.ApiSessionContext!
+static Polhem.Api.Client.Definitions.LanguageLayers.operator !=(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
+static Polhem.Api.Client.Definitions.LanguageLayers.operator ==(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
+static Polhem.Api.Client.Definitions.SnapshotLanguageService.BuildKey(string! lang, string! ns) -> string!
+static Polhem.Api.Client.FormDataGuard.RequireConnector(Polhem.Api.Client.Connectors.FormApiConnector? connector, string! operation) -> Polhem.Api.Client.Connectors.FormApiConnector!
+static Polhem.Api.Client.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
 static Polhem.Api.Client.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
+static Polhem.Api.Client.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Forms.FormSchema! schema) -> System.Data.DataSet!
+static Polhem.Api.Client.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
+static Polhem.Api.Client.FormValueBinding.ToBindingString(object? raw) -> string!
+static Polhem.Api.Client.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
 static Polhem.Api.Client.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool
 static Polhem.Api.Client.Permissions.FieldCapability.operator !=(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
 static Polhem.Api.Client.Permissions.FieldCapability.operator ==(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
@@ -201,5 +201,7 @@ virtual Polhem.Api.Client.Connectors.SystemApiConnector.SaveDefineAsync(Polhem.D
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyEnabledAsync(string! sysId, bool enabled, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse!>!
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyExpiryAsync(string! sysId, System.DateTime? expiredAt, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse!>!
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetDeploymentAdminAsync(string! userId, bool isDeploymentAdmin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse!>!
+~override Polhem.Api.Client.Definitions.LanguageLayers.Equals(object obj) -> bool
+~override Polhem.Api.Client.Definitions.LanguageLayers.ToString() -> string
 ~override Polhem.Api.Client.Permissions.FieldCapability.Equals(object obj) -> bool
 ~override Polhem.Api.Client.Permissions.FieldCapability.ToString() -> string

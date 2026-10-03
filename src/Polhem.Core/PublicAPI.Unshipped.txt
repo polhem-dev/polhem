@@ -1,2 +1,1 @@
 #nullable enable
-static Polhem.Core.Serialization.JsonCodec.Options.get -> System.Text.Json.JsonSerializerOptions!

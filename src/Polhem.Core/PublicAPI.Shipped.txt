@@ -91,19 +91,40 @@ Polhem.Core.DateTimeBasis
 Polhem.Core.DateTimeBasis.UserZone = 0 -> Polhem.Core.DateTimeBasis
 Polhem.Core.DateTimeBasis.Utc = 1 -> Polhem.Core.DateTimeBasis
 Polhem.Core.DateTimeExtensions
+Polhem.Core.Exceptions.AuthenticationRequiredException
+Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message) -> void
+Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Core.Exceptions.AuthenticationRequiredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.AuthenticationRequiredException.MessageKey.get -> string!
 Polhem.Core.Exceptions.CompanyAccessDeniedException
 Polhem.Core.Exceptions.CompanyAccessDeniedException.CompanyAccessDeniedException(string! message) -> void
 Polhem.Core.Exceptions.CompanyAccessDeniedException.CompanyAccessDeniedException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Exceptions.CompanyAccessDeniedException.CompanyAccessDeniedException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Core.Exceptions.CompanyAccessDeniedException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.CompanyAccessDeniedException.MessageKey.get -> string!
 Polhem.Core.Exceptions.CompanyNotEnteredException
 Polhem.Core.Exceptions.CompanyNotEnteredException.CompanyNotEnteredException(string! message) -> void
 Polhem.Core.Exceptions.CompanyNotEnteredException.CompanyNotEnteredException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Exceptions.CompanyNotEnteredException.CompanyNotEnteredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Core.Exceptions.CompanyNotEnteredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.CompanyNotEnteredException.MessageKey.get -> string!
 Polhem.Core.Exceptions.ExceptionExtensions
 Polhem.Core.Exceptions.ForbiddenException
 Polhem.Core.Exceptions.ForbiddenException.ForbiddenException(string! message) -> void
 Polhem.Core.Exceptions.ForbiddenException.ForbiddenException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Exceptions.ForbiddenException.ForbiddenException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Core.Exceptions.ForbiddenException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.ForbiddenException.MessageKey.get -> string!
+Polhem.Core.Exceptions.ILocalizableMessage
+Polhem.Core.Exceptions.ILocalizableMessage.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.ILocalizableMessage.MessageKey.get -> string!
 Polhem.Core.Exceptions.UserMessageException
+Polhem.Core.Exceptions.UserMessageException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Core.Exceptions.UserMessageException.MessageKey.get -> string!
 Polhem.Core.Exceptions.UserMessageException.UserMessageException(string! message) -> void
 Polhem.Core.Exceptions.UserMessageException.UserMessageException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Exceptions.UserMessageException.UserMessageException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
 Polhem.Core.Expressions.ExpressionEvaluationException
 Polhem.Core.Expressions.ExpressionEvaluationException.Expression.get -> string?
 Polhem.Core.Expressions.ExpressionEvaluationException.Expression.init -> void
@@ -131,6 +152,7 @@ Polhem.Core.ISysInfoConfiguration.Version.set -> void
 Polhem.Core.ITagProperty
 Polhem.Core.ITagProperty.Tag.get -> object?
 Polhem.Core.ITagProperty.Tag.set -> void
+Polhem.Core.Security.AccessTokenHasher
 Polhem.Core.Security.AesCbcHmacCryptor
 Polhem.Core.Security.AesCbcHmacKeyGenerator
 Polhem.Core.Security.ApiKeyFormat
@@ -183,6 +205,7 @@ static Polhem.Core.Data.DataColumnExtensions.GetDeclaredFieldDbType(this System.
 static Polhem.Core.Data.DataColumnExtensions.ResolveFieldDbType(this System.Data.DataColumn! column) -> Polhem.Core.Data.FieldDbType
 static Polhem.Core.Data.DataRowExtensions.GetFieldValue<T>(this System.Data.DataRow! row, string! columnName) -> T
 static Polhem.Core.Data.DataRowExtensions.GetFieldValue<T>(this System.Data.DataRow! row, string! columnName, T defaultValue) -> T
+static Polhem.Core.Data.DataRowExtensions.RewriteVersions(this System.Data.DataRow! row, System.Func<System.Data.DataColumn!, System.Data.DataRowVersion, object!, object!>! rewrite) -> void
 static Polhem.Core.Data.DataRowViewExtensions.GetFieldValue<T>(this System.Data.DataRowView! rowView, string! columnName) -> T
 static Polhem.Core.Data.DataRowViewExtensions.GetFieldValue<T>(this System.Data.DataRowView! rowView, string! columnName, T defaultValue) -> T
 static Polhem.Core.Data.DataSetExtensions.GetMasterTable(this System.Data.DataSet! dataSet) -> System.Data.DataTable?
@@ -207,7 +230,9 @@ static Polhem.Core.Data.FieldDbTypeExtensions.GetDefaultValue(this Polhem.Core.D
 static Polhem.Core.DateTimeExtensions.GetYearMonth(this System.DateTime dateValue) -> System.DateTime
 static Polhem.Core.Exceptions.ExceptionExtensions.Unwrap(this System.Exception! ex) -> System.Exception!
 static Polhem.Core.Expressions.ExpressionPolicy.CoerceValue(object? value, Polhem.Core.Data.FieldDbType dbType) -> object!
+static Polhem.Core.FileUtilities.EnsureFileExists(string! filePath) -> void
 static Polhem.Core.FileUtilities.FileReadText(string! filePath) -> string!
+static Polhem.Core.FileUtilities.FileWriteOwnerOnlyText(string! filePath, string! contents, bool overwrite) -> void
 static Polhem.Core.FileUtilities.FileWriteText(string! filePath, string! contents) -> void
 static Polhem.Core.FileUtilities.FileWriteText(string! filePath, string! contents, System.Text.Encoding! encoding) -> void
 static Polhem.Core.FileUtilities.FileWriteTextAtomic(string! filePath, string! contents) -> void
@@ -216,6 +241,8 @@ static Polhem.Core.FileUtilities.IsLocalPath(string! input) -> bool
 static Polhem.Core.FrameworkClock.Now(string! timeZoneId) -> System.DateTime
 static Polhem.Core.FrameworkClock.Now(string! timeZoneId, Polhem.Core.DateTimeBasis basis) -> System.DateTime
 static Polhem.Core.FrameworkClock.Today(string! timeZoneId) -> System.DateOnly
+static Polhem.Core.Security.AccessTokenHasher.ComputeFingerprint(System.Guid accessToken) -> string?
+static Polhem.Core.Security.AccessTokenHasher.ComputeStorageKey(System.Guid accessToken) -> System.Guid
 static Polhem.Core.Security.AesCbcHmacCryptor.Decrypt(byte[]! encryptedData, byte[]! aesKey, byte[]! hmacKey) -> byte[]!
 static Polhem.Core.Security.AesCbcHmacCryptor.Encrypt(byte[]! plainBytes, byte[]! aesKey, byte[]! hmacKey) -> byte[]!
 static Polhem.Core.Security.AesCbcHmacKeyGenerator.FromCombinedKey(byte[]! combinedKey, out byte[]! aesKey, out byte[]! hmacKey) -> void
@@ -230,14 +257,18 @@ static Polhem.Core.Security.ApiKeyHasher.VerifySecret(string? secret, string? ha
 static Polhem.Core.Security.FileHashValidator.ComputeSha256(string! filePath) -> string!
 static Polhem.Core.Security.FileHashValidator.VerifySha256(string! filePath, string! expectedSha256Hex) -> bool
 static Polhem.Core.Security.PasswordHasher.HashPassword(string! password) -> string!
+static Polhem.Core.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -> bool
 static Polhem.Core.Security.PasswordHasher.VerifyPassword(string! password, string! hashedPassword) -> bool
 static Polhem.Core.Security.RsaCryptor.DecryptWithPrivateKey(string! base64CipherText, string! privateKey) -> string!
 static Polhem.Core.Security.RsaCryptor.EncryptWithPublicKey(string! plainText, string! publicKey) -> string!
 static Polhem.Core.Security.RsaCryptor.GenerateRsaKeyPair(out string! publicKey, out string! privateKey) -> void
 static Polhem.Core.Serialization.Gzip.Compress(byte[]! bytes) -> byte[]!
 static Polhem.Core.Serialization.Gzip.Decompress(byte[]! bytes) -> byte[]!
+static Polhem.Core.Serialization.JsonCodec.Deserialize<T>(string! json) -> T?
 static Polhem.Core.Serialization.JsonCodec.DeserializeAsync<T>(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<T?>
 static Polhem.Core.Serialization.JsonCodec.DeserializeFromFile<T>(string! filePath) -> T?
+static Polhem.Core.Serialization.JsonCodec.Options.get -> System.Text.Json.JsonSerializerOptions!
+static Polhem.Core.Serialization.JsonCodec.Serialize(object! value, bool ignoreDefaultValue = true, bool ignoreNullValue = true) -> string!
 static Polhem.Core.Serialization.JsonCodec.SerializeToFile(object! value, string! filePath) -> void
 static Polhem.Core.Serialization.SerializationExtensions.Save(this Polhem.Core.Serialization.IObjectSerializeFile! value) -> void
 static Polhem.Core.Serialization.SerializationExtensions.ToJson(this Polhem.Core.Serialization.IObjectSerializeBase! value) -> string!
@@ -303,39 +334,9 @@ static Polhem.Core.ValueUtilities.IsEmpty(string! value) -> bool
 static Polhem.Core.ValueUtilities.IsNullOrDBNull(object? value) -> bool
 static Polhem.Core.ValueUtilities.IsNumeric(object! value) -> bool
 static Polhem.Core.ValueUtilities.IsNumeric(string! value, int length) -> bool
-static readonly Polhem.Core.ValueUtilities.TimeOnlyLength -> int
-virtual Polhem.Core.Collections.KeyCollectionItem.Key.get -> string!
-virtual Polhem.Core.Collections.KeyCollectionItem.Key.set -> void
-Polhem.Core.Exceptions.AuthenticationRequiredException
-Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message) -> void
-Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message, System.Exception! innerException) -> void
-Polhem.Core.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
-Polhem.Core.Exceptions.AuthenticationRequiredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.AuthenticationRequiredException.MessageKey.get -> string!
-Polhem.Core.Exceptions.CompanyAccessDeniedException.CompanyAccessDeniedException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
-Polhem.Core.Exceptions.CompanyAccessDeniedException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.CompanyAccessDeniedException.MessageKey.get -> string!
-Polhem.Core.Exceptions.CompanyNotEnteredException.CompanyNotEnteredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
-Polhem.Core.Exceptions.CompanyNotEnteredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.CompanyNotEnteredException.MessageKey.get -> string!
-Polhem.Core.Exceptions.ForbiddenException.ForbiddenException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
-Polhem.Core.Exceptions.ForbiddenException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.ForbiddenException.MessageKey.get -> string!
-Polhem.Core.Exceptions.ILocalizableMessage
-Polhem.Core.Exceptions.ILocalizableMessage.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.ILocalizableMessage.MessageKey.get -> string!
-Polhem.Core.Exceptions.UserMessageException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
-Polhem.Core.Exceptions.UserMessageException.MessageKey.get -> string!
-Polhem.Core.Exceptions.UserMessageException.UserMessageException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
-Polhem.Core.Security.AccessTokenHasher
-static Polhem.Core.Data.DataRowExtensions.RewriteVersions(this System.Data.DataRow! row, System.Func<System.Data.DataColumn!, System.Data.DataRowVersion, object!, object!>! rewrite) -> void
-static Polhem.Core.FileUtilities.EnsureFileExists(string! filePath) -> void
-static Polhem.Core.FileUtilities.FileWriteOwnerOnlyText(string! filePath, string! contents, bool overwrite) -> void
-static Polhem.Core.Security.AccessTokenHasher.ComputeFingerprint(System.Guid accessToken) -> string?
-static Polhem.Core.Security.AccessTokenHasher.ComputeStorageKey(System.Guid accessToken) -> System.Guid
-static Polhem.Core.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -> bool
-static Polhem.Core.Serialization.JsonCodec.Deserialize<T>(string! json) -> T?
-static Polhem.Core.Serialization.JsonCodec.Serialize(object! value, bool ignoreDefaultValue = true, bool ignoreNullValue = true) -> string!
 static readonly Polhem.Core.Security.ApiKeyFormat.MaxSysIdLength -> int
 static readonly Polhem.Core.Security.ApiKeyFormat.MinSysIdLength -> int
 static readonly Polhem.Core.Security.PasswordHasher.Iterations -> int
+static readonly Polhem.Core.ValueUtilities.TimeOnlyLength -> int
+virtual Polhem.Core.Collections.KeyCollectionItem.Key.get -> string!
+virtual Polhem.Core.Collections.KeyCollectionItem.Key.set -> void
