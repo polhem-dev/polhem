@@ -249,7 +249,7 @@ namespace Polhem.Api.Core.UnitTests
             => new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sequence);
 
         /// <summary>The services, with payload options that require a frame.</summary>
-        private static IServiceProvider WithFrames(IServiceProvider services)
+        private static TestOverrideServiceProvider WithFrames(IServiceProvider services)
             => new TestOverrideServiceProvider(services, (typeof(PayloadOptions), Options(requireFrame: true)));
 
         /// <summary>
