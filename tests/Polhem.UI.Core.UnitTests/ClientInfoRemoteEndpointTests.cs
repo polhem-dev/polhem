@@ -6,9 +6,8 @@ namespace Polhem.UI.Core.UnitTests
     /// <summary>
     /// Verifies how <see cref="ClientInfo"/> guards against a remote endpoint that cannot be reached.
     /// <para>
-    /// <c>ApiConnectValidator.ValidateRemoteAsync</c> first probes connectivity with an HTTP HEAD request
-    /// (<c>HttpUtilities.IsEndpointReachableAsync</c>), then calls <c>PingAsync</c>.
-    /// If either step fails, the exception is thrown before <c>SetConnectType</c> is called.
+    /// <c>ApiConnectValidator.ValidateRemoteAsync</c> calls <c>PingAsync</c>, and reports a host that cannot be
+    /// reached as an unreachable endpoint. If the ping fails, the exception is thrown before <c>SetConnectType</c> is called.
     /// This class verifies only that throwing behavior and how <c>InitializeConnectAsync</c> swallows the exception.
     /// </para>
     /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.

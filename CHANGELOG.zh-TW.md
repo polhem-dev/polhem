@@ -10,10 +10,12 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ### 行為變更
 
+- 連線到遠端端點時（`ApiConnectValidator`，以及 UI head 透過它呼叫的 `ClientInfo`）只以 ping 檢查端點，不再先送 HTTP
+  `HEAD` 請求；端點每次連線都以 405 回應那個請求。連不上的主機仍回報為 `Endpoint not reachable`。
 - 儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
   `DefinitionNotFoundException`（衍生自 `FileNotFoundException`）。遠端呼叫端會以 UserMessage 錯誤碼（-32099）收到它的訊息
   （例如 `FormSchema 'Employee' not found.`），不再是檔案儲存回的通用 InternalError（-32603）或資料庫儲存回的固定訊息。
-  訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。
+  訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。([#51](https://github.com/polhem-dev/polhem/pull/51))
 
 ## [1.2.0] - 2026-10-03
 
