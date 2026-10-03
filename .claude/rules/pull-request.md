@@ -5,7 +5,8 @@
 `main` is protected: a pull request can only merge when the `build` check of `.github/workflows/build-ci.yml` and
 the `docs` check of `.github/workflows/docs-check.yml` pass and the branch is up to date with `main`. The protection
 applies to administrators too. Nobody pushes to `main` directly, maintainers included. Pull requests are squash
-merged. The settings themselves are recorded in `maintainers/branch-protection-setup.md`.
+merged. The settings themselves are the polhem-dev baseline (`repo-baseline.json` in polhem-dev/.github);
+`maintainers/branch-protection-setup.md` records what is specific to this repository.
 
 1. Branch from the latest `origin/main`. Agents name their branches `claude/<topic>`.
 2. Build and test locally when the environment allows it (see below), then push the branch with
