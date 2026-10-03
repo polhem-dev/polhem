@@ -170,5 +170,43 @@ namespace Polhem.Api.Client.UnitTests
                 ApiClientInfo.SupportedConnectTypes = original;
             }
         }
+
+        [Fact]
+        [DisplayName("ApiConnectValidator.ValidateAsync checks a remote endpoint with the ping alone, sending no HEAD request")]
+        public async Task ValidateAsync_RemoteUrl_SendsOnlyThePing()
+        {
+            var original = ApiClientInfo.SupportedConnectTypes;
+            await using var server = await LoopbackHttpServer.StartAsync("HTTP/1.1 404 Not Found");
+            try
+            {
+                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => ApiConnectValidator.ValidateAsync(server.BuildUrl("/api")));
+                Assert.Equal(["POST"], server.Methods);
+            }
+            finally
+            {
+                ApiClientInfo.SupportedConnectTypes = original;
+            }
+        }
+
+        [Fact]
+        [DisplayName("ApiConnectValidator.ValidateAsync does not report an endpoint that answered with an HTTP error as unreachable")]
+        public async Task ValidateAsync_RemoteUrl_HttpError_IsNotReportedAsUnreachable()
+        {
+            var original = ApiClientInfo.SupportedConnectTypes;
+            await using var server = await LoopbackHttpServer.StartAsync("HTTP/1.1 404 Not Found");
+            try
+            {
+                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => ApiConnectValidator.ValidateAsync(server.BuildUrl("/api")));
+                Assert.DoesNotContain("Endpoint not reachable", ex.Message);
+            }
+            finally
+            {
+                ApiClientInfo.SupportedConnectTypes = original;
+            }
+        }
     }
 }

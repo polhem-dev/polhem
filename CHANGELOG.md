@@ -8,6 +8,12 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+### Changed behaviour
+
+- Connecting to a remote endpoint (`ApiConnectValidator`, and through it `ClientInfo` in the UI heads) checks the
+  endpoint with the ping alone. It no longer sends an HTTP `HEAD` request first, which the endpoint answered with 405
+  on every connect. A host that cannot be reached is still reported as `Endpoint not reachable`.
+
 ## [1.2.0] - 2026-10-03
 
 > JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and the payload

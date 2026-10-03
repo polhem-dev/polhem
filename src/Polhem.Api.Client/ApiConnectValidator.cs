@@ -17,7 +17,7 @@ namespace Polhem.Api.Client
         /// <param name="allowGenerateSettings">Whether to auto-generate missing settings files (SystemSettings.xml and DatabaseSettings.xml) for local connections.</param>
         /// <param name="cancellationToken">A token that cancels remote validation.</param>
         /// <remarks>
-        /// Remote validation awaits the ping and reachability probes instead of blocking on them,
+        /// Remote validation awaits the ping instead of blocking on it,
         /// so it is safe on single-threaded runtimes (browser WASM) where blocking would throw
         /// "Cannot wait on monitors".
         /// </remarks>
@@ -114,10 +114,15 @@ namespace Polhem.Api.Client
         }
 
         /// <summary>
-        /// Validates the remote connection settings, awaiting the reachability and ping probes.
+        /// Validates the remote connection settings by pinging the endpoint.
         /// </summary>
+        /// <remarks>
+        /// The ping is the reachability check: a failure to reach the host is reported as an unreachable endpoint,
+        /// while an HTTP or JSON-RPC error from a host that answered propagates as it is. A separate HTTP <c>HEAD</c>
+        /// probe used to run first; the endpoint accepts only POST, so it was answered with 405 on every connect.
+        /// </remarks>
         /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="cancellationToken">A token that cancels the probes.</param>
+        /// <param name="cancellationToken">A token that cancels the ping.</param>
         private static async Task ValidateRemoteAsync(string endpoint, CancellationToken cancellationToken)
         {
             // Verify the application supports remote connections
@@ -125,12 +130,27 @@ namespace Polhem.Api.Client
                 throw new InvalidOperationException("Remote connections are not supported.");
             if (StringUtilities.IsEmpty(endpoint))
                 throw new ArgumentException("The endpoint must be specified.", nameof(endpoint));
-            // Pre-check transport-level reachability before establishing the connector
-            if (!await HttpUtilities.IsEndpointReachableAsync(endpoint, cancellationToken: cancellationToken).ConfigureAwait(false))
-                throw new InvalidOperationException($"Endpoint not reachable: {endpoint}");
-            // Use remote connection to execute the Ping method
             var connector = new SystemApiConnector(endpoint, Guid.Empty);
-            await connector.PingAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await connector.PingAsync(cancellationToken).ConfigureAwait(false);
+            }
+            // `PingAsync` wraps every failure except the caller's cancellation, so the cause is the inner exception.
+            catch (InvalidOperationException ex) when (IsUnreachable(ex.InnerException))
+            {
+                throw new InvalidOperationException($"Endpoint not reachable: {endpoint}", ex);
+            }
         }
+
+        /// <summary>
+        /// Says whether a ping failed before any HTTP response arrived.
+        /// </summary>
+        /// <param name="exception">The cause of the failure.</param>
+        /// <returns>
+        /// <see langword="true"/> for a request that got no response (DNS failure, a refused connection) or that
+        /// timed out; <see langword="false"/> for an HTTP or JSON-RPC error from a host that answered.
+        /// </returns>
+        private static bool IsUnreachable(Exception? exception)
+            => exception is HttpRequestException { StatusCode: null } or TaskCanceledException;
     }
 }
