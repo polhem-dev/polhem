@@ -13,6 +13,11 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - Connecting to a remote endpoint (`ApiConnectValidator`, and through it `ClientInfo` in the UI heads) checks the
   endpoint with the ping alone. It no longer sends an HTTP `HEAD` request first, which the endpoint answered with 405
   on every connect. A host that cannot be reached is still reported as `Endpoint not reachable`.
+- A definition the storage must hold but does not — a form schema, a table schema, the program registry or the
+  database categories — now throws `DefinitionNotFoundException`, a `FileNotFoundException`. A remote caller receives
+  its message (such as `FormSchema 'Employee' not found.`) under the UserMessage code (-32099) instead of a generic
+  InternalError (-32603) from a file storage or a fixed message from a database storage. The message names the
+  definition type and the key the caller sent, never a path. ([#51](https://github.com/polhem-dev/polhem/pull/51))
 
 ## [1.2.0] - 2026-10-03
 

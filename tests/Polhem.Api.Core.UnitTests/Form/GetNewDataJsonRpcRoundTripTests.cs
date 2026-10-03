@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Business;
 using Polhem.Definition;
@@ -72,6 +73,43 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Equal(skeletonRowId, (Guid)result.DataSet.Tables["Employee"]!.Rows[0][SysFields.RowId]);
 
             Assert.True(stub.GetNewDataCalled);
+        }
+
+        [Fact]
+        [DisplayName("A form method on a progId with no stored schema returns the UserMessage code and names the progId")]
+        public async Task GetNewData_UnknownProgId_ReturnsDefinitionNotFoundMessage()
+        {
+            var stub = new StubCrudDataFormRepository { GetNewDataResult = new DataSet() };
+            var overrideServices = new TestOverrideServiceProvider(
+                _fx.Provider,
+                (typeof(IRepositoryFactory), new StubCrudFormRepositoryFactory(stub)));
+
+            var boFactory = new BusinessObjectFactory(
+                overrideServices,
+                _fx.GetRequiredService<IDefineAccess>(),
+                _fx.GetRequiredService<ISessionInfoService>(),
+                _fx.GetRequiredService<ILanguageService>(),
+                _fx.GetRequiredService<IBoTypeResolver>());
+
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
+            {
+                AccessToken = TestSessionFactory.CreateAccessToken(_fx),
+                IsLocalCall = true,
+            };
+
+            string progId = "NoSuchForm" + Guid.NewGuid().ToString("N");
+            var request = new TestRpcRequest
+            {
+                Method = $"{progId}.{FormActions.GetNewData}",
+                Params = new TestPayload { Value = new GetNewDataRequest() },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var response = await executor.ExecuteAsync(request);
+
+            Assert.NotNull(response.Error);
+            Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
+            Assert.Equal($"FormSchema '{progId}' not found.", response.Error.Message);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Polhem.Core.Exceptions;
+using Polhem.Definition.Storage;
 using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.JsonRpc
@@ -108,6 +109,10 @@ namespace Polhem.Api.Core.JsonRpc
             // the code is many-to-one on the way out, so the way back can only land here.
             new(typeof(UserMessageException), JsonRpcErrorCode.UserMessage,
                 message => new UserMessageException(message)),
+
+            // A missing definition is a configuration error the caller can act on, and its message names only the
+            // definition type and the key the caller sent. It is not rebuilt: the code is UserMessage's.
+            new(typeof(DefinitionNotFoundException), JsonRpcErrorCode.UserMessage, null),
 
             new(typeof(UnauthorizedAccessException), JsonRpcErrorCode.UserMessage, null, "Access denied."),
             new(typeof(ArgumentException), JsonRpcErrorCode.UserMessage, null, "The request is not valid."),

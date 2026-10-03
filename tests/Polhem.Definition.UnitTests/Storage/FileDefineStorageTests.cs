@@ -57,16 +57,22 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetFormSchema throws FileNotFoundException for a missing file")]
-        public void GetFormSchema_FileNotFound_Throws()
+        [DisplayName("GetFormSchema throws DefinitionNotFoundException for a missing file, naming the progId and not the path")]
+        public void GetFormSchema_FileNotFound_ThrowsDefinitionNotFound()
         {
             WithTempDefinePath(paths =>
             {
                 // Arrange
                 var storage = new FileDefineStorage(paths);
 
-                // Act & Assert
-                Assert.Throws<FileNotFoundException>(() => storage.GetFormSchema("nonexistent"));
+                // Act
+                var ex = Assert.Throws<DefinitionNotFoundException>(() => storage.GetFormSchema("nonexistent"));
+
+                // Assert
+                Assert.Equal(DefineType.FormSchema, ex.DefineType);
+                Assert.Equal("nonexistent", ex.Key);
+                Assert.Equal("FormSchema 'nonexistent' not found.", ex.Message);
+                Assert.Equal(paths.GetFormSchemaFilePath("nonexistent"), ex.FileName);
             });
         }
 
@@ -93,16 +99,20 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetTableSchema throws FileNotFoundException for a missing file")]
-        public void GetTableSchema_FileNotFound_Throws()
+        [DisplayName("GetTableSchema throws DefinitionNotFoundException for a missing file, keyed by category and table")]
+        public void GetTableSchema_FileNotFound_ThrowsDefinitionNotFound()
         {
             WithTempDefinePath(paths =>
             {
                 // Arrange
                 var storage = new FileDefineStorage(paths);
 
-                // Act & Assert
-                Assert.Throws<FileNotFoundException>(() => storage.GetTableSchema("common", "missing"));
+                // Act
+                var ex = Assert.Throws<DefinitionNotFoundException>(() => storage.GetTableSchema("common", "missing"));
+
+                // Assert
+                Assert.Equal(DefineType.TableSchema, ex.DefineType);
+                Assert.Equal("TableSchema 'common.missing' not found.", ex.Message);
             });
         }
 
@@ -164,16 +174,19 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetDbCategorySettings throws FileNotFoundException for a missing file")]
-        public void GetDbCategorySettings_FileNotFound_Throws()
+        [DisplayName("GetDbCategorySettings throws DefinitionNotFoundException for a missing file")]
+        public void GetDbCategorySettings_FileNotFound_ThrowsDefinitionNotFound()
         {
             WithTempDefinePath(paths =>
             {
                 // Arrange
                 var storage = new FileDefineStorage(paths);
 
-                // Act & Assert
-                Assert.Throws<FileNotFoundException>(() => storage.GetDbCategorySettings());
+                // Act
+                var ex = Assert.Throws<DefinitionNotFoundException>(() => storage.GetDbCategorySettings());
+
+                // Assert
+                Assert.Equal("DbCategorySettings not found.", ex.Message);
             });
         }
 
@@ -198,13 +211,19 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetProgramSettings throws FileNotFoundException for a missing file")]
-        public void GetProgramSettings_FileNotFound_Throws()
+        [DisplayName("GetProgramSettings throws a DefinitionNotFoundException that callers catching FileNotFoundException still catch")]
+        public void GetProgramSettings_FileNotFound_ThrowsFileNotFoundSubtype()
         {
             WithTempDefinePath(paths =>
             {
                 var storage = new FileDefineStorage(paths);
-                Assert.Throws<FileNotFoundException>(() => storage.GetProgramSettings());
+
+                // Callers such as `BusinessObjectFactory.CanonicalProgId` treat a missing registry as normal by
+                // catching `FileNotFoundException`, so the subtype has to keep matching that catch.
+                var ex = Assert.ThrowsAny<FileNotFoundException>(() => storage.GetProgramSettings());
+
+                Assert.IsType<DefinitionNotFoundException>(ex);
+                Assert.Equal("ProgramSettings not found.", ex.Message);
             });
         }
 

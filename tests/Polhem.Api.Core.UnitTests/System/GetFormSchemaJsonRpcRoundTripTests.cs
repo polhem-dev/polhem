@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
+using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Business;
 using Polhem.Definition;
@@ -105,6 +106,41 @@ namespace Polhem.Api.Core.UnitTests.System
 
             Assert.NotNull(response.Error);
             Assert.Contains("ProgId is required", response.Error!.Message);
+        }
+
+        [Fact]
+        [DisplayName("System.GetFormSchema for a progId with no stored schema returns the UserMessage code and names the progId, not the file")]
+        public async Task GetFormSchema_UnknownProgId_ReturnsDefinitionNotFoundMessage()
+        {
+            var boFactory = new BusinessObjectFactory(
+                _fx.Provider,
+                _fx.GetRequiredService<IDefineAccess>(),
+                _fx.GetRequiredService<ISessionInfoService>(),
+                _fx.GetRequiredService<ILanguageService>(),
+                _fx.GetRequiredService<IBoTypeResolver>());
+
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
+            {
+                AccessToken = TestSessionFactory.CreateAccessToken(_fx),
+                IsLocalCall = true,
+            };
+
+            string progId = "NoSuchForm" + Guid.NewGuid().ToString("N");
+            var request = new TestRpcRequest
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.GetFormSchema}",
+                Params = new TestPayload
+                {
+                    Value = new GetFormSchemaRequest { ProgId = progId },
+                },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var response = await executor.ExecuteAsync(request);
+
+            Assert.NotNull(response.Error);
+            Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
+            Assert.Equal($"FormSchema '{progId}' not found.", response.Error.Message);
         }
     }
 }

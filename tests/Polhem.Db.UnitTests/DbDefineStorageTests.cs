@@ -5,11 +5,13 @@ using Polhem.Core.Serialization;
 using Polhem.Db.CacheNotify;
 using Polhem.Db.Manager;
 using Polhem.Db.Storage;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests
@@ -128,12 +130,17 @@ namespace Polhem.Db.UnitTests
         public void RoundTrip_Oracle() => RunRoundTrip(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server Get of a missing required definition throws")]
-        public void GetRequired_Missing_Throws()
+        [DisplayName("SQL Server Get of a missing required definition throws DefinitionNotFoundException naming the type and key")]
+        public void GetRequired_Missing_ThrowsDefinitionNotFound()
         {
             var storage = NewStorage(DatabaseType.SQLServer);
-            Assert.Throws<InvalidOperationException>(
-                () => storage.GetFormSchema("RT_missing_" + Guid.NewGuid().ToString("N")));
+            string progId = "RT_missing_" + Guid.NewGuid().ToString("N");
+
+            var ex = Assert.Throws<DefinitionNotFoundException>(() => storage.GetFormSchema(progId));
+
+            Assert.Equal(DefineType.FormSchema, ex.DefineType);
+            Assert.Equal(progId, ex.Key);
+            Assert.Equal($"FormSchema '{progId}' not found.", ex.Message);
         }
 
         // IServiceProvider that fails if asked to resolve anything — proves the DI ctor defers

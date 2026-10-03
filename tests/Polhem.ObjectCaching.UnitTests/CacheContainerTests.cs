@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 
 namespace Polhem.ObjectCaching.UnitTests
@@ -78,12 +79,12 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.Get throws FileNotFoundException when tests/Define has no ProgramSettings.xml")]
-        public void ProgramSettings_NoSettingsFile_ThrowsFileNotFound()
+        [DisplayName("ProgramSettings.Get throws DefinitionNotFoundException when tests/Define has no ProgramSettings.xml")]
+        public void ProgramSettings_NoSettingsFile_ThrowsDefinitionNotFound()
         {
             // There is no ProgramSettings.xml under tests/Define, so `ProgramSettingsCache.CreateInstance` throws
-            // `FileNotFoundException`. The point is to cover the file-load path of `ProgramSettingsCache.Get`.
-            Assert.Throws<FileNotFoundException>(() => Cache.ProgramSettings.Get());
+            // `DefinitionNotFoundException`. The point is to cover the file-load path of `ProgramSettingsCache.Get`.
+            Assert.Throws<DefinitionNotFoundException>(() => Cache.ProgramSettings.Get());
         }
 
         [Fact]

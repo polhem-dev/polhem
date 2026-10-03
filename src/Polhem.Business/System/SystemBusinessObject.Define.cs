@@ -140,6 +140,7 @@ namespace Polhem.Business.System
         /// </para>
         /// </remarks>
         /// <param name="args">The input arguments carrying the target <c>ProgId</c>.</param>
+        /// <exception cref="DefinitionNotFoundException">No form schema is stored for <c>ProgId</c>.</exception>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetFormSchemaResult GetFormSchema(GetFormSchemaArgs args)
         {
@@ -147,8 +148,9 @@ namespace Polhem.Business.System
             if (string.IsNullOrWhiteSpace(args.ProgId))
                 throw new UserMessageException("ProgId is required.");
 
+            // The built-in storages throw for a missing schema themselves; a custom storage may return null instead.
             var schema = DefineAccess.GetDefine(DefineType.FormSchema, new[] { args.ProgId }) as FormSchema
-                ?? throw new UserMessageException($"FormSchema '{args.ProgId}' not found.");
+                ?? throw new DefinitionNotFoundException(DefineType.FormSchema, args.ProgId);
             return new GetFormSchemaResult { Xml = SerializeDefine(schema) };
         }
 
