@@ -8,6 +8,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-03
+
 > JSON-RPC 改建在 [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) 套件上，payload 外殼、加密與重放 frame
 > 改建在它的選用 payload 套件上。移除 `Polhem.Api.AspNetCore` 與 `ApiServiceOptions`，這會讓 host 編譯失敗，卻在次版號
 > 發佈：繼 1.1.0 之後，1.x 內的第二次例外。
@@ -15,26 +17,28 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 > 要與伺服器一起升級。理由，以及本版視為框架內部管線的型別，見
 > [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
 
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.2.0.md](docs/zh-TW/changelogs/1.2.0.md)
+
 ### 破壞性 API 變更
 
 - 移除 `Polhem.Api.AspNetCore` 套件，連同 `ApiServiceController` 與 `UsePolhemFramework()`。host 改用
-  `Polhem.JsonRpc.AspNetCore` 提供 API。
+  `Polhem.JsonRpc.AspNetCore` 提供 API。([#46](https://github.com/polhem-dev/polhem/pull/46))
 - 移除 `IJsonRpcProvider`。`RemoteApiProvider` 與 `LocalApiProvider` 改實作套件的 `IJsonRpcTransport`，
-  `ApiConnector.Provider` 也改為該型別。
-- 移除 `Polhem.Api.Core.JsonRpc` 的 `JsonRpcExecutor`，以及訊息型別 `JsonRpcRequest`、`JsonRpcResponse`、`JsonRpcError`。
+  `ApiConnector.Provider` 也改為該型別。([#46](https://github.com/polhem-dev/polhem/pull/46))
+- 移除 `Polhem.Api.Core.JsonRpc` 的 `JsonRpcExecutor`，以及訊息型別 `JsonRpcRequest`、`JsonRpcResponse`、`JsonRpcError`。([#46](https://github.com/polhem-dev/polhem/pull/46))
 - 移除 `ApiServiceOptions`，連同 `Polhem.Api.Core` 的 payload 型別：transformer、serializer、壓縮器與加密器的介面及實作、
   `ApiPayloadOptionsFactory`、外殼型別（`ApiPayload`、`JsonRpcParams`、`JsonRpcResult`、`ApiPayloadConverter`）、
   `ApiPayloadFrame`、`IReplayWindowStore`、`MemoryReplayWindowStore` 與 `ReplayRejectedException`。替代品在
-  `Polhem.JsonRpc.Payload`；用戶端捕捉重放呼叫的例外改為 `Polhem.JsonRpc.Payload.ReplayRejectedException`。
-- `MessagePackPayloadSerializer` 改名為 `MessagePackPayloadCodec`，實作套件的 `IPayloadCodec`。
+  `Polhem.JsonRpc.Payload`；用戶端捕捉重放呼叫的例外改為 `Polhem.JsonRpc.Payload.ReplayRejectedException`。([#47](https://github.com/polhem-dev/polhem/pull/47))
+- `MessagePackPayloadSerializer` 改名為 `MessagePackPayloadCodec`，實作套件的 `IPayloadCodec`。([#47](https://github.com/polhem-dev/polhem/pull/47))
 - `IApiAuthorizationValidator` 改從 service collection 取得，不再是 `ApiServiceOptions.AuthorizationValidator`；要替換預設值就
-  註冊自己的實作。
+  註冊自己的實作。([#47](https://github.com/polhem-dev/polhem/pull/47))
 
 以 HTTP 提供 API 的 host 升級方式：
 
 ```diff
 - <PackageReference Include="Polhem.Api.AspNetCore" Version="1.1.0" />
-+ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="…" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.0.0" />
 ```
 
 ```diff
@@ -65,22 +69,22 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ### 新增
 
-- `Polhem.Hosting` 的 `AddPolhemApiKeyGateCheck()`：尚未發行 API key 時於啟動時記錄 log，供以 HTTP 提供 API 的 host 使用。
+- `Polhem.Hosting` 的 `AddPolhemApiKeyGateCheck()`：尚未發行 API key 時於啟動時記錄 log，供以 HTTP 提供 API 的 host 使用。([#46](https://github.com/polhem-dev/polhem/pull/46))
 - `Polhem.Hosting` 的 `AddPolhemPayload()`、`Polhem.Api.Client` 的 `ApiClientInfo.PayloadOptions`，以及 `Polhem.Api.Core` 的
-  `PolhemPayload`（以框架的方式組出 payload 選項）。
+  `PolhemPayload`（以框架的方式組出 payload 選項）。([#47](https://github.com/polhem-dev/polhem/pull/47))
 
 ### 行為變更
 
 - 內部錯誤改回錯誤碼 -32603（原為 -32000），`JsonRpcErrorCode.InternalError` 也改為此值。回應不再帶 `method` 成員。
-  [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) 用戶端需要對應 1.2.0 的版本。
+  [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) 用戶端需要對應 1.2.0 的版本。([#46](https://github.com/polhem-dev/polhem/pull/46))
 - API key 或 `Authorization` header 被拒時，回 HTTP 200 與 JSON-RPC 錯誤，不再回 401；因此 .NET 用戶端丟出的是錯誤合約重建的
-  例外，而不是 `HttpRequestException`。
+  例外，而不是 `HttpRequestException`。([#46](https://github.com/polhem-dev/polhem/pull/46))
 - 方法名稱格式錯誤時回 `MethodNotFound`（-32601），不再回 `UserMessage`。找不到的方法以固定訊息回應，debug 模式也一樣，
-  且不寫異常紀錄。
-- in-process 呼叫與遠端呼叫一樣會序列化參數。
-- `format` 不是 0、1 或 2 的 payload 外殼以無效參數拒絕。
+  且不寫異常紀錄。([#46](https://github.com/polhem-dev/polhem/pull/46))
+- in-process 呼叫與遠端呼叫一樣會序列化參數。([#46](https://github.com/polhem-dev/polhem/pull/46))
+- `format` 不是 0、1 或 2 的 payload 外殼以無效參數拒絕。([#47](https://github.com/polhem-dev/polhem/pull/47))
 - log category：被遮蔽的失敗記在 `Polhem.Api.Core.Dispatch.PolhemExceptionMapper`，API key 啟動檢查記在
-  `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`。
+  `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`。([#46](https://github.com/polhem-dev/polhem/pull/46))
 
 ## [1.1.0] - 2026-09-30
 
@@ -413,6 +417,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
 [1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0
