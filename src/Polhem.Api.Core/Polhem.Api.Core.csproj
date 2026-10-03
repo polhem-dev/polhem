@@ -50,6 +50,9 @@
          that sees both can assert they agree, and the client test project is the one that already
          references both assemblies. -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+    <!-- HACK: Temporary. ApiConnector reads the static ApiServiceOptions through LegacyPayloadBridge until
+         ApiServiceOptions is removed; this line goes with it. -->
+    <InternalsVisibleTo Include="Polhem.Api.Client" />
   </ItemGroup>
 
 </Project>

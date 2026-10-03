@@ -1,11 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Polhem.Api.Core;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
-using Polhem.Core.Serialization;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
+using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
@@ -176,13 +175,14 @@ namespace Polhem.Api.Client.Connectors
             T result;
             using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
             {
-                var (parameters, actualFormat) = PrepareParams(value, format);
+                var payload = new Polhem.JsonRpc.Payload.PayloadProcessor(LegacyPayloadBridge.CreateOptions());
+                var parameters = WrapRequest(payload, value, format);
 
                 // Invoke the JSON-RPC method (remote or local)
                 var element = await _connector.InvokeAsync<JsonElement>(
-                    $"{progId}.{action}", ToElement(parameters), cancellationToken).ConfigureAwait(false);
+                    $"{progId}.{action}", parameters, cancellationToken).ConfigureAwait(false);
 
-                result = FinalizeResult<T>(element, actualFormat);
+                result = FinalizeResult<T>(payload, element);
             }
             PayloadZoneConverter.ToUserZone(result, timeZoneId);
             return result;
@@ -209,39 +209,37 @@ namespace Polhem.Api.Client.Connectors
         }
 
         /// <summary>
-        /// Builds the request parameters and transforms their payload to the target format.
+        /// Opens the result payload and converts the result value.
         /// </summary>
-        private (JsonRpcParams parameters, PayloadFormat actualFormat) PrepareParams(object value, PayloadFormat format)
+        private T FinalizeResult<T>(Polhem.JsonRpc.Payload.PayloadProcessor payload, JsonElement element)
         {
-            var parameters = new JsonRpcParams { Value = value };
-            var actualFormat = TransformRequestPayload(parameters, format);
-            return (parameters, actualFormat);
-        }
-
-        /// <summary>
-        /// Writes the parameters with <see cref="JsonCodec"/>, the settings every Polhem payload is written with.
-        /// </summary>
-        private static JsonElement ToElement(JsonRpcParams parameters)
-        {
-            using var document = JsonDocument.Parse(JsonCodec.Serialize(parameters));
-            return document.RootElement.Clone();
-        }
-
-        /// <summary>
-        /// Restores the result payload and converts the result value.
-        /// </summary>
-        private T FinalizeResult<T>(JsonElement element, PayloadFormat actualFormat)
-        {
-            var payload = element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
-                ? null
-                : JsonCodec.Deserialize<JsonRpcResult>(element.GetRawText());
-            if (payload == null)
+            if (element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
                 throw new InvalidOperationException("The API answered without a result.");
 
-            RestoreResponsePayload(payload, actualFormat);
-            var result = ApiOutputConverter.ConvertResultValue<T>(payload.Value!)!;
+            var value = ResolvePlainValue(payload.Unwrap(element, Session.ApiEncryptionKey));
+            var result = ApiOutputConverter.ConvertResultValue<T>(value!)!;
             DateTimeWireGuard.Validate(result);
             return result;
+        }
+
+        /// <summary>
+        /// Reads a JSON primitive of a plain result as the .NET value it spells; objects and arrays stay
+        /// <see cref="JsonElement"/> for <see cref="ApiOutputConverter.ConvertResultValue{T}(object)"/>.
+        /// </summary>
+        private static object? ResolvePlainValue(object? value)
+        {
+            if (value is not JsonElement element)
+                return value;
+
+            return element.ValueKind switch
+            {
+                JsonValueKind.String => element.GetString(),
+                JsonValueKind.Number => element.TryGetInt64(out var number) ? number : element.GetDouble(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Null or JsonValueKind.Undefined => null,
+                _ => element,
+            };
         }
 
         /// <summary>
@@ -270,19 +268,16 @@ namespace Polhem.Api.Client.Connectors
                 : new InvalidOperationException($"API error: {code} - {message}");
 
         /// <summary>
-        /// Transforms the specified JSON-RPC request payload to the target transmission format (Plain, Encoded, or Encrypted).
+        /// Wraps the request value in the payload envelope, in the format this call can actually use.
         /// </summary>
-        /// <param name="parameters">The request parameters to process.</param>
+        /// <param name="payload">The payload processor of the call.</param>
+        /// <param name="value">The request value.</param>
         /// <param name="format">
-        /// The desired payload format:
-        /// <list type="bullet">
-        /// <item><description><see cref="PayloadFormat.Plain"/>: No transformation.</description></item>
-        /// <item><description><see cref="PayloadFormat.Encoded"/>: Serialize and compress.</description></item>
-        /// <item><description><see cref="PayloadFormat.Encrypted"/>: Serialize, compress, and encrypt.</description></item>
-        /// </list>
+        /// The requested format. A local provider outside debug mode always sends Plain, and Encrypted falls back to
+        /// Encoded while the session has no encryption key.
         /// </param>
-        /// <returns>The actual format applied, which may be downgraded to Plain depending on the runtime environment.</returns>
-        private PayloadFormat TransformRequestPayload(JsonRpcParams parameters, PayloadFormat format)
+        /// <returns>The <c>params</c> element.</returns>
+        private JsonElement WrapRequest(Polhem.JsonRpc.Payload.PayloadProcessor payload, object value, PayloadFormat format)
         {
             // For local providers in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
             if (this.Provider is LocalApiProvider && !SysInfo.IsDebugMode)
@@ -296,42 +291,14 @@ namespace Polhem.Api.Client.Connectors
                 format = PayloadFormat.Encoded;
             }
 
-            if (format != PayloadFormat.Plain)
-            {
-                // Stamped before the transform, which reads it off the payload the same way the
-                // receiving end does.
-                parameters.Codec = PayloadCodec;
-
-                if (ApiServiceOptions.RequireWireFrame)
-                {
-                    // Numbered here rather than inside the converter: only the connector knows
-                    // which session the call belongs to, and the counter is per session.
-                    parameters.Frame = new ApiPayloadFrame(
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Session.NextSequence());
-                }
-                ApiPayloadConverter.TransformTo(parameters, format, Session.ApiEncryptionKey);
-            }
-
-            return format;
-        }
-
-        /// <summary>
-        /// Restores the result payload by decoding or decrypting it back to the original object.
-        /// </summary>
-        /// <param name="result">The result payload to restore.</param>
-        /// <param name="format">
-        /// The response payload format:
-        /// <list type="bullet">
-        /// <item><description><see cref="PayloadFormat.Plain"/>: No processing; used as-is.</description></item>
-        /// <item><description><see cref="PayloadFormat.Encoded"/> or <see cref="PayloadFormat.Encrypted"/>: Decode or decrypt the payload.</description></item>
-        /// </list>
-        /// </param>
-        private void RestoreResponsePayload(JsonRpcResult result, PayloadFormat format)
-        {
             if (format == PayloadFormat.Plain)
-                return;
+                return payload.Wrap(value, Polhem.JsonRpc.Payload.PayloadFormat.Plain);
 
-            ApiPayloadConverter.RestoreFrom(result, format, Session.ApiEncryptionKey);
+            // Numbered here: only the connector knows which session the call belongs to, and the counter is per
+            // session. A number is spent only when frames are on, as before.
+            long sequence = payload.Options.RequireFrame ? Session.NextSequence() : 0;
+            return payload.Wrap(value, (Polhem.JsonRpc.Payload.PayloadFormat)format, PayloadCodec,
+                Session.ApiEncryptionKey, sequence);
         }
     }
 }
