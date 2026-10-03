@@ -33,7 +33,7 @@ namespace Polhem.Definition.Storage
         public DbCategorySettings? GetDbCategorySettings()
         {
             string filePath = _paths.GetDbCategorySettingsFilePath();
-            FileUtilities.EnsureFileExists(filePath);
+            EnsureDefinitionExists(filePath, DefineType.DbCategorySettings, string.Empty);
             return XmlCodec.DeserializeFromFile<DbCategorySettings>(filePath);
         }
 
@@ -99,7 +99,7 @@ namespace Polhem.Definition.Storage
         public ProgramSettings? GetProgramSettings()
         {
             string filePath = _paths.GetProgramSettingsFilePath();
-            FileUtilities.EnsureFileExists(filePath);
+            EnsureDefinitionExists(filePath, DefineType.ProgramSettings, string.Empty);
             return XmlCodec.DeserializeFromFile<ProgramSettings>(filePath);
         }
 
@@ -180,7 +180,7 @@ namespace Polhem.Definition.Storage
         public TableSchema? GetTableSchema(string categoryId, string tableName)
         {
             string filePath = _paths.GetTableSchemaFilePath(categoryId, tableName);
-            FileUtilities.EnsureFileExists(filePath);
+            EnsureDefinitionExists(filePath, DefineType.TableSchema, $"{categoryId}.{tableName}");
             return XmlCodec.DeserializeFromFile<TableSchema>(filePath);
         }
 
@@ -202,7 +202,7 @@ namespace Polhem.Definition.Storage
         public FormSchema? GetFormSchema(string progId)
         {
             string filePath = _paths.GetFormSchemaFilePath(progId);
-            FileUtilities.EnsureFileExists(filePath);
+            EnsureDefinitionExists(filePath, DefineType.FormSchema, progId);
             return XmlCodec.DeserializeFromFile<FormSchema>(filePath);
         }
 
@@ -315,6 +315,12 @@ namespace Polhem.Definition.Storage
             };
 
             return filePaths is null ? DefineChangeSource.None : new DefineChangeSource { FilePaths = filePaths };
+        }
+
+        private static void EnsureDefinitionExists(string filePath, DefineType defineType, string key)
+        {
+            if (!File.Exists(filePath))
+                throw new DefinitionNotFoundException(defineType, key, filePath);
         }
     }
 }

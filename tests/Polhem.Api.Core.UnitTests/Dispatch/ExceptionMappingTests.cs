@@ -3,6 +3,8 @@ using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
 using Polhem.Core.Exceptions;
+using Polhem.Definition;
+using Polhem.Definition.Storage;
 
 namespace Polhem.Api.Core.UnitTests.Dispatch
 {
@@ -132,6 +134,28 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
                 Assert.Equal(JsonRpcErrorCode.UserMessage, code);
                 Assert.Equal("Missing method", message);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
+        }
+
+        [Fact]
+        [DisplayName("MapCode sends a missing definition under the UserMessage code with its own message outside debug mode")]
+        public void MapCode_DefinitionNotFoundException_KeepsItsMessage()
+        {
+            var ex = new DefinitionNotFoundException(
+                DefineType.FormSchema, "Employee", Path.Combine("srv", "Define", "FormSchema", "Employee.FormSchema.xml"));
+
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = false;
+                var (code, message) = PolhemExceptionMapper.MapCode(ex);
+
+                Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal("FormSchema 'Employee' not found.", message);
             }
             finally
             {

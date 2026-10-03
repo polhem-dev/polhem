@@ -326,14 +326,17 @@ namespace Polhem.Db.Storage
         private static string LanguageKey(string lang, string ns) => $"{lang}.{ns}";
 
         /// <summary>
-        /// Reads a definition that must exist; throws when the row is absent (mirrors the file
-        /// storage, where a missing definition file signals a bug).
+        /// Reads a definition that must exist; throws <see cref="DefinitionNotFoundException"/> when the row is
+        /// absent, as the file storage does for a missing file.
         /// </summary>
         private T ReadRequired<T>(string customizeId, string defineKey) where T : class
         {
             var xml = ReadContent(typeof(T).Name, customizeId, defineKey);
             if (xml == null)
-                throw new InvalidOperationException($"Definition not found: {typeof(T).Name} / {customizeId} / {defineKey}.");
+            {
+                throw new DefinitionNotFoundException(
+                    Enum.Parse<DefineType>(typeof(T).Name), defineKey == SingletonKey ? string.Empty : defineKey);
+            }
             return XmlCodec.Deserialize<T>(xml)
                 ?? throw new InvalidOperationException($"Failed to deserialize definition: {typeof(T).Name} / {customizeId} / {defineKey}.");
         }

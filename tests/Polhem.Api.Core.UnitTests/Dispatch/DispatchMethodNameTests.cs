@@ -106,9 +106,10 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         [DisplayName("A progId with no FormSchema file answers without the server's path, even in debug mode where the message passes through")]
         public async Task ProgIdWithoutFormSchema_DebugMode_MessageCarriesNoPath()
         {
+            string progId = "NoSuchForm" + Guid.NewGuid().ToString("N")[..8];
             var request = new TestRpcRequest
             {
-                Method = "NoSuchForm" + Guid.NewGuid().ToString("N")[..8] + ".GetList",
+                Method = progId + ".GetList",
                 Params = new TestPayload { Value = new Polhem.Api.Core.Messages.Form.GetListRequest() },
                 Id = "1"
             };
@@ -121,7 +122,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
                 var response = await NewDispatcher(TestSessionFactory.CreateAccessToken(_fx)).ExecuteAsync(request);
 
                 Assert.NotNull(response.Error);
-                Assert.Contains(".FormSchema.xml", response.Error!.Message, StringComparison.Ordinal);
+                Assert.Equal($"FormSchema '{progId}' not found.", response.Error!.Message);
                 Assert.DoesNotContain(definePath, response.Error.Message, StringComparison.Ordinal);
                 Assert.DoesNotContain(Path.DirectorySeparatorChar + "FormSchema" + Path.DirectorySeparatorChar,
                     response.Error.Message, StringComparison.Ordinal);
