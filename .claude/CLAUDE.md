@@ -62,6 +62,10 @@ keep a copy.
 
 ## Workflow
 
+- How changes reach `main`, and who merges them, is the polhem-dev organization's contributing guide,
+  <https://github.com/polhem-dev/.github/blob/main/CONTRIBUTING.md>: contributors work from a fork and open a pull
+  request, and only the maintainer merges. `main` is protected, so nothing is pushed to it directly.
+
 ### Plan before you build
 
 Any task that needs planning first (a refactoring, a new feature, an architectural change):
