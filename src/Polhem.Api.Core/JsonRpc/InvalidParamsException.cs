@@ -1,7 +1,7 @@
 namespace Polhem.Api.Core.JsonRpc
 {
     /// <summary>
-    /// Thrown by the JSON-RPC pipeline when the request parameters are not a Polhem payload, or a
+    /// Thrown by the JSON-RPC pipeline when the request parameters are not a Polhem payload, carry no value, or a
     /// <c>Plain</c> body cannot be read into the type the addressed method takes.
     /// </summary>
     /// <remarks>
@@ -10,6 +10,15 @@ namespace Polhem.Api.Core.JsonRpc
     /// </remarks>
     internal sealed class InvalidParamsException : Exception
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidParamsException"/> class.
+        /// </summary>
+        /// <param name="message">The message for the server log; the caller receives a fixed one.</param>
+        public InvalidParamsException(string message)
+            : base(message)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidParamsException"/> class.
         /// </summary>

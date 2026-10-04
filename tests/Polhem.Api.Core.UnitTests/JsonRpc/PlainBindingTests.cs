@@ -78,6 +78,22 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Null(bo.Received);
         }
 
+        [Theory]
+        [DisplayName("A request without a value to bind is answered with InvalidParams (-32602) and never reaches the method")]
+        [InlineData("""{"jsonrpc":"2.0","method":"Probe.Probe","id":"1"}""")]
+        [InlineData("""{"jsonrpc":"2.0","method":"Probe.Probe","params":{"format":0},"id":"1"}""")]
+        [InlineData("""{"jsonrpc":"2.0","method":"Probe.Probe","params":{"format":0,"value":null},"id":"1"}""")]
+        public async Task RequestWithoutValue_ReturnsInvalidParams(string requestJson)
+        {
+            var bo = new ProbeBusinessObject();
+            var executor = NewDispatcher(bo);
+
+            var response = await executor.ExecuteJsonAsync(requestJson);
+
+            Assert.Equal((int)JsonRpcErrorCode.InvalidParams, response.Error!.Code);
+            Assert.False(bo.Called);
+        }
+
         [Fact]
         [DisplayName("Every framework business-object action argument declares only its contract interface's members and Parameters")]
         public void FrameworkActionArguments_DeclareOnlyContractMembers()
@@ -128,8 +144,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         {
             public ProbeArgs? Received { get; private set; }
 
+            public bool Called { get; private set; }
+
             public string Probe(ProbeArgs args)
             {
+                Called = true;
                 Received = args;
                 return args.TraceId ?? string.Empty;
             }

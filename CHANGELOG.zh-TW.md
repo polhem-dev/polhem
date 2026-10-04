@@ -16,6 +16,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `DefinitionNotFoundException`（衍生自 `FileNotFoundException`）。遠端呼叫端會以 UserMessage 錯誤碼（-32099）收到它的訊息
   （例如 `FormSchema 'Employee' not found.`），不再是檔案儲存回的通用 InternalError（-32603）或資料庫儲存回的固定訊息。
   訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。([#51](https://github.com/polhem-dev/polhem/pull/51))
+- **Wire 可見：** 參數沒有可繫結的值（沒有 `params` 成員，或 payload 信封沒有 `value`、`value` 為 `null`）的請求，
+  會在方法執行前以 `-32602 Invalid params` 回應。過去會以 `null` 引數呼叫方法，通常失敗並回 `-32603 Internal error`。
+  此行為與 `Polhem.JsonRpc` 預設的 binder 一致。
 
 ## [1.2.0] - 2026-10-03
 

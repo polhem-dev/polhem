@@ -18,6 +18,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   its message (such as `FormSchema 'Employee' not found.`) under the UserMessage code (-32099) instead of a generic
   InternalError (-32603) from a file storage or a fixed message from a database storage. The message names the
   definition type and the key the caller sent, never a path. ([#51](https://github.com/polhem-dev/polhem/pull/51))
+- **Wire-visible:** a request whose parameters carry no value to bind — no `params` member, or a payload envelope
+  without a `value` or with a `null` one — is answered with `-32602 Invalid params` before the method runs. It used to
+  call the method with a `null` argument, which usually failed and answered `-32603 Internal error`. This matches the
+  default binder of `Polhem.JsonRpc`.
 
 ## [1.2.0] - 2026-10-03
 
