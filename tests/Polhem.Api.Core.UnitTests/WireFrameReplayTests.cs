@@ -8,6 +8,7 @@ using Polhem.Api.Core.Transformers;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
+using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Api.Core.UnitTests.Dispatch;
 using Polhem.JsonRpc.Payload;
@@ -27,7 +28,9 @@ namespace Polhem.Api.Core.UnitTests
     /// <see cref="TestSessionFactory.CreateAccessToken"/>, which writes the SessionInfo straight into the
     /// session cache, so the server finds it without taking the rebuild path that queries <c>st_session</c>.
     /// What is verified here is the replay sequence check (the replay store, in memory only), which does not
-    /// depend on where the session comes from.
+    /// depend on where the session comes from. The sequence tests call over HTTP, because only a remote call has a
+    /// replay scope; <see cref="TestDispatcher"/> registers no API key validator for them, so the key gate does not
+    /// read <c>st_api_key</c> either.
     /// </para>
     /// <para>
     /// NOTE: Two tests used to pass <c>Guid.NewGuid()</c> as the token, so every call fell into the rebuild path,
@@ -46,6 +49,8 @@ namespace Polhem.Api.Core.UnitTests
         {
             _fx = fx;
         }
+
+        private static readonly string s_pingMethod = $"{SysProgIds.System}.Ping";
 
         private static byte[] MakeKey()
         {
@@ -68,8 +73,8 @@ namespace Polhem.Api.Core.UnitTests
             var key = MakeKey();
             var processor = new PayloadProcessor(Options(requireFrame: false));
 
-            var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
-            var value = processor.OpenResult(envelope, key, out var frame);
+            var envelope = processor.SealResponse(s_pingMethod, new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
+            var value = processor.OpenResult(envelope, key, s_pingMethod, out var frame);
 
             Assert.Null(frame);
             Assert.IsType<PingRequest>(value);
@@ -82,8 +87,8 @@ namespace Polhem.Api.Core.UnitTests
             var key = MakeKey();
             var processor = new PayloadProcessor(Options(requireFrame: true));
 
-            var envelope = processor.Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
-            var value = processor.OpenResult(envelope, key, out var frame);
+            var envelope = processor.SealResponse(s_pingMethod, new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
+            var value = processor.OpenResult(envelope, key, s_pingMethod, out var frame);
 
             Assert.NotNull(frame);
             Assert.Equal(PayloadFrame.CurrentVersion, frame!.Version);
@@ -111,10 +116,10 @@ namespace Polhem.Api.Core.UnitTests
             // deploys both ends before turning the switch on.
             var key = MakeKey();
             var envelope = new PayloadProcessor(Options(requireFrame: true))
-                .Seal(new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
+                .SealResponse(s_pingMethod, new PingRequest { ClientName = "a" }, PayloadFormat.Encrypted, key: key);
 
             Assert.Throws<InvalidOperationException>(() =>
-                new PayloadProcessor(Options(requireFrame: false)).OpenResult(envelope, key, out _));
+                new PayloadProcessor(Options(requireFrame: false)).OpenResult(envelope, key, s_pingMethod, out _));
         }
 
         [Fact]
@@ -152,9 +157,9 @@ namespace Polhem.Api.Core.UnitTests
                 // Each test uses its own token so that its window does not interfere with other tests.
                 var token = TestSessionFactory.CreateAccessToken(_fx);
 
-                var first = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
-                var replay = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
-                var nextSequence = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(2), token);
+                var first = await ExecuteEncrypted("ExecFunc", new ExecFuncRequest("noop"), 1, token);
+                var replay = await ExecuteEncrypted("ExecFunc", new ExecFuncRequest("noop"), 1, token);
+                var nextSequence = await ExecuteEncrypted("ExecFunc", new ExecFuncRequest("noop"), 2, token);
 
                 // The first call goes all the way into the BO (the custom method "noop" does not exist, hence
                 // InternalError). What matters is that it is not ReplayRejected, meaning the sequence check let it through.
@@ -174,25 +179,44 @@ namespace Polhem.Api.Core.UnitTests
                 var token = TestSessionFactory.CreateAccessToken(_fx);
                 var value = new PingRequest { ClientName = "replay-test" };
 
-                Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
-                Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
+                Assert.Null((await ExecuteEncrypted("Ping", value, 1, token)).Error);
+                Assert.Null((await ExecuteEncrypted("Ping", value, 1, token)).Error);
             }
         }
 
         [Fact]
-        [DisplayName("Anonymous calls skip the sequence check (there is no session to count against)")]
-        public async Task Execute_RepeatedSequenceAnonymously_Succeeds()
+        [DisplayName("An encoded remote call to a method that declares UniqueSequence returns InvalidParams when frames are on")]
+        public async Task Execute_EncodedRemoteCallOnGuardedMethod_ReturnsInvalidParams()
         {
-            // Sequences are per session. Anonymous calls all share `Guid.Empty`, so checking them would let
-            // different clients use up each other's sequences and cause many false rejections.
-            {
-                var first = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
-                var replay = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
+            // Only an encrypted frame cannot be rewritten by whoever captured the call, so a guarded method refuses an
+            // encoded one outright. A session without an encryption key falls into this case.
+            var token = TestSessionFactory.CreateAccessToken(_fx);
 
-                // As above, InternalError means both calls passed the sequence gate and reached the BO.
-                Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
-                Assert.Equal((int)JsonRpcErrorCode.InternalError, replay.Error!.Code);
-            }
+            var response = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token, isLocalCall: false);
+
+            Assert.Equal((int)JsonRpcErrorCode.InvalidParams, response.Error!.Code);
+        }
+
+        [Fact]
+        [DisplayName("A plain local call to a method that declares UniqueSequence executes when frames are on")]
+        public async Task Execute_PlainLocalCallOnGuardedMethod_Succeeds()
+        {
+            // The local provider sends Plain outside debug mode. A local call never crossed a network, so there is
+            // nothing to replay, and the policy gives it no replay scope.
+            var token = TestSessionFactory.CreateAccessToken(_fx);
+            var executor = new TestDispatcher(WithFrames(_fx.Provider)) { AccessToken = token };
+            var request = new TestRpcRequest
+            {
+                Method = $"{SysProgIds.System}.ExecFunc",
+                Params = new TestPayload { Format = Polhem.Api.Core.Messages.PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
+            };
+
+            var first = await executor.ExecuteAsync(request);
+            var second = await executor.ExecuteAsync(request);
+
+            // InternalError means the call reached the BO, past the payload filter.
+            Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
+            Assert.Equal((int)JsonRpcErrorCode.InternalError, second.Error!.Code);
         }
 
         [Fact]
@@ -225,20 +249,48 @@ namespace Polhem.Api.Core.UnitTests
         /// <param name="value">The value passed in.</param>
         /// <param name="frame">The replay protection frame to attach.</param>
         /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> means an anonymous call.</param>
-        private async Task<TestRpcResponse> Execute(string action, object value, PayloadFrame frame, Guid accessToken)
+        /// <param name="isLocalCall">Whether the call is in-process; otherwise it arrives over HTTP.</param>
+        private async Task<TestRpcResponse> Execute(string action, object value, PayloadFrame frame, Guid accessToken, bool isLocalCall = true)
         {
             var executor = new TestDispatcher(WithFrames(_fx.Provider))
             {
                 AccessToken = accessToken,
-                // A local call skips token validation, so the test need not create a session first (that would
-                // touch the database). The sequence check does not depend on this; it only looks at whether the token is empty.
-                IsLocalCall = true,
+                IsLocalCall = isLocalCall,
             };
 
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{action}",
                 RawParams = EncodedWithFrame(value, frame),
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            return await executor.ExecuteAsync(request);
+        }
+
+        /// <summary>
+        /// Sends one Encrypted SystemBO call over HTTP with the given sequence number and token, to a server that
+        /// requires frames. Only a remote call with a session has a replay scope, and only an encrypted one may reach
+        /// a guarded method.
+        /// </summary>
+        /// <param name="action">The action name.</param>
+        /// <param name="value">The value passed in.</param>
+        /// <param name="sequence">The sequence number written to the frame, which carries the current time.</param>
+        /// <param name="accessToken">The access token of a session planted in the cache.</param>
+        private async Task<TestRpcResponse> ExecuteEncrypted(string action, object value, long sequence, Guid accessToken)
+        {
+            var executor = new TestDispatcher(WithFrames(_fx.Provider)) { AccessToken = accessToken, IsLocalCall = false };
+            var request = new TestRpcRequest
+            {
+                Method = $"{SysProgIds.System}.{action}",
+                Params = new TestPayload
+                {
+                    Format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted,
+                    Value = value,
+                    // The key the server's payload policy looks up for this token.
+                    Key = _fx.GetRequiredService<IApiEncryptionKeyProvider>().GetKey(accessToken),
+                    Sequence = sequence,
+                },
                 Id = Guid.NewGuid().ToString(),
             };
 

@@ -69,13 +69,13 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// Sends the request and returns the answer.
         /// </summary>
         public Task<TestRpcResponse> ExecuteAsync(TestRpcRequest request, CancellationToken cancellationToken = default)
-            => DispatchAsync(Serialize(request, PayloadOptions), request.Params.Key, cancellationToken);
+            => DispatchAsync(Serialize(request, PayloadOptions), BindingMethod(request), request.Params.Key, cancellationToken);
 
         /// <summary>
         /// Sends a request written as JSON, as a client in another language sends it, and returns the answer.
         /// </summary>
         public Task<TestRpcResponse> ExecuteJsonAsync(string requestJson, CancellationToken cancellationToken = default)
-            => DispatchAsync(Encoding.UTF8.GetBytes(requestJson), null, cancellationToken);
+            => DispatchAsync(Encoding.UTF8.GetBytes(requestJson), null, null, cancellationToken);
 
         /// <summary>
         /// Registers what the framework's dispatcher resolves from a call's services and <c>AddPolhemFramework</c>
@@ -93,7 +93,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// <summary>Gets the payload options the backend's services carry, which the call is sealed and opened with.</summary>
         private PayloadOptions PayloadOptions => (PayloadOptions?)_services.GetService(typeof(PayloadOptions)) ?? PolhemPayload.CreateOptions();
 
-        private async Task<TestRpcResponse> DispatchAsync(byte[] body, byte[]? key, CancellationToken cancellationToken)
+        private async Task<TestRpcResponse> DispatchAsync(byte[] body, string? method, byte[]? key, CancellationToken cancellationToken)
         {
             var resultType = new ResultTypeFilter();
             var options = PolhemJsonRpc.CreateServerOptions();
@@ -101,7 +101,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
 
             var result = await new JsonRpcDispatcher(options).DispatchMessageAsync(body, CreateTransport(), cancellationToken);
             var json = Encoding.UTF8.GetString(result.Serialize() ?? []);
-            return TestRpcResponse.Read(json, resultType.ResultType, new PayloadProcessor(PayloadOptions), key);
+            return TestRpcResponse.Read(json, resultType.ResultType, new PayloadProcessor(PayloadOptions), method, key);
         }
 
         private JsonRpcTransportInfo CreateTransport()
@@ -127,11 +127,19 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         internal static byte[] Serialize(TestRpcRequest request, PayloadOptions? options = null)
         {
             var payload = request.Params;
-            var parameters = request.RawParams ?? new PayloadProcessor(options ?? PolhemPayload.CreateOptions()).Wrap(
-                payload.Value, (Polhem.JsonRpc.Payload.PayloadFormat)payload.Format, payload.Codec, payload.Key, payload.Sequence);
+            var processor = new PayloadProcessor(options ?? PolhemPayload.CreateOptions());
+            var format = (Polhem.JsonRpc.Payload.PayloadFormat)payload.Format;
+            var parameters = request.RawParams ?? (BindingMethod(request) is { } method
+                ? processor.WrapRequest(method, payload.Value, format, payload.Codec, payload.Key, payload.Sequence)
+                : processor.Wrap(payload.Value, format, payload.Codec, payload.Key, payload.Sequence));
             var id = request.Id == null ? JsonRpcId.Null : JsonRpcId.FromString(request.Id);
             return JsonRpcSerializer.SerializeRequest(new Polhem.JsonRpc.JsonRpcRequest(request.Method, parameters, id));
         }
+
+        // An encrypted payload is bound to its method, and a binding needs a method name. A test that sends an empty
+        // method on purpose cannot encrypt, so its payload is wrapped without one.
+        private static string? BindingMethod(TestRpcRequest request)
+            => string.IsNullOrEmpty(request.Method) ? null : request.Method;
 
         /// <summary>
         /// Records the type of the message the server sends for the action's return value.
@@ -215,7 +223,9 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         /// <summary>Gets the id of the answer, or <c>null</c> for a JSON <c>null</c> id.</summary>
         public string? Id { get; private init; }
 
-        internal static TestRpcResponse Read(string json, Type? resultType, PayloadProcessor payload, byte[]? key)
+        // `method` is null for a request written as JSON. Its result opens only when it is not encrypted, which holds
+        // because such a test has no key to give.
+        internal static TestRpcResponse Read(string json, Type? resultType, PayloadProcessor payload, string? method, byte[]? key)
         {
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
@@ -224,7 +234,9 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             if (root.TryGetProperty("result", out var resultElement) && resultElement.ValueKind != JsonValueKind.Null)
             {
                 var envelope = PayloadEnvelope.Read(resultElement.Clone());
-                var value = ResolvePlainValue(payload.OpenResult(envelope, key, out _));
+                var value = ResolvePlainValue(method == null
+                    ? payload.OpenResult(envelope, key, out _)
+                    : payload.OpenResult(envelope, key, method, out _));
                 if (envelope.Format == Polhem.JsonRpc.Payload.PayloadFormat.Plain && value is JsonElement && resultType != null)
                 {
                     value = ConvertPlain(value, resultType);
@@ -245,7 +257,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
                 Json = json,
                 Result = result,
                 Error = error,
-                Method = root.TryGetProperty("method", out var method) ? method.GetString() : null,
+                Method = root.TryGetProperty("method", out var echoed) ? echoed.GetString() : null,
                 Id = root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String ? id.GetString() : null,
             };
         }

@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 9a19da5b4b2d21659446ca17da4fc71ea192db34 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: f635e1246049f91d9dd828fb3c1e188ad26a144d -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -64,7 +64,7 @@ Authorization: Bearer <access-token>     // 匿名呼叫可省略
 ```
 
 - `method` — `<ProgId>.<Action>`，server 用 reflection 派遣到對應 BO
-- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有
+- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有。`Encrypted` payload 的 HMAC 不只涵蓋密文，還涵蓋方向（呼叫的參數為 `0x01`、結果為 `0x02`）與請求 `method` 的 UTF-8，所以加密 payload 只能以寫入時的那個呼叫開啟。確切的位元組規格見 Polhem.JsonRpc 的 [ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)；沒有這段綁定的 payload 會被拒絕
 - `params.value` — args 物件，**camelCase 或 PascalCase 屬性名都可以**
   （server 反序列化 case-insensitive）
 - `id` — client 任選的識別字串，response 會原樣回傳

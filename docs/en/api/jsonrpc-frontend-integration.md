@@ -67,7 +67,7 @@ Authorization: Bearer <access-token>     // omit for anonymous calls
 ```
 
 - `method` — `<ProgId>.<Action>`, dispatched to the BO by reflection
-- `params.format` — `0` (`PayloadFormat.Plain`) for the plain path this guide covers. It is **not** restricted to that: since [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) a JS client can also use `Encoded` / `Encrypted` by declaring `"codec": "json"` on the envelope, which needs only JSON, gzip, AES-CBC-HMAC and RSA — all available in the browser
+- `params.format` — `0` (`PayloadFormat.Plain`) for the plain path this guide covers. It is **not** restricted to that: since [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) a JS client can also use `Encoded` / `Encrypted` by declaring `"codec": "json"` on the envelope, which needs only JSON, gzip, AES-CBC-HMAC and RSA — all available in the browser. The HMAC of an `Encrypted` payload covers more than the ciphertext: it also covers the direction (`0x01` for the parameters of a call, `0x02` for its result) and the request's `method` in UTF-8, so an encrypted payload opens only as the call it was written for. The exact bytes are specified in Polhem.JsonRpc's [ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md); a payload without the binding is refused
 - `params.value` — your args object, with **camelCase or PascalCase property names**
   (server deserializes case-insensitive)
 - `id` — any client-chosen identifier echoed back in the response

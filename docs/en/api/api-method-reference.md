@@ -29,9 +29,11 @@ JSON-RPC, grouped by BO axis. Each row lists the method's wire-level
 
 These methods additionally declare `ReplayProtection = UniqueSequence`: each call must carry a
 sequence number the session has not used before, or the server answers `-32005 ReplayRejected`.
-The check applies to Encrypted calls from a signed-in session when the host switches the wire frame on
-(`RequireFrame` in `AddPolhemPayload`, off by default); a Plain call carries no frame and is not
-checked. The XML doc on `ApiReplayProtection` explains why the other formats cannot be protected.
+The check applies when the host switches the wire frame on (`RequireFrame` in `AddPolhemPayload`, off
+by default). A remote call from a signed-in session is then accepted only as Encrypted: a Plain or
+Encoded call is refused with `-32602 InvalidParams`, so the client session needs an encryption key.
+In-process calls are not checked. The XML doc on `ApiReplayProtection` explains why the other formats
+cannot be protected.
 
 - `CreateApiKey`
 - `Delete`

@@ -68,7 +68,8 @@ namespace Polhem.Hosting.Registry
             {
                 _logger.LogWarning(
                     "PayloadOptions.RequireFrame is off, so methods declaring ReplayProtection = UniqueSequence are not checked for replayed calls: {Methods}. "
-                    + "Enable the wire frame on server and clients to turn the check on; it protects Encrypted payloads only.",
+                    + "Enable the wire frame on server and clients to turn the check on. Once it is on, remote calls to these methods "
+                    + "are accepted only when Encrypted, so a client session needs an encryption key to call them; local calls are not checked.",
                     string.Join(", ", methods));
             }
             return Task.CompletedTask;
