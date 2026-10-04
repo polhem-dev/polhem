@@ -179,12 +179,15 @@ namespace Polhem.Api.Client.Connectors
                 // is called, and opens the result.
                 var method = $"{progId}.{action}";
                 var parameters = WrapRequest(payload, method, value, format);
+                // The result must come back in the format the call was actually sent in, which WrapRequest may have
+                // lowered. Read it from the parameters that go on the wire, never from the result being checked.
+                var sentFormat = Polhem.JsonRpc.Payload.PayloadEnvelope.ReadFormat(parameters);
 
                 // Invoke the JSON-RPC method (remote or local)
                 var element = await _connector.InvokeAsync<JsonElement>(
                     method, parameters, cancellationToken).ConfigureAwait(false);
 
-                result = FinalizeResult<T>(payload, method, element);
+                result = FinalizeResult<T>(payload, method, sentFormat, element);
             }
             PayloadZoneConverter.ToUserZone(result, timeZoneId);
             return result;
@@ -213,12 +216,13 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Opens the result payload and converts the result value.
         /// </summary>
-        private T FinalizeResult<T>(Polhem.JsonRpc.Payload.PayloadProcessor payload, string method, JsonElement element)
+        private T FinalizeResult<T>(Polhem.JsonRpc.Payload.PayloadProcessor payload, string method,
+            Polhem.JsonRpc.Payload.PayloadFormat sentFormat, JsonElement element)
         {
             if (element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
                 throw new InvalidOperationException("The API answered without a result.");
 
-            var value = ResolvePlainValue(payload.UnwrapResult(method, element, Session.ApiEncryptionKey));
+            var value = ResolvePlainValue(payload.UnwrapResult(method, sentFormat, element, Session.ApiEncryptionKey));
             var result = ApiOutputConverter.ConvertResultValue<T>(value!)!;
             DateTimeWireGuard.Validate(result);
             return result;
