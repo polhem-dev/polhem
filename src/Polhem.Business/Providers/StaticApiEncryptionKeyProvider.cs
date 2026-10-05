@@ -7,10 +7,12 @@ namespace Polhem.Business.Providers
     /// </summary>
     /// <remarks>
     /// Every client holds the same key, so with the wire frame on, a method that declares
-    /// <see cref="ApiReplayProtection.UniqueSequence"/> stops only replays by callers without the key. Another client
-    /// can write a fresh frame of its own and replay what it captured. Sequence numbers are still remembered per
-    /// session: one scope for the shared key would not work, because the replay window remembers only the 64 numbers
-    /// below the highest it has seen, and clients that count on their own would refuse each other's calls. Use
+    /// <see cref="ApiReplayProtection.UniqueSequence"/> does not stop a call captured in one session from running
+    /// again in another. Sequence numbers are remembered per session, and the HMAC proves only that the frame was
+    /// written with the shared key: whoever can present another session replays the captured call there once, without
+    /// holding the key, and a client that holds it can also seal a captured call again with a fresh frame. One scope
+    /// for the shared key would not work either, because the built-in replay store accepts a number only within a
+    /// window below the highest it has seen, and clients that count on their own would refuse each other's calls. Use
     /// <see cref="DerivedApiEncryptionKeyProvider"/>, the default, when replay protection matters.
     /// </remarks>
     public sealed class StaticApiEncryptionKeyProvider : IApiEncryptionKeyProvider
