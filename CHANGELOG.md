@@ -8,6 +8,12 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+### Changed
+
+- `ApiConnector` seals its calls through `PayloadConnector` from the new `Polhem.JsonRpc.Payload.Client` package, which
+  `Polhem.Api.Client` now references instead of `Polhem.JsonRpc.Client` (still referenced through it). Requires
+  Polhem.JsonRpc 1.2.0 or later. The wire format and the formats, keys and sequence numbers a call uses are unchanged.
+
 ## [1.3.0] - 2026-10-05
 
 > Polhem now runs on [Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc) 1.1 (1.1.1 or later), whose

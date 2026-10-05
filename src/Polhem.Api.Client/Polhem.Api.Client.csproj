@@ -11,12 +11,12 @@
     <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
   </ItemGroup>
 
-  <!-- The JSON-RPC connector. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
+  <!-- The JSON-RPC connector and the payload connector around it. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
-    <PackageReference Include="Polhem.JsonRpc.Client" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload.Client" Version="$(PolhemJsonRpcVersion)" />
   </ItemGroup>
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
-    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Client/Polhem.JsonRpc.Client.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload.Client/Polhem.JsonRpc.Payload.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>

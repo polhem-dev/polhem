@@ -8,6 +8,11 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 變更
+
+- `ApiConnector` 改透過新套件 `Polhem.JsonRpc.Payload.Client` 的 `PayloadConnector` 封裝呼叫；`Polhem.Api.Client` 改參考該套件，
+  取代 `Polhem.JsonRpc.Client`（仍經由它間接參考）。需要 Polhem.JsonRpc 1.2.0 以上。線路格式，以及呼叫採用的格式、金鑰與序號都不變。
+
 ## [1.3.0] - 2026-10-05
 
 > Polhem 改建在 [Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc) 1.1（1.1.1 以上）上，它的 payload

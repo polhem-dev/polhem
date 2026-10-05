@@ -18,7 +18,7 @@
 
 ### 本機 / 遠端策略
 
-- 連接器透過 [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc) 送出，經由兩種實作其 `IJsonRpcTransport` 的傳輸之一：`LocalApiProvider` 把呼叫交給行程內的 dispatcher，`RemoteApiProvider` 則以 HTTP POST 呼叫遠端端點。
+- 連接器透過 [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc) 送出，並以 `Polhem.JsonRpc.Payload.Client` 的 `PayloadConnector` 封裝每次呼叫，經由兩種實作其 `IJsonRpcTransport` 的傳輸之一：`LocalApiProvider` 把呼叫交給行程內的 dispatcher，`RemoteApiProvider` 則以 HTTP POST 呼叫遠端端點。
 - 策略由連接器建構子決定：接受 `IServiceProvider`（以 `AddPolhemFramework` 建立的後端服務提供者）的建構子走行程內，接受端點 URL 的建構子走 HTTP。
 
 ### 連接器
