@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted (2026-10-02)**
+**Accepted (2026-10-02)**, decision 6 and a consequence amended by [ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md)
 
 Amends decision 5 of [ADR-048](adr-048-rename-base-to-core-in-1-1.md) and narrows the scope of the compatibility rule
 stated in the context of [ADR-046](adr-046-api-evolution-policies-for-1-0.md).
@@ -193,6 +193,8 @@ applications pass to connectors and which stays. Code that imports both namespac
 Decision 5 of ADR-048 said the rename to `Polhem.Core` was the only exception in 1.x. This ADR is a second one, for
 decisions 3, 4 and 5. Decision 5 of ADR-048 now points here. Further breaking changes within 1.x need an ADR of their
 own; this one is not a precedent for skipping that.
+*Amended 2026-10-05:* [ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md) makes a third one in 1.3.0, the move to
+Polhem.JsonRpc 1.1.0 and its incompatible payload wire format.
 
 ## Consequences
 
@@ -216,6 +218,8 @@ own; this one is not a precedent for skipping that.
   - An envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters; it used to be accepted and fail
     further on.
   - A client reads a result in the format the response states, rather than the format its request used.
+    *Amended 2026-10-05:* from 1.3.0 a client reads the format its request was sent in
+    ([ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md)).
   - A server resolves the payload options, the replay store and the authorization validator from the call's
     services; a service collection built by hand, without `AddPolhemFramework`, has to register them.
 - Polhem now releases against versions of packages from another repository. The version it depends on is set in

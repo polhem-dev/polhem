@@ -18,7 +18,7 @@
     they build and publish depends on the released packages.
   -->
   <PropertyGroup>
-    <PolhemJsonRpcVersion>[1.1.0, 2.0.0)</PolhemJsonRpcVersion>
+    <PolhemJsonRpcVersion>[1.1.1, 2.0.0)</PolhemJsonRpcVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props"
           Condition="Exists('$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props')" />
