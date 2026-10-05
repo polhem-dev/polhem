@@ -198,6 +198,26 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
+        [DisplayName("A plain remote call from a signed-in session to a method that declares UniqueSequence returns InvalidParams when frames are on")]
+        public async Task Execute_PlainRemoteCallOnGuardedMethod_ReturnsInvalidParams()
+        {
+            // A plain call carries no frame at all, so it would otherwise reach the method without any sequence check.
+            // It is refused before the business object runs, whatever the method's protection level.
+            var token = TestSessionFactory.CreateAccessToken(_fx);
+            var executor = new TestDispatcher(WithFrames(_fx.Provider)) { AccessToken = token, IsLocalCall = false };
+            var request = new TestRpcRequest
+            {
+                Method = $"{SysProgIds.System}.ExecFunc",
+                Params = new TestPayload { Format = Polhem.Api.Core.Messages.PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var response = await executor.ExecuteAsync(request);
+
+            Assert.Equal((int)JsonRpcErrorCode.InvalidParams, response.Error!.Code);
+        }
+
+        [Fact]
         [DisplayName("A plain local call to a method that declares UniqueSequence executes when frames are on")]
         public async Task Execute_PlainLocalCallOnGuardedMethod_Succeeds()
         {
