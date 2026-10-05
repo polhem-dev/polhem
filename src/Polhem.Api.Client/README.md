@@ -18,7 +18,7 @@
 
 ### Local / Remote Strategy
 
-- The connectors send through [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc), over one of two transports that implement its `IJsonRpcTransport`: `LocalApiProvider` hands the call to the in-process dispatcher, while `RemoteApiProvider` sends HTTP POST requests to a remote endpoint.
+- The connectors send through [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc), sealing each call with `PayloadConnector` from `Polhem.JsonRpc.Payload.Client`, over one of two transports that implement its `IJsonRpcTransport`: `LocalApiProvider` hands the call to the in-process dispatcher, while `RemoteApiProvider` sends HTTP POST requests to a remote endpoint.
 - The strategy is selected by the connector constructor: the constructors that take an `IServiceProvider` (the backend service provider built with `AddPolhemFramework`) run in-process, the ones that take an endpoint URL go over HTTP.
 
 ### Connectors

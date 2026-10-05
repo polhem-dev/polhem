@@ -8,6 +8,7 @@ using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Client;
+using Polhem.JsonRpc.Payload.Client;
 
 namespace Polhem.Api.Client.Connectors
 {
@@ -174,20 +175,12 @@ namespace Polhem.Api.Client.Connectors
             T result;
             using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
             {
-                var payload = new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions);
-                // An encrypted payload is bound to the method under its HMAC, so the same name wraps the parameters,
-                // is called, and opens the result.
-                var method = $"{progId}.{action}";
-                var parameters = WrapRequest(payload, method, value, format);
-                // The result must come back in the format the call was actually sent in, which WrapRequest may have
-                // lowered. Read it from the parameters that go on the wire, never from the result being checked.
-                var sentFormat = Polhem.JsonRpc.Payload.PayloadEnvelope.ReadFormat(parameters);
+                // The payload connector seals the parameters and opens the result in the same format, bound to the
+                // same method (remote or local). `object` opens the result into the type its envelope names.
+                var opened = await CreatePayloadConnector().InvokeAsync<object>(
+                    $"{progId}.{action}", value, EffectiveFormat(format), cancellationToken).ConfigureAwait(false);
 
-                // Invoke the JSON-RPC method (remote or local)
-                var element = await _connector.InvokeAsync<JsonElement>(
-                    method, parameters, cancellationToken).ConfigureAwait(false);
-
-                result = FinalizeResult<T>(payload, method, sentFormat, element);
+                result = FinalizeResult<T>(opened);
             }
             PayloadZoneConverter.ToUserZone(result, timeZoneId);
             return result;
@@ -214,15 +207,27 @@ namespace Polhem.Api.Client.Connectors
         }
 
         /// <summary>
-        /// Opens the result payload and converts the result value.
+        /// Creates the payload connector of one call.
         /// </summary>
-        private T FinalizeResult<T>(Polhem.JsonRpc.Payload.PayloadProcessor payload, string method,
-            Polhem.JsonRpc.Payload.PayloadFormat sentFormat, JsonElement element)
-        {
-            if (element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
-                throw new InvalidOperationException("The API answered without a result.");
+        /// <remarks>
+        /// Created per call because <see cref="ApiClientInfo.PayloadOptions"/> and <see cref="PayloadCodec"/> may
+        /// change between calls. The key and the sequence numbers come from the session, which is what keeps them
+        /// per session when several connectors share it.
+        /// </remarks>
+        private PayloadConnector CreatePayloadConnector()
+            => new(_connector, new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions), new PayloadConnectorOptions
+            {
+                Codec = PayloadCodec,
+                KeyProvider = () => Session.ApiEncryptionKey,
+                SequenceGenerator = Session.NextSequence,
+            });
 
-            var value = ResolvePlainValue(payload.UnwrapResult(method, sentFormat, element, Session.ApiEncryptionKey));
+        /// <summary>
+        /// Converts the opened result value.
+        /// </summary>
+        private static T FinalizeResult<T>(object? opened)
+        {
+            var value = ResolvePlainValue(opened);
             var result = ApiOutputConverter.ConvertResultValue<T>(value!)!;
             DateTimeWireGuard.Validate(result);
             return result;
@@ -274,17 +279,14 @@ namespace Polhem.Api.Client.Connectors
                 : new InvalidOperationException($"API error: {code} - {message}");
 
         /// <summary>
-        /// Wraps the request value in the payload envelope, in the format this call can actually use.
+        /// Returns the format this call can actually use.
         /// </summary>
-        /// <param name="payload">The payload processor of the call.</param>
-        /// <param name="method">The JSON-RPC method of the call, which an encrypted payload is bound to.</param>
-        /// <param name="value">The request value.</param>
         /// <param name="format">
         /// The requested format. A local provider outside debug mode always sends Plain, and Encrypted falls back to
         /// Encoded while the session has no encryption key.
         /// </param>
-        /// <returns>The <c>params</c> element.</returns>
-        private JsonElement WrapRequest(Polhem.JsonRpc.Payload.PayloadProcessor payload, string method, object value, PayloadFormat format)
+        /// <returns>The format the call is sent in, and its result opened in.</returns>
+        private Polhem.JsonRpc.Payload.PayloadFormat EffectiveFormat(PayloadFormat format)
         {
             // For local providers in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
             if (this.Provider is LocalApiProvider && !SysInfo.IsDebugMode)
@@ -298,14 +300,7 @@ namespace Polhem.Api.Client.Connectors
                 format = PayloadFormat.Encoded;
             }
 
-            if (format == PayloadFormat.Plain)
-                return payload.WrapRequest(method, value, Polhem.JsonRpc.Payload.PayloadFormat.Plain);
-
-            // Numbered here: only the connector knows which session the call belongs to, and the counter is per
-            // session. A number is spent only when frames are on, as before.
-            long sequence = payload.Options.RequireFrame ? Session.NextSequence() : 0;
-            return payload.WrapRequest(method, value, (Polhem.JsonRpc.Payload.PayloadFormat)format, PayloadCodec,
-                Session.ApiEncryptionKey, sequence);
+            return (Polhem.JsonRpc.Payload.PayloadFormat)format;
         }
     }
 }
