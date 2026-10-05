@@ -20,21 +20,24 @@ namespace Polhem.Definition.Security
         /// </summary>
         /// <remarks>
         /// <para>
-        /// IMPORTANT: this protects Encrypted payloads only. Plain carries no frame, so a Plain call
-        /// is not checked at all; Encoded frames are not authenticated — compression is not a MAC —
-        /// so a captured Encoded call can be re-framed with a fresh sequence number and replayed.
-        /// Only inside an Encrypted payload does the payload HMAC cover the frame. Leaving a method
-        /// with this setting at <see cref="ApiProtectionLevel.Public"/> or
-        /// <see cref="ApiProtectionLevel.Encoded"/> therefore leaves those formats unprotected,
-        /// which this setting cannot close.
+        /// IMPORTANT: only an Encrypted payload can be checked. Plain carries no frame, and Encoded frames are not
+        /// authenticated (compression is not a MAC), so a captured Encoded call can be re-framed with a fresh sequence
+        /// number. Only inside an Encrypted payload does the payload HMAC cover the frame. Therefore, while the wire
+        /// frame is required, a remote call from a signed-in session to a method with this setting is refused with
+        /// <c>-32602 InvalidParams</c> unless it is Encrypted, whatever the method's <see cref="ApiProtectionLevel"/>.
+        /// The refusal is made by the payload filter of Polhem.JsonRpc.Payload, for every call to which the framework's
+        /// <c>PolhemPayloadPolicy</c> gives a replay scope.
         /// </para>
         /// <para>
-        /// It also requires the wire frame to be switched on (<c>PayloadOptions.RequireFrame</c>
-        /// of Polhem.JsonRpc.Payload, set with <c>AddPolhemPayload</c>), which is off by default; a host built with
-        /// <c>AddPolhemFramework</c> logs a startup warning when methods declare this setting while
-        /// the frame is off. Anonymous callers are not checked
-        /// either: sequence numbers are per session, and calls made without one have no session to
-        /// count against.
+        /// That policy gives no scope to in-process calls or to anonymous ones, so neither is checked or refused on this
+        /// account. An in-process call never crossed a network, so there is nothing to replay. An anonymous call has no
+        /// session to count sequence numbers against, so declaring this setting on a method that admits anonymous
+        /// callers protects nothing.
+        /// </para>
+        /// <para>
+        /// The wire frame is switched on with <c>PayloadOptions.RequireFrame</c> of Polhem.JsonRpc.Payload, set with
+        /// <c>AddPolhemPayload</c>, and is off by default. While it is off nothing is checked; a host built with
+        /// <c>AddPolhemFramework</c> logs a startup warning when methods declare this setting.
         /// </para>
         /// </remarks>
         UniqueSequence = 1

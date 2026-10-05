@@ -10,6 +10,17 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ### Changed behaviour
 
+- **Wire-visible, breaking:** on Polhem.JsonRpc 1.1.0 the HMAC of each Encrypted payload also covers its method and
+  its direction ([ADR-003 of Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)). The server and every remote client (.NET applications built on
+  `Polhem.Api.Client`, and [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)) must upgrade
+  together: a mismatched pair fails every Encrypted call, and the server answers it with `-32603 Internal error`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- **Wire-visible:** a result is answered in the format its request was sent in, a `null` result included, and
+  `ApiConnector` refuses a result in another format with `InvalidPayloadException`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- **Wire-visible, breaking:** while the wire frame is required (`RequireFrame`), a method that declares
+  `ReplayProtection = UniqueSequence` refuses a remote Plain or Encoded call from a signed-in session with
+  `-32602 Invalid params`. Such calls used to be accepted without a sequence check. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- In-process calls are not checked for repeated sequence numbers. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- The packages depend on Polhem.JsonRpc `[1.1.0, 2.0.0)` instead of `1.0.0` or later. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - Connecting to a remote endpoint (`ApiConnectValidator`, and through it `ClientInfo` in the UI heads) checks the
   endpoint with the ping alone. It no longer sends an HTTP `HEAD` request first, which the endpoint answered with 405
   on every connect. A host that cannot be reached is still reported as `Endpoint not reachable`.
@@ -18,6 +29,11 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   its message (such as `FormSchema 'Employee' not found.`) under the UserMessage code (-32099) instead of a generic
   InternalError (-32603) from a file storage or a fixed message from a database storage. The message names the
   definition type and the key the caller sent, never a path. ([#51](https://github.com/polhem-dev/polhem/pull/51))
+- **Wire-visible:** a request whose parameters carry no value to bind — no `params` member, or a payload envelope
+  without a `value` or with a `null` one — is answered with `-32602 Invalid params` before the method runs. It used to
+  call the method with a `null` argument: most framework methods check for it with `ArgumentNullException`, which
+  answered `-32099` with "The request is not valid.", and the others failed with `-32603 Internal error`. This matches
+  the default binder of `Polhem.JsonRpc`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 
 ## [1.2.0] - 2026-10-03
 

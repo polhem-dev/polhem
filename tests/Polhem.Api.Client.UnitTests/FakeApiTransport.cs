@@ -42,7 +42,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         public static PayloadEnvelope Answer(FakeApiCall call, object? value)
             => new PayloadProcessor(ApiClientInfo.PayloadOptions)
-                .Seal(value, call.Params.Envelope.Format, call.Params.Codec);
+                .SealResponse(call.Method, value, call.Params.Envelope.Format, call.Params.Codec);
 
         public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         {
@@ -98,7 +98,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         public T SentValue<T>()
         {
-            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).OpenRequest(Params.Envelope, typeof(T), null, out _);
+            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).OpenRequest(Params.Envelope, typeof(T), null, Method, out _);
             // A Plain body stays a `JsonElement` until the parameter binder reads it.
             if (value is JsonElement element)
                 value = element.Deserialize<T>(ApiInputConverter.PlainReadOptions);

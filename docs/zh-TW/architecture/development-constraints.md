@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 4690cf0bcd17af6074ddfab1cc253dfcb7a07425 -->
+<!-- source: en/architecture/development-constraints.md blob: 30ab0e2197a979e6474b8264b14676e6383effc9 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -327,11 +327,21 @@ Encoded 與 Encrypted 的請求會在 payload 內夾帶一段 wire frame（時�
   啟用順序：**兩端先升套件，再同時開啟兩端開關**（.NET 用戶端設定 `ApiClientInfo.PayloadOptions.RequireFrame`）。
 - **`UniqueSequence` 需要開關。** `RequireFrame` 關閉時什麼都不檢查；以 `AddPolhemFramework`
   建立的宿主會在這種狀態下記錄啟動警告，列出宣告了 `UniqueSequence` 的方法。
-- **Plain 路徑不受保護。** 明文沒有攻擊者無法偽造的綁定，任何防重放欄位他都能改寫（改成當下
-  時間、改成更大的序號），那就是一個全新的合法請求。`ApiProtectionLevel.Public` 的方法
-  （含 `Save` / `Delete` / `ExecFunc`）仍允許以 Plain 呼叫，該路徑不帶 frame、不受檢查。
+- **開關開啟後，受保護的方法只接受 Encrypted 的遠端呼叫。** 明文沒有攻擊者無法偽造的綁定，
+  任何防重放欄位他都能改寫（改成當下時間、改成更大的序號），那就是一個全新的合法請求。
   `Encoded` 帶 frame 但無 HMAC，攔截到的 Encoded 呼叫可以換上新序號重新封裝。只有在 Encrypted
-  payload 內，payload 的 HMAC 才涵蓋 frame，所以 `UniqueSequence` 只保護 Encrypted 呼叫。
+  payload 內，payload 的 HMAC 才涵蓋 frame。因此已登入 session 對 `UniqueSequence` 方法的遠端呼叫，
+  不是 Encrypted 就會被拒絕（`-32602 InvalidParams`；拒絕的是 Polhem.JsonRpc.Payload 的 `PayloadFilter`，
+  `tests/Polhem.Api.Core.UnitTests` 的 `WireFrameReplayTests` 守住 Plain 與 Encoded 兩種呼叫），
+  **用戶端 session 必須有加密金鑰**才能呼叫這些方法。.NET 的 `ApiConnector` 在 session 沒有金鑰時會退回
+  Encoded，這類呼叫就會被拒絕。用戶端也必須寫入 frame：polhem-connector-js 不寫，所以開關開啟時，
+  以它建構的瀏覽器用戶端無法呼叫這些方法。
+  開關關閉時，這些方法在 `ApiProtectionLevel.Public` 下仍接受 Plain 呼叫。
+- **行程內呼叫不做序號檢查。** 經由本機 provider 的呼叫不經過網路，沒有可重放的東西；
+  本機 provider 在非 debug 模式送 Plain，否則會被上一條規則拒絕。
+- **共用金鑰只擋得住沒有金鑰的人。** 使用 `StaticApiEncryptionKeyProvider` 時所有用戶端持有同一把
+  金鑰，某個用戶端可以把攔截到的其他用戶端呼叫換上新的 frame 重新封裝。序號仍依 session 計算；
+  預設的 `DerivedApiEncryptionKeyProvider` 讓每個 session 各有自己的金鑰。
 - **預設的序號窗口依行程分開。** 接受或拒絕由註冊在 service collection 的 `IPayloadReplayStore`
   決定。預設的 `MemoryPayloadReplayStore` 存在行程記憶體中：多個節點位於負載平衡器之後、且沒有依
   token 黏著時，攔截到的請求可以在每個節點各重放一次。無法接受這點的部署，請註冊一個以共用儲存體

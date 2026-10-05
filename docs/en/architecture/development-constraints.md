@@ -349,13 +349,26 @@ used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`
 - **`UniqueSequence` needs the switch.** While `RequireFrame` is off, nothing is checked; a host
   built with `AddPolhemFramework` logs a startup warning naming the methods that declare
   `UniqueSequence` in that state.
-- **The Plain path is unprotected.** Plaintext offers no binding an attacker cannot forge: any
-  anti-replay field can be rewritten (to the current time, to a higher sequence), which makes it a
-  fresh legitimate request rather than a replay. Methods at `ApiProtectionLevel.Public` — including
-  `Save`, `Delete` and `ExecFunc` — may still be called as Plain, and that path carries no frame and
-  is not checked. `Encoded` carries a frame but has no HMAC, so a captured Encoded call can be
-  re-framed with a fresh sequence number. Only inside an Encrypted payload does the payload HMAC
-  cover the frame, so `UniqueSequence` protects Encrypted calls only.
+- **With the switch on, guarded methods accept only Encrypted remote calls.** Plaintext offers no
+  binding an attacker cannot forge: any anti-replay field can be rewritten (to the current time, to a
+  higher sequence), which makes it a fresh legitimate request rather than a replay. `Encoded` carries
+  a frame but has no HMAC, so a captured Encoded call can be re-framed with a fresh sequence number.
+  Only inside an Encrypted payload does the payload HMAC cover the frame. So a remote call from a
+  signed-in session to a `UniqueSequence` method is refused with `-32602 InvalidParams` unless it is
+  Encrypted (the refusal is the `PayloadFilter` of Polhem.JsonRpc.Payload; `WireFrameReplayTests` in
+  `tests/Polhem.Api.Core.UnitTests` holds it for Plain and Encoded calls), and **the client session
+  needs an encryption key** to call these methods. The .NET `ApiConnector` falls back to Encoded while
+  its session has no key, and such calls are then refused. The client must also write the frame:
+  polhem-connector-js does not, so a browser client built on it cannot call these methods while the
+  switch is on.
+  While the switch is off, these methods still accept Plain calls at `ApiProtectionLevel.Public`.
+- **In-process calls are not sequence-checked.** A call through the local provider never crossed a
+  network, so there is nothing to replay; the local provider sends Plain outside debug mode, which
+  the previous rule would otherwise refuse.
+- **A shared key stops only callers without it.** With `StaticApiEncryptionKeyProvider` every client
+  holds the same key, so one client can re-seal what it captured from another with a fresh frame.
+  Sequence numbers are still counted per session; the default `DerivedApiEncryptionKeyProvider` gives
+  each session its own key.
 - **The default window is per process.** The accept-or-reject decision is made by the
   `IPayloadReplayStore` registered in the service collection. The default,
   `MemoryPayloadReplayStore`, keeps it in process memory: with several nodes behind a load balancer

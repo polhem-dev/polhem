@@ -23,6 +23,12 @@ namespace Polhem.Api.Core.Dispatch
             var method = context.Method!.MethodInfo;
             object? value = PayloadRequest.Find(context)?.Value;
 
+            // Every action takes one argument object, so a call without a value has nothing to bind. A request
+            // without `params` reads as an empty plain envelope and lands here too; it is answered as the
+            // dispatcher's own binder answers it, rather than failing inside the business object.
+            if (value is null or JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined })
+                throw new InvalidParamsException($"'{method.Name}' was called without a value to bind.");
+
             if (value is JsonElement element)
             {
                 try
@@ -35,7 +41,7 @@ namespace Polhem.Api.Core.Dispatch
                 }
             }
 
-            return value == null ? null : ApiInputConverter.Convert(value, context.Method.ParameterType);
+            return ApiInputConverter.Convert(value!, context.Method.ParameterType);
         }
     }
 }
