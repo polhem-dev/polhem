@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: 40f6e59f04e46d3c266b21b1be08798baace5b67 -->
+<!-- source: en/api/api-method-reference.md blob: dab1c51db10777754d26395f3069ae38ada5d2c8 -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -29,7 +29,8 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 下列方法另外宣告了 `ReplayProtection = UniqueSequence`：每次呼叫都必須帶一個該 session 沒用過的
 序號，否則伺服端回 `-32005 ReplayRejected`。host 開啟 wire frame（`AddPolhemPayload` 的 `RequireFrame`，
 預設關閉）後才會檢查。此時已登入 session 的遠端呼叫只接受 Encrypted：Plain 或 Encoded 呼叫會被拒絕，
-回 `-32602 InvalidParams`，所以用戶端 session 必須有加密金鑰。行程內呼叫不受檢查。
+回 `-32602 InvalidParams`，所以用戶端 session 必須有加密金鑰，用戶端也必須寫入 wire frame。
+polhem-connector-js 不寫 frame，所以開關開啟時，以它建構的瀏覽器用戶端無法呼叫這些方法。行程內呼叫不受檢查。
 其他格式為何無法防護，見 `ApiReplayProtection` 的 XML doc。
 
 - `CreateApiKey`

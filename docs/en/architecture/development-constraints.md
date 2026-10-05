@@ -355,8 +355,12 @@ used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`
   a frame but has no HMAC, so a captured Encoded call can be re-framed with a fresh sequence number.
   Only inside an Encrypted payload does the payload HMAC cover the frame. So a remote call from a
   signed-in session to a `UniqueSequence` method is refused with `-32602 InvalidParams` unless it is
-  Encrypted, and **the client session needs an encryption key** to call these methods. The .NET
-  `ApiConnector` falls back to Encoded while its session has no key, and such calls are then refused.
+  Encrypted (the refusal is the `PayloadFilter` of Polhem.JsonRpc.Payload; `WireFrameReplayTests` in
+  `tests/Polhem.Api.Core.UnitTests` holds it for Plain and Encoded calls), and **the client session
+  needs an encryption key** to call these methods. The .NET `ApiConnector` falls back to Encoded while
+  its session has no key, and such calls are then refused. The client must also write the frame:
+  polhem-connector-js does not, so a browser client built on it cannot call these methods while the
+  switch is on.
   While the switch is off, these methods still accept Plain calls at `ApiProtectionLevel.Public`.
 - **In-process calls are not sequence-checked.** A call through the local provider never crossed a
   network, so there is nothing to replay; the local provider sends Plain outside debug mode, which

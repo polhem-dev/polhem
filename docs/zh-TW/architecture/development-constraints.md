@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 3355f8a92cdc812e23403992ec2f031c44ca4ae5 -->
+<!-- source: en/architecture/development-constraints.md blob: 30ab0e2197a979e6474b8264b14676e6383effc9 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -331,8 +331,11 @@ Encoded 與 Encrypted 的請求會在 payload 內夾帶一段 wire frame（時�
   任何防重放欄位他都能改寫（改成當下時間、改成更大的序號），那就是一個全新的合法請求。
   `Encoded` 帶 frame 但無 HMAC，攔截到的 Encoded 呼叫可以換上新序號重新封裝。只有在 Encrypted
   payload 內，payload 的 HMAC 才涵蓋 frame。因此已登入 session 對 `UniqueSequence` 方法的遠端呼叫，
-  不是 Encrypted 就會被拒絕（`-32602 InvalidParams`），**用戶端 session 必須有加密金鑰**才能呼叫
-  這些方法。.NET 的 `ApiConnector` 在 session 沒有金鑰時會退回 Encoded，這類呼叫就會被拒絕。
+  不是 Encrypted 就會被拒絕（`-32602 InvalidParams`；拒絕的是 Polhem.JsonRpc.Payload 的 `PayloadFilter`，
+  `tests/Polhem.Api.Core.UnitTests` 的 `WireFrameReplayTests` 守住 Plain 與 Encoded 兩種呼叫），
+  **用戶端 session 必須有加密金鑰**才能呼叫這些方法。.NET 的 `ApiConnector` 在 session 沒有金鑰時會退回
+  Encoded，這類呼叫就會被拒絕。用戶端也必須寫入 frame：polhem-connector-js 不寫，所以開關開啟時，
+  以它建構的瀏覽器用戶端無法呼叫這些方法。
   開關關閉時，這些方法在 `ApiProtectionLevel.Public` 下仍接受 Plain 呼叫。
 - **行程內呼叫不做序號檢查。** 經由本機 provider 的呼叫不經過網路，沒有可重放的東西；
   本機 provider 在非 debug 模式送 Plain，否則會被上一條規則拒絕。

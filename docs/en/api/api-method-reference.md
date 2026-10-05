@@ -31,9 +31,10 @@ These methods additionally declare `ReplayProtection = UniqueSequence`: each cal
 sequence number the session has not used before, or the server answers `-32005 ReplayRejected`.
 The check applies when the host switches the wire frame on (`RequireFrame` in `AddPolhemPayload`, off
 by default). A remote call from a signed-in session is then accepted only as Encrypted: a Plain or
-Encoded call is refused with `-32602 InvalidParams`, so the client session needs an encryption key.
-In-process calls are not checked. The XML doc on `ApiReplayProtection` explains why the other formats
-cannot be protected.
+Encoded call is refused with `-32602 InvalidParams`, so the client session needs an encryption key
+and the client must write the wire frame. polhem-connector-js does not write the frame, so a browser
+client built on it cannot call these methods while the frame is on. In-process calls are not checked.
+The XML doc on `ApiReplayProtection` explains why the other formats cannot be protected.
 
 - `CreateApiKey`
 - `Delete`

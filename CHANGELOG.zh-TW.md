@@ -10,6 +10,16 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ### 行為變更
 
+- **Wire 可見、破壞性：** 在 Polhem.JsonRpc 1.1.0 上，每個 Encrypted payload 的 HMAC 也涵蓋它的方法與方向
+  （[Polhem.JsonRpc 的 ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)，英文）。
+  伺服端與所有遠端用戶端（以 `Polhem.Api.Client` 建構的 .NET 應用程式，以及 [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)）必須一起升級：版本不相符的一組，
+  每個 Encrypted 呼叫都會失敗，伺服端回 `-32603 Internal error`。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- **Wire 可見：** 結果一律以請求送出時的格式回應（`null` 結果也一樣），`ApiConnector` 收到其他格式的結果時會以
+  `InvalidPayloadException` 拒絕。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- **Wire 可見、破壞性：** 要求 wire frame（`RequireFrame`）時，宣告 `ReplayProtection = UniqueSequence` 的方法會以
+  `-32602 Invalid params` 拒絕已登入 session 的遠端 Plain 或 Encoded 呼叫。這類呼叫過去會被接受，只是不檢查序號。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 行程內呼叫不檢查序號是否重複。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 套件相依的 Polhem.JsonRpc 改為 `[1.1.0, 2.0.0)`，不再是 `1.0.0` 以上。([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 連線到遠端端點時（`ApiConnectValidator`，以及 UI head 透過它呼叫的 `ClientInfo`）只以 ping 檢查端點，不再先送 HTTP
   `HEAD` 請求；端點每次連線都以 405 回應那個請求。連不上的主機仍回報為 `Endpoint not reachable`。
 - 儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
@@ -17,8 +27,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   （例如 `FormSchema 'Employee' not found.`），不再是檔案儲存回的通用 InternalError（-32603）或資料庫儲存回的固定訊息。
   訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。([#51](https://github.com/polhem-dev/polhem/pull/51))
 - **Wire 可見：** 參數沒有可繫結的值（沒有 `params` 成員，或 payload 信封沒有 `value`、`value` 為 `null`）的請求，
-  會在方法執行前以 `-32602 Invalid params` 回應。過去會以 `null` 引數呼叫方法，通常失敗並回 `-32603 Internal error`。
-  此行為與 `Polhem.JsonRpc` 預設的 binder 一致。
+  會在方法執行前以 `-32602 Invalid params` 回應。過去會以 `null` 引數呼叫方法：多數框架方法以 `ArgumentNullException`
+  檢查它，回 `-32099` 與「The request is not valid.」；其餘方法則失敗並回 `-32603 Internal error`。
+  此行為與 `Polhem.JsonRpc` 預設的 binder 一致。([#60](https://github.com/polhem-dev/polhem/pull/60))
 
 ## [1.2.0] - 2026-10-03
 

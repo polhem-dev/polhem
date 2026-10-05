@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: f635e1246049f91d9dd828fb3c1e188ad26a144d -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: ea7798c468806decdc8bd7f1dc6aa3e68148463a -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -64,7 +64,7 @@ Authorization: Bearer <access-token>     // 匿名呼叫可省略
 ```
 
 - `method` — `<ProgId>.<Action>`，server 用 reflection 派遣到對應 BO
-- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有。`Encrypted` payload 的 HMAC 不只涵蓋密文，還涵蓋方向（呼叫的參數為 `0x01`、結果為 `0x02`）與請求 `method` 的 UTF-8，所以加密 payload 只能以寫入時的那個呼叫開啟。確切的位元組規格見 Polhem.JsonRpc 的 [ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)；沒有這段綁定的 payload 會被拒絕
+- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有。`Encrypted` payload 的 HMAC 不只涵蓋密文，還涵蓋方向（呼叫的參數為 `0x01`、結果為 `0x02`）與請求 `method` 的 UTF-8，所以加密 payload 只能以寫入時的那個呼叫開啟。確切的位元組規格見 Polhem.JsonRpc 的 [ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)；沒有這段綁定的 payload 驗證會失敗，伺服端回 `-32603`。要求 wire frame 的 host（`AddPolhemPayload` 的 `RequireFrame`）也會要求每個 `Encoded` 與 `Encrypted` 本文內帶有 frame；polhem-connector-js 不寫 frame，所以面對這種 host，瀏覽器用戶端只能送 Plain 呼叫，完全無法呼叫[有重放防護](api-method-reference.md#重放防護)的方法
 - `params.value` — args 物件，**camelCase 或 PascalCase 屬性名都可以**
   （server 反序列化 case-insensitive）
 - `id` — client 任選的識別字串，response 會原樣回傳
@@ -245,8 +245,8 @@ XML 相同。定義在每條路徑上都以 XML 傳輸，因為它們的巢狀�
 | `-32700` | `ParseError` | request body 不是合法 JSON | 修 client 序列化 |
 | `-32600` | `InvalidRequest` | 不是有效的 JSON-RPC 請求（缺 `method`、`jsonrpc` 不對）、金鑰被拒，或 `Authorization` header 格式錯誤 | 檢查 headers 與 body |
 | `-32601` | `MethodNotFound` | 方法名稱不是 `progId.action` 格式，或沒有對應業務物件公開的 action；訊息固定，不會回帶名稱 | 檢查方法名稱 / 大小寫 |
-| `-32602` | `InvalidParams` | `Plain` 本文無法讀成方法所接受的型別；訊息固定為「Invalid params.」。讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構 |
-| `-32603` | `InternalError` | 未處理的 server 端例外（1.1.0 以前為 `-32000`） | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」 |
+| `-32602` | `InvalidParams` | 參數沒有可繫結的值（沒有 `params`、沒有 `value`，或 `value` 為 `null`）；`Plain` 本文無法讀成方法所接受的型別；或 host 要求 wire frame 時，已登入 session 以 `Plain` 或 `Encoded` payload 呼叫[有重放防護](api-method-reference.md#重放防護)的方法。訊息固定為「Invalid params.」。讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構，或改以 `Encrypted` 呼叫該方法 |
+| `-32603` | `InternalError` | 未處理的 server 端例外（1.1.0 以前為 `-32000`）。驗證失敗的 `Encrypted` payload 也會落在這裡，所以 payload 版本與伺服端不相符的用戶端，每個 `Encrypted` 呼叫都會收到它 | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」。若所有 `Encrypted` 呼叫都這樣失敗、其他格式正常，請確認用戶端與伺服端的版本相符 |
 | `-32001` | `Unauthorized` | 方法需要已登入的呼叫者，而 access token 缺漏、未知或已過期 | 重新登入 |
 | `-32002` | `CompanyNotEntered` | 方法需要公司 context | 先呼叫 `System.EnterCompany` |
 | `-32003` | `CompanyAccessDenied` | 公司不存在，或使用者沒有此公司權限 | 顯示拒絕、切換公司 |

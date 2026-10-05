@@ -63,4 +63,4 @@ curl -s -X POST http://localhost:5050/api \
       }'
 ```
 
-The response is a JSON-RPC envelope whose `result.value.response` is `"echo: hello"`. The payload property names are matched exactly and are lower case (`format`, `value`); sent as `Value`, the business object receives no argument and the call fails. `format: 0` is `Plain`, which `Echo` accepts because it is declared `Public`.
+The response is a JSON-RPC envelope whose `result.value.response` is `"echo: hello"`. The payload property names are matched exactly and are lower case (`format`, `value`); sent as `Value`, the member is not read, so the call carries no value and is answered `-32602 Invalid params` before the business object runs. `format: 0` is `Plain`, which `Echo` accepts because it is declared `Public`.

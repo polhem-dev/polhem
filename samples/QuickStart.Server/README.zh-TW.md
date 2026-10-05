@@ -61,4 +61,4 @@ curl -s -X POST http://localhost:5050/api \
       }'
 ```
 
-預期回一個 JSON-RPC envelope，其 `result.value.response` 為 `"echo: hello"`。payload 的屬性名稱是精確比對的小寫（`format`、`value`）；寫成 `Value` 時業務物件收不到參數，呼叫會失敗。`format: 0` 即 `Plain`，`Echo` 宣告為 `Public`，所以接受它。
+預期回一個 JSON-RPC envelope，其 `result.value.response` 為 `"echo: hello"`。payload 的屬性名稱是精確比對的小寫（`format`、`value`）；寫成 `Value` 時該成員不會被讀取，呼叫等於沒有帶值，會在業務物件執行前就回 `-32602 Invalid params`。`format: 0` 即 `Plain`，`Echo` 宣告為 `Public`，所以接受它。

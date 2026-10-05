@@ -62,7 +62,10 @@ library gets right; what needs pinning is the JSON shape, which only this framew
 ```
 
 - `format` is a **number**: `0` Plain, `1` Encoded (serialize + compress), `2` Encrypted
-  (serialize + compress + encrypt).
+  (serialize + compress + encrypt). The HMAC of an Encrypted value also covers the direction (the
+  parameters of a call or its result) and the request's `method`, so a client that computes it over
+  the ciphertext alone is refused. The bytes are specified in Polhem.JsonRpc's
+  [ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md).
 - `codec` names the body codec. Omit it and the body is read as MessagePack, which is what every
   client predating codec negotiation sends. The response comes back in the same codec.
 - `type` is required whenever the body is encoded. The server does not decode into the type it
