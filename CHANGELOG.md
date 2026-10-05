@@ -10,38 +10,56 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [1.3.0] - 2026-10-05
 
-> Polhem now runs on [Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc) 1.1.0, whose payload wire format
-> is incompatible with 1.2.0: the HMAC of each Encrypted payload also covers its method and its direction, and a result
-> is answered in its request's format. **The server and every remote client must upgrade together**: .NET clients on
-> `Polhem.Api.Client`, and [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) in its release
-> that supports Polhem 1.3.0. Polhem's public .NET API changes only by additions, so this ships in a minor version: a
-> third exception within 1.x, after 1.1.0 and 1.2.0. The reasons are in
-> [ADR-050](maintainers/adr/adr-050-jsonrpc-1-1-wire-break-in-1-3.md).
+> Polhem now runs on [Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc) 1.1 (1.1.1 or later), whose
+> payload wire format is incompatible with that of Polhem 1.2.0: the HMAC of each Encrypted payload also covers its
+> method and its direction, and a result is answered in its request's format. **The server and every remote client
+> must upgrade together**: .NET clients on `Polhem.Api.Client`, and browser clients built from
+> [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) `main` at or after the commit that merges
+> [polhem-dev/polhem-connector-js#11](https://github.com/polhem-dev/polhem-connector-js/pull/11). Polhem's public .NET
+> API changes only by additions, so this ships in a minor version: a third exception within 1.x, after 1.1.0 and
+> 1.2.0. The reasons are in [ADR-050](maintainers/adr/adr-050-jsonrpc-1-1-wire-break-in-1-3.md).
 
 📄 Full notes and background: [docs/en/changelogs/1.3.0.md](docs/en/changelogs/1.3.0.md)
 
+### Security
+
+- On 1.2.0, someone who captured an Encrypted request could send it to another method of the same session, for
+  example to turn a read into a delete, or send a result back as a request: the HMAC covered the payload's bytes and
+  nothing else. 1.3.0 closes both by binding the method and the direction into the HMAC
+  ([ADR-050](maintainers/adr/adr-050-jsonrpc-1-1-wire-break-in-1-3.md),
+  [ADR-003 of Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)).
+  The fix changes the wire; what that means for an upgrade is under "Breaking wire changes" below.
+  ([#60](https://github.com/polhem-dev/polhem/pull/60))
+
 ### Breaking wire changes
 
-- On Polhem.JsonRpc 1.1.0 the HMAC of each Encrypted payload also covers its method and its direction
-  ([ADR-003 of Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)).
-  A mismatched server and client fail every Encrypted call, and the server answers it with `-32603 Internal error`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- The HMAC of each Encrypted payload also covers its method and its direction (see "Security" above). A mismatched
+  server and client fail every Encrypted call, and the server answers it with `-32603 Internal error`.
+  ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - While the wire frame is required (`RequireFrame`), a method that declares `ReplayProtection = UniqueSequence`
-  refuses a remote Plain or Encoded call from a signed-in session with `-32602 Invalid params`. Such calls used to be
-  accepted without a sequence check. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+  refuses a remote Plain or Encoded call from a signed-in session with `-32602 Invalid params`. A Plain call used to
+  be accepted without a sequence check, and an Encoded call was checked against a sequence number anyone could forge,
+  because only an Encrypted frame is covered by the HMAC. The framework's own `Save`, `Delete`, `ExecFunc`,
+  `EnterCompany` and `LeaveCompany` are such methods, so a client without a session key, such as a .NET browser
+  (WebAssembly) head, can no longer call them under `RequireFrame`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 
-To upgrade, move the server and its clients in the same window. A host that serves the API over HTTP raises its own
-`Polhem.JsonRpc.AspNetCore` reference with the Polhem packages; version 1.0 of it stops the dispatcher from starting:
+To upgrade, move the server and its clients in the same window, and raise every `Polhem.JsonRpc.*` package you
+reference directly to 1.1.1 or later. A host that serves the API over HTTP references `Polhem.JsonRpc.AspNetCore`
+itself; version 1.0 of it stops the dispatcher from starting:
 
 ```diff
 - <PackageReference Include="Polhem.Hosting" Version="1.2.0" />
 - <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.0.0" />
 + <PackageReference Include="Polhem.Hosting" Version="1.3.0" />
-+ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.1.0" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.1.1" />
 ```
 
-Code of your own compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter, must be recompiled, and an
-`IPayloadEncryptor` of your own must implement the overloads that authenticate associated data. The rest of
-Polhem.JsonRpc's own changes are in [its changelog](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md).
+Do not set `JsonRpcServerOptions.AllowCodeCompiledAgainst10` to get past that startup error: code compiled against
+1.0 that reads or sets the transport kind can take an HTTP call for an in-process one, and Polhem lets in-process calls
+past its access checks. Code of your own compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter, must be
+recompiled. An `IPayloadEncryptor` of your own must implement the overloads that take associated data, and
+authenticate that data: one that ignores it accepts the 1.2.0 form and reopens both attacks. The rest of Polhem.JsonRpc's own changes are in
+[its changelog](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md).
 
 ### Added
 
@@ -58,12 +76,17 @@ Polhem.JsonRpc's own changes are in [its changelog](https://github.com/polhem-de
   answered `-32099` with "The request is not valid.", and the others failed with `-32603 Internal error`. This matches
   the default binder of `Polhem.JsonRpc`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - In-process calls are not checked for repeated sequence numbers. ([#60](https://github.com/polhem-dev/polhem/pull/60))
-- The packages depend on Polhem.JsonRpc `[1.1.0, 2.0.0)` instead of `1.0.0` or later. ([#60](https://github.com/polhem-dev/polhem/pull/60))
-- A definition the storage must hold but does not — a form schema, a table schema, the program registry or the
-  database categories — now throws `DefinitionNotFoundException`. A remote caller receives
+- The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or later. 1.1.1 is the first version
+  whose dispatcher refuses to start beside a Polhem.JsonRpc package compiled against 1.0, whatever
+  `AllowCodeCompiledAgainst10` is set to. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+- A definition the built-in file or database storage must hold but does not — a form schema, a table schema, the
+  program registry or the database categories — now throws `DefinitionNotFoundException`, and so does the
+  `GetFormSchema` API when a storage of your own returns no form schema. A remote caller receives
   its message (such as `FormSchema 'Employee' not found.`) under the UserMessage code (-32099) instead of a generic
-  InternalError (-32603) from a file storage or a fixed message from a database storage. The message names the
-  definition type and the key the caller sent, never a path. ([#51](https://github.com/polhem-dev/polhem/pull/51))
+  InternalError (-32603) from a file storage or a fixed message from a database storage. The message names only the
+  definition type and its key, never a path. A database storage threw `InvalidOperationException` before; code that
+  caught that type for a missing definition must catch `DefinitionNotFoundException` (or `FileNotFoundException`)
+  instead. ([#51](https://github.com/polhem-dev/polhem/pull/51))
 - Connecting to a remote endpoint (`ApiConnectValidator`, and through it `ClientInfo` in the UI heads) checks the
   endpoint with the ping alone. It no longer sends an HTTP `HEAD` request first, which the endpoint answered with 405
   on every connect. A host that cannot be reached is still reported as `Endpoint not reachable`. ([#50](https://github.com/polhem-dev/polhem/pull/50))

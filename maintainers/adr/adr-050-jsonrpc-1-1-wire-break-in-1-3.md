@@ -4,7 +4,7 @@
 
 **Accepted (2026-10-05)**
 
-Amends decision 6 of [ADR-049](adr-049-jsonrpc-packages-in-1-2.md): a third exception to semantic versioning within
+Amends decision 6 of [ADR-049](adr-049-jsonrpc-packages-in-1-2.md), and one of its consequences: a third exception to semantic versioning within
 1.x, after [ADR-048](adr-048-rename-base-to-core-in-1-1.md) and ADR-049. Unlike those two, it leaves the compatibility
 rule stated in the context of [ADR-046](adr-046-api-evolution-policies-for-1-0.md) intact: the
 `PublicAPI.Shipped.txt` baselines only grow. The break is on the wire, and in the Polhem.JsonRpc packages Polhem
@@ -17,8 +17,9 @@ replay frame on their optional payload packages (ADR-049). Polhem.JsonRpc 1.1.0 
 every party to a call can see:
 
 - **The HMAC of an Encrypted payload also covers the direction and the JSON-RPC method of the call.** Before, a
-  captured encrypted request could be sent to another method of the same session, and a result sent back as a
-  request; the binding closes both. The layout of the bytes does not change, but a payload written without the
+  captured encrypted request could be sent to another method of the same session, for example turning a read into a
+  delete, and a result sent back as a request; the binding closes both. On Polhem 1.2.0 this is a weakness that
+  anyone able to capture an encrypted request could use, so the move is a security fix as well as a wire change. The layout of the bytes does not change, but a payload written without the
   binding fails its HMAC on a reader that expects it, and the reverse. The design and the bytes that are bound are
   recorded in
   [ADR-003 of Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)
@@ -33,21 +34,30 @@ Polhem 1.2.0 assemblies are such code, so 1.2.0 cannot run on 1.1.0. Polhem has 
 own, and the remote clients have to move with it.
 
 The change is in Polhem's own code too: `ApiConnector` seals requests and opens results with the method
-([#60](https://github.com/polhem-dev/polhem/pull/60)), and two adjustments the new packages call for are made in the
-same release.
+([#60](https://github.com/polhem-dev/polhem/pull/60)), and the same release makes the adjustments the new packages
+call for: the in-process replay scope (decision 2) and the binder's `-32602` (decision 3).
 
 ## Decision
 
 ### 1. Adopt the binding with no compatibility mode
 
 Polhem 1.3.0 binds every Encrypted call to its method and its direction, and answers every result in its request's
-format, as Polhem.JsonRpc 1.1.0 does. Nothing in Polhem accepts the 1.2.0 form, and no setting brings it back.
+format, as Polhem.JsonRpc 1.1.0 does. Nothing in Polhem accepts the 1.2.0 form, and no built-in setting brings it
+back: the built-in encryptor refuses a payload written before the binding
+(`PayloadWireVectorTests.Open_PolhemEncryptedFramedEnvelope_RefusedWithoutBinding` in Polhem.JsonRpc). An
+`IPayloadEncryptor` of an application's own, set through `AddPolhemPayload`, is outside that test: one that takes the
+associated data and does not authenticate it would accept the 1.2.0 form and reopen both attacks, which is why the
+changelog says it must authenticate that data.
 
 **The server and every remote client upgrade together**: .NET clients built on `Polhem.Api.Client`, and
-[polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) in its release that supports Polhem 1.3.0.
+[polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) built from `main` at or after the commit that
+merges [polhem-dev/polhem-connector-js#11](https://github.com/polhem-dev/polhem-connector-js/pull/11). polhem-connector-js
+is not published to npm and its package version does not change, so that commit is the only thing that tells a
+compatible build from an old one; #11 is merged before the v1.3.0 tag is pushed.
 A mismatched pair, an old client against a new server or the reverse, fails every Encrypted call, and the server
-answers each one with `-32603 Internal error`. The answer does not say which check failed, by design of the payload
-packages. Plain and Encoded calls carry no HMAC, so a mismatched pair can look healthy until its first Encrypted call;
+answers each one with `-32603 Internal error`. Outside debug mode the answer does not say which check failed, by
+design of Polhem's exception mapper (`PolhemExceptionMapper`), which answers an unmapped exception with a fixed
+message unless `SysInfo.IsDebugMode` is set. Plain and Encoded calls carry no HMAC, so a mismatched pair can look healthy until its first Encrypted call;
 it is not a state to run in. The result format rule can fail across the pair as well, for example a `null` result
 that an old server answers to an Encoded request as a plain `null`.
 
@@ -61,8 +71,9 @@ provider sends Plain outside debug mode. Whether a call is local is still decide
 decision 1).
 
 The other side of the same rule is visible on the wire: while the frame is required, a remote Plain or Encoded call
-from a signed-in session to such a method is answered `-32602 Invalid params`. It used to be accepted without a
-sequence check.
+from a signed-in session to such a method is answered `-32602 Invalid params`. A Plain call used to be accepted
+without a sequence check, and an Encoded call was checked against a sequence number anyone could forge, because only
+an Encrypted frame is covered by the HMAC.
 
 ### 3. A call with no value to bind answers `-32602`
 
@@ -72,10 +83,17 @@ whatever it threw (`-32099` for most framework methods, which check their argume
 is what the default binder of Polhem.JsonRpc answers, and Polhem's binder now agrees with it. A request with
 `"params": null` is still refused by the dispatcher with `-32600`, as JSON-RPC 2.0 asks.
 
-### 4. Depend on `[1.1.0, 2.0.0)`
+### 4. Depend on `[1.1.1, 2.0.0)`
 
-The packages depend on Polhem.JsonRpc `[1.1.0, 2.0.0)` instead of `1.0.0` or later. The lower bound keeps NuGet from
-resolving the 1.0 packages, which do not bind. The upper bound keeps a later major version of Polhem.JsonRpc out
+The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or later. The lower bound keeps NuGet from
+resolving the 1.0 packages, which do not bind, for Polhem's own dependencies; a `Polhem.JsonRpc.*` package the
+application references directly is not raised by it, and the application has to raise it (a reference left at 1.0.0
+fails the restore with NU1605). The bound is 1.1.1 rather than 1.1.0 because 1.1.1 is the first version whose
+dispatcher refuses to start beside a Polhem.JsonRpc package compiled against 1.0 whatever
+`JsonRpcServerOptions.AllowCodeCompiledAgainst10` is set to
+([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let
+`Polhem.JsonRpc.AspNetCore` 1.0 run, and it writes the transport kind with the old numbers, so every HTTP call was
+taken for an in-process one, which Polhem lets past its access checks (`ApiAccessValidator`). The upper bound keeps a later major version of Polhem.JsonRpc out
 until Polhem has been built and tested against it; the 1.0 range had no upper bound, which is how an application on
 Polhem 1.2.0 that updates its transitive packages can end up with a Polhem.JsonRpc it cannot run on.
 
@@ -88,9 +106,18 @@ Semantic versioning asks for 2.0.0. This is released as 1.3.0, a third exception
   business objects and its hosting extensions compiles against 1.3.0 unchanged.
 - **The break is on the wire, and a version number does not change who can talk to whom.** A client of 1.2.0 cannot
   call a server of 1.3.0 whether the server is called 1.3.0 or 2.0.0, and polhem-connector-js, which does not depend on
-  the .NET packages at all, would need its own release either way. A major version would signal the break, but would
-  not help an existing client interoperate. The signal is given instead where an upgrading reader looks: the
-  changelog entry for 1.3.0 opens with it, and so does its detailed note.
+  the .NET packages at all, has to be rebuilt either way. A major version would signal the break, but would not help
+  an existing client interoperate. The signal is given instead where an upgrading reader looks: the changelog entry
+  for 1.3.0 opens with it, and so does its detailed note.
+
+The cost of a minor version is accepted knowingly. A version number does decide who upgrades without deciding to: a
+floating reference such as `1.*` takes 1.3.0 at the next restore, and Dependabot or Renovate often merge minor
+updates on their own, so a server can move to 1.3.0 alone and every remote client's Encrypted calls then fail at
+once. 2.0.0 would have stopped that; decision 2 of ADR-048 chose a minor version over a patch for the same reason,
+one step down. It is accepted here
+because the failure is loud and immediate rather than silent (every Encrypted call fails, and a host still on
+`Polhem.JsonRpc.AspNetCore` 1.0 does not start), because the warning opens the changelog entry, and because 1.2.0 is
+deprecated (decision 6).
 
 The first reason does not cover everything. What an application may have to change because of Polhem.JsonRpc 1.1.0,
 rather than because of Polhem's surface:
@@ -99,9 +126,13 @@ rather than because of Polhem's surface:
   to raise that reference to 1.1.0. Version 1.0 of it was compiled against `Polhem.JsonRpc.Server` 1.0, so the
   dispatcher refuses to start next to it.
 - Its own code compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter added through `AddJsonRpcServer`, must
-  be recompiled, or the dispatcher refuses to start and names the assembly.
-- An `IPayloadEncryptor` of its own must implement the overloads that authenticate associated data; until then every
-  Encrypted call through it fails.
+  be recompiled. If the assembly is loaded when the dispatcher is created, the dispatcher refuses to start and names
+  it; an assembly loaded later, such as a business object assembly that `AssemblyLoader` loads when its type is first
+  resolved, is not checked. Setting `AllowCodeCompiledAgainst10` to get past the refusal is unsafe for code that reads or sets the
+  transport kind, for the reason in decision 4.
+- An `IPayloadEncryptor` of its own must implement the overloads that take associated data, and authenticate that
+  data; until it implements them every Encrypted call through it fails, and one that ignores the data reopens both
+  attacks (decision 1).
 
 None of this shows up in Polhem's baselines. The changelog says it, and points to Polhem.JsonRpc's changelog for the
 rest of its own changes.
@@ -110,23 +141,31 @@ As in ADR-049, this is not a precedent: each further breaking change within 1.x 
 
 ### 6. 1.2.0 is deprecated on nuget.org once 1.3.0 is published
 
-Every `Polhem.*` package of 1.2.0 is marked deprecated on nuget.org, with the 1.3.0 package of the same name as the
-alternate, after 1.3.0 is published. Polhem 1.2.0 accepts any later Polhem.JsonRpc, so an application that updates
+After publishing 1.3.0, the maintainer marks every `Polhem.*` package of 1.2.0 deprecated on nuget.org, with the
+1.3.0 package of the same name as the alternate and the redirection weakness as the reason. This is a manual step
+after the release, not something the publishing workflow does. Polhem 1.2.0 accepts any later Polhem.JsonRpc, so an application that updates
 its transitive packages gets one its dispatcher refuses to start on, and its clients cannot call a 1.3.0 server.
 Deprecation keeps 1.2.0 restorable for anyone who pinned it, and warns everyone else.
 
 ## Consequences
 
 - Upgrading is a coordinated step for a deployment that has remote clients: the server and every client move in the
-  same window. A deployment whose clients are all in-process, or that never uses Encrypted, is not affected by the
-  binding itself.
+  same window. Clients installed on users' devices, such as the desktop and mobile heads, cannot always move with the
+  server; such a deployment can keep a Polhem 1.2.0 server, with its `Polhem.JsonRpc.*` packages pinned to 1.0.0, on a
+  separate endpoint until the old clients are gone. A deployment whose clients are all in-process, or that never uses
+  Encrypted, is not affected by the binding itself.
 - Every Encrypted call carries its method into the HMAC. A client in another language that speaks the payload has to
   implement ADR-003 of Polhem.JsonRpc; the cross-language test vectors of that repository are the reference.
 - A remote call to a `UniqueSequence` method while the frame is required needs a session key, because only Encrypted
   is accepted there. A session without a key, whose Encrypted calls the connector downgrades to Encoded, is refused.
+  The framework's own `Save`, `Delete`, `ExecFunc`, `EnterCompany` and `LeaveCompany` are such methods, and a .NET
+  browser (WebAssembly) head always signs in without a key, because `SystemApiConnector.LoginAsync` skips the RSA
+  handshake when `OperatingSystem.IsBrowser()` is true. Under `RequireFrame` such a head can no longer save, delete or
+  enter a company, so a deployment with one keeps `RequireFrame` off. polhem-connector-js, which writes no frames yet,
+  loses its Plain calls to these methods under `RequireFrame` as well.
 - A client that relied on reading a `null` result as a plain `null` from an Encoded or Encrypted request now reads it
-  from an envelope in the request's format. The .NET connector, and polhem-connector-js in its release that supports
-  Polhem 1.3.0, do this for the caller.
+  from an envelope in the request's format. The .NET connector, and polhem-connector-js from the commit that merges
+  polhem-dev/polhem-connector-js#11, do this for the caller.
 
 ## Alternatives considered
 
