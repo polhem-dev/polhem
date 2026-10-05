@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 2cef5477ee9b082eda2aa4d1d2d237573ab78e9d -->
+<!-- source: en/architecture/development-constraints.md blob: aa45ffecde8d0f1c137182d3a94afbf67bd070a4 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -340,8 +340,8 @@ Encoded 與 Encrypted 的請求會在 payload 內夾帶一段 wire frame（時�
 - **行程內呼叫不做序號檢查。** 經由本機 provider 的呼叫不經過網路，沒有可重放的東西；
   本機 provider 在非 debug 模式送 Plain，否則會被上一條規則拒絕。
 - **共用金鑰擋不住在另一個 session 重放。** 使用 `StaticApiEncryptionKeyProvider` 時所有用戶端持有同一把
-  金鑰，而序號依 session 計算。在某個 session 攔截到的呼叫，任何能出示另一個 session 的人都能在那裡重放一次，
-  不需要持有金鑰；持有金鑰的用戶端還能把攔截到的呼叫換上新的 frame 重新封裝。
+  金鑰，而序號依 session 計算。在時間戳仍在容許範圍內時，某個 session 攔截到的呼叫，任何能出示另一個 session
+  的人都能在那裡重放，只要序號在那個 session 還沒出現過，不需要持有金鑰；持有金鑰的用戶端則能自行寫出任何呼叫。
   預設的 `DerivedApiEncryptionKeyProvider` 讓每個 session 各有自己的金鑰。
 - **預設的序號窗口依行程分開。** 接受或拒絕由註冊在 service collection 的 `IPayloadReplayStore`
   決定。預設的 `MemoryPayloadReplayStore` 存在行程記憶體中：多個節點位於負載平衡器之後、且沒有依

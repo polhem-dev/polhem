@@ -366,9 +366,10 @@ used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`
   network, so there is nothing to replay; the local provider sends Plain outside debug mode, which
   the previous rule would otherwise refuse.
 - **A shared key does not stop a replay in another session.** With `StaticApiEncryptionKeyProvider`
-  every client holds the same key, and sequence numbers are counted per session. A call captured in
-  one session is accepted once in any other session, by whoever can present that session, without
-  holding the key; a client that holds it can also seal a captured call again with a fresh frame.
+  every client holds the same key, and sequence numbers are counted per session. While its timestamp
+  is within the tolerance, a call captured in one session is accepted in any other session in which
+  its sequence number is still new, by whoever can present that session, without holding the key; a
+  client that holds the key can write any call of its own.
   The default `DerivedApiEncryptionKeyProvider` gives each session its own key.
 - **The default window is per process.** The accept-or-reject decision is made by the
   `IPayloadReplayStore` registered in the service collection. The default,
