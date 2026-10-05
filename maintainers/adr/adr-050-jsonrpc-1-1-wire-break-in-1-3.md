@@ -53,13 +53,14 @@ changelog says it must authenticate that data.
 [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) built from `main` at or after the commit that
 merges [polhem-dev/polhem-connector-js#11](https://github.com/polhem-dev/polhem-connector-js/pull/11).
 polhem-connector-js is not published to npm and its package version does not change, so that commit is the only thing
-that tells a compatible build from an old one; #11 is merged before the v1.3.0 tag is pushed. A mismatched pair, an old
-client against a new server or the reverse, fails every Encrypted call, and the server answers each one with
-`-32603 Internal error`. Outside debug mode the answer does not say which check failed, by design of Polhem's
-exception mapper (`PolhemExceptionMapper`), which answers an unmapped exception with a fixed message unless
-`SysInfo.IsDebugMode` is set. Plain and Encoded calls carry no HMAC, so a mismatched pair can look healthy until its
-first Encrypted call; it is not a state to run in. The result format rule can fail across the pair as well, for example
-a `null` result that an old server answers to an Encoded request as a plain `null`.
+that tells a compatible build from an old one. The maintainer merges #11 before pushing the v1.3.0 tag, so that a
+compatible browser client exists when 1.3.0 is published. A mismatched pair, an old client against a new server or
+the reverse, fails every Encrypted call, and the server answers each one with `-32603 Internal error`. Outside debug
+mode the answer does not say which check failed, by design of Polhem's exception mapper (`PolhemExceptionMapper`),
+which answers an unmapped exception with a fixed message unless `SysInfo.IsDebugMode` is set. Plain and Encoded calls
+carry no HMAC, so a mismatched pair can look healthy until its first Encrypted call; it is not a state to run in. The
+result format rule can fail across the pair as well, for example a `null` result that an old server answers to an
+Encoded request as a plain `null`.
 
 ### 2. In-process calls get no replay scope
 
@@ -103,8 +104,8 @@ cannot run on.
 Semantic versioning asks for 2.0.0. This is released as 1.3.0, a third exception within 1.x, for these reasons:
 
 - **Polhem's own public .NET API changes only by additions.** The `PublicAPI.Shipped.txt` baselines gain
-  `DefinitionNotFoundException` and lose nothing. An application that calls Polhem through its connectors, its
-  business objects and its hosting extensions compiles against 1.3.0 unchanged.
+  `DefinitionNotFoundException` and lose nothing. An application that references only the Polhem packages and calls
+  Polhem through its connectors, its business objects and its hosting extensions compiles against 1.3.0 unchanged.
 - **The break is on the wire, and a version number does not change who can talk to whom.** A client of 1.2.0 cannot
   call a server of 1.3.0 whether the server is called 1.3.0 or 2.0.0, and polhem-connector-js, which does not depend on
   the .NET packages at all, has to be rebuilt either way. A major version would signal the break, but would not help
@@ -115,10 +116,9 @@ The cost of a minor version is accepted knowingly. A version number does decide 
 floating reference such as `1.*` takes 1.3.0 at the next restore, and Dependabot or Renovate often merge minor
 updates on their own, so a server can move to 1.3.0 alone and every remote client's Encrypted calls then fail at
 once. 2.0.0 would have stopped that; decision 2 of ADR-048 chose a minor version over a patch for the same reason,
-one step down. It is accepted here
-because the failure is loud and immediate rather than silent (every Encrypted call fails, and a host still on
-`Polhem.JsonRpc.AspNetCore` 1.0 does not start), because the warning opens the changelog entry, and because 1.2.0 is
-deprecated (decision 6).
+one step down. It is accepted here because the failure is loud and immediate rather than silent (every Encrypted call
+fails, and a host still on `Polhem.JsonRpc.AspNetCore` 1.0 does not start), because the warning opens the changelog
+entry, and because 1.2.0 is deprecated (decision 6).
 
 The first reason does not cover everything. What an application may have to change because of Polhem.JsonRpc 1.1.0,
 rather than because of Polhem's surface:
