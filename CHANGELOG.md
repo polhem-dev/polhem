@@ -77,8 +77,8 @@ Polhem.JsonRpc's own changes are in [its changelog](https://github.com/polhem-de
   the default binder of `Polhem.JsonRpc`. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - In-process calls are not checked for repeated sequence numbers. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or later. 1.1.1 is the first version
-  whose dispatcher refuses to start beside any assembly compiled against `Polhem.JsonRpc.Server` 1.0, with no
-  exception: in it `AllowCodeCompiledAgainst10` has no effect. ([#60](https://github.com/polhem-dev/polhem/pull/60))
+  whose dispatcher refuses to start beside any assembly compiled against `Polhem.JsonRpc.Server` 1.0 that is loaded
+  when it is created, with no exception: in it `AllowCodeCompiledAgainst10` has no effect. ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - A definition the built-in file or database storage must hold but does not — a form schema, a table schema, the
   program registry or the database categories — now throws `DefinitionNotFoundException`, and so does the
   `GetFormSchema` API when a storage of your own returns no form schema. A remote caller receives

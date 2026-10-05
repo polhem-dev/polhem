@@ -68,7 +68,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   此行為與 `Polhem.JsonRpc` 預設的 binder 一致。([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 行程內呼叫不檢查序號是否重複。([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 套件相依的 Polhem.JsonRpc 改為 `[1.1.1, 2.0.0)`，不再是 `1.0.0` 以上。1.1.1 是第一個只要旁邊有以
-  `Polhem.JsonRpc.Server` 1.0 編譯的組件，dispatcher 就一律拒絕啟動的版本：`AllowCodeCompiledAgainst10` 在其中沒有作用。
+  `Polhem.JsonRpc.Server` 1.0 編譯、且在 dispatcher 建立時已載入的組件，dispatcher 就一律拒絕啟動的版本：`AllowCodeCompiledAgainst10` 在其中沒有作用。
   ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 內建的檔案或資料庫儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
   `DefinitionNotFoundException`；自訂的儲存沒有傳回表單結構描述時，`GetFormSchema` API 也丟出它。遠端呼叫端會以

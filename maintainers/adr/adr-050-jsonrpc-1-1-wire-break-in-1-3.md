@@ -90,12 +90,13 @@ The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or lat
 resolving the 1.0 packages, which do not bind, for Polhem's own dependencies; a `Polhem.JsonRpc.*` package the
 application references directly is not raised by it, and the application has to raise it (a reference left at 1.0.0
 fails the restore with NU1605). The bound is 1.1.1 rather than 1.1.0 because 1.1.1 is the first version whose dispatcher
-refuses to start beside any assembly compiled against `Polhem.JsonRpc.Server` 1.0, with no exception: in it
-`JsonRpcServerOptions.AllowCodeCompiledAgainst10` has no effect
-([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let such
-code run: `Polhem.JsonRpc.AspNetCore` 1.0 writes the transport kind with the old numbers and Polhem 1.2.0 reads it with
-them, so every HTTP call was taken for an in-process one, which Polhem lets past its access checks
-(`ApiAccessValidator`). The upper bound keeps a later
+refuses to start beside any assembly compiled against `Polhem.JsonRpc.Server` 1.0 and loaded when the dispatcher is
+created, with no exception: in it `JsonRpcServerOptions.AllowCodeCompiledAgainst10` has no effect
+([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let
+such code run beside code compiled against 1.1, and either mix takes every HTTP call for an in-process one, which Polhem
+lets past its access checks (`ApiAccessValidator`): `Polhem.JsonRpc.AspNetCore` 1.0 writes `Http` as 1, which Polhem
+1.3.0 reads as `InProcess`; and `Polhem.JsonRpc.AspNetCore` 1.1 writes `Http` as 0, which Polhem 1.2.0 reads as
+`InProcess`. The upper bound keeps a later
 major version of Polhem.JsonRpc out until Polhem has been built and tested against it; the 1.0 range had no upper bound,
 which is how an application on Polhem 1.2.0 that updates its transitive packages can end up with a Polhem.JsonRpc it
 cannot run on.
@@ -154,7 +155,8 @@ server. Deprecation keeps 1.2.0 restorable for anyone who pinned it, and warns e
 - Upgrading is a coordinated step for a deployment that has remote clients: the server and every client move in the
   same window. Clients installed on users' devices, such as the desktop and mobile heads, cannot always move with the
   server; such a deployment can keep a Polhem 1.2.0 server, with its `Polhem.JsonRpc.*` packages pinned to 1.0.0, on a
-  separate endpoint until the old clients are gone. A deployment whose clients are all in-process, or that never uses
+  separate endpoint until the old clients are gone; that server keeps the weakness this release closes, so it is open
+  only to those clients and retired early. A deployment whose clients are all in-process, or that never uses
   Encrypted, is not affected by the binding itself.
 - Every Encrypted call carries its method into the HMAC. A client in another language that speaks the payload has to
   implement ADR-003 of Polhem.JsonRpc; the cross-language test vectors of that repository are the reference.
