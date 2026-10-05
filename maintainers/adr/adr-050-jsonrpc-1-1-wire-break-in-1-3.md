@@ -4,11 +4,11 @@
 
 **Accepted (2026-10-05)**
 
-Amends decision 6 of [ADR-049](adr-049-jsonrpc-packages-in-1-2.md), and one of its consequences: a third exception to semantic versioning within
-1.x, after [ADR-048](adr-048-rename-base-to-core-in-1-1.md) and ADR-049. Unlike those two, it leaves the compatibility
-rule stated in the context of [ADR-046](adr-046-api-evolution-policies-for-1-0.md) intact: the
-`PublicAPI.Shipped.txt` baselines only grow. The break is on the wire, and in the Polhem.JsonRpc packages Polhem
-depends on.
+Amends decision 6 of [ADR-049](adr-049-jsonrpc-packages-in-1-2.md), and one of its consequences: a third exception to
+semantic versioning within 1.x, after [ADR-048](adr-048-rename-base-to-core-in-1-1.md) and ADR-049. Unlike those two, it
+leaves the compatibility rule stated in the context of [ADR-046](adr-046-api-evolution-policies-for-1-0.md) intact: the
+`PublicAPI.Shipped.txt` baselines only grow. The break is on the wire, and in the Polhem.JsonRpc packages Polhem depends
+on.
 
 ## Context
 
@@ -16,12 +16,12 @@ Since 1.2.0, Polhem's JSON-RPC runs on the `Polhem.JsonRpc` packages, and the pa
 replay frame on their optional payload packages (ADR-049). Polhem.JsonRpc 1.1.0 changes that payload in two ways that
 every party to a call can see:
 
-- **The HMAC of an Encrypted payload also covers the direction and the JSON-RPC method of the call.** Before, a
-  captured encrypted request could be sent to another method of the same session, for example turning a read into a
-  delete, and a result sent back as a request; the binding closes both. On Polhem 1.2.0 this is a weakness that
-  anyone able to capture an encrypted request could use, so the move is a security fix as well as a wire change. The layout of the bytes does not change, but a payload written without the
-  binding fails its HMAC on a reader that expects it, and the reverse. The design and the bytes that are bound are
-  recorded in
+- **The HMAC of an Encrypted payload also covers the direction and the JSON-RPC method of the call.** Before, a captured
+  encrypted request could be sent to another method of the same session, for example turning a read into a delete, and a
+  result sent back as a request; the binding closes both. On Polhem 1.2.0 this is a weakness that anyone able to capture
+  an encrypted request could use, so the move is a security fix as well as a wire change. The layout of the bytes does
+  not change, but a payload written without the binding fails its HMAC on a reader that expects it, and the reverse. The
+  design and the bytes that are bound are recorded in
   [ADR-003 of Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)
   and are not repeated here.
 - **A result is answered in the format of its request** (decision 6 of the same ADR), a `null` result included, and a
@@ -51,15 +51,15 @@ changelog says it must authenticate that data.
 
 **The server and every remote client upgrade together**: .NET clients built on `Polhem.Api.Client`, and
 [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js) built from `main` at or after the commit that
-merges [polhem-dev/polhem-connector-js#11](https://github.com/polhem-dev/polhem-connector-js/pull/11). polhem-connector-js
-is not published to npm and its package version does not change, so that commit is the only thing that tells a
-compatible build from an old one; #11 is merged before the v1.3.0 tag is pushed.
-A mismatched pair, an old client against a new server or the reverse, fails every Encrypted call, and the server
-answers each one with `-32603 Internal error`. Outside debug mode the answer does not say which check failed, by
-design of Polhem's exception mapper (`PolhemExceptionMapper`), which answers an unmapped exception with a fixed
-message unless `SysInfo.IsDebugMode` is set. Plain and Encoded calls carry no HMAC, so a mismatched pair can look healthy until its first Encrypted call;
-it is not a state to run in. The result format rule can fail across the pair as well, for example a `null` result
-that an old server answers to an Encoded request as a plain `null`.
+merges [polhem-dev/polhem-connector-js#11](https://github.com/polhem-dev/polhem-connector-js/pull/11).
+polhem-connector-js is not published to npm and its package version does not change, so that commit is the only thing
+that tells a compatible build from an old one; #11 is merged before the v1.3.0 tag is pushed. A mismatched pair, an old
+client against a new server or the reverse, fails every Encrypted call, and the server answers each one with
+`-32603 Internal error`. Outside debug mode the answer does not say which check failed, by design of Polhem's
+exception mapper (`PolhemExceptionMapper`), which answers an unmapped exception with a fixed message unless
+`SysInfo.IsDebugMode` is set. Plain and Encoded calls carry no HMAC, so a mismatched pair can look healthy until its
+first Encrypted call; it is not a state to run in. The result format rule can fail across the pair as well, for example
+a `null` result that an old server answers to an Encoded request as a plain `null`.
 
 ### 2. In-process calls get no replay scope
 
@@ -88,14 +88,15 @@ is what the default binder of Polhem.JsonRpc answers, and Polhem's binder now ag
 The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or later. The lower bound keeps NuGet from
 resolving the 1.0 packages, which do not bind, for Polhem's own dependencies; a `Polhem.JsonRpc.*` package the
 application references directly is not raised by it, and the application has to raise it (a reference left at 1.0.0
-fails the restore with NU1605). The bound is 1.1.1 rather than 1.1.0 because 1.1.1 is the first version whose
-dispatcher refuses to start beside a Polhem.JsonRpc package compiled against 1.0 whatever
+fails the restore with NU1605). The bound is 1.1.1 rather than 1.1.0 because 1.1.1 is the first version whose dispatcher
+refuses to start beside a Polhem.JsonRpc package compiled against 1.0 whatever
 `JsonRpcServerOptions.AllowCodeCompiledAgainst10` is set to
 ([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let
-`Polhem.JsonRpc.AspNetCore` 1.0 run, and it writes the transport kind with the old numbers, so every HTTP call was
-taken for an in-process one, which Polhem lets past its access checks (`ApiAccessValidator`). The upper bound keeps a later major version of Polhem.JsonRpc out
-until Polhem has been built and tested against it; the 1.0 range had no upper bound, which is how an application on
-Polhem 1.2.0 that updates its transitive packages can end up with a Polhem.JsonRpc it cannot run on.
+`Polhem.JsonRpc.AspNetCore` 1.0 run, and it writes the transport kind with the old numbers, so every HTTP call was taken
+for an in-process one, which Polhem lets past its access checks (`ApiAccessValidator`). The upper bound keeps a later
+major version of Polhem.JsonRpc out until Polhem has been built and tested against it; the 1.0 range had no upper bound,
+which is how an application on Polhem 1.2.0 that updates its transitive packages can end up with a Polhem.JsonRpc it
+cannot run on.
 
 ### 5. Released as 1.3.0, the third exception in 1.x
 
@@ -123,12 +124,12 @@ The first reason does not cover everything. What an application may have to chan
 rather than because of Polhem's surface:
 
 - A host that serves the API over HTTP references `Polhem.JsonRpc.AspNetCore` itself (ADR-049, decision 3), and has
-  to raise that reference to 1.1.0. Version 1.0 of it was compiled against `Polhem.JsonRpc.Server` 1.0, so the
+  to raise that reference to 1.1.1 or later. Version 1.0 of it was compiled against `Polhem.JsonRpc.Server` 1.0, so the
   dispatcher refuses to start next to it.
-- Its own code compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter added through `AddJsonRpcServer`, must
-  be recompiled. If the assembly is loaded when the dispatcher is created, the dispatcher refuses to start and names
-  it; an assembly loaded later, such as a business object assembly that `AssemblyLoader` loads when its type is first
-  resolved, is not checked. Setting `AllowCodeCompiledAgainst10` to get past the refusal is unsafe for code that reads or sets the
+- Its own code compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter added through `AddJsonRpcServer`, must be
+  recompiled. If the assembly is loaded when the dispatcher is created, the dispatcher refuses to start and names it; an
+  assembly loaded later, such as a business object assembly that `AssemblyLoader` loads when its type is first resolved,
+  is not checked. Setting `AllowCodeCompiledAgainst10` to get past the refusal is unsafe for code that reads or sets the
   transport kind, for the reason in decision 4.
 - An `IPayloadEncryptor` of its own must implement the overloads that take associated data, and authenticate that
   data; until it implements them every Encrypted call through it fails, and one that ignores the data reopens both
@@ -141,11 +142,11 @@ As in ADR-049, this is not a precedent: each further breaking change within 1.x 
 
 ### 6. 1.2.0 is deprecated on nuget.org once 1.3.0 is published
 
-After publishing 1.3.0, the maintainer marks every `Polhem.*` package of 1.2.0 deprecated on nuget.org, with the
-1.3.0 package of the same name as the alternate and the redirection weakness as the reason. This is a manual step
-after the release, not something the publishing workflow does. Polhem 1.2.0 accepts any later Polhem.JsonRpc, so an application that updates
-its transitive packages gets one its dispatcher refuses to start on, and its clients cannot call a 1.3.0 server.
-Deprecation keeps 1.2.0 restorable for anyone who pinned it, and warns everyone else.
+After publishing 1.3.0, the maintainer marks every `Polhem.*` package of 1.2.0 deprecated on nuget.org, with the 1.3.0
+package of the same name as the alternate and the redirection weakness as the reason. This is a manual step after the
+release, not something the publishing workflow does. Polhem 1.2.0 accepts any later Polhem.JsonRpc, so an application
+that updates its transitive packages gets one its dispatcher refuses to start on, and its clients cannot call a 1.3.0
+server. Deprecation keeps 1.2.0 restorable for anyone who pinned it, and warns everyone else.
 
 ## Consequences
 

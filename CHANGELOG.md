@@ -58,8 +58,8 @@ Do not set `JsonRpcServerOptions.AllowCodeCompiledAgainst10` to get past that st
 1.0 that reads or sets the transport kind can take an HTTP call for an in-process one, and Polhem lets in-process calls
 past its access checks. Code of your own compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter, must be
 recompiled. An `IPayloadEncryptor` of your own must implement the overloads that take associated data, and
-authenticate that data: one that ignores it accepts the 1.2.0 form and reopens both attacks. The rest of Polhem.JsonRpc's own changes are in
-[its changelog](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md).
+authenticate that data: one that ignores it accepts the 1.2.0 form and reopens both attacks. The rest of
+Polhem.JsonRpc's own changes are in [its changelog](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md).
 
 ### Added
 
