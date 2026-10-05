@@ -1,5 +1,1 @@
 #nullable enable
-Polhem.Definition.Storage.DefinitionNotFoundException
-Polhem.Definition.Storage.DefinitionNotFoundException.DefineType.get -> Polhem.Definition.DefineType
-Polhem.Definition.Storage.DefinitionNotFoundException.DefinitionNotFoundException(Polhem.Definition.DefineType defineType, string! key, string? filePath = null) -> void
-Polhem.Definition.Storage.DefinitionNotFoundException.Key.get -> string!

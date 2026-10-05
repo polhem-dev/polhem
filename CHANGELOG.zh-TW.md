@@ -8,28 +8,66 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-05
+
+> Polhem 改建在 [Polhem.JsonRpc](https://github.com/polhem-dev/polhem-jsonrpc) 1.1.0 上，它的 payload 線路格式與 1.2.0
+> 不相容：每個 Encrypted payload 的 HMAC 也涵蓋它的方法與方向，結果也以請求的格式回應。**伺服端與所有遠端用戶端必須
+> 一起升級**：以 `Polhem.Api.Client` 建構的 .NET 用戶端，以及 [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)
+> 支援 Polhem 1.3.0 的版本。Polhem 自己的公開 .NET API 只有新增，因此以次版號發佈：繼 1.1.0 與 1.2.0 之後，1.x 內的
+> 第三次例外。理由見 [ADR-050](maintainers/adr/adr-050-jsonrpc-1-1-wire-break-in-1-3.md)（英文）。
+
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.0.md](docs/zh-TW/changelogs/1.3.0.md)
+
+### 破壞性線路變更
+
+- 在 Polhem.JsonRpc 1.1.0 上，每個 Encrypted payload 的 HMAC 也涵蓋它的方法與方向
+  （[Polhem.JsonRpc 的 ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)，英文）。
+  版本不相符的伺服端與用戶端，每個 Encrypted 呼叫都會失敗，伺服端回 `-32603 Internal error`。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 要求 wire frame（`RequireFrame`）時，宣告 `ReplayProtection = UniqueSequence` 的方法會以 `-32602 Invalid params`
+  拒絕已登入 session 的遠端 Plain 或 Encoded 呼叫。這類呼叫過去會被接受，只是不檢查序號。([#60](https://github.com/polhem-dev/polhem/pull/60))
+
+升級時，伺服端與它的用戶端在同一個時段一起升級。以 HTTP 提供 API 的 host 自己參考的 `Polhem.JsonRpc.AspNetCore`
+要與 Polhem 套件一起升級；它的 1.0 版會讓 dispatcher 無法啟動：
+
+```diff
+- <PackageReference Include="Polhem.Hosting" Version="1.2.0" />
+- <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.0.0" />
++ <PackageReference Include="Polhem.Hosting" Version="1.3.0" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.1.0" />
+```
+
+自己以 `Polhem.JsonRpc.Server` 1.0 編譯的程式碼（例如 filter）必須重新編譯；自己實作的 `IPayloadEncryptor` 必須實作驗證
+associated data 的多載。Polhem.JsonRpc 自己的其餘變更見[它的變更記錄](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md)。
+
+### 新增
+
+- `Polhem.Definition.Storage` 的 `DefinitionNotFoundException`：衍生自 `FileNotFoundException`，帶有定義類型與鍵。([#51](https://github.com/polhem-dev/polhem/pull/51))
+
 ### 行為變更
 
-- **Wire 可見、破壞性：** 在 Polhem.JsonRpc 1.1.0 上，每個 Encrypted payload 的 HMAC 也涵蓋它的方法與方向
-  （[Polhem.JsonRpc 的 ADR-003](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/maintainers/adr/adr-003-bind-method-into-payload-hmac.md)，英文）。
-  伺服端與所有遠端用戶端（以 `Polhem.Api.Client` 建構的 .NET 應用程式，以及 [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)）必須一起升級：版本不相符的一組，
-  每個 Encrypted 呼叫都會失敗，伺服端回 `-32603 Internal error`。([#60](https://github.com/polhem-dev/polhem/pull/60))
 - **Wire 可見：** 結果一律以請求送出時的格式回應（`null` 結果也一樣），`ApiConnector` 收到其他格式的結果時會以
   `InvalidPayloadException` 拒絕。([#60](https://github.com/polhem-dev/polhem/pull/60))
-- **Wire 可見、破壞性：** 要求 wire frame（`RequireFrame`）時，宣告 `ReplayProtection = UniqueSequence` 的方法會以
-  `-32602 Invalid params` 拒絕已登入 session 的遠端 Plain 或 Encoded 呼叫。這類呼叫過去會被接受，只是不檢查序號。([#60](https://github.com/polhem-dev/polhem/pull/60))
-- 行程內呼叫不檢查序號是否重複。([#60](https://github.com/polhem-dev/polhem/pull/60))
-- 套件相依的 Polhem.JsonRpc 改為 `[1.1.0, 2.0.0)`，不再是 `1.0.0` 以上。([#60](https://github.com/polhem-dev/polhem/pull/60))
-- 連線到遠端端點時（`ApiConnectValidator`，以及 UI head 透過它呼叫的 `ClientInfo`）只以 ping 檢查端點，不再先送 HTTP
-  `HEAD` 請求；端點每次連線都以 405 回應那個請求。連不上的主機仍回報為 `Endpoint not reachable`。
-- 儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
-  `DefinitionNotFoundException`（衍生自 `FileNotFoundException`）。遠端呼叫端會以 UserMessage 錯誤碼（-32099）收到它的訊息
-  （例如 `FormSchema 'Employee' not found.`），不再是檔案儲存回的通用 InternalError（-32603）或資料庫儲存回的固定訊息。
-  訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。([#51](https://github.com/polhem-dev/polhem/pull/51))
 - **Wire 可見：** 參數沒有可繫結的值（沒有 `params` 成員，或 payload 信封沒有 `value`、`value` 為 `null`）的請求，
   會在方法執行前以 `-32602 Invalid params` 回應。過去會以 `null` 引數呼叫方法：多數框架方法以 `ArgumentNullException`
   檢查它，回 `-32099` 與「The request is not valid.」；其餘方法則失敗並回 `-32603 Internal error`。
   此行為與 `Polhem.JsonRpc` 預設的 binder 一致。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 行程內呼叫不檢查序號是否重複。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 套件相依的 Polhem.JsonRpc 改為 `[1.1.0, 2.0.0)`，不再是 `1.0.0` 以上。([#60](https://github.com/polhem-dev/polhem/pull/60))
+- 儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
+  `DefinitionNotFoundException`。遠端呼叫端會以 UserMessage 錯誤碼（-32099）收到它的訊息
+  （例如 `FormSchema 'Employee' not found.`），不再是檔案儲存回的通用 InternalError（-32603）或資料庫儲存回的固定訊息。
+  訊息只含定義類型與呼叫端送來的鍵，不含任何路徑。([#51](https://github.com/polhem-dev/polhem/pull/51))
+- 連線到遠端端點時（`ApiConnectValidator`，以及 UI head 透過它呼叫的 `ClientInfo`）只以 ping 檢查端點，不再先送 HTTP
+  `HEAD` 請求；端點每次連線都以 405 回應那個請求。連不上的主機仍回報為 `Endpoint not reachable`。([#50](https://github.com/polhem-dev/polhem/pull/50))
+
+### 範例與工具
+
+- Northwind 在瀏覽器與 iOS head 上，也會在選單從伺服端載入後開啟選單的第一個表單。([#49](https://github.com/polhem-dev/polhem/pull/49))
+
+### 文件
+
+- 從 Bee.NET 遷移的指南從 README 移到
+  [`docs/zh-TW/guides/migrating-from-bee-net.md`](docs/zh-TW/guides/migrating-from-bee-net.md)。([#52](https://github.com/polhem-dev/polhem/pull/52))
 
 ## [1.2.0] - 2026-10-03
 
@@ -440,7 +478,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
 [1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
 [1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0
