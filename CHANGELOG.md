@@ -8,11 +8,21 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-05
+
+📄 Full notes and background: [docs/en/changelogs/1.3.1.md](docs/en/changelogs/1.3.1.md)
+
 ### Changed
 
 - `ApiConnector` seals its calls through `PayloadConnector` from the new `Polhem.JsonRpc.Payload.Client` package, which
   `Polhem.Api.Client` now references instead of `Polhem.JsonRpc.Client` (still referenced through it). Requires
   Polhem.JsonRpc 1.2.0 or later. The wire format and the formats, keys and sequence numbers a call uses are unchanged.
+  ([#63](https://github.com/polhem-dev/polhem/pull/63))
+
+### Documentation
+
+- What a shared API key (`StaticApiEncryptionKeyProvider`) leaves open: a call captured in one session can be replayed
+  in another session while its timestamp is within the tolerance. ([#62](https://github.com/polhem-dev/polhem/pull/62))
 
 ## [1.3.0] - 2026-10-05
 
@@ -572,7 +582,8 @@ The renaming was done before the repository took pull requests, so these entries
   ([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
 [1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
 [1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
