@@ -8,10 +8,20 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-05
+
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.1.md](docs/zh-TW/changelogs/1.3.1.md)
+
 ### 變更
 
 - `ApiConnector` 改透過新套件 `Polhem.JsonRpc.Payload.Client` 的 `PayloadConnector` 封裝呼叫；`Polhem.Api.Client` 改參考該套件，
   取代 `Polhem.JsonRpc.Client`（仍經由它間接參考）。需要 Polhem.JsonRpc 1.2.0 以上。線路格式，以及呼叫採用的格式、金鑰與序號都不變。
+  ([#63](https://github.com/polhem-dev/polhem/pull/63))
+
+### 文件
+
+- 說明共用 API 金鑰（`StaticApiEncryptionKeyProvider`）留下的缺口：在時間戳記的容許範圍內，於某個 session 攔截到的呼叫
+  可以在另一個 session 重放。([#62](https://github.com/polhem-dev/polhem/pull/62))
 
 ## [1.3.0] - 2026-10-05
 
@@ -502,7 +512,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
 [1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
 [1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
