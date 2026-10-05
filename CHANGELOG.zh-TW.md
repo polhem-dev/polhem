@@ -48,8 +48,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 + <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="1.1.1" />
 ```
 
-不要為了跳過這個啟動錯誤而設定 `JsonRpcServerOptions.AllowCodeCompiledAgainst10`：以 1.0 編譯、讀取或設定傳輸種類的
-程式碼，可能把 HTTP 呼叫當成行程內呼叫，而 Polhem 對行程內呼叫不做存取檢查。自己以 `Polhem.JsonRpc.Server` 1.0 編譯的
+`JsonRpcServerOptions.AllowCodeCompiledAgainst10` 無法跳過這個啟動錯誤：從 1.1.1 起它沒有作用，因為以 1.0 編譯、
+讀取或設定傳輸種類的程式碼，可能把 HTTP 呼叫當成行程內呼叫，而 Polhem 對行程內呼叫不做存取檢查。自己以 `Polhem.JsonRpc.Server` 1.0 編譯的
 程式碼（例如 filter）必須重新編譯。自己實作的 `IPayloadEncryptor` 必須實作接受 associated data 的多載，並驗證那份資料：
 忽略它的實作會接受 1.2.0 的形式，讓兩種攻擊重新打開。Polhem.JsonRpc 自己的其餘變更見
 [它的變更記錄](https://github.com/polhem-dev/polhem-jsonrpc/blob/main/CHANGELOG.md)。
@@ -67,8 +67,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   檢查它，回 `-32099` 與「The request is not valid.」；其餘方法則失敗並回 `-32603 Internal error`。
   此行為與 `Polhem.JsonRpc` 預設的 binder 一致。([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 行程內呼叫不檢查序號是否重複。([#60](https://github.com/polhem-dev/polhem/pull/60))
-- 套件相依的 Polhem.JsonRpc 改為 `[1.1.1, 2.0.0)`，不再是 `1.0.0` 以上。1.1.1 是第一個不論
-  `AllowCodeCompiledAgainst10` 如何設定，只要旁邊有以 1.0 編譯的 Polhem.JsonRpc 套件，dispatcher 就拒絕啟動的版本。
+- 套件相依的 Polhem.JsonRpc 改為 `[1.1.1, 2.0.0)`，不再是 `1.0.0` 以上。1.1.1 是第一個只要旁邊有以
+  `Polhem.JsonRpc.Server` 1.0 編譯的組件，dispatcher 就一律拒絕啟動的版本：`AllowCodeCompiledAgainst10` 在其中沒有作用。
   ([#60](https://github.com/polhem-dev/polhem/pull/60))
 - 內建的檔案或資料庫儲存中應存在卻找不到的定義（表單結構描述、資料表結構描述、程式登錄、資料庫分類）改為丟出
   `DefinitionNotFoundException`；自訂的儲存沒有傳回表單結構描述時，`GetFormSchema` API 也丟出它。遠端呼叫端會以

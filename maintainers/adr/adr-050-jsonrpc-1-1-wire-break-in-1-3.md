@@ -90,11 +90,12 @@ The packages depend on Polhem.JsonRpc `[1.1.1, 2.0.0)` instead of `1.0.0` or lat
 resolving the 1.0 packages, which do not bind, for Polhem's own dependencies; a `Polhem.JsonRpc.*` package the
 application references directly is not raised by it, and the application has to raise it (a reference left at 1.0.0
 fails the restore with NU1605). The bound is 1.1.1 rather than 1.1.0 because 1.1.1 is the first version whose dispatcher
-refuses to start beside a Polhem.JsonRpc package compiled against 1.0 whatever
-`JsonRpcServerOptions.AllowCodeCompiledAgainst10` is set to
-([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let
-`Polhem.JsonRpc.AspNetCore` 1.0 run, and it writes the transport kind with the old numbers, so every HTTP call was taken
-for an in-process one, which Polhem lets past its access checks (`ApiAccessValidator`). The upper bound keeps a later
+refuses to start beside any assembly compiled against `Polhem.JsonRpc.Server` 1.0, with no exception: in it
+`JsonRpcServerOptions.AllowCodeCompiledAgainst10` has no effect
+([polhem-dev/polhem-jsonrpc#46](https://github.com/polhem-dev/polhem-jsonrpc/pull/46)). Under 1.1.0 that option let such
+code run: `Polhem.JsonRpc.AspNetCore` 1.0 writes the transport kind with the old numbers and Polhem 1.2.0 reads it with
+them, so every HTTP call was taken for an in-process one, which Polhem lets past its access checks
+(`ApiAccessValidator`). The upper bound keeps a later
 major version of Polhem.JsonRpc out until Polhem has been built and tested against it; the 1.0 range had no upper bound,
 which is how an application on Polhem 1.2.0 that updates its transitive packages can end up with a Polhem.JsonRpc it
 cannot run on.
@@ -129,8 +130,8 @@ rather than because of Polhem's surface:
 - Its own code compiled against `Polhem.JsonRpc.Server` 1.0, such as a filter added through `AddJsonRpcServer`, must be
   recompiled. If the assembly is loaded when the dispatcher is created, the dispatcher refuses to start and names it; an
   assembly loaded later, such as a business object assembly that `AssemblyLoader` loads when its type is first resolved,
-  is not checked. Setting `AllowCodeCompiledAgainst10` to get past the refusal is unsafe for code that reads or sets the
-  transport kind, for the reason in decision 4.
+  is not checked. `AllowCodeCompiledAgainst10` cannot get past the refusal; it has no effect from 1.1.1, for the reason
+  in decision 4.
 - An `IPayloadEncryptor` of its own must implement the overloads that take associated data, and authenticate that
   data; until it implements them every Encrypted call through it fails, and one that ignores the data reopens both
   attacks (decision 1).
