@@ -9,6 +9,8 @@ below; see [ADR-048](adr-048-rename-base-to-core-in-1-1.md). The removal of `Pol
 (one of the static configuration classes this ADR keeps) in 1.2.0 is a second one, and [ADR-049](adr-049-jsonrpc-packages-in-1-2.md) also exempts the framework pipeline types it names from
 that rule.
 
+Decision 4, added on 2026-10-06, exempts the framework's exception types from that rule from then on.
+
 ## Context
 
 Polhem 1.0 fixes the public API baseline. From then on, the `PublicAPI.Shipped.txt` file of each package records the
@@ -117,6 +119,30 @@ What this means:
 the head registration methods, and have the framework read them from DI. The statics would then be kept for
 compatibility or marked `[Obsolete]`, and removed only in a major version. The move does not have to be decided now,
 and 1.0 does not block it.
+
+### 4. Exception types may change in minor versions
+
+*Added 2026-10-06.*
+
+The framework's exception types, every public class in `src/` that derives from `Exception`, may be added, removed,
+renamed or changed in a **minor** version, members and constructors included. That is not treated as a breaking change,
+needs no ADR of its own, and the release notes list each change.
+
+The reason: an application meets these types in two ways, and neither ties it to a compiled surface the way an
+interface or a connector method does. A business object throws one to send a message or a code to the caller, and a
+client catches the type that `JsonRpcErrorContract` rebuilds from a code. What both rely on is the code on the wire and
+the message it carries, not the type that produced it. Since the framework moved to the Polhem.JsonRpc packages, its
+own exception types have also been the part of the surface that the move left stranded (`JsonRpcException` and
+`MethodNotFoundException` stopped being thrown in 1.2.0), and keeping each one until 2.0 would preserve types whose
+only role is to be caught for a failure that no longer happens.
+
+What stays under ordinary semantic versioning:
+
+- **The JSON-RPC error codes** (`JsonRpcErrorCode`) and the code each failure travels as. Clients, polhem-connector-js
+  among them, compare against the numbers, so changing the code of a failure waits for a major version even when the
+  exception type behind it changes.
+- **Every other public type**, including a type that only uses an exception type, such as a method that declares it in
+  its signature.
 
 ## Consequences
 
