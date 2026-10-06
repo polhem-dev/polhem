@@ -127,6 +127,20 @@ namespace Polhem.Definition.UnitTests.ObjectTree
         }
 
         [Fact]
+        [DisplayName("A node created with a label provider computes its label now and again on Refresh")]
+        public void Refresh_LabelProviderNode_RecomputesLabel()
+        {
+            var text = "first";
+            var node = new ObjectTreeNode(new object(), _ => text, isFolder: true);
+            Assert.Equal("first", node.Label);
+
+            text = "second";
+            node.Refresh();
+
+            Assert.Equal("second", node.Label);
+        }
+
+        [Fact]
         [DisplayName("Refresh keeps the fixed label of a node created with one")]
         public void Refresh_FixedLabelNode_KeepsLabel()
         {

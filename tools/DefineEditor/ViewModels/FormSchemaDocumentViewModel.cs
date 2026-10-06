@@ -95,7 +95,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
     private static ObjectTreeNode CreateGroup(ObjectTreeBuilder builder, System.Collections.IEnumerable items, string label)
     {
-        var group = new ObjectTreeNode(items, label, isFolder: true);
+        var group = new ObjectTreeNode(items, _ => TreeLabels.Translate(label), isFolder: true);
         foreach (var item in items)
             group.Children.Add(builder.Build(item));
         return group;

@@ -239,4 +239,44 @@ Do you want to save them before closing?
 Save anyway?</value></data>
   <data name="Confirm_SaveAfterValidationErrorsAndWarnings" xml:space="preserve"><value>Validation found {0} errors and {1} warnings.
 Save anyway?</value></data>
+  <!-- Tree node labels: folder and root names from the [TreeNode] annotations, and editor-made groups. -->
+  <data name="TreeNode_AuditLog" xml:space="preserve"><value>AuditLog</value></data>
+  <data name="TreeNode_Backend" xml:space="preserve"><value>Backend</value></data>
+  <data name="TreeNode_BackgroundService" xml:space="preserve"><value>BackgroundService</value></data>
+  <data name="TreeNode_CacheNotify" xml:space="preserve"><value>CacheNotify</value></data>
+  <data name="TreeNode_Columns" xml:space="preserve"><value>Columns</value></data>
+  <data name="TreeNode_Common" xml:space="preserve"><value>Common</value></data>
+  <data name="TreeNode_Components" xml:space="preserve"><value>Components</value></data>
+  <data name="TreeNode_DatabaseCategories" xml:space="preserve"><value>Database Categories</value></data>
+  <data name="TreeNode_DatabaseSettings" xml:space="preserve"><value>Database Settings</value></data>
+  <data name="TreeNode_Databases" xml:space="preserve"><value>Databases</value></data>
+  <data name="TreeNode_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="TreeNode_Entries" xml:space="preserve"><value>Entries</value></data>
+  <data name="TreeNode_Enums" xml:space="preserve"><value>Enums</value></data>
+  <data name="TreeNode_ExtendedProperties" xml:space="preserve"><value>ExtendedProperties</value></data>
+  <data name="TreeNode_Fields" xml:space="preserve"><value>Fields</value></data>
+  <data name="TreeNode_Frontend" xml:space="preserve"><value>Frontend</value></data>
+  <data name="TreeNode_IndexFields" xml:space="preserve"><value>Index Fields</value></data>
+  <data name="TreeNode_Indexes" xml:space="preserve"><value>Indexes</value></data>
+  <data name="TreeNode_Items" xml:space="preserve"><value>Items</value></data>
+  <data name="TreeNode_ListItems" xml:space="preserve"><value>ListItems</value></data>
+  <data name="TreeNode_Logging" xml:space="preserve"><value>Logging</value></data>
+  <data name="TreeNode_Lookup" xml:space="preserve"><value>Lookup</value></data>
+  <data name="TreeNode_MenuSettings" xml:space="preserve"><value>Menu Settings</value></data>
+  <data name="TreeNode_Models" xml:space="preserve"><value>Models</value></data>
+  <data name="TreeNode_PermissionModels" xml:space="preserve"><value>Permission Models</value></data>
+  <data name="TreeNode_PluginSettings" xml:space="preserve"><value>Plugin Settings</value></data>
+  <data name="TreeNode_Plugins" xml:space="preserve"><value>Plugins</value></data>
+  <data name="TreeNode_ProgramItems" xml:space="preserve"><value>Program Items</value></data>
+  <data name="TreeNode_ProgramPlugins" xml:space="preserve"><value>Program Plugins</value></data>
+  <data name="TreeNode_ProgramSettings" xml:space="preserve"><value>Program Settings</value></data>
+  <data name="TreeNode_Relation" xml:space="preserve"><value>Relation</value></data>
+  <data name="TreeNode_Rules" xml:space="preserve"><value>Rules</value></data>
+  <data name="TreeNode_Sections" xml:space="preserve"><value>Sections</value></data>
+  <data name="TreeNode_SecurityKeys" xml:space="preserve"><value>Security Keys</value></data>
+  <data name="TreeNode_Servers" xml:space="preserve"><value>Servers</value></data>
+  <data name="TreeNode_SessionCleanup" xml:space="preserve"><value>SessionCleanup</value></data>
+  <data name="TreeNode_SystemSettings" xml:space="preserve"><value>System Settings</value></data>
+  <data name="TreeNode_Tables" xml:space="preserve"><value>Tables</value></data>
+  <data name="TreeNode_Website" xml:space="preserve"><value>Website</value></data>
 </root>

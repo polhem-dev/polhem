@@ -36,6 +36,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `ObjectTreeView.CommandProvider` 在每次開啟右鍵選單時，以選取節點的命令填入選單。
 - `ITreeNodeDragDropHandler` 與 `TreeNodeDropPosition`（`Polhem.Definition.ObjectTree`）：決定哪些樹節點可以拖曳、可以放在哪裡。
   `ObjectTreeView.DragDropHandler` 讓使用者把節點拖到另一個節點之前或之後，並顯示落點；handler 搬動物件後，控件再搬動樹上的節點。
+- `ObjectTreeNode(object, Func<object, string>, bool)`：標籤由值計算、`Refresh` 時重算的節點，用於消費端自行加入、需要跟著切換顯示語言的節點。
 
 ### 變更
 
@@ -50,7 +51,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 ### 範例與工具
 
 - DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
-  `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。
+  `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。資料夾、根節點與群組的標籤會依編輯器的語言顯示，切換語言時立即更新。
 
 ## [1.3.1] - 2026-10-05
 

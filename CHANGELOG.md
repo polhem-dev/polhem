@@ -43,6 +43,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - `ITreeNodeDragDropHandler` and `TreeNodeDropPosition` (`Polhem.Definition.ObjectTree`): which tree nodes can be
   dragged and where they may land. `ObjectTreeView.DragDropHandler` lets the user drop a node before or after another,
   shows where it will land, and moves the node in the tree after the handler has moved the objects.
+- `ObjectTreeNode(object, Func<object, string>, bool)`: a node whose label is computed from its value and recomputed on
+  `Refresh`, for nodes a consumer adds that must follow a change of display language.
 
 ### Changed
 
@@ -62,7 +64,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - DefineEditor builds every document tree with `ObjectTreeBuilder`, shows it in `ObjectTreeView` and takes its context
   menus from an `ITreeNodeCommandProvider` per document type, in place of its hand-written tree nodes. Labels follow
   the `[TreeNode]` annotations and folders no longer show a count. In every editor a node can be dragged before or after
-  a sibling to reorder the collection that holds it.
+  a sibling to reorder the collection that holds it. Folder, root and group labels follow the editor's language and
+  switch with it.
 
 ## [1.3.1] - 2026-10-05
 

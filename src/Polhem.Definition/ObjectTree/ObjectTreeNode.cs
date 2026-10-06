@@ -26,6 +26,17 @@ namespace Polhem.Definition.ObjectTree
             : this(value, label, isFolder, null)
         { }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="ObjectTreeNode"/> whose label is computed from its value, now and
+        /// on every <see cref="Refresh"/>, for example to follow a change of display language.
+        /// </summary>
+        /// <param name="value">The object the node stands for.</param>
+        /// <param name="labelProvider">Computes the label from <paramref name="value"/>.</param>
+        /// <param name="isFolder">Whether the node groups the items of a collection rather than standing for an object.</param>
+        public ObjectTreeNode(object value, Func<object, string> labelProvider, bool isFolder)
+            : this(value, ComputeLabel(value, labelProvider), isFolder, labelProvider)
+        { }
+
         internal ObjectTreeNode(object value, string label, bool isFolder, Func<object, string>? labelProvider)
         {
             ArgumentNullException.ThrowIfNull(value);
@@ -95,13 +106,21 @@ namespace Polhem.Definition.ObjectTree
         /// Recomputes <see cref="Label"/> from <see cref="Value"/>, for example after the object was edited.
         /// </summary>
         /// <remarks>
-        /// A node created by <see cref="ObjectTreeBuilder"/> recomputes its label the way the builder did. A node
-        /// created with a fixed label keeps it. The children are not refreshed.
+        /// A node created by <see cref="ObjectTreeBuilder"/> recomputes its label the way the builder did, and a node
+        /// created with a label provider calls it again. A node created with a fixed label keeps it. The children are
+        /// not refreshed.
         /// </remarks>
         public void Refresh()
         {
             if (_labelProvider != null)
                 Label = _labelProvider(Value);
+        }
+
+        private static string ComputeLabel(object value, Func<object, string> labelProvider)
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            ArgumentNullException.ThrowIfNull(labelProvider);
+            return labelProvider(value);
         }
 
         /// <inheritdoc/>

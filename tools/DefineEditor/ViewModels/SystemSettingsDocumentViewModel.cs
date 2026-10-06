@@ -4,6 +4,7 @@ using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
@@ -55,7 +56,7 @@ public sealed partial class SystemSettingsDocumentViewModel : ObjectTreeDocument
     {
         if (node.Value is not SystemSettings settings) { return; }
         var properties = settings.ExtendedProperties!;
-        var folder = new ObjectTreeNode(properties, "ExtendedProperties", isFolder: true);
+        var folder = new ObjectTreeNode(properties, _ => TreeLabels.Translate("ExtendedProperties"), isFolder: true);
         foreach (var property in properties)
             folder.Children.Add(builder.Build(property));
         node.Children.Add(folder);
