@@ -77,6 +77,18 @@ namespace Polhem.Definition.Language
         /// <summary>Key of the summary shown for a collection property; argument 0 is the number of items.</summary>
         public const string CollectionSummary = "CollectionSummary";
 
+        /// <summary>Key of the command that moves an item one place up in a list.</summary>
+        public const string MoveUp = "MoveUp";
+
+        /// <summary>Key of the command that moves an item one place down in a list.</summary>
+        public const string MoveDown = "MoveDown";
+
+        /// <summary>Key of the message shown when an item of a keyed collection has no key.</summary>
+        public const string CollectionKeyMissing = "CollectionKeyMissing";
+
+        /// <summary>Key of the message shown when several items of a keyed collection share a key; argument 0 is the key.</summary>
+        public const string CollectionKeyDuplicate = "CollectionKeyDuplicate";
+
         private PolhemUIText()
         {
         }
@@ -108,6 +120,10 @@ namespace Polhem.Definition.Language
             [RequiredFieldsEmpty] = "Fill in the required fields: {0}",
             [ResetValue] = "Reset",
             [CollectionSummary] = "(Collection) {0} items",
+            [MoveUp] = "Move up",
+            [MoveDown] = "Move down",
+            [CollectionKeyMissing] = "An item has no key.",
+            [CollectionKeyDuplicate] = "More than one item has the key \"{0}\".",
         };
 
         /// <summary>

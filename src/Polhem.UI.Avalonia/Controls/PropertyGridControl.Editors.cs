@@ -41,7 +41,8 @@ namespace Polhem.UI.Avalonia.Controls
                 },
                 PropertyGridEditorKind.Numeric => CreateNumericEditor(property.PropertyType, isReadOnly),
                 PropertyGridEditorKind.Date => new DatePicker { IsEnabled = !isReadOnly },
-                PropertyGridEditorKind.Collection or PropertyGridEditorKind.Summary => new TextBlock
+                PropertyGridEditorKind.Collection => CreateCollectionEditor(),
+                PropertyGridEditorKind.Summary => new TextBlock
                 {
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(6, 0),
@@ -51,6 +52,26 @@ namespace Polhem.UI.Avalonia.Controls
             };
             editor.HorizontalAlignment = HorizontalAlignment.Stretch;
             return editor;
+        }
+
+        private static DockPanel CreateCollectionEditor()
+        {
+            var button = new Button
+            {
+                // Three periods rather than the ellipsis character, which the theme's font draws as a short dash.
+                Content = "...",
+                MinWidth = 32,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(4, 0, 0, 0),
+            };
+            DockPanel.SetDock(button, Dock.Right);
+            var summary = new TextBlock
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(6, 0),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            };
+            return new DockPanel { Children = { button, summary } };
         }
 
         private static NumericUpDown CreateNumericEditor(Type propertyType, bool isReadOnly)
@@ -131,10 +152,15 @@ namespace Polhem.UI.Avalonia.Controls
                         e.Handled = true;
                     };
                     break;
-                case TextBlock summary when row.Kind == PropertyGridEditorKind.Collection:
-                    row.Load = () => summary.Text = string.Format(CultureInfo.CurrentCulture,
-                        UIText.Get(PolhemUIText.CollectionSummary),
-                        property.GetValue(component) is ICollection collection ? collection.Count : 0);
+                case DockPanel { Children: [Button editButton, TextBlock summary] }:
+                    row.Load = () =>
+                    {
+                        var value = property.GetValue(component);
+                        summary.Text = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.CollectionSummary),
+                            value is ICollection collection ? collection.Count : 0);
+                        editButton.IsEnabled = CanEditCollection(value);
+                    };
+                    editButton.Click += async (_, _) => await EditCollectionAsync(row);
                     break;
                 case TextBlock summary:
                     row.Load = () => summary.Text = PropertyGridMetadata.FormatText(property, property.GetValue(component));

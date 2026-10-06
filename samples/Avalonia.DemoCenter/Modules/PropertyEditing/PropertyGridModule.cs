@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.DemoCenter.Modules.DataEditors;
@@ -33,8 +34,9 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
         public override string Description =>
             "Pick a FormField, a DbField or BackendConfiguration: the rows, groups, editors and descriptions all come from "
             + "[Category], [Description], [DefaultValue], [Browsable] and the property types. A value that differs from its "
-            + "default is in bold, and right-clicking its label resets it. Collections show their item count and nested "
-            + "settings objects show their text; neither is edited here yet.";
+            + "default is in bold, and right-clicking its label resets it. The … button of a collection, such as the "
+            + "FormField's ListItems, opens CollectionEditDialog: add, delete and reorder the items and edit the selected one "
+            + "in a grid of its own; Cancel leaves the collection as it was. Nested settings objects show their text.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -49,7 +51,9 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
             var grid = new PropertyGridControl { Height = 560, SelectedObject = subjects[0].Value };
             var log = new ObservableCollection<string>();
             grid.PropertyValueChanged += (_, e) =>
-                log.Insert(0, $"{e.Property.Name}: {e.OldValue ?? "(null)"} → {e.NewValue ?? "(null)"}");
+                log.Insert(0, e.NewValue is ICollection items
+                    ? $"{e.Property.Name}: now {items.Count} items"
+                    : $"{e.Property.Name}: {e.OldValue ?? "(null)"} → {e.NewValue ?? "(null)"}");
 
             var subject = new ComboBox
             {

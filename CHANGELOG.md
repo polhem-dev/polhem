@@ -49,9 +49,16 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   by `[Category]`, `[Description]`, `[DisplayName]`, `[Browsable]`, `[DefaultValue]` and `[TypeConverter]`. A value
   that differs from its default is shown in bold and the label's context menu resets it; `PropertyValueChanged`
   reports each write. `LabelTranslator` translates the labels, and `Refresh` reads the object and translates again.
-  Collections and nested objects are shown read-only for now. The control reads types through `TypeDescriptor` and is
-  meant for desktop tools, not trimmed mobile heads.
-- `PolhemUIText.ResetValue` and `PolhemUIText.CollectionSummary`, the text keys the property grid uses.
+  A collection property opens in `CollectionEditDialog`, or in whatever `CollectionEditorProvider` supplies; nested
+  objects are shown read-only. The control reads types through `TypeDescriptor` and is meant for desktop tools, not
+  trimmed mobile heads.
+- `CollectionEditDialog` and `CollectionEditContext` (`Polhem.UI.Avalonia`): a modal dialog that edits a collection
+  property, with the items in a list (add, delete, move up and down) and a `PropertyGridControl` for the selected one.
+  It edits copies of the items and OK replaces the collection's items with them, so references to the old items must
+  be read again; Cancel leaves the collection untouched. In a keyed collection a new item gets a free key, and OK
+  refuses a key used twice.
+- `PolhemUIText.ResetValue`, `CollectionSummary`, `MoveUp`, `MoveDown`, `CollectionKeyMissing` and
+  `CollectionKeyDuplicate`, the text keys the property grid and the collection dialog use.
 
 ### Changed
 
@@ -74,7 +81,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   a sibling to reorder the collection that holds it. Folder, root and group labels follow the editor's language and
   switch with it.
 - Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField` and
-  `BackendConfiguration`, with its display options and a log of `PropertyValueChanged`.
+  `BackendConfiguration`, with its display options and a log of `PropertyValueChanged`; the FormField's `ListItems`
+  open in `CollectionEditDialog`.
 
 ## [1.3.1] - 2026-10-05
 

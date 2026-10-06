@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
@@ -56,6 +57,17 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             Assert.True(property.IsBrowsable);
             Assert.Equal(PropertyGridEditorKind.Collection, PropertyGridMetadata.GetEditorKind(property));
+        }
+
+        [Theory]
+        [InlineData(typeof(ListItemCollection), typeof(ListItem))]
+        [InlineData(typeof(FieldMappingCollection), typeof(FieldMapping))]
+        [InlineData(typeof(List<string>), typeof(string))]
+        [InlineData(typeof(System.Collections.ArrayList), typeof(object))]
+        [DisplayName("GetItemType reads the item type from the collection base, then IList<T>, else object")]
+        public void GetItemType_ResolvesItemType(Type collectionType, Type expected)
+        {
+            Assert.Equal(expected, PropertyGridMetadata.GetItemType(collectionType));
         }
 
         [Fact]

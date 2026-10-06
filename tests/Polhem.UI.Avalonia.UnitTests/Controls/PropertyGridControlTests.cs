@@ -2,6 +2,9 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Polhem.Core.Data;
+using Polhem.Definition.Collections;
+using Polhem.Definition.Forms;
 using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -14,6 +17,12 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     {
         private static PropertyGridRow Row(PropertyGridControl grid, string name) =>
             grid.Rows.Single(r => r.Property.Name == name);
+
+        private static TextBlock CollectionSummary(PropertyGridRow row) =>
+            Assert.IsType<DockPanel>(row.Editor).Children.OfType<TextBlock>().Single();
+
+        private static Button CollectionButton(PropertyGridRow row) =>
+            Assert.IsType<DockPanel>(row.Editor).Children.OfType<Button>().Single();
 
         [Fact]
         [DisplayName("Setting SelectedObject shows one row per browsable property under its category")]
@@ -59,7 +68,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal("n", Assert.IsType<TextBox>(Row(grid, nameof(PropertyGridSample.Name)).Editor).Text);
             Assert.True(Assert.IsType<CheckBox>(Row(grid, nameof(PropertyGridSample.Enabled)).Editor).IsChecked);
             Assert.Equal(7m, Assert.IsType<NumericUpDown>(Row(grid, nameof(PropertyGridSample.Count)).Editor).Value);
-            Assert.Contains("1", Assert.IsType<TextBlock>(Row(grid, nameof(PropertyGridSample.Items)).Editor).Text);
+            Assert.Contains("1", CollectionSummary(Row(grid, nameof(PropertyGridSample.Items))).Text);
             Assert.Equal("child", Assert.IsType<TextBlock>(Row(grid, nameof(PropertyGridSample.Child)).Editor).Text);
         }
 
@@ -239,6 +248,82 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             grid.Refresh();
 
             Assert.Equal("outside", ((TextBox)Row(grid, nameof(PropertyGridSample.Name)).Editor).Text);
+        }
+    
+        [Fact]
+        [DisplayName("A collection row offers a button that opens it, disabled when the grid is read-only")]
+        public void CollectionRow_Button_FollowsIsReadOnly()
+        {
+            var field = new FormField("status", "Status", FieldDbType.String);
+            var grid = new PropertyGridControl { SelectedObject = field };
+            var row = Row(grid, nameof(FormField.ListItems));
+            Assert.True(CollectionButton(row).IsEnabled);
+
+            grid.IsReadOnly = true;
+
+            Assert.False(CollectionButton(Row(grid, nameof(FormField.ListItems))).IsEnabled);
+        }
+
+        [Fact]
+        [DisplayName("A collection of strings cannot be opened by the built-in dialog, but can by a provider")]
+        public void CollectionRow_StringItems_NeedsProvider()
+        {
+            var grid = new PropertyGridControl { SelectedObject = new PropertyGridSample() };
+            Assert.False(CollectionButton(Row(grid, nameof(PropertyGridSample.Items))).IsEnabled);
+
+            grid.CollectionEditorProvider = _ => Task.FromResult(false);
+
+            Assert.True(CollectionButton(Row(grid, nameof(PropertyGridSample.Items))).IsEnabled);
+        }
+
+        [Fact]
+        [DisplayName("When the provider reports a change, the grid reloads the summary and raises PropertyValueChanged with the collection")]
+        public async Task EditCollectionAsync_ProviderChanged_RaisesAndReloads()
+        {
+            var field = new FormField("status", "Status", FieldDbType.String);
+            CollectionEditContext? received = null;
+            var grid = new PropertyGridControl
+            {
+                SelectedObject = field,
+                CollectionEditorProvider = context =>
+                {
+                    received = context;
+                    ((ListItemCollection)context.Collection).Add("A", "Active");
+                    return Task.FromResult(true);
+                },
+            };
+            PropertyValueChangedEventArgs? raised = null;
+            grid.PropertyValueChanged += (_, e) => raised = e;
+            var row = Row(grid, nameof(FormField.ListItems));
+
+            var changed = await grid.EditCollectionAsync(row);
+
+            Assert.True(changed);
+            Assert.NotNull(received);
+            Assert.Same(field, received.Component);
+            Assert.Equal(typeof(ListItem), received.ItemType);
+            Assert.NotNull(raised);
+            Assert.Same(field.ListItems, raised.NewValue);
+            Assert.Contains("1", CollectionSummary(Row(grid, nameof(FormField.ListItems))).Text);
+            Assert.Equal(FontWeight.Bold, Row(grid, nameof(FormField.ListItems)).Label.FontWeight);
+        }
+
+        [Fact]
+        [DisplayName("When the provider reports no change, the grid raises nothing")]
+        public async Task EditCollectionAsync_ProviderUnchanged_RaisesNothing()
+        {
+            var grid = new PropertyGridControl
+            {
+                SelectedObject = new FormField("status", "Status", FieldDbType.String),
+                CollectionEditorProvider = _ => Task.FromResult(false),
+            };
+            var raised = false;
+            grid.PropertyValueChanged += (_, _) => raised = true;
+
+            var changed = await grid.EditCollectionAsync(Row(grid, nameof(FormField.ListItems)));
+
+            Assert.False(changed);
+            Assert.False(raised);
         }
     }
 }

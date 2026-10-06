@@ -72,7 +72,7 @@ The navigation tree has two levels: **topic (`Category`) → case (`Title`)**. T
 | | Multi-unit quantities | Quantity decimals follow the row's unit; the total is shown only when every row has the same unit |
 | **Master-Detail** | Master + detail | `FormLayoutRenderer` renders a master section and a detail grid |
 | **Permission Capability** | Interactive permission simulator (master/detail) | Ticking simulated role grants degrades a master and its detail live, as the capability snapshot from `EnterCompany` would |
-| **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` shows a `FormField`, a `DbField` or `BackendConfiguration` from their `System.ComponentModel` annotations, with its display options and a `PropertyValueChanged` log |
+| **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` shows a `FormField`, a `DbField` or `BackendConfiguration` from their `System.ComponentModel` annotations, with its display options and a `PropertyValueChanged` log; the `...` button of `ListItems` opens `CollectionEditDialog` |
 
 > **The Views (`FormView` / `ListView`)**: both are coupled to a back end, and the Demo Center has none. So it uses
 > "`FormDataObject` as the view model + sample data → bound UI", rendered with the same public primitives as the

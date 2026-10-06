@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,8 +22,9 @@ namespace Polhem.UI.Avalonia.Controls
     /// an editor by its type: a check box for <see cref="bool"/>, a drop-down for an enum or a converter's exclusive
     /// standard values, a numeric up-down for an integral or <see cref="decimal"/> type, a date picker for
     /// <see cref="DateTime"/> and <see cref="DateOnly"/>, and a text box for anything its converter reads from text.
-    /// A collection shows its item count, and any other value, such as a nested object, shows its text; neither can
-    /// be edited here.
+    /// A collection shows its item count and a button that opens it in <see cref="CollectionEditDialog"/>, or in
+    /// whatever <see cref="CollectionEditorProvider"/> supplies. Any other value, such as a nested object, shows its
+    /// text and cannot be edited here.
     /// </para>
     /// <para>
     /// A value that differs from its <c>[DefaultValue]</c> is shown in bold, and the label's context menu resets it.
@@ -66,6 +68,12 @@ namespace Polhem.UI.Avalonia.Controls
         /// </summary>
         public static readonly StyledProperty<Func<string, string>?> LabelTranslatorProperty =
             AvaloniaProperty.Register<PropertyGridControl, Func<string, string>?>(nameof(LabelTranslator));
+
+        /// <summary>
+        /// Defines the <see cref="CollectionEditorProvider"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Func<CollectionEditContext, Task<bool>?>?> CollectionEditorProviderProperty =
+            AvaloniaProperty.Register<PropertyGridControl, Func<CollectionEditContext, Task<bool>?>?>(nameof(CollectionEditorProvider));
 
         private const double EditorRowHeight = 36;
 
@@ -164,6 +172,29 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
+        /// Gets or sets the function the control asks first when the user opens a collection property; <c>null</c>
+        /// always uses <see cref="CollectionEditDialog"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The function returns <c>null</c> to leave the collection to <see cref="CollectionEditDialog"/>, or a task
+        /// that edits the collection in its own way and completes with whether it changed it. When the collection
+        /// changed, the control reloads its rows and raises <see cref="PropertyValueChanged"/> with the collection as
+        /// both the old and the new value.
+        /// </para>
+        /// <para>
+        /// The grid inside <see cref="CollectionEditDialog"/> uses the same function for collections of the items.
+        /// While a function is set, the button that opens a collection is enabled for any collection, since the
+        /// function may edit one the dialog cannot.
+        /// </para>
+        /// </remarks>
+        public Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider
+        {
+            get { return GetValue(CollectionEditorProviderProperty); }
+            set { SetValue(CollectionEditorProviderProperty, value); }
+        }
+
+        /// <summary>
         /// Occurs after the control has written a new value to a property of <see cref="SelectedObject"/>.
         /// </summary>
         public event EventHandler<PropertyValueChangedEventArgs>? PropertyValueChanged;
@@ -197,7 +228,7 @@ namespace Polhem.UI.Avalonia.Controls
                 Rebuild();
             }
             else if (change.Property == ShowCategoriesProperty || change.Property == IsReadOnlyProperty
-                || change.Property == LabelTranslatorProperty)
+                || change.Property == LabelTranslatorProperty || change.Property == CollectionEditorProviderProperty)
             {
                 Refresh();
             }
@@ -393,6 +424,37 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 _isLoading = false;
             }
+        }
+
+        /// <summary>
+        /// Opens the collection of <paramref name="row"/> in <see cref="CollectionEditorProvider"/> or in
+        /// <see cref="CollectionEditDialog"/>.
+        /// </summary>
+        /// <returns><c>true</c> when the collection changed.</returns>
+        internal async Task<bool> EditCollectionAsync(PropertyGridRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            if (row.Kind != PropertyGridEditorKind.Collection || !CanEditCollection(row.Property.GetValue(row.Component)))
+                return false;
+            SelectRow(row);
+            var context = new CollectionEditContext(row.Component, row.Property);
+            var provider = CollectionEditorProvider;
+            var edit = provider?.Invoke(context)
+                ?? CollectionEditDialog.ShowAsync(this, context, LabelTranslator, provider, CancellationToken.None);
+            if (!await edit) { return false; }
+            OnValueWritten(row, context.Collection);
+            return true;
+        }
+
+        /// <summary>
+        /// Returns whether the button that opens a collection is enabled for <paramref name="value"/>.
+        /// </summary>
+        internal bool CanEditCollection(object? value)
+        {
+            if (IsReadOnly || value is not IList collection) { return false; }
+            return CollectionEditorProvider is not null
+                || (PropertyGridMetadata.IsResizable(collection)
+                    && PropertyGridMetadata.IsEditableItemType(PropertyGridMetadata.GetItemType(collection.GetType())));
         }
 
         private void OnValueWritten(PropertyGridRow row, object? oldValue)
