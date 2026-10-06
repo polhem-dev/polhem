@@ -21,12 +21,15 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     public override ITreeNodeCommandProvider CommandProvider { get; }
 
+    public override ITreeNodeDragDropHandler DragDropHandler { get; }
+
     private FormLayoutDocumentViewModel(string filePath, FormLayout root)
         // The root and the two folders start expanded.
         : base(filePath, "FormLayout", keyText: root.LayoutId, new ObjectTreeOptions { ExpandDepth = 2 })
     {
         Root = root;
         CommandProvider = new FormLayoutCommandProvider(this);
+        DragDropHandler = new SiblingReorderDragDropHandler(this);
         InitializeTree(root);
     }
 

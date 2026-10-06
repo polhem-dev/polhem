@@ -128,5 +128,69 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             Assert.Equal(1, runs);
         }
+
+        private sealed class AllowAll : ITreeNodeDragDropHandler
+        {
+            public bool CanDrag(ObjectTreeNode node) => true;
+            public bool CanDrop(ObjectTreeNode node, ObjectTreeNode target, TreeNodeDropPosition position) => true;
+            public void Drop(ObjectTreeNode node, ObjectTreeNode target, TreeNodeDropPosition position) { }
+        }
+
+        private static ObjectTreeNode CreateSiblings(out ObjectTreeNode a, out ObjectTreeNode b, out ObjectTreeNode c)
+        {
+            var root = new ObjectTreeNode(new object(), "root", isFolder: false);
+            root.Children.Add(a = new ObjectTreeNode(new object(), "a", isFolder: false));
+            root.Children.Add(b = new ObjectTreeNode(new object(), "b", isFolder: false));
+            root.Children.Add(c = new ObjectTreeNode(new object(), "c", isFolder: false));
+            return root;
+        }
+
+        [Theory]
+        [InlineData(0, 2, TreeNodeDropPosition.After, "b,c,a")]
+        [InlineData(0, 2, TreeNodeDropPosition.Before, "b,a,c")]
+        [InlineData(2, 0, TreeNodeDropPosition.Before, "c,a,b")]
+        [InlineData(2, 0, TreeNodeDropPosition.After, "a,c,b")]
+        [InlineData(1, 0, TreeNodeDropPosition.After, "a,b,c")]
+        [DisplayName("Dropping a node before or after a sibling moves it to that place")]
+        public void DropPlace_AmongSiblings_MovesNode(int from, int onto, TreeNodeDropPosition position, string expected)
+        {
+            var root = CreateSiblings(out _, out _, out _);
+            var node = root.Children[from];
+
+            Assert.True(ObjectTreeView.TryGetDropPlace(new AllowAll(), node, root.Children[onto], position, out var parent, out var index));
+            ObjectTreeView.MoveNode(node, parent, index);
+
+            Assert.Equal(expected, string.Join(",", root.Children.Select(c => c.Label)));
+            Assert.Same(root, node.Parent);
+        }
+
+        [Fact]
+        [DisplayName("A node cannot be dropped on itself, next to the root, or inside its own subtree")]
+        public void DropPlace_InvalidTargets_AreRejected()
+        {
+            var root = CreateSiblings(out var a, out var b, out _);
+            var child = new ObjectTreeNode(new object(), "child", isFolder: false);
+            a.Children.Add(child);
+
+            Assert.False(ObjectTreeView.TryGetDropPlace(new AllowAll(), a, a, TreeNodeDropPosition.After, out _, out _));
+            Assert.False(ObjectTreeView.TryGetDropPlace(new AllowAll(), b, root, TreeNodeDropPosition.After, out _, out _));
+            Assert.False(ObjectTreeView.TryGetDropPlace(new AllowAll(), a, child, TreeNodeDropPosition.Before, out _, out _));
+        }
+
+        [Fact]
+        [DisplayName("A drop the handler refuses is rejected")]
+        public void DropPlace_HandlerRefuses_IsRejected()
+        {
+            var root = CreateSiblings(out var a, out var b, out _);
+
+            Assert.False(ObjectTreeView.TryGetDropPlace(new RefuseAll(), a, b, TreeNodeDropPosition.After, out _, out _));
+        }
+
+        private sealed class RefuseAll : ITreeNodeDragDropHandler
+        {
+            public bool CanDrag(ObjectTreeNode node) => true;
+            public bool CanDrop(ObjectTreeNode node, ObjectTreeNode target, TreeNodeDropPosition position) => false;
+            public void Drop(ObjectTreeNode node, ObjectTreeNode target, TreeNodeDropPosition position) { }
+        }
     }
 }

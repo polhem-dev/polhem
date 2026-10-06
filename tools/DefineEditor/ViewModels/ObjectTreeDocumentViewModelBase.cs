@@ -149,6 +149,9 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// <summary>The commands of the tree's context menu.</summary>
     public abstract ITreeNodeCommandProvider CommandProvider { get; }
 
+    /// <summary>What the tree lets the user drag and where; null turns dragging off.</summary>
+    public virtual ITreeNodeDragDropHandler? DragDropHandler => null;
+
     /// <summary>The resource key of the icon shown before <paramref name="node"/>.</summary>
     public abstract string IconKeyFor(ObjectTreeNode node);
 

@@ -12,3 +12,6 @@ static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNodeProperty -> A
 Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.get -> Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?
 Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.set -> void
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProviderProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?>!
+Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.get -> Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.set -> void
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandlerProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?>!

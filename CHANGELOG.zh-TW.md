@@ -34,6 +34,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `ObjectTreeNode.IsExpanded` 與 `ObjectTreeOptions.ExpandDepth`，後者設定建出的樹一開始展開幾層。
 - `ITreeNodeCommandProvider` 與 `TreeNodeCommand`（`Polhem.Definition.ObjectTree`）：與 UI 無關的樹節點命令。
   `ObjectTreeView.CommandProvider` 在每次開啟右鍵選單時，以選取節點的命令填入選單。
+- `ITreeNodeDragDropHandler` 與 `TreeNodeDropPosition`（`Polhem.Definition.ObjectTree`）：決定哪些樹節點可以拖曳、可以放在哪裡。
+  `ObjectTreeView.DragDropHandler` 讓使用者把節點拖到另一個節點之前或之後，並顯示落點；handler 搬動物件後，控件再搬動樹上的節點。
 
 ### 變更
 
