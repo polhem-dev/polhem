@@ -4,10 +4,10 @@ using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Client;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Payload.Client;
 
 namespace Polhem.Api.Client.Connectors
@@ -215,7 +215,7 @@ namespace Polhem.Api.Client.Connectors
         /// per session when several connectors share it.
         /// </remarks>
         private PayloadConnector CreatePayloadConnector()
-            => new(_connector, new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions), new PayloadConnectorOptions
+            => new(_connector, new PayloadProcessor(ApiClientInfo.PayloadOptions), new PayloadConnectorOptions
             {
                 Codec = PayloadCodec,
                 KeyProvider = () => Session.ApiEncryptionKey,
@@ -286,7 +286,7 @@ namespace Polhem.Api.Client.Connectors
         /// Encoded while the session has no encryption key.
         /// </param>
         /// <returns>The format the call is sent in, and its result opened in.</returns>
-        private Polhem.JsonRpc.Payload.PayloadFormat EffectiveFormat(PayloadFormat format)
+        private PayloadFormat EffectiveFormat(PayloadFormat format)
         {
             // For local providers in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
             if (this.Provider is LocalApiProvider && !SysInfo.IsDebugMode)
@@ -300,7 +300,7 @@ namespace Polhem.Api.Client.Connectors
                 format = PayloadFormat.Encoded;
             }
 
-            return (Polhem.JsonRpc.Payload.PayloadFormat)format;
+            return format;
         }
     }
 }

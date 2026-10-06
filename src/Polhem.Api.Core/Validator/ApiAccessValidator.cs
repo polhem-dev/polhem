@@ -2,9 +2,9 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
-using Polhem.Api.Core.Messages;
 using Polhem.Core.Exceptions;
 using Polhem.Definition.Language;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.Validator
 {

@@ -63,7 +63,7 @@ client ──POST /api──▶ MapJsonRpc endpoint (Polhem.JsonRpc.AspNetCore) 
   resolve Action → PolhemAccessFilter checks [ApiAccessControl] → PolhemPayloadFilter decodes the body → invoke
         │
         ▼
-  result → ApiPayload in the same format and codec as the request; the client deserializes it to TResult
+  result → payload envelope (`PayloadEnvelope`, Polhem.JsonRpc.Payload) in the same format and codec as the request; the client deserializes it to TResult
 ```
 
 **Single args / single result** is the hard rule for every action: `TResult Action(TArgs args)` (or

@@ -6,7 +6,7 @@ using Polhem.Api.Core.Transformers;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
-using PayloadFormat = Polhem.Api.Core.Messages.PayloadFormat;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.UnitTests.Dispatch
 {

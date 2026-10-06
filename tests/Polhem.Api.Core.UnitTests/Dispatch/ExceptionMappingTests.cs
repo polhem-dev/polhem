@@ -173,13 +173,13 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
             {
                 if (row.IsVerbatim)
                     Assert.NotEqual(bclAssembly, row.ExceptionType.Assembly);
-                else if (row.Code is not (JsonRpcErrorCode.MethodNotFound or JsonRpcErrorCode.InvalidParams))
+                else if (row.Code != JsonRpcErrorCode.InvalidParams)
                     Assert.Equal(bclAssembly, row.ExceptionType.Assembly);
             }
 
-            // The protocol errors are the one place a framework type travels with a fixed message: their own
-            // text names server types for the log, and the code already tells the caller what went wrong.
-            Assert.Contains(JsonRpcErrorContract.Rows, row => row.Code == JsonRpcErrorCode.MethodNotFound && !row.IsVerbatim);
+            // Invalid params is the one place a framework type travels with a fixed message: its own text names
+            // server types for the log, and the code already tells the caller what went wrong. The dispatcher of
+            // Polhem.JsonRpc.Server answers an unknown method itself, so MethodNotFound has no row.
             Assert.Contains(JsonRpcErrorContract.Rows, row => row.Code == JsonRpcErrorCode.InvalidParams && !row.IsVerbatim);
         }
 

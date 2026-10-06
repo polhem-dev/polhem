@@ -8,6 +8,16 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+### Breaking API changes
+
+- `Polhem.Api.Core.Messages.PayloadFormat` is removed. The connectors' `ExecuteAsync` and `ApiCallContext` take
+  `Polhem.JsonRpc.Payload.PayloadFormat`, which has the same members and values: replace
+  `using Polhem.Api.Core.Messages;` with `using Polhem.JsonRpc.Payload;` where `PayloadFormat` is named, and
+  recompile. The wire is unchanged.
+  ([ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md))
+- `Polhem.Core.Serialization.Gzip` is removed; nothing in the framework used it since 1.2.0. Use `GZipStream`
+  directly. ([ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md))
+
 ## [1.3.1] - 2026-10-05
 
 📄 Full notes and background: [docs/en/changelogs/1.3.1.md](docs/en/changelogs/1.3.1.md)

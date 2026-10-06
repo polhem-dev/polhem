@@ -8,6 +8,15 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 破壞性 API 變更
+
+- 移除 `Polhem.Api.Core.Messages.PayloadFormat`。各 connector 的 `ExecuteAsync` 與 `ApiCallContext` 改用成員與值都相同的
+  `Polhem.JsonRpc.Payload.PayloadFormat`：用到 `PayloadFormat` 的地方把 `using Polhem.Api.Core.Messages;` 換成
+  `using Polhem.JsonRpc.Payload;` 後重新編譯即可。線路格式不變。
+  （[ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md)）
+- 移除 `Polhem.Core.Serialization.Gzip`，框架自 1.2.0 起就沒有用到它。請直接使用 `GZipStream`。
+  （[ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md)）
+
 ## [1.3.1] - 2026-10-05
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.1.md](docs/zh-TW/changelogs/1.3.1.md)

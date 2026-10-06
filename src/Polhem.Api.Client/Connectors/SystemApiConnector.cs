@@ -11,6 +11,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Organization;
 using Polhem.Definition.Security;
 using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Client.Connectors
 {

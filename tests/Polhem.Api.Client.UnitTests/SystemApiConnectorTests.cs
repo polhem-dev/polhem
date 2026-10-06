@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Client.Connectors;
+using Polhem.JsonRpc.Payload;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
-using Polhem.Api.Core.Messages;
 
 namespace Polhem.Api.Client.UnitTests
 {

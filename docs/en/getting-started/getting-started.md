@@ -277,7 +277,7 @@ dotnet add package Polhem.Api.Client
 ```csharp
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 ApiClientInfo.ApiKey = "my-demo-key";
 

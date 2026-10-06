@@ -15,7 +15,7 @@ namespace Polhem.Api.Core.JsonRpc
     ///
     /// The cell's <see cref="DateTimeKind"/> is ignored. A round-tripped value comes back as
     /// <c>Unspecified</c> on one wire and <c>Utc</c> on the other (ADR-032 D6), so branching on it
-    /// would make conversion depend on the deployment's <see cref="Polhem.Api.Core.Messages.PayloadFormat"/>.
+    /// would make conversion depend on the deployment's <see cref="Polhem.JsonRpc.Payload.PayloadFormat"/>.
     ///
     /// Both row versions are converted. A modified row carries Original alongside Current, and
     /// converting only Current would leave the two versions in different zones.

@@ -1,6 +1,6 @@
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 namespace QuickStart.Console;
 

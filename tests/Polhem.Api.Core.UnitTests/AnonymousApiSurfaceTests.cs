@@ -127,7 +127,7 @@ namespace Polhem.Api.Core.UnitTests
                 Assert.Equal(Guid.Empty, result.AccessToken);
 
                 // The attribute decides, and only the attribute.
-                var context = new ApiCallContext(result.AccessToken, isLocalCall: false, Polhem.Api.Core.Messages.PayloadFormat.Encrypted);
+                var context = new ApiCallContext(result.AccessToken, isLocalCall: false, Polhem.JsonRpc.Payload.PayloadFormat.Encrypted);
                 var denied = Record.Exception(() => { ApiAccessValidator.ValidateAccess(method, context, new RejectAllTokens()); });
                 if (attr!.AccessRequirement == ApiAccessRequirement.Anonymous)
                     Assert.True(denied == null, $"{name} is Anonymous but was refused without a token.");

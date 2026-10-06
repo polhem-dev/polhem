@@ -1,6 +1,6 @@
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Definition;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Client.Connectors
 {

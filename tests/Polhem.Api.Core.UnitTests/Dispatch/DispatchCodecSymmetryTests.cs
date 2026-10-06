@@ -1,8 +1,8 @@
 using System.ComponentModel;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Api.Core.Transformers;
 using Polhem.Definition;
+using Polhem.JsonRpc.Payload;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests.Dispatch

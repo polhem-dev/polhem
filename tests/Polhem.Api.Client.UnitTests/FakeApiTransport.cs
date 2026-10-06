@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Conversion;
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc;
 using PayloadEnvelope = Polhem.JsonRpc.Payload.PayloadEnvelope;
 using PayloadProcessor = Polhem.JsonRpc.Payload.PayloadProcessor;
@@ -73,7 +73,7 @@ namespace Polhem.Api.Client.UnitTests
     internal sealed record FakeParams(PayloadEnvelope Envelope)
     {
         /// <summary>Gets the format the call was sent in.</summary>
-        public PayloadFormat Format => (PayloadFormat)Envelope.Format;
+        public PayloadFormat Format => Envelope.Format;
 
         /// <summary>Gets the codec the call named.</summary>
         public string Codec => Envelope.Codec;

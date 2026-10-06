@@ -2,7 +2,6 @@ using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Core;
 using Polhem.Core.Exceptions;
@@ -10,6 +9,7 @@ using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Security;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.UnitTests.Dispatch
 {
