@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -58,7 +59,15 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     {
         FilePath = filePath;
         Title = string.IsNullOrEmpty(keyText) ? titlePrefix : $"{titlePrefix} — {keyText}";
+        treeOptions.LabelTranslator ??= TreeLabels.Translate;
         Builder = new ObjectTreeBuilder(treeOptions);
+        // Every builder-made label goes through the translator again on Refresh, so a language
+        // switch only needs the labels recomputed.
+        RegisterCultureHandler((_, _) =>
+        {
+            foreach (var root in Roots)
+                RefreshNodeLabels(root);
+        });
         DragDropHandler = new SiblingReorderDragDropHandler(this);
     }
 
