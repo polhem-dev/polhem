@@ -5,6 +5,7 @@ using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Client.Connectors
 {

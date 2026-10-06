@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Validator;
 using Polhem.Definition.Security;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Server;
 
 namespace Polhem.Api.Core.Dispatch
@@ -37,6 +37,6 @@ namespace Polhem.Api.Core.Dispatch
         }
 
         private static PayloadFormat ReadFormat(JsonRpcRequestContext context)
-            => (PayloadFormat)Polhem.JsonRpc.Payload.PayloadEnvelope.ReadFormat(context.Request.Params);
+            => PayloadEnvelope.ReadFormat(context.Request.Params);
     }
 }

@@ -36,11 +36,10 @@
 - `FileHashValidator` -- 透過 SHA-256 驗證檔案完整性
 - `AesCbcHmacKeyGenerator` -- 加密金鑰產生器
 
-### 序列化與壓縮
+### 序列化
 
 - `XmlCodec` -- 透過 `XmlSerializer` 的 XML 序列化
 - `JsonCodec` -- 透過 `System.Text.Json` 的 JSON 序列化（camelCase）
-- `Gzip` -- Gzip 壓縮 / 解壓縮，用於 Payload 處理
 
 ### 集合
 

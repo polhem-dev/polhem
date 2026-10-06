@@ -145,7 +145,7 @@ cross-version compatibility. `WireValueCodePinTests` pins them for both codecs. 
    desktop, it only blows up on mobile**, so "it tested fine on desktop" is no evidence of anything.
 2. **Derived / index / owner fields missing one axis → leakage or cycles**: `[XmlIgnore, JsonIgnore]` always go as a
    pair.
-3. **The type whitelist is only for the `object` escape hatch and `ApiPayload.TypeName`**, and what it lists are
+3. **The type whitelist is only for the `object` escape hatch and `PayloadEnvelope.TypeName` (Polhem.JsonRpc.Payload)**, and what it lists are
    **namespaces** (`SysInfo.AllowedTypeNamespaces`). **Always validate an assembly-qualified name with
    `WireTypeWhitelist.IsAssemblyQualifiedNameAllowed`**; do not split the string yourself. The commas of generic
    arguments come before the assembly separator, so splitting on the first comma leaves the arguments completely

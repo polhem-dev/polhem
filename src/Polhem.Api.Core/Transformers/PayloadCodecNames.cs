@@ -1,3 +1,5 @@
+using Polhem.JsonRpc.Payload;
+
 namespace Polhem.Api.Core.Transformers
 {
     /// <summary>
@@ -18,6 +20,6 @@ namespace Polhem.Api.Core.Transformers
         /// <summary>
         /// The JSON body codec, for clients that cannot speak the MessagePack wire.
         /// </summary>
-        public const string Json = "json";
+        public const string Json = JsonPayloadCodec.CodecName;
     }
 }

@@ -187,6 +187,8 @@ To migrate a host:
 
 The package's `PayloadFormat` has the same name as Polhem's `Polhem.Api.Core.Messages.PayloadFormat`, which
 applications pass to connectors and which stays. Code that imports both namespaces names one of them in full.
+*Amended 2026-10-06:* [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) removes Polhem's `PayloadFormat`; the
+connectors take the package's type.
 
 ### 6. Released as 1.2.0, and ADR-048 is amended
 
@@ -195,6 +197,8 @@ decisions 3, 4 and 5. Decision 5 of ADR-048 now points here. Further breaking ch
 own; this one is not a precedent for skipping that.
 *Amended 2026-10-05:* [ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md) makes a third one in 1.3.0, the move to
 Polhem.JsonRpc 1.1.0 and its incompatible payload wire format.
+*Amended 2026-10-06:* [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) makes a fourth one, the removal of the
+types this move left behind.
 
 ## Consequences
 

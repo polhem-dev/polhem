@@ -96,7 +96,6 @@ namespace Polhem.Api.Core.JsonRpc
 
             // Protocol errors the server raises itself. The caller gets a fixed message and no
             // rebuilt type: the code alone says what went wrong, and the real text names server types.
-            new(typeof(MethodNotFoundException), JsonRpcErrorCode.MethodNotFound, null, "Method not found."),
             new(typeof(InvalidParamsException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
             new(typeof(InvalidPayloadException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
 

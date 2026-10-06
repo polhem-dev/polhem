@@ -13,7 +13,6 @@ using Polhem.Definition.Settings;
 using Polhem.Api.Core.UnitTests.Dispatch;
 using Polhem.JsonRpc.Payload;
 using Polhem.Tests.Shared;
-using PayloadFormat = Polhem.JsonRpc.Payload.PayloadFormat;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -208,7 +207,7 @@ namespace Polhem.Api.Core.UnitTests
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
-                Params = new TestPayload { Format = Polhem.Api.Core.Messages.PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
+                Params = new TestPayload { Format = PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
                 Id = Guid.NewGuid().ToString(),
             };
 
@@ -228,7 +227,7 @@ namespace Polhem.Api.Core.UnitTests
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
-                Params = new TestPayload { Format = Polhem.Api.Core.Messages.PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
+                Params = new TestPayload { Format = PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
             };
 
             var first = await executor.ExecuteAsync(request);
@@ -305,7 +304,7 @@ namespace Polhem.Api.Core.UnitTests
                 Method = $"{SysProgIds.System}.{action}",
                 Params = new TestPayload
                 {
-                    Format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted,
+                    Format = PayloadFormat.Encrypted,
                     Value = value,
                     // The key the server's payload policy looks up for this token.
                     Key = _fx.GetRequiredService<IApiEncryptionKeyProvider>().GetKey(accessToken),

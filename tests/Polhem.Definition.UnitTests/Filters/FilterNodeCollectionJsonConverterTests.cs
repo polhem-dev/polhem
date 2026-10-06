@@ -10,7 +10,7 @@ namespace Polhem.Definition.UnitTests.Filters
     /// </summary>
     public class FilterNodeCollectionJsonConverterTests
     {
-        // In practice the outer ApiPayload is serialized with the camelCase naming policy, which lets the converter's Read path match the lowercase "kind" property.
+        // In practice the outer payload envelope is serialized with the camelCase naming policy, which lets the converter's Read path match the lowercase "kind" property.
         private static readonly JsonSerializerOptions s_options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

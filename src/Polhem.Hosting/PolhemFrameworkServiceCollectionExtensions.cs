@@ -55,10 +55,9 @@ namespace Polhem.Hosting
 
         /// <summary>
         /// Registers Polhem framework services and decrypts security keys from
-        /// <paramref name="configuration"/>. This call alone brings the framework up:
-        /// <c>app.UsePolhemFramework()</c> carries no bootstrap work of its own — callers obtain
-        /// <see cref="DbAccess"/> via <see cref="IDbAccessFactory"/> (ctor injected). It does
-        /// still run host-side startup checks, so an ASP.NET Core host should keep calling it.
+        /// <paramref name="configuration"/>. This call alone brings the framework up: callers obtain
+        /// <see cref="DbAccess"/> via <see cref="IDbAccessFactory"/> (ctor injected), and the
+        /// startup checks it registers run as hosted services when the host starts.
         /// </summary>
         /// <param name="services">The service collection.</param>
         /// <param name="configuration">The backend configuration (from SystemSettings.xml).</param>

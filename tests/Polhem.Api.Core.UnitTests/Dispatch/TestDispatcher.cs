@@ -8,6 +8,7 @@ using Polhem.Api.Core.Transformers;
 using Polhem.Api.Core.Messages;
 using Polhem.Definition;
 using Polhem.Definition.Security;
+using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc;
 using PayloadEnvelope = Polhem.JsonRpc.Payload.PayloadEnvelope;
 using PayloadOptions = Polhem.JsonRpc.Payload.PayloadOptions;
@@ -95,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         private PayloadOptions PayloadOptions => (PayloadOptions?)_services.GetService(typeof(PayloadOptions)) ?? PolhemPayload.CreateOptions();
 
         private async Task<TestRpcResponse> DispatchAsync(byte[] body, string? method,
-            Polhem.JsonRpc.Payload.PayloadFormat sentFormat, byte[]? key, CancellationToken cancellationToken)
+            PayloadFormat sentFormat, byte[]? key, CancellationToken cancellationToken)
         {
             var resultType = new ResultTypeFilter();
             var options = PolhemJsonRpc.CreateServerOptions();
@@ -130,7 +131,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         {
             var payload = request.Params;
             var processor = new PayloadProcessor(options ?? PolhemPayload.CreateOptions());
-            var format = (Polhem.JsonRpc.Payload.PayloadFormat)payload.Format;
+            var format = payload.Format;
             var parameters = request.RawParams ?? (BindingMethod(request) is { } method
                 ? processor.WrapRequest(method, payload.Value, format, payload.Codec, payload.Key, payload.Sequence)
                 : processor.Wrap(payload.Value, format, payload.Codec, payload.Key, payload.Sequence));
@@ -139,10 +140,10 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         }
 
         // The result must come back in the format the request went out in, as the client connector checks it.
-        private static Polhem.JsonRpc.Payload.PayloadFormat SentFormat(TestRpcRequest request)
+        private static PayloadFormat SentFormat(TestRpcRequest request)
             => request.RawParams is { } raw
                 ? PayloadEnvelope.ReadFormat(raw)
-                : (Polhem.JsonRpc.Payload.PayloadFormat)request.Params.Format;
+                : request.Params.Format;
 
         // An encrypted payload is bound to its method, and a binding needs a method name. A test that sends an empty
         // method on purpose cannot encrypt, so its payload is wrapped without one.
@@ -234,7 +235,7 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         // `method` is null for a request written as JSON. Its result opens only when it is not encrypted, which holds
         // because such a test has no key to give, and its format is not checked against the request.
         internal static TestRpcResponse Read(string json, Type? resultType, PayloadProcessor payload, string? method,
-            Polhem.JsonRpc.Payload.PayloadFormat sentFormat, byte[]? key)
+            PayloadFormat sentFormat, byte[]? key)
         {
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
@@ -246,11 +247,11 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
                 var value = ResolvePlainValue(method == null
                     ? payload.OpenResult(envelope, key, out _)
                     : payload.OpenResult(envelope, key, method, sentFormat, out _));
-                if (envelope.Format == Polhem.JsonRpc.Payload.PayloadFormat.Plain && value is JsonElement && resultType != null)
+                if (envelope.Format == PayloadFormat.Plain && value is JsonElement && resultType != null)
                 {
                     value = ConvertPlain(value, resultType);
                 }
-                result = new TestPayload { Format = (PayloadFormat)envelope.Format, Value = value, Codec = envelope.Codec };
+                result = new TestPayload { Format = envelope.Format, Value = value, Codec = envelope.Codec };
             }
 
             TestRpcError? error = null;

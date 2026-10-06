@@ -79,7 +79,6 @@ and the details.
 - `ApiOutputConverter` -- converts a business object result into the wire response type (property copy by name;
   the inbound direction is internal).
 - `ApiHeaders` -- standard header constants for API communication.
-- `PayloadFormat` -- how a payload travels: `Plain`, `Encoded` (serialized and compressed) or `Encrypted`.
 - `DateTimeWireGuard` -- enforces the date and time wire invariants of
   [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md) on the responses that carry them.
 
@@ -112,7 +111,6 @@ and the details.
 | `PolhemPayload` | Builds the payload options the framework's way |
 | `MessagePackPayloadCodec` | The `messagepack` body codec |
 | `ApiAccessValidator` | Method-level protection via `ApiAccessControlAttribute` |
-| `PayloadFormat` | Payload format enum (`Plain`, `Encoded`, `Encrypted`) |
 | `ApiAuthorizationValidator` | Request authorization validation |
 | `ApiCallContext` | Per-call metadata (token, protection, identity) |
 
@@ -132,7 +130,7 @@ and the details.
 - `Json/` -- JSON converters for `object`-typed members
 - `Dispatch/` -- the components that plug Polhem into the `Polhem.JsonRpc.Server` dispatcher
 - `JsonRpc/` -- `ActionPayloadType`, `DateTimeWireGuard`, the error codes and the error contract
-- `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `PayloadFormat`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
+- `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
 - `MessagePack/` -- the internal MessagePack infrastructure and formatters
 - `Transformers/` -- Polhem's side of the payload pipeline (`PolhemPayload`, `MessagePackPayloadCodec`, `PayloadCodecNames`)
 - `Validator/` -- `ApiAccessValidator`, `ApiCallContext`

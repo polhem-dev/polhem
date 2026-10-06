@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: fe7ee52176791c2545c552ac01cee71398be6080 -->
+<!-- source: en/getting-started/getting-started.md blob: 49b365553a48807218ba11ec706086a4abc7545f -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -270,7 +270,7 @@ dotnet add package Polhem.Api.Client
 ```csharp
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 ApiClientInfo.ApiKey = "my-demo-key";
 

@@ -3,7 +3,6 @@ using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.JsonRpc.Payload;
-using PayloadFormat = Polhem.Api.Core.Messages.PayloadFormat;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
@@ -45,7 +44,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         /// <summary>Answers <paramref name="value"/> sealed in <paramref name="format"/>, whatever the call was sent in.</summary>
-        private static FakeApiTransport AnswerIn(Polhem.JsonRpc.Payload.PayloadFormat? format, object? value, byte[] key)
+        private static FakeApiTransport AnswerIn(PayloadFormat? format, object? value, byte[] key)
             => new(call => new PayloadProcessor(ApiClientInfo.PayloadOptions).SealResponse(
                 call.Method, value, format ?? call.Params.Envelope.Format, call.Params.Codec, key));
 
@@ -68,10 +67,10 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
         [Theory]
         [DisplayName("A result in a format other than the one the request was sent in is refused")]
-        [InlineData(PayloadFormat.Encrypted, Polhem.JsonRpc.Payload.PayloadFormat.Plain)]
-        [InlineData(PayloadFormat.Encrypted, Polhem.JsonRpc.Payload.PayloadFormat.Encoded)]
-        [InlineData(PayloadFormat.Encoded, Polhem.JsonRpc.Payload.PayloadFormat.Plain)]
-        public async Task ExecuteAsync_ResultInAnotherFormat_Throws(PayloadFormat sent, Polhem.JsonRpc.Payload.PayloadFormat answered)
+        [InlineData(PayloadFormat.Encrypted, PayloadFormat.Plain)]
+        [InlineData(PayloadFormat.Encrypted, PayloadFormat.Encoded)]
+        [InlineData(PayloadFormat.Encoded, PayloadFormat.Plain)]
+        public async Task ExecuteAsync_ResultInAnotherFormat_Throws(PayloadFormat sent, PayloadFormat answered)
         {
             var key = MakeKey();
             var connector = CreateConnector(AnswerIn(answered, "swapped", key), key);

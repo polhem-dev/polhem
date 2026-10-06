@@ -1,1 +1,4 @@
 #nullable enable
+*REMOVED*Polhem.Core.Serialization.Gzip
+*REMOVED*static Polhem.Core.Serialization.Gzip.Compress(byte[]! bytes) -> byte[]!
+*REMOVED*static Polhem.Core.Serialization.Gzip.Decompress(byte[]! bytes) -> byte[]!

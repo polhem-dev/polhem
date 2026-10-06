@@ -71,7 +71,6 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 - `ApiOutputConverter` -- 把商業物件結果轉成 wire 回應型別（依名稱複製屬性；入站方向為 internal）。
 - `ApiHeaders` -- API 通訊的標準 Header 常數。
-- `PayloadFormat` -- payload 的傳輸方式：`Plain`、`Encoded`（序列化並壓縮）或 `Encrypted`。
 - `DateTimeWireGuard` -- 對帶有日期時間的回應強制 [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)
   的 wire 不變式。
 
@@ -101,7 +100,6 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 | `PolhemPayload` | 以框架的方式組出 payload 選項 |
 | `MessagePackPayloadCodec` | `messagepack` body codec |
 | `ApiAccessValidator` | 透過 `ApiAccessControlAttribute` 的方法層級保護 |
-| `PayloadFormat` | Payload 格式列舉（`Plain`、`Encoded`、`Encrypted`） |
 | `ApiAuthorizationValidator` | 請求授權驗證 |
 | `ApiCallContext` | 每次呼叫的中繼資料（Token、保護、身分） |
 
@@ -121,7 +119,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `Json/` -- `object` 型別成員的 JSON converter
 - `Dispatch/` -- 把 Polhem 接上 `Polhem.JsonRpc.Server` dispatcher 的元件
 - `JsonRpc/` -- `ActionPayloadType`、`DateTimeWireGuard`、錯誤碼與錯誤合約
-- `Messages/` -- `ApiRequest`、`ApiResponse`、`ApiHeaders`、`PayloadFormat`、`ExecFunc*`，以及 `System/`、`Form/`、`AuditLog/` 訊息
+- `Messages/` -- `ApiRequest`、`ApiResponse`、`ApiHeaders`、`ExecFunc*`，以及 `System/`、`Form/`、`AuditLog/` 訊息
 - `MessagePack/` -- 內部的 MessagePack 基礎設施與 formatter
 - `Transformers/` -- payload 管線中 Polhem 這一側（`PolhemPayload`、`MessagePackPayloadCodec`、`PayloadCodecNames`）
 - `Validator/` -- `ApiAccessValidator`、`ApiCallContext`

@@ -40,11 +40,10 @@
 - `FileHashValidator` -- file integrity verification via SHA-256
 - `AesCbcHmacKeyGenerator` -- cryptographic key generation
 
-### Serialization & Compression
+### Serialization
 
 - `XmlCodec` -- XML serialization through `XmlSerializer`
 - `JsonCodec` -- JSON serialization through `System.Text.Json` (camelCase)
-- `Gzip` -- Gzip compression / decompression for payload handling
 
 ### Collections
 

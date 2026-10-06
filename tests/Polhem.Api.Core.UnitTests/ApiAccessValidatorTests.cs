@@ -3,7 +3,7 @@ using Polhem.Api.Core.Validator;
 using Polhem.Core.Exceptions;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.UnitTests
 {

@@ -71,3 +71,4 @@ understanding why the design is the way it is.
 | [048](adr-048-rename-base-to-core-in-1-1.md) | `Polhem.Base` is renamed to `Polhem.Core` in 1.1.0, a one-time break within 1.x | ✅ Accepted, amended |
 | [049](adr-049-jsonrpc-packages-in-1-2.md) | Polhem's JSON-RPC runs on the `Polhem.JsonRpc` packages, and `Polhem.Api.AspNetCore` is removed in 1.2.0 | ✅ Accepted, amended |
 | [050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md) | Polhem 1.3.0 moves to Polhem.JsonRpc 1.1.0, whose payload wire format is incompatible | ✅ Accepted |
+| [051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) | Remove the types the move to Polhem.JsonRpc left behind, within 1.x | ✅ Accepted |

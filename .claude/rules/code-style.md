@@ -10,7 +10,7 @@
 | Private field | `_camelCase` | `_accessToken` |
 | Parameter | camelCase | `accessToken` |
 | Extension method class | `<TypeName>Extensions` | `StringExtensions`, `ExceptionExtensions` |
-| Noun-style static utility | `<Domain>Utilities` or a plain noun | `StringUtilities`, `ValueUtilities`, `Gzip`, `XmlCodec` |
+| Noun-style static utility | `<Domain>Utilities` or a plain noun | `StringUtilities`, `ValueUtilities`, `XmlCodec`, `JsonCodec` |
 
 > **The `*Func` suffix is deprecated** (removed everywhere on 2026-05-01). Do not add new ones.
 

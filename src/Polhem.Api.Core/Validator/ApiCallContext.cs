@@ -1,5 +1,5 @@
 
-using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc.Payload;
 
 namespace Polhem.Api.Core.Validator
 {
@@ -15,7 +15,7 @@ namespace Polhem.Api.Core.Validator
     /// neither of them intended. The TypeScript contract generator publishes every public class in
     /// that namespace, so this type — which carries <see cref="IsLocalCall"/>, the flag several
     /// second lines of defence key on — was published as a shape a client could name and
-    /// instantiate. It also dragged <see cref="Polhem.Api.Core.Messages.PayloadFormat"/> into the generated contract as a string
+    /// instantiate. It also dragged <see cref="PayloadFormat"/> into the generated contract as a string
     /// union (<c>'Plain' | 'Encoded' | 'Encrypted'</c>) while the value actually on the wire is a
     /// number, so the contract disagreed with the wire on a field of the same name.
     /// </para>
