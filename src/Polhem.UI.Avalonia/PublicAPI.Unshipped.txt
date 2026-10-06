@@ -42,3 +42,14 @@ static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslatorP
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.SelectedObjectProperty -> Avalonia.StyledProperty<object?>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowCategoriesProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowDescriptionProperty -> Avalonia.StyledProperty<bool>!
+Polhem.UI.Avalonia.Controls.CollectionEditContext
+Polhem.UI.Avalonia.Controls.CollectionEditContext.Collection.get -> System.Collections.IList!
+Polhem.UI.Avalonia.Controls.CollectionEditContext.CollectionEditContext(object! component, System.ComponentModel.PropertyDescriptor! property) -> void
+Polhem.UI.Avalonia.Controls.CollectionEditContext.Component.get -> object!
+Polhem.UI.Avalonia.Controls.CollectionEditContext.ItemType.get -> System.Type!
+Polhem.UI.Avalonia.Controls.CollectionEditContext.Property.get -> System.ComponentModel.PropertyDescriptor!
+Polhem.UI.Avalonia.Controls.CollectionEditDialog
+Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProvider.get -> System.Func<Polhem.UI.Avalonia.Controls.CollectionEditContext!, System.Threading.Tasks.Task<bool>?>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProvider.set -> void
+static Polhem.UI.Avalonia.Controls.CollectionEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Avalonia.Controls.CollectionEditContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProviderProperty -> Avalonia.StyledProperty<System.Func<Polhem.UI.Avalonia.Controls.CollectionEditContext!, System.Threading.Tasks.Task<bool>?>?>!

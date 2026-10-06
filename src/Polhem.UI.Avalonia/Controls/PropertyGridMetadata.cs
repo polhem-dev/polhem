@@ -90,6 +90,49 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
+        /// Returns the type of the items of <paramref name="collectionType"/>: the type argument of
+        /// <see cref="Polhem.Core.Collections.CollectionBase{T}"/> or <see cref="Polhem.Core.Collections.KeyCollectionBase{T}"/>
+        /// when the type derives from one, else the item type of the <see cref="IList{T}"/> it implements, else
+        /// <see cref="object"/>.
+        /// </summary>
+        internal static Type GetItemType(Type collectionType)
+        {
+            ArgumentNullException.ThrowIfNull(collectionType);
+            for (var type = collectionType; type is not null; type = type.BaseType)
+            {
+                if (!type.IsGenericType) { continue; }
+                var definition = type.GetGenericTypeDefinition();
+                if (definition == typeof(Polhem.Core.Collections.CollectionBase<>)
+                    || definition == typeof(Polhem.Core.Collections.KeyCollectionBase<>))
+                {
+                    return type.GetGenericArguments()[0];
+                }
+            }
+            var list = collectionType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            return list?.GetGenericArguments()[0] ?? typeof(object);
+        }
+
+        /// <summary>
+        /// Returns whether items of <paramref name="itemType"/> can be edited in the property grid of the collection
+        /// dialog: a class other than <see cref="string"/>, whose properties are what the dialog edits.
+        /// </summary>
+        internal static bool IsEditableItemType(Type itemType)
+        {
+            ArgumentNullException.ThrowIfNull(itemType);
+            return itemType.IsClass && itemType != typeof(string) && itemType != typeof(object);
+        }
+
+        /// <summary>
+        /// Returns whether the items of <paramref name="collection"/> can be added, removed and reordered.
+        /// </summary>
+        internal static bool IsResizable(IList collection)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            return !collection.IsReadOnly && !collection.IsFixedSize;
+        }
+
+        /// <summary>
         /// Returns the values the drop-down of a <see cref="PropertyGridEditorKind.Choice"/> property offers.
         /// </summary>
         internal static IReadOnlyList<object> GetChoices(PropertyDescriptor property)

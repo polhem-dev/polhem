@@ -62,3 +62,7 @@ Polhem.Definition.ObjectTree.TreeNodeDropPosition.Before = 0 -> Polhem.Definitio
 Polhem.Definition.ObjectTree.ObjectTreeNode.ObjectTreeNode(object! value, System.Func<object!, string!>! labelProvider, bool isFolder) -> void
 const Polhem.Definition.Language.PolhemUIText.CollectionSummary = "CollectionSummary" -> string!
 const Polhem.Definition.Language.PolhemUIText.ResetValue = "ResetValue" -> string!
+const Polhem.Definition.Language.PolhemUIText.CollectionKeyDuplicate = "CollectionKeyDuplicate" -> string!
+const Polhem.Definition.Language.PolhemUIText.CollectionKeyMissing = "CollectionKeyMissing" -> string!
+const Polhem.Definition.Language.PolhemUIText.MoveDown = "MoveDown" -> string!
+const Polhem.Definition.Language.PolhemUIText.MoveUp = "MoveUp" -> string!
