@@ -424,7 +424,7 @@ internal static class Smoke
             }
 
             // Add via command, save, reload.
-            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.Kind == DatabaseSettingsDocumentViewModel.KindServersGroup);
+            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.IsFolder && c.Value is DatabaseServerCollection);
             vm.AddServerCommand.Execute(null);
             vm.Root.Servers!.Last().DisplayName = "SmokeNew";
             vm.SaveCommand.Execute(null);

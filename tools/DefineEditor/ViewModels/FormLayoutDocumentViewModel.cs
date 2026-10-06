@@ -12,28 +12,22 @@ namespace Polhem.DefineEditor.ViewModels;
 /// FormLayout → Sections folder → LayoutSection[] → LayoutField[];
 /// FormLayout → Details folder → LayoutGrid[] → LayoutColumn[].
 /// </summary>
-public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelBase<ObjectTreeNode>
+public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    // The root and the two folders start expanded, as before the move to ObjectTreeBuilder.
-    private static readonly ObjectTreeBuilder s_builder = new(new ObjectTreeOptions { ExpandDepth = 2 });
-
     public FormLayout Root { get; }
     protected override object RootObject => Root;
 
-    public ObjectTreeNode RootNode => Roots[0];
-
     public override string TabIcon => "DefFormLayout";
 
-    /// <summary>The commands of the tree's context menu.</summary>
-    public ITreeNodeCommandProvider CommandProvider { get; }
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     private FormLayoutDocumentViewModel(string filePath, FormLayout root)
-        : base(filePath, "FormLayout", keyText: root.LayoutId)
+        // The root and the two folders start expanded.
+        : base(filePath, "FormLayout", keyText: root.LayoutId, new ObjectTreeOptions { ExpandDepth = 2 })
     {
         Root = root;
         CommandProvider = new FormLayoutCommandProvider(this);
-        Roots.Add(s_builder.Build(root));
-        SelectedTreeNode = Roots[0];
+        InitializeTree(root);
     }
 
     public static FormLayoutDocumentViewModel Load(string filePath)
@@ -46,10 +40,7 @@ public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelB
         return new FormLayoutDocumentViewModel(filePath, root);
     }
 
-    /// <summary>
-    /// The resource key of the icon shown before a node, for the tree view's icon selector.
-    /// </summary>
-    public static string IconKeyFor(ObjectTreeNode node) => node.Value switch
+    public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
         FormLayout => "DefFormLayout",
         LayoutSectionCollection or LayoutSection => "IconSection",
@@ -58,26 +49,6 @@ public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelB
         LayoutColumn => "IconColumn",
         _ => "DefUnknown",
     };
-
-    private ObjectTreeNode? FolderOf<TCollection>() =>
-        Roots[0].Children.FirstOrDefault(c => c.IsFolder && c.Value is TCollection);
-
-    private static ObjectTreeNode? FindAncestor<TValue>(ObjectTreeNode? node)
-    {
-        for (var cur = node; cur != null; cur = cur.Parent)
-            if (cur.Value is TValue) return cur;
-        return null;
-    }
-
-    private void AddNode(ObjectTreeNode parent, object value)
-    {
-        var node = s_builder.Build(value);
-        node.IsExpanded = false;
-        parent.Children.Add(node);
-        parent.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
-    }
 
     [RelayCommand(CanExecute = nameof(CanAddSection))]
     private void AddSection()
@@ -141,21 +112,6 @@ public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelB
             => () => parentGrid.Columns!.Remove(c),
         _ => null,
     };
-
-    protected override object? GetNodeValue(ObjectTreeNode node) => node.IsFolder ? null : node.Value;
-
-    protected override string GetNodeLabel(ObjectTreeNode node) => node.Label;
-
-    protected override ObjectTreeNode? GetParentNode(ObjectTreeNode node) => node.Parent;
-
-    protected override void RemoveNode(ObjectTreeNode node) => node.Parent?.Children.Remove(node);
-
-    protected override void RefreshNodeLabels(ObjectTreeNode node)
-    {
-        node.Refresh();
-        foreach (var child in node.Children)
-            RefreshNodeLabels(child);
-    }
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation()
     {

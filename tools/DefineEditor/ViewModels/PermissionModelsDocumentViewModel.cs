@@ -1,5 +1,6 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;
 
@@ -11,36 +12,22 @@ namespace Polhem.DefineEditor.ViewModels;
 /// built-in <see cref="PermissionModels.Validate"/> plus duplicate / empty
 /// ModelId checks the framework method doesn't catch.
 /// </summary>
-public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public const string KindRoot = "PermissionModels";
-    public const string KindModel = "PermissionModel";
-    public const string KindRule = "PermissionRule";
-
     public PermissionModels Root { get; }
 
     protected override object RootObject => Root;
 
     public override string TabIcon => "DefPermissionModels";
 
-    public bool SelectedKindIsRoot => SelectedTreeNode?.Kind == KindRoot;
-    public bool SelectedKindIsModel => SelectedTreeNode?.Kind == KindModel;
-
-    protected override bool HasVisibleAddMenuItems =>
-        SelectedKindIsRoot || SelectedKindIsModel;
-
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
-    {
-        OnPropertyChanged(nameof(SelectedKindIsRoot));
-        OnPropertyChanged(nameof(SelectedKindIsModel));
-    }
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     private PermissionModelsDocumentViewModel(string filePath, PermissionModels root)
-        : base(filePath, "PermissionModels", keyText: string.Empty)
+        : base(filePath, "PermissionModels", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
     {
         Root = root;
-        Roots.Add(BuildRootNode(root));
-        SelectedTreeNode = Roots[0];
+        CommandProvider = new PermissionModelsCommandProvider(this);
+        InitializeTree(root);
     }
 
     public static PermissionModelsDocumentViewModel Load(string filePath)
@@ -53,75 +40,33 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
         return new PermissionModelsDocumentViewModel(filePath, root);
     }
 
-    private static SettingsTreeNode BuildRootNode(PermissionModels root)
+    public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
-        var node = SettingsTreeNode.Create("DefPermissionModels", KindRoot, root, RefreshRoot, isExpanded: true);
-        if (root.Models is { } models)
-            foreach (var model in models)
-                node.AddChild(BuildModelNode(model));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildModelNode(PermissionModel model)
-    {
-        var node = SettingsTreeNode.Create("IconBox", KindModel, model, RefreshModel, isExpanded: false);
-        if (model.Rules is { } rules)
-            foreach (var rule in rules)
-                node.AddChild(BuildRuleNode(rule));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildRuleNode(PermissionRule rule) =>
-        SettingsTreeNode.Create("IconKey", KindRule, rule, RefreshRule, isExpanded: false);
-
-    private static void RefreshRoot(SettingsTreeNode node)
-    {
-        var root = (PermissionModels)node.Payload!;
-        node.Header = "PermissionModels";
-        node.Detail = $"{root.Models?.Count ?? 0} PermissionModel item(s)";
-    }
-
-    private static void RefreshModel(SettingsTreeNode node)
-    {
-        var m = (PermissionModel)node.Payload!;
-        node.Header = $"{m.ModelId}  —  {m.DisplayName}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"ModelId: {m.ModelId}",
-            $"DisplayName: {m.DisplayName}",
-            $"Rules: {m.Rules?.Count ?? 0}");
-    }
-
-    private static void RefreshRule(SettingsTreeNode node)
-    {
-        var r = (PermissionRule)node.Payload!;
-        node.Header = $"{r.Action}  →  {r.Scope}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"Action: {r.Action}",
-            $"Scope: {r.Scope}");
-    }
+        PermissionModels => "DefPermissionModels",
+        PermissionModel => "IconBox",
+        PermissionRule => "IconKey",
+        _ => "DefUnknown",
+    };
 
     [RelayCommand(CanExecute = nameof(CanAddModel))]
     private void AddModel()
     {
-        if (SelectedTreeNode is not { Kind: KindRoot, Payload: PermissionModels root } rootNode)
+        if (SelectedTreeNode is not { Value: PermissionModels root } rootNode)
             return;
         var modelId = UniqueKey(root.Models!.Select(m => m.ModelId), "NewModel");
         var model = new PermissionModel(modelId, "New model");
         root.Models!.Add(model);
-        var node = BuildModelNode(model);
-        rootNode.AddChild(node);
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(rootNode, model);
         StatusText = L("Status_AddedNamed", "PermissionModel", modelId);
     }
 
-    private bool CanAddModel() => SelectedTreeNode?.Kind == KindRoot;
+    private bool CanAddModel() => SelectedTreeNode?.Value is PermissionModels;
 
     [RelayCommand(CanExecute = nameof(CanAddRule))]
     private void AddRule()
     {
-        var modelNode = FindAncestor(SelectedTreeNode, KindModel);
-        if (modelNode?.Payload is not PermissionModel model) return;
+        var modelNode = FindAncestor<PermissionModel>(SelectedTreeNode);
+        if (modelNode?.Value is not PermissionModel model) return;
         var action = PickAvailableAction(model);
         if (action is null)
         {
@@ -130,15 +75,11 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
         }
         var rule = new PermissionRule(action.Value);
         model.Rules!.Add(rule);
-        var node = BuildRuleNode(rule);
-        modelNode.AddChild(node);
-        modelNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(modelNode, rule);
         StatusText = L("Status_AddedNamed", "PermissionRule", action.Value);
     }
 
-    private bool CanAddRule() => FindAncestor(SelectedTreeNode, KindModel) is not null;
+    private bool CanAddRule() => FindAncestor<PermissionModel>(SelectedTreeNode) is not null;
 
     private static PermissionActions? PickAvailableAction(PermissionModel model)
     {
@@ -149,12 +90,10 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
         return null;
     }
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node) => node.Kind switch
+    protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
-        KindModel when node.Payload is PermissionModel m && node.Parent?.Payload is PermissionModels p
-            => () => p.Models!.Remove(m),
-        KindRule when node.Payload is PermissionRule r && node.Parent?.Payload is PermissionModel pm
-            => () => pm.Rules!.Remove(r),
+        PermissionModel m when node.Parent?.Value is PermissionModels p => () => p.Models!.Remove(m),
+        PermissionRule r when node.Parent?.Value is PermissionModel pm => () => pm.Rules!.Remove(r),
         _ => null,
     };
 

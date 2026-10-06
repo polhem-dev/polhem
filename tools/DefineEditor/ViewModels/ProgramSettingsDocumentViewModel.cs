@@ -1,5 +1,6 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,32 +10,22 @@ namespace Polhem.DefineEditor.ViewModels;
 /// Editor for <see cref="ProgramSettings"/>. Flat tree: ProgramSettings → ProgramItem[].
 /// Validation: empty or duplicate ProgIds across the whole registry.
 /// </summary>
-public sealed partial class ProgramSettingsDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class ProgramSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public const string KindRoot = "ProgramSettings";
-    public const string KindProgram = "ProgramItem";
-
     public ProgramSettings Root { get; }
 
     protected override object RootObject => Root;
 
     public override string TabIcon => "DefProgramSettings";
 
-    public bool SelectedKindIsRoot => SelectedTreeNode?.Kind == KindRoot;
-
-    protected override bool HasVisibleAddMenuItems => SelectedKindIsRoot;
-
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
-    {
-        OnPropertyChanged(nameof(SelectedKindIsRoot));
-    }
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     private ProgramSettingsDocumentViewModel(string filePath, ProgramSettings root)
-        : base(filePath, "ProgramSettings", keyText: string.Empty)
+        : base(filePath, "ProgramSettings", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
     {
         Root = root;
-        Roots.Add(BuildRootNode(root));
-        SelectedTreeNode = Roots[0];
+        CommandProvider = new ProgramSettingsCommandProvider(this);
+        InitializeTree(root);
     }
 
     public static ProgramSettingsDocumentViewModel Load(string filePath)
@@ -47,58 +38,30 @@ public sealed partial class ProgramSettingsDocumentViewModel : SingletonDocument
         return new ProgramSettingsDocumentViewModel(filePath, root);
     }
 
-    private static SettingsTreeNode BuildRootNode(ProgramSettings root)
+    public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
-        var node = SettingsTreeNode.Create("DefProgramSettings", KindRoot, root, RefreshRoot, isExpanded: true);
-        if (root.Items is { } items)
-            foreach (var program in items)
-                node.AddChild(BuildProgramNode(program));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildProgramNode(ProgramItem program) =>
-        SettingsTreeNode.Create("IconBox", KindProgram, program, RefreshProgram, isExpanded: false);
-
-    private static void RefreshRoot(SettingsTreeNode node)
-    {
-        var root = (ProgramSettings)node.Payload!;
-        node.Header = "ProgramSettings";
-        node.Detail = $"{root.Items?.Count ?? 0} ProgramItem(s)";
-    }
-
-    private static void RefreshProgram(SettingsTreeNode node)
-    {
-        var p = (ProgramItem)node.Payload!;
-        node.Header = $"{p.ProgId}  —  {p.DisplayName}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"ProgId: {p.ProgId}",
-            $"DisplayName: {p.DisplayName}",
-            $"BusinessObject: {p.BusinessObject}",
-            $"Repository: {p.Repository}");
-    }
+        ProgramSettings => "DefProgramSettings",
+        ProgramItem => "IconBox",
+        _ => "DefUnknown",
+    };
 
     [RelayCommand(CanExecute = nameof(CanAddProgram))]
     private void AddProgram()
     {
-        if (SelectedTreeNode is not { Kind: KindRoot, Payload: ProgramSettings root } rootNode)
+        if (SelectedTreeNode is not { Value: ProgramSettings root } rootNode)
             return;
         var id = UniqueKey(root.Items!.Select(p => p.ProgId), "NewProgram");
         var program = new ProgramItem { ProgId = id, DisplayName = "New program" };
         root.Items!.Add(program);
-        var node = BuildProgramNode(program);
-        rootNode.AddChild(node);
-        rootNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(rootNode, program);
         StatusText = L("Status_AddedNamed", "ProgramItem", id);
     }
 
-    private bool CanAddProgram() => SelectedTreeNode?.Kind == KindRoot;
+    private bool CanAddProgram() => SelectedTreeNode?.Value is ProgramSettings;
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node) => node.Kind switch
+    protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
-        KindProgram when node.Payload is ProgramItem prog && node.Parent?.Payload is ProgramSettings p
-            => () => p.Items!.Remove(prog),
+        ProgramItem prog when node.Parent?.Value is ProgramSettings p => () => p.Items!.Remove(prog),
         _ => null,
     };
 
