@@ -45,6 +45,13 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   shows where it will land, and moves the node in the tree after the handler has moved the objects.
 - `ObjectTreeNode(object, Func<object, string>, bool)`: a node whose label is computed from its value and recomputed on
   `Refresh`, for nodes a consumer adds that must follow a change of display language.
+- `PropertyGridControl` (`Polhem.UI.Avalonia`): shows the properties of `SelectedObject` as labels and editors driven
+  by `[Category]`, `[Description]`, `[DisplayName]`, `[Browsable]`, `[DefaultValue]` and `[TypeConverter]`. A value
+  that differs from its default is shown in bold and the label's context menu resets it; `PropertyValueChanged`
+  reports each write. `LabelTranslator` translates the labels, and `Refresh` reads the object and translates again.
+  Collections and nested objects are shown read-only for now. The control reads types through `TypeDescriptor` and is
+  meant for desktop tools, not trimmed mobile heads.
+- `PolhemUIText.ResetValue` and `PolhemUIText.CollectionSummary`, the text keys the property grid uses.
 
 ### Changed
 
@@ -66,6 +73,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   the `[TreeNode]` annotations and folders no longer show a count. In every editor a node can be dragged before or after
   a sibling to reorder the collection that holds it. Folder, root and group labels follow the editor's language and
   switch with it.
+- Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField` and
+  `BackendConfiguration`, with its display options and a log of `PropertyValueChanged`.
 
 ## [1.3.1] - 2026-10-05
 

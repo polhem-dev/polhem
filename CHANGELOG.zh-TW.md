@@ -37,6 +37,11 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `ITreeNodeDragDropHandler` 與 `TreeNodeDropPosition`（`Polhem.Definition.ObjectTree`）：決定哪些樹節點可以拖曳、可以放在哪裡。
   `ObjectTreeView.DragDropHandler` 讓使用者把節點拖到另一個節點之前或之後，並顯示落點；handler 搬動物件後，控件再搬動樹上的節點。
 - `ObjectTreeNode(object, Func<object, string>, bool)`：標籤由值計算、`Refresh` 時重算的節點，用於消費端自行加入、需要跟著切換顯示語言的節點。
+- `PropertyGridControl`（`Polhem.UI.Avalonia`）：依 `[Category]`、`[Description]`、`[DisplayName]`、`[Browsable]`、
+  `[DefaultValue]` 與 `[TypeConverter]`，把 `SelectedObject` 的屬性顯示成標籤與編輯器。值與預設值不同時以粗體顯示，標籤的右鍵選單可重設；
+  每次寫回都會引發 `PropertyValueChanged`。`LabelTranslator` 翻譯標籤，`Refresh` 重新讀取物件並重新翻譯。集合與巢狀物件目前只唯讀顯示。
+  控件透過 `TypeDescriptor` 讀取型別，定位為桌面工具使用，不適用於經過 trim 的行動端。
+- `PolhemUIText.ResetValue` 與 `PolhemUIText.CollectionSummary`：屬性方格使用的文字鍵。
 
 ### 變更
 
@@ -52,6 +57,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 - DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
   `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。資料夾、根節點與群組的標籤會依編輯器的語言顯示，切換語言時立即更新。
+- Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField` 與 `BackendConfiguration`，
+  可切換顯示選項，並記錄 `PropertyValueChanged`。
 
 ## [1.3.1] - 2026-10-05
 

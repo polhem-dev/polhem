@@ -27,6 +27,8 @@
     <LanguageItem Key="SignIn" Value="登入" />
     <LanguageItem Key="SignInEmptyToken" Value="登入失敗：伺服器未傳回存取權杖。" />
     <LanguageItem Key="RequiredFieldsEmpty" Value="請填寫必填欄位：{0}" />
+    <LanguageItem Key="ResetValue" Value="重設" />
+    <LanguageItem Key="CollectionSummary" Value="（集合）{0} 項" />
   </Items>
   <Enums />
 </LanguageResource>

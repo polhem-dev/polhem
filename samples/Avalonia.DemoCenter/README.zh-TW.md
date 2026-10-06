@@ -68,6 +68,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | | Multi-unit quantities | 數量位數隨該列單位；全部同單位時才顯示合計 |
 | **Master-Detail** | Master + detail | `FormLayoutRenderer` 渲染 master 區段 + 明細 grid |
 | **Permission Capability** | Interactive permission simulator (master/detail) | 勾選模擬的角色授權，主檔與明細即時降級，與 `EnterCompany` 回傳的能力快照相同 |
+| **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` 依 `System.ComponentModel` 標註顯示 `FormField`、`DbField` 或 `BackendConfiguration`，可切換顯示選項並記錄 `PropertyValueChanged` |
 
 > **Views（FormView/ListView）路線**：兩者為後端耦合控件，本中心無後端，故以「`FormDataObject` 當 VM + 假資料 →
 > 前端繫結」示範——用與生產 `FormView` 同一套公開 primitive（`FieldEditorFactory` + `GridControl`）渲染（見
