@@ -5,6 +5,7 @@
              xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
              xmlns:models="using:Polhem.DefineEditor.Models"
              xmlns:controls="using:Polhem.UI.Avalonia.Controls"
+             xmlns:conv="using:Polhem.DefineEditor.Converters"
              xmlns:layouts="using:Polhem.Definition.Layouts"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -103,7 +104,8 @@
         </Border>
 
         <Grid ColumnDefinitions="*,4,1.2*">
-            <controls:ObjectTreeView x:Name="Tree" Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}"
+            <controls:ObjectTreeView Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}"
+                                     IconSelector="{Binding IconKeys, Converter={x:Static conv:TreeIconSelector.Converter}}"
                                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
             <Border Grid.Column="2" Padding="18,14">

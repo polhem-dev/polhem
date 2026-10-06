@@ -1,5 +1,6 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,38 +11,22 @@ namespace Polhem.DefineEditor.ViewModels;
 /// DbCategorySettings → DbCategory[] → TableItem[]. Validation: duplicate /
 /// empty category Ids, duplicate / empty table names within a category.
 /// </summary>
-public sealed partial class DbCategorySettingsDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class DbCategorySettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public const string KindRoot = "DbCategorySettings";
-    public const string KindCategory = "DbCategory";
-    public const string KindTable = "TableItem";
-
     public DbCategorySettings Root { get; }
 
     protected override object RootObject => Root;
 
     public override string TabIcon => "DefDbCategorySettings";
 
-    // Visibility flags for the tree-view context menu. Each MenuItem binds
-    // IsVisible to the flag matching the kind it applies to.
-    public bool SelectedKindIsRoot => SelectedTreeNode?.Kind == KindRoot;
-    public bool SelectedKindIsCategory => SelectedTreeNode?.Kind == KindCategory;
-
-    protected override bool HasVisibleAddMenuItems =>
-        SelectedKindIsRoot || SelectedKindIsCategory;
-
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
-    {
-        OnPropertyChanged(nameof(SelectedKindIsRoot));
-        OnPropertyChanged(nameof(SelectedKindIsCategory));
-    }
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     private DbCategorySettingsDocumentViewModel(string filePath, DbCategorySettings root)
-        : base(filePath, "DbCategorySettings", keyText: string.Empty)
+        : base(filePath, "DbCategorySettings", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
     {
         Root = root;
-        Roots.Add(BuildRootNode(root));
-        SelectedTreeNode = Roots[0];
+        CommandProvider = new DbCategorySettingsCommandProvider(this);
+        InitializeTree(root);
     }
 
     public static DbCategorySettingsDocumentViewModel Load(string filePath)
@@ -54,94 +39,46 @@ public sealed partial class DbCategorySettingsDocumentViewModel : SingletonDocum
         return new DbCategorySettingsDocumentViewModel(filePath, root);
     }
 
-    private static SettingsTreeNode BuildRootNode(DbCategorySettings root)
+    public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
-        var node = SettingsTreeNode.Create("DefDbCategorySettings", KindRoot, root, RefreshRoot, isExpanded: true);
-        if (root.Categories is { } categories)
-            foreach (var category in categories)
-                node.AddChild(BuildCategoryNode(category));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildCategoryNode(DbCategory category)
-    {
-        var node = SettingsTreeNode.Create("DefCategory", KindCategory, category, RefreshCategory, isExpanded: false);
-        if (category.Tables is { } tables)
-            foreach (var table in tables)
-                node.AddChild(BuildTableNode(table));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildTableNode(TableItem table) =>
-        SettingsTreeNode.Create("IconTable", KindTable, table, RefreshTable, isExpanded: false);
-
-    private static void RefreshRoot(SettingsTreeNode node)
-    {
-        var root = (DbCategorySettings)node.Payload!;
-        node.Header = "DbCategorySettings";
-        node.Detail = $"{root.Categories?.Count ?? 0} DbCategory item(s)";
-    }
-
-    private static void RefreshCategory(SettingsTreeNode node)
-    {
-        var c = (DbCategory)node.Payload!;
-        node.Header = $"{c.Id}  —  {c.DisplayName}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"Id: {c.Id}",
-            $"DisplayName: {c.DisplayName}",
-            $"Tables: {c.Tables?.Count ?? 0}");
-    }
-
-    private static void RefreshTable(SettingsTreeNode node)
-    {
-        var t = (TableItem)node.Payload!;
-        node.Header = $"{t.TableName}  —  {t.DisplayName}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"TableName: {t.TableName}",
-            $"DisplayName: {t.DisplayName}");
-    }
+        DbCategorySettings => "DefDbCategorySettings",
+        DbCategory => "DefCategory",
+        TableItem => "IconTable",
+        _ => "DefUnknown",
+    };
 
     [RelayCommand(CanExecute = nameof(CanAddCategory))]
     private void AddCategory()
     {
-        if (SelectedTreeNode is not { Kind: KindRoot, Payload: DbCategorySettings root } rootNode)
+        if (SelectedTreeNode is not { Value: DbCategorySettings root } rootNode)
             return;
         var id = UniqueKey(root.Categories!.Select(c => c.Id), "new_category");
         var category = new DbCategory { Id = id, DisplayName = "New category" };
         root.Categories!.Add(category);
-        var node = BuildCategoryNode(category);
-        rootNode.AddChild(node);
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(rootNode, category);
         StatusText = L("Status_AddedNamed", "DbCategory", id);
     }
 
-    private bool CanAddCategory() => SelectedTreeNode?.Kind == KindRoot;
+    private bool CanAddCategory() => SelectedTreeNode?.Value is DbCategorySettings;
 
     [RelayCommand(CanExecute = nameof(CanAddTable))]
     private void AddTable()
     {
-        var categoryNode = FindAncestor(SelectedTreeNode, KindCategory);
-        if (categoryNode?.Payload is not DbCategory category) return;
+        var categoryNode = FindAncestor<DbCategory>(SelectedTreeNode);
+        if (categoryNode?.Value is not DbCategory category) return;
         var name = UniqueKey(category.Tables!.Select(t => t.TableName), "new_table");
         var table = new TableItem { TableName = name, DisplayName = "New table" };
         category.Tables!.Add(table);
-        var node = BuildTableNode(table);
-        categoryNode.AddChild(node);
-        categoryNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(categoryNode, table);
         StatusText = L("Status_AddedNamed", "TableItem", name);
     }
 
-    private bool CanAddTable() => FindAncestor(SelectedTreeNode, KindCategory) is not null;
+    private bool CanAddTable() => FindAncestor<DbCategory>(SelectedTreeNode) is not null;
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node) => node.Kind switch
+    protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
-        KindCategory when node.Payload is DbCategory c && node.Parent?.Payload is DbCategorySettings p
-            => () => p.Categories!.Remove(c),
-        KindTable when node.Payload is TableItem t && node.Parent?.Payload is DbCategory pc
-            => () => pc.Tables!.Remove(t),
+        DbCategory c when node.Parent?.Value is DbCategorySettings p => () => p.Categories!.Remove(c),
+        TableItem t when node.Parent?.Value is DbCategory pc => () => pc.Tables!.Remove(t),
         _ => null,
     };
 

@@ -1,5 +1,6 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;
 
@@ -12,41 +13,27 @@ namespace Polhem.DefineEditor.ViewModels;
 /// and — when the sibling ProgramSettings.xml is present — entries pointing at an
 /// unregistered progId.
 /// </summary>
-public sealed partial class MenuSettingsDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public const string KindRoot = "MenuSettings";
-    public const string KindFolder = "MenuFolder";
-    public const string KindEntry = "MenuEntry";
-
     public MenuSettings Root { get; }
 
     protected override object RootObject => Root;
 
     public override string TabIcon => "DefMenuSettings";
 
-    public bool SelectedKindIsRoot => SelectedTreeNode?.Kind == KindRoot;
-    public bool SelectedKindIsFolder => SelectedTreeNode?.Kind == KindFolder;
-
-    /// <summary>
-    /// A folder or the root can own children, so both accept Add.
-    /// </summary>
-    public bool SelectedKindCanOwnChildren => SelectedKindIsRoot || SelectedKindIsFolder;
-
-    protected override bool HasVisibleAddMenuItems => SelectedKindCanOwnChildren;
-
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
-    {
-        OnPropertyChanged(nameof(SelectedKindIsRoot));
-        OnPropertyChanged(nameof(SelectedKindIsFolder));
-        OnPropertyChanged(nameof(SelectedKindCanOwnChildren));
-    }
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     private MenuSettingsDocumentViewModel(string filePath, MenuSettings root)
-        : base(filePath, "MenuSettings", keyText: string.Empty)
+        : base(filePath, "MenuSettings", keyText: string.Empty, new ObjectTreeOptions
+        {
+            ExpandDepth = 1,
+            // Folders start expanded at any depth, so the whole menu is visible on open.
+            NodeBuilt = (node, _) => { if (node.Value is MenuFolder) node.IsExpanded = true; },
+        })
     {
         Root = root;
-        Roots.Add(BuildRootNode(root));
-        SelectedTreeNode = Roots[0];
+        CommandProvider = new MenuSettingsCommandProvider(this);
+        InitializeTree(root);
     }
 
     public static MenuSettingsDocumentViewModel Load(string filePath)
@@ -61,87 +48,31 @@ public sealed partial class MenuSettingsDocumentViewModel : SingletonDocumentVie
         return new MenuSettingsDocumentViewModel(filePath, root);
     }
 
-    private static SettingsTreeNode BuildRootNode(MenuSettings root)
+    public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
-        var node = SettingsTreeNode.Create("DefMenuSettings", KindRoot, root, RefreshRoot, isExpanded: true);
-        AddChildNodes(node, root.Items);
-        return node;
-    }
+        MenuSettings => "DefMenuSettings",
+        MenuFolder => "DefCategory",
+        MenuEntry => "IconBox",
+        _ => "DefUnknown",
+    };
 
-    private static void AddChildNodes(SettingsTreeNode parent, MenuNodeCollection? nodes)
+    private static MenuNodeCollection? OwnedItems(ObjectTreeNode? node) => node?.Value switch
     {
-        if (nodes is null) { return; }
-        foreach (var child in nodes)
-            parent.AddChild(BuildNode(child));
-    }
-
-    private static SettingsTreeNode BuildNode(MenuNodeBase node)
-    {
-        if (node is MenuFolder folder)
-        {
-            var folderNode = SettingsTreeNode.Create("DefCategory", KindFolder, folder, RefreshFolder, isExpanded: true);
-            AddChildNodes(folderNode, folder.Items);
-            return folderNode;
-        }
-        return SettingsTreeNode.Create("IconBox", KindEntry, node, RefreshEntry, isExpanded: false);
-    }
-
-    private static void RefreshRoot(SettingsTreeNode node)
-    {
-        var root = (MenuSettings)node.Payload!;
-        node.Header = "MenuSettings";
-        node.Detail = $"{root.EnumerateNodes().Count()} node(s)";
-    }
-
-    private static void RefreshFolder(SettingsTreeNode node)
-    {
-        var f = (MenuFolder)node.Payload!;
-        node.Header = $"{f.Id}  —  {f.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"Id: {f.Id}",
-            $"Caption: {f.Caption}",
-            $"Order: {f.Order}",
-            $"Visible: {f.Visible}",
-            $"Items: {f.Items?.Count ?? 0}");
-    }
-
-    private static void RefreshEntry(SettingsTreeNode node)
-    {
-        var e = (MenuEntry)node.Payload!;
-        node.Header = $"{e.Id}  —  {e.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"Id: {e.Id}",
-            $"ProgId: {e.ProgId}",
-            $"Caption: {e.Caption}",
-            $"Order: {e.Order}",
-            $"Visible: {e.Visible}");
-    }
-
-    /// <summary>
-    /// Returns the collection owned by the selected node, or <c>null</c> when the selection cannot
-    /// own children.
-    /// </summary>
-    private MenuNodeCollection? SelectedOwnerCollection(out SettingsTreeNode? ownerNode)
-    {
-        ownerNode = SelectedTreeNode;
-        return ownerNode?.Payload switch
-        {
-            MenuSettings settings => settings.Items,
-            MenuFolder folder => folder.Items,
-            _ => null,
-        };
-    }
+        MenuSettings settings => settings.Items,
+        MenuFolder folder => folder.Items,
+        _ => null,
+    };
 
     [RelayCommand(CanExecute = nameof(CanAddNode))]
-    private void AddFolder() => AddNode(isFolder: true);
+    private void AddFolder() => AddMenuNode(isFolder: true);
 
     [RelayCommand(CanExecute = nameof(CanAddNode))]
-    private void AddEntry() => AddNode(isFolder: false);
+    private void AddEntry() => AddMenuNode(isFolder: false);
 
-    private void AddNode(bool isFolder)
+    private void AddMenuNode(bool isFolder)
     {
-        var owner = SelectedOwnerCollection(out var ownerNode);
-        if (owner is null || ownerNode is null) { return; }
+        var ownerNode = SelectedTreeNode;
+        if (OwnedItems(ownerNode) is not { } owner || ownerNode is null) { return; }
 
         // Ids are unique across the whole tree, not merely among siblings, so the candidate is
         // checked against every existing node.
@@ -150,27 +81,17 @@ public sealed partial class MenuSettingsDocumentViewModel : SingletonDocumentVie
             ? new MenuFolder(id, "New folder")
             : new MenuEntry(id, string.Empty, "New entry");
         owner.Add(node);
-
-        var treeNode = BuildNode(node);
-        ownerNode.AddChild(treeNode);
-        ownerNode.IsExpanded = true;
-        SelectedTreeNode = treeNode;
-        IsDirty = true;
+        AddNode(ownerNode, node);
         StatusText = L("Status_AddedNamed", isFolder ? "MenuFolder" : "MenuEntry", id);
     }
 
-    private bool CanAddNode() => SelectedKindCanOwnChildren;
+    /// <summary>Whether the selected node can hold menu nodes: the root or a folder.</summary>
+    public bool CanAddNode() => OwnedItems(SelectedTreeNode) is not null;
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node)
+    protected override Action? GetDeleteAction(ObjectTreeNode node)
     {
-        if (node.Payload is not MenuNodeBase target) { return null; }
-        var owner = node.Parent?.Payload switch
-        {
-            MenuSettings settings => settings.Items,
-            MenuFolder folder => folder.Items,
-            _ => null,
-        };
-        return owner is null ? null : () => owner.Remove(target);
+        if (node.Value is not MenuNodeBase target) { return null; }
+        return OwnedItems(node.Parent) is { } owner ? () => owner.Remove(target) : null;
     }
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation()
