@@ -500,7 +500,7 @@ internal static class Smoke
             var errors = vm.Issues.Count(i => i.Severity == Models.ValidationSeverity.Error);
             if (errors != 0) return Fail(103, $"Validator reported {errors} errors");
 
-            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.Kind == TableSchemaDocumentViewModel.KindFieldsGroup);
+            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.IsFolder && c.Value is DbFieldCollection);
             vm.AddFieldCommand.Execute(null);
             vm.Root.Fields!.Last().Caption = "SmokeNew";
             vm.SaveCommand.Execute(null);
@@ -591,7 +591,7 @@ internal static class Smoke
             if (vm.Issues.Any(i => i.Severity == Models.ValidationSeverity.Error))
                 return Fail(124, "Validator unexpectedly reported errors");
 
-            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.Kind == LanguageDocumentViewModel.KindItemsGroup);
+            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.IsFolder && c.Value is LanguageItemCollection);
             vm.AddItemCommand.Execute(null);
             vm.Root.Items.Last().Value = "SmokeNew";
             vm.SaveCommand.Execute(null);
