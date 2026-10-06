@@ -8,6 +8,7 @@ namespace Polhem.Definition.ObjectTree
     public sealed class ObjectTreeOptions
     {
         private int _maxDepth = 32;
+        private int _expandDepth;
 
         /// <summary>
         /// Gets or sets the deepest level that gets nodes; the root is level 0 and a folder node counts as a level.
@@ -21,6 +22,22 @@ namespace Polhem.Definition.ObjectTree
             {
                 ArgumentOutOfRangeException.ThrowIfNegative(value);
                 _maxDepth = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets how many levels start expanded: a built node at a level below this value has
+        /// <see cref="ObjectTreeNode.IsExpanded"/> set. The root is level 0 and a folder node counts as a level, so
+        /// 1 expands the root alone. The default is 0, which expands nothing.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value is negative.</exception>
+        public int ExpandDepth
+        {
+            get { return _expandDepth; }
+            set
+            {
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                _expandDepth = value;
             }
         }
 

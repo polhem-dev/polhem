@@ -21,7 +21,7 @@ namespace Polhem.Definition.Settings
     /// </para>
     /// </remarks>
     [Description("Menu node.")]
-    [TreeNode]
+    [TreeNode("{0}", "Id")]
     [XmlInclude(typeof(MenuFolder))]
     [XmlInclude(typeof(MenuEntry))]
     public abstract class MenuNodeBase : KeyCollectionItem

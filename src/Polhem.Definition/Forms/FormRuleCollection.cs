@@ -8,7 +8,7 @@ namespace Polhem.Definition.Forms
     /// A collection of business rules owned by a <see cref="FormSchema"/>.
     /// </summary>
     [Description("Business rule collection.")]
-    [TreeNode("Rules", false)]
+    [TreeNode("Rules", true)]
     public sealed class FormRuleCollection : KeyCollectionBase<FormRule>
     {
         /// <summary>

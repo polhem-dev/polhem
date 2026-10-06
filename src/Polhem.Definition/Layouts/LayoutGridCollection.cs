@@ -8,7 +8,7 @@ namespace Polhem.Definition.Layouts
     /// A collection of layout grids (detail tables under a <see cref="FormLayout"/>).
     /// </summary>
     [Description("Layout grid collection.")]
-    [TreeNode("Details", false)]
+    [TreeNode("Details", true)]
     public sealed class LayoutGridCollection : CollectionBase<LayoutGrid>
     {
     }

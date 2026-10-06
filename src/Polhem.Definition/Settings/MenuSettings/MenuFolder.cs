@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// A grouping node. Owns child nodes and references no program of its own.
     /// </summary>
     [Description("Menu folder (grouping node).")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "Id,Caption")]
     public sealed class MenuFolder : MenuNodeBase
     {
         private MenuNodeCollection? _items = null;

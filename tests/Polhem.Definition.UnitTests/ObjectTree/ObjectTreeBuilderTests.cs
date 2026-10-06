@@ -243,6 +243,38 @@ namespace Polhem.Definition.UnitTests.ObjectTree
         }
 
         [Fact]
+        [DisplayName("ExpandDepth expands the built nodes above that level and leaves the rest collapsed")]
+        public void Build_ExpandDepth_ExpandsUpperLevels()
+        {
+            var options = new ObjectTreeOptions { ExpandDepth = 2 };
+
+            var root = new ObjectTreeBuilder(options).Build(BuildChain(4));
+
+            Assert.True(root.IsExpanded);
+            Assert.True(root.Children[0].IsExpanded);
+            Assert.False(root.Children[0].Children[0].IsExpanded);
+        }
+
+        [Fact]
+        [DisplayName("By default no built node starts expanded")]
+        public void Build_DefaultExpandDepth_ExpandsNothing()
+        {
+            var root = new ObjectTreeBuilder().Build(BuildChain(2));
+
+            Assert.False(root.IsExpanded);
+            Assert.False(root.Children[0].IsExpanded);
+        }
+
+        [Fact]
+        [DisplayName("Setting a negative ExpandDepth throws ArgumentOutOfRangeException")]
+        public void ExpandDepth_Negative_Throws()
+        {
+            var options = new ObjectTreeOptions();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => options.ExpandDepth = -1);
+        }
+
+        [Fact]
         [DisplayName("PropertyFilter returning false leaves the property out of the tree")]
         public void Build_PropertyFilterRejects_SkipsProperty()
         {

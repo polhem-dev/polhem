@@ -8,7 +8,7 @@ A desktop tool for maintaining the Polhem definition files (the XML under Define
 
 - **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx` and is not published to NuGet. Its unit tests, `tests/Polhem.DefineEditor.UnitTests`, are part of the main `Polhem.slnx`, so CI builds the tool and runs them.
 - **Purely offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database.
-- **In sync with the framework**: references `Polhem.Definition` and `Polhem.Core` through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
+- **In sync with the framework**: references `Polhem.Definition`, `Polhem.Core` and `Polhem.UI.Avalonia` (for `ObjectTreeView`) through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
 
 ## Supported definition types
 

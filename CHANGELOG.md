@@ -33,6 +33,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   and `LabelTranslator` let the consumer adjust the tree.
 - `TreeNodeAttribute.GetDisplayText(object, Func<string, string>?)` translates the display format before the property
   values are put into it.
+- `ObjectTreeView` (`Polhem.UI.Avalonia`): a `TreeView` that shows an `ObjectTreeNode` tree. Set `RootNode`, and
+  optionally `IconSelector` for an icon before each label; each item's `IsExpanded` binds both ways to the node.
+- `ObjectTreeNode.IsExpanded` and `ObjectTreeOptions.ExpandDepth`, which sets how many levels of a built tree start
+  expanded.
 
 ### Changed
 
@@ -40,6 +44,11 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   `Polhem.Definition.Attributes` (`Polhem.Definition`), next to the definition types they annotate. Nothing in the
   framework read them yet, so applying them had no effect; a type of your own that applies them needs
   `using Polhem.Definition.Attributes;` instead of `using Polhem.Core.Attributes;`.
+- The `[TreeNode]` annotations of the definition types follow one rule for folders: a collection is shown as a folder
+  when its owner has more than one annotated collection, and directly under the owner otherwise. The Sections and
+  Details of `FormLayout` and the Tables and Rules of `FormSchema` become folders; the Fields of `FormTable` and the
+  Entries of `LanguageEnum` no longer are. Every annotated object type now names the properties its label is
+  formatted from, matching its `ToString()`. `TreeNodeAnnotationGateTests` pins both conventions.
 
 ## [1.3.1] - 2026-10-05
 

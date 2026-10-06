@@ -9,7 +9,7 @@ namespace Polhem.Definition.Forms
     /// A collection of form fields.
     /// </summary>
     [Description("Form field collection.")]
-    [TreeNode("Fields", true)]
+    [TreeNode("Fields", false)]
     public sealed class FormFieldCollection : KeyCollectionBase<FormField>
     {
         /// <summary>

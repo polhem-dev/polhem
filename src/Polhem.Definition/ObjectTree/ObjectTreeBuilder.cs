@@ -61,7 +61,7 @@ namespace Polhem.Definition.ObjectTree
 
         private ObjectTreeNode BuildObjectNode(object value, int depth, HashSet<object> visited)
         {
-            var node = CreateNode(value, isFolder: false);
+            var node = CreateNode(value, isFolder: false, depth);
             if (depth < Options.MaxDepth)
                 AddPropertyChildren(node, depth + 1, visited);
             Options.NodeBuilt?.Invoke(node, this);
@@ -97,7 +97,7 @@ namespace Polhem.Definition.ObjectTree
 
         private ObjectTreeNode BuildFolderNode(object collection, IEnumerable items, int depth, HashSet<object> visited)
         {
-            var folder = CreateNode(collection, isFolder: true);
+            var folder = CreateNode(collection, isFolder: true, depth);
             if (depth < Options.MaxDepth)
                 AddItemNodes(folder, items, depth + 1, visited);
             Options.NodeBuilt?.Invoke(folder, this);
@@ -121,11 +121,14 @@ namespace Polhem.Definition.ObjectTree
             return Options.PropertyFilter?.Invoke(owner, property) ?? true;
         }
 
-        private ObjectTreeNode CreateNode(object value, bool isFolder)
+        private ObjectTreeNode CreateNode(object value, bool isFolder, int depth)
         {
             var translator = Options.LabelTranslator;
             Func<object, string> labelProvider = v => TreeNodeAttribute.GetDisplayText(v, translator);
-            return new ObjectTreeNode(value, labelProvider(value), isFolder, labelProvider);
+            return new ObjectTreeNode(value, labelProvider(value), isFolder, labelProvider)
+            {
+                IsExpanded = depth < Options.ExpandDepth,
+            };
         }
 
         private static bool IsDeclaredByCollectionBase(Type declaringType)

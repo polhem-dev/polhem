@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// Keyed by <see cref="Action"/> within a model (each action appears at most once).
     /// </summary>
     [Description("Permission rule.")]
-    [TreeNode]
+    [TreeNode("{0} : {1}", "Action,Scope")]
     public sealed class PermissionRule : KeyCollectionItem
     {
         private PermissionActions _action = PermissionActions.None;

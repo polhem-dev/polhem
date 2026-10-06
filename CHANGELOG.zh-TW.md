@@ -29,12 +29,19 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `ObjectTreeNode` 樹。節點會發出變更通知，UI head 可以直接繫結；走訪時每個物件只產生一個節點，並在
   `ObjectTreeOptions.MaxDepth` 停止；消費端可用 `PropertyFilter`、`NodeBuilt`、`LabelTranslator` 調整樹。
 - `TreeNodeAttribute.GetDisplayText(object, Func<string, string>?)` 會在填入屬性值之前先翻譯顯示格式。
+- `ObjectTreeView`（`Polhem.UI.Avalonia`）：顯示 `ObjectTreeNode` 樹的 `TreeView`。設定 `RootNode` 即可，可選
+  `IconSelector` 在每個標籤前顯示圖示；每個項目的 `IsExpanded` 與節點雙向繫結。
+- `ObjectTreeNode.IsExpanded` 與 `ObjectTreeOptions.ExpandDepth`，後者設定建出的樹一開始展開幾層。
 
 ### 變更
 
 - `TreeNodeAttribute` 與 `TreeNodeIgnoreAttribute` 從 `Polhem.Core.Attributes`（`Polhem.Core`）移到
   `Polhem.Definition.Attributes`（`Polhem.Definition`），與它們所標註的定義型別放在一起。框架目前沒有任何程式讀取它們，
   套用與否對行為沒有影響；自訂型別若有套用，把 `using Polhem.Core.Attributes;` 換成 `using Polhem.Definition.Attributes;` 即可。
+- 定義型別的 `[TreeNode]` 標註改依同一條資料夾規則：擁有者有兩個以上帶標註的集合時，集合以資料夾呈現，否則直接掛在擁有者下。
+  `FormLayout` 的 Sections 與 Details、`FormSchema` 的 Tables 與 Rules 改為資料夾；`FormTable` 的 Fields 與 `LanguageEnum` 的
+  Entries 不再是資料夾。每個帶標註的物件型別都明確寫出標籤取自哪些屬性，與其 `ToString()` 一致。
+  `TreeNodeAnnotationGateTests` 固定這兩項慣例。
 
 ## [1.3.1] - 2026-10-05
 

@@ -37,37 +37,38 @@ namespace Polhem.Definition.UnitTests.ObjectTree
         }
 
         [Fact]
-        [DisplayName("A FormLayout tree has sections and grids directly under the root, with their fields and columns below")]
+        [DisplayName("A FormLayout tree has Sections and Details folders, with fields under sections and columns under grids")]
         public void Build_FormLayout_MatchesAnnotationModel()
         {
             var layout = CreateLayout();
 
             var root = new ObjectTreeBuilder().Build(layout);
 
-            Assert.Equal(layout.ToString(), root.Label);
-            Assert.All(root.Children, c => Assert.False(c.IsFolder));
-            var section = Assert.Single(root.Children, c => c.Value is LayoutSection);
-            Assert.IsType<LayoutField>(Assert.Single(section.Children).Value);
-            var grid = Assert.Single(root.Children, c => c.Value is LayoutGrid);
-            Assert.IsType<LayoutColumn>(Assert.Single(grid.Children).Value);
-            Assert.Equal(2, root.Children.Count);
+            Assert.Equal("Employee - Employee", root.Label);
+            Assert.Equal(["Sections", "Details"], root.Children.Select(c => c.Label));
+            Assert.All(root.Children, c => Assert.True(c.IsFolder));
+            var section = Assert.Single(root.Children[0].Children);
+            Assert.Equal("Main - Main", section.Label);
+            Assert.Equal("sys_id - Id", Assert.Single(section.Children).Label);
+            var grid = Assert.Single(root.Children[1].Children);
+            Assert.Equal("WorkLog - Work log", grid.Label);
+            Assert.Equal("seq - Seq", Assert.Single(grid.Children).Label);
         }
 
         [Fact]
-        [DisplayName("A FormSchema tree has tables and rules under the root, and each table a Fields folder")]
+        [DisplayName("A FormSchema tree has Tables and Rules folders, with each table's fields directly under it")]
         public void Build_FormSchema_MatchesAnnotationModel()
         {
             var schema = CreateSchema();
 
             var root = new ObjectTreeBuilder().Build(schema);
 
-            var tables = root.Children.Where(c => c.Value is FormTable).ToList();
-            Assert.Equal(["Order", "OrderLine"], tables.Select(t => ((FormTable)t.Value).TableName));
-            Assert.Single(root.Children, c => c.Value is FormRule);
-            var fields = Assert.Single(tables[0].Children);
-            Assert.True(fields.IsFolder);
-            Assert.Equal("Fields", fields.Label);
-            Assert.Equal(["sys_id", "amount"], fields.Children.Select(f => ((FormField)f.Value).FieldName));
+            Assert.Equal(["Tables", "Rules"], root.Children.Select(c => c.Label));
+            var tables = root.Children[0].Children;
+            Assert.Equal(["Order - Order", "OrderLine - Order line"], tables.Select(t => t.Label));
+            Assert.Equal(["sys_id - Order No", "amount - Amount"], tables[0].Children.Select(f => f.Label));
+            Assert.All(tables[0].Children, f => Assert.False(f.IsFolder));
+            Assert.Equal("R1 - amount > 0", Assert.Single(root.Children[1].Children).Label);
         }
 
         [Fact]

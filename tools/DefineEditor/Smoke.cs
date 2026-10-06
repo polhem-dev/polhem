@@ -547,7 +547,7 @@ internal static class Smoke
             if (vm.Issues.Any(i => i.Severity == Models.ValidationSeverity.Error))
                 return Fail(114, "Validator unexpectedly reported errors");
 
-            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.Kind == FormLayoutDocumentViewModel.KindSectionsGroup);
+            vm.SelectedTreeNode = vm.Roots[0].Children.First(c => c.IsFolder && c.Value is LayoutSectionCollection);
             vm.AddSectionCommand.Execute(null);
             vm.Root.Sections!.Last().Caption = "SmokeNew";
             vm.SaveCommand.Execute(null);

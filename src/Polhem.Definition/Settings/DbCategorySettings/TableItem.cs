@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// A table item in the database category.
     /// </summary>
     [Description("Table item.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "TableName,DisplayName")]
     public sealed class TableItem : KeyCollectionItem
     {
         /// <summary>

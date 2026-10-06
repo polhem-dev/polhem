@@ -1,1 +1,11 @@
 #nullable enable
+Polhem.UI.Avalonia.Controls.ObjectTreeView
+Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelector.get -> System.Func<Polhem.Definition.ObjectTree.ObjectTreeNode!, Avalonia.Media.Geometry?>?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelector.set -> void
+Polhem.UI.Avalonia.Controls.ObjectTreeView.ObjectTreeView() -> void
+Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNode.get -> Polhem.Definition.ObjectTree.ObjectTreeNode?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNode.set -> void
+override Polhem.UI.Avalonia.Controls.ObjectTreeView.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+override Polhem.UI.Avalonia.Controls.ObjectTreeView.StyleKeyOverride.get -> System.Type!
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelectorProperty -> Avalonia.StyledProperty<System.Func<Polhem.Definition.ObjectTree.ObjectTreeNode!, Avalonia.Media.Geometry?>?>!
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNodeProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ObjectTreeNode?>!

@@ -12,7 +12,7 @@ namespace Polhem.Definition.Settings
     /// PascalCase business entity name, deliberately distinct from a form's progId.
     /// </summary>
     [Description("Permission model.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "ModelId,DisplayName")]
     public sealed class PermissionModel : KeyCollectionItem
     {
         private PermissionRuleCollection? _rules = null;

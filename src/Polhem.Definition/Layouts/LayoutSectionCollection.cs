@@ -8,7 +8,7 @@ namespace Polhem.Definition.Layouts
     /// A collection of layout sections.
     /// </summary>
     [Description("Layout section collection.")]
-    [TreeNode("Sections", false)]
+    [TreeNode("Sections", true)]
     public sealed class LayoutSectionCollection : CollectionBase<LayoutSection>
     {
     }

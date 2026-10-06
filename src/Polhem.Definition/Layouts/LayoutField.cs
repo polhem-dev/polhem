@@ -8,7 +8,7 @@ namespace Polhem.Definition.Layouts
     /// A field placed in a master <see cref="LayoutSection"/>.
     /// </summary>
     [Description("Layout field.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "FieldName,Caption")]
     public sealed class LayoutField : LayoutFieldBase
     {
         private int _rowSpan = 1;

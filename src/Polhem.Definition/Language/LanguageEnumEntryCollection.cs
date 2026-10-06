@@ -10,7 +10,7 @@ namespace Polhem.Definition.Language
     /// / lookup binding); lookup by code is O(1).
     /// </summary>
     [Description("Language enum entry collection.")]
-    [TreeNode("Entries", true)]
+    [TreeNode("Entries", false)]
     public sealed class LanguageEnumEntryCollection : KeyCollectionBase<LanguageEnumEntry>
     {
         /// <summary>
