@@ -6,6 +6,7 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Polhem.Definition.ObjectTree;
 
 namespace Polhem.UI.Avalonia.Controls
@@ -106,8 +107,7 @@ namespace Polhem.UI.Avalonia.Controls
             base.OnPropertyChanged(change);
             if (change.Property == RootNodeProperty)
             {
-                var root = RootNode;
-                ItemsSource = root is null ? null : new[] { root };
+                OnRootNodeChanged();
             }
             else if (change.Property == IconSelectorProperty)
             {
@@ -144,6 +144,27 @@ namespace Polhem.UI.Avalonia.Controls
                 items.Add(item);
             }
             return items;
+        }
+
+        private void OnRootNodeChanged()
+        {
+            var root = RootNode;
+            if (root is null)
+            {
+                // A view that is re-parented, such as a tab's content, briefly loses its DataContext,
+                // so a bound RootNode goes null and comes back within the same dispatcher turn. Clearing
+                // ItemsSource at once would clear the selection, and a two-way SelectedItem binding still
+                // attached to the view model would write that null back. Clear only if it stays null.
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (RootNode is null)
+                        ItemsSource = null;
+                });
+                return;
+            }
+            if (ItemsSource is ObjectTreeNode[] { Length: 1 } shown && ReferenceEquals(shown[0], root))
+                return;
+            ItemsSource = new[] { root };
         }
 
         private ContextMenu CreateCommandMenu()

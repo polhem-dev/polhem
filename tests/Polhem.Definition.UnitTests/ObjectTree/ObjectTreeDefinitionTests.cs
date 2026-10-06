@@ -63,6 +63,7 @@ namespace Polhem.Definition.UnitTests.ObjectTree
 
             var root = new ObjectTreeBuilder().Build(schema);
 
+            Assert.Equal("Order - Order", root.Label);
             Assert.Equal(["Tables", "Rules"], root.Children.Select(c => c.Label));
             var tables = root.Children[0].Children;
             Assert.Equal(["Order - Order", "OrderLine - Order line"], tables.Select(t => t.Label));
