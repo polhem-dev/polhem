@@ -1,6 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:controls="using:Polhem.UI.Avalonia.Controls"
+             xmlns:conv="using:Polhem.DefineEditor.Converters"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
              xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
              xmlns:models="using:Polhem.DefineEditor.Models"
@@ -229,83 +231,9 @@
 
         <!-- Inner tree + property panel -->
         <Grid ColumnDefinitions="*,4,1.2*">
-            <TreeView Grid.Column="0"
-                      ItemsSource="{Binding Roots}"
-                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}"
-                      Padding="6,4">
-                <TreeView.ItemTemplate>
-                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
-                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </TreeDataTemplate>
-                </TreeView.ItemTemplate>
-                <TreeView.Styles>
-                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
-                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                    </Style>
-                </TreeView.Styles>
-                <!-- Right-click menu. The TreeView's DataContext is the VM, so
-                     Command bindings resolve there; IsVisible filters items by
-                     the currently selected node's kind (right-click on an item
-                     auto-selects it in Avalonia's TreeView). -->
-                <TreeView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="{loc:Loc FormSchema_AddTable}"
-                                  Command="{Binding AddTableCommand}"
-                                  IsVisible="{Binding SelectedKindIsSchema}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconTable}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormSchema_AddField}"
-                                  Command="{Binding AddFieldCommand}"
-                                  IsVisible="{Binding SelectedKindIsTable}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconAdd}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormSchema_AddRelationMapping}"
-                                  Command="{Binding AddRelationMappingCommand}"
-                                  IsVisible="{Binding SelectedKindIsRelationGroup}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconLink}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormSchema_AddLookupMapping}"
-                                  Command="{Binding AddLookupMappingCommand}"
-                                  IsVisible="{Binding SelectedKindIsLookupGroup}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconLink}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormSchema_AddListItem}"
-                                  Command="{Binding AddListItemCommand}"
-                                  IsVisible="{Binding SelectedKindIsListItemsGroup}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconList}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator IsVisible="{Binding SelectedKindIsSchema}"/>
-                        <MenuItem Header="{loc:Loc FormSchema_GenerateFormLayout}"
-                                  Command="{Binding GenerateFormLayoutCommand}"
-                                  IsVisible="{Binding SelectedKindIsSchema}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource DefFormLayout}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
-                        <MenuItem Header="{loc:Loc Action_Delete}"
-                                  Command="{Binding DeleteCommand}"
-                                  IsVisible="{Binding SelectedKindCanDelete}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
-                </TreeView.ContextMenu>
-            </TreeView>
+            <controls:ObjectTreeView Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}"
+                                     IconSelector="{Binding IconKeys, Converter={x:Static conv:TreeIconSelector.Converter}}"
+                                     SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
 
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
 

@@ -54,6 +54,12 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   formatted from, matching its `ToString()`, and `IndexField` with its collection gains an annotation so an index
   lists its fields. `TreeNodeAnnotationGateTests` pins both conventions.
 
+### Samples and tools
+
+- DefineEditor builds every document tree with `ObjectTreeBuilder`, shows it in `ObjectTreeView` and takes its context
+  menus from an `ITreeNodeCommandProvider` per document type, in place of its hand-written tree nodes. Labels follow
+  the `[TreeNode]` annotations and folders no longer show a count.
+
 ## [1.3.1] - 2026-10-05
 
 📄 Full notes and background: [docs/en/changelogs/1.3.1.md](docs/en/changelogs/1.3.1.md)

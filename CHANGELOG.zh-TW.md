@@ -45,6 +45,11 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   Entries 不再是資料夾。每個帶標註的物件型別都明確寫出標籤取自哪些屬性，與其 `ToString()` 一致；`IndexField` 與其集合也補上標註，索引底下會列出索引欄位。
   `TreeNodeAnnotationGateTests` 固定這兩項慣例。
 
+### 範例與工具
+
+- DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
+  `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。
+
 ## [1.3.1] - 2026-10-05
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.1.md](docs/zh-TW/changelogs/1.3.1.md)

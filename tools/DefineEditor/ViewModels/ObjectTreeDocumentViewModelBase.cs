@@ -1,21 +1,144 @@
+using System.Collections.ObjectModel;
+using Polhem.Core.Serialization;
 using Polhem.Definition.ObjectTree;
+using Polhem.DefineEditor.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// Tree editors whose tree the framework's <see cref="ObjectTreeBuilder"/> builds from the
-/// <c>[TreeNode]</c> annotations and whose context menu comes from an
-/// <see cref="ITreeNodeCommandProvider"/>. A subclass sets its root object, calls
-/// <see cref="InitializeTree"/>, and supplies the icon of each node and its commands.
+/// Common shell for tree editors of a single define file. Holds Title / FilePath /
+/// Roots / Issues / IsDirty / StatusText, the Save command (XmlCodec round-trip),
+/// the Validate command (delegates to <see cref="PerformValidation"/>), and a
+/// generic Delete command driven by <see cref="GetDeleteAction"/>. The tree is built
+/// by the framework's <see cref="ObjectTreeBuilder"/> from the <c>[TreeNode]</c>
+/// annotations, and its context menu comes from an <see cref="ITreeNodeCommandProvider"/>.
+/// A subclass sets its root object, calls <see cref="InitializeTree"/>, and supplies
+/// the icon of each node, its commands and its Add / Delete actions.
 /// </summary>
-public abstract class ObjectTreeDocumentViewModelBase : TreeDocumentViewModelBase<ObjectTreeNode>
+public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewModelBase
 {
+    public override string Title { get; }
+
+    public override string DocumentKey => FilePath;
+
+    public string FilePath { get; }
+
+    public ObservableCollection<ObjectTreeNode> Roots { get; } = new();
+
+    public ObservableCollection<ValidationIssue> Issues { get; } = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedEditorContext))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
+    private ObjectTreeNode? _selectedTreeNode;
+
+    // IsDirty / StatusText / culture-change refresh are inherited from
+    // DocumentViewModelBase.
+
+    /// <summary>
+    /// Right-pane content. Defaults to the selected node's object (nothing for a folder);
+    /// subclasses override to inject wrapper view-models (e.g. FormSchema's mapping editor).
+    /// </summary>
+    public virtual object? SelectedEditorContext => SelectedTreeNode is { IsFolder: false } node ? node.Value : null;
+
+    /// <summary>Underlying mutable object handed to <see cref="XmlCodec.SerializeToFile"/>.</summary>
+    protected abstract object RootObject { get; }
+
+    // Forwarders for the base type's uniform file-level command surface — see
+    // DocumentViewModelBase.FileSaveCommand. The generated SaveCommand /
+    // ValidateCommand below carry the actual logic; this just exposes them
+    // under a name the source generator hasn't taken.
+    public override IRelayCommand FileSaveCommand => SaveCommand;
+    public override IRelayCommand FileValidateCommand => ValidateCommand;
+
     protected ObjectTreeDocumentViewModelBase(
         string filePath, string titlePrefix, string keyText, ObjectTreeOptions treeOptions)
-        : base(filePath, titlePrefix, keyText)
     {
+        FilePath = filePath;
+        Title = string.IsNullOrEmpty(keyText) ? titlePrefix : $"{titlePrefix} — {keyText}";
         Builder = new ObjectTreeBuilder(treeOptions);
     }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task Save()
+    {
+        try
+        {
+            var issues = PerformValidation();
+            if (!await ConfirmSaveAfterValidationAsync(issues, Issues))
+            {
+                var errs = issues.Count(i => i.Severity == ValidationSeverity.Error);
+                StatusText = L("Status_SaveCancelled", errs);
+                return;
+            }
+
+            foreach (var root in Roots)
+                RefreshNodeLabels(root);
+            XmlCodec.SerializeToFile(RootObject, FilePath);
+            IsDirty = false;
+            StatusText = L("Status_Saved", Path.GetFileName(FilePath));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            StatusText = L("Status_SaveFailed", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void Validate()
+    {
+        Issues.Clear();
+        var found = PerformValidation();
+        foreach (var issue in found)
+            Issues.Add(issue);
+
+        if (Issues.Count == 0)
+        {
+            StatusText = L("Status_ValidationPassed");
+        }
+        else
+        {
+            var errors = Issues.Count(i => i.Severity == ValidationSeverity.Error);
+            var warnings = Issues.Count(i => i.Severity == ValidationSeverity.Warning);
+            StatusText = L("Status_ValidationCompleted", Issues.Count, errors, warnings);
+        }
+    }
+
+    /// <summary>Subclasses produce validation findings here. Default: none.</summary>
+    protected virtual IReadOnlyList<ValidationIssue> PerformValidation() =>
+        Array.Empty<ValidationIssue>();
+
+    [RelayCommand(CanExecute = nameof(CanDelete))]
+    private async System.Threading.Tasks.Task Delete()
+    {
+        var node = SelectedTreeNode;
+        if (node is null) return;
+        if (GetDeleteAction(node) is not { } action) return;
+
+        if (!await ConfirmDeleteAsync(node.Label))
+        {
+            StatusText = L("Status_DeleteCancelled");
+            return;
+        }
+
+        action();
+        var parent = node.Parent;
+        parent?.Children.Remove(node);
+        SelectedTreeNode = parent;
+        IsDirty = true;
+        StatusText = L("Status_Deleted");
+    }
+
+    private bool CanDelete() => SelectedTreeNode is not null && GetDeleteAction(SelectedTreeNode) is not null;
+
+    /// <summary>
+    /// Subclasses return a closure that removes <paramref name="node"/> from its
+    /// owning Polhem.Definition collection, or null when the node is not deletable
+    /// (e.g. root nodes). The shell then drops the tree-side node.
+    /// </summary>
+    protected abstract Action? GetDeleteAction(ObjectTreeNode node);
 
     /// <summary>Builds the tree and the nodes for objects added later, with the subclass's options.</summary>
     protected ObjectTreeBuilder Builder { get; }
@@ -66,15 +189,7 @@ public abstract class ObjectTreeDocumentViewModelBase : TreeDocumentViewModelBas
         return node;
     }
 
-    protected override object? GetNodeValue(ObjectTreeNode node) => node.IsFolder ? null : node.Value;
-
-    protected override string GetNodeLabel(ObjectTreeNode node) => node.Label;
-
-    protected override ObjectTreeNode? GetParentNode(ObjectTreeNode node) => node.Parent;
-
-    protected override void RemoveNode(ObjectTreeNode node) => node.Parent?.Children.Remove(node);
-
-    protected override void RefreshNodeLabels(ObjectTreeNode node)
+    private static void RefreshNodeLabels(ObjectTreeNode node)
     {
         node.Refresh();
         foreach (var child in node.Children)
