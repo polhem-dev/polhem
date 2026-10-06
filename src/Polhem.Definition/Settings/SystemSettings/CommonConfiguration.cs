@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core;
-using Polhem.Core.Attributes;
+using Polhem.Definition.Attributes;
 using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Settings

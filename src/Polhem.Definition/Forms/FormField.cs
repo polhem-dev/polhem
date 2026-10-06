@@ -1,5 +1,5 @@
 using Polhem.Core;
-using Polhem.Core.Attributes;
+using Polhem.Definition.Attributes;
 using Polhem.Core.Data;
 using Polhem.Core.Collections;
 using System.Text.Json.Serialization;

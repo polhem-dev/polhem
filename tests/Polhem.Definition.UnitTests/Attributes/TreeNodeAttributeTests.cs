@@ -1,7 +1,8 @@
 using System.ComponentModel;
-using Polhem.Core.Attributes;
+using Polhem.Core;
+using Polhem.Definition.Attributes;
 
-namespace Polhem.Core.UnitTests
+namespace Polhem.Definition.UnitTests.Attributes
 {
     public class TreeNodeAttributeTests
     {

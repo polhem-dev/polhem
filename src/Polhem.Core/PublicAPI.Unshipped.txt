@@ -2,3 +2,14 @@
 *REMOVED*Polhem.Core.Serialization.Gzip
 *REMOVED*static Polhem.Core.Serialization.Gzip.Compress(byte[]! bytes) -> byte[]!
 *REMOVED*static Polhem.Core.Serialization.Gzip.Decompress(byte[]! bytes) -> byte[]!
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.CollectionFolder.get -> bool
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.DisplayFormat.get -> string!
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.PropertyName.get -> string!
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute() -> void
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat) -> void
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, bool collectionFolder) -> void
+*REMOVED*Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, string! propertyName) -> void
+*REMOVED*Polhem.Core.Attributes.TreeNodeIgnoreAttribute
+*REMOVED*Polhem.Core.Attributes.TreeNodeIgnoreAttribute.TreeNodeIgnoreAttribute() -> void
+*REMOVED*static Polhem.Core.Attributes.TreeNodeAttribute.GetDisplayText(object! value) -> string!

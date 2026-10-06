@@ -2,7 +2,7 @@ using Polhem.Definition.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Text.Json.Serialization;
-using Polhem.Core.Attributes;
+using Polhem.Definition.Attributes;
 using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Settings

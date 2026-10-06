@@ -25,6 +25,13 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   (`-32099`). Exception types may change in a minor version
   ([ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md), decision 4).
 
+### Changed
+
+- `TreeNodeAttribute` and `TreeNodeIgnoreAttribute` move from `Polhem.Core.Attributes` (`Polhem.Core`) to
+  `Polhem.Definition.Attributes` (`Polhem.Definition`), next to the definition types they annotate. Nothing in the
+  framework read them yet, so applying them had no effect; a type of your own that applies them needs
+  `using Polhem.Definition.Attributes;` instead of `using Polhem.Core.Attributes;`.
+
 ## [1.3.1] - 2026-10-05
 
 📄 Full notes and background: [docs/en/changelogs/1.3.1.md](docs/en/changelogs/1.3.1.md)

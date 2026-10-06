@@ -1,11 +1,10 @@
 using System.ComponentModel;
-using Polhem.Core.Attributes;
 
 namespace Polhem.Core.UnitTests
 {
     public class AssemblyLoaderTests
     {
-        private static readonly object[] s_treeNodeCtorArgs = { "ok", true };
+        private static readonly object[] s_sampleCtorArgs = { "ok", true };
 
         private const string BaseAssembly = "Polhem.Core.dll";
 
@@ -51,8 +50,8 @@ namespace Polhem.Core.UnitTests
         [DisplayName("GetType supports the 'type, assembly' format")]
         public void GetType_WithAssemblyQualifiedName_ReturnsType()
         {
-            var type = AssemblyLoader.GetType("Polhem.Core.Attributes.TreeNodeAttribute, Polhem.Core");
-            Assert.Equal(typeof(TreeNodeAttribute), type);
+            var type = AssemblyLoader.GetType("Polhem.Core.UnitTests.AssemblyLoaderSample, Polhem.Core.UnitTests");
+            Assert.Equal(typeof(AssemblyLoaderSample), type);
         }
 
         [Fact]
@@ -60,7 +59,7 @@ namespace Polhem.Core.UnitTests
         public void GetType_WithFullTypeName_ReturnsType()
         {
             // The sample type must be in the root namespace `Polhem.Core`. The assembly name is inferred by dropping
-            // the last segment, so `Polhem.Core.Attributes.X` would look for a nonexistent `Polhem.Core.Attributes.dll`.
+            // the last segment, so `Polhem.Core.Collections.X` would look for a nonexistent `Polhem.Core.Collections.dll`.
             var type = AssemblyLoader.GetType("Polhem.Core.SysInfo");
             Assert.Equal(typeof(SysInfo), type);
         }
@@ -69,8 +68,8 @@ namespace Polhem.Core.UnitTests
         [DisplayName("CreateInstance creates a new object of the given type")]
         public void CreateInstance_ReturnsInstance()
         {
-            var instance = AssemblyLoader.CreateInstance("Polhem.Core.Attributes.TreeNodeAttribute, Polhem.Core");
-            Assert.IsType<TreeNodeAttribute>(instance);
+            var instance = AssemblyLoader.CreateInstance("Polhem.Core.UnitTests.AssemblyLoaderSample, Polhem.Core.UnitTests");
+            Assert.IsType<AssemblyLoaderSample>(instance);
         }
 
         [Fact]
@@ -83,10 +82,10 @@ namespace Polhem.Core.UnitTests
             // throws `FileLoadException`. The original test only avoided this because its first constructor argument
             // happened to be a bool.
             var instance = AssemblyLoader.CreateInstance(
-                "Polhem.Core.Attributes.TreeNodeAttribute, Polhem.Core", s_treeNodeCtorArgs);
-            var result = Assert.IsType<TreeNodeAttribute>(instance);
-            Assert.Equal("ok", result.DisplayFormat);
-            Assert.True(result.CollectionFolder);
+                "Polhem.Core.UnitTests.AssemblyLoaderSample, Polhem.Core.UnitTests", s_sampleCtorArgs);
+            var result = Assert.IsType<AssemblyLoaderSample>(instance);
+            Assert.Equal("ok", result.Label);
+            Assert.True(result.Flag);
         }
     }
 }

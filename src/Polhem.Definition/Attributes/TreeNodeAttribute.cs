@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using Polhem.Core;
 
-namespace Polhem.Core.Attributes
+namespace Polhem.Definition.Attributes
 {
     /// <summary>
     /// Custom attribute applied to a class to describe how the object is presented as a tree node.

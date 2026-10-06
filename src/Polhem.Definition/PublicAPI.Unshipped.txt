@@ -1,1 +1,12 @@
 #nullable enable
+Polhem.Definition.Attributes.TreeNodeAttribute
+Polhem.Definition.Attributes.TreeNodeAttribute.CollectionFolder.get -> bool
+Polhem.Definition.Attributes.TreeNodeAttribute.DisplayFormat.get -> string!
+Polhem.Definition.Attributes.TreeNodeAttribute.PropertyName.get -> string!
+Polhem.Definition.Attributes.TreeNodeAttribute.TreeNodeAttribute() -> void
+Polhem.Definition.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat) -> void
+Polhem.Definition.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, bool collectionFolder) -> void
+Polhem.Definition.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, string! propertyName) -> void
+Polhem.Definition.Attributes.TreeNodeIgnoreAttribute
+Polhem.Definition.Attributes.TreeNodeIgnoreAttribute.TreeNodeIgnoreAttribute() -> void
+static Polhem.Definition.Attributes.TreeNodeAttribute.GetDisplayText(object! value) -> string!
