@@ -78,9 +78,8 @@ namespace Polhem.Api.Core.JsonRpc
         /// </para>
         /// <para>
         /// NOTE: named rather than counted. This once said "the six BCL rows", which had the count
-        /// right and the label wrong — <see cref="JsonRpcException"/> is the framework's own type, so
-        /// no wording with a number in it was true. A wrong name is visible to the reader; a wrong
-        /// count is not (<c>code-style.md</c>, "Do not write inventory counts of code artifacts").
+        /// right and the label wrong. A wrong name is visible to the reader; a wrong count is not
+        /// (<c>code-style.md</c>, "Do not write inventory counts of code artifacts").
         /// </para>
         /// </remarks>
         private static readonly Mapping[] s_mappings =
@@ -118,7 +117,6 @@ namespace Polhem.Api.Core.JsonRpc
             new(typeof(InvalidOperationException), JsonRpcErrorCode.UserMessage, null, "The request could not be completed."),
             new(typeof(NotSupportedException), JsonRpcErrorCode.UserMessage, null, "The request is not supported."),
             new(typeof(FormatException), JsonRpcErrorCode.UserMessage, null, "The request is not valid."),
-            new(typeof(JsonRpcException), JsonRpcErrorCode.UserMessage, null),
         ];
 
         /// <summary>

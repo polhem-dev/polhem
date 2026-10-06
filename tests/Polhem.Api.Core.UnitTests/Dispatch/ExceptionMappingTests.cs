@@ -122,26 +122,6 @@ namespace Polhem.Api.Core.UnitTests.Dispatch
         }
 
         [Fact]
-        [DisplayName("MapCode keeps the message of the framework's own JsonRpcException outside debug mode")]
-        public void MapCode_JsonRpcException_KeepsItsMessage()
-        {
-            bool original = SysInfo.IsDebugMode;
-            try
-            {
-                SysInfo.IsDebugMode = false;
-                var (code, message) = PolhemExceptionMapper.MapCode(
-                    new JsonRpcException(400, JsonRpcErrorCode.InvalidRequest, "Missing method"));
-
-                Assert.Equal(JsonRpcErrorCode.UserMessage, code);
-                Assert.Equal("Missing method", message);
-            }
-            finally
-            {
-                SysInfo.IsDebugMode = original;
-            }
-        }
-
-        [Fact]
         [DisplayName("MapCode sends a missing definition under the UserMessage code with its own message outside debug mode")]
         public void MapCode_DefinitionNotFoundException_KeepsItsMessage()
         {
