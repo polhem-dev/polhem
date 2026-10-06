@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Core.Attributes;
 
 namespace Polhem.Core.UnitTests
 {
@@ -9,16 +8,16 @@ namespace Polhem.Core.UnitTests
         [DisplayName("GetType supports separate assembly name and type name arguments")]
         public void GetType_WithSeparateAssemblyAndTypeName_ReturnsType()
         {
-            var type = AssemblyLoader.GetType("Polhem.Core.dll", "Polhem.Core.Attributes.TreeNodeAttribute");
-            Assert.Equal(typeof(TreeNodeAttribute), type);
+            var type = AssemblyLoader.GetType("Polhem.Core.UnitTests.dll", "Polhem.Core.UnitTests.AssemblyLoaderSample");
+            Assert.Equal(typeof(AssemblyLoaderSample), type);
         }
 
         [Fact]
         [DisplayName("CreateInstance supports separate assembly name and type name arguments")]
         public void CreateInstance_SeparateAssemblyAndTypeName_ReturnsInstance()
         {
-            var instance = AssemblyLoader.CreateInstance("Polhem.Core.dll", "Polhem.Core.Attributes.TreeNodeAttribute");
-            Assert.IsType<TreeNodeAttribute>(instance);
+            var instance = AssemblyLoader.CreateInstance("Polhem.Core.UnitTests.dll", "Polhem.Core.UnitTests.AssemblyLoaderSample");
+            Assert.IsType<AssemblyLoaderSample>(instance);
         }
 
         [Fact]
@@ -26,10 +25,10 @@ namespace Polhem.Core.UnitTests
         public void CreateInstance_SeparateParamsWithCtorArgs_UsesMatchingConstructor()
         {
             var instance = AssemblyLoader.CreateInstance(
-                "Polhem.Core.dll", "Polhem.Core.Attributes.TreeNodeAttribute", "msg", true);
-            var result = Assert.IsType<TreeNodeAttribute>(instance);
-            Assert.Equal("msg", result.DisplayFormat);
-            Assert.True(result.CollectionFolder);
+                "Polhem.Core.UnitTests.dll", "Polhem.Core.UnitTests.AssemblyLoaderSample", "msg", true);
+            var result = Assert.IsType<AssemblyLoaderSample>(instance);
+            Assert.Equal("msg", result.Label);
+            Assert.True(result.Flag);
         }
     }
 }

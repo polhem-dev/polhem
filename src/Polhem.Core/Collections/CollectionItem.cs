@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Polhem.Core.Attributes;
 using Polhem.Core.Serialization;
 
 namespace Polhem.Core.Collections
@@ -51,7 +50,6 @@ namespace Polhem.Core.Collections
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]
-        [TreeNodeIgnore]
         public ICollectionBase? Collection
         {
             get { return _collection; }

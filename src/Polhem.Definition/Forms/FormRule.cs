@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using Polhem.Core.Attributes;
+using Polhem.Definition.Attributes;
 using Polhem.Core.Collections;
 
 namespace Polhem.Definition.Forms

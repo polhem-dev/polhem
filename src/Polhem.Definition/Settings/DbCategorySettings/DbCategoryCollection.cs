@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Core.Attributes;
+using Polhem.Definition.Attributes;
 using Polhem.Core.Collections;
 
 namespace Polhem.Definition.Settings

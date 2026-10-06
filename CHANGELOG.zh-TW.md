@@ -23,6 +23,12 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   object 請改 throw `UserMessageException`，它以同一個錯誤碼（`-32099`）傳送。exception 型別可以在 minor 版變動
   （[ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md) decision 4）。
 
+### 變更
+
+- `TreeNodeAttribute` 與 `TreeNodeIgnoreAttribute` 從 `Polhem.Core.Attributes`（`Polhem.Core`）移到
+  `Polhem.Definition.Attributes`（`Polhem.Definition`），與它們所標註的定義型別放在一起。框架目前沒有任何程式讀取它們，
+  套用與否對行為沒有影響；自訂型別若有套用，把 `using Polhem.Core.Attributes;` 換成 `using Polhem.Definition.Attributes;` 即可。
+
 ## [1.3.1] - 2026-10-05
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.1.md](docs/zh-TW/changelogs/1.3.1.md)
