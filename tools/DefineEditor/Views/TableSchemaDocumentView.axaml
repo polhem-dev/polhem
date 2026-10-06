@@ -89,7 +89,7 @@
         </Border>
 
         <Grid ColumnDefinitions="*,4,1.2*">
-            <controls:ObjectTreeView Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}"
+            <controls:ObjectTreeView Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}" DragDropHandler="{Binding DragDropHandler}"
                                      IconSelector="{Binding IconKeys, Converter={x:Static conv:TreeIconSelector.Converter}}"
                                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>

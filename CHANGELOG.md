@@ -61,7 +61,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 - DefineEditor builds every document tree with `ObjectTreeBuilder`, shows it in `ObjectTreeView` and takes its context
   menus from an `ITreeNodeCommandProvider` per document type, in place of its hand-written tree nodes. Labels follow
-  the `[TreeNode]` annotations and folders no longer show a count.
+  the `[TreeNode]` annotations and folders no longer show a count. In every editor a node can be dragged before or after
+  a sibling to reorder the collection that holds it.
 
 ## [1.3.1] - 2026-10-05
 

@@ -117,5 +117,19 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Contains(CommandsFor(Field("status").Children[0].Children[0]), c => c.Label == LocalizationService.Current["Action_Delete"]);
             Assert.DoesNotContain(CommandsFor(_document.RootNode.Children[1]), c => c.Label == LocalizationService.Current["Action_Delete"]);
         }
+
+        [Fact]
+        [DisplayName("Dragging a list item after its sibling reorders the field's list items")]
+        public void DragListItem_ReordersListItems()
+        {
+            var status = (FormField)Field("status").Value;
+            status.ListItems!.Add(new ListItem("closed", "Closed"));
+            var group = Field("status").Children[0];
+            group.Children.Add(new ObjectTreeBuilder().Build(status.ListItems[1]));
+
+            _document.DragDropHandler.Drop(group.Children[0], group.Children[1], TreeNodeDropPosition.After);
+
+            Assert.Equal(["closed", "open"], status.ListItems!.Select(i => i.Value));
+        }
     }
 }

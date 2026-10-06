@@ -142,5 +142,23 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Single(((LanguageEnum)enumNode.Value).Entries);
             Assert.Single(enumNode.Children);
         }
+
+        [Fact]
+        [DisplayName("Dragging a menu entry before its sibling reorders the folder's items")]
+        public void MenuSettings_DragEntry_ReordersFolderItems()
+        {
+            var menu = new MenuSettings();
+            var folder = menu.Items!.AddFolder("hr", "HR");
+            folder.Items!.AddEntry("employee", "Employee", "Employee");
+            folder.Items!.AddEntry("department", "Department", "Department");
+            var document = MenuSettingsDocumentViewModel.Load(Save(menu, "MenuSettings.xml"));
+            var hr = document.RootNode.Children[0];
+            var department = hr.Children[1];
+
+            Assert.True(document.DragDropHandler.CanDrop(department, hr.Children[0], TreeNodeDropPosition.Before));
+            document.DragDropHandler.Drop(department, hr.Children[0], TreeNodeDropPosition.Before);
+
+            Assert.Equal(["department", "employee"], ((MenuFolder)hr.Value).Items!.Select(n => n.Id));
+        }
     }
 }
