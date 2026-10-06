@@ -15,6 +15,8 @@ It is declared in `.claude/settings.json` and implemented in `.claude/hooks/pre-
    compatibility judgement in the commit message or in your reply**. The analyzer catches "not declared"; it cannot
    catch "declared but binary incompatible" (for example, adding an optional parameter to an existing public
    constructor). The purpose of the notice is to turn that judgement from silent into something you must face.
+   What counts as breaking within 1.x has exemptions: the host interfaces and the exception types of
+   `maintainers/adr/adr-046-api-evolution-policies-for-1-0.md` (decisions 2 and 4) may change in a minor version.
 3. **Output from `check-docs-i18n.sh` only produces a notice and does not block.** Committing a source document and
    its translations separately is reasonable; the real gate is the Docs Check in CI. When you see the notice, update
    the translations against the source and `--stamp` them before you push. Do not wait for CI on main to go red.
