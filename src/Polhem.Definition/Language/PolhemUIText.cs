@@ -71,6 +71,12 @@ namespace Polhem.Definition.Language
         /// </summary>
         public const string RequiredFieldsEmpty = "RequiredFieldsEmpty";
 
+        /// <summary>Key of the command that puts a property back to its default value.</summary>
+        public const string ResetValue = "ResetValue";
+
+        /// <summary>Key of the summary shown for a collection property; argument 0 is the number of items.</summary>
+        public const string CollectionSummary = "CollectionSummary";
+
         private PolhemUIText()
         {
         }
@@ -100,6 +106,8 @@ namespace Polhem.Definition.Language
             [SignIn] = "Sign in",
             [SignInEmptyToken] = "Login failed: the server returned an empty access token.",
             [RequiredFieldsEmpty] = "Fill in the required fields: {0}",
+            [ResetValue] = "Reset",
+            [CollectionSummary] = "(Collection) {0} items",
         };
 
         /// <summary>

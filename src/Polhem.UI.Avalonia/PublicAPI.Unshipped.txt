@@ -15,3 +15,30 @@ static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProviderProper
 Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.get -> Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?
 Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.set -> void
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandlerProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?>!
+Polhem.UI.Avalonia.Controls.PropertyGridControl
+Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnly.get -> bool
+Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnly.set -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslator.get -> System.Func<string!, string!>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslator.set -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyGridControl() -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyValueChanged -> System.EventHandler<Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs!>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.Refresh() -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.SelectedObject.get -> object?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.SelectedObject.set -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowCategories.get -> bool
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowCategories.set -> void
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowDescription.get -> bool
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowDescription.set -> void
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.Component.get -> object!
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.NewValue.get -> object?
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.OldValue.get -> object?
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.Property.get -> System.ComponentModel.PropertyDescriptor!
+Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.PropertyValueChangedEventArgs(object! component, System.ComponentModel.PropertyDescriptor! property, object? oldValue, object? newValue) -> void
+override Polhem.UI.Avalonia.Controls.PropertyGridControl.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+override Polhem.UI.Avalonia.Controls.PropertyGridControl.StyleKeyOverride.get -> System.Type!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnlyProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslatorProperty -> Avalonia.StyledProperty<System.Func<string!, string!>?>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.SelectedObjectProperty -> Avalonia.StyledProperty<object?>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowCategoriesProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowDescriptionProperty -> Avalonia.StyledProperty<bool>!
