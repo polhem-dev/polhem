@@ -71,10 +71,30 @@ namespace Polhem.Definition.Attributes
         /// <param name="value">The object instance.</param>
         public static string GetDisplayText(object value)
         {
-            // Get the TreeNodeAttribute from the object
+            return GetDisplayText(value, null);
+        }
+
+        /// <summary>
+        /// Gets the display text for the object that has <see cref="TreeNodeAttribute"/> applied, translating
+        /// <see cref="DisplayFormat"/> before it is used.
+        /// </summary>
+        /// <param name="value">The object instance.</param>
+        /// <param name="formatTranslator">
+        /// Translates <see cref="DisplayFormat"/>, a literal label or a composite format string, before the property
+        /// values are put into it; <c>null</c> uses it as written.
+        /// </param>
+        /// <remarks>
+        /// Only the format is translated, never the property values or the fallback text from
+        /// <see cref="IDisplayName"/> or <see cref="object.ToString"/>.
+        /// </remarks>
+        public static string GetDisplayText(object value, Func<string, string>? formatTranslator)
+        {
             var attribute = TypeDescriptor.GetAttributes(value)[typeof(TreeNodeAttribute)] as TreeNodeAttribute;
-            // If no attribute is found, return the object's string representation
             if (attribute == null) { return value.ToString() ?? string.Empty; }
+
+            var format = attribute.DisplayFormat;
+            if (formatTranslator != null && StringUtilities.IsNotEmpty(format))
+                format = formatTranslator(format);
 
             string displayText;
             if (StringUtilities.IsNotEmpty(attribute.PropertyName))
@@ -84,12 +104,12 @@ namespace Polhem.Definition.Attributes
                 var args = new object[names.Length];
                 for (int N1 = 0; N1 < names.Length; N1++)
                     args[N1] = TypeDescriptor.GetProperties(value)[names[N1]]?.GetValue(value)!;
-                displayText = StringUtilities.Format(attribute.DisplayFormat, args);
+                displayText = StringUtilities.Format(format, args);
             }
             else
             {
                 // DisplayFormat is a literal string
-                displayText = attribute.DisplayFormat;
+                displayText = format;
             }
 
             if (StringUtilities.IsEmpty(displayText))

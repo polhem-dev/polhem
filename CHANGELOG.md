@@ -25,6 +25,15 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   (`-32099`). Exception types may change in a minor version
   ([ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md), decision 4).
 
+### Added
+
+- `Polhem.Definition.ObjectTree`: `ObjectTreeBuilder` builds a UI-independent `ObjectTreeNode` tree from an object
+  graph, driven by `[TreeNode]` and `[TreeNodeIgnore]`. Nodes raise change notifications so a UI head can bind them;
+  the walk keeps each object to one node and stops at `ObjectTreeOptions.MaxDepth`, and `PropertyFilter`, `NodeBuilt`
+  and `LabelTranslator` let the consumer adjust the tree.
+- `TreeNodeAttribute.GetDisplayText(object, Func<string, string>?)` translates the display format before the property
+  values are put into it.
+
 ### Changed
 
 - `TreeNodeAttribute` and `TreeNodeIgnoreAttribute` move from `Polhem.Core.Attributes` (`Polhem.Core`) to

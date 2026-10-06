@@ -76,7 +76,7 @@ gate guards, and because some of their callers reference only this assembly: `Po
 
 | Folder | Main types |
 |--------|------------|
-| `Attributes/` | `ApiAccessControlAttribute` |
+| `Attributes/` | `ApiAccessControlAttribute`, `TreeNodeAttribute`, `TreeNodeIgnoreAttribute` |
 | `Collections/` | `ListItem`, `Parameter`, `Property` and their collections |
 | `Customization/` | `CustomizeOverlay` (the tenant customization overlay) |
 | `Database/` | `TableSchema`, `DbField`, `DbTableIndex`, `DatabaseType`, `FieldType`, `DbCategoryIds` |
@@ -87,6 +87,7 @@ gate guards, and because some of their callers reference only this assembly: `Po
 | `Language/` | `ILanguageService`, `LanguageResource`, `FormSchemaLocalizer`, `MenuLocalizer`, `LanguageResourceStringLocalizer` |
 | `Layouts/` | `FormLayout`, `LayoutSection`, `LayoutField`, `LayoutGrid`, `LayoutColumn`, `ControlType` |
 | `Logging/` | `IAuditLogWriter`, `AuditEntry` and its subtypes, `AuditRule`, `LogOptions` |
+| `ObjectTree/` | `ObjectTreeBuilder`, `ObjectTreeNode`, `ObjectTreeOptions` (a UI-independent tree built from `[TreeNode]` annotations) |
 | `Organization/` | `DepartmentTree`, `IDepartmentTreeService` |
 | `Paging/` | `PagingInfo`, `PagingOptions` |
 | `Security/` | `IAccessTokenValidator`, `IApiEncryptionKeyProvider`, `MasterKeyProvider`, `ApiAccessRequirement`, `ApiProtectionLevel`, the API key types |

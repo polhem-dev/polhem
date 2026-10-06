@@ -23,6 +23,13 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   object 請改 throw `UserMessageException`，它以同一個錯誤碼（`-32099`）傳送。exception 型別可以在 minor 版變動
   （[ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md) decision 4）。
 
+### 新增
+
+- `Polhem.Definition.ObjectTree`：`ObjectTreeBuilder` 依 `[TreeNode]` 與 `[TreeNodeIgnore]`，從物件圖建出與 UI 無關的
+  `ObjectTreeNode` 樹。節點會發出變更通知，UI head 可以直接繫結；走訪時每個物件只產生一個節點，並在
+  `ObjectTreeOptions.MaxDepth` 停止；消費端可用 `PropertyFilter`、`NodeBuilt`、`LabelTranslator` 調整樹。
+- `TreeNodeAttribute.GetDisplayText(object, Func<string, string>?)` 會在填入屬性值之前先翻譯顯示格式。
+
 ### 變更
 
 - `TreeNodeAttribute` 與 `TreeNodeIgnoreAttribute` 從 `Polhem.Core.Attributes`（`Polhem.Core`）移到
