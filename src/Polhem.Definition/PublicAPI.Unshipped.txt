@@ -40,3 +40,15 @@ Polhem.Definition.ObjectTree.ObjectTreeNode.IsExpanded.get -> bool
 Polhem.Definition.ObjectTree.ObjectTreeNode.IsExpanded.set -> void
 Polhem.Definition.ObjectTree.ObjectTreeOptions.ExpandDepth.get -> int
 Polhem.Definition.ObjectTree.ObjectTreeOptions.ExpandDepth.set -> void
+Polhem.Definition.ObjectTree.ITreeNodeCommandProvider
+Polhem.Definition.ObjectTree.ITreeNodeCommandProvider.GetCommands(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.ObjectTree.TreeNodeCommand!>!
+Polhem.Definition.ObjectTree.TreeNodeCommand
+Polhem.Definition.ObjectTree.TreeNodeCommand.BeginsGroup.get -> bool
+Polhem.Definition.ObjectTree.TreeNodeCommand.BeginsGroup.init -> void
+Polhem.Definition.ObjectTree.TreeNodeCommand.Execute() -> void
+Polhem.Definition.ObjectTree.TreeNodeCommand.IconKey.get -> string?
+Polhem.Definition.ObjectTree.TreeNodeCommand.IconKey.init -> void
+Polhem.Definition.ObjectTree.TreeNodeCommand.IsEnabled.get -> bool
+Polhem.Definition.ObjectTree.TreeNodeCommand.IsEnabled.init -> void
+Polhem.Definition.ObjectTree.TreeNodeCommand.Label.get -> string!
+Polhem.Definition.ObjectTree.TreeNodeCommand.TreeNodeCommand(string! label, System.Action! execute) -> void

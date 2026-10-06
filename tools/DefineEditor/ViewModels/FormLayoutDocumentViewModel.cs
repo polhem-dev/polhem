@@ -24,27 +24,14 @@ public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelB
 
     public override string TabIcon => "DefFormLayout";
 
-    public bool SelectedKindIsSectionsGroup => SelectedTreeNode is { IsFolder: true, Value: LayoutSectionCollection };
-    public bool SelectedKindIsSection => SelectedTreeNode?.Value is LayoutSection;
-    public bool SelectedKindIsDetailsGroup => SelectedTreeNode is { IsFolder: true, Value: LayoutGridCollection };
-    public bool SelectedKindIsGrid => SelectedTreeNode?.Value is LayoutGrid;
-
-    protected override bool HasVisibleAddMenuItems =>
-        SelectedKindIsSectionsGroup || SelectedKindIsSection ||
-        SelectedKindIsDetailsGroup || SelectedKindIsGrid;
-
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(ObjectTreeNode? value)
-    {
-        OnPropertyChanged(nameof(SelectedKindIsSectionsGroup));
-        OnPropertyChanged(nameof(SelectedKindIsSection));
-        OnPropertyChanged(nameof(SelectedKindIsDetailsGroup));
-        OnPropertyChanged(nameof(SelectedKindIsGrid));
-    }
+    /// <summary>The commands of the tree's context menu.</summary>
+    public ITreeNodeCommandProvider CommandProvider { get; }
 
     private FormLayoutDocumentViewModel(string filePath, FormLayout root)
         : base(filePath, "FormLayout", keyText: root.LayoutId)
     {
         Root = root;
+        CommandProvider = new FormLayoutCommandProvider(this);
         Roots.Add(s_builder.Build(root));
         SelectedTreeNode = Roots[0];
     }

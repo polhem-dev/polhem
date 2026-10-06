@@ -37,6 +37,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   optionally `IconSelector` for an icon before each label; each item's `IsExpanded` binds both ways to the node.
 - `ObjectTreeNode.IsExpanded` and `ObjectTreeOptions.ExpandDepth`, which sets how many levels of a built tree start
   expanded.
+- `ITreeNodeCommandProvider` and `TreeNodeCommand` (`Polhem.Definition.ObjectTree`): UI-independent commands for a
+  tree node. `ObjectTreeView.CommandProvider` fills the tree's context menu with the selected node's commands each
+  time it opens.
 
 ### Changed
 

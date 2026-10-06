@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Data;
 using Avalonia.Media;
 using Polhem.Definition.ObjectTree;
@@ -62,6 +63,70 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             var item = Assert.IsType<StackPanel>(tree.ItemTemplate!.Build(CreateTree()));
 
             Assert.IsType<TextBlock>(Assert.Single(item.Children));
+        }
+
+        private sealed class FixedProvider(params TreeNodeCommand[] commands) : ITreeNodeCommandProvider
+        {
+            public IReadOnlyList<TreeNodeCommand> GetCommands(ObjectTreeNode node) => commands;
+        }
+
+        [Fact]
+        [DisplayName("Setting CommandProvider gives the tree a context menu, and clearing it removes that menu")]
+        public void CommandProvider_SetAndCleared_ManagesContextMenu()
+        {
+            var tree = new ObjectTreeView { CommandProvider = new FixedProvider() };
+            Assert.NotNull(tree.ContextMenu);
+
+            tree.CommandProvider = null;
+
+            Assert.Null(tree.ContextMenu);
+        }
+
+        [Fact]
+        [DisplayName("Clearing CommandProvider leaves a context menu the host set itself")]
+        public void CommandProvider_Cleared_KeepsHostMenu()
+        {
+            var hostMenu = new ContextMenu();
+            var tree = new ObjectTreeView { ContextMenu = hostMenu };
+
+            tree.CommandProvider = null;
+
+            Assert.Same(hostMenu, tree.ContextMenu);
+        }
+
+        [Fact]
+        [DisplayName("BuildMenuItems makes one item per command and a separator before each later group")]
+        public void BuildMenuItems_Groups_InsertSeparators()
+        {
+            var tree = new ObjectTreeView();
+
+            var items = tree.BuildMenuItems(
+            [
+                new TreeNodeCommand("Add", () => { }) { BeginsGroup = true },
+                new TreeNodeCommand("Rename", () => { }),
+                new TreeNodeCommand("Delete", () => { }) { BeginsGroup = true, IsEnabled = false },
+            ]);
+
+            Assert.Equal(4, items.Count);
+            Assert.Equal("Add", Assert.IsType<MenuItem>(items[0]).Header);
+            Assert.Equal("Rename", Assert.IsType<MenuItem>(items[1]).Header);
+            Assert.IsType<Separator>(items[2]);
+            var delete = Assert.IsType<MenuItem>(items[3]);
+            Assert.Equal("Delete", delete.Header);
+            Assert.False(delete.IsEnabled);
+        }
+
+        [Fact]
+        [DisplayName("Clicking a built menu item runs its command")]
+        public void BuildMenuItems_Click_ExecutesCommand()
+        {
+            var runs = 0;
+            var item = Assert.IsType<MenuItem>(Assert.Single(
+                new ObjectTreeView().BuildMenuItems([new TreeNodeCommand("Add", () => runs++)])));
+
+            item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+
+            Assert.Equal(1, runs);
         }
     }
 }
