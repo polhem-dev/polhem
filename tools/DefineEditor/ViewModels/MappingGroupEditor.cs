@@ -6,8 +6,7 @@ namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
 /// View-model shown in the right pane when the selected tree node is a
-/// FormSchema relation-group or lookup-group (kind strings
-/// <c>FormSchemaKinds.RelationGroup</c> / <c>FormSchemaKinds.LookupGroup</c>).
+/// FormSchema field's Relation or Lookup group.
 /// Lets the user pick the target ProgId from solution-wide candidates and
 /// edit each FieldMapping inline with destination-field autocomplete drawn
 /// from the owning table's fields.

@@ -1,8 +1,10 @@
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
@@ -11,14 +13,19 @@ using CommunityToolkit.Mvvm.Input;
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// FormSchema editor. Loads the schema via <see cref="XmlCodec"/>, exposes an
-/// inner tree, lets the right-pane DataTemplates two-way bind to the underlying
-/// Polhem.Definition payload, and offers Add commands for tables / fields /
-/// mappings / list items. Save / Validate / Delete and tree-node plumbing
-/// inherit from <see cref="SingletonDocumentViewModelBase"/>.
+/// FormSchema editor. Loads the schema via <see cref="XmlCodec"/>, shows it as an
+/// <see cref="ObjectTreeBuilder"/> tree (Tables and Rules folders, fields directly under
+/// each table), lets the right-pane DataTemplates two-way bind to the underlying
+/// Polhem.Definition object, and offers Add commands for tables / fields / mappings /
+/// list items. Each field also gets Relation / Lookup / ListItems group nodes, which the
+/// annotations cannot express; see <see cref="AddFieldGroups"/>.
 /// </summary>
-public sealed partial class FormSchemaDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
+    private const string RelationLabel = "Relation";
+    private const string LookupLabel = "Lookup";
+    private const string ListItemsLabel = "ListItems";
+
     public override string TabIcon => "DefFormSchema";
 
     public FormSchema Schema { get; }
@@ -28,46 +35,31 @@ public sealed partial class FormSchemaDocumentViewModel : SingletonDocumentViewM
     /// <summary>Backing object handed to <see cref="XmlCodec.SerializeToFile"/> by base's Save.</summary>
     protected override object RootObject => Schema;
 
-    // Visibility hints for the tree-view context menu. Each MenuItem binds
-    // IsVisible to the flag matching the kind it applies to. Kept here rather
-    // than on the node model so the VM owns "what can be done from this kind"
-    // — the node stays a passive data holder.
-    public bool SelectedKindIsSchema => SelectedTreeNode?.Kind == FormSchemaKinds.Schema;
-    public bool SelectedKindIsTable => SelectedTreeNode?.Kind == FormSchemaKinds.Table;
-    public bool SelectedKindIsField => SelectedTreeNode?.Kind == FormSchemaKinds.Field;
-    public bool SelectedKindIsRelationGroup => SelectedTreeNode?.Kind == FormSchemaKinds.RelationGroup;
-    public bool SelectedKindIsLookupGroup => SelectedTreeNode?.Kind == FormSchemaKinds.LookupGroup;
-    public bool SelectedKindIsListItemsGroup => SelectedTreeNode?.Kind == FormSchemaKinds.ListItemsGroup;
-
-    protected override bool HasVisibleAddMenuItems =>
-        SelectedKindIsSchema || SelectedKindIsTable || SelectedKindIsRelationGroup ||
-        SelectedKindIsLookupGroup || SelectedKindIsListItemsGroup;
+    public override ITreeNodeCommandProvider CommandProvider { get; }
 
     /// <summary>
     /// Content shown in the right-pane <see cref="Avalonia.Controls.ContentControl"/>.
-    /// Group nodes (Relation / Lookup) yield a dedicated <see cref="MappingGroupEditor"/>
-    /// wrapper; everything else yields the raw payload so the existing
+    /// The Relation / Lookup groups yield a <see cref="MappingGroupEditor"/>, the ListItems
+    /// group yields its field, and everything else yields the node's object so the
     /// FormSchema / FormTable / FormField / FieldMapping / ListItem templates apply.
     /// </summary>
-    public override object? SelectedEditorContext => SelectedTreeNode is null
-        ? null
-        : SelectedTreeNode.Kind switch
-        {
-            FormSchemaKinds.RelationGroup when SelectedTreeNode.Payload is FormField rf =>
-                new MappingGroupEditor(rf, isRelation: true, Solution.AvailableProgIds),
-            FormSchemaKinds.LookupGroup when SelectedTreeNode.Payload is FormField lf =>
-                new MappingGroupEditor(lf, isRelation: false, Solution.AvailableProgIds),
-            _ => SelectedTreeNode.Payload,
-        };
+    public override object? SelectedEditorContext => SelectedTreeNode switch
+    {
+        null => null,
+        var node when IsRelationGroup(node) => new MappingGroupEditor(OwningField(node)!, isRelation: true, Solution.AvailableProgIds),
+        var node when IsLookupGroup(node) => new MappingGroupEditor(OwningField(node)!, isRelation: false, Solution.AvailableProgIds),
+        var node when IsListItemsGroup(node) => OwningField(node),
+        _ => base.SelectedEditorContext,
+    };
 
     private FormSchemaDocumentViewModel(string filePath, FormSchema schema, SolutionContext solution)
-        : base(filePath, "FormSchema", schema.ProgId)
+        // The root, its folders and the tables start expanded; fields start collapsed.
+        : base(filePath, "FormSchema", schema.ProgId, new ObjectTreeOptions { ExpandDepth = 3, NodeBuilt = AddFieldGroups })
     {
         Schema = schema;
         Solution = solution;
-        var root = FormSchemaNodeBuilder.BuildSchema(schema);
-        Roots.Add(root);
-        SelectedTreeNode = root;
+        CommandProvider = new FormSchemaCommandProvider(this);
+        InitializeTree(schema);
     }
 
     public static FormSchemaDocumentViewModel Load(string filePath, SolutionContext solution)
@@ -85,147 +77,148 @@ public sealed partial class FormSchemaDocumentViewModel : SingletonDocumentViewM
         => FormSchemaValidator.Validate(Schema, Solution);
 
     /// <summary>
-    /// Base fires the SelectedEditorContext / SelectedKindCanDelete / DeleteCommand
-    /// notifications itself via the <c>[NotifyXxx]</c> attributes on its
-    /// <c>_selectedTreeNode</c>. This override adds FormSchema-specific fan-out:
-    /// the six <c>SelectedKindIsX</c> context-menu visibility flags and the five
-    /// AddXxxCommand can-execute states (which can't be wired through
-    /// <c>[NotifyCanExecuteChangedFor]</c> from base's field).
+    /// Adds the Relation, Lookup and ListItems groups under a field node, each when the field
+    /// uses it. <see cref="FieldMappingCollection"/> and <see cref="ListItemCollection"/> carry no
+    /// <c>[TreeNode]</c>, and a field holds two mapping collections of the same type, which a
+    /// class-level annotation could not label apart.
     /// </summary>
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
+    private static void AddFieldGroups(ObjectTreeNode node, ObjectTreeBuilder builder)
     {
-        OnPropertyChanged(nameof(SelectedKindIsSchema));
-        OnPropertyChanged(nameof(SelectedKindIsTable));
-        OnPropertyChanged(nameof(SelectedKindIsField));
-        OnPropertyChanged(nameof(SelectedKindIsRelationGroup));
-        OnPropertyChanged(nameof(SelectedKindIsLookupGroup));
-        OnPropertyChanged(nameof(SelectedKindIsListItemsGroup));
-        AddTableCommand.NotifyCanExecuteChanged();
-        AddFieldCommand.NotifyCanExecuteChanged();
-        AddRelationMappingCommand.NotifyCanExecuteChanged();
-        AddLookupMappingCommand.NotifyCanExecuteChanged();
-        AddListItemCommand.NotifyCanExecuteChanged();
+        if (node.Value is not FormField field) return;
+        if (!string.IsNullOrEmpty(field.RelationProgId) || field.RelationFieldMappings is { Count: > 0 })
+            node.Children.Add(CreateGroup(builder, field.RelationFieldMappings!, RelationLabel));
+        if (!string.IsNullOrEmpty(field.LookupProgId) || field.LookupFieldMappings is { Count: > 0 })
+            node.Children.Add(CreateGroup(builder, field.LookupFieldMappings!, LookupLabel));
+        if (field.ListItems is { Count: > 0 } || !string.IsNullOrEmpty(field.LangEnumName))
+            node.Children.Add(CreateGroup(builder, field.ListItems!, ListItemsLabel));
     }
+
+    private static ObjectTreeNode CreateGroup(ObjectTreeBuilder builder, System.Collections.IEnumerable items, string label)
+    {
+        var group = new ObjectTreeNode(items, label, isFolder: true);
+        foreach (var item in items)
+            group.Children.Add(builder.Build(item));
+        return group;
+    }
+
+    private static FormField? OwningField(ObjectTreeNode node) => node.Parent?.Value as FormField;
+
+    public static bool IsRelationGroup(ObjectTreeNode node) =>
+        node.IsFolder && OwningField(node) is { } f && ReferenceEquals(node.Value, f.RelationFieldMappings);
+
+    public static bool IsLookupGroup(ObjectTreeNode node) =>
+        node.IsFolder && OwningField(node) is { } f && ReferenceEquals(node.Value, f.LookupFieldMappings);
+
+    public static bool IsListItemsGroup(ObjectTreeNode node) =>
+        node.IsFolder && OwningField(node) is { } f && ReferenceEquals(node.Value, f.ListItems);
+
+    public override string IconKeyFor(ObjectTreeNode node) => node switch
+    {
+        { Value: FormSchema } => "DefFormSchema",
+        { Value: FormTableCollection or FormTable } => "IconTable",
+        { Value: FormField field } => field.Type switch
+        {
+            FieldType.DbField => "IconColumn",
+            FieldType.RelationField => "IconLink",
+            _ => "IconText",
+        },
+        _ when IsRelationGroup(node) => "IconLink",
+        _ when IsLookupGroup(node) => "IconLookup",
+        _ when IsListItemsGroup(node) => "IconList",
+        { Value: FormRuleCollection } => "IconList",
+        { Value: FieldMapping } => "IconArrowRight",
+        { Value: ListItem or FormRule } => "IconDot",
+        _ => "DefUnknown",
+    };
 
     [RelayCommand(CanExecute = nameof(CanAddTable))]
     private void AddTable()
     {
-        if (SelectedTreeNode is not { Kind: FormSchemaKinds.Schema, Payload: FormSchema schema } schemaNode)
-            return;
+        var folder = FindAncestor<FormTableCollection>(SelectedTreeNode) ?? FolderOf<FormTableCollection>();
+        if (folder is null) return;
 
-        var name = UniqueKey(schema.Tables!.Select(t => t.TableName), "NewTable");
+        var name = UniqueKey(Schema.Tables!.Select(t => t.TableName), "NewTable");
         var table = new FormTable(name, "New table");
-        schema.Tables!.Add(table);
-
-        var node = FormSchemaNodeBuilder.BuildTable(table);
-        schemaNode.AddChild(node);
-        SelectedTreeNode = node;
-        IsDirty = true;
+        Schema.Tables!.Add(table);
+        AddNode(folder, table);
         StatusText = L("Status_AddedNamed", "FormTable", name);
     }
 
-    private bool CanAddTable() => SelectedTreeNode?.Kind == FormSchemaKinds.Schema;
+    private bool CanAddTable() => SelectedTreeNode is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddField))]
     private void AddField()
     {
-        var tableNode = FindAncestor(SelectedTreeNode, FormSchemaKinds.Table);
-        if (tableNode?.Payload is not FormTable table) return;
+        var tableNode = FindAncestor<FormTable>(SelectedTreeNode);
+        if (tableNode?.Value is not FormTable table) return;
 
         var name = UniqueKey(table.Fields!.Select(f => f.FieldName), "new_field");
         var field = new FormField(name, "New field", FieldDbType.String);
         table.Fields!.Add(field);
-
-        var node = FormSchemaNodeBuilder.BuildField(field);
-        tableNode.AddChild(node);
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(tableNode, field);
         StatusText = L("Status_AddedNamed", "FormField", name);
     }
 
-    private bool CanAddField() =>
-        FindAncestor(SelectedTreeNode, FormSchemaKinds.Table) is not null;
+    private bool CanAddField() => FindAncestor<FormTable>(SelectedTreeNode) is not null;
 
-    [RelayCommand(CanExecute = nameof(CanAddRelationMapping))]
-    private void AddRelationMapping()
+    [RelayCommand(CanExecute = nameof(CanAddMapping))]
+    private void AddRelationMapping() => AddMapping(isRelation: true);
+
+    [RelayCommand(CanExecute = nameof(CanAddMapping))]
+    private void AddLookupMapping() => AddMapping(isRelation: false);
+
+    private void AddMapping(bool isRelation)
     {
-        var fieldNode = FindAncestor(SelectedTreeNode, FormSchemaKinds.Field);
-        if (fieldNode?.Payload is not FormField field) return;
+        var fieldNode = FindAncestor<FormField>(SelectedTreeNode);
+        if (fieldNode?.Value is not FormField field) return;
 
         var mapping = new FieldMapping(string.Empty, string.Empty);
-        field.RelationFieldMappings!.Add(mapping);
+        var mappings = isRelation ? field.RelationFieldMappings! : field.LookupFieldMappings!;
+        mappings.Add(mapping);
 
-        var group = EnsureGroup(fieldNode, FormSchemaKinds.RelationGroup,
-            f => FormSchemaNodeBuilder.BuildRelationGroup(f));
-        var node = FormSchemaNodeBuilder.BuildMapping(mapping);
-        group.AddChild(node);
-        group.IsExpanded = true;
+        var group = EnsureGroup(fieldNode, mappings, isRelation ? RelationLabel : LookupLabel);
+        var selected = SelectedTreeNode;
+        var node = AddNode(group, mapping);
         fieldNode.IsExpanded = true;
 
-        // If user was sitting on the relation group, refresh the editor view of
-        // the group so the new mapping appears immediately; otherwise focus the
-        // new mapping for inline editing.
-        if (SelectedTreeNode == group)
+        // Sitting on the group, the mapping editor in the right pane lists the new mapping, so
+        // keep the group selected and refresh the editor; otherwise the new mapping is selected.
+        if (ReferenceEquals(selected, group))
+        {
+            SelectedTreeNode = group;
             OnPropertyChanged(nameof(SelectedEditorContext));
-        else
-            SelectedTreeNode = node;
-        IsDirty = true;
-        StatusText = L("Status_AddedNamed", "Relation FieldMapping", "");
+        }
+        StatusText = L("Status_AddedNamed", isRelation ? "Relation FieldMapping" : "Lookup FieldMapping", "");
     }
 
-    private bool CanAddRelationMapping() =>
-        FindAncestor(SelectedTreeNode, FormSchemaKinds.Field) is not null;
-
-    [RelayCommand(CanExecute = nameof(CanAddLookupMapping))]
-    private void AddLookupMapping()
-    {
-        var fieldNode = FindAncestor(SelectedTreeNode, FormSchemaKinds.Field);
-        if (fieldNode?.Payload is not FormField field) return;
-
-        var mapping = new FieldMapping(string.Empty, string.Empty);
-        field.LookupFieldMappings!.Add(mapping);
-
-        var group = EnsureGroup(fieldNode, FormSchemaKinds.LookupGroup,
-            f => FormSchemaNodeBuilder.BuildLookupGroup(f));
-        var node = FormSchemaNodeBuilder.BuildMapping(mapping);
-        group.AddChild(node);
-        group.IsExpanded = true;
-        fieldNode.IsExpanded = true;
-
-        if (SelectedTreeNode == group)
-            OnPropertyChanged(nameof(SelectedEditorContext));
-        else
-            SelectedTreeNode = node;
-        IsDirty = true;
-        StatusText = L("Status_AddedNamed", "Lookup FieldMapping", "");
-    }
-
-    private bool CanAddLookupMapping() =>
-        FindAncestor(SelectedTreeNode, FormSchemaKinds.Field) is not null;
+    private bool CanAddMapping() => FindAncestor<FormField>(SelectedTreeNode) is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddListItem))]
     private void AddListItem()
     {
-        var fieldNode = FindAncestor(SelectedTreeNode, FormSchemaKinds.Field);
-        if (fieldNode?.Payload is not FormField field) return;
+        var fieldNode = FindAncestor<FormField>(SelectedTreeNode);
+        if (fieldNode?.Value is not FormField field) return;
 
-        var key = UniqueKey((field.ListItems ?? new ListItemCollection()).Select(i => i.Value), "value");
+        var key = UniqueKey(field.ListItems!.Select(i => i.Value), "value");
         var item = new ListItem(key, "New option");
         field.ListItems!.Add(item);
 
-        var group = EnsureGroup(fieldNode, FormSchemaKinds.ListItemsGroup,
-            f => FormSchemaNodeBuilder.BuildListItemsGroup(f));
-        var node = FormSchemaNodeBuilder.BuildListItem(item);
-        group.AddChild(node);
-        group.IsExpanded = true;
+        var group = EnsureGroup(fieldNode, field.ListItems!, ListItemsLabel);
+        AddNode(group, item);
         fieldNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
         StatusText = L("Status_AddedNamed", "ListItem", key);
     }
 
-    private bool CanAddListItem() =>
-        FindAncestor(SelectedTreeNode, FormSchemaKinds.Field) is not null;
+    private bool CanAddListItem() => FindAncestor<FormField>(SelectedTreeNode) is not null;
+
+    private ObjectTreeNode EnsureGroup(ObjectTreeNode fieldNode, System.Collections.IEnumerable items, string label)
+    {
+        var existing = fieldNode.Children.FirstOrDefault(c => c.IsFolder && ReferenceEquals(c.Value, items));
+        if (existing is not null) return existing;
+        var group = CreateGroup(Builder, items, label);
+        fieldNode.Children.Add(group);
+        return group;
+    }
 
     /// <summary>
     /// Generates the <see cref="FormLayout"/> definition for this schema and writes it to
@@ -262,7 +255,7 @@ public sealed partial class FormSchemaDocumentViewModel : SingletonDocumentViewM
     }
 
     private bool CanGenerateFormLayout() =>
-        SelectedKindIsSchema && !string.IsNullOrWhiteSpace(Schema.ProgId);
+        SelectedTreeNode?.Value is FormSchema && !string.IsNullOrWhiteSpace(Schema.ProgId);
 
     private static async Task<bool> ConfirmOverwriteFormLayoutAsync(string progId)
     {
@@ -276,35 +269,12 @@ public sealed partial class FormSchemaDocumentViewModel : SingletonDocumentViewM
             cancelLabel: L("Action_Cancel"));
     }
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node) => node.Kind switch
+    protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
-        FormSchemaKinds.Table when node.Payload is FormTable t
-            && node.Parent?.Payload is FormSchema s
-            => () => s.Tables!.Remove(t),
-        FormSchemaKinds.Field when node.Payload is FormField f
-            && node.Parent?.Payload is FormTable t
-            => () => t.Fields!.Remove(f),
-        FormSchemaKinds.Mapping when node.Payload is FieldMapping m
-            && node.Parent is { Kind: FormSchemaKinds.RelationGroup, Payload: FormField rf }
-            => () => rf.RelationFieldMappings!.Remove(m),
-        FormSchemaKinds.Mapping when node.Payload is FieldMapping m
-            && node.Parent is { Kind: FormSchemaKinds.LookupGroup, Payload: FormField lf }
-            => () => lf.LookupFieldMappings!.Remove(m),
-        FormSchemaKinds.ListItem when node.Payload is ListItem i
-            && node.Parent is { Kind: FormSchemaKinds.ListItemsGroup, Payload: FormField pf }
-            => () => pf.ListItems!.Remove(i),
+        FormTable t => () => Schema.Tables!.Remove(t),
+        FormField f when node.Parent?.Value is FormTable t => () => t.Fields!.Remove(f),
+        FieldMapping m when node.Parent?.Value is FieldMappingCollection mappings => () => mappings.Remove(m),
+        ListItem i when node.Parent?.Value is ListItemCollection items => () => items.Remove(i),
         _ => null,
     };
-
-    private static SettingsTreeNode EnsureGroup(
-        SettingsTreeNode fieldNode,
-        string groupKind,
-        Func<FormField, SettingsTreeNode> builder)
-    {
-        var existing = fieldNode.Children.FirstOrDefault(c => c.Kind == groupKind);
-        if (existing is not null) return existing;
-        var group = builder((FormField)fieldNode.Payload!);
-        fieldNode.AddChild(group);
-        return group;
-    }
 }
