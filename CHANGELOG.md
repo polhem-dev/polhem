@@ -40,6 +40,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - `ITreeNodeCommandProvider` and `TreeNodeCommand` (`Polhem.Definition.ObjectTree`): UI-independent commands for a
   tree node. `ObjectTreeView.CommandProvider` fills the tree's context menu with the selected node's commands each
   time it opens.
+- `ITreeNodeDragDropHandler` and `TreeNodeDropPosition` (`Polhem.Definition.ObjectTree`): which tree nodes can be
+  dragged and where they may land. `ObjectTreeView.DragDropHandler` lets the user drop a node before or after another,
+  shows where it will land, and moves the node in the tree after the handler has moved the objects.
 
 ### Changed
 
