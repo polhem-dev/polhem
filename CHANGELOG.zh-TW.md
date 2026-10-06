@@ -50,7 +50,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 ### 範例與工具
 
 - DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
-  `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。
+  `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。
 
 ## [1.3.1] - 2026-10-05
 

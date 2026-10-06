@@ -59,6 +59,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         FilePath = filePath;
         Title = string.IsNullOrEmpty(keyText) ? titlePrefix : $"{titlePrefix} — {keyText}";
         Builder = new ObjectTreeBuilder(treeOptions);
+        DragDropHandler = new SiblingReorderDragDropHandler(this);
     }
 
     [RelayCommand]
@@ -149,8 +150,11 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// <summary>The commands of the tree's context menu.</summary>
     public abstract ITreeNodeCommandProvider CommandProvider { get; }
 
-    /// <summary>What the tree lets the user drag and where; null turns dragging off.</summary>
-    public virtual ITreeNodeDragDropHandler? DragDropHandler => null;
+    /// <summary>
+    /// What the tree lets the user drag and where: by default, reordering a node within the define
+    /// collection that holds it.
+    /// </summary>
+    public ITreeNodeDragDropHandler DragDropHandler { get; }
 
     /// <summary>The resource key of the icon shown before <paramref name="node"/>.</summary>
     public abstract string IconKeyFor(ObjectTreeNode node);
