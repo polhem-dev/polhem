@@ -9,3 +9,6 @@ override Polhem.UI.Avalonia.Controls.ObjectTreeView.OnPropertyChanged(Avalonia.A
 override Polhem.UI.Avalonia.Controls.ObjectTreeView.StyleKeyOverride.get -> System.Type!
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelectorProperty -> Avalonia.StyledProperty<System.Func<Polhem.Definition.ObjectTree.ObjectTreeNode!, Avalonia.Media.Geometry?>?>!
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNodeProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ObjectTreeNode?>!
+Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.get -> Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.set -> void
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProviderProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?>!

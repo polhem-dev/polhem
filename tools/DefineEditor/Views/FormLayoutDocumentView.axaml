@@ -103,48 +103,8 @@
         </Border>
 
         <Grid ColumnDefinitions="*,4,1.2*">
-            <controls:ObjectTreeView x:Name="Tree" Grid.Column="0" RootNode="{Binding RootNode}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
-                <controls:ObjectTreeView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="{loc:Loc FormLayout_AddSection}"
-                                  Command="{Binding AddSectionCommand}"
-                                  IsVisible="{Binding SelectedKindIsSectionsGroup}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconSection}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormLayout_AddField}"
-                                  Command="{Binding AddLayoutFieldCommand}"
-                                  IsVisible="{Binding SelectedKindIsSection}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconColumn}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormLayout_AddGrid}"
-                                  Command="{Binding AddGridCommand}"
-                                  IsVisible="{Binding SelectedKindIsDetailsGroup}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconGrid}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{loc:Loc FormLayout_AddColumn}"
-                                  Command="{Binding AddLayoutColumnCommand}"
-                                  IsVisible="{Binding SelectedKindIsGrid}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconColumn}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
-                        <MenuItem Header="{loc:Loc Action_Delete}"
-                                  Command="{Binding DeleteCommand}"
-                                  IsVisible="{Binding SelectedKindCanDelete}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
-                </controls:ObjectTreeView.ContextMenu>
-            </controls:ObjectTreeView>
+            <controls:ObjectTreeView x:Name="Tree" Grid.Column="0" RootNode="{Binding RootNode}" CommandProvider="{Binding CommandProvider}"
+                                     SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
             <Border Grid.Column="2" Padding="18,14">
                 <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">

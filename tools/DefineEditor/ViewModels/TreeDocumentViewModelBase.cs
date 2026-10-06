@@ -30,7 +30,6 @@ public abstract partial class TreeDocumentViewModelBase<TNode> : DocumentViewMod
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedEditorContext))]
-    [NotifyPropertyChangedFor(nameof(SelectedKindCanDelete))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     private TNode? _selectedTreeNode;
 
@@ -42,9 +41,9 @@ public abstract partial class TreeDocumentViewModelBase<TNode> : DocumentViewMod
         // specific to each settings document).
         OnSelectedTreeNodeRefreshDerivedProperties(value);
 
-        // ShowDeleteSeparator depends on the subclass flags refreshed above,
-        // so it must be raised after the hook.
-        OnPropertyChanged(nameof(ShowDeleteSeparator));
+        // Menu state that depends on the subclass flags refreshed above, so it
+        // must be raised after the hook.
+        OnSelectionMenuStateChanged();
     }
 
     /// <summary>
@@ -56,27 +55,10 @@ public abstract partial class TreeDocumentViewModelBase<TNode> : DocumentViewMod
     protected virtual void OnSelectedTreeNodeRefreshDerivedProperties(TNode? value) { }
 
     /// <summary>
-    /// Whether the currently selected node can be deleted — visibility hint
-    /// for the context-menu "Delete" item. Mirrors <c>CanDelete()</c> so the
-    /// menu item appears exactly when the command would execute.
+    /// Runs after <see cref="OnSelectedTreeNodeRefreshDerivedProperties"/> on every
+    /// selection change, for menu state derived from those flags. Base does nothing.
     /// </summary>
-    public bool SelectedKindCanDelete =>
-        SelectedTreeNode is not null && GetDeleteAction(SelectedTreeNode) is not null;
-
-    /// <summary>
-    /// Whether the context-menu separator between the Add items and the
-    /// Delete item should show. A separator only makes sense when both
-    /// sides are visible — a delete-only menu would otherwise render an
-    /// orphaned line above its single item.
-    /// </summary>
-    public bool ShowDeleteSeparator => SelectedKindCanDelete && HasVisibleAddMenuItems;
-
-    /// <summary>
-    /// Whether any Add menu item is visible for the current selection —
-    /// the OR of the subclass's <c>SelectedKindIsXxx</c> flags that gate
-    /// its Add items. Drives <see cref="ShowDeleteSeparator"/>.
-    /// </summary>
-    protected abstract bool HasVisibleAddMenuItems { get; }
+    protected virtual void OnSelectionMenuStateChanged() { }
 
     // IsDirty / StatusText / culture-change refresh are inherited from
     // DocumentViewModelBase.

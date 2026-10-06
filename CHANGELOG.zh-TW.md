@@ -32,6 +32,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `ObjectTreeView`（`Polhem.UI.Avalonia`）：顯示 `ObjectTreeNode` 樹的 `TreeView`。設定 `RootNode` 即可，可選
   `IconSelector` 在每個標籤前顯示圖示；每個項目的 `IsExpanded` 與節點雙向繫結。
 - `ObjectTreeNode.IsExpanded` 與 `ObjectTreeOptions.ExpandDepth`，後者設定建出的樹一開始展開幾層。
+- `ITreeNodeCommandProvider` 與 `TreeNodeCommand`（`Polhem.Definition.ObjectTree`）：與 UI 無關的樹節點命令。
+  `ObjectTreeView.CommandProvider` 在每次開啟右鍵選單時，以選取節點的命令填入選單。
 
 ### 變更
 

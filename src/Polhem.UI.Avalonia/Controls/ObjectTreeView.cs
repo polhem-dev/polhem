@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
@@ -19,7 +20,8 @@ namespace Polhem.UI.Avalonia.Controls
     /// <see cref="IconSelector"/> returns one, and binds <see cref="TreeViewItem.IsExpanded"/> both ways to
     /// <see cref="ObjectTreeNode.IsExpanded"/>. <see cref="TreeView.SelectedItem"/> is the selected
     /// <see cref="ObjectTreeNode"/>. Labels are localized through <see cref="ObjectTreeOptions.LabelTranslator"/>
-    /// when the tree is built.
+    /// when the tree is built. When <see cref="CommandProvider"/> is set, the control owns its
+    /// <see cref="Control.ContextMenu"/> and fills it with the selected node's commands each time it opens.
     /// </remarks>
     public class ObjectTreeView : TreeView
     {
@@ -34,6 +36,14 @@ namespace Polhem.UI.Avalonia.Controls
         /// </summary>
         public static readonly StyledProperty<Func<ObjectTreeNode, Geometry?>?> IconSelectorProperty =
             AvaloniaProperty.Register<ObjectTreeView, Func<ObjectTreeNode, Geometry?>?>(nameof(IconSelector));
+
+        /// <summary>
+        /// Defines the <see cref="CommandProvider"/> property.
+        /// </summary>
+        public static readonly StyledProperty<ITreeNodeCommandProvider?> CommandProviderProperty =
+            AvaloniaProperty.Register<ObjectTreeView, ITreeNodeCommandProvider?>(nameof(CommandProvider));
+
+        private ContextMenu? _commandMenu;
 
         /// <summary>
         /// Initializes a new instance of <see cref="ObjectTreeView"/>.
@@ -70,6 +80,21 @@ namespace Polhem.UI.Avalonia.Controls
             set { SetValue(IconSelectorProperty, value); }
         }
 
+        /// <summary>
+        /// Gets or sets the provider of the commands shown in the context menu for the selected node; <c>null</c>
+        /// leaves <see cref="Control.ContextMenu"/> to the host.
+        /// </summary>
+        /// <remarks>
+        /// The menu does not open when the selected node has no commands. A command's
+        /// <see cref="TreeNodeCommand.IconKey"/> is looked up as a resource key from this control and shown when it
+        /// resolves to a <see cref="Geometry"/>.
+        /// </remarks>
+        public ITreeNodeCommandProvider? CommandProvider
+        {
+            get { return GetValue(CommandProviderProperty); }
+            set { SetValue(CommandProviderProperty, value); }
+        }
+
         // NOTE: Without this override the control looks up a theme for its own type, and Semi and Fluent only ship
         // one for TreeView, so the whole control would be invisible (maintainers/gotchas/avalonia-controls.md #4).
         /// <inheritdoc/>
@@ -88,6 +113,57 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 ItemTemplate = CreateItemTemplate();
             }
+            else if (change.Property == CommandProviderProperty)
+            {
+                if (CommandProvider != null)
+                    ContextMenu = _commandMenu ??= CreateCommandMenu();
+                else if (ReferenceEquals(ContextMenu, _commandMenu))
+                    ContextMenu = null;
+            }
+        }
+
+        /// <summary>
+        /// Builds the context menu entries for <paramref name="commands"/>: one item per command, with a separator
+        /// before each command that begins a group.
+        /// </summary>
+        internal List<Control> BuildMenuItems(IReadOnlyList<TreeNodeCommand> commands)
+        {
+            var items = new List<Control>();
+            foreach (var command in commands)
+            {
+                if (command.BeginsGroup && items.Count > 0)
+                    items.Add(new Separator());
+                var item = new MenuItem { Header = command.Label, IsEnabled = command.IsEnabled };
+                if (command.IconKey is { } key
+                    && this.TryFindResource(key, ActualThemeVariant, out var resource)
+                    && resource is Geometry icon)
+                {
+                    item.Icon = new PathIcon { Data = icon, Width = 14, Height = 14 };
+                }
+                item.Click += (_, _) => command.Execute();
+                items.Add(item);
+            }
+            return items;
+        }
+
+        private ContextMenu CreateCommandMenu()
+        {
+            var menu = new ContextMenu();
+            menu.Opening += OnCommandMenuOpening;
+            return menu;
+        }
+
+        private void OnCommandMenuOpening(object? sender, CancelEventArgs e)
+        {
+            IReadOnlyList<TreeNodeCommand> commands = SelectedItem is ObjectTreeNode node && CommandProvider is { } provider
+                ? provider.GetCommands(node)
+                : [];
+            if (commands.Count == 0)
+            {
+                e.Cancel = true;
+                return;
+            }
+            ((ContextMenu)sender!).ItemsSource = BuildMenuItems(commands);
         }
 
         private FuncTreeDataTemplate<ObjectTreeNode> CreateItemTemplate()
