@@ -37,6 +37,8 @@ enum is the same set of values under another namespace, and `Gzip` is a thin wra
 3. **Remove `MethodNotFoundException`** and its row in `JsonRpcErrorContract`.
 4. **The exceptions stay.** `JsonRpcException` is no longer thrown by the framework, but an application's business
    objects may throw it and the error contract still maps it; it is outside this decision.
+   *Amended 2026-10-06:* decision 4 of [ADR-046](adr-046-api-evolution-policies-for-1-0.md) lets exception types change
+   in a minor version, and `JsonRpcException` is removed under it in the same release.
 5. **Released in 1.x**, like ADR-048, ADR-049 and ADR-050. A later breaking change within 1.x still needs an ADR of its
    own.
 

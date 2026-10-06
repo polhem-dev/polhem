@@ -18,6 +18,13 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - `Polhem.Core.Serialization.Gzip` is removed; nothing in the framework used it since 1.2.0. Use `GZipStream`
   directly. ([ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md))
 
+### Removed
+
+- `Polhem.Api.Core.JsonRpc.JsonRpcException`. The framework has not thrown it since 1.2.0. A business object that
+  threw it to show a message throws `UserMessageException` instead, which travels under the same code
+  (`-32099`). Exception types may change in a minor version
+  ([ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md), decision 4).
+
 ## [1.3.1] - 2026-10-05
 
 📄 Full notes and background: [docs/en/changelogs/1.3.1.md](docs/en/changelogs/1.3.1.md)

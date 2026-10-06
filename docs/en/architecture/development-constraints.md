@@ -188,7 +188,7 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 The server maps an exception to a JSON-RPC error code (`PolhemExceptionMapper`) through [`JsonRpcErrorContract`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs), the single declaration both ends read. See [ADR-043](../../../maintainers/adr/adr-043-error-contract-single-registry.md) for the reasoning. What reaches the caller falls into three groups:
 
-- **The framework's own exceptions carry their message to the caller.** `UserMessageException` (**preferred** for anything an end user should read) and `JsonRpcException` travel as `JsonRpcErrorCode.UserMessage` (`-32099`); `AuthenticationRequiredException`, `CompanyNotEnteredException`, `CompanyAccessDeniedException`, `ForbiddenException` and `ReplayRejectedException` each travel under a code of their own. Client-side error handling that assumes every user-facing failure arrives as `-32099` will misclassify these.
+- **The framework's own exceptions carry their message to the caller.** `UserMessageException` (**preferred** for anything an end user should read) travels as `JsonRpcErrorCode.UserMessage` (`-32099`); `AuthenticationRequiredException`, `CompanyNotEnteredException`, `CompanyAccessDeniedException`, `ForbiddenException` and `ReplayRejectedException` each travel under a code of their own. Client-side error handling that assumes every user-facing failure arrives as `-32099` will misclassify these.
 - **BCL exceptions keep a code but not their message.** `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and `FormatException` (each with its subclasses) travel as `-32099` with a fixed, generic message such as "The request is not valid."; the real message is logged on the server (by `PolhemExceptionMapper`). These types are what the BCL, database drivers and infrastructure throw with table names, parameter names and server details in the text, so none of it is shown to a remote caller.
 - **Everything else** is masked as `"Internal server error"` under `JsonRpcErrorCode.InternalError` (`-32603`), and the real message is logged.
 
@@ -202,7 +202,6 @@ When debug mode is on (`SysInfo.IsDebugMode`, set from `CommonConfiguration.IsDe
 | `ForbiddenException` | The caller lacks a permission (`-32004`). The framework throws it from the permission gates. |
 | `ArgumentException`, `InvalidOperationException`, `NotSupportedException`, `FormatException` | Their BCL meaning: a caller passed a bad argument, an object is in the wrong state, a feature does not apply, text cannot be parsed. A remote caller sees only the fixed message, so do not use them to tell the user something. |
 | `UnauthorizedAccessException` | Access refused on the server. A remote caller sees only the fixed message "Access denied."; throw `AuthenticationRequiredException` when the caller has to sign in again. |
-| `JsonRpcException` | Protocol-level errors of the API framework itself (HTTP status / JSON-RPC error code). |
 
 ### Translatable Messages
 

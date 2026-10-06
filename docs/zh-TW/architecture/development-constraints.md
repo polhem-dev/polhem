@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: aa45ffecde8d0f1c137182d3a94afbf67bd070a4 -->
+<!-- source: en/architecture/development-constraints.md blob: d9295f1b1e3ddc251dd55a85a7736a6dda8c1bac -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -177,7 +177,7 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 伺服端（`PolhemExceptionMapper`）透過 [`JsonRpcErrorContract`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs) 把例外對映到 JSON-RPC 錯誤碼，伺服端與呼叫端都讀這一份宣告。設計理由見 [ADR-043](../../../maintainers/adr/adr-043-error-contract-single-registry.md)。送到呼叫端的內容分為三類：
 
-- **框架自有的例外會把訊息帶給呼叫端。** `UserMessageException`（凡是要給終端使用者看的訊息，**優先選用**）與 `JsonRpcException` 以 `JsonRpcErrorCode.UserMessage`（`-32099`）傳送；`AuthenticationRequiredException`、`CompanyNotEnteredException`、`CompanyAccessDeniedException`、`ForbiddenException` 與 `ReplayRejectedException` 各自使用專屬的錯誤碼。用戶端若假設「所有 user-facing 失敗都是 `-32099`」，會誤判這些例外。
+- **框架自有的例外會把訊息帶給呼叫端。** `UserMessageException`（凡是要給終端使用者看的訊息，**優先選用**）以 `JsonRpcErrorCode.UserMessage`（`-32099`）傳送；`AuthenticationRequiredException`、`CompanyNotEnteredException`、`CompanyAccessDeniedException`、`ForbiddenException` 與 `ReplayRejectedException` 各自使用專屬的錯誤碼。用戶端若假設「所有 user-facing 失敗都是 `-32099`」，會誤判這些例外。
 - **BCL 例外保留錯誤碼、不保留訊息。** `UnauthorizedAccessException`、`ArgumentException`、`InvalidOperationException`、`NotSupportedException` 與 `FormatException`（含各自的子類別）以 `-32099` 傳送，但訊息換成固定的通用文字，例如「The request is not valid.」；真正的訊息由 `PolhemExceptionMapper` 記錄在伺服端。這些型別正是 BCL、資料庫驅動程式與基礎設施拋出時會在文字中夾帶表名、參數名與伺服器細節的例外，所以一律不給遠端呼叫者看。
 - **其他所有例外**遮蔽為 `"Internal server error"`，錯誤碼為 `JsonRpcErrorCode.InternalError`（`-32603`），真正的訊息記錄在伺服端。
 
@@ -191,7 +191,6 @@ debug 模式開啟時（`SysInfo.IsDebugMode`，由 `CommonConfiguration.IsDebug
 | `ForbiddenException` | 呼叫者缺少權限（`-32004`）。由框架的權限閘門拋出。 |
 | `ArgumentException`、`InvalidOperationException`、`NotSupportedException`、`FormatException` | 取其 BCL 本意：呼叫端傳錯參數、物件狀態不對、功能不適用、文字無法剖析。遠端呼叫者只會看到固定訊息，因此不要拿它們告訴使用者任何事。 |
 | `UnauthorizedAccessException` | 伺服端拒絕存取。遠端呼叫者只會看到固定訊息「Access denied.」；需要呼叫者重新登入時請拋 `AuthenticationRequiredException`。 |
-| `JsonRpcException` | API 框架自身的協定錯誤（HTTP status / JSON-RPC error code） |
 
 ### 可翻譯的訊息
 

@@ -17,6 +17,12 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - 移除 `Polhem.Core.Serialization.Gzip`，框架自 1.2.0 起就沒有用到它。請直接使用 `GZipStream`。
   （[ADR-051](maintainers/adr/adr-051-remove-jsonrpc-leftovers-in-1-x.md)）
 
+### 移除
+
+- `Polhem.Api.Core.JsonRpc.JsonRpcException`。框架自 1.2.0 起就不再 throw 它。原本 throw 它來顯示訊息的 business
+  object 請改 throw `UserMessageException`，它以同一個錯誤碼（`-32099`）傳送。exception 型別可以在 minor 版變動
+  （[ADR-046](maintainers/adr/adr-046-api-evolution-policies-for-1-0.md) decision 4）。
+
 ## [1.3.1] - 2026-10-05
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.3.1.md](docs/zh-TW/changelogs/1.3.1.md)
