@@ -5,7 +5,7 @@ namespace Polhem.DefineEditor.ViewModels;
 /// <summary>
 /// Tree editors whose nodes are the hand-built <see cref="SettingsTreeNode"/>, dispatched by
 /// <see cref="SettingsTreeNode.Kind"/>. Editors are moving to <see cref="ObjectTreeDocumentViewModelBase"/>;
-/// this base goes away once the last of them (TableSchema, Language, FormSchema) has moved.
+/// this base goes away once the last of them (FormSchema) has moved.
 /// </summary>
 public abstract class SingletonDocumentViewModelBase : TreeDocumentViewModelBase<SettingsTreeNode>
 {

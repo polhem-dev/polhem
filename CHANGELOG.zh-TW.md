@@ -42,7 +42,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   套用與否對行為沒有影響；自訂型別若有套用，把 `using Polhem.Core.Attributes;` 換成 `using Polhem.Definition.Attributes;` 即可。
 - 定義型別的 `[TreeNode]` 標註改依同一條資料夾規則：擁有者有兩個以上帶標註的集合時，集合以資料夾呈現，否則直接掛在擁有者下。
   `FormLayout` 的 Sections 與 Details、`FormSchema` 的 Tables 與 Rules 改為資料夾；`FormTable` 的 Fields 與 `LanguageEnum` 的
-  Entries 不再是資料夾。每個帶標註的物件型別都明確寫出標籤取自哪些屬性，與其 `ToString()` 一致。
+  Entries 不再是資料夾。每個帶標註的物件型別都明確寫出標籤取自哪些屬性，與其 `ToString()` 一致；`IndexField` 與其集合也補上標註，索引底下會列出索引欄位。
   `TreeNodeAnnotationGateTests` 固定這兩項慣例。
 
 ## [1.3.1] - 2026-10-05

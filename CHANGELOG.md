@@ -51,7 +51,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   when its owner has more than one annotated collection, and directly under the owner otherwise. The Sections and
   Details of `FormLayout` and the Tables and Rules of `FormSchema` become folders; the Fields of `FormTable` and the
   Entries of `LanguageEnum` no longer are. Every annotated object type now names the properties its label is
-  formatted from, matching its `ToString()`. `TreeNodeAnnotationGateTests` pins both conventions.
+  formatted from, matching its `ToString()`, and `IndexField` with its collection gains an annotation so an index
+  lists its fields. `TreeNodeAnnotationGateTests` pins both conventions.
 
 ## [1.3.1] - 2026-10-05
 

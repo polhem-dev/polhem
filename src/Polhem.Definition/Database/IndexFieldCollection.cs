@@ -1,4 +1,5 @@
 using Polhem.Core.Collections;
+using Polhem.Definition.Attributes;
 using Polhem.Definition.Sorting;
 
 namespace Polhem.Definition.Database
@@ -6,6 +7,7 @@ namespace Polhem.Definition.Database
     /// <summary>
     /// Index field collection.
     /// </summary>
+    [TreeNode("Index Fields", false)]
     public sealed class IndexFieldCollection : KeyCollectionBase<IndexField>
     {
     }

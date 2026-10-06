@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Core.Collections;
+using Polhem.Definition.Attributes;
 using Polhem.Definition.Sorting;
 
 namespace Polhem.Definition.Database
@@ -9,6 +10,7 @@ namespace Polhem.Definition.Database
     /// An index field.
     /// </summary>
     [Description("Index field.")]
+    [TreeNode("{0} {1}", "FieldName,SortDirection")]
     public sealed class IndexField : KeyCollectionItem
     {
         /// <summary>

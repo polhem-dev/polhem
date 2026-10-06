@@ -1,16 +1,20 @@
 using System.ComponentModel;
 using Polhem.Core.Serialization;
+using Polhem.Core.Data;
 using Polhem.Definition.Collections;
+using Polhem.Definition.Database;
+using Polhem.Definition.Language;
 using Polhem.Definition.ObjectTree;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Sorting;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 
 namespace Polhem.DefineEditor.UnitTests
 {
     /// <summary>
-    /// The settings editors whose tree needs more than the annotations: the menu's folders, the system
-    /// settings' extended properties folder, and the database settings' two folders.
+    /// The editors whose tree has a shape worth pinning: the menu's folders, the system settings'
+    /// extended properties folder, and the folders of the database settings, table schema and language resource.
     /// </summary>
     public sealed class SettingsTreeEditorTests : IDisposable
     {
@@ -96,6 +100,47 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.Single(document.Root.Items!);
             Assert.Single(document.RootNode.Children[1].Children);
+        }
+
+        [Fact]
+        [DisplayName("A table schema shows Fields and Indexes folders, and an index lists its fields and offers Add index field")]
+        public void TableSchema_Index_ListsFieldsAndAddsOne()
+        {
+            var schema = new TableSchema { TableName = "ft_order", DisplayName = "Order" };
+            schema.Fields!.Add(new DbField("sys_id", "Order No", FieldDbType.String));
+            var index = new DbTableIndex { Name = "PK_ft_order", PrimaryKey = true };
+            index.IndexFields!.Add(new IndexField("sys_id", SortDirection.Asc));
+            schema.Indexes!.Add(index);
+            var document = TableSchemaDocumentViewModel.Load(Save(schema, "ft_order.TableSchema.xml"));
+
+            Assert.Equal(["Fields", "Indexes"], document.RootNode.Children.Select(c => c.Label));
+            var indexNode = Assert.Single(document.RootNode.Children[1].Children);
+            Assert.Equal("sys_id Asc", Assert.Single(indexNode.Children).Label);
+            Assert.Equal("IconLock", document.IconKeyFor(indexNode));
+
+            CommandsFor(document, indexNode)[0].Execute();
+
+            Assert.Equal(2, ((DbTableIndex)indexNode.Value).IndexFields!.Count);
+            Assert.Equal(2, indexNode.Children.Count);
+        }
+
+        [Fact]
+        [DisplayName("A language resource shows Items and Enums folders, and an enum offers Add entry")]
+        public void Language_Enum_AddsEntry()
+        {
+            var resource = new LanguageResource { Namespace = "Employee", Lang = "en" };
+            resource.Items.Add(new LanguageItem { Key = "Caption", Value = "Employee" });
+            var gender = new LanguageEnum { Name = "Gender" };
+            resource.Enums.Add(gender);
+            var document = LanguageDocumentViewModel.Load(Save(resource, "Employee.Language.xml"));
+
+            Assert.Equal(["Items", "Enums"], document.RootNode.Children.Select(c => c.Label));
+            var enumNode = Assert.Single(document.RootNode.Children[1].Children);
+
+            CommandsFor(document, enumNode)[0].Execute();
+
+            Assert.Single(((LanguageEnum)enumNode.Value).Entries);
+            Assert.Single(enumNode.Children);
         }
     }
 }
