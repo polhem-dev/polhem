@@ -10,7 +10,7 @@ namespace Polhem.Definition.Layouts
     /// A grid layout for tabular data.
     /// </summary>
     [Description("Grid layout for tabular data.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "TableName,Caption")]
     public sealed class LayoutGrid : CollectionItem
     {
         private LayoutColumnCollection? _columns = null;

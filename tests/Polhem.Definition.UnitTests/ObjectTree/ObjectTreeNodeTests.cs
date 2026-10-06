@@ -113,6 +113,20 @@ namespace Polhem.Definition.UnitTests.ObjectTree
         }
 
         [Fact]
+        [DisplayName("Setting IsExpanded raises PropertyChanged only when the value changes")]
+        public void IsExpanded_Set_NotifiesOnChange()
+        {
+            var node = new ObjectTreeNode(new object(), "node", isFolder: false);
+            var changed = new List<string?>();
+            node.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+            node.IsExpanded = true;
+            node.IsExpanded = true;
+
+            Assert.Equal([nameof(ObjectTreeNode.IsExpanded)], changed);
+        }
+
+        [Fact]
         [DisplayName("Refresh keeps the fixed label of a node created with one")]
         public void Refresh_FixedLabelNode_KeepsLabel()
         {

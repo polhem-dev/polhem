@@ -36,3 +36,7 @@ Polhem.Definition.ObjectTree.ObjectTreeOptions.PropertyFilter.get -> System.Func
 Polhem.Definition.ObjectTree.ObjectTreeOptions.PropertyFilter.set -> void
 override Polhem.Definition.ObjectTree.ObjectTreeNode.ToString() -> string!
 static Polhem.Definition.Attributes.TreeNodeAttribute.GetDisplayText(object! value, System.Func<string!, string!>? formatTranslator) -> string!
+Polhem.Definition.ObjectTree.ObjectTreeNode.IsExpanded.get -> bool
+Polhem.Definition.ObjectTree.ObjectTreeNode.IsExpanded.set -> void
+Polhem.Definition.ObjectTree.ObjectTreeOptions.ExpandDepth.get -> int
+Polhem.Definition.ObjectTree.ObjectTreeOptions.ExpandDepth.set -> void

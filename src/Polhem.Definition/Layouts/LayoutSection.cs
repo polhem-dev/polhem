@@ -11,7 +11,7 @@ namespace Polhem.Definition.Layouts
     /// All sections share the column division defined by <see cref="FormLayout.ColumnCount"/>.
     /// </summary>
     [Description("Layout section.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "Name,Caption")]
     public sealed class LayoutSection : CollectionItem
     {
         private LayoutFieldCollection? _fields = null;

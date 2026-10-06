@@ -10,7 +10,7 @@ namespace Polhem.Definition.Database
     /// Table schema.
     /// </summary>
     [Description("Table schema.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "TableName,DisplayName")]
     public sealed class TableSchema : IObjectSerializeFile
     {
         private DbFieldCollection? _fields = null;

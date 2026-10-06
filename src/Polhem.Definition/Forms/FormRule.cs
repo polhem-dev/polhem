@@ -18,7 +18,7 @@ namespace Polhem.Definition.Forms
     /// aborts the operation and surfaces <see cref="Message"/> to the user.
     /// </remarks>
     [Description("Business rule.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "RuleId,Condition")]
     public sealed class FormRule : KeyCollectionItem
     {
         #region Constructors

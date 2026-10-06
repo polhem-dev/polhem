@@ -1,40 +1,39 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// Editor for <see cref="FormLayout"/>. Tree: FormLayout → Sections group →
-/// LayoutSection[] → LayoutField[]; FormLayout → Details group → LayoutGrid[] →
-/// LayoutColumn[].
+/// Editor for <see cref="FormLayout"/>. The tree is built by the framework's
+/// <see cref="ObjectTreeBuilder"/> from the <c>[TreeNode]</c> annotations:
+/// FormLayout → Sections folder → LayoutSection[] → LayoutField[];
+/// FormLayout → Details folder → LayoutGrid[] → LayoutColumn[].
 /// </summary>
-public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewModelBase
+public sealed partial class FormLayoutDocumentViewModel : TreeDocumentViewModelBase<ObjectTreeNode>
 {
-    public const string KindRoot = "FormLayout";
-    public const string KindSectionsGroup = "SectionsGroup";
-    public const string KindSection = "LayoutSection";
-    public const string KindLayoutField = "LayoutField";
-    public const string KindDetailsGroup = "DetailsGroup";
-    public const string KindGrid = "LayoutGrid";
-    public const string KindLayoutColumn = "LayoutColumn";
+    // The root and the two folders start expanded, as before the move to ObjectTreeBuilder.
+    private static readonly ObjectTreeBuilder s_builder = new(new ObjectTreeOptions { ExpandDepth = 2 });
 
     public FormLayout Root { get; }
     protected override object RootObject => Root;
 
+    public ObjectTreeNode RootNode => Roots[0];
+
     public override string TabIcon => "DefFormLayout";
 
-    public bool SelectedKindIsSectionsGroup => SelectedTreeNode?.Kind == KindSectionsGroup;
-    public bool SelectedKindIsSection => SelectedTreeNode?.Kind == KindSection;
-    public bool SelectedKindIsDetailsGroup => SelectedTreeNode?.Kind == KindDetailsGroup;
-    public bool SelectedKindIsGrid => SelectedTreeNode?.Kind == KindGrid;
+    public bool SelectedKindIsSectionsGroup => SelectedTreeNode is { IsFolder: true, Value: LayoutSectionCollection };
+    public bool SelectedKindIsSection => SelectedTreeNode?.Value is LayoutSection;
+    public bool SelectedKindIsDetailsGroup => SelectedTreeNode is { IsFolder: true, Value: LayoutGridCollection };
+    public bool SelectedKindIsGrid => SelectedTreeNode?.Value is LayoutGrid;
 
     protected override bool HasVisibleAddMenuItems =>
         SelectedKindIsSectionsGroup || SelectedKindIsSection ||
         SelectedKindIsDetailsGroup || SelectedKindIsGrid;
 
-    protected override void OnSelectedTreeNodeRefreshDerivedProperties(SettingsTreeNode? value)
+    protected override void OnSelectedTreeNodeRefreshDerivedProperties(ObjectTreeNode? value)
     {
         OnPropertyChanged(nameof(SelectedKindIsSectionsGroup));
         OnPropertyChanged(nameof(SelectedKindIsSection));
@@ -46,7 +45,7 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         : base(filePath, "FormLayout", keyText: root.LayoutId)
     {
         Root = root;
-        Roots.Add(BuildRootNode(root));
+        Roots.Add(s_builder.Build(root));
         SelectedTreeNode = Roots[0];
     }
 
@@ -60,138 +59,48 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         return new FormLayoutDocumentViewModel(filePath, root);
     }
 
-    private static SettingsTreeNode BuildRootNode(FormLayout root)
+    /// <summary>
+    /// The resource key of the icon shown before a node, for the tree view's icon selector.
+    /// </summary>
+    public static string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {
-        var rootNode = SettingsTreeNode.Create("DefFormLayout", KindRoot, root, RefreshRoot, isExpanded: true);
+        FormLayout => "DefFormLayout",
+        LayoutSectionCollection or LayoutSection => "IconSection",
+        LayoutGridCollection or LayoutGrid => "IconGrid",
+        LayoutField => "IconText",
+        LayoutColumn => "IconColumn",
+        _ => "DefUnknown",
+    };
 
-        var sectionsGroup = SettingsTreeNode.Create("IconSection", KindSectionsGroup, root, RefreshSectionsGroup, isExpanded: true);
-        if (root.Sections is { } sections)
-            foreach (var s in sections)
-                sectionsGroup.AddChild(BuildSectionNode(s));
-        rootNode.AddChild(sectionsGroup);
+    private ObjectTreeNode? FolderOf<TCollection>() =>
+        Roots[0].Children.FirstOrDefault(c => c.IsFolder && c.Value is TCollection);
 
-        var detailsGroup = SettingsTreeNode.Create("IconGrid", KindDetailsGroup, root, RefreshDetailsGroup, isExpanded: true);
-        if (root.Details is { } details)
-            foreach (var g in details)
-                detailsGroup.AddChild(BuildGridNode(g));
-        rootNode.AddChild(detailsGroup);
-
-        return rootNode;
+    private static ObjectTreeNode? FindAncestor<TValue>(ObjectTreeNode? node)
+    {
+        for (var cur = node; cur != null; cur = cur.Parent)
+            if (cur.Value is TValue) return cur;
+        return null;
     }
 
-    private static SettingsTreeNode BuildSectionNode(LayoutSection section)
+    private void AddNode(ObjectTreeNode parent, object value)
     {
-        var node = SettingsTreeNode.Create("IconSection", KindSection, section, RefreshSection, isExpanded: false);
-        if (section.Fields is { } fields)
-            foreach (var f in fields)
-                node.AddChild(BuildLayoutFieldNode(f));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildLayoutFieldNode(LayoutField field) =>
-        SettingsTreeNode.Create("IconText", KindLayoutField, field, RefreshLayoutField, isExpanded: false);
-
-    private static SettingsTreeNode BuildGridNode(LayoutGrid grid)
-    {
-        var node = SettingsTreeNode.Create("IconGrid", KindGrid, grid, RefreshGrid, isExpanded: false);
-        if (grid.Columns is { } columns)
-            foreach (var c in columns)
-                node.AddChild(BuildLayoutColumnNode(c));
-        return node;
-    }
-
-    private static SettingsTreeNode BuildLayoutColumnNode(LayoutColumn column) =>
-        SettingsTreeNode.Create("IconColumn", KindLayoutColumn, column, RefreshLayoutColumn, isExpanded: false);
-
-    private static void RefreshRoot(SettingsTreeNode node)
-    {
-        var l = (FormLayout)node.Payload!;
-        node.Header = $"{l.LayoutId}  —  {l.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"LayoutId: {l.LayoutId}",
-            $"ProgId: {l.ProgId}",
-            $"Caption: {l.Caption}",
-            $"ColumnCount: {l.ColumnCount}");
-    }
-
-    private static void RefreshSectionsGroup(SettingsTreeNode node)
-    {
-        var l = (FormLayout)node.Payload!;
-        node.Header = $"Sections ({l.Sections?.Count ?? 0})";
-        node.Detail = "Master form section (shares the ColumnCount column allocation).";
-    }
-
-    private static void RefreshDetailsGroup(SettingsTreeNode node)
-    {
-        var l = (FormLayout)node.Payload!;
-        node.Header = $"Details ({l.Details?.Count ?? 0})";
-        node.Detail = "Detail grid (full-width below the master form).";
-    }
-
-    private static void RefreshSection(SettingsTreeNode node)
-    {
-        var s = (LayoutSection)node.Payload!;
-        node.Header = $"{s.Name}  —  {s.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"Name: {s.Name}",
-            $"Caption: {s.Caption}",
-            $"ShowCaption: {s.ShowCaption}",
-            $"Fields: {s.Fields?.Count ?? 0}");
-    }
-
-    private static void RefreshLayoutField(SettingsTreeNode node)
-    {
-        var f = (LayoutField)node.Payload!;
-        node.Header = $"{f.FieldName}  —  {f.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"FieldName: {f.FieldName}",
-            $"Caption: {f.Caption}",
-            $"ControlType: {f.ControlType}",
-            $"RowSpan/ColumnSpan: {f.RowSpan}/{f.ColumnSpan}",
-            $"Visible: {f.Visible}",
-            $"ReadOnly: {f.ReadOnly}");
-    }
-
-    private static void RefreshGrid(SettingsTreeNode node)
-    {
-        var g = (LayoutGrid)node.Payload!;
-        node.Header = $"{g.TableName}  —  {g.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"TableName: {g.TableName}",
-            $"Caption: {g.Caption}",
-            $"AllowActions: {g.AllowActions}",
-            $"Columns: {g.Columns?.Count ?? 0}");
-    }
-
-    private static void RefreshLayoutColumn(SettingsTreeNode node)
-    {
-        var c = (LayoutColumn)node.Payload!;
-        node.Header = $"{c.FieldName}  —  {c.Caption}";
-        node.Detail = string.Join(Environment.NewLine,
-            $"FieldName: {c.FieldName}",
-            $"Caption: {c.Caption}",
-            $"ControlType: {c.ControlType}",
-            $"Width: {c.Width}",
-            $"Visible: {c.Visible}",
-            $"ReadOnly: {c.ReadOnly}");
+        var node = s_builder.Build(value);
+        node.IsExpanded = false;
+        parent.Children.Add(node);
+        parent.IsExpanded = true;
+        SelectedTreeNode = node;
+        IsDirty = true;
     }
 
     [RelayCommand(CanExecute = nameof(CanAddSection))]
     private void AddSection()
     {
-        var groupNode = FindAncestor(SelectedTreeNode, KindSectionsGroup)
-                        ?? Roots[0].Children.FirstOrDefault(c => c.Kind == KindSectionsGroup);
-        if (groupNode is null) return;
-        var name = UniqueKey(
-            (Root.Sections ?? new LayoutSectionCollection()).Select(s => s.Name),
-            "Section");
+        var folder = FolderOf<LayoutSectionCollection>();
+        if (folder is null) return;
+        var name = UniqueKey(Root.Sections!.Select(s => s.Name), "Section");
         var section = new LayoutSection { Name = name, Caption = "New section" };
         Root.Sections!.Add(section);
-        var node = BuildSectionNode(section);
-        groupNode.AddChild(node);
-        groupNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(folder, section);
         StatusText = L("Status_AddedNamed", "LayoutSection", name);
     }
     private bool CanAddSection() => SelectedTreeNode is not null;
@@ -199,38 +108,25 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
     [RelayCommand(CanExecute = nameof(CanAddLayoutField))]
     private void AddLayoutField()
     {
-        var sectionNode = FindAncestor(SelectedTreeNode, KindSection);
-        if (sectionNode?.Payload is not LayoutSection section) return;
-        var name = UniqueKey(
-            (section.Fields ?? new LayoutFieldCollection()).Select(f => f.FieldName),
-            "new_field");
+        var sectionNode = FindAncestor<LayoutSection>(SelectedTreeNode);
+        if (sectionNode?.Value is not LayoutSection section) return;
+        var name = UniqueKey(section.Fields!.Select(f => f.FieldName), "new_field");
         var field = new LayoutField { FieldName = name, Caption = "New field" };
         section.Fields!.Add(field);
-        var node = BuildLayoutFieldNode(field);
-        sectionNode.AddChild(node);
-        sectionNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(sectionNode, field);
         StatusText = L("Status_AddedNamed", "LayoutField", name);
     }
-    private bool CanAddLayoutField() => FindAncestor(SelectedTreeNode, KindSection) is not null;
+    private bool CanAddLayoutField() => FindAncestor<LayoutSection>(SelectedTreeNode) is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddGrid))]
     private void AddGrid()
     {
-        var groupNode = FindAncestor(SelectedTreeNode, KindDetailsGroup)
-                        ?? Roots[0].Children.FirstOrDefault(c => c.Kind == KindDetailsGroup);
-        if (groupNode is null) return;
-        var name = UniqueKey(
-            (Root.Details ?? new LayoutGridCollection()).Select(g => g.TableName),
-            "DetailTable");
+        var folder = FolderOf<LayoutGridCollection>();
+        if (folder is null) return;
+        var name = UniqueKey(Root.Details!.Select(g => g.TableName), "DetailTable");
         var grid = new LayoutGrid(name, "New detail grid");
         Root.Details!.Add(grid);
-        var node = BuildGridNode(grid);
-        groupNode.AddChild(node);
-        groupNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(folder, grid);
         StatusText = L("Status_AddedNamed", "LayoutGrid", name);
     }
     private bool CanAddGrid() => SelectedTreeNode is not null;
@@ -238,34 +134,41 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
     [RelayCommand(CanExecute = nameof(CanAddLayoutColumn))]
     private void AddLayoutColumn()
     {
-        var gridNode = FindAncestor(SelectedTreeNode, KindGrid);
-        if (gridNode?.Payload is not LayoutGrid grid) return;
-        var name = UniqueKey(
-            (grid.Columns ?? new LayoutColumnCollection()).Select(c => c.FieldName),
-            "new_column");
+        var gridNode = FindAncestor<LayoutGrid>(SelectedTreeNode);
+        if (gridNode?.Value is not LayoutGrid grid) return;
+        var name = UniqueKey(grid.Columns!.Select(c => c.FieldName), "new_column");
         var column = new LayoutColumn { FieldName = name, Caption = "New field" };
         grid.Columns!.Add(column);
-        var node = BuildLayoutColumnNode(column);
-        gridNode.AddChild(node);
-        gridNode.IsExpanded = true;
-        SelectedTreeNode = node;
-        IsDirty = true;
+        AddNode(gridNode, column);
         StatusText = L("Status_AddedNamed", "LayoutColumn", name);
     }
-    private bool CanAddLayoutColumn() => FindAncestor(SelectedTreeNode, KindGrid) is not null;
+    private bool CanAddLayoutColumn() => FindAncestor<LayoutGrid>(SelectedTreeNode) is not null;
 
-    protected override Action? GetDeleteAction(SettingsTreeNode node) => node.Kind switch
+    protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
-        KindSection when node.Payload is LayoutSection s => () => Root.Sections!.Remove(s),
-        KindLayoutField when node.Payload is LayoutField f
-            && node.Parent?.Payload is LayoutSection parentSection
+        LayoutSection s => () => Root.Sections!.Remove(s),
+        LayoutField f when node.Parent?.Value is LayoutSection parentSection
             => () => parentSection.Fields!.Remove(f),
-        KindGrid when node.Payload is LayoutGrid g => () => Root.Details!.Remove(g),
-        KindLayoutColumn when node.Payload is LayoutColumn c
-            && node.Parent?.Payload is LayoutGrid parentGrid
+        LayoutGrid g => () => Root.Details!.Remove(g),
+        LayoutColumn c when node.Parent?.Value is LayoutGrid parentGrid
             => () => parentGrid.Columns!.Remove(c),
         _ => null,
     };
+
+    protected override object? GetNodeValue(ObjectTreeNode node) => node.IsFolder ? null : node.Value;
+
+    protected override string GetNodeLabel(ObjectTreeNode node) => node.Label;
+
+    protected override ObjectTreeNode? GetParentNode(ObjectTreeNode node) => node.Parent;
+
+    protected override void RemoveNode(ObjectTreeNode node) => node.Parent?.Children.Remove(node);
+
+    protected override void RefreshNodeLabels(ObjectTreeNode node)
+    {
+        node.Refresh();
+        foreach (var child in node.Children)
+            RefreshNodeLabels(child);
+    }
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation()
     {

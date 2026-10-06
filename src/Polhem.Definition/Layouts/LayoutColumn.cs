@@ -8,7 +8,7 @@ namespace Polhem.Definition.Layouts
     /// A grid layout column.
     /// </summary>
     [Description("Grid layout column.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "FieldName,Caption")]
     public sealed class LayoutColumn : LayoutFieldBase
     {
         /// <summary>

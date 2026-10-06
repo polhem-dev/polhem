@@ -8,7 +8,7 @@ namespace Polhem.Definition.Forms
     /// A collection of form tables.
     /// </summary>
     [Description("Form table collection.")]
-    [TreeNode("Tables", false)]
+    [TreeNode("Tables", true)]
     public sealed class FormTableCollection : KeyCollectionBase<FormTable>
     {
         /// <summary>

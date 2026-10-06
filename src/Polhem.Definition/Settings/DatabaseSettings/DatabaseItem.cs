@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// A database configuration item.
     /// </summary>
     [Description("Database item.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "DbName,DisplayName")]
     public sealed class DatabaseItem : KeyCollectionItem
     {
         /// <summary>

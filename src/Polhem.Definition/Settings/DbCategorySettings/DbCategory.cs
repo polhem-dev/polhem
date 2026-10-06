@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// A logical database category definition.
     /// </summary>
     [Description("Database category.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "Id,DisplayName")]
     public sealed class DbCategory : KeyCollectionItem
     {
         private TableItemCollection? _tables = null;

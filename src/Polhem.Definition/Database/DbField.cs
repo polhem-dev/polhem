@@ -12,7 +12,7 @@ namespace Polhem.Definition.Database
     /// Database field schema.
     /// </summary>
     [Description("Database field schema.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "FieldName,Caption")]
     public sealed class DbField : KeyCollectionItem, IDefineField
     {
         /// <summary>

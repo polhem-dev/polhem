@@ -16,7 +16,7 @@ namespace Polhem.Definition.Settings
     /// namespaces in scope.
     /// </remarks>
     [Description("Menu entry (leaf node opening one program).")]
-    [TreeNode]
+    [TreeNode("{0} - {1} ({2})", "Id,Caption,ProgId")]
     public sealed class MenuEntry : MenuNodeBase
     {
         #region Constructors

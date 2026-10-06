@@ -27,5 +27,8 @@
     <!-- References the core definition model and XmlCodec directly (not through NuGet), so no serialization conversion is needed. -->
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Core\Polhem.Core.csproj" />
+    <!-- Brings the framework's Avalonia controls (ObjectTreeView). It also carries Polhem.Api.Client and Polhem.Expressions,
+         which the editor needs for remote define access and design-time expression checks. -->
+    <ProjectReference Include="..\..\src\Polhem.UI.Avalonia\Polhem.UI.Avalonia.csproj" />
   </ItemGroup>
 </Project>

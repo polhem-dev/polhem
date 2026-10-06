@@ -12,7 +12,7 @@ namespace Polhem.Definition.Forms
     /// A form table definition.
     /// </summary>
     [Description("Form table.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "TableName,DisplayName")]
     public sealed class FormTable : KeyCollectionItem
     {
         private FormFieldCollection? _fields = null;

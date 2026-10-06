@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// The plugin chain bound to one progId.
     /// </summary>
     [Description("Plugins bound to one program.")]
-    [TreeNode]
+    [TreeNode("{0}", "ProgId")]
     public sealed class ProgramPluginItem : KeyCollectionItem
     {
         private PluginItemCollection? _plugins = null;

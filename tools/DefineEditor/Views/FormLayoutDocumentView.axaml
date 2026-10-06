@@ -4,6 +4,7 @@
              xmlns:loc="using:Polhem.DefineEditor.Markup"
              xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
              xmlns:models="using:Polhem.DefineEditor.Models"
+             xmlns:controls="using:Polhem.UI.Avalonia.Controls"
              xmlns:layouts="using:Polhem.Definition.Layouts"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -102,21 +103,8 @@
         </Border>
 
         <Grid ColumnDefinitions="*,4,1.2*">
-            <TreeView Grid.Column="0" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
-                <TreeView.ItemTemplate>
-                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
-                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </TreeDataTemplate>
-                </TreeView.ItemTemplate>
-                <TreeView.Styles>
-                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
-                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                    </Style>
-                </TreeView.Styles>
-                <TreeView.ContextMenu>
+            <controls:ObjectTreeView x:Name="Tree" Grid.Column="0" RootNode="{Binding RootNode}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
+                <controls:ObjectTreeView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="{loc:Loc FormLayout_AddSection}"
                                   Command="{Binding AddSectionCommand}"
@@ -155,8 +143,8 @@
                             </MenuItem.Icon>
                         </MenuItem>
                     </ContextMenu>
-                </TreeView.ContextMenu>
-            </TreeView>
+                </controls:ObjectTreeView.ContextMenu>
+            </controls:ObjectTreeView>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
             <Border Grid.Column="2" Padding="18,14">
                 <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">

@@ -15,7 +15,7 @@ namespace Polhem.Definition.Settings
     /// one stage, so a type never needs to appear twice under the same program.
     /// </remarks>
     [Description("Business plugin binding.")]
-    [TreeNode]
+    [TreeNode("{0} ({1})", "Type,Stage")]
     public sealed class PluginItem : KeyCollectionItem
     {
         #region Constructors

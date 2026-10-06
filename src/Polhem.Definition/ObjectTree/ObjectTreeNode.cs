@@ -6,13 +6,15 @@ namespace Polhem.Definition.ObjectTree
     /// A UI-independent tree node that stands for an object, or for a collection shown as a folder.
     /// </summary>
     /// <remarks>
-    /// Nodes are usually created by <see cref="ObjectTreeBuilder"/>. A UI head binds <see cref="Label"/> and
-    /// <see cref="Children"/> to its own tree control; both raise change notifications.
+    /// Nodes are usually created by <see cref="ObjectTreeBuilder"/>. A UI head binds <see cref="Label"/>,
+    /// <see cref="IsExpanded"/> and <see cref="Children"/> to its own tree control; all three raise change
+    /// notifications.
     /// </remarks>
     public sealed class ObjectTreeNode : INotifyPropertyChanged
     {
         private readonly Func<object, string>? _labelProvider;
         private string _label;
+        private bool _isExpanded;
 
         /// <summary>
         /// Initializes a new instance of <see cref="ObjectTreeNode"/> with a fixed label.
@@ -60,6 +62,21 @@ namespace Polhem.Definition.ObjectTree
         }
 
         /// <summary>
+        /// Gets or sets whether the node shows its children. It is view state that a UI head binds both ways;
+        /// <see cref="ObjectTreeOptions.ExpandDepth"/> sets the starting value of a built node.
+        /// </summary>
+        public bool IsExpanded
+        {
+            get { return _isExpanded; }
+            set
+            {
+                if (_isExpanded == value) { return; }
+                _isExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+            }
+        }
+
+        /// <summary>
         /// Gets the node whose <see cref="Children"/> contain this node, or <c>null</c> for a root.
         /// </summary>
         public ObjectTreeNode? Parent { get; internal set; }
@@ -70,7 +87,7 @@ namespace Polhem.Definition.ObjectTree
         public ObjectTreeNodeCollection Children { get; }
 
         /// <summary>
-        /// Occurs when <see cref="Label"/> changes.
+        /// Occurs when <see cref="Label"/> or <see cref="IsExpanded"/> changes.
         /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 

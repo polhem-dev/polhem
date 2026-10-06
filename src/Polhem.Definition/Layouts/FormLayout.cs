@@ -11,7 +11,7 @@ namespace Polhem.Definition.Layouts
     /// Holds the master sections plus 0..N detail grids for a single form view.
     /// </summary>
     [Description("Form layout configuration.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "LayoutId,Caption")]
     public sealed class FormLayout : IObjectSerializeFile
     {
         private LayoutSectionCollection? _sections = null;

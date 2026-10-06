@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// A program item.
     /// </summary>
     [Description("Program item.")]
-    [TreeNode]
+    [TreeNode("{0} - {1}", "ProgId,DisplayName")]
     public sealed class ProgramItem : KeyCollectionItem
     {
         #region Constructors
