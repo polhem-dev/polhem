@@ -81,6 +81,26 @@ namespace Polhem.Definition.UnitTests.Attributes
         }
 
         [Fact]
+        [DisplayName("GetDisplayText translates the format before the property values are put into it")]
+        public void GetDisplayText_WithTranslator_TranslatesFormatOnly()
+        {
+            var obj = new FormattedClass { Name = "Alice", Age = 30 };
+
+            var text = TreeNodeAttribute.GetDisplayText(obj, format => format.Replace("-", " / ", StringComparison.Ordinal));
+
+            Assert.Equal("Alice / 30", text);
+        }
+
+        [Fact]
+        [DisplayName("GetDisplayText does not translate the ToString fallback of a type without the attribute")]
+        public void GetDisplayText_WithTranslatorNoAttribute_ReturnsToString()
+        {
+            var text = TreeNodeAttribute.GetDisplayText(new NoAttrClass(), _ => "translated");
+
+            Assert.Equal("no-attr-tostring", text);
+        }
+
+        [Fact]
         [DisplayName("TreeNodeIgnoreAttribute can be instantiated")]
         public void TreeNodeIgnoreAttribute_CanBeInstantiated()
         {

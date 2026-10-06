@@ -73,7 +73,7 @@ Polhem.Definition 位於 Polhem 框架的最底層，提供所有上層共用的
 
 | 資料夾 | 主要型別 |
 |--------|----------|
-| `Attributes/` | `ApiAccessControlAttribute` |
+| `Attributes/` | `ApiAccessControlAttribute`、`TreeNodeAttribute`、`TreeNodeIgnoreAttribute` |
 | `Collections/` | `ListItem`、`Parameter`、`Property` 及其集合 |
 | `Customization/` | `CustomizeOverlay`（租戶客製化疊層） |
 | `Database/` | `TableSchema`、`DbField`、`DbTableIndex`、`DatabaseType`、`FieldType`、`DbCategoryIds` |
@@ -84,6 +84,7 @@ Polhem.Definition 位於 Polhem 框架的最底層，提供所有上層共用的
 | `Language/` | `ILanguageService`、`LanguageResource`、`FormSchemaLocalizer`、`MenuLocalizer`、`LanguageResourceStringLocalizer` |
 | `Layouts/` | `FormLayout`、`LayoutSection`、`LayoutField`、`LayoutGrid`、`LayoutColumn`、`ControlType` |
 | `Logging/` | `IAuditLogWriter`、`AuditEntry` 及其子型別、`AuditRule`、`LogOptions` |
+| `ObjectTree/` | `ObjectTreeBuilder`、`ObjectTreeNode`、`ObjectTreeOptions`（依 `[TreeNode]` 標註建出、與 UI 無關的樹） |
 | `Organization/` | `DepartmentTree`、`IDepartmentTreeService` |
 | `Paging/` | `PagingInfo`、`PagingOptions` |
 | `Security/` | `IAccessTokenValidator`、`IApiEncryptionKeyProvider`、`MasterKeyProvider`、`ApiAccessRequirement`、`ApiProtectionLevel`、API 金鑰相關型別 |
