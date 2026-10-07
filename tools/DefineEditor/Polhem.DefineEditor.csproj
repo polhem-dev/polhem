@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
+    <!-- Assets/brand holds the SVG sources of the icons, which scripts/build-icon.swift reads; the app does not. -->
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\brand\**" />
   </ItemGroup>
 
   <ItemGroup>

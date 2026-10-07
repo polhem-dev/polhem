@@ -10,7 +10,7 @@
         x:Name="WindowRoot"
         x:DataType="vm:MainWindowViewModel"
         x:CompileBindings="True"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/polhem.ico"
         Width="1200" Height="720"
         WindowState="Maximized"
         Title="{loc:Loc Window_Title}">
