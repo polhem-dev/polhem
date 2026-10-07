@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Polhem</title>
+  <rect width="512" height="512" rx="96" fill="#B4532A"/>
+  <path fill="#F5EADB" stroke="#F5EADB" stroke-width="22" stroke-linejoin="round" d="M256 256 A95 95 0 0 1 256 408.42 L168 408.42 L80 256 L124 179.79 A95 95 0 0 0 256 256 Z"/>
+  <path fill="#F5EADB" stroke="#F5EADB" stroke-width="22" stroke-linejoin="round" d="M256 256 A95 95 0 0 1 124 179.79 L168 103.58 L344 103.58 L388 179.79 A95 95 0 0 0 256 256 Z"/>
+  <path fill="#F5EADB" stroke="#F5EADB" stroke-width="22" stroke-linejoin="round" d="M256 256 A95 95 0 0 1 388 179.79 L432 256 L344 408.42 L256 408.42 A95 95 0 0 0 256 256 Z"/>
+  <path fill="none" stroke="#B4532A" stroke-width="22" d="M256 256 A95 95 0 0 1 256 408.42 L256 448.42"/>
+  <path fill="none" stroke="#B4532A" stroke-width="22" d="M256 256 A95 95 0 0 1 124 179.79 L89.36 159.79"/>
+  <path fill="none" stroke="#B4532A" stroke-width="22" d="M256 256 A95 95 0 0 1 388 179.79 L422.64 159.79"/>
+  <circle cx="256" cy="256" r="48" fill="#B4532A"/>
+  <circle cx="256" cy="256" r="28" fill="#3A4350"/>
+</svg>

@@ -6,11 +6,12 @@
 //   * polhem.ico: the rounded mark, edge to edge, as PNG entries at 16, 32, 48 and 256 pixels; the main window's
 //     icon on Windows and Linux.
 //
-// The input is the folder holding the brand mark's SVG files, polhem-mark-square.svg and polhem-mark-rounded.svg
-// (the svg/ folder of the Polhem brand assets).
+// The input is the folder holding the brand mark's SVG files, polhem-mark-square.svg and polhem-mark-rounded.svg.
+// Copies of them are kept in tools/DefineEditor/Assets/brand, so the icons can be rebuilt from this repository.
+// They are copies of the Polhem brand assets: when the mark changes there, copy the new files here and rebuild.
 //
-// Usage:
-//   swift build-icon.swift <brand_svg_dir> <output_dir>
+// Usage, from the repository root:
+//   swift tools/DefineEditor/scripts/build-icon.swift tools/DefineEditor/Assets/brand <output_dir>
 //   iconutil -c icns <output_dir>/AppIcon.iconset -o tools/DefineEditor/Assets/AppIcon.icns
 //   cp <output_dir>/polhem.ico tools/DefineEditor/Assets/polhem.ico
 
