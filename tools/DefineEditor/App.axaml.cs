@@ -5,10 +5,12 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Polhem.Definition.Language;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.DefineEditor.Views;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.UI.Avalonia;
 
 namespace Polhem.DefineEditor;
 
@@ -75,6 +77,12 @@ public partial class App : Application
         // already shows the right language.
         var settings = UserSettings.Load();
         LocalizationService.Current.Culture = CultureInfo.GetCultureInfo(settings.Language);
+
+        // The framework controls (the property grid's reset command, collection summary and dialog buttons) read their
+        // text through UIText, which by default follows the operating system's UI culture. Follow the editor's
+        // language instead; the text is read when a control is built, so EditorPane refreshes its grid on a switch.
+        UIText.Localizer = new LanguageResourceStringLocalizer<PolhemUIText>(
+            new FrameworkLanguageService(null), static () => LocalizationService.Current.Culture.Name);
 
         // App-level NativeMenu = the macOS application menu (the bold first
         // entry on the menu bar named after the app). Items added directly

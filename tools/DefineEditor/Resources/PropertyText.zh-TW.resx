@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!--
+    Traditional Chinese (zh-TW) property grid categories and property descriptions.
+    PropCategory_{category}: the translation of a [Category].
+    PropDesc_{type}_{property}: the translation of a [Description]; <comment> holds the English text it was
+    translated from. When the English text changes, PropertyLabelsTests fails until the entry is translated again.
+  -->
+  <data name="PropCategory_API" xml:space="preserve"><value>API</value></data>
+  <data name="PropCategory_Appearance" xml:space="preserve"><value>外觀</value></data>
+  <data name="PropCategory_AuditLog" xml:space="preserve"><value>稽核日誌</value></data>
+  <data name="PropCategory_Backend" xml:space="preserve"><value>後端</value></data>
+  <data name="PropCategory_Behavior" xml:space="preserve"><value>行為</value></data>
+  <data name="PropCategory_Cache" xml:space="preserve"><value>快取</value></data>
+  <data name="PropCategory_CacheNotify" xml:space="preserve"><value>快取通知</value></data>
+  <data name="PropCategory_Components" xml:space="preserve"><value>元件</value></data>
+  <data name="PropCategory_Connection" xml:space="preserve"><value>連線</value></data>
+  <data name="PropCategory_Data" xml:space="preserve"><value>資料</value></data>
+  <data name="PropCategory_Define" xml:space="preserve"><value>定義</value></data>
+  <data name="PropCategory_Layout" xml:space="preserve"><value>版面</value></data>
+  <data name="PropCategory_Localization" xml:space="preserve"><value>在地化</value></data>
+  <data name="PropCategory_Logging" xml:space="preserve"><value>日誌</value></data>
+  <data name="PropCategory_Providers" xml:space="preserve"><value>提供者</value></data>
+  <data name="PropCategory_Relation" xml:space="preserve"><value>關聯</value></data>
+  <data name="PropCategory_Repository" xml:space="preserve"><value>儲存庫</value></data>
+  <data name="PropCategory_Security" xml:space="preserve"><value>安全性</value></data>
+  <data name="PropCategory_Service" xml:space="preserve"><value>服務</value></data>
+  <data name="PropCategory_Session" xml:space="preserve"><value>工作階段</value></data>
+  <data name="PropCategory_SessionCleanup" xml:space="preserve"><value>工作階段清理</value></data>
+  <data name="PropCategory_Validators" xml:space="preserve"><value>驗證器</value></data>
+
+  <data name="PropDesc_AllowedCurrencyItem_Code" xml:space="preserve"><value>公司可使用之幣別的 ISO 4217 三碼代碼。</value><comment>ISO 4217 alpha-3 code of a currency the company may use.</comment></data>
+  <data name="PropDesc_CashRoundingItem_CurrencyCode" xml:space="preserve"><value>此覆寫套用之幣別的 ISO 4217 三碼代碼。</value><comment>ISO 4217 alpha-3 code of the currency the override applies to.</comment></data>
+  <data name="PropDesc_CashRoundingItem_Unit" xml:space="preserve"><value>套用於最終應付金額的現金進位單位，例如 0.05。</value><comment>Cash-rounding unit applied to the final payable amount, for example 0.05.</comment></data>
+  <data name="PropDesc_ListItem_Value" xml:space="preserve"><value>選項值。</value><comment>Item value.</comment></data>
+  <data name="PropDesc_ListItem_Text" xml:space="preserve"><value>顯示文字。</value><comment>Display text.</comment></data>
+  <data name="PropDesc_Property_Name" xml:space="preserve"><value>屬性名稱。</value><comment>Property name.</comment></data>
+  <data name="PropDesc_Property_Value" xml:space="preserve"><value>屬性值。</value><comment>Property value.</comment></data>
+  <data name="PropDesc_DbField_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
+  <data name="PropDesc_DbField_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_DbField_OriginalFieldName" xml:space="preserve"><value>原始欄位名稱；結構升級時一次性的更名提示。</value><comment>Original field name; one-time rename hint for schema upgrade.</comment></data>
+  <data name="PropDesc_DbField_DbType" xml:space="preserve"><value>資料庫資料型別。</value><comment>Database data type.</comment></data>
+  <data name="PropDesc_DbField_Length" xml:space="preserve"><value>字串型別欄位的長度；適用於 String。</value><comment>Field length for string-type fields; applies to String.</comment></data>
+  <data name="PropDesc_DbField_Precision" xml:space="preserve"><value>Decimal 型別欄位的數值精度（總位數）。</value><comment>Numeric precision (total digits) for Decimal-type fields.</comment></data>
+  <data name="PropDesc_DbField_Scale" xml:space="preserve"><value>Decimal 型別欄位的小數位數。</value><comment>Number of decimal places for Decimal-type fields.</comment></data>
+  <data name="PropDesc_DbField_AllowNull" xml:space="preserve"><value>是否允許 null 值。</value><comment>Indicates whether null values are allowed.</comment></data>
+  <data name="PropDesc_DbField_DefaultValue" xml:space="preserve"><value>預設值。</value><comment>Default value.</comment></data>
+  <data name="PropDesc_DbTableIndex_Name" xml:space="preserve"><value>索引名稱。</value><comment>Index name.</comment></data>
+  <data name="PropDesc_DbTableIndex_Unique" xml:space="preserve"><value>索引是否唯一。</value><comment>Indicates whether the index is unique.</comment></data>
+  <data name="PropDesc_DbTableIndex_PrimaryKey" xml:space="preserve"><value>是否為主鍵。</value><comment>Indicates whether this is the primary key.</comment></data>
+  <data name="PropDesc_IndexField_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
+  <data name="PropDesc_IndexField_SortDirection" xml:space="preserve"><value>排序方向。</value><comment>Sort direction.</comment></data>
+  <data name="PropDesc_TableSchema_TableName" xml:space="preserve"><value>資料表名稱。</value><comment>Table name.</comment></data>
+  <data name="PropDesc_TableSchema_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_FieldMapping_SourceField" xml:space="preserve"><value>來源欄位。</value><comment>Source field.</comment></data>
+  <data name="PropDesc_FieldMapping_DestinationField" xml:space="preserve"><value>目的欄位。</value><comment>Destination field.</comment></data>
+  <data name="PropDesc_FormField_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
+  <data name="PropDesc_FormField_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_FormField_DbType" xml:space="preserve"><value>資料庫欄位型別。</value><comment>Database field type.</comment></data>
+  <data name="PropDesc_FormField_Type" xml:space="preserve"><value>欄位類型。</value><comment>Field type.</comment></data>
+  <data name="PropDesc_FormField_ControlType" xml:space="preserve"><value>控制項類型。</value><comment>Control type.</comment></data>
+  <data name="PropDesc_FormField_MaxLength" xml:space="preserve"><value>字串最大長度。</value><comment>Maximum string length.</comment></data>
+  <data name="PropDesc_FormField_DefaultValue" xml:space="preserve"><value>預設值。</value><comment>Default value.</comment></data>
+  <data name="PropDesc_FormField_ValueExpression" xml:space="preserve"><value>計算此欄位值的運算式；儲存前會重新計算。</value><comment>Expression computing this field's value; recomputed before save.</comment></data>
+  <data name="PropDesc_FormField_DefaultValueExpression" xml:space="preserve"><value>為新資料列產生此欄位預設值的運算式。</value><comment>Expression producing this field's default value for new rows.</comment></data>
+  <data name="PropDesc_FormField_DisplayFormat" xml:space="preserve"><value>顯示格式字串。</value><comment>Display format string.</comment></data>
+  <data name="PropDesc_FormField_NumberFormat" xml:space="preserve"><value>數值格式字串。</value><comment>Number format string.</comment></data>
+  <data name="PropDesc_FormField_NumberKind" xml:space="preserve"><value>數值的語意種類，決定進位方式與小數位數。</value><comment>Numeric semantic kind driving rounding and decimal places.</comment></data>
+  <data name="PropDesc_FormField_CurrencyField" xml:space="preserve"><value>存放此金額欄位幣別代碼的欄位名稱（SAP CUKY 參照）。</value><comment>Name of the field holding this amount field's currency code (SAP CUKY reference).</comment></data>
+  <data name="PropDesc_FormField_UnitField" xml:space="preserve"><value>存放此數量／重量欄位單位代碼的欄位名稱（SAP UNIT 參照）。</value><comment>Name of the field holding this quantity/weight field's unit code (SAP UNIT reference).</comment></data>
+  <data name="PropDesc_FormField_RelationProgId" xml:space="preserve"><value>關聯程式的程式代碼。</value><comment>Program ID of the related program.</comment></data>
+  <data name="PropDesc_FormField_RelationFieldMappings" xml:space="preserve"><value>從關聯來源對應到本地欄位的欄位對應集合。</value><comment>Field mapping collection from the relation source to local fields.</comment></data>
+  <data name="PropDesc_FormField_LookupProgId" xml:space="preserve"><value>UI 查詢／選取視窗的程式代碼。</value><comment>Program ID of the UI lookup/selection window.</comment></data>
+  <data name="PropDesc_FormField_LookupFieldMappings" xml:space="preserve"><value>查詢／選取視窗的欄位對應集合。</value><comment>Field mapping collection for the lookup/selection window.</comment></data>
+  <data name="PropDesc_FormField_DisplayFields" xml:space="preserve"><value>取代綁定值顯示的本地欄位，以逗號分隔（查詢編輯器）。</value><comment>Local fields displayed in place of the bound value, comma separated (lookup editors).</comment></data>
+  <data name="PropDesc_FormField_Visible" xml:space="preserve"><value>此欄位是否可見。</value><comment>Indicates whether this field is visible.</comment></data>
+  <data name="PropDesc_FormField_ReadOnly" xml:space="preserve"><value>此欄位是否唯讀。</value><comment>Indicates whether this field is read-only.</comment></data>
+  <data name="PropDesc_FormField_Required" xml:space="preserve"><value>此欄位是否必填。</value><comment>Indicates whether this field is required (mandatory input).</comment></data>
+  <data name="PropDesc_FormField_ListItems" xml:space="preserve"><value>選項清單集合。</value><comment>List item collection.</comment></data>
+  <data name="PropDesc_FormField_LangEnumName" xml:space="preserve"><value>下拉選項使用的語系列舉名稱（例如 'Common.Gender'）；有設定時會取代 ListItems。</value><comment>Localized enum name for dropdown options (e.g. 'Common.Gender'); overrides ListItems when set.</comment></data>
+  <data name="PropDesc_FormField_Width" xml:space="preserve"><value>欄寬。必須大於 0 才會生效。</value><comment>Column width. A value greater than 0 is required to take effect.</comment></data>
+  <data name="PropDesc_FormField_ScopeRole" xml:space="preserve"><value>權限篩選用的資料範圍角色（擁有者／部門欄位）。</value><comment>Record-scope role for permission filtering (Owner / Dept column).</comment></data>
+  <data name="PropDesc_FormField_SensitiveCategory" xml:space="preserve"><value>資料敏感度分類，控制欄位的可見（Read）與可編輯（Update）。</value><comment>Data-sensitivity classification gating field visibility (Read) and editability (Update).</comment></data>
+  <data name="PropDesc_FormRule_RuleId" xml:space="preserve"><value>規則代碼。</value><comment>Rule id.</comment></data>
+  <data name="PropDesc_FormRule_Trigger" xml:space="preserve"><value>評估此規則的生命週期時點。</value><comment>Lifecycle point at which the rule is evaluated.</comment></data>
+  <data name="PropDesc_FormRule_TargetTable" xml:space="preserve"><value>目標資料表名稱；空白表示主檔資料表。</value><comment>Target table name; empty targets the master table.</comment></data>
+  <data name="PropDesc_FormRule_When" xml:space="preserve"><value>適用條件運算式；空白一律適用，結果為 false 時略過此規則。</value><comment>Applicability expression; empty always applies, false skips the rule.</comment></data>
+  <data name="PropDesc_FormRule_Condition" xml:space="preserve"><value>驗證運算式；結果為 false 即為違規。</value><comment>Validation expression; a false result is a violation.</comment></data>
+  <data name="PropDesc_FormRule_Message" xml:space="preserve"><value>條件不成立時顯示的訊息（原文；翻譯放在 Rule.{RuleId}.Message）。</value><comment>Message shown when the condition fails (base text; translations under Rule.{RuleId}.Message).</comment></data>
+  <data name="PropDesc_FormRule_Enabled" xml:space="preserve"><value>此規則是否啟用。</value><comment>Indicates whether this rule is enabled.</comment></data>
+  <data name="PropDesc_FormRule_Order" xml:space="preserve"><value>同一觸發時點的規則之間的評估順序（數字小者先）。</value><comment>Evaluation order among rules with the same trigger (lower first).</comment></data>
+  <data name="PropDesc_FormSchema_ProgId" xml:space="preserve"><value>程式代碼。</value><comment>Program ID.</comment></data>
+  <data name="PropDesc_FormSchema_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_FormSchema_CategoryId" xml:space="preserve"><value>資料庫類別代碼（必填）。</value><comment>Database category id (required).</comment></data>
+  <data name="PropDesc_FormSchema_CurrencyField" xml:space="preserve"><value>存放單據幣別代碼的主檔欄位名稱（SAP CUKY，慣例為 sys_currency）。</value><comment>Name of the master field holding the document currency code (SAP CUKY, convention sys_currency).</comment></data>
+  <data name="PropDesc_FormSchema_ListFields" xml:space="preserve"><value>清單欄位字串，多個欄位以逗號分隔。</value><comment>List field collection string, with multiple fields separated by commas.</comment></data>
+  <data name="PropDesc_FormSchema_LookupFields" xml:space="preserve"><value>開放給查詢使用的欄位字串，多個欄位以逗號分隔。</value><comment>Field collection string exposed to lookup queries, with multiple fields separated by commas.</comment></data>
+  <data name="PropDesc_FormSchema_PermissionModelId" xml:space="preserve"><value>對應此表單主要聚合的權限模型代碼。</value><comment>Permission model id mapped to this form's main aggregate.</comment></data>
+  <data name="PropDesc_FormTable_TableName" xml:space="preserve"><value>資料表名稱。</value><comment>Table name.</comment></data>
+  <data name="PropDesc_FormTable_DbTableName" xml:space="preserve"><value>資料庫資料表名稱。</value><comment>Database table name.</comment></data>
+  <data name="PropDesc_FormTable_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_SessionUser_UserId" xml:space="preserve"><value>使用者帳號。</value><comment>User account ID.</comment></data>
+  <data name="PropDesc_SessionUser_UserName" xml:space="preserve"><value>使用者名稱。</value><comment>User name.</comment></data>
+  <data name="PropDesc_SessionUser_EndTime" xml:space="preserve"><value>工作階段到期時間。</value><comment>Session expiration time.</comment></data>
+  <data name="PropDesc_SessionUser_CompanyId" xml:space="preserve"><value>工作階段目前所在的公司；尚未進入公司時為空白。</value><comment>Company the session is working in; empty until it enters one.</comment></data>
+  <data name="PropDesc_LanguageEnum_Name" xml:space="preserve"><value>列舉名稱，在所屬資源內不可重複。</value><comment>Enum name, unique within the parent resource.</comment></data>
+  <data name="PropDesc_LanguageEnumEntry_Code" xml:space="preserve"><value>儲存在資料庫中的代碼。</value><comment>Persisted code stored in the database.</comment></data>
+  <data name="PropDesc_LanguageEnumEntry_Text" xml:space="preserve"><value>在地化的顯示文字。</value><comment>Localized display text.</comment></data>
+  <data name="PropDesc_LanguageItem_Key" xml:space="preserve"><value>在所屬命名空間內的子鍵。</value><comment>Sub-key within the parent namespace.</comment></data>
+  <data name="PropDesc_LanguageItem_Value" xml:space="preserve"><value>在地化文字。</value><comment>Localized text.</comment></data>
+  <data name="PropDesc_LanguageResource_Namespace" xml:space="preserve"><value>命名空間，通常是程式代碼或模組名稱（與檔名主幹相同；完整鍵值的第一段）。</value><comment>Namespace, usually the ProgId or module name (matches file name stem; first segment of full keys).</comment></data>
+  <data name="PropDesc_LanguageResource_Lang" xml:space="preserve"><value>BCP-47 語言代碼，例如 zh-TW 或 en-US。</value><comment>BCP-47 language code, for example zh-TW or en-US.</comment></data>
+  <data name="PropDesc_FormLayout_LayoutId" xml:space="preserve"><value>表單版面代碼。</value><comment>Form layout ID.</comment></data>
+  <data name="PropDesc_FormLayout_ProgId" xml:space="preserve"><value>此版面所屬的程式代碼。</value><comment>Program ID this layout belongs to.</comment></data>
+  <data name="PropDesc_FormLayout_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_FormLayout_ColumnCount" xml:space="preserve"><value>主檔表單區域的最大欄數。</value><comment>Maximum number of columns for the master form area.</comment></data>
+  <data name="PropDesc_LayoutColumn_Width" xml:space="preserve"><value>欄寬（像素）。0 表示自動／未設定。</value><comment>Column width in pixels. Zero means auto/unset.</comment></data>
+  <data name="PropDesc_LayoutField_RowSpan" xml:space="preserve"><value>跨越的列數。</value><comment>Number of rows to span.</comment></data>
+  <data name="PropDesc_LayoutField_ColumnSpan" xml:space="preserve"><value>跨越的欄數。</value><comment>Number of columns to span.</comment></data>
+  <data name="PropDesc_LayoutField_AllowEditModes" xml:space="preserve"><value>此欄位可編輯的表單模式。</value><comment>Form modes in which this field is editable.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_ControlType" xml:space="preserve"><value>控制項類型。</value><comment>Control type.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_DisplayFields" xml:space="preserve"><value>取代綁定值顯示的本地欄位，以逗號分隔（查詢編輯器）。</value><comment>Local fields displayed in place of the bound value, comma separated (lookup editors).</comment></data>
+  <data name="PropDesc_LayoutFieldBase_DisplayFormat" xml:space="preserve"><value>顯示格式字串。</value><comment>Display format string.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_NumberFormat" xml:space="preserve"><value>數值格式字串。</value><comment>Number format string.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_NumberKind" xml:space="preserve"><value>數值的語意種類，決定進位方式與小數位數。</value><comment>Numeric semantic kind driving rounding and decimal places.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_CurrencyField" xml:space="preserve"><value>存放此金額欄位幣別代碼的欄位名稱（SAP CUKY 參照）。</value><comment>Name of the field holding this amount field's currency code (SAP CUKY reference).</comment></data>
+  <data name="PropDesc_LayoutFieldBase_UnitField" xml:space="preserve"><value>存放此數量／重量欄位單位代碼的欄位名稱（SAP UNIT 參照）。</value><comment>Name of the field holding this quantity/weight field's unit code (SAP UNIT reference).</comment></data>
+  <data name="PropDesc_LayoutFieldBase_Visible" xml:space="preserve"><value>此欄位是否可見。</value><comment>Indicates whether this field is visible.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_ReadOnly" xml:space="preserve"><value>此欄位是否唯讀。</value><comment>Indicates whether this field is read-only.</comment></data>
+  <data name="PropDesc_LayoutFieldBase_Required" xml:space="preserve"><value>此欄位是否必填。</value><comment>Indicates whether this field is required (mandatory input).</comment></data>
+  <data name="PropDesc_LayoutFieldBase_ExtendedProperties" xml:space="preserve"><value>擴充屬性集合。</value><comment>Extended property collection.</comment></data>
+  <data name="PropDesc_LayoutGrid_TableName" xml:space="preserve"><value>資料表名稱。</value><comment>Table name.</comment></data>
+  <data name="PropDesc_LayoutGrid_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_LayoutGrid_AllowActions" xml:space="preserve"><value>表格控制項允許的動作。</value><comment>Actions allowed on the grid control.</comment></data>
+  <data name="PropDesc_LayoutGrid_AllowEditModes" xml:space="preserve"><value>表格允許編輯動作的表單模式。</value><comment>Form modes in which this grid allows editing actions.</comment></data>
+  <data name="PropDesc_LayoutSection_Name" xml:space="preserve"><value>區段名稱。</value><comment>Section name.</comment></data>
+  <data name="PropDesc_LayoutSection_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
+  <data name="PropDesc_LayoutSection_ShowCaption" xml:space="preserve"><value>是否顯示標題。</value><comment>Indicates whether the caption is shown.</comment></data>
+  <data name="PropDesc_DbAccessAnomalyLogOptions_Level" xml:space="preserve"><value>日誌記錄等級（Error：只記錄錯誤；Warning：包含異常情況）。</value><comment>Logging level (Error: only errors, Warning: includes abnormal cases).</comment></data>
+  <data name="PropDesc_DbAccessAnomalyLogOptions_AffectedRowThreshold" xml:space="preserve"><value>影響列數的門檻（預設 10000）。小於或等於 0 時停用此檢查。</value><comment>Threshold for affected rows (default: 10000). &lt;=0 disables this check.</comment></data>
+  <data name="PropDesc_DbAccessAnomalyLogOptions_ResultRowThreshold" xml:space="preserve"><value>結果列數的門檻（預設 10000）。小於或等於 0 時不記錄結果列數。</value><comment>Threshold for result rows (default: 10000). &lt;=0 disables logging for result rows.</comment></data>
+  <data name="PropDesc_DbAccessAnomalyLogOptions_ExecutionTimeThreshold" xml:space="preserve"><value>執行時間的門檻，以秒為單位（預設 300）。小於或等於 0 時不記錄執行時間。</value><comment>Threshold for execution time in seconds (default: 300). &lt;=0 disables logging for execution time.</comment></data>
+  <data name="PropDesc_LogOptions_DbAccess" xml:space="preserve"><value>DbAccess 模組的日誌選項。</value><comment>Logging options for the DbAccess module.</comment></data>
+  <data name="PropDesc_NumberFormatItem_Kind" xml:space="preserve"><value>此覆寫套用的數值種類。</value><comment>Number kind the override applies to.</comment></data>
+  <data name="PropDesc_NumberFormatItem_Decimals" xml:space="preserve"><value>此數值種類的小數位數。</value><comment>Decimal places for this number kind.</comment></data>
+  <data name="PropDesc_ApiPayloadOptions_Compressor" xml:space="preserve"><value>壓縮器名稱，例如 gzip、none。</value><comment>Specifies the compressor name, e.g., gzip, none.</comment></data>
+  <data name="PropDesc_ApiPayloadOptions_Encryptor" xml:space="preserve"><value>加密器名稱，例如 aes-cbc-hmac、none。</value><comment>Specifies the encryptor name, e.g., aes-cbc-hmac, none.</comment></data>
+  <data name="PropDesc_AuditLogOptions_Enabled" xml:space="preserve"><value>是否啟用稽核日誌。預設停用（需明確開啟）。</value><comment>Whether audit-trail logging is enabled. Disabled by default (opt-in).</comment></data>
+  <data name="PropDesc_AuditLogOptions_UseBackgroundWriter" xml:space="preserve"><value>是否使用背景批次寫入器。為 false 時同步寫入（適用於沒有 IHost 的主機）。</value><comment>Whether to use the background batch writer. When false, writes run synchronously (for hosts without an IHost).</comment></data>
+  <data name="PropDesc_AuditLogOptions_QueueCapacity" xml:space="preserve"><value>背景寫入器的記憶體佇列容量上限。佇列滿時改為同步寫入。</value><comment>Bounded in-memory queue capacity for the background writer. When full, writes degrade to synchronous.</comment></data>
+  <data name="PropDesc_AuditLogOptions_BatchSize" xml:space="preserve"><value>背景寫入器每批寫入的最大筆數。</value><comment>Maximum number of entries inserted per batch by the background writer.</comment></data>
+  <data name="PropDesc_AuditLogOptions_FileFallbackPath" xml:space="preserve"><value>日誌資料庫無法使用時，寫出紀錄的備援檔案路徑（選填）。空白表示停用備援。</value><comment>Optional file path to spill entries to when the log database is unavailable. Empty disables the fallback.</comment></data>
+  <data name="PropDesc_AuditLogOptions_LoginEnabled" xml:space="preserve"><value>是否記錄登入紀錄。</value><comment>Whether login records are captured.</comment></data>
+  <data name="PropDesc_AuditLogOptions_ChangeEnabled" xml:space="preserve"><value>是否記錄資料異動紀錄。</value><comment>Whether data-change records are captured.</comment></data>
+  <data name="PropDesc_AuditLogOptions_AccessEnabled" xml:space="preserve"><value>是否記錄讀取／存取紀錄。因資料量大，預設關閉（需明確開啟）。</value><comment>Whether read/access records are captured. Opt-in (off by default) due to volume.</comment></data>
+  <data name="PropDesc_AuditLogOptions_AnomalyEnabled" xml:space="preserve"><value>是否記錄異常紀錄（API 與資料庫的錯誤、逾時、緩慢）。</value><comment>Whether anomaly records (API + DB errors / timeouts / slow) are captured.</comment></data>
+  <data name="PropDesc_AuditLogOptions_ApiSlowThresholdMs" xml:space="preserve"><value>API 呼叫被記錄為緩慢的耗時門檻（毫秒）。小於或等於 0 時停用。</value><comment>Elapsed-time threshold (ms) above which an API call is recorded as Slow. &lt;=0 disables.</comment></data>
+  <data name="PropDesc_BackendComponents_ApiEncryptionKeyProvider" xml:space="preserve"><value>API 加密金鑰提供者型別，決定如何取得 API 資料加密金鑰。</value><comment>API encryption key provider type, defines how to obtain the API data encryption key.</comment></data>
+  <data name="PropDesc_BackendComponents_AccessTokenValidator" xml:space="preserve"><value>存取權杖驗證器型別，用來驗證存取權杖是否有效。</value><comment>Access token validator type, used to verify the validity of access tokens.</comment></data>
+  <data name="PropDesc_BackendComponents_CacheProvider" xml:space="preserve"><value>快取提供者型別，決定快取機制的實作（例如 MemoryCache、Redis）。</value><comment>Cache provider type, defines the cache mechanism implementation (e.g., MemoryCache, Redis).</comment></data>
+  <data name="PropDesc_BackendComponents_CacheDataSourceProvider" xml:space="preserve"><value>快取資料來源提供者型別，決定快取資料的來源（例如預先載入的定義資料）。</value><comment>Cache data source provider type, defines the source of cached data (such as preloaded definition data).</comment></data>
+  <data name="PropDesc_BackendComponents_DefineStorage" xml:space="preserve"><value>定義儲存型別，決定如何載入系統定義檔（例如檔案、資料庫等）。</value><comment>Define storage type, specifies how to load system definition files (e.g., file, database, etc.).</comment></data>
+  <data name="PropDesc_BackendComponents_DefineAccess" xml:space="preserve"><value>定義存取型別。</value><comment>Define access type.</comment></data>
+  <data name="PropDesc_BackendComponents_SessionInfoService" xml:space="preserve"><value>工作階段資訊服務型別。</value><comment>Session info service type.</comment></data>
+  <data name="PropDesc_BackendComponents_CompanyInfoService" xml:space="preserve"><value>公司資訊服務型別。</value><comment>Company info service type.</comment></data>
+  <data name="PropDesc_BackendComponents_RepositoryFactory" xml:space="preserve"><value>儲存庫工廠型別，決定每個儲存庫如何建立。</value><comment>Repository factory type, defines how every repository is created.</comment></data>
+  <data name="PropDesc_BackendConfiguration_SessionCleanupOptions" xml:space="preserve"><value>過期工作階段的清理設定。</value><comment>Expired session cleanup settings.</comment></data>
+  <data name="PropDesc_BackendConfiguration_DefaultTimeZone" xml:space="preserve"><value>使用者沒有自己的時區時套用的 IANA 時區代碼。空白表示 UTC。</value><comment>IANA time zone id applied when a user has no time zone of their own. Empty means UTC.</comment></data>
+  <data name="PropDesc_CacheNotifyOptions_Enabled" xml:space="preserve"><value>是否啟用快取通知輪詢。</value><comment>Whether the cache-notify poller is enabled.</comment></data>
+  <data name="PropDesc_CacheNotifyOptions_IntervalSeconds" xml:space="preserve"><value>輪詢間隔（秒）。</value><comment>Polling interval in seconds.</comment></data>
+  <data name="PropDesc_CacheNotifyOptions_MarginSeconds" xml:space="preserve"><value>增量讀取重疊區間的安全邊際（秒）。</value><comment>Safety margin in seconds for the incremental read overlap window.</comment></data>
+  <data name="PropDesc_CacheNotifyOptions_DatabaseId" xml:space="preserve"><value>要輪詢其通知資料表的資料庫代碼。</value><comment>Database identifier whose notification table is polled.</comment></data>
+  <data name="PropDesc_CommonConfiguration_Version" xml:space="preserve"><value>系統主版本。</value><comment>System major version.</comment></data>
+  <data name="PropDesc_CommonConfiguration_IsDebugMode" xml:space="preserve"><value>是否啟用偵錯模式。</value><comment>Indicates whether debug mode is enabled.</comment></data>
+  <data name="PropDesc_CommonConfiguration_DefaultLanguage" xml:space="preserve"><value>預設的 BCP-47 文化特性：沒有設定文化特性之使用者所用的文化特性，也是最後的語言後援（例如 zh-TW、en-US）。</value><comment>Default BCP-47 culture: the culture of users without one, and the last language fall-back (e.g. zh-TW, en-US).</comment></data>
+  <data name="PropDesc_CommonConfiguration_AllowedTypeNamespaces" xml:space="preserve"><value>JSON-RPC 資料傳輸允許的型別命名空間清單，以 '|' 分隔。</value><comment>List of allowed type namespaces for JSON-RPC data transfer, separated by '|'.</comment></data>
+  <data name="PropDesc_CommonConfiguration_ApiPayloadOptions" xml:space="preserve"><value>API 承載資料的處理選項，例如序列化、壓縮與加密。</value><comment>Provides API payload handling options, such as serialization, compression, and encryption.</comment></data>
+  <data name="PropDesc_CurrencyItem_Code" xml:space="preserve"><value>ISO 4217 三碼幣別代碼，例如 USD；查詢用的鍵值。</value><comment>ISO 4217 alpha-3 currency code, for example USD; the lookup key.</comment></data>
+  <data name="PropDesc_CurrencyItem_Numeric" xml:space="preserve"><value>ISO 4217 數字代碼，例如 840（選填）。</value><comment>ISO 4217 numeric code, for example 840 (optional).</comment></data>
+  <data name="PropDesc_CurrencyItem_Rounding" xml:space="preserve"><value>幣別本身的最小單位：兩位小數為 0.01，無小數為 1。</value><comment>Natural minor unit of the currency: 0.01 for two decimals, 1 for none.</comment></data>
+  <data name="PropDesc_CurrencyItem_Symbol" xml:space="preserve"><value>顯示符號，例如 $。</value><comment>Display symbol, for example $.</comment></data>
+  <data name="PropDesc_CurrencyItem_Name" xml:space="preserve"><value>顯示名稱，例如 US Dollar。</value><comment>Display name, for example US Dollar.</comment></data>
+  <data name="PropDesc_DatabaseItem_Id" xml:space="preserve"><value>資料庫代碼。</value><comment>Database ID.</comment></data>
+  <data name="PropDesc_DatabaseItem_CategoryId" xml:space="preserve"><value>此項目所屬的邏輯資料庫類別代碼（例如 "common"、"company"、"log"）。</value><comment>Logical database category id this item belongs to (e.g. "common", "company", "log").</comment></data>
+  <data name="PropDesc_DatabaseItem_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_DatabaseItem_DatabaseType" xml:space="preserve"><value>資料庫類型。</value><comment>Database type.</comment></data>
+  <data name="PropDesc_DatabaseItem_ServerId" xml:space="preserve"><value>資料庫伺服器代碼。有設定時使用對應伺服器的連線字串。</value><comment>Database server ID. When set, the connection string from the corresponding server is used.</comment></data>
+  <data name="PropDesc_DatabaseItem_ConnectionString" xml:space="preserve"><value>資料庫連線字串。</value><comment>Database connection string.</comment></data>
+  <data name="PropDesc_DatabaseItem_DbName" xml:space="preserve"><value>資料庫名稱，用來取代連線字串中的 {@DbName} 預留位置。</value><comment>Database name, which replaces the {@DbName} placeholder in the connection string.</comment></data>
+  <data name="PropDesc_DatabaseItem_UserId" xml:space="preserve"><value>登入使用者帳號，用來取代連線字串中的 {@UserId} 預留位置。</value><comment>Login user ID, which replaces the {@UserId} placeholder in the connection string.</comment></data>
+  <data name="PropDesc_DatabaseItem_Password" xml:space="preserve"><value>登入密碼，用來取代連線字串中的 {@Password} 預留位置。</value><comment>Login password, which replaces the {@Password} placeholder in the connection string.</comment></data>
+  <data name="PropDesc_DatabaseServer_Id" xml:space="preserve"><value>伺服器代碼。</value><comment>Server ID.</comment></data>
+  <data name="PropDesc_DatabaseServer_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_DatabaseServer_DatabaseType" xml:space="preserve"><value>資料庫類型。</value><comment>Database type.</comment></data>
+  <data name="PropDesc_DatabaseServer_ConnectionString" xml:space="preserve"><value>資料庫連線字串。</value><comment>Database connection string.</comment></data>
+  <data name="PropDesc_DatabaseServer_UserId" xml:space="preserve"><value>登入使用者帳號，用來取代連線字串中的 {@UserId} 預留位置。</value><comment>Login user ID, which replaces the {@UserId} placeholder in the connection string.</comment></data>
+  <data name="PropDesc_DatabaseServer_Password" xml:space="preserve"><value>登入密碼，用來取代連線字串中的 {@Password} 預留位置。</value><comment>Login password, which replaces the {@Password} placeholder in the connection string.</comment></data>
+  <data name="PropDesc_DbCategory_Id" xml:space="preserve"><value>類別代碼。</value><comment>Category id.</comment></data>
+  <data name="PropDesc_DbCategory_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_MasterKeySource_Type" xml:space="preserve"><value>主金鑰來源類型。</value><comment>Master key source type.</comment></data>
+  <data name="PropDesc_MasterKeySource_Value" xml:space="preserve"><value>來源參數值：檔案路徑或環境變數名稱。空白時使用預設值。</value><comment>Source parameter value, file path or environment variable name. If empty, the default value will be used.</comment></data>
+  <data name="PropDesc_MenuEntry_ProgId" xml:space="preserve"><value>此項目開啟的程式代碼（參照 ProgramSettings 的項目）。</value><comment>Program ID this entry opens (references a ProgramSettings entry).</comment></data>
+  <data name="PropDesc_MenuNodeBase_Id" xml:space="preserve"><value>節點代碼（在整個選單樹中不可重複）。</value><comment>Node ID (unique across the whole menu tree).</comment></data>
+  <data name="PropDesc_MenuNodeBase_Caption" xml:space="preserve"><value>標題（撰寫語言的原文；翻譯放在 Menu 語系命名空間）。</value><comment>Caption (authoring-language original; translations live in the Menu language namespace).</comment></data>
+  <data name="PropDesc_MenuNodeBase_Order" xml:space="preserve"><value>同層之間的排序；數字小者在前。</value><comment>Sort order among siblings; lower comes first.</comment></data>
+  <data name="PropDesc_MenuNodeBase_Icon" xml:space="preserve"><value>由使用端外殼解析的圖示識別碼。</value><comment>Icon identifier resolved by the consuming shell.</comment></data>
+  <data name="PropDesc_MenuNodeBase_Visible" xml:space="preserve"><value>節點是否出現在選單中（設計期開關，不是權限）。</value><comment>Whether the node appears in the menu (design-time switch, NOT a permission).</comment></data>
+  <data name="PropDesc_PermissionModel_ModelId" xml:space="preserve"><value>模型代碼。</value><comment>Model id.</comment></data>
+  <data name="PropDesc_PermissionModel_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_PermissionRule_Action" xml:space="preserve"><value>權限動作。</value><comment>Permission action.</comment></data>
+  <data name="PropDesc_PermissionRule_Scope" xml:space="preserve"><value>資料範圍策略。Print 與 Export 沿用 Read 的範圍，請維持 Inherit。</value><comment>Record-scope strategy. Print and Export inherit the Read scope, so leave them at Inherit.</comment></data>
+  <data name="PropDesc_PluginItem_Type" xml:space="preserve"><value>外掛的組件限定型別名稱。</value><comment>Assembly-qualified type name of the plugin.</comment></data>
+  <data name="PropDesc_PluginItem_Stage" xml:space="preserve"><value>此外掛執行的管線階段。</value><comment>Pipeline stage this plugin runs at.</comment></data>
+  <data name="PropDesc_ProgramItem_ProgId" xml:space="preserve"><value>程式代碼。</value><comment>Program ID.</comment></data>
+  <data name="PropDesc_ProgramItem_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_ProgramItem_BusinessObject" xml:space="preserve"><value>繫結到此程式的商業物件（組件限定型別名稱）。</value><comment>Business object bound to this program (assembly-qualified type name).</comment></data>
+  <data name="PropDesc_ProgramItem_Repository" xml:space="preserve"><value>繫結到此程式的儲存庫（組件限定型別名稱）。</value><comment>Repository bound to this program (assembly-qualified type name).</comment></data>
+  <data name="PropDesc_ProgramPluginItem_ProgId" xml:space="preserve"><value>程式代碼。</value><comment>Program ID.</comment></data>
+  <data name="PropDesc_SecurityKeySettings_MasterKeySource" xml:space="preserve"><value>主金鑰來源。</value><comment>Master key source.</comment></data>
+  <data name="PropDesc_SecurityKeySettings_ApiEncryptionKey" xml:space="preserve"><value>API 傳輸金鑰（以主金鑰加密的 base64 字串）。</value><comment>API transport key (encrypted with master key, base64 string).</comment></data>
+  <data name="PropDesc_SecurityKeySettings_CookieEncryptionKey" xml:space="preserve"><value>Cookie 金鑰（以主金鑰加密的 base64 字串）。</value><comment>Cookie key (encrypted with master key, base64 string).</comment></data>
+  <data name="PropDesc_SecurityKeySettings_ConfigEncryptionKey" xml:space="preserve"><value>設定檔中敏感資料的加密金鑰（以主金鑰加密的 base64 字串）。</value><comment>Encryption key for sensitive data in config files (encrypted with master key, base64 string).</comment></data>
+  <data name="PropDesc_SecurityKeySettings_DatabaseEncryptionKey" xml:space="preserve"><value>資料庫中敏感欄位的加密金鑰（以主金鑰加密的 base64 字串）。</value><comment>Encryption key for sensitive fields in the database (encrypted with master key, base64 string).</comment></data>
+  <data name="PropDesc_SessionCleanupOptions_Enabled" xml:space="preserve"><value>是否啟用過期工作階段的清理作業。</value><comment>Whether the expired session cleanup job is enabled.</comment></data>
+  <data name="PropDesc_SessionCleanupOptions_IntervalSeconds" xml:space="preserve"><value>兩次清理之間的間隔（秒）。</value><comment>Interval in seconds between cleanup passes.</comment></data>
+  <data name="PropDesc_TableItem_TableName" xml:space="preserve"><value>資料表名稱。</value><comment>Table name.</comment></data>
+  <data name="PropDesc_TableItem_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
+  <data name="PropDesc_UnitItem_Code" xml:space="preserve"><value>單位代碼，例如 KG；查詢用的鍵值。</value><comment>Unit code, for example KG; the lookup key.</comment></data>
+  <data name="PropDesc_UnitItem_Decimals" xml:space="preserve"><value>用來顯示與進位此單位數量的小數位數。</value><comment>Decimal places used to display and round quantities in this unit.</comment></data>
+  <data name="PropDesc_UnitItem_Dimension" xml:space="preserve"><value>維度分組，例如重量或長度（選填）。</value><comment>Dimension grouping such as weight or length (optional).</comment></data>
+  <data name="PropDesc_UnitItem_Name" xml:space="preserve"><value>顯示名稱，例如 Kilogram。</value><comment>Display name, for example Kilogram.</comment></data>
+</root>
