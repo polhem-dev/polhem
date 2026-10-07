@@ -105,8 +105,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   Pasting a connection string moves to a dialog on a database server's or item's context menu, and its preview no
   longer shows the password. Renaming an object relabels its tree node at once.
 - Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField`, a
-  `DatabaseServer`, a `PermissionRule` and `BackendConfiguration`, with its display options, suggested form ids and a
-  log of `PropertyValueChanged`; the FormField's `ListItems` open in `CollectionEditDialog`.
+  `DatabaseServer`, a `PermissionRule`, `BackendConfiguration` and a demo object of groups with entries, with its
+  display options, suggested form ids and a log of `PropertyValueChanged`; the FormField's `ListItems` open in
+  `CollectionEditDialog`, and a group's entries open a second dialog from inside the first.
 
 ## [1.3.1] - 2026-10-05
 

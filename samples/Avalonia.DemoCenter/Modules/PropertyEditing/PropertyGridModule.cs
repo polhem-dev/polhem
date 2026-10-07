@@ -44,7 +44,9 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
             + "FormField's ListItems, opens CollectionEditDialog: add, delete and reorder the items and edit the selected one "
             + "in a grid of its own; Cancel leaves the collection as it was. Nested settings objects show their text. The "
             + "DatabaseServer's Password is masked, the PermissionRule's Action offers single actions, and the suggestion "
-            + "option turns the FormField's RelationProgId and LookupProgId into drop-downs that still take typed text.";
+            + "option turns the FormField's RelationProgId and LookupProgId into drop-downs that still take typed text. "
+            + "In the nested collections object, a group's Entries open a second dialog from inside the first; the "
+            + "inner OK only reaches the outer dialog's copy, so Cancel on the outer dialog discards both.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -55,6 +57,7 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
                 ("DbField", new DbField("unit_price", "Unit price", FieldDbType.Decimal) { Precision = 18, Scale = 2 }),
                 ("DatabaseServer (masked Password)", new DatabaseServer { Id = "main", DisplayName = "Main server", Password = "demo-only" }),
                 ("PermissionRule", new PermissionRule(PermissionActions.Read, ScopeStrategy.Own)),
+                ("Nested collections (Groups → Entries)", NestedCollectionsDemo.Create()),
                 ("BackendConfiguration", new BackendConfiguration()),
             };
 

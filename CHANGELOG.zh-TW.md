@@ -77,8 +77,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   不再是樹節點；選取欄位的 Relation 或 Lookup 群組時只顯示 Relation 屬性，表單代碼、對應欄位與方案內的語系列舉會列出建議值。貼上連線字串改為資料庫
   Server 或 Item 右鍵選單開啟的對話框，預覽不再顯示密碼。修改物件名稱後，樹上的標籤會立即更新。
 - Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField`、`DatabaseServer`、
-  `PermissionRule` 與 `BackendConfiguration`，可切換顯示選項與表單代碼建議值，並記錄 `PropertyValueChanged`；FormField 的 `ListItems`
-  可在 `CollectionEditDialog` 中編輯。
+  `PermissionRule`、`BackendConfiguration` 與一個「群組含項目」的示範物件，可切換顯示選項與表單代碼建議值，並記錄 `PropertyValueChanged`；
+  FormField 的 `ListItems` 可在 `CollectionEditDialog` 中編輯，群組的項目會在第一層對話框之上再開第二層。
 
 ## [1.3.1] - 2026-10-05
 
