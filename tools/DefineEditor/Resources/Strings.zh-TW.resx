@@ -120,7 +120,6 @@
   <!-- FormSchema -->
   <data name="FormSchema_AddTable" xml:space="preserve"><value>新增 FormTable</value></data>
   <data name="FormSchema_AddField" xml:space="preserve"><value>新增 FormField</value></data>
-  <data name="FormSchema_AddListItem" xml:space="preserve"><value>新增 ListItem</value></data>
   <data name="FormSchema_AddLookupMapping" xml:space="preserve"><value>新增 Lookup Mapping</value></data>
   <data name="FormSchema_AddRelationMapping" xml:space="preserve"><value>新增 Relation Mapping</value></data>
   <data name="FormSchema_GenerateFormLayout" xml:space="preserve"><value>產生 FormLayout</value></data>
@@ -128,15 +127,6 @@
   <data name="Confirm_OverwriteFormLayoutTitle" xml:space="preserve"><value>覆寫既有的 FormLayout</value></data>
   <data name="Confirm_OverwriteFormLayoutMessage" xml:space="preserve"><value>{0} 已存在。重新產生會丟掉其中人工調整過的版面。要覆寫嗎？</value></data>
   <data name="Action_Overwrite" xml:space="preserve"><value>覆寫</value></data>
-  <data name="FormSchema_Props" xml:space="preserve"><value>FormSchema 屬性</value></data>
-  <data name="FormSchema_TableProps" xml:space="preserve"><value>FormTable 屬性</value></data>
-  <data name="FormSchema_FieldProps" xml:space="preserve"><value>FormField 屬性</value></data>
-  <data name="FormSchema_FieldMappingProps" xml:space="preserve"><value>FieldMapping 屬性</value></data>
-  <data name="FormSchema_ListItemProps" xml:space="preserve"><value>ListItem 屬性</value></data>
-  <data name="FormSchema_MappingHeader" xml:space="preserve"><value>欄位對應（Source → Destination）</value></data>
-  <data name="FormSchema_MappingRelation" xml:space="preserve"><value>關聯欄位</value></data>
-  <data name="FormSchema_MappingSource" xml:space="preserve"><value>來源欄位</value></data>
-  <data name="FormSchema_MappingNote" xml:space="preserve"><value>（於對應群組節點右鍵新增 / 刪除對應列；Destination 候選來自目前 FormTable 的欄位）</value></data>
 
   <!-- DatabaseSettings -->
   <data name="DatabaseSettings_AddServer" xml:space="preserve"><value>新增 DatabaseServer</value></data>
@@ -214,7 +204,6 @@
   <data name="TreeNode_IndexFields" xml:space="preserve"><value>索引欄位</value></data>
   <data name="TreeNode_Indexes" xml:space="preserve"><value>索引</value></data>
   <data name="TreeNode_Items" xml:space="preserve"><value>項目</value></data>
-  <data name="TreeNode_ListItems" xml:space="preserve"><value>選項清單</value></data>
   <data name="TreeNode_Logging" xml:space="preserve"><value>日誌</value></data>
   <data name="TreeNode_Lookup" xml:space="preserve"><value>查詢</value></data>
   <data name="TreeNode_MenuSettings" xml:space="preserve"><value>選單設定</value></data>

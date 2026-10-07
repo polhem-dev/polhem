@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.DefineEditor.ViewModels;
 
@@ -32,6 +34,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedEditorContext))]
+    [NotifyPropertyChangedFor(nameof(SelectedPropertyFilter))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     private ObjectTreeNode? _selectedTreeNode;
 
@@ -43,6 +46,20 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// subclasses override to inject wrapper view-models (e.g. FormSchema's mapping editor).
     /// </summary>
     public virtual object? SelectedEditorContext => SelectedTreeNode is { IsFolder: false } node ? node.Value : null;
+
+    /// <summary>
+    /// Which properties of <see cref="SelectedEditorContext"/> the property grid shows; <c>null</c> shows them all.
+    /// </summary>
+    public virtual Func<PropertyDescriptor, bool>? SelectedPropertyFilter => null;
+
+    /// <summary>The values the property grid offers for string properties; <c>null</c> offers none.</summary>
+    public virtual Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => null;
+
+    /// <summary>
+    /// What the property grid asks before it opens a collection; <c>null</c> opens every collection in the grid's
+    /// own dialog.
+    /// </summary>
+    public virtual Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider => null;
 
     /// <summary>Underlying mutable object handed to <see cref="XmlCodec.SerializeToFile"/>.</summary>
     protected abstract object RootObject { get; }
@@ -219,6 +236,16 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         IsDirty = true;
         for (var node = SelectedTreeNode; node != null; node = node.Parent)
             node.Refresh();
+        if (SelectedTreeNode is { } selected)
+            OnSelectedObjectEdited(selected);
+    }
+
+    /// <summary>
+    /// Lets a subclass bring the tree in line after the grid wrote a property of <paramref name="node"/>'s object,
+    /// for example by adding a node the new value calls for.
+    /// </summary>
+    protected virtual void OnSelectedObjectEdited(ObjectTreeNode node)
+    {
     }
 
     private static void RefreshNodeLabels(ObjectTreeNode node)

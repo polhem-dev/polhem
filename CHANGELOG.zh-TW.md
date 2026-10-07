@@ -41,7 +41,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `[DefaultValue]` 與 `[TypeConverter]`，把 `SelectedObject` 的屬性顯示成標籤與編輯器。值與預設值不同時以粗體顯示，標籤的右鍵選單可重設；
   每次寫回都會引發 `PropertyValueChanged`。`LabelTranslator` 翻譯標籤：每段文字以 `PropertyGridText` 傳入，附上
   `PropertyGridTextKind`（分組、顯示名稱、說明、項目標籤）、所屬型別與屬性名稱，因此說明可以依屬性查詢；`Refresh` 重新讀取物件並重新翻譯。
-  標有 `[PasswordPropertyText(true)]` 的屬性會遮蔽顯示；`ValueSuggestionProvider` 讓字串屬性改為列出建議值、仍可自行輸入的下拉清單。
+  標有 `[PasswordPropertyText(true)]` 的屬性會遮蔽顯示；`ValueSuggestionProvider` 讓字串屬性改為列出建議值、仍可自行輸入的下拉清單；`PropertyFilter` 可縮小顯示的列，例如只顯示一個分組。
   集合屬性以 `CollectionEditDialog`（或 `CollectionEditorProvider` 提供的編輯器）開啟；巢狀物件只唯讀顯示。
   控件透過 `TypeDescriptor` 讀取型別，定位為桌面工具使用，不適用於經過 trim 的行動端。
 - `CollectionEditDialog` 與 `CollectionEditContext`（`Polhem.UI.Avalonia`）：編輯集合屬性的對話框，左邊是項目清單（新增、刪除、上移、下移），

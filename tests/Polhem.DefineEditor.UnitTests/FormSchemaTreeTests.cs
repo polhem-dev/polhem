@@ -10,8 +10,8 @@ using Polhem.DefineEditor.ViewModels;
 namespace Polhem.DefineEditor.UnitTests
 {
     /// <summary>
-    /// The FormSchema tree: the folders the annotations give it, and the Relation / Lookup /
-    /// ListItems groups the editor adds under each field.
+    /// The FormSchema tree: the folders the annotations give it, the Relation / Lookup groups the
+    /// editor adds under each field, and what the property grid is given for them.
     /// </summary>
     public sealed class FormSchemaTreeTests : IDisposable
     {
@@ -32,7 +32,19 @@ namespace Polhem.DefineEditor.UnitTests
             status.ListItems!.Add(new ListItem("open", "Open"));
             var path = Path.Combine(_directory, "Order.FormSchema.xml");
             XmlCodec.SerializeToFile(schema, path);
-            _document = FormSchemaDocumentViewModel.Load(path, SolutionContext.Empty);
+
+            var related = new FormSchema("Customer", "Customer") { CategoryId = "company" };
+            var customers = related.Tables!.Add("Customer", "Customer");
+            customers.Fields!.Add("sys_id", "Customer No", FieldDbType.String);
+            customers.Fields!.Add("sys_name", "Customer Name", FieldDbType.String);
+            var relatedPath = Path.Combine(_directory, "Customer.FormSchema.xml");
+            XmlCodec.SerializeToFile(related, relatedPath);
+
+            var solution = new SolutionContext(["Customer", "Order"])
+            {
+                FormSchemaPaths = new Dictionary<string, string> { ["Customer"] = relatedPath, ["Order"] = path },
+            };
+            _document = FormSchemaDocumentViewModel.Load(path, solution);
         }
 
         public void Dispose()
@@ -60,7 +72,7 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A field gets a Relation group only when it has a relation, and a ListItems group only when it has items")]
+        [DisplayName("A field gets a Relation group only when it has a relation, and no group for its list items")]
         public void Field_Groups_FollowWhatTheFieldUses()
         {
             Assert.Empty(Field("sys_id").Children);
@@ -68,23 +80,29 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal("Relation", relation.Label);
             Assert.True(FormSchemaDocumentViewModel.IsRelationGroup(relation));
             Assert.Equal("sys_name -> ref_customer_name", Assert.Single(relation.Children).Label);
-            Assert.True(FormSchemaDocumentViewModel.IsListItemsGroup(Assert.Single(Field("status").Children)));
+            Assert.Empty(Field("status").Children);
         }
 
         [Fact]
-        [DisplayName("Selecting the Relation group shows the mapping editor, and selecting the ListItems group shows its field")]
-        public void SelectedEditorContext_Groups()
+        [DisplayName("Selecting the Relation group shows its field narrowed to the Relation category, and the field node shows all of it")]
+        public void SelectedEditorContext_RelationGroup_ShowsFieldRelationCategory()
         {
             _document.SelectedTreeNode = Field("customer_rowid").Children[0];
-            var editor = Assert.IsType<MappingGroupEditor>(_document.SelectedEditorContext);
-            Assert.True(editor.IsRelation);
 
-            _document.SelectedTreeNode = Field("status").Children[0];
-            Assert.Same(Field("status").Value, _document.SelectedEditorContext);
+            Assert.Same(Field("customer_rowid").Value, _document.SelectedEditorContext);
+            var filter = Assert.IsType<Func<PropertyDescriptor, bool>>(_document.SelectedPropertyFilter);
+            var shown = TypeDescriptor.GetProperties(typeof(FormField)).Cast<PropertyDescriptor>().Where(filter).Select(p => p.Name).ToList();
+            Assert.Contains(nameof(FormField.RelationProgId), shown);
+            Assert.Contains(nameof(FormField.LookupFieldMappings), shown);
+            Assert.DoesNotContain(nameof(FormField.FieldName), shown);
+
+            _document.SelectedTreeNode = Field("customer_rowid");
+
+            Assert.Null(_document.SelectedPropertyFilter);
         }
 
         [Fact]
-        [DisplayName("Add relation mapping on the Relation group adds a mapping and keeps the group selected")]
+        [DisplayName("Add relation mapping on the Relation group adds a mapping and selects it")]
         public void AddRelationMapping_OnGroup_AddsMapping()
         {
             var group = Field("customer_rowid").Children[0];
@@ -94,7 +112,7 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.Equal(2, ((FormField)Field("customer_rowid").Value).RelationFieldMappings!.Count);
             Assert.Equal(2, group.Children.Count);
-            Assert.Same(group, _document.SelectedTreeNode);
+            Assert.Same(group.Children[1], _document.SelectedTreeNode);
         }
 
         [Fact]
@@ -110,26 +128,86 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A mapping and a list item can be deleted, a folder cannot")]
-        public void Delete_AvailableForMappingAndListItem()
+        [DisplayName("A mapping can be deleted, a folder cannot")]
+        public void Delete_AvailableForMapping()
         {
             Assert.Contains(CommandsFor(Field("customer_rowid").Children[0].Children[0]), c => c.Label == LocalizationService.Current["Action_Delete"]);
-            Assert.Contains(CommandsFor(Field("status").Children[0].Children[0]), c => c.Label == LocalizationService.Current["Action_Delete"]);
             Assert.DoesNotContain(CommandsFor(_document.RootNode.Children[1]), c => c.Label == LocalizationService.Current["Action_Delete"]);
         }
 
         [Fact]
-        [DisplayName("Dragging a list item after its sibling reorders the field's list items")]
-        public void DragListItem_ReordersListItems()
+        [DisplayName("RelationProgId suggests the solution's form ids, and a mapping suggests its table's fields and the related form's fields")]
+        public void Suggest_ProgIdsAndMappingFields()
         {
-            var status = (FormField)Field("status").Value;
-            status.ListItems!.Add(new ListItem("closed", "Closed"));
-            var group = Field("status").Children[0];
-            group.Children.Add(new ObjectTreeBuilder().Build(status.ListItems[1]));
+            var customer = (FormField)Field("customer_rowid").Value;
+            var properties = TypeDescriptor.GetProperties(typeof(FormField));
+            Assert.Equal(["Customer", "Order"], _document.Suggest(properties[nameof(FormField.RelationProgId)]!, customer));
+            Assert.Null(_document.Suggest(properties[nameof(FormField.Caption)]!, customer));
+
+            var mappingNode = Field("customer_rowid").Children[0].Children[0];
+            _document.SelectedTreeNode = mappingNode;
+            var mappingProperties = TypeDescriptor.GetProperties(typeof(FieldMapping));
+
+            Assert.Equal(["sys_id", "customer_rowid", "ref_customer_name", "status"],
+                _document.Suggest(mappingProperties[nameof(FieldMapping.DestinationField)]!, mappingNode.Value));
+            Assert.Equal(["sys_id", "sys_name"],
+                _document.Suggest(mappingProperties[nameof(FieldMapping.SourceField)]!, mappingNode.Value));
+        }
+
+        [Fact]
+        [DisplayName("Opening a field's relation mappings from the grid selects their tree group and reports no change")]
+        public async Task EditMappingsInTree_SelectsGroup()
+        {
+            var customer = (FormField)Field("customer_rowid").Value;
+            _document.SelectedTreeNode = Field("customer_rowid");
+
+            var edit = _document.EditMappingsInTree(new(customer, TypeDescriptor.GetProperties(customer)[nameof(FormField.RelationFieldMappings)]!));
+
+            Assert.NotNull(edit);
+            Assert.False(await edit);
+            Assert.Same(Field("customer_rowid").Children[0], _document.SelectedTreeNode);
+            Assert.Null(_document.EditMappingsInTree(new(customer, TypeDescriptor.GetProperties(customer)[nameof(FormField.ListItems)]!)));
+        }
+
+        [Fact]
+        [DisplayName("Opening the lookup mappings of a field without a Lookup group adds the group after the Relation group")]
+        public async Task EditMappingsInTree_AddsMissingGroup()
+        {
+            var customer = (FormField)Field("customer_rowid").Value;
+            _document.SelectedTreeNode = Field("customer_rowid");
+
+            Assert.False(await _document.EditMappingsInTree(new(customer, TypeDescriptor.GetProperties(customer)[nameof(FormField.LookupFieldMappings)]!))!);
+
+            Assert.Equal(["Relation", "Lookup"], Field("customer_rowid").Children.Select(c => c.Label));
+            Assert.True(FormSchemaDocumentViewModel.IsLookupGroup(_document.SelectedTreeNode!));
+        }
+
+        [Fact]
+        [DisplayName("Setting a RelationProgId through the grid adds the field's Relation group")]
+        public void OnPropertyEdited_RelationProgIdSet_AddsGroup()
+        {
+            var field = (FormField)Field("sys_id").Value;
+            _document.SelectedTreeNode = Field("sys_id");
+
+            field.RelationProgId = "Customer";
+            _document.OnPropertyEdited();
+
+            Assert.True(FormSchemaDocumentViewModel.IsRelationGroup(Assert.Single(Field("sys_id").Children)));
+            Assert.True(_document.IsDirty);
+        }
+
+        [Fact]
+        [DisplayName("Dragging a mapping after its sibling reorders the field's relation mappings")]
+        public void DragMapping_ReordersMappings()
+        {
+            var customer = (FormField)Field("customer_rowid").Value;
+            customer.RelationFieldMappings!.Add(new FieldMapping("sys_id", "sys_id"));
+            var group = Field("customer_rowid").Children[0];
+            group.Children.Add(new ObjectTreeBuilder().Build(customer.RelationFieldMappings[1]));
 
             _document.DragDropHandler.Drop(group.Children[0], group.Children[1], TreeNodeDropPosition.After);
 
-            Assert.Equal(["closed", "open"], status.ListItems!.Select(i => i.Value));
+            Assert.Equal(["sys_id", "sys_name"], customer.RelationFieldMappings!.Select(m => m.SourceField));
         }
     }
 }

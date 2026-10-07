@@ -20,7 +20,8 @@ namespace Polhem.UI.Avalonia.Controls
             _descriptionText.Text = null;
             if (SelectedObject is not { } component) { return; }
 
-            var properties = PropertyGridMetadata.GetProperties(component);
+            var filter = PropertyFilter;
+            var properties = PropertyGridMetadata.GetProperties(component).Where(p => filter is null || filter(p)).ToList();
             if (ShowCategories)
             {
                 foreach (var group in PropertyGridMetadata.GroupByCategory(properties))

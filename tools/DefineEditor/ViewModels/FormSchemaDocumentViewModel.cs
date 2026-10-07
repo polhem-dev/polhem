@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
@@ -9,22 +10,25 @@ using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
 /// FormSchema editor. Loads the schema via <see cref="XmlCodec"/>, shows it as an
 /// <see cref="ObjectTreeBuilder"/> tree (Tables and Rules folders, fields directly under
-/// each table), lets the right-pane DataTemplates two-way bind to the underlying
-/// Polhem.Definition object, and offers Add commands for tables / fields / mappings /
-/// list items. Each field also gets Relation / Lookup / ListItems group nodes, which the
-/// annotations cannot express; see <see cref="AddFieldGroups"/>.
+/// each table) with the selected object in the property grid, and offers Add commands for
+/// tables, fields and mappings. Each field also gets Relation / Lookup group nodes, which the
+/// annotations cannot express; see <see cref="AddFieldGroups"/>. A field's list items are
+/// edited in the grid's collection dialog.
 /// </summary>
 public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
     private const string RelationLabel = "Relation";
     private const string LookupLabel = "Lookup";
-    private const string ListItemsLabel = "ListItems";
+
+    // NOTE: The category FormField declares on RelationProgId, LookupProgId, their mappings and DisplayFields.
+    private const string RelationCategory = "Relation";
 
     public override string TabIcon => "DefFormSchema";
 
@@ -38,19 +42,28 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     public override ITreeNodeCommandProvider CommandProvider { get; }
 
     /// <summary>
-    /// Content shown in the right-pane <see cref="Avalonia.Controls.ContentControl"/>.
-    /// The Relation / Lookup groups yield a <see cref="MappingGroupEditor"/>, the ListItems
-    /// group yields its field, and everything else yields the node's object so the
-    /// FormSchema / FormTable / FormField / FieldMapping / ListItem templates apply.
+    /// The object the property grid shows: a Relation or Lookup group shows the field that owns it,
+    /// narrowed to its Relation category by <see cref="SelectedPropertyFilter"/>; any other node shows
+    /// its own object.
     /// </summary>
     public override object? SelectedEditorContext => SelectedTreeNode switch
     {
         null => null,
-        var node when IsRelationGroup(node) => new MappingGroupEditor(OwningField(node)!, isRelation: true, Solution.AvailableProgIds),
-        var node when IsLookupGroup(node) => new MappingGroupEditor(OwningField(node)!, isRelation: false, Solution.AvailableProgIds),
-        var node when IsListItemsGroup(node) => OwningField(node),
+        var node when IsMappingGroup(node) => OwningField(node),
         _ => base.SelectedEditorContext,
     };
+
+    /// <inheritdoc/>
+    public override Func<PropertyDescriptor, bool>? SelectedPropertyFilter =>
+        SelectedTreeNode is { } node && IsMappingGroup(node)
+            ? static p => string.Equals(p.Category, RelationCategory, StringComparison.Ordinal)
+            : null;
+
+    /// <inheritdoc/>
+    public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
+
+    /// <inheritdoc/>
+    public override Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider => EditMappingsInTree;
 
     private FormSchemaDocumentViewModel(string filePath, FormSchema schema, SolutionContext solution)
         // The root, its folders and the tables start expanded; fields start collapsed.
@@ -77,10 +90,9 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         => FormSchemaValidator.Validate(Schema, Solution);
 
     /// <summary>
-    /// Adds the Relation, Lookup and ListItems groups under a field node, each when the field
-    /// uses it. <see cref="FieldMappingCollection"/> and <see cref="ListItemCollection"/> carry no
-    /// <c>[TreeNode]</c>, and a field holds two mapping collections of the same type, which a
-    /// class-level annotation could not label apart.
+    /// Adds the Relation and Lookup groups under a field node, each when the field uses it.
+    /// <see cref="FieldMappingCollection"/> carries no <c>[TreeNode]</c>, and a field holds two
+    /// mapping collections of the same type, which a class-level annotation could not label apart.
     /// </summary>
     private static void AddFieldGroups(ObjectTreeNode node, ObjectTreeBuilder builder)
     {
@@ -89,8 +101,6 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
             node.Children.Add(CreateGroup(builder, field.RelationFieldMappings!, RelationLabel));
         if (!string.IsNullOrEmpty(field.LookupProgId) || field.LookupFieldMappings is { Count: > 0 })
             node.Children.Add(CreateGroup(builder, field.LookupFieldMappings!, LookupLabel));
-        if (field.ListItems is { Count: > 0 } || !string.IsNullOrEmpty(field.LangEnumName))
-            node.Children.Add(CreateGroup(builder, field.ListItems!, ListItemsLabel));
     }
 
     private static ObjectTreeNode CreateGroup(ObjectTreeBuilder builder, System.Collections.IEnumerable items, string label)
@@ -109,8 +119,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     public static bool IsLookupGroup(ObjectTreeNode node) =>
         node.IsFolder && OwningField(node) is { } f && ReferenceEquals(node.Value, f.LookupFieldMappings);
 
-    public static bool IsListItemsGroup(ObjectTreeNode node) =>
-        node.IsFolder && OwningField(node) is { } f && ReferenceEquals(node.Value, f.ListItems);
+    private static bool IsMappingGroup(ObjectTreeNode node) => IsRelationGroup(node) || IsLookupGroup(node);
 
     public override string IconKeyFor(ObjectTreeNode node) => node switch
     {
@@ -124,10 +133,9 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         },
         _ when IsRelationGroup(node) => "IconLink",
         _ when IsLookupGroup(node) => "IconLookup",
-        _ when IsListItemsGroup(node) => "IconList",
         { Value: FormRuleCollection } => "IconList",
         { Value: FieldMapping } => "IconArrowRight",
-        { Value: ListItem or FormRule } => "IconDot",
+        { Value: FormRule } => "IconDot",
         _ => "DefUnknown",
     };
 
@@ -176,48 +184,93 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         var mappings = isRelation ? field.RelationFieldMappings! : field.LookupFieldMappings!;
         mappings.Add(mapping);
 
-        var group = EnsureGroup(fieldNode, mappings, isRelation ? RelationLabel : LookupLabel);
-        var selected = SelectedTreeNode;
-        var node = AddNode(group, mapping);
+        var group = EnsureGroup(fieldNode, mappings, isRelation);
+        AddNode(group, mapping);
         fieldNode.IsExpanded = true;
-
-        // Sitting on the group, the mapping editor in the right pane lists the new mapping, so
-        // keep the group selected and refresh the editor; otherwise the new mapping is selected.
-        if (ReferenceEquals(selected, group))
-        {
-            SelectedTreeNode = group;
-            OnPropertyChanged(nameof(SelectedEditorContext));
-        }
         StatusText = L("Status_AddedNamed", isRelation ? "Relation FieldMapping" : "Lookup FieldMapping", "");
     }
 
     private bool CanAddMapping() => FindAncestor<FormField>(SelectedTreeNode) is not null;
 
-    [RelayCommand(CanExecute = nameof(CanAddListItem))]
-    private void AddListItem()
+    /// <summary>
+    /// Returns the Relation or Lookup group of <paramref name="fieldNode"/>, adding it when the field has none yet. The
+    /// Relation group always comes first.
+    /// </summary>
+    private ObjectTreeNode EnsureGroup(ObjectTreeNode fieldNode, FieldMappingCollection mappings, bool isRelation)
     {
-        var fieldNode = FindAncestor<FormField>(SelectedTreeNode);
-        if (fieldNode?.Value is not FormField field) return;
-
-        var key = UniqueKey(field.ListItems!.Select(i => i.Value), "value");
-        var item = new ListItem(key, "New option");
-        field.ListItems!.Add(item);
-
-        var group = EnsureGroup(fieldNode, field.ListItems!, ListItemsLabel);
-        AddNode(group, item);
-        fieldNode.IsExpanded = true;
-        StatusText = L("Status_AddedNamed", "ListItem", key);
+        var existing = fieldNode.Children.FirstOrDefault(c => c.IsFolder && ReferenceEquals(c.Value, mappings));
+        if (existing is not null) return existing;
+        var group = CreateGroup(Builder, mappings, isRelation ? RelationLabel : LookupLabel);
+        if (isRelation)
+            fieldNode.Children.Insert(0, group);
+        else
+            fieldNode.Children.Add(group);
+        return group;
     }
 
-    private bool CanAddListItem() => FindAncestor<FormField>(SelectedTreeNode) is not null;
-
-    private ObjectTreeNode EnsureGroup(ObjectTreeNode fieldNode, System.Collections.IEnumerable items, string label)
+    /// <summary>
+    /// After the grid set a field's RelationProgId or LookupProgId, adds the group the field now calls for, so its
+    /// mappings can be added from the tree.
+    /// </summary>
+    protected override void OnSelectedObjectEdited(ObjectTreeNode node)
     {
-        var existing = fieldNode.Children.FirstOrDefault(c => c.IsFolder && ReferenceEquals(c.Value, items));
-        if (existing is not null) return existing;
-        var group = CreateGroup(Builder, items, label);
-        fieldNode.Children.Add(group);
-        return group;
+        var fieldNode = FindAncestor<FormField>(node);
+        if (fieldNode?.Value is not FormField field) return;
+        if (!string.IsNullOrEmpty(field.RelationProgId))
+            EnsureGroup(fieldNode, field.RelationFieldMappings!, isRelation: true);
+        if (!string.IsNullOrEmpty(field.LookupProgId))
+            EnsureGroup(fieldNode, field.LookupFieldMappings!, isRelation: false);
+    }
+
+    /// <summary>
+    /// The values the grid offers: the solution's form ids for a field's RelationProgId and LookupProgId; for a
+    /// mapping, the fields of its own table as the destination and the fields of the related form's master table as
+    /// the source.
+    /// </summary>
+    public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component)
+    {
+        switch (component)
+        {
+            case FormField when property.Name is nameof(FormField.RelationProgId) or nameof(FormField.LookupProgId):
+                return Solution.AvailableProgIds.Count > 0 ? Solution.AvailableProgIds : null;
+            case FieldMapping:
+                var groupNode = SelectedTreeNode?.Parent;
+                if (groupNode is null || OwningField(groupNode) is not { } field) return null;
+                if (property.Name == nameof(FieldMapping.DestinationField))
+                {
+                    return field.Table?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray();
+                }
+                if (property.Name == nameof(FieldMapping.SourceField))
+                {
+                    var progId = IsRelationGroup(groupNode) ? field.RelationProgId : field.LookupProgId;
+                    return Solution.MasterFieldNames(progId) is { Count: > 0 } names ? names : null;
+                }
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
+    /// Keeps a field's Relation and Lookup mappings in the tree: opening either collection from the grid selects its
+    /// group node instead, adding the group when the field has none yet. Every other collection opens in the grid's
+    /// dialog.
+    /// </summary>
+    public Task<bool>? EditMappingsInTree(CollectionEditContext context)
+    {
+        if (context.Component is not FormField field
+            || context.Property.Name is not (nameof(FormField.RelationFieldMappings) or nameof(FormField.LookupFieldMappings)))
+        {
+            return null;
+        }
+        var fieldNode = FindAncestor<FormField>(SelectedTreeNode);
+        if (fieldNode is null || !ReferenceEquals(fieldNode.Value, field)) return Task.FromResult(false);
+        var isRelation = context.Property.Name == nameof(FormField.RelationFieldMappings);
+        var group = EnsureGroup(fieldNode, isRelation ? field.RelationFieldMappings! : field.LookupFieldMappings!, isRelation);
+        fieldNode.IsExpanded = true;
+        SelectedTreeNode = group;
+        // Nothing in the collection changed; the grid must not report an edit.
+        return Task.FromResult(false);
     }
 
     /// <summary>
@@ -274,7 +327,6 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         FormTable t => () => Schema.Tables!.Remove(t),
         FormField f when node.Parent?.Value is FormTable t => () => t.Fields!.Remove(f),
         FieldMapping m when node.Parent?.Value is FieldMappingCollection mappings => () => mappings.Remove(m),
-        ListItem i when node.Parent?.Value is ListItemCollection items => () => items.Remove(i),
         _ => null,
     };
 }
