@@ -43,6 +43,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Model id.")]
+        [Category(PropertyCategories.Data)]
         public string ModelId
         {
             get { return base.Key; }
@@ -54,6 +55,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Display name.")]
+        [Category(PropertyCategories.Data)]
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>

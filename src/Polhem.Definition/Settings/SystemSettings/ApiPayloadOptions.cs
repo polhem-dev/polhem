@@ -20,12 +20,14 @@ namespace Polhem.Definition.Settings
         /// Specifies the compressor name, e.g., gzip, none.
         /// </summary>
         [Description("Specifies the compressor name, e.g., gzip, none.")]
+        [Category("API")]
         public string Compressor { get; set; } = "gzip";
 
         /// <summary>
         /// Specifies the encryptor name, e.g., aes-cbc-hmac, none.
         /// </summary>
         [Description("Specifies the encryptor name, e.g., aes-cbc-hmac, none.")]
+        [Category("API")]
         public string Encryptor { get; set; } = "aes-cbc-hmac";
 
         /// <summary>

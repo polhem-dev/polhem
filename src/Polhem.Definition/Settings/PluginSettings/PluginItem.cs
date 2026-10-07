@@ -50,6 +50,7 @@ namespace Polhem.Definition.Settings
         /// </remarks>
         [XmlAttribute]
         [Description("Assembly-qualified type name of the plugin.")]
+        [Category(PropertyCategories.Data)]
         public string Type
         {
             get { return base.Key; }
@@ -69,6 +70,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [DefaultValue(PluginStage.None)]
         [Description("Pipeline stage this plugin runs at.")]
+        [Category(PropertyCategories.Data)]
         public PluginStage Stage { get; set; } = PluginStage.None;
 
         /// <summary>

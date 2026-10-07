@@ -15,6 +15,7 @@ namespace Polhem.Definition.Logging
         /// Logging options for the DbAccess module.
         /// </summary>
         [Description("Logging options for the DbAccess module.")]
+        [Category("Logging")]
         public DbAccessAnomalyLogOptions DbAccess { get; set; } = new DbAccessAnomalyLogOptions();
 
         /// <summary>

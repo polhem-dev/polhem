@@ -27,6 +27,7 @@ namespace Polhem.Definition.Language
         /// </summary>
         [XmlAttribute]
         [Description("Namespace (matches file name stem; first segment of full keys).")]
+        [Category(PropertyCategories.Data)]
         public string Namespace { get; set; } = string.Empty;
 
         /// <summary>
@@ -34,6 +35,7 @@ namespace Polhem.Definition.Language
         /// </summary>
         [XmlAttribute]
         [Description("BCP-47 language code.")]
+        [Category(PropertyCategories.Data)]
         public string Lang { get; set; } = string.Empty;
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace Polhem.Definition.Language
         [XmlArray("Items")]
         [XmlArrayItem(typeof(LanguageItem))]
         [Description("Keyed collection of localized text items.")]
+        [Browsable(false)]
         public LanguageItemCollection Items
         {
             get => _items ??= new LanguageItemCollection(this);
@@ -53,6 +56,7 @@ namespace Polhem.Definition.Language
         [XmlArray("Enums")]
         [XmlArrayItem(typeof(LanguageEnum))]
         [Description("Keyed collection of localized enums.")]
+        [Browsable(false)]
         public LanguageEnumCollection Enums
         {
             get => _enums ??= new LanguageEnumCollection(this);

@@ -143,6 +143,7 @@ namespace Polhem.Definition.Layouts
         /// </summary>
         [Description("Extended property collection.")]
         [DefaultValue(null)]
+        [Category(PropertyCategories.Data)]
         public PropertyCollection? ExtendedProperties
         {
             get

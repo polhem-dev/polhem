@@ -33,6 +33,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Node ID (unique across the whole menu tree).")]
+        [Category(PropertyCategories.Data)]
         public string Id
         {
             get { return base.Key; }
@@ -51,6 +52,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Caption (authoring-language original; translations live in the Menu language namespace).")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Appearance)]
         public string Caption { get; set; } = string.Empty;
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Sort order among siblings; lower comes first.")]
         [DefaultValue(0)]
+        [Category(PropertyCategories.Layout)]
         public int Order { get; set; }
 
         /// <summary>
@@ -68,6 +71,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Icon identifier resolved by the consuming shell.")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Appearance)]
         public string Icon { get; set; } = string.Empty;
 
         /// <summary>
@@ -82,6 +86,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Whether the node appears in the menu (design-time switch, NOT a permission).")]
         [DefaultValue(true)]
+        [Category(PropertyCategories.Appearance)]
         public bool Visible { get; set; } = true;
     }
 }

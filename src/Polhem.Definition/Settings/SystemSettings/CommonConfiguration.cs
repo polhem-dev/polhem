@@ -17,6 +17,7 @@ namespace Polhem.Definition.Settings
         /// System major version.
         /// </summary>
         [Description("System major version.")]
+        [Category(PropertyCategories.Data)]
         public string Version { get; set; } = string.Empty;
 
         /// <summary>
@@ -24,6 +25,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Indicates whether debug mode is enabled.")]
         [DefaultValue(false)]
+        [Category(PropertyCategories.Behavior)]
         public bool IsDebugMode { get; set; } = false;
 
         /// <summary>

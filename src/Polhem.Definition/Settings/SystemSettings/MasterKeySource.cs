@@ -22,6 +22,7 @@ namespace Polhem.Definition.Settings
         /// in <c>SystemSettings.xml</c> are unaffected.
         /// </remarks>
         [Description("Master key source type.")]
+        [Category("Security")]
         public MasterKeySourceType Type { get; set; } = MasterKeySourceType.Environment;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Source parameter value, file path or environment variable name. If empty, the default value will be used.")]
         [DefaultValue("")]
+        [Category("Security")]
         public string Value { get; set; } = string.Empty;
 
         /// <summary>

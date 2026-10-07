@@ -32,12 +32,16 @@ namespace Polhem.Definition
         /// Gets or sets the number kind this override applies to.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Number kind the override applies to.")]
         public NumberKind Kind { get; set; } = NumberKind.None;
 
         /// <summary>
         /// Gets or sets the decimal places for this kind.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Decimal places for this number kind.")]
         public int Decimals { get; set; }
     }
 }

@@ -18,6 +18,7 @@ namespace Polhem.Definition.Logging
         /// Warning: log errors, exceptions, and abnormal cases (slow queries, large updates, large result sets).
         /// </summary>
         [Description("Logging level (Error: only errors, Warning: includes abnormal cases).")]
+        [Category("Logging")]
         public DbAccessAnomalyLogLevel Level { get; set; } = DbAccessAnomalyLogLevel.Warning;
 
         /// <summary>
@@ -26,6 +27,7 @@ namespace Polhem.Definition.Logging
         /// A value less than or equal to 0 disables this check.
         /// </summary>
         [Description("Threshold for affected rows (default: 10000). <=0 disables this check.")]
+        [Category("Logging")]
         public int AffectedRowThreshold { get; set; } = 10000;
 
         /// <summary>
@@ -34,6 +36,7 @@ namespace Polhem.Definition.Logging
         /// A value less than or equal to 0 disables logging for result rows.
         /// </summary>
         [Description("Threshold for result rows (default: 10000). <=0 disables logging for result rows.")]
+        [Category("Logging")]
         public int ResultRowThreshold { get; set; } = 10000;
 
         /// <summary>
@@ -43,6 +46,7 @@ namespace Polhem.Definition.Logging
         /// A value less than or equal to 0 disables logging for execution time.
         /// </summary>
         [Description("Threshold for execution time in seconds (default: 300). <=0 disables logging for execution time.")]
+        [Category("Logging")]
         public int ExecutionTimeThreshold { get; set; } = 300;
 
         /// <summary>

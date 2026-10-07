@@ -20,22 +20,29 @@ namespace Polhem.Definition.Identity
         /// deserializes; the stale value it carries is overwritten on read.
         /// </remarks>
         [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
         public Guid AccessToken { get; set; } = Guid.Empty;
 
         /// <summary>
         /// Gets or sets the user account ID.
         /// </summary>
+        [Category("Session")]
+        [Description("User account ID.")]
         public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user name.
         /// </summary>
+        [Category("Session")]
+        [Description("User name.")]
         public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the session expiration time.
         /// </summary>
         [DefaultValue(typeof(DateTime), "0001-01-01T00:00:00.0000000Z")]
+        [Category("Session")]
+        [Description("Session expiration time.")]
         public DateTime EndTime { get; set; } = DateTime.MinValue;
 
         /// <summary>
@@ -53,6 +60,8 @@ namespace Polhem.Definition.Identity
         /// a signed-in session that has not entered a company — the same state
         /// <c>LeaveCompany</c> leaves behind.
         /// </remarks>
+        [Category("Session")]
+        [Description("Company the session is working in; empty until it enters one.")]
         public string? CompanyId { get; set; }
 
         /// <summary>

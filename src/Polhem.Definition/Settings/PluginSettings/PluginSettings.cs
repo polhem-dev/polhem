@@ -69,6 +69,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Program plugin item collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public ProgramPluginItemCollection? Items
         {
             get

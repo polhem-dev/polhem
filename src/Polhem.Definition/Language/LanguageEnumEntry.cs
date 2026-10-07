@@ -19,6 +19,7 @@ namespace Polhem.Definition.Language
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Persisted code stored in the database.")]
+        [Category(PropertyCategories.Data)]
         public string Code
         {
             get => this.Key;
@@ -31,6 +32,7 @@ namespace Polhem.Definition.Language
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Localized display text.")]
+        [Category(PropertyCategories.Data)]
         public string Text { get; set; } = string.Empty;
 
         /// <summary>

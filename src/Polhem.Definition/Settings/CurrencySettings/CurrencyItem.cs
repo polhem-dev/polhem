@@ -41,6 +41,8 @@ namespace Polhem.Definition.Settings
         /// <c>BHD</c>). This is the lookup key.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("ISO 4217 alpha-3 currency code, for example USD; the lookup key.")]
         public string Code { get; set; } = string.Empty;
 
         /// <summary>
@@ -48,6 +50,8 @@ namespace Polhem.Definition.Settings
         /// stored for reference and interchange.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("ISO 4217 numeric code, for example 840 (optional).")]
         public string Numeric { get; set; } = string.Empty;
 
         /// <summary>
@@ -60,18 +64,24 @@ namespace Polhem.Definition.Settings
         // reader substitute the initialiser. Enforced for every wire member by `WireDefaultOmissionTests`.
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Natural minor unit of the currency: 0.01 for two decimals, 1 for none.")]
         public decimal Rounding { get; set; } = 0.01m;
 
         /// <summary>
         /// Gets or sets the display symbol (for example <c>$</c>, <c>¥</c>).
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Display symbol, for example $.")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the display name (for example <c>US Dollar</c>).
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Display name, for example US Dollar.")]
         public string Name { get; set; } = string.Empty;
     }
 }

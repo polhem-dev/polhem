@@ -43,6 +43,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Permission model collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public PermissionModelCollection? Models
         {
             get
