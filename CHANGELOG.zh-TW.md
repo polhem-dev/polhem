@@ -74,7 +74,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。資料夾、根節點與群組的標籤會依編輯器的語言顯示，切換語言時立即更新。
 - DefineEditor 改以 `PropertyGridControl` 顯示選取的物件，取代手寫的屬性面板，因此每個可瀏覽的屬性都能編輯，並依 `[Category]` 分組、
   以 `[Description]` 說明。分組與說明已翻成繁體中文，會跟著編輯器的語言切換；屬性名稱維持原文。欄位的 ListItems 改在方格的集合對話框中編輯，
-  不再是樹節點；選取欄位的 Relation 或 Lookup 群組時只顯示 Relation 屬性，表單代碼與對應欄位會列出建議值。貼上連線字串改為資料庫
+  不再是樹節點；選取欄位的 Relation 或 Lookup 群組時只顯示 Relation 屬性，表單代碼、對應欄位與方案內的語系列舉會列出建議值。貼上連線字串改為資料庫
   Server 或 Item 右鍵選單開啟的對話框，預覽不再顯示密碼。修改物件名稱後，樹上的標籤會立即更新。
 - Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField`、`DatabaseServer`、
   `PermissionRule` 與 `BackendConfiguration`，可切換顯示選項與表單代碼建議值，並記錄 `PropertyValueChanged`；FormField 的 `ListItems`

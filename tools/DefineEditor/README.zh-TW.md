@@ -22,7 +22,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 | **PermissionModels**（單例） | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Models → Rules 兩層；Action 下拉只列單一動作，Scope 下拉列出策略；含 `PermissionModels.Validate()` 整合 |
 | **MenuSettings**（單例） | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry 樹狀結構 |
 | **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；Server 或 Item 的右鍵選單可在對話框中**貼上並拆解連線字串**（SQL Server / PostgreSQL / MySQL / Oracle）；Item 的 ServerId 會列出可用的 Server；含靜態驗證（`Services/DatabaseSettingsValidator.cs`） |
-| **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應。選取 Relation 或 Lookup 群組時，右側只顯示該欄位的 Relation 屬性；RelationProgId / LookupProgId 會列出方案內其他 FormSchema，對應的欄位會列出兩張表單的欄位。欄位的 ListItems 在屬性方格的集合對話框中編輯。schema 節點右鍵可**產生 FormLayout** |
+| **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應。選取 Relation 或 Lookup 群組時，右側只顯示該欄位的 Relation 屬性；RelationProgId / LookupProgId 會列出方案內其他 FormSchema，對應的欄位會列出兩張表單的欄位，LangEnumName 會列出方案內語系檔的列舉。欄位的 ListItems 在屬性方格的集合對話框中編輯。schema 節點右鍵可**產生 FormLayout** |
 | **TableSchema**（多份） | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Fields + Indexes 兩個 group；IndexField 含 SortDirection；驗證 PrimaryKey 唯一性 |
 | **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗 |
 | **Language**（多份） | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items（Key/Value）+ Enums（→ Entry code/text） |
