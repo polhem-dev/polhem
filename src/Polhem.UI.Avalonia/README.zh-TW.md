@@ -14,7 +14,7 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 
 ## 目標框架
 
-單一 `net10.0` TFM。下限版本：`Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`；host 可透過 transitive 帶更新的 `Avalonia 12.0.x`。本套件不內建主題——由 host 自選（Semi.Avalonia、Fluent…），所有控件透過 `StyleKeyOverride` 沿用 host 主題。
+單一 `net10.0` TFM。下限版本：`Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`；host 可透過 transitive 帶更新的 `Avalonia 12.x`。本套件不內建主題——由 host 自選（Semi.Avalonia、Fluent…），所有控件透過 `StyleKeyOverride` 沿用 host 主題。
 
 ## 主要元件
 

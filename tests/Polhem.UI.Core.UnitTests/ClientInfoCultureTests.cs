@@ -78,6 +78,42 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
+        [DisplayName("ApplyCulture posts the culture to the caller's SynchronizationContext, which sets it on a thread that already has its own")]
+        public void ApplyCulture_WithSynchronizationContext_PostsCultureToIt()
+        {
+            var saved = CultureSnapshot.Take();
+            var savedContext = SynchronizationContext.Current;
+            var context = new RecordingSynchronizationContext();
+            try
+            {
+                SynchronizationContext.SetSynchronizationContext(context);
+
+                Assert.True(ClientInfo.ApplyCulture("de-DE"));
+
+                var posted = Assert.Single(context.Posted);
+                // The UI thread under Avalonia 12.1 has an explicit culture of its own, so the defaults the call
+                // also sets would not reach it. Run the posted callback on a thread in the same state.
+                string? observed = null;
+                var thread = new Thread(() =>
+                {
+                    CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+                    CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+                    posted.Callback(posted.State);
+                    observed = CultureInfo.CurrentUICulture.Name + "|" + CultureInfo.CurrentCulture.Name;
+                });
+                thread.Start();
+                thread.Join();
+
+                Assert.Equal("de-DE|de-DE", observed);
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(savedContext);
+                saved.Restore();
+            }
+        }
+
+        [Fact]
         [DisplayName("UseDefinitionLoader is on by default, so views localize without the host opting in")]
         public void UseDefinitionLoader_DefaultsToTrue()
         {
@@ -109,6 +145,13 @@ namespace Polhem.UI.Core.UnitTests
                 ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.Empty });
                 ClientInfo.UseDefinitionLoader = savedSwitch;
             }
+        }
+
+        private sealed class RecordingSynchronizationContext : SynchronizationContext
+        {
+            public List<(SendOrPostCallback Callback, object? State)> Posted { get; } = [];
+
+            public override void Post(SendOrPostCallback d, object? state) => Posted.Add((d, state));
         }
 
         private sealed record CultureSnapshot(
