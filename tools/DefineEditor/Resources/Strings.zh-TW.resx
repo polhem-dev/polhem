@@ -78,8 +78,6 @@
   <data name="DbCategory_AddTable" xml:space="preserve"><value>新增 TableItem</value></data>
   <data name="DbCategory_RootSubtitle" xml:space="preserve"><value>DbCategorySettings（DB 分類根節點）</value></data>
   <data name="DbCategory_RootHint" xml:space="preserve"><value>於根節點右鍵新增 DbCategory；於 Category 節點右鍵新增 TableItem。</value></data>
-  <data name="DbCategory_CategoryProps" xml:space="preserve"><value>DbCategory 屬性</value></data>
-  <data name="DbCategory_TableProps" xml:space="preserve"><value>TableItem 屬性</value></data>
 
   <!-- ProgramSettings -->
   <data name="Program_AddProgram" xml:space="preserve"><value>新增 ProgramItem</value></data>
@@ -91,62 +89,33 @@
   <data name="Menu_AddEntry" xml:space="preserve"><value>新增 MenuEntry</value></data>
   <data name="Menu_RootSubtitle" xml:space="preserve"><value>MenuSettings（選單樹根節點）</value></data>
   <data name="Menu_RootHint" xml:space="preserve"><value>於根節點或任一 Folder 右鍵新增 Folder 或 Entry。Id 需全樹唯一；Visible 是設計期開關，不是權限機制。</value></data>
-  <data name="Menu_FolderProps" xml:space="preserve"><value>MenuFolder 屬性</value></data>
-  <data name="Menu_EntryProps" xml:space="preserve"><value>MenuEntry 屬性</value></data>
 
   <!-- PermissionModels -->
   <data name="Permission_AddModel" xml:space="preserve"><value>新增 PermissionModel</value></data>
   <data name="Permission_AddRule" xml:space="preserve"><value>新增 PermissionRule</value></data>
   <data name="Permission_RootSubtitle" xml:space="preserve"><value>PermissionModels（registry 根節點）</value></data>
   <data name="Permission_RootHint" xml:space="preserve"><value>於根節點右鍵新增 PermissionModel；於 Model 節點右鍵新增 PermissionRule。</value></data>
-  <data name="Permission_ModelProps" xml:space="preserve"><value>PermissionModel 屬性</value></data>
-  <data name="Permission_RuleProps" xml:space="preserve"><value>PermissionRule 屬性</value></data>
-  <data name="Permission_RuleNote" xml:space="preserve"><value>（Print / Export 為輸出動作，Scope 應留 Inherit；其他 action 可自由指定。）</value></data>
 
   <!-- Language -->
   <data name="Language_AddItem" xml:space="preserve"><value>新增 LanguageItem</value></data>
   <data name="Language_AddEnum" xml:space="preserve"><value>新增 LanguageEnum</value></data>
   <data name="Language_AddEntry" xml:space="preserve"><value>新增 LanguageEnumEntry</value></data>
-  <data name="Language_ResourceProps" xml:space="preserve"><value>LanguageResource 屬性</value></data>
-  <data name="Language_ItemProps" xml:space="preserve"><value>LanguageItem 屬性</value></data>
-  <data name="Language_EnumProps" xml:space="preserve"><value>LanguageEnum 屬性</value></data>
-  <data name="Language_EnumEntryProps" xml:space="preserve"><value>LanguageEnumEntry 屬性</value></data>
-  <data name="Language_ItemNote" xml:space="preserve"><value>（Namespace 通常對應 ProgId / 模組名稱；Lang 例：zh-TW、en-US。）</value></data>
-  <data name="Language_EnumNote" xml:space="preserve"><value>（右鍵新增 code/text 對。）</value></data>
 
   <!-- TableSchema -->
   <data name="TableSchema_AddField" xml:space="preserve"><value>新增 DbField</value></data>
   <data name="TableSchema_AddIndex" xml:space="preserve"><value>新增 DbTableIndex</value></data>
   <data name="TableSchema_AddIndexField" xml:space="preserve"><value>新增 IndexField</value></data>
-  <data name="TableSchema_Props" xml:space="preserve"><value>TableSchema 屬性</value></data>
-  <data name="TableSchema_FieldProps" xml:space="preserve"><value>DbField 屬性</value></data>
-  <data name="TableSchema_IndexProps" xml:space="preserve"><value>DbTableIndex 屬性</value></data>
-  <data name="TableSchema_IndexFieldProps" xml:space="preserve"><value>IndexField 屬性</value></data>
-  <data name="TableSchema_FieldNote" xml:space="preserve"><value>（OriginalFieldName 是 schema upgrade 階段一次性 rename hint，平常留空。）</value></data>
-  <data name="TableSchema_IndexNote" xml:space="preserve"><value>（右鍵新增索引欄位。）</value></data>
 
   <!-- FormLayout -->
   <data name="FormLayout_AddSection" xml:space="preserve"><value>新增 LayoutSection</value></data>
   <data name="FormLayout_AddField" xml:space="preserve"><value>新增 LayoutField</value></data>
   <data name="FormLayout_AddGrid" xml:space="preserve"><value>新增 LayoutGrid</value></data>
   <data name="FormLayout_AddColumn" xml:space="preserve"><value>新增 LayoutColumn</value></data>
-  <data name="FormLayout_Props" xml:space="preserve"><value>FormLayout 屬性</value></data>
-  <data name="FormLayout_SectionProps" xml:space="preserve"><value>LayoutSection 屬性</value></data>
-  <data name="FormLayout_FieldProps" xml:space="preserve"><value>LayoutField 屬性（主表單欄位）</value></data>
-  <data name="FormLayout_GridProps" xml:space="preserve"><value>LayoutGrid 屬性（明細表格）</value></data>
-  <data name="FormLayout_ColumnProps" xml:space="preserve"><value>LayoutColumn 屬性（grid 欄）</value></data>
 
   <!-- SystemSettings -->
   <data name="SystemSettings_AddProperty" xml:space="preserve"><value>新增 Property</value></data>
   <data name="SystemSettings_RootSubtitle" xml:space="preserve"><value>SystemSettings（系統設定根節點）</value></data>
   <data name="SystemSettings_RootHint" xml:space="preserve"><value>選取下方 Configuration 子節點編輯個別區塊；ExtendedProperties 提供自由 key/value 欄位（右鍵可新增 / 刪除）。</value></data>
-  <data name="SystemSettings_CommonProps" xml:space="preserve"><value>CommonConfiguration 屬性</value></data>
-  <data name="SystemSettings_SecurityProps" xml:space="preserve"><value>SecurityKeySettings 屬性</value></data>
-  <data name="SystemSettings_SecurityWarning" xml:space="preserve"><value>（金鑰直接顯示為純文字 — 編輯器本機檔案僅供 dev 操作；於 production 應透過 KMS 管理）</value></data>
-  <data name="SystemSettings_CacheNotifyProps" xml:space="preserve"><value>CacheNotifyOptions 屬性</value></data>
-  <data name="SystemSettings_BackendComponentsProps" xml:space="preserve"><value>BackendComponents 屬性</value></data>
-  <data name="SystemSettings_BackendComponentsHint" xml:space="preserve"><value>後端各 component 的型別 AssemblyQualifiedName（留空使用框架預設值）。</value></data>
-  <data name="SystemSettings_ExtendedPropertyProps" xml:space="preserve"><value>ExtendedProperty 屬性</value></data>
 
   <!-- FormSchema -->
   <data name="FormSchema_AddTable" xml:space="preserve"><value>新增 FormTable</value></data>

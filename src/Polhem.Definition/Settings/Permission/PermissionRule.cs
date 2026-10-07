@@ -58,7 +58,7 @@ namespace Polhem.Definition.Settings
         /// egress actions (Print / Export) omit the scope and inherit the model's Read scope.
         /// </summary>
         [XmlAttribute]
-        [Description("Record-scope strategy.")]
+        [Description("Record-scope strategy. Print and Export inherit the Read scope, so leave them at Inherit.")]
         [DefaultValue(ScopeStrategy.Inherit)]
         [Category(PropertyCategories.Data)]
         public ScopeStrategy Scope { get; set; } = ScopeStrategy.Inherit;

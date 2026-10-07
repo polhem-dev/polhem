@@ -52,6 +52,30 @@ namespace Polhem.Definition.UnitTests
                 + $"editor should not show the property:{Environment.NewLine}{string.Join(Environment.NewLine, missing)}");
         }
 
+        [Fact]
+        [DisplayName("LanguageItem.Key stays browsable although the base Key it overrides is hidden")]
+        public void LanguageItemKey_IsBrowsable()
+        {
+            var key = TypeDescriptor.GetProperties(typeof(Polhem.Definition.Language.LanguageItem))[nameof(Polhem.Definition.Language.LanguageItem.Key)];
+
+            Assert.NotNull(key);
+            Assert.True(key.IsBrowsable);
+            Assert.Equal(PropertyCategories.Data, key.Category);
+        }
+
+        [Theory]
+        [DisplayName("The encryption keys of SecurityKeySettings are marked for a masked editor")]
+        [InlineData(nameof(Polhem.Definition.Settings.SecurityKeySettings.ApiEncryptionKey))]
+        [InlineData(nameof(Polhem.Definition.Settings.SecurityKeySettings.CookieEncryptionKey))]
+        [InlineData(nameof(Polhem.Definition.Settings.SecurityKeySettings.ConfigEncryptionKey))]
+        [InlineData(nameof(Polhem.Definition.Settings.SecurityKeySettings.DatabaseEncryptionKey))]
+        public void SecurityKeys_AreMarkedAsPasswords(string propertyName)
+        {
+            var property = TypeDescriptor.GetProperties(typeof(Polhem.Definition.Settings.SecurityKeySettings))[propertyName];
+
+            Assert.True(property?.Attributes[typeof(PasswordPropertyTextAttribute)] is PasswordPropertyTextAttribute { Password: true });
+        }
+
         /// <summary>
         /// The most derived public instance property of <paramref name="type"/> named <paramref name="name"/>.
         /// </summary>
