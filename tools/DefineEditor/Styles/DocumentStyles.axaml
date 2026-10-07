@@ -168,13 +168,12 @@
         <Setter Property="BorderThickness" Value="0,1,0,0"/>
     </Style>
 
+    <!-- Headings are set apart by size, not weight, as on the VS Code welcome page -->
     <Style Selector="TextBlock.h1">
         <Setter Property="FontSize" Value="16"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="TextBlock.h2">
         <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="TextBlock.muted">
         <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}"/>
@@ -201,13 +200,13 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
     <Style Selector="TreeViewItem">
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="2,4"/>
     </Style>
     <!-- PathIcon for tree nodes and tab headers -->
     <Style Selector="PathIcon.tree-icon">
-        <Setter Property="Width" Value="18"/>
-        <Setter Property="Height" Value="18"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
     <Style Selector="PathIcon.tab-icon">
@@ -228,15 +227,17 @@
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
-    <!-- Font: Inter everywhere (registered through WithInterFont in Program.cs) -->
+    <!-- Font: Inter everywhere (registered through WithInterFont in Program.cs), at the 13 that VS Code uses.
+         NOTE: VS Code draws with San Francisco on macOS, but that face is hidden from Skia's font lookup by name
+         and may not be redistributed, so Inter, a close match in proportions, stands in for it. -->
     <Style Selector="Window">
         <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default"/>
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="13"/>
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground0}"/>
     </Style>
     <Style Selector="UserControl">
         <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default"/>
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="13"/>
     </Style>
 
     <!-- =================================================================
