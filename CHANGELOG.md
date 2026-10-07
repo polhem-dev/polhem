@@ -86,6 +86,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   changes the XML or wire form.
 - The encryption keys of `SecurityKeySettings` are marked `[PasswordPropertyText(true)]`, so a property grid masks
   them. `LanguageItem.Key` is marked browsable again: the override inherited `[Browsable(false)]` from the base key.
+- `DatabaseItem` is labelled by its `Id` rather than its `DbName`, in its `[TreeNode]` annotation and its
+  `ToString()`: an item that names no database, such as a SQLite one, showed an empty name.
 
 ### Samples and tools
 

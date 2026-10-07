@@ -66,6 +66,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   以及 `SessionUser.AccessToken` 標為 `[Browsable(false)]`。這兩種標註都不影響 XML 與 wire 的形式。
 - `SecurityKeySettings` 的加密金鑰標上 `[PasswordPropertyText(true)]`，屬性方格會遮蔽顯示。`LanguageItem.Key` 重新標為可瀏覽：
   它覆寫的基底鍵值標了 `[Browsable(false)]`，覆寫時被一併繼承。
+- `DatabaseItem` 的 `[TreeNode]` 標註與 `ToString()` 改以 `Id` 而非 `DbName` 為標籤：不指定資料庫名稱的項目（例如 SQLite）原本顯示空白名稱。
 
 ### 範例與工具
 

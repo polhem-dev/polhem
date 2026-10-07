@@ -151,6 +151,15 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("A database item's tree label starts with its Id, also when it names no database")]
+        public void DatabaseSettings_ItemLabel_ShowsId()
+        {
+            var document = LoadDatabaseSettings();
+
+            Assert.Equal("common - ", document.RootNode.Children[1].Children[0].Label);
+        }
+
+        [Fact]
         [DisplayName("A database item's ServerId suggests the ids of the file's servers")]
         public void DatabaseSettings_ServerId_SuggestsServers()
         {

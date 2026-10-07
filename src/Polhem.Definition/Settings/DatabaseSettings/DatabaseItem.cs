@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// A database configuration item.
     /// </summary>
     [Description("Database item.")]
-    [TreeNode("{0} - {1}", "DbName,DisplayName")]
+    [TreeNode("{0} - {1}", "Id,DisplayName")]
     public sealed class DatabaseItem : KeyCollectionItem
     {
         /// <summary>
@@ -120,7 +120,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         public override string ToString()
         {
-            return $"{DbName} - {DisplayName}";
+            return $"{Id} - {DisplayName}";
         }
     }
 }
