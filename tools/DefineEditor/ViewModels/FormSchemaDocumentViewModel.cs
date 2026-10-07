@@ -223,7 +223,21 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
-    /// The values the grid offers: the solution's form ids for a field's RelationProgId and LookupProgId; for a
+    /// The names a field's LangEnumName can take: the enums of this form's own language namespace by their bare name
+    /// first, since a bare name resolves against the schema's ProgId, then every enum of the solution's Language
+    /// files by its full <c>Namespace.Name</c>.
+    /// </summary>
+    private IReadOnlyList<string> LangEnumNames()
+    {
+        var enums = Solution.LanguageEnums();
+        var own = enums.Where(e => string.Equals(e.Namespace, Schema.ProgId, StringComparison.Ordinal)).Select(e => e.Name);
+        var qualified = enums.Select(e => $"{e.Namespace}.{e.Name}");
+        return own.Concat(qualified).Distinct(StringComparer.Ordinal).ToArray();
+    }
+
+    /// <summary>
+    /// The values the grid offers: the solution's form ids for a field's RelationProgId and LookupProgId, the
+    /// language enums for its LangEnumName; for a
     /// mapping, the fields of its own table as the destination and the fields of the related form's master table as
     /// the source.
     /// </summary>
@@ -233,6 +247,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         {
             case FormField when property.Name is nameof(FormField.RelationProgId) or nameof(FormField.LookupProgId):
                 return Solution.AvailableProgIds.Count > 0 ? Solution.AvailableProgIds : null;
+            case FormField when property.Name == nameof(FormField.LangEnumName):
+                return LangEnumNames() is { Count: > 0 } enumNames ? enumNames : null;
             case FieldMapping:
                 var groupNode = SelectedTreeNode?.Parent;
                 if (groupNode is null || OwningField(groupNode) is not { } field) return null;
