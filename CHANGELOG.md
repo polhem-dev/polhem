@@ -48,9 +48,12 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - `PropertyGridControl` (`Polhem.UI.Avalonia`): shows the properties of `SelectedObject` as labels and editors driven
   by `[Category]`, `[Description]`, `[DisplayName]`, `[Browsable]`, `[DefaultValue]` and `[TypeConverter]`. A value
   that differs from its default is shown in bold and the label's context menu resets it; `PropertyValueChanged`
-  reports each write. `LabelTranslator` translates the labels, and `Refresh` reads the object and translates again.
-  A collection property opens in `CollectionEditDialog`, or in whatever `CollectionEditorProvider` supplies; nested
-  objects are shown read-only. The control reads types through `TypeDescriptor` and is meant for desktop tools, not
+  reports each write. `LabelTranslator` translates the labels: it receives each text as a `PropertyGridText` with its
+  `PropertyGridTextKind` (category, display name, description, item label), the type it belongs to and the property
+  name, so a description can be looked up by the property; `Refresh` reads the object and translates again. A property
+  marked `[PasswordPropertyText(true)]` is masked, and `ValueSuggestionProvider` turns a string property into a
+  drop-down of suggested values that still takes typed text. A collection property opens in `CollectionEditDialog`,
+  or in whatever `CollectionEditorProvider` supplies; nested objects are shown read-only. The control reads types through `TypeDescriptor` and is meant for desktop tools, not
   trimmed mobile heads.
 - `CollectionEditDialog` and `CollectionEditContext` (`Polhem.UI.Avalonia`): a modal dialog that edits a collection
   property, with the items in a list (add, delete, move up and down) and a `PropertyGridControl` for the selected one.
@@ -72,6 +75,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   Entries of `LanguageEnum` no longer are. Every annotated object type now names the properties its label is
   formatted from, matching its `ToString()`, and `IndexField` with its collection gains an annotation so an index
   lists its fields. `TreeNodeAnnotationGateTests` pins both conventions.
+- `PermissionRule.Action` declares a type converter whose exclusive standard values are the single actions, so a
+  property grid offers a drop-down of one action rather than a text box for combined flags. The XML form of a rule is
+  unchanged.
 
 ### Samples and tools
 
@@ -80,9 +86,9 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   the `[TreeNode]` annotations and folders no longer show a count. In every editor a node can be dragged before or after
   a sibling to reorder the collection that holds it. Folder, root and group labels follow the editor's language and
   switch with it.
-- Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField` and
-  `BackendConfiguration`, with its display options and a log of `PropertyValueChanged`; the FormField's `ListItems`
-  open in `CollectionEditDialog`.
+- Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField`, a
+  `DatabaseServer`, a `PermissionRule` and `BackendConfiguration`, with its display options, suggested form ids and a
+  log of `PropertyValueChanged`; the FormField's `ListItems` open in `CollectionEditDialog`.
 
 ## [1.3.1] - 2026-10-05
 

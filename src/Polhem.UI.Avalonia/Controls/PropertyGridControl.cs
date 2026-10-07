@@ -2,11 +2,8 @@ using System.Collections;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
-using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -22,6 +19,8 @@ namespace Polhem.UI.Avalonia.Controls
     /// an editor by its type: a check box for <see cref="bool"/>, a drop-down for an enum or a converter's exclusive
     /// standard values, a numeric up-down for an integral or <see cref="decimal"/> type, a date picker for
     /// <see cref="DateTime"/> and <see cref="DateOnly"/>, and a text box for anything its converter reads from text.
+    /// A text box hides its text for a property marked <c>[PasswordPropertyText(true)]</c>, and a <see cref="string"/>
+    /// property gets a drop-down that also takes typed text when <see cref="ValueSuggestionProvider"/> offers values.
     /// A collection shows its item count and a button that opens it in <see cref="CollectionEditDialog"/>, or in
     /// whatever <see cref="CollectionEditorProvider"/> supplies. Any other value, such as a nested object, shows its
     /// text and cannot be edited here.
@@ -66,8 +65,15 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>
         /// Defines the <see cref="LabelTranslator"/> property.
         /// </summary>
-        public static readonly StyledProperty<Func<string, string>?> LabelTranslatorProperty =
-            AvaloniaProperty.Register<PropertyGridControl, Func<string, string>?>(nameof(LabelTranslator));
+        public static readonly StyledProperty<Func<PropertyGridText, string?>?> LabelTranslatorProperty =
+            AvaloniaProperty.Register<PropertyGridControl, Func<PropertyGridText, string?>?>(nameof(LabelTranslator));
+
+        /// <summary>
+        /// Defines the <see cref="ValueSuggestionProvider"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Func<PropertyDescriptor, object, IReadOnlyList<string>?>?> ValueSuggestionProviderProperty =
+            AvaloniaProperty.Register<PropertyGridControl, Func<PropertyDescriptor, object, IReadOnlyList<string>?>?>(
+                nameof(ValueSuggestionProvider));
 
         /// <summary>
         /// Defines the <see cref="CollectionEditorProvider"/> property.
@@ -161,14 +167,48 @@ namespace Polhem.UI.Avalonia.Controls
         /// <c>null</c> shows them as written.
         /// </summary>
         /// <remarks>
-        /// The translator receives the text as written in the annotations, and an empty result keeps that text. After
-        /// the language changes, call <see cref="Refresh"/>: the same translator usually stays set, so nothing else
-        /// tells the control to translate again.
+        /// <para>
+        /// The translator receives each text as written in the annotations together with what it is and which type and
+        /// property it belongs to, so it can look a description up by the property rather than by its wording. A
+        /// <c>null</c> or empty result keeps the text as written.
+        /// </para>
+        /// <para>
+        /// <see cref="CollectionEditDialog"/> opened from this control uses the same translator for its title, for its
+        /// item grid and, as <see cref="PropertyGridTextKind.ItemLabel"/>, for the display format of its items.
+        /// <see cref="Polhem.Definition.ObjectTree.ObjectTreeOptions.LabelTranslator"/> takes the text alone; the tree
+        /// translates display formats, which carry their own meaning, while a property's text needs the property to
+        /// serve as its key.
+        /// </para>
+        /// <para>
+        /// After the language changes, call <see cref="Refresh"/>: the same translator usually stays set, so nothing
+        /// else tells the control to translate again.
+        /// </para>
         /// </remarks>
-        public Func<string, string>? LabelTranslator
+        public Func<PropertyGridText, string?>? LabelTranslator
         {
             get { return GetValue(LabelTranslatorProperty); }
             set { SetValue(LabelTranslatorProperty, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that offers values for a <see cref="string"/> property; <c>null</c> offers none.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The function receives the property and the object that owns it, and returns the values to offer, or
+        /// <c>null</c> to keep a plain text box. When it returns a list the row becomes a drop-down that still takes
+        /// typed text, so a value outside the list can be entered. It is asked when the rows are built, so call
+        /// <see cref="Refresh"/> after the values it would return change.
+        /// </para>
+        /// <para>
+        /// It is not asked for a property of another type, for a property whose type converter already offers
+        /// exclusive values, or for a password.
+        /// </para>
+        /// </remarks>
+        public Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider
+        {
+            get { return GetValue(ValueSuggestionProviderProperty); }
+            set { SetValue(ValueSuggestionProviderProperty, value); }
         }
 
         /// <summary>
@@ -197,6 +237,11 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>
         /// Occurs after the control has written a new value to a property of <see cref="SelectedObject"/>.
         /// </summary>
+        /// <remarks>
+        /// The event carries the old and new values as they are, including those of a property marked
+        /// <c>[PasswordPropertyText(true)]</c>, whose editor hides them. Do not write the values to a log or a status
+        /// line.
+        /// </remarks>
         public event EventHandler<PropertyValueChangedEventArgs>? PropertyValueChanged;
 
         /// <summary>
@@ -228,7 +273,8 @@ namespace Polhem.UI.Avalonia.Controls
                 Rebuild();
             }
             else if (change.Property == ShowCategoriesProperty || change.Property == IsReadOnlyProperty
-                || change.Property == LabelTranslatorProperty || change.Property == CollectionEditorProviderProperty)
+                || change.Property == LabelTranslatorProperty || change.Property == CollectionEditorProviderProperty
+                || change.Property == ValueSuggestionProviderProperty)
             {
                 Refresh();
             }
@@ -266,9 +312,8 @@ namespace Polhem.UI.Avalonia.Controls
             }
             _selectedRow = row;
             BindResource(row.LabelHost, Border.BackgroundProperty, "SemiColorFill1", Brushes.LightSteelBlue);
-            var translator = LabelTranslator;
-            _descriptionTitle.Text = PropertyGridMetadata.Translate(translator, row.Property.DisplayName);
-            _descriptionText.Text = PropertyGridMetadata.Translate(translator, row.Property.Description);
+            _descriptionTitle.Text = TranslateProperty(row, PropertyGridTextKind.DisplayName, row.Property.DisplayName);
+            _descriptionText.Text = TranslateProperty(row, PropertyGridTextKind.Description, row.Property.Description);
         }
 
         /// <summary>
@@ -286,146 +331,6 @@ namespace Polhem.UI.Avalonia.Controls
             ShowError(row, error);
         }
 
-        private void Rebuild()
-        {
-            _rows.Clear();
-            _selectedRow = null;
-            _rowsHost.Children.Clear();
-            _rowsHost.RowDefinitions.Clear();
-            _descriptionTitle.Text = null;
-            _descriptionText.Text = null;
-            if (SelectedObject is not { } component) { return; }
-
-            var properties = PropertyGridMetadata.GetProperties(component);
-            if (ShowCategories)
-            {
-                foreach (var group in PropertyGridMetadata.GroupByCategory(properties))
-                {
-                    var members = new List<Control>();
-                    AddCategoryHeader(group.Key, members);
-                    foreach (var property in group)
-                        members.AddRange(AddRow(component, property));
-                }
-            }
-            else
-            {
-                foreach (var property in properties)
-                    AddRow(component, property);
-            }
-            LoadAll();
-        }
-
-        private void AddCategoryHeader(string category, List<Control> members)
-        {
-            var text = PropertyGridMetadata.Translate(LabelTranslator, category);
-            var glyph = new Run("▾ ");
-            var header = new Border
-            {
-                Padding = new Thickness(6, 4),
-                Tag = new CategoryTag(text),
-                Child = new TextBlock { FontWeight = FontWeight.SemiBold, Inlines = [glyph, new Run(text)] },
-            };
-            // The header needs a background to take clicks on its blank area (gotcha #2).
-            BindResource(header, Border.BackgroundProperty, "SemiColorBackground2", Brushes.Gainsboro);
-            header.PointerPressed += (_, e) =>
-            {
-                var expand = members.Count > 0 && !members[0].IsVisible;
-                foreach (var member in members)
-                    member.IsVisible = expand;
-                glyph.Text = expand ? "▾ " : "▸ ";
-                e.Handled = true;
-            };
-            Grid.SetColumnSpan(header, 2);
-            PlaceInNewRow(header);
-        }
-
-        private Control[] AddRow(object component, PropertyDescriptor property)
-        {
-            var kind = PropertyGridMetadata.GetEditorKind(property);
-            var isReadOnly = IsReadOnly || property.IsReadOnly;
-            var label = new TextBlock
-            {
-                Text = PropertyGridMetadata.Translate(LabelTranslator, property.DisplayName),
-                VerticalAlignment = VerticalAlignment.Center,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-            };
-            var labelHost = new Border
-            {
-                Padding = new Thickness(16, 2, 6, 2),
-                BorderThickness = new Thickness(0, 0, 1, 1),
-                // A transparent background lets the whole cell take the click that selects the row (gotcha #2).
-                Background = Brushes.Transparent,
-                Child = label,
-            };
-            BindResource(labelHost, Border.BorderBrushProperty, "SemiColorBorder", Brushes.LightGray);
-
-            var editor = CreateEditor(kind, property, isReadOnly);
-            var editorHost = new Border
-            {
-                Padding = new Thickness(2),
-                // Keeps the rows of check boxes and summaries as tall as the rows of text boxes.
-                MinHeight = EditorRowHeight,
-                BorderThickness = new Thickness(0, 0, 0, 1),
-                Child = editor,
-            };
-            BindResource(editorHost, Border.BorderBrushProperty, "SemiColorBorder", Brushes.LightGray);
-            Grid.SetColumn(editorHost, 1);
-
-            var row = new PropertyGridRow(component, property, kind, isReadOnly, labelHost, label, editor);
-            _rows.Add(row);
-            AttachEditor(row);
-            labelHost.ContextMenu = CreateRowMenu(row);
-            labelHost.PointerPressed += (_, _) => SelectRow(row);
-            editor.GotFocus += (_, _) => SelectRow(row);
-
-            PlaceInNewRow(labelHost);
-            _rowsHost.Children.Add(editorHost);
-            Grid.SetRow(editorHost, Grid.GetRow(labelHost));
-            return [labelHost, editorHost];
-        }
-
-        private void PlaceInNewRow(Control control)
-        {
-            _rowsHost.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            Grid.SetRow(control, _rowsHost.RowDefinitions.Count - 1);
-            _rowsHost.Children.Add(control);
-        }
-
-        private ContextMenu CreateRowMenu(PropertyGridRow row)
-        {
-            var reset = new MenuItem { Header = UIText.Get(PolhemUIText.ResetValue) };
-            reset.Click += (_, _) =>
-            {
-                ResetRow(row);
-                // Focus goes back to the editor that had it before the menu opened, which would select that row.
-                row.Editor.Focus();
-                SelectRow(row);
-            };
-            var menu = new ContextMenu { ItemsSource = new[] { reset } };
-            menu.Opening += (_, _) => reset.IsEnabled = PropertyGridMetadata.CanReset(row.Property, row.Component, IsReadOnly);
-            return menu;
-        }
-
-        private void LoadAll()
-        {
-            _isLoading = true;
-            try
-            {
-                foreach (var row in _rows)
-                {
-                    row.Load();
-                    DataValidationErrors.ClearErrors(row.Editor);
-                    row.Label.FontWeight = PropertyGridMetadata.IsModified(row.Property, row.Component)
-                        ? FontWeight.Bold
-                        : FontWeight.Normal;
-                }
-            }
-            finally
-            {
-                _isLoading = false;
-            }
-        }
-
         /// <summary>
         /// Opens the collection of <paramref name="row"/> in <see cref="CollectionEditorProvider"/> or in
         /// <see cref="CollectionEditDialog"/>.
@@ -440,7 +345,7 @@ namespace Polhem.UI.Avalonia.Controls
             var context = new CollectionEditContext(row.Component, row.Property);
             var provider = CollectionEditorProvider;
             var edit = provider?.Invoke(context)
-                ?? CollectionEditDialog.ShowAsync(this, context, LabelTranslator, provider, CancellationToken.None);
+                ?? CollectionEditDialog.ShowAsync(this, context, this, CancellationToken.None);
             if (!await edit) { return false; }
             OnValueWritten(row, context.Collection);
             return true;
@@ -464,6 +369,11 @@ namespace Polhem.UI.Avalonia.Controls
             PropertyValueChanged?.Invoke(this, new PropertyValueChangedEventArgs(row.Component, row.Property, oldValue, newValue));
         }
 
+        private string TranslateProperty(PropertyGridRow row, PropertyGridTextKind kind, string text)
+        {
+            return PropertyGridMetadata.Translate(LabelTranslator, kind, row.Component.GetType(), row.Property.Name, text);
+        }
+
         private static void ShowError(PropertyGridRow row, string? error)
         {
             DataValidationErrors.SetErrors(row.Editor, [error ?? string.Empty]);
@@ -473,7 +383,5 @@ namespace Polhem.UI.Avalonia.Controls
         {
             control.Bind(property, control.GetResourceObservable(key, value => value as IBrush ?? fallback));
         }
-
-        private sealed record CategoryTag(string Text);
     }
 }

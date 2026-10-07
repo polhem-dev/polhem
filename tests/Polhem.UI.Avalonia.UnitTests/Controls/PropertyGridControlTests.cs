@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -15,6 +16,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     /// </summary>
     public class PropertyGridControlTests
     {
+        private static readonly string[] s_suggestions = ["Alpha", "Beta"];
+
         private static PropertyGridRow Row(PropertyGridControl grid, string name) =>
             grid.Rows.Single(r => r.Property.Name == name);
 
@@ -229,12 +232,96 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             var grid = new PropertyGridControl { SelectedObject = new PropertyGridSample() };
             grid.SelectRow(Row(grid, nameof(PropertyGridSample.Name)));
 
-            grid.LabelTranslator = text => text.ToUpperInvariant();
+            grid.LabelTranslator = text => text.Text.ToUpperInvariant();
 
             Assert.Equal(["GENERAL", "LAYOUT", "MISC"], grid.CategoryHeaders);
             Assert.Equal("NAME", Row(grid, nameof(PropertyGridSample.Name)).Label.Text);
             Assert.Equal(nameof(PropertyGridSample.Name), grid.SelectedRow?.Property.Name);
             Assert.Equal("THE SAMPLE'S NAME.", grid.DescriptionText);
+        }
+
+        [Fact]
+        [DisplayName("LabelTranslator receives each label with its kind, the selected object's type and the property name")]
+        public void LabelTranslator_ReceivesContext()
+        {
+            var received = new List<PropertyGridText>();
+            var grid = new PropertyGridControl
+            {
+                LabelTranslator = t => { received.Add(t); return null; },
+                SelectedObject = new PropertyGridSample(),
+            };
+
+            grid.SelectRow(Row(grid, nameof(PropertyGridSample.Name)));
+
+            Assert.Contains(received, t => t.Kind == PropertyGridTextKind.Category && t.Text == "General"
+                && t.PropertyName is null && t.ComponentType == typeof(PropertyGridSample));
+            Assert.Contains(received, t => t.Kind == PropertyGridTextKind.DisplayName
+                && t.PropertyName == nameof(PropertyGridSample.Name) && t.ComponentType == typeof(PropertyGridSample));
+            Assert.Contains(received, t => t.Kind == PropertyGridTextKind.Description
+                && t.PropertyName == nameof(PropertyGridSample.Name) && t.Text == "The sample's name.");
+            Assert.Equal("Name", grid.DescriptionTitle);
+        }
+
+        [Fact]
+        [DisplayName("A PasswordPropertyText property gets a text box that masks its text and still writes it")]
+        public void PasswordRow_MasksAndWrites()
+        {
+            var sample = new PropertyGridSample();
+            var grid = new PropertyGridControl { SelectedObject = sample };
+            var row = Row(grid, nameof(PropertyGridSample.Secret));
+            var textBox = Assert.IsType<TextBox>(row.Editor);
+
+            textBox.Text = "s3cret";
+            grid.CommitText(row);
+
+            Assert.NotEqual(default, textBox.PasswordChar);
+            Assert.Equal(default, Assert.IsType<TextBox>(Row(grid, nameof(PropertyGridSample.Name)).Editor).PasswordChar);
+            Assert.Equal("s3cret", sample.Secret);
+        }
+
+        [Fact]
+        [DisplayName("ValueSuggestionProvider turns a string row into an editable drop-down that writes typed and picked text")]
+        public void SuggestionRow_WritesTypedText()
+        {
+            var sample = new PropertyGridSample { Name = "Alpha" };
+            var grid = new PropertyGridControl
+            {
+                ValueSuggestionProvider = (property, _) => property.Name == nameof(PropertyGridSample.Name) ? s_suggestions : null,
+                SelectedObject = sample,
+            };
+            var row = Row(grid, nameof(PropertyGridSample.Name));
+            var comboBox = Assert.IsType<ComboBox>(row.Editor);
+            var changes = 0;
+            grid.PropertyValueChanged += (_, _) => changes++;
+
+            Assert.True(comboBox.IsEditable);
+            Assert.Equal(s_suggestions, comboBox.ItemsSource);
+            Assert.Equal("Alpha", comboBox.Text);
+            Assert.IsType<TextBox>(Row(grid, nameof(PropertyGridSample.NoDefault)).Editor);
+
+            comboBox.Text = "Gamma";
+            grid.CommitText(row);
+            Assert.Equal("Gamma", sample.Name);
+
+            comboBox.Text = "Beta";
+            grid.CommitText(row);
+            grid.CommitText(row);
+            Assert.Equal("Beta", sample.Name);
+            Assert.Equal(2, changes);
+        }
+
+        [Fact]
+        [DisplayName("PermissionRule.Action gets a drop-down of single actions, and picking one writes it")]
+        public void PermissionRuleAction_PicksSingleAction()
+        {
+            var rule = new PermissionRule(PermissionActions.Read);
+            var grid = new PropertyGridControl { SelectedObject = rule };
+            var comboBox = Assert.IsType<ComboBox>(Row(grid, nameof(PermissionRule.Action)).Editor);
+
+            comboBox.SelectedItem = PermissionActions.Delete;
+
+            Assert.Equal(PermissionActions.Delete, rule.Action);
+            Assert.Equal("Delete", rule.Key);
         }
 
         [Fact]

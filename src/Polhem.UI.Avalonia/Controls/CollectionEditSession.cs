@@ -171,10 +171,18 @@ namespace Polhem.UI.Avalonia.Controls
         /// Returns the text the list shows for the item at <paramref name="index"/>: its <see cref="TreeNodeAttribute"/>
         /// label or its own <see cref="object.ToString"/>, else its key, else the type name and position.
         /// </summary>
-        internal string GetLabel(int index, Func<string, string>? translator)
+        /// <param name="index">The position of the item in the working list.</param>
+        /// <param name="translator">
+        /// The translator of <see cref="PropertyGridControl.LabelTranslator"/>, which receives the display format as
+        /// <see cref="PropertyGridTextKind.ItemLabel"/>; <c>null</c> uses the format as written.
+        /// </param>
+        internal string GetLabel(int index, Func<PropertyGridText, string?>? translator)
         {
             var item = _items[index];
-            var label = TreeNodeAttribute.GetDisplayText(item, translator);
+            var itemType = item.GetType();
+            var label = TreeNodeAttribute.GetDisplayText(item, translator is null
+                ? null
+                : format => PropertyGridMetadata.Translate(translator, PropertyGridTextKind.ItemLabel, itemType, null, format));
             if (string.IsNullOrEmpty(label) || label == item.GetType().ToString())
             {
                 label = item is IKeyCollectionItem { Key: { Length: > 0 } key }

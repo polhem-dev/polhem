@@ -41,6 +41,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Permission action.")]
+        [TypeConverter(typeof(PermissionActionConverter))]
         public PermissionActions Action
         {
             get { return _action; }

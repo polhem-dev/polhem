@@ -8,6 +8,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 {
     public class PropertyGridMetadataTests
     {
+        private static readonly string[] s_suggestions = ["Alpha", "Beta"];
+
         private static PropertyDescriptor Property(string name) =>
             TypeDescriptor.GetProperties(typeof(PropertyGridSample))[name]!;
 
@@ -237,12 +239,75 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("Translate keeps the text when there is no translator or it returns an empty string")]
+        [DisplayName("Translate keeps the text when there is no translator or it returns null or an empty string")]
         public void Translate_NoTranslation_KeepsText()
         {
-            Assert.Equal("Name", PropertyGridMetadata.Translate(null, "Name"));
-            Assert.Equal("Name", PropertyGridMetadata.Translate(_ => string.Empty, "Name"));
-            Assert.Equal("NAME", PropertyGridMetadata.Translate(t => t.ToUpperInvariant(), "Name"));
+            Assert.Equal("Name", Translate(null));
+            Assert.Equal("Name", Translate(_ => string.Empty));
+            Assert.Equal("Name", Translate(_ => null));
+            Assert.Equal("NAME", Translate(t => t.Text.ToUpperInvariant()));
+
+            static string Translate(Func<PropertyGridText, string?>? translator) => PropertyGridMetadata.Translate(
+                translator, PropertyGridTextKind.DisplayName, typeof(PropertyGridSample), "Name", "Name");
+        }
+
+        [Fact]
+        [DisplayName("Translate hands the translator the kind, component type, property name and text")]
+        public void Translate_PassesContext()
+        {
+            PropertyGridText? received = null;
+
+            PropertyGridMetadata.Translate(t => { received = t; return null; }, PropertyGridTextKind.Description,
+                typeof(FormField), nameof(FormField.Caption), "The caption.");
+
+            Assert.NotNull(received);
+            Assert.Equal(PropertyGridTextKind.Description, received.Kind);
+            Assert.Equal(typeof(FormField), received.ComponentType);
+            Assert.Equal(nameof(FormField.Caption), received.PropertyName);
+            Assert.Equal("The caption.", received.Text);
+        }
+
+        [Fact]
+        [DisplayName("IsPassword is true only for a property marked PasswordPropertyText(true)")]
+        public void IsPassword_FollowsAttribute()
+        {
+            Assert.True(PropertyGridMetadata.IsPassword(Property(nameof(PropertyGridSample.Secret))));
+            Assert.False(PropertyGridMetadata.IsPassword(Property(nameof(PropertyGridSample.Name))));
+        }
+
+        [Fact]
+        [DisplayName("GetSuggestions asks the provider only for a string text property that is not a password")]
+        public void GetSuggestions_AsksOnlyForPlainStringText()
+        {
+            var sample = new PropertyGridSample();
+            var asked = new List<string>();
+            IReadOnlyList<string>? Provider(PropertyDescriptor property, object component)
+            {
+                asked.Add(property.Name);
+                return s_suggestions;
+            }
+
+            foreach (var property in PropertyGridMetadata.GetProperties(sample))
+                PropertyGridMetadata.GetSuggestions(property, sample, Provider);
+
+            Assert.Contains(nameof(PropertyGridSample.Name), asked);
+            Assert.DoesNotContain(nameof(PropertyGridSample.Secret), asked);
+            Assert.DoesNotContain(nameof(PropertyGridSample.Count), asked);
+            Assert.DoesNotContain(nameof(PropertyGridSample.Flags), asked);
+            Assert.Same(s_suggestions, PropertyGridMetadata.GetSuggestions(Property(nameof(PropertyGridSample.Name)), sample, Provider));
+            Assert.Null(PropertyGridMetadata.GetSuggestions(Property(nameof(PropertyGridSample.Name)), sample, null));
+        }
+
+        [Fact]
+        [DisplayName("A flags enum whose converter offers exclusive values gets a drop-down of those values")]
+        public void GetEditorKind_FlagsWithExclusiveConverter_IsChoice()
+        {
+            var action = TypeDescriptor.GetProperties(typeof(PermissionRule))[nameof(PermissionRule.Action)]!;
+
+            Assert.Equal(PropertyGridEditorKind.Choice, PropertyGridMetadata.GetEditorKind(action));
+            Assert.Equal(
+                Enum.GetValues<PermissionActions>().Where(a => a != PermissionActions.None).Cast<object>(),
+                PropertyGridMetadata.GetChoices(action));
         }
     }
 }

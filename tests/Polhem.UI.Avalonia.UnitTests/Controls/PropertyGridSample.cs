@@ -28,6 +28,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [Category("General")]
         public string NoDefault { get; set; } = "x";
 
+        [Category("General")]
+        [PasswordPropertyText(true)]
+        public string Secret { get; set; } = string.Empty;
+
         [Browsable(false)]
         public string Hidden { get; set; } = string.Empty;
 

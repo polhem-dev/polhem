@@ -25,7 +25,7 @@ namespace Polhem.UI.Avalonia.Controls
         private const double CompactListHeight = 140;
         private const double CompactGridHeight = 280;
 
-        private readonly Func<string, string>? _translator;
+        private readonly Func<PropertyGridText, string?>? _translator;
         private readonly ListBox _list;
         private readonly PropertyGridControl _grid;
         private readonly TextBlock _message;
@@ -40,22 +40,25 @@ namespace Polhem.UI.Avalonia.Controls
         /// Builds the panel for <paramref name="session"/>.
         /// </summary>
         /// <param name="session">The edit to show.</param>
-        /// <param name="translator">The translator for the labels of the item grid.</param>
-        /// <param name="collectionEditorProvider">The provider the item grid asks before it edits a nested collection.</param>
+        /// <param name="source">
+        /// The grid the dialog was opened from, whose <see cref="PropertyGridControl.LabelTranslator"/>,
+        /// <see cref="PropertyGridControl.ValueSuggestionProvider"/> and
+        /// <see cref="PropertyGridControl.CollectionEditorProvider"/> the item grid takes over; <c>null</c> for none.
+        /// </param>
         /// <param name="compact">Whether to stack the list above the grid, for a narrow screen.</param>
-        internal CollectionEditPanel(CollectionEditSession session, Func<string, string>? translator,
-            Func<CollectionEditContext, Task<bool>?>? collectionEditorProvider, bool compact)
+        internal CollectionEditPanel(CollectionEditSession session, PropertyGridControl? source, bool compact)
         {
             ArgumentNullException.ThrowIfNull(session);
             Session = session;
-            _translator = translator;
+            _translator = source?.LabelTranslator;
 
             _list = new ListBox { SelectionMode = SelectionMode.Multiple };
             _list.SelectionChanged += (_, _) => OnSelectionChanged();
             _grid = new PropertyGridControl
             {
-                LabelTranslator = translator,
-                CollectionEditorProvider = collectionEditorProvider,
+                LabelTranslator = source?.LabelTranslator,
+                ValueSuggestionProvider = source?.ValueSuggestionProvider,
+                CollectionEditorProvider = source?.CollectionEditorProvider,
             };
             _grid.PropertyValueChanged += (_, _) => RefreshList();
             _message = new TextBlock { TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };

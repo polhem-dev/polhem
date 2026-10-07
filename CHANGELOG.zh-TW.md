@@ -39,8 +39,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `ObjectTreeNode(object, Func<object, string>, bool)`：標籤由值計算、`Refresh` 時重算的節點，用於消費端自行加入、需要跟著切換顯示語言的節點。
 - `PropertyGridControl`（`Polhem.UI.Avalonia`）：依 `[Category]`、`[Description]`、`[DisplayName]`、`[Browsable]`、
   `[DefaultValue]` 與 `[TypeConverter]`，把 `SelectedObject` 的屬性顯示成標籤與編輯器。值與預設值不同時以粗體顯示，標籤的右鍵選單可重設；
-  每次寫回都會引發 `PropertyValueChanged`。`LabelTranslator` 翻譯標籤，`Refresh` 重新讀取物件並重新翻譯。集合屬性以
-  `CollectionEditDialog`（或 `CollectionEditorProvider` 提供的編輯器）開啟；巢狀物件只唯讀顯示。
+  每次寫回都會引發 `PropertyValueChanged`。`LabelTranslator` 翻譯標籤：每段文字以 `PropertyGridText` 傳入，附上
+  `PropertyGridTextKind`（分組、顯示名稱、說明、項目標籤）、所屬型別與屬性名稱，因此說明可以依屬性查詢；`Refresh` 重新讀取物件並重新翻譯。
+  標有 `[PasswordPropertyText(true)]` 的屬性會遮蔽顯示；`ValueSuggestionProvider` 讓字串屬性改為列出建議值、仍可自行輸入的下拉清單。
+  集合屬性以 `CollectionEditDialog`（或 `CollectionEditorProvider` 提供的編輯器）開啟；巢狀物件只唯讀顯示。
   控件透過 `TypeDescriptor` 讀取型別，定位為桌面工具使用，不適用於經過 trim 的行動端。
 - `CollectionEditDialog` 與 `CollectionEditContext`（`Polhem.UI.Avalonia`）：編輯集合屬性的對話框，左邊是項目清單（新增、刪除、上移、下移），
   右邊以 `PropertyGridControl` 編輯選取的項目。對話框編輯項目的副本，按確定時以副本取代集合的項目，因此先前持有的項目參照要重新讀取；
@@ -57,13 +59,16 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `FormLayout` 的 Sections 與 Details、`FormSchema` 的 Tables 與 Rules 改為資料夾；`FormTable` 的 Fields 與 `LanguageEnum` 的
   Entries 不再是資料夾。每個帶標註的物件型別都明確寫出標籤取自哪些屬性，與其 `ToString()` 一致；`IndexField` 與其集合也補上標註，索引底下會列出索引欄位。
   `TreeNodeAnnotationGateTests` 固定這兩項慣例。
+- `PermissionRule.Action` 宣告了型別轉換器，其互斥的標準值是單一動作，因此屬性方格會給單一動作的下拉清單，而不是可組合旗標的文字框。
+  規則的 XML 形式不變。
 
 ### 範例與工具
 
 - DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
   `ITreeNodeCommandProvider` 提供，取代原本手寫的樹節點。標籤依 `[TreeNode]` 標註，資料夾不再顯示數量。每個編輯器都可以把節點拖到同層的另一個節點之前或之後，調整它所在集合的順序。資料夾、根節點與群組的標籤會依編輯器的語言顯示，切換語言時立即更新。
-- Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField` 與 `BackendConfiguration`，
-  可切換顯示選項，並記錄 `PropertyValueChanged`；FormField 的 `ListItems` 可在 `CollectionEditDialog` 中編輯。
+- Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField`、`DatabaseServer`、
+  `PermissionRule` 與 `BackendConfiguration`，可切換顯示選項與表單代碼建議值，並記錄 `PropertyValueChanged`；FormField 的 `ListItems`
+  可在 `CollectionEditDialog` 中編輯。
 
 ## [1.3.1] - 2026-10-05
 
