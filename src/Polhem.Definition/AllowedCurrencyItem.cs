@@ -30,6 +30,8 @@ namespace Polhem.Definition
         /// Gets or sets the ISO 4217 alpha-3 currency code.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("ISO 4217 alpha-3 code of a currency the company may use.")]
         public string Code { get; set; } = string.Empty;
     }
 }

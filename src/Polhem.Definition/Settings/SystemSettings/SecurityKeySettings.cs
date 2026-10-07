@@ -15,30 +15,35 @@ namespace Polhem.Definition.Settings
         /// Master key source.
         /// </summary>
         [Description("Master key source.")]
+        [Category("Security")]
         public MasterKeySource MasterKeySource { get; set; } = new MasterKeySource();
 
         /// <summary>
         /// API transport key (encrypted with master key, base64 string).
         /// </summary>
         [Description("API transport key (encrypted with master key, base64 string).")]
+        [Category("Security")]
         public string ApiEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
         /// Cookie key (encrypted with master key, base64 string).
         /// </summary>
         [Description("Cookie key (encrypted with master key, base64 string).")]
+        [Category("Security")]
         public string CookieEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
         /// Config sensitive data encryption key (encrypted with master key, base64 string).
         /// </summary>
         [Description("Encryption key for sensitive data in config files (encrypted with master key, base64 string).")]
+        [Category("Security")]
         public string ConfigEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
         /// Database sensitive field encryption key (encrypted with master key, base64 string).
         /// </summary>
         [Description("Encryption key for sensitive fields in the database (encrypted with master key, base64 string).")]
+        [Category("Security")]
         public string DatabaseEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>

@@ -52,6 +52,7 @@ namespace Polhem.Definition.Layouts
         [NotifyParentProperty(true)]
         [Description("Caption text.")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Appearance)]
         public string Caption { get; set; } = string.Empty;
 
         /// <summary>
@@ -60,6 +61,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [Description("Actions allowed on the grid control.")]
         [DefaultValue(GridControlAllowActions.All)]
+        [Category(PropertyCategories.Behavior)]
         public GridControlAllowActions AllowActions { get; set; } = GridControlAllowActions.All;
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [Description("Form modes in which this grid allows editing actions.")]
         [DefaultValue(FormEditModes.All)]
+        [Category(PropertyCategories.Behavior)]
         public FormEditModes AllowEditModes { get; set; } = FormEditModes.All;
 
         /// <summary>

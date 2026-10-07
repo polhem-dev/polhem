@@ -42,6 +42,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Permission action.")]
         [TypeConverter(typeof(PermissionActionConverter))]
+        [Category(PropertyCategories.Data)]
         public PermissionActions Action
         {
             get { return _action; }
@@ -59,6 +60,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Record-scope strategy.")]
         [DefaultValue(ScopeStrategy.Inherit)]
+        [Category(PropertyCategories.Data)]
         public ScopeStrategy Scope { get; set; } = ScopeStrategy.Inherit;
 
         /// <summary>

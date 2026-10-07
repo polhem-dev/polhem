@@ -39,6 +39,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Program ID.")]
+        [Category(PropertyCategories.Data)]
         public string ProgId
         {
             get { return base.Key; }
@@ -55,6 +56,7 @@ namespace Polhem.Definition.Settings
         /// </remarks>
         [Description("Plugin collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public PluginItemCollection? Plugins
         {
             get

@@ -17,6 +17,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Table name.")]
+        [Category(PropertyCategories.Data)]
         public string TableName
         {
             get { return base.Key; }
@@ -28,6 +29,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Display name.")]
+        [Category(PropertyCategories.Data)]
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>

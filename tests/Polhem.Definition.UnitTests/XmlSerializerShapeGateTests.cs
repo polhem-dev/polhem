@@ -128,7 +128,7 @@ namespace Polhem.Definition.UnitTests
         /// Collects every Polhem type reachable from the roots through mapped members, collection items,
         /// <c>[XmlInclude]</c> and the types named by <c>[XmlElement]</c> / <c>[XmlArrayItem]</c>.
         /// </summary>
-        private static HashSet<Type> Walk()
+        internal static HashSet<Type> Walk()
         {
             var seen = new HashSet<Type>();
             var pending = new Queue<Type>(s_roots);
@@ -176,7 +176,7 @@ namespace Polhem.Definition.UnitTests
                 .FirstOrDefault(m => m.Name == "Add" && m.GetParameters().Length == 1)
                 ?.GetParameters()[0].ParameterType;
 
-        private static bool IsCollection(Type type)
+        internal static bool IsCollection(Type type)
             => type != typeof(string) && !type.IsArray && typeof(IEnumerable).IsAssignableFrom(type);
 
         /// <summary>

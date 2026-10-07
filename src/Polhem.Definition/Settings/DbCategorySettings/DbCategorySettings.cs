@@ -59,6 +59,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Database category collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public DbCategoryCollection? Categories
         {
             get

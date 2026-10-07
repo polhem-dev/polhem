@@ -61,6 +61,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `TreeNodeAnnotationGateTests` 固定這兩項慣例。
 - `PermissionRule.Action` 宣告了型別轉換器，其互斥的標準值是單一動作，因此屬性方格會給單一動作的下拉清單，而不是可組合旗標的文字框。
   規則的 XML 形式不變。
+- 定義型別在屬性方格中顯示的每個屬性都宣告了 `[Category]` 與 `[Description]`，會依分組顯示並附上說明，不再落到 `Misc`；
+  `EditorAnnotationGateTests` 固定這項慣例。編輯器以樹節點呈現的集合（表單結構描述的資料表與規則、各設定檔的項目、語系資源的項目與列舉）
+  以及 `SessionUser.AccessToken` 標為 `[Browsable(false)]`。這兩種標註都不影響 XML 與 wire 的形式。
 
 ### 範例與工具
 

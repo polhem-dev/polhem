@@ -60,6 +60,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Database server collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public DatabaseServerCollection? Servers
         {
             get
@@ -83,6 +84,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Database connection settings collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public DatabaseItemCollection? Items
         {
             get

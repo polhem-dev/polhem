@@ -22,6 +22,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Section name.")]
+        [Category(PropertyCategories.Data)]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace Polhem.Definition.Layouts
         [NotifyParentProperty(true)]
         [Description("Caption text.")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Appearance)]
         public string Caption { get; set; } = string.Empty;
 
         /// <summary>
@@ -39,6 +41,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [Description("Indicates whether the caption is shown.")]
         [DefaultValue(true)]
+        [Category(PropertyCategories.Appearance)]
         public bool ShowCaption { get; set; } = true;
 
         /// <summary>

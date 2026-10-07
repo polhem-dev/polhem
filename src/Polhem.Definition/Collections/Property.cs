@@ -36,6 +36,7 @@ namespace Polhem.Definition.Collections
         /// </summary>
         [XmlAttribute]
         [Description("Property name.")]
+        [Category(PropertyCategories.Data)]
         public string Name
         {
             get { return base.Key; }
@@ -47,6 +48,7 @@ namespace Polhem.Definition.Collections
         /// </summary>
         [XmlAttribute]
         [Description("Property value.")]
+        [Category(PropertyCategories.Data)]
         public string Value { get; set; } = string.Empty;
 
         /// <summary>

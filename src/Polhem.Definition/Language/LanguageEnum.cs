@@ -26,6 +26,7 @@ namespace Polhem.Definition.Language
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Enum name, unique within the parent resource.")]
+        [Category(PropertyCategories.Data)]
         public string Name
         {
             get => this.Key;
@@ -54,6 +55,7 @@ namespace Polhem.Definition.Language
         /// </remarks>
         [XmlElement("Entry")]
         [Description("Ordered list of code/text entries.")]
+        [Browsable(false)]
         public LanguageEnumEntryCollection Entries
         {
             get => _entries ??= new LanguageEnumEntryCollection(this);

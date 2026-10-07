@@ -92,6 +92,7 @@ namespace Polhem.Definition.Forms
         /// </summary>
         [Description("Field collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public FormFieldCollection? Fields
         {
             get

@@ -54,6 +54,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Program ID this entry opens (references a ProgramSettings entry).")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Data)]
         public string ProgId { get; set; } = string.Empty;
 
         /// <summary>

@@ -38,6 +38,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Program ID.")]
+        [Category(PropertyCategories.Data)]
         public string ProgId
         {
             get { return base.Key; }
@@ -49,6 +50,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Display name.")]
+        [Category(PropertyCategories.Data)]
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
@@ -71,6 +73,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Business object bound to this program (assembly-qualified type name).")]
         [DefaultValue("")]
+        [Category("Components")]
         public string BusinessObject { get; set; } = string.Empty;
 
         /// <summary>
@@ -96,6 +99,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Repository bound to this program (assembly-qualified type name).")]
         [DefaultValue("")]
+        [Category("Components")]
         public string Repository { get; set; } = string.Empty;
 
         /// <summary>

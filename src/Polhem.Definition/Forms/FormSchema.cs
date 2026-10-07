@@ -72,6 +72,7 @@ namespace Polhem.Definition.Forms
         /// </summary>
         [XmlAttribute()]
         [Description("Program ID.")]
+        [Category(PropertyCategories.Data)]
         public string ProgId { get; set; } = string.Empty;
 
         /// <summary>
@@ -145,6 +146,7 @@ namespace Polhem.Definition.Forms
         /// </summary>
         [Description("Table collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public FormTableCollection? Tables
         {
             get
@@ -193,6 +195,7 @@ namespace Polhem.Definition.Forms
         /// </summary>
         [Description("Business rule collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public FormRuleCollection? Rules
         {
             get

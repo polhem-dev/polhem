@@ -33,6 +33,8 @@ namespace Polhem.Definition
         /// Gets or sets the ISO 4217 alpha-3 currency code this override applies to.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("ISO 4217 alpha-3 code of the currency the override applies to.")]
         public string CurrencyCode { get; set; } = string.Empty;
 
         /// <summary>
@@ -40,6 +42,8 @@ namespace Polhem.Definition
         /// <c>0.05</c> to round to the nearest five cents).
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Cash-rounding unit applied to the final payable amount, for example 0.05.")]
         public decimal Unit { get; set; }
     }
 }

@@ -45,6 +45,8 @@ namespace Polhem.Definition.Settings
         /// This is the lookup key.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Unit code, for example KG; the lookup key.")]
         public string Code { get; set; } = string.Empty;
 
         /// <summary>
@@ -53,6 +55,8 @@ namespace Polhem.Definition.Settings
         /// <c>DECAN</c> (display) and <c>ANDEC</c> (rounding); this framework uses one value for both.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Decimal places used to display and round quantities in this unit.")]
         public int Decimals { get; set; }
 
         /// <summary>
@@ -60,12 +64,16 @@ namespace Polhem.Definition.Settings
         /// <c>volume</c> / <c>count</c>. Used for UI grouping only.
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Dimension grouping such as weight or length (optional).")]
         public string Dimension { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the display name (for example <c>Kilogram</c>).
         /// </summary>
         [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Display name, for example Kilogram.")]
         public string Name { get; set; } = string.Empty;
     }
 }

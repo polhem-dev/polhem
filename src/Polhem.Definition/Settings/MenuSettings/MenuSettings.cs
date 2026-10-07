@@ -69,6 +69,7 @@ namespace Polhem.Definition.Settings
         [DefaultValue(null)]
         [XmlArrayItem(typeof(MenuFolder))]
         [XmlArrayItem(typeof(MenuEntry))]
+        [Browsable(false)]
         public MenuNodeCollection? Items
         {
             get

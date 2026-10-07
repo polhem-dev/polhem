@@ -94,6 +94,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Extended property collection.")]
         [DefaultValue(null)]
+        [Browsable(false)]
         public PropertyCollection? ExtendedProperties
         {
             get

@@ -29,6 +29,7 @@ namespace Polhem.Definition.Language
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Localized text.")]
+        [Category(PropertyCategories.Data)]
         public string Value { get; set; } = string.Empty;
 
         /// <summary>

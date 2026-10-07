@@ -18,6 +18,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Database ID.")]
+        [Category(PropertyCategories.Data)]
         public string Id
         {
             get { return base.Key; }
@@ -30,6 +31,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Logical database category id this item belongs to (e.g. \"common\", \"company\", \"log\").")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Data)]
         public string CategoryId { get; set; } = string.Empty;
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Display name.")]
+        [Category(PropertyCategories.Data)]
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
@@ -44,6 +47,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [XmlAttribute]
         [Description("Database type.")]
+        [Category("Connection")]
         public DatabaseType DatabaseType { get; set; } = DatabaseType.SQLServer;
 
         /// <summary>
@@ -52,6 +56,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Database server ID. When set, the connection string from the corresponding server is used.")]
         [DefaultValue("")]
+        [Category("Connection")]
         public string ServerId { get; set; } = string.Empty;
 
         /// <summary>
@@ -60,6 +65,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Database connection string.")]
         [DefaultValue("")]
+        [Category("Connection")]
         public string ConnectionString { get; set; } = string.Empty;
 
         /// <summary>
@@ -68,6 +74,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Database name, which replaces the {@DbName} placeholder in the connection string.")]
         [DefaultValue("")]
+        [Category("Connection")]
         public string DbName { get; set; } = string.Empty;
 
         /// <summary>
@@ -76,6 +83,7 @@ namespace Polhem.Definition.Settings
         [XmlAttribute]
         [Description("Login user ID, which replaces the {@UserId} placeholder in the connection string.")]
         [DefaultValue("")]
+        [Category("Connection")]
         public string UserId { get; set; } = string.Empty;
 
         /// <summary>
@@ -85,6 +93,7 @@ namespace Polhem.Definition.Settings
         [Description("Login password, which replaces the {@Password} placeholder in the connection string.")]
         [PasswordPropertyText(true)]
         [DefaultValue("")]
+        [Category("Connection")]
         public string Password { get; set; } = string.Empty;
 
         /// <summary>

@@ -78,6 +78,11 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - `PermissionRule.Action` declares a type converter whose exclusive standard values are the single actions, so a
   property grid offers a drop-down of one action rather than a text box for combined flags. The XML form of a rule is
   unchanged.
+- Every property a property grid shows on a definition type now declares `[Category]` and `[Description]`, so it
+  groups and describes itself instead of falling into `Misc`; `EditorAnnotationGateTests` pins this. The collections
+  an editor shows as tree nodes (the tables and rules of a form schema, the items of the settings files, a language
+  resource's items and enums) and `SessionUser.AccessToken` are marked `[Browsable(false)]`. Neither attribute
+  changes the XML or wire form.
 
 ### Samples and tools
 

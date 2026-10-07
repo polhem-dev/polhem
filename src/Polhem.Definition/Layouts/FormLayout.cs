@@ -55,6 +55,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Form layout ID.")]
+        [Category(PropertyCategories.Data)]
         public string LayoutId { get; set; } = string.Empty;
 
         /// <summary>
@@ -63,6 +64,7 @@ namespace Polhem.Definition.Layouts
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Program ID this layout belongs to.")]
+        [Category(PropertyCategories.Data)]
         public string ProgId { get; set; } = string.Empty;
 
         /// <summary>
@@ -72,6 +74,7 @@ namespace Polhem.Definition.Layouts
         [NotifyParentProperty(true)]
         [Description("Caption text.")]
         [DefaultValue("")]
+        [Category(PropertyCategories.Appearance)]
         public string Caption { get; set; } = string.Empty;
 
         /// <summary>
@@ -84,6 +87,7 @@ namespace Polhem.Definition.Layouts
         [NotifyParentProperty(true)]
         [Description("Maximum number of columns for the master form area.")]
         [DefaultValue(2)]
+        [Category(PropertyCategories.Layout)]
         public int ColumnCount { get; set; } = 2;
 
         /// <summary>
