@@ -8,7 +8,7 @@ A desktop tool for maintaining the Polhem definition files (the XML under Define
 
 - **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx` and is not published to NuGet. Its unit tests, `tests/Polhem.DefineEditor.UnitTests`, are part of the main `Polhem.slnx`, so CI builds the tool and runs them.
 - **Purely offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database.
-- **In sync with the framework**: references `Polhem.Definition`, `Polhem.Core` and `Polhem.UI.Avalonia` (for `ObjectTreeView`) through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
+- **In sync with the framework**: references `Polhem.Definition`, `Polhem.Core` and `Polhem.UI.Avalonia` (for `ObjectTreeView` and `PropertyGridControl`) through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
 
 ## Supported definition types
 
@@ -19,13 +19,19 @@ After a solution is opened, the solution tree on the left lists every file under
 | **SystemSettings** (singleton) | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | A tree of the Configuration sections and the BackendConfiguration options, plus free key/value ExtendedProperties. Some options have no node yet (for example `AuditLogOptions` and `SessionCleanupOptions`); edit those in the XML |
 | **DbCategorySettings** (singleton) | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Two levels, Categories → Tables; validates duplicate Id / TableName |
 | **ProgramSettings** (singleton) | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | A flat list of ProgramItems (`<Items>`); each holds ProgId / DisplayName / BusinessObject / Repository; validates empty or duplicate ProgIds |
-| **PermissionModels** (singleton) | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Two levels, Models → Rules; Action / Scope are drop-downs; integrates `PermissionModels.Validate()` |
-| **MenuSettings** (singleton) | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry tree; separate property panels for folders and entries |
-| **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; includes **parsing a pasted connection string** (SQL Server / PostgreSQL / MySQL / Oracle) and static validation (`Services/DatabaseSettingsValidator.cs`) |
-| **FormSchema** (multiple) | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup mappings; RelationProgId candidates come from the other FormSchemas in the solution. Right-click a schema node to **Generate FormLayout** |
+| **PermissionModels** (singleton) | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Two levels, Models → Rules; Action offers single actions and Scope its strategies; integrates `PermissionModels.Validate()` |
+| **MenuSettings** (singleton) | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry tree |
+| **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; a server's or item's context menu **pastes and parses a connection string** (SQL Server / PostgreSQL / MySQL / Oracle) in a dialog; an item's ServerId suggests the servers; static validation (`Services/DatabaseSettingsValidator.cs`) |
+| **FormSchema** (multiple) | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup mappings. Selecting a Relation or Lookup group shows the field's Relation properties; RelationProgId / LookupProgId suggest the other FormSchemas in the solution, and a mapping's fields suggest the fields of both forms. A field's ListItems are edited in the property grid's collection dialog. Right-click a schema node to **Generate FormLayout** |
 | **TableSchema** (multiple) | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Two groups, Fields + Indexes; IndexField includes SortDirection; validates that the PrimaryKey is unique |
 | **FormLayout** (multiple) | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections (→ LayoutField) + Details (LayoutGrid → LayoutColumn). The layout is produced and saved at design time — the runtime only reads it, and opening a form fails when the file is missing |
 | **Language** (multiple) | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items (Key/Value) + Enums (→ Entry code/text) |
+
+The right-hand pane is a property grid (`PropertyGridControl`) built from the annotations on each definition type:
+the properties are grouped by `[Category]`, the bar under them shows the selected property's `[Description]`, a value
+that differs from its default is in bold and its context menu resets it, a password is masked, and a collection opens
+in a dialog. Categories and descriptions follow the UI language; property names stay as written, since they are the
+attribute names of the define files.
 
 Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder and Open Recent; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 

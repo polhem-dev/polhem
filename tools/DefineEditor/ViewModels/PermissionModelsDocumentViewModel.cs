@@ -81,11 +81,22 @@ public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocume
 
     private bool CanAddRule() => FindAncestor<PermissionModel>(SelectedTreeNode) is not null;
 
+    // The single actions a rule can grant. None is left out: a rule for it grants nothing and fails validation.
+    private static readonly PermissionActions[] s_grantableActions =
+    [
+        PermissionActions.Create,
+        PermissionActions.Read,
+        PermissionActions.Update,
+        PermissionActions.Delete,
+        PermissionActions.Print,
+        PermissionActions.Export,
+    ];
+
     private static PermissionActions? PickAvailableAction(PermissionModel model)
     {
         var taken = new HashSet<PermissionActions>(
             (model.Rules ?? Enumerable.Empty<PermissionRule>()).Select(r => r.Action));
-        foreach (var candidate in EditorOptions.PermissionActionValues)
+        foreach (var candidate in s_grantableActions)
             if (!taken.Contains(candidate)) return candidate;
         return null;
     }
