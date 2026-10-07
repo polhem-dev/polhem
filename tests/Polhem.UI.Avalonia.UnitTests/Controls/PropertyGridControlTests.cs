@@ -325,6 +325,23 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("PropertyFilter narrows the rows, and clearing it shows every browsable property again")]
+        public void PropertyFilter_NarrowsRows()
+        {
+            var grid = new PropertyGridControl { SelectedObject = new PropertyGridSample() };
+            var all = grid.Rows.Count;
+
+            grid.PropertyFilter = p => p.Category == "Layout";
+
+            Assert.Equal(["Layout"], grid.CategoryHeaders);
+            Assert.All(grid.Rows, r => Assert.Equal("Layout", r.Property.Category));
+
+            grid.PropertyFilter = null;
+
+            Assert.Equal(all, grid.Rows.Count);
+        }
+
+        [Fact]
         [DisplayName("Refresh reads values that changed outside the control")]
         public void Refresh_ReadsOutsideChanges()
         {

@@ -17,7 +17,7 @@ namespace Polhem.DefineEditor.UnitTests
             new("Polhem.DefineEditor.Resources.Strings", typeof(LocalizationService).Assembly);
 
         // The group labels the FormSchema and SystemSettings editors add; the annotations cannot carry them.
-        private static readonly string[] s_editorGroupLabels = ["Relation", "Lookup", "ListItems", "ExtendedProperties"];
+        private static readonly string[] s_editorGroupLabels = ["Relation", "Lookup", "ExtendedProperties"];
 
         private static IEnumerable<string> FixedAnnotationLabels() =>
             typeof(TreeNodeAttribute).Assembly.GetTypes()

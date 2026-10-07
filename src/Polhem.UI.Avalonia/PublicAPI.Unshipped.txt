@@ -67,3 +67,6 @@ Polhem.UI.Avalonia.Controls.PropertyGridTextKind.Category = 0 -> Polhem.UI.Avalo
 Polhem.UI.Avalonia.Controls.PropertyGridTextKind.Description = 2 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
 Polhem.UI.Avalonia.Controls.PropertyGridTextKind.DisplayName = 1 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
 Polhem.UI.Avalonia.Controls.PropertyGridTextKind.ItemLabel = 3 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyFilter.get -> System.Func<System.ComponentModel.PropertyDescriptor!, bool>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyFilter.set -> void
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyFilterProperty -> Avalonia.StyledProperty<System.Func<System.ComponentModel.PropertyDescriptor!, bool>?>!

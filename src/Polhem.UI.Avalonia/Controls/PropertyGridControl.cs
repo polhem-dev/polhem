@@ -76,6 +76,12 @@ namespace Polhem.UI.Avalonia.Controls
                 nameof(ValueSuggestionProvider));
 
         /// <summary>
+        /// Defines the <see cref="PropertyFilter"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Func<PropertyDescriptor, bool>?> PropertyFilterProperty =
+            AvaloniaProperty.Register<PropertyGridControl, Func<PropertyDescriptor, bool>?>(nameof(PropertyFilter));
+
+        /// <summary>
         /// Defines the <see cref="CollectionEditorProvider"/> property.
         /// </summary>
         public static readonly StyledProperty<Func<CollectionEditContext, Task<bool>?>?> CollectionEditorProviderProperty =
@@ -191,6 +197,20 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
+        /// Gets or sets the function that decides which browsable properties of <see cref="SelectedObject"/> are shown;
+        /// <c>null</c> shows them all.
+        /// </summary>
+        /// <remarks>
+        /// It narrows what <c>[Browsable]</c> already allows, for example to one category of a large object. It applies to
+        /// this grid only, not to the grid of a <see cref="CollectionEditDialog"/> opened from it.
+        /// </remarks>
+        public Func<PropertyDescriptor, bool>? PropertyFilter
+        {
+            get { return GetValue(PropertyFilterProperty); }
+            set { SetValue(PropertyFilterProperty, value); }
+        }
+
+        /// <summary>
         /// Gets or sets the function that offers values for a <see cref="string"/> property; <c>null</c> offers none.
         /// </summary>
         /// <remarks>
@@ -274,7 +294,7 @@ namespace Polhem.UI.Avalonia.Controls
             }
             else if (change.Property == ShowCategoriesProperty || change.Property == IsReadOnlyProperty
                 || change.Property == LabelTranslatorProperty || change.Property == CollectionEditorProviderProperty
-                || change.Property == ValueSuggestionProviderProperty)
+                || change.Property == ValueSuggestionProviderProperty || change.Property == PropertyFilterProperty)
             {
                 Refresh();
             }

@@ -52,7 +52,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   `PropertyGridTextKind` (category, display name, description, item label), the type it belongs to and the property
   name, so a description can be looked up by the property; `Refresh` reads the object and translates again. A property
   marked `[PasswordPropertyText(true)]` is masked, and `ValueSuggestionProvider` turns a string property into a
-  drop-down of suggested values that still takes typed text. A collection property opens in `CollectionEditDialog`,
+  drop-down of suggested values that still takes typed text, and `PropertyFilter` narrows the rows, for example to
+  one category. A collection property opens in `CollectionEditDialog`,
   or in whatever `CollectionEditorProvider` supplies; nested objects are shown read-only. The control reads types through `TypeDescriptor` and is meant for desktop tools, not
   trimmed mobile heads.
 - `CollectionEditDialog` and `CollectionEditContext` (`Polhem.UI.Avalonia`): a modal dialog that edits a collection
