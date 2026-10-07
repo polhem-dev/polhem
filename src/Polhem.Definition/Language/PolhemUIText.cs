@@ -89,6 +89,12 @@ namespace Polhem.Definition.Language
         /// <summary>Key of the message shown when several items of a keyed collection share a key; argument 0 is the key.</summary>
         public const string CollectionKeyDuplicate = "CollectionKeyDuplicate";
 
+        /// <summary>
+        /// Key of the message shown when a key is refused because another item of the collection already has it;
+        /// argument 0 is the key.
+        /// </summary>
+        public const string CollectionKeyTaken = "CollectionKeyTaken";
+
         private PolhemUIText()
         {
         }
@@ -124,6 +130,7 @@ namespace Polhem.Definition.Language
             [MoveDown] = "Move down",
             [CollectionKeyMissing] = "An item has no key.",
             [CollectionKeyDuplicate] = "More than one item has the key \"{0}\".",
+            [CollectionKeyTaken] = "Another item already has the key \"{0}\".",
         };
 
         /// <summary>

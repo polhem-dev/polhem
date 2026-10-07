@@ -268,6 +268,20 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("FindTakenKey reports a key another item of the collection has, ignoring case, and nothing else")]
+        public void FindTakenKey_ReportsOnlyAnotherItemsKey()
+        {
+            var items = new ListItemCollection { { "A", "Active" }, { "S", "Suspended" } };
+            var active = items["A"];
+
+            Assert.Equal("s", PropertyGridMetadata.FindTakenKey(active, "s"));
+            Assert.Null(PropertyGridMetadata.FindTakenKey(active, "A"));
+            Assert.Null(PropertyGridMetadata.FindTakenKey(active, "C"));
+            Assert.Null(PropertyGridMetadata.FindTakenKey(new ListItem("X", "Loose"), "A"));
+            Assert.Null(PropertyGridMetadata.FindTakenKey(new PropertyGridSample(), "A"));
+        }
+
+        [Fact]
         [DisplayName("IsPassword is true only for a property marked PasswordPropertyText(true)")]
         public void IsPassword_FollowsAttribute()
         {

@@ -64,5 +64,6 @@ const Polhem.Definition.Language.PolhemUIText.CollectionSummary = "CollectionSum
 const Polhem.Definition.Language.PolhemUIText.ResetValue = "ResetValue" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyDuplicate = "CollectionKeyDuplicate" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyMissing = "CollectionKeyMissing" -> string!
+const Polhem.Definition.Language.PolhemUIText.CollectionKeyTaken = "CollectionKeyTaken" -> string!
 const Polhem.Definition.Language.PolhemUIText.MoveDown = "MoveDown" -> string!
 const Polhem.Definition.Language.PolhemUIText.MoveUp = "MoveUp" -> string!

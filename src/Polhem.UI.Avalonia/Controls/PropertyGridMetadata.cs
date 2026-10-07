@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using Polhem.Core.Collections;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -287,6 +288,30 @@ namespace Polhem.UI.Avalonia.Controls
                 error = ex.Message;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Returns the key another item of the keyed collection that holds <paramref name="component"/> already has, when
+        /// <paramref name="value"/> names it; otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// A keyed item's key setter asks its collection to change the key, and the collection refuses a key it
+        /// already holds with the BCL's own English message. This finds that case so the grid can say it in the UI
+        /// language. Keys compare without regard to case, as <see cref="Polhem.Core.Collections.KeyCollectionBase{T}"/>
+        /// does.
+        /// </remarks>
+        internal static string? FindTakenKey(object component, object? value)
+        {
+            ArgumentNullException.ThrowIfNull(component);
+            if (component is not KeyCollectionItem { Collection: IEnumerable items } item
+                || value?.ToString() is not { Length: > 0 } key)
+            {
+                return null;
+            }
+            return items.OfType<IKeyCollectionItem>()
+                .Any(other => !ReferenceEquals(other, item) && string.Equals(other.Key, key, StringComparison.OrdinalIgnoreCase))
+                ? key
+                : null;
         }
 
         /// <summary>

@@ -33,6 +33,7 @@
     <LanguageItem Key="MoveDown" Value="下移" />
     <LanguageItem Key="CollectionKeyMissing" Value="有項目沒有鍵值。" />
     <LanguageItem Key="CollectionKeyDuplicate" Value="有多個項目使用相同的鍵值「{0}」。" />
+    <LanguageItem Key="CollectionKeyTaken" Value="已有其他項目使用鍵值「{0}」。" />
   </Items>
   <Enums />
 </LanguageResource>
