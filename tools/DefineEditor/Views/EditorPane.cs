@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Polhem.DefineEditor.Behaviors;
+using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
 
@@ -63,7 +64,7 @@ public sealed class EditorPane : UserControl
                 Content = _templated,
             },
         };
-        _grid = new PropertyGridControl { IsVisible = false };
+        _grid = new PropertyGridControl { IsVisible = false, LabelTranslator = PropertyLabels.Translate };
         _grid.PropertyValueChanged += (_, _) => (DataContext as ObjectTreeDocumentViewModelBase)?.OnPropertyEdited();
         Content = new Panel { Children = { _templatedHost, _grid } };
     }
@@ -136,6 +137,24 @@ public sealed class EditorPane : UserControl
     }
 
     private void OnEditorRefreshRequested(object? sender, EventArgs e) => _grid.Refresh();
+
+    // The grid reads its texts when it builds its rows, and the translator stays the same across a language switch.
+    // The subscription follows the visual tree so a closed document's pane does not stay referenced by the service.
+    /// <inheritdoc/>
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        LocalizationService.Current.CultureChanged += OnCultureChanged;
+    }
+
+    /// <inheritdoc/>
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        LocalizationService.Current.CultureChanged -= OnCultureChanged;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void OnCultureChanged(object? sender, System.Globalization.CultureInfo culture) => _grid.Refresh();
 
     private void Show(object? context)
     {
