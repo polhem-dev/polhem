@@ -46,6 +46,7 @@ public sealed class EditorPane : UserControl
 
     private readonly ContentControl _templated;
     private readonly Border _templatedHost;
+    private ObjectTreeDocumentViewModelBase? _document;
     private readonly PropertyGridControl _grid;
 
     public EditorPane()
@@ -122,6 +123,19 @@ public sealed class EditorPane : UserControl
         // The templates in scope are only known once the pane is in the view's logical tree.
         Show(Context);
     }
+
+    /// <inheritdoc/>
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (_document is not null)
+            _document.EditorRefreshRequested -= OnEditorRefreshRequested;
+        _document = DataContext as ObjectTreeDocumentViewModelBase;
+        if (_document is not null)
+            _document.EditorRefreshRequested += OnEditorRefreshRequested;
+    }
+
+    private void OnEditorRefreshRequested(object? sender, EventArgs e) => _grid.Refresh();
 
     private void Show(object? context)
     {

@@ -241,6 +241,23 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     }
 
     /// <summary>
+    /// Occurs when the selected object changed outside the property grid, so the grid must read it again.
+    /// </summary>
+    public event EventHandler? EditorRefreshRequested;
+
+    /// <summary>
+    /// Marks the document dirty, recomputes the labels from the selected node up to the root, and asks the property
+    /// grid to read the selected object again, after a command changed that object.
+    /// </summary>
+    protected void OnSelectedObjectChangedByCommand()
+    {
+        IsDirty = true;
+        for (var node = SelectedTreeNode; node != null; node = node.Parent)
+            node.Refresh();
+        EditorRefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Lets a subclass bring the tree in line after the grid wrote a property of <paramref name="node"/>'s object,
     /// for example by adding a node the new value calls for.
     /// </summary>

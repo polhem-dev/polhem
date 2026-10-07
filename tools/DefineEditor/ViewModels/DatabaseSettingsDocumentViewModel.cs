@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
@@ -5,14 +6,15 @@ using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.DefineEditor.Views;
 
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// Editor for <see cref="DatabaseSettings"/>. Two top-level groups (Servers /
-/// Items); selection on a Server or Item yields a wrapper editor with proxy
-/// fields plus the connection-string paste-and-split UI. Validation runs the
-/// dedicated <see cref="DatabaseSettingsValidator"/>.
+/// Editor for <see cref="DatabaseSettings"/>. Two top-level groups (Servers / Items), with the
+/// selected server or item in the property grid; a server's or item's context menu opens the
+/// connection-string paste-and-split dialog. Validation runs the dedicated
+/// <see cref="DatabaseSettingsValidator"/>.
 /// </summary>
 public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
@@ -24,12 +26,8 @@ public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocume
 
     public override ITreeNodeCommandProvider CommandProvider { get; }
 
-    public override object? SelectedEditorContext => SelectedTreeNode switch
-    {
-        { Value: DatabaseServer server } => new DatabaseServerEditor(server, () => IsDirty = true),
-        { Value: DatabaseItem item } => new DatabaseItemEditor(item, SnapshotServerIds(), () => IsDirty = true),
-        _ => base.SelectedEditorContext,
-    };
+    /// <summary>A DatabaseItem's ServerId suggests the ids of the servers in this file.</summary>
+    public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
 
     private DatabaseSettingsDocumentViewModel(string filePath, DatabaseSettings root)
         // The root and the two folders start expanded.
@@ -91,6 +89,59 @@ public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocume
 
     private bool CanAddItem() => SelectedTreeNode is not null;
 
+    /// <summary>
+    /// Opens the paste-and-split dialog for the selected server or item and applies what the user confirms.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanPasteConnectionString))]
+    private async Task PasteConnectionStringAsync()
+    {
+        var target = SelectedTreeNode?.Value;
+        var databaseType = target switch
+        {
+            DatabaseServer server => server.DatabaseType,
+            DatabaseItem item => item.DatabaseType,
+            _ => (DatabaseType?)null,
+        };
+        if (databaseType is null) return;
+        var owner = GetOwnerWindow();
+        if (owner is null) return; // smoke / headless
+        var result = await ConnectionStringDialog.ShowAsync(owner,
+            new ConnectionStringDialogViewModel(databaseType.Value, forItem: target is DatabaseItem));
+        if (result is not null)
+            ApplyConnectionString(result);
+    }
+
+    private bool CanPasteConnectionString() => SelectedTreeNode?.Value is DatabaseServer or DatabaseItem;
+
+    /// <summary>
+    /// Writes a parse result without errors to the selected server or item: the rewritten connection string, and the
+    /// user id, password and (for an item) database name the string carried.
+    /// </summary>
+    /// <remarks>Nothing about the values reaches the status line, since one of them is a password.</remarks>
+    public void ApplyConnectionString(ConnectionStringParseResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (!result.IsOk) return;
+        switch (SelectedTreeNode?.Value)
+        {
+            case DatabaseServer server:
+                server.ConnectionString = result.RewrittenConnectionString;
+                if (result.UserId is not null) server.UserId = result.UserId;
+                if (result.Password is not null) server.Password = result.Password;
+                break;
+            case DatabaseItem item:
+                item.ConnectionString = result.RewrittenConnectionString;
+                if (result.UserId is not null) item.UserId = result.UserId;
+                if (result.Password is not null) item.Password = result.Password;
+                if (result.DbName is not null) item.DbName = result.DbName;
+                break;
+            default:
+                return;
+        }
+        OnSelectedObjectChangedByCommand();
+        StatusText = L("Status_ConnectionStringApplied");
+    }
+
     protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {
         DatabaseServer s => () => Root.Servers!.Remove(s),
@@ -100,6 +151,12 @@ public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocume
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation() =>
         DatabaseSettingsValidator.Validate(Root);
+
+    /// <summary>The values the grid offers: the ids of this file's servers for a DatabaseItem's ServerId.</summary>
+    public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component) =>
+        component is DatabaseItem && property.Name == nameof(DatabaseItem.ServerId) && SnapshotServerIds() is { Count: > 0 } ids
+            ? ids
+            : null;
 
     private IReadOnlyList<string> SnapshotServerIds() =>
         (Root.Servers ?? Enumerable.Empty<DatabaseServer>())
