@@ -10,6 +10,8 @@ public sealed class DatabaseSettingsCommandProvider(DatabaseSettingsDocumentView
     {
         { IsFolder: true, Value: DatabaseServerCollection } => [Create("DatabaseSettings_AddServer", "IconDatabase", document.AddServerCommand)],
         { IsFolder: true, Value: DatabaseItemCollection } => [Create("DatabaseSettings_AddItem", "IconAdd", document.AddItemCommand)],
+        { Value: DatabaseServer or DatabaseItem } =>
+            [Create("DatabaseSettings_PasteConnectionString", "IconParse", document.PasteConnectionStringCommand)],
         _ => [],
     };
 }

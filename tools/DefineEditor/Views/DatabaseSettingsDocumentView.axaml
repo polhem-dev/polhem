@@ -4,7 +4,7 @@
              xmlns:controls="using:Polhem.UI.Avalonia.Controls"
              xmlns:conv="using:Polhem.DefineEditor.Converters"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
-             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:views="using:Polhem.DefineEditor.Views"
              xmlns:models="using:Polhem.DefineEditor.Models"
              xmlns:settings="using:Polhem.Definition.Settings"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -23,126 +23,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="vm:DatabaseServerEditor">
-            <StackPanel x:DataType="vm:DatabaseServerEditor" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc DatabaseSettings_ServerProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Id"/><TextBox Text="{Binding Id, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="DisplayName"/><TextBox Text="{Binding DisplayName, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row short">
-                    <TextBlock Classes="label" Text="DatabaseType"/>
-                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.DatabaseTypes}"
-                              SelectedItem="{Binding DatabaseType, Mode=TwoWay}"/>
-                </DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="UserId"/><TextBox Text="{Binding UserId, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Password"/><TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="●"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="ConnectionString"/><TextBox Text="{Binding ConnectionString, Mode=TwoWay}" TextWrapping="Wrap"/></DockPanel>
-
-                <Separator Margin="0,12,0,4"/>
-                <TextBlock Text="{loc:Loc DatabaseSettings_ParseSection}" Classes="muted" FontWeight="SemiBold" Margin="0,0,0,2"/>
-                <TextBlock Classes="muted" TextWrapping="Wrap" Margin="0,0,0,6"
-                           Text="{loc:Loc DatabaseSettings_ParseHint}"/>
-                <TextBox Text="{Binding PasteInput, Mode=TwoWay}" Height="80" AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         PlaceholderText="{loc:Loc DatabaseSettings_PastePlaceholderServer}"/>
-                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                    <Button Classes="tool" Command="{Binding ParseCommand}" ToolTip.Tip="{loc:Loc DatabaseSettings_ParseTooltip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconParse}"/><TextBlock Text="{loc:Loc DatabaseSettings_Parse}" VerticalAlignment="Center"/></StackPanel>
-                    </Button>
-                    <Button Classes="tool" Command="{Binding ClearCommand}" ToolTip.Tip="{loc:Loc DatabaseSettings_ClearTooltip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconClear}"/><TextBlock Text="{loc:Loc DatabaseSettings_Clear}" VerticalAlignment="Center"/></StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <Border IsVisible="{Binding HasParseResult}" Padding="10" Margin="0,10,0,0"
-                        Classes="surface-sunken" CornerRadius="3">
-                    <StackPanel Spacing="4" x:DataType="vm:DatabaseServerEditor">
-                        <TextBlock Text="{loc:Loc DatabaseSettings_ParsePreview}" Classes="muted" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId: {0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password: {0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString: {0}'}" TextWrapping="Wrap"/>
-                        <ItemsControl ItemsSource="{Binding ParseResult.Errors}" Margin="0,4,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorDanger}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <ItemsControl ItemsSource="{Binding ParseResult.Warnings}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorWarning}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Button Classes="tool Primary" Command="{Binding ApplyCommand}" Margin="0,8,0,0" HorizontalAlignment="Left"
-                                ToolTip.Tip="{loc:Loc DatabaseSettings_ApplyServerTooltip}">
-                            <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconApply}"/><TextBlock Text="{loc:Loc DatabaseSettings_ApplyServer}" VerticalAlignment="Center"/></StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </DataTemplate>
-
-        <DataTemplate DataType="vm:DatabaseItemEditor">
-            <StackPanel x:DataType="vm:DatabaseItemEditor" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc DatabaseSettings_ItemProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Id"/><TextBox Text="{Binding Id, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="CategoryId"/><TextBox Text="{Binding CategoryId, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="DisplayName"/><TextBox Text="{Binding DisplayName, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row short">
-                    <TextBlock Classes="label" Text="DatabaseType"/>
-                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.DatabaseTypes}"
-                              SelectedItem="{Binding DatabaseType, Mode=TwoWay}"/>
-                </DockPanel>
-                <DockPanel Classes="row">
-                    <TextBlock Classes="label" Text="ServerId"/>
-                    <ComboBox ItemsSource="{Binding AvailableServerIds}"
-                              SelectedItem="{Binding ServerId, Mode=TwoWay}"
-                              Text="{Binding ServerId, Mode=TwoWay}" IsEditable="True"/>
-                </DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="DbName"/><TextBox Text="{Binding DbName, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="UserId"/><TextBox Text="{Binding UserId, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Password"/><TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="●"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="ConnectionString"/><TextBox Text="{Binding ConnectionString, Mode=TwoWay}" TextWrapping="Wrap"/></DockPanel>
-
-                <Separator Margin="0,12,0,4"/>
-                <TextBlock Text="{loc:Loc DatabaseSettings_ParseSection}" Classes="muted" FontWeight="SemiBold" Margin="0,0,0,2"/>
-                <TextBlock Classes="muted" TextWrapping="Wrap" Margin="0,0,0,6"
-                           Text="{loc:Loc DatabaseSettings_ParseHintItem}"/>
-                <TextBox Text="{Binding PasteInput, Mode=TwoWay}" Height="80" AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         PlaceholderText="{loc:Loc DatabaseSettings_PastePlaceholderItem}"/>
-                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                    <Button Classes="tool" Command="{Binding ParseCommand}" ToolTip.Tip="{loc:Loc DatabaseSettings_ParseTooltip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconParse}"/><TextBlock Text="{loc:Loc DatabaseSettings_Parse}" VerticalAlignment="Center"/></StackPanel>
-                    </Button>
-                    <Button Classes="tool" Command="{Binding ClearCommand}" ToolTip.Tip="{loc:Loc DatabaseSettings_ClearTooltip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconClear}"/><TextBlock Text="{loc:Loc DatabaseSettings_Clear}" VerticalAlignment="Center"/></StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <Border IsVisible="{Binding HasParseResult}" Padding="10" Margin="0,10,0,0"
-                        Classes="surface-sunken" CornerRadius="3">
-                    <StackPanel Spacing="4" x:DataType="vm:DatabaseItemEditor">
-                        <TextBlock Text="{loc:Loc DatabaseSettings_ParsePreview}" Classes="muted" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId: {0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password: {0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.DbName, StringFormat='DbName: {0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString: {0}'}" TextWrapping="Wrap"/>
-                        <ItemsControl ItemsSource="{Binding ParseResult.Errors}" Margin="0,4,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorDanger}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <ItemsControl ItemsSource="{Binding ParseResult.Warnings}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorWarning}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Button Classes="tool Primary" Command="{Binding ApplyCommand}" Margin="0,8,0,0" HorizontalAlignment="Left"
-                                ToolTip.Tip="{loc:Loc DatabaseSettings_ApplyItemTooltip}">
-                            <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconApply}"/><TextBlock Text="{loc:Loc DatabaseSettings_ApplyItem}" VerticalAlignment="Center"/></StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </DataTemplate>
     </UserControl.DataTemplates>
 
     <DockPanel>
@@ -173,12 +53,8 @@
                                      IconSelector="{Binding IconKeys, Converter={x:Static conv:TreeIconSelector.Converter}}"
                                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
-            <Border Grid.Column="2" Padding="18,14">
-                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
-                    <ContentControl Content="{Binding SelectedEditorContext}"
-                                    behaviors:DirtyTracking.IsEnabled="True"/>
-                </ScrollViewer>
-            </Border>
+            <views:EditorPane Grid.Column="2" Context="{Binding SelectedEditorContext}"
+                              ValueSuggestionProvider="{Binding ValueSuggestionProvider}"/>
         </Grid>
     </DockPanel>
 </UserControl>

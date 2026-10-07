@@ -1,0 +1,60 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="420"
+        x:Class="Polhem.DefineEditor.Views.ConnectionStringDialog"
+        x:DataType="vm:ConnectionStringDialogViewModel"
+        x:CompileBindings="True"
+        Width="560" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Title="{loc:Loc DatabaseSettings_ParseSection}">
+
+    <Border Padding="22,20">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                        HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+                <Button Classes="tool" Content="{loc:Loc Action_Cancel}" Click="OnCancel" MinWidth="90"/>
+                <Button Classes="tool Primary" Content="{Binding ApplyLabel}" Command="{Binding ApplyCommand}" MinWidth="100"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Hint}"/>
+                <TextBox Text="{Binding PasteInput, Mode=TwoWay}" Height="80" AcceptsReturn="True"
+                         TextWrapping="Wrap" PlaceholderText="{Binding Placeholder}"/>
+                <Button Classes="tool" Command="{Binding ParseCommand}" HorizontalAlignment="Left"
+                        ToolTip.Tip="{loc:Loc DatabaseSettings_ParseTooltip}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource IconParse}"/>
+                        <TextBlock Text="{loc:Loc DatabaseSettings_Parse}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Border IsVisible="{Binding HasParseResult}" Padding="10" Margin="0,6,0,0"
+                        Classes="surface-sunken" CornerRadius="3">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{loc:Loc DatabaseSettings_ParsePreview}" Classes="muted" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId: {0}'}"/>
+                        <TextBlock Text="{Binding PasswordPreview, StringFormat='Password: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.DbName, StringFormat='DbName: {0}'}" IsVisible="{Binding ForItem}"/>
+                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString: {0}'}" TextWrapping="Wrap"/>
+                        <ItemsControl ItemsSource="{Binding ParseResult.Errors}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorDanger}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl ItemsSource="{Binding ParseResult.Warnings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorWarning}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>

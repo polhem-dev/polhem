@@ -104,6 +104,93 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(2, folder.Children.Count);
         }
 
+        private const string SqlServerConnectionString = "Data Source=localhost;Initial Catalog=northwind;User ID=sa;Password=secret";
+
+        private DatabaseSettingsDocumentViewModel LoadDatabaseSettings()
+        {
+            var settings = new DatabaseSettings();
+            settings.Servers!.Add(new DatabaseServer { Id = "main", DatabaseType = DatabaseType.SQLServer });
+            settings.Servers!.Add(new DatabaseServer { Id = "archive", DatabaseType = DatabaseType.SQLServer });
+            settings.Items!.Add(new DatabaseItem { Id = "common", DatabaseType = DatabaseType.SQLServer });
+            return DatabaseSettingsDocumentViewModel.Load(Save(settings, "DatabaseSettings.xml"));
+        }
+
+        [Fact]
+        [DisplayName("A database server and item offer Paste connection string, their folders do not")]
+        public void DatabaseSettings_ServerAndItem_OfferPasteConnectionString()
+        {
+            var document = LoadDatabaseSettings();
+            var label = LocalizationService.Current["DatabaseSettings_PasteConnectionString"];
+            var servers = document.RootNode.Children[0];
+            var items = document.RootNode.Children[1];
+
+            Assert.Contains(CommandsFor(document, servers.Children[0]), c => c.Label == label);
+            Assert.Contains(CommandsFor(document, items.Children[0]), c => c.Label == label);
+            Assert.DoesNotContain(CommandsFor(document, servers), c => c.Label == label);
+        }
+
+        [Fact]
+        [DisplayName("Applying a parsed connection string writes the item's fields, marks the document dirty and refreshes the grid")]
+        public void DatabaseSettings_ApplyConnectionString_WritesItem()
+        {
+            var document = LoadDatabaseSettings();
+            document.SelectedTreeNode = document.RootNode.Children[1].Children[0];
+            var refreshes = 0;
+            document.EditorRefreshRequested += (_, _) => refreshes++;
+
+            document.ApplyConnectionString(ConnectionStringParser.Parse(SqlServerConnectionString, DatabaseType.SQLServer));
+
+            var item = Assert.IsType<DatabaseItem>(document.SelectedTreeNode.Value);
+            Assert.Equal("sa", item.UserId);
+            Assert.Equal("secret", item.Password);
+            Assert.Equal("northwind", item.DbName);
+            Assert.DoesNotContain("secret", item.ConnectionString, StringComparison.Ordinal);
+            Assert.True(document.IsDirty);
+            Assert.Equal(1, refreshes);
+            Assert.DoesNotContain("secret", document.StatusText, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A database item's tree label starts with its Id, also when it names no database")]
+        public void DatabaseSettings_ItemLabel_ShowsId()
+        {
+            var document = LoadDatabaseSettings();
+
+            Assert.Equal("common - ", document.RootNode.Children[1].Children[0].Label);
+        }
+
+        [Fact]
+        [DisplayName("A database item's ServerId suggests the ids of the file's servers")]
+        public void DatabaseSettings_ServerId_SuggestsServers()
+        {
+            var document = LoadDatabaseSettings();
+            var item = document.Root.Items![0];
+            var properties = TypeDescriptor.GetProperties(typeof(DatabaseItem));
+
+            Assert.Equal(["main", "archive"], document.Suggest(properties[nameof(DatabaseItem.ServerId)]!, item));
+            Assert.Null(document.Suggest(properties[nameof(DatabaseItem.DbName)]!, item));
+        }
+
+        [Fact]
+        [DisplayName("The connection string dialog masks the parsed password and applies only a result without errors")]
+        public void ConnectionStringDialog_MasksPasswordAndAppliesValidResult()
+        {
+            var dialog = new ConnectionStringDialogViewModel(DatabaseType.SQLServer, forItem: true);
+            var applied = 0;
+            dialog.Applied += (_, _) => applied++;
+            Assert.False(dialog.ApplyCommand.CanExecute(null));
+
+            dialog.PasteInput = SqlServerConnectionString;
+            dialog.ParseCommand.Execute(null);
+
+            Assert.True(dialog.HasParseResult);
+            Assert.DoesNotContain("secret", dialog.PasswordPreview, StringComparison.Ordinal);
+            Assert.NotEmpty(dialog.PasswordPreview);
+            Assert.True(dialog.ApplyCommand.CanExecute(null));
+            dialog.ApplyCommand.Execute(null);
+            Assert.Equal(1, applied);
+        }
+
         [Fact]
         [DisplayName("Database settings show expanded Servers and Databases folders, each with its own Add command")]
         public void DatabaseSettings_Folders_OfferTheirAddCommands()

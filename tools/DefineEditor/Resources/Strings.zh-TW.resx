@@ -124,6 +124,7 @@
   <data name="FormSchema_AddRelationMapping" xml:space="preserve"><value>新增 Relation Mapping</value></data>
   <data name="FormSchema_GenerateFormLayout" xml:space="preserve"><value>產生 FormLayout</value></data>
   <data name="Status_FormLayoutGenerated" xml:space="preserve"><value>已產生 {0}</value></data>
+  <data name="Status_ConnectionStringApplied" xml:space="preserve"><value>已套用連線字串</value></data>
   <data name="Confirm_OverwriteFormLayoutTitle" xml:space="preserve"><value>覆寫既有的 FormLayout</value></data>
   <data name="Confirm_OverwriteFormLayoutMessage" xml:space="preserve"><value>{0} 已存在。重新產生會丟掉其中人工調整過的版面。要覆寫嗎？</value></data>
   <data name="Action_Overwrite" xml:space="preserve"><value>覆寫</value></data>
@@ -131,10 +132,9 @@
   <!-- DatabaseSettings -->
   <data name="DatabaseSettings_AddServer" xml:space="preserve"><value>新增 DatabaseServer</value></data>
   <data name="DatabaseSettings_AddItem" xml:space="preserve"><value>新增 DatabaseItem</value></data>
+  <data name="DatabaseSettings_PasteConnectionString" xml:space="preserve"><value>貼上連線字串…</value></data>
   <data name="DatabaseSettings_RootSubtitle" xml:space="preserve"><value>DatabaseSettings 根節點</value></data>
   <data name="DatabaseSettings_RootHint" xml:space="preserve"><value>於 Servers 群組右鍵新增 DatabaseServer，於 Items 群組右鍵新增 DatabaseItem；Server 提供共用連線字串樣板（用 {@UserId}/{@Password} 佔位符），Item 綁定 Server 或自行提供連線字串（用 {@DbName} 指定資料庫名）。</value></data>
-  <data name="DatabaseSettings_ServerProps" xml:space="preserve"><value>DatabaseServer 屬性</value></data>
-  <data name="DatabaseSettings_ItemProps" xml:space="preserve"><value>DatabaseItem 屬性</value></data>
   <data name="DatabaseSettings_ParseSection" xml:space="preserve"><value>貼上連線字串拆解</value></data>
   <data name="DatabaseSettings_ParseHint" xml:space="preserve"><value>貼上完整連線字串後按「拆解」，工具會依目前選定的 DatabaseType 把帳密拆出來、改寫成佔位符。</value></data>
   <data name="DatabaseSettings_ParseHintItem" xml:space="preserve"><value>貼上完整連線字串後按「拆解」，工具會依目前 DatabaseType 把帳密 / 資料庫名拆出來、改寫成佔位符。</value></data>
@@ -142,13 +142,9 @@
   <data name="DatabaseSettings_PastePlaceholderItem" xml:space="preserve"><value>例：Host=localhost;Port=5432;Database=mydb;Username=app;Password=…</value></data>
   <data name="DatabaseSettings_Parse" xml:space="preserve"><value>拆解</value></data>
   <data name="DatabaseSettings_ParseTooltip" xml:space="preserve"><value>依 DatabaseType 別名表拆出帳密 / DbName</value></data>
-  <data name="DatabaseSettings_Clear" xml:space="preserve"><value>清除</value></data>
-  <data name="DatabaseSettings_ClearTooltip" xml:space="preserve"><value>清空貼上區與預覽</value></data>
   <data name="DatabaseSettings_ParsePreview" xml:space="preserve"><value>拆解預覽</value></data>
   <data name="DatabaseSettings_ApplyServer" xml:space="preserve"><value>套用至此 Server</value></data>
-  <data name="DatabaseSettings_ApplyServerTooltip" xml:space="preserve"><value>把預覽結果寫入此 Server 的欄位</value></data>
   <data name="DatabaseSettings_ApplyItem" xml:space="preserve"><value>套用至此 Item</value></data>
-  <data name="DatabaseSettings_ApplyItemTooltip" xml:space="preserve"><value>把預覽結果寫入此 Item 的欄位</value></data>
 
   <!-- Unsupported -->
   <data name="Unsupported_SelectedItem" xml:space="preserve"><value>選取項目</value></data>
