@@ -85,7 +85,6 @@
   <data name="Program_AddProgram" xml:space="preserve"><value>新增 ProgramItem</value></data>
   <data name="Program_RootSubtitle" xml:space="preserve"><value>ProgramSettings（型別註冊表根節點）</value></data>
   <data name="Program_RootHint" xml:space="preserve"><value>於根節點右鍵新增 ProgramItem。一個 progId 只註冊一次；出現在選單哪裡由 MenuSettings 決定。</value></data>
-  <data name="Program_ProgramProps" xml:space="preserve"><value>ProgramItem 屬性</value></data>
 
   <!-- MenuSettings -->
   <data name="Menu_AddFolder" xml:space="preserve"><value>新增 MenuFolder</value></data>

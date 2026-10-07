@@ -98,7 +98,6 @@
   <data name="Program_AddProgram" xml:space="preserve"><value>Add ProgramItem</value></data>
   <data name="Program_RootSubtitle" xml:space="preserve"><value>ProgramSettings (type registry root)</value></data>
   <data name="Program_RootHint" xml:space="preserve"><value>Right-click the root to add a ProgramItem. A progId is registered once; where it appears in the menu is MenuSettings' business.</value></data>
-  <data name="Program_ProgramProps" xml:space="preserve"><value>ProgramItem properties</value></data>
 
   <!-- MenuSettings -->
   <data name="Menu_AddFolder" xml:space="preserve"><value>Add MenuFolder</value></data>
