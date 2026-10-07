@@ -96,6 +96,13 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   the `[TreeNode]` annotations and folders no longer show a count. In every editor a node can be dragged before or after
   a sibling to reorder the collection that holds it. Folder, root and group labels follow the editor's language and
   switch with it.
+- DefineEditor shows the selected object in a `PropertyGridControl` instead of hand-written property panels, so every
+  browsable property is editable, grouped by `[Category]` and described by `[Description]`. Categories and
+  descriptions are translated into Traditional Chinese and follow the editor's language; property names stay as written.
+  A field's ListItems are edited in the grid's collection dialog rather than as tree nodes; selecting a field's
+  Relation or Lookup group shows its Relation properties, and form ids and mapping fields are offered as suggestions.
+  Pasting a connection string moves to a dialog on a database server's or item's context menu, and its preview no
+  longer shows the password. Renaming an object relabels its tree node at once.
 - Avalonia.DemoCenter adds a Property Grid case: `PropertyGridControl` over a `FormField`, a `DbField`, a
   `DatabaseServer`, a `PermissionRule` and `BackendConfiguration`, with its display options, suggested form ids and a
   log of `PropertyValueChanged`; the FormField's `ListItems` open in `CollectionEditDialog`.

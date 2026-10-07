@@ -2,7 +2,6 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Polhem.DefineEditor.Behaviors;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
@@ -15,9 +14,8 @@ namespace Polhem.DefineEditor.Views;
 /// shown by a <see cref="PropertyGridControl"/>, which builds its rows from the type's annotations.
 /// </summary>
 /// <remarks>
-/// The template path keeps <see cref="DirtyTracking"/>, since its controls bind straight into the
-/// define objects. The grid path reports each write itself through
-/// <see cref="ObjectTreeDocumentViewModelBase.OnPropertyEdited"/>.
+/// The templates that remain only show text, so nothing edits a define object except the grid, which reports each
+/// write through <see cref="ObjectTreeDocumentViewModelBase.OnPropertyEdited"/>.
 /// </remarks>
 public sealed class EditorPane : UserControl
 {
@@ -53,7 +51,6 @@ public sealed class EditorPane : UserControl
     public EditorPane()
     {
         _templated = new ContentControl();
-        DirtyTracking.SetIsEnabled(_templated, true);
         _templatedHost = new Border
         {
             Padding = new Thickness(18, 14),
