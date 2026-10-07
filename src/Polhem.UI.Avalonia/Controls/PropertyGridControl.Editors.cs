@@ -80,7 +80,11 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 // Three periods rather than the ellipsis character, which the theme's font draws as a short dash.
                 Content = "...",
-                MinWidth = 32,
+                // A fixed width: the theme sizes buttons for a label, which leaves this one far wider than its text.
+                Width = 28,
+                MinWidth = 0,
+                Padding = new Thickness(0),
+                HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(4, 0, 0, 0),
             };
