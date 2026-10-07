@@ -3,6 +3,7 @@ using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
@@ -43,8 +44,24 @@ namespace Polhem.DefineEditor.UnitTests
             var solution = new SolutionContext(["Customer", "Order"])
             {
                 FormSchemaPaths = new Dictionary<string, string> { ["Customer"] = relatedPath, ["Order"] = path },
+                LanguagePaths =
+                [
+                    SaveLanguage("Order", "en-US", "OrderStatus"),
+                    SaveLanguage("Order", "zh-TW", "OrderStatus"),
+                    SaveLanguage("Common", "en-US", "Gender"),
+                    Path.Combine(_directory, "Missing.Language.xml"),
+                ],
             };
             _document = FormSchemaDocumentViewModel.Load(path, solution);
+        }
+
+        private string SaveLanguage(string @namespace, string lang, string enumName)
+        {
+            var resource = new LanguageResource { Namespace = @namespace, Lang = lang };
+            resource.Enums.Add(new LanguageEnum { Name = enumName });
+            var path = Path.Combine(_directory, $"{@namespace}.{lang}.Language.xml");
+            XmlCodec.SerializeToFile(resource, path);
+            return path;
         }
 
         public void Dispose()
@@ -152,6 +169,16 @@ namespace Polhem.DefineEditor.UnitTests
                 _document.Suggest(mappingProperties[nameof(FieldMapping.DestinationField)]!, mappingNode.Value));
             Assert.Equal(["sys_id", "sys_name"],
                 _document.Suggest(mappingProperties[nameof(FieldMapping.SourceField)]!, mappingNode.Value));
+        }
+
+        [Fact]
+        [DisplayName("LangEnumName suggests this form's enums by bare name, then every solution enum by its full name, once each")]
+        public void Suggest_LangEnumName_OwnBareNamesThenQualified()
+        {
+            var status = (FormField)Field("status").Value;
+            var property = TypeDescriptor.GetProperties(typeof(FormField))[nameof(FormField.LangEnumName)]!;
+
+            Assert.Equal(["OrderStatus", "Common.Gender", "Order.OrderStatus"], _document.Suggest(property, status));
         }
 
         [Fact]
