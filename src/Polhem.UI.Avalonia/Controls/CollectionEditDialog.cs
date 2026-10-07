@@ -46,26 +46,29 @@ namespace Polhem.UI.Avalonia.Controls
         /// them; otherwise <c>false</c>.
         /// </returns>
         public static Task<bool> ShowAsync(Visual host, CollectionEditContext context, CancellationToken cancellationToken = default)
-            => ShowAsync(host, context, null, null, cancellationToken);
+            => ShowAsync(host, context, null, cancellationToken);
 
         /// <summary>
-        /// Opens the dialog with the item grid translating its labels through <paramref name="translator"/> and asking
-        /// <paramref name="collectionEditorProvider"/> before it edits a nested collection.
+        /// Opens the dialog with its title, item labels and item grid following the settings of
+        /// <paramref name="source"/>: its <see cref="PropertyGridControl.LabelTranslator"/>,
+        /// <see cref="PropertyGridControl.ValueSuggestionProvider"/> and
+        /// <see cref="PropertyGridControl.CollectionEditorProvider"/>.
         /// </summary>
-        internal static async Task<bool> ShowAsync(Visual host, CollectionEditContext context, Func<string, string>? translator,
-            Func<CollectionEditContext, Task<bool>?>? collectionEditorProvider, CancellationToken cancellationToken)
+        internal static async Task<bool> ShowAsync(Visual host, CollectionEditContext context, PropertyGridControl? source,
+            CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(context);
             cancellationToken.ThrowIfCancellationRequested();
 
             var session = new CollectionEditSession(context.Collection, context.ItemType);
-            var title = PropertyGridMetadata.Translate(translator, context.Property.DisplayName);
+            var title = PropertyGridMetadata.Translate(source?.LabelTranslator, PropertyGridTextKind.DisplayName,
+                context.Component.GetType(), context.Property.Name, context.Property.DisplayName);
             var topLevel = TopLevel.GetTopLevel(host);
             var owner = DialogHosting.GetWindowOwner(topLevel);
             // The overlay card is narrower than the two columns need, so it always stacks them.
             var compact = owner is null || RowEditPanel.IsCompactWidth(topLevel?.Bounds.Width ?? 0);
-            var panel = new CollectionEditPanel(session, translator, collectionEditorProvider, compact);
+            var panel = new CollectionEditPanel(session, source, compact);
             var committed = false;
             panel.Committed += (_, _) => committed = true;
             // The token closes the dialog the way Cancel does. The callback can run on any thread, and the panel is a

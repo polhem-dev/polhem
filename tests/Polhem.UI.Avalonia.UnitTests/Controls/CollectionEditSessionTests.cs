@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -173,6 +174,24 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             var plain = new CollectionEditSession(new List<PlainItem> { new() }, typeof(PlainItem));
             Assert.Equal("PlainItem #1", plain.GetLabel(0, null));
+        }
+
+        [Fact]
+        [DisplayName("GetLabel translates the TreeNode display format as an ItemLabel of the item's type")]
+        public void GetLabel_TranslatesDisplayFormatAsItemLabel()
+        {
+            var rules = new PermissionRuleCollection { new PermissionRule(PermissionActions.Read, ScopeStrategy.Own) };
+            var session = new CollectionEditSession(rules, typeof(PermissionRule));
+            PropertyGridText? received = null;
+
+            var label = session.GetLabel(0, t => { received = t; return "{0} = {1}"; });
+
+            Assert.Equal("Read = Own", label);
+            Assert.NotNull(received);
+            Assert.Equal(PropertyGridTextKind.ItemLabel, received.Kind);
+            Assert.Equal(typeof(PermissionRule), received.ComponentType);
+            Assert.Null(received.PropertyName);
+            Assert.Equal("{0} : {1}", received.Text);
         }
 
         [Fact]

@@ -17,7 +17,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
                 { "A", "Active" },
                 { "C", "Closed" },
             };
-            var panel = new CollectionEditPanel(new CollectionEditSession(items, typeof(ListItem)), null, null, compact: false);
+            var panel = new CollectionEditPanel(new CollectionEditSession(items, typeof(ListItem)), null, compact: false);
             return (items, panel);
         }
 

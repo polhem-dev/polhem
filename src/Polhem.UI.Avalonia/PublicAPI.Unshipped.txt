@@ -18,7 +18,7 @@ static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandlerProper
 Polhem.UI.Avalonia.Controls.PropertyGridControl
 Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnly.get -> bool
 Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnly.set -> void
-Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslator.get -> System.Func<string!, string!>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslator.get -> System.Func<Polhem.UI.Avalonia.Controls.PropertyGridText!, string?>?
 Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslator.set -> void
 Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyGridControl() -> void
 Polhem.UI.Avalonia.Controls.PropertyGridControl.PropertyValueChanged -> System.EventHandler<Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs!>?
@@ -38,7 +38,7 @@ Polhem.UI.Avalonia.Controls.PropertyValueChangedEventArgs.PropertyValueChangedEv
 override Polhem.UI.Avalonia.Controls.PropertyGridControl.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
 override Polhem.UI.Avalonia.Controls.PropertyGridControl.StyleKeyOverride.get -> System.Type!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.IsReadOnlyProperty -> Avalonia.StyledProperty<bool>!
-static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslatorProperty -> Avalonia.StyledProperty<System.Func<string!, string!>?>!
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.LabelTranslatorProperty -> Avalonia.StyledProperty<System.Func<Polhem.UI.Avalonia.Controls.PropertyGridText!, string?>?>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.SelectedObjectProperty -> Avalonia.StyledProperty<object?>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowCategoriesProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ShowDescriptionProperty -> Avalonia.StyledProperty<bool>!
@@ -53,3 +53,17 @@ Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProvider.get -> 
 Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProvider.set -> void
 static Polhem.UI.Avalonia.Controls.CollectionEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Avalonia.Controls.CollectionEditContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.CollectionEditorProviderProperty -> Avalonia.StyledProperty<System.Func<Polhem.UI.Avalonia.Controls.CollectionEditContext!, System.Threading.Tasks.Task<bool>?>?>!
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueSuggestionProvider.get -> System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Collections.Generic.IReadOnlyList<string!>?>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueSuggestionProvider.set -> void
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueSuggestionProviderProperty -> Avalonia.StyledProperty<System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Collections.Generic.IReadOnlyList<string!>?>?>!
+Polhem.UI.Avalonia.Controls.PropertyGridText
+Polhem.UI.Avalonia.Controls.PropertyGridText.ComponentType.get -> System.Type!
+Polhem.UI.Avalonia.Controls.PropertyGridText.Kind.get -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridText.PropertyGridText(Polhem.UI.Avalonia.Controls.PropertyGridTextKind kind, System.Type! componentType, string? propertyName, string! text) -> void
+Polhem.UI.Avalonia.Controls.PropertyGridText.PropertyName.get -> string?
+Polhem.UI.Avalonia.Controls.PropertyGridText.Text.get -> string!
+Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridTextKind.Category = 0 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridTextKind.Description = 2 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridTextKind.DisplayName = 1 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind
+Polhem.UI.Avalonia.Controls.PropertyGridTextKind.ItemLabel = 3 -> Polhem.UI.Avalonia.Controls.PropertyGridTextKind

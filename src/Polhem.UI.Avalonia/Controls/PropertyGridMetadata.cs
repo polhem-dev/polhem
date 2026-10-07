@@ -55,17 +55,13 @@ namespace Polhem.UI.Avalonia.Controls
             var type = property.PropertyType;
             if (IsCollectionType(type)) { return PropertyGridEditorKind.Collection; }
             if (type == typeof(bool)) { return PropertyGridEditorKind.Boolean; }
-            if (type.IsEnum)
-            {
-                // A flags enum takes several members at once, which a drop-down cannot pick; its converter reads
-                // "A, B" from text.
-                return type.IsDefined(typeof(FlagsAttribute), inherit: false)
-                    ? PropertyGridEditorKind.Text
-                    : PropertyGridEditorKind.Choice;
-            }
+            if (IsPlainEnum(type)) { return PropertyGridEditorKind.Choice; }
             if (s_numericTypes.Contains(type)) { return PropertyGridEditorKind.Numeric; }
             if (type == typeof(DateTime) || type == typeof(DateOnly)) { return PropertyGridEditorKind.Date; }
 
+            // A flags enum takes several members at once, which a drop-down cannot pick: its default converter offers
+            // no exclusive values and reads "A, B" from text. A converter on the property that offers exclusive values,
+            // such as one that allows a single member, still gets a drop-down here.
             var converter = property.Converter;
             if (converter.GetStandardValuesSupported() && converter.GetStandardValuesExclusive()
                 && converter.GetStandardValues() is { Count: > 0 })
@@ -77,6 +73,37 @@ namespace Polhem.UI.Avalonia.Controls
             return converter.CanConvertFrom(typeof(string))
                 ? PropertyGridEditorKind.Text
                 : PropertyGridEditorKind.Summary;
+        }
+
+        /// <summary>
+        /// Returns whether a <see cref="PropertyGridEditorKind.Text"/> row of <paramref name="property"/> hides its text,
+        /// as <c>[PasswordPropertyText(true)]</c> asks.
+        /// </summary>
+        internal static bool IsPassword(PropertyDescriptor property)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+            return property.Attributes[typeof(PasswordPropertyTextAttribute)] is PasswordPropertyTextAttribute { Password: true };
+        }
+
+        /// <summary>
+        /// Returns the values <paramref name="provider"/> suggests for <paramref name="property"/> on
+        /// <paramref name="component"/>, or <c>null</c> when the row stays a plain text box.
+        /// </summary>
+        /// <remarks>
+        /// Only a <see cref="string"/> property that would get a <see cref="PropertyGridEditorKind.Text"/> row is asked,
+        /// and never a password, whose text a drop-down would show.
+        /// </remarks>
+        internal static IReadOnlyList<string>? GetSuggestions(PropertyDescriptor property, object component,
+            Func<PropertyDescriptor, object, IReadOnlyList<string>?>? provider)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+            ArgumentNullException.ThrowIfNull(component);
+            if (provider is null || property.PropertyType != typeof(string) || IsPassword(property)
+                || GetEditorKind(property) != PropertyGridEditorKind.Text)
+            {
+                return null;
+            }
+            return provider(property, component);
         }
 
         /// <summary>
@@ -138,7 +165,7 @@ namespace Polhem.UI.Avalonia.Controls
         internal static IReadOnlyList<object> GetChoices(PropertyDescriptor property)
         {
             ArgumentNullException.ThrowIfNull(property);
-            if (property.PropertyType.IsEnum)
+            if (IsPlainEnum(property.PropertyType))
                 return Enum.GetValues(property.PropertyType).Cast<object>().ToList();
             return property.Converter.GetStandardValues()?.Cast<object>().ToList() ?? [];
         }
@@ -360,13 +387,21 @@ namespace Polhem.UI.Avalonia.Controls
 
         /// <summary>
         /// Returns <paramref name="text"/> through <paramref name="translator"/>, or as written when there is none or it
-        /// returns an empty string.
+        /// returns <c>null</c> or an empty string.
         /// </summary>
-        internal static string Translate(Func<string, string>? translator, string text)
+        /// <param name="translator">The translator, or <c>null</c>.</param>
+        /// <param name="kind">What the text is.</param>
+        /// <param name="componentType">The type of the object the text belongs to.</param>
+        /// <param name="propertyName">The name of the property the text belongs to, or <c>null</c>.</param>
+        /// <param name="text">The text as written in the annotation.</param>
+        internal static string Translate(Func<PropertyGridText, string?>? translator, PropertyGridTextKind kind,
+            Type componentType, string? propertyName, string text)
         {
             if (translator is null || string.IsNullOrEmpty(text)) { return text; }
-            var translated = translator(text);
+            var translated = translator(new PropertyGridText(kind, componentType, propertyName, text));
             return string.IsNullOrEmpty(translated) ? text : translated;
         }
+
+        private static bool IsPlainEnum(Type type) => type.IsEnum && !type.IsDefined(typeof(FlagsAttribute), inherit: false);
     }
 }

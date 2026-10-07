@@ -11,6 +11,12 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>A check box for a <see cref="bool"/> property.</summary>
         Boolean,
 
+        /// <summary>
+        /// A drop-down whose text can also be typed, for a <see cref="string"/> property that
+        /// <see cref="PropertyGridControl.ValueSuggestionProvider"/> offers values for.
+        /// </summary>
+        Suggestion,
+
         /// <summary>A drop-down of the enum members or of the converter's exclusive standard values.</summary>
         Choice,
 

@@ -9,6 +9,12 @@ namespace Polhem.Definition.UnitTests.Settings
     /// </summary>
     public class PermissionModelsDataTests
     {
+        private static readonly PermissionActions[] s_singleActions =
+        [
+            PermissionActions.Create, PermissionActions.Read, PermissionActions.Update,
+            PermissionActions.Delete, PermissionActions.Print, PermissionActions.Export,
+        ];
+
         /// <summary>
         /// Builds a sample permission definition (PurchaseOrder / Vendor / Requisition) used by the tests.
         /// </summary>
@@ -110,6 +116,37 @@ namespace Polhem.Definition.UnitTests.Settings
             var xml = XmlCodec.Serialize(models);
 
             Assert.Contains("Scope=\"Own\"", xml);
+        }
+
+        [Fact]
+        [DisplayName("The converter of PermissionRule.Action offers each single action as an exclusive standard value")]
+        public void PermissionRule_ActionConverter_OffersSingleActions()
+        {
+            var converter = TypeDescriptor.GetProperties(typeof(PermissionRule))[nameof(PermissionRule.Action)]!.Converter;
+
+            Assert.True(converter.GetStandardValuesSupported());
+            Assert.True(converter.GetStandardValuesExclusive());
+            Assert.Equal(s_singleActions, converter.GetStandardValues()!.Cast<PermissionActions>());
+            Assert.Equal(PermissionActions.Delete, converter.ConvertFromInvariantString("Delete"));
+        }
+
+        [Fact]
+        [DisplayName("Each single action round-trips through XML under its own name")]
+        public void PermissionRule_EachAction_RoundTripsThroughXmlByName()
+        {
+            var models = new PermissionModels();
+            var model = models.Models!.Add("PurchaseOrder", "採購單");
+            foreach (var action in s_singleActions)
+                model.Rules!.Add(action);
+
+            var xml = XmlCodec.Serialize(models);
+            var restored = XmlCodec.Deserialize<PermissionModels>(xml);
+
+            foreach (var action in s_singleActions)
+            {
+                Assert.Contains($"Action=\"{action}\"", xml);
+                Assert.Equal(action, restored!.Models!["PurchaseOrder"].Rules![action.ToString()].Action);
+            }
         }
 
         [Fact]

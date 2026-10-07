@@ -12,13 +12,22 @@ namespace Polhem.UI.Avalonia.Controls
 {
     public partial class PropertyGridControl
     {
+        // The mask a password row shows instead of its text.
+        private const char PasswordMask = '●';
+
         /// <summary>
-        /// Writes the text in the text box of <paramref name="row"/> to its property, unless it is the text last loaded.
+        /// Writes the text in the text box or the editable drop-down of <paramref name="row"/> to its property, unless
+        /// it is the text last loaded.
         /// </summary>
         internal void CommitText(PropertyGridRow row)
         {
-            if (row.Kind != PropertyGridEditorKind.Text || row.IsReadOnly) { return; }
-            var text = ((TextBox)row.Editor).Text ?? string.Empty;
+            var text = row.Kind switch
+            {
+                PropertyGridEditorKind.Text => ((TextBox)row.Editor).Text ?? string.Empty,
+                PropertyGridEditorKind.Suggestion => ((ComboBox)row.Editor).Text ?? string.Empty,
+                _ => null,
+            };
+            if (text is null || row.IsReadOnly) { return; }
             if (string.Equals(text, row.LoadedText, StringComparison.Ordinal)) { return; }
             if (!PropertyGridMetadata.TryParseText(row.Property, text, out var value, out var error))
             {
@@ -29,7 +38,8 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         // Semi's ComboBox, NumericUpDown and DatePicker do not stretch by default, unlike TextBox (gotcha #3).
-        private static Control CreateEditor(PropertyGridEditorKind kind, PropertyDescriptor property, bool isReadOnly)
+        private static Control CreateEditor(PropertyGridEditorKind kind, PropertyDescriptor property, bool isReadOnly,
+            IReadOnlyList<string>? suggestions)
         {
             Control editor = kind switch
             {
@@ -37,6 +47,12 @@ namespace Polhem.UI.Avalonia.Controls
                 PropertyGridEditorKind.Choice => new ComboBox
                 {
                     ItemsSource = PropertyGridMetadata.GetChoices(property),
+                    IsEnabled = !isReadOnly,
+                },
+                PropertyGridEditorKind.Suggestion => new ComboBox
+                {
+                    ItemsSource = suggestions,
+                    IsEditable = true,
                     IsEnabled = !isReadOnly,
                 },
                 PropertyGridEditorKind.Numeric => CreateNumericEditor(property.PropertyType, isReadOnly),
@@ -48,7 +64,11 @@ namespace Polhem.UI.Avalonia.Controls
                     Margin = new Thickness(6, 0),
                     TextTrimming = TextTrimming.CharacterEllipsis,
                 },
-                _ => new TextBox { IsReadOnly = isReadOnly },
+                _ => new TextBox
+                {
+                    IsReadOnly = isReadOnly,
+                    PasswordChar = PropertyGridMetadata.IsPassword(property) ? PasswordMask : default,
+                },
             };
             editor.HorizontalAlignment = HorizontalAlignment.Stretch;
             return editor;
@@ -96,6 +116,11 @@ namespace Polhem.UI.Avalonia.Controls
         {
             var property = row.Property;
             var component = row.Component;
+            if (row.Kind == PropertyGridEditorKind.Suggestion)
+            {
+                AttachSuggestionEditor(row, (ComboBox)row.Editor);
+                return;
+            }
             switch (row.Editor)
             {
                 case CheckBox checkBox:
@@ -166,6 +191,26 @@ namespace Polhem.UI.Avalonia.Controls
                     row.Load = () => summary.Text = PropertyGridMetadata.FormatText(property, property.GetValue(component));
                     break;
             }
+        }
+
+        // An editable drop-down writes its text the way a text box does: on Enter, when it loses focus, and when the
+        // drop-down closes after a pick. Writing on each SelectedItem change would also write while the user is still
+        // typing, since typed text that matches a value selects it.
+        private void AttachSuggestionEditor(PropertyGridRow row, ComboBox comboBox)
+        {
+            row.Load = () =>
+            {
+                row.LoadedText = PropertyGridMetadata.FormatText(row.Property, row.Property.GetValue(row.Component));
+                comboBox.Text = row.LoadedText;
+            };
+            comboBox.LostFocus += (_, _) => CommitText(row);
+            comboBox.DropDownClosed += (_, _) => CommitText(row);
+            comboBox.KeyDown += (_, e) =>
+            {
+                if (e.Key != Key.Enter) { return; }
+                CommitText(row);
+                e.Handled = true;
+            };
         }
 
         private void WriteValue(PropertyGridRow row, object? value, bool reloadOnError)
