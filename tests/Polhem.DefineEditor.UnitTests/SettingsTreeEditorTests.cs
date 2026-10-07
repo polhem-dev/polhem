@@ -44,6 +44,25 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("OnPropertyEdited marks the document dirty and relabels the selected node from its new values")]
+        public void ProgramSettings_OnPropertyEdited_DirtiesAndRelabels()
+        {
+            var settings = new ProgramSettings();
+            settings.Items!.Add(new ProgramItem("Employee", "Employees"));
+            var document = ProgramSettingsDocumentViewModel.Load(Save(settings, "ProgramSettings.xml"));
+            var node = document.RootNode.Children[0];
+            document.SelectedTreeNode = node;
+            var item = Assert.IsType<ProgramItem>(node.Value);
+
+            item.ProgId = "Staff";
+            document.OnPropertyEdited();
+
+            Assert.True(document.IsDirty);
+            Assert.Contains("Staff", node.Label, StringComparison.Ordinal);
+            Assert.DoesNotContain("Employee -", node.Label, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("Menu folders start expanded and offer Add folder and Add entry, which add under the folder")]
         public void MenuSettings_Folder_ExpandedAndAddsUnderIt()
         {

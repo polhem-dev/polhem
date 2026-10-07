@@ -205,6 +205,22 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         return node;
     }
 
+    /// <summary>
+    /// Called after the property grid has written a property of the selected object: marks the
+    /// document dirty and recomputes the labels from the selected node up to the root, since a
+    /// label is formatted from the object's properties.
+    /// </summary>
+    /// <remarks>
+    /// The grid's event carries the old and new values, a password among them, so nothing about
+    /// the edit reaches <see cref="DocumentViewModelBase.StatusText"/>.
+    /// </remarks>
+    public void OnPropertyEdited()
+    {
+        IsDirty = true;
+        for (var node = SelectedTreeNode; node != null; node = node.Parent)
+            node.Refresh();
+    }
+
     private static void RefreshNodeLabels(ObjectTreeNode node)
     {
         node.Refresh();
