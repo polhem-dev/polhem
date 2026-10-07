@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 4b1dd2c297e2459d42180de9bcea07389ee76b4e -->
+<!-- source: en/architecture/dependency-map.md blob: 1fb8a7371280f1523fde75cd496ab1ef991ae129 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -98,7 +98,7 @@ graph BT
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Hosting.Abstractions 10.x |
 | Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App` |
-| Polhem.UI.Avalonia | Avalonia 12.0.x、Avalonia.Controls.DataGrid 12.0.x |
+| Polhem.UI.Avalonia | Avalonia 12.x、Avalonia.Controls.DataGrid 12.x |
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core | *(none)* |
 
@@ -136,7 +136,7 @@ graph BT
 - **JSON-RPC 協定**來自 `Polhem.JsonRpc.*` 套件，它們對 Polhem 一無所知：`Polhem.Api.Core` 建在 `Polhem.JsonRpc.Server` 上，`Polhem.Api.Client` 建在 `Polhem.JsonRpc.Client` 上（經由 `Polhem.JsonRpc.Payload.Client`，以其 `PayloadConnector` 封裝每次呼叫），ASP.NET Core 宿主另加 `Polhem.JsonRpc.AspNetCore` 提供 `POST /api` 端點。相依只走這個方向。見 [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
 - 用戶端（Polhem.Api.Client）與伺服器端皆透過 **Polhem.Api.Core** 共享 payload 外殼，確保序列化與加解密行為一致。
 - **Polhem.UI.Core** 為跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `FileEndpointStorage` / `IUIViewService`），供所有 native UI family（目前為 Avalonia，以單一專案涵蓋桌面 / 瀏覽器（WASM）/ iOS / Android；未來 WinForms / WPF）共用 client-side 連線狀態與 endpoint 持久化邏輯；不含任何平台專屬 UI 程式碼，只依 `Polhem.Api.Client`。
-- **Polhem.UI.Avalonia** 為 Avalonia 控制項套件，供桌面、瀏覽器（WASM）、iOS 與 Android 各端使用；各端需要什麼見[平台支援](../getting-started/platform-support.md)。內含 FormSchema 驅動控制項（`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞），單一 `net10.0` TFM。它對 `Avalonia` 與 `Avalonia.Controls.DataGrid` 的參考是版本下限；host 可以帶入更新的 `Avalonia 12.0.x`。DataGrid 為何不走 `Binding "[FieldName]"` 詳見 [adr-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md)，編輯策略詳見 [adr-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)。
+- **Polhem.UI.Avalonia** 為 Avalonia 控制項套件，供桌面、瀏覽器（WASM）、iOS 與 Android 各端使用；各端需要什麼見[平台支援](../getting-started/platform-support.md)。內含 FormSchema 驅動控制項（`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞），單一 `net10.0` TFM。它對 `Avalonia` 與 `Avalonia.Controls.DataGrid` 的參考是版本下限；host 可以帶入更新的 `Avalonia 12.x`。DataGrid 為何不走 `Binding "[FieldName]"` 詳見 [adr-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md)，編輯策略詳見 [adr-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)。
 - **`Polhem.UI.*` family 判別準則**：是否消費 `Polhem.UI.Core` 抽象（`ClientInfo` / `IEndpointStorage` / `IUIViewService` 等）。
   - 消費 → 歸 `Polhem.UI.*`（目前：`Polhem.UI.Core`、`Polhem.UI.Avalonia`；未來：`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理）
   - 不消費，自有狀態管理 → 走獨立 family prefix（如 `Polhem.Web.Blazor.*`：Blazor circuit 無檔案 IO 與 dialog service 概念，獨立路線合理）
