@@ -17,6 +17,10 @@ namespace Polhem.Definition.Language
         [XmlAttribute]
         [NotifyParentProperty(true)]
         [Description("Sub-key within the parent namespace.")]
+        [Category(PropertyCategories.Data)]
+        // The base declares Key [Browsable(false)], and an override inherits that. Here the key is the item's own
+        // identifier, with no other property exposing it, so the editor must show it.
+        [Browsable(true)]
         public override string Key
         {
             get => base.Key;

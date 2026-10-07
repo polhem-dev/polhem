@@ -4,7 +4,7 @@
              xmlns:controls="using:Polhem.UI.Avalonia.Controls"
              xmlns:conv="using:Polhem.DefineEditor.Converters"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
-             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:views="using:Polhem.DefineEditor.Views"
              xmlns:models="using:Polhem.DefineEditor.Models"
              xmlns:lang="using:Polhem.Definition.Language"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -13,42 +13,6 @@
              x:Class="Polhem.DefineEditor.Views.LanguageDocumentView"
              x:DataType="vm:LanguageDocumentViewModel"
              x:CompileBindings="True">
-
-    <UserControl.DataTemplates>
-        <DataTemplate DataType="lang:LanguageResource">
-            <StackPanel x:DataType="lang:LanguageResource" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc Language_ResourceProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Namespace"/><TextBox Text="{Binding Namespace, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row short"><TextBlock Classes="label" Text="Lang (BCP-47)"/><TextBox Text="{Binding Lang, Mode=TwoWay}"/></DockPanel>
-                <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap"
-                           Text="{loc:Loc Language_ItemNote}"/>
-            </StackPanel>
-        </DataTemplate>
-
-        <DataTemplate DataType="lang:LanguageItem">
-            <StackPanel x:DataType="lang:LanguageItem" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc Language_ItemProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Key (sub-key)"/><TextBox Text="{Binding Key, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Value"/><TextBox Text="{Binding Value, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"/></DockPanel>
-            </StackPanel>
-        </DataTemplate>
-
-        <DataTemplate DataType="lang:LanguageEnum">
-            <StackPanel x:DataType="lang:LanguageEnum" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc Language_EnumProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Name"/><TextBox Text="{Binding Name, Mode=TwoWay}"/></DockPanel>
-                <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap" Text="{loc:Loc Language_EnumNote}"/>
-            </StackPanel>
-        </DataTemplate>
-
-        <DataTemplate DataType="lang:LanguageEnumEntry">
-            <StackPanel x:DataType="lang:LanguageEnumEntry" Spacing="2">
-                <TextBlock Classes="h2" Text="{loc:Loc Language_EnumEntryProps}" Margin="0,0,0,8"/>
-                <DockPanel Classes="row short"><TextBlock Classes="label" Text="Code"/><TextBox Text="{Binding Code, Mode=TwoWay}"/></DockPanel>
-                <DockPanel Classes="row"><TextBlock Classes="label" Text="Text"/><TextBox Text="{Binding Text, Mode=TwoWay}"/></DockPanel>
-            </StackPanel>
-        </DataTemplate>
-    </UserControl.DataTemplates>
 
     <DockPanel>
 
@@ -78,12 +42,7 @@
                                      IconSelector="{Binding IconKeys, Converter={x:Static conv:TreeIconSelector.Converter}}"
                                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
-            <Border Grid.Column="2" Padding="18,14">
-                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
-                    <ContentControl Content="{Binding SelectedEditorContext}"
-                                    behaviors:DirtyTracking.IsEnabled="True"/>
-                </ScrollViewer>
-            </Border>
+            <views:EditorPane Grid.Column="2" Context="{Binding SelectedEditorContext}"/>
         </Grid>
     </DockPanel>
 </UserControl>

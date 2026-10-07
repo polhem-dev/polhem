@@ -26,7 +26,7 @@ namespace Polhem.Definition.Language
         /// resolved against this resource (e.g. <c>"Customer"</c>, <c>"Common"</c>, <c>"Sys"</c>).
         /// </summary>
         [XmlAttribute]
-        [Description("Namespace (matches file name stem; first segment of full keys).")]
+        [Description("Namespace, usually the ProgId or module name (matches file name stem; first segment of full keys).")]
         [Category(PropertyCategories.Data)]
         public string Namespace { get; set; } = string.Empty;
 
@@ -34,7 +34,7 @@ namespace Polhem.Definition.Language
         /// Gets or sets the BCP-47 language code (e.g. <c>"zh-TW"</c>, <c>"en-US"</c>).
         /// </summary>
         [XmlAttribute]
-        [Description("BCP-47 language code.")]
+        [Description("BCP-47 language code, for example zh-TW or en-US.")]
         [Category(PropertyCategories.Data)]
         public string Lang { get; set; } = string.Empty;
 

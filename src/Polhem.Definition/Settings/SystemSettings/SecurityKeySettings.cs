@@ -23,6 +23,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("API transport key (encrypted with master key, base64 string).")]
         [Category("Security")]
+        [PasswordPropertyText(true)]
         public string ApiEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Cookie key (encrypted with master key, base64 string).")]
         [Category("Security")]
+        [PasswordPropertyText(true)]
         public string CookieEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Encryption key for sensitive data in config files (encrypted with master key, base64 string).")]
         [Category("Security")]
+        [PasswordPropertyText(true)]
         public string ConfigEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
@@ -44,6 +47,7 @@ namespace Polhem.Definition.Settings
         /// </summary>
         [Description("Encryption key for sensitive fields in the database (encrypted with master key, base64 string).")]
         [Category("Security")]
+        [PasswordPropertyText(true)]
         public string DatabaseEncryptionKey { get; set; } = string.Empty;
 
         /// <summary>

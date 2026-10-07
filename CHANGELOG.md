@@ -83,6 +83,8 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   an editor shows as tree nodes (the tables and rules of a form schema, the items of the settings files, a language
   resource's items and enums) and `SessionUser.AccessToken` are marked `[Browsable(false)]`. Neither attribute
   changes the XML or wire form.
+- The encryption keys of `SecurityKeySettings` are marked `[PasswordPropertyText(true)]`, so a property grid masks
+  them. `LanguageItem.Key` is marked browsable again: the override inherited `[Browsable(false)]` from the base key.
 
 ### Samples and tools
 

@@ -91,8 +91,6 @@
   <data name="DbCategory_AddTable" xml:space="preserve"><value>Add TableItem</value></data>
   <data name="DbCategory_RootSubtitle" xml:space="preserve"><value>DbCategorySettings (DB category root)</value></data>
   <data name="DbCategory_RootHint" xml:space="preserve"><value>Right-click the root to add a DbCategory; right-click a category to add a TableItem under it.</value></data>
-  <data name="DbCategory_CategoryProps" xml:space="preserve"><value>DbCategory properties</value></data>
-  <data name="DbCategory_TableProps" xml:space="preserve"><value>TableItem properties</value></data>
 
   <!-- ProgramSettings -->
   <data name="Program_AddProgram" xml:space="preserve"><value>Add ProgramItem</value></data>
@@ -104,62 +102,33 @@
   <data name="Menu_AddEntry" xml:space="preserve"><value>Add MenuEntry</value></data>
   <data name="Menu_RootSubtitle" xml:space="preserve"><value>MenuSettings (menu tree root)</value></data>
   <data name="Menu_RootHint" xml:space="preserve"><value>Right-click the root or any folder to add a folder or an entry. Ids must be unique across the whole tree; Visible is a design-time switch, not a permission.</value></data>
-  <data name="Menu_FolderProps" xml:space="preserve"><value>MenuFolder properties</value></data>
-  <data name="Menu_EntryProps" xml:space="preserve"><value>MenuEntry properties</value></data>
 
   <!-- PermissionModels -->
   <data name="Permission_AddModel" xml:space="preserve"><value>Add PermissionModel</value></data>
   <data name="Permission_AddRule" xml:space="preserve"><value>Add PermissionRule</value></data>
   <data name="Permission_RootSubtitle" xml:space="preserve"><value>PermissionModels (registry root)</value></data>
   <data name="Permission_RootHint" xml:space="preserve"><value>Right-click the root to add a PermissionModel; right-click a model to add a PermissionRule.</value></data>
-  <data name="Permission_ModelProps" xml:space="preserve"><value>PermissionModel properties</value></data>
-  <data name="Permission_RuleProps" xml:space="preserve"><value>PermissionRule properties</value></data>
-  <data name="Permission_RuleNote" xml:space="preserve"><value>(Print / Export are output-style actions, leave Scope = Inherit; other actions are unrestricted.)</value></data>
 
   <!-- Language -->
   <data name="Language_AddItem" xml:space="preserve"><value>Add LanguageItem</value></data>
   <data name="Language_AddEnum" xml:space="preserve"><value>Add LanguageEnum</value></data>
   <data name="Language_AddEntry" xml:space="preserve"><value>Add LanguageEnumEntry</value></data>
-  <data name="Language_ResourceProps" xml:space="preserve"><value>LanguageResource properties</value></data>
-  <data name="Language_ItemProps" xml:space="preserve"><value>LanguageItem properties</value></data>
-  <data name="Language_EnumProps" xml:space="preserve"><value>LanguageEnum properties</value></data>
-  <data name="Language_EnumEntryProps" xml:space="preserve"><value>LanguageEnumEntry properties</value></data>
-  <data name="Language_ItemNote" xml:space="preserve"><value>(Namespace typically maps to ProgId / module name; Lang examples: zh-TW, en-US.)</value></data>
-  <data name="Language_EnumNote" xml:space="preserve"><value>(Right-click to add code/text entries.)</value></data>
 
   <!-- TableSchema -->
   <data name="TableSchema_AddField" xml:space="preserve"><value>Add DbField</value></data>
   <data name="TableSchema_AddIndex" xml:space="preserve"><value>Add DbTableIndex</value></data>
   <data name="TableSchema_AddIndexField" xml:space="preserve"><value>Add IndexField</value></data>
-  <data name="TableSchema_Props" xml:space="preserve"><value>TableSchema properties</value></data>
-  <data name="TableSchema_FieldProps" xml:space="preserve"><value>DbField properties</value></data>
-  <data name="TableSchema_IndexProps" xml:space="preserve"><value>DbTableIndex properties</value></data>
-  <data name="TableSchema_IndexFieldProps" xml:space="preserve"><value>IndexField properties</value></data>
-  <data name="TableSchema_FieldNote" xml:space="preserve"><value>(OriginalFieldName is a one-off rename hint for schema upgrade; leave it empty in normal use.)</value></data>
-  <data name="TableSchema_IndexNote" xml:space="preserve"><value>(Right-click to add index fields.)</value></data>
 
   <!-- FormLayout -->
   <data name="FormLayout_AddSection" xml:space="preserve"><value>Add LayoutSection</value></data>
   <data name="FormLayout_AddField" xml:space="preserve"><value>Add LayoutField</value></data>
   <data name="FormLayout_AddGrid" xml:space="preserve"><value>Add LayoutGrid</value></data>
   <data name="FormLayout_AddColumn" xml:space="preserve"><value>Add LayoutColumn</value></data>
-  <data name="FormLayout_Props" xml:space="preserve"><value>FormLayout properties</value></data>
-  <data name="FormLayout_SectionProps" xml:space="preserve"><value>LayoutSection properties</value></data>
-  <data name="FormLayout_FieldProps" xml:space="preserve"><value>LayoutField properties (master form field)</value></data>
-  <data name="FormLayout_GridProps" xml:space="preserve"><value>LayoutGrid properties (detail grid)</value></data>
-  <data name="FormLayout_ColumnProps" xml:space="preserve"><value>LayoutColumn properties (grid column)</value></data>
 
   <!-- SystemSettings -->
   <data name="SystemSettings_AddProperty" xml:space="preserve"><value>Add Property</value></data>
   <data name="SystemSettings_RootSubtitle" xml:space="preserve"><value>SystemSettings (system configuration root)</value></data>
   <data name="SystemSettings_RootHint" xml:space="preserve"><value>Select a Configuration child to edit it; ExtendedProperties provides free key/value entries (right-click to add / delete).</value></data>
-  <data name="SystemSettings_CommonProps" xml:space="preserve"><value>CommonConfiguration properties</value></data>
-  <data name="SystemSettings_SecurityProps" xml:space="preserve"><value>SecurityKeySettings properties</value></data>
-  <data name="SystemSettings_SecurityWarning" xml:space="preserve"><value>(Keys are shown as plain text — this editor is for local dev only; manage production keys via KMS.)</value></data>
-  <data name="SystemSettings_CacheNotifyProps" xml:space="preserve"><value>CacheNotifyOptions properties</value></data>
-  <data name="SystemSettings_BackendComponentsProps" xml:space="preserve"><value>BackendComponents properties</value></data>
-  <data name="SystemSettings_BackendComponentsHint" xml:space="preserve"><value>Each backend component's AssemblyQualifiedName (leave blank for the framework default).</value></data>
-  <data name="SystemSettings_ExtendedPropertyProps" xml:space="preserve"><value>ExtendedProperty</value></data>
 
   <!-- FormSchema -->
   <data name="FormSchema_AddTable" xml:space="preserve"><value>Add FormTable</value></data>
