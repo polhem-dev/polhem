@@ -172,11 +172,15 @@ CI will be green.
 
 **Three pitfalls that were hit**:
 
-1. **rsync needs `--exclude '*.csproj' --exclude 'README*.md'`** and syncs only source. csproj files are handled
-   individually and READMEs are ported by hand; otherwise the files specific to the standalone repository (paths
-   relative to the root, the NuGet framework description) get overwritten.
-   `.smoke.yaml` likewise (its paths are relative to the root of each repository: the project folder in the
-   standalone repository, `apps/Polhem.Northwind/...` in polhem).
+1. **rsync needs `--exclude '*.csproj' --exclude 'README*.md' --exclude '.smoke.yaml'`** and syncs only source.
+   The two repositories are laid out differently: each project in `apps/Polhem.Northwind/<Project>/` here lives in
+   `src/<Project>/` there, while `Define/`, `Customize/`, `docs/`, the READMEs, the solution and `.smoke.yaml` stay
+   at its root. So the destination of a project is `src/<Project>/`, and every path that crosses that boundary has one
+   more `..` there than here (the Server csproj's `PolhemDefinitionFilesGlob`, for one). csproj files are handled
+   individually and READMEs are ported by hand; otherwise the files specific to the standalone repository (its paths,
+   the NuGet framework description) get overwritten. `.smoke.yaml` is kept apart for the same reason: its paths are
+   relative to the root of each repository, `src/<Project>` there and `apps/Polhem.Northwind/<Project>` here, and
+   the standalone copy and its solution, launch settings, docs and CI workflow all name the `src/` paths.
    The Server csproj also differs in shape, not only in reference type: in polhem the convention analyzer is a
    ProjectReference and the definitions are listed as `AdditionalFiles`, because `buildTransitive/` only reaches a
    package consumer; the standalone repository gets both from the `Polhem.Definition` package and only sets
