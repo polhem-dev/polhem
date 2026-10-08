@@ -88,6 +88,11 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   them. `LanguageItem.Key` is marked browsable again: the override inherited `[Browsable(false)]` from the base key.
 - `DatabaseItem` is labelled by its `Id` rather than its `DbName`, in its `[TreeNode]` annotation and its
   `ToString()`: an item that names no database, such as a SQLite one, showed an empty name.
+- The Roslyn analyzers shipped in the `Polhem.Definition` package are built against Microsoft.CodeAnalysis 5.9, so a
+  project that references the package needs the .NET SDK 10.0.400 or later. An older compiler reports `CS9057` instead
+  of running the analyzers, which fails the build under `TreatWarningsAsErrors`.
+- The package dependencies move to MessagePack 3.1.11, DynamicExpresso.Core 2.19.6 and the 10.0.12 releases of the
+  `Microsoft.Extensions` packages the framework references.
 
 ### Samples and tools
 

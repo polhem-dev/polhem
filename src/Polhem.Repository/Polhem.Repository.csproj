@@ -10,7 +10,7 @@
   <ItemGroup>
     <!-- ActivatorUtilities only: the abstractions package carries no container, so a custom
          repository can declare its own DI dependencies without this package pulling one in. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>

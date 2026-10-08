@@ -67,6 +67,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `SecurityKeySettings` 的加密金鑰標上 `[PasswordPropertyText(true)]`，屬性方格會遮蔽顯示。`LanguageItem.Key` 重新標為可瀏覽：
   它覆寫的基底鍵值標了 `[Browsable(false)]`，覆寫時被一併繼承。
 - `DatabaseItem` 的 `[TreeNode]` 標註與 `ToString()` 改以 `Id` 而非 `DbName` 為標籤：不指定資料庫名稱的項目（例如 SQLite）原本顯示空白名稱。
+- `Polhem.Definition` 套件所附的 Roslyn 分析器改以 Microsoft.CodeAnalysis 5.9 建置，參考此套件的專案需要 .NET SDK
+  10.0.400 以上。較舊的編譯器會回報 `CS9057` 而不執行分析器，在 `TreatWarningsAsErrors` 下建置會失敗。
+- 套件相依升為 MessagePack 3.1.11、DynamicExpresso.Core 2.19.6，以及框架所參考的 `Microsoft.Extensions` 套件的 10.0.12 版。
 
 ### 範例與工具
 

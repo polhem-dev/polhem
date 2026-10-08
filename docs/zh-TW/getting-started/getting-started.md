@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 49b365553a48807218ba11ec706086a4abc7545f -->
+<!-- source: en/getting-started/getting-started.md blob: b982e5b21d1dd3e62d2d017f375108f9862dabad -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -13,7 +13,7 @@
 
 ## 前置需求
 
-- **.NET 10 SDK**
+- **.NET SDK 10.0.400 以上**。`Polhem.Definition` 套件中的分析器需要這一版的編譯器。
 - **一個資料庫**。SQL Server、PostgreSQL、MySQL、Oracle、SQLite 皆可。SQLite 不需架設伺服器，以下即以它示範。
 
 ## 1. 建專案並安裝套件

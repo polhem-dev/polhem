@@ -10,9 +10,9 @@
   <ItemGroup>
     <!-- The only MessagePack dependency in the repository (adr-036): the hand-written wire
          formatters live here, and a request that declares no codec is decoded as MessagePack. -->
-    <PackageReference Include="MessagePack" Version="3.1.7" />
+    <PackageReference Include="MessagePack" Version="3.1.11" />
     <!-- The executor logs the real message of a failure whose caller only sees a generic one. -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <!--
