@@ -1,15 +1,5 @@
 #nullable enable
 Polhem.Core.AssemblyLoader
-Polhem.Core.Attributes.TreeNodeAttribute
-Polhem.Core.Attributes.TreeNodeAttribute.CollectionFolder.get -> bool
-Polhem.Core.Attributes.TreeNodeAttribute.DisplayFormat.get -> string!
-Polhem.Core.Attributes.TreeNodeAttribute.PropertyName.get -> string!
-Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute() -> void
-Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat) -> void
-Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, bool collectionFolder) -> void
-Polhem.Core.Attributes.TreeNodeAttribute.TreeNodeAttribute(string! displayFormat, string! propertyName) -> void
-Polhem.Core.Attributes.TreeNodeIgnoreAttribute
-Polhem.Core.Attributes.TreeNodeIgnoreAttribute.TreeNodeIgnoreAttribute() -> void
 Polhem.Core.Collections.CollectionBase<T>
 Polhem.Core.Collections.CollectionBase<T>.CollectionBase() -> void
 Polhem.Core.Collections.CollectionBase<T>.CollectionBase(object! owner) -> void
@@ -164,7 +154,6 @@ Polhem.Core.Serialization.DataSetJsonConverter
 Polhem.Core.Serialization.DataSetJsonConverter.DataSetJsonConverter() -> void
 Polhem.Core.Serialization.DataTableJsonConverter
 Polhem.Core.Serialization.DataTableJsonConverter.DataTableJsonConverter() -> void
-Polhem.Core.Serialization.Gzip
 Polhem.Core.Serialization.IObjectSerializeBase
 Polhem.Core.Serialization.IObjectSerializeFile
 Polhem.Core.Serialization.IObjectSerializeFile.ObjectFilePath.get -> string!
@@ -198,7 +187,6 @@ static Polhem.Core.AssemblyLoader.FindAssembly(string! assemblyName) -> System.R
 static Polhem.Core.AssemblyLoader.GetType(string! assemblyName, string! typeName) -> System.Type?
 static Polhem.Core.AssemblyLoader.GetType(string! fullTypeName) -> System.Type?
 static Polhem.Core.AssemblyLoader.LoadAssembly(string! assemblyName) -> System.Reflection.Assembly!
-static Polhem.Core.Attributes.TreeNodeAttribute.GetDisplayText(object! value) -> string!
 static Polhem.Core.Collections.CollectionExtensions.GetValue<T>(this System.Data.PropertyCollection! collection, string! key, object? defaultValue) -> T?
 static Polhem.Core.Data.DataColumnExtensions.ApplyFieldDbType(this System.Data.DataColumn! column, Polhem.Core.Data.FieldDbType dbType) -> void
 static Polhem.Core.Data.DataColumnExtensions.GetDeclaredFieldDbType(this System.Data.DataColumn! column) -> Polhem.Core.Data.FieldDbType?
@@ -262,8 +250,6 @@ static Polhem.Core.Security.PasswordHasher.VerifyPassword(string! password, stri
 static Polhem.Core.Security.RsaCryptor.DecryptWithPrivateKey(string! base64CipherText, string! privateKey) -> string!
 static Polhem.Core.Security.RsaCryptor.EncryptWithPublicKey(string! plainText, string! publicKey) -> string!
 static Polhem.Core.Security.RsaCryptor.GenerateRsaKeyPair(out string! publicKey, out string! privateKey) -> void
-static Polhem.Core.Serialization.Gzip.Compress(byte[]! bytes) -> byte[]!
-static Polhem.Core.Serialization.Gzip.Decompress(byte[]! bytes) -> byte[]!
 static Polhem.Core.Serialization.JsonCodec.Deserialize<T>(string! json) -> T?
 static Polhem.Core.Serialization.JsonCodec.DeserializeAsync<T>(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<T?>
 static Polhem.Core.Serialization.JsonCodec.DeserializeFromFile<T>(string! filePath) -> T?

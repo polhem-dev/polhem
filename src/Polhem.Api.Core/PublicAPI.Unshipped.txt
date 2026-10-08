@@ -1,14 +1,1 @@
 #nullable enable
-*REMOVED*Polhem.Api.Core.Messages.PayloadFormat
-*REMOVED*Polhem.Api.Core.Messages.PayloadFormat.Encoded = 1 -> Polhem.Api.Core.Messages.PayloadFormat
-*REMOVED*Polhem.Api.Core.Messages.PayloadFormat.Encrypted = 2 -> Polhem.Api.Core.Messages.PayloadFormat
-*REMOVED*Polhem.Api.Core.Messages.PayloadFormat.Plain = 0 -> Polhem.Api.Core.Messages.PayloadFormat
-*REMOVED*Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.Api.Core.Messages.PayloadFormat format) -> void
-*REMOVED*Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
-Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.JsonRpc.Payload.PayloadFormat format) -> void
-Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.JsonRpc.Payload.PayloadFormat
-*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcException
-*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcException.ErrorCode.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
-*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcException.HttpStatusCode.get -> int
-*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcException.JsonRpcException(int httpStatusCode, Polhem.Api.Core.JsonRpc.JsonRpcErrorCode errorCode, string! rpcMessage) -> void
-*REMOVED*Polhem.Api.Core.JsonRpc.JsonRpcException.RpcMessage.get -> string!

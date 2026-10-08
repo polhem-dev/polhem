@@ -8,6 +8,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-08
+
+📄 Full notes and background: [docs/en/changelogs/1.4.0.md](docs/en/changelogs/1.4.0.md)
+
 ### Breaking API changes
 
 - `Polhem.Api.Core.Messages.PayloadFormat` is removed. The connectors' `ExecuteAsync` and `ApiCallContext` take
@@ -94,6 +98,14 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 - The package dependencies move to MessagePack 3.1.11, DynamicExpresso.Core 2.19.6 and the 10.0.12 releases of the
   `Microsoft.Extensions` packages the framework references.
 
+### Fixed
+
+- With Avalonia 12.1, a client's culture no longer reverted to the operating system's after sign-in. Avalonia 12.1
+  writes the UI thread's culture back after each dispatcher operation, so the signed-in user's culture, set inside an
+  async handler, was undone at the next `await`: an en-US account showed the operating system's language.
+  `ClientInfo` now also posts the culture to the caller's synchronization context.
+  ([#95](https://github.com/polhem-dev/polhem/pull/95))
+
 ### Samples and tools
 
 - DefineEditor builds every document tree with `ObjectTreeBuilder`, shows it in `ObjectTreeView` and takes its context
@@ -113,6 +125,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   `DatabaseServer`, a `PermissionRule`, `BackendConfiguration` and a demo object of groups with entries, with its
   display options, suggested form ids and a log of `PropertyValueChanged`; the FormField's `ListItems` open in
   `CollectionEditDialog`, and a group's entries open a second dialog from inside the first.
+- The Avalonia heads (DefineEditor, Avalonia.DemoCenter, the Northwind heads) run Avalonia 12.1 with Semi.Avalonia
+  12.1; `Polhem.UI.Avalonia` keeps Avalonia 12.0.0 as its lowest version. The Northwind iOS head requires iOS 15.0,
+  the lowest the iOS workload of the .NET SDK 10.0.400 accepts. ([#95](https://github.com/polhem-dev/polhem/pull/95),
+  [#96](https://github.com/polhem-dev/polhem/pull/96))
 
 ## [1.3.1] - 2026-10-05
 
@@ -688,7 +704,8 @@ The renaming was done before the repository took pull requests, so these entries
   ([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/polhem-dev/polhem/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
 [1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
