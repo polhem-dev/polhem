@@ -36,7 +36,7 @@
          commit, so a breaking change can no longer reach a release without someone noticing.
          Adopted because the commit-subject `!` convention was previously the only gate and it
          missed real breaks twice. Baseline maintenance: maintainers/public-api-baseline.md. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

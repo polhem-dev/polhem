@@ -27,10 +27,10 @@
          references no driver because choosing them is the host's decision. Comparing engines is
          the point of having them all here. Logging comes from the ASP.NET Core framework
          reference below, which a bare ServiceCollection also draws on for AddLogging. -->
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
-    <PackageReference Include="Npgsql" Version="9.0.4" />
-    <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.301" />
   </ItemGroup>
 
   <ItemGroup>

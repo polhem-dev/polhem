@@ -12,7 +12,7 @@ Each step links to the document that covers it in depth. Everything shown here i
 
 ## Prerequisites
 
-- **.NET 10 SDK**
+- **.NET SDK 10.0.400 or later.** The analyzers in the `Polhem.Definition` package need its compiler.
 - **A database.** Any of SQL Server, PostgreSQL, MySQL, Oracle or SQLite. SQLite needs no server and is used below.
 
 ## 1. Create the project and add the packages
