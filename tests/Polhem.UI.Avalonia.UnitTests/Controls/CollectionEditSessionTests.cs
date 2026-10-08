@@ -195,6 +195,30 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("A nested edit commits into the outer copy only, so the collection changes when the outer edit commits")]
+        public void NestedEdit_ReachesCollectionOnlyThroughOuterCommit()
+        {
+            var parent = new NestingItem { Name = "Drinks" };
+            parent.Children.Add(new PlainItem { Name = "Tea" });
+            var collection = new List<NestingItem> { parent };
+            var outer = new CollectionEditSession(collection, typeof(NestingItem));
+            var copy = (NestingItem)outer.Items[0];
+
+            var inner = new CollectionEditSession(copy.Children, typeof(PlainItem));
+            ((PlainItem)inner.Items[inner.Add(0)]).Name = "Coffee";
+            inner.Commit();
+
+            Assert.True(outer.IsCancelable);
+            Assert.True(inner.IsCancelable);
+            Assert.Equal(["Tea", "Coffee"], copy.Children.Select(c => c.Name));
+            Assert.Equal(["Tea"], parent.Children.Select(c => c.Name));
+
+            outer.Commit();
+
+            Assert.Equal(["Tea", "Coffee"], Assert.Single(collection).Children.Select(c => c.Name));
+        }
+
+        [Fact]
         [DisplayName("NextKey skips the keys already used, ignoring case")]
         public void NextKey_SkipsUsedKeys()
         {
@@ -211,6 +235,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         public sealed class PlainItem
         {
             public string Name { get; set; } = string.Empty;
+        }
+
+        /// <summary>An item that holds a collection of its own, as a nested dialog edits it.</summary>
+        public sealed class NestingItem
+        {
+            public string Name { get; set; } = string.Empty;
+
+            public List<PlainItem> Children { get; } = [];
         }
     }
 }

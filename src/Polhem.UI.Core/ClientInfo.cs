@@ -528,7 +528,9 @@ namespace Polhem.UI.Core
         /// The culture the server returns — <c>st_user.culture</c>, or the deployment's default
         /// language — becomes <see cref="CultureInfo.CurrentUICulture"/> and
         /// <see cref="CultureInfo.CurrentCulture"/>, for the current flow and as the process default
-        /// (<see cref="CultureInfo.DefaultThreadCurrentUICulture"/>). Everything that localizes reads
+        /// (<see cref="CultureInfo.DefaultThreadCurrentUICulture"/>). When the caller has a
+        /// <see cref="SynchronizationContext"/>, as a UI thread does, the culture is also posted to it, so the UI
+        /// thread keeps it after an async sign-in handler resumes. Everything that localizes reads
         /// those: definition captions, the framework's own UI text, and the display and input of
         /// numbers and dates. So a user whose account says <c>en-US</c> gets English on a Chinese
         /// operating system.
@@ -585,6 +587,20 @@ namespace Polhem.UI.Core
             CultureInfo.DefaultThreadCurrentUICulture = info;
             CultureInfo.CurrentCulture = info;
             CultureInfo.CurrentUICulture = info;
+
+            // IMPORTANT: the assignments above do not stick on a UI thread when the caller is an async method,
+            // which a sign-in handler always is. The culture flows with the execution context, so the async
+            // machinery reverts it at the caller's next `await`. Avalonia 12.0 left the UI thread without a culture
+            // of its own, so it fell back to the defaults set above. Avalonia 12.1 (AvaloniaUI/Avalonia#21627)
+            // writes the thread's live culture back after every dispatcher operation, which pins the reverted one.
+            // A plain callback posted to the UI thread's context sets the culture outside any async method, and
+            // Avalonia keeps whatever such a callback leaves.
+            SynchronizationContext.Current?.Post(static state =>
+            {
+                var posted = (CultureInfo)state!;
+                CultureInfo.CurrentCulture = posted;
+                CultureInfo.CurrentUICulture = posted;
+            }, info);
             return true;
         }
 

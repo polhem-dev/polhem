@@ -1,0 +1,73 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Text weight and brightness modelled on VS Code. Semi's defaults are hard to read for long sessions in an
+         editor: body text is near-white in Dark and buttons, links and the selected tab are drawn at weight 600.
+         VS Code keeps body text dimmed, uses regular weight throughout, and saves full brightness for whatever has
+         the focus (the selected tree node, the active tab, the hovered menu item).
+
+         NOTE: Semi's control keys are `StaticResource` aliases of its palette (for example
+         `TreeViewItemDefaultForeground` → `SemiColorText0`), resolved inside Semi's own dictionaries. Overriding the
+         palette key here therefore does not reach them, so every control key is overridden by name. The key names
+         come from Semi.Avalonia's `Themes/{Dark,Light,Shared}` folders; check them when Semi is upgraded.
+
+         The values come from the VS Code "Dark Modern" and "Light Modern" themes: `foreground`,
+         `tab.activeForeground`, `tab.inactiveForeground` and `list.activeSelectionForeground`. -->
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="SemiColorText0">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="DefaultForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="WindowDefaultForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TextBlockDefaultForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TextBoxForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="CheckBoxForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemPointeroverForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemSelectedForeground">#FFFFFF</SolidColorBrush>
+
+            <SolidColorBrush x:Key="TreeViewItemDefaultForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemPointeroverForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemIconHoverForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemSelectedForeground">#FFFFFF</SolidColorBrush>
+
+            <SolidColorBrush x:Key="TabItemLineHeaderForeground">#9D9D9D</SolidColorBrush>
+            <SolidColorBrush x:Key="TabItemLineHeaderPointeroverForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="TabItemLineHeaderSelectedForeground">#FFFFFF</SolidColorBrush>
+
+            <SolidColorBrush x:Key="MenuItemForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuItemPointeroverForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuItemExpandIconOpenForeground">#FFFFFF</SolidColorBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SemiColorText0">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="DefaultForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="WindowDefaultForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TextBlockDefaultForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TextBoxForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="CheckBoxForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemPointeroverForeground">#000000</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemSelectedForeground">#000000</SolidColorBrush>
+
+            <SolidColorBrush x:Key="TreeViewItemDefaultForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemPointeroverForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemIconHoverForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TreeViewItemSelectedForeground">#000000</SolidColorBrush>
+
+            <SolidColorBrush x:Key="TabItemLineHeaderForeground">#868686</SolidColorBrush>
+            <SolidColorBrush x:Key="TabItemLineHeaderPointeroverForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="TabItemLineHeaderSelectedForeground">#000000</SolidColorBrush>
+
+            <SolidColorBrush x:Key="MenuItemForeground">#3B3B3B</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuItemPointeroverForeground">#000000</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuItemExpandIconOpenForeground">#000000</SolidColorBrush>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <FontWeight x:Key="TabItemSelectedFontWeight">Normal</FontWeight>
+    <FontWeight x:Key="ButtonDefaultFontWeight">Normal</FontWeight>
+    <FontWeight x:Key="ToggleButtonDefaultFontWeight">Normal</FontWeight>
+    <FontWeight x:Key="HyperlinkButtonFontWeight">Normal</FontWeight>
+
+</ResourceDictionary>

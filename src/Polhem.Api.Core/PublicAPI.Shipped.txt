@@ -57,11 +57,6 @@ Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.ReplayRejected = -32005 -> Polhem.Api.C
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.Unauthorized = -32001 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.UserMessage = -32099 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
 Polhem.Api.Core.JsonRpc.JsonRpcErrorContract
-Polhem.Api.Core.JsonRpc.JsonRpcException
-Polhem.Api.Core.JsonRpc.JsonRpcException.ErrorCode.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
-Polhem.Api.Core.JsonRpc.JsonRpcException.HttpStatusCode.get -> int
-Polhem.Api.Core.JsonRpc.JsonRpcException.JsonRpcException(int httpStatusCode, Polhem.Api.Core.JsonRpc.JsonRpcErrorCode errorCode, string! rpcMessage) -> void
-Polhem.Api.Core.JsonRpc.JsonRpcException.RpcMessage.get -> string!
 Polhem.Api.Core.JsonRpc.PayloadSwap
 Polhem.Api.Core.JsonRpc.PayloadSwap.Dispose() -> void
 Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(Polhem.Api.Core.JsonRpc.PayloadSwap other) -> bool
@@ -271,10 +266,6 @@ Polhem.Api.Core.Messages.Form.SaveResponse.AffectedRows.set -> void
 Polhem.Api.Core.Messages.Form.SaveResponse.DataSet.get -> System.Data.DataSet?
 Polhem.Api.Core.Messages.Form.SaveResponse.DataSet.set -> void
 Polhem.Api.Core.Messages.Form.SaveResponse.SaveResponse() -> void
-Polhem.Api.Core.Messages.PayloadFormat
-Polhem.Api.Core.Messages.PayloadFormat.Encoded = 1 -> Polhem.Api.Core.Messages.PayloadFormat
-Polhem.Api.Core.Messages.PayloadFormat.Encrypted = 2 -> Polhem.Api.Core.Messages.PayloadFormat
-Polhem.Api.Core.Messages.PayloadFormat.Plain = 0 -> Polhem.Api.Core.Messages.PayloadFormat
 Polhem.Api.Core.Messages.System.CreateApiKeyRequest
 Polhem.Api.Core.Messages.System.CreateApiKeyRequest.Contact.get -> string?
 Polhem.Api.Core.Messages.System.CreateApiKeyRequest.Contact.set -> void
@@ -497,8 +488,8 @@ Polhem.Api.Core.Validator.ApiCallContext
 Polhem.Api.Core.Validator.ApiCallContext.AccessToken.get -> System.Guid
 Polhem.Api.Core.Validator.ApiCallContext.AccessToken.set -> void
 Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext() -> void
-Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.Api.Core.Messages.PayloadFormat format) -> void
-Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.JsonRpc.Payload.PayloadFormat format) -> void
+Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.JsonRpc.Payload.PayloadFormat
 Polhem.Api.Core.Validator.ApiCallContext.Format.set -> void
 Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.get -> bool
 Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.set -> void

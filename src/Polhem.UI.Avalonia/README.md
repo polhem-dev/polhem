@@ -15,7 +15,7 @@ Belongs to the `Polhem.UI.*` family: connects to the backend through the static 
 
 ## Target Framework
 
-Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`; hosts may bring a newer `Avalonia 12.0.x` transitively. The library ships no theme — the host picks one (Semi.Avalonia, Fluent, …); every control keeps the host theme through `StyleKeyOverride`.
+Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`; hosts may bring a newer `Avalonia 12.x` transitively. The library ships no theme — the host picks one (Semi.Avalonia, Fluent, …); every control keeps the host theme through `StyleKeyOverride`.
 
 ## Key Components
 

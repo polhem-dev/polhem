@@ -43,7 +43,7 @@ Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! 
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Connectors.ApiConnector.ExecuteAsync<T>(string! progId, string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.ApiConnector.ExecuteAsync<T>(string! progId, string! action, object! value, Polhem.JsonRpc.Payload.PayloadFormat format, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.get -> string!
 Polhem.Api.Client.Connectors.ApiConnector.PayloadCodec.set -> void
 Polhem.Api.Client.Connectors.ApiConnector.Provider.get -> Polhem.JsonRpc.IJsonRpcTransport!
@@ -53,16 +53,16 @@ Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IS
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Connectors.AuditLogApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.AuditLogApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.JsonRpc.Payload.PayloadFormat format = Polhem.JsonRpc.Payload.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.FormApiConnector
-Polhem.Api.Client.Connectors.FormApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.FormApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.JsonRpc.Payload.PayloadFormat format = Polhem.JsonRpc.Payload.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.ProgId.get -> string!
 Polhem.Api.Client.Connectors.SystemApiConnector
-Polhem.Api.Client.Connectors.SystemApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.SystemApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.JsonRpc.Payload.PayloadFormat format = Polhem.JsonRpc.Payload.PayloadFormat.Encrypted, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Polhem.Api.Client.Connectors.SystemApiConnector.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
