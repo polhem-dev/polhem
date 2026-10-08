@@ -1898,6 +1898,7 @@ const Polhem.Definition.Language.PolhemUIText.Back = "Back" -> string!
 const Polhem.Definition.Language.PolhemUIText.Cancel = "Cancel" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyDuplicate = "CollectionKeyDuplicate" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyMissing = "CollectionKeyMissing" -> string!
+const Polhem.Definition.Language.PolhemUIText.CollectionKeyTaken = "CollectionKeyTaken" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionSummary = "CollectionSummary" -> string!
 const Polhem.Definition.Language.PolhemUIText.Delete = "Delete" -> string!
 const Polhem.Definition.Language.PolhemUIText.Edit = "Edit" -> string!

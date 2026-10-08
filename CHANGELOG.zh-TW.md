@@ -51,8 +51,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `CollectionEditDialog` 與 `CollectionEditContext`（`Polhem.UI.Avalonia`）：編輯集合屬性的對話框，左邊是項目清單（新增、刪除、上移、下移），
   右邊以 `PropertyGridControl` 編輯選取的項目。對話框編輯項目的副本，按確定時以副本取代集合的項目，因此先前持有的項目參照要重新讀取；
   按取消則集合完全不變。有鍵值的集合中，新項目會取得未使用的鍵值，按確定時拒絕重複的鍵值。
-- `PolhemUIText.ResetValue`、`CollectionSummary`、`MoveUp`、`MoveDown`、`CollectionKeyMissing` 與 `CollectionKeyDuplicate`：
-  屬性方格與集合對話框使用的文字鍵。
+- `PolhemUIText.ResetValue`、`CollectionSummary`、`MoveUp`、`MoveDown`、`CollectionKeyMissing`、`CollectionKeyDuplicate` 與
+  `CollectionKeyTaken`：屬性方格與集合對話框使用的文字鍵。屬性方格寫入的鍵值已被集合中其他項目使用時，會以介面語言顯示
+  `CollectionKeyTaken`，而不是集合擲出的英文例外訊息。
 
 ### 變更
 

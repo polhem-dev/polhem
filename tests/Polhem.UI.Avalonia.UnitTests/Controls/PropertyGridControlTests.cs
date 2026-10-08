@@ -1,10 +1,12 @@
 using System.ComponentModel;
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 
@@ -339,6 +341,23 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             grid.PropertyFilter = null;
 
             Assert.Equal(all, grid.Rows.Count);
+        }
+
+        [Fact]
+        [DisplayName("A key another item already has is refused with the localized CollectionKeyTaken message")]
+        public void KeyTaken_ShowsLocalizedMessage()
+        {
+            var items = new ListItemCollection { { "A", "Active" }, { "S", "Suspended" } };
+            var active = items["A"];
+            var grid = new PropertyGridControl { SelectedObject = active };
+            var row = Row(grid, nameof(ListItem.Value));
+
+            ((TextBox)row.Editor).Text = "S";
+            grid.CommitText(row);
+
+            Assert.Equal("A", active.Value);
+            var expected = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.CollectionKeyTaken), "S");
+            Assert.Equal(expected, Assert.Single(DataValidationErrors.GetErrors(row.Editor)!));
         }
 
         [Fact]

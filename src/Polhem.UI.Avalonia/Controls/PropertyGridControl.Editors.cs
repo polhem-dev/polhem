@@ -226,6 +226,8 @@ namespace Polhem.UI.Avalonia.Controls
                 OnValueWritten(row, oldValue);
                 return;
             }
+            if (PropertyGridMetadata.FindTakenKey(row.Component, value) is { } takenKey)
+                error = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.CollectionKeyTaken), takenKey);
             // An editor that cannot hold an invalid entry goes back to the value the property kept; a text box keeps
             // the typed text so it can be corrected.
             if (reloadOnError)

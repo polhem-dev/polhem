@@ -65,8 +65,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
   It edits copies of the items and OK replaces the collection's items with them, so references to the old items must
   be read again; Cancel leaves the collection untouched. In a keyed collection a new item gets a free key, and OK
   refuses a key used twice.
-- `PolhemUIText.ResetValue`, `CollectionSummary`, `MoveUp`, `MoveDown`, `CollectionKeyMissing` and
-  `CollectionKeyDuplicate`, the text keys the property grid and the collection dialog use.
+- `PolhemUIText.ResetValue`, `CollectionSummary`, `MoveUp`, `MoveDown`, `CollectionKeyMissing`,
+  `CollectionKeyDuplicate` and `CollectionKeyTaken`, the text keys the property grid and the collection dialog use.
+  When the grid writes a key that another item of the collection already has, it shows `CollectionKeyTaken` in the
+  UI language instead of the collection's English exception message.
 
 ### Changed
 
