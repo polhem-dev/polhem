@@ -8,6 +8,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-08
+
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.4.0.md](docs/zh-TW/changelogs/1.4.0.md)
+
 ### 破壞性 API 變更
 
 - 移除 `Polhem.Api.Core.Messages.PayloadFormat`。各 connector 的 `ExecuteAsync` 與 `ApiCallContext` 改用成員與值都相同的
@@ -71,6 +75,12 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   10.0.400 以上。較舊的編譯器會回報 `CS9057` 而不執行分析器，在 `TreatWarningsAsErrors` 下建置會失敗。
 - 套件相依升為 MessagePack 3.1.11、DynamicExpresso.Core 2.19.6，以及框架所參考的 `Microsoft.Extensions` 套件的 10.0.12 版。
 
+### 修正
+
+- 搭配 Avalonia 12.1 時，用戶端登入後的 culture 不再退回作業系統的設定。Avalonia 12.1 會在每次 dispatcher 作業後寫回 UI 執行緒的
+  culture，而登入者的 culture 是在非同步處理常式中設定的，到下一個 `await` 就被還原：en-US 帳號會顯示作業系統的語言。
+  `ClientInfo` 現在也會把 culture 投遞到呼叫端的同步內容。([#95](https://github.com/polhem-dev/polhem/pull/95))
+
 ### 範例與工具
 
 - DefineEditor 的每一種文件樹都改用 `ObjectTreeBuilder` 建樹、以 `ObjectTreeView` 顯示，右鍵選單由各文件型別的
@@ -82,6 +92,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - Avalonia.DemoCenter 新增 Property Grid 案例：以 `PropertyGridControl` 顯示 `FormField`、`DbField`、`DatabaseServer`、
   `PermissionRule`、`BackendConfiguration` 與一個「群組含項目」的示範物件，可切換顯示選項與表單代碼建議值，並記錄 `PropertyValueChanged`；
   FormField 的 `ListItems` 可在 `CollectionEditDialog` 中編輯，群組的項目會在第一層對話框之上再開第二層。
+- Avalonia 的各個 head（DefineEditor、Avalonia.DemoCenter、Northwind 各 head）改用 Avalonia 12.1 與 Semi.Avalonia 12.1；
+  `Polhem.UI.Avalonia` 仍以 Avalonia 12.0.0 為最低版本。Northwind 的 iOS head 改為需要 iOS 15.0，這是 .NET SDK 10.0.400 的
+  iOS workload 所接受的最低版本。([#95](https://github.com/polhem-dev/polhem/pull/95)、[#96](https://github.com/polhem-dev/polhem/pull/96))
 
 ## [1.3.1] - 2026-10-05
 
@@ -587,7 +600,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/polhem-dev/polhem/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
 [1.2.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.2.0
