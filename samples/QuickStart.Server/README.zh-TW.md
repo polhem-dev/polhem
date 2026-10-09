@@ -47,6 +47,11 @@ console 應顯示 `Now listening on: http://localhost:5050`。
 | `services.AddPolhemApiKeyGateCheck()`（`Program.cs`） | `Polhem.Hosting` — 尚未發行 API key 時，於啟動時記錄 log |
 | `[ApiAccessControl(Public, Anonymous)]`（`BusinessObjects/EchoBusinessObject.cs`） | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API 存取控制 |
 
+## JavaScript 用戶端
+
+[polhem-connector-js 的範例](https://github.com/polhem-dev/polhem-connector-js/tree/main/examples)（一支 Node 程式與一個瀏覽器頁面）可以直接連這個 host：以 `demo` / `demo`
+登入、列出 `Staff` 表單，並新增、修改、刪除一筆資料。host 允許瀏覽器頁面的跨來源呼叫。
+
 ## 試打看看（不啟動 console demo 的情況下）
 
 ```bash

@@ -49,6 +49,12 @@ The console should print `Now listening on: http://localhost:5050`.
 | `services.AddPolhemApiKeyGateCheck()` (`Program.cs`) | `Polhem.Hosting` — logs at startup while no API key has been issued |
 | `[ApiAccessControl(Public, Anonymous)]` (`BusinessObjects/EchoBusinessObject.cs`) | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API access control |
 
+## A JavaScript client
+
+The [examples of polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js/tree/main/examples), a Node program and a browser page, run against this host: they
+sign in as `demo` / `demo`, list the `Staff` form, and create, change and delete a record. The host allows the browser
+page's cross-origin calls.
+
 ## Try it without the console demo
 
 ```bash

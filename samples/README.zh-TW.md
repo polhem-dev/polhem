@@ -36,6 +36,7 @@ dotnet run                          # → http://localhost:5055
 |--------|--------|
 | 如何起一個 Polhem 後端、註冊自訂 BO、暴露 JSON-RPC API | [`QuickStart.Server`](QuickStart.Server/README.zh-TW.md) |
 | 如何用 `Polhem.Api.Client` 從第三方端連 Polhem(Remote 模式) | [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md) |
+| 如何從 JavaScript 或 TypeScript 呼叫 Polhem，在 Node 或瀏覽器（連 `QuickStart.Server`） | [polhem-connector-js 的範例](https://github.com/polhem-dev/polhem-connector-js/tree/main/examples) |
 | 如何在 Blazor 內用 `Polhem.Web.Blazor.Server` 元件（Local，in-process 派遣） | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) |
 | 同一份 `FormSchema` 在桌面／瀏覽器／行動端 Avalonia 上如何渲染 | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md) |
 | 主題導向控件 demo center（導覽樹 主題→案例、Demo/Source 分頁、主題/FormMode 工具列）：資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) |
