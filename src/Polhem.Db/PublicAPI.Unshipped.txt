@@ -1,2 +1,1 @@
 #nullable enable
-Polhem.Db.DbCommandSpec.ColumnTypes.get -> System.Collections.Generic.Dictionary<string!, System.Type!>!

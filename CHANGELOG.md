@@ -8,6 +8,10 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-09
+
+📄 Full notes and background: [docs/en/changelogs/1.5.0.md](docs/en/changelogs/1.5.0.md)
+
 ### Added
 
 - `DbCommandSpec.ColumnTypes`: the CLR type to build each named result column with, in place of the type the provider
@@ -723,7 +727,8 @@ The renaming was done before the repository took pull requests, so these entries
   ([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/polhem-dev/polhem/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/polhem-dev/polhem/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0
