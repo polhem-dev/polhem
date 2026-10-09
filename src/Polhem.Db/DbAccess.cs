@@ -347,21 +347,35 @@ namespace Polhem.Db
                 // Every registered provider supplies a DbDataAdapter — SQLite via the framework's
                 // SqliteProviderFactory wrapper — so the sync read uses Fill uniformly. (The async
                 // overload cannot: DbDataAdapter has no FillAsync, so it streams via DbDataReader.)
-                var adapter = Provider.CreateDataAdapter()
-                    ?? throw new InvalidOperationException(
-                        $"Provider for {DatabaseType} supplies no DbDataAdapter; register " +
-                        "SqliteProviderFactory for SQLite.");
-                var table = new DataTable("DataTable");
-                using (adapter)
-                {
-                    adapter.SelectCommand = cmd;
-                    adapter.Fill(table);
-                }
+                var table = command.ColumnTypes.Count > 0
+                    ? ReadTypedTable(cmd, command)
+                    : FillTable(cmd);
                 table.LowercaseColumnNames();
                 table.NormalizeDateTimeMode();
                 ApplyDateColumns(command, table);
                 return DbCommandResult.ForTable(table);
             }
+        }
+
+        private DataTable FillTable(DbCommand cmd)
+        {
+            var adapter = Provider.CreateDataAdapter()
+                ?? throw new InvalidOperationException(
+                    $"Provider for {DatabaseType} supplies no DbDataAdapter; register " +
+                    "SqliteProviderFactory for SQLite.");
+            var table = new DataTable("DataTable");
+            using (adapter)
+            {
+                adapter.SelectCommand = cmd;
+                adapter.Fill(table);
+            }
+            return table;
+        }
+
+        private static DataTable ReadTypedTable(DbCommand cmd, DbCommandSpec command)
+        {
+            using var reader = cmd.ExecuteReader();
+            return LoadTypedTable(reader, command);
         }
 
         /// <summary>

@@ -8,6 +8,22 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+### Added
+
+- `DbCommandSpec.ColumnTypes`: the CLR type to build each named result column with, in place of the type the provider
+  reports. The columns are created before the rows are read, so each value is converted into the declared type as it
+  loads. Applies to `DataTable` commands only, like `DateColumns`.
+
+### Fixed
+
+- Form reads (`GetList`, `GetData` and the reads by row id) return numeric, boolean and Guid columns in the type their
+  FormSchema field declares on every provider. On SQLite a decimal column whose first row held a whole number was read
+  as `long`, and every later value lost its fractional part without an error; a Boolean column was read as `long`, a
+  Guid column as `string`, and a Short, Integer or AutoIncrement column as `long`. MySQL read AutoIncrement as `long`
+  and Oracle as `decimal`. Over the JSON codec those columns went out as strings under a type that said otherwise, so a
+  client that decodes by column type, such as polhem-connector-js, refused the response, after a `Save` had already
+  committed. ([#99](https://github.com/polhem-dev/polhem/issues/99))
+
 ## [1.4.0] - 2026-10-08
 
 📄 Full notes and background: [docs/en/changelogs/1.4.0.md](docs/en/changelogs/1.4.0.md)

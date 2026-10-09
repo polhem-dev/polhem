@@ -299,6 +299,37 @@ The inventory and the fix are in `ProviderScopedRouter` (`tests/Polhem.Tests.Sha
 **Remaining**: other places that build their own SQL to read date columns have not been checked one by one. When you
 see a bare `is DateTime`, ask: "what type is this value on SQLite?"
 
+## SQLite: a result column is typed by its first row, so a decimal loses its fraction (fixed, with remaining caveats)
+
+**Symptom**: on SQLite, a form's `GetList` sent a Boolean column as `"type":"Boolean"` with the cells `"1"` / `"0"`,
+and polhem-connector-js refused the table; a `Save` threw on the client after the server had committed
+([#99](https://github.com/polhem-dev/polhem/issues/99)). The quieter case is worse: a Currency column read `100.5` as
+`100`, with no error anywhere.
+
+**Root cause**: SQLite has no column types, only a storage class per value, and Microsoft.Data.Sqlite gives each
+result column the type of its first row (an empty result gets the declared type's affinity: `BOOLEAN` and `NUMERIC`
+become `String`). `DbDataAdapter.Fill` builds the table from that, so a `NUMERIC` column whose first row is a whole
+number becomes `Int64`, and every later value is converted into it, losing its fraction. Boolean, Short, Integer and
+AutoIncrement read as `Int64`, and Guid as `String`. The wire then writes a `long` as a string (to keep JavaScript
+precision) under the column type the FormSchema declares. MySQL (AutoIncrement as `long`) and Oracle (AutoIncrement as
+`decimal`) had the same mismatch, without the data loss.
+
+**Why converting after the read was not enough**: `MarkFromSchema` already replaced storage-form columns (Oracle
+`byte[]` Guids, SQLite text dates), and adding a `Boolean ⇐ long` case there would have fixed the symptom reported.
+The decimal value is already gone by then.
+
+**Fix**: `DataFormRepository.ReadFormTable` declares the numeric and boolean fields in `DbCommandSpec.ColumnTypes`,
+and `DbAccess` creates those columns before reading any row, so each value converts into the declared type as it loads.
+Guid ⇐ `string` joined the after-read conversions in `NormalizeStorageColumns`. `DataFormRepositoryColumnTypeTests`
+checks on every provider that each cell is of its column's declared type.
+
+**Remaining**:
+
+- A value with more than about 15 significant digits is already rounded when SQLite stores it under `NUMERIC`
+  affinity (`'12345678901234567.89'` is stored as an integer). Nothing on the read side can restore it.
+- Hand-written SQL (AnyCode, reports) does not go through `ReadFormTable`. It reads numeric columns typed by their
+  first row unless it declares `ColumnTypes` itself.
+
 ## Oracle: the load test tool and the unit tests share the same schema and break each other
 
 **Symptom**: after running `dotnet run --project tools/Polhem.LoadTests -- prepare --provider Oracle`, the whole unit

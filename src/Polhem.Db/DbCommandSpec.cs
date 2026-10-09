@@ -124,6 +124,26 @@ namespace Polhem.Db
         public List<string> DateColumns { get; } = [];
 
         /// <summary>
+        /// Gets the CLR types to build result columns with, keyed by column name, in place of the types
+        /// the provider reports.
+        /// </summary>
+        /// <remarks>
+        /// SQLite has no column types, only per-value storage classes, and Microsoft.Data.Sqlite types
+        /// each result column after the first row. A `NUMERIC` column whose first row holds a whole
+        /// number becomes an `Int64` column, and every later `100.5` is then read as `100` without an
+        /// error. Converting after the read cannot recover it. A column created with its declared type
+        /// before the rows are read takes each value through a lossless conversion instead.
+        /// <para>
+        /// Applies only to <see cref="DbCommandKind.DataTable"/>, and setting it on any other kind is
+        /// rejected at execution time, as with <see cref="DateColumns"/>. Names are matched
+        /// case-insensitively. Unlike <see cref="DateColumns"/>, a name absent from the result set is
+        /// ignored: a caller declaring from a schema declares every field, and a query may select only
+        /// some of them. Declared columns keep their position in the result set.
+        /// </para>
+        /// </remarks>
+        public Dictionary<string, Type> ColumnTypes { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Creates a <see cref="DbCommand"/> instance configured with the current <see cref="DbCommandSpec"/> settings.
         /// </summary>
         /// <param name="databaseType">The database type.</param>
@@ -141,6 +161,12 @@ namespace Polhem.Db
             {
                 throw new InvalidOperationException(
                     $"{nameof(DateColumns)} applies only to {nameof(DbCommandKind.DataTable)} commands; " +
+                    $"this command is {Kind}.");
+            }
+            if (ColumnTypes.Count > 0 && Kind != DbCommandKind.DataTable)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(ColumnTypes)} applies only to {nameof(DbCommandKind.DataTable)} commands; " +
                     $"this command is {Kind}.");
             }
 

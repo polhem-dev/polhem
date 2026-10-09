@@ -89,7 +89,7 @@ namespace Polhem.Repository.Form
             if (paging == null)
             {
                 var spec = builder.BuildSelect(ProgId, resolvedSelectFields, filter, sortFields);
-                return new DataFormListResult { Table = MarkFromSchema(dbAccess.Execute(spec).Table, _schema.MasterTable) };
+                return new DataFormListResult { Table = ReadFormTable(dbAccess, spec, _schema.MasterTable) };
             }
 
             // Paged path: clamp PageSize, supply a deterministic ORDER BY, run optional
@@ -116,7 +116,7 @@ namespace Polhem.Repository.Form
 
             int take = paging.IncludeTotalCount ? pageSize : pageSize + 1;
             var pagedSpec = builder.BuildSelect(ProgId, resolvedSelectFields, filter, effectiveSort, skip, take);
-            var table = MarkFromSchema(dbAccess.Execute(pagedSpec).Table, _schema.MasterTable)!;
+            var table = ReadFormTable(dbAccess, pagedSpec, _schema.MasterTable)!;
 
             bool hasMore;
             if (paging.IncludeTotalCount)
@@ -211,7 +211,7 @@ namespace Polhem.Repository.Form
             // an out-of-scope row reads as "not found" (null).
             var masterFilter = CombineWithScope(FilterCondition.Equal(SysFields.RowId, rowId), scopeFilter);
             var masterSpec = builder.BuildSelect(ProgId, string.Empty, masterFilter);
-            var masterDataTable = MarkFromSchema(dbAccess.Execute(masterSpec).Table, _schema.MasterTable);
+            var masterDataTable = ReadFormTable(dbAccess, masterSpec, _schema.MasterTable);
             if (masterDataTable == null || masterDataTable.Rows.Count == 0)
                 return null;
 
@@ -227,7 +227,7 @@ namespace Polhem.Repository.Form
             {
                 var detailTableName = detail.TableName;
                 var detailSpec = builder.BuildSelect(detailTableName, string.Empty, detailFilter);
-                var detailDataTable = MarkFromSchema(dbAccess.Execute(detailSpec).Table, detail)
+                var detailDataTable = ReadFormTable(dbAccess, detailSpec, detail)
                     ?? new DataTable(detailTableName);
                 detailDataTable.TableName = detailTableName;
                 dataSet.Tables.Add(detailDataTable);
@@ -269,7 +269,7 @@ namespace Polhem.Repository.Form
             {
                 var filter = FilterCondition.In(SysFields.RowId, chunk.Cast<object>());
                 var spec = builder.BuildSelect(tableName, fields, filter);
-                var table = MarkFromSchema(dbAccess.Execute(spec).Table, formTable);
+                var table = ReadFormTable(dbAccess, spec, formTable);
                 if (table != null) { result.Merge(table); }
             }
 
