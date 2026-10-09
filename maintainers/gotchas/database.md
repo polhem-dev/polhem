@@ -310,7 +310,7 @@ and polhem-connector-js refused the table; a `Save` threw on the client after th
 result column the type of its first row (an empty result gets the declared type's affinity: `BOOLEAN` and `NUMERIC`
 become `String`). `DbDataAdapter.Fill` builds the table from that, so a `NUMERIC` column whose first row is a whole
 number becomes `Int64`, and every later value is converted into it, losing its fraction. Boolean, Short, Integer and
-AutoIncrement read as `Int64`, and Guid as `String`. The wire then writes a `long` as a string (to keep JavaScript
+AutoIncrement read as `Int64`. The wire then writes a `long` as a string (to keep JavaScript
 precision) under the column type the FormSchema declares. MySQL (AutoIncrement as `long`) and Oracle (AutoIncrement as
 `decimal`) had the same mismatch, without the data loss.
 
@@ -320,8 +320,7 @@ The decimal value is already gone by then.
 
 **Fix**: `DataFormRepository.ReadFormTable` declares the numeric and boolean fields in `DbCommandSpec.ColumnTypes`,
 and `DbAccess` creates those columns before reading any row, so each value converts into the declared type as it loads.
-Guid ⇐ `string` joined the after-read conversions in `NormalizeStorageColumns`. `DataFormRepositoryColumnTypeTests`
-checks on every provider that each cell is of its column's declared type.
+`DataFormRepositoryColumnTypeTests` checks on every provider that each cell is of its column's declared type.
 
 **Remaining**:
 
@@ -329,6 +328,11 @@ checks on every provider that each cell is of its column's declared type.
   affinity (`'12345678901234567.89'` is stored as an integer). Nothing on the read side can restore it.
 - Hand-written SQL (AnyCode, reports) does not go through `ReadFormTable`. It reads numeric columns typed by their
   first row unless it declares `ColumnTypes` itself.
+- AutoIncrement is declared `int`, and SQL Server and PostgreSQL create it as a 32-bit identity, but MySQL (`BIGINT`),
+  Oracle (`NUMBER(19)`) and SQLite store 64 bits. A value above `int.MaxValue` fails the form read; it already failed
+  on the wire, where both codecs rebuild the column as `int`.
+- On SQLite a Guid column still reads back as `string`, on purpose: converting it would round-trip the stored text
+  through `Guid`, which the SQLite GUID entry above warns against. The guard test exempts that one case.
 
 ## Oracle: the load test tool and the unit tests share the same schema and break each other
 

@@ -18,6 +18,12 @@ namespace Polhem.Repository.UnitTests
     /// reads as <see cref="long"/> and drops the fractional part of every later row, and a boolean column reads as
     /// <see cref="long"/>. The guard tests run the same check on every provider, so the next declared type a provider
     /// reports differently is caught here rather than by a client decoding the wire.
+    /// <para>
+    /// One exception is deliberate: on SQLite a Guid column reads back as <see cref="string"/>. Converting it would
+    /// round-trip the stored text through <see cref="Guid"/>, and a GUID that SQLite's column default stored without
+    /// hyphens would then no longer match on a later write (see the SQLite GUID entry in
+    /// <c>maintainers/gotchas/database.md</c>).
+    /// </para>
     /// </remarks>
     public class DataFormRepositoryColumnTypeTests : IClassFixture<SharedDbFixture>
     {
@@ -69,7 +75,7 @@ namespace Polhem.Repository.UnitTests
                 var table = ReadList(form);
 
                 Assert.Empty(table.Rows);
-                AssertDeclaredTypes(form.Schema.MasterTable!, table);
+                AssertDeclaredTypes(form, table);
             });
 
         [DbFact(DatabaseType.SQLite)]
@@ -97,28 +103,30 @@ namespace Polhem.Repository.UnitTests
             {
                 Insert(form, true, 100m);
                 var rowId = Insert(form, false, 100.5m);
-                var formTable = form.Schema.MasterTable!;
 
                 var list = ReadList(form);
-                AssertDeclaredTypes(formTable, list);
+                AssertDeclaredTypes(form, list);
                 AssertCellsMatchColumns(list);
                 Assert.Equal(100.5m, list.Rows[1][CurrencyColumn]);
 
                 var data = form.Repository.GetData(rowId)!.Tables[progId]!;
-                AssertDeclaredTypes(formTable, data);
+                AssertDeclaredTypes(form, data);
                 AssertCellsMatchColumns(data);
             });
 
         private static DataTable ReadList(TransientForm form)
             => form.Repository.GetList(string.Empty, null, [new SortField(SysFields.No, SortDirection.Asc)]).Table!;
 
-        private static void AssertDeclaredTypes(FormTable formTable, DataTable table)
+        private static void AssertDeclaredTypes(TransientForm form, DataTable table)
         {
-            foreach (FormField field in formTable.Fields!)
+            foreach (FormField field in form.Schema.MasterTable!.Fields!)
             {
                 var column = table.Columns[field.FieldName];
                 Assert.NotNull(column);
-                Assert.Equal(DbTypeConverter.ToType(field.DbType), column.DataType);
+                var expected = form.DatabaseType == DatabaseType.SQLite && field.DbType == FieldDbType.Guid
+                    ? typeof(string)
+                    : DbTypeConverter.ToType(field.DbType);
+                Assert.Equal(expected, column.DataType);
             }
         }
 

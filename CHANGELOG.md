@@ -16,13 +16,14 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ### Fixed
 
-- Form reads (`GetList`, `GetData` and the reads by row id) return numeric, boolean and Guid columns in the type their
+- Form reads (`GetList`, `GetData` and the reads by row id) return numeric and boolean columns in the type their
   FormSchema field declares on every provider. On SQLite a decimal column whose first row held a whole number was read
-  as `long`, and every later value lost its fractional part without an error; a Boolean column was read as `long`, a
-  Guid column as `string`, and a Short, Integer or AutoIncrement column as `long`. MySQL read AutoIncrement as `long`
-  and Oracle as `decimal`. Over the JSON codec those columns went out as strings under a type that said otherwise, so a
-  client that decodes by column type, such as polhem-connector-js, refused the response, after a `Save` had already
-  committed. ([#99](https://github.com/polhem-dev/polhem/issues/99))
+  as `long`, and every later value lost its fractional part without an error; a Boolean, Short, Integer or
+  AutoIncrement column was read as `long`. MySQL read AutoIncrement as `long` and Oracle as `decimal`. Over the JSON
+  codec those columns went out as strings under a type that said otherwise, so a client that decodes by column type,
+  such as polhem-connector-js, refused the response, after a `Save` had already committed. An AutoIncrement value
+  above `int.MaxValue`, which the 64-bit identity columns of MySQL, Oracle and SQLite can hold, now fails a form read
+  in process as it already failed on the wire. ([#99](https://github.com/polhem-dev/polhem/issues/99))
 
 ## [1.4.0] - 2026-10-08
 

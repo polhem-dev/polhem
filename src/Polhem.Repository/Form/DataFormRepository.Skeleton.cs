@@ -109,10 +109,10 @@ namespace Polhem.Repository.Form
         /// </summary>
         /// <remarks>
         /// Oracle has no UUID type: the framework maps <see cref="FieldDbType.Guid"/> to <c>RAW(16)</c>,
-        /// which reads back as <see cref="byte"/>[]. SQLite has neither a UUID nor a date type:
-        /// <see cref="FieldDbType.Guid"/>, <see cref="FieldDbType.Date"/> and <see cref="FieldDbType.DateTime"/>
-        /// are stored as text and read back as <see cref="string"/>. Numeric and boolean columns are not
-        /// converted here; they are typed before the read (see <see cref="ReadFormTable"/>).
+        /// which reads back as <see cref="byte"/>[]. SQLite has no date type: <see cref="FieldDbType.Date"/>
+        /// and <see cref="FieldDbType.DateTime"/> are stored as text and read back as <see cref="string"/>.
+        /// Numeric and boolean columns are not converted here; they are typed before the read (see
+        /// <see cref="ReadFormTable"/>).
         /// The column type is judged from the table itself even when it has no rows, so an empty result
         /// has the same shape as a full one.
         /// <para>
@@ -123,7 +123,7 @@ namespace Polhem.Repository.Form
         /// Modified.
         /// </para>
         /// </remarks>
-        /// <exception cref="InvalidOperationException">A date or Guid column holds text that is not a date or a Guid.</exception>
+        /// <exception cref="InvalidOperationException">A date column holds text that is not a date.</exception>
         private static void NormalizeStorageColumns(DataTable table)
         {
             var pending = table.Columns.Cast<DataColumn>()
@@ -140,7 +140,7 @@ namespace Polhem.Repository.Form
 
         private static bool IsStorageForm(Type dataType, FieldDbType declared) => declared switch
         {
-            FieldDbType.Guid => dataType == typeof(byte[]) || dataType == typeof(string),
+            FieldDbType.Guid => dataType == typeof(byte[]),
             FieldDbType.Date or FieldDbType.DateTime => dataType == typeof(string),
             _ => false,
         };
@@ -168,23 +168,14 @@ namespace Polhem.Repository.Form
 
         private static object FromStorageForm(object value, FieldDbType declared, string tableName, string columnName)
         {
-            if (declared == FieldDbType.Guid && value is byte[] bytes)
+            if (declared == FieldDbType.Guid)
             {
                 // The byte order is the one `Guid.ToByteArray` produced on the way in (see
                 // `DbCommandSpec.NormalizeParameterValue`), so the matching constructor round-trips it.
-                return bytes.Length == 16 ? new Guid(bytes) : DBNull.Value;
+                return value is byte[] { Length: 16 } bytes ? new Guid(bytes) : DBNull.Value;
             }
 
             if (value is not string text || StringUtilities.IsEmpty(text)) { return DBNull.Value; }
-
-            if (declared == FieldDbType.Guid)
-            {
-                // WARNING: text that is not a Guid throws, for the reason given below for dates.
-                return Guid.TryParse(text, out var guid)
-                    ? guid
-                    : throw new InvalidOperationException(
-                        $"Column '{columnName}' of table '{tableName}' is declared Guid but holds text that is not a Guid.");
-            }
 
             // WARNING: text that is not a date throws instead of reading as NULL. A value that silently
             // disappears is the failure this conversion exists to remove, and a NULL written back by a
