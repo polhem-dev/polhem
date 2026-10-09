@@ -8,6 +8,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-09
+
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.5.0.md](docs/zh-TW/changelogs/1.5.0.md)
+
 ### 新增
 
 - `DbCommandSpec.ColumnTypes`：依欄名指定結果欄位要以哪個 CLR 型別建立，取代 provider 回報的型別。欄位在讀取資料列之前就建好，
@@ -615,7 +619,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/polhem-dev/polhem/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/polhem-dev/polhem/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/polhem-dev/polhem/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.3.0

@@ -88,6 +88,7 @@ Polhem.Db.DbCommandResult.Table.get -> System.Data.DataTable?
 Polhem.Db.DbCommandResultCollection
 Polhem.Db.DbCommandResultCollection.DbCommandResultCollection() -> void
 Polhem.Db.DbCommandSpec
+Polhem.Db.DbCommandSpec.ColumnTypes.get -> System.Collections.Generic.Dictionary<string!, System.Type!>!
 Polhem.Db.DbCommandSpec.CommandText.get -> string!
 Polhem.Db.DbCommandSpec.CommandText.set -> void
 Polhem.Db.DbCommandSpec.CommandTimeout.get -> int
