@@ -8,6 +8,20 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 新增
+
+- `DbCommandSpec.ColumnTypes`：依欄名指定結果欄位要以哪個 CLR 型別建立，取代 provider 回報的型別。欄位在讀取資料列之前就建好，
+  每個值在載入時就轉成宣告的型別。與 `DateColumns` 相同，只適用於 `DataTable` 命令。
+
+### 修正
+
+- 表單讀取（`GetList`、`GetData` 與依 row id 的讀取）在所有 provider 上，都以 FormSchema 欄位宣告的型別回傳數值與布林欄。
+  SQLite 上，第一列是整數值的 decimal 欄會被讀成 `long`，之後每一列的小數都被靜默捨去；Boolean、Short、Integer 與
+  AutoIncrement 欄讀成 `long`。MySQL 把 AutoIncrement 讀成 `long`，Oracle 讀成 `decimal`。這些欄位經 JSON codec 送出時是字串，
+  與宣告的型別不符，依欄位型別解碼的客戶端（例如 polhem-connector-js）因此拒收回應，而 `Save` 在那之前已經提交。
+  AutoIncrement 的值超過 `int.MaxValue`（MySQL、Oracle 與 SQLite 的 64 位元 identity 欄存得下）時，in-process 的表單讀取現在也會失敗，
+  與經過 wire 時原本的行為一致。（[#99](https://github.com/polhem-dev/polhem/issues/99)）
+
 ## [1.4.0] - 2026-10-08
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.4.0.md](docs/zh-TW/changelogs/1.4.0.md)

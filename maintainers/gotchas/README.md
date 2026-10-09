@@ -12,7 +12,7 @@ framework users. Design decisions go in `maintainers/adr/`; public descriptions 
 
 | File | Covers |
 |------|--------|
-| [database.md](database.md) | Oracle `''`=NULL / positional binding / `RAW(16)` read back as `byte[]`, MySQL TEXT/UUID, SQLite GUID casing, decimal scale, the datetime2 parameter layer, the cost of deep-pagination `OFFSET` and the decision on it, the schema shared by load tests and unit tests |
+| [database.md](database.md) | Oracle `''`=NULL / positional binding / `RAW(16)` read back as `byte[]`, MySQL TEXT/UUID, SQLite GUID casing, SQLite columns typed by their first row, decimal scale, the datetime2 parameter layer, the cost of deep-pagination `OFFSET` and the decision on it, the schema shared by load tests and unit tests |
 | [serialization-and-expressions.md](serialization-and-expressions.md) | Wire facts (payload format vs codec), the retired MessagePack ctor-order and `[Union]` constraints (kept as history), the two expression engine pitfalls, measured AOT conclusions |
 | [avalonia-controls.md](avalonia-controls.md) | Proven Avalonia control pitfalls (DataGrid, read-only appearance, events, parallelism, phone overlays) |
 | [mobile-trim-aot.md](mobile-trim-aot.md) | Mobile trim / AOT: the reasoning behind the decision tree, the fidelity of the reflection-only reproduction, build and verification command recipes, **interpreting iOS build warnings (never 0 warnings)** |

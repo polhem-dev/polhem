@@ -2,6 +2,7 @@ using System.Data;
 using System.Globalization;
 using Polhem.Core;
 using Polhem.Core.Data;
+using Polhem.Db;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 
@@ -42,6 +43,40 @@ namespace Polhem.Repository.Form
         }
 
         /// <summary>
+        /// Runs a SELECT built from the schema and returns its table with every column in the declared type.
+        /// </summary>
+        /// <param name="dbAccess">The database access for the form's database.</param>
+        /// <param name="spec">The SELECT the command builder produced.</param>
+        /// <param name="formTable">The form table describing the query shape.</param>
+        /// <remarks>
+        /// Numeric and boolean columns are typed before the rows are read, through
+        /// <see cref="DbCommandSpec.ColumnTypes"/>: on SQLite a decimal column typed by its first row loses
+        /// the fractional part of every later row, and nothing afterwards can restore it. The remaining
+        /// declared types need conversions of their own and are handled after the read, in
+        /// <see cref="MarkFromSchema"/>.
+        /// </remarks>
+        private static DataTable? ReadFormTable(DbAccess dbAccess, DbCommandSpec spec, FormTable? formTable)
+        {
+            if (formTable != null) { DeclareColumnTypes(spec, formTable); }
+            return MarkFromSchema(dbAccess.Execute(spec).Table, formTable);
+        }
+
+        private static void DeclareColumnTypes(DbCommandSpec spec, FormTable formTable)
+        {
+            if (formTable.Fields == null) { return; }
+
+            foreach (FormField field in formTable.Fields)
+            {
+                if (IsTypedBeforeRead(field.DbType))
+                    spec.ColumnTypes[field.FieldName] = DbTypeConverter.ToType(field.DbType);
+            }
+        }
+
+        private static bool IsTypedBeforeRead(FieldDbType declared) => declared is
+            FieldDbType.Boolean or FieldDbType.Short or FieldDbType.Integer or FieldDbType.AutoIncrement
+            or FieldDbType.Long or FieldDbType.Decimal or FieldDbType.Currency;
+
+        /// <summary>
         /// Replays the schema's declared field types over a table read from the database.
         /// </summary>
         /// <param name="table">The table returned by the query; null passes through.</param>
@@ -76,6 +111,8 @@ namespace Polhem.Repository.Form
         /// Oracle has no UUID type: the framework maps <see cref="FieldDbType.Guid"/> to <c>RAW(16)</c>,
         /// which reads back as <see cref="byte"/>[]. SQLite has no date type: <see cref="FieldDbType.Date"/>
         /// and <see cref="FieldDbType.DateTime"/> are stored as text and read back as <see cref="string"/>.
+        /// Numeric and boolean columns are not converted here; they are typed before the read (see
+        /// <see cref="ReadFormTable"/>).
         /// The column type is judged from the table itself even when it has no rows, so an empty result
         /// has the same shape as a full one.
         /// <para>

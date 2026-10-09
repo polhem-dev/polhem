@@ -205,8 +205,16 @@ namespace Polhem.Db
 
                 using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    var table = new DataTable("DataTable");
-                    table.Load(reader);
+                    DataTable table;
+                    if (command.ColumnTypes.Count > 0)
+                    {
+                        table = await LoadTypedTableAsync(reader, command, cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        table = new DataTable("DataTable");
+                        table.Load(reader);
+                    }
                     table.LowercaseColumnNames();
                     table.NormalizeDateTimeMode();
                     ApplyDateColumns(command, table);
