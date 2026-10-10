@@ -1,15 +1,1 @@
 #nullable enable
-*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.AccessToken.get -> System.Guid
-*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.AccessToken.set -> void
-*REMOVED*Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory
-*REMOVED*Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.Mode.get -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
-*REMOVED*Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options, Polhem.Api.Client.ApiSessionContext! session, System.IServiceProvider! services) -> void
-*REMOVED*Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.UseDefinitionLoader.get -> bool
-Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.ApiKey.get -> string!
-Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.DefaultLanguage.get -> string!
-Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.DefaultLanguage.set -> void
-*REMOVED*Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseRemoteProvider(string! endpoint) -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!
-Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseRemoteProvider(string! endpoint, string! apiKey) -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!
-*REMOVED*virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateDefinitionLoader(System.Guid accessToken) -> Polhem.Api.Client.Definitions.FormDefinitionLoader!
-*REMOVED*virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateFormConnector(System.Guid accessToken, string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
-*REMOVED*virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateSystemConnector(System.Guid accessToken) -> Polhem.Api.Client.Connectors.SystemApiConnector!

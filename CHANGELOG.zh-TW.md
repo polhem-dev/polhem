@@ -12,6 +12,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-11
+
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.6.0.md](docs/zh-TW/changelogs/1.6.0.md)
+
 ### 破壞性 API 變更
 
 - `Polhem.Api.Client` 只有一個進入點：`PolhemApiClient`，由它擁有連線與已登入的身分

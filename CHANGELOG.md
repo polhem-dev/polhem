@@ -13,6 +13,10 @@ line each; the reasons and the background are in its detailed notes under [`docs
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-11
+
+📄 Full notes and background: [docs/en/changelogs/1.6.0.md](docs/en/changelogs/1.6.0.md)
+
 ### Breaking API changes
 
 - `Polhem.Api.Client` has one entry point, `PolhemApiClient`, which owns the connection and the signed-in identity
