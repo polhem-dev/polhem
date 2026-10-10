@@ -47,6 +47,10 @@ dotnet add package Polhem.Db
 
 [Getting Started](https://github.com/polhem-dev/polhem/blob/main/docs/en/getting-started/getting-started.md) continues from there.
 
+> **1.x minor versions may contain breaking changes**, each listed with its migration step in the
+> [changelog](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md). Pin the packages to one minor version,
+> for example `Version="[1.5,1.6)"`. Semantic versioning applies from 2.0.0.
+
 ### Shared (Frontend / Backend)
 
 | Assembly Name | Description |

@@ -8,6 +8,9 @@ A one-time exception to the compatibility rule stated in the context of
 [ADR-046](adr-046-api-evolution-policies-for-1-0.md) ("a change that breaks it waits for the next major version").
 It is not a precedent.
 
+The promise that it would be the only exception did not hold; [ADR-052](adr-052-breaking-changes-in-1-x-minors.md)
+replaces the rule it was an exception to, for the rest of 1.x.
+
 ## Context
 
 The lowest assembly of the framework was always meant to be called `Polhem.Core`. Polhem 1.0.0 was published on

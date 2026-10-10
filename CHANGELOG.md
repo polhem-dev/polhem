@@ -3,8 +3,13 @@
 [繁體中文](CHANGELOG.zh-TW.md)
 
 Notable changes to the Polhem packages. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and versions follow [Semantic Versioning](https://semver.org/). Each version lists its changes here in one line each;
-the reasons and the background are in its detailed notes under [`docs/en/changelogs/`](docs/en/changelogs/).
+and versions follow [Semantic Versioning](https://semver.org/) from 2.0.0. Each version lists its changes here in one
+line each; the reasons and the background are in its detailed notes under [`docs/en/changelogs/`](docs/en/changelogs/).
+
+> **1.x minor versions may contain breaking changes**, listed under "Breaking API changes" or "Breaking wire changes"
+> with the step to migrate. Patch versions do not. Reference the packages with a range that stays within one minor
+> version, for example `[1.5,1.6)`, rather than `1.*`. The policy and its reasons are in
+> [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
 ## [Unreleased]
 

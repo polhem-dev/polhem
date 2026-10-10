@@ -2,9 +2,13 @@
 
 [English](CHANGELOG.md)
 
-Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版號依循
+Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版號自 2.0.0 起依循
 [語意化版本](https://semver.org/lang/zh-TW/)。每個版本在這裡以一行列一項變更；理由與背景寫在
 [`docs/zh-TW/changelogs/`](docs/zh-TW/changelogs/) 下該版本的明細。
+
+> **1.x 的 minor 版可能含破壞性變更**，列在「Breaking API changes」或「Breaking wire changes」下，並附遷移步驟；
+> patch 版不會。引用套件時請使用不跨 minor 版的範圍，例如 `[1.5,1.6)`，不要用 `1.*`。這項政策與理由見
+> [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
 ## [Unreleased]
 
