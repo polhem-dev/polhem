@@ -13,6 +13,8 @@ Decision 4, added on 2026-10-06, exempts the framework's exception types from th
 
 [ADR-052](adr-052-breaking-changes-in-1-x-minors.md) replaces the compatibility rule for the rest of 1.x: a 1.x minor
 version may break the public API. The decisions below stay, and ADR-052 says how they apply from 2.0.
+[ADR-053](adr-053-api-client-composition-root.md) removes `ApiClientInfo` from the static configuration of decision 3:
+a client's settings now live on its `PolhemApiClient`.
 
 ## Context
 

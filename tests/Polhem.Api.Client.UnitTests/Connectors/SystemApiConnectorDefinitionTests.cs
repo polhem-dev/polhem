@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Core.Serialization;
@@ -8,7 +7,6 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.JsonRpc.Payload;
-using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
@@ -25,12 +23,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     {
         private static (SystemApiConnector Connector, FakeApiTransport Transport) Create(object resultValue)
         {
-            var connector = new SystemApiConnector(EmptyServiceProvider.Instance, Guid.NewGuid(), new ApiSessionContext());
             var transport = new FakeApiTransport(call => FakeApiTransport.Answer(call, resultValue));
-            typeof(ApiConnector)
-                .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, transport);
-            return (connector, transport);
+            return (new SystemApiConnector(TestClients.Fake(transport)), transport);
         }
 
         [Fact]

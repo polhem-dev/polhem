@@ -320,7 +320,7 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `ClientInfo` | 用戶端資訊 | Static class that manages connection state (endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model of the Avalonia heads and other native UI. **Do not use it in Blazor Server**, where multiple user circuits share a process |
+| `ClientInfo` | 用戶端資訊 | Static class that manages connection state (the head's one `PolhemApiClient`, endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model of the Avalonia heads and other native UI. **Do not use it in Blazor Server**, where multiple user circuits share a process |
 | `IEndpointStorage` | 端點儲存介面 | Abstraction for persisting the API endpoint on the client side. The default for `ClientInfo.EndpointStorage` is `FileEndpointStorage` |
 | `FileEndpointStorage` | 檔案端點儲存 | File-backed `IEndpointStorage` and `IApiKeyStorage`: keeps the endpoint in `endpoint.txt` and the API key in `apikey.txt` under `LocalApplicationData/<appName>/`. The default for both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`; a browser (WASM) head replaces both with storage backed by the browser |
 | `IUIViewService` | UI 視圖服務介面 | Host-supplied dialog service called when `ClientInfo.InitializeAsync` needs to ask the user for the endpoint (`ShowApiConnectAsync`); concrete implementation depends on the UI framework (Avalonia Window / MAUI ContentPage / WinForms Form, etc.) |
@@ -341,18 +341,19 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 ### Web Frontend (`Polhem.Web.Blazor.Server`)
 
-`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with DI-scoped connectors so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`RemoteApiProvider`) directly.
+`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `DynamicForm` (Razor component) | 動態表單元件 | Blazor component that renders a FormSchema-driven form |
 | `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.Api.Client` (`FormValueBinding`, `FormDataGuard`) |
-| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (DI-scoped connectors) |
+| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (a DI-scoped `PolhemApiClient` per circuit) |
 
 ### Api Client Providers (`Polhem.Api.Client`)
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | From `Polhem.JsonRpc`: how a connector reaches the backend; the two providers below implement it, and the host chooses one at startup |
-| `LocalApiProvider` | 近端 API 提供者 | In-process implementation; the frontend and backend share the same process, invoking BO methods directly (no HTTP) |
-| `RemoteApiProvider` | 遠端 API 提供者 | HTTP-based implementation; the frontend reaches the backend over JSON-RPC (required for Blazor WASM) |
+| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | From `Polhem.JsonRpc`: how a connector reaches the backend; `Polhem.Api.Client` implements it in process and over HTTP, and the host chooses one when it creates the client |
+| `PolhemApiClient` | API 用戶端 | The entry point of the client: one connection to a backend, the identity signed in over it, and the connectors that call it (`System`, `AuditLog`, `Form(progId)`) |
+| `PolhemApiClient.CreateLocal` | 近端 API 用戶端 | In-process client; the frontend and backend share the same process, invoking BO methods directly (no HTTP) |
+| `PolhemApiClient.CreateRemote` | 遠端 API 用戶端 | HTTP-based client; the frontend reaches the backend over JSON-RPC (required for Blazor WASM) |

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: d9295f1b1e3ddc251dd55a85a7736a6dda8c1bac -->
+<!-- source: en/architecture/development-constraints.md blob: c84b959670e25172e6707b774d73bc21d3a90223 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -16,7 +16,7 @@
 4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — 註冊框架服務（擴充方法來自 `Polhem.Hosting`），並以 `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` 設定 payload 的壓縮器與加密器
 5. 建立 service provider，接著：
    - **ASP.NET Core 宿主**在建置前呼叫 `services.AddJsonRpcServer()` 與 `services.AddPolhemApiKeyGateCheck()`，並在建好的應用程式上呼叫 `app.MapJsonRpc("/api")`。閘門檢查在宿主啟動時執行（見 [API 金鑰管理](../security/api-key-management.md)）。
-   - 在行程內執行後端的**非 web 宿主**，把產出的 `IServiceProvider` 交給用戶端：`Polhem.Api.Client` 的 connector 以建構子參數接收它，原生 UI head 則指派給 `ClientInfo.LocalServiceProvider`（`Polhem.UI.Core`）。
+   - 在行程內執行後端的**非 web 宿主**，把產出的 `IServiceProvider` 交給用戶端：`Polhem.Api.Client` 的 `PolhemApiClient.CreateLocal` 以參數接收它，原生 UI head 則指派給 `ClientInfo.LocalServiceProvider`（`Polhem.UI.Core`）。
 
 完整參考見[端到端開發指引 § 框架初始化順序](../guides/development-cookbook.md#框架初始化順序)。
 
@@ -323,7 +323,7 @@ Encoded 與 Encrypted 的請求會在 payload 內夾帶一段 wire frame（時�
 
 - **兩端必須設成同一個值。** frame 的有無是部署層級的事實，不由封包自述——伺服器若「偵測」
   frame 在不在，攻擊者只要把 frame 拿掉就能關閉防護。因此兩端設定不一致必然失敗，這是刻意的。
-  啟用順序：**兩端先升套件，再同時開啟兩端開關**（.NET 用戶端設定 `ApiClientInfo.PayloadOptions.RequireFrame`）。
+  啟用順序：**兩端先升套件，再同時開啟兩端開關**（.NET 用戶端設定 `PolhemApiClient.PayloadOptions.RequireFrame`）。
 - **`UniqueSequence` 需要開關。** `RequireFrame` 關閉時什麼都不檢查；以 `AddPolhemFramework`
   建立的宿主會在這種狀態下記錄啟動警告，列出宣告了 `UniqueSequence` 的方法。
 - **開關開啟後，受保護的方法只接受 Encrypted 的遠端呼叫。** 明文沒有攻擊者無法偽造的綁定，

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 
 namespace Polhem.UI.Core.UnitTests
 {
@@ -41,7 +40,7 @@ namespace Polhem.UI.Core.UnitTests
             var original = s_defineAccessField.GetValue(null);
             try
             {
-                var connector = new SystemApiConnector(EmptyServiceProvider.Instance, Guid.Empty);
+                var connector = PolhemApiClient.CreateLocal(EmptyServiceProvider.Instance).System;
                 var remoteAccess = new ClientDefineAccess(connector);
                 s_defineAccessField.SetValue(null, remoteAccess);
                 var exception = Record.Exception(() => ClientInfo.ResetDefineCache());

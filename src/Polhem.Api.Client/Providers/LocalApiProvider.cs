@@ -13,7 +13,7 @@ namespace Polhem.Api.Client.Providers
     /// <see cref="InProcessTransport"/>, which marks it as a local call and carries the access token in
     /// <see cref="PolhemJsonRpc.AccessTokenItem"/>.
     /// </remarks>
-    public sealed class LocalApiProvider : IJsonRpcTransport
+    internal sealed class LocalApiProvider : IJsonRpcTransport
     {
         private readonly IServiceProvider _services;
 

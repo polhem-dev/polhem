@@ -15,7 +15,7 @@ The framework registers itself in the standard `IServiceCollection` DI container
 4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — register framework services (extension from `Polhem.Hosting`), and `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` for the payload compressor and encryptor
 5. Build the service provider, then:
    - **ASP.NET Core hosts** call `services.AddJsonRpcServer()` and `services.AddPolhemApiKeyGateCheck()` before building, and `app.MapJsonRpc("/api")` on the built application. The gate check runs when the host starts (see [API Key Management](../security/api-key-management.md)).
-   - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: the `Polhem.Api.Client` connectors take it as a constructor argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.Core`).
+   - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: `PolhemApiClient.CreateLocal` (`Polhem.Api.Client`) takes it as an argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.Core`).
 
 See [development-cookbook.md § Framework Initialization Order](../guides/development-cookbook.md#framework-initialization-order) for the canonical reference.
 
@@ -344,7 +344,7 @@ used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`
   fact and is never read from the packet — were the server to "detect" it, an attacker could turn
   the protection off simply by removing the frame. A mismatched pair therefore fails, deliberately.
   Rollout order: **upgrade the package on both ends first, then enable the switch on both** (a .NET
-  client sets `ApiClientInfo.PayloadOptions.RequireFrame`).
+  client sets `PolhemApiClient.PayloadOptions.RequireFrame`).
 - **`UniqueSequence` needs the switch.** While `RequireFrame` is off, nothing is checked; a host
   built with `AddPolhemFramework` logs a startup warning naming the methods that declare
   `UniqueSequence` in that state.

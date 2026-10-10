@@ -10,7 +10,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// </summary>
     /// <remarks>
     /// Driven through <c>AdoptServerConfiguration</c> rather than <c>InitializeAsync</c>, so no test touches the
-    /// process-wide <c>SysInfo</c> and <c>ApiClientInfo.PayloadOptions</c> statics.
+    /// process-wide <c>SysInfo</c> static or needs a client to apply the configuration to.
     /// </remarks>
     public class SystemApiConnectorConfigurationTests
     {

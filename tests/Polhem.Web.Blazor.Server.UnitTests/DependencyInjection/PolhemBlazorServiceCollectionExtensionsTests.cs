@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Api.Client;
 using Polhem.Definition.Language;
 using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.DependencyInjection;
@@ -8,8 +9,8 @@ using Microsoft.Extensions.Localization;
 namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
 {
     /// <summary>
-    /// Verifies that <c>AddPolhemBlazor</c> registers the resolved options and factory
-    /// as singletons, and that the fluent options API picks up the chosen provider.
+    /// Verifies that <c>AddPolhemBlazor</c> registers the resolved options as a singleton and a client per scope,
+    /// and that the fluent options API picks up the chosen provider.
     /// </summary>
     public class PolhemBlazorServiceCollectionExtensionsTests
     {
@@ -43,24 +44,46 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         public void AddPolhemBlazor_UseRemoteProvider_SwitchesToRemote()
         {
             var services = new ServiceCollection();
-            services.AddPolhemBlazor(o => o.UseRemoteProvider("http://example.com/api"));
+            services.AddPolhemBlazor(o => o.UseRemoteProvider("http://example.com/api", "app.key"));
             using var sp = services.BuildServiceProvider();
 
             var options = sp.GetRequiredService<PolhemBlazorOptions>();
             Assert.Equal(PolhemBlazorProviderMode.Remote, options.Mode);
             Assert.Equal("http://example.com/api", options.Endpoint);
+            Assert.Equal("app.key", options.ApiKey);
         }
 
         [Fact]
-        [DisplayName("AddPolhemBlazor registers PolhemApiConnectorFactory")]
-        public void AddPolhemBlazor_RegistersConnectorFactory()
+        [DisplayName("AddPolhemBlazor registers a PolhemApiClient per scope, in process under Local mode")]
+        public void AddPolhemBlazor_Local_RegistersScopedLocalClient()
         {
             var services = new ServiceCollection();
             services.AddPolhemBlazor();
             using var sp = services.BuildServiceProvider();
+            using var first = sp.CreateScope();
+            using var second = sp.CreateScope();
 
-            var factory = sp.GetRequiredService<PolhemApiConnectorFactory>();
-            Assert.Equal(PolhemBlazorProviderMode.Local, factory.Mode);
+            var client = first.ServiceProvider.GetRequiredService<PolhemApiClient>();
+
+            Assert.True(client.IsLocal);
+            Assert.Same(client, first.ServiceProvider.GetRequiredService<PolhemApiClient>());
+            Assert.NotSame(client, second.ServiceProvider.GetRequiredService<PolhemApiClient>());
+        }
+
+        [Fact]
+        [DisplayName("Under Remote mode the circuit's client sends to the endpoint with the configured API key")]
+        public void AddPolhemBlazor_Remote_ClientCarriesEndpointAndApiKey()
+        {
+            var services = new ServiceCollection();
+            services.AddPolhemBlazor(o => o.UseRemoteProvider("http://example.com/api", "app.key"));
+            using var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+
+            var client = scope.ServiceProvider.GetRequiredService<PolhemApiClient>();
+
+            Assert.False(client.IsLocal);
+            Assert.Equal("http://example.com/api", client.Endpoint);
+            Assert.Equal("app.key", client.ApiKey);
         }
 
         [Fact]
@@ -98,7 +121,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         public void UseRemoteProvider_EmptyEndpoint_Throws(string? endpoint)
         {
             var options = new PolhemBlazorOptions();
-            Assert.ThrowsAny<ArgumentException>(() => options.UseRemoteProvider(endpoint!));
+            Assert.ThrowsAny<ArgumentException>(() => options.UseRemoteProvider(endpoint!, string.Empty));
         }
 
         [Fact]

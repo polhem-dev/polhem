@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: 1222f383b8d841243cb53a8289cd7d65a31b5eb6 -->
+<!-- source: en/getting-started/platform-support.md blob: de1f180e519ea39fb2c4c589c7c0ef59bb5e1c43 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -32,16 +32,16 @@
 
 - **Remote** 表示 head 透過 HTTP 呼叫後端主機的 JSON-RPC 端點。**Local** 表示 head 也自行建立後端的服務
   （`AddPolhemFramework`），把產生的 provider 指定給 `ClientInfo.LocalServiceProvider`，並在行程內呼叫後端。
-  Avalonia head 接受哪一種由 `ApiClientInfo.SupportedConnectTypes` 決定；Northwind 的每個 head 都設為 `Remote`。
+  Avalonia head 接受哪一種由 `ClientInfo.SupportedConnectTypes` 決定；Northwind 的每個 head 都設為 `Remote`。
 - 四種 Avalonia head 共用同一套 UI 函式庫與同一套用戶端執行環境（`Polhem.UI.Core` 的 `ClientInfo`），每個行程只保存一位
   已登入的使用者。[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 以同一個共用 UI 專案建出這四種
   head，是下方檢查清單的參考設定。
-- **Blazor Server** 的元件在 ASP.NET Core 伺服器行程中執行，因此下文的裁剪與 AOT 問題與它無關。它的 API session 是每個
-  circuit 一份，而不是每個行程一份。它預設的 Local 模式會把每位瀏覽器使用者的呼叫都當成受信任的行程內呼叫（略過存取權杖與
+- **Blazor Server** 的元件在 ASP.NET Core 伺服器行程中執行，因此下文的裁剪與 AOT 問題與它無關。它的 API client（也就是登入的
+  session）是每個 circuit 一份，而不是每個行程一份。它預設的 Local 模式會把每位瀏覽器使用者的呼叫都當成受信任的行程內呼叫（略過存取權杖與
   `LocalOnly` 檢查）：只有在網站的每位使用者都可以看到整個後端時才使用，否則請在 `AddPolhemBlazor` 中呼叫
-  `UseRemoteProvider(endpoint)`。Remote 模式還需要在啟動時把應用程式的 API key 設到 `ApiClientInfo.ApiKey`，否則伺服器會以
-  `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及 Remote 為何從那裡讀取
-  key；另見
+  `UseRemoteProvider(endpoint, apiKey)`。Remote 模式需要在這裡傳入應用程式的 API key，否則伺服器會以
+  `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
+  送出同一個 key；另見
   [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.zh-TW.md)。
 
 ---

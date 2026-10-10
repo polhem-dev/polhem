@@ -13,6 +13,37 @@ line each; the reasons and the background are in its detailed notes under [`docs
 
 ## [Unreleased]
 
+### Breaking API changes
+
+- `Polhem.Api.Client` has one entry point, `PolhemApiClient`, which owns the connection and the signed-in identity
+  ([ADR-053](maintainers/adr/adr-053-api-client-composition-root.md)). Create it once with
+  `PolhemApiClient.CreateRemote(endpoint, apiKey)` or `PolhemApiClient.CreateLocal(services)`, sign in through
+  `client.System.LoginAsync`, and take connectors from it (`client.System`, `client.AuditLog`, `client.Form(progId)`):
+  every connector then calls with the token, transmission key and time zone of that sign-in, with no token to pass
+  around. The connector constructors that took an endpoint or a service provider with an access token are removed;
+  each connector has one constructor that takes the client. `ApiConnector.AccessToken` and `ApiConnector.Provider`
+  are removed, and `LocalApiProvider` and `RemoteApiProvider` are internal.
+- `ApiClientInfo` is removed. `Endpoint` and `ConnectType` → `PolhemApiClient.Endpoint` and `IsLocal` (desktop:
+  `ClientInfo.ConnectType`); `ApiKey` → the argument of `CreateRemote`, or `PolhemApiClient.ApiKey`; `PayloadOptions`
+  → `PolhemApiClient.PayloadOptions`; `SupportedConnectTypes` → `ClientInfo.SupportedConnectTypes`; `DefaultLanguage`
+  → `PolhemApiClient.DefaultLanguage` (Blazor: `PolhemBlazorOptions.DefaultLanguage`).
+  `ApiConnectValidator.ValidateAsync` takes the allowed connection types as its second argument.
+- `ApiSessionContext.Ambient` and the setters of `ApiSessionContext.ApiEncryptionKey` and `UserTimeZoneId` are
+  removed. The session holds an `ApiSessionCredentials`, replaced as a whole by `SignIn` and `SignOut`.
+- Blazor Server: `PolhemApiConnectorFactory` is removed. `AddPolhemBlazor` registers a scoped `PolhemApiClient` per
+  circuit; inject it instead of the factory. `UseRemoteProvider` takes the API key as its second argument, in place of
+  setting `ApiClientInfo.ApiKey`. `FormPage` no longer has an `AccessToken` parameter: it calls as whoever signed in on
+  the circuit's client.
+- Desktop heads keep `ClientInfo` with its signatures; replace `ApiClientInfo.SupportedConnectTypes` and
+  `ApiClientInfo.ConnectType` with the members of the same name on `ClientInfo`. After `LoginAsync`, the same
+  `ClientInfo.SystemApiConnector` can call `EnterCompanyAsync`; it no longer has to be read again.
+
+### Added
+
+- `PolhemApiClient`, `ApiSessionCredentials`, `ClientInfo.ApiClient`, and `PolhemBlazorOptions.ApiKey` and
+  `DefaultLanguage`. One process can call several servers, each through a client with its own endpoint, API key and
+  identity.
+
 ## [1.5.0] - 2026-10-09
 
 📄 Full notes and background: [docs/en/changelogs/1.5.0.md](docs/en/changelogs/1.5.0.md)

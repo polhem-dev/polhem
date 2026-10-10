@@ -74,7 +74,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         /// Returns a pending <see cref="GetDataAsync"/> task that the test completes from a thread-pool
         /// thread, so the method under test really suspends there.
         /// </summary>
-        private sealed class PendingConnector() : FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty, "Employee")
+        private sealed class PendingConnector() : FormApiConnector(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), "Employee")
         {
             public TaskCompletionSource<GetDataResponse> Pending { get; } = new();
 

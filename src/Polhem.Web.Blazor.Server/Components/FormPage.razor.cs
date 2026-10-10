@@ -1,4 +1,5 @@
 using System.Globalization;
+using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
 using System.Data;
 using Polhem.Api.Client.Connectors;
@@ -20,10 +21,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// <see cref="FormDataObject.NewAsync"/> / <c>SaveAsync</c> / <c>DeleteAsync</c>.
     /// </summary>
     /// <remarks>
-    /// FormPage assumes the host has acquired an <c>AccessToken</c> elsewhere
-    /// (e.g. via a sign-in page that calls <see cref="SystemApiConnector.LoginAsync"/>)
-    /// and supplies it through a cascading parameter. Anonymous use is allowed
-    /// (<see cref="AccessToken"/> defaults to <see cref="Guid.Empty"/>); the
+    /// FormPage calls with the circuit's <see cref="PolhemApiClient"/>, so it acts as whoever signed in
+    /// on that client (for example through a <see cref="PolhemLoginPanel"/>, which calls
+    /// <see cref="SystemApiConnector.LoginAsync"/>). Before a sign-in it calls anonymously, and the
     /// backend BO methods being called must then declare
     /// <see cref="Polhem.Definition.Security.ApiAccessRequirement.Anonymous"/> themselves.
     /// <para>
@@ -62,15 +62,11 @@ namespace Polhem.Web.Blazor.Server.Components
         [Parameter, EditorRequired]
         public string ProgId { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the cascading access token. Defaults to
-        /// <see cref="Guid.Empty"/> (anonymous).
-        /// </summary>
-        [CascadingParameter]
-        public Guid AccessToken { get; set; }
+        [Inject]
+        private PolhemApiClient Client { get; set; } = default!;
 
         [Inject]
-        private PolhemApiConnectorFactory Factory { get; set; } = default!;
+        private PolhemBlazorOptions Options { get; set; } = default!;
 
         // Nullable: a component created outside a renderer has no services, and still renders.
         [Inject]
@@ -80,8 +76,8 @@ namespace Polhem.Web.Blazor.Server.Components
 
         /// <summary>
         /// Gets or sets the assembler that turns raw definitions into a localized schema and a
-        /// runtime layout, for this page only. <c>null</c> — the default — uses the one
-        /// <see cref="PolhemApiConnectorFactory.CreateDefinitionLoader"/> builds, unless the host
+        /// runtime layout, for this page only. <c>null</c> — the default — uses one over the circuit's
+        /// client, unless the host
         /// turned off <see cref="PolhemBlazorOptions.UseDefinitionLoader"/>; with neither, the page
         /// renders the schema and the layout exactly as stored.
         /// </summary>
@@ -107,13 +103,15 @@ namespace Polhem.Web.Blazor.Server.Components
             try
             {
                 var loader = DefinitionLoader
-                    ?? (Factory.UseDefinitionLoader ? Factory.CreateDefinitionLoader(AccessToken) : null);
+                    ?? (Options.UseDefinitionLoader
+                        ? new FormDefinitionLoader(new ClientDefineAccess(Client.System), Options.DefaultLanguage)
+                        : null);
                 // Without a loader both definitions are fetched exactly as stored. With one, both
                 // layers of language and layout are fetched and assembled, so the captions are in the
                 // circuit's language and tenant customization takes effect.
                 if (loader is null)
                 {
-                    var system = Factory.CreateSystemConnector(AccessToken);
+                    var system = Client.System;
                     _schema = await system
                         .GetDefineAsync<FormSchema>(DefineType.FormSchema, [ProgId])
                         .ConfigureAwait(true);
@@ -136,7 +134,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
                 _listLayout = _schema.GetListLayout();
 
-                _dataObject = new FormDataObject(_schema, Factory.CreateFormConnector(AccessToken, ProgId));
+                _dataObject = new FormDataObject(_schema, Client.Form(ProgId));
                 await ReloadListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -151,7 +149,7 @@ namespace Polhem.Web.Blazor.Server.Components
 
         private async Task ReloadListAsync()
         {
-            var connector = Factory.CreateFormConnector(AccessToken, ProgId);
+            var connector = Client.Form(ProgId);
             var response = await connector.GetListAsync().ConfigureAwait(true);
             _listRows = response.Table;
         }

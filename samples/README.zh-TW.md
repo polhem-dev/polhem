@@ -23,7 +23,7 @@ dotnet run
 要看 Blazor 元件實際渲染 `FormSchema`、走 Login + Staff CRUD:
 
 ```bash
-# Blazor Server(in-process LocalApiProvider,無 HTTP round-trip)
+# Blazor Server(in-process client,無 HTTP round-trip)
 cd samples/Blazor.Server.Demo
 dotnet run                          # → http://localhost:5055
 ```
@@ -106,22 +106,21 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 ## Local vs Remote 派遣模式
 
-Polhem 的 `Polhem.Api.Client` 對呼叫端有**一致的 API 表面**,差異只在底層 provider:
+Polhem 的 `Polhem.Api.Client` 對呼叫端有**一致的 API 表面**,差異只在 `PolhemApiClient` 是怎麼建立的:
 
 | 模式 | 路徑 | 用於 | 範例 demo |
 |------|------|------|-----------|
-| **Local** | client → `LocalApiProvider` → `JsonRpcDispatcher` → BO(同 process) | Blazor Server、in-process 工具、跨 BO 直接呼叫 | `Blazor.Server.Demo` |
-| **Remote** | client → `RemoteApiProvider` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console、桌面、行動端、跨機器 | `QuickStart.Console` |
+| **Local** | `PolhemApiClient.CreateLocal` → `JsonRpcDispatcher` → BO(同 process) | Blazor Server、in-process 工具、跨 BO 直接呼叫 | `Blazor.Server.Demo` |
+| **Remote** | `PolhemApiClient.CreateRemote` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console、桌面、行動端、跨機器 | `QuickStart.Console` |
 
-在 Blazor Server host 裡，切換只是 `AddPolhemBlazor` 的一行設定；其他情境則是選用哪個 connector 建構子（Remote 傳 endpoint，Local 傳 backend 的 `IServiceProvider`，見 [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md)）：
+在 Blazor Server host 裡，切換只是 `AddPolhemBlazor` 的一行設定；其他情境則是選用哪個工廠方法（`CreateRemote` 傳 endpoint 與 API key，`CreateLocal` 傳 backend 的 `IServiceProvider`，見 [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md)）：
 
 ```csharp
 // Local
 builder.Services.AddPolhemBlazor(o => o.UseLocalProvider());
 
 // Remote（伺服器會以 401 拒絕沒有此應用程式 API key 的呼叫）
-Polhem.Api.Client.ApiClientInfo.ApiKey = "<issued api key>";
-builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api"));
+builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api", "<issued api key>"));
 ```
 
 Local 呼叫是受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。使用者必須受限於自身權限的網站請用 Remote。

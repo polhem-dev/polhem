@@ -1,4 +1,3 @@
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.JsonRpc.Payload;
@@ -23,26 +22,15 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
         private sealed class TestApiConnector : ApiConnector
         {
-            public TestApiConnector(Guid accessToken) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken) { }
-
-            public TestApiConnector(Guid accessToken, ApiSessionContext session) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken, session) { }
+            public TestApiConnector(PolhemApiClient client) : base(client) { }
 
             public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format,
                 CancellationToken cancellationToken = default)
                 => base.ExecuteAsync<T>(progId, action, value, format, cancellationToken);
         }
 
-        private static TestApiConnector CreateConnector(FakeApiTransport transport, ApiSessionContext? session = null)
-        {
-            // A dedicated session keeps tests off ApiSessionContext.Ambient, which is process-wide.
-            var connector = session == null
-                ? new TestApiConnector(Guid.NewGuid())
-                : new TestApiConnector(Guid.NewGuid(), session);
-            var prop = typeof(ApiConnector).GetProperty(nameof(ApiConnector.Provider),
-                BindingFlags.Public | BindingFlags.Instance)!;
-            prop.SetValue(connector, transport);
-            return connector;
-        }
+        private static TestApiConnector CreateConnector(FakeApiTransport transport, string timeZoneId = "")
+            => new(TestClients.Fake(transport, timeZoneId: timeZoneId));
 
         /// <summary>
         /// Runs one call to which the server responds with the given error code and message.
@@ -86,13 +74,12 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         /// </param>
         public static Task<string> ExecuteAsUserAsync(object value, string userTimeZoneId, Action<FakeApiCall> onServer)
         {
-            var session = new ApiSessionContext { UserTimeZoneId = userTimeZoneId };
             var transport = new FakeApiTransport(call =>
             {
                 onServer(call);
                 return FakeApiTransport.Answer(call, "ok");
             });
-            return CreateConnector(transport, session).ExecuteAsync<string>(
+            return CreateConnector(transport, userTimeZoneId).ExecuteAsync<string>(
                 TestProgId, TestAction, value, PayloadFormat.Plain);
         }
     }

@@ -88,7 +88,7 @@ namespace Polhem.LoadTests
             }
 
             // Resolving these proves the chain a Local call actually walks: the dispatcher is what
-            // LocalApiProvider reaches for, and it is useless without definitions and database
+            // an in-process PolhemApiClient reaches for, and it is useless without definitions and database
             // access behind it.
             var dispatcher = host.Services.GetRequiredService<JsonRpcDispatcher>();
             var defineAccess = host.Services.GetRequiredService<IDefineAccess>();
@@ -200,16 +200,15 @@ namespace Polhem.LoadTests
                 Console.WriteLine($"Dropped      : {string.Join(", ", host.DroppedBindings)}");
             }
 
-            if (options.Target.Mode == TargetMode.Remote)
-            {
-                // Sent as X-Api-Key on every remote call; the server rejects a request without it
-                // before any of this reaches a business object.
-                ApiClientInfo.ApiKey = options.Target.ApiKey;
-            }
+            // Every virtual user gets a client of its own: a client holds one signed-in identity. The API key is
+            // sent as X-Api-Key on every remote call; the server rejects a request without it before any of this
+            // reaches a business object.
+            var payloadOptions = host.ClientPayloadOptions;
+            Func<PolhemApiClient> createClient = options.Target.Mode == TargetMode.Remote
+                ? () => PolhemApiClient.CreateRemote(options.Target.Endpoint, options.Target.ApiKey, payloadOptions)
+                : () => PolhemApiClient.CreateLocal(host.Services, payloadOptions);
 
-            var pool = new VirtualUserPool(options.Auth,
-                options.Target.Mode == TargetMode.Remote ? options.Target.Endpoint : null,
-                host.Services);
+            var pool = new VirtualUserPool(options.Auth, createClient);
 
             // Keys for the read-by-key scenario are collected up front. Doing it inside the
             // scenario would fold the lookup into every sample.
@@ -218,7 +217,7 @@ namespace Polhem.LoadTests
                 : [];
 
             var scenarios = enabled
-                .Select(scenario => CreateScenario(scenario, options, pool, rowIds, host.Services))
+                .Select(scenario => CreateScenario(scenario, options, pool, rowIds, createClient))
                 .ToArray();
 
             Console.WriteLine($"Scenarios    : {string.Join(", ", scenarios.Select(s => s.Name))}");
@@ -285,13 +284,11 @@ namespace Polhem.LoadTests
             LoadTestOptions options,
             VirtualUserPool pool,
             IReadOnlyList<Guid> rowIds,
-            IServiceProvider localServices)
+            Func<PolhemApiClient> createClient)
         {
-            var endpoint = options.Target.Mode == TargetMode.Remote ? options.Target.Endpoint : null;
-
             return scenario.Name switch
             {
-                "Login" => new LoginScenario(options.Auth, endpoint, localServices),
+                "Login" => new LoginScenario(options.Auth, createClient),
                 "GetList" or "GetListDeep" => new GetListScenario(
                     pool, scenario.Name, scenario.ProgId, scenario.PageSize, scenario.StartPage),
                 "GetData" => new GetDataScenario(pool, scenario.ProgId, rowIds),

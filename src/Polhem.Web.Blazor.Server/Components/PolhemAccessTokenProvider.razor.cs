@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.Components;
 namespace Polhem.Web.Blazor.Server.Components
 {
     /// <summary>
-    /// Holds the in-circuit <c>AccessToken</c> and exposes it as a cascading
-    /// value so descendant components (e.g. <see cref="FormPage"/>) can pick it
-    /// up through <c>[CascadingParameter] public Guid AccessToken</c>.
+    /// Holds the page's sign-in state for the circuit and exposes the access token as a cascading
+    /// value, so a layout can switch between its signed-out and signed-in content.
     /// </summary>
     /// <remarks>
     /// Wrap a layout fragment with <c>&lt;PolhemAccessTokenProvider Context="auth"&gt;</c>
     /// and call <see cref="SetToken"/> when the user signs in
-    /// (e.g. from <see cref="PolhemLoginPanel"/>'s <c>OnLoggedIn</c> callback):
-    /// the provider re-renders, propagates the new value via the inner
-    /// <c>CascadingValue&lt;Guid&gt;</c>, and authenticated children re-fetch.
-    /// State lives in memory only, scoped to the SignalR circuit. It does not
-    /// survive a reconnect to a new circuit or a page refresh; a host that needs
-    /// that persists the token itself (for example in ProtectedSessionStorage)
-    /// and passes it back through <see cref="SetToken"/>.
+    /// (e.g. from <see cref="PolhemLoginPanel"/>'s <c>OnLoggedIn</c> callback): the provider
+    /// re-renders and propagates the new value via the inner <c>CascadingValue&lt;Guid&gt;</c>.
+    /// It holds UI state only. The identity the components call with is the circuit's
+    /// <see cref="Polhem.Api.Client.PolhemApiClient"/>, which the sign-in itself updates, so a host that signs out
+    /// clears both: <see cref="Polhem.Api.Client.PolhemApiClient.SignOut"/> and <see cref="Clear"/>.
+    /// State lives in memory only, scoped to the SignalR circuit. It does not survive a reconnect to
+    /// a new circuit or a page refresh.
     /// </remarks>
     public sealed partial class PolhemAccessTokenProvider : ComponentBase
     {

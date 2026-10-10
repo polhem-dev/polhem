@@ -5,16 +5,15 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Core.Exceptions;
+using Polhem.Core.Serialization;
 using Polhem.Core.Data;
 using Polhem.Definition;
-using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
-using Polhem.Definition.Paging;
-using Polhem.Definition.Sorting;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Tests.Shared;
@@ -28,9 +27,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// </summary>
     /// <remarks>
     /// The services are what <see cref="PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor"/> registers,
-    /// including the localizer the toolbar reads its text from, with the connector factory replaced by a fake whose
-    /// system connector serves a schema, a layout and optionally a zh-TW translation of the schema, and whose form
-    /// connector records every call. The factory keeps the default definition loader, so the page assembles its
+    /// including the localizer the toolbar reads its text from, with the circuit's client replaced by one whose calls
+    /// go to a <see cref="FakeApiServer"/>. The fake serves a schema, a layout and optionally a zh-TW translation of
+    /// the schema, and records every form call. The page keeps the default definition loader, so it assembles its
     /// definitions the way it does for a real host. No backend runs.
     /// <para>
     /// The toolbar text follows the UI culture. Each test pins <c>en-US</c> so the run does not depend on the
@@ -72,28 +71,47 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return dataSet;
         }
 
-        /// <summary>Records every CRUD call and answers from an in-memory list.</summary>
-        private sealed class RecordingFormConnector : FormApiConnector
+        /// <summary>
+        /// Stands in for the backend of one form: records every CRUD call and answers from an in-memory list, and
+        /// serves the stored definitions (the schema, its layout, and the zh-TW translation when one is given). No
+        /// tenant customization exists, and a language without a translation has no stored resource.
+        /// </summary>
+        private sealed class FakeBackend
         {
             private readonly FormSchema _schema;
+            private readonly bool _hasLayout;
+            private readonly LanguageResource? _zhTw;
 
-            public RecordingFormConnector(FormSchema schema)
-                : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty, TestProgId)
+            public FakeBackend(FormSchema schema, bool hasLayout, LanguageResource? zhTw)
             {
                 _schema = schema;
+                _hasLayout = hasLayout;
+                _zhTw = zhTw;
+                Server = new FakeApiServer()
+                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", _ => GetList())
+                    .On<GetDataRequest>($"{TestProgId}.{FormActions.GetData}", request => GetData(request.RowId))
+                    .On<GetNewDataRequest>($"{TestProgId}.{FormActions.GetNewData}", _ => GetNewData())
+                    .On<SaveRequest>($"{TestProgId}.{FormActions.Save}", request => Save(request.DataSet!))
+                    .On<DeleteRequest>($"{TestProgId}.{FormActions.Delete}", request => Delete(request.RowId))
+                    .On<GetDefineRequest>($"{SysProgIds.System}.{SystemActions.GetDefine}", GetDefine)
+                    .On<GetFormLayoutRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeFormLayout}",
+                        _ => new GetFormLayoutResponse())
+                    .On<GetLanguageRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeLanguage}",
+                        _ => new GetLanguageResponse());
             }
+
+            public FakeApiServer Server { get; }
 
             public int GetListCount { get; private set; }
             public List<Guid> Loaded { get; } = [];
             public int NewCount { get; private set; }
             public List<DataSet> Saved { get; } = [];
             public List<Guid> Deleted { get; } = [];
-            public Exception? GetDataFailure { get; set; }
+            public string? GetDataFailure { get; set; }
             public string NewName { get; set; } = "New employee";
+            public int LanguageFetchCount { get; private set; }
 
-            public override Task<GetListResponse> GetListAsync(
-                string selectFields = "", FilterNode? filter = null, SortFieldCollection? sortFields = null,
-                PagingOptions? paging = null, CancellationToken cancellationToken = default)
+            private GetListResponse GetList()
             {
                 GetListCount++;
                 var table = new DataTable(TestProgId);
@@ -101,114 +119,72 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 table.Columns.Add("emp_name", typeof(string));
                 table.Rows.Add(s_aliceRowId, "Alice");
                 table.Rows.Add(s_bobRowId, "Bob");
-                return Task.FromResult(new GetListResponse { Table = table });
+                return new GetListResponse { Table = table };
             }
 
-            public override Task<GetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default)
+            private GetDataResponse GetData(Guid rowId)
             {
                 Loaded.Add(rowId);
-                if (GetDataFailure != null) { throw GetDataFailure; }
+                if (GetDataFailure != null) { throw new UserMessageException(GetDataFailure); }
                 string name = rowId == s_aliceRowId ? "Alice" : "Bob";
-                return Task.FromResult(new GetDataResponse { DataSet = RecordFor(_schema, rowId, name) });
+                return new GetDataResponse { DataSet = RecordFor(_schema, rowId, name) };
             }
 
-            public override Task<GetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
+            private GetNewDataResponse GetNewData()
             {
                 NewCount++;
                 // As the server returns it: the new master row is still an added row.
-                return Task.FromResult(new GetNewDataResponse { DataSet = RecordFor(_schema, Guid.NewGuid(), NewName, accept: false) });
+                return new GetNewDataResponse { DataSet = RecordFor(_schema, Guid.NewGuid(), NewName, accept: false) };
             }
 
-            public override Task<SaveResponse> SaveAsync(DataSet dataSet, CancellationToken cancellationToken = default)
+            private SaveResponse Save(DataSet dataSet)
             {
                 Saved.Add(dataSet);
-                return Task.FromResult(new SaveResponse { DataSet = dataSet });
+                return new SaveResponse { DataSet = dataSet };
             }
 
-            public override Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
+            private DeleteResponse Delete(Guid rowId)
             {
                 Deleted.Add(rowId);
-                return Task.FromResult(new DeleteResponse { RowsAffected = 1 });
-            }
-        }
-
-        /// <summary>
-        /// Serves the stored definitions: the schema, its layout, and the zh-TW translation when one is given. No
-        /// tenant customization exists, and a language without a translation is a missing file, as on a server.
-        /// </summary>
-        private sealed class DefinitionConnector : SystemApiConnector
-        {
-            private readonly FormSchema _schema;
-            private readonly bool _hasLayout;
-            private readonly LanguageResource? _zhTw;
-
-            public DefinitionConnector(FormSchema schema, bool hasLayout, LanguageResource? zhTw)
-                : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty)
-            {
-                _schema = schema;
-                _hasLayout = hasLayout;
-                _zhTw = zhTw;
+                return new DeleteResponse { RowsAffected = 1 };
             }
 
-            public int LanguageFetchCount { get; private set; }
-
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
+            private GetDefineResponse GetDefine(GetDefineRequest request)
             {
-                if (typeof(T) == typeof(FormSchema)) { return Task.FromResult((T)(object)_schema); }
-                if (typeof(T) == typeof(FormLayout))
+                object? stored = request.DefineType switch
                 {
-                    return Task.FromResult(_hasLayout ? (T)(object)FormLayoutGenerator.Generate(_schema, TestProgId) : default!);
-                }
-                if (typeof(T) == typeof(LanguageResource))
-                {
-                    LanguageFetchCount++;
-                    if (_zhTw != null && keys is [var lang, var ns] && lang == _zhTw.Lang && ns == _zhTw.Namespace)
-                        return Task.FromResult((T)(object)_zhTw);
-                    throw new FileNotFoundException("No language resource.", string.Join("/", keys ?? []));
-                }
-                throw new NotSupportedException($"GetDefineAsync<{typeof(T).Name}> is not supported by the fake.");
+                    DefineType.FormSchema => _schema,
+                    DefineType.FormLayout => _hasLayout ? FormLayoutGenerator.Generate(_schema, TestProgId) : null,
+                    DefineType.Language => Language(request.Keys),
+                    _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
+                };
+                return new GetDefineResponse { Xml = stored is null ? string.Empty : XmlCodec.Serialize(stored) };
             }
 
-            public override Task<FormLayout?> GetCustomizeFormLayoutAsync(string progId, string layoutId = "",
-                CancellationToken cancellationToken = default)
-                => Task.FromResult<FormLayout?>(null);
-
-            public override Task<LanguageResource?> GetCustomizeLanguageAsync(string lang, string ns,
-                CancellationToken cancellationToken = default)
-                => Task.FromResult<LanguageResource?>(null);
-        }
-
-        private sealed class FakeFactory : PolhemApiConnectorFactory
-        {
-            private readonly DefinitionConnector _system;
-            private readonly RecordingFormConnector _form;
-
-            public FakeFactory(DefinitionConnector system, RecordingFormConnector form, PolhemBlazorOptions options)
-                : base(options, new ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance)
+            private LanguageResource? Language(string[]? keys)
             {
-                _system = system;
-                _form = form;
+                LanguageFetchCount++;
+                return _zhTw != null && keys is [var lang, var ns] && lang == _zhTw.Lang && ns == _zhTw.Namespace
+                    ? _zhTw
+                    : null;
             }
-
-            public override SystemApiConnector CreateSystemConnector(Guid accessToken) => _system;
-
-            public override FormApiConnector CreateFormConnector(Guid accessToken, string progId) => _form;
         }
 
-        private DefinitionConnector? _definitions;
+        private FakeBackend? _backend;
 
-        private RecordingFormConnector RegisterFactory(bool hasLayout = true, bool nameRequired = false,
+        private FakeBackend RegisterBackend(bool hasLayout = true, bool nameRequired = false,
             LanguageResource? zhTw = null, bool useDefinitionLoader = true)
         {
-            var schema = BuildSchema(nameRequired);
-            var form = new RecordingFormConnector(schema);
-            _definitions = new DefinitionConnector(schema, hasLayout, zhTw);
-            var options = new PolhemBlazorOptions().UseLocalProvider();
-            options.UseDefinitionLoader = useDefinitionLoader;
-            Services.AddPolhemBlazor();
-            // Registered after `AddPolhemBlazor`, so this fake is the factory the page resolves.
-            Services.AddSingleton<PolhemApiConnectorFactory>(new FakeFactory(_definitions, form, options));
-            return form;
+            _backend = new FakeBackend(BuildSchema(nameRequired), hasLayout, zhTw);
+            Services.AddPolhemBlazor(options =>
+            {
+                options.UseLocalProvider();
+                options.UseDefinitionLoader = useDefinitionLoader;
+            });
+            // Registered after `AddPolhemBlazor`, so this is the client the page resolves.
+            var server = _backend.Server;
+            Services.AddScoped(_ => server.CreateClient());
+            return _backend;
         }
 
         private static string FieldLabel(IRenderedComponent<FormPage> cut)
@@ -234,7 +210,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Initialize_ListsRowsAndDisablesSaveAndDeleteWithoutRecord()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
 
             var cut = RenderPage();
 
@@ -252,7 +228,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void RowClick_LoadsRecordAndEnablesSaveAndDelete()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
 
@@ -268,7 +244,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void New_RequestsNewDataAndEnablesSave()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
@@ -283,7 +259,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Toolbar_UnderZhTw_ShowsTranslatedLabelsAndWorks()
         {
             using var culture = new CultureScope("zh-TW");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
@@ -299,7 +275,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Save_SavesOpenRecordAndReloadsList()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
@@ -318,7 +294,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Delete_DeletesOpenRecordReloadsListAndClosesRecord()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
@@ -337,8 +313,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Action_Fails_ShowsErrorMessage()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
-            form.GetDataFailure = new InvalidOperationException("Record is locked by another user.");
+            var form = RegisterBackend();
+            form.GetDataFailure = "Record is locked by another user.";
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
 
@@ -354,7 +330,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Initialize_NoFormLayout_ShowsConfigurationError()
         {
             using var culture = new CultureScope("en-US");
-            RegisterFactory(hasLayout: false);
+            RegisterBackend(hasLayout: false);
 
             var cut = RenderPage();
 
@@ -370,7 +346,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Initialize_BlankProgId_ShowsProgIdError()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory();
+            var form = RegisterBackend();
 
             var cut = RenderPage(progId: string.Empty);
 
@@ -383,7 +359,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Initialize_DefaultLoader_UnderZhTw_ShowsTranslatedCaption()
         {
             using var culture = new CultureScope("zh-TW");
-            RegisterFactory(zhTw: BuildZhTwTranslation());
+            RegisterBackend(zhTw: BuildZhTwTranslation());
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
@@ -398,31 +374,32 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Initialize_LoaderOff_UnderZhTw_ShowsStoredCaption()
         {
             using var culture = new CultureScope("zh-TW");
-            RegisterFactory(zhTw: BuildZhTwTranslation(), useDefinitionLoader: false);
+            RegisterBackend(zhTw: BuildZhTwTranslation(), useDefinitionLoader: false);
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
             Click(cut, PolhemUIText.New);
 
             cut.WaitForAssertion(() => Assert.Equal("Name", FieldLabel(cut)));
-            Assert.Equal(0, _definitions!.LanguageFetchCount);
+            Assert.Equal(0, _backend!.LanguageFetchCount);
         }
 
         [Fact]
-        [DisplayName("A DefinitionLoader passed to the page is used instead of the factory's")]
-        public void Initialize_PageLoader_OverridesFactoryDefault()
+        [DisplayName("A DefinitionLoader passed to the page is used instead of the default one")]
+        public void Initialize_PageLoader_OverridesDefault()
         {
             using var culture = new CultureScope("zh-TW");
-            RegisterFactory(useDefinitionLoader: false);
-            var translated = new DefinitionConnector(BuildSchema(), hasLayout: true, BuildZhTwTranslation());
-            var loader = new Polhem.Api.Client.Definitions.FormDefinitionLoader(new ClientDefineAccess(translated));
+            RegisterBackend(useDefinitionLoader: false);
+            var translated = new FakeBackend(BuildSchema(), hasLayout: true, BuildZhTwTranslation());
+            var loader = new Polhem.Api.Client.Definitions.FormDefinitionLoader(
+                new ClientDefineAccess(translated.Server.CreateClient().System));
             var cut = Render<FormPage>(p => p.Add(c => c.ProgId, TestProgId).Add(c => c.DefinitionLoader, loader));
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
             Click(cut, PolhemUIText.New);
 
             cut.WaitForAssertion(() => Assert.Equal("姓名", FieldLabel(cut)));
-            Assert.Equal(0, _definitions!.LanguageFetchCount);
+            Assert.Equal(0, _backend!.LanguageFetchCount);
         }
 
         [Fact]
@@ -430,7 +407,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Save_RequiredFieldEmpty_ShowsNoticeAndDoesNotSave()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory(nameRequired: true);
+            var form = RegisterBackend(nameRequired: true);
             form.NewName = " ";
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
@@ -451,7 +428,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public void Save_AfterFillingRequiredField_SavesAndClearsNotice()
         {
             using var culture = new CultureScope("en-US");
-            var form = RegisterFactory(nameRequired: true);
+            var form = RegisterBackend(nameRequired: true);
             form.NewName = string.Empty;
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));

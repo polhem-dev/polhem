@@ -44,8 +44,9 @@ namespace Polhem.Api.Client.Definitions
         /// <param name="defineAccess">The client define access used to fetch raw definitions.</param>
         /// <param name="defaultLanguage">
         /// The default language, the last hop of the fall-back chain. <c>null</c> — the default —
-        /// reads <see cref="ApiClientInfo.DefaultLanguage"/>, the value the server advertised, at
-        /// each call; an empty string drops the hop.
+        /// reads <see cref="PolhemApiClient.DefaultLanguage"/> of the client behind
+        /// <paramref name="defineAccess"/>, the value the server advertised, at each call; an empty
+        /// string drops the hop.
         /// </param>
         public FormDefinitionLoader(ClientDefineAccess defineAccess, string? defaultLanguage = null)
         {
@@ -53,7 +54,7 @@ namespace Polhem.Api.Client.Definitions
             _defaultLanguage = defaultLanguage;
         }
 
-        private string DefaultLanguage => _defaultLanguage ?? ApiClientInfo.DefaultLanguage;
+        private string DefaultLanguage => _defaultLanguage ?? _defineAccess.Client.DefaultLanguage;
 
         /// <summary>
         /// Gets the accessor supplying the company whose decimal places the number formats are baked

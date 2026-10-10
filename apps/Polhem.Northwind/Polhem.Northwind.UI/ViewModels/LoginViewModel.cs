@@ -96,16 +96,11 @@ public partial class LoginViewModel : ViewModelBase
                 .ConfigureAwait(true);
             ClientInfo.ApplyLoginResult(response);
 
-            // Second half of sign-in. ApplyEnterCompanyResult also flushes the definition cache,
-            // which is why the company is entered before any form is opened rather than lazily on
-            // the first one that needs it.
-            //
-            // WARNING: the connector is read again rather than reusing the local above. Storing the
-            // token discards the cached connector, because that one was built around the token the
-            // client held before signing in — an empty one here. Calling EnterCompany on the stale
-            // instance fails with "AccessToken is required or invalid", which reads like a session
-            // problem rather than a stale local.
-            var company = await ClientInfo.SystemApiConnector
+            // Second half of sign-in, on the same connector: the login signed in the client it
+            // belongs to. ApplyEnterCompanyResult also flushes the definition cache, which is why
+            // the company is entered before any form is opened rather than lazily on the first one
+            // that needs it.
+            var company = await connector
                 .EnterCompanyAsync(DemoCompanyId)
                 .ConfigureAwait(true);
             ClientInfo.ApplyEnterCompanyResult(company);

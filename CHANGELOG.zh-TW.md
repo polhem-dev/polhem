@@ -6,11 +6,38 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 [語意化版本](https://semver.org/lang/zh-TW/)。每個版本在這裡以一行列一項變更；理由與背景寫在
 [`docs/zh-TW/changelogs/`](docs/zh-TW/changelogs/) 下該版本的明細。
 
-> **1.x 的 minor 版可能含破壞性變更**，列在「Breaking API changes」或「Breaking wire changes」下，並附遷移步驟；
+> **1.x 的 minor 版可能含破壞性變更**，列在「破壞性 API 變更」或「破壞性線路變更」下，並附遷移步驟；
 > patch 版不會。引用套件時請使用不跨 minor 版的範圍，例如 `[1.5,1.6)`，不要用 `1.*`。這項政策與理由見
 > [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
 ## [Unreleased]
+
+### 破壞性 API 變更
+
+- `Polhem.Api.Client` 只有一個進入點：`PolhemApiClient`，由它擁有連線與已登入的身分
+  （[ADR-053](maintainers/adr/adr-053-api-client-composition-root.md)）。以 `PolhemApiClient.CreateRemote(endpoint, apiKey)`
+  或 `PolhemApiClient.CreateLocal(services)` 建立一次，透過 `client.System.LoginAsync` 登入，再從它取得連接器
+  （`client.System`、`client.AuditLog`、`client.Form(progId)`）：之後每個連接器都以該次登入的權杖、傳輸金鑰與時區呼叫，
+  不必再到處傳遞權杖。接收端點或服務提供者加存取權杖的連接器建構子已移除，每個連接器只剩一個接收 client 的建構子。
+  `ApiConnector.AccessToken` 與 `ApiConnector.Provider` 已移除，`LocalApiProvider` 與 `RemoteApiProvider` 改為 internal。
+- `ApiClientInfo` 已移除。`Endpoint` 與 `ConnectType` → `PolhemApiClient.Endpoint` 與 `IsLocal`（桌面：
+  `ClientInfo.ConnectType`）；`ApiKey` → `CreateRemote` 的參數，或 `PolhemApiClient.ApiKey`；`PayloadOptions` →
+  `PolhemApiClient.PayloadOptions`；`SupportedConnectTypes` → `ClientInfo.SupportedConnectTypes`；`DefaultLanguage` →
+  `PolhemApiClient.DefaultLanguage`（Blazor：`PolhemBlazorOptions.DefaultLanguage`）。
+  `ApiConnectValidator.ValidateAsync` 的第二個參數改為允許的連線方式。
+- `ApiSessionContext.Ambient` 以及 `ApiSessionContext.ApiEncryptionKey`、`UserTimeZoneId` 的 setter 已移除。session
+  改持有一個 `ApiSessionCredentials`，由 `SignIn` 與 `SignOut` 整份替換。
+- Blazor Server：`PolhemApiConnectorFactory` 已移除。`AddPolhemBlazor` 為每個 circuit 註冊一個 scoped 的
+  `PolhemApiClient`，改注入它來取代 factory。`UseRemoteProvider` 的第二個參數改為 API 金鑰，取代設定
+  `ApiClientInfo.ApiKey`。`FormPage` 不再有 `AccessToken` 參數：它以 circuit 的 client 上已登入的身分呼叫。
+- 桌面 head 的 `ClientInfo` 簽章不變；把 `ApiClientInfo.SupportedConnectTypes` 與 `ApiClientInfo.ConnectType`
+  改為 `ClientInfo` 上的同名成員。`LoginAsync` 之後，可用同一個 `ClientInfo.SystemApiConnector` 呼叫
+  `EnterCompanyAsync`，不必重新讀取。
+
+### 新增
+
+- `PolhemApiClient`、`ApiSessionCredentials`、`ClientInfo.ApiClient`，以及 `PolhemBlazorOptions.ApiKey` 與
+  `DefaultLanguage`。同一個行程可以呼叫多台伺服器，每個 client 各自擁有端點、API 金鑰與身分。
 
 ## [1.5.0] - 2026-10-09
 

@@ -1,7 +1,6 @@
 using Polhem.Definition.Settings;
 using Polhem.Core;
 using Polhem.Core.Serialization;
-using Polhem.Api.Client.Connectors;
 
 namespace Polhem.Api.Client
 {
@@ -14,6 +13,7 @@ namespace Polhem.Api.Client
         /// Validates the input service endpoint and returns the corresponding connection type.
         /// </summary>
         /// <param name="endpoint">The endpoint to validate: a URL for remote connections or a local path for local connections.</param>
+        /// <param name="supportedConnectTypes">The connection types the application allows; any other is refused.</param>
         /// <param name="allowGenerateSettings">Whether to auto-generate missing settings files (SystemSettings.xml and DatabaseSettings.xml) for local connections.</param>
         /// <param name="cancellationToken">A token that cancels remote validation.</param>
         /// <remarks>
@@ -21,8 +21,8 @@ namespace Polhem.Api.Client
         /// so it is safe on single-threaded runtimes (browser WASM) where blocking would throw
         /// "Cannot wait on monitors".
         /// </remarks>
-        public static async Task<ConnectType> ValidateAsync(string endpoint, bool allowGenerateSettings = false,
-            CancellationToken cancellationToken = default)
+        public static async Task<ConnectType> ValidateAsync(string endpoint, SupportedConnectTypes supportedConnectTypes,
+            bool allowGenerateSettings = false, CancellationToken cancellationToken = default)
         {
             if (StringUtilities.IsEmpty(endpoint))
                 throw new ArgumentException("Input cannot be null or empty.", nameof(endpoint));
@@ -30,12 +30,12 @@ namespace Polhem.Api.Client
             if (FileUtilities.IsLocalPath(endpoint))
             {
                 // Local validation is pure file-system I/O with no async work to await.
-                ValidateLocal(endpoint, allowGenerateSettings);
+                ValidateLocal(endpoint, supportedConnectTypes, allowGenerateSettings);
                 return ConnectType.Local;
             }
             else if (HttpUtilities.IsUrl(endpoint))
             {
-                await ValidateRemoteAsync(endpoint, cancellationToken).ConfigureAwait(false);
+                await ValidateRemoteAsync(endpoint, supportedConnectTypes, cancellationToken).ConfigureAwait(false);
                 return ConnectType.Remote;
             }
             else
@@ -48,11 +48,12 @@ namespace Polhem.Api.Client
         /// Validates the local connection settings.
         /// </summary>
         /// <param name="definePath">The definition path.</param>
+        /// <param name="supportedConnectTypes">The connection types the application allows.</param>
         /// <param name="allowGenerateSettings">Whether to auto-generate missing settings files for local connections.</param>
-        private static void ValidateLocal(string definePath, bool allowGenerateSettings)
+        private static void ValidateLocal(string definePath, SupportedConnectTypes supportedConnectTypes, bool allowGenerateSettings)
         {
             // Verify the application supports local connections
-            if (!ApiClientInfo.SupportedConnectTypes.HasFlag(SupportedConnectTypes.Local))
+            if (!supportedConnectTypes.HasFlag(SupportedConnectTypes.Local))
                 throw new InvalidOperationException("Local connections are not supported.");
             if (StringUtilities.IsEmpty(definePath))
                 throw new ArgumentException("Definition path must be specified.", nameof(definePath));
@@ -122,15 +123,18 @@ namespace Polhem.Api.Client
         /// probe used to run first; the endpoint accepts only POST, so it was answered with 405 on every connect.
         /// </remarks>
         /// <param name="endpoint">The service endpoint.</param>
+        /// <param name="supportedConnectTypes">The connection types the application allows.</param>
         /// <param name="cancellationToken">A token that cancels the ping.</param>
-        private static async Task ValidateRemoteAsync(string endpoint, CancellationToken cancellationToken)
+        private static async Task ValidateRemoteAsync(string endpoint, SupportedConnectTypes supportedConnectTypes,
+            CancellationToken cancellationToken)
         {
             // Verify the application supports remote connections
-            if (!ApiClientInfo.SupportedConnectTypes.HasFlag(SupportedConnectTypes.Remote))
+            if (!supportedConnectTypes.HasFlag(SupportedConnectTypes.Remote))
                 throw new InvalidOperationException("Remote connections are not supported.");
             if (StringUtilities.IsEmpty(endpoint))
                 throw new ArgumentException("The endpoint must be specified.", nameof(endpoint));
-            var connector = new SystemApiConnector(endpoint, Guid.Empty);
+            // The server answers `System.Ping` without an API key, so the probe needs none.
+            var connector = PolhemApiClient.CreateRemote(endpoint, string.Empty).System;
             try
             {
                 await connector.PingAsync(cancellationToken).ConfigureAwait(false);

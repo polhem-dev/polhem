@@ -20,7 +20,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("RemoteApiProvider constructor throws ArgumentException for a blank endpoint")]
         public void Constructor_NullOrEmptyEndpoint_ThrowsArgumentException(string? endpoint)
         {
-            Assert.Throws<ArgumentException>(() => new RemoteApiProvider(endpoint!, Guid.Empty));
+            Assert.Throws<ArgumentException>(() => new RemoteApiProvider(endpoint!, Guid.Empty, NoKey));
         }
 
         [Fact]
@@ -28,7 +28,7 @@ namespace Polhem.Api.Client.UnitTests
         public void Constructor_ValidArgs_SetsProperties()
         {
             var token = Guid.NewGuid();
-            var provider = new RemoteApiProvider("http://example.com/api", token);
+            var provider = new RemoteApiProvider("http://example.com/api", token, NoKey);
 
             Assert.Equal("http://example.com/api", provider.Endpoint);
             Assert.Equal(token, provider.AccessToken);
@@ -38,7 +38,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("RemoteApiProvider constructor accepts Guid.Empty as AccessToken (for Login and Ping)")]
         public void Constructor_EmptyAccessToken_IsAccepted()
         {
-            var provider = new RemoteApiProvider("http://example.com/api", Guid.Empty);
+            var provider = new RemoteApiProvider("http://example.com/api", Guid.Empty, NoKey);
 
             Assert.Equal(Guid.Empty, provider.AccessToken);
         }
@@ -48,7 +48,7 @@ namespace Polhem.Api.Client.UnitTests
         public async Task SendAsync_EmptyAccessToken_SendsNoAuthorizationHeader()
         {
             var handler = new CapturingHandler();
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, NoKey, handler);
 
             await provider.SendAsync(PingRequest());
 
@@ -62,7 +62,7 @@ namespace Polhem.Api.Client.UnitTests
         {
             var handler = new CapturingHandler();
             var token = Guid.NewGuid();
-            var provider = new RemoteApiProvider("http://example.invalid/api", token, handler);
+            var provider = new RemoteApiProvider("http://example.invalid/api", token, NoKey, handler);
 
             await provider.SendAsync(PingRequest());
 
@@ -75,7 +75,7 @@ namespace Polhem.Api.Client.UnitTests
         public async Task SendAsync_SendsApiKeyHeader()
         {
             var handler = new CapturingHandler();
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, NoKey, handler);
 
             await provider.SendAsync(PingRequest());
 
@@ -84,17 +84,35 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
+        [DisplayName("RemoteApiProvider reads the API key for each request, so a changed key applies to the next one")]
+        public async Task SendAsync_KeyChangedBetweenRequests_SendsCurrentKey()
+        {
+            var handler = new CapturingHandler();
+            var key = "first.key";
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, () => key, handler);
+
+            await provider.SendAsync(PingRequest());
+            Assert.Equal("first.key", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.ApiKey)));
+
+            key = "second.key";
+            await provider.SendAsync(PingRequest());
+            Assert.Equal("second.key", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.ApiKey)));
+        }
+
+        [Fact]
         [DisplayName("RemoteApiProvider posts the request to its endpoint")]
         public async Task SendAsync_PostsToEndpoint()
         {
             var handler = new CapturingHandler();
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, NoKey, handler);
 
             await provider.SendAsync(PingRequest());
 
             Assert.Equal(HttpMethod.Post, handler.Request!.Method);
             Assert.Equal(new Uri("http://example.invalid/api"), handler.Request.RequestUri);
         }
+
+        private static string NoKey() => string.Empty;
 
         private static JsonRpcRequest PingRequest()
             => new("System.Ping", JsonSerializer.Deserialize<JsonElement>("{}"), JsonRpcId.FromString("1"));

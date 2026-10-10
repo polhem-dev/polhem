@@ -28,7 +28,7 @@
 | 整合測試 | 直接引用 `Polhem.Hosting` |
 
 只與遠端伺服器溝通的 head（以遠端端點使用 `Polhem.Api.Client`）不需要此套件。在自己行程內執行後端的 head
-兩者都要引用：以 `AddPolhemFramework` 建立後端，再把產生的 `IServiceProvider` 傳給行程內連接器的建構子。
+兩者都要引用：以 `AddPolhemFramework` 建立後端，再把產生的 `IServiceProvider` 傳給 `PolhemApiClient.CreateLocal`。
 
 ## 主要公開 API
 
@@ -36,7 +36,7 @@
 |------------|------|
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、JSON-RPC dispatcher 與其選項、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | 尚未發行 API key 時於啟動時記錄 log。供以 HTTP 提供 API 的宿主使用 |
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `ApiClientInfo.PayloadOptions` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |
 
 ## 使用方式
@@ -78,7 +78,7 @@ generic host 並啟動它。這需要 `Microsoft.Extensions.Hosting` 套件。
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Polhem.Api.Client.Connectors;
+using Polhem.Api.Client;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -93,13 +93,13 @@ builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions
 using var host = builder.Build();
 await host.StartAsync();
 
-// 行程內連接器接受後端服務提供者，而不是端點 URL。
-var connector = new SystemApiConnector(host.Services, Guid.Empty);
-var login = await connector.LoginAsync("demo", "demo");
+// 行程內 client 接受後端服務提供者，而不是端點 URL。
+var client = PolhemApiClient.CreateLocal(host.Services);
+var login = await client.System.LoginAsync("demo", "demo");
 ```
 
-`Polhem.UI.Core` 的 head 則把 `host.Services` 指派給 `ClientInfo.LocalServiceProvider`，由 `ClientInfo`
-建立的連接器使用它。
+`Polhem.UI.Core` 的 head 則把 `host.Services` 指派給 `ClientInfo.LocalServiceProvider`，行程內的
+`ClientInfo.ApiClient` 會派遣到它。
 
 ## 設計慣例
 

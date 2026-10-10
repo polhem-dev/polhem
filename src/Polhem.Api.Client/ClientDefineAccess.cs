@@ -57,6 +57,11 @@ namespace Polhem.Api.Client
         }
 
         /// <summary>
+        /// Gets the client behind the connector.
+        /// </summary>
+        internal PolhemApiClient Client => _connector.Client;
+
+        /// <summary>
         /// Gets the cache of in-flight or completed definition fetches, keyed by define type and keys.
         /// </summary>
         /// <remarks>

@@ -188,13 +188,13 @@ action as a typed method. Details in `references/client.md`:
 ```csharp
 public sealed class XxxApiConnector : ApiConnector
 {
-    public XxxApiConnector(string endpoint, Guid accessToken) : base(endpoint, accessToken) { }
+    public XxxApiConnector(PolhemApiClient client) : base(client) { }
     public Task<GetLevelsResponse> GetLevelsAsync(CancellationToken cancellationToken = default) =>
         ExecuteAsync<GetLevelsResponse>("Game", "GetLevels", new GetLevelsRequest(), PayloadFormat.Plain, cancellationToken);
 }
 // Caller:
-ApiClientInfo.ApiKey = "xxx-dev";       // any non-empty value passes until the deployment issues its first API key
-var r = await new XxxApiConnector(endpoint, Guid.Empty).GetLevelsAsync();
+var client = PolhemApiClient.CreateRemote(endpoint, "xxx-dev"); // any non-empty key passes until the deployment issues its first API key
+var r = await new XxxApiConnector(client).GetLevelsAsync();
 ```
 - endpoint: desktop `http://localhost:<port>/api`; **Android emulator `10.0.2.2`**, iOS simulator `localhost`;
   cleartext must be allowed during development.

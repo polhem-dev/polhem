@@ -216,7 +216,6 @@ protects a process-wide static that has not been moved to DI yet:
 |---|---|
 | `ClientInfoStateCollection.Name` | `ClientInfo.*` |
 | `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Core` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
-| `ApiClientInfoStateCollection.Name` | `ApiClientInfo.*` |
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
 
 Each definition is a `static` class declaring `public const string Name`, and every user writes

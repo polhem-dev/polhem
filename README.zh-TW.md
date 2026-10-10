@@ -75,7 +75,7 @@ dotnet add package Polhem.Db
 
 | 組件名稱 | 說明 |
 |---|---|
-| **Polhem.Api.Client.dll** | 提供連接器機制，支援近端與遠端呼叫後端 Business Object（`LocalApiProvider` / `RemoteApiProvider`）。 |
+| **Polhem.Api.Client.dll** | 提供 API client，支援以同程序或 HTTP 呼叫後端 Business Object（`PolhemApiClient.CreateLocal` / `CreateRemote`）。 |
 | **Polhem.UI.Core.dll** | 跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `FileEndpointStorage` / `IUIViewService`），供原生 UI 宿主共用 client-side 連線狀態與 endpoint 持久化邏輯。 |
 | **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
 | **Polhem.Web.Blazor.Server.dll** | Blazor Server 宿主用的 Razor Class Library（RCL），提供 DI scope 連接器與 Blazor 元件（`DynamicForm`、`FormDataObject`）。 |
@@ -127,7 +127,7 @@ Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo
 | 類別 | Demo | 重點 |
 |------|------|------|
 | QuickStart | [`QuickStart.Server`](samples/QuickStart.Server/README.zh-TW.md) + [`QuickStart.Console`](samples/QuickStart.Console/README.zh-TW.md) | 最小 JSON-RPC 端到端，含一個 anonymous 自訂 BO |
-| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD,走 `LocalApiProvider` in-process 派遣 |
+| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD,走 `PolhemApiClient.CreateLocal` in-process 派遣 |
 | Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.zh-TW.md) | 主題導向控件 demo center（DevExpress 風格）：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 主題/FormMode 工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（Semi.Avalonia，無後端） |
 
 ## 從 Bee.NET 遷移

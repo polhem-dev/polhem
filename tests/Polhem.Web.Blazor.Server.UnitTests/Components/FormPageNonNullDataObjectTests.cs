@@ -1,15 +1,11 @@
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
-using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
-using Polhem.Definition.Filters;
+using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Definition.Paging;
-using Polhem.Definition.Sorting;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DataObjects;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -18,33 +14,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// and <c>ReloadListAsync</c>.
     /// The action handlers trigger an exception with a <see cref="FormDataObject"/> that has no connector.
     /// <c>RunGuardedAsync</c> catches it and sets <c>_error</c>.
-    /// <c>ReloadListAsync</c> runs its full path driven by the injected <see cref="FakeFactory"/>.
+    /// <c>ReloadListAsync</c> runs its full path against a <see cref="FakeApiServer"/>.
     /// </summary>
     public class FormPageNonNullDataObjectTests
     {
-        private sealed class FakeFormConnector : FormApiConnector
-        {
-            public FakeFormConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty, "TestProg") { }
-
-            public override Task<GetListResponse> GetListAsync(
-                string selectFields = "",
-                FilterNode? filter = null,
-                SortFieldCollection? sortFields = null,
-                PagingOptions? paging = null, CancellationToken cancellationToken = default)
-                => Task.FromResult(new GetListResponse { Table = new DataTable("Test") });
-        }
-
-        private sealed class FakeFactory : PolhemApiConnectorFactory
-        {
-            public FakeFactory()
-                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance) { }
-
-            public override FormApiConnector CreateFormConnector(Guid accessToken, string progId)
-                => new FakeFormConnector();
-
-            public override SystemApiConnector CreateSystemConnector(Guid accessToken)
-                => throw new InvalidOperationException("SystemApiConnector not needed in this test.");
-        }
+        private static FakeApiServer ListServer()
+            => new FakeApiServer().On<GetListRequest>($"TestProg.{FormActions.GetList}",
+                _ => new GetListResponse { Table = new DataTable("Test") });
 
         private static readonly FieldInfo s_dataObjectField =
             typeof(FormPage).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -114,14 +90,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("ReloadListAsync with FakeFactory sets _listRows to a non-null DataTable")]
-        public async Task ReloadListAsync_WithFakeFactory_SetsListRows()
+        [DisplayName("ReloadListAsync sets _listRows to the table the server returns")]
+        public async Task ReloadListAsync_WithFakeServer_SetsListRows()
         {
             var page = new FormPage();
             typeof(FormPage).GetProperty("ProgId", BindingFlags.Public | BindingFlags.Instance)!
                 .SetValue(page, "TestProg");
-            typeof(FormPage).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .SetValue(page, new FakeFactory());
+            typeof(FormPage).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .SetValue(page, ListServer().CreateClient());
 
             var method = typeof(FormPage).GetMethod(
                 "ReloadListAsync", BindingFlags.NonPublic | BindingFlags.Instance);

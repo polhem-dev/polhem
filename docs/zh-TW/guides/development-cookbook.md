@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 54bb0ce3d0cb76d69757b50d39a6a14624532278 -->
+<!-- source: en/guides/development-cookbook.md blob: e1c8b6aab28de7b5ad4c701f927af6d76723cb81 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -38,7 +38,7 @@ ctor 注入解析，無靜態入口點（service locator）。
 宿主套件選擇：
 
 - **ASP.NET Core web host**：引用 `Polhem.Hosting` 與 `Polhem.JsonRpc.AspNetCore`。啟動程式加上 `using Polhem.Hosting;`（取 `AddPolhemFramework` 與 `AddPolhemApiKeyGateCheck`）與 `using Polhem.JsonRpc.AspNetCore;`（取 `AddJsonRpcServer` 與 `MapJsonRpc`）。`services.AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，`app.MapJsonRpc("/api")` 發布 `POST /api` 端點；不需要撰寫 controller。
-- **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 connector 的建構子（`new SystemApiConnector(provider, accessToken)`），或在使用 `Polhem.UI.Core` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
+- **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 `PolhemApiClient.CreateLocal(provider)`，或在使用 `Polhem.UI.Core` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
 
 `AddPolhemFramework` 也會註冊數個 hosted service，包括保留 progId 的啟動期註冊、跨 process 的 cache-notify poller，以及過期 session 的清理。它們只在 provider 屬於 .NET Generic Host（`WebApplication`、`Host.CreateApplicationBuilder`）時才會啟動；單純以 `BuildServiceProvider()` 建出的 provider 不會啟動它們。
 
@@ -224,7 +224,8 @@ protected override void DoExecFunc(ExecFuncArgs args, ExecFuncResult result)
 
 ```csharp
 // Form-level: the request goes to the business object of progId "Customer".
-var connector = new FormApiConnector(endpoint, accessToken, "Customer");
+// `client` is a signed-in PolhemApiClient.
+var connector = client.Form("Customer");
 var response = await connector.ExecFuncAsync(new ExecFuncRequest
 {
     FuncId = "Greet",
@@ -234,11 +235,11 @@ string greeting = response.Parameters!.GetValue<string>("Greeting");
 ```
 
 系統層級函式以同樣方式走 `SystemApiConnector.ExecFuncAsync`。框架自己的系統函式 `UpgradeTableSchema` 與
-`TestConnection` 都是 `LocalOnly`，所以只有在 process 內分派的 connector —— 以後端的 `IServiceProvider`
-建構的那種 —— 才能執行它們：
+`TestConnection` 都是 `LocalOnly`，所以只有在 process 內分派的 connector —— 來自以 `PolhemApiClient.CreateLocal` 搭配後端
+`IServiceProvider` 建立的 client —— 才能執行它們：
 
 ```csharp
-var sysConnector = new SystemApiConnector(serviceProvider, accessToken);
+var sysConnector = PolhemApiClient.CreateLocal(serviceProvider).System;
 var upgrade = await sysConnector.ExecFuncAsync(new ExecFuncRequest
 {
     FuncId = "UpgradeTableSchema",
@@ -844,14 +845,14 @@ FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer")
 
 ```csharp
 await ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
-// Clears AccessToken, so the user signs in again.
+// Replaces the client and signs out, so the user signs in again.
 ```
 
-`SetEndpointAsync` 驗證 endpoint、切換連線類型、清除 access token 與使用者時區、初始化系統 connector，並透過 `ClientInfo.EndpointStorage` 儲存 endpoint。它不會登入：要再呼叫一次 `LoginAsync` 與 `ApplyLoginResult`。
+`SetEndpointAsync` 依 `ClientInfo.SupportedConnectTypes` 驗證 endpoint、以新連線類型的 client 取代 `ClientInfo.ApiClient`（新 client 處於未登入狀態，沒有 access token 與時區）、初始化其系統 connector，並透過 `ClientInfo.EndpointStorage` 儲存 endpoint。它不會登入：要再呼叫一次 `LoginAsync` 與 `ApplyLoginResult`。
 
 ### Blazor Server（Polhem.Web.Blazor.Server）
 
-Blazor Server 透過 ASP.NET Core DI 建立 connector。**每個 SignalR circuit 一個 DI scope** —— `AddPolhemBlazor` 把 connector factory 與 `ApiSessionContext` 註冊為 scoped —— 避免 cross-user data leak。Blazor Server 跑在 server process 內，所以其他 head 的裁剪與平台問題不適用於它。
+Blazor Server 透過 ASP.NET Core DI 提供 API client。**每個 SignalR circuit 一個 DI scope** —— `AddPolhemBlazor` 把 `PolhemApiClient` 註冊為 scoped，所以每個 circuit 都在自己的 client 上登入 —— 避免 cross-user data leak。Blazor Server 跑在 server process 內，所以其他 head 的裁剪與平台問題不適用於它。
 
 **1. `Program.cs` 註冊**：
 
@@ -864,7 +865,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Backend services (IDbConnectionManager / IDefineAccess / BO, etc.) — the Local provider dispatches to them
 builder.Services.AddPolhemFramework(backendConfiguration, pathOptions);
 
-// Polhem.Web.Blazor.Server services: options, connector factory, the components' UI text
+// Polhem.Web.Blazor.Server services: options, the per-circuit PolhemApiClient, the components' UI text
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 
 // Standard Blazor Server setup
@@ -881,45 +882,42 @@ app.Run();
 > 記錄一筆 error（Development 環境為 warning），因為此時 `X-Api-Key` header 只檢查是否存在。
 > 見 [API 金鑰管理](../security/api-key-management.md)。
 
-**2. 在 Razor component 中建立 connector**：
+**2. 在 Razor component 中呼叫後端**：
 
 ```razor
 @page "/customers"
 @using Polhem.Api.Core.Messages.Form
-@using Polhem.Web.Blazor.Server.DependencyInjection
-@inject PolhemApiConnectorFactory ConnectorFactory
+@using Polhem.Api.Client
+@inject PolhemApiClient Client
 
 <h3>Customers</h3>
 
 @code {
-    // Cascaded by a PolhemAccessTokenProvider around the page.
-    [CascadingParameter] public Guid AccessToken { get; set; }
-
     private GetListResponse? listResult;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (AccessToken == Guid.Empty) { return; }
-        var formConnector = ConnectorFactory.CreateFormConnector(AccessToken, "Customer");
-        listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
+        // The circuit's client carries whoever signed in on it; before sign-in it is anonymous.
+        if (Client.Session.Credentials.AccessToken == Guid.Empty) { return; }
+        listResult = await Client.Form("Customer").GetListAsync(selectFields: "sys_id,sys_name");
     }
 }
 ```
 
-`PolhemAccessTokenProvider` 保存 circuit 的 access token 並以 cascading 方式傳遞；`PolhemLoginPanel` 負責登入並把 token 交給它；`FormPage` 依 `ProgId` 呈現整張表單。[`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.zh-TW.md) 把三者接在一起。元件自己的文字來自 `AddPolhemBlazor` 註冊的 `IStringLocalizer<PolhemUIText>` —— 一個 `LanguageResourceStringLocalizer`，依 circuit 目前的 UI culture，先讀宿主的語系資源，再讀框架內附的翻譯。宿主若自行為 `PolhemUIText` 註冊 localizer，會保留宿主的那一個。
+`PolhemLoginPanel` 在 circuit 的 client 上登入，並把 token 交給 `PolhemAccessTokenProvider`，由它保存頁面的登入狀態並以 cascading 方式傳遞；`FormPage` 依 `ProgId` 呈現整張表單。[`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.zh-TW.md) 把三者接在一起。元件自己的文字來自 `AddPolhemBlazor` 註冊的 `IStringLocalizer<PolhemUIText>` —— 一個 `LanguageResourceStringLocalizer`，依 circuit 目前的 UI culture，先讀宿主的語系資源，再讀框架內附的翻譯。宿主若自行為 `PolhemUIText` 註冊 localizer，會保留宿主的那一個。
 
-`FormPage` 載入定義的方式與 Avalonia 畫面相同：經由 `FormDefinitionLoader`，由 `PolhemApiConnectorFactory.CreateDefinitionLoader` 為每個頁面建立，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用。在 `AddPolhemBlazor` 中設定 `options.UseDefinitionLoader = false` 會照原樣呈現定義；把 loader 傳給頁面的 `DefinitionLoader` 參數，則可改變單一頁面的組裝方式（例如提供 `CompanyAccessor`，套用公司的數值格式）。儲存前，`FormPage` 會檢查標記為 `Required` 的欄位；只要有空白，就在工具列上方列出這些欄位，且不送出儲存。Avalonia 的 `FormView` 也會這樣做，訊息顯示在它的錯誤列。
+`FormPage` 載入定義的方式與 Avalonia 畫面相同：經由它為每個頁面在 circuit 的 client 上建立的 `FormDefinitionLoader`（以 `PolhemBlazorOptions.DefaultLanguage` 作為語言回退的最後一站），因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用。在 `AddPolhemBlazor` 中設定 `options.UseDefinitionLoader = false` 會照原樣呈現定義；把 loader 傳給頁面的 `DefinitionLoader` 參數，則可改變單一頁面的組裝方式（例如提供 `CompanyAccessor`，套用公司的數值格式）。儲存前，`FormPage` 會檢查標記為 `Required` 的欄位；只要有空白，就在工具列上方列出這些欄位，且不送出儲存。Avalonia 的 `FormView` 也會這樣做，訊息顯示在它的錯誤列。
 
 **3. Local vs Remote 模式**：
 
-模式在 `AddPolhemBlazor` 選定，`PolhemApiConnectorFactory` 依此建立每一個 connector：
+模式在 `AddPolhemBlazor` 選定，每個 circuit 的 `PolhemApiClient` 依此建立：
 
-- **Local mode（in-process）**—— `options.UseLocalProvider()`，預設值：元件與後端共用同一個 ASP.NET Core process，connector 經 `LocalApiProvider` 分派，沒有 HTTP。**每次呼叫都是受信任的 local 呼叫**：access token 檢查與 `LocalOnly` 限制都會略過。只有在網站的每個使用者都可以看到整個後端時才使用，例如內部管理工具。
-- **Remote mode（HTTP）**—— `options.UseRemoteProvider("https://api.example.com/api")`：後端在另一個 process 或 server，connector 走 `RemoteApiProvider`，每次呼叫都和其他 API client 一樣接受檢查。此時 Blazor 宿主不需要 `AddPolhemFramework`，但必須在第一次呼叫前把 `Polhem.Api.Client.ApiClientInfo.ApiKey` 設為伺服器核發給此應用程式的 key：`RemoteApiProvider` 會把這個行程共用的值當作 `X-Api-Key` 標頭送出，`UseRemoteProvider` 本身不接受 key，而沒有 key 時伺服器對 `System.Ping` 以外的每個方法都回應 `401 Unauthorized`，所以最先失敗的是登入。key 識別的是應用程式而不是使用者，因此所有 circuit 共用同一把。
+- **Local mode（in-process）**—— `options.UseLocalProvider()`，預設值：元件與後端共用同一個 ASP.NET Core process，client 在 process 內分派（`PolhemApiClient.CreateLocal`），沒有 HTTP。**每次呼叫都是受信任的 local 呼叫**：access token 檢查與 `LocalOnly` 限制都會略過。只有在網站的每個使用者都可以看到整個後端時才使用，例如內部管理工具。
+- **Remote mode（HTTP）**—— `options.UseRemoteProvider("https://api.example.com/api", apiKey)`：後端在另一個 process 或 server，client 走 HTTP（`PolhemApiClient.CreateRemote`），每次呼叫都和其他 API client 一樣接受檢查。此時 Blazor 宿主不需要 `AddPolhemFramework`，但 `apiKey` 必須是伺服器核發給此應用程式的 key：每個 circuit 的 client 都會把它當作 `X-Api-Key` 標頭送出，而沒有被接受的 key 時伺服器對 `System.Ping` 以外的每個方法都回應 `401 Unauthorized`，所以最先失敗的是登入。key 識別的是應用程式而不是使用者，因此所有 circuit 共用同一把。
 
 ### Avalonia（Polhem.UI.Avalonia）
 
-`Polhem.UI.Avalonia` 歸 **`Polhem.UI.*` family**，所以在每一個 Avalonia head 上，連 API 的方式都與上方「Polhem.UI.* head」章節相同 —— 透過 `ClientInfo` static singleton，per-process 一個 token。
+`Polhem.UI.Avalonia` 歸 **`Polhem.UI.*` family**，所以在每一個 Avalonia head 上，連 API 的方式都與上方「Polhem.UI.* head」章節相同 —— 透過 `ClientInfo` static singleton，per-process 一個身分。
 
 內含 FormSchema 驅動控制項：`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞。套件目標為 `net10.0`；平台專屬的 target framework 屬於各 head 專案。
 
@@ -927,7 +925,7 @@ app.Run();
 // Avalonia desktop head — configure ClientInfo BEFORE any UI control instantiates.
 public static void Main(string[] args)
 {
-    ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+    ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
     // The shipped key seeds empty storage on first run; after that the stored value wins.
     ClientInfo.ApplyApiKey("my-app-key");
 
@@ -943,7 +941,7 @@ public static void Main(string[] args)
 
 | 前端 | 連線抽象 | Token 承載 | Endpoint 持久化 | 模式 | 註冊方式 |
 |------|---------|-----------|---------------|------|---------|
-| `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（`ClientInfo.AccessToken` 背後的 static 欄位） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `ClientInfo.InitializeAsync` |
-| Blazor Server | DI scope | **N 個使用者 / process**（per SignalR circuit） | 啟動設定（`UseRemoteProvider(endpoint)`） | Local 或 Remote | `AddPolhemBlazor`（Local 另加 `AddPolhemFramework`） |
+| `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（static 的 `ClientInfo.ApiClient`） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `ClientInfo.InitializeAsync` |
+| Blazor Server | DI scope | **N 個使用者 / process**（per SignalR circuit） | 啟動設定（`UseRemoteProvider(endpoint, apiKey)`） | Local 或 Remote | `AddPolhemBlazor`（Local 另加 `AddPolhemFramework`） |
 
-> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.Core.ClientInfo`**：它把 access token 存在單一 static 欄位，一個 process 內只能存 **1 個** AccessToken。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。詳見 [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。
+> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.Core.ClientInfo`**：它把一個已登入的 client 存在 static 屬性，一個 process 內只能存 **1 個** access token。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。詳見 [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。

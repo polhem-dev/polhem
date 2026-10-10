@@ -1,11 +1,9 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
-using Polhem.JsonRpc;
 using Polhem.Api.Core.Messages.System;
+using Polhem.Definition;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Polhem.Tests.Shared;
 
@@ -13,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
     /// Covers the success path of <c>PolhemLoginPanel.OnSubmitAsync</c> (private, so not a cref).
-    /// A fake Factory and a fake transport make LoginAsync return a controllable <see cref="LoginResponse"/>
+    /// A <see cref="FakeApiServer"/> makes LoginAsync return a controllable <see cref="LoginResponse"/>
     /// without a real API service, covering these paths:
     /// 1. Empty AccessToken: sets an error message and returns early.
     /// 2. Valid AccessToken: clears the password field.
@@ -28,49 +26,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly FieldInfo s_passwordField =
             typeof(PolhemLoginPanel).GetField("_password", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        private static readonly PropertyInfo s_factoryProp =
-            typeof(PolhemLoginPanel).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!;
-
-        /// <summary>
-        /// Answers every call with the given login response. The connector treats any transport other than the
-        /// in-process one as remote and encodes the request, so this encodes the response in the request's format
-        /// and codec, the way a server answers, and the connector's decode path accepts it.
-        /// </summary>
-        private sealed class FakeLoginTransport(LoginResponse response) : IJsonRpcTransport
-        {
-            public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
-            {
-                var parameters = Polhem.JsonRpc.Payload.PayloadEnvelope.Read(request.Params);
-                var result = new Polhem.JsonRpc.Payload.PayloadProcessor(ApiClientInfo.PayloadOptions)
-                    .Seal(response, parameters.Format, parameters.Codec);
-                return Task.FromResult<JsonRpcResponse?>(JsonRpcResponse.Success(request.Id, result.ToElement()));
-            }
-
-            public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)
-                => throw new NotSupportedException();
-        }
-
-        private sealed class FakeConnectorFactory : PolhemApiConnectorFactory
-        {
-            private readonly IJsonRpcTransport _provider;
-            private readonly ApiSessionContext _session;
-
-            public FakeConnectorFactory(IJsonRpcTransport provider, ApiSessionContext session)
-                : base(new PolhemBlazorOptions(), session, Polhem.Tests.Shared.EmptyServiceProvider.Instance)
-            {
-                _provider = provider;
-                _session = session;
-            }
-
-            public override SystemApiConnector CreateSystemConnector(Guid accessToken)
-            {
-                var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken, _session);
-                typeof(ApiConnector)
-                    .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                    .SetValue(connector, _provider);
-                return connector;
-            }
-        }
+        private static readonly PropertyInfo s_clientProp =
+            typeof(PolhemLoginPanel).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private sealed class SyncEventHandler : IHandleEvent
         {
@@ -85,20 +42,22 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             await (Task)method.Invoke(panel, null)!;
         }
 
-        private static PolhemLoginPanel CreatePanelWithFakeFactory(LoginResponse response, ApiSessionContext? session = null)
+        private static PolhemLoginPanel CreatePanel(LoginResponse response, PolhemApiClient? client = null)
         {
             var panel = new PolhemLoginPanel();
-            var factory = new FakeConnectorFactory(new FakeLoginTransport(response), session ?? new ApiSessionContext());
-            s_factoryProp.SetValue(panel, factory);
+            s_clientProp.SetValue(panel, client ?? LoginServer(response).CreateClient());
             return panel;
         }
+
+        private static FakeApiServer LoginServer(LoginResponse response)
+            => new FakeApiServer().On<LoginRequest>($"{SysProgIds.System}.{SystemActions.Login}", _ => response);
 
         [Fact]
         [DisplayName("OnSubmitAsync sets a login failure error message when LoginAsync returns an empty AccessToken")]
         public async Task OnSubmitAsync_EmptyAccessToken_SetsLoginFailedError()
         {
             using var culture = new CultureScope("en-US");
-            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.Empty });
+            var panel = CreatePanel(new LoginResponse { AccessToken = Guid.Empty });
 
             await InvokeOnSubmitAsync(panel);
 
@@ -112,7 +71,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnSubmitAsync_EmptyAccessTokenUnderZhTw_SetsLocalizedError()
         {
             using var culture = new CultureScope("zh-TW");
-            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.Empty });
+            var panel = CreatePanel(new LoginResponse { AccessToken = Guid.Empty });
 
             await InvokeOnSubmitAsync(panel);
 
@@ -123,7 +82,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("OnSubmitAsync clears the password field to an empty string after a successful login")]
         public async Task OnSubmitAsync_SuccessfulLogin_ClearsPasswordField()
         {
-            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.NewGuid() });
+            var panel = CreatePanel(new LoginResponse { AccessToken = Guid.NewGuid() });
             s_passwordField.SetValue(panel, "secret");
 
             await InvokeOnSubmitAsync(panel);
@@ -132,24 +91,27 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("A successful login sets the user's time zone on the circuit's own session, not on the ambient one")]
-        public async Task OnSubmitAsync_SuccessfulLogin_SetsCircuitSessionTimeZone()
+        [DisplayName("A successful login signs in the circuit's own client with the token and the user's time zone")]
+        public async Task OnSubmitAsync_SuccessfulLogin_SignsInCircuitClient()
         {
-            var circuitSession = new ApiSessionContext();
-            var panel = CreatePanelWithFakeFactory(
-                new LoginResponse { AccessToken = Guid.NewGuid(), TimeZone = "Asia/Tokyo" }, circuitSession);
+            var token = Guid.NewGuid();
+            var response = new LoginResponse { AccessToken = token, TimeZone = "Asia/Tokyo" };
+            var circuitClient = LoginServer(response).CreateClient();
+            var otherClient = LoginServer(response).CreateClient();
+            var panel = CreatePanel(response, circuitClient);
 
             await InvokeOnSubmitAsync(panel);
 
-            Assert.Equal("Asia/Tokyo", circuitSession.UserTimeZoneId);
-            Assert.NotEqual("Asia/Tokyo", ApiSessionContext.Ambient.UserTimeZoneId);
+            Assert.Equal(token, circuitClient.Session.Credentials.AccessToken);
+            Assert.Equal("Asia/Tokyo", circuitClient.Session.Credentials.UserTimeZoneId);
+            Assert.Same(ApiSessionCredentials.Anonymous, otherClient.Session.Credentials);
         }
 
         [Fact]
         [DisplayName("OnSubmitAsync does not throw or set an error message after a successful login without an OnLoggedIn delegate")]
         public async Task OnSubmitAsync_SuccessfulLoginNoDelegate_NoErrorSet()
         {
-            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.NewGuid() });
+            var panel = CreatePanel(new LoginResponse { AccessToken = Guid.NewGuid() });
 
             await InvokeOnSubmitAsync(panel);
 
@@ -161,7 +123,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnSubmitAsync_SuccessfulLoginWithDelegate_InvokesCallback()
         {
             var expectedToken = Guid.NewGuid();
-            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = expectedToken });
+            var panel = CreatePanel(new LoginResponse { AccessToken = expectedToken });
 
             LoginResponse? captured = null;
             typeof(PolhemLoginPanel)

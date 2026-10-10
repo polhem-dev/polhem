@@ -393,11 +393,11 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
         /// <summary>
         /// Test double overriding every virtual round-trip on <see cref="FormApiConnector"/>
-        /// so the base <c>LocalApiProvider</c> is never reached.
+        /// so the in-process transport of its client is never reached.
         /// </summary>
         private sealed class FakeFormApiConnector : FormApiConnector
         {
-            public FakeFormApiConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId) { }
+            public FakeFormApiConnector() : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), TestProgId) { }
 
             public Func<string, GetListResponse>? GetListHandler { get; set; }
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }

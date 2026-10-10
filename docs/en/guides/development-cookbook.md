@@ -38,7 +38,7 @@ entry point (service locator).
 Host package selection:
 
 - **ASP.NET Core web host**: reference `Polhem.Hosting` and `Polhem.JsonRpc.AspNetCore`. Add `using Polhem.Hosting;` for `AddPolhemFramework` and `AddPolhemApiKeyGateCheck`, and `using Polhem.JsonRpc.AspNetCore;` for `AddJsonRpcServer` and `MapJsonRpc`. `services.AddJsonRpcServer()` builds on the JSON-RPC options `AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` publishes the `POST /api` endpoint; there is no controller to write.
-- **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to a connector constructor (`new SystemApiConnector(provider, accessToken)`), or, in a head that uses `Polhem.UI.Core`, assign it to `ClientInfo.LocalServiceProvider`.
+- **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to `PolhemApiClient.CreateLocal(provider)`, or, in a head that uses `Polhem.UI.Core`, assign it to `ClientInfo.LocalServiceProvider`.
 
 `AddPolhemFramework` also registers hosted services, among them the startup registration of the reserved progIds, the cross-process cache-notify poller and the expired-session cleanup. They start only when the provider belongs to a .NET Generic Host (`WebApplication`, `Host.CreateApplicationBuilder`); a provider built with `BuildServiceProvider()` alone does not start them.
 
@@ -231,7 +231,8 @@ The `System` progId works the same way, through a subclass of `SystemBusinessObj
 
 ```csharp
 // Form-level: the request goes to the business object of progId "Customer".
-var connector = new FormApiConnector(endpoint, accessToken, "Customer");
+// `client` is a signed-in PolhemApiClient.
+var connector = client.Form("Customer");
 var response = await connector.ExecFuncAsync(new ExecFuncRequest
 {
     FuncId = "Greet",
@@ -242,10 +243,10 @@ string greeting = response.Parameters!.GetValue<string>("Greeting");
 
 System-level functions go through `SystemApiConnector.ExecFuncAsync` in the same way. The framework's own system
 functions `UpgradeTableSchema` and `TestConnection` are `LocalOnly`, so only a connector that dispatches in
-process — one constructed with the backend's `IServiceProvider` — can run them:
+process — one from a client created with `PolhemApiClient.CreateLocal` over the backend's `IServiceProvider` — can run them:
 
 ```csharp
-var sysConnector = new SystemApiConnector(serviceProvider, accessToken);
+var sysConnector = PolhemApiClient.CreateLocal(serviceProvider).System;
 var upgrade = await sysConnector.ExecFuncAsync(new ExecFuncRequest
 {
     FuncId = "UpgradeTableSchema",
@@ -870,14 +871,14 @@ FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer")
 
 ```csharp
 await ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
-// Clears AccessToken, so the user signs in again.
+// Replaces the client and signs out, so the user signs in again.
 ```
 
-`SetEndpointAsync` validates the endpoint, switches the connection type, clears the access token and the user's time zone, initializes the system connector and stores the endpoint through `ClientInfo.EndpointStorage`. It does not sign in: call `LoginAsync` and `ApplyLoginResult` again.
+`SetEndpointAsync` validates the endpoint against `ClientInfo.SupportedConnectTypes`, replaces `ClientInfo.ApiClient` with a client of the new connection type (which starts signed out, with no access token or time zone), initializes its system connector and stores the endpoint through `ClientInfo.EndpointStorage`. It does not sign in: call `LoginAsync` and `ApplyLoginResult` again.
 
 ### Blazor Server (Polhem.Web.Blazor.Server)
 
-Blazor Server uses ASP.NET Core DI to build connectors. **Each SignalR circuit gets its own DI scope** — `AddPolhemBlazor` registers the connector factory and the `ApiSessionContext` as scoped — preventing cross-user data leakage. Blazor Server runs in the server process, so the trimming and platform questions of the other heads do not apply to it.
+Blazor Server uses ASP.NET Core DI to hand out the API client. **Each SignalR circuit gets its own DI scope** — `AddPolhemBlazor` registers the `PolhemApiClient` as scoped, so each circuit signs in on a client of its own — preventing cross-user data leakage. Blazor Server runs in the server process, so the trimming and platform questions of the other heads do not apply to it.
 
 **1. Register in `Program.cs`**:
 
@@ -890,7 +891,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Backend services (IDbConnectionManager / IDefineAccess / BO, etc.) — the Local provider dispatches to them
 builder.Services.AddPolhemFramework(backendConfiguration, pathOptions);
 
-// Polhem.Web.Blazor.Server services: options, connector factory, the components' UI text
+// Polhem.Web.Blazor.Server services: options, the per-circuit PolhemApiClient, the components' UI text
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 
 // Standard Blazor Server setup
@@ -907,45 +908,42 @@ app.Run();
 > logs an error (a warning in Development) while `st_api_key` holds no enabled key, because the `X-Api-Key` header is
 > then checked for presence only. See [API Key Management](../security/api-key-management.md).
 
-**2. Build connectors in a Razor component**:
+**2. Call the backend from a Razor component**:
 
 ```razor
 @page "/customers"
 @using Polhem.Api.Core.Messages.Form
-@using Polhem.Web.Blazor.Server.DependencyInjection
-@inject PolhemApiConnectorFactory ConnectorFactory
+@using Polhem.Api.Client
+@inject PolhemApiClient Client
 
 <h3>Customers</h3>
 
 @code {
-    // Cascaded by a PolhemAccessTokenProvider around the page.
-    [CascadingParameter] public Guid AccessToken { get; set; }
-
     private GetListResponse? listResult;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (AccessToken == Guid.Empty) { return; }
-        var formConnector = ConnectorFactory.CreateFormConnector(AccessToken, "Customer");
-        listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
+        // The circuit's client carries whoever signed in on it; before sign-in it is anonymous.
+        if (Client.Session.Credentials.AccessToken == Guid.Empty) { return; }
+        listResult = await Client.Form("Customer").GetListAsync(selectFields: "sys_id,sys_name");
     }
 }
 ```
 
-`PolhemAccessTokenProvider` holds the circuit's access token and cascades it; `PolhemLoginPanel` signs in and hands the token to it; `FormPage` renders a whole form from its `ProgId`. [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md) wires the three together. The components' own text comes from the `IStringLocalizer<PolhemUIText>` that `AddPolhemBlazor` registers — a `LanguageResourceStringLocalizer` that reads the host's language resources, then the translations shipped with the framework, in the circuit's current UI culture. A host that registers its own localizer for `PolhemUIText` keeps it.
+`PolhemLoginPanel` signs in on the circuit's client and hands the token to `PolhemAccessTokenProvider`, which holds the page's signed-in state and cascades it; `FormPage` renders a whole form from its `ProgId`. [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md) wires the three together. The components' own text comes from the `IStringLocalizer<PolhemUIText>` that `AddPolhemBlazor` registers — a `LanguageResourceStringLocalizer` that reads the host's language resources, then the translations shipped with the framework, in the circuit's current UI culture. A host that registers its own localizer for `PolhemUIText` keeps it.
 
-`FormPage` loads its definitions the way the Avalonia views do: through a `FormDefinitionLoader`, which `PolhemApiConnectorFactory.CreateDefinitionLoader` builds for each page, so the captions follow the circuit's UI culture and the tenant's customized layout applies. Set `options.UseDefinitionLoader = false` in `AddPolhemBlazor` to render the definitions as stored, or pass a loader to the page's `DefinitionLoader` parameter to change how one page assembles them (for example to give it a `CompanyAccessor` for the company's number formats). Before a save, `FormPage` checks the fields marked `Required`; when any is empty it names them above the toolbar and sends nothing. The Avalonia `FormView` does the same on its error line.
+`FormPage` loads its definitions the way the Avalonia views do: through a `FormDefinitionLoader` it builds for each page over the circuit's client (with `PolhemBlazorOptions.DefaultLanguage` as the last language fall-back), so the captions follow the circuit's UI culture and the tenant's customized layout applies. Set `options.UseDefinitionLoader = false` in `AddPolhemBlazor` to render the definitions as stored, or pass a loader to the page's `DefinitionLoader` parameter to change how one page assembles them (for example to give it a `CompanyAccessor` for the company's number formats). Before a save, `FormPage` checks the fields marked `Required`; when any is empty it names them above the toolbar and sends nothing. The Avalonia `FormView` does the same on its error line.
 
 **3. Local vs Remote mode**:
 
-The mode is chosen in `AddPolhemBlazor`, and `PolhemApiConnectorFactory` builds every connector accordingly:
+The mode is chosen in `AddPolhemBlazor`, and each circuit's `PolhemApiClient` is created accordingly:
 
-- **Local mode (in-process)** — `options.UseLocalProvider()`, the default: the components and the backend share the ASP.NET Core process, and connectors dispatch through `LocalApiProvider` with no HTTP. **Every call is a trusted local call**: the access token check and the `LocalOnly` restriction are skipped. Use it only when every user of the site may see the whole backend, such as an internal administration tool.
-- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api")`: the backend runs in another process or server, connectors go through `RemoteApiProvider`, and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`, but it must set `Polhem.Api.Client.ApiClientInfo.ApiKey` to the key the server issued for this application before the first call: `RemoteApiProvider` sends that process-wide value as the `X-Api-Key` header, `UseRemoteProvider` takes no key of its own, and without one the server answers every method except `System.Ping` with `401 Unauthorized`, so the sign-in fails first. The key identifies the application, not a user, which is why every circuit shares it.
+- **Local mode (in-process)** — `options.UseLocalProvider()`, the default: the components and the backend share the ASP.NET Core process, and the client dispatches in process (`PolhemApiClient.CreateLocal`) with no HTTP. **Every call is a trusted local call**: the access token check and the `LocalOnly` restriction are skipped. Use it only when every user of the site may see the whole backend, such as an internal administration tool.
+- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api", apiKey)`: the backend runs in another process or server, the client goes over HTTP (`PolhemApiClient.CreateRemote`), and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`, but `apiKey` must be the key the server issued for this application: every circuit's client sends it as the `X-Api-Key` header, and without an accepted one the server answers every method except `System.Ping` with `401 Unauthorized`, so the sign-in fails first. The key identifies the application, not a user, which is why every circuit shares it.
 
 ### Avalonia (Polhem.UI.Avalonia)
 
-`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**, so its API-connection pattern is the one in "Polhem.UI.* heads" above — the `ClientInfo` static singleton with a per-process token model — on every Avalonia head.
+`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**, so its API-connection pattern is the one in "Polhem.UI.* heads" above — the `ClientInfo` static singleton with a per-process identity model — on every Avalonia head.
 
 It ships FormSchema-driven controls: `FormView` for a single record, `ListView` for the list, `GridControl` for grids, plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`. The package targets `net10.0`; the platform target framework belongs to each head project.
 
@@ -953,7 +951,7 @@ It ships FormSchema-driven controls: `FormView` for a single record, `ListView` 
 // Avalonia desktop head — configure ClientInfo BEFORE any UI control instantiates.
 public static void Main(string[] args)
 {
-    ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+    ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
     // The shipped key seeds empty storage on first run; after that the stored value wins.
     ClientInfo.ApplyApiKey("my-app-key");
 
@@ -969,7 +967,7 @@ Worked examples: [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README
 
 | Frontend | Connection abstraction | Token tenancy | Endpoint persistence | Mode | Registration |
 |---------|-----------------------|---------------|--------------------|------|-------------|
-| `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (a static field behind `ClientInfo.AccessToken`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `ClientInfo.InitializeAsync` at startup |
-| Blazor Server | DI scope | **N users / process** (per SignalR circuit) | Startup configuration (`UseRemoteProvider(endpoint)`) | Local or Remote | `AddPolhemBlazor` (+ `AddPolhemFramework` for Local) |
+| `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (the static `ClientInfo.ApiClient`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `ClientInfo.InitializeAsync` at startup |
+| Blazor Server | DI scope | **N users / process** (per SignalR circuit) | Startup configuration (`UseRemoteProvider(endpoint, apiKey)`) | Local or Remote | `AddPolhemBlazor` (+ `AddPolhemFramework` for Local) |
 
-> ⚠️ **Do not use `Polhem.UI.Core.ClientInfo` in Blazor Server.** It keeps the access token in a single static field — only **one** AccessToken per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. See [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md).
+> ⚠️ **Do not use `Polhem.UI.Core.ClientInfo` in Blazor Server.** It keeps one signed-in client in a static property — only **one** access token per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. See [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md).

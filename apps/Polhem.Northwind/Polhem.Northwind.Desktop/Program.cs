@@ -6,8 +6,8 @@ using Polhem.UI.Core;
 namespace Polhem.Northwind.Desktop;
 
 /// <summary>
-/// Desktop head — the thin process entry point. Wires the Polhem client-side singletons
-/// (<see cref="ApiClientInfo"/> + <see cref="ClientInfo"/>) before any
+/// Desktop head — the thin process entry point. Wires the Polhem client-side state
+/// (<see cref="ClientInfo"/>) before any
 /// Avalonia control instantiates, then hands control to the classic-desktop lifetime
 /// hosting the shared <see cref="App"/> from <c>Polhem.Northwind.UI</c>.
 /// </summary>
@@ -23,7 +23,7 @@ internal static class Program
         // Configure the Polhem client singletons before any control or VM runs. The endpoint and
         // the API key keep their default storage, a per-user folder under the local application
         // data directory.
-        ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+        ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
         // The shipped key only seeds empty storage on first run; after that the stored value wins,
         // so swapping keys is a settings change rather than a rebuild.
         ClientInfo.ApplyApiKey(AppDefaults.ApiKey);

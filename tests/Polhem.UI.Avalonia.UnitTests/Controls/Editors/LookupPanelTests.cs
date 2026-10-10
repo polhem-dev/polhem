@@ -122,7 +122,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         {
             private readonly DataTable _table;
 
-            public StubConnector(DataTable table) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), "Customer")
+            public StubConnector(DataTable table) : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), "Customer")
             {
                 _table = table;
             }
@@ -140,7 +140,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
         private sealed class ThrowingConnector : FormApiConnector
         {
-            public ThrowingConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), "Customer") { }
+            public ThrowingConnector() : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), "Customer") { }
 
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",

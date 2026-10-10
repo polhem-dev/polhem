@@ -12,14 +12,15 @@ for ERP forms) — follow its pattern: inherit `ApiConnector` and build a **dedi
 action as a typed method:
 
 ```csharp
+using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages;   // PayloadFormat
 
 public sealed class XxxApiConnector : ApiConnector
 {
-    public XxxApiConnector(string endpoint, Guid accessToken) : base(endpoint, accessToken) { }
-    // In-process (the backend runs in the same process): the (IServiceProvider services, Guid accessToken) overload.
-    // A host serving several users from one process passes each one its own ApiSessionContext.
+    // The client decides in-process vs HTTP and carries the signed-in identity; the connector only reads it.
+    // A host serving several users from one process creates one PolhemApiClient per user.
+    public XxxApiConnector(PolhemApiClient client) : base(client) { }
 
     // One connector can serve several ProgIds (the base passes progId on every call).
     public Task<GetLevelsResponse> GetLevelsAsync(CancellationToken cancellationToken = default) =>
@@ -55,27 +56,28 @@ public sealed class LevelDto { public string Name { get; set; } = ""; public Lev
 
 ```csharp
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 
-ApiClientInfo.ApiKey = "xxx-dev";   // any non-empty value passes until the deployment issues its first API key
-var sys = new SystemApiConnector(endpoint, Guid.Empty);
+// Any non-empty key passes until the deployment issues its first API key.
+var client = PolhemApiClient.CreateRemote(endpoint, "xxx-dev");
+var sys = client.System;
 await sys.PingAsync();              // System.Ping (anonymous, no API key needed)
 await sys.InitializeAsync();        // adopt the server's compressor / encryptor before Encoded or Encrypted calls
 ```
-- `endpoint`: `http://<host>:<port>/api`.
+- `endpoint`: `http://<host>:<port>/api`. In process (the backend runs in the same process), use
+  `PolhemApiClient.CreateLocal(serviceProvider)` instead.
 
 ## Calls that require login
 
 ```csharp
-var login = await sys.LoginAsync("demo", "demo");   // stores the session key on the connector's session
-var token = login.AccessToken;                      // Guid
-var game = new XxxApiConnector(endpoint, token);
+await sys.LoginAsync("demo", "demo");   // signs the client in: token, session key and time zone
+var game = new XxxApiConnector(client);
 var r = await game.SomeAuthedActionAsync();         // wraps ExecuteAsync<T>(..., PayloadFormat.Encrypted, ...)
 ```
 
-- `LoginAsync` performs the RSA handshake and puts the session encryption key on the connector's
-  `ApiSessionContext` (the ambient one unless you passed your own). A connector created afterwards on the same
-  session can send `Encrypted`; without a session key, `Encrypted` is downgraded to `Encoded`.
+- `LoginAsync` performs the RSA handshake and stores the access token and the session encryption key in the
+  client's `Session` (`PolhemApiClient.Session`). Every connector of that client, created before or after, then
+  calls as the signed-in user and can send `Encrypted`; without a session key, `Encrypted` is downgraded to
+  `Encoded`.
 - The Encrypted format relies on TLS against an active man-in-the-middle (`SystemApiConnector.InitializeAsync`
   remarks). Use HTTPS outside development.
 
@@ -109,10 +111,9 @@ A standalone console project (referencing `Polhem.Api.Client`) that calls Ping +
 server. It covers Encoded / Encrypted calls too, whose envelope is impractical to build by hand with curl.
 
 ```csharp
-ApiClientInfo.ApiKey = "xxx-dev";
-var sys = new SystemApiConnector("http://localhost:5180/api", Guid.Empty);
-await sys.PingAsync();                                    // → ok
-var game = new XxxApiConnector("http://localhost:5180/api", Guid.Empty);
+var client = PolhemApiClient.CreateRemote("http://localhost:5180/api", "xxx-dev");
+await client.System.PingAsync();                          // → ok
+var game = new XxxApiConnector(client);
 var r = await game.GetLevelsAsync();
 Console.WriteLine($"{r.Levels.Count} levels");           // → expected count
 ```

@@ -1,4 +1,4 @@
-using Polhem.Api.Client;
+using Polhem.JsonRpc.Payload;
 using Polhem.Api.Core.Transformers;
 using Polhem.Core;
 using Polhem.Definition;
@@ -18,7 +18,7 @@ namespace Polhem.LoadTests.Bootstrap
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This is what makes <c>LocalApiProvider</c> able to dispatch: it needs a built service
+    /// This is what makes an in-process <c>PolhemApiClient</c> able to dispatch: it needs a built service
     /// provider (<see cref="Services"/>) holding a
     /// <c>JsonRpcDispatcher</c>, and everything that dispatcher reaches — definitions, cache,
     /// database access, business-object resolution — has to be registered first.
@@ -47,8 +47,10 @@ namespace Polhem.LoadTests.Bootstrap
             ServiceProvider services,
             CountingCacheProvider cacheCounters,
             ICacheProvider originalCacheProvider,
-            string connectionStringTemplate)
+            string connectionStringTemplate,
+            PayloadOptions clientPayloadOptions)
         {
+            ClientPayloadOptions = clientPayloadOptions;
             _workspace = workspace;
             _services = services;
             _originalCacheProvider = originalCacheProvider;
@@ -67,6 +69,11 @@ namespace Polhem.LoadTests.Bootstrap
         /// Gets the counting wrapper installed around the framework's cache provider.
         /// </summary>
         public CountingCacheProvider CacheCounters { get; }
+
+        /// <summary>
+        /// Gets the payload options the run's clients speak: the same compressor and encryptor as the backend.
+        /// </summary>
+        public PayloadOptions ClientPayloadOptions { get; }
 
         /// <summary>
         /// Gets the service provider the backend was built into.
@@ -105,7 +112,7 @@ namespace Polhem.LoadTests.Bootstrap
                 // show up in the numbers as latency that a production host, writing elsewhere,
                 // would not have.
                 services.AddLogging();
-                ConfigureFramework(services, options, workspace);
+                var clientPayloadOptions = ConfigureFramework(services, options, workspace);
 
                 var provider = services.BuildServiceProvider();
 
@@ -117,7 +124,7 @@ namespace Polhem.LoadTests.Bootstrap
                 var counters = new CountingCacheProvider(original);
                 CacheInfo.Provider = counters;
 
-                return new LoadTestHost(workspace, provider, counters, original, connectionString);
+                return new LoadTestHost(workspace, provider, counters, original, connectionString, clientPayloadOptions);
             }
             catch
             {
@@ -142,12 +149,13 @@ namespace Polhem.LoadTests.Bootstrap
         /// <param name="services">The collection to register into.</param>
         /// <param name="options">The run configuration.</param>
         /// <param name="workspace">The prepared definition workspace.</param>
+        /// <returns>The payload options a client of this backend must speak.</returns>
         /// <remarks>
         /// Shared with the self-hosted server so both sides of a Remote run start the framework
         /// exactly the same way. If they diverged, the difference between a Local and a Remote
         /// measurement would no longer be only the transport.
         /// </remarks>
-        public static void ConfigureFramework(
+        public static PayloadOptions ConfigureFramework(
             IServiceCollection services, LoadTestOptions options, DefineWorkspace workspace)
         {
             ArgumentNullException.ThrowIfNull(services);
@@ -161,12 +169,14 @@ namespace Polhem.LoadTests.Bootstrap
 
             SysInfo.Initialize(settings.CommonConfiguration);
             services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
-            // The same process also calls the API through a local client, which must speak the same payload.
-            PolhemPayload.Apply(ApiClientInfo.PayloadOptions, settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+            // The same process also calls the API through clients, which must speak the same payload.
+            var clientPayloadOptions = PolhemPayload.CreateOptions();
+            PolhemPayload.Apply(clientPayloadOptions, settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
             // autoCreateMasterKey generates a key when POLHEM_MASTER_KEY is unset, so a run needs no
             // key material of its own and none is hard-coded here.
             services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
+            return clientPayloadOptions;
         }
 
         /// <summary>

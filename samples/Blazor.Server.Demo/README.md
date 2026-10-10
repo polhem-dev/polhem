@@ -2,7 +2,7 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
-A Blazor Server host that demonstrates how to wire `Polhem.Web.Blazor.Server` components into ASP.NET Core and dispatch directly into the Polhem backend via the **in-process `LocalApiProvider`** (same process, no HTTP round-trip).
+A Blazor Server host that demonstrates how to wire `Polhem.Web.Blazor.Server` components into ASP.NET Core and dispatch directly into the Polhem backend via an **in-process client** (`PolhemApiClient.CreateLocal`; same process, no HTTP round-trip).
 
 ## How to run
 
@@ -34,19 +34,19 @@ On first run:
 |---------------|-------------------|
 | Login form | `PolhemLoginPanel` |
 | Entering the company | `SystemApiConnector.EnterCompanyAsync` |
-| AccessToken cascading | `PolhemAccessTokenProvider` |
+| Signed-in state on the page | `PolhemAccessTokenProvider` |
 | Staff grid rendering | `DynamicGrid` + `FormSchema.GetListLayout()` |
 | Staff edit form | `DynamicForm` + the stored `FormLayout` definition (`Define/FormLayout/Staff.FormLayout.xml`) |
 | Grid + form integration | `FormPage` |
 | CRUD through Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local in-process dispatch | `PolhemBlazorOptions.UseLocalProvider()` |
-| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcDispatcher` → `FormBusinessObject` |
+| In-process JSON-RPC | `PolhemApiClient.CreateLocal` → `JsonRpcDispatcher` → `FormBusinessObject` |
 
 ## Simplifications vs production
 
-- **Local mode trusts every browser user.** `UseLocalProvider()` makes each call a trusted in-process call: the backend skips the access token check and the `LocalOnly` restriction for it. That suits a site whose users are all trusted with the whole backend, such as this single-user demo or an internal administration tool. A site whose users must be held to their own permissions uses `UseRemoteProvider(endpoint)` instead (see the `PolhemBlazorOptions` remarks)
+- **Local mode trusts every browser user.** `UseLocalProvider()` makes each call a trusted in-process call: the backend skips the access token check and the `LocalOnly` restriction for it. That suits a site whose users are all trusted with the whole backend, such as this single-user demo or an internal administration tool. A site whose users must be held to their own permissions uses `UseRemoteProvider(endpoint, apiKey)` instead (see the `PolhemBlazorOptions` remarks)
 - **`DemoAuthenticatingSystemBusinessObject`** replaces only the credential check: it accepts the hard-coded `demo/demo` instead of verifying a password stored in `st_user`. The rest of sign-in is the framework's, so `st_user` (the user's time zone and culture), `st_session` (the session seed), `st_company` and `st_user_company` (the company entry) are still created and seeded
 - **One company, entered without asking**: a deployment with several puts a company picker between `Login` and `EnterCompany`
 - SQLite is a single file (`quickstart.db`), same as `QuickStart.Server`
 
-Session state is not a simplification: `AddPolhemBlazor` registers one `ApiSessionContext` per circuit, so concurrent users each keep their own transmission key and time zone.
+Session state is not a simplification: `AddPolhemBlazor` registers one `PolhemApiClient` per circuit, so concurrent users each keep their own access token, transmission key and time zone.

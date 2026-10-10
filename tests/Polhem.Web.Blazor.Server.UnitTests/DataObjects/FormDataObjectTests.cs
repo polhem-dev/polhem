@@ -455,14 +455,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
 
         /// <summary>
         /// Test double that bypasses the real JSON-RPC pipeline by overriding every
-        /// virtual CRUD method on <see cref="FormApiConnector"/>. The base constructor
-        /// still installs a <see cref="Polhem.Api.Client.Providers.LocalApiProvider"/>, but
-        /// because all four methods short-circuit before reaching it the provider is
-        /// never invoked.
+        /// virtual CRUD method on <see cref="FormApiConnector"/>. The connector still belongs
+        /// to an in-process client, but because the overridden methods short-circuit before
+        /// a call is dispatched, its transport is never invoked.
         /// </summary>
         private sealed class FakeFormApiConnector : FormApiConnector
         {
-            public FakeFormApiConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId) { }
+            public FakeFormApiConnector() : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), TestProgId) { }
 
             public Func<Guid, GetDataResponse>? GetDataHandler { get; set; }
             public Func<GetNewDataResponse>? GetNewDataHandler { get; set; }

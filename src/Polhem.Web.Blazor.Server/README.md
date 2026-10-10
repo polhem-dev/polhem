@@ -8,8 +8,8 @@
 
 - **Layer**: Web Frontend (Razor Class Library)
 - **Hosting model**: Blazor Server — component logic executes on the ASP.NET Core server; the browser receives DOM diffs via SignalR.
-- **Provider binding**: chosen with `AddPolhemBlazor` (see below) — in-process through `LocalApiProvider`, or over
-  HTTP through `RemoteApiProvider`, both from `Polhem.Api.Client`.
+- **Provider binding**: chosen with `AddPolhemBlazor` (see below) — each circuit gets a `PolhemApiClient` from
+  `Polhem.Api.Client` that calls the backend in process (`CreateLocal`) or over HTTP (`CreateRemote`).
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 - Consumed by ASP.NET Core host applications.
 
@@ -23,25 +23,25 @@
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 // Remote: the components call a Polhem API server over HTTP, where every call is checked like any
-// other API client's. No AddPolhemFramework is needed in this host. Set the API key issued for this
-// application first: every circuit's RemoteApiProvider sends the process-wide ApiClientInfo.ApiKey.
-Polhem.Api.Client.ApiClientInfo.ApiKey = builder.Configuration["Polhem:ApiKey"] ?? string.Empty;
-builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://api.example.com/api"));
+// other API client's. No AddPolhemFramework is needed in this host. Pass the API key issued for this
+// application: every circuit's client sends it.
+builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
+    "https://api.example.com/api", builder.Configuration["Polhem:ApiKey"] ?? string.Empty));
 
 // Local (the default): the host is also the backend. Register it with AddPolhemFramework
 // (Polhem.Hosting) on the same service collection, then:
 // builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 ```
 
-`AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `ApiSessionContext`, the
-`PolhemApiConnectorFactory` that components use to build connectors and definition loaders, and the localizer for
-the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
+`AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `PolhemApiClient` that components inject to reach
+the backend (each circuit signs in on its own client, so one user's identity never reaches another's calls), and the
+localizer for the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
 decides whether `FormPage` localizes its definitions; see below.
 
 > **Remote mode needs the application's API key.** The server's default `ApiAuthorizationValidator` refuses every
 > method except `System.Ping` when the `X-Api-Key` header is missing or not an enabled key, and the request is
-> answered with `401 Unauthorized`. `UseRemoteProvider` takes no key: the key identifies the calling application rather than a
-> user, so it lives in the process-wide `ApiClientInfo.ApiKey`, which is empty until the host sets it. Without it the
+> answered with `401 Unauthorized`. The key is the second argument of `UseRemoteProvider`: it identifies the calling application
+> rather than a user, so every circuit sends the same one. With an empty key the
 > first call, usually the sign-in, fails with "Response status code does not indicate success: 401 (Unauthorized)."
 > Until the server has issued any key, a non-empty value is enough; once one is enabled, only an enabled key passes.
 > The configuration key in the example is a placeholder: read the value from wherever the host keeps its secrets.
@@ -62,7 +62,8 @@ decides whether `FormPage` localizes its definitions; see below.
 - `DynamicForm` -- renders the master section(s) of a `FormLayout`, choosing the input element from each field's
   `ControlType` (text, date, month, time, checkbox, textarea, dropdown).
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`.
-- `PolhemAccessTokenProvider` -- holds the circuit's access token and cascades it to descendant components.
+- `PolhemAccessTokenProvider` -- holds the page's signed-in state (the access token) and cascades it to descendant
+  components. The calls themselves use the circuit's `PolhemApiClient`, which the sign-in has signed in.
 - `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
   `GetField` / `SetField` for two-way binding, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
   through the connector.

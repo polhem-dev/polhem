@@ -1,4 +1,4 @@
-<!-- source: en/api/api-bo-contract-design.md blob: d8220fc83592520c8a9a844408cca607312e2078 -->
+<!-- source: en/api/api-bo-contract-design.md blob: 7c66e880e61fa83420115e1735b33b041a162fd5 -->
 # API 合約與 BO 參數設計原則
 
 [English](../../en/api/api-bo-contract-design.md) · [← 文件索引](../README.md)
@@ -217,7 +217,7 @@ public sealed class RecalcArgs : BusinessArgs
 用戶端透過 `SystemApiConnector` 呼叫 API 時，一律使用 `Request` / `Response` 型別：
 
 ```csharp
-var connector = new SystemApiConnector(endpoint, Guid.Empty);
+var connector = PolhemApiClient.CreateRemote(endpoint, apiKey).System;
 
 // 使用 API 型別，不使用 BO 型別
 LoginResponse response = await connector.LoginAsync("admin", "password");

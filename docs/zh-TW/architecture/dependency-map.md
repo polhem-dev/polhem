@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 1fb8a7371280f1523fde75cd496ab1ef991ae129 -->
+<!-- source: en/architecture/dependency-map.md blob: eba7253b6bb96b2156120db68790cd266341b194 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -140,4 +140,4 @@ graph BT
 - **`Polhem.UI.*` family 判別準則**：是否消費 `Polhem.UI.Core` 抽象（`ClientInfo` / `IEndpointStorage` / `IUIViewService` 等）。
   - 消費 → 歸 `Polhem.UI.*`（目前：`Polhem.UI.Core`、`Polhem.UI.Avalonia`；未來：`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理）
   - 不消費，自有狀態管理 → 走獨立 family prefix（如 `Polhem.Web.Blazor.*`：Blazor circuit 無檔案 IO 與 dialog service 概念，獨立路線合理）
-- **Web 前端層**（`Polhem.Web.Blazor.Server`）為 RCL（Razor Class Library）元件庫，只相依 `Polhem.Api.Client`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（經 HTTP 的 `RemoteApiProvider`），或 `UseLocalProvider`（in-process 的 `LocalApiProvider`，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。
+- **Web 前端層**（`Polhem.Web.Blazor.Server`）為 RCL（Razor Class Library）元件庫，只相依 `Polhem.Api.Client`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（每個 circuit 的 `PolhemApiClient` 經 HTTP 呼叫），或 `UseLocalProvider`（in-process 呼叫，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。

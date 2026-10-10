@@ -179,6 +179,9 @@ v4.4 and is kept to show the context of the decision.
 - **No ambient session in the Blazor connector factory.** The `PolhemApiConnectorFactory` constructor that fell back
   to process-wide session state was removed; the factory is scoped per circuit and always receives that circuit's
   `ApiSessionContext` (`src/Polhem.Web.Blazor.Server/DependencyInjection/PolhemApiConnectorFactory.cs`).
+- **2026-10-10: one client per connection.** The connectors, the session and the process-wide `ApiClientInfo` were
+  replaced by `PolhemApiClient`, which owns the connection and the signed-in identity; the Blazor connector factory
+  was removed and each circuit gets a scoped client. See [ADR-053](adr-053-api-client-composition-root.md).
 - **Shared logic moved down to `Polhem.Api.Client`.** The permission capability resolver
   (`ElementCapabilityResolver`, `src/Polhem.Api.Client/Permissions/`) moved there from `Polhem.UI.Core`, so both
   families can use it, as the Negative consequences above anticipated.

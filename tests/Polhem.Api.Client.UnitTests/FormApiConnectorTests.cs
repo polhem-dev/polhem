@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Client.Providers;
 using Polhem.Api.Client.Connectors;
 using Polhem.JsonRpc.Payload;
 
@@ -13,37 +12,21 @@ namespace Polhem.Api.Client.UnitTests
         private const string TestProgId = "Employee";
 
         [Fact]
-        [DisplayName("FormApiConnector local constructor sets ProgId and a LocalApiProvider")]
-        public void Constructor_Local_SetsProgIdAndProvider()
+        [DisplayName("FormApiConnector constructor sets ProgId and the client it calls with")]
+        public void Constructor_SetsProgIdAndClient()
         {
-            var token = Guid.NewGuid();
-            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, token, TestProgId);
+            var client = PolhemApiClient.CreateRemote("http://example.com/api", string.Empty);
+            var connector = new FormApiConnector(client, TestProgId);
 
-            Assert.Equal(token, connector.AccessToken);
             Assert.Equal(TestProgId, connector.ProgId);
-            Assert.IsType<LocalApiProvider>(connector.Provider);
+            Assert.Same(client, connector.Client);
         }
 
         [Fact]
-        [DisplayName("FormApiConnector remote constructor sets ProgId and a RemoteApiProvider")]
-        public void Constructor_Remote_SetsProgIdAndProvider()
+        [DisplayName("FormApiConnector constructor throws ArgumentNullException for a null client")]
+        public void Constructor_NullClient_ThrowsArgumentNullException()
         {
-            var token = Guid.NewGuid();
-            var connector = new FormApiConnector("http://example.com/api", token, TestProgId);
-
-            Assert.Equal(token, connector.AccessToken);
-            Assert.Equal(TestProgId, connector.ProgId);
-            Assert.IsType<RemoteApiProvider>(connector.Provider);
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        [DisplayName("FormApiConnector remote constructor throws ArgumentException for a blank endpoint")]
-        public void Constructor_RemoteEmptyEndpoint_ThrowsArgumentException(string? endpoint)
-        {
-            Assert.Throws<ArgumentException>(() => new FormApiConnector(endpoint!, Guid.NewGuid(), TestProgId));
+            Assert.Throws<ArgumentNullException>(() => new FormApiConnector(null!, TestProgId));
         }
 
         [Theory]
@@ -52,7 +35,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("FormApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
-            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId);
+            var connector = new FormApiConnector(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()), TestProgId);
             await Assert.ThrowsAsync<ArgumentException>(async () =>
                 await connector.ExecuteAsync<object>(action!, new object(), PayloadFormat.Plain));
         }
@@ -61,7 +44,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("FormApiConnector.SaveAsync throws ArgumentNullException for a null DataSet")]
         public async Task SaveAsync_NullDataSet_ThrowsArgumentNullException()
         {
-            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId);
+            var connector = new FormApiConnector(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()), TestProgId);
             await Assert.ThrowsAsync<ArgumentNullException>(() => connector.SaveAsync(null!));
         }
 

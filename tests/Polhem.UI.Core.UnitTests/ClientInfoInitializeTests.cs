@@ -33,7 +33,7 @@ namespace Polhem.UI.Core.UnitTests
             IUIViewService? originalViewService,
             IReadOnlyDictionary<string, string>? originalArgs)
         {
-            ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+            ClientInfo.SupportedConnectTypes = originalSupportedTypes;
             s_uiViewServiceProp.GetSetMethod(nonPublic: true)?.Invoke(null, new object?[] { originalViewService });
             s_argumentsProp.GetSetMethod(nonPublic: true)?.Invoke(null, new object?[] { originalArgs });
         }
@@ -42,7 +42,7 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("InitializeAsync(IUIViewService) returns false when ShowApiConnectAsync returns false")]
         public async Task InitializeAsync_ShowApiConnectReturnsFalse_ReturnsFalse()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             var originalViewService = ClientInfo.UIViewService;
             var originalArgs = ClientInfo.Arguments;
             try
@@ -60,7 +60,7 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("InitializeAsync(IUIViewService) returns true when ShowApiConnectAsync returns true")]
         public async Task InitializeAsync_ShowApiConnectReturnsTrue_ReturnsTrue()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             var originalViewService = ClientInfo.UIViewService;
             var originalArgs = ClientInfo.Arguments;
             try
@@ -78,7 +78,7 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("InitializeAsync(IUIViewService) sets UIViewService to the passed service instance")]
         public async Task InitializeAsync_SetsUIViewServiceToPassedInstance()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             var originalViewService = ClientInfo.UIViewService;
             var originalArgs = ClientInfo.Arguments;
             try
@@ -97,7 +97,7 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("InitializeAsync(IUIViewService) leaves Arguments as a non-null dictionary")]
         public async Task InitializeAsync_SetsArgumentsToNonNull()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             var originalViewService = ClientInfo.UIViewService;
             var originalArgs = ClientInfo.Arguments;
             try

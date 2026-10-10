@@ -32,7 +32,7 @@ The unit test projects of the packages a head ships run under `-p:DynamicCodeSup
 
 **Head structure**: `[Application] class Application : AvaloniaAndroidApplication<App>` in `Application.cs`; its
 `CustomizeAppBuilder` is the **only** authoritative hook that builds the AppBuilder + SetupWithLifetime → the client
-wiring (`ApiClientInfo` / `ClientInfo.EndpointStorage`) goes here (the counterpart of the iOS AppDelegate).
+wiring (`ClientInfo.SupportedConnectTypes` / `ClientInfo.EndpointStorage`) goes here (the counterpart of the iOS AppDelegate).
 `MainActivity : AvaloniaMainActivity` (**non-generic**) only hosts the view and takes the lifetime from Application.
 
 `FileEndpointStorage` is writable in the Android sandbox (`/data/data/<pkg>/files/...`), but the ConnectionView field

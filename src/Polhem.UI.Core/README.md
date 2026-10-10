@@ -28,15 +28,16 @@ connectors, `ClientDefineAccess`, `FormDefinitionLoader` and the permission capa
 
 ### Connection State
 
-- `ClientInfo` -- static client-side connection state. Owns the `AccessToken` (per-process token
-  model: resetting the token clears the cached `SystemApiConnector`, `DefineAccess` and
-  capability snapshot), lazily creates the `SystemApiConnector` and `DefineAccess` (`ClientDefineAccess`),
-  produces connectors via `CreateFormApiConnector(progId)` and `CreateAuditLogApiConnector()`, resolves the
-  endpoint (local vs. remote) through `InitializeAsync` / `SetEndpointAsync`, and applies login / EnterCompany
+- `ClientInfo` -- static client-side connection state. Owns the head's one `ApiClient` (`PolhemApiClient`;
+  per-process identity model: a new sign-in clears the cached `DefineAccess` and capability snapshot, and a new
+  endpoint replaces the client and signs out), exposes its `AccessToken`, `ConnectType` and `SystemApiConnector`,
+  lazily creates `DefineAccess` (`ClientDefineAccess`), produces connectors via `CreateFormApiConnector(progId)`
+  and `CreateAuditLogApiConnector()`, resolves the endpoint (local vs. remote, limited by
+  `SupportedConnectTypes`) through `InitializeAsync` / `SetEndpointAsync`, and applies login / EnterCompany
   results (`ApplyLoginResult`, `ApplyEnterCompanyResult`, `ClearCompanyContext`). `ResetDefineCache` discards
   the cached definition data after a tenant switch.
 - `ClientInfo.LocalServiceProvider` -- the backend service provider of a head that runs the backend in-process
-  (built with `AddPolhemFramework`); the local connectors `ClientInfo` creates use it.
+  (built with `AddPolhemFramework`); the in-process `ApiClient` dispatches to it.
 - `ClientInfo.UseDefinitionLoader` / `DefinitionLoader` -- localized form definitions through `FormDefinitionLoader`.
 
 ### Endpoint and API Key Persistence

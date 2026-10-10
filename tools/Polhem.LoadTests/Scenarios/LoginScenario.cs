@@ -1,6 +1,5 @@
 using System.Globalization;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.LoadTests.Configuration;
 using Polhem.LoadTests.Running;
 
@@ -10,31 +9,25 @@ namespace Polhem.LoadTests.Scenarios
     /// Signs an account in, measuring the only path that creates a session.
     /// </summary>
     /// <remarks>
-    /// IMPORTANT: every call builds its own <see cref="ApiSessionContext"/> rather than using
-    /// <see cref="ApiSessionContext.Ambient"/>. The ambient instance is a single process-wide
-    /// object, so concurrent sign-ins through it overwrite one another's transmission key; the
-    /// symptom is not a clear error but decryption failures elsewhere that read like framework
-    /// instability under load.
+    /// IMPORTANT: every call creates its own <see cref="PolhemApiClient"/>. A client holds one
+    /// signed-in identity, so concurrent sign-ins through a shared one would overwrite one another's
+    /// token and transmission key; the symptom is not a clear error but decryption failures
+    /// elsewhere that read like framework instability under load.
     /// </remarks>
     public sealed class LoginScenario : IScenario
     {
         private readonly AuthOptions _auth;
-        private readonly string? _endpoint;
-        private readonly IServiceProvider? _localServices;
+        private readonly Func<PolhemApiClient>? _createClient;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="auth">Authentication configuration.</param>
-        /// <param name="endpoint">
-        /// The remote endpoint, or null to dispatch in-process.
-        /// </param>
-        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
-        public LoginScenario(AuthOptions auth, string? endpoint = null, IServiceProvider? localServices = null)
+        /// <param name="createClient">Creates a new client for one sign-in; required to execute.</param>
+        public LoginScenario(AuthOptions auth, Func<PolhemApiClient>? createClient = null)
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
-            _endpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
-            _localServices = localServices;
+            _createClient = createClient;
         }
 
         /// <inheritdoc/>
@@ -44,13 +37,8 @@ namespace Polhem.LoadTests.Scenarios
         public async Task ExecuteAsync(ScenarioContext context, CancellationToken cancellationToken)
         {
             var userId = ResolveUserId(context.VirtualUserIndex);
-            var session = new ApiSessionContext();
-
-            var connector = _endpoint is null
-                ? new SystemApiConnector(_localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider."), Guid.Empty, session)
-                : new SystemApiConnector(_endpoint, Guid.Empty, session);
-
-            await connector.LoginAsync(userId, _auth.Password).ConfigureAwait(false);
+            var client = (_createClient ?? throw new InvalidOperationException("Signing in needs a client factory."))();
+            await client.System.LoginAsync(userId, _auth.Password).ConfigureAwait(false);
         }
 
         /// <summary>

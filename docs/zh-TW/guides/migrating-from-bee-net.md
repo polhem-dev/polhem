@@ -1,4 +1,4 @@
-<!-- source: en/guides/migrating-from-bee-net.md blob: 59f68633948694420e049340066eb0d57e1fad4f -->
+<!-- source: en/guides/migrating-from-bee-net.md blob: d1a551ad2d492759cad2fe3b59586f09b4e41826 -->
 # 從 Bee.NET 遷移
 
 [English](../../en/guides/migrating-from-bee-net.md) · [← 文件索引](../README.md)
@@ -32,8 +32,10 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](../../../CHANGELOG.zh-TW.md)
 | `NullAuditLogWriter` | `NullLogWriter` |
 | `UserID`（`SessionUser`、`CreateSessionArgs`） | `UserId` |
 | `AuditEntry.AccessToken` | `AuditEntry.TokenFingerprint` |
-| `ApiClientInfo.ApiEncryptionKey`、`ApiClientInfo.UserTimeZoneId` | `ApiSessionContext` 上的同名成員 |
-| `ApiClientInfo.LocalServiceProvider` | 把 `IServiceProvider` 傳給 `LocalApiProvider` 或本機 connector 的建構子 |
+| `ApiClientInfo`（`Endpoint`、`ApiKey`、`PayloadOptions`、`DefaultLanguage`、`ConnectType`） | `PolhemApiClient` 的成員，以 `PolhemApiClient.CreateRemote(endpoint, apiKey)` 建立（以 `IsLocal` 取代 `ConnectType`）；`SupportedConnectTypes` 移到 `ClientInfo`（`Polhem.UI.Core`） |
+| `ApiClientInfo.ApiEncryptionKey`、`ApiClientInfo.UserTimeZoneId` | `PolhemApiClient.Session.Credentials`，由 `LoginAsync` 設定 |
+| `ApiClientInfo.LocalServiceProvider` | 把 `IServiceProvider` 傳給 `PolhemApiClient.CreateLocal` |
+| `new SystemApiConnector(endpoint, accessToken)`、`new FormApiConnector(endpoint, accessToken, progId)` | `PolhemApiClient` 的 `client.System`、`client.Form(progId)`；`LoginAsync` 之後 client 會保存 access token |
 | `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.Core.FileEndpointStorage` |
 | `Bee.UI.Core.Permissions` 中的 `ElementCapabilityResolver`、`IElementCapabilityResolver`、`FieldCapability` | `Polhem.Api.Client.Permissions` 中的同名型別 |
 | `Bee.ObjectCaching.Services` 中的 `DeploymentAuthorizationService`、`EmployeeContextResolver` | `Polhem.Business.Security.DeploymentAuthorizationService`、`Polhem.Business.Session.EmployeeContextResolver` |

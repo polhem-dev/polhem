@@ -240,7 +240,7 @@ reported.
 
 **For a type in a different namespace, use the fully qualified name; do not add a `using` just for the cref.**
 A cref does not count as a "use", so adding one triggers `IDE0005`.
-`<see cref="Polhem.Api.Client.Providers.LocalApiProvider"/>` is guarded by the compiler just the same.
+`<see cref="Polhem.Api.Client.Connectors.SystemApiConnector"/>` is guarded by the compiler just the same.
 
 > Example: the doc of `CacheInfo.Initialize` said "Called by `<c>CacheBootstrapper</c>`". That type disappeared
 > when the static facade was removed, and **no mechanism noticed**. It survived until the repository-wide inventory

@@ -683,6 +683,9 @@ the current code:
   `src/Polhem.Api.Client/Connectors/SystemApiConnector.cs`), and the conversion of D4 reads it from there. A host that
   serves several users from one process, such as a Blazor Server app with one session per circuit, therefore converts
   each user's values with that user's time zone.
+- **2026-10-10: the zone travels with the credentials.** The zone is now part of the session's
+  `ApiSessionCredentials`, replaced together with the token and the key at sign-in, and a call reads it once at its
+  start ([ADR-053](adr-053-api-client-composition-root.md)).
 
 ## Related
 

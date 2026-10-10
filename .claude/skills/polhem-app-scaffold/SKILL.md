@@ -185,7 +185,7 @@ The full description is `docs/en/definitions/definition-files-overview.md` § 4 
 ## Hard rules
 
 1. **The Server must not `ProjectReference Polhem.Api.Client`**. The backend is the backend, the client is the client.
-   The only temptation is the in-process client bridge (local connectors built with the host's `IServiceProvider`)
+   The only temptation is the in-process client bridge (a `PolhemApiClient.CreateLocal` over the host's `IServiceProvider`)
    — remote heads go over HTTP and do not need it; delete it.
 2. **CategoryId ∈ {common, company, log}**, business data = company (Part 1).
 3. **TableSchema folder name = CategoryId**.

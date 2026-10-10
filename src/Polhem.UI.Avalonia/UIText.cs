@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Localization;
-using Polhem.Api.Client;
+using Polhem.UI.Core;
 using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia
@@ -15,7 +15,8 @@ namespace Polhem.UI.Avalonia
     /// <see cref="FrameworkLanguageService"/>, which serves the translations shipped with the
     /// framework in the UI culture — the signed-in user's culture once
     /// <c>ClientInfo.ApplyLoginResult</c> has run — through the language fall-back chain, ending at
-    /// the deployment's default language (<see cref="ApiClientInfo.DefaultLanguage"/>).
+    /// the deployment's default language (the <see cref="Polhem.Api.Client.PolhemApiClient.DefaultLanguage"/> of
+    /// <see cref="ClientInfo.ApiClient"/>).
     /// </para>
     /// <para>
     /// A host replaces <see cref="Localizer"/> to reword the text or add a language, typically with
@@ -31,7 +32,7 @@ namespace Polhem.UI.Avalonia
         /// </summary>
         public static IStringLocalizer Localizer { get; set; } =
             new LanguageResourceStringLocalizer<PolhemUIText>(
-                new FrameworkLanguageService(null, static () => ApiClientInfo.DefaultLanguage));
+                new FrameworkLanguageService(null, static () => ClientInfo.ApiClient.DefaultLanguage));
 
         /// <summary>
         /// Returns the text of <paramref name="key"/>, one of the <see cref="PolhemUIText"/> keys.

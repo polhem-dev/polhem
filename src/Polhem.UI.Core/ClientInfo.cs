@@ -26,9 +26,9 @@ namespace Polhem.UI.Core
     /// <para>
     /// This is a stated limitation, not an oversight — but nothing in the type system marks the
     /// boundary, so a server-side UI head built on this package inherits the defect silently.
-    /// <c>Polhem.Api.Client</c> already went through this: its per-user statics moved to
-    /// <see cref="ApiSessionContext"/>, one instance per session. A multi-user head needs the same
-    /// treatment here before using this type.
+    /// <c>Polhem.Api.Client</c> already went through this: the connection and the signed-in identity
+    /// live in a <see cref="PolhemApiClient"/>, one per user. This class holds exactly one of them,
+    /// <see cref="ApiClient"/>; a multi-user head creates its own clients instead of using this type.
     /// </para>
     /// <para>
     /// Deployment-level values are a different matter and belong exactly where they are:
@@ -57,10 +57,10 @@ namespace Polhem.UI.Core
 
         private static readonly FileEndpointStorage s_defaultStorage = new(FileEndpointStorage.DefaultAppName);
 
-        private static SystemApiConnector? s_systemConnector;
+        private static PolhemApiClient? s_client;
+        private static string s_apiKey = string.Empty;
         private static ClientDefineAccess? s_defineAccess;
         private static FormDefinitionLoader? s_definitionLoader;
-        private static Guid s_accessToken = Guid.Empty;
         private static IReadOnlyDictionary<string, PermissionActions>? s_capabilities;
         private static CompanyInfo? s_company;
 
@@ -93,109 +93,97 @@ namespace Polhem.UI.Core
         public static IApiKeyStorage ApiKeyStorage { get; set; } = s_defaultStorage;
 
         /// <summary>
-        /// Access token issued on a successful login.
+        /// Gets the client this head calls the backend with.
         /// </summary>
-        public static Guid AccessToken
-        {
-            get { return s_accessToken; }
-            private set
-            {
-                // NOTE: resetting the access token has to clear the `SystemApiConnector` and
-                // `ClientDefineAccess` caches with it. Otherwise later calls carry the old token
-                // and fail against the server.
-                if (value != s_accessToken)
-                {
-                    // One identity change, one visible step: a reader must not be able to catch a
-                    // new token paired with the previous identity's capability snapshot.
-                    lock (s_stateGate)
-                    {
-                        s_accessToken = value;
-                        s_systemConnector = null;
-                        s_defineAccess = null;
-                        s_definitionLoader = null;
-                        // A new (or cleared) token means a different identity — the cached capability
-                        // snapshot no longer applies. Reset to null so degradation is disabled until
-                        // the next EnterCompany populates it.
-                        s_capabilities = null;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// System-level API connector. Recreated whenever the endpoint changes.
-        /// </summary>
-        public static SystemApiConnector SystemApiConnector
+        /// <remarks>
+        /// Replaced whenever the endpoint changes (<see cref="SetEndpointAsync"/>, <see cref="InitializeAsync(string, CancellationToken)"/>),
+        /// which also signs out: a new connection always needs a fresh sign-in. Before any endpoint is set it is an
+        /// in-process client over <see cref="LocalServiceProvider"/>.
+        /// </remarks>
+        public static PolhemApiClient ApiClient
         {
             get
             {
-                lock (s_stateGate) { return s_systemConnector ??= CreateSystemApiConnector(); }
+                lock (s_stateGate) { return s_client ??= CreateLocalClient(); }
             }
         }
 
-        private static SystemApiConnector CreateSystemApiConnector()
-        {
-            return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new SystemApiConnector(LocalServicesForConnector(), AccessToken)
-                : new SystemApiConnector(ApiClientInfo.Endpoint, AccessToken);
-        }
+        /// <summary>
+        /// Gets the access token of the signed-in user; <see cref="Guid.Empty"/> before sign-in.
+        /// </summary>
+        public static Guid AccessToken => ApiClient.Session.Credentials.AccessToken;
 
         /// <summary>
-        /// Gets or sets the in-process backend's service provider, which connectors use when
-        /// <see cref="ApiClientInfo.ConnectType"/> is <see cref="ConnectType.Local"/>.
+        /// Gets how <see cref="ApiClient"/> reaches the backend.
+        /// </summary>
+        public static ConnectType ConnectType => ApiClient.IsLocal ? ConnectType.Local : ConnectType.Remote;
+
+        /// <summary>
+        /// Gets or sets the connection types this application allows.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes, CancellationToken)"/> sets it from its
+        /// argument. An endpoint of another type is refused when it is set.
+        /// </remarks>
+        public static SupportedConnectTypes SupportedConnectTypes { get; set; } = SupportedConnectTypes.Both;
+
+        /// <summary>
+        /// System-level API connector of <see cref="ApiClient"/>.
+        /// </summary>
+        public static SystemApiConnector SystemApiConnector => ApiClient.System;
+
+        /// <summary>
+        /// Gets or sets the in-process backend's service provider, which <see cref="ApiClient"/> dispatches to when
+        /// <see cref="ConnectType"/> is <see cref="ConnectType.Local"/>.
         /// </summary>
         /// <remarks>
         /// A head that runs the backend in its own process assigns the provider built by
         /// <c>services.AddPolhemFramework(...)</c> before connecting. A remote-only head leaves it
         /// <c>null</c>. It lives here, with the rest of this head's process-wide state, rather than
-        /// in <c>Polhem.Api.Client</c>, whose connectors take the provider as a constructor argument.
+        /// in <c>Polhem.Api.Client</c>, whose clients take the provider as an argument.
         /// </remarks>
         public static IServiceProvider? LocalServiceProvider { get; set; }
 
-        // A connector is created before anything is sent (the getter is also read by code that never
-        // dispatches), so a missing provider is reported on the first call rather than on creation.
-        private static IServiceProvider LocalServicesForConnector()
-            => LocalServiceProvider ?? UnsetLocalServiceProvider.Instance;
-
-        private sealed class UnsetLocalServiceProvider : IServiceProvider
+        // The provider is read when a call is dispatched, not when the client is created: the client exists before
+        // anything is sent (its getter is also read by code that never dispatches), and a head may assign the
+        // provider after that. A missing provider is reported on the first call.
+        private static PolhemApiClient CreateLocalClient()
         {
-            public static readonly UnsetLocalServiceProvider Instance = new();
+            var client = PolhemApiClient.CreateLocal(DeferredLocalServiceProvider.Instance);
+            client.ApiKey = s_apiKey;
+            return client;
+        }
+
+        private sealed class DeferredLocalServiceProvider : IServiceProvider
+        {
+            public static readonly DeferredLocalServiceProvider Instance = new();
 
             public object? GetService(Type serviceType)
-                => throw new InvalidOperationException(
+                => (LocalServiceProvider ?? throw new InvalidOperationException(
                     "ClientInfo.LocalServiceProvider is not set. A local connection runs the backend in this process; " +
-                    "assign the service provider built by services.AddPolhemFramework(...) before connecting.");
+                    "assign the service provider built by services.AddPolhemFramework(...) before connecting."))
+                    .GetService(serviceType);
         }
 
         /// <summary>
         /// Creates a form-level API connector for the specified program.
         /// </summary>
         /// <param name="progId">Program identifier.</param>
-        public static FormApiConnector CreateFormApiConnector(string progId)
-        {
-            return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new FormApiConnector(LocalServicesForConnector(), AccessToken, progId)
-                : new FormApiConnector(ApiClientInfo.Endpoint, AccessToken, progId);
-        }
+        public static FormApiConnector CreateFormApiConnector(string progId) => ApiClient.Form(progId);
 
         /// <summary>
         /// Creates an audit-log API connector (read-only queries over the <c>st_log_*</c> tables).
         /// </summary>
-        public static AuditLogApiConnector CreateAuditLogApiConnector()
-        {
-            return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new AuditLogApiConnector(LocalServicesForConnector(), AccessToken)
-                : new AuditLogApiConnector(ApiClientInfo.Endpoint, AccessToken);
-        }
+        public static AuditLogApiConnector CreateAuditLogApiConnector() => ApiClient.AuditLog;
 
         /// <summary>
-        /// Definition-data accessor. Recreated whenever the endpoint changes.
+        /// Definition-data accessor. Recreated whenever the endpoint changes or a user signs in.
         /// </summary>
         public static ClientDefineAccess DefineAccess
         {
             get
             {
-                lock (s_stateGate) { return s_defineAccess ??= new ClientDefineAccess(SystemApiConnector); }
+                lock (s_stateGate) { return s_defineAccess ??= new ClientDefineAccess((s_client ??= CreateLocalClient()).System); }
             }
         }
 
@@ -224,9 +212,9 @@ namespace Polhem.UI.Core
         /// </summary>
         /// <remarks>
         /// Built over <see cref="DefineAccess"/> with the entered <see cref="Company"/> as its
-        /// company accessor and <see cref="Polhem.Api.Client.ApiClientInfo.DefaultLanguage"/> as its
-        /// default language, and discarded together with <see cref="DefineAccess"/> when the access
-        /// token changes, so it never serves a previous identity's definitions.
+        /// company accessor and the <see cref="PolhemApiClient.DefaultLanguage"/> of <see cref="ApiClient"/> as its
+        /// default language, and discarded together with <see cref="DefineAccess"/> when the endpoint
+        /// changes or a user signs in, so it never serves a previous identity's definitions.
         /// </remarks>
         public static FormDefinitionLoader? DefinitionLoader
         {
@@ -236,7 +224,7 @@ namespace Polhem.UI.Core
                 lock (s_stateGate)
                 {
                     return s_definitionLoader ??= new FormDefinitionLoader(
-                        s_defineAccess ??= new ClientDefineAccess(SystemApiConnector))
+                        s_defineAccess ??= new ClientDefineAccess((s_client ??= CreateLocalClient()).System))
                     {
                         CompanyAccessor = static () => Company,
                     };
@@ -285,7 +273,7 @@ namespace Polhem.UI.Core
         /// <summary>
         /// The per-model capability snapshot for the entered company, or <c>null</c> when no company
         /// context is active (before <see cref="ApplyEnterCompanyResult"/>, or after
-        /// <see cref="ClearCompanyContext"/> / a token change).
+        /// <see cref="ClearCompanyContext"/> / a sign-in / an endpoint change).
         /// </summary>
         /// <remarks>
         /// <c>null</c> means capability enforcement is inactive and the element capability resolver
@@ -340,23 +328,28 @@ namespace Polhem.UI.Core
 
         private static void SetConnectType(ConnectType connectType, string endpoint)
         {
-            if (connectType == ConnectType.Local)
+            // NOTE: a new client means a new connection, which always needs a fresh sign-in: its session starts
+            // anonymous, with no time zone, so no zone outlives the session it belonged to (ADR-032 D13). The
+            // identity-scoped caches go in the same step, so no reader pairs the new client with the previous
+            // identity's definitions or capabilities.
+            var client = connectType == ConnectType.Local
+                ? CreateLocalClient()
+                : PolhemApiClient.CreateRemote(endpoint, s_apiKey);
+            lock (s_stateGate)
             {
-                ApiClientInfo.ConnectType = ConnectType.Local;
-                ApiClientInfo.Endpoint = string.Empty;
+                s_client = client;
+                DiscardIdentityState();
             }
-            else
-            {
-                ApiClientInfo.ConnectType = ConnectType.Remote;
-                ApiClientInfo.Endpoint = endpoint;
-            }
-            // NOTE: changing the connection method always invalidates the existing token, so a
-            // fresh sign-in is required.
-            AccessToken = Guid.Empty;
-            // The time zone goes with it. Once the session is gone that zone belongs to nobody,
-            // and leaving it behind means it would be used for conversions before the next sign-in
-            // (ADR-032 D13). `ApplyLoginResult` fills it in again on the way back.
-            ApiSessionContext.Ambient.UserTimeZoneId = string.Empty;
+        }
+
+        // Callers hold `s_stateGate`.
+        private static void DiscardIdentityState()
+        {
+            s_defineAccess = null;
+            s_definitionLoader = null;
+            // A new identity, or none: the cached capability snapshot no longer applies. Null disables degradation
+            // until the next EnterCompany populates it.
+            s_capabilities = null;
         }
 
         /// <summary>
@@ -372,7 +365,7 @@ namespace Polhem.UI.Core
         /// </remarks>
         public static async Task SetEndpointAsync(string endpoint, CancellationToken cancellationToken = default)
         {
-            var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings, cancellationToken)
+            var connectType = await ApiConnectValidator.ValidateAsync(endpoint, SupportedConnectTypes, AllowGenerateSettings, cancellationToken)
                 .ConfigureAwait(false);
             SetConnectType(connectType, endpoint);
             await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
@@ -407,11 +400,11 @@ namespace Polhem.UI.Core
         public static void SetApiKey(string apiKey)
         {
             ApiKeyStorage.SaveApiKey(apiKey);
-            ApiClientInfo.ApiKey = apiKey;
+            UseApiKey(apiKey);
         }
 
         /// <summary>
-        /// Applies the stored API key to <see cref="ApiClientInfo.ApiKey"/>, falling back to
+        /// Applies the stored API key to <see cref="ApiClient"/>, falling back to
         /// <paramref name="defaultApiKey"/> — and persisting it — the first time an application runs
         /// with nothing stored.
         /// </summary>
@@ -432,17 +425,27 @@ namespace Polhem.UI.Core
                 ApiKeyStorage.SaveApiKey(defaultApiKey);
                 stored = defaultApiKey;
             }
-            ApiClientInfo.ApiKey = stored;
+            UseApiKey(stored);
+        }
+
+        // The key outlives the client: an endpoint change creates a new client, which starts with this key.
+        private static void UseApiKey(string apiKey)
+        {
+            lock (s_stateGate)
+            {
+                s_apiKey = apiKey;
+                s_client?.ApiKey = apiKey;
+            }
         }
 
         private static async Task<bool> InitializeConnectAsync(SupportedConnectTypes supportedConnectTypes,
             CancellationToken cancellationToken)
         {
-            ApiClientInfo.SupportedConnectTypes = supportedConnectTypes;
+            SupportedConnectTypes = supportedConnectTypes;
             try
             {
                 string endpoint = GetEndpoint();
-                var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings, cancellationToken)
+                var connectType = await ApiConnectValidator.ValidateAsync(endpoint, SupportedConnectTypes, AllowGenerateSettings, cancellationToken)
                     .ConfigureAwait(false);
                 SetConnectType(connectType, endpoint);
                 await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
@@ -519,8 +522,8 @@ namespace Polhem.UI.Core
         }
 
         /// <summary>
-        /// Applies the login response, populating <see cref="AccessToken"/> and <see cref="UserInfo"/>,
-        /// and makes the user's culture this process's culture.
+        /// Applies the login response, populating <see cref="UserInfo"/> and the session's time zone,
+        /// discarding the previous identity's cached state, and making the user's culture this process's culture.
         /// </summary>
         /// <param name="loginResponse">Result returned from the login API.</param>
         /// <remarks>
@@ -545,7 +548,6 @@ namespace Polhem.UI.Core
         {
             ArgumentNullException.ThrowIfNull(loginResponse);
 
-            AccessToken = loginResponse.AccessToken;
             UserInfo = new UserInfo()
             {
                 UserId = loginResponse.UserId,
@@ -557,9 +559,19 @@ namespace Polhem.UI.Core
                     : new UserInfo().TimeZone,
                 Culture = loginResponse.Culture ?? string.Empty,
             };
-            // The Connector layer sits below this one, so it cannot read UserInfo — hand it the zone
-            // it needs to convert payloads with (ADR-032 D4).
-            ApiSessionContext.Ambient.UserTimeZoneId = UserInfo.TimeZone;
+            // `LoginAsync` has signed the session in already. Signing it in again here does two things: it applies
+            // the zone of UserInfo, which falls back to its default where the server sent none, and it accepts a
+            // response from a sign-in made elsewhere. The key belongs to the token it was exchanged with, so it is
+            // kept only when the token is the one the session already holds.
+            var session = ApiClient.Session;
+            var current = session.Credentials;
+            lock (s_stateGate)
+            {
+                session.SignIn(new ApiSessionCredentials(loginResponse.AccessToken,
+                    current.AccessToken == loginResponse.AccessToken ? current.ApiEncryptionKey : [],
+                    UserInfo.TimeZone));
+                DiscardIdentityState();
+            }
             ApplyCulture(UserInfo.Culture);
             // NOTE: any further post-sign-in state belongs here.
         }

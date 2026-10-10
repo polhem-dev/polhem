@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Definition;
@@ -20,13 +19,10 @@ namespace Polhem.Api.Client.UnitTests
     {
         private static (AuditLogApiConnector Connector, FakeApiTransport Transport) Create(object resultValue)
         {
-            var connector = new AuditLogApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
             // The connector asks for Encrypted by default but degrades to Encoded when not logged in (no transport
             // key). Answering in the same format lets the whole restore path run.
             var transport = new FakeApiTransport(call => FakeApiTransport.Answer(call, resultValue));
-            typeof(ApiConnector)
-                .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, transport);
+            var connector = new AuditLogApiConnector(TestClients.Fake(transport));
             return (connector, transport);
         }
 

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Conversion;
 using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc;
@@ -9,7 +8,7 @@ using PayloadProcessor = Polhem.JsonRpc.Payload.PayloadProcessor;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// A transport that answers in place of a server, for tests that replace <see cref="ApiConnector.Provider"/>.
+    /// A transport that answers in place of a server, for tests that create their client with <see cref="TestClients.Fake"/>.
     /// </summary>
     /// <remarks>
     /// It reads the parameters as the server's payload filter does, with the client's own payload options, so a test
@@ -41,7 +40,7 @@ namespace Polhem.Api.Client.UnitTests
         /// Answers with <paramref name="value"/> in the format and codec the call was sent in, as the server does.
         /// </summary>
         public static PayloadEnvelope Answer(FakeApiCall call, object? value)
-            => new PayloadProcessor(ApiClientInfo.PayloadOptions)
+            => new PayloadProcessor(TestClients.PayloadOptions)
                 .SealResponse(call.Method, value, call.Params.Envelope.Format, call.Params.Codec);
 
         public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
@@ -98,7 +97,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         public T SentValue<T>()
         {
-            var value = new PayloadProcessor(ApiClientInfo.PayloadOptions).OpenRequest(Params.Envelope, typeof(T), null, Method, out _);
+            var value = new PayloadProcessor(TestClients.PayloadOptions).OpenRequest(Params.Envelope, typeof(T), null, Method, out _);
             // A Plain body stays a `JsonElement` until the parameter binder reads it.
             if (value is JsonElement element)
                 value = element.Deserialize<T>(ApiInputConverter.PlainReadOptions);

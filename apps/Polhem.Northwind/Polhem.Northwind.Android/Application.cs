@@ -34,7 +34,7 @@ public class Application : AvaloniaAndroidApplication<App>
         // Configure the Polhem client singletons before the Avalonia app initialises. The endpoint
         // and the API key keep their default storage: it writes under the local application data
         // folder, which on Android is inside the app's private data directory.
-        ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+        ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
         // The shipped key only seeds empty storage on first run; after that the stored value wins,
         // so swapping keys is a settings change rather than a rebuild.
         ClientInfo.ApplyApiKey(AppDefaults.ApiKey);

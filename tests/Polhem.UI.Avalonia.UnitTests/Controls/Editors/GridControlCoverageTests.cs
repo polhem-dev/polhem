@@ -157,7 +157,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
         private sealed class FakeFormApiConnector : Polhem.Api.Client.Connectors.FormApiConnector
         {
-            public FakeFormApiConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), "Employee") { }
+            public FakeFormApiConnector() : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), "Employee") { }
 
             public Func<Polhem.Api.Core.Messages.Form.GetNewDataResponse>? GetNewDataHandler { get; set; }
 
