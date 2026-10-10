@@ -11,6 +11,9 @@ that rule.
 
 Decision 4, added on 2026-10-06, exempts the framework's exception types from that rule from then on.
 
+[ADR-052](adr-052-breaking-changes-in-1-x-minors.md) replaces the compatibility rule for the rest of 1.x: a 1.x minor
+version may break the public API. The decisions below stay, and ADR-052 says how they apply from 2.0.
+
 ## Context
 
 Polhem 1.0 fixes the public API baseline. From then on, the `PublicAPI.Shipped.txt` file of each package records the

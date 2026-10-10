@@ -66,9 +66,10 @@ understanding why the design is the way it is.
 | [043](adr-043-error-contract-single-registry.md) | The error contract is expressed as a single registry that both ends consume from one declaration | ✅ Accepted |
 | [044](adr-044-payload-codec-negotiation.md) | The body codec is declared by each request; JSON and MessagePack coexist | ✅ Accepted |
 | [045](adr-045-language-policy-and-local-plans.md) | English for everything maintained together; plans stay out of the repository | ✅ Accepted, partially superseded |
-| [046](adr-046-api-evolution-policies-for-1-0.md) | API evolution policies for 1.0: a synchronous server path, growable host interfaces, process-wide configuration | ✅ Accepted |
+| [046](adr-046-api-evolution-policies-for-1-0.md) | API evolution policies for 1.0: a synchronous server path, growable host interfaces, process-wide configuration | ✅ Accepted, amended |
 | [047](adr-047-documents-split-by-reader.md) | Documents are split by reader: user documents are multilingual, maintainer documents are English only | ✅ Accepted |
 | [048](adr-048-rename-base-to-core-in-1-1.md) | `Polhem.Base` is renamed to `Polhem.Core` in 1.1.0, a one-time break within 1.x | ✅ Accepted, amended |
 | [049](adr-049-jsonrpc-packages-in-1-2.md) | Polhem's JSON-RPC runs on the `Polhem.JsonRpc` packages, and `Polhem.Api.AspNetCore` is removed in 1.2.0 | ✅ Accepted, amended |
 | [050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md) | Polhem 1.3.0 moves to Polhem.JsonRpc 1.1.0, whose payload wire format is incompatible | ✅ Accepted |
 | [051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) | Remove the types the move to Polhem.JsonRpc left behind, within 1.x | ✅ Accepted |
+| [052](adr-052-breaking-changes-in-1-x-minors.md) | Breaking changes are allowed in 1.x minor versions; strict semantic versioning starts at 2.0 | ✅ Accepted |

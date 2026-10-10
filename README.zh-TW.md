@@ -47,6 +47,9 @@ dotnet add package Polhem.Db
 
 接下來的步驟見[快速上手](docs/zh-TW/getting-started/getting-started.md)。
 
+> **1.x 的 minor 版可能含破壞性變更**，每一項都會連同遷移步驟列在[變更記錄](CHANGELOG.zh-TW.md)。請把套件鎖定在
+> 一個 minor 版內，例如 `Version="[1.5,1.6)"`。自 2.0.0 起依循語意化版本。
+
 ### 共用（前端 / 後端）
 
 | 組件名稱 | 說明 |
