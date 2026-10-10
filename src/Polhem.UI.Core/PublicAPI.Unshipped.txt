@@ -1,5 +1,1 @@
 #nullable enable
-static Polhem.UI.Core.ClientInfo.ApiClient.get -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.UI.Core.ClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
-static Polhem.UI.Core.ClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
-static Polhem.UI.Core.ClientInfo.SupportedConnectTypes.set -> void
