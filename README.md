@@ -76,7 +76,7 @@ dotnet add package Polhem.Db
 
 | Assembly Name | Description |
 |---|---|
-| **Polhem.Api.Client.dll** | Connector for local or remote invocation of backend Business Objects (`LocalApiProvider` / `RemoteApiProvider`). |
+| **Polhem.Api.Client.dll** | Client for invoking backend Business Objects in process or over HTTP (`PolhemApiClient.CreateLocal` / `CreateRemote`). |
 | **Polhem.UI.Core.dll** | Cross-platform UI common layer (`ClientInfo` / `IEndpointStorage` / `FileEndpointStorage` / `IUIViewService`); shared by native UI hosts for client-side connection state and endpoint persistence. |
 | **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
 | **Polhem.Web.Blazor.Server.dll** | Razor Class Library (RCL) for Blazor Server hosts; provides DI-scoped connectors and Blazor components (`DynamicForm`, `FormDataObject`). |
@@ -129,7 +129,7 @@ All demos live in-repo under [`samples/`](https://github.com/polhem-dev/polhem/b
 | Category | Demo | Shows |
 |----------|------|-------|
 | QuickStart | [`QuickStart.Server`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Server/README.md) + [`QuickStart.Console`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Console/README.md) | Minimal JSON-RPC end-to-end with a custom anonymous BO |
-| Blazor Server | [`Blazor.Server.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Server.Demo/README.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD, dispatched in-process via `LocalApiProvider` |
+| Blazor Server | [`Blazor.Server.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Server.Demo/README.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD, dispatched in-process via `PolhemApiClient.CreateLocal` |
 | Avalonia | [`Avalonia.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Avalonia.DemoCenter/README.md) | Theme-oriented control demo center (DevExpress-style): nav tree (theme → case) + Demo/Source tabs + theme/FormMode toolbar; covers data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity (Semi.Avalonia, no backend) |
 
 

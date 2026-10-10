@@ -2,16 +2,15 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
     /// Structural smoke tests for <see cref="PolhemLoginPanel"/>: confirms the
-    /// public parameter surface, the <see cref="PolhemApiConnectorFactory"/>
-    /// injection, and the labels' defaults. The submit paths are driven through a fake
-    /// connector factory by <see cref="PolhemLoginPanelSuccessPathTests"/>; submitting
+    /// public parameter surface, the <see cref="Polhem.Api.Client.PolhemApiClient"/>
+    /// injection, and the labels' defaults. The submit paths are driven through a
+    /// <see cref="FakeApiServer"/> by <see cref="PolhemLoginPanelSuccessPathTests"/>; submitting
     /// against a real backend is not covered by this project.
     /// </summary>
     public class PolhemLoginPanelTests
@@ -60,12 +59,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("The Factory property is injected with PolhemApiConnectorFactory through [Inject]")]
-        public void Factory_IsInjected()
+        [DisplayName("The Client property is injected with PolhemApiClient through [Inject]")]
+        public void Client_IsInjected()
         {
-            var property = GetNonPublicProperty("Factory");
+            var property = GetNonPublicProperty("Client");
             Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
-            Assert.Equal(typeof(PolhemApiConnectorFactory), property.PropertyType);
+            Assert.Equal(typeof(Polhem.Api.Client.PolhemApiClient), property.PropertyType);
         }
 
         [Fact]

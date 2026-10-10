@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: d6d6c14afc698c1046923b627ff02d0d17c70515 -->
+<!-- source: en/reference/terminology.md blob: a989b2aefffcdb80e06997c0fcab1de5b1e69e34 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -319,7 +319,7 @@
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
-| `ClientInfo` | 用戶端資訊 | Static class，管理連線狀態（endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`。設計給 Avalonia 各端與其他 native UI 的「一個 process = 一個使用者」模型。**不要用於 Blazor Server**，後者一個 process 服務多個 user circuit |
+| `ClientInfo` | 用戶端資訊 | Static class，管理連線狀態（head 唯一的 `PolhemApiClient`、endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`。設計給 Avalonia 各端與其他 native UI 的「一個 process = 一個使用者」模型。**不要用於 Blazor Server**，後者一個 process 服務多個 user circuit |
 | `IEndpointStorage` | 端點儲存介面 | 抽象 API endpoint 的用戶端持久化機制。`ClientInfo.EndpointStorage` 的預設值為 `FileEndpointStorage` |
 | `FileEndpointStorage` | 檔案端點儲存 | 檔案後端的 `IEndpointStorage` 與 `IApiKeyStorage`：endpoint 存於 `endpoint.txt`、API key 存於 `apikey.txt`，位於 `LocalApplicationData/<appName>/` 下。它是 `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 兩者的預設值；瀏覽器（WASM）端改以瀏覽器儲存空間的實作取代兩者 |
 | `IUIViewService` | UI 視圖服務介面 | 由宿主提供的 dialog service，當 `ClientInfo.InitializeAsync` 需要詢問使用者 endpoint 時呼叫（`ShowApiConnectAsync`）；具體實作依 UI 框架而定（Avalonia Window / MAUI ContentPage / WinForms Form 等） |
@@ -340,18 +340,19 @@
 
 ### Web 前端（`Polhem.Web.Blazor.Server`）
 
-`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `DynamicForm`、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 連接器讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`RemoteApiProvider`）連後端。
+`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `DynamicForm`、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `DynamicForm`（Razor 元件） | 動態表單元件 | Blazor 元件，依 FormSchema 動態渲染表單 |
 | `FormDataObject` | 表單資料物件 | Blazor `DynamicForm` 綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.Api.Client`（`FormValueBinding`、`FormDataGuard`） |
-| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（DI scope 連接器） |
+| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（每個 circuit 一個 DI scope 的 `PolhemApiClient`） |
 
 ### API 連線提供者（`Polhem.Api.Client`）
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
-| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | 來自 `Polhem.JsonRpc`：連接器如何抵達後端；下列兩個提供者實作它，由宿主在啟動時選擇 |
-| `LocalApiProvider` | 近端 API 提供者 | In-process 實作，前後端共用同一個 process，直接呼叫 BO 方法（無 HTTP 開銷） |
-| `RemoteApiProvider` | 遠端 API 提供者 | 基於 HTTP 的實作，前端透過 JSON-RPC 連到後端（Blazor WASM 必須使用此實作） |
+| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | 來自 `Polhem.JsonRpc`：連接器如何抵達後端；`Polhem.Api.Client` 提供行程內與 HTTP 兩種實作，由宿主在建立 client 時選擇 |
+| `PolhemApiClient` | API 用戶端 | 用戶端的進入點：一條連到後端的連線、透過它登入的身分，以及呼叫它的連接器（`System`、`AuditLog`、`Form(progId)`） |
+| `PolhemApiClient.CreateLocal` | 近端 API 用戶端 | In-process client，前後端共用同一個 process，直接呼叫 BO 方法（無 HTTP 開銷） |
+| `PolhemApiClient.CreateRemote` | 遠端 API 用戶端 | 基於 HTTP 的 client，前端透過 JSON-RPC 連到後端（Blazor WASM 必須使用此方式） |

@@ -35,10 +35,9 @@ dotnet run -- --endpoint http://other-host:5050/api --apikey app-id.secret
 
 | 程式段落 | library 功能 |
 |----------|--------------|
-| `ApiClientInfo.ApiKey = ParseApiKey(args) ?? DefaultApiKey` | `Polhem.Api.Client.ApiClientInfo` — Remote 模式下每個 request 會帶 `X-Api-Key`。伺服端發放正式金鑰後以 `--apikey <key>` 傳入；內建值只是 demo 預設，之所以能用是因為尚未發放金鑰的部署仍接受任何非空值 |
-| `new SystemApiConnector(endpoint, Guid.Empty)` | `Polhem.Api.Client.Connectors.SystemApiConnector` — 內部用 `RemoteApiProvider` 走 HTTP |
-| `await connector.PingAsync()` | 直接打 `System.Ping`，框架預設將其視為 anonymous，回傳 `status=ok` |
-| `new FormApiConnector(endpoint, Guid.Empty, "Echo")` | `Polhem.Api.Client.Connectors.FormApiConnector` — 鎖定 progId="Echo"，呼叫 `Echo.<action>` |
+| `PolhemApiClient.CreateRemote(endpoint, ParseApiKey(args) ?? DefaultApiKey)` | `Polhem.Api.Client.PolhemApiClient` — 透過 HTTP 呼叫伺服端的 client，每個 request 都會把金鑰帶在 `X-Api-Key`。伺服端發放正式金鑰後以 `--apikey <key>` 傳入；內建值只是 demo 預設，之所以能用是因為尚未發放金鑰的部署仍接受任何非空值 |
+| `await client.System.PingAsync()` | 直接打 `System.Ping`，框架預設將其視為 anonymous，回傳 `status=ok` |
+| `client.Form("Echo")` | `Polhem.Api.Client.Connectors.FormApiConnector` — 鎖定 progId="Echo"，呼叫 `Echo.<action>` |
 | `connector.ExecuteAsync<EchoResponse>("Echo", req, PayloadFormat.Plain)` | 走 `Echo.Echo`；Plain format 因為 BO 標 `[ApiAccessControl(Public, Anonymous)]` 不需要加密 |
 
 ## Local vs Remote 模式
@@ -47,15 +46,15 @@ dotnet run -- --endpoint http://other-host:5050/api --apikey app-id.secret
 
 ```csharp
 // Remote（本 demo）
-var connector = new SystemApiConnector("http://localhost:5050/api", Guid.Empty);
+var client = PolhemApiClient.CreateRemote("http://localhost:5050/api", apiKey);
 
 // Local（在同一個 process 內）：傳入註冊了 backend 的 service provider
 var services = new ServiceCollection();
 services.AddPolhemFramework(settings.BackendConfiguration, paths);
 using var provider = services.BuildServiceProvider();
-var connector = new SystemApiConnector(provider, Guid.Empty);
+var client = PolhemApiClient.CreateLocal(provider);
 ```
 
-Local 版的 connector 建構子接收註冊 backend 的那個 `IServiceProvider`；`BuildServiceProvider` 來自 `Microsoft.Extensions.DependencyInjection` 套件。完整的 backend bootstrap（master key、SQLite 註冊、載入設定、`AddPolhemFramework`）是 `QuickStart.Server` 呼叫的 [`DemoBackend.AddPolhemBackend`](../Polhem.Samples.Shared/DemoBackend.cs)；console host 在一般的 `ServiceCollection` 上照同樣步驟做即可。
+`CreateLocal` 接收註冊 backend 的那個 `IServiceProvider`；`BuildServiceProvider` 來自 `Microsoft.Extensions.DependencyInjection` 套件。完整的 backend bootstrap（master key、SQLite 註冊、載入設定、`AddPolhemFramework`）是 `QuickStart.Server` 呼叫的 [`DemoBackend.AddPolhemBackend`](../Polhem.Samples.Shared/DemoBackend.cs)；console host 在一般的 `ServiceCollection` 上照同樣步驟做即可。
 
 > Local 呼叫是受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。只在呼叫端可被信任、能存取整個 backend 的情境使用。

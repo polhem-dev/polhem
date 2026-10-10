@@ -23,7 +23,7 @@ You should see `response : echo: hello from QuickStart.Console` in Terminal 2.
 To watch Blazor components render a `FormSchema` and drive a Login + Staff CRUD flow:
 
 ```bash
-# Blazor Server (in-process LocalApiProvider, no HTTP round-trip)
+# Blazor Server (in-process client, no HTTP round-trip)
 cd samples/Blazor.Server.Demo
 dotnet run                          # → http://localhost:5055
 ```
@@ -106,22 +106,21 @@ To reset demo data: delete `samples/<Host>/quickstart.db` and re-run. Changing t
 
 ## Local vs Remote dispatch
 
-`Polhem.Api.Client` exposes a **uniform API surface** to callers; only the underlying provider differs:
+`Polhem.Api.Client` exposes a **uniform API surface** to callers; only how the `PolhemApiClient` was created differs:
 
 | Mode | Path | Used by | Sample demo |
 |------|------|---------|-------------|
-| **Local** | client → `LocalApiProvider` → `JsonRpcDispatcher` → BO (same process) | Blazor Server, in-process tooling, BO-to-BO calls | `Blazor.Server.Demo` |
-| **Remote** | client → `RemoteApiProvider` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console, desktop, mobile, cross-machine | `QuickStart.Console` |
+| **Local** | `PolhemApiClient.CreateLocal` → `JsonRpcDispatcher` → BO (same process) | Blazor Server, in-process tooling, BO-to-BO calls | `Blazor.Server.Demo` |
+| **Remote** | `PolhemApiClient.CreateRemote` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console, desktop, mobile, cross-machine | `QuickStart.Console` |
 
-In a Blazor Server host, switching modes is one line in `AddPolhemBlazor`; elsewhere it is the choice of connector constructor (an endpoint for Remote, the backend's `IServiceProvider` for Local, as in [`QuickStart.Console`](QuickStart.Console/README.md#local-vs-remote-modes)):
+In a Blazor Server host, switching modes is one line in `AddPolhemBlazor`; elsewhere it is the choice of factory method (`CreateRemote` with an endpoint and API key, `CreateLocal` with the backend's `IServiceProvider`, as in [`QuickStart.Console`](QuickStart.Console/README.md#local-vs-remote-modes)):
 
 ```csharp
 // Local
 builder.Services.AddPolhemBlazor(o => o.UseLocalProvider());
 
 // Remote (the server rejects calls without this application's API key with 401)
-Polhem.Api.Client.ApiClientInfo.ApiKey = "<issued api key>";
-builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api"));
+builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api", "<issued api key>"));
 ```
 
 A Local call is a trusted in-process call: the backend skips the access token check and the `LocalOnly` restriction for it. Use Remote for a site whose users must be held to their own permissions.

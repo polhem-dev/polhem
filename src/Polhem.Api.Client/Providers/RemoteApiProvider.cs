@@ -12,7 +12,7 @@ namespace Polhem.Api.Client.Providers
     /// are added by a handler in front of a connection pool the process shares, so every provider has its own
     /// headers without opening connections of its own.
     /// </remarks>
-    public sealed class RemoteApiProvider : IJsonRpcTransport
+    internal sealed class RemoteApiProvider : IJsonRpcTransport
     {
         private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(30);
 
@@ -22,28 +22,22 @@ namespace Polhem.Api.Client.Providers
         /// Initializes a new instance of the <see cref="RemoteApiProvider"/> class.
         /// </summary>
         /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        public RemoteApiProvider(string endpoint, Guid accessToken) : this(endpoint, accessToken, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance that sends through <paramref name="innerHandler"/> instead of the
-        /// shared connection pool.
-        /// </summary>
-        /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
+        /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> for an anonymous call such as a login or a ping.</param>
+        /// <param name="apiKey">Reads the API key to send; called for every request.</param>
         /// <param name="innerHandler">The handler to send with, or <c>null</c> for the shared connection pool.</param>
-        /// <remarks>Internal: the seam exists so tests can observe the HTTP call through a fake handler.</remarks>
-        internal RemoteApiProvider(string endpoint, Guid accessToken, HttpMessageHandler? innerHandler)
+        /// <remarks>
+        /// <paramref name="innerHandler"/> exists so tests can observe the HTTP call through a fake handler.
+        /// </remarks>
+        public RemoteApiProvider(string endpoint, Guid accessToken, Func<string> apiKey, HttpMessageHandler? innerHandler = null)
         {
             if (string.IsNullOrWhiteSpace(endpoint))
                 throw new ArgumentException("Endpoint cannot be null or empty.", nameof(endpoint));
+            ArgumentNullException.ThrowIfNull(apiKey);
 
             Endpoint = endpoint;
-            AccessToken = accessToken;  // Note: AccessToken may be Guid.Empty for unauthenticated calls (e.g., Login, Ping)
+            AccessToken = accessToken;
 
-            var headers = new ApiHeaderHandler(accessToken)
+            var headers = new ApiHeaderHandler(accessToken, apiKey)
             {
                 InnerHandler = innerHandler ?? HttpUtilities.SharedHandler
             };
@@ -85,17 +79,17 @@ namespace Polhem.Api.Client.Providers
         /// Adds the API key and the access token to every request.
         /// </summary>
         /// <remarks>
-        /// The API key is read per request, because <see cref="ApiClientInfo.ApiKey"/> can be set after the provider
+        /// The API key is read per request, because <see cref="PolhemApiClient.ApiKey"/> can be set after the provider
         /// is created. The <c>Authorization</c> header is sent only when there is an access token. The server treats a
         /// request without the header as an anonymous call and leaves the decision to the method's access control,
         /// and a deployment that overrides <c>IsAuthorizationRequired</c> to refuse such requests must not be
         /// bypassed by a placeholder token.
         /// </remarks>
-        private sealed class ApiHeaderHandler(Guid accessToken) : DelegatingHandler
+        private sealed class ApiHeaderHandler(Guid accessToken, Func<string> apiKey) : DelegatingHandler
         {
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                request.Headers.TryAddWithoutValidation(ApiHeaders.ApiKey, ApiClientInfo.ApiKey);
+                request.Headers.TryAddWithoutValidation(ApiHeaders.ApiKey, apiKey());
                 if (accessToken != Guid.Empty)
                 {
                     request.Headers.TryAddWithoutValidation(ApiHeaders.Authorization, $"Bearer {accessToken}");

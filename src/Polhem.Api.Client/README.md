@@ -18,8 +18,15 @@
 
 ### Local / Remote Strategy
 
-- The connectors send through [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc), sealing each call with `PayloadConnector` from `Polhem.JsonRpc.Payload.Client`, over one of two transports that implement its `IJsonRpcTransport`: `LocalApiProvider` hands the call to the in-process dispatcher, while `RemoteApiProvider` sends HTTP POST requests to a remote endpoint.
-- The strategy is selected by the connector constructor: the constructors that take an `IServiceProvider` (the backend service provider built with `AddPolhemFramework`) run in-process, the ones that take an endpoint URL go over HTTP.
+- The connectors send through [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc), sealing each call with `PayloadConnector` from `Polhem.JsonRpc.Payload.Client`, over one of two transports that implement its `IJsonRpcTransport`: an in-process one that hands the call to the backend's dispatcher, or an HTTP one that sends POST requests to a remote endpoint.
+- The strategy is chosen once, when the `PolhemApiClient` is created: `PolhemApiClient.CreateLocal` takes an `IServiceProvider` (the backend service provider built with `AddPolhemFramework`) and runs in-process, `PolhemApiClient.CreateRemote` takes an endpoint URL and the API key and goes over HTTP. Every connector the client hands out follows that choice.
+
+```csharp
+var client = PolhemApiClient.CreateRemote("https://host/api", apiKey);
+await client.System.LoginAsync(userId, password);
+await client.System.EnterCompanyAsync(companyId);
+var data = await client.Form("Employee").GetDataAsync(rowId);
+```
 
 ### Connectors
 
@@ -34,7 +41,7 @@
 
 ### Connection Validation
 
-- `ApiConnectValidator.ValidateAsync` determines `ConnectType` (Local or Remote) from the endpoint string, validates the target, and optionally generates missing settings files for local connections.
+- `ApiConnectValidator.ValidateAsync` determines `ConnectType` (Local or Remote) from the endpoint string, checks it against the `SupportedConnectTypes` the caller passes, validates the target, and optionally generates missing settings files for local connections.
 - Remote validation performs a `Ping` to verify connectivity before returning.
 
 ### Cached Definition Access
@@ -46,11 +53,14 @@
 
 ### Client State
 
-- `ApiClientInfo` holds the process-wide settings: `ConnectType`, `Endpoint`, `ApiKey`, `DefaultLanguage` and
-  `SupportedConnectTypes`.
-- `ApiSessionContext` holds the state of one signed-in user (the transmission key set at login and the user's
-  time zone). A single-user head uses the shared `ApiSessionContext.Ambient`; a host serving several users from
-  one process (Blazor Server) passes one per session to the connector constructors.
+- `PolhemApiClient` is the composition root: one connection to a backend (`IsLocal`, `Endpoint`, `ApiKey`,
+  `PayloadOptions`, `DefaultLanguage`), the identity signed in over it (`Session`), and the connectors that call it
+  (`System`, `AuditLog`, `Form(progId)`). The members are the class itself.
+- `ApiSessionContext` (`PolhemApiClient.Session`) holds the signed-in state as one immutable
+  `ApiSessionCredentials` (access token, transmission key, user's time zone). `SystemApiConnector.LoginAsync`
+  replaces it as a unit, `LogoutAsync` and `PolhemApiClient.SignOut` clear it.
+- One client holds one identity. A host serving several users from one process (Blazor Server) creates a client
+  per user.
 
 ### UI Helpers Shared by Every Head
 
@@ -61,14 +71,12 @@
 
 | Class / Interface | Purpose |
 |-------------------|---------|
-| `ApiClientInfo` | Process-wide client settings (connection type, endpoint, API key, default language) |
-| `ApiSessionContext` | Per-user client state (transmission key, time zone) |
+| `PolhemApiClient` | Entry point: one connection, its signed-in identity and its connectors |
+| `ApiSessionContext` / `ApiSessionCredentials` | The client's signed-in state (access token, transmission key, time zone) |
 | `ApiConnector` | Abstract base connector with the payload pipeline |
 | `SystemApiConnector` | System-level operations |
 | `FormApiConnector` | Form-level business object calls bound to a specific ProgId |
 | `AuditLogApiConnector` | Audit and anomaly log queries |
-| `LocalApiProvider` | In-process transport to the backend's JSON-RPC dispatcher |
-| `RemoteApiProvider` | HTTP transport with API key and Bearer token headers |
 | `ClientDefineAccess` | Cached asynchronous definition access over the API |
 | `FormDefinitionLoader` | Localized form schema and runtime layout for a UI |
 | `ApiConnectValidator` | Validates endpoints and determines connection type |
@@ -77,16 +85,16 @@
 
 ## Design Conventions
 
-- **Strategy Pattern** -- `LocalApiProvider` and `RemoteApiProvider` implement `IJsonRpcTransport`; the connector selects one at construction time.
+- **Strategy Pattern** -- an in-process and an HTTP transport implement `IJsonRpcTransport`; the client's factory method selects one, and each call gets a transport of that kind.
 - **Template Method** -- `ApiConnector.ExecuteAsync<T>` has fixed steps (transform payload, send through the transport, restore response); subclasses supply domain-specific methods.
-- **Dual constructor pattern** -- each connector offers a local and a remote constructor, mirroring the two provider types: `SystemApiConnector(IServiceProvider services, Guid accessToken)` / `(string endpoint, Guid accessToken)`. `FormApiConnector` takes the bound `progId` as well. Each has an overload that also takes an `ApiSessionContext`.
-- **Payload format** -- each action chooses its `PayloadFormat`; an `Encrypted` request is sent `Encoded` when the session has no transmission key yet, and a local provider sends `Plain` unless `SysInfo.IsDebugMode` is on. `ApiConnector.PayloadCodec` selects the body codec of `Encoded` / `Encrypted` requests (MessagePack when blank).
+- **Connectors belong to a client** -- each connector has one constructor taking the `PolhemApiClient` (`FormApiConnector` takes the bound `progId` as well), and reads its connection and credentials from `ApiConnector.Client`. `PolhemApiClient.System` and `AuditLog` are single instances; `Form(progId)` creates a new connector each call.
+- **Payload format** -- each action chooses its `PayloadFormat`; an `Encrypted` request is sent `Encoded` when the session has no transmission key yet, and a local client sends `Plain` unless `SysInfo.IsDebugMode` is on. `ApiConnector.PayloadCodec` selects the body codec of `Encoded` / `Encrypted` requests (MessagePack when blank).
 
 ## Directory Structure
 
-- project root -- `ApiClientInfo`, `ApiSessionContext`, `ApiConnectValidator`, `ClientDefineAccess`, `ConnectType`,
+- project root -- `PolhemApiClient`, `ApiSessionContext`, `ApiSessionCredentials`, `ApiConnectValidator`, `ClientDefineAccess`, `ConnectType`,
   `SupportedConnectTypes`, `FormDataGuard`, `FormValueBinding`
 - `Connectors/` -- `ApiConnector`, `SystemApiConnector`, `FormApiConnector`, `AuditLogApiConnector`
-- `Providers/` -- `LocalApiProvider`, `RemoteApiProvider`
+- `Providers/` -- the internal in-process and HTTP transports
 - `Definitions/` -- `FormDefinitionLoader`, `LanguageLayers`, `SnapshotLanguageService`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

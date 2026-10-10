@@ -34,17 +34,17 @@ the head, not to the Polhem packages.
 - **Remote** means the head calls the JSON-RPC endpoint of a backend host over HTTP. **Local** means the head also
   builds the backend's services (`AddPolhemFramework`), assigns the resulting provider to
   `ClientInfo.LocalServiceProvider`, and calls the backend in process. Which of the two an Avalonia head accepts is
-  `ApiClientInfo.SupportedConnectTypes`; every Northwind head sets it to `Remote`.
+  `ClientInfo.SupportedConnectTypes`; every Northwind head sets it to `Remote`.
 - The four Avalonia heads share one UI library and one client runtime (`Polhem.UI.Core`'s `ClientInfo`), which holds
   one signed-in user per process. [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) builds all four
   from a single shared UI project and is the reference configuration for the checklist below.
 - **Blazor Server** runs its components in the ASP.NET Core server process, so the trimming and AOT questions below
-  do not apply to it. It keeps one API session per circuit rather than per process. Its default Local mode treats
+  do not apply to it. It keeps one API client, and so one signed-in session, per circuit rather than per process. Its default Local mode treats
   every browser user's call as a trusted in-process call (the access token and `LocalOnly` checks are skipped): use
-  it only when every user of the site may see the whole backend, and call `UseRemoteProvider(endpoint)` in
-  `AddPolhemBlazor` otherwise. Remote mode also needs the application's API key in `ApiClientInfo.ApiKey`, set at
-  startup, or the server refuses the first call with `401 Unauthorized`. The remarks on `PolhemBlazorOptions` spell
-  out what Local skips and why Remote reads the key from there; see also
+  it only when every user of the site may see the whole backend, and call `UseRemoteProvider(endpoint, apiKey)` in
+  `AddPolhemBlazor` otherwise. Remote mode needs the application's API key there, or the server refuses the first
+  call with `401 Unauthorized`. The remarks on `PolhemBlazorOptions` spell out what Local skips and why every
+  circuit sends the same key; see also
   [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md).
 
 ---

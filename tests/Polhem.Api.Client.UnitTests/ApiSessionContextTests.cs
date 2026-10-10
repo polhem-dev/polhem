@@ -1,68 +1,102 @@
 using System.ComponentModel;
-using Polhem.Api.Client.Connectors;
 
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// Verifies that per-session state is no longer a process-wide static.
+    /// Verifies that the signed-in state is held per session and replaced as one unit.
     /// </summary>
     /// <remarks>
-    /// The defect was "two sessions share one transport key", so the point of the tests is not that a property
-    /// can be stored, but that **two sessions cannot see each other**.
+    /// The defects this type exists to prevent were "two sessions share one transport key" and "a token from one
+    /// sign-in travels with the key of another", so the tests check isolation and whole replacement rather than
+    /// that a value can be stored.
     /// </remarks>
-    [Collection(ApiClientInfoStateCollection.Name)]
     public class ApiSessionContextTests
     {
-        [Fact]
-        [DisplayName("Two sessions do not overwrite each other's transport key")]
-        public void TwoSessions_DoNotOverwriteEachOthersEncryptionKey()
-        {
-            var a = new ApiSessionContext { ApiEncryptionKey = [1, 2, 3] };
-            var b = new ApiSessionContext { ApiEncryptionKey = [9, 9, 9] };
+        private static ApiSessionCredentials Credentials(byte key, string zone = "")
+            => new(Guid.NewGuid(), [key, key, key], zone);
 
-            Assert.Equal([1, 2, 3], a.ApiEncryptionKey);
-            Assert.Equal([9, 9, 9], b.ApiEncryptionKey);
+        [Fact]
+        [DisplayName("A new session is anonymous")]
+        public void Credentials_NewSession_IsAnonymous()
+        {
+            var session = new ApiSessionContext();
+
+            Assert.Same(ApiSessionCredentials.Anonymous, session.Credentials);
+            Assert.Equal(Guid.Empty, session.Credentials.AccessToken);
+            Assert.Empty(session.Credentials.ApiEncryptionKey);
+            Assert.Equal(string.Empty, session.Credentials.UserTimeZoneId);
         }
 
         [Fact]
-        [DisplayName("Two sessions do not overwrite each other's user time zone")]
-        public void TwoSessions_DoNotOverwriteEachOthersTimeZone()
+        [DisplayName("Two sessions do not see each other's credentials")]
+        public void SignIn_TwoSessions_DoNotOverwriteEachOther()
         {
-            var a = new ApiSessionContext { UserTimeZoneId = "Asia/Taipei" };
-            var b = new ApiSessionContext { UserTimeZoneId = "Europe/Berlin" };
+            var a = new ApiSessionContext();
+            var b = new ApiSessionContext();
+            var first = Credentials(1, "Asia/Taipei");
+            var second = Credentials(9, "Asia/Tokyo");
 
-            Assert.Equal("Asia/Taipei", a.UserTimeZoneId);
-            Assert.Equal("Europe/Berlin", b.UserTimeZoneId);
+            a.SignIn(first);
+            b.SignIn(second);
+
+            Assert.Same(first, a.Credentials);
+            Assert.Same(second, b.Credentials);
         }
 
         [Fact]
-        [DisplayName("A connector constructed with a session holds that session, not Ambient")]
-        public void Connector_WithSession_UsesThatSession()
+        [DisplayName("SignIn replaces the token, the key and the zone together")]
+        public void SignIn_ReplacesWholeCredentials()
         {
-            var session = new ApiSessionContext { UserTimeZoneId = "Asia/Taipei" };
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), session);
+            var session = new ApiSessionContext();
+            var first = Credentials(1, "Asia/Taipei");
+            session.SignIn(first);
+            var held = session.Credentials;
 
-            Assert.Same(session, connector.Session);
-            Assert.NotSame(ApiSessionContext.Ambient, connector.Session);
+            var second = Credentials(2, "Asia/Tokyo");
+            session.SignIn(second);
+
+            // A reader that took the first instance keeps a consistent token, key and zone.
+            Assert.Same(first, held);
+            Assert.Same(second, session.Credentials);
         }
 
         [Fact]
-        [DisplayName("A connector constructed without a session falls back to Ambient (existing single-user hosts are unchanged)")]
-        public void Connector_WithoutSession_FallsBackToAmbient()
+        [DisplayName("SignOut returns the session to anonymous")]
+        public void SignOut_AfterSignIn_IsAnonymous()
         {
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
+            var session = new ApiSessionContext();
+            session.SignIn(Credentials(1, "Asia/Taipei"));
 
-            Assert.Same(ApiSessionContext.Ambient, connector.Session);
+            session.SignOut();
+
+            Assert.Same(ApiSessionCredentials.Anonymous, session.Credentials);
         }
 
         [Fact]
-        [DisplayName("Constructing a connector with a null session throws instead of silently falling back to Ambient")]
-        public void Connector_NullSession_Throws()
+        [DisplayName("SignIn with null credentials throws ArgumentNullException")]
+        public void SignIn_Null_ThrowsArgumentNullException()
         {
-            // Silently falling back to Ambient would turn a configuration error in a multi-user host into
-            // "looks like it works, but actually shares the key".
-            Assert.Throws<ArgumentNullException>(
-                () => new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), null!));
+            Assert.Throws<ArgumentNullException>(() => new ApiSessionContext().SignIn(null!));
+        }
+
+        [Fact]
+        [DisplayName("NextSequence keeps counting across a new sign-in")]
+        public void NextSequence_AcrossSignIn_KeepsIncreasing()
+        {
+            var session = new ApiSessionContext();
+            var before = session.NextSequence();
+
+            session.SignIn(Credentials(1));
+
+            Assert.True(session.NextSequence() > before);
+        }
+
+        [Fact]
+        [DisplayName("ApiSessionCredentials rejects a null key or zone")]
+        public void Credentials_NullParts_Throw()
+        {
+            Assert.Throws<ArgumentNullException>(() => new ApiSessionCredentials(Guid.NewGuid(), null!, string.Empty));
+            Assert.Throws<ArgumentNullException>(() => new ApiSessionCredentials(Guid.NewGuid(), [], null!));
         }
     }
 }

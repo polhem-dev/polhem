@@ -20,49 +20,17 @@ namespace Polhem.Api.Client.Connectors
     /// </summary>
     public class SystemApiConnector : ApiConnector
     {
-        #region Constructors
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a local connection.
+        /// Initializes a new instance of the <see cref="SystemApiConnector"/> class.
         /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
-        public SystemApiConnector(IServiceProvider services, Guid accessToken) : base(services, accessToken)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a remote connection.
-        /// </summary>
-        /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        public SystemApiConnector(string endpoint, Guid accessToken) : base(endpoint, accessToken)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a local connection and
-        /// the given session state.
-        /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="session">The per-session state. Give each user their own in a host that serves several from one
-        /// process; omitting it shares <see cref="ApiSessionContext.Ambient"/>.</param>
-        public SystemApiConnector(IServiceProvider services, Guid accessToken, ApiSessionContext session) : base(services, accessToken, session)
+        /// <param name="client">The client whose connection and signed-in identity this connector calls with.</param>
+        /// <remarks>
+        /// <see cref="PolhemApiClient.System"/> is the instance most callers want. Construct one only to derive a
+        /// connector that exposes a host's own system actions.
+        /// </remarks>
+        public SystemApiConnector(PolhemApiClient client) : base(client)
         {
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a remote connection and
-        /// the given session state.
-        /// </summary>
-        /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="session">The per-session state. This is the overload a multi-user host wants — the remote path is
-        /// the one that encrypts payloads with the session key.</param>
-        public SystemApiConnector(string endpoint, Guid accessToken, ApiSessionContext session) : base(endpoint, accessToken, session)
-        {
-        }
-
-        #endregion
 
         /// <summary>
         /// Asynchronously executes an API method.
@@ -177,7 +145,7 @@ namespace Polhem.Api.Client.Connectors
         /// guards this client against what the server sends and cannot be the server's to widen.
         /// A client that must accept a deployment's own types configures its list locally, through
         /// <see cref="SysInfo.Initialize"/>, before calling this. The default language is taken as
-        /// advertised into <see cref="ApiClientInfo.DefaultLanguage"/>: a forged one changes only
+        /// advertised into <see cref="PolhemApiClient.DefaultLanguage"/>: a forged one changes only
         /// which language a missing translation falls back to.
         /// </para>
         /// <para>
@@ -199,9 +167,9 @@ namespace Polhem.Api.Client.Connectors
             var serverConfiguration = XmlCodec.Deserialize<CommonConfiguration>(result.CommonConfiguration)!;
             var configuration = AdoptServerConfiguration(serverConfiguration, SysInfo.IsDebugMode, SysInfo.AllowedTypeNamespaces);
             SysInfo.Initialize(configuration);
-            ApiClientInfo.DefaultLanguage = configuration.DefaultLanguage;
+            Client.DefaultLanguage = configuration.DefaultLanguage;
             // The server decides the compressor and the encryptor; the rest of the client's payload options stay.
-            PolhemPayload.Apply(ApiClientInfo.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
+            PolhemPayload.Apply(Client.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
 
         /// <summary>
@@ -282,9 +250,10 @@ namespace Polhem.Api.Client.Connectors
         /// <see cref="PayloadFormat.Encrypted"/> requests are auto-downgraded to
         /// <see cref="PayloadFormat.Encoded"/> by <see cref="ApiConnector"/>.
         /// <para>
-        /// On success the connector's <see cref="ApiConnector.Session"/> receives the session key and
-        /// the user's time zone (<see cref="LoginResponse.TimeZone"/>), which date-time conversion of
-        /// later calls on that session uses.
+        /// On success the client's <see cref="PolhemApiClient.Session"/> is signed in with the access
+        /// token, the session key and the user's time zone (<see cref="LoginResponse.TimeZone"/>), as
+        /// one replacement. Every connector of the client calls with them from then on, and date-time
+        /// conversion uses the zone.
         /// </para>
         /// </remarks>
         /// <param name="userId">The user account identifier.</param>
@@ -309,16 +278,16 @@ namespace Polhem.Api.Client.Connectors
             var result = await ExecuteAsync<LoginResponse>(SystemActions.Login, request, PayloadFormat.Encoded, cancellationToken)
                 .ConfigureAwait(false);
 
+            byte[] sessionKey = [];
             if (useRsaHandshake && !string.IsNullOrEmpty(result.ApiEncryptionKey))
             {
-                string sessionKey = RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey);
-                Session.ApiEncryptionKey = Convert.FromBase64String(sessionKey);
+                sessionKey = Convert.FromBase64String(RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey));
             }
 
-            // The connector owns the session it signs in, the key above included. Setting the zone
-            // here rather than in a UI head is what gives every head, a multi-user Blazor circuit
-            // among them, the ADR-032 conversion of this user's date-time values.
-            Session.UserTimeZoneId = result.TimeZone ?? string.Empty;
+            // The connector signs in the session itself, the zone included. Doing it here rather than
+            // in a UI head is what gives every head, a multi-user Blazor circuit among them, the
+            // ADR-032 conversion of this user's date-time values.
+            Client.Session.SignIn(new ApiSessionCredentials(result.AccessToken, sessionKey, result.TimeZone ?? string.Empty));
 
             return result;
         }
@@ -666,11 +635,16 @@ namespace Polhem.Api.Client.Connectors
         /// Idempotent — succeeds even if the session is already expired or unknown.
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <remarks>
+        /// On success the client is signed out locally as well (<see cref="PolhemApiClient.SignOut"/>).
+        /// </remarks>
         public virtual async Task<LogoutResponse> LogoutAsync(CancellationToken cancellationToken = default)
         {
             var request = new LogoutRequest();
-            return await ExecuteAsync<LogoutResponse>(SystemActions.Logout, request, cancellationToken: cancellationToken)
+            var result = await ExecuteAsync<LogoutResponse>(SystemActions.Logout, request, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
+            Client.SignOut();
+            return result;
         }
     }
 }

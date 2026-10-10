@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Polhem.Api.Client;
 using Polhem.Definition.Language;
 
 namespace Polhem.Web.Blazor.Server.Components
@@ -18,7 +17,7 @@ namespace Polhem.Web.Blazor.Server.Components
     {
         private static readonly IStringLocalizer s_fallback =
             new LanguageResourceStringLocalizer<PolhemUIText>(
-                new FrameworkLanguageService(null, static () => ApiClientInfo.DefaultLanguage));
+                new FrameworkLanguageService(null, static () => string.Empty));
 
         /// <summary>
         /// Returns the localizer registered in <paramref name="services"/>, else the fallback.

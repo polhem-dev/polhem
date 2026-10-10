@@ -14,59 +14,19 @@ namespace Polhem.Api.Client.Connectors
     /// </summary>
     public class FormApiConnector : ApiConnector
     {
-        #region Constructors
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a local connection.
+        /// Initializes a new instance of the <see cref="FormApiConnector"/> class.
         /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
+        /// <param name="client">The client whose connection and signed-in identity this connector calls with.</param>
         /// <param name="progId">The program identifier.</param>
-        public FormApiConnector(IServiceProvider services, Guid accessToken, string progId) : base(services, accessToken)
+        /// <remarks>
+        /// <see cref="PolhemApiClient.Form"/> creates one. Construct one directly to derive a connector for a form
+        /// whose business object has actions of its own.
+        /// </remarks>
+        public FormApiConnector(PolhemApiClient client, string progId) : base(client)
         {
             ProgId = progId;
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a remote connection.
-        /// </summary>
-        /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="progId">The program identifier.</param>
-        public FormApiConnector(string endpoint, Guid accessToken, string progId) : base(endpoint, accessToken)
-        {
-            ProgId = progId;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a local connection and
-        /// the given session state.
-        /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="progId">The program identifier.</param>
-        /// <param name="session">The per-session state. Give each user their own in a host that serves several from one
-        /// process; omitting it shares <see cref="ApiSessionContext.Ambient"/>.</param>
-        public FormApiConnector(IServiceProvider services, Guid accessToken, string progId, ApiSessionContext session) : base(services, accessToken, session)
-        {
-            ProgId = progId;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a remote connection and
-        /// the given session state.
-        /// </summary>
-        /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="progId">The program identifier.</param>
-        /// <param name="session">The per-session state. This is the overload a multi-user host wants — the remote path is
-        /// the one that encrypts payloads with the session key.</param>
-        public FormApiConnector(string endpoint, Guid accessToken, string progId, ApiSessionContext session) : base(endpoint, accessToken, session)
-        {
-            ProgId = progId;
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets or sets the program identifier (ProgId) used to identify the form-level business object.

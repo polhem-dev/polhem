@@ -32,7 +32,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         {
             private readonly bool _numeric;
 
-            public SchemaConnector(bool numeric = true) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { _numeric = numeric; }
+            public SchemaConnector(bool numeric = true) : base(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid())) { _numeric = numeric; }
 
             public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {

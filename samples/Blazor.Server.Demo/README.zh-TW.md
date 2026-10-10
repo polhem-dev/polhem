@@ -2,7 +2,7 @@
 
 [English](README.md) | **繁體中文**
 
-Blazor Server 宿主，示範如何把 `Polhem.Web.Blazor.Server` 元件庫掛到 ASP.NET Core，並透過 **in-process LocalApiProvider** 直連 Polhem 後端（同一個程序內、無 HTTP round-trip）。
+Blazor Server 宿主，示範如何把 `Polhem.Web.Blazor.Server` 元件庫掛到 ASP.NET Core，並透過 **in-process client**（`PolhemApiClient.CreateLocal`）直連 Polhem 後端（同一個程序內、無 HTTP round-trip）。
 
 ## 跑起來
 
@@ -34,19 +34,19 @@ dotnet run
 |----------|--------------|
 | Login 表單 | `PolhemLoginPanel` |
 | 進入公司 | `SystemApiConnector.EnterCompanyAsync` |
-| AccessToken cascading | `PolhemAccessTokenProvider` |
+| 頁面上的登入狀態 | `PolhemAccessTokenProvider` |
 | 人員列表渲染 | `DynamicGrid` + `FormSchema.GetListLayout()` |
 | 人員編輯表單 | `DynamicForm` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Staff.FormLayout.xml`） |
 | 列表 + 表單整合 | `FormPage` |
 | CRUD 走 Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local 模式 in-process 派遣 | `PolhemBlazorOptions.UseLocalProvider()` |
-| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcDispatcher` → `FormBusinessObject` |
+| In-process JSON-RPC | `PolhemApiClient.CreateLocal` → `JsonRpcDispatcher` → `FormBusinessObject` |
 
 ## 簡化措施（與 production 不同）
 
-- **Local 模式信任每一位瀏覽器使用者。** `UseLocalProvider()` 讓每個呼叫都成為受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。這適合使用者全都可被信任、能存取整個 backend 的網站，例如這個單人 demo 或內部管理工具。使用者必須受限於自身權限的網站，改用 `UseRemoteProvider(endpoint)`（見 `PolhemBlazorOptions` 的 remarks）
+- **Local 模式信任每一位瀏覽器使用者。** `UseLocalProvider()` 讓每個呼叫都成為受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。這適合使用者全都可被信任、能存取整個 backend 的網站，例如這個單人 demo 或內部管理工具。使用者必須受限於自身權限的網站，改用 `UseRemoteProvider(endpoint, apiKey)`（見 `PolhemBlazorOptions` 的 remarks）
 - **`DemoAuthenticatingSystemBusinessObject`** 只替換帳密比對：它接受寫死的 `demo/demo`，而不驗證存在 `st_user` 的密碼。登入的其餘流程仍是框架的，所以 `st_user`（使用者的時區與語系）、`st_session`（session 種子）、`st_company` 與 `st_user_company`（進入公司）照樣會建立並寫入資料
 - **只有一間公司，不詢問直接進入**：有多間公司的部署會在 `Login` 與 `EnterCompany` 之間放一個公司選擇畫面
 - SQLite 為單一檔（`quickstart.db`），跟 `QuickStart.Server` 一樣
 
-Session 狀態不屬於簡化：`AddPolhemBlazor` 為每個 circuit 註冊一個 `ApiSessionContext`，所以同時登入的使用者各自保有自己的傳輸金鑰與時區。
+Session 狀態不屬於簡化：`AddPolhemBlazor` 為每個 circuit 註冊一個 `PolhemApiClient`，所以同時登入的使用者各自保有自己的 access token、傳輸金鑰與時區。

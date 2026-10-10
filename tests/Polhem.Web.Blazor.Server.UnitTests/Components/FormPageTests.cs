@@ -47,20 +47,21 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("The AccessToken property is marked with [CascadingParameter]")]
-        public void AccessToken_HasCascadingParameterAttribute()
+        [DisplayName("The private Client property is marked with [Inject] and is of type PolhemApiClient")]
+        public void Client_IsInjectedPolhemApiClient()
         {
-            var property = GetPublicProperty(nameof(FormPage.AccessToken));
-            Assert.NotNull(property.GetCustomAttribute<CascadingParameterAttribute>());
+            var property = GetNonPublicProperty("Client");
+            Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
+            Assert.Equal(typeof(Polhem.Api.Client.PolhemApiClient), property.PropertyType);
         }
 
         [Fact]
-        [DisplayName("The private Factory property is marked with [Inject] and is of type PolhemApiConnectorFactory")]
-        public void Factory_IsInjectedPolhemApiConnectorFactory()
+        [DisplayName("The private Options property is marked with [Inject] and is of type PolhemBlazorOptions")]
+        public void Options_IsInjectedPolhemBlazorOptions()
         {
-            var property = GetNonPublicProperty("Factory");
+            var property = GetNonPublicProperty("Options");
             Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
-            Assert.Equal(typeof(PolhemApiConnectorFactory), property.PropertyType);
+            Assert.Equal(typeof(PolhemBlazorOptions), property.PropertyType);
         }
 
         [Fact]
@@ -69,14 +70,6 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = new FormPage();
             Assert.Equal(string.Empty, page.ProgId);
-        }
-
-        [Fact]
-        [DisplayName("FormPage AccessToken defaults to Guid.Empty")]
-        public void AccessToken_Default_IsGuidEmpty()
-        {
-            var page = new FormPage();
-            Assert.Equal(Guid.Empty, page.AccessToken);
         }
     }
 }

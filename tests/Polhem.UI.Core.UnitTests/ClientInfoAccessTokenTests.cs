@@ -1,59 +1,70 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// Covers that the <c>AccessToken</c> setter does not reset the connector cache when given the same token.
+    /// Covers how <see cref="ClientInfo.ApplyLoginResult"/> updates the session of <see cref="ClientInfo.ApiClient"/>.
     /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
     [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoAccessTokenTests
     {
-        private static readonly FieldInfo s_systemConnectorField =
-            typeof(ClientInfo).GetField("s_systemConnector", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly FieldInfo s_defineAccessField =
+            typeof(ClientInfo).GetField("s_defineAccess", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        private static PolhemApiClient UseFreshClient()
+        {
+            var client = PolhemApiClient.CreateRemote("http://remote.example.com", string.Empty);
+            ClientInfoTestState.UseClient(client);
+            return client;
+        }
 
         [Fact]
-        [DisplayName("AccessToken setter does not reset the _systemConnector cache when given the same token")]
-        public void AccessToken_SameTokenSetTwice_ConnectorCachePreserved()
+        [DisplayName("ApplyLoginResult keeps the transmission key exchanged for the same token")]
+        public void ApplyLoginResult_SameToken_KeepsKey()
         {
+            using var preserved = ClientInfoTestState.Preserve();
+            var client = UseFreshClient();
             var token = Guid.NewGuid();
-            var originalType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            var originalConnectorCached = s_systemConnectorField.GetValue(null);
+            client.Session.SignIn(new ApiSessionCredentials(token, [1, 2, 3], string.Empty));
 
-            try
-            {
-                ClientInfo.ApplyLoginResult(new LoginResponse
-                {
-                    AccessToken = token,
-                    UserId = "u1",
-                    UserName = "U1"
-                });
+            ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = token, TimeZone = "Asia/Tokyo" });
 
-                var connector = ClientInfo.SystemApiConnector;
-                Assert.NotNull(connector);
+            Assert.Equal(token, ClientInfo.AccessToken);
+            Assert.Equal([1, 2, 3], client.Session.Credentials.ApiEncryptionKey);
+            Assert.Equal("Asia/Tokyo", client.Session.Credentials.UserTimeZoneId);
+        }
 
-                ClientInfo.ApplyLoginResult(new LoginResponse
-                {
-                    AccessToken = token,
-                    UserId = "u1",
-                    UserName = "U1"
-                });
+        [Fact]
+        [DisplayName("ApplyLoginResult for a token the session does not hold signs in without a key")]
+        public void ApplyLoginResult_OtherToken_DropsKey()
+        {
+            using var preserved = ClientInfoTestState.Preserve();
+            var client = UseFreshClient();
+            client.Session.SignIn(new ApiSessionCredentials(Guid.NewGuid(), [1, 2, 3], string.Empty));
+            var other = Guid.NewGuid();
 
-                var connectorAfter = s_systemConnectorField.GetValue(null);
-                Assert.Same(connector, (SystemApiConnector?)connectorAfter);
-            }
-            finally
-            {
-                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.Empty });
-                ApiClientInfo.ConnectType = originalType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-                s_systemConnectorField.SetValue(null, originalConnectorCached);
-            }
+            ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = other });
+
+            Assert.Equal(other, ClientInfo.AccessToken);
+            Assert.Empty(client.Session.Credentials.ApiEncryptionKey);
+        }
+
+        [Fact]
+        [DisplayName("ApplyLoginResult discards the definition cache of the previous identity")]
+        public void ApplyLoginResult_DiscardsDefinitionCache()
+        {
+            using var preserved = ClientInfoTestState.Preserve();
+            UseFreshClient();
+            var cached = ClientInfo.DefineAccess;
+
+            ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.NewGuid() });
+
+            Assert.Null(s_defineAccessField.GetValue(null));
+            Assert.NotSame(cached, ClientInfo.DefineAccess);
         }
     }
 }

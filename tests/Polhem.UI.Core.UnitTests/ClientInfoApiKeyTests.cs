@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Client;
 
 namespace Polhem.UI.Core.UnitTests
 {
@@ -33,7 +32,7 @@ namespace Polhem.UI.Core.UnitTests
         private static void WithFakeStorage(Action<FakeApiKeyStorage> action)
         {
             var originalStorage = ClientInfo.ApiKeyStorage;
-            var originalKey = ApiClientInfo.ApiKey;
+            using var preserved = ClientInfoTestState.Preserve();
             var fake = new FakeApiKeyStorage();
             ClientInfo.ApiKeyStorage = fake;
             try
@@ -43,7 +42,6 @@ namespace Polhem.UI.Core.UnitTests
             finally
             {
                 ClientInfo.ApiKeyStorage = originalStorage;
-                ApiClientInfo.ApiKey = originalKey;
             }
         }
 
@@ -69,7 +67,7 @@ namespace Polhem.UI.Core.UnitTests
 
                 Assert.Equal("new-app.secret", fake.Stored);
                 Assert.Equal(1, fake.SaveCount);
-                Assert.Equal("new-app.secret", ApiClientInfo.ApiKey);
+                Assert.Equal("new-app.secret", ClientInfoTestState.ApiKey);
             });
         }
 
@@ -83,7 +81,7 @@ namespace Polhem.UI.Core.UnitTests
 
                 Assert.Equal("shipped-default", fake.Stored);
                 Assert.Equal(1, fake.SaveCount);
-                Assert.Equal("shipped-default", ApiClientInfo.ApiKey);
+                Assert.Equal("shipped-default", ClientInfoTestState.ApiKey);
             });
         }
 
@@ -100,7 +98,7 @@ namespace Polhem.UI.Core.UnitTests
                 Assert.Equal("configured.secret", fake.Stored);
                 // An existing value is not written again. This is what keeps a changed key from being reverted on the next start.
                 Assert.Equal(0, fake.SaveCount);
-                Assert.Equal("configured.secret", ApiClientInfo.ApiKey);
+                Assert.Equal("configured.secret", ClientInfoTestState.ApiKey);
             });
         }
 
@@ -110,11 +108,11 @@ namespace Polhem.UI.Core.UnitTests
         {
             WithFakeStorage(fake =>
             {
-                ApiClientInfo.ApiKey = "stale";
+                ClientInfoTestState.ApiKey = "stale";
 
                 ClientInfo.ApplyApiKey();
 
-                Assert.Equal(string.Empty, ApiClientInfo.ApiKey);
+                Assert.Equal(string.Empty, ClientInfoTestState.ApiKey);
                 Assert.Equal(0, fake.SaveCount);
             });
         }

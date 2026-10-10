@@ -38,7 +38,7 @@ using Polhem.Api.Client;
 using Polhem.UI.Core;
 
 // Host bootstrap, before any UI control is created.
-ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
 // FileEndpointStorage (per-user application data folder) is already the default endpoint and API key
 // storage. A browser head assigns ClientInfo.EndpointStorage and ClientInfo.ApiKeyStorage its own
 // browser-backed storage here.

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc.Payload;
@@ -21,7 +20,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class TestApiConnector : ApiConnector
         {
-            public TestApiConnector(Guid accessToken) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken) { }
+            public TestApiConnector(PolhemApiClient client) : base(client) { }
 
             public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format,
                 CancellationToken cancellationToken = default)
@@ -29,15 +28,10 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         /// <summary>
-        /// Replaces <see cref="ApiConnector.Provider"/> (private setter) with the test transport through reflection.
+        /// Creates a connector whose calls go to the test transport.
         /// </summary>
         private static TestApiConnector CreateConnector(FakeApiTransport transport)
-        {
-            var connector = new TestApiConnector(Guid.NewGuid());
-            typeof(ApiConnector).GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, transport);
-            return connector;
-        }
+            => new(TestClients.Fake(transport));
 
         [Fact]
         [DisplayName("ExecuteAsync returns the provider result converted to the target type on success")]

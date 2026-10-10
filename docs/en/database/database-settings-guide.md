@@ -337,7 +337,7 @@ foreach (var table in company.Tables!) { ... }
 | DatabaseSettings | ❌ No. A local call receives the file as stored, with passwords still in their `enc:` form |
 | DbCategorySettings | ❌ No |
 
-`SystemBusinessObject.GetDefine` serves a remote caller only the definition types a client needs to render forms and menus, and refuses every other type; both settings files are outside that list. A local call (an in-process `LocalApiProvider`, for example tooling) may read them, which is how `ClientDefineAccess.GetDbCategorySettingsAsync` works. Saving goes through `SaveDefine`, which is local-only. The allow-list itself is in the XML documentation of `SystemBusinessObject.GetDefine`.
+`SystemBusinessObject.GetDefine` serves a remote caller only the definition types a client needs to render forms and menus, and refuses every other type; both settings files are outside that list. A local call (an in-process client from `PolhemApiClient.CreateLocal`, for example tooling) may read them, which is how `ClientDefineAccess.GetDbCategorySettingsAsync` works. Saving goes through `SaveDefine`, which is local-only. The allow-list itself is in the XML documentation of `SystemBusinessObject.GetDefine`.
 
 ---
 

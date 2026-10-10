@@ -48,9 +48,8 @@ namespace Polhem.UI.Core.UnitTests
         {
             var tempDir = CreateTempDefinePath();
             var originalStorage = ClientInfo.EndpointStorage;
-            var originalConnectType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            using var preserved = ClientInfoTestState.Preserve();
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             try
             {
                 ClientInfo.EndpointStorage = new FakeEndpointStorage(tempDir);
@@ -58,14 +57,12 @@ namespace Polhem.UI.Core.UnitTests
                 // `SetConnectType(Local, tempDir)` and then `SystemApiConnector.InitializeAsync()`. Without a local API
                 // service `InitializeAsync` throws, and the catch returns false.
                 await ClientInfo.InitializeAsync(new FakeUIViewService(), SupportedConnectTypes.Both);
-                Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
+                Assert.Equal(ConnectType.Local, ClientInfo.ConnectType);
             }
             finally
             {
                 ClientInfo.EndpointStorage = originalStorage;
-                ApiClientInfo.ConnectType = originalConnectType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
                 try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
             }
         }
@@ -75,23 +72,20 @@ namespace Polhem.UI.Core.UnitTests
         public async Task SetEndpointAsync_ValidLocalPath_SetsConnectTypeToLocal()
         {
             var tempDir = CreateTempDefinePath();
-            var originalConnectType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            using var preserved = ClientInfoTestState.Preserve();
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             try
             {
                 // `SetEndpointAsync` does not set `SupportedConnectTypes` itself, so Local must be supported before the call.
-                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
                 // After `ValidateAsync` passes it calls `SetConnectType(Local, tempDir)` and then `SystemApiConnector.InitializeAsync()`.
                 // Without a local API service that throws and propagates, so `SaveEndpoint` never runs.
                 await Record.ExceptionAsync(() => ClientInfo.SetEndpointAsync(tempDir));
-                Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
+                Assert.Equal(ConnectType.Local, ClientInfo.ConnectType);
             }
             finally
             {
-                ApiClientInfo.ConnectType = originalConnectType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
                 try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
             }
         }

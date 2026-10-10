@@ -6,8 +6,8 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     public enum PolhemBlazorProviderMode
     {
         /// <summary>
-        /// In-process: the host is also the API backend; connectors use
-        /// <see cref="Polhem.Api.Client.Providers.LocalApiProvider"/>.
+        /// In-process: the host is also the API backend; each circuit's client is created by
+        /// <see cref="Polhem.Api.Client.PolhemApiClient.CreateLocal"/>.
         /// </summary>
         /// <remarks>
         /// WARNING: every call made in this mode is a trusted local call, whichever browser user caused
@@ -20,8 +20,8 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         Local = 0,
 
         /// <summary>
-        /// Over HTTP: connectors use <see cref="Polhem.Api.Client.Providers.RemoteApiProvider"/> against
-        /// <see cref="PolhemBlazorOptions.Endpoint"/>.
+        /// Over HTTP: each circuit's client is created by <see cref="Polhem.Api.Client.PolhemApiClient.CreateRemote"/>
+        /// against <see cref="PolhemBlazorOptions.Endpoint"/>.
         /// </summary>
         Remote = 1,
     }

@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.ComponentModel;
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Messages.Form;
@@ -11,7 +10,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// Cancellation through the client surface: a token handed to a connector, a provider or the client
+    /// Cancellation through the client surface: a token handed to a connector, a transport or the client
     /// definition cache must reach the transport and stop the call.
     /// </summary>
     public class ClientCancellationTests
@@ -55,7 +54,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         {
             private readonly TaskCompletionSource _gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            public GatedConnector() : base(EmptyServiceProvider.Instance, Guid.NewGuid()) { }
+            public GatedConnector() : base(TestClients.Local(EmptyServiceProvider.Instance, Guid.NewGuid())) { }
 
             public int GetDefineCallCount { get; private set; }
 
@@ -76,11 +75,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
         private static FormApiConnector NewFormConnector(FakeApiTransport transport)
         {
-            var connector = new FormApiConnector(EmptyServiceProvider.Instance, Guid.NewGuid(), "Employee", new ApiSessionContext());
-            typeof(ApiConnector)
-                .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, transport);
-            return connector;
+            return new FormApiConnector(TestClients.Fake(transport), "Employee");
         }
 
         [Fact]
@@ -88,7 +83,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         public async Task RemoteApiProvider_CancelledDuringHttpCall_AbortsRequest()
         {
             var handler = new HangingHandler();
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, () => string.Empty, handler);
             using var cts = new CancellationTokenSource();
 
             var call = provider.SendAsync(NewRequest(), cts.Token);
@@ -126,7 +121,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("A connector method passes its cancellation token down to the provider")]
+        [DisplayName("A connector method passes its cancellation token down to the transport")]
         public async Task ConnectorMethod_Token_ReachesProvider()
         {
             var transport = NewCapturingTransport();
@@ -139,7 +134,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("A connector method with a cancelled token throws without calling the provider")]
+        [DisplayName("A connector method with a cancelled token throws without calling the transport")]
         public async Task ConnectorMethod_CancelledToken_DoesNotCallProvider()
         {
             var transport = NewCapturingTransport();
@@ -155,7 +150,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         [DisplayName("PingAsync lets a cancellation through unwrapped")]
         public async Task PingAsync_CancelledToken_ThrowsOperationCanceled()
         {
-            var connector = new SystemApiConnector(EmptyServiceProvider.Instance, Guid.Empty, new ApiSessionContext());
+            var connector = TestClients.Local(EmptyServiceProvider.Instance, Guid.Empty).System;
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();
 

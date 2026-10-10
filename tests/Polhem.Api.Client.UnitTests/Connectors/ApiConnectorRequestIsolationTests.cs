@@ -12,7 +12,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// </summary>
     /// <remarks>
     /// <c>FormBusinessObject.Save</c> rewrites the time columns, and after writing, the adapter also calls
-    /// <c>AcceptChanges</c>. Before 1.2.0 an in-process call (<c>LocalApiProvider</c> + <c>Plain</c>) had no
+    /// <c>AcceptChanges</c>. Before 1.2.0 an in-process call (a local client + <c>Plain</c>) had no
     /// serialization boundary, so without the copy the document on screen turned into UTC values and lost its
     /// unsaved state. Every transport now serializes the request; this test keeps the caller's data safe should one
     /// ever hand the object over again. Here a fake transport rewrites the received object on the "server",

@@ -61,7 +61,7 @@ Depends on the front-end decision + whether auth is needed:
 - `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + the
   Staff / Team / Project seed data. Samples other than Console that want auth all connect to this server
 - in-process mode is for Blazor Server only; Avalonia and other non-web hosts cannot run in-process (there is no
-  `WebApplicationBuilder`); instead pass the `IServiceProvider` to the local connector constructors (or set
+  `WebApplicationBuilder`); instead pass the `IServiceProvider` to `PolhemApiClient.CreateLocal` (or set
   `ClientInfo.LocalServiceProvider` on a native head) and use local mode
 
 ### Decision 3: is login needed?
@@ -178,9 +178,9 @@ add the Polhem integration.
 
 #### Console template (auth=no)
 
-See `samples/QuickStart.Console/Program.cs`: first set `ApiClientInfo.ApiKey`, then
-`new SystemApiConnector(endpoint, Guid.Empty)` + `PingAsync()`, and call the Echo BO with
-`ExecuteAsync<T>("Echo", request, PayloadFormat.Plain)` on `new FormApiConnector(endpoint, Guid.Empty, "Echo")`.
+See `samples/QuickStart.Console/Program.cs`: create the client with
+`PolhemApiClient.CreateRemote(endpoint, apiKey)`, call `client.System.PingAsync()`, and call the Echo BO with
+`ExecuteAsync<T>("Echo", request, PayloadFormat.Plain)` on `client.Form("Echo")`.
 
 #### Console template (auth=yes)
 
@@ -197,14 +197,13 @@ internal static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        ApiClientInfo.ApiKey = "{sample-key}";
+        ClientInfo.ApplyApiKey("{sample-key}");
         await ClientInfo.InitializeAsync("http://localhost:5050/api"); // QuickStart.Server
 
         var login = await ClientInfo.SystemApiConnector.LoginAsync("demo", "demo");
         ClientInfo.ApplyLoginResult(login);
 
-        // The sample forms are company-scoped. Read the connector again: storing the token
-        // replaced the cached one, which still carries the empty pre-login token.
+        // The sample forms are company-scoped. The same connector carries the login.
         var company = await ClientInfo.SystemApiConnector.EnterCompanyAsync("DEMO");
         ClientInfo.ApplyEnterCompanyResult(company);
 

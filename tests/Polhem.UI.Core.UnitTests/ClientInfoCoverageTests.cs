@@ -61,89 +61,67 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetConnectType Local sets ApiClientInfo.ConnectType to Local")]
+        [DisplayName("SetConnectType Local sets ClientInfo.ConnectType to Local")]
         public void SetConnectType_LocalEndpoint_SetsConnectTypeToLocal()
         {
             var method = GetSetConnectTypeMethod();
-            var originalType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            try
-            {
-                method.Invoke(null, s_localConnectTypeArgs);
-                Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
-                Assert.Equal(string.Empty, ApiClientInfo.Endpoint);
-            }
-            finally
-            {
-                ApiClientInfo.ConnectType = originalType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-            }
+            using var preserved = ClientInfoTestState.Preserve();
+            method.Invoke(null, s_localConnectTypeArgs);
+            Assert.Equal(ConnectType.Local, ClientInfo.ConnectType);
+            Assert.Equal(string.Empty, ClientInfo.ApiClient.Endpoint);
         }
 
         [Fact]
-        [DisplayName("SetConnectType Remote sets ApiClientInfo.ConnectType to Remote and updates Endpoint")]
+        [DisplayName("SetConnectType Remote sets ClientInfo.ConnectType to Remote and updates Endpoint")]
         public void SetConnectType_RemoteEndpoint_SetsConnectTypeAndEndpoint()
         {
             var method = GetSetConnectTypeMethod();
-            var originalType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            try
-            {
-                method.Invoke(null, s_remoteConnectTypeArgs);
-                Assert.Equal(ConnectType.Remote, ApiClientInfo.ConnectType);
-                Assert.Equal("http://remote.example.com", ApiClientInfo.Endpoint);
-            }
-            finally
-            {
-                ApiClientInfo.ConnectType = originalType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-            }
+            using var preserved = ClientInfoTestState.Preserve();
+            method.Invoke(null, s_remoteConnectTypeArgs);
+            Assert.Equal(ConnectType.Remote, ClientInfo.ConnectType);
+            Assert.Equal("http://remote.example.com", ClientInfo.ApiClient.Endpoint);
         }
 
         [Fact]
-        [DisplayName("CreateFormApiConnector with the Remote connect type returns a non-null FormApiConnector")]
-        public void CreateFormApiConnector_RemoteConnectType_ReturnsNonNullConnector()
+        [DisplayName("CreateFormApiConnector returns a connector for the form, bound to ApiClient")]
+        public void CreateFormApiConnector_ReturnsConnectorOfApiClient()
         {
-            var originalType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            try
-            {
-                ApiClientInfo.ConnectType = ConnectType.Remote;
-                ApiClientInfo.Endpoint = "http://remote.example.com";
-                var connector = ClientInfo.CreateFormApiConnector("TestProg");
-                Assert.Equal("TestProg", connector.ProgId);
-            }
-            finally
-            {
-                ApiClientInfo.ConnectType = originalType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-            }
+            using var preserved = ClientInfoTestState.Preserve();
+            var client = PolhemApiClient.CreateRemote("http://remote.example.com", string.Empty);
+            ClientInfoTestState.UseClient(client);
+
+            var connector = ClientInfo.CreateFormApiConnector("TestProg");
+
+            Assert.Equal("TestProg", connector.ProgId);
+            Assert.Same(client, connector.Client);
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector getter with the Remote connect type creates and returns a non-null remote connector")]
-        public void SystemApiConnector_RemoteConnectType_ReturnsNonNullConnector()
+        [DisplayName("SystemApiConnector and CreateAuditLogApiConnector return the connectors of ApiClient")]
+        public void Connectors_AreThoseOfApiClient()
         {
-            var originalType = ApiClientInfo.ConnectType;
-            var originalEndpoint = ApiClientInfo.Endpoint;
-            var sysConnField = typeof(ClientInfo).GetField(
-                "s_systemConnector", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.NotNull(sysConnField);
-            var originalConnector = sysConnField!.GetValue(null);
-            try
-            {
-                ApiClientInfo.ConnectType = ConnectType.Remote;
-                ApiClientInfo.Endpoint = "http://remote.example.com";
-                sysConnField.SetValue(null, null);
-                var connector = ClientInfo.SystemApiConnector;
-                Assert.NotNull(connector);
-            }
-            finally
-            {
-                ApiClientInfo.ConnectType = originalType;
-                ApiClientInfo.Endpoint = originalEndpoint;
-                sysConnField.SetValue(null, originalConnector);
-            }
+            using var preserved = ClientInfoTestState.Preserve();
+            var client = PolhemApiClient.CreateRemote("http://remote.example.com", string.Empty);
+            ClientInfoTestState.UseClient(client);
+
+            Assert.Same(client.System, ClientInfo.SystemApiConnector);
+            Assert.Same(client.AuditLog, ClientInfo.CreateAuditLogApiConnector());
+        }
+
+        [Fact]
+        [DisplayName("SetConnectType Remote creates a client with the current API key and an anonymous session")]
+        public void SetConnectType_Remote_NewClientCarriesKeyAndIsAnonymous()
+        {
+            var method = GetSetConnectTypeMethod();
+            using var preserved = ClientInfoTestState.Preserve();
+            ClientInfoTestState.ApiKey = "app.key";
+            ClientInfo.ApiClient.Session.SignIn(new ApiSessionCredentials(Guid.NewGuid(), [1], "Asia/Tokyo"));
+
+            method.Invoke(null, s_remoteConnectTypeArgs);
+
+            Assert.Equal("app.key", ClientInfo.ApiClient.ApiKey);
+            Assert.Same(ApiSessionCredentials.Anonymous, ClientInfo.ApiClient.Session.Credentials);
+            Assert.Equal(Guid.Empty, ClientInfo.AccessToken);
         }
     }
 }

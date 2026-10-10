@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.JsonRpc.Payload;
@@ -20,8 +19,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         private const string ProgId = "Unit";
         private const string Action = "Echo";
 
-        private sealed class TestApiConnector(ApiSessionContext session)
-            : ApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), session)
+        private sealed class TestApiConnector(PolhemApiClient client) : ApiConnector(client)
         {
             public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format,
                 CancellationToken cancellationToken = default)
@@ -37,15 +35,12 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
         private static TestApiConnector CreateConnector(FakeApiTransport transport, byte[] key)
         {
-            var connector = new TestApiConnector(new ApiSessionContext { ApiEncryptionKey = key });
-            typeof(ApiConnector).GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, transport);
-            return connector;
+            return new TestApiConnector(TestClients.Fake(transport, key: key));
         }
 
         /// <summary>Answers <paramref name="value"/> sealed in <paramref name="format"/>, whatever the call was sent in.</summary>
         private static FakeApiTransport AnswerIn(PayloadFormat? format, object? value, byte[] key)
-            => new(call => new PayloadProcessor(ApiClientInfo.PayloadOptions).SealResponse(
+            => new(call => new PayloadProcessor(TestClients.PayloadOptions).SealResponse(
                 call.Method, value, format ?? call.Params.Envelope.Format, call.Params.Codec, key));
 
         [Theory]

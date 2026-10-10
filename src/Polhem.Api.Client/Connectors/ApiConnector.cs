@@ -1,8 +1,6 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
-using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
@@ -17,84 +15,20 @@ namespace Polhem.Api.Client.Connectors
     /// </summary>
     public abstract class ApiConnector
     {
-        #region Constructors
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="ApiConnector"/> class using a local connection.
+        /// Initializes a new instance of the <see cref="ApiConnector"/> class.
         /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
-        protected ApiConnector(IServiceProvider services, Guid accessToken)
-            : this(services, accessToken, ApiSessionContext.Ambient)
+        /// <param name="client">The client whose connection and signed-in identity this connector calls with.</param>
+        protected ApiConnector(PolhemApiClient client)
         {
+            ArgumentNullException.ThrowIfNull(client);
+            Client = client;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ApiConnector"/> class using a local connection
-        /// and the given session state.
+        /// Gets the client whose connection and signed-in identity this connector calls with.
         /// </summary>
-        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="session">
-        /// The per-session state. A host serving several users from one process must give each session
-        /// its own instance; sharing one makes the last login's transmission key overwrite the rest.
-        /// </param>
-        protected ApiConnector(IServiceProvider services, Guid accessToken, ApiSessionContext session)
-        {
-            ArgumentNullException.ThrowIfNull(services);
-            ArgumentNullException.ThrowIfNull(session);
-            AccessToken = accessToken;
-            Session = session;
-            SetProvider(new LocalApiProvider(services, accessToken));
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApiConnector"/> class using a remote connection.
-        /// </summary>
-        /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        protected ApiConnector(string endpoint, Guid accessToken)
-            : this(endpoint, accessToken, ApiSessionContext.Ambient)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApiConnector"/> class using a remote connection
-        /// and the given session state.
-        /// </summary>
-        /// <param name="endpoint">The API service endpoint.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="session">
-        /// The per-session state. This is the overload a multi-user host wants: the remote path is the
-        /// one that encrypts payloads, so a shared context there is what locks users out of each other's
-        /// sessions.
-        /// </param>
-        protected ApiConnector(string endpoint, Guid accessToken, ApiSessionContext session)
-        {
-            if (StringUtilities.IsEmpty(endpoint))
-                throw new ArgumentException("Endpoint cannot be null or empty.", nameof(endpoint));
-            ArgumentNullException.ThrowIfNull(session);
-
-            AccessToken = accessToken;
-            Session = session;
-            SetProvider(new RemoteApiProvider(endpoint, accessToken));
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Gets or sets the access token.
-        /// </summary>
-        public Guid AccessToken { get; private set; }
-
-        /// <summary>
-        /// Gets the per-session state this connector reads and writes.
-        /// </summary>
-        /// <remarks>
-        /// Defaults to <see cref="ApiSessionContext.Ambient"/> for connectors created through the
-        /// constructors that do not take one, which is what keeps single-user hosts unchanged.
-        /// </remarks>
-        public ApiSessionContext Session { get; } = ApiSessionContext.Ambient;
+        public PolhemApiClient Client { get; }
 
         private static readonly JsonRpcClientOptions s_clientOptions = new()
         {
@@ -105,27 +39,6 @@ namespace Polhem.Api.Client.Connectors
             IdGenerator = () => JsonRpcId.FromString(Guid.NewGuid().ToString()),
             ErrorMapper = error => MapError(error.Code, error.Message),
         };
-
-        private IJsonRpcTransport _provider;
-        private JsonRpcConnector _connector;
-
-        /// <summary>
-        /// Gets the transport this connector's calls go through: a <see cref="LocalApiProvider"/> or a
-        /// <see cref="RemoteApiProvider"/>.
-        /// </summary>
-        public IJsonRpcTransport Provider
-        {
-            get => _provider;
-            private set => SetProvider(value);
-        }
-
-        [MemberNotNull(nameof(_provider), nameof(_connector))]
-        private void SetProvider(IJsonRpcTransport provider)
-        {
-            ArgumentNullException.ThrowIfNull(provider);
-            _provider = provider;
-            _connector = new JsonRpcConnector(provider, s_clientOptions);
-        }
 
         /// <summary>
         /// Gets or sets the body codec this connector speaks, blank for the framework default
@@ -159,12 +72,18 @@ namespace Polhem.Api.Client.Connectors
             ValidateArgs(progId, action);
             cancellationToken.ThrowIfCancellationRequested();
 
+            // IMPORTANT: the credentials are read once, and this call uses that one instance throughout: the token
+            // it sends, the key it seals and opens with, and the zone it converts in. A sign-in on another thread
+            // replaces the instance rather than its fields, so the call cannot pair one sign-in's token with
+            // another's key.
+            var credentials = Client.Session.Credentials;
+
             // The Connector is the only place time zones are applied (ADR-032 D4). A response
             // converts into the user's zone. A request converts only its filter values: a data set
             // is copied but not converted, because the server does not take DateTime values from a
             // save. The swap is undone before returning so the caller's own request object is left
             // exactly as it was handed over.
-            var timeZoneId = UserTimeZoneId;
+            var timeZoneId = credentials.UserTimeZoneId;
 
             // Guard the caller's own value before the filter conversion (ADR-032 D6). Conversion
             // rewrites filter values to Kind=Unspecified, so a guard placed after it would pass
@@ -177,23 +96,14 @@ namespace Polhem.Api.Client.Connectors
             {
                 // The payload connector seals the parameters and opens the result in the same format, bound to the
                 // same method (remote or local). `object` opens the result into the type its envelope names.
-                var opened = await CreatePayloadConnector().InvokeAsync<object>(
-                    $"{progId}.{action}", value, EffectiveFormat(format), cancellationToken).ConfigureAwait(false);
+                var opened = await CreatePayloadConnector(credentials).InvokeAsync<object>(
+                    $"{progId}.{action}", value, EffectiveFormat(format, credentials), cancellationToken).ConfigureAwait(false);
 
                 result = FinalizeResult<T>(opened);
             }
             PayloadZoneConverter.ToUserZone(result, timeZoneId);
             return result;
         }
-
-        /// <summary>
-        /// The signed-in user's IANA time zone id, or blank (meaning no conversion) before login.
-        /// </summary>
-        /// <remarks>
-        /// Read per call rather than captured: a connector instance outlives a sign-in, and a stale
-        /// zone would silently shift another user's data (ADR-032 D13).
-        /// </remarks>
-        private string UserTimeZoneId => Session.UserTimeZoneId;
 
         /// <summary>
         /// Validates the progId and action arguments.
@@ -210,17 +120,19 @@ namespace Polhem.Api.Client.Connectors
         /// Creates the payload connector of one call.
         /// </summary>
         /// <remarks>
-        /// Created per call because <see cref="ApiClientInfo.PayloadOptions"/> and <see cref="PayloadCodec"/> may
-        /// change between calls. The key and the sequence numbers come from the session, which is what keeps them
-        /// per session when several connectors share it.
+        /// Created per call, transport included, because the transport carries the access token of
+        /// <paramref name="credentials"/>, and <see cref="PolhemApiClient.PayloadOptions"/> and
+        /// <see cref="PayloadCodec"/> may change between calls. The sequence numbers come from the session, which is
+        /// what keeps them per session when several connectors share it.
         /// </remarks>
-        private PayloadConnector CreatePayloadConnector()
-            => new(_connector, new PayloadProcessor(ApiClientInfo.PayloadOptions), new PayloadConnectorOptions
-            {
-                Codec = PayloadCodec,
-                KeyProvider = () => Session.ApiEncryptionKey,
-                SequenceGenerator = Session.NextSequence,
-            });
+        private PayloadConnector CreatePayloadConnector(ApiSessionCredentials credentials)
+            => new(new JsonRpcConnector(Client.CreateTransport(credentials.AccessToken), s_clientOptions),
+                new PayloadProcessor(Client.PayloadOptions), new PayloadConnectorOptions
+                {
+                    Codec = PayloadCodec,
+                    KeyProvider = () => credentials.ApiEncryptionKey,
+                    SequenceGenerator = Client.Session.NextSequence,
+                });
 
         /// <summary>
         /// Converts the opened result value.
@@ -282,20 +194,21 @@ namespace Polhem.Api.Client.Connectors
         /// Returns the format this call can actually use.
         /// </summary>
         /// <param name="format">
-        /// The requested format. A local provider outside debug mode always sends Plain, and Encrypted falls back to
+        /// The requested format. A local client outside debug mode always sends Plain, and Encrypted falls back to
         /// Encoded while the session has no encryption key.
         /// </param>
+        /// <param name="credentials">The credentials this call uses.</param>
         /// <returns>The format the call is sent in, and its result opened in.</returns>
-        private PayloadFormat EffectiveFormat(PayloadFormat format)
+        private PayloadFormat EffectiveFormat(PayloadFormat format, ApiSessionCredentials credentials)
         {
-            // For local providers in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
-            if (this.Provider is LocalApiProvider && !SysInfo.IsDebugMode)
+            // For local clients in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
+            if (Client.IsLocal && !SysInfo.IsDebugMode)
             {
                 format = PayloadFormat.Plain; // No encoding in local non-debug mode
             }
 
             // If Encrypted is requested but no encryption key is set, downgrade to Encoded to prevent encryption failure.
-            if (format == PayloadFormat.Encrypted && ValueUtilities.IsEmpty(Session.ApiEncryptionKey))
+            if (format == PayloadFormat.Encrypted && ValueUtilities.IsEmpty(credentials.ApiEncryptionKey))
             {
                 format = PayloadFormat.Encoded;
             }

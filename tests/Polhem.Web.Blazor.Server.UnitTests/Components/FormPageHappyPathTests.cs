@@ -1,14 +1,12 @@
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
-using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
+using Polhem.Api.Core.Messages.System;
 using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Definition;
-using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
-using Polhem.Definition.Paging;
-using Polhem.Definition.Sorting;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Definition.Layouts;
@@ -16,64 +14,40 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId and a working Factory.
-    /// <see cref="FakeSystemConnector"/> and <see cref="FakeFormConnector"/> simulate the full
+    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId and a working backend.
+    /// A <see cref="FakeApiServer"/> simulates the full
     /// initialization path, covering the schema fetch, layout creation, DataObject creation and ReloadList inside the try block.
     /// </summary>
     public class FormPageHappyPathTests
     {
-        private sealed class FakeFormConnector : FormApiConnector
+        /// <summary>
+        /// A server that serves the schema and a layout generated from it as the stored definitions, and an empty list.
+        /// The page reads the stored layout definition; it never derives one from the schema. This fake stands in for
+        /// that stored definition.
+        /// </summary>
+        private static FakeApiServer Server(FormSchema schema)
+            => new FakeApiServer()
+                .On<GetListRequest>($"TestProg.{FormActions.GetList}", _ => new GetListResponse { Table = new DataTable("FakeList") })
+                .On<GetDefineRequest>($"{SysProgIds.System}.{SystemActions.GetDefine}", request => new GetDefineResponse
+                {
+                    Xml = request.DefineType switch
+                    {
+                        DefineType.FormSchema => XmlCodec.Serialize(schema),
+                        DefineType.FormLayout => XmlCodec.Serialize(FormLayoutGenerator.Generate(schema, schema.ProgId)),
+                        _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
+                    },
+                });
+
+        /// <summary>
+        /// Gives the page a client over <see cref="Server"/>. The fake serves stored definitions only, so the page
+        /// takes the path that renders them as stored; the default loader path is covered by <c>FormPageBunitTests</c>.
+        /// </summary>
+        private static void Inject(FormPage page, FormSchema schema)
         {
-            public FakeFormConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty, "TestProg") { }
-
-            public override Task<GetListResponse> GetListAsync(
-                string selectFields = "",
-                FilterNode? filter = null,
-                SortFieldCollection? sortFields = null,
-                PagingOptions? paging = null, CancellationToken cancellationToken = default)
-                => Task.FromResult(new GetListResponse { Table = new DataTable("FakeList") });
-        }
-
-        private sealed class FakeSystemConnector : SystemApiConnector
-        {
-            private readonly FormSchema _schema;
-
-            public FakeSystemConnector(FormSchema schema) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty)
-            {
-                _schema = schema;
-            }
-
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
-            {
-                if (typeof(T) == typeof(FormSchema))
-                    return Task.FromResult((T)(object)_schema);
-                // The page reads the stored layout definition; it never derives one from the schema.
-                // This fake stands in for that stored definition.
-                if (typeof(T) == typeof(FormLayout))
-                    return Task.FromResult((T)(object)FormLayoutGenerator.Generate(_schema, _schema.ProgId));
-
-                throw new NotSupportedException($"GetDefineAsync<{typeof(T).Name}> is not supported by the fake.");
-            }
-        }
-
-        private sealed class FakeFactory : PolhemApiConnectorFactory
-        {
-            private readonly FakeSystemConnector _systemConnector;
-
-            // The fake system connector serves stored definitions only, so the page takes the path that
-            // renders them as stored. The default loader path is covered by `FormPageBunitTests`.
-            public FakeFactory(FormSchema schema)
-                : base(new PolhemBlazorOptions { UseDefinitionLoader = false }.UseLocalProvider(),
-                    new Polhem.Api.Client.ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance)
-            {
-                _systemConnector = new FakeSystemConnector(schema);
-            }
-
-            public override FormApiConnector CreateFormConnector(Guid accessToken, string progId)
-                => new FakeFormConnector();
-
-            public override SystemApiConnector CreateSystemConnector(Guid accessToken)
-                => _systemConnector;
+            typeof(FormPage).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .SetValue(page, Server(schema).CreateClient());
+            typeof(FormPage).GetProperty("Options", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .SetValue(page, new PolhemBlazorOptions { UseDefinitionLoader = false }.UseLocalProvider());
         }
 
         private static FormSchema BuildSchema()
@@ -95,15 +69,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync completes initialization without setting _error for a valid ProgId and a working Factory")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_CompletesWithoutError()
+        [DisplayName("OnInitializedAsync completes initialization without setting _error for a valid ProgId and a working backend")]
+        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_CompletesWithoutError()
         {
             var schema = BuildSchema();
             var page = new FormPage();
             typeof(FormPage).GetProperty("ProgId", BindingFlags.Public | BindingFlags.Instance)!
                 .SetValue(page, "TestProg");
-            typeof(FormPage).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .SetValue(page, new FakeFactory(schema));
+            Inject(page, schema);
 
             await InvokeOnInitializedAsync(page);
 
@@ -113,15 +86,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync sets _isInitializing to false for a valid ProgId and a working Factory")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_SetsIsInitializingFalse()
+        [DisplayName("OnInitializedAsync sets _isInitializing to false for a valid ProgId and a working backend")]
+        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_SetsIsInitializingFalse()
         {
             var schema = BuildSchema();
             var page = new FormPage();
             typeof(FormPage).GetProperty("ProgId", BindingFlags.Public | BindingFlags.Instance)!
                 .SetValue(page, "TestProg");
-            typeof(FormPage).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .SetValue(page, new FakeFactory(schema));
+            Inject(page, schema);
 
             await InvokeOnInitializedAsync(page);
 
@@ -131,15 +103,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync sets _dataObject to non-null for a valid ProgId and a working Factory")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_SetsDataObjectNonNull()
+        [DisplayName("OnInitializedAsync sets _dataObject to non-null for a valid ProgId and a working backend")]
+        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_SetsDataObjectNonNull()
         {
             var schema = BuildSchema();
             var page = new FormPage();
             typeof(FormPage).GetProperty("ProgId", BindingFlags.Public | BindingFlags.Instance)!
                 .SetValue(page, "TestProg");
-            typeof(FormPage).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .SetValue(page, new FakeFactory(schema));
+            Inject(page, schema);
 
             await InvokeOnInitializedAsync(page);
 

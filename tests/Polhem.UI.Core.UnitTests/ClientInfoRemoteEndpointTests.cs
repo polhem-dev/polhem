@@ -36,10 +36,10 @@ namespace Polhem.UI.Core.UnitTests
         public async Task InitializeAsync_UnreachableRemoteUrl_ReturnsFalse()
         {
             var originalStorage = ClientInfo.EndpointStorage;
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             try
             {
-                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
                 ClientInfo.EndpointStorage = new FakeEndpointStorage("http://localhost:19999");
                 var result = await ClientInfo.InitializeAsync(new FakeUIViewService(false), SupportedConnectTypes.Both);
                 Assert.False(result);
@@ -47,7 +47,7 @@ namespace Polhem.UI.Core.UnitTests
             finally
             {
                 ClientInfo.EndpointStorage = originalStorage;
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
             }
         }
 
@@ -56,13 +56,13 @@ namespace Polhem.UI.Core.UnitTests
         public async Task InitializeAsync_CancelledToken_ThrowsWithoutShowingSetup()
         {
             var originalStorage = ClientInfo.EndpointStorage;
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             var service = new CountingUIViewService();
             using var cancellation = new CancellationTokenSource();
             await cancellation.CancelAsync();
             try
             {
-                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
                 ClientInfo.EndpointStorage = new FakeEndpointStorage("http://localhost:19999");
 
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -72,7 +72,7 @@ namespace Polhem.UI.Core.UnitTests
             finally
             {
                 ClientInfo.EndpointStorage = originalStorage;
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
             }
         }
 
@@ -91,16 +91,16 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("SetEndpointAsync throws InvalidOperationException for an unreachable remote URL")]
         public async Task SetEndpointAsync_UnreachableRemoteUrl_ThrowsInvalidOperationException()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             try
             {
-                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
                 var ex = await Record.ExceptionAsync(() => ClientInfo.SetEndpointAsync("http://localhost:19999"));
                 Assert.IsType<InvalidOperationException>(ex);
             }
             finally
             {
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
             }
         }
 
@@ -108,16 +108,16 @@ namespace Polhem.UI.Core.UnitTests
         [DisplayName("InitializeAsync(string) throws InvalidOperationException for an unreachable remote URL")]
         public async Task InitializeAsync_UnreachableRemoteUrl_ThrowsInvalidOperationException()
         {
-            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var originalSupportedTypes = ClientInfo.SupportedConnectTypes;
             try
             {
-                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
                 var ex = await Record.ExceptionAsync(() => ClientInfo.InitializeAsync("http://localhost:19999"));
                 Assert.IsType<InvalidOperationException>(ex);
             }
             finally
             {
-                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+                ClientInfo.SupportedConnectTypes = originalSupportedTypes;
             }
         }
     }

@@ -37,7 +37,7 @@ using Polhem.Api.Client;
 using Polhem.UI.Core;
 
 // Host 啟動，在建立任何 UI 控件之前。
-ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
 // FileEndpointStorage（每位使用者的應用程式資料資料夾）已是 endpoint 與 API 金鑰的預設儲存。
 // 瀏覽器 head 在此把 ClientInfo.EndpointStorage 與 ClientInfo.ApiKeyStorage 指派為自己的瀏覽器儲存實作。
 // 首次執行時以此值初始化空的儲存；之後以儲存值為準，因此變更它只是改設定、不必重新建置。

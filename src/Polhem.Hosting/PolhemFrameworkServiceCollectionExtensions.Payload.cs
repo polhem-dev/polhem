@@ -23,7 +23,7 @@ namespace Polhem.Hosting
         /// <returns>The same service collection, for chaining.</returns>
         /// <remarks>
         /// Without this call the framework uses gzip and aes-cbc-hmac with no frame. Clients must use the same compressor,
-        /// encryptor and frame setting; a .NET client keeps them in <c>ApiClientInfo.PayloadOptions</c>. Sequence numbers
+        /// encryptor and frame setting; a .NET client keeps them in <c>PolhemApiClient.PayloadOptions</c>. Sequence numbers
         /// are remembered in memory; register another <see cref="IPayloadReplayStore"/> when several server instances
         /// share sessions.
         /// </remarks>

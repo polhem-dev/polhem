@@ -4,47 +4,34 @@ using Polhem.Api.Client.Connectors;
 namespace Polhem.LoadTests.Scenarios
 {
     /// <summary>
-    /// One signed-in virtual user: its token, its own session state, and how to reach the server.
+    /// One signed-in virtual user: a client of its own, holding its identity.
     /// </summary>
     public sealed class VirtualUser
     {
-        private readonly string? _endpoint;
-        private readonly IServiceProvider? _localServices;
-
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
-        /// <param name="accessToken">The token obtained at sign-in.</param>
-        /// <param name="session">This user's own session state.</param>
-        /// <param name="endpoint">The remote endpoint, or null for in-process dispatch.</param>
-        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
-        public VirtualUser(Guid accessToken, ApiSessionContext session, string? endpoint, IServiceProvider? localServices = null)
+        /// <param name="client">This user's own client, already signed in.</param>
+        public VirtualUser(PolhemApiClient client)
         {
-            AccessToken = accessToken;
-            Session = session ?? throw new ArgumentNullException(nameof(session));
-            _endpoint = endpoint;
-            _localServices = localServices;
+            Client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        /// <summary>Gets the access token.</summary>
-        public Guid AccessToken { get; }
+        /// <summary>Gets this user's client.</summary>
+        public PolhemApiClient Client { get; }
 
-        /// <summary>Gets this user's session state.</summary>
-        public ApiSessionContext Session { get; }
+        /// <summary>Gets the access token.</summary>
+        public Guid AccessToken => Client.Session.Credentials.AccessToken;
 
         /// <summary>
-        /// Creates a form connector for a program, bound to this user's token and session.
+        /// Creates a form connector for a program, calling as this user.
         /// </summary>
         /// <param name="progId">The program id.</param>
         /// <returns>A connector.</returns>
         /// <remarks>
-        /// A connector is created per call rather than cached: it is a thin object over the token
-        /// and session, and caching one per user per program would add bookkeeping that measures
-        /// nothing.
+        /// A connector is created per call rather than cached: it is a thin object over the client,
+        /// and caching one per user per program would add bookkeeping that measures nothing.
         /// </remarks>
-        public FormApiConnector CreateFormConnector(string progId)
-            => _endpoint is null
-                ? new FormApiConnector(_localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider."), AccessToken, progId, Session)
-                : new FormApiConnector(_endpoint, AccessToken, progId, Session);
+        public FormApiConnector CreateFormConnector(string progId) => Client.Form(progId);
     }
 }

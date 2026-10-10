@@ -1,5 +1,4 @@
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.JsonRpc.Payload;
 
 namespace QuickStart.Console;
@@ -16,15 +15,15 @@ internal static class Program
         // The server requires an X-Api-Key. A deployment that has issued no key still accepts any
         // non-empty value, so the demo default works out of the box; once a real key is issued,
         // pass it with --apikey rather than rebuilding this sample.
-        ApiClientInfo.ApiKey = ParseApiKey(args) ?? DefaultApiKey;
+        var client = PolhemApiClient.CreateRemote(endpoint, ParseApiKey(args) ?? DefaultApiKey);
 
         System.Console.WriteLine($"→ endpoint: {endpoint}");
         System.Console.WriteLine();
 
         try
         {
-            await PingAsync(endpoint);
-            await EchoAsync(endpoint, "hello from QuickStart.Console");
+            await PingAsync(client);
+            await EchoAsync(client, "hello from QuickStart.Console");
             return 0;
         }
         catch (Exception ex)
@@ -34,19 +33,18 @@ internal static class Program
         }
     }
 
-    private static async Task PingAsync(string endpoint)
+    private static async Task PingAsync(PolhemApiClient client)
     {
         System.Console.WriteLine("• System.Ping");
-        var connector = new SystemApiConnector(endpoint, Guid.Empty);
-        await connector.PingAsync();
+        await client.System.PingAsync();
         System.Console.WriteLine("  status: ok");
         System.Console.WriteLine();
     }
 
-    private static async Task EchoAsync(string endpoint, string message)
+    private static async Task EchoAsync(PolhemApiClient client, string message)
     {
         System.Console.WriteLine($"• Echo.Echo (message=\"{message}\")");
-        var connector = new FormApiConnector(endpoint, Guid.Empty, "Echo");
+        var connector = client.Form("Echo");
 
         // Echo is declared [ApiAccessControl(Public, Anonymous)] so PayloadFormat.Plain
         // (no encoding / no encryption) is sufficient and avoids the Login-issued

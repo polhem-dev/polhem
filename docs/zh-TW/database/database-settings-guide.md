@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: 9a5d5d18250d0a9d6760fc8d40bf6f9c57ef0f78 -->
+<!-- source: en/database/database-settings-guide.md blob: 89ea130cb8de728adc051ef26370f61fbda5bad3 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -337,7 +337,7 @@ foreach (var table in company.Tables!) { ... }
 | DatabaseSettings | ❌ 否。local call 取得的是檔案原本儲存的內容，密碼仍是 `enc:` 形式 |
 | DbCategorySettings | ❌ 否 |
 
-`SystemBusinessObject.GetDefine` 對遠端呼叫者只提供 client 繪製表單與選單所需的定義型別，其他型別一律拒絕；這兩個設定檔都不在清單內。local call（行程內的 `LocalApiProvider`，例如工具程式）可以讀取，`ClientDefineAccess.GetDbCategorySettingsAsync` 就是這樣運作。存檔經由 local-only 的 `SaveDefine`。允許清單本身寫在 `SystemBusinessObject.GetDefine` 的 XML 文件中。
+`SystemBusinessObject.GetDefine` 對遠端呼叫者只提供 client 繪製表單與選單所需的定義型別，其他型別一律拒絕；這兩個設定檔都不在清單內。local call（以 `PolhemApiClient.CreateLocal` 建立的行程內 client，例如工具程式）可以讀取，`ClientDefineAccess.GetDbCategorySettingsAsync` 就是這樣運作。存檔經由 local-only 的 `SaveDefine`。允許清單本身寫在 `SystemBusinessObject.GetDefine` 的 XML 文件中。
 
 ---
 

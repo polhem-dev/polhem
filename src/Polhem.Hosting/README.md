@@ -31,7 +31,7 @@ execution belong to those layers; new SQL added here would be a layering regress
 
 A head that only talks to a remote server (a `Polhem.Api.Client` consumer with remote endpoints) does not need
 this package. A head that runs the backend in its own process references both: it builds the backend with
-`AddPolhemFramework` and passes the resulting `IServiceProvider` to the in-process connector constructors.
+`AddPolhemFramework` and passes the resulting `IServiceProvider` to `PolhemApiClient.CreateLocal`.
 
 ## Key Public APIs
 
@@ -39,7 +39,7 @@ this package. A head that runs the backend in its own process references both: i
 |----------------|---------|
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, the hosted services, …) into the supplied `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `ApiClientInfo.PayloadOptions` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
 
 ## Usage
@@ -82,7 +82,7 @@ the background audit writer), so build a generic host and start it. This needs t
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Polhem.Api.Client.Connectors;
+using Polhem.Api.Client;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
@@ -97,13 +97,13 @@ builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions
 using var host = builder.Build();
 await host.StartAsync();
 
-// In-process connectors take the backend service provider instead of an endpoint URL.
-var connector = new SystemApiConnector(host.Services, Guid.Empty);
-var login = await connector.LoginAsync("demo", "demo");
+// An in-process client takes the backend service provider instead of an endpoint URL.
+var client = PolhemApiClient.CreateLocal(host.Services);
+var login = await client.System.LoginAsync("demo", "demo");
 ```
 
-A `Polhem.UI.Core` head assigns `host.Services` to `ClientInfo.LocalServiceProvider` instead, and the connectors
-`ClientInfo` creates use it.
+A `Polhem.UI.Core` head assigns `host.Services` to `ClientInfo.LocalServiceProvider` instead, and the in-process
+`ClientInfo.ApiClient` dispatches to it.
 
 ## Design Conventions
 

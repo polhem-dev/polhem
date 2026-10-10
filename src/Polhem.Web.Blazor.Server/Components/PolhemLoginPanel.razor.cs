@@ -1,7 +1,7 @@
+using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Definition.Language;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 
 namespace Polhem.Web.Blazor.Server.Components
@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Server.Components
         public EventCallback<LoginResponse> OnLoggedIn { get; set; }
 
         [Inject]
-        private PolhemApiConnectorFactory Factory { get; set; } = default!;
+        private PolhemApiClient Client { get; set; } = default!;
 
         // Nullable: a component created outside a renderer has no services, and still renders.
         [Inject]
@@ -89,8 +89,7 @@ namespace Polhem.Web.Blazor.Server.Components
             _error = null;
             try
             {
-                var system = Factory.CreateSystemConnector(Guid.Empty);
-                var response = await system.LoginAsync(_userId, _password).ConfigureAwait(true);
+                var response = await Client.System.LoginAsync(_userId, _password).ConfigureAwait(true);
 
                 if (response.AccessToken == Guid.Empty)
                 {

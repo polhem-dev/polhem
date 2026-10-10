@@ -40,7 +40,7 @@ namespace Polhem.Api.Client.UnitTests
 
         private ClientDefineAccess CreateAccess()
         {
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken(_fx));
+            var connector = new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken(_fx)));
             return new ClientDefineAccess(connector);
         }
 
@@ -48,7 +48,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("ClientDefineAccess constructor does not throw when given a SystemApiConnector")]
         public void Constructor_WithConnector_DoesNotThrow()
         {
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
+            var connector = new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()));
             var access = new ClientDefineAccess(connector);
             Assert.NotNull(access);
         }
@@ -272,7 +272,7 @@ namespace Polhem.Api.Client.UnitTests
         public async Task GetSystemSettingsAsync_PropagatesConnectorException()
         {
             // Points at an unreachable endpoint, so the HTTP call fails and the connector throws.
-            var connector = new SystemApiConnector("http://127.0.0.1:1/", Guid.NewGuid());
+            var connector = new SystemApiConnector(PolhemApiClient.CreateRemote("http://127.0.0.1:1/", string.Empty));
             var access = new ClientDefineAccess(connector);
 
             var ex = await Assert.ThrowsAnyAsync<Exception>(() => access.GetSystemSettingsAsync());
@@ -286,7 +286,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class CountingConnector : SystemApiConnector
         {
-            public CountingConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
+            public CountingConnector() : base(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid())) { }
 
             public int GetDefineCallCount { get; private set; }
 
@@ -306,7 +306,7 @@ namespace Polhem.Api.Client.UnitTests
             private readonly TaskCompletionSource<bool> _gate =
                 new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            public GatedConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
+            public GatedConnector() : base(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid())) { }
 
             public int GetDefineCallCount { get; private set; }
 
@@ -326,7 +326,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class FlakyConnector : SystemApiConnector
         {
-            public FlakyConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
+            public FlakyConnector() : base(TestClients.Local(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid())) { }
 
             public int GetDefineCallCount { get; private set; }
 

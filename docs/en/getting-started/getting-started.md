@@ -276,13 +276,11 @@ dotnet add package Polhem.Api.Client
 
 ```csharp
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.JsonRpc.Payload;
 
-ApiClientInfo.ApiKey = "my-demo-key";
+var client = PolhemApiClient.CreateRemote("http://localhost:5050/api", apiKey: "my-demo-key");
 
-var connector = new FormApiConnector("http://localhost:5050/api", Guid.Empty, "Echo");
-var result = await connector.ExecuteAsync<EchoResponse>(
+var result = await client.Form("Echo").ExecuteAsync<EchoResponse>(
     "Echo",
     new EchoRequest { Message = "hello" },
     PayloadFormat.Plain);
@@ -308,7 +306,7 @@ Every call carries the `X-Api-Key` header. While no API key has been issued (`st
 non-empty value is accepted, which is what `AddPolhemApiKeyGateCheck` warned about at startup. Once a key is issued, only
 issued keys are. → [API Key Management](../security/api-key-management.md).
 
-`PayloadFormat.Plain` matches the `Public` + `Anonymous` declaration above. A method that requires authentication or encryption needs `Login` first, which issues the access token and, through an RSA handshake, the session encryption key.
+`PayloadFormat.Plain` matches the `Public` + `Anonymous` declaration above. A method that requires authentication or encryption needs `Login` first (`client.System.LoginAsync`), which issues the access token and, through an RSA handshake, the session encryption key; the client keeps both and every connector it hands out calls with them.
 
 → Calling from JavaScript / TypeScript with no .NET on the client: [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md). Every exposed method and its access control: [API Method Reference](../api/api-method-reference.md).
 

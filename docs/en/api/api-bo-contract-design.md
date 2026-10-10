@@ -226,7 +226,7 @@ persisted as files, not to these wire messages.
 When calling APIs through `SystemApiConnector`, always use `Request` / `Response` types:
 
 ```csharp
-var connector = new SystemApiConnector(endpoint, Guid.Empty);
+var connector = PolhemApiClient.CreateRemote(endpoint, apiKey).System;
 
 // Use API types, not BO types
 LoginResponse response = await connector.LoginAsync("admin", "password");

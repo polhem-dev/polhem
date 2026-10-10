@@ -90,13 +90,13 @@ public partial class ConnectionViewModel : ViewModelBase
             // then stores the endpoint via EndpointStorage — fully async, so it does not block
             // the UI thread. The async path is required on browser WASM, whose single-threaded
             // runtime throws "Cannot wait on monitors" if any await is bridged synchronously.
-            // Applied before connecting: the ping itself carries the key, so a wrong one shows up
-            // here rather than on the first real call.
+            // Applied before connecting: the configuration call that connecting makes carries the key,
+            // so a wrong one shows up here rather than on the first real call.
             ClientInfo.SetApiKey(ApiKey?.Trim() ?? string.Empty);
             await ClientInfo.InitializeAsync(endpoint).ConfigureAwait(true);
 
             SetStatus(
-                $"Connected to {endpoint}. ConnectType = {ApiClientInfo.ConnectType}.",
+                $"Connected to {endpoint}. ConnectType = {ClientInfo.ConnectType}.",
                 isError: false);
             _onConnected();
         }

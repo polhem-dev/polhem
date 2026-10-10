@@ -14,8 +14,8 @@ internal static class Program
         // AddPolhemBlazor so the Local provider has services to resolve.
         builder.AddPolhemBackend();
 
-        // Blazor component services — UseLocalProvider makes the PolhemApiConnectorFactory build
-        // connectors that dispatch to the backend registered above, in this process.
+        // Blazor component services — UseLocalProvider gives each circuit a PolhemApiClient that
+        // dispatches to the backend registered above, in this process.
         builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 
         builder.Services.AddRazorComponents()

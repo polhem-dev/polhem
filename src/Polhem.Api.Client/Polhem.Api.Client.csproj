@@ -21,8 +21,10 @@
 
   <ItemGroup>
     <!-- Lets the tests check how a server's unauthenticated configuration is adopted without
-         touching the process-wide SysInfo and ApiClientInfo statics. -->
+         touching the process-wide SysInfo statics, and create clients over a fake transport
+         (PolhemApiClient.CreateWithTransport). -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Server.UnitTests" />
   </ItemGroup>
 
 </Project>

@@ -34,7 +34,7 @@
 
 - `PolhemPayload` -- 以框架的方式組出套件的 `PayloadOptions`：MessagePack 為預設 codec、框架的 JSON 拼法與型別名稱，
   以及部署的 `ApiPayloadOptions` 指名的壓縮器與加密器（加密器 `none` 只限 debug 模式）。伺服器以 `AddPolhemPayload`
-  （`Polhem.Hosting`）註冊；用戶端存放在 `ApiClientInfo.PayloadOptions`（`Polhem.Api.Client`）。
+  （`Polhem.Hosting`）註冊；用戶端存放在 `PolhemApiClient.PayloadOptions`（`Polhem.Api.Client`）。
 - `MessagePackPayloadCodec` -- 以框架 formatter 實作的 `messagepack` body codec。`json` codec 是套件的，使用框架的選項；
   其他 codec 以 `PayloadOptions.RegisterCodec` 登錄。
 - `PayloadCodecNames` -- payload 宣告的 codec 名稱。
@@ -50,7 +50,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - frame（放在外殼內、body 之前的時間戳記與序號）與重放紀錄屬於 payload 套件：`PayloadFrame`、`IPayloadReplayStore`
   與記憶體內的預設實作 `MemoryPayloadReplayStore`。多節點部署註冊一個以共用儲存實作的 `IPayloadReplayStore`；Polhem
   以 access token 作為序號唯一的範圍。
-- `PayloadOptions.RequireFrame` -- 總開關，伺服器經 `AddPolhemPayload`、.NET 用戶端經 `ApiClientInfo.PayloadOptions`
+- `PayloadOptions.RequireFrame` -- 總開關，伺服器經 `AddPolhemPayload`、.NET 用戶端經 `PolhemApiClient.PayloadOptions`
   設定；**用戶端與伺服端必須設為相同值**。
 - `ApiReplayProtection` -- `ApiAccessControlAttribute` 的第三個維度，逐方法宣告是否檢查序號。以
   `AddPolhemFramework` 建立的 host 在方法宣告了它、但 frame 關閉時，會記錄一則啟動警告。

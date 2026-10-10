@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.LoadTests.Configuration;
 
 namespace Polhem.LoadTests.Scenarios
@@ -16,30 +15,27 @@ namespace Polhem.LoadTests.Scenarios
     /// not go through this pool — signing in is the thing it measures.
     /// </para>
     /// <para>
-    /// IMPORTANT: each user gets its own <see cref="ApiSessionContext"/>. Sharing
-    /// <see cref="ApiSessionContext.Ambient"/> would let concurrent sign-ins overwrite one
-    /// another's transmission key, and the resulting decryption failures read like framework
-    /// instability rather than a load-test defect.
+    /// IMPORTANT: each user gets its own <see cref="PolhemApiClient"/>. A client holds one signed-in
+    /// identity, so sharing one would let concurrent sign-ins overwrite one another's token and
+    /// transmission key, and the resulting decryption failures read like framework instability
+    /// rather than a load-test defect.
     /// </para>
     /// </remarks>
     public sealed class VirtualUserPool
     {
         private readonly ConcurrentDictionary<int, Lazy<Task<VirtualUser>>> _users = new();
         private readonly AuthOptions _auth;
-        private readonly string? _endpoint;
-        private readonly IServiceProvider? _localServices;
+        private readonly Func<PolhemApiClient>? _createClient;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="auth">Authentication configuration.</param>
-        /// <param name="endpoint">The remote endpoint, or null to dispatch in-process.</param>
-        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
-        public VirtualUserPool(AuthOptions auth, string? endpoint = null, IServiceProvider? localServices = null)
+        /// <param name="createClient">Creates a new client for one virtual user; required to sign anyone in.</param>
+        public VirtualUserPool(AuthOptions auth, Func<PolhemApiClient>? createClient = null)
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
-            _endpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
-            _localServices = localServices;
+            _createClient = createClient;
         }
 
         /// <summary>
@@ -114,24 +110,14 @@ namespace Polhem.LoadTests.Scenarios
         {
             var userId = ResolveUserId(virtualUserIndex);
 
-            var session = new ApiSessionContext();
-            var system = _endpoint is null
-                ? new SystemApiConnector(RequireLocalServices(), Guid.Empty, session)
-                : new SystemApiConnector(_endpoint, Guid.Empty, session);
-
-            var login = await system.LoginAsync(userId, _auth.Password).ConfigureAwait(false);
+            var client = (_createClient ?? throw new InvalidOperationException("Signing in needs a client factory."))();
+            await client.System.LoginAsync(userId, _auth.Password).ConfigureAwait(false);
 
             // Entering a company is a separate step the framework requires before form data is
             // reachable; a session that skipped it has no company to route category "company" to.
-            var entered = _endpoint is null
-                ? new SystemApiConnector(RequireLocalServices(), login.AccessToken, session)
-                : new SystemApiConnector(_endpoint, login.AccessToken, session);
-            await entered.EnterCompanyAsync(_auth.CompanyId).ConfigureAwait(false);
+            await client.System.EnterCompanyAsync(_auth.CompanyId).ConfigureAwait(false);
 
-            return new VirtualUser(login.AccessToken, session, _endpoint, _localServices);
+            return new VirtualUser(client);
         }
-
-        private IServiceProvider RequireLocalServices()
-            => _localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider.");
     }
 }

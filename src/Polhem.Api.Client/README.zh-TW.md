@@ -18,8 +18,15 @@
 
 ### 本機 / 遠端策略
 
-- 連接器透過 [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc) 送出，並以 `Polhem.JsonRpc.Payload.Client` 的 `PayloadConnector` 封裝每次呼叫，經由兩種實作其 `IJsonRpcTransport` 的傳輸之一：`LocalApiProvider` 把呼叫交給行程內的 dispatcher，`RemoteApiProvider` 則以 HTTP POST 呼叫遠端端點。
-- 策略由連接器建構子決定：接受 `IServiceProvider`（以 `AddPolhemFramework` 建立的後端服務提供者）的建構子走行程內，接受端點 URL 的建構子走 HTTP。
+- 連接器透過 [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc) 送出，並以 `Polhem.JsonRpc.Payload.Client` 的 `PayloadConnector` 封裝每次呼叫，經由兩種實作其 `IJsonRpcTransport` 的傳輸之一：行程內傳輸把呼叫交給後端的 dispatcher，HTTP 傳輸則以 POST 呼叫遠端端點。
+- 策略在建立 `PolhemApiClient` 時決定一次：`PolhemApiClient.CreateLocal` 接受 `IServiceProvider`（以 `AddPolhemFramework` 建立的後端服務提供者）並走行程內，`PolhemApiClient.CreateRemote` 接受端點 URL 與 API 金鑰並走 HTTP。client 發出的每個連接器都依循這個選擇。
+
+```csharp
+var client = PolhemApiClient.CreateRemote("https://host/api", apiKey);
+await client.System.LoginAsync(userId, password);
+await client.System.EnterCompanyAsync(companyId);
+var data = await client.Form("Employee").GetDataAsync(rowId);
+```
 
 ### 連接器
 
@@ -34,7 +41,7 @@
 
 ### 連線驗證
 
-- `ApiConnectValidator.ValidateAsync` 依端點字串判斷 `ConnectType`（Local 或 Remote）、驗證目標，並可選擇為本機連線產生缺少的設定檔。
+- `ApiConnectValidator.ValidateAsync` 依端點字串判斷 `ConnectType`（Local 或 Remote）、對照呼叫端傳入的 `SupportedConnectTypes`、驗證目標，並可選擇為本機連線產生缺少的設定檔。
 - 遠端驗證會先執行 `Ping` 確認連線可用後才回傳。
 
 ### 快取定義存取
@@ -46,11 +53,13 @@
 
 ### 用戶端狀態
 
-- `ApiClientInfo` 持有行程層級的設定：`ConnectType`、`Endpoint`、`ApiKey`、`DefaultLanguage` 與
-  `SupportedConnectTypes`。
-- `ApiSessionContext` 持有單一登入使用者的狀態（登入時建立的傳輸金鑰與使用者時區）。單一使用者的 head
-  共用 `ApiSessionContext.Ambient`；在同一行程服務多位使用者的 host（Blazor Server）則每個 session
-  傳一個給連接器建構子。
+- `PolhemApiClient` 是組合根：一條連到後端的連線（`IsLocal`、`Endpoint`、`ApiKey`、`PayloadOptions`、
+  `DefaultLanguage`）、透過它登入的身分（`Session`），以及呼叫它的連接器（`System`、`AuditLog`、
+  `Form(progId)`）。成員以類別本身為準。
+- `ApiSessionContext`（`PolhemApiClient.Session`）以一個不可變的 `ApiSessionCredentials`（access token、
+  傳輸金鑰、使用者時區）持有登入狀態。`SystemApiConnector.LoginAsync` 整組替換，`LogoutAsync` 與
+  `PolhemApiClient.SignOut` 將其清除。
+- 一個 client 只持有一個身分。在同一行程服務多位使用者的 host（Blazor Server）為每位使用者建立一個 client。
 
 ### 各 head 共用的 UI 輔助
 
@@ -61,14 +70,12 @@
 
 | 類別 / 介面 | 用途 |
 |-------------|------|
-| `ApiClientInfo` | 行程層級的用戶端設定（連線類型、端點、API 金鑰、預設語言） |
-| `ApiSessionContext` | 每位使用者的用戶端狀態（傳輸金鑰、時區） |
+| `PolhemApiClient` | 進入點：一條連線、其登入身分與連接器 |
+| `ApiSessionContext` / `ApiSessionCredentials` | client 的登入狀態（access token、傳輸金鑰、時區） |
 | `ApiConnector` | 抽象基底連接器，含 payload 管線 |
 | `SystemApiConnector` | 系統層級操作 |
 | `FormApiConnector` | 綁定特定 ProgId 的表單層級商業物件呼叫 |
 | `AuditLogApiConnector` | 稽核與異常紀錄查詢 |
-| `LocalApiProvider` | 連到後端 JSON-RPC dispatcher 的行程內傳輸 |
-| `RemoteApiProvider` | HTTP 傳輸，附帶 API 金鑰與 Bearer Token 標頭 |
 | `ClientDefineAccess` | 透過 API 的非同步快取定義存取 |
 | `FormDefinitionLoader` | 供 UI 使用的在地化表單結構與執行期版面 |
 | `ApiConnectValidator` | 驗證端點並判斷連線類型 |
@@ -77,16 +84,16 @@
 
 ## 設計慣例
 
-- **策略模式（Strategy Pattern）** -- `LocalApiProvider` 與 `RemoteApiProvider` 實作 `IJsonRpcTransport`；連接器在建構時選定其一。
+- **策略模式（Strategy Pattern）** -- 行程內與 HTTP 兩種傳輸實作 `IJsonRpcTransport`；由 client 的工廠方法選定其一，每次呼叫都取得該種傳輸。
 - **樣板方法（Template Method）** -- `ApiConnector.ExecuteAsync<T>` 定義固定步驟（轉換 payload、經傳輸送出、還原回應）；子類別提供領域專屬方法。
-- **雙建構子模式** -- 每個連接器提供本機與遠端兩種建構子，對應兩種提供者：`SystemApiConnector(IServiceProvider services, Guid accessToken)` / `(string endpoint, Guid accessToken)`。`FormApiConnector` 另外帶綁定的 `progId`。每個建構子都有再多帶一個 `ApiSessionContext` 的多載。
-- **Payload 格式** -- 每個動作自行選擇 `PayloadFormat`；session 尚無傳輸金鑰時，`Encrypted` 請求改以 `Encoded` 送出；本機提供者除非開啟 `SysInfo.IsDebugMode`，否則送 `Plain`。`ApiConnector.PayloadCodec` 決定 `Encoded` / `Encrypted` 請求的 body codec（空白即 MessagePack）。
+- **連接器隸屬於 client** -- 每個連接器只有一個接受 `PolhemApiClient` 的建構子（`FormApiConnector` 另外帶綁定的 `progId`），並從 `ApiConnector.Client` 取得連線與憑證。`PolhemApiClient.System` 與 `AuditLog` 是單一實例；`Form(progId)` 每次呼叫都建立新的連接器。
+- **Payload 格式** -- 每個動作自行選擇 `PayloadFormat`；session 尚無傳輸金鑰時，`Encrypted` 請求改以 `Encoded` 送出；本機 client 除非開啟 `SysInfo.IsDebugMode`，否則送 `Plain`。`ApiConnector.PayloadCodec` 決定 `Encoded` / `Encrypted` 請求的 body codec（空白即 MessagePack）。
 
 ## 目錄結構
 
-- 專案根目錄 -- `ApiClientInfo`、`ApiSessionContext`、`ApiConnectValidator`、`ClientDefineAccess`、`ConnectType`、
+- 專案根目錄 -- `PolhemApiClient`、`ApiSessionContext`、`ApiSessionCredentials`、`ApiConnectValidator`、`ClientDefineAccess`、`ConnectType`、
   `SupportedConnectTypes`、`FormDataGuard`、`FormValueBinding`
 - `Connectors/` -- `ApiConnector`、`SystemApiConnector`、`FormApiConnector`、`AuditLogApiConnector`
-- `Providers/` -- `LocalApiProvider`、`RemoteApiProvider`
+- `Providers/` -- 內部使用的行程內與 HTTP 傳輸
 - `Definitions/` -- `FormDefinitionLoader`、`LanguageLayers`、`SnapshotLanguageService`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`

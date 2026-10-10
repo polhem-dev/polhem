@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: b982e5b21d1dd3e62d2d017f375108f9862dabad -->
+<!-- source: en/getting-started/getting-started.md blob: d3c92ce6a72612449b794c6a06192c71738c1cda -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -269,13 +269,11 @@ dotnet add package Polhem.Api.Client
 
 ```csharp
 using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
 using Polhem.JsonRpc.Payload;
 
-ApiClientInfo.ApiKey = "my-demo-key";
+var client = PolhemApiClient.CreateRemote("http://localhost:5050/api", apiKey: "my-demo-key");
 
-var connector = new FormApiConnector("http://localhost:5050/api", Guid.Empty, "Echo");
-var result = await connector.ExecuteAsync<EchoResponse>(
+var result = await client.Form("Echo").ExecuteAsync<EchoResponse>(
     "Echo",
     new EchoRequest { Message = "hello" },
     PayloadFormat.Plain);
@@ -301,7 +299,7 @@ public class EchoResponse
 這正是 `AddPolhemApiKeyGateCheck` 在啟動時警告的狀況。一旦發出 key，就只接受已發出的 key。
 → [API 金鑰管理](../security/api-key-management.md)。
 
-`PayloadFormat.Plain` 對應上面宣告的 `Public` + `Anonymous`。需要認證或加密的方法都得先 `Login`，由它發出 access token，並透過 RSA 握手交付 session 加密金鑰。
+`PayloadFormat.Plain` 對應上面宣告的 `Public` + `Anonymous`。需要認證或加密的方法都得先 `Login`（`client.System.LoginAsync`），由它發出 access token，並透過 RSA 握手交付 session 加密金鑰；client 會保存兩者，它發出的每個連接器都以此呼叫。
 
 → 前端無 .NET、以 JavaScript / TypeScript 呼叫：[JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)。所有對外方法與其存取控制：[API 方法參考](../api/api-method-reference.md)。
 

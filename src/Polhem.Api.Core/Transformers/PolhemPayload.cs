@@ -12,7 +12,7 @@ namespace Polhem.Api.Core.Transformers
     /// </summary>
     /// <remarks>
     /// A server registers the result with <c>AddPolhemPayload</c> (Polhem.Hosting); a client keeps it in
-    /// <c>ApiClientInfo.PayloadOptions</c> (Polhem.Api.Client). Both ends must agree on the compressor, the encryptor and
+    /// <c>PolhemApiClient.PayloadOptions</c> (Polhem.Api.Client). Both ends must agree on the compressor, the encryptor and
     /// <see cref="PayloadOptions.RequireFrame"/>, which the envelope does not name.
     /// </remarks>
     public static class PolhemPayload

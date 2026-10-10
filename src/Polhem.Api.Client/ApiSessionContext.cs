@@ -1,56 +1,40 @@
 namespace Polhem.Api.Client
 {
     /// <summary>
-    /// The per-session client state a connector needs: the transmission key established at login and
-    /// the signed-in user's time zone.
+    /// The signed-in state of one <see cref="PolhemApiClient"/>: its credentials and the sequence
+    /// numbers of its replay frames.
     /// </summary>
     /// <remarks>
-    /// These two values used to live on <see cref="ApiClientInfo"/> as process-wide statics, which is
-    /// correct for a desktop head — one process, one user — and wrong for a host that serves several
-    /// users from one process. <c>Polhem.Web.Blazor.Server</c> is such a host: every circuit runs
-    /// <c>LoginAsync</c> against the same statics, so the last login wins and earlier users find their
-    /// requests encrypted with someone else's key.
-    /// <para>
-    /// WARNING: What belongs here is state whose owner is <b>a signed-in user</b>. Deployment-level
-    /// settings do not — <see cref="ApiClientInfo.ApiKey"/> identifies the application to the server
-    /// and is the same for every circuit, so making it per-session would be wrong, not safer.
-    /// </para>
-    /// <para>
-    /// A connector created without one shares <see cref="Ambient"/>, which keeps every existing
-    /// single-user host behaving exactly as before. A multi-user host creates one per session and
-    /// passes it to the connector constructors that take it.
-    /// </para>
+    /// Every connector of a client reads the same instance, so signing in through
+    /// <see cref="PolhemApiClient.System"/> is what every other connector of that client then calls
+    /// with. A host that serves several users from one process gives each user a client of their own,
+    /// and with it a session of their own.
     /// </remarks>
     public sealed class ApiSessionContext
     {
+        private ApiSessionCredentials _credentials = ApiSessionCredentials.Anonymous;
         private long _sequence;
 
         /// <summary>
-        /// The shared instance used by connectors that were not given one.
+        /// Gets the current credentials; <see cref="ApiSessionCredentials.Anonymous"/> before sign-in
+        /// and after <see cref="SignOut"/>.
         /// </summary>
-        /// <remarks>
-        /// This is the pre-existing process-wide behaviour, kept so a desktop host needs no change.
-        /// It is deliberately not the answer for a multi-user host: sharing it there is the defect
-        /// this type exists to fix.
-        /// <para>
-        /// WARNING: falling back to this in a multi-user host does not fail loudly, it fails as a
-        /// replay rejection nobody can explain. The shared <c>NextSequence()</c> hands out one
-        /// counter across every session, so any one session sees large gaps in its own numbers; and
-        /// because the server's window remembers a fixed span of recent sequences, two of that
-        /// session's own requests arriving out of order far enough apart are refused as replays.
-        /// The host that forgot to register a scoped context sees intermittent
-        /// <c>ReplayRejected</c> on perfectly legitimate traffic.
-        /// <c>Polhem.Web.Blazor.Server</c> registers one per circuit; a host wiring this up itself has
-        /// to do the same.
-        /// </para>
-        /// </remarks>
-        public static ApiSessionContext Ambient { get; } = new ApiSessionContext();
+        public ApiSessionCredentials Credentials => Volatile.Read(ref _credentials);
 
         /// <summary>
-        /// Gets or sets the API transmission encryption key, exchanged via RSA public key at login.
-        /// Typically unused in local connection scenarios.
+        /// Replaces the credentials with those of a new sign-in.
         /// </summary>
-        public byte[] ApiEncryptionKey { get; set; } = Array.Empty<byte>();
+        /// <param name="credentials">The new credentials.</param>
+        public void SignIn(ApiSessionCredentials credentials)
+        {
+            ArgumentNullException.ThrowIfNull(credentials);
+            Volatile.Write(ref _credentials, credentials);
+        }
+
+        /// <summary>
+        /// Returns the session to <see cref="ApiSessionCredentials.Anonymous"/>.
+        /// </summary>
+        public void SignOut() => Volatile.Write(ref _credentials, ApiSessionCredentials.Anonymous);
 
         /// <summary>
         /// Hands out the next sequence number for this session's replay frames.
@@ -62,20 +46,12 @@ namespace Polhem.Api.Client
         /// so a per-connector counter would issue the same numbers twice and the second connector's
         /// requests would be refused as replays.
         /// <para>
-        /// Starting from zero on a fresh instance is safe. <see cref="ApiEncryptionKey"/> lives only
-        /// in memory, so a restarted client must sign in again and receives a new access token —
-        /// and the server's window is per token, hence empty.
+        /// The counter is not reset by a new sign-in. The server's window is per access token, so a
+        /// new token starts with an empty window and any number is new to it. Starting from zero on a
+        /// fresh instance is safe for the same reason: the key lives only in memory, so a restarted
+        /// client signs in again and receives a new token.
         /// </para>
         /// </remarks>
         public long NextSequence() => Interlocked.Increment(ref _sequence);
-
-        /// <summary>
-        /// Gets or sets the signed-in user's IANA time zone id; blank disables time zone conversion.
-        /// </summary>
-        /// <remarks>
-        /// Blank is the correct state before sign-in — there is no user whose zone could apply, and
-        /// adopting the device's would reintroduce the second source of truth ADR-032 D4 rejects.
-        /// </remarks>
-        public string UserTimeZoneId { get; set; } = string.Empty;
     }
 }

@@ -28,14 +28,15 @@
 
 ### 連線狀態
 
-- `ClientInfo` -- 用戶端的靜態連線狀態。持有 `AccessToken`（per-process token 模型：重設 token 會
-  清掉快取的 `SystemApiConnector`、`DefineAccess` 與能力快照）、延遲建立 `SystemApiConnector` 與
-  `DefineAccess`（`ClientDefineAccess`）、透過 `CreateFormApiConnector(progId)` 與 `CreateAuditLogApiConnector()`
-  產生連接器、經 `InitializeAsync` / `SetEndpointAsync` 解析 endpoint（本機或遠端），並套用登入 /
+- `ClientInfo` -- 用戶端的靜態連線狀態。持有 head 唯一的 `ApiClient`（`PolhemApiClient`；per-process 身分
+  模型：重新登入會清掉快取的 `DefineAccess` 與能力快照，換 endpoint 則會替換 client 並登出），公開其
+  `AccessToken`、`ConnectType` 與 `SystemApiConnector`、延遲建立 `DefineAccess`（`ClientDefineAccess`）、透過
+  `CreateFormApiConnector(progId)` 與 `CreateAuditLogApiConnector()` 產生連接器、經 `InitializeAsync` /
+  `SetEndpointAsync` 解析 endpoint（本機或遠端，受 `SupportedConnectTypes` 限制），並套用登入 /
   EnterCompany 結果（`ApplyLoginResult`、`ApplyEnterCompanyResult`、`ClearCompanyContext`）。
   `ResetDefineCache` 在切換租戶後丟棄快取的定義資料。
 - `ClientInfo.LocalServiceProvider` -- 在行程內執行後端的 head 的後端服務提供者（以 `AddPolhemFramework`
-  建立）；`ClientInfo` 建立的本機連接器使用它。
+  建立）；行程內的 `ApiClient` 會派遣到它。
 - `ClientInfo.UseDefinitionLoader` / `DefinitionLoader` -- 透過 `FormDefinitionLoader` 取得在地化的表單定義。
 
 ### Endpoint 與 API 金鑰持久化

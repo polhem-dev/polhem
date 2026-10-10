@@ -34,12 +34,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
     /// production: the server serves raw definitions and decides <b>which tenant's</b> customization
     /// layer to hand out, and the caller decides how the layers combine.
     /// </para>
-    /// <para>
-    /// Bound to the <c>ApiClientInfoState</c> collection: near-end connectors read the process-wide
-    /// <c>ApiClientInfo.ConnectType</c>, which the other classes in that collection mutate.
-    /// </para>
     /// </remarks>
-    [Collection(ApiClientInfoStateCollection.Name)]
     public class TenantCustomizationEndToEndTests : IClassFixture<TenantCustomizationFixture>
     {
         private const string SeedUserId = "001";
@@ -91,7 +86,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
             var customized = await LoadLocalizedSchemaAsync(scope.AccessToken);
             Assert.Equal(TenantCustomizationFixture.OverriddenCaption, CaptionOf(customized, TenantCustomizationFixture.OverriddenField));
 
-            await new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, scope.AccessToken).LeaveCompanyAsync();
+            await new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, scope.AccessToken)).LeaveCompanyAsync();
 
             // A fresh loader, because ClientDefineAccess caches per definition key and not per
             // tenant — dropping that cache on a tenant switch is the caller's job.
@@ -105,7 +100,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         public async Task GetRuntimeLayout_AfterEnteringCustomizedCompany_UsesTenantLayout()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.CustomizeId);
-            var access = new ClientDefineAccess(new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, scope.AccessToken));
+            var access = new ClientDefineAccess(new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, scope.AccessToken)));
             var loader = new FormDefinitionLoader(access);
             var schema = await loader.GetLocalizedSchemaAsync(TenantCustomizationFixture.ProgId, TenantCustomizationFixture.Lang);
 
@@ -154,7 +149,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, SeedUserId);
             try
             {
-                var access = new ClientDefineAccess(new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken));
+                var access = new ClientDefineAccess(new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken)));
                 var loader = new FormDefinitionLoader(access);
                 var schema = await loader.GetLocalizedSchemaAsync(TenantCustomizationFixture.ProgId, TenantCustomizationFixture.Lang);
 
@@ -182,7 +177,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, SeedUserId);
             try
             {
-                var access = new ClientDefineAccess(new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken));
+                var access = new ClientDefineAccess(new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken)));
                 var loader = new FormDefinitionLoader(access);
                 var schema = await loader.GetLocalizedSchemaAsync(TenantCustomizationFixture.ProgId, TenantCustomizationFixture.Lang);
 
@@ -238,7 +233,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
 
         private static async Task<FormSchema> LoadLocalizedSchemaAsync(Guid accessToken)
         {
-            var access = new ClientDefineAccess(new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken));
+            var access = new ClientDefineAccess(new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken)));
             return await new FormDefinitionLoader(access)
                 .GetLocalizedSchemaAsync(TenantCustomizationFixture.ProgId, TenantCustomizationFixture.Lang);
         }
@@ -356,7 +351,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
                 bool entered = false;
                 try
                 {
-                    await new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken).EnterCompanyAsync(companyId);
+                    await new SystemApiConnector(TestClients.Local(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken)).EnterCompanyAsync(companyId);
                     entered = true;
                 }
                 finally

@@ -37,7 +37,7 @@ The envelope, the Serialize -> Compress -> Encrypt pipeline, the replay frame an
 - `PolhemPayload` -- builds the package's `PayloadOptions` the framework's way: MessagePack as the default codec,
   the framework's JSON spellings and type names, and the compressor and encryptor named in the deployment's
   `ApiPayloadOptions` (the encryptor `none` only in debug mode). A server registers them with `AddPolhemPayload`
-  (`Polhem.Hosting`); a client keeps them in `ApiClientInfo.PayloadOptions` (`Polhem.Api.Client`).
+  (`Polhem.Hosting`); a client keeps them in `PolhemApiClient.PayloadOptions` (`Polhem.Api.Client`).
 - `MessagePackPayloadCodec` -- the `messagepack` body codec over the framework's formatters. The `json` codec is the
   package's, with the framework's options; others are registered with `PayloadOptions.RegisterCodec`.
 - `PayloadCodecNames` -- the codec names a payload declares.
@@ -56,7 +56,7 @@ which is what every client that predates negotiation sends. On the client, `ApiC
   multi-node deployment registers an `IPayloadReplayStore` over a shared store; Polhem uses the access token as the
   scope a sequence number is unique in.
 - `PayloadOptions.RequireFrame` -- the master switch, set through `AddPolhemPayload` on the server and
-  `ApiClientInfo.PayloadOptions` on a .NET client; **client and server must be set to the same value**.
+  `PolhemApiClient.PayloadOptions` on a .NET client; **client and server must be set to the same value**.
 - `ApiReplayProtection` -- third dimension of `ApiAccessControlAttribute`, declaring per method whether sequences
   are checked. A host built with `AddPolhemFramework` logs a startup warning when methods declare it while the
   frame is off.
