@@ -96,7 +96,6 @@ See [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md) and 
 | **Password hashing** | `PasswordHasher` for credential storage and verification |
 | **API encryption key providers** | Static, dynamic and derived strategies decide which payload key a client receives |
 | **Sensitive fields** | `SensitiveCategory` lets the UI hide or lock a field the user has no permission for (UX only, not enforced on the server); `ProtectedFields` lists columns such as the password hash that the FormSchema-driven data path refuses to read, write, filter or sort on |
-| **File integrity** | `FileHashValidator` verifies delivered files against their hash |
 
 ## 7. Permission and Authorization
 

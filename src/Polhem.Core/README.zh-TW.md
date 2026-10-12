@@ -33,7 +33,6 @@
 - `RsaCryptor` -- RSA 非對稱加密
 - `PasswordHasher` -- PBKDF2-SHA256 密碼雜湊
 - `ApiKeyHasher` / `AccessTokenHasher` -- API 金鑰密鑰與存取權杖在儲存前的雜湊
-- `FileHashValidator` -- 透過 SHA-256 驗證檔案完整性
 - `AesCbcHmacKeyGenerator` -- 加密金鑰產生器
 
 ### 序列化

@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/framework-capabilities.md blob: a2e129cf92eb482d3220139fbd985170c53e874b -->
+<!-- source: en/getting-started/framework-capabilities.md blob: 60ba561ff39663c64fdb821e29f182ed7484c961 -->
 # 框架機制清單
 
 [English](../../en/getting-started/framework-capabilities.md) · [← 文件索引](../README.md)
@@ -97,7 +97,6 @@
 | **密碼雜湊** | `PasswordHasher` 負責憑證的儲存與驗證 |
 | **API 加密金鑰 provider** | 靜態、動態、衍生三種策略，決定 client 拿到哪一把 payload 金鑰 |
 | **敏感欄位** | `SensitiveCategory` 讓 UI 隱藏或鎖定使用者無權限的欄位（僅 UX，伺服端不強制）；`ProtectedFields` 列出密碼雜湊等欄位，FormSchema 驅動的資料路徑拒絕讀取、寫入、篩選或排序它們 |
-| **檔案完整性** | `FileHashValidator` 以雜湊驗證交付的檔案 |
 
 ## 7. 權限與授權
 

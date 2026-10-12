@@ -85,7 +85,7 @@ namespace Polhem.Definition.Attributes
         /// </param>
         /// <remarks>
         /// Only the format is translated, never the property values or the fallback text from
-        /// <see cref="IDisplayName"/> or <see cref="object.ToString"/>.
+        /// <see cref="object.ToString"/>.
         /// </remarks>
         public static string GetDisplayText(object value, Func<string, string>? formatTranslator)
         {
@@ -113,12 +113,7 @@ namespace Polhem.Definition.Attributes
             }
 
             if (StringUtilities.IsEmpty(displayText))
-            {
-                if (value is IDisplayName displayName)
-                    displayText = displayName.DisplayName ?? string.Empty;
-                else
-                    displayText = value.ToString() ?? string.Empty;
-            }
+                displayText = value.ToString() ?? string.Empty;
 
             return displayText;
         }

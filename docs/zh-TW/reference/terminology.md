@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: a989b2aefffcdb80e06997c0fcab1de5b1e69e34 -->
+<!-- source: en/reference/terminology.md blob: acecc33c01178065e997c398f9aa8908f569961d -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -212,7 +212,6 @@
 |----------|----------|------|
 | `IKeyObject` | 鍵值物件介面 | 具有唯一識別鍵的物件抽象介面 |
 | `XmlCodec` | XML 序列化工具 | XML 序列化與反序列化的靜態工具類別（位於 `Polhem.Core.Serialization`） |
-| `FileHashValidator` | 檔案雜湊驗證器 | 使用雜湊值驗證檔案完整性 |
 | `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | 產生 AES 與 HMAC 所需金鑰的工具類別 |
 | `TreeNodeAttribute` | 樹狀節點屬性 | 標記類別在樹狀結構中的顯示名稱 |
 

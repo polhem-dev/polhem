@@ -13,6 +13,13 @@ line each; the reasons and the background are in its detailed notes under [`docs
 
 ## [Unreleased]
 
+### Breaking API changes
+
+- `FileHashValidator` (`Polhem.Core.Security`) is removed: nothing in the framework used it. To check a file against a
+  SHA-256 hash, compute it with `SHA256.HashData(stream)` and compare with `CryptographicOperations.FixedTimeEquals`.
+- `IDisplayName` (`Polhem.Core`) is removed. `TreeNodeAttribute.GetDisplayText` falls back to `ToString()` when the
+  formatted text is empty; a type that implemented `IDisplayName` overrides `ToString()` instead.
+
 ## [1.6.0] - 2026-10-11
 
 📄 Full notes and background: [docs/en/changelogs/1.6.0.md](docs/en/changelogs/1.6.0.md)

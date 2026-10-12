@@ -37,7 +37,6 @@
 - `RsaCryptor` -- RSA asymmetric encryption
 - `PasswordHasher` -- PBKDF2-SHA256 password hashing
 - `ApiKeyHasher` / `AccessTokenHasher` -- hashing of API key secrets and of access tokens for storage
-- `FileHashValidator` -- file integrity verification via SHA-256
 - `AesCbcHmacKeyGenerator` -- cryptographic key generation
 
 ### Serialization

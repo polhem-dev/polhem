@@ -469,7 +469,7 @@ the decision was written in another table **below** the struck-through list, and
 
 | Item | Reason kept |
 |------|---------|
-| `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute` / `IDisplayName`) | Re-judged as "a design not yet wired up"; the tree view builder that consumes it is separate future work |
+| `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute`) | Re-judged as "a design not yet wired up"; the tree view builder that consumes it is separate future work |
 | The designer attributes on definition types: `[Description]`, `[Category]` (with the `PropertyCategories` constants), `[Browsable]`, `[NotifyParentProperty]`, `[TypeConverter(typeof(ExpandableObjectConverter))]` | Decided in the 2026-09-26 round: kept for the planned Avalonia property grid editor, which is to read them. Nothing reads them today, which is expected until that editor exists. `[DefaultValue]` is not in this row: `XmlSerializer` honours it |
 | `IDefineField` | Implemented by `DbField`; an abstraction not yet consumed, not dead code |
 | `IElementCapabilityResolver` | Its implementation `ElementCapabilityResolver.Default` (now in `Polhem.Api.Client`) is called by `LayoutCapabilityApplier`, `FormView.Commands` and `ListView.Commands`, and by DemoCenter |
@@ -479,6 +479,8 @@ the decision was written in another table **below** the struck-through list, and
 | The `I*Request` / `I*Response` interfaces of `Polhem.Api.Contracts` | Most have no consumer that uses them as a type (a few are pattern-matched, for example in `DateTimeWireGuard`); `ApiContractPairingTests` and `BusinessContractPairingTests` find them by reflection. They are the member contract shared by a wire message and its BO args / result: `ApiInputConverter` copies between the two by property name and skips a name that does not match silently, so implementing the interface on both sides is what makes the compiler keep their members in step. Not dead code, even where the only reference is the implementing type |
 
 **(b) Removed** (a record, so the next round does not look for them):
+- After 1.6.0: `FileHashValidator` (no flow in the framework verified files) and `IDisplayName` (no implementer;
+  `TreeNodeAttribute.GetDisplayText` now falls back to `ToString` alone).
 - Before Polhem 1.0.0 (the 2026-09-26 fix batches; the commit messages and `PublicAPI.*.txt` diffs list the rest):
   the per-object serialize state (`IObjectSerialize`, `SerializeState`, `SerializationUtilities`); the tracing
   subsystem; `DateInterval`, `IPValidator`, `VersionInfo`, `DataTableComparer`, `DefaultBoTypeResolver`;
