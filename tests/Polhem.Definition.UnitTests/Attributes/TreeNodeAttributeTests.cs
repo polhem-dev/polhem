@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Core;
 using Polhem.Definition.Attributes;
 
 namespace Polhem.Definition.UnitTests.Attributes
@@ -17,10 +16,10 @@ namespace Polhem.Definition.UnitTests.Attributes
         }
 
         [TreeNode("{0}", "Name")]
-        private sealed class EmptyFormattedClass : IDisplayName
+        private sealed class EmptyFormattedClass
         {
             public string Name { get; set; } = string.Empty;
-            public string DisplayName { get; set; } = string.Empty;
+            public override string ToString() => "fallback";
         }
 
         private sealed class NoAttrClass
@@ -54,10 +53,10 @@ namespace Polhem.Definition.UnitTests.Attributes
         }
 
         [Fact]
-        [DisplayName("GetDisplayText falls back to DisplayName when the formatted result is empty and the type implements IDisplayName")]
-        public void GetDisplayText_EmptyFormattedValue_FallsBackToIDisplayName()
+        [DisplayName("GetDisplayText falls back to ToString when the formatted result is empty")]
+        public void GetDisplayText_EmptyFormattedValue_FallsBackToToString()
         {
-            var obj = new EmptyFormattedClass { Name = string.Empty, DisplayName = "fallback" };
+            var obj = new EmptyFormattedClass { Name = string.Empty };
             Assert.Equal("fallback", TreeNodeAttribute.GetDisplayText(obj));
         }
 

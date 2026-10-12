@@ -211,7 +211,6 @@ This document provides a standard term reference for technical writing, ensuring
 |---------|------|-------------|
 | `IKeyObject` | 鍵值物件介面 | Abstract interface for objects with a unique identifying key |
 | `XmlCodec` | XML 序列化工具 | Static utility class for XML serialization / deserialization (`Polhem.Core.Serialization`) |
-| `FileHashValidator` | 檔案雜湊驗證器 | Validates file integrity using hash values |
 | `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | Utility class for generating AES and HMAC keys |
 | `TreeNodeAttribute` | 樹狀節點屬性 | Marks the display name of a class within a tree structure |
 

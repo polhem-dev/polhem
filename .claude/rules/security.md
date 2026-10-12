@@ -28,7 +28,7 @@ a type, first decide which kind it is:
 
 | Layer | Location | Contents | Examples |
 |----|------|------|------|
-| **Primitives** | `Polhem.Core/Security/` | Stateless cryptographic operations | `AesCbcHmacCryptor`, `RsaCryptor`, `PasswordHasher`, `FileHashValidator`, `AesCbcHmacKeyGenerator` |
+| **Primitives** | `Polhem.Core/Security/` | Stateless cryptographic operations | `AesCbcHmacCryptor`, `RsaCryptor`, `PasswordHasher`, `AesCbcHmacKeyGenerator` |
 | **Policy / key protocol** | `Polhem.Definition/Security/` | Key sources, access policy, verification protocols | `MasterKeyProvider`, `EncryptionKeyProtector`, `IAccessTokenValidator`, `ILoginAttemptTracker` |
 
 Dividing principle: pure computation (given input, compute output, no business meaning) goes in `Polhem.Core`;
@@ -87,7 +87,3 @@ No step may be skipped or reordered.
   `PolhemPayload` rejects it unless the host runs in debug mode, and the package refuses it unless
   `PayloadOptions.AllowNoEncryption` is set
 - Never compare HMAC / hash results directly with `==`
-
-## File integrity
-
-Use `FileHashValidator` to verify file integrity; do not implement your own hash comparison logic.

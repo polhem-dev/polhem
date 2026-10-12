@@ -12,6 +12,13 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 破壞性 API 變更
+
+- 移除 `FileHashValidator`（`Polhem.Core.Security`）：框架內沒有任何地方使用它。要以 SHA-256 驗證檔案，用
+  `SHA256.HashData(stream)` 計算後以 `CryptographicOperations.FixedTimeEquals` 比對。
+- 移除 `IDisplayName`（`Polhem.Core`）。`TreeNodeAttribute.GetDisplayText` 在格式化結果為空時改為只退回
+  `ToString()`；原本實作 `IDisplayName` 的型別改為覆寫 `ToString()`。
+
 ## [1.6.0] - 2026-10-11
 
 📄 完整說明與背景：[docs/zh-TW/changelogs/1.6.0.md](docs/zh-TW/changelogs/1.6.0.md)

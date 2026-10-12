@@ -1,1 +1,7 @@
 #nullable enable
+*REMOVED*Polhem.Core.IDisplayName
+*REMOVED*Polhem.Core.IDisplayName.DisplayName.get -> string!
+*REMOVED*Polhem.Core.IDisplayName.DisplayName.set -> void
+*REMOVED*Polhem.Core.Security.FileHashValidator
+*REMOVED*static Polhem.Core.Security.FileHashValidator.ComputeSha256(string! filePath) -> string!
+*REMOVED*static Polhem.Core.Security.FileHashValidator.VerifySha256(string! filePath, string! expectedSha256Hex) -> bool
