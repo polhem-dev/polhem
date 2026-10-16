@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: 5309f343c917198f397f739fe4d5cae0ab51c82f -->
+<!-- source: en/getting-started/platform-support.md blob: c5552709a45ec94595ad1d8b7d0ddacb83541111 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -158,7 +158,8 @@ DynamicExpresso 求值的程式碼也有相同限制。
 - **不支援的設定**：POLHEM9004，位於 `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`。
 - **在沒有動態程式碼的情況下執行**：本 repository 的 CI 會以 `DynamicCodeSupport=false`（iOS SDK 設定的開關）把用戶端
   head 會帶到的每個套件的測試專案（`Polhem.Core`、`Polhem.Definition`、`Polhem.Expressions`、`Polhem.Api.Core`、
-  `Polhem.Api.Client`、`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`）再跑一次。
+  `Polhem.Api.Client`、`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`）再跑一次，另加
+  `Polhem.Api.Server.UnitTests` 的派遣往返測試（它們像用戶端一樣編碼與解碼每一種訊息）。
 - **運算式描述檔**：`tests/Polhem.Expressions.UnitTests` 中的 `TrimmerDescriptorGateTests`。
 - **head 本身**：Northwind 的瀏覽器、iOS 與 Android head 是參考設定，但本 repository 的 CI 不會建置它們。修改上述任何設定後，
   要靠建置並執行該 head 來檢查。

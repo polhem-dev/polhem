@@ -60,8 +60,8 @@
 
 ## 設計慣例
 
-- **不含傳輸** -- 套件只參考 `Polhem.Api.Contracts`。參考 `Polhem.Api.Client`、`Polhem.Api.Core` 或
-  `Polhem.UI.ApiBridge` 時，`POLHEM9001`（`src/Directory.Build.targets`）會讓建置失敗。
+- **不含傳輸** -- 套件只參考 `Polhem.Api.Contracts`。參考 `Polhem.Api.Client`、`Polhem.Api.Core`、
+  `Polhem.Api.Server` 或 `Polhem.UI.ApiBridge` 時，`POLHEM9001`（`src/Directory.Build.targets`）會讓建置失敗。
 - **與 UI 框架無關** -- 不含 UI 框架型別，因此同一套合約與規則可服務所有前端。
 - **畫面的解析順序** -- 控制項先用自己的屬性，再用可覆寫的 `Resolve*` hook，最後才是 `UIServices.Provider`；
   三者皆無時，就以 host 設定的內容運作。

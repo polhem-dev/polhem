@@ -25,8 +25,8 @@
 ### In-Process Calls
 
 - `IInProcessTransportFactory` -- creates the transport an in-process client (`PolhemApiClient.CreateLocal`) sends
-  its calls through. `AddPolhemFramework` registers the implementation from `Polhem.Api.Server`, so a client never
-  references the server side itself.
+  its calls through. `AddPolhemFramework` registers the implementation from `Polhem.Api.Server`, so a client does
+  not reference the server side; `ApiClientDependencyGateTests` (`tests/Polhem.Api.Client.UnitTests`) fails when it does.
 
 ### Payload Security Pipeline
 

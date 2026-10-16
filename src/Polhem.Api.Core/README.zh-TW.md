@@ -24,7 +24,8 @@
 ### 同程序呼叫
 
 - `IInProcessTransportFactory` -- 建立同程序用戶端（`PolhemApiClient.CreateLocal`）送出呼叫用的 transport。
-  實作來自 `Polhem.Api.Server`，由 `AddPolhemFramework` 註冊，所以用戶端本身不會參考伺服器端。
+  實作來自 `Polhem.Api.Server`，由 `AddPolhemFramework` 註冊，所以用戶端本身不參考伺服器端；
+  參考時 `ApiClientDependencyGateTests`（`tests/Polhem.Api.Client.UnitTests`）會失敗。
 
 ### Payload 安全管線
 

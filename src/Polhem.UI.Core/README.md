@@ -68,7 +68,7 @@ application's own data through its own implementation of `IFormApiConnector`.
 ## Design Conventions
 
 - **No transport** -- the package references `Polhem.Api.Contracts` only. `POLHEM9001` (`src/Directory.Build.targets`)
-  fails the build on a reference to `Polhem.Api.Client`, `Polhem.Api.Core` or `Polhem.UI.ApiBridge`.
+  fails the build on a reference to `Polhem.Api.Client`, `Polhem.Api.Core`, `Polhem.Api.Server` or `Polhem.UI.ApiBridge`.
 - **Framework-agnostic** -- no UI-framework types, so the same contracts and rules serve every front end.
 - **Resolution order in the views** -- a control uses its own property first, then its overridable `Resolve*` hook,
   then `UIServices.Provider`; with none of them it runs on what the host set.

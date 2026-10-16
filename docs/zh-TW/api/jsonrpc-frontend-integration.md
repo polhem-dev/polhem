@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: dc8faa2cba29f095c93a0f7b8c9f6fb6fd89ed2f -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: ac287a2e7d098cea03a4f1999abb9fe25f6a6f14 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -463,5 +463,6 @@ export const formApi = (progId: string) => ({
 - [`wire-contracts/README.md`](../../../wire-contracts/README.md) — 產生出來的 TypeScript 合約，以及它如何與伺服端保持一致
 - [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — 前端連線策略全景
 - [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) — 逐請求的 codec 協商
-- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.zh-TW.md) — server 端派遣內部細節
+- [`src/Polhem.Api.Server/README.md`](../../../src/Polhem.Api.Server/README.zh-TW.md) — server 端派遣內部細節
+- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.zh-TW.md) — 前後端共用的 wire 層
 - [`src/Polhem.Api.Client/README.md`](../../../src/Polhem.Api.Client/README.zh-TW.md) — 本指引對應的 .NET client

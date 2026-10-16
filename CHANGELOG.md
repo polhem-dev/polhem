@@ -47,6 +47,9 @@ line each; the reasons and the background are in its detailed notes under [`docs
 - `PolhemApiClient.CreateLocal` reaches the in-process dispatcher through `IInProcessTransportFactory`, which
   `AddPolhemFramework` registers. A service provider built without it registers `InProcessTransportFactory`
   (`Polhem.Api.Server.Dispatch`) as `IInProcessTransportFactory`.
+- `Polhem.Api.Client` (and so `Polhem.UI.ApiBridge`) no longer brings `Microsoft.Extensions.Logging.Abstractions`,
+  `Polhem.JsonRpc.Server` or `Polhem.JsonRpc.Payload.Server` transitively; an application that used them through it
+  references them itself.
 
 ### Added
 
@@ -60,7 +63,6 @@ line each; the reasons and the background are in its detailed notes under [`docs
   `ClientUserContext`.
 - `Polhem.Web.Blazor.Server` references `Polhem.UI.Core`.
 - `Polhem.Api.Server`: the dispatcher setup, authorization and access control the server runs.
-  `Polhem.Api.Client` no longer carries `Polhem.JsonRpc.Server` or `Polhem.JsonRpc.Payload.Server`.
 
 ### Changed
 
@@ -68,9 +70,6 @@ line each; the reasons and the background are in its detailed notes under [`docs
   `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`, and the API key lookup warnings under
   `Polhem.Api.Server.Dispatch.PolhemObjectFactory`. Update a `Logging:LogLevel` filter or sink route keyed on
   `Polhem.Api.Core`.
-- `Polhem.Api.Client` (and so `Polhem.UI.ApiBridge`) no longer brings `Microsoft.Extensions.Logging.Abstractions`,
-  `Polhem.JsonRpc.Server` or `Polhem.JsonRpc.Payload.Server` transitively; an application that used them through it
-  references them itself.
 
 ## [1.6.0] - 2026-10-11
 

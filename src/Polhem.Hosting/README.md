@@ -37,7 +37,7 @@ this package. A head that runs the backend in its own process references both: i
 
 | Class / Member | Purpose |
 |----------------|---------|
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, the hosted services, …) into the supplied `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, `IInProcessTransportFactory` (used by `PolhemApiClient.CreateLocal`), the hosted services, …) into the supplied `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
