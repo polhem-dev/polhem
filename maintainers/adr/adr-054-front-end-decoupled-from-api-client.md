@@ -120,4 +120,4 @@ the connector contract there lets `FormApiConnector` implement it without an ada
 
 `Polhem.Api.Client` still carries the JSON-RPC server packages through `Polhem.Api.Core`, which mixes the shared
 message types with the server-side dispatch. It does not cross into the business-object layer and no longer reaches a
-front end; splitting `Polhem.Api.Core` is separate work.
+front end; splitting `Polhem.Api.Core` is separate work. Resolved by [ADR-055](adr-055-api-core-split-from-server.md).

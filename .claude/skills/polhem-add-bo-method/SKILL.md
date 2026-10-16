@@ -353,7 +353,7 @@ public virtual async Task<<Action>Response> <Action>Async(
 | Layer | Path / template | What it verifies | What it does not verify |
 |----|------------|---------|--------|
 | Wire-level | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>MessagePackTests.cs` | Member registration, polymorphic / collection / DataTable round-trip, default values | BO behaviour, SQL |
-| Executor dispatch | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>JsonRpcRoundTripTests.cs` | `progId.action` dispatch, Input/Output Converter | Actual SQL results |
+| Executor dispatch | `tests/Polhem.Api.Server.UnitTests/<Axis>/<Action>JsonRpcRoundTripTests.cs` | `progId.action` dispatch, Input/Output Converter | Actual SQL results |
 | BO+DB integration | `tests/Polhem.Business.UnitTests/<Axis>/<Axis>BusinessObject<Action>Tests.cs` | BO → Repository → SQL → correctness against real data | Wire format |
 
 Only the three layers together amount to "works end to end". Do **not** write a single "executor + real DB" integration
@@ -386,7 +386,7 @@ public class <Action>MessagePackTests
 ### Dispatch test template (stub Repository)
 
 Copy the private `StubFormRepositoryFactory` / `StubDataFormRepository` pair from
-`tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs`.
+`tests/Polhem.Api.Server.UnitTests/Form/GetListJsonRpcRoundTripTests.cs`.
 
 ```csharp
 public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
@@ -408,7 +408,7 @@ public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
             _fx.GetRequiredService<ILanguageService>(),
             _fx.GetRequiredService<IBoTypeResolver>());
 
-        // `TestDispatcher` (tests/Polhem.Api.Core.UnitTests/Dispatch) sends the request as JSON, in process.
+        // `TestDispatcher` (tests/Polhem.Api.Server.UnitTests/Dispatch) sends the request as JSON, in process.
         var dispatcher = new TestDispatcher(_fx.Provider, boFactory)
         {
             AccessToken = TestSessionFactory.CreateAccessToken(_fx),
@@ -521,7 +521,7 @@ When adding an `<Action>` method, complete every step below in order.
 - [ ] Add `<Action>Async` to `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` (async only)
 - [ ] Wire-level round-trip test
 - [ ] Executor dispatch round-trip test
-- [ ] Release build 0w/0e + tests pass, including the `-p:DynamicCodeSupport=false` gate for `Polhem.Api.Core.UnitTests`
+- [ ] Release build 0w/0e + tests pass, including the `-p:DynamicCodeSupport=false` gate for `Polhem.Api.Core.UnitTests` and `Polhem.Api.Server.UnitTests`
 
 **P4 surface sync** (in the same commit as either P2 or P3):
 - [ ] Update `docs/en/api/api-method-reference.md` + `docs/zh-TW/api/api-method-reference.md`: add / change the method in the table for its axis (restamp the translation, `rules/public-docs.md`)
@@ -545,10 +545,10 @@ When adding an `<Action>` method, complete every step below in order.
 | Repository abstraction / implementation | `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs` / `src/Polhem.Repository/Form/DataFormRepository.cs` |
 | Repository Factory | `src/Polhem.Repository/Factories/RepositoryFactory.cs` |
 | Client connector | `src/Polhem.Api.Client/Connectors/SystemApiConnector.cs` / `FormApiConnector.cs` |
-| JSON-RPC dispatch | `src/Polhem.Api.Core/Dispatch/` (the Polhem components on the `Polhem.JsonRpc.Server` dispatcher) |
+| JSON-RPC dispatch | `src/Polhem.Api.Server/Dispatch/` (the Polhem components on the `Polhem.JsonRpc.Server` dispatcher) |
 | Naming-convention conversion | `src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs` / `ApiInputConverter.cs` |
 | BO integration test template | `tests/Polhem.Business.UnitTests/Form/FormBusinessObjectGetListTests.cs` |
 | Wire round-trip template | `tests/Polhem.Api.Core.UnitTests/Form/GetListMessagePackTests.cs` |
-| Executor dispatch template | `tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs` |
+| Executor dispatch template | `tests/Polhem.Api.Server.UnitTests/Form/GetListJsonRpcRoundTripTests.cs` |
 | Single-page API method overview | `docs/en/api/api-method-reference.md` (must be updated for every new method) |
 | Surface audit test | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` |

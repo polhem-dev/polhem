@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 4fec3dd1536e887fcedeb3437ba0ae2f5200bcdb -->
+<!-- source: en/architecture/dependency-map.md blob: 7e22615102b9da1e4a01fb6316c5416919ceb380 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -37,6 +37,7 @@ graph BT
 
   subgraph API 層
     Core["Polhem.Api.Core"]
+    Server["Polhem.Api.Server"]
   end
 
   subgraph CompositionRoot [組合根]
@@ -72,7 +73,8 @@ graph BT
   Repo --> RepoAbs
   Core --> Contracts
   Core --> Definition
-  Hosting --> Core
+  Server --> Core
+  Hosting --> Server
   Hosting --> Business
   Hosting --> Db
   Hosting --> Repo
@@ -96,7 +98,8 @@ graph BT
 | Polhem.Definition | Microsoft.Extensions.Localization.Abstractions 10.x |
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
-| Polhem.Api.Core | MessagePack 3.x、Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server |
+| Polhem.Api.Core | MessagePack 3.x、Polhem.JsonRpc.Payload |
+| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Hosting.Abstractions 10.x |
@@ -136,9 +139,9 @@ graph BT
 - **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 的前端即時預覽）才引用本套件。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
 - **Polhem.Definition** 為被依賴次數最多的專案，直接相依者為 Contracts、Db、RepoAbs、Caching、Business、Api.Core 與 UI.Avalonia。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入 **共用契約層**，而非 API 應用層。
-- **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Core`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上獨立列為 **組合根** 而非歸入 API 層：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的是**它本身不含資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
-- **JSON-RPC 協定**來自 `Polhem.JsonRpc.*` 套件，它們對 Polhem 一無所知：`Polhem.Api.Core` 建在 `Polhem.JsonRpc.Server` 上，`Polhem.Api.Client` 建在 `Polhem.JsonRpc.Client` 上（經由 `Polhem.JsonRpc.Payload.Client`，以其 `PayloadConnector` 封裝每次呼叫），ASP.NET Core 宿主另加 `Polhem.JsonRpc.AspNetCore` 提供 `POST /api` 端點。相依只走這個方向。見 [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
-- 用戶端（Polhem.Api.Client）與伺服器端皆透過 **Polhem.Api.Core** 共享 payload 外殼，確保序列化與加解密行為一致。
+- **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Server`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上獨立列為 **組合根** 而非歸入 API 層：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的是**它本身不含資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
+- **JSON-RPC 協定**來自 `Polhem.JsonRpc.*` 套件，它們對 Polhem 一無所知：`Polhem.Api.Server` 建在 `Polhem.JsonRpc.Server` 上，`Polhem.Api.Client` 建在 `Polhem.JsonRpc.Client` 上（經由 `Polhem.JsonRpc.Payload.Client`，以其 `PayloadConnector` 封裝每次呼叫），ASP.NET Core 宿主另加 `Polhem.JsonRpc.AspNetCore` 提供 `POST /api` 端點。相依只走這個方向。見 [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
+- **Polhem.Api.Core** 是前後端共用的 wire 層：請求與回應訊息、payload codec、壓縮與加密，以及錯誤契約，讓用戶端（`Polhem.Api.Client`）與伺服器端的序列化與加解密行為一致。它不含任何伺服器端的東西，並由 `POLHEM9001` 把關。**Polhem.Api.Server** 放伺服器端：dispatcher 的設定、存取與 payload 篩選器、API 金鑰與授權檢查，以及例外對應。同程序的用戶端透過 `AddPolhemFramework` 註冊的 `IInProcessTransportFactory` 呼叫 dispatcher，因此 `Polhem.Api.Client` 不帶任何伺服器端套件。`Polhem.Api.Server` 會讀取 `Polhem.Api.Core` 的 internal 成員，所以兩者必須是完全相同的版本。詳見 [adr-055](../../../maintainers/adr/adr-055-api-core-split-from-server.md)。
 - **前端與後端共用三個基礎組件**：`Polhem.Core`、`Polhem.Definition` 與 `Polhem.Api.Contracts`。它們不放只屬於單一端的東西；前端只透過 `Polhem.Api.Contracts` 的契約接觸後端（表單是 `IFormApiConnector` 與 `IFormApiConnectorFactory`），傳輸層（`Polhem.Api.Core`、`Polhem.Api.Client`）不在前端的相依閉包內。見 [adr-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)（英文）。
 - **Polhem.UI.Core** 為所有前端共用的一層，不帶任何傳輸：只引用 `Polhem.Api.Contracts`。內含 UI 的服務契約（`IFormDefinitionSource`、`IUserContext`）與 `UIServices`（由 markup 建立的控制項透過它解析這些服務）；各端共用的表單值規則（`FormValueBinding`、`FormDataGuard`，以及位於 `Polhem.UI.Core.Permissions` 的元素能力解析器）；`StorageDefinitionSource`，建在 `IDefineStorage` 上、供沒有後端的應用程式使用的定義來源；以及供自行實作 `IFormApiConnector` 的應用程式使用的簡單回應型別。不含任何平台專屬 UI 程式碼。
 - **Polhem.UI.ApiBridge** 將單一使用者的端（桌面、瀏覽器（WASM）、iOS、Android）接上 Polhem 後端。它引用 `Polhem.UI.Core` 與 `Polhem.Api.Client`，本身與 UI 框架無關。內含 `ClientInfo`（該端的連線狀態）與 endpoint、API key 的儲存（`IEndpointStorage`、`IApiKeyStorage`、`FileEndpointStorage`），並以 `AddPolhemUIApiBridge()` 註冊 `Polhem.UI.Core` 服務的 API 版實作。相依由 bridge 指向兩側：`Polhem.Api.Client` 從不引用 UI。

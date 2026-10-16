@@ -25,14 +25,15 @@
 
     The same boundary is asserted from the other end by
     tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs and, for the front-end layer,
-    tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs, which walk the full
+    tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs and, for Polhem.Api.Core and the API client
+    that inherits it, tests/Polhem.Api.Client.UnitTests/ApiClientDependencyGateTests.cs, which walk the full
     transitive closure. The two are complements, not duplicates: this target catches the direct
     edge at the moment it is written, the test catches a package that arrives indirectly through a
     project reference — which is exactly how DynamicExpresso.Core got in.
   -->
 
   <PropertyGroup>
-    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts' Or '$(MSBuildProjectName)' == 'Polhem.UI.Core' Or '$(MSBuildProjectName)' == 'Polhem.UI.Avalonia'">true</PolhemEnforceDependencyBoundary>
+    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts' Or '$(MSBuildProjectName)' == 'Polhem.UI.Core' Or '$(MSBuildProjectName)' == 'Polhem.UI.Avalonia' Or '$(MSBuildProjectName)' == 'Polhem.Api.Core'">true</PolhemEnforceDependencyBoundary>
   </PropertyGroup>
 
   <!-- Polhem.Core: no consumer-facing dependency of any kind. The allowlist is deliberately empty. -->
@@ -79,6 +80,21 @@
     <PolhemAllowedDependency Include="Polhem.Core" />
   </ItemGroup>
 
+  <!--
+    Polhem.Api.Core is the wire layer both ends share (ADR-055): the messages, the payload codecs and the error
+    contract. It is not a foundation assembly, since the front-end layer above still may not reference it, but every
+    API client inherits it, so it is locked too. What the lock keeps out is the server side: Polhem.JsonRpc.Server,
+    Polhem.JsonRpc.Payload.Server and the dispatcher's logging belong to Polhem.Api.Server.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Polhem.Api.Core'">
+    <!-- The only transport-format package in the framework (ADR-036). -->
+    <PolhemAllowedDependency Include="MessagePack" />
+    <PolhemAllowedDependency Include="Polhem.JsonRpc.Payload" />
+    <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
+    <PolhemAllowedDependency Include="Polhem.Definition" />
+    <PolhemAllowedDependency Include="Polhem.Core" />
+  </ItemGroup>
+
   <!-- POLHEM9002: the three version properties must agree. The definition is shared with tools/. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.targets" />
 
@@ -96,7 +112,7 @@
 
     <Error Condition="'@(_PolhemBoundaryViolation)' != ''"
            Code="POLHEM9001"
-           Text="$(MSBuildProjectName) is locked to an explicit dependency allowlist (ADR-038, ADR-054). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by everything that references this assembly. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the allowlist of the closure test (tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, or tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs for the front-end layer), and record why in the ADR." />
+           Text="$(MSBuildProjectName) is locked to an explicit dependency allowlist (ADR-038, ADR-054). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by everything that references this assembly. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the allowlist of the closure test (tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, or tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs for the front-end layer, or tests/Polhem.Api.Client.UnitTests/ApiClientDependencyGateTests.cs for Polhem.Api.Core), and record why in the ADR." />
   </Target>
 
 </Project>

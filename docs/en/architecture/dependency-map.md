@@ -37,6 +37,7 @@ graph BT
 
   subgraph API
     Core["Polhem.Api.Core"]
+    Server["Polhem.Api.Server"]
   end
 
   subgraph CompositionRoot [Composition Root]
@@ -72,7 +73,8 @@ graph BT
   Repo --> RepoAbs
   Core --> Contracts
   Core --> Definition
-  Hosting --> Core
+  Server --> Core
+  Hosting --> Server
   Hosting --> Business
   Hosting --> Db
   Hosting --> Repo
@@ -96,7 +98,8 @@ graph BT
 | Polhem.Definition | Microsoft.Extensions.Localization.Abstractions 10.x |
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
-| Polhem.Api.Core | MessagePack 3.x, Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server |
+| Polhem.Api.Core | MessagePack 3.x, Polhem.JsonRpc.Payload |
+| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Hosting.Abstractions 10.x |
@@ -138,9 +141,9 @@ Also under `tools/` but not on NuGet:
 - **Polhem.Expressions** holds `DynamicExpressoEvaluator`, the DynamicExpresso-backed implementation of the expression engine. The *abstraction* — `IExpressionEvaluator`, `ExpressionPolicy`, `ExpressionEvaluationException` — lives in `Polhem.Core.Expressions`, so `Polhem.Definition` (the `FormExpressionCalculator`) and `Polhem.Business` (the rule processor) consume the engine without taking a dependency on DynamicExpresso; only the composition roots that pick an implementation (`Polhem.Hosting` for DI registration, `Polhem.UI.Avalonia` for client-side live preview) reference this package. That split keeps the definition layer free of third-party packages while a field computed on the client still matches what the server writes on save. See [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) and [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md).
 - **Polhem.Definition** is the most depended-on project. Its direct dependents are Contracts, Db, RepoAbs, Caching, Business, Api.Core and UI.Avalonia.
 - **Polhem.Api.Contracts** is a shared contract/abstraction layer, not an application-level API project. Despite the "API" name, both `Polhem.Business` and `Polhem.Api.Core` depend on it (`Business → Contracts`, `Core → Contracts`), so it sits *below* them — the diagram groups it under **Shared Contracts** rather than the API application layer.
-- **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Core`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It is shown in its own **Composition Root** group rather than under API: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
-- **The JSON-RPC protocol** comes from the `Polhem.JsonRpc.*` packages, which know nothing about Polhem: `Polhem.Api.Core` builds on `Polhem.JsonRpc.Server`, `Polhem.Api.Client` on `Polhem.JsonRpc.Client` (through `Polhem.JsonRpc.Payload.Client`, whose `PayloadConnector` seals each call), and an ASP.NET Core host adds `Polhem.JsonRpc.AspNetCore` for the `POST /api` endpoint. The dependency only goes that way. See [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
-- Both the client (Polhem.Api.Client) and the server share the payload envelope via **Polhem.Api.Core**, ensuring consistent serialization and encryption behavior.
+- **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Server`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It is shown in its own **Composition Root** group rather than under API: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
+- **The JSON-RPC protocol** comes from the `Polhem.JsonRpc.*` packages, which know nothing about Polhem: `Polhem.Api.Server` builds on `Polhem.JsonRpc.Server`, `Polhem.Api.Client` on `Polhem.JsonRpc.Client` (through `Polhem.JsonRpc.Payload.Client`, whose `PayloadConnector` seals each call), and an ASP.NET Core host adds `Polhem.JsonRpc.AspNetCore` for the `POST /api` endpoint. The dependency only goes that way. See [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
+- **Polhem.Api.Core** is the wire layer both ends share: the request and response messages, the payload codecs, compression and encryption, and the error contract, so the client (`Polhem.Api.Client`) and the server serialize and encrypt the same way. It holds none of the server side, and `POLHEM9001` keeps it that way. **Polhem.Api.Server** holds the server side: the dispatcher setup, the access and payload filters, API key and authorization checks, and the exception mapping. An in-process client reaches the dispatcher through `IInProcessTransportFactory`, which `AddPolhemFramework` registers, so `Polhem.Api.Client` carries no server package. `Polhem.Api.Server` reads internals of `Polhem.Api.Core` and depends on it at the exact same version. See [adr-055](../../../maintainers/adr/adr-055-api-core-split-from-server.md).
 - **Front end and back end share three foundation assemblies**: `Polhem.Core`, `Polhem.Definition` and `Polhem.Api.Contracts`. They hold nothing that belongs to one side only, and a front end reaches the backend only through the contracts in `Polhem.Api.Contracts` (for forms, `IFormApiConnector` and `IFormApiConnectorFactory`); the transport (`Polhem.Api.Core`, `Polhem.Api.Client`) is not part of a front end's dependency closure. See [adr-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
 - **Polhem.UI.Core** is the layer every front end shares, and it carries no transport: it references `Polhem.Api.Contracts` only. It holds the UI's service contracts (`IFormDefinitionSource`, `IUserContext`) and `UIServices`, through which controls created from markup resolve them; the form value rules every head shares (`FormValueBinding`, `FormDataGuard`, and the element capability resolver in `Polhem.UI.Core.Permissions`); `StorageDefinitionSource`, a definition source over `IDefineStorage` for an application without a backend; and simple response types for an application that implements `IFormApiConnector` itself. It contains no platform-specific UI code.
 - **Polhem.UI.ApiBridge** connects a single-user head (desktop, browser (WASM), iOS, Android) to a Polhem backend. It references `Polhem.UI.Core` and `Polhem.Api.Client`, and is itself UI-framework-agnostic. It holds `ClientInfo` (the head's connection state) and the endpoint and API key storage (`IEndpointStorage`, `IApiKeyStorage`, `FileEndpointStorage`), and registers the API-backed implementations of the `Polhem.UI.Core` services with `AddPolhemUIApiBridge()`. The dependency points from the bridge to both sides: `Polhem.Api.Client` never references the UI.

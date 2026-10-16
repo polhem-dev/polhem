@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.Transformers;
 using Polhem.Definition.Settings;
 using Polhem.JsonRpc.Payload;

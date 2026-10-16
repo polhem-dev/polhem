@@ -1,5 +1,6 @@
-using Polhem.Api.Core.Authorization;
-using Polhem.Api.Core.Dispatch;
+using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Server.Authorization;
+using Polhem.Api.Server.Dispatch;
 using Polhem.Core.Expressions;
 using Polhem.Business;
 using Polhem.Business.Form;
@@ -361,6 +362,9 @@ namespace Polhem.Hosting
             var jsonRpcOptions = PolhemJsonRpc.CreateServerOptions();
             services.AddSingleton(jsonRpcOptions);
             services.TryAddSingleton(_ => new JsonRpcDispatcher(jsonRpcOptions));
+            // In-process clients (PolhemApiClient.CreateLocal) reach the dispatcher through this, so the client
+            // assembly never references the server side (ADR-055).
+            services.TryAddSingleton<IInProcessTransportFactory, InProcessTransportFactory>();
 
             return services;
         }

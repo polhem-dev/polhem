@@ -37,6 +37,16 @@ line each; the reasons and the background are in its detailed notes under [`docs
 - `IUIViewService` and `ClientInfo.UIViewService` are removed. `ClientInfo.InitializeAsync(IUIViewService,
   SupportedConnectTypes)` becomes `ClientInfo.InitializeAsync(SupportedConnectTypes)`: when it returns `false`, show
   the connection setup yourself and then call `ClientInfo.InitializeAsync(endpoint)`.
+- The server side of the API moves from `Polhem.Api.Core` to the new `Polhem.Api.Server` package
+  ([ADR-055](maintainers/adr/adr-055-api-core-split-from-server.md)): `Polhem.Api.Core.Dispatch`,
+  `Polhem.Api.Core.Authorization` and `Polhem.Api.Core.Validator` become `Polhem.Api.Server.Dispatch`,
+  `Polhem.Api.Server.Authorization` and `Polhem.Api.Server.Validator`. Change the `using` of a custom
+  `IApiAuthorizationValidator`; a host that builds the dispatcher without `AddPolhemFramework` references
+  `Polhem.Api.Server`. `Polhem.Api.Server` depends on `Polhem.Api.Core` at the exact same version. The wire does not
+  change.
+- `PolhemApiClient.CreateLocal` reaches the in-process dispatcher through `IInProcessTransportFactory`, which
+  `AddPolhemFramework` registers. A service provider built without it registers `InProcessTransportFactory`
+  (`Polhem.Api.Server.Dispatch`) as `IInProcessTransportFactory`.
 
 ### Added
 
@@ -49,6 +59,18 @@ line each; the reasons and the background are in its detailed notes under [`docs
 - `Polhem.UI.ApiBridge`: `AddPolhemUIApiBridge`, `FormApiConnectorFactory`, `ApiFormDefinitionSource`,
   `ClientUserContext`.
 - `Polhem.Web.Blazor.Server` references `Polhem.UI.Core`.
+- `Polhem.Api.Server`: the dispatcher setup, authorization and access control the server runs.
+  `Polhem.Api.Client` no longer carries `Polhem.JsonRpc.Server` or `Polhem.JsonRpc.Payload.Server`.
+
+### Changed
+
+- Log categories of the dispatcher move with its namespace: masked failures log under
+  `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`, and the API key lookup warnings under
+  `Polhem.Api.Server.Dispatch.PolhemObjectFactory`. Update a `Logging:LogLevel` filter or sink route keyed on
+  `Polhem.Api.Core`.
+- `Polhem.Api.Client` (and so `Polhem.UI.ApiBridge`) no longer brings `Microsoft.Extensions.Logging.Abstractions`,
+  `Polhem.JsonRpc.Server` or `Polhem.JsonRpc.Payload.Server` transitively; an application that used them through it
+  references them itself.
 
 ## [1.6.0] - 2026-10-11
 

@@ -65,6 +65,7 @@ jobs:
           'src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj'
           'src/Polhem.Business/Polhem.Business.csproj'
           'src/Polhem.Api.Core/Polhem.Api.Core.csproj'
+          'src/Polhem.Api.Server/Polhem.Api.Server.csproj'
           'src/Polhem.Api.Client/Polhem.Api.Client.csproj'
           'src/Polhem.UI.Core/Polhem.UI.Core.csproj'
           'src/Polhem.UI.ApiBridge/Polhem.UI.ApiBridge.csproj'

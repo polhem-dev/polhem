@@ -146,7 +146,7 @@ other sessions.
 
 | Forbidden | Reason | Correct Approach |
 |-----------|--------|------------------|
-| API layer directly references the Repository layer (`Polhem.Api.Core`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
+| API layer directly references the Repository layer (`Polhem.Api.Core`, `Polhem.Api.Server`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
 | Business Object directly creates a `DbConnection` | Bypasses connection management and logging | Put the query in a repository (next row); the repository uses `DbAccess` |
 | BO references `Polhem.Db` (`Polhem.Business.csproj` has no `ProjectReference` to `Polhem.Db`) | BO is a thin shell over business logic; data access belongs to Repository | FormSchema-driven CRUD → `IDataFormRepository`; custom queries → ad-hoc bo repo with `IDbAccessFactory` |
 | BO hard-codes a `databaseId` string or reads `SessionInfo.CompanyId` / `CompanyInfo` directly | Couples BO to the routing implementation; breaks when deployments change | Use `BusinessObject.ResolveDatabaseId(DbScope)` (custom bo repo) or `CreateDataFormRepository(progId)` (FormSchema CRUD); the helpers delegate to `IRepositoryDatabaseRouter` which is the single source of truth |

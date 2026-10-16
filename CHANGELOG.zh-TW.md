@@ -35,6 +35,15 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - 移除 `IUIViewService` 與 `ClientInfo.UIViewService`。`ClientInfo.InitializeAsync(IUIViewService,
   SupportedConnectTypes)` 改為 `ClientInfo.InitializeAsync(SupportedConnectTypes)`：回傳 `false` 時由 head 自行顯示
   連線設定，再呼叫 `ClientInfo.InitializeAsync(endpoint)`。
+- API 的伺服器端從 `Polhem.Api.Core` 移到新套件 `Polhem.Api.Server`
+  （[ADR-055](maintainers/adr/adr-055-api-core-split-from-server.md)）：`Polhem.Api.Core.Dispatch`、
+  `Polhem.Api.Core.Authorization`、`Polhem.Api.Core.Validator` 改為 `Polhem.Api.Server.Dispatch`、
+  `Polhem.Api.Server.Authorization`、`Polhem.Api.Server.Validator`。自訂的 `IApiAuthorizationValidator` 要改 `using`；
+  不經 `AddPolhemFramework` 自行組裝 dispatcher 的 host 要參考 `Polhem.Api.Server`。`Polhem.Api.Server` 對
+  `Polhem.Api.Core` 的相依是完全相同的版本。wire 不變。
+- `PolhemApiClient.CreateLocal` 透過 `AddPolhemFramework` 註冊的 `IInProcessTransportFactory` 呼叫同程序的 dispatcher。
+  不經它建立的 service provider，要自行把 `InProcessTransportFactory`（`Polhem.Api.Server.Dispatch`）註冊為
+  `IInProcessTransportFactory`。
 
 ### 新增
 
@@ -46,6 +55,16 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `Polhem.UI.ApiBridge`：`AddPolhemUIApiBridge`、`FormApiConnectorFactory`、`ApiFormDefinitionSource`、
   `ClientUserContext`。
 - `Polhem.Web.Blazor.Server` 改為參考 `Polhem.UI.Core`。
+- `Polhem.Api.Server`：伺服器端執行的 dispatcher 設定、授權與存取控制。`Polhem.Api.Client` 不再帶有
+  `Polhem.JsonRpc.Server` 與 `Polhem.JsonRpc.Payload.Server`。
+
+### 變更
+
+- dispatcher 的 log 類別跟著 namespace 改變：被遮蔽的失敗記錄在 `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`，
+  API 金鑰查詢的警告記錄在 `Polhem.Api.Server.Dispatch.PolhemObjectFactory`。以 `Polhem.Api.Core` 為鍵的
+  `Logging:LogLevel` 篩選或 sink 路由要跟著改。
+- `Polhem.Api.Client`（以及 `Polhem.UI.ApiBridge`）不再間接帶入 `Microsoft.Extensions.Logging.Abstractions`、
+  `Polhem.JsonRpc.Server` 與 `Polhem.JsonRpc.Payload.Server`；經由它使用這些套件的應用程式要自行參考。
 
 ## [1.6.0] - 2026-10-11
 

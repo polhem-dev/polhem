@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
+    <ProjectReference Include="..\Polhem.Api.Server\Polhem.Api.Server.csproj" />
     <ProjectReference Include="..\Polhem.Business\Polhem.Business.csproj" />
     <!-- Declared explicitly rather than taken transitively via Polhem.Repository: the composition
          root binds Polhem.Db types directly (IDbAccessFactory, IDbConnectionManager, the cache-notify

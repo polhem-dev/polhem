@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Api.Core.Dispatch;
+using Polhem.Api.Core.Transformers;
 using Polhem.Api.Core.Messages.System;
 
 namespace Polhem.Api.Core.UnitTests.Payload

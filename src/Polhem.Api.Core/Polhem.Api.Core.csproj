@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>The JSON-RPC 2.0 layer of the Polhem framework: request and response messages, the payload codecs, compression and encryption, and the server-side dispatcher.</Description>
+    <Description>The wire layer of the Polhem framework shared by its clients and its server: request and response messages, the payload codecs, compression and encryption, and the error contract.</Description>
     <PackageTags>polhem;api;jsonrpc;messagepack;serialization;encryption</PackageTags>
   </PropertyGroup>
 
@@ -11,8 +11,6 @@
     <!-- The only MessagePack dependency in the repository (adr-036): the hand-written wire
          formatters live here, and a request that declares no codec is decoded as MessagePack. -->
     <PackageReference Include="MessagePack" Version="3.1.11" />
-    <!-- The executor logs the real message of a failure whose caller only sees a generic one. -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <!--
@@ -27,15 +25,14 @@
                       PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The JSON-RPC dispatcher and the payload envelope. PolhemJsonRpcSource switches to a local checkout; see
-       PolhemJsonRpc.props. -->
+  <!-- The payload envelope, shared by both ends. The server-side halves (Polhem.JsonRpc.Server,
+       Polhem.JsonRpc.Payload.Server) belong to Polhem.Api.Server (ADR-055). PolhemJsonRpcSource switches to a local
+       checkout; see PolhemJsonRpc.props. -->
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
-    <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
-    <PackageReference Include="Polhem.JsonRpc.Payload.Server" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload" Version="$(PolhemJsonRpcVersion)" />
   </ItemGroup>
   <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
-    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
-    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload.Server/Polhem.JsonRpc.Payload.Server.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload/Polhem.JsonRpc.Payload.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,11 +42,14 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.Api.Core.UnitTests" />
-    <!-- The error contract has two halves: PolhemExceptionMapper.MapCode maps an exception to a
-         code, and ApiConnector maps that code back to an exception. Only a test
-         that sees both can assert they agree, and the client test project is the one that already
-         references both assemblies. -->
+    <InternalsVisibleTo Include="Polhem.Api.Server.UnitTests" />
+    <!-- The client tests check that ApiConnector rebuilds every row of the error contract table declared here, and
+         their fake transport binds requests the way the server does. -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+    <!-- IMPORTANT: the server half reads the request types, the input converter and the error contract through
+         internals of this assembly. That only holds when both packages come from the same release, which is why
+         Polhem.Api.Server depends on this package at an exact version (ADR-055). -->
+    <InternalsVisibleTo Include="Polhem.Api.Server" />
   </ItemGroup>
 
 </Project>
