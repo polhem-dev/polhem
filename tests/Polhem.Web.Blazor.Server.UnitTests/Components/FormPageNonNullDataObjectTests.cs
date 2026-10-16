@@ -59,7 +59,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnRowSelectedAsync", new object[] { Guid.NewGuid() });
-            Assert.StartsWith("LoadAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("LoadAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnNewAsync", null);
-            Assert.StartsWith("NewAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("NewAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -77,7 +77,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnSaveAsync", null);
-            Assert.StartsWith("SaveAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("SaveAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnDeleteAsync", null);
-            Assert.StartsWith("DeleteAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("DeleteAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]

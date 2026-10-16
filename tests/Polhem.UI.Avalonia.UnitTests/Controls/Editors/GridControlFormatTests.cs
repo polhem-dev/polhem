@@ -1,4 +1,3 @@
-using Polhem.Api.Client;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
@@ -7,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.Tests.Shared;
+using Polhem.UI.Core;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

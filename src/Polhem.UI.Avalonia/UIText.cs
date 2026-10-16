@@ -13,10 +13,9 @@ namespace Polhem.UI.Avalonia
     /// The keys and their English base text are <see cref="PolhemUIText"/>; the default
     /// <see cref="Localizer"/> is a <see cref="LanguageResourceStringLocalizer{T}"/> over
     /// <see cref="FrameworkLanguageService"/>, which serves the translations shipped with the
-    /// framework in the UI culture — the signed-in user's culture once
-    /// <c>ClientInfo.ApplyLoginResult</c> has run — through the language fall-back chain, ending at
-    /// the deployment's default language (the <see cref="Polhem.Api.Client.PolhemApiClient.DefaultLanguage"/> of
-    /// <see cref="ClientInfo.ApiClient"/>).
+    /// framework in the UI culture through the language fall-back chain, ending at the deployment's
+    /// default language (the <see cref="IUserContext.DefaultLanguage"/> registered in
+    /// <see cref="UIServices.Provider"/>; English when none is).
     /// </para>
     /// <para>
     /// A host replaces <see cref="Localizer"/> to reword the text or add a language, typically with
@@ -32,7 +31,7 @@ namespace Polhem.UI.Avalonia
         /// </summary>
         public static IStringLocalizer Localizer { get; set; } =
             new LanguageResourceStringLocalizer<PolhemUIText>(
-                new FrameworkLanguageService(null, static () => ClientInfo.ApiClient.DefaultLanguage));
+                new FrameworkLanguageService(null, static () => UIServices.Get<IUserContext>()?.DefaultLanguage ?? string.Empty));
 
         /// <summary>
         /// Returns the text of <paramref name="key"/>, one of the <see cref="PolhemUIText"/> keys.

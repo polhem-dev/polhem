@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: de1f180e519ea39fb2c4c589c7c0ef59bb5e1c43 -->
+<!-- source: en/getting-started/platform-support.md blob: 5309f343c917198f397f739fe4d5cae0ab51c82f -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -33,8 +33,10 @@
 - **Remote** 表示 head 透過 HTTP 呼叫後端主機的 JSON-RPC 端點。**Local** 表示 head 也自行建立後端的服務
   （`AddPolhemFramework`），把產生的 provider 指定給 `ClientInfo.LocalServiceProvider`，並在行程內呼叫後端。
   Avalonia head 接受哪一種由 `ClientInfo.SupportedConnectTypes` 決定；Northwind 的每個 head 都設為 `Remote`。
-- 四種 Avalonia head 共用同一套 UI 函式庫與同一套用戶端執行環境（`Polhem.UI.Core` 的 `ClientInfo`），每個行程只保存一位
-  已登入的使用者。[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 以同一個共用 UI 專案建出這四種
+- 四種 Avalonia head 共用同一套 UI 函式庫與同一套用戶端執行環境（`Polhem.UI.ApiBridge` 的 `ClientInfo`），每個行程只保存
+  一位已登入的使用者。有後端的 head 在 `Polhem.UI.Avalonia` 之外引用 `Polhem.UI.ApiBridge`，並在啟動時註冊一次
+  （`UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();`）；控制項本身不引用
+  API 用戶端。[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 以同一個共用 UI 專案建出這四種
   head，是下方檢查清單的參考設定。
 - **Blazor Server** 的元件在 ASP.NET Core 伺服器行程中執行，因此下文的裁剪與 AOT 問題與它無關。它的 API client（也就是登入的
   session）是每個 circuit 一份，而不是每個行程一份。它預設的 Local 模式會把每位瀏覽器使用者的呼叫都當成受信任的行程內呼叫（略過存取權杖與
@@ -156,7 +158,7 @@ DynamicExpresso 求值的程式碼也有相同限制。
 - **不支援的設定**：POLHEM9004，位於 `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`。
 - **在沒有動態程式碼的情況下執行**：本 repository 的 CI 會以 `DynamicCodeSupport=false`（iOS SDK 設定的開關）把用戶端
   head 會帶到的每個套件的測試專案（`Polhem.Core`、`Polhem.Definition`、`Polhem.Expressions`、`Polhem.Api.Core`、
-  `Polhem.Api.Client`、`Polhem.UI.Core`、`Polhem.UI.Avalonia`）再跑一次。
+  `Polhem.Api.Client`、`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`）再跑一次。
 - **運算式描述檔**：`tests/Polhem.Expressions.UnitTests` 中的 `TrimmerDescriptorGateTests`。
 - **head 本身**：Northwind 的瀏覽器、iOS 與 Android head 是參考設定，但本 repository 的 CI 不會建置它們。修改上述任何設定後，
   要靠建置並執行該 head 來檢查。

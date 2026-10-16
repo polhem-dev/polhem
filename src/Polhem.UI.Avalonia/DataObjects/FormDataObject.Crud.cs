@@ -1,5 +1,5 @@
-using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
+using Polhem.UI.Core;
+using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 
 namespace Polhem.UI.Avalonia.DataObjects
@@ -17,7 +17,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
         /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
+        /// Thrown when no <see cref="IFormApiConnector"/> was supplied to the constructor,
         /// or when the server responds with a null <see cref="DataSet"/> (no row matched).
         /// </exception>
         public async Task LoadAsync(Guid rowId, CancellationToken cancellationToken = default)
@@ -52,7 +52,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor.
+        /// Thrown when no <see cref="IFormApiConnector"/> was supplied to the constructor.
         /// </exception>
         public async Task SaveAsync(CancellationToken cancellationToken = default)
         {
@@ -78,7 +78,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
+        /// Thrown when no <see cref="IFormApiConnector"/> was supplied to the constructor,
         /// when there is no master row to delete, or when the master table does not carry
         /// a <c>sys_rowid</c> column.
         /// </exception>
@@ -107,7 +107,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
+        /// Thrown when no <see cref="IFormApiConnector"/> was supplied to the constructor,
         /// or when the server responds with a null <see cref="DataSet"/>.
         /// </exception>
         public async Task NewAsync(CancellationToken cancellationToken = default)

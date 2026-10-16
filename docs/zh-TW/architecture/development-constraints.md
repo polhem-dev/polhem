@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: c84b959670e25172e6707b774d73bc21d3a90223 -->
+<!-- source: en/architecture/development-constraints.md blob: 64fa95af2fa66576223ef3a076bcd3adfb273048 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -16,7 +16,7 @@
 4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — 註冊框架服務（擴充方法來自 `Polhem.Hosting`），並以 `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` 設定 payload 的壓縮器與加密器
 5. 建立 service provider，接著：
    - **ASP.NET Core 宿主**在建置前呼叫 `services.AddJsonRpcServer()` 與 `services.AddPolhemApiKeyGateCheck()`，並在建好的應用程式上呼叫 `app.MapJsonRpc("/api")`。閘門檢查在宿主啟動時執行（見 [API 金鑰管理](../security/api-key-management.md)）。
-   - 在行程內執行後端的**非 web 宿主**，把產出的 `IServiceProvider` 交給用戶端：`Polhem.Api.Client` 的 `PolhemApiClient.CreateLocal` 以參數接收它，原生 UI head 則指派給 `ClientInfo.LocalServiceProvider`（`Polhem.UI.Core`）。
+   - 在行程內執行後端的**非 web 宿主**，把產出的 `IServiceProvider` 交給用戶端：`Polhem.Api.Client` 的 `PolhemApiClient.CreateLocal` 以參數接收它，原生 UI head 則指派給 `ClientInfo.LocalServiceProvider`（`Polhem.UI.ApiBridge`）。
 
 完整參考見[端到端開發指引 § 框架初始化順序](../guides/development-cookbook.md#框架初始化順序)。
 

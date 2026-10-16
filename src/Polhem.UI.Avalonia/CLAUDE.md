@@ -34,11 +34,14 @@ controls + a composed GridControl + a FormView/ListView View layer + the lookup 
 - The UI families have converged on **two tracks, Avalonia + Blazor.Server** (`Polhem.UI.Maui` /
   `Polhem.Web.Blazor.Wasm` have been removed), so **"port to another UI family" has only one target left,
   Blazor.Server**.
-- **Do not make Blazor depend on `Polhem.UI.Core` to remove duplication between Avalonia and Blazor.Server (such as
-  `FormDataObject`)**: `docs/en/architecture/dependency-map.md` explicitly defines the `Polhem.UI.*` family by "whether it
-  consumes the `Polhem.UI.Core` abstractions", so making Blazor depend on it would contradict the basis of that
-  definition. Head-agnostic logic goes to `Polhem.Api.Client`, a common ancestor of both heads with no family
-  meaning: the `FormDataObject` value rules now live there once, in `FormValueBinding` and `FormDataGuard`.
+- **Head-agnostic logic goes to `Polhem.UI.Core`**, which every front end references, Blazor.Server included: the
+  `FormDataObject` value rules live there once, in `FormValueBinding` and `FormDataGuard`. Blazor must not use
+  `UIServices` (process-wide) or reference `Polhem.UI.ApiBridge` (single-user); `UIServicesUsageGateTests` enforces it.
+- **This project never references the API client.** Views reach the backend through `IFormApiConnector`
+  (`Polhem.Api.Contracts`) and resolve their services as: their own property, then the `Resolve*` hook, then
+  `UIServices.Provider`; with nothing registered they run without a backend. `POLHEM9001` blocks a reference to
+  `Polhem.Api.Client`, `Polhem.Api.Core` or `Polhem.UI.ApiBridge`. See
+  `../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md`.
 
 ## Acceptance baseline for control behavior
 

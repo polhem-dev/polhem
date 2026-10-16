@@ -114,7 +114,7 @@ revoke.
 
 ## 6. Where clients keep their key
 
-Clients read and persist their key through `IApiKeyStorage` (`Polhem.UI.Core`), assigned as
+Clients read and persist their key through `IApiKeyStorage` (`Polhem.UI.ApiBridge`), assigned as
 `ClientInfo.ApiKeyStorage`. `ClientInfo.ApplyApiKey(defaultApiKey)` seeds empty storage with the
 application's built-in value and otherwise uses what is stored, so changing a key never requires
 recompiling a client.

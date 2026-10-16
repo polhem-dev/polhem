@@ -35,8 +35,11 @@ the head, not to the Polhem packages.
   builds the backend's services (`AddPolhemFramework`), assigns the resulting provider to
   `ClientInfo.LocalServiceProvider`, and calls the backend in process. Which of the two an Avalonia head accepts is
   `ClientInfo.SupportedConnectTypes`; every Northwind head sets it to `Remote`.
-- The four Avalonia heads share one UI library and one client runtime (`Polhem.UI.Core`'s `ClientInfo`), which holds
-  one signed-in user per process. [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) builds all four
+- The four Avalonia heads share one UI library and one client runtime (`Polhem.UI.ApiBridge`'s `ClientInfo`), which
+  holds one signed-in user per process. A head with a backend references `Polhem.UI.ApiBridge` beside
+  `Polhem.UI.Avalonia` and registers it once at startup
+  (`UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();`); the controls
+  themselves do not reference the API client. [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) builds all four
   from a single shared UI project and is the reference configuration for the checklist below.
 - **Blazor Server** runs its components in the ASP.NET Core server process, so the trimming and AOT questions below
   do not apply to it. It keeps one API client, and so one signed-in session, per circuit rather than per process. Its default Local mode treats
@@ -175,7 +178,7 @@ Two behaviours differ by platform without any setup:
 - **The unsupported configurations**: POLHEM9004, in `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`.
 - **Running without dynamic code**: this repository's CI runs the test projects of every package a client head ships
   (`Polhem.Core`, `Polhem.Definition`, `Polhem.Expressions`, `Polhem.Api.Core`, `Polhem.Api.Client`, `Polhem.UI.Core`,
-  `Polhem.UI.Avalonia`) a second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets.
+  `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`) a second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets.
 - **The expression descriptor**: `TrimmerDescriptorGateTests` in `tests/Polhem.Expressions.UnitTests`.
 - **The heads themselves**: the Northwind browser, iOS and Android heads are the reference configuration, but this
   repository's CI does not build them. A change to one of the settings above is checked by building and running the

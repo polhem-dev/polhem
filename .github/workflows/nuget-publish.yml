@@ -67,6 +67,7 @@ jobs:
           'src/Polhem.Api.Core/Polhem.Api.Core.csproj'
           'src/Polhem.Api.Client/Polhem.Api.Client.csproj'
           'src/Polhem.UI.Core/Polhem.UI.Core.csproj'
+          'src/Polhem.UI.ApiBridge/Polhem.UI.ApiBridge.csproj'
           'src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj'
           'src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj'
           'src/Polhem.Repository/Polhem.Repository.csproj'

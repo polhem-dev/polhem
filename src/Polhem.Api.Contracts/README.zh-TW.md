@@ -1,12 +1,13 @@
 # Polhem.Api.Contracts
 
-> API 層與商業邏輯層共用的契約介面庫，定義 Request/Response 介面。
+> 前端、API 層與商業邏輯層共用的契約介面庫：Request/Response 介面與表單連接器合約。
 
 [English](README.md)
 
 ## 架構定位
 
 - **層級**：共用契約層。名稱雖有 API，但不屬於 API 層：`Polhem.Business` 與 `Polhem.Api.Core` 都相依於它，所以它位於兩者之下
+- **三個基礎組件之一**（`Polhem.Core`、`Polhem.Definition`、`Polhem.Api.Contracts`），前端與後端都參考它們。這裡不得放只屬於某一側的東西：不放資料庫、MessagePack、JSON-RPC 或 ASP.NET，也不放 UI 框架、本機檔案儲存或使用者狀態。所有前端共用的 `Polhem.UI.Core` 只透過本套件接觸後端。見 [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 
 ## 目標框架
@@ -53,6 +54,8 @@
 ### 表單與稽核紀錄
 
 - `Form/` -- `IGetListRequest`、`IGetDataRequest`、`IGetNewDataRequest`、`ISaveRequest`、`IDeleteRequest`、`IGetLookupRequest` 及其回應
+- `Form/IFormApiConnector` -- 用戶端對單一程式呼叫的表單操作（`GetListAsync`、`GetLookupAsync`、`GetNewDataAsync`、`GetDataAsync`、`SaveAsync`、`DeleteAsync`），回傳上述的回應介面。前端相依於這個合約而非傳輸：`Polhem.Api.Client` 的 `FormApiConnector` 以 JSON-RPC 實作它，沒有 Polhem 後端的應用程式則以自己的資料實作它。
+- `Form/IFormApiConnectorFactory` -- `Create(progId)` 回傳某個程式的 `IFormApiConnector`；前端的畫面解析它來建立連接器。
 - `AuditLog/` -- 異動、存取、登入與異常紀錄查詢，以及 `IAuditLogListResponse`、`IAuditLogAggregateResponse`、`RecordFieldChange`
 
 ## 主要公開 API
@@ -66,11 +69,12 @@
 | `ISaveDefineRequest` / `ISaveDefineResponse` | 定義儲存契約 |
 | `IExecFuncRequest` / `IExecFuncResponse` | 自訂函式執行契約 |
 | `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` | 組態擷取契約 |
+| `IFormApiConnector` / `IFormApiConnectorFactory` | 前端所相依的表單連接器契約 |
 
 ## 設計慣例
 
 - **軸分命名空間** -- 介面依 `System` / `Form` / `AuditLog` 子命名空間分組，對映 `Polhem.Business.*` 與 `Polhem.Api.Core.Messages.*` 兩層，使「合約介面、訊息實作、商業物件」三者共用同一軸。跨 BO 的泛用 `IExecFunc*` 派發契約保留在根命名空間 `Polhem.Api.Contracts`（鏡像 `Polhem.Api.Core.Messages` 根層的 `ExecFunc*` 實作）。
-- **純介面定義** -- 每個 API 操作以 `IXxxRequest` / `IXxxResponse` 配對定義，本專案不含任何實作邏輯。
+- **純介面定義** -- 每個 API 操作以 `IXxxRequest` / `IXxxResponse` 配對定義，表單連接器則以 `IFormApiConnector` 定義；本專案不含任何實作邏輯。
 - **不帶序列化標註** -- 資料類別如 `RecordFieldChange` 是帶 public 可讀寫屬性的普通型別。它們與 wire 的綁定以手寫 formatter 的形式住在 `Polhem.Api.Core`，因此本套件不相依任何傳輸格式（[ADR-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md)）。
 - **RSA 安全機制** -- 登入契約包含 `ClientPublicKey`（用戶端產生）與 `ApiEncryptionKey`（伺服器產生），用於安全金鑰交換。
 - **啟用可為 Null 參考型別**（`<Nullable>enable</Nullable>`）。

@@ -19,6 +19,36 @@ line each; the reasons and the background are in its detailed notes under [`docs
   SHA-256 hash, compute it with `SHA256.HashData(stream)` and compare with `CryptographicOperations.FixedTimeEquals`.
 - `IDisplayName` (`Polhem.Core`) is removed. `TreeNodeAttribute.GetDisplayText` falls back to `ToString()` when the
   formatted text is empty; a type that implemented `IDisplayName` overrides `ToString()` instead.
+- Front ends no longer reference the API client ([ADR-054](maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)).
+  `ClientInfo`, `IEndpointStorage`, `IApiKeyStorage` and `FileEndpointStorage` move from `Polhem.UI.Core` to the new
+  `Polhem.UI.ApiBridge` package (namespace `Polhem.UI.ApiBridge`): a head that talks to a Polhem backend references it
+  and, at startup, sets `UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();`
+  so `FormView`, `ListView` and the lookup dialog resolve their connector, definitions and user context.
+- `FormValueBinding` and `FormDataGuard` move from `Polhem.Api.Client` to `Polhem.UI.Core`;
+  `ElementCapabilityResolver`, `IElementCapabilityResolver` and `FieldCapability` move from
+  `Polhem.Api.Client.Permissions` to `Polhem.UI.Core.Permissions`. `FormDataGuard.RequireConnector` is generic.
+- `FormView.FormConnector`, `ListView.FormConnector`, `FormDataObject`, `LookupPanel.Bind` and `LookupDialog.ShowAsync`
+  take `IFormApiConnector` (`Polhem.Api.Contracts.Form`), which `FormApiConnector` implements; existing code that
+  passes a `FormApiConnector` keeps compiling. `ResolveFormConnector` returns `IFormApiConnector?`.
+- `FormView.DefinitionLoader` and `ListView.DefinitionLoader` are replaced by `DefinitionSource`
+  (`IFormDefinitionSource`); `ResolveLang` is removed, the definition source decides the language.
+  `FormView` and `ListView` lose the `AccessToken` property and `ResolveAccessToken`, which nothing read since the
+  client's session holds the token; `ResolveUserContext` replaces the reads of `ClientInfo`.
+- `IUIViewService` and `ClientInfo.UIViewService` are removed. `ClientInfo.InitializeAsync(IUIViewService,
+  SupportedConnectTypes)` becomes `ClientInfo.InitializeAsync(SupportedConnectTypes)`: when it returns `false`, show
+  the connection setup yourself and then call `ClientInfo.InitializeAsync(endpoint)`.
+
+### Added
+
+- `IFormApiConnector` and `IFormApiConnectorFactory` in `Polhem.Api.Contracts`: the form operations a front end calls,
+  implemented by `FormApiConnector` or by an application over its own data.
+- In `Polhem.UI.Core`: `UIServices`, `IUserContext`, `IFormDefinitionSource`, `StorageDefinitionSource` (definitions
+  read from an `IDefineStorage`, for an application without a backend) and the response types `FormListResult`,
+  `FormDataResult` and `FormDeleteResult`. `FormView` and `ListView` run without a Polhem backend on the schema, layout
+  and connector the host sets.
+- `Polhem.UI.ApiBridge`: `AddPolhemUIApiBridge`, `FormApiConnectorFactory`, `ApiFormDefinitionSource`,
+  `ClientUserContext`.
+- `Polhem.Web.Blazor.Server` references `Polhem.UI.Core`.
 
 ## [1.6.0] - 2026-10-11
 

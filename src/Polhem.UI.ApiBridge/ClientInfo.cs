@@ -1,0 +1,628 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using Polhem.Api.Client;
+using Polhem.Api.Client.Connectors;
+using Polhem.Api.Client.Definitions;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Core;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Settings;
+using System.Net.Sockets;
+
+namespace Polhem.UI.ApiBridge
+{
+    /// <summary>
+    /// Provides client-side connection state and access to API connectors.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// WARNING: this holds <b>one signed-in user's</b> state in process-wide statics — the access
+    /// token, the capability snapshot, the entered company, and a definition cache carrying that
+    /// user's tenant customization. That is correct for a desktop head, where one process serves one
+    /// user, and <b>wrong for a host that serves several users from one process</b>: every session
+    /// would write the same fields, so the last sign-in wins and earlier users would read someone
+    /// else's identity.
+    /// </para>
+    /// <para>
+    /// This is a stated limitation, not an oversight — but nothing in the type system marks the
+    /// boundary, so a server-side UI head built on this package inherits the defect silently.
+    /// <c>Polhem.Api.Client</c> already went through this: the connection and the signed-in identity
+    /// live in a <see cref="PolhemApiClient"/>, one per user. This class holds exactly one of them,
+    /// <see cref="ApiClient"/>; a multi-user head creates its own clients instead of using this type.
+    /// </para>
+    /// <para>
+    /// Deployment-level values are a different matter and belong exactly where they are:
+    /// <see cref="EndpointStorage"/> and <see cref="ApiKeyStorage"/> identify the application, not
+    /// a user, so making them per-session would be wrong rather than safer.
+    /// </para>
+    /// </remarks>
+    public static class ClientInfo
+    {
+        /// <summary>
+        /// Guards the lazily created singletons and the resets that clear them.
+        /// </summary>
+        /// <remarks>
+        /// The getters are reached from the UI thread and from continuations of
+        /// <c>ConfigureAwait(false)</c> awaits, so two threads can enter the same <c>??=</c> at once.
+        /// The wasted instance is not the problem — the orphan is: <see cref="ResetDefineCache"/>
+        /// would clear whichever one it happens to hold while callers keep using the other, and a
+        /// tenant switch would leave the old customization in play.
+        /// <para>
+        /// A <see cref="Lazy{T}"/> would not fit: these are deliberately resettable (a new access
+        /// token drops the connector and the definition cache), and replacing the <c>Lazy</c>
+        /// instance only moves the race.
+        /// </para>
+        /// </remarks>
+        private static readonly Lock s_stateGate = new();
+
+        private static readonly FileEndpointStorage s_defaultStorage = new(FileEndpointStorage.DefaultAppName);
+
+        private static PolhemApiClient? s_client;
+        private static string s_apiKey = string.Empty;
+        private static ClientDefineAccess? s_defineAccess;
+        private static FormDefinitionLoader? s_definitionLoader;
+        private static IReadOnlyDictionary<string, PermissionActions>? s_capabilities;
+        private static CompanyInfo? s_company;
+
+        /// <summary>
+        /// Command-line arguments parsed at <see cref="InitializeAsync(SupportedConnectTypes, CancellationToken)"/>.
+        /// </summary>
+        public static IReadOnlyDictionary<string, string>? Arguments { get; private set; }
+
+        /// <summary>
+        /// Gets or sets where the service endpoint is persisted.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to a <see cref="FileEndpointStorage"/> that keeps the endpoint under the per-user local
+        /// application data directory, in a folder named after the entry assembly. It is the same instance as the
+        /// default <see cref="ApiKeyStorage"/>. A browser WASM host has no persistent file system and replaces
+        /// both; see <see cref="FileEndpointStorage"/>. Assign it before
+        /// <see cref="InitializeAsync(SupportedConnectTypes, CancellationToken)"/> or <see cref="SetEndpointAsync(string, CancellationToken)"/>.
+        /// </remarks>
+        public static IEndpointStorage EndpointStorage { get; set; } = s_defaultStorage;
+
+        /// <summary>
+        /// Gets or sets where the API key is persisted.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to the same <see cref="FileEndpointStorage"/> instance as <see cref="EndpointStorage"/>, which
+        /// keeps the key beside the endpoint in a file only its owner can read. A host that replaces
+        /// <see cref="EndpointStorage"/> because its platform cannot use the file system (browser WASM) replaces
+        /// this too.
+        /// </remarks>
+        public static IApiKeyStorage ApiKeyStorage { get; set; } = s_defaultStorage;
+
+        /// <summary>
+        /// Gets the client this head calls the backend with.
+        /// </summary>
+        /// <remarks>
+        /// Replaced whenever the endpoint changes (<see cref="SetEndpointAsync"/>, <see cref="InitializeAsync(string, CancellationToken)"/>),
+        /// which also signs out: a new connection always needs a fresh sign-in. Before any endpoint is set it is an
+        /// in-process client over <see cref="LocalServiceProvider"/>.
+        /// </remarks>
+        public static PolhemApiClient ApiClient
+        {
+            get
+            {
+                lock (s_stateGate) { return s_client ??= CreateLocalClient(); }
+            }
+        }
+
+        /// <summary>
+        /// Gets the access token of the signed-in user; <see cref="Guid.Empty"/> before sign-in.
+        /// </summary>
+        public static Guid AccessToken => ApiClient.Session.Credentials.AccessToken;
+
+        /// <summary>
+        /// Gets how <see cref="ApiClient"/> reaches the backend.
+        /// </summary>
+        public static ConnectType ConnectType => ApiClient.IsLocal ? ConnectType.Local : ConnectType.Remote;
+
+        /// <summary>
+        /// Gets or sets the connection types this application allows.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="InitializeAsync(SupportedConnectTypes, CancellationToken)"/> sets it from its
+        /// argument. An endpoint of another type is refused when it is set.
+        /// </remarks>
+        public static SupportedConnectTypes SupportedConnectTypes { get; set; } = SupportedConnectTypes.Both;
+
+        /// <summary>
+        /// System-level API connector of <see cref="ApiClient"/>.
+        /// </summary>
+        public static SystemApiConnector SystemApiConnector => ApiClient.System;
+
+        /// <summary>
+        /// Gets or sets the in-process backend's service provider, which <see cref="ApiClient"/> dispatches to when
+        /// <see cref="ConnectType"/> is <see cref="ConnectType.Local"/>.
+        /// </summary>
+        /// <remarks>
+        /// A head that runs the backend in its own process assigns the provider built by
+        /// <c>services.AddPolhemFramework(...)</c> before connecting. A remote-only head leaves it
+        /// <c>null</c>. It lives here, with the rest of this head's process-wide state, rather than
+        /// in <c>Polhem.Api.Client</c>, whose clients take the provider as an argument.
+        /// </remarks>
+        public static IServiceProvider? LocalServiceProvider { get; set; }
+
+        // The provider is read when a call is dispatched, not when the client is created: the client exists before
+        // anything is sent (its getter is also read by code that never dispatches), and a head may assign the
+        // provider after that. A missing provider is reported on the first call.
+        private static PolhemApiClient CreateLocalClient()
+        {
+            var client = PolhemApiClient.CreateLocal(DeferredLocalServiceProvider.Instance);
+            client.ApiKey = s_apiKey;
+            return client;
+        }
+
+        private sealed class DeferredLocalServiceProvider : IServiceProvider
+        {
+            public static readonly DeferredLocalServiceProvider Instance = new();
+
+            public object? GetService(Type serviceType)
+                => (LocalServiceProvider ?? throw new InvalidOperationException(
+                    "ClientInfo.LocalServiceProvider is not set. A local connection runs the backend in this process; " +
+                    "assign the service provider built by services.AddPolhemFramework(...) before connecting."))
+                    .GetService(serviceType);
+        }
+
+        /// <summary>
+        /// Creates a form-level API connector for the specified program.
+        /// </summary>
+        /// <param name="progId">Program identifier.</param>
+        public static FormApiConnector CreateFormApiConnector(string progId) => ApiClient.Form(progId);
+
+        /// <summary>
+        /// Creates an audit-log API connector (read-only queries over the <c>st_log_*</c> tables).
+        /// </summary>
+        public static AuditLogApiConnector CreateAuditLogApiConnector() => ApiClient.AuditLog;
+
+        /// <summary>
+        /// Definition-data accessor. Recreated whenever the endpoint changes or a user signs in.
+        /// </summary>
+        public static ClientDefineAccess DefineAccess
+        {
+            get
+            {
+                lock (s_stateGate) { return s_defineAccess ??= new ClientDefineAccess((s_client ??= CreateLocalClient()).System); }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether views that were not given a definition loader of their own assemble
+        /// their definitions through <see cref="DefinitionLoader"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// One switch for the whole client: the record form, the list and the lookup dialog all consult
+        /// it, and a view's own loader still wins. <c>true</c> — the default — gives every view
+        /// customized layouts, localized captions and company number formats. <c>false</c> renders
+        /// definitions exactly as stored, which saves the extra round trips the loader makes and needs
+        /// nothing but the stored files.
+        /// </para>
+        /// <para>
+        /// Views localize when they load. A language switch takes effect in views opened after it;
+        /// a view already on screen keeps the language it was opened in until it is reopened.
+        /// </para>
+        /// </remarks>
+        public static bool UseDefinitionLoader { get; set; } = true;
+
+        /// <summary>
+        /// Gets the client-wide definition loader, or <c>null</c> when
+        /// <see cref="UseDefinitionLoader"/> is off.
+        /// </summary>
+        /// <remarks>
+        /// Built over <see cref="DefineAccess"/> with the entered <see cref="Company"/> as its
+        /// company accessor and the <see cref="PolhemApiClient.DefaultLanguage"/> of <see cref="ApiClient"/> as its
+        /// default language, and discarded together with <see cref="DefineAccess"/> when the endpoint
+        /// changes or a user signs in, so it never serves a previous identity's definitions.
+        /// </remarks>
+        public static FormDefinitionLoader? DefinitionLoader
+        {
+            get
+            {
+                if (!UseDefinitionLoader) { return null; }
+                lock (s_stateGate)
+                {
+                    return s_definitionLoader ??= new FormDefinitionLoader(
+                        s_defineAccess ??= new ClientDefineAccess((s_client ??= CreateLocalClient()).System))
+                    {
+                        CompanyAccessor = static () => Company,
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// Discards the locally cached definition data.
+        /// </summary>
+        /// <remarks>
+        /// Called automatically by <see cref="ApplyEnterCompanyResult"/> and
+        /// <see cref="ClearCompanyContext"/>, which is where a tenant switch actually happens —
+        /// hosts do not need to remember it. Exposed for the rare case of discarding the cache
+        /// without a tenant change. No-op when the accessor has not been created yet.
+        /// <para>
+        /// The flush matters because <see cref="ClientDefineAccess"/> keys its cache by
+        /// progId / layoutId / namespace alone. The customization layer it holds belongs to whichever
+        /// tenant was current when it was fetched, so entries that outlive the switch would serve the
+        /// previous tenant's customization to the next one.
+        /// </para>
+        /// </remarks>
+        public static void ResetDefineCache()
+        {
+            ClientDefineAccess? defineAccess;
+            lock (s_stateGate) { defineAccess = s_defineAccess; }
+            defineAccess?.ClearCache();
+        }
+
+        /// <summary>
+        /// Whether <c>System.Settings.xml</c> and <c>Database.Settings.xml</c> should be auto-generated
+        /// when the local endpoint is missing the expected files.
+        /// </summary>
+        public static bool AllowGenerateSettings { get; set; }
+
+        /// <summary>
+        /// Authenticated user information set by <see cref="ApplyLoginResult"/>.
+        /// </summary>
+        public static UserInfo? UserInfo { get; private set; }
+
+        /// <summary>
+        /// The per-model capability snapshot for the entered company, or <c>null</c> when no company
+        /// context is active (before <see cref="ApplyEnterCompanyResult"/>, or after
+        /// <see cref="ClearCompanyContext"/> / a sign-in / an endpoint change).
+        /// </summary>
+        /// <remarks>
+        /// <c>null</c> means capability enforcement is inactive and the element capability resolver
+        /// leaves every element at full capability — so an app that never enters a company (or does
+        /// not use permissions) renders unchanged. When non-null, a model absent from the map means
+        /// no permission on that model. This is UX degradation only; the backend remains the
+        /// authoritative security boundary.
+        /// </remarks>
+        public static IReadOnlyDictionary<string, PermissionActions>? Capabilities => s_capabilities;
+
+        /// <summary>
+        /// Gets the current company entered through <c>EnterCompany</c>, or <c>null</c> when no company
+        /// context is active. Carries the company-level decimal-place overrides and default (home)
+        /// currency used to round computed numeric fields client-side. Read-only UX aid; the server rounds authoritatively on save.
+        /// </summary>
+        public static CompanyInfo? Company => s_company;
+
+        /// <summary>
+        /// Caches the capability snapshot and company info from an <c>EnterCompany</c> response, and
+        /// discards definitions cached for the previous tenant. The host calls this after
+        /// <see cref="SystemApiConnector.EnterCompanyAsync"/>.
+        /// </summary>
+        /// <remarks>
+        /// The cache flush is done here rather than left to the caller. Entering a company is exactly
+        /// the moment the tenant changes, and a host that forgets to flush gets the previous tenant's
+        /// customized layouts and captions with no error to point at it — a cross-tenant leak that
+        /// only shows up as wrong text on screen.
+        /// </remarks>
+        /// <param name="response">The EnterCompany response carrying the capability snapshot and company.</param>
+        public static void ApplyEnterCompanyResult(EnterCompanyResponse response)
+        {
+            ArgumentNullException.ThrowIfNull(response);
+            s_capabilities = response.Capabilities;
+            s_company = response.Company;
+            ResetDefineCache();
+        }
+
+        /// <summary>
+        /// Clears the cached capability snapshot, company info and definition cache. The host calls
+        /// this on <c>LeaveCompany</c> / logout so nothing from the previous tenant survives.
+        /// </summary>
+        /// <remarks>
+        /// Mirrors <see cref="ApplyEnterCompanyResult"/>: leaving a company is a tenant change too,
+        /// so the definition cache is flushed here rather than left to the caller.
+        /// </remarks>
+        public static void ClearCompanyContext()
+        {
+            s_capabilities = null;
+            s_company = null;
+            ResetDefineCache();
+        }
+
+        private static void SetConnectType(ConnectType connectType, string endpoint)
+        {
+            // NOTE: a new client means a new connection, which always needs a fresh sign-in: its session starts
+            // anonymous, with no time zone, so no zone outlives the session it belonged to (ADR-032 D13). The
+            // identity-scoped caches go in the same step, so no reader pairs the new client with the previous
+            // identity's definitions or capabilities.
+            var client = connectType == ConnectType.Local
+                ? CreateLocalClient()
+                : PolhemApiClient.CreateRemote(endpoint, s_apiKey);
+            lock (s_stateGate)
+            {
+                s_client = client;
+                DiscardIdentityState();
+            }
+        }
+
+        // Callers hold `s_stateGate`.
+        private static void DiscardIdentityState()
+        {
+            s_defineAccess = null;
+            s_definitionLoader = null;
+            // A new identity, or none: the cached capability snapshot no longer applies. Null disables degradation
+            // until the next EnterCompany populates it.
+            s_capabilities = null;
+        }
+
+        /// <summary>
+        /// Sets the service endpoint and persists it, awaiting the validation and connector
+        /// initialization instead of blocking on them.
+        /// </summary>
+        /// <param name="endpoint">URL for remote connections; local file path for local connections.</param>
+        /// <param name="cancellationToken">A token that cancels the validation and the connector initialization.</param>
+        /// <remarks>
+        /// Validates the endpoint and initializes the connector without blocking, so it is safe on
+        /// single-threaded runtimes (browser WASM), where blocking on async work throws
+        /// "Cannot wait on monitors on this runtime".
+        /// </remarks>
+        public static async Task SetEndpointAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            var connectType = await ApiConnectValidator.ValidateAsync(endpoint, SupportedConnectTypes, AllowGenerateSettings, cancellationToken)
+                .ConfigureAwait(false);
+            SetConnectType(connectType, endpoint);
+            await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            EndpointStorage.SaveEndpoint(endpoint);
+        }
+
+        /// <summary>
+        /// Returns the currently configured service endpoint.
+        /// </summary>
+        public static string GetEndpoint()
+        {
+            return EndpointStorage.LoadEndpoint();
+        }
+
+        /// <summary>
+        /// Returns the currently configured API key.
+        /// </summary>
+        public static string GetApiKey()
+        {
+            return ApiKeyStorage.LoadApiKey();
+        }
+
+        /// <summary>
+        /// Persists the API key and applies it to subsequent API calls.
+        /// </summary>
+        /// <param name="apiKey">The API key issued for this application.</param>
+        /// <remarks>
+        /// Synchronous, unlike <see cref="SetEndpointAsync"/>: changing the endpoint has to
+        /// revalidate the connection and rebuild the connector, whereas the key is simply a header
+        /// value the next call carries.
+        /// </remarks>
+        public static void SetApiKey(string apiKey)
+        {
+            ApiKeyStorage.SaveApiKey(apiKey);
+            UseApiKey(apiKey);
+        }
+
+        /// <summary>
+        /// Applies the stored API key to <see cref="ApiClient"/>, falling back to
+        /// <paramref name="defaultApiKey"/> — and persisting it — the first time an application runs
+        /// with nothing stored.
+        /// </summary>
+        /// <param name="defaultApiKey">
+        /// The key the application ships with, used only to seed empty storage. Pass an empty string
+        /// for deployments that expect the key to be configured out of band.
+        /// </param>
+        /// <remarks>
+        /// This is what lets an application drop its hard-coded key without losing out-of-the-box
+        /// behaviour: the shipped value becomes a first-run seed, and from then on the stored value
+        /// wins and can be changed without recompiling.
+        /// </remarks>
+        public static void ApplyApiKey(string defaultApiKey = "")
+        {
+            string stored = ApiKeyStorage.LoadApiKey();
+            if (StringUtilities.IsEmpty(stored) && StringUtilities.IsNotEmpty(defaultApiKey))
+            {
+                ApiKeyStorage.SaveApiKey(defaultApiKey);
+                stored = defaultApiKey;
+            }
+            UseApiKey(stored);
+        }
+
+        // The key outlives the client: an endpoint change creates a new client, which starts with this key.
+        private static void UseApiKey(string apiKey)
+        {
+            lock (s_stateGate)
+            {
+                s_apiKey = apiKey;
+                s_client?.ApiKey = apiKey;
+            }
+        }
+
+        private static async Task<bool> InitializeConnectAsync(SupportedConnectTypes supportedConnectTypes,
+            CancellationToken cancellationToken)
+        {
+            SupportedConnectTypes = supportedConnectTypes;
+            try
+            {
+                string endpoint = GetEndpoint();
+                var connectType = await ApiConnectValidator.ValidateAsync(endpoint, SupportedConnectTypes, AllowGenerateSettings, cancellationToken)
+                    .ConfigureAwait(false);
+                SetConnectType(connectType, endpoint);
+                await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+            // A cancellation the caller asked for is not an unreachable endpoint: it propagates rather
+            // than sending the host to its connection setup.
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException
+                or IOException or SocketException or UriFormatException
+                || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
+            {
+                // Returning false sends the host to its connection setup, so only "the
+                // endpoint is missing, malformed or unreachable" belongs here. The first two entries
+                // are the vocabulary this path actually raises — `ApiConnectValidator` reports an
+                // unreachable endpoint as `InvalidOperationException` and an empty one as
+                // `ArgumentException`; the rest cover the transport failures underneath it.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Initializes from the stored settings and the command line.
+        /// </summary>
+        /// <param name="connectTypes">Connection types supported by the application.</param>
+        /// <param name="cancellationToken">
+        /// A token that cancels the connection attempt. A cancelled call throws
+        /// <see cref="OperationCanceledException"/> rather than returning <c>false</c>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> when the stored endpoint was reached; <c>false</c> when it is missing, malformed or
+        /// unreachable, in which case the host shows its own connection setup and then calls
+        /// <see cref="InitializeAsync(string, CancellationToken)"/> with the endpoint the user entered.
+        /// </returns>
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple overloads with optional parameters",
+            Justification = "The only optional parameter is the trailing cancellation token, and the two overloads differ in their first parameter (the supported connection types or an endpoint string), so no call can rebind from one to the other, which is the hazard RS0026 guards against.")]
+        public static async Task<bool> InitializeAsync(SupportedConnectTypes connectTypes,
+            CancellationToken cancellationToken = default)
+        {
+            Arguments = ParseCommandLineArgs();
+            if (Arguments.TryGetValue("Endpoint", out string? endpointArg))
+            {
+                EndpointStorage.SetEndpoint(endpointArg);
+            }
+            // NOTE: in-memory only, like the endpoint argument — a command line switch overrides
+            // this run without rewriting stored settings. Suitable because the key identifies an
+            // application rather than authenticating a user; a real credential does not belong in
+            // an argument list, which is readable from the process table.
+            if (Arguments.TryGetValue("ApiKey", out string? apiKeyArg))
+            {
+                ApiKeyStorage.SetApiKey(apiKeyArg);
+            }
+            return await InitializeConnectAsync(connectTypes, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Initializes with an explicit endpoint, awaiting the validation and connector
+        /// initialization without blocking.
+        /// </summary>
+        /// <param name="endpoint">URL for remote connections; local file path for local connections.</param>
+        /// <param name="cancellationToken">A token that cancels the validation and the connector initialization.</param>
+        /// <remarks>
+        /// Safe on single-threaded runtimes (browser WASM), where blocking on async work throws
+        /// "Cannot wait on monitors".
+        /// </remarks>
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple overloads with optional parameters",
+            Justification = "The only optional parameter is the trailing cancellation token, and the two overloads differ in their first parameter (the supported connection types or an endpoint string), so no call can rebind from one to the other, which is the hazard RS0026 guards against.")]
+        public static Task InitializeAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            return SetEndpointAsync(endpoint, cancellationToken);
+        }
+
+        /// <summary>
+        /// Applies the login response, populating <see cref="UserInfo"/> and the session's time zone,
+        /// discarding the previous identity's cached state, and making the user's culture this process's culture.
+        /// </summary>
+        /// <param name="loginResponse">Result returned from the login API.</param>
+        /// <remarks>
+        /// <para>
+        /// The culture the server returns — <c>st_user.culture</c>, or the deployment's default
+        /// language — becomes <see cref="CultureInfo.CurrentUICulture"/> and
+        /// <see cref="CultureInfo.CurrentCulture"/>, for the current flow and as the process default
+        /// (<see cref="CultureInfo.DefaultThreadCurrentUICulture"/>). When the caller has a
+        /// <see cref="SynchronizationContext"/>, as a UI thread does, the culture is also posted to it, so the UI
+        /// thread keeps it after an async sign-in handler resumes. Everything that localizes reads
+        /// those: definition captions, the framework's own UI text, and the display and input of
+        /// numbers and dates. So a user whose account says <c>en-US</c> gets English on a Chinese
+        /// operating system.
+        /// </para>
+        /// <para>
+        /// An empty culture, or one this runtime does not know, leaves the process culture as it was.
+        /// Process-wide state is correct here for the same reason the rest of this class is: one
+        /// process serves one signed-in user.
+        /// </para>
+        /// </remarks>
+        public static void ApplyLoginResult(LoginResponse loginResponse)
+        {
+            ArgumentNullException.ThrowIfNull(loginResponse);
+
+            UserInfo = new UserInfo()
+            {
+                UserId = loginResponse.UserId,
+                UserName = loginResponse.UserName,
+                // The server's value is authoritative; an empty one leaves the UserInfo default
+                // rather than silently adopting the device zone, which ADR-032 D4 rules out.
+                TimeZone = StringUtilities.IsNotEmpty(loginResponse.TimeZone)
+                    ? loginResponse.TimeZone
+                    : new UserInfo().TimeZone,
+                Culture = loginResponse.Culture ?? string.Empty,
+            };
+            // `LoginAsync` has signed the session in already. Signing it in again here does two things: it applies
+            // the zone of UserInfo, which falls back to its default where the server sent none, and it accepts a
+            // response from a sign-in made elsewhere. The key belongs to the token it was exchanged with, so it is
+            // kept only when the token is the one the session already holds.
+            var session = ApiClient.Session;
+            var current = session.Credentials;
+            lock (s_stateGate)
+            {
+                session.SignIn(new ApiSessionCredentials(loginResponse.AccessToken,
+                    current.AccessToken == loginResponse.AccessToken ? current.ApiEncryptionKey : [],
+                    UserInfo.TimeZone));
+                DiscardIdentityState();
+            }
+            ApplyCulture(UserInfo.Culture);
+            // NOTE: any further post-sign-in state belongs here.
+        }
+
+        /// <summary>
+        /// Makes <paramref name="culture"/> the current and default culture of this process.
+        /// </summary>
+        /// <param name="culture">A BCP-47 culture name; empty or unknown leaves the culture unchanged.</param>
+        /// <returns><c>true</c> when the culture was applied.</returns>
+        internal static bool ApplyCulture(string culture)
+        {
+            if (StringUtilities.IsEmpty(culture)) { return false; }
+
+            CultureInfo info;
+            try
+            {
+                info = CultureInfo.GetCultureInfo(culture);
+            }
+            catch (CultureNotFoundException)
+            {
+                return false;
+            }
+
+            CultureInfo.DefaultThreadCurrentCulture = info;
+            CultureInfo.DefaultThreadCurrentUICulture = info;
+            CultureInfo.CurrentCulture = info;
+            CultureInfo.CurrentUICulture = info;
+
+            // IMPORTANT: the assignments above do not stick on a UI thread when the caller is an async method,
+            // which a sign-in handler always is. The culture flows with the execution context, so the async
+            // machinery reverts it at the caller's next `await`. Avalonia 12.0 left the UI thread without a culture
+            // of its own, so it fell back to the defaults set above. Avalonia 12.1 (AvaloniaUI/Avalonia#21627)
+            // writes the thread's live culture back after every dispatcher operation, which pins the reverted one.
+            // A plain callback posted to the UI thread's context sets the culture outside any async method, and
+            // Avalonia keeps whatever such a callback leaves.
+            SynchronizationContext.Current?.Post(static state =>
+            {
+                var posted = (CultureInfo)state!;
+                CultureInfo.CurrentCulture = posted;
+                CultureInfo.CurrentUICulture = posted;
+            }, info);
+            return true;
+        }
+
+        private static Dictionary<string, string> ParseCommandLineArgs()
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 1; i < args.Length; i++)
+            {
+                int sep = args[i].IndexOf('=');
+                if (sep > 0)
+                {
+                    string key = args[i].Substring(0, sep);
+                    string value = args[i].Substring(sep + 1);
+                    result[key] = value;
+                }
+            }
+            return result;
+        }
+
+    }
+}

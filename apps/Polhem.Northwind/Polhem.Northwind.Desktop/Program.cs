@@ -1,7 +1,7 @@
 using Avalonia;
 using Polhem.Api.Client;
 using Polhem.Northwind.UI;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 
 namespace Polhem.Northwind.Desktop;
 

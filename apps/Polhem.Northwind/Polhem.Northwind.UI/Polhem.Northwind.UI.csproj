@@ -17,10 +17,12 @@
     <PackageReference Include="Semi.Avalonia" Version="12.1.0.1" />
     <PackageReference Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Polhem.UI.Avalonia\Polhem.UI.Avalonia.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.UI.ApiBridge\Polhem.UI.ApiBridge.csproj" />
   </ItemGroup>
 
 </Project>

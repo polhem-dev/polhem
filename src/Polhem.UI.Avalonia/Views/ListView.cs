@@ -1,19 +1,17 @@
 using System.Data;
-using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
-using Polhem.Api.Client.Definitions;
+using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Definitions;
 using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Views
@@ -28,10 +26,10 @@ namespace Polhem.UI.Avalonia.Views
     /// </summary>
     /// <remarks>
     /// Like <see cref="FormView"/>, the host typically supplies only <see cref="ProgId"/>;
-    /// when <see cref="Schema"/> / <see cref="FormConnector"/> / <see cref="AccessToken"/>
-    /// are left unset, <see cref="InitializeAsync"/> resolves them from
-    /// <see cref="ClientInfo"/> through the <c>Resolve*</c> hooks, which a subclass can
-    /// override to bypass the static state (the unit tests rely on this).
+    /// when <see cref="Schema"/> / <see cref="FormConnector"/> are left unset,
+    /// <see cref="InitializeAsync"/> resolves them through the <c>Resolve*</c> hooks from the services
+    /// registered in <see cref="UIServices.Provider"/>, and a subclass can override the hooks to supply them
+    /// another way (the unit tests rely on this).
     /// </remarks>
     public partial class ListView : UserControl
     {
@@ -39,17 +37,13 @@ namespace Polhem.UI.Avalonia.Views
         public static readonly StyledProperty<string> ProgIdProperty =
             AvaloniaProperty.Register<ListView, string>(nameof(ProgId), defaultValue: string.Empty);
 
-        /// <summary>Identifies the <see cref="AccessToken"/> styled property.</summary>
-        public static readonly StyledProperty<Guid> AccessTokenProperty =
-            AvaloniaProperty.Register<ListView, Guid>(nameof(AccessToken), defaultValue: Guid.Empty);
-
         /// <summary>Identifies the <see cref="Schema"/> styled property.</summary>
         public static readonly StyledProperty<FormSchema?> SchemaProperty =
             AvaloniaProperty.Register<ListView, FormSchema?>(nameof(Schema));
 
         /// <summary>Identifies the <see cref="FormConnector"/> styled property.</summary>
-        public static readonly StyledProperty<FormApiConnector?> FormConnectorProperty =
-            AvaloniaProperty.Register<ListView, FormApiConnector?>(nameof(FormConnector));
+        public static readonly StyledProperty<IFormApiConnector?> FormConnectorProperty =
+            AvaloniaProperty.Register<ListView, IFormApiConnector?>(nameof(FormConnector));
 
         private readonly Button _viewButton;
         private readonly Button _newButton;
@@ -160,26 +154,13 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>
-        /// Gets or sets the program identifier (e.g. "Category"). Drives both the
-        /// <see cref="ClientInfo"/>-backed FormSchema lookup and the
-        /// <see cref="FormApiConnector"/> creation when the host leaves
-        /// <see cref="Schema"/> / <see cref="FormConnector"/> unset.
+        /// Gets or sets the program identifier (e.g. "Category"). Drives both the schema lookup and the
+        /// connector creation when the host leaves <see cref="Schema"/> / <see cref="FormConnector"/> unset.
         /// </summary>
         public string ProgId
         {
             get => GetValue(ProgIdProperty);
             set => SetValue(ProgIdProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the access token surfaced on the view. Defaults to
-        /// <see cref="Guid.Empty"/>; <see cref="InitializeAsync"/> fills it from
-        /// <see cref="ClientInfo.AccessToken"/> when the host did not supply one.
-        /// </summary>
-        public Guid AccessToken
-        {
-            get => GetValue(AccessTokenProperty);
-            set => SetValue(AccessTokenProperty, value);
         }
 
         /// <summary>Gets or sets the resolved <see cref="FormSchema"/>.</summary>
@@ -190,7 +171,7 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>Gets or sets the connector used for the list / delete round-trips.</summary>
-        public FormApiConnector? FormConnector
+        public IFormApiConnector? FormConnector
         {
             get => GetValue(FormConnectorProperty);
             set => SetValue(FormConnectorProperty, value);
@@ -229,8 +210,6 @@ namespace Polhem.UI.Avalonia.Views
             _isInitializing = true;
             try
             {
-                ApplyAccessTokenFallback();
-
                 if (!await TryResolveSchemaAsync(hasProgId, cancellationToken).ConfigureAwait(true)) return;
                 ResolveFormConnectorFallback(hasProgId);
 
@@ -283,48 +262,44 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>
-        /// Gets or sets the assembler that localizes the schema the column headers come from, for
-        /// this view only. <c>null</c> — the default — uses <see cref="ClientInfo.DefinitionLoader"/>,
-        /// which is <c>null</c> only when the host turned off <see cref="ClientInfo.UseDefinitionLoader"/>;
-        /// with neither, the headers are the schema's stored captions.
+        /// Gets or sets the source the column headers' schema is fetched from, for this view only. <c>null</c>, the
+        /// default, uses the <see cref="IFormDefinitionSource"/> registered in <see cref="UIServices.Provider"/>;
+        /// with neither, the host sets <see cref="Schema"/>.
         /// </summary>
         /// <remarks>
-        /// The same switch <see cref="FormView.DefinitionLoader"/> reads, so the list and the record
-        /// it opens show the same captions. The schema is localized once, when the list loads;
-        /// switching the language does not re-localize a list already on screen — reopen it.
+        /// The same source <see cref="FormView.DefinitionSource"/> falls back to, so the list and the record it
+        /// opens show the same captions. The schema is fetched once, when the list loads; switching the language
+        /// does not re-localize a list already on screen — reopen it.
         /// </remarks>
-        public FormDefinitionLoader? DefinitionLoader { get; set; }
+        public IFormDefinitionSource? DefinitionSource { get; set; }
 
         /// <summary>
         /// Resolves the <see cref="FormSchema"/> for <paramref name="progId"/> when the host did
-        /// not pre-set <see cref="Schema"/>. Localizes through <see cref="DefinitionLoader"/> or the
-        /// client-wide loader when one is in effect, else fetches the stored schema through the
-        /// cached <see cref="ClientInfo.DefineAccess"/>; override to supply a schema without touching
-        /// the static <see cref="ClientInfo"/>.
+        /// not pre-set <see cref="Schema"/>. Defaults to <see cref="DefinitionSource"/>, else the registered
+        /// source; returns <c>null</c> when there is none.
         /// </summary>
         /// <param name="progId">The program identifier.</param>
         /// <param name="cancellationToken">A token that cancels the fetch.</param>
         protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
-            => (DefinitionLoader ?? ClientInfo.DefinitionLoader) is { } loader
-                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang(), cancellationToken).ConfigureAwait(false)
-                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false);
+            => (DefinitionSource ?? UIServices.Get<IFormDefinitionSource>()) is { } source
+                ? await source.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false)
+                : null;
 
         /// <summary>
-        /// Resolves the language the list renders in. Defaults to the UI culture, which
-        /// <see cref="ClientInfo.ApplyLoginResult"/> sets to the signed-in user's culture. Only
-        /// consulted when a definition loader is in effect.
+        /// Resolves the connector for the list / delete round-trips when the host did not set
+        /// <see cref="FormConnector"/>. Defaults to the <see cref="IFormApiConnectorFactory"/> registered in
+        /// <see cref="UIServices.Provider"/>; returns <c>null</c> when there is none.
         /// </summary>
-        protected virtual string ResolveLang() => CultureInfo.CurrentUICulture.Name;
+        /// <param name="progId">The program identifier.</param>
+        protected virtual IFormApiConnector? ResolveFormConnector(string progId)
+            => UIServices.Get<IFormApiConnectorFactory>()?.Create(progId);
 
         /// <summary>
-        /// Resolves the <see cref="FormApiConnector"/> for the list / delete round-trips.
-        /// Override to bypass <see cref="ClientInfo"/>.
+        /// Resolves the signed-in user's context, whose capabilities degrade the columns and the toolbar.
+        /// Defaults to the <see cref="IUserContext"/> registered in <see cref="UIServices.Provider"/>; <c>null</c>
+        /// treats the user as unrestricted.
         /// </summary>
-        protected virtual FormApiConnector ResolveFormConnector(string progId)
-            => ClientInfo.CreateFormApiConnector(progId);
-
-        /// <summary>Resolves the access token. Override to plug in a different session source.</summary>
-        protected virtual Guid ResolveAccessToken() => ClientInfo.AccessToken;
+        protected virtual IUserContext? ResolveUserContext() => UIServices.Get<IUserContext>();
 
         /// <inheritdoc/>
         protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
@@ -419,14 +394,6 @@ namespace Polhem.UI.Avalonia.Views
         {
             if (_initialized || _isInitializing) return;
             _ = InitializeAsync();
-        }
-
-        private void ApplyAccessTokenFallback()
-        {
-            if (AccessToken != Guid.Empty) return;
-            var fallbackToken = ResolveAccessToken();
-            if (fallbackToken != Guid.Empty)
-                AccessToken = fallbackToken;
         }
 
         private async Task<bool> TryResolveSchemaAsync(bool hasProgId, CancellationToken cancellationToken)

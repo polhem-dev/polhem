@@ -20,6 +20,7 @@
     <Project Path="src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj" />
     <Project Path="src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj" Id="30b306b6-0aab-475e-8df0-e1a0801e56a6" />
     <Project Path="src/Polhem.Repository/Polhem.Repository.csproj" Id="f78f3849-45b9-426e-a7b0-6edbd7fe256d" />
+    <Project Path="src/Polhem.UI.ApiBridge/Polhem.UI.ApiBridge.csproj" />
     <Project Path="src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj" />
     <Project Path="src/Polhem.UI.Core/Polhem.UI.Core.csproj" />
     <Project Path="src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj" />
@@ -40,6 +41,7 @@
     <Project Path="tests/Polhem.ObjectCaching.UnitTests/Polhem.ObjectCaching.UnitTests.csproj" />
     <Project Path="tests/Polhem.Repository.UnitTests/Polhem.Repository.UnitTests.csproj" Id="37be88f7-d67a-40a7-91a3-23583c6b85f1" />
     <Project Path="tests/Polhem.Tests.Shared/Polhem.Tests.Shared.csproj" />
+    <Project Path="tests/Polhem.UI.ApiBridge.UnitTests/Polhem.UI.ApiBridge.UnitTests.csproj" />
     <Project Path="tests/Polhem.UI.Avalonia.UnitTests/Polhem.UI.Avalonia.UnitTests.csproj" />
     <Project Path="tests/Polhem.UI.Core.UnitTests/Polhem.UI.Core.UnitTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Server.UnitTests/Polhem.Web.Blazor.Server.UnitTests.csproj" />

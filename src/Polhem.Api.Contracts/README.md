@@ -1,12 +1,13 @@
 # Polhem.Api.Contracts
 
-> Contract interface library shared by the API layer and the business logic layer, defining the Request/Response interfaces.
+> Contract interface library shared by the front end, the API layer and the business logic layer: the Request/Response interfaces and the form connector contract.
 
 [繁體中文](README.zh-TW.md)
 
 ## Architecture Position
 
 - **Layer**: Shared Contracts. Despite the name it is not part of the API layer: `Polhem.Business` and `Polhem.Api.Core` both depend on it, so it sits below them
+- **One of the three foundation assemblies** (`Polhem.Core`, `Polhem.Definition`, `Polhem.Api.Contracts`) that both the front end and the back end reference. It may hold nothing that belongs to one side only: no database, MessagePack, JSON-RPC or ASP.NET, and no UI framework, local file storage or user state. `Polhem.UI.Core`, the layer every front end shares, reaches the backend through this package only. See [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 
 ## Target Framework
@@ -53,6 +54,8 @@
 ### Forms and Audit Logs
 
 - `Form/` -- `IGetListRequest`, `IGetDataRequest`, `IGetNewDataRequest`, `ISaveRequest`, `IDeleteRequest`, `IGetLookupRequest` and their responses
+- `Form/IFormApiConnector` -- the form operations a client calls for one program (`GetListAsync`, `GetLookupAsync`, `GetNewDataAsync`, `GetDataAsync`, `SaveAsync`, `DeleteAsync`), returning the response interfaces above. A front end depends on this contract, not on a transport: `Polhem.Api.Client`'s `FormApiConnector` implements it over JSON-RPC, and an application without a Polhem backend implements it over its own data.
+- `Form/IFormApiConnectorFactory` -- `Create(progId)` returns the `IFormApiConnector` of a program; the views of a front end resolve it to create their connectors.
 - `AuditLog/` -- the change, access, login and anomaly log queries, with `IAuditLogListResponse`, `IAuditLogAggregateResponse` and `RecordFieldChange`
 
 ## Key Public APIs
@@ -66,11 +69,12 @@
 | `ISaveDefineRequest` / `ISaveDefineResponse` | Definition persistence contract |
 | `IExecFuncRequest` / `IExecFuncResponse` | Custom function execution contract |
 | `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` | Configuration retrieval contract |
+| `IFormApiConnector` / `IFormApiConnectorFactory` | Form connector contract a front end depends on |
 
 ## Design Conventions
 
 - **Axis-based namespaces** -- interfaces are grouped into `System` / `Form` / `AuditLog` sub-namespaces that mirror the `Polhem.Business.*` and `Polhem.Api.Core.Messages.*` layers, so a contract, its message implementation, and its business object share the same axis. The generic cross-BO `IExecFunc*` dispatch contract stays at the root `Polhem.Api.Contracts` (mirroring the root-level `ExecFunc*` implementation in `Polhem.Api.Core.Messages`).
-- **Pure interface definitions** -- each API operation is defined as an `IXxxRequest` / `IXxxResponse` pair; no implementation logic in this project.
+- **Pure interface definitions** -- each API operation is defined as an `IXxxRequest` / `IXxxResponse` pair, and the form connector as `IFormApiConnector`; no implementation logic in this project.
 - **No serialization attributes** -- data classes such as `RecordFieldChange` are plain types with public read/write properties. Their binding to the wire lives in `Polhem.Api.Core` as hand-written formatters, so this package takes no dependency on a transport format ([ADR-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md)).
 - **RSA-based security** -- the login contract includes `ClientPublicKey` (client-generated) and `ApiEncryptionKey` (server-generated) for secure key exchange.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).

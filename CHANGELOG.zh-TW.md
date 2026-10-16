@@ -18,6 +18,34 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   `SHA256.HashData(stream)` 計算後以 `CryptographicOperations.FixedTimeEquals` 比對。
 - 移除 `IDisplayName`（`Polhem.Core`）。`TreeNodeAttribute.GetDisplayText` 在格式化結果為空時改為只退回
   `ToString()`；原本實作 `IDisplayName` 的型別改為覆寫 `ToString()`。
+- 前端不再參考 API client（[ADR-054](maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)）。
+  `ClientInfo`、`IEndpointStorage`、`IApiKeyStorage`、`FileEndpointStorage` 從 `Polhem.UI.Core` 移到新套件
+  `Polhem.UI.ApiBridge`（命名空間 `Polhem.UI.ApiBridge`）。連 Polhem 後端的 head 要參考它，並在啟動時設定
+  `UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();`，`FormView`、
+  `ListView` 與查詢視窗才取得到連接器、定義與使用者情境。
+- `FormValueBinding`、`FormDataGuard` 從 `Polhem.Api.Client` 移到 `Polhem.UI.Core`；`ElementCapabilityResolver`、
+  `IElementCapabilityResolver`、`FieldCapability` 從 `Polhem.Api.Client.Permissions` 移到 `Polhem.UI.Core.Permissions`。
+  `FormDataGuard.RequireConnector` 改為泛型。
+- `FormView.FormConnector`、`ListView.FormConnector`、`FormDataObject`、`LookupPanel.Bind`、`LookupDialog.ShowAsync`
+  改收 `IFormApiConnector`（`Polhem.Api.Contracts.Form`），`FormApiConnector` 已實作它，原本傳入 `FormApiConnector`
+  的程式碼照常編譯。`ResolveFormConnector` 改回傳 `IFormApiConnector?`。
+- `FormView.DefinitionLoader`、`ListView.DefinitionLoader` 改為 `DefinitionSource`（`IFormDefinitionSource`）；
+  移除 `ResolveLang`，語系由定義來源決定。`FormView`、`ListView` 移除 `AccessToken` 屬性與 `ResolveAccessToken`
+  （token 已由 client 的 session 持有，沒有地方讀它）；原本讀 `ClientInfo` 的地方改由 `ResolveUserContext` 取得。
+- 移除 `IUIViewService` 與 `ClientInfo.UIViewService`。`ClientInfo.InitializeAsync(IUIViewService,
+  SupportedConnectTypes)` 改為 `ClientInfo.InitializeAsync(SupportedConnectTypes)`：回傳 `false` 時由 head 自行顯示
+  連線設定，再呼叫 `ClientInfo.InitializeAsync(endpoint)`。
+
+### 新增
+
+- `Polhem.Api.Contracts` 新增 `IFormApiConnector`、`IFormApiConnectorFactory`：前端呼叫的表單操作，由
+  `FormApiConnector` 實作，或由應用程式依自己的資料實作。
+- `Polhem.UI.Core` 新增 `UIServices`、`IUserContext`、`IFormDefinitionSource`、`StorageDefinitionSource`（從
+  `IDefineStorage` 讀定義，供沒有後端的應用程式使用），以及回應型別 `FormListResult`、`FormDataResult`、
+  `FormDeleteResult`。`FormView`、`ListView` 可以在沒有 Polhem 後端時，依 host 設定的 schema、layout 與連接器運作。
+- `Polhem.UI.ApiBridge`：`AddPolhemUIApiBridge`、`FormApiConnectorFactory`、`ApiFormDefinitionSource`、
+  `ClientUserContext`。
+- `Polhem.Web.Blazor.Server` 改為參考 `Polhem.UI.Core`。
 
 ## [1.6.0] - 2026-10-11
 

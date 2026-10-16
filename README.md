@@ -58,7 +58,7 @@ dotnet add package Polhem.Db
 | **Polhem.Core.dll** | Core utilities such as serialization, encryption, and general-purpose helpers. |
 | **Polhem.Definition.dll** | Defines system-wide structured types including FormSchema, field schemas, and layout configurations. |
 | **Polhem.Expressions.dll** | Portable, sandboxed expression evaluator (DynamicExpresso-backed) for computed fields and validation rules; shared by backend save and Avalonia client live preview so both sides compute identically. |
-| **Polhem.Api.Contracts.dll** | Shared data contracts (request/response models) used by both frontend and backend. |
+| **Polhem.Api.Contracts.dll** | Shared data contracts (request/response models) and the form connector contract (`IFormApiConnector`) used by both frontend and backend. |
 | **Polhem.Api.Core.dll** | Encapsulates API support such as model definitions, payload encryption, and serialization pipeline. |
 
 ### Backend
@@ -77,7 +77,8 @@ dotnet add package Polhem.Db
 | Assembly Name | Description |
 |---|---|
 | **Polhem.Api.Client.dll** | Client for invoking backend Business Objects in process or over HTTP (`PolhemApiClient.CreateLocal` / `CreateRemote`). |
-| **Polhem.UI.Core.dll** | Cross-platform UI common layer (`ClientInfo` / `IEndpointStorage` / `FileEndpointStorage` / `IUIViewService`); shared by native UI hosts for client-side connection state and endpoint persistence. |
+| **Polhem.UI.Core.dll** | Shared front-end layer referenced by every front end, the Blazor head included: the UI service contracts (`UIServices` / `IUserContext` / `IFormDefinitionSource`), the form value rules (`FormValueBinding` / `FormDataGuard`) and the permission capability resolver. No transport; reaches the backend only through `Polhem.Api.Contracts`. |
+| **Polhem.UI.ApiBridge.dll** | Connects a single-user front end to a Polhem backend: client connection state (`ClientInfo`), endpoint and API key persistence (`IEndpointStorage` / `FileEndpointStorage`), and the API-backed `Polhem.UI.Core` services registered with `AddPolhemUIApiBridge()`. Not for multi-user hosts. |
 | **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
 | **Polhem.Web.Blazor.Server.dll** | Razor Class Library (RCL) for Blazor Server hosts; provides DI-scoped connectors and Blazor components (`DynamicForm`, `FormDataObject`). |
 

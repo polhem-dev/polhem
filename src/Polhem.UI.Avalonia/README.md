@@ -11,7 +11,7 @@ Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAsse
 Which trim modes are supported and what each head needs is described in
 [Platform support](../../docs/en/getting-started/platform-support.md).
 
-Belongs to the `Polhem.UI.*` family: connects to the backend through the static `ClientInfo` (`Polhem.UI.Core`) with a per-process token model. Its package dependencies are in the [dependency map](../../docs/en/architecture/dependency-map.md).
+Belongs to the `Polhem.UI.*` family and builds on [`Polhem.UI.Core`](../Polhem.UI.Core/README.md): it references no API client and no transport, and reaches its data through the `IFormApiConnector` contract (`Polhem.Api.Contracts.Form`). A head connects it to a Polhem backend with [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md), or uses the controls without a backend over a connector of its own. The reasons are in [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md). Its package dependencies are in the [dependency map](../../docs/en/architecture/dependency-map.md).
 
 ## Target Framework
 
@@ -21,8 +21,8 @@ Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.D
 
 | Component | Description |
 |---|---|
-| `ListView` | Read-only master list of a form; raises view / edit / add requests for the host to open the record surface. Resolves its schema and connector from `ClientInfo` when the host sets only `ProgId`. |
-| `FormView` | Top-level container: list (`GridControl`) + master/detail form + New / Save / Delete toolbar. Renders the master sections of a `FormLayout` (one field editor per `LayoutField`) followed by the detail grids (`FormLayout.Details`) directly — there is no separate `DynamicForm` control; `DetailEditMode` picks the detail editing model. Resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host sets only `ProgId`. |
+| `ListView` | Read-only master list of a form; raises view / edit / add requests for the host to open the record surface. Resolves its schema and connector as described under [How the views resolve their services](#how-the-views-resolve-their-services) when the host sets only `ProgId`. |
+| `FormView` | Top-level container: list (`GridControl`) + master/detail form + New / Save / Delete toolbar. Renders the master sections of a `FormLayout` (one field editor per `LayoutField`) followed by the detail grids (`FormLayout.Details`) directly — there is no separate `DynamicForm` control; `DetailEditMode` picks the detail editing model. Resolves `Schema` / `Layout` / `FormConnector` as described under [How the views resolve their services](#how-the-views-resolve-their-services) when the host sets only `ProgId`. |
 | `GridControl` | `ContentControl` hosting a `DataGrid` (exposed as `InnerGrid`), driven by a `LayoutGrid`; implements `IBindTableControl` / `IUIControl`. Cell rendering goes through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` (see ADR-020). |
 | Field editors (`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `TimeEdit` / `NumericEdit` / `DropDownEdit` / `CheckEdit`) | One per `ControlType` value (`Auto` picks one from the field); native-control subclasses implementing `IBindFieldControl` / `IUIControl`, auto-applying `FormField` metadata (MaxLength, ListItems). |
 | `FormScope` | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and every descendant editor with a `FieldName` binds itself. |
@@ -33,8 +33,13 @@ Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.D
 
 ## Usage
 
+### With a Polhem backend
+
 ```csharp
+using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Client;
+using Polhem.UI.ApiBridge;
+using Polhem.UI.ApiBridge.DependencyInjection;
 using Polhem.UI.Core;
 
 // Host bootstrap, before any UI control is created.
@@ -45,6 +50,12 @@ ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
 // Seeds empty storage on first run; the stored key wins afterwards, so changing it
 // is a settings change rather than a rebuild.
 ClientInfo.ApplyApiKey("my-app");
+
+// The views resolve their connector, definitions and user context from this provider.
+UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
+
+// false: the stored endpoint is missing or unreachable, so the host shows its own connection setup.
+bool connected = await ClientInfo.InitializeAsync(SupportedConnectTypes.Remote);
 ```
 
 ```xml
@@ -64,6 +75,30 @@ ClientInfo.ApplyApiKey("my-app");
 </UserControl>
 ```
 
+### Without a backend
+
+The controls do not need a Polhem backend. Register nothing in `UIServices`, and set the schema, the layout and a
+connector on the views yourself; the connector is your own `IFormApiConnector` over the application's data, and the
+result records in `Polhem.UI.Core.Connectors` (`FormListResult`, `FormDataResult`, `FormDeleteResult`) save writing
+response types:
+
+```csharp
+var list = new ListView { Schema = schema, FormConnector = connector };
+var record = new FormView { Schema = schema, Layout = layout, FormConnector = connector };
+```
+
+To read the schema and layout from definition files instead, set `DefinitionSource` to a
+`StorageDefinitionSource` over a `FileDefineStorage`. A complete example is the "Without a Backend" module of the demo
+center, [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/).
+
+### How the views resolve their services
+
+`FormView` and `ListView` resolve each service in this order: their own property (`FormConnector`,
+`DefinitionSource`), then the overridable `Resolve*` hook (`ResolveFormConnector`, `ResolveSchemaAsync`,
+`ResolveUserContext`, …), then the service registered in `UIServices.Provider` (`IFormApiConnectorFactory`,
+`IFormDefinitionSource`, `IUserContext`). With nothing registered there is no backend: the views render the `Schema`
+and `Layout` the host set, call the `FormConnector` the host set, and treat the user as unrestricted.
+
 ## Design Notes
 
 - Every control subclass overrides `StyleKeyOverride` to its native base type so the host theme keeps applying (a missing override renders the control invisible).
@@ -73,4 +108,4 @@ ClientInfo.ApplyApiKey("my-app");
 ## Samples
 
 - [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md) — full Connection → Login → CRUD flow over `FormView`, on the Desktop, Browser, iOS and Android heads.
-- [`samples/Avalonia.DemoCenter`](../../samples/Avalonia.DemoCenter/README.md) — theme-oriented control demo center (theme → case nav, Demo/Source tabs, theme/FormMode toolbar): data binding, read-only/required, FormMode, layout, grid, and native-vs-inherited parity.
+- [`samples/Avalonia.DemoCenter`](../../samples/Avalonia.DemoCenter/README.md) — theme-oriented control demo center (theme → case nav, Demo/Source tabs, theme/FormMode toolbar): data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity, and `ListView` / `FormView` without a backend.

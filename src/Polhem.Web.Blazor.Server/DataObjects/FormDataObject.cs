@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
+using Polhem.UI.Core;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -22,19 +22,17 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// </para>
     /// <para>
     /// The value rules this type used to carry privately — DataSet seeding, string/column
-    /// coercion, display formatting, the CRUD preconditions — now live once in
-    /// <c>Polhem.Api.Client</c> (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which both this
-    /// head and <c>Polhem.UI.Avalonia</c> already reference. They are head-agnostic: the same
+    /// coercion, display formatting, the CRUD preconditions — live once in <c>Polhem.UI.Core</c>
+    /// (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which every front end references,
+    /// this head and <c>Polhem.UI.Avalonia</c> included. They are head-agnostic: the same
     /// <see cref="FormSchema"/> and the same server responses drive every head.
     /// </para>
     /// <para>
     /// NOTE: this used to be a verbatim copy of the Avalonia head's version, marked "deliberately
-    /// parallel" on the grounds that the only shared home would be <c>Polhem.UI.Core</c> — which
-    /// would put <c>Polhem.Web.Blazor.Server</c> inside the <c>Polhem.UI.*</c> family, and Blazor is a
-    /// separate family on purpose. That reasoning had a hole: <c>Polhem.Api.Client</c> is a common
-    /// ancestor of both heads and carries no such family meaning. It also had a cost — the note
-    /// said nothing enforced the parallel, and the two copies did in fact diverge, with one side
-    /// writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
+    /// parallel" with a note that nothing enforced the parallel. The two copies did diverge, with one
+    /// side writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
+    /// This head references <c>Polhem.UI.Core</c> but never its process-wide <see cref="UIServices"/>, which
+    /// would share one user's services across circuits; <c>UIServicesUsageGateTests</c> enforces that.
     /// </para>
     /// <para>
     /// NOTE: the async methods resume on the caller's context (<c>ConfigureAwait(true)</c>). Their

@@ -16,13 +16,13 @@
 | 活文件 / 對齊基準 | 每個控件 / 概念的標準行為與外觀契約；日後移植其他 UI head 的對齊範本 |
 | 開發驗證面 | 修改控件外觀（如唯讀去框）時的目視回饋場 |
 
-本 Demo Center 只聚焦**控件層**，不連後端、不涉入 Login / CRUD 流程。端到端的**應用**（登入 → 連線 → JSON-RPC →
+本 Demo Center 只聚焦**控件層**，不連後端、不涉入 Login；唯一示範的 CRUD 流程跑在記憶體內的連接器上（「Without a Backend」主題）。端到端的**應用**（登入 → 連線 → JSON-RPC →
 渲染表單）見 [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.zh-TW.md)。
 
 ## 前置條件
 
 - .NET 10 SDK
-- 無需後端、無需資料庫——資料來源是 in-memory `FormSchema` + `FormDataObject`
+- 無需後端、無需資料庫——資料來源是 in-memory `FormSchema` + `FormDataObject`，或 in-memory 的 `IFormApiConnector`
 
 ## 跑起來
 
@@ -69,10 +69,12 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | **Master-Detail** | Master + detail | `FormLayoutRenderer` 渲染 master 區段 + 明細 grid |
 | **Permission Capability** | Interactive permission simulator (master/detail) | 勾選模擬的角色授權，主檔與明細即時降級，與 `EnterCompany` 回傳的能力快照相同 |
 | **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` 依 `System.ComponentModel` 標註顯示 `FormField`、`DbField` 或 `BackendConfiguration`，可切換顯示選項並記錄 `PropertyValueChanged`；`ListItems` 的 `...` 按鈕開啟 `CollectionEditDialog` |
+| **Without a Backend** | List and record over your own data | 以 `FormSchema`、`FormLayout` 與記憶體內的 `IFormApiConnector` 驅動 `ListView` 與 `FormView`；`UIServices` 中什麼都不註冊，由 host 在畫面上設定 `Schema`、`Layout` 與 `FormConnector`（[`Modules/WithoutBackend/`](Modules/WithoutBackend/)） |
 
-> **Views（FormView/ListView）路線**：兩者為後端耦合控件，本中心無後端，故以「`FormDataObject` 當 VM + 假資料 →
-> 前端繫結」示範——用與生產 `FormView` 同一套公開 primitive（`FieldEditorFactory` + `GridControl`）渲染（見
-> Master-Detail / Layout / Grid 主題）。後端載入/存檔/列事件見 `apps/Polhem.Northwind`。
+> **Views（FormView/ListView）路線**：兩者不需要 Polhem 後端。「Without a Backend」主題讓它們跑在範例自行實作的
+> in-memory `IFormApiConnector` 上。其他主題以「`FormDataObject` 當 VM + 假資料 → 前端繫結」示範——用與生產
+> `FormView` 同一套公開 primitive（`FieldEditorFactory` + `GridControl`）渲染（見 Master-Detail / Layout / Grid 主題）。
+> 對接 Polhem 後端的載入/存檔/列事件見 `apps/Polhem.Northwind`。
 
 ## 模組架構（IDemoModule）
 

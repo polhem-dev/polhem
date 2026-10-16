@@ -8,6 +8,7 @@ using Avalonia.DemoCenter.Modules.MasterDetail;
 using Avalonia.DemoCenter.Modules.Permissions;
 using Avalonia.DemoCenter.Modules.PropertyEditing;
 using Avalonia.DemoCenter.Modules.ReadOnlyRequired;
+using Avalonia.DemoCenter.Modules.WithoutBackend;
 
 namespace Avalonia.DemoCenter.Modules
 {
@@ -56,6 +57,8 @@ namespace Avalonia.DemoCenter.Modules
             new PermissionCapabilityModule(),
             // Property Grid.
             new PropertyGridModule(),
+            // Without a Backend (FormView / ListView over an application's own connector).
+            new WithoutBackendModule(),
         ];
     }
 }

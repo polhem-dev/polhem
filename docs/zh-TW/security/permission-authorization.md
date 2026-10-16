@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: a864e6e64b7c9a417fe38194891cbe33adf762ac -->
+<!-- source: en/security/permission-authorization.md blob: 6633ae5b7dcab8888f42ba27c3fccedd96ec65a6 -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -185,7 +185,7 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
 
 ## 9. 前端如何降級
 
-`ClientInfo.Capabilities`（`Polhem.UI.Core`）快取此快照（nullable），`Polhem.Api.Client.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）讀它。目前由 Avalonia 的視圖（`FormView`、`ListView`）套用；Blazor 元件不讀這份快照。
+`ClientInfo.Capabilities`（`Polhem.UI.ApiBridge`）快取此快照（nullable），視圖透過 `AddPolhemUIApiBridge` 以 `ClientInfo` 為底註冊的 `IUserContext.Capabilities` 讀它，由 `Polhem.UI.Core.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）判定。目前由 Avalonia 的視圖（`FormView`、`ListView`）套用；未註冊 `IUserContext` 的視圖看不到快照，什麼都不降級；Blazor 元件不讀這份快照。
 
 - **`null` → capability 未啟用 → 什麼都不降級。** 從未進公司、或不用權限的 app，呈現與過去完全相同。
 - **非 null → 已啟用。** map 中缺某 model 即代表對它*無權*。
@@ -211,13 +211,14 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
 
 capability **未接線前一律 inert**，既有 app 不受影響。要啟用：
 
-1. 在 `PermissionModels` 宣告 well-known 分類 model（`Amount` / `Cost` / `PersonalData`）並授權（第 7 節）。
-2. `SystemApiConnector.EnterCompanyAsync` 之後，把回應交給 client 快取：
+1. 註冊 bridge，讓視圖讀得到快照：`UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();`（見[開發手冊 § Polhem.UI.* head](../guides/development-cookbook.md#polhemui-headclientinfo)）。
+2. 在 `PermissionModels` 宣告 well-known 分類 model（`Amount` / `Cost` / `PersonalData`）並授權（第 7 節）。
+3. `SystemApiConnector.EnterCompanyAsync` 之後，把回應交給 client 快取：
    ```csharp
    var response = await ClientInfo.SystemApiConnector.EnterCompanyAsync(companyId);
    ClientInfo.ApplyEnterCompanyResult(response);   // 快取 capability 快照，並丟棄前一個租戶的定義快取
    ```
-3. `LeaveCompany` 或登出時清除：`ClientInfo.ClearCompanyContext();`（同時丟棄定義快取）。
+4. `LeaveCompany` 或登出時清除：`ClientInfo.ClearCompanyContext();`（同時丟棄定義快取）。
 
 > **警語 — 欄權限是 UX，不是資料邊界。** `GetList` / `GetData` 仍會回傳敏感欄的值；前端只是把它隱藏／鎖定。繞過標準 UI 的 client 仍可能從 API 取得原始值。請把欄權限視為*呈現層*。任何**絕不能離開伺服器**的資料，應放在**動作**或**列**邊界（第一部分）或自成一個 permission model——而非僅靠 `SensitiveCategory`。伺服器端欄位遮罩屬另案（見非目標）。
 

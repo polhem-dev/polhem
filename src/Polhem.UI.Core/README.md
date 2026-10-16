@@ -1,14 +1,15 @@
 # Polhem.UI.Core
 
-> Shared client-side foundation for the `Polhem.UI.*` native front-end family (Avalonia today): connection state, connector creation, endpoint and API key persistence.
+> Shared front-end layer for every Polhem front end: the service contracts a UI consumes, the form value rules every head shares, and the permission capability resolver. No transport.
 
 [繁體中文](README.zh-TW.md)
 
 ## Architecture Position
 
-- **Layer**: UI Layer (shared client foundation)
+- **Layer**: UI Layer (shared front-end foundation)
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
-- The Blazor family does **not** consume `Polhem.UI.Core` — see [ADR-013](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md).
+- Every front end references it, the Blazor head (`Polhem.Web.Blazor.Server`) included. It reaches the backend only through the contracts in `Polhem.Api.Contracts`; it references neither `Polhem.Api.Client` nor `Polhem.Api.Core`. The reasons are in [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
+- Connecting a single-user head to a Polhem backend is the job of [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md), which implements the contracts below over the API client.
 
 ## Target Framework
 
@@ -16,78 +17,69 @@
 
 ## Overview
 
-`Polhem.UI.Core` is the framework-agnostic base every `Polhem.UI.*` front end builds on. It holds the
-per-process client connection state (`ClientInfo`) and abstracts where the service endpoint and API key are
-persisted (`IEndpointStorage`, `IApiKeyStorage`). It carries no UI-framework types.
-
-`Polhem.Web.Blazor.Server` serves several users from one process, so it keeps its connection state per circuit
-instead of in `ClientInfo`. What the two families do share lives one layer down in `Polhem.Api.Client`: the
-connectors, `ClientDefineAccess`, `FormDefinitionLoader` and the permission capability resolver.
+`Polhem.UI.Core` is the framework-agnostic base every front end builds on. It declares what a UI needs from its
+surroundings (the definitions of a form, the signed-in user's context, a connector per program) as contracts, and
+holds the rules for a form's values that must be the same in every head. It carries no UI-framework types and no
+transport: a UI built on it works against a Polhem backend through `Polhem.UI.ApiBridge`, or against the
+application's own data through its own implementation of `IFormApiConnector`.
 
 ## Key Types
 
-### Connection State
+### Service Locator for Controls Created from Markup
 
-- `ClientInfo` -- static client-side connection state. Owns the head's one `ApiClient` (`PolhemApiClient`;
-  per-process identity model: a new sign-in clears the cached `DefineAccess` and capability snapshot, and a new
-  endpoint replaces the client and signs out), exposes its `AccessToken`, `ConnectType` and `SystemApiConnector`,
-  lazily creates `DefineAccess` (`ClientDefineAccess`), produces connectors via `CreateFormApiConnector(progId)`
-  and `CreateAuditLogApiConnector()`, resolves the endpoint (local vs. remote, limited by
-  `SupportedConnectTypes`) through `InitializeAsync` / `SetEndpointAsync`, and applies login / EnterCompany
-  results (`ApplyLoginResult`, `ApplyEnterCompanyResult`, `ClearCompanyContext`). `ResetDefineCache` discards
-  the cached definition data after a tenant switch.
-- `ClientInfo.LocalServiceProvider` -- the backend service provider of a head that runs the backend in-process
-  (built with `AddPolhemFramework`); the in-process `ApiClient` dispatches to it.
-- `ClientInfo.UseDefinitionLoader` / `DefinitionLoader` -- localized form definitions through `FormDefinitionLoader`.
+- `UIServices` -- the process-wide `IServiceProvider` (`Provider`) that controls created by a XAML loader resolve their
+  services from, with `Get<T>()` returning `null` when no provider is set or the service is not registered. A
+  single-user head sets it once at startup; with nothing registered the controls run without a backend. A host that
+  serves several users from one process must not use it.
 
-### Endpoint and API Key Persistence
+### Front-End Service Contracts
 
-- `IEndpointStorage` -- persistence contract for the configured service endpoint
-  (`LoadEndpoint` / `SetEndpoint` / `SaveEndpoint`).
-- `IApiKeyStorage` -- the same for the `X-Api-Key` value (`LoadApiKey` / `SetApiKey` / `SaveApiKey`).
-- `FileEndpointStorage` -- the default for both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`: one
-  single-line text file per value in a per-application folder under the per-user local application data
-  directory. Its XML documentation lists where that folder is on each platform. Browser WASM has no persistent
-  file system, so a browser host assigns both properties an implementation backed by browser storage.
-- `ClientInfo.ApplyApiKey(defaultApiKey)` -- applies the stored key, seeding empty storage with the
-  value the application ships. That makes the shipped constant a first-run default instead of a
-  hard-coded key: from then on the stored value wins and can be changed without recompiling.
-  `ClientInfo.SetApiKey` persists a new key and applies it to subsequent calls.
+- `IUserContext` -- the signed-in user as a front end sees it: `User`, `Capabilities` (per permission model),
+  `Company` and the deployment's `DefaultLanguage`.
+- `Definitions/IFormDefinitionSource` -- supplies the form schema, the layout and the currency and unit masters a form
+  view is built from. The implementation decides the language, and every instance it returns belongs to the caller.
+- `Definitions/StorageDefinitionSource` -- an `IFormDefinitionSource` over an `IDefineStorage` (for example
+  `FileDefineStorage` over a local folder), for a front end without a Polhem backend. It returns the definitions as
+  stored, with no language resources and no tenant customization.
+- The connector contract itself, `IFormApiConnector` / `IFormApiConnectorFactory`, is in `Polhem.Api.Contracts`
+  (namespace `Polhem.Api.Contracts.Form`), so the API client can implement it without referencing the UI.
 
-> An API key held by a client is not a secret in the cryptographic sense -- it can be recovered from
-> the shipped application. It identifies *which application* is calling; authenticating *the user*
-> remains the access token's job.
+### Results for a Connector of Your Own
 
-### Host Services
+- `Connectors/FormListResult`, `FormDataResult`, `FormDeleteResult` -- simple records implementing the response
+  interfaces of `Polhem.Api.Contracts.Form`, for an application that implements `IFormApiConnector` over its own data
+  instead of a Polhem backend.
 
-- `IUIViewService` -- view services supplied by the host UI framework (e.g. `ShowApiConnectAsync`
-  to prompt for connection setup when the endpoint is missing or unreachable).
+### Form Value Rules Shared by Every Head
+
+- `FormValueBinding` -- converts between the values in a form's `DataSet` and the strings UI bindings exchange, and
+  builds the empty `DataSet` a form starts from.
+- `FormDataGuard` -- the preconditions a form's CRUD calls check before they reach the connector, with one wording of
+  each failure for every head.
 
 ### Permission Capabilities
 
-- `ClientInfo.Capabilities` -- the per-model permission snapshot received at company entry. The resolver that
-  turns it into element-level decisions, `ElementCapabilityResolver`, is in `Polhem.Api.Client` so both UI
-  families use it.
+- `Permissions/IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability` -- turn the user's
+  per-model capabilities into element-level decisions (whether a field is visible or read-only).
 
 > Client-side capability resolution is **UX degradation only**. The backend remains the
 > authoritative security boundary.
 
 ## Design Conventions
 
-- **Per-process token model** -- `ClientInfo` is static and holds one access token for the
-  process; changing it invalidates the cached connectors, define accessor, and capability snapshot.
-- **Framework-agnostic** -- no UI-framework types leak in, so the same connection logic serves every
-  `Polhem.UI.*` front end.
-- **Pluggable endpoint / API key storage** -- hosts replace `ClientInfo.EndpointStorage` and
-  `ClientInfo.ApiKeyStorage` with platform-appropriate implementations.
-- **Async-friendly initialization** -- `InitializeAsync` / `SetEndpointAsync` validate the endpoint
-  and initialize the connector without blocking, so they are safe on single-threaded runtimes
-  (browser WASM).
+- **No transport** -- the package references `Polhem.Api.Contracts` only. `POLHEM9001` (`src/Directory.Build.targets`)
+  fails the build on a reference to `Polhem.Api.Client`, `Polhem.Api.Core` or `Polhem.UI.ApiBridge`.
+- **Framework-agnostic** -- no UI-framework types, so the same contracts and rules serve every front end.
+- **Resolution order in the views** -- a control uses its own property first, then its overridable `Resolve*` hook,
+  then `UIServices.Provider`; with none of them it runs on what the host set.
+- **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor head references this
+  package for the value rules only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when
+  it references `UIServices` or `Polhem.UI.ApiBridge`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-- `ClientInfo.cs` -- client-side connection state and connector creation
-- `IEndpointStorage.cs` / `IApiKeyStorage.cs` -- persistence contracts
-- `FileEndpointStorage.cs` -- the default file-backed implementation of both
-- `IUIViewService.cs` -- host-supplied view services
+- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`
+- `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
+- `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
+- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

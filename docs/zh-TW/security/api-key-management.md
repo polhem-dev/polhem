@@ -1,4 +1,4 @@
-<!-- source: en/security/api-key-management.md blob: 4adbf7e5d4a902286ea92cf0478fbd86e476ac71 -->
+<!-- source: en/security/api-key-management.md blob: 296a0ff3fbe6c06dea613a430d89607453226150 -->
 # API 金鑰管理
 
 [English](../../en/security/api-key-management.md) · [← 文件索引](../README.md)
@@ -100,7 +100,7 @@ wire frame（`AddPolhemPayload` 的 `RequireFrame`）後，這類呼叫被重放
 
 ## 6. 用戶端把金鑰放在哪
 
-用戶端透過 `IApiKeyStorage`（`Polhem.UI.Core`）讀寫金鑰，以 `ClientInfo.ApiKeyStorage` 指派。
+用戶端透過 `IApiKeyStorage`（`Polhem.UI.ApiBridge`）讀寫金鑰，以 `ClientInfo.ApiKeyStorage` 指派。
 `ClientInfo.ApplyApiKey(defaultApiKey)` 在存放為空時以應用內建值作為種子寫入，否則一律以存放值
 為準，因此更換金鑰不需要重新編譯任何用戶端。
 

@@ -15,7 +15,7 @@ The framework registers itself in the standard `IServiceCollection` DI container
 4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — register framework services (extension from `Polhem.Hosting`), and `services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` for the payload compressor and encryptor
 5. Build the service provider, then:
    - **ASP.NET Core hosts** call `services.AddJsonRpcServer()` and `services.AddPolhemApiKeyGateCheck()` before building, and `app.MapJsonRpc("/api")` on the built application. The gate check runs when the host starts (see [API Key Management](../security/api-key-management.md)).
-   - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: `PolhemApiClient.CreateLocal` (`Polhem.Api.Client`) takes it as an argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.Core`).
+   - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: `PolhemApiClient.CreateLocal` (`Polhem.Api.Client`) takes it as an argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.ApiBridge`).
 
 See [development-cookbook.md § Framework Initialization Order](../guides/development-cookbook.md#framework-initialization-order) for the canonical reference.
 

@@ -8,7 +8,7 @@
 
 - **層級**：前端 / 用戶端
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
-- 由應用程式消費（Avalonia、Blazor、主控台及其他 head）。
+- 由應用程式消費（Blazor head、主控台及其他 host）。單一使用者的原生 head（Avalonia）透過 [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md) 使用它；UI 控制項套件本身不參考它。
 
 ## 目標框架
 
@@ -34,7 +34,8 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
   定義讀寫（`GetDefineAsync` / `SaveDefineAsync` 以及 `GetFormSchemaAsync` 等具型別版本）、API 金鑰管理與
   `ExecFuncAsync`。完整清單以類別本身為準。
 - `FormApiConnector` -- 綁定單一 `ProgId`：`GetListAsync`、`GetDataAsync`、`GetNewDataAsync`、`SaveAsync`、
-  `DeleteAsync`、`GetLookupAsync`、`ExecFuncAsync` 與 `ExecFuncAnonymousAsync`。
+  `DeleteAsync`、`GetLookupAsync`、`ExecFuncAsync` 與 `ExecFuncAnonymousAsync`。它實作前端所相依的合約
+  `Polhem.Api.Contracts.Form.IFormApiConnector`：公開方法回傳具體的訊息型別，合約成員則轉呼叫這些方法。
 - `AuditLogApiConnector` -- 查詢稽核與異常紀錄。
 - 所有動作方法都是非同步、帶 `Async` 後綴，並以 `CancellationToken` 作為最後一個參數。
   所有連接器共用 `ApiConnector` 的 payload 管線（編碼、壓縮、加密）。
@@ -61,10 +62,12 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
   `PolhemApiClient.SignOut` 將其清除。
 - 一個 client 只持有一個身分。在同一行程服務多位使用者的 host（Blazor Server）為每位使用者建立一個 client。
 
-### 各 head 共用的 UI 輔助
+### 本套件不持有的部分
 
-- `ElementCapabilityResolver` -- 依使用者權限判斷欄位可見或唯讀。
-- `FormDataGuard` / `FormValueBinding` -- CRUD 前置條件，以及 UI 與 `DataRow` 之間的值轉換。
+- 各 head 共用的 UI 輔助（`FormValueBinding`、`FormDataGuard` 與元素能力解析器）位於
+  [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md)，單一使用者 head 的連線狀態（`ClientInfo`）位於
+  [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md)。本套件不參考 UI；見
+  [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
 
 ## 主要公開 API
 
@@ -74,7 +77,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 | `ApiSessionContext` / `ApiSessionCredentials` | client 的登入狀態（access token、傳輸金鑰、時區） |
 | `ApiConnector` | 抽象基底連接器，含 payload 管線 |
 | `SystemApiConnector` | 系統層級操作 |
-| `FormApiConnector` | 綁定特定 ProgId 的表單層級商業物件呼叫 |
+| `FormApiConnector` | 綁定特定 ProgId 的表單層級商業物件呼叫；實作 `IFormApiConnector` |
 | `AuditLogApiConnector` | 稽核與異常紀錄查詢 |
 | `ClientDefineAccess` | 透過 API 的非同步快取定義存取 |
 | `FormDefinitionLoader` | 供 UI 使用的在地化表單結構與執行期版面 |
@@ -92,8 +95,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 ## 目錄結構
 
 - 專案根目錄 -- `PolhemApiClient`、`ApiSessionContext`、`ApiSessionCredentials`、`ApiConnectValidator`、`ClientDefineAccess`、`ConnectType`、
-  `SupportedConnectTypes`、`FormDataGuard`、`FormValueBinding`
+  `SupportedConnectTypes`
 - `Connectors/` -- `ApiConnector`、`SystemApiConnector`、`FormApiConnector`、`AuditLogApiConnector`
 - `Providers/` -- 內部使用的行程內與 HTTP 傳輸
 - `Definitions/` -- `FormDefinitionLoader`、`LanguageLayers`、`SnapshotLanguageService`
-- `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`

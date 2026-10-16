@@ -4,8 +4,7 @@ using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Permissions;
-using Polhem.UI.Core;
-using Polhem.Api.Client.Permissions;
+using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -23,7 +22,7 @@ namespace Polhem.UI.Avalonia.Views
             var listLayout = Schema!.GetListLayout();
             // Degrade the freshly generated list layout before binding: sensitive columns the user
             // cannot Read drop out. No-op when no company context is active.
-            LayoutCapabilityApplier.ApplyGrid(listLayout, Schema, ClientInfo.Capabilities);
+            LayoutCapabilityApplier.ApplyGrid(listLayout, Schema, ResolveUserContext()?.Capabilities);
             // Columns render immediately; rows arrive with the first ReloadAsync. The master table
             // lets drop-down columns show their (localized) list item text instead of stored codes.
             _grid.Bind(listLayout, rows: null, Schema.MasterTable);
@@ -126,7 +125,7 @@ namespace Polhem.UI.Avalonia.Views
         // and cached capability snapshot. Untagged buttons and a missing schema resolve to permitted.
         private bool CanCommand(Control button)
             => Schema is null
-               || ElementCapabilityResolver.Default.Can(Schema, PermissionScope.GetAction(button), ClientInfo.Capabilities);
+               || ElementCapabilityResolver.Default.Can(Schema, PermissionScope.GetAction(button), ResolveUserContext()?.Capabilities);
 
         private void ReportError(Exception ex)
         {

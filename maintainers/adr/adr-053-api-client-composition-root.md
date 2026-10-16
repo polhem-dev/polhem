@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted (2026-10-10)**
+**Accepted (2026-10-10)**, `ClientInfo` moved to `Polhem.UI.ApiBridge` by [ADR-054](adr-054-front-end-decoupled-from-api-client.md) (2026-10-16)
 
 A breaking change within 1.x under [ADR-052](adr-052-breaking-changes-in-1-x-minors.md). Amends
 [ADR-013](adr-013-frontend-api-connection-strategy.md) (connection plumbing) and [ADR-046](adr-046-api-evolution-policies-for-1-0.md)

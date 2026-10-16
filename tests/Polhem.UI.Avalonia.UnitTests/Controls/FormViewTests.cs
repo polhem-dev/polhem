@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Api.Contracts.Form;
 using System.Data;
 using System.Reflection;
 using Avalonia;
@@ -23,7 +24,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     /// CRUD / three-mode flow (View / Add / Edit, Save / Cancel / Back), the
     /// <see cref="FormView.FormMode"/> broadcast through the ambient <see cref="FormScope"/>,
     /// and the record rendering (master sections + detail grids). A <see cref="TestFormView"/>
-    /// overrides the <c>Resolve*</c> hooks so the static <c>ClientInfo</c> is never touched.
+    /// overrides the <c>Resolve*</c> hooks so the services registered in <c>UIServices</c> are never reached.
     /// </summary>
     public class FormViewTests
     {
@@ -150,7 +151,6 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
         [Theory]
         [InlineData(nameof(FormView.ProgId), "ProgIdProperty")]
-        [InlineData(nameof(FormView.AccessToken), "AccessTokenProperty")]
         [InlineData(nameof(FormView.Schema), "SchemaProperty")]
         [InlineData(nameof(FormView.FormConnector), "FormConnectorProperty")]
         [InlineData(nameof(FormView.FormMode), "FormModeProperty")]
@@ -619,7 +619,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         /// <summary>
-        /// Overrides the <c>Resolve*</c> hooks so tests never read <c>ClientInfo</c>, and
+        /// Overrides the <c>Resolve*</c> hooks so tests never reach the registered services, and
         /// surfaces the <c>OnFormModeChanged</c> hook for assertions.
         /// </summary>
         // ---- live recomputation wiring ----
@@ -1023,12 +1023,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
                 => Task.FromResult<FormSchema?>(null);
 
-            protected override FormApiConnector ResolveFormConnector(string progId)
-                => throw new InvalidOperationException("ClientInfo fallback must not be reached in unit tests.");
+            protected override IFormApiConnector? ResolveFormConnector(string progId)
+                => throw new InvalidOperationException("The registered connector factory must not be reached in unit tests.");
 
-            protected override Guid ResolveAccessToken() => Guid.Empty;
-
-            /// <summary>Injects a rounding context for live preview without touching the static ClientInfo.</summary>
+            /// <summary>Injects a rounding context for live preview without touching the registered services.</summary>
             public RoundingContext? RoundingContextOverride { get; set; }
 
             protected override Task<RoundingContext> ResolveRoundingContextAsync(CancellationToken cancellationToken)

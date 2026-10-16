@@ -1,1 +1,34 @@
 #nullable enable
+*REMOVED*Polhem.Api.Client.FormDataGuard
+*REMOVED*Polhem.Api.Client.FormValueBinding
+*REMOVED*Polhem.Api.Client.Permissions.ElementCapabilityResolver
+*REMOVED*Polhem.Api.Client.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+*REMOVED*Polhem.Api.Client.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
+*REMOVED*Polhem.Api.Client.Permissions.ElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.Deconstruct(out bool Visible, out bool ReadOnly) -> void
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.Equals(Polhem.Api.Client.Permissions.FieldCapability other) -> bool
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.FieldCapability() -> void
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.FieldCapability(bool Visible, bool ReadOnly) -> void
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.get -> bool
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.init -> void
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.Visible.get -> bool
+*REMOVED*Polhem.Api.Client.Permissions.FieldCapability.Visible.init -> void
+*REMOVED*Polhem.Api.Client.Permissions.IElementCapabilityResolver
+*REMOVED*Polhem.Api.Client.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+*REMOVED*Polhem.Api.Client.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
+*REMOVED*override Polhem.Api.Client.Permissions.FieldCapability.GetHashCode() -> int
+*REMOVED*static Polhem.Api.Client.FormDataGuard.RequireConnector(Polhem.Api.Client.Connectors.FormApiConnector? connector, string! operation) -> Polhem.Api.Client.Connectors.FormApiConnector!
+*REMOVED*static Polhem.Api.Client.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
+*REMOVED*static Polhem.Api.Client.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
+*REMOVED*static Polhem.Api.Client.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Forms.FormSchema! schema) -> System.Data.DataSet!
+*REMOVED*static Polhem.Api.Client.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
+*REMOVED*static Polhem.Api.Client.FormValueBinding.ToBindingString(object? raw) -> string!
+*REMOVED*static Polhem.Api.Client.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
+*REMOVED*static Polhem.Api.Client.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool
+*REMOVED*static Polhem.Api.Client.Permissions.FieldCapability.operator !=(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
+*REMOVED*static Polhem.Api.Client.Permissions.FieldCapability.operator ==(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
+*REMOVED*static readonly Polhem.Api.Client.Permissions.ElementCapabilityResolver.Default -> Polhem.Api.Client.Permissions.ElementCapabilityResolver!
+*REMOVED*static readonly Polhem.Api.Client.Permissions.FieldCapability.Allowed -> Polhem.Api.Client.Permissions.FieldCapability
+*REMOVED*~override Polhem.Api.Client.Permissions.FieldCapability.Equals(object obj) -> bool
+*REMOVED*~override Polhem.Api.Client.Permissions.FieldCapability.ToString() -> string

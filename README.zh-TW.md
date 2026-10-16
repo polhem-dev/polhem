@@ -57,7 +57,7 @@ dotnet add package Polhem.Db
 | **Polhem.Core.dll** | 提供基礎函式與工具（序列化、加密等），作為共通基礎模組。 |
 | **Polhem.Definition.dll** | 定義系統結構化資料，包含 FormSchema、欄位結構描述與版面配置。 |
 | **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia 前端即時預覽共用，兩端算法一致。 |
-| **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）。 |
+| **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）與表單連接器契約（`IFormApiConnector`）。 |
 | **Polhem.Api.Core.dll** | 提供 API 核心支援，包含資料模型、Payload 加解密與序列化管線。 |
 
 ### 後端
@@ -76,7 +76,8 @@ dotnet add package Polhem.Db
 | 組件名稱 | 說明 |
 |---|---|
 | **Polhem.Api.Client.dll** | 提供 API client，支援以同程序或 HTTP 呼叫後端 Business Object（`PolhemApiClient.CreateLocal` / `CreateRemote`）。 |
-| **Polhem.UI.Core.dll** | 跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `FileEndpointStorage` / `IUIViewService`），供原生 UI 宿主共用 client-side 連線狀態與 endpoint 持久化邏輯。 |
+| **Polhem.UI.Core.dll** | 所有前端（含 Blazor head）共用的前端層：UI 服務合約（`UIServices` / `IUserContext` / `IFormDefinitionSource`）、表單值規則（`FormValueBinding` / `FormDataGuard`）與權限能力解析器。不含傳輸，只透過 `Polhem.Api.Contracts` 接觸後端。 |
+| **Polhem.UI.ApiBridge.dll** | 把單一使用者的前端接上 Polhem 後端：用戶端連線狀態（`ClientInfo`）、endpoint 與 API 金鑰持久化（`IEndpointStorage` / `FileEndpointStorage`），以及以 `AddPolhemUIApiBridge()` 註冊、以 API 實作的 `Polhem.UI.Core` 服務。不適用多使用者 host。 |
 | **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
 | **Polhem.Web.Blazor.Server.dll** | Blazor Server 宿主用的 Razor Class Library（RCL），提供 DI scope 連接器與 Blazor 元件（`DynamicForm`、`FormDataObject`）。 |
 

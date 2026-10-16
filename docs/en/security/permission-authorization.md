@@ -184,7 +184,7 @@ On `EnterCompany`, the back end computes the per-model action mask for the sessi
 
 ## 9. How the client degrades
 
-`ClientInfo.Capabilities` (`Polhem.UI.Core`) caches the snapshot (nullable), and `Polhem.Api.Client.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) reads it. The Avalonia views (`FormView`, `ListView`) apply it today; the Blazor components do not read the snapshot.
+`ClientInfo.Capabilities` (`Polhem.UI.ApiBridge`) caches the snapshot (nullable), and the views read it through `IUserContext.Capabilities`, which `AddPolhemUIApiBridge` registers over `ClientInfo`. `Polhem.UI.Core.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) evaluates it. The Avalonia views (`FormView`, `ListView`) apply it today; a view with no `IUserContext` registered sees no snapshot and degrades nothing; the Blazor components do not read the snapshot.
 
 - **`null` → capability inactive → nothing is degraded.** An app that never enters a company, or does not use permissions, renders exactly as before.
 - **Non-null → active.** A model absent from the map means *no permission* on it.
@@ -210,13 +210,14 @@ Degradation never mutates cached definitions: the client applies it to the per-v
 
 Capability is **inert until wired**, so existing apps are unaffected. To turn it on:
 
-1. Declare the well-known category models (`Amount` / `Cost` / `PersonalData`) in `PermissionModels` and grant them (section 7).
-2. After `SystemApiConnector.EnterCompanyAsync`, hand the response to the client cache:
+1. Register the bridge so the views can read the snapshot: `UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();` (see [Development Cookbook § Polhem.UI.* heads](../guides/development-cookbook.md#polhemui-heads-clientinfo)).
+2. Declare the well-known category models (`Amount` / `Cost` / `PersonalData`) in `PermissionModels` and grant them (section 7).
+3. After `SystemApiConnector.EnterCompanyAsync`, hand the response to the client cache:
    ```csharp
    var response = await ClientInfo.SystemApiConnector.EnterCompanyAsync(companyId);
    ClientInfo.ApplyEnterCompanyResult(response);   // caches the capability snapshot and drops the previous tenant's definitions
    ```
-3. On `LeaveCompany` or logout, clear it: `ClientInfo.ClearCompanyContext();` (which drops the cached definitions too).
+4. On `LeaveCompany` or logout, clear it: `ClientInfo.ClearCompanyContext();` (which drops the cached definitions too).
 
 > **Caveat — the Field dimension is UX, not a data boundary.** `GetList` / `GetData` still return the sensitive column's value; the client merely hides or locks it. A client that bypasses the standard UI could still receive the raw value over the API. Treat field permission as *presentation*. Anything that must never leave the server belongs behind an **Action** or **Record** boundary (Part 1), or its own permission model — not solely a `SensitiveCategory`. Server-side column masking is a separate future concern (see Non-goals).
 
