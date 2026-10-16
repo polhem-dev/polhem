@@ -18,13 +18,15 @@ says one thing.
 | Living documentation / alignment baseline | The reference behavior and appearance of each control and concept; the template to align with when porting to other UI heads |
 | Development check | Visual feedback when changing the appearance of a control (such as removing the border of a read-only field) |
 
-The Demo Center covers **the control layer only**. It has no back end and no login or CRUD flow. For an end-to-end
-application (sign-in, connection, JSON-RPC, rendering forms) see [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md).
+The Demo Center covers **the control layer only**. It has no back end and no login; the one CRUD flow it shows runs
+over an in-memory connector (the "Without a Backend" topic). For an end-to-end application (sign-in, connection,
+JSON-RPC, rendering forms) see [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md).
 
 ## Prerequisites
 
 - .NET 10 SDK
-- No back end and no database: the data comes from an in-memory `FormSchema` + `FormDataObject`
+- No back end and no database: the data comes from an in-memory `FormSchema` + `FormDataObject`, or an in-memory
+  `IFormApiConnector`
 
 ## Run it
 
@@ -73,11 +75,14 @@ The navigation tree has two levels: **topic (`Category`) → case (`Title`)**. T
 | **Master-Detail** | Master + detail | `FormLayoutRenderer` renders a master section and a detail grid |
 | **Permission Capability** | Interactive permission simulator (master/detail) | Ticking simulated role grants degrades a master and its detail live, as the capability snapshot from `EnterCompany` would |
 | **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` shows a `FormField`, a `DbField` or `BackendConfiguration` from their `System.ComponentModel` annotations, with its display options and a `PropertyValueChanged` log; the `...` button of `ListItems` opens `CollectionEditDialog` |
+| **Without a Backend** | List and record over your own data | `ListView` and `FormView` driven by a `FormSchema`, a `FormLayout` and an in-memory `IFormApiConnector`; nothing is registered in `UIServices`, and the host sets `Schema`, `Layout` and `FormConnector` on the views ([`Modules/WithoutBackend/`](Modules/WithoutBackend/)) |
+| **Without a Backend** | List and record over your own data | `ListView` and `FormView` driven by a `FormSchema`, a `FormLayout` and an in-memory `IFormApiConnector`; nothing is registered in `UIServices`, and the host sets `Schema`, `Layout` and `FormConnector` on the views ([`Modules/WithoutBackend/`](Modules/WithoutBackend/)) |
 
-> **The Views (`FormView` / `ListView`)**: both are coupled to a back end, and the Demo Center has none. So it uses
-> "`FormDataObject` as the view model + sample data → bound UI", rendered with the same public primitives as the
-> production `FormView` (`FieldEditorFactory` + `GridControl`); see the Master-Detail, Layout and Grid topics. Loading,
-> saving and row events against a back end are shown in `apps/Polhem.Northwind`.
+> **The Views (`FormView` / `ListView`)**: they do not need a Polhem back end. The "Without a Backend" topic runs them
+> over an in-memory `IFormApiConnector` the sample implements itself. The other topics use "`FormDataObject` as the view
+> model + sample data → bound UI", rendered with the same public primitives as the production `FormView`
+> (`FieldEditorFactory` + `GridControl`); see the Master-Detail, Layout and Grid topics. Loading, saving and row events
+> against a Polhem back end are shown in `apps/Polhem.Northwind`.
 
 ## Module architecture (IDemoModule)
 

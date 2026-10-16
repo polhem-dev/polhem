@@ -1,18 +1,32 @@
-# Dependency boundary rules (`Polhem.Core` / `Polhem.Definition`)
+# Dependency boundary rules (the foundation assemblies and the front-end layer)
 
-## `Polhem.Core` and `Polhem.Definition` are the two lowest assemblies
+## Three foundation assemblies: `Polhem.Core`, `Polhem.Definition`, `Polhem.Api.Contracts`
 
-**Unless it is necessary, do not add any further package reference (`PackageReference`) to these two projects.**
+**Both the front end and the back end reference these three.** So they may hold nothing that belongs to one side only:
+nothing server-side (database, MessagePack, JSON-RPC, ASP.NET) and nothing front-end (a UI framework, local file
+storage, user state). `Polhem.Core` and `Polhem.Definition` are also the two lowest assemblies; `Polhem.Api.Contracts`
+sits above `Polhem.Definition` but is inherited the same way. The reasons are in
+[adr-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
+
+**Unless it is necessary, do not add any further package reference (`PackageReference`) to these projects.**
 
 They are the bottom of the framework's dependency graph: the direct downstream of `Polhem.Definition` spans the
 contracts, data access, caching, business logic, API and UI layers, and `Polhem.Core` is a dependency of **every**
 project. **Any package added to these two layers spreads along the dependency chain to every consumer**, including
 pure UI heads and definition file tools that only want to read definitions.
 
-**`Polhem.Api.Contracts` is locked the same way.** It is not at the bottom, but it sits in the transitive closure of
-every UI head, so the same argument applies. Everything in this file about "these two projects" applies to it as
-well; which projects the gates govern is set in `src/Directory.Build.targets` (`PolhemEnforceDependencyBoundary`),
-not here.
+Which projects the gates govern is set in `src/Directory.Build.targets` (`PolhemEnforceDependencyBoundary`), not
+here.
+
+## The front-end layer never carries the transport
+
+`Polhem.UI.Core` and `Polhem.UI.Avalonia` reach the backend only through the contracts in `Polhem.Api.Contracts`
+(`IFormApiConnector` and the response interfaces), and the services they need are injected
+(`Polhem.UI.Core.UIServices`). **They must not reference `Polhem.Api.Client`, `Polhem.Api.Core` or
+`Polhem.UI.ApiBridge`**: those bring MessagePack and the JSON-RPC packages into every front end. A head that has a
+backend references `Polhem.UI.ApiBridge` itself. The same lock (`POLHEM9001`) governs both projects, and
+`FrontEndDependencyGateTests` (tests/Polhem.UI.Avalonia.UnitTests) checks their transitive closure. Do not let the
+connector reference the UI either: joining the two is the bridge's job.
 
 Likewise, **a `ProjectReference` to a downstream project counts too**: `Polhem.Definition` once transitively depended
 on `DynamicExpresso.Core` through `ProjectReference → Polhem.Expressions` (resolved by adr-038). The visible symptom
@@ -50,7 +64,7 @@ shared by several layers".
 | Gate | Location | When it goes red |
 |------|------|--------|
 | **Build-time lock** `POLHEM9001` | `src/Directory.Build.targets` | The moment you write it, `dotnet build` fails |
-| **Transitive closure test** | `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs` | When tests run |
+| **Transitive closure test** | `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs`; for the front-end layer `tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs` | When tests run |
 
 **Both are needed**, because the build-time lock cannot see "a **package** brought in indirectly through some
 `ProjectReference`" (that is exactly how DynamicExpresso got in), while the closure test only tells you when tests

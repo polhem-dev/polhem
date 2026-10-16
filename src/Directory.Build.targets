@@ -18,15 +18,21 @@
     ProjectReference with ReferenceOutputAssembly="false" (the Polhem.Analyzers build ordering
     reference) contributes no assembly.
 
+    The front-end layer is locked the same way (ADR-054): Polhem.UI.Core and Polhem.UI.Avalonia reach the
+    backend only through the contracts in Polhem.Api.Contracts, so a reference to Polhem.Api.Client or
+    Polhem.Api.Core, which would carry MessagePack and the JSON-RPC server packages into every front end,
+    fails the build here.
+
     The same boundary is asserted from the other end by
-    tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, which walks the full
+    tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs and, for the front-end layer,
+    tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs, which walk the full
     transitive closure. The two are complements, not duplicates: this target catches the direct
     edge at the moment it is written, the test catches a package that arrives indirectly through a
     project reference — which is exactly how DynamicExpresso.Core got in.
   -->
 
   <PropertyGroup>
-    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts'">true</PolhemEnforceDependencyBoundary>
+    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts' Or '$(MSBuildProjectName)' == 'Polhem.UI.Core' Or '$(MSBuildProjectName)' == 'Polhem.UI.Avalonia'">true</PolhemEnforceDependencyBoundary>
   </PropertyGroup>
 
   <!-- Polhem.Core: no consumer-facing dependency of any kind. The allowlist is deliberately empty. -->
@@ -51,6 +57,28 @@
     <PolhemAllowedDependency Include="Polhem.Core" />
   </ItemGroup>
 
+  <!--
+    The front-end layer (ADR-054). Polhem.UI.Core holds the service contracts and the form value rules every
+    front end shares; it reaches the backend only through Polhem.Api.Contracts. Polhem.UI.Avalonia adds the
+    Avalonia packages and the expression engine for live computation. Neither may reference Polhem.Api.Client,
+    Polhem.Api.Core or Polhem.UI.ApiBridge: a head that has a backend references the bridge itself.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Polhem.UI.Core'">
+    <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
+    <PolhemAllowedDependency Include="Polhem.Definition" />
+    <PolhemAllowedDependency Include="Polhem.Core" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Polhem.UI.Avalonia'">
+    <PolhemAllowedDependency Include="Avalonia" />
+    <PolhemAllowedDependency Include="Avalonia.Controls.DataGrid" />
+    <PolhemAllowedDependency Include="Polhem.UI.Core" />
+    <PolhemAllowedDependency Include="Polhem.Expressions" />
+    <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
+    <PolhemAllowedDependency Include="Polhem.Definition" />
+    <PolhemAllowedDependency Include="Polhem.Core" />
+  </ItemGroup>
+
   <!-- POLHEM9002: the three version properties must agree. The definition is shared with tools/. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.targets" />
 
@@ -68,7 +96,7 @@
 
     <Error Condition="'@(_PolhemBoundaryViolation)' != ''"
            Code="POLHEM9001"
-           Text="$(MSBuildProjectName) is inherited by every consumer of the framework and is locked to an explicit dependency allowlist (ADR-038). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by every consumer of the framework. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the whitelist in tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, and record why in maintainers/adr/adr-038-definition-dependency-boundary.md." />
+           Text="$(MSBuildProjectName) is locked to an explicit dependency allowlist (ADR-038, ADR-054). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by everything that references this assembly. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the allowlist of the closure test (tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, or tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs for the front-end layer), and record why in the ADR." />
   </Target>
 
 </Project>

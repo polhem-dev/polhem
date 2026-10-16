@@ -102,8 +102,8 @@ var client = PolhemApiClient.CreateLocal(host.Services);
 var login = await client.System.LoginAsync("demo", "demo");
 ```
 
-A `Polhem.UI.Core` head assigns `host.Services` to `ClientInfo.LocalServiceProvider` instead, and the in-process
-`ClientInfo.ApiClient` dispatches to it.
+A single-user head built on [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md) assigns `host.Services` to
+`ClientInfo.LocalServiceProvider` instead, and the in-process `ClientInfo.ApiClient` dispatches to it.
 
 ## Design Conventions
 

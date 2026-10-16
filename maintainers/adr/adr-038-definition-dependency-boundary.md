@@ -2,7 +2,9 @@
 
 ## Status
 
-**Accepted (2026-08-11)**: the decision has been carried out.
+**Accepted (2026-08-11)**: the decision has been carried out. The locked set amended by
+[ADR-054](adr-054-front-end-decoupled-from-api-client.md) (2026-10-16): `POLHEM9001` also governs `Polhem.UI.Core` and
+`Polhem.UI.Avalonia`.
 
 This ADR continues the criterion of [ADR-036](adr-036-wire-serialization-externalized.md) and adds the definition of
 its boundary. It also revises the assembly layout in [ADR-028](adr-028-expression-rule-engine.md) where "the

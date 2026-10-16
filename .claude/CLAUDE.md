@@ -54,11 +54,11 @@ Container detection, automatic skipping and environment variable overrides for `
 The projects, their layers and every allowed dependency edge are in `docs/en/architecture/dependency-map.md`; this file does not
 keep a copy.
 
-> ⚠️ **`Polhem.Core` and `Polhem.Definition` are the two lowest assemblies.** Every project depends on
-> `Polhem.Core`, and the direct consumers of `Polhem.Definition` span every layer. **Do not add package references
-> to these two projects unless it is necessary**: any dependency added here spreads along the dependency chain to
-> every consumer. `Polhem.Api.Contracts` is locked the same way. The criteria, the correct approach and the gates are
-> in `rules/dependency-boundary.md`.
+> ⚠️ **`Polhem.Core`, `Polhem.Definition` and `Polhem.Api.Contracts` are the three foundation assemblies: both the
+> front end and the back end reference them.** **Do not add package references to them unless it is necessary**: any
+> dependency added here spreads to every consumer on both sides. The front-end layer (`Polhem.UI.Core`,
+> `Polhem.UI.Avalonia`) is locked as well, so it never carries the transport. The criteria, the correct approach and
+> the gates are in `rules/dependency-boundary.md`.
 
 ## Workflow
 

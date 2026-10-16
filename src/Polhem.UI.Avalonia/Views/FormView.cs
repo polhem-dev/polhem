@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Api.Client.Connectors;
+using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
@@ -11,7 +11,6 @@ using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
-using Polhem.UI.Core;
 using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Views
@@ -28,9 +27,11 @@ namespace Polhem.UI.Avalonia.Views
     /// <see cref="Saved"/> / <see cref="Closed"/> to return to the list.
     /// </summary>
     /// <remarks>
-    /// The host typically supplies only <see cref="ProgId"/>; the schema, connector and access
-    /// token resolve from <see cref="ClientInfo"/> through the <c>Resolve*</c> hooks, which a
-    /// subclass can override to bypass the static state (the unit tests rely on this). Setting
+    /// The host typically supplies only <see cref="ProgId"/>; the schema, layout and connector resolve
+    /// through the <c>Resolve*</c> hooks from the services registered in
+    /// <see cref="Polhem.UI.Core.UIServices.Provider"/>, and a subclass can override the hooks to supply them
+    /// another way (the unit tests rely on this). With no services registered, the host sets
+    /// <see cref="Schema"/>, <see cref="Layout"/> and <see cref="FormConnector"/> itself. Setting
     /// <see cref="FormMode"/> broadcasts through the ambient <see cref="FormScope"/> so the
     /// field editors and detail grids switch read-only / editable to match.
     /// </remarks>
@@ -39,10 +40,6 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>Identifies the <see cref="ProgId"/> styled property.</summary>
         public static readonly StyledProperty<string> ProgIdProperty =
             AvaloniaProperty.Register<FormView, string>(nameof(ProgId), defaultValue: string.Empty);
-
-        /// <summary>Identifies the <see cref="AccessToken"/> styled property.</summary>
-        public static readonly StyledProperty<Guid> AccessTokenProperty =
-            AvaloniaProperty.Register<FormView, Guid>(nameof(AccessToken), defaultValue: Guid.Empty);
 
         /// <summary>Identifies the <see cref="Schema"/> styled property.</summary>
         public static readonly StyledProperty<FormSchema?> SchemaProperty =
@@ -53,8 +50,8 @@ namespace Polhem.UI.Avalonia.Views
             AvaloniaProperty.Register<FormView, FormLayout?>(nameof(Layout));
 
         /// <summary>Identifies the <see cref="FormConnector"/> styled property.</summary>
-        public static readonly StyledProperty<FormApiConnector?> FormConnectorProperty =
-            AvaloniaProperty.Register<FormView, FormApiConnector?>(nameof(FormConnector));
+        public static readonly StyledProperty<IFormApiConnector?> FormConnectorProperty =
+            AvaloniaProperty.Register<FormView, IFormApiConnector?>(nameof(FormConnector));
 
         /// <summary>Identifies the <see cref="FormMode"/> styled property.</summary>
         public static readonly StyledProperty<SingleFormMode> FormModeProperty =
@@ -165,26 +162,13 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>
-        /// Gets or sets the program identifier (e.g. "Category"). Drives both the
-        /// <see cref="ClientInfo"/>-backed FormSchema lookup and the
-        /// <see cref="FormApiConnector"/> creation when the host leaves
-        /// <see cref="Schema"/> / <see cref="FormConnector"/> unset.
+        /// Gets or sets the program identifier (e.g. "Category"). Drives both the schema lookup and the
+        /// connector creation when the host leaves <see cref="Schema"/> / <see cref="FormConnector"/> unset.
         /// </summary>
         public string ProgId
         {
             get => GetValue(ProgIdProperty);
             set => SetValue(ProgIdProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the access token surfaced on the view. Defaults to
-        /// <see cref="Guid.Empty"/>; resolves from <see cref="ClientInfo.AccessToken"/> when
-        /// the host did not supply one.
-        /// </summary>
-        public Guid AccessToken
-        {
-            get => GetValue(AccessTokenProperty);
-            set => SetValue(AccessTokenProperty, value);
         }
 
         /// <summary>Gets or sets the resolved <see cref="FormSchema"/>.</summary>
@@ -201,8 +185,8 @@ namespace Polhem.UI.Avalonia.Views
         /// <remarks>
         /// The counterpart of <see cref="Schema"/>, and it exists for the same case: a host may drive
         /// the view with definitions it built itself and no backend behind them. Layouts are authored
-        /// at design time, so a view with neither a layout here, nor a
-        /// <see cref="DefinitionLoader"/>, nor a backend to fetch one from has no layout to render
+        /// at design time, so a view with neither a layout here nor a definition source to fetch one
+        /// from has no layout to render
         /// and says so — it does not derive one from the schema. To build one from a schema in code,
         /// call the design-time <see cref="FormLayoutGenerator.Generate"/> explicitly and assign the result
         /// here.
@@ -214,7 +198,7 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>Gets or sets the connector used for the load / save round-trips.</summary>
-        public FormApiConnector? FormConnector
+        public IFormApiConnector? FormConnector
         {
             get => GetValue(FormConnectorProperty);
             set => SetValue(FormConnectorProperty, value);

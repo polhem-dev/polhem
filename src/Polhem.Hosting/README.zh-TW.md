@@ -98,8 +98,8 @@ var client = PolhemApiClient.CreateLocal(host.Services);
 var login = await client.System.LoginAsync("demo", "demo");
 ```
 
-`Polhem.UI.Core` 的 head 則把 `host.Services` 指派給 `ClientInfo.LocalServiceProvider`，行程內的
-`ClientInfo.ApiClient` 會派遣到它。
+建立在 [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md) 上的單一使用者 head 則把 `host.Services`
+指派給 `ClientInfo.LocalServiceProvider`，行程內的 `ClientInfo.ApiClient` 會派遣到它。
 
 ## 設計慣例
 

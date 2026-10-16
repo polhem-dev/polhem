@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Api.Client;
+using Polhem.UI.Core;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -67,7 +67,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             // Same schema-driven seeding the server uses for the GetNewData master row, plus the
             // master link for a detail row (the client knows the loaded master).
             FormRowDefaults.Apply(formTable, e.Row, ResolveMasterRowId(),
-                Polhem.UI.Core.ClientInfo.UserInfo?.TimeZone ?? string.Empty);
+                UIServices.Get<IUserContext>()?.User?.TimeZone ?? string.Empty);
         }
 
         // The master row's sys_rowid a new detail row links through sys_master_rowid. Returns the

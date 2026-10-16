@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Connects Polhem front ends to a Polhem backend: the client connection state and the API-backed implementations of the Polhem.UI.Core services.</Description>
+    <PackageTags>polhem;ui;client;api;bridge</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.UI.Core\Polhem.UI.Core.csproj" />
+    <ProjectReference Include="..\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.UI.ApiBridge.UnitTests" />
+  </ItemGroup>
+
+</Project>

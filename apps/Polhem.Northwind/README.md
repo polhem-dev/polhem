@@ -87,7 +87,7 @@ endpoint to `http://10.0.2.2:5100/api`; the manifest enables cleartext HTTP for 
 
 > The first server run creates `northwind.db` in the server project folder (`Polhem.Northwind.Server/`, where `.gitignore` covers it) and seeds a Northwind subset. Delete that file to reseed from scratch.
 >
-> The desktop and mobile heads remember the endpoint and the API key in the framework's default `FileEndpointStorage`: a per-user folder named after the head's entry assembly (for example `Polhem.Northwind.Desktop`) under the local application data directory. Where that directory is on each platform is described on `FileEndpointStorage` in `Polhem.UI.Core`. The browser head keeps them in `localStorage` instead.
+> The desktop and mobile heads remember the endpoint and the API key in the framework's default `FileEndpointStorage`: a per-user folder named after the head's entry assembly (for example `Polhem.Northwind.Desktop`) under the local application data directory. Where that directory is on each platform is described on `FileEndpointStorage` in `Polhem.UI.ApiBridge`. The browser head keeps them in `localStorage` instead.
 
 ## Screenshots
 
@@ -240,8 +240,10 @@ just happens to have one of each.
 Assembling all of this is the client's job, not the server's: the APIs serve definitions exactly
 as stored, and `FormDefinitionLoader` fetches both layers, applies the overlay, and hands the view
 a localized schema. One switch covers the whole client — `ClientInfo.UseDefinitionLoader`, on by
-default and set explicitly in [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) — and the record
-form, the list and the lookup dialog all use `ClientInfo.DefinitionLoader`. With it off,
+default and set explicitly in [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs). The same file
+registers `AddPolhemUIApiBridge()` in `UIServices.Provider`, and the record form, the list and the
+lookup dialog all read their definitions from the `IFormDefinitionSource` it registers, which goes
+through `ClientInfo.DefinitionLoader`. With it off,
 a view renders the definitions as stored: English captions, and the packaged layout from
 `Define/FormLayout/` instead of the tenant's.
 

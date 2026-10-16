@@ -1,5 +1,5 @@
 using Polhem.Api.Client;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 

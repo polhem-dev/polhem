@@ -70,8 +70,14 @@ decides whether `FormPage` localizes its definitions; see below.
 
 ## Dependency Constraints
 
-References `Polhem.Api.Client` (and ASP.NET Core). The backend services are registered by the host: with
-`AddPolhemFramework` in Local mode, or by the remote server in Remote mode.
+References `Polhem.Api.Client`, [`Polhem.UI.Core`](../Polhem.UI.Core/README.md) and ASP.NET Core. The backend
+services are registered by the host: with `AddPolhemFramework` in Local mode, or by the remote server in Remote mode.
+
+`Polhem.UI.Core` supplies the form value rules every head shares (`FormValueBinding`, `FormDataGuard`, the element
+capability resolver). Its process-wide parts are off limits: this head serves several users from one process, so it
+must not use `UIServices` or reference `Polhem.UI.ApiBridge`, both of which hold one user per process.
+`UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) reads the compiled assembly's references and
+fails when it does. See [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
 
 ## License
 

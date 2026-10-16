@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Api.Client;
-using Polhem.Api.Client.Connectors;
+using Polhem.UI.Core;
+using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -17,30 +17,27 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// The constructor seeds an empty <see cref="DataSet"/> derived from
     /// <see cref="FormSchema"/>. The async methods (<see cref="LoadAsync"/>,
     /// <see cref="NewAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>)
-    /// round-trip through the supplied <see cref="FormApiConnector"/> and replace
+    /// round-trip through the supplied <see cref="IFormApiConnector"/> and replace
     /// the local <see cref="DataSet"/> with the server response.
     /// </para>
     /// <para>
     /// The value rules this type used to carry privately — DataSet seeding, string/column
-    /// coercion, display formatting, the CRUD preconditions — now live once in
-    /// <c>Polhem.Api.Client</c> (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which both this
-    /// head and <c>Polhem.Web.Blazor.Server</c> already reference. They are head-agnostic: the same
-    /// <see cref="FormSchema"/> and the same server responses drive every head.
+    /// coercion, display formatting, the CRUD preconditions — live once in <c>Polhem.UI.Core</c>
+    /// (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which every front end references,
+    /// <c>Polhem.Web.Blazor.Server</c> included. They are head-agnostic: the same <see cref="FormSchema"/>
+    /// and the same server responses drive every head.
     /// </para>
     /// <para>
     /// NOTE: this used to be a verbatim copy of the Blazor head's version, marked "deliberately
-    /// parallel" on the grounds that the only shared home would be <c>Polhem.UI.Core</c> — which
-    /// would put <c>Polhem.Web.Blazor.Server</c> inside the <c>Polhem.UI.*</c> family, and Blazor is a
-    /// separate family on purpose. That reasoning had a hole: <c>Polhem.Api.Client</c> is a common
-    /// ancestor of both heads and carries no such family meaning. It also had a cost — the note
-    /// said nothing enforced the parallel, and the two copies did in fact diverge, with one side
-    /// writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
+    /// parallel" with a note that nothing enforced the parallel. The two copies did diverge, with one
+    /// side writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
+    /// One shared implementation is what keeps them aligned.
     /// </para>
     /// </remarks>
     public partial class FormDataObject
     {
         private readonly FormSchema _schema;
-        private readonly FormApiConnector? _connector;
+        private readonly IFormApiConnector? _connector;
         // Rows under an explicit BeginRowEdit session. ADO.NET does NOT suppress
         // ColumnChanged during BeginEdit (pinned by test) — the bridge consults this
         // set to raise RowEditFieldChanged instead of FieldValueChanged until
@@ -57,7 +54,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <see cref="NewAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>).
         /// Optional when only the in-memory <see cref="DataSet"/> surface is needed.
         /// </param>
-        public FormDataObject(FormSchema schema, FormApiConnector? connector = null)
+        public FormDataObject(FormSchema schema, IFormApiConnector? connector = null)
         {
             ArgumentNullException.ThrowIfNull(schema);
             if (string.IsNullOrWhiteSpace(schema.ProgId))

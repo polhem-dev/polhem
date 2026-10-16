@@ -4,6 +4,7 @@ using Polhem.Core.Expressions;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
+using Polhem.UI.Core;
 
 namespace Polhem.UI.Avalonia.DataObjects
 {
@@ -37,7 +38,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// Read per call rather than captured at construction: this object outlives a sign-in, and a
         /// stale zone would silently date a new row by the previous user's day (ADR-032 D13).
         /// </remarks>
-        private static string TimeZoneId => Polhem.UI.Core.ClientInfo.UserInfo?.TimeZone ?? string.Empty;
+        private static string TimeZoneId => UIServices.Get<IUserContext>()?.User?.TimeZone ?? string.Empty;
 
         private readonly FormExpressionCalculator _calculator;
         private readonly RoundingContext _roundingContext;

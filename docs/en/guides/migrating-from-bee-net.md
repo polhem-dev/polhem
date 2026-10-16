@@ -35,12 +35,14 @@ The review also renamed, moved or removed public types. These are the ones a Bee
 | `NullAuditLogWriter` | `NullLogWriter` |
 | `UserID` (`SessionUser`, `CreateSessionArgs`) | `UserId` |
 | `AuditEntry.AccessToken` | `AuditEntry.TokenFingerprint` |
-| `ApiClientInfo` (`Endpoint`, `ApiKey`, `PayloadOptions`, `DefaultLanguage`, `ConnectType`) | The members of `PolhemApiClient`, created with `PolhemApiClient.CreateRemote(endpoint, apiKey)` (`IsLocal` instead of `ConnectType`); `SupportedConnectTypes` moved to `ClientInfo` (`Polhem.UI.Core`) |
+| `ApiClientInfo` (`Endpoint`, `ApiKey`, `PayloadOptions`, `DefaultLanguage`, `ConnectType`) | The members of `PolhemApiClient`, created with `PolhemApiClient.CreateRemote(endpoint, apiKey)` (`IsLocal` instead of `ConnectType`); `SupportedConnectTypes` moved to `ClientInfo` (`Polhem.UI.ApiBridge`) |
 | `ApiClientInfo.ApiEncryptionKey`, `ApiClientInfo.UserTimeZoneId` | `PolhemApiClient.Session.Credentials`, set by `LoginAsync` |
 | `ApiClientInfo.LocalServiceProvider` | Pass the `IServiceProvider` to `PolhemApiClient.CreateLocal` |
 | `new SystemApiConnector(endpoint, accessToken)`, `new FormApiConnector(endpoint, accessToken, progId)` | `client.System`, `client.Form(progId)` of a `PolhemApiClient`, which keeps the access token after `LoginAsync` |
-| `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.Core.FileEndpointStorage` |
-| `ElementCapabilityResolver`, `IElementCapabilityResolver`, `FieldCapability` in `Bee.UI.Core.Permissions` | The same types in `Polhem.Api.Client.Permissions` |
+| `ClientInfo`, `IEndpointStorage`, `IApiKeyStorage` in `Bee.UI.Core` | The same types in `Polhem.UI.ApiBridge` (package `Polhem.UI.ApiBridge`) |
+| `IUIViewService`, `ClientInfo.InitializeAsync(IUIViewService, SupportedConnectTypes)` | Removed: `ClientInfo.InitializeAsync(SupportedConnectTypes)` returns `false` and the head shows its own connection setup, then calls `ClientInfo.InitializeAsync(endpoint)` |
+| `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.ApiBridge.FileEndpointStorage` |
+| `ElementCapabilityResolver`, `IElementCapabilityResolver`, `FieldCapability` in `Bee.UI.Core.Permissions` | The same types in `Polhem.UI.Core.Permissions` |
 | `DeploymentAuthorizationService`, `EmployeeContextResolver` in `Bee.ObjectCaching.Services` | `Polhem.Business.Security.DeploymentAuthorizationService`, `Polhem.Business.Session.EmployeeContextResolver` |
 | `JsonRpcExecutor.Execute`, `ApiServiceController` | Removed in 1.2.0: the dispatcher of `Polhem.JsonRpc.Server`, published with `app.MapJsonRpc("/api")` |
 | `BusinessObject.SessionInfo` | `SessionInfoService.Get(AccessToken)` inside the business object |

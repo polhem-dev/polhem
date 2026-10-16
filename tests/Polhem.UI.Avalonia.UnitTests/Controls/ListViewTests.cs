@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Api.Contracts.Form;
 using System.Data;
 using System.Globalization;
 using System.Reflection;
@@ -20,7 +21,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     /// <see cref="ListView.InitializeAsync"/> + a <see cref="FakeFormApiConnector"/> so the
     /// unit-test environment never needs an Avalonia visual tree nor a live JSON-RPC
     /// backend. A <see cref="TestListView"/> subclass overrides the <c>Resolve*</c> hooks so
-    /// the static <c>ClientInfo</c> is never touched.
+    /// the services registered in <c>UIServices</c> are never reached.
     /// </summary>
     public class ListViewTests
     {
@@ -83,7 +84,6 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
         [Theory]
         [InlineData(nameof(ListView.ProgId), "ProgIdProperty")]
-        [InlineData(nameof(ListView.AccessToken), "AccessTokenProperty")]
         [InlineData(nameof(ListView.Schema), "SchemaProperty")]
         [InlineData(nameof(ListView.FormConnector), "FormConnectorProperty")]
         [DisplayName("Every public property has a matching StyledProperty registration")]
@@ -295,8 +295,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         /// <summary>
-        /// Overrides the <c>Resolve*</c> hooks so tests never read the process-wide
-        /// <c>ClientInfo</c> statics; <c>ResolveFormConnector</c> throws to flag any
+        /// Overrides the <c>Resolve*</c> hooks so tests never reach the process-wide
+        /// <c>UIServices</c> provider; <c>ResolveFormConnector</c> throws to flag any
         /// unexpected ProgId-fallback path.
         /// </summary>
         [Fact]
@@ -385,10 +385,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
                 => Task.FromResult<FormSchema?>(null);
 
-            protected override FormApiConnector ResolveFormConnector(string progId)
-                => throw new InvalidOperationException("ClientInfo fallback must not be reached in unit tests.");
-
-            protected override Guid ResolveAccessToken() => Guid.Empty;
+            protected override IFormApiConnector? ResolveFormConnector(string progId)
+                => throw new InvalidOperationException("The registered connector factory must not be reached in unit tests.");
         }
 
         /// <summary>

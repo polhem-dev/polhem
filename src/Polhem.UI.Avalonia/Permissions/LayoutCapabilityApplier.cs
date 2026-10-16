@@ -1,7 +1,7 @@
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
-using Polhem.Api.Client.Permissions;
+using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Permissions
 {

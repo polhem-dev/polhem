@@ -1,6 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using Polhem.UI.ApiBridge;
+using Polhem.UI.ApiBridge.DependencyInjection;
 using Polhem.UI.Core;
 using Polhem.Northwind.UI.ViewModels;
 using Polhem.Northwind.UI.Views;
@@ -30,6 +33,10 @@ public partial class App : Application
         // company's number formats. The language is the signed-in account's culture, which
         // ClientInfo.ApplyLoginResult makes the UI culture.
         ClientInfo.UseDefinitionLoader = true;
+
+        // The views resolve their connector, definitions and user context from the provider; the bridge reads
+        // them from ClientInfo, so this registration holds across the connection, sign-in and company steps.
+        UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

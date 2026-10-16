@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Api.Client;
+using Polhem.UI.Core;
 using System.Globalization;
 using Polhem.Definition;
 using Polhem.Definition.Collections;

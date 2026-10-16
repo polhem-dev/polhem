@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices.JavaScript;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 
 namespace Polhem.Northwind.Browser.Storage;
 

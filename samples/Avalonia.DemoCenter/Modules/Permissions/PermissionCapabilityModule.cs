@@ -7,7 +7,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
-using Polhem.Api.Client.Permissions;
+using Polhem.UI.Core.Permissions;
 
 namespace Avalonia.DemoCenter.Modules.Permissions
 {

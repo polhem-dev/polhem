@@ -3,6 +3,7 @@ using System.Reflection;
 using Polhem.Tests.Shared;
 using Polhem.UI.Avalonia.Views;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Definitions;
 
 namespace Polhem.UI.Avalonia.UnitTests
 {
@@ -14,11 +15,12 @@ namespace Polhem.UI.Avalonia.UnitTests
     /// The same rule the client package's surface test enforces, for the same reason: once a package ships, adding
     /// the token breaks callers and overriders, and an optional parameter pins its method as the overload with the
     /// most parameters (RS0027). Both assemblies are scanned whole, so the next async member added to either is
-    /// caught. <c>Polhem.UI.Core</c> is scanned from here because this project already references it.
+    /// caught. <c>Polhem.UI.Core</c> is scanned from here because this project already references it;
+    /// <c>Polhem.UI.ApiBridge</c> is scanned by its own test project.
     /// </remarks>
     public class UIAsyncSurfaceTests
     {
-        private static readonly Assembly[] s_assemblies = [typeof(ClientInfo).Assembly, typeof(FormView).Assembly];
+        private static readonly Assembly[] s_assemblies = [typeof(UIServices).Assembly, typeof(FormView).Assembly];
 
         public static TheoryData<string> AsyncMembers()
         {
@@ -42,7 +44,7 @@ namespace Polhem.UI.Avalonia.UnitTests
         [DisplayName("The UI async surface scan finds members in both assemblies, so an empty filter cannot pass vacuously")]
         public void AsyncSurface_FindsMembersInBothAssemblies()
         {
-            Assert.Contains(AsyncSurface.Methods(typeof(ClientInfo).Assembly), m => m.DeclaringType == typeof(IUIViewService));
+            Assert.Contains(AsyncSurface.Methods(typeof(UIServices).Assembly), m => m.DeclaringType == typeof(IFormDefinitionSource));
             Assert.Contains(AsyncSurface.Methods(typeof(FormView).Assembly), m => m.DeclaringType == typeof(FormView));
         }
     }

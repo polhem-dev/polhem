@@ -8,7 +8,7 @@
 
 - **Layer**: Frontend / Client
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
-- Consumed by application code (Avalonia, Blazor, console and other heads).
+- Consumed by application code (the Blazor head, console and other hosts). A single-user native head (Avalonia) reaches it through [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md); the UI control libraries do not reference it.
 
 ## Target Framework
 
@@ -34,7 +34,9 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
   (environment bootstrap), definition reads and saves (`GetDefineAsync` / `SaveDefineAsync` and typed variants
   such as `GetFormSchemaAsync`), API key management and `ExecFuncAsync`. The full list is the class itself.
 - `FormApiConnector` -- bound to one `ProgId`: `GetListAsync`, `GetDataAsync`, `GetNewDataAsync`, `SaveAsync`,
-  `DeleteAsync`, `GetLookupAsync`, `ExecFuncAsync` and `ExecFuncAnonymousAsync`.
+  `DeleteAsync`, `GetLookupAsync`, `ExecFuncAsync` and `ExecFuncAnonymousAsync`. It implements
+  `Polhem.Api.Contracts.Form.IFormApiConnector`, the contract the front ends depend on: its public methods return the
+  concrete messages, and the contract members forward to them.
 - `AuditLogApiConnector` -- reads the audit and anomaly logs.
 - Every action method is asynchronous, carries the `Async` suffix and takes a trailing `CancellationToken`.
   All connectors share the payload pipeline (encoding, compression, encryption) of `ApiConnector`.
@@ -62,10 +64,12 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 - One client holds one identity. A host serving several users from one process (Blazor Server) creates a client
   per user.
 
-### UI Helpers Shared by Every Head
+### What This Package Does Not Hold
 
-- `ElementCapabilityResolver` -- resolves whether a field is visible or read-only from the user's permissions.
-- `FormDataGuard` / `FormValueBinding` -- CRUD preconditions and value conversion between the UI and a `DataRow`.
+- The UI helpers every head shares (`FormValueBinding`, `FormDataGuard` and the element capability resolver) are in
+  [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), and the connection state of a single-user head (`ClientInfo`) is in
+  [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md). This package does not reference the UI; see
+  [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
 
 ## Key Public APIs
 
@@ -75,7 +79,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 | `ApiSessionContext` / `ApiSessionCredentials` | The client's signed-in state (access token, transmission key, time zone) |
 | `ApiConnector` | Abstract base connector with the payload pipeline |
 | `SystemApiConnector` | System-level operations |
-| `FormApiConnector` | Form-level business object calls bound to a specific ProgId |
+| `FormApiConnector` | Form-level business object calls bound to a specific ProgId; implements `IFormApiConnector` |
 | `AuditLogApiConnector` | Audit and anomaly log queries |
 | `ClientDefineAccess` | Cached asynchronous definition access over the API |
 | `FormDefinitionLoader` | Localized form schema and runtime layout for a UI |
@@ -93,8 +97,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 ## Directory Structure
 
 - project root -- `PolhemApiClient`, `ApiSessionContext`, `ApiSessionCredentials`, `ApiConnectValidator`, `ClientDefineAccess`, `ConnectType`,
-  `SupportedConnectTypes`, `FormDataGuard`, `FormValueBinding`
+  `SupportedConnectTypes`
 - `Connectors/` -- `ApiConnector`, `SystemApiConnector`, `FormApiConnector`, `AuditLogApiConnector`
 - `Providers/` -- the internal in-process and HTTP transports
 - `Definitions/` -- `FormDefinitionLoader`, `LanguageLayers`, `SnapshotLanguageService`
-- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

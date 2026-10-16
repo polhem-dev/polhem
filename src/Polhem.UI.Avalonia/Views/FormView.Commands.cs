@@ -5,8 +5,7 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Avalonia.Permissions;
-using Polhem.UI.Core;
-using Polhem.Api.Client.Permissions;
+using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -31,8 +30,6 @@ namespace Polhem.UI.Avalonia.Views
         private async Task<FormDataObject?> EnsureDataObjectAsync(CancellationToken cancellationToken)
         {
             if (_dataObject is not null) return _dataObject;
-
-            ApplyAccessTokenFallback();
 
             if (Schema is null && !string.IsNullOrEmpty(ProgId))
             {
@@ -75,16 +72,8 @@ namespace Polhem.UI.Avalonia.Views
             // (detail grid actions follow the form's edit mode, not permission). No-op when no
             // company context is active. The applier writes into the layout, which is this view's
             // own copy: `ResolveLayoutAsync` clones on every path.
-            LayoutCapabilityApplier.Apply(_formLayout, Schema, ClientInfo.Capabilities);
+            LayoutCapabilityApplier.Apply(_formLayout, Schema, ResolveUserContext()?.Capabilities);
             return _dataObject;
-        }
-
-        private void ApplyAccessTokenFallback()
-        {
-            if (AccessToken != Guid.Empty) return;
-            var fallbackToken = ResolveAccessToken();
-            if (fallbackToken != Guid.Empty)
-                AccessToken = fallbackToken;
         }
 
         private async Task OnSaveClickedAsync()
@@ -165,7 +154,7 @@ namespace Polhem.UI.Avalonia.Views
         // resolve to permitted, so this only ever hides a genuinely un-permitted command.
         private bool CanCommand(Control button)
             => Schema is null
-               || ElementCapabilityResolver.Default.Can(Schema, PermissionScope.GetAction(button), ClientInfo.Capabilities);
+               || ElementCapabilityResolver.Default.Can(Schema, PermissionScope.GetAction(button), ResolveUserContext()?.Capabilities);
 
         // ---- Live recomputation of computed fields ----
 

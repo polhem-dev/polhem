@@ -317,13 +317,27 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 ### Cross-Platform UI Common (`Polhem.UI.Core`)
 
+`Polhem.UI.Core` is the layer every front end shares. It references `Polhem.Api.Contracts` only, so it carries no transport; the connection to a Polhem backend is in `Polhem.UI.ApiBridge` below.
+
 | English | 中文 | Description |
 |---------|------|-------------|
+| `IFormApiConnector` | 表單 API 連接器介面 | The connector contract a front end uses for one form: list, lookup, new, load, save and delete, returning the response interfaces of the contracts. Declared in `Polhem.Api.Contracts` (namespace `Polhem.Api.Contracts.Form`) together with `IFormApiConnectorFactory`; the client's `FormApiConnector` implements it, and an application without a Polhem backend implements it over its own data |
+| `UIServices` | UI 服務 | Static holder of the `IServiceProvider` that controls created from markup resolve their services from (`IFormApiConnectorFactory`, `IFormDefinitionSource`, `IUserContext`). A single-user head sets `Provider` once at startup; unset, the controls run on what the host sets on them. Process-wide state: **do not use it in Blazor Server** |
+| `IUserContext` | 使用者情境介面 | The signed-in user as a front end sees it: `User`, `Capabilities`, `Company` and `DefaultLanguage`. With none registered, the views treat the user as anonymous and unrestricted |
+| `IFormDefinitionSource` | 表單定義來源介面 | Supplies the `FormSchema`, `FormLayout`, currency and unit masters a view is built from, in the current UI culture (namespace `Polhem.UI.Core.Definitions`). `StorageDefinitionSource` reads them as stored from an `IDefineStorage`; the bridge's implementation reads them from the backend |
+| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | The form value rules every head shares (DataSet seeding, value coercion, display formatting, CRUD preconditions), used by both the Avalonia and the Blazor `FormDataObject` |
+
+### API Bridge (`Polhem.UI.ApiBridge`)
+
+`Polhem.UI.ApiBridge` connects a single-user head (desktop, browser (WASM), iOS, Android) to a Polhem backend. It references `Polhem.UI.Core` and `Polhem.Api.Client` and is UI-framework-agnostic.
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `AddPolhemUIApiBridge` | API 橋接註冊擴充方法 | `IServiceCollection` extension that registers the API-backed `IFormApiConnectorFactory`, `IFormDefinitionSource` and `IUserContext`, all reading from `ClientInfo`. A head assigns the built provider to `UIServices.Provider` |
 | `ClientInfo` | 用戶端資訊 | Static class that manages connection state (the head's one `PolhemApiClient`, endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model of the Avalonia heads and other native UI. **Do not use it in Blazor Server**, where multiple user circuits share a process |
 | `IEndpointStorage` | 端點儲存介面 | Abstraction for persisting the API endpoint on the client side. The default for `ClientInfo.EndpointStorage` is `FileEndpointStorage` |
 | `FileEndpointStorage` | 檔案端點儲存 | File-backed `IEndpointStorage` and `IApiKeyStorage`: keeps the endpoint in `endpoint.txt` and the API key in `apikey.txt` under `LocalApplicationData/<appName>/`. The default for both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`; a browser (WASM) head replaces both with storage backed by the browser |
-| `IUIViewService` | UI 視圖服務介面 | Host-supplied dialog service called when `ClientInfo.InitializeAsync` needs to ask the user for the endpoint (`ShowApiConnectAsync`); concrete implementation depends on the UI framework (Avalonia Window / MAUI ContentPage / WinForms Form, etc.) |
-| `SupportedConnectTypes` | 支援連線類型 | Flags controlling which connection modes (`Local` / `Remote` / `Both`) the host allows during `ClientInfo.InitializeAsync`; declared in `Polhem.Api.Client` |
+| `SupportedConnectTypes` | 支援連線類型 | Flags controlling which connection modes (`Local` / `Remote` / `Both`) the host allows during `ClientInfo.InitializeAsync`, which returns `false` when the stored endpoint is missing or unreachable so the host can show its own connection setup; declared in `Polhem.Api.Client` |
 
 ### Avalonia Control Library (`Polhem.UI.Avalonia`)
 
@@ -335,7 +349,7 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `FormScope` | 表單作用域 | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and descendant editors with a `FieldName` bind themselves |
 | `GridEditMode` | 表格編輯模式 | UI-layer editing model for `GridControl`: `InCell` (cell editing) / `EditForm` (popup row editing) |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm-mode editing surface built from the field editors; uses the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`) |
-| `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. Resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host sets only `ProgId` |
+| `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. When the host sets only `ProgId`, it resolves `Schema`, `Layout` and `FormConnector` through `DefinitionSource` and the services registered in `UIServices.Provider`; with none registered, the host sets them itself |
 | `FormDataObject` | 表單資料物件 | The view-model object bound by the Avalonia controls: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, and exposes the buffered row-edit protocol |
 
 ### Web Frontend (`Polhem.Web.Blazor.Server`)
@@ -345,7 +359,7 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | English | 中文 | Description |
 |---------|------|-------------|
 | `DynamicForm` (Razor component) | 動態表單元件 | Blazor component that renders a FormSchema-driven form |
-| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.Api.Client` (`FormValueBinding`, `FormDataGuard`) |
+| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.UI.Core` (`FormValueBinding`, `FormDataGuard`) |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (a DI-scoped `PolhemApiClient` per circuit) |
 
 ### Api Client Providers (`Polhem.Api.Client`)

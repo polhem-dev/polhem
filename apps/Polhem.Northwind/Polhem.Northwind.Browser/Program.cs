@@ -4,7 +4,7 @@ using Avalonia.Browser;
 using Polhem.Api.Client;
 using Polhem.Northwind.Browser.Storage;
 using Polhem.Northwind.UI;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 
 internal sealed partial class Program
 {

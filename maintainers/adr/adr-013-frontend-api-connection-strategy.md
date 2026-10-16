@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted (2026-05-22)
+Accepted (2026-05-22). The connection state of the native heads and the `Polhem.UI.*` family criterion amended by
+[ADR-054](adr-054-front-end-decoupled-from-api-client.md) (2026-10-16): `ClientInfo` moved to `Polhem.UI.ApiBridge`, and
+every front end, the Blazor head included, references `Polhem.UI.Core`.
 
 ## Context
 

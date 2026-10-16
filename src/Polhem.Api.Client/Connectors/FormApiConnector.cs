@@ -1,4 +1,5 @@
 using System.Data;
+using Polhem.Api.Contracts.Form;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Definition;
@@ -12,7 +13,7 @@ namespace Polhem.Api.Client.Connectors
     /// <summary>
     /// Form-level API service connector.
     /// </summary>
-    public class FormApiConnector : ApiConnector
+    public class FormApiConnector : ApiConnector, IFormApiConnector
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FormApiConnector"/> class.
@@ -196,5 +197,28 @@ namespace Polhem.Api.Client.Connectors
                 .ConfigureAwait(false);
         }
 
+        // The contract returns the response interfaces, while the public methods keep returning the concrete
+        // messages their existing callers read. C# has no return-type covariance for interface members, and
+        // `Task<T>` is not covariant either, so each contract member forwards to its public counterpart.
+
+        async Task<IGetListResponse> IFormApiConnector.GetListAsync(string selectFields, FilterNode? filter,
+            SortFieldCollection? sortFields, PagingOptions? paging, CancellationToken cancellationToken)
+            => await GetListAsync(selectFields, filter, sortFields, paging, cancellationToken).ConfigureAwait(false);
+
+        async Task<IGetLookupResponse> IFormApiConnector.GetLookupAsync(string searchText, PagingOptions? paging,
+            CancellationToken cancellationToken)
+            => await GetLookupAsync(searchText, paging, cancellationToken).ConfigureAwait(false);
+
+        async Task<IGetNewDataResponse> IFormApiConnector.GetNewDataAsync(CancellationToken cancellationToken)
+            => await GetNewDataAsync(cancellationToken).ConfigureAwait(false);
+
+        async Task<IGetDataResponse> IFormApiConnector.GetDataAsync(Guid rowId, CancellationToken cancellationToken)
+            => await GetDataAsync(rowId, cancellationToken).ConfigureAwait(false);
+
+        async Task<ISaveResponse> IFormApiConnector.SaveAsync(DataSet dataSet, CancellationToken cancellationToken)
+            => await SaveAsync(dataSet, cancellationToken).ConfigureAwait(false);
+
+        async Task<IDeleteResponse> IFormApiConnector.DeleteAsync(Guid rowId, CancellationToken cancellationToken)
+            => await DeleteAsync(rowId, cancellationToken).ConfigureAwait(false);
     }
 }

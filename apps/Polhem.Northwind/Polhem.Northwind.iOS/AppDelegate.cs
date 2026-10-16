@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.iOS;
 using Polhem.Api.Client;
 using Polhem.Northwind.UI;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 using Foundation;
 
 namespace Polhem.Northwind.iOS;

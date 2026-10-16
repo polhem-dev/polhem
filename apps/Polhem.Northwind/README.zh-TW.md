@@ -83,7 +83,7 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 
 > 首次執行 server 會在 server 專案資料夾（`Polhem.Northwind.Server/`，已被 `.gitignore` 涵蓋）建立 `northwind.db` 並灌入 Northwind 子集。刪除該檔即可重新建表灌種子。
 >
-> 桌面與行動前端用框架預設的 `FileEndpointStorage` 記住 endpoint 與 API 金鑰：本機應用程式資料目錄下、以該 head 的進入點組件命名的個人資料夾（例如 `Polhem.Northwind.Desktop`）。各平台的目錄位置見 `Polhem.UI.Core` 中 `FileEndpointStorage` 的說明。瀏覽器前端則改存在 `localStorage`。
+> 桌面與行動前端用框架預設的 `FileEndpointStorage` 記住 endpoint 與 API 金鑰：本機應用程式資料目錄下、以該 head 的進入點組件命名的個人資料夾（例如 `Polhem.Northwind.Desktop`）。各平台的目錄位置見 `Polhem.UI.ApiBridge` 中 `FileEndpointStorage` 的說明。瀏覽器前端則改存在 `localStorage`。
 
 ## 執行畫面
 
@@ -231,8 +231,9 @@ session 的客製化代碼，以及 [`NorthwindBackend`](Polhem.Northwind.Server
 把這些組裝起來是 client 的工作、不是 server 的：API 一律把定義原樣送出，由
 `FormDefinitionLoader` 取回兩層、套用疊加，再把在地化後的 schema 交給畫面。整個 client 只有一個
 開關 —— `ClientInfo.UseDefinitionLoader`，預設開啟，demo 也在
-[`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) 裡明確設定 —— 單筆表單、清單與 lookup 對話框都使用
-`ClientInfo.DefinitionLoader`。關掉時，畫面照原樣渲染定義：英文標題，版面也是
+[`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) 裡明確設定。同一個檔案把 `AddPolhemUIApiBridge()`
+註冊到 `UIServices.Provider`，單筆表單、清單與 lookup 對話框都從它註冊的 `IFormDefinitionSource`
+讀取定義，而它經由 `ClientInfo.DefinitionLoader` 取得。關掉時，畫面照原樣渲染定義：英文標題，版面也是
 `Define/FormLayout/` 裡的套裝版面而非租戶的。
 
 ## 終章：三十分鐘加一張 Region 表單，零程式碼

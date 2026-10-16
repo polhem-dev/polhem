@@ -1,24 +1,23 @@
 using System.Data;
-using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using Polhem.Api.Client.Connectors;
+using Polhem.Api.Contracts.Form;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Definitions;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
     /// <summary>
     /// Modal presentation of <see cref="LookupPanel"/>: opens the lookup picker for
     /// a target program and returns the selected row, or <c>null</c> when the user
-    /// cancels. Schema and connector default to the ambient <see cref="ClientInfo"/>
-    /// wiring; pass them explicitly to bypass it (tests, custom hosts).
+    /// cancels. Schema and connector default to the services registered in
+    /// <see cref="UIServices.Provider"/>; pass them explicitly to bypass it (tests, custom hosts).
     /// </summary>
     /// <remarks>
-    /// The default schema is localized through <see cref="ClientInfo.DefinitionLoader"/> unless the
-    /// host turned off <see cref="ClientInfo.UseDefinitionLoader"/>, so the dialog title and columns
-    /// read in the same language as the form that opened it.
+    /// The default schema comes from the registered <see cref="IFormDefinitionSource"/>, the same source the
+    /// form that opened the dialog uses, so the dialog title and columns read in the same language.
     /// </remarks>
     public static class LookupDialog
     {
@@ -29,10 +28,12 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// <param name="host">A visual inside the owning window; used to resolve the dialog owner.</param>
         /// <param name="progId">The target program identifier (the lookup source form).</param>
         /// <param name="schema">
-        /// The target form's schema; <c>null</c> loads it through <see cref="ClientInfo.DefinitionLoader"/>
-        /// in the UI culture when one is in effect, else as stored through <see cref="ClientInfo.DefineAccess"/> (cached).
+        /// The target form's schema; <c>null</c> loads it through the registered <see cref="IFormDefinitionSource"/>.
         /// </param>
-        /// <param name="connector">The connector for the target form; <c>null</c> creates one through <see cref="ClientInfo.CreateFormApiConnector"/>.</param>
+        /// <param name="connector">
+        /// The connector for the target form; <c>null</c> creates one through the registered
+        /// <see cref="IFormApiConnectorFactory"/>.
+        /// </param>
         /// <param name="cancellationToken">
         /// A token that cancels the schema fetch and the row load, and closes an open dialog as if the
         /// user had cancelled it. A cancelled call throws <see cref="OperationCanceledException"/>.
@@ -41,18 +42,19 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             Visual host,
             string progId,
             FormSchema? schema = null,
-            FormApiConnector? connector = null,
+            IFormApiConnector? connector = null,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
 
-            schema ??= ClientInfo.DefinitionLoader is { } loader
-                ? await loader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name, cancellationToken).ConfigureAwait(true)
-                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(true);
+            if (schema is null && UIServices.Get<IFormDefinitionSource>() is { } source)
+                schema = await source.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(true);
             if (schema is null)
                 throw new InvalidOperationException($"FormSchema '{progId}' was not found for lookup.");
-            connector ??= ClientInfo.CreateFormApiConnector(progId);
+            connector ??= UIServices.Get<IFormApiConnectorFactory>()?.Create(progId)
+                ?? throw new InvalidOperationException(
+                    $"No connector for lookup '{progId}': pass one, or register an {nameof(IFormApiConnectorFactory)}.");
             cancellationToken.ThrowIfCancellationRequested();
 
             var panel = new LookupPanel();

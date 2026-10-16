@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: e1c8b6aab28de7b5ad4c701f927af6d76723cb81 -->
+<!-- source: en/guides/development-cookbook.md blob: 295b88a5ec1808763ce2a48493cd533f4c6c3e07 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -38,7 +38,7 @@ ctor 注入解析，無靜態入口點（service locator）。
 宿主套件選擇：
 
 - **ASP.NET Core web host**：引用 `Polhem.Hosting` 與 `Polhem.JsonRpc.AspNetCore`。啟動程式加上 `using Polhem.Hosting;`（取 `AddPolhemFramework` 與 `AddPolhemApiKeyGateCheck`）與 `using Polhem.JsonRpc.AspNetCore;`（取 `AddJsonRpcServer` 與 `MapJsonRpc`）。`services.AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，`app.MapJsonRpc("/api")` 發布 `POST /api` 端點；不需要撰寫 controller。
-- **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 `PolhemApiClient.CreateLocal(provider)`，或在使用 `Polhem.UI.Core` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
+- **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 `PolhemApiClient.CreateLocal(provider)`，或在使用 `Polhem.UI.ApiBridge` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
 
 `AddPolhemFramework` 也會註冊數個 hosted service，包括保留 progId 的啟動期註冊、跨 process 的 cache-notify poller，以及過期 session 的清理。它們只在 provider 屬於 .NET Generic Host（`WebApplication`、`Host.CreateApplicationBuilder`）時才會啟動；單純以 `BuildServiceProvider()` 建出的 provider 不會啟動它們。
 
@@ -759,7 +759,8 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 你的前端是什麼？
 │
 ├── Avalonia（桌面、瀏覽器、iOS、Android），或你自己的 WinForms / WPF host
-│   → 使用 Polhem.UI.* family，透過 ClientInfo static singleton
+│   → 使用 Polhem.UI.* family；由 Polhem.UI.ApiBridge 透過
+│     ClientInfo static singleton 連上後端
 │   → 參考下方「Polhem.UI.* head」章節
 │
 ├── Blazor Server（ASP.NET Core server-rendered）
@@ -773,43 +774,41 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 
 > 框架提供兩個 UI 套件：`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server`。
 > 其他 .NET 前端——WinForms、WPF、你自己的 Blazor WebAssembly app——沒有對應的框架 UI 套件，
-> 直接使用 `Polhem.UI.Core`（`ClientInfo`）或 `Polhem.Api.Client`。沒有 .NET 的 client 依
+> 直接使用 `Polhem.UI.ApiBridge`（`ClientInfo`）或 `Polhem.Api.Client`。沒有 .NET 的 client 依
 > [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)。
 
 ### Polhem.UI.* head（ClientInfo）
 
-這些 head 透過 `Polhem.UI.Core.ClientInfo` static singleton 管理連線狀態，適用於「一個 process = 一個使用者」的環境。以下程式碼在所有使用它的 head 都一樣：Avalonia 的桌面、瀏覽器（WebAssembly）、iOS 與 Android head，以及你自己的 WinForms 或 WPF host。各平台不同的是設定——瀏覽器中 endpoint 與 API key 的儲存方式、發佈設定、適用哪些連線類型——這些見 [平台支援 § 瀏覽器或行動裝置 head 的檢查清單](../getting-started/platform-support.md#3-瀏覽器或行動裝置-head-的檢查清單)。Local 連線（後端在同一個 process）是桌面才有的選項；瀏覽器與行動裝置 head 走 Remote。
+這些 head 透過 `Polhem.UI.ApiBridge.ClientInfo` static singleton 管理連線狀態，適用於「一個 process = 一個使用者」的環境。以下程式碼在所有使用它的 head 都一樣：Avalonia 的桌面、瀏覽器（WebAssembly）、iOS 與 Android head，以及你自己的 WinForms 或 WPF host。各平台不同的是設定——瀏覽器中 endpoint 與 API key 的儲存方式、發佈設定、適用哪些連線類型——這些見 [平台支援 § 瀏覽器或行動裝置 head 的檢查清單](../getting-started/platform-support.md#3-瀏覽器或行動裝置-head-的檢查清單)。Local 連線（後端在同一個 process）是桌面才有的選項；瀏覽器與行動裝置 head 走 Remote。
 
-**1. App 啟動時呼叫 `InitializeAsync`**：
+**1. App 啟動時註冊 bridge 並呼叫 `InitializeAsync`**：
 
 ```csharp
-// MyApp/Program.cs (or App.axaml.cs, etc.)
-using Polhem.Api.Client;
-using Polhem.UI.Core;
+// MyApp/App.axaml.cs (or Program.cs, etc.)
+using Microsoft.Extensions.DependencyInjection;   // ServiceCollection
+using Polhem.Api.Client;                          // SupportedConnectTypes
+using Polhem.UI.ApiBridge;                        // ClientInfo
+using Polhem.UI.ApiBridge.DependencyInjection;    // AddPolhemUIApiBridge
+using Polhem.UI.Core;                             // UIServices
 
-// 1. Implement IUIViewService (provides the connection settings dialog)
-public sealed class MyUIViewService : IUIViewService
-{
-    public async Task<bool> ShowApiConnectAsync()
-    {
-        // Ask the user for the endpoint with your own dialog (an Avalonia view, a WinForms Form, …).
-        string? endpoint = await ShowEndpointDialogAsync();
-        if (endpoint is null) { return false; }      // the user cancelled
-        await ClientInfo.SetEndpointAsync(endpoint);  // validates, connects and stores it
-        return true;
-    }
-}
+// 1. Register the bridge once, before any view is created. The views resolve their connector,
+//    definitions and user context from this provider; the bridge reads them from ClientInfo,
+//    so the registration holds across the connection, sign-in and company steps.
+UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
 
-// 2. Initialize at startup — the accessors are asynchronous end-to-end, so await it.
+// 2. Connect with the stored endpoint. The accessors are asynchronous end-to-end, so await it.
 var supportedConnectTypes = SupportedConnectTypes.Remote; // Both allows Local as well (desktop only)
-if (!await ClientInfo.InitializeAsync(new MyUIViewService(), supportedConnectTypes))
+if (!await ClientInfo.InitializeAsync(supportedConnectTypes))
 {
-    // The user cancelled connection setup; exit the app.
-    return;
+    // The stored endpoint is missing, malformed or unreachable: show your own connection setup
+    // (an Avalonia view, a WinForms Form, …) and connect with the endpoint the user entered.
+    string? endpoint = await ShowConnectionSetupAsync();
+    if (endpoint is null) { return; }             // the user cancelled; exit the app
+    await ClientInfo.InitializeAsync(endpoint);   // validates, connects and stores it
 }
 ```
 
-`InitializeAsync` 從 `ClientInfo.EndpointStorage` 讀出已儲存的 endpoint，驗證後初始化系統 connector；endpoint 不存在或連不上時，呼叫 `IUIViewService.ShowApiConnectAsync()`。預設的儲存是 `FileEndpointStorage`（`Polhem.UI.Core`），把 endpoint 與 API key 存在使用者本機應用程式資料目錄下、以進入點組件命名的資料夾中。命令列引數 `Endpoint=<url>` 或 `ApiKey=<key>` 會在該次執行中覆蓋已儲存的值。瀏覽器 head 要同時替換 `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage`，因為 WebAssembly 沒有可持久保存的檔案系統。
+`InitializeAsync(SupportedConnectTypes)` 從 `ClientInfo.EndpointStorage` 讀出已儲存的 endpoint，驗證後初始化系統 connector。endpoint 不存在、格式錯誤或連不上時回傳 `false`；框架本身不提供連線畫面，所以由 head 顯示自己的設定畫面，再以使用者輸入的 endpoint 呼叫 `InitializeAsync(endpoint)`（或 `SetEndpointAsync(endpoint)`）。預設的儲存是 `FileEndpointStorage`（`Polhem.UI.ApiBridge`），把 endpoint 與 API key 存在使用者本機應用程式資料目錄下、以進入點組件命名的資料夾中。命令列引數 `Endpoint=<url>` 或 `ApiKey=<key>` 會在該次執行中覆蓋已儲存的值。瀏覽器 head 要同時替換 `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage`，因為 WebAssembly 沒有可持久保存的檔案系統。`ServiceCollection` 來自 `Microsoft.Extensions.DependencyInjection` 套件，由 head 自行引用。
 
 **2. 登入、套用結果、進入公司**：
 
@@ -839,7 +838,7 @@ var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name
 FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer");
 ```
 
-沒有傳分頁選項的 `GetListAsync` 回傳第一頁、最多 `PagingOptions.MaxPageSize` 筆；要取得更多，傳入 `PagingOptions` 逐頁讀取。`ClientInfo.DefineAccess` 照原樣回傳定義，不做在地化，也不套租戶覆寫層。Avalonia 的 `FormView`、`ListView` 與 `LookupDialog` 則改由 `ClientInfo.DefinitionLoader` 載入定義——使用者語言的標題、租戶客製層與公司的數值格式——程式碼也可以自己呼叫 `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)`。`ClientInfo.UseDefinitionLoader` 預設為開啟；啟動時設為 `false` 會照原樣呈現定義，省下載入器額外的往返。
+沒有傳分頁選項的 `GetListAsync` 回傳第一頁、最多 `PagingOptions.MaxPageSize` 筆；要取得更多，傳入 `PagingOptions` 逐頁讀取。`ClientInfo.DefineAccess` 照原樣回傳定義，不做在地化，也不套租戶覆寫層。Avalonia 的 `FormView`、`ListView` 與 `LookupDialog` 則改由 `AddPolhemUIApiBridge` 註冊的 `IFormDefinitionSource` 載入定義（它經由 `ClientInfo.DefinitionLoader`）——使用者語言的標題、租戶客製層與公司的數值格式——程式碼也可以自己呼叫 `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)`。`ClientInfo.UseDefinitionLoader` 預設為開啟；啟動時設為 `false` 會照原樣呈現定義，省下載入器額外的往返。
 
 **4. 切換 endpoint（使用者更換 server）**：
 
@@ -917,7 +916,7 @@ app.Run();
 
 ### Avalonia（Polhem.UI.Avalonia）
 
-`Polhem.UI.Avalonia` 歸 **`Polhem.UI.*` family**，所以在每一個 Avalonia head 上，連 API 的方式都與上方「Polhem.UI.* head」章節相同 —— 透過 `ClientInfo` static singleton，per-process 一個身分。
+`Polhem.UI.Avalonia` 歸 **`Polhem.UI.*` family**。它不引用 API 用戶端：畫面接收的是 `IFormApiConnector`（`Polhem.Api.Contracts.Form`）。有 Polhem 後端的 head 另外引用 `Polhem.UI.ApiBridge`，在每一個 Avalonia head 上都依上方「Polhem.UI.* head」章節連線 —— 透過 `ClientInfo` static singleton，per-process 一個身分。
 
 內含 FormSchema 驅動控制項：`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞。套件目標為 `net10.0`；平台專屬的 target framework 屬於各 head 專案。
 
@@ -931,9 +930,36 @@ public static void Main(string[] args)
 
     BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 }
+
+// App.axaml.cs — register the bridge before the first view is created.
+public override void OnFrameworkInitializationCompleted()
+{
+    UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
+    // … create the main window …
+    base.OnFrameworkInitializationCompleted();
+}
 ```
 
-`FormView` 在 host 只設 `ProgId` 時自動向 `ClientInfo` 取得 `Schema` / `FormConnector` / `AccessToken`。`GridControl`（`ContentControl` 組合式控件，內部 `DataGrid` 以 `InnerGrid` 公開）的 cell 走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch（**不**走 `Binding "[FieldName]"`，原因詳見 [ADR-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md)），並以 `GridEditMode` 提供兩種編輯模型（`InCell` 逐格 / `EditForm` 彈窗整列，詳見 [ADR-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)）。field editor 支援 ambient 綁定：容器設一次 `FormScope.DataObject`，子孫編輯器憑 `FieldName` 自動接線。
+host 只設 `ProgId` 時，`FormView` 與 `ListView` 依下列順序取得所需：先看自己的屬性（`Schema`、`Layout`、`FormConnector`、`DefinitionSource`），再看 `protected virtual` 的 `Resolve*` hook，最後才取 `UIServices.Provider` 中註冊的服務（`IFormDefinitionSource`、`IFormApiConnectorFactory`、`IUserContext`）。`GridControl`（`ContentControl` 組合式控件，內部 `DataGrid` 以 `InnerGrid` 公開）的 cell 走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch（**不**走 `Binding "[FieldName]"`，原因詳見 [ADR-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md)），並以 `GridEditMode` 提供兩種編輯模型（`InCell` 逐格 / `EditForm` 彈窗整列，詳見 [ADR-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)）。field editor 支援 ambient 綁定：容器設一次 `FormScope.DataObject`，子孫編輯器憑 `FieldName` 自動接線。
+
+#### 沒有 Polhem 後端的畫面
+
+畫面也能在應用程式自己提供的資料上運作。不在 `UIServices.Provider` 註冊任何東西；在畫面上設定 `Schema`、`Layout` 與 `FormConnector`，其中 connector 是應用程式在自己資料上實作的 `IFormApiConnector`。`Polhem.UI.Core.Connectors` 中的回應型別（`FormListResult`、`FormDataResult`、`FormDeleteResult`）讓它不必自己寫。
+
+```csharp
+using Polhem.Api.Contracts.Form;     // IFormApiConnector
+using Polhem.Definition.Layouts;     // FormLayoutGenerator
+using Polhem.UI.Avalonia.Views;      // ListView, FormView
+
+FormSchema schema = BuildSchema();                                 // built in code or read from a file
+FormLayout layout = FormLayoutGenerator.Generate(schema, schema.ProgId);
+IFormApiConnector connector = new MyFormApiConnector(schema);      // the application's implementation
+
+var list = new ListView { Schema = schema, FormConnector = connector };
+var record = new FormView { Schema = schema, Layout = layout, FormConnector = connector };
+```
+
+若要改從本機資料夾讀取定義，把畫面的 `DefinitionSource` 設為建在 `FileDefineStorage` 上的 `StorageDefinitionSource`（`Polhem.UI.Core.Definitions`）；它照原樣回傳定義，不套語系資源，也不套租戶客製。沒有註冊使用者情境時，畫面把使用者視為匿名且不受限制。可執行的範例在 [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/)，以記憶體內的 connector 呈現 `ListView` 與 `FormView`。
 
 實際範例：[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md)（完整 CRUD 流程；桌面、瀏覽器、iOS 與 Android head 共用一個 UI 專案）與 [`samples/Avalonia.DemoCenter`](../../../samples/Avalonia.DemoCenter/README.zh-TW.md)（控件 demo center）。
 
@@ -941,7 +967,7 @@ public static void Main(string[] args)
 
 | 前端 | 連線抽象 | Token 承載 | Endpoint 持久化 | 模式 | 註冊方式 |
 |------|---------|-----------|---------------|------|---------|
-| `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（static 的 `ClientInfo.ApiClient`） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `ClientInfo.InitializeAsync` |
+| `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（static 的 `ClientInfo.ApiClient`） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `UIServices.Provider = …AddPolhemUIApiBridge()…` 與 `ClientInfo.InitializeAsync` |
 | Blazor Server | DI scope | **N 個使用者 / process**（per SignalR circuit） | 啟動設定（`UseRemoteProvider(endpoint, apiKey)`） | Local 或 Remote | `AddPolhemBlazor`（Local 另加 `AddPolhemFramework`） |
 
-> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.Core.ClientInfo`**：它把一個已登入的 client 存在 static 屬性，一個 process 內只能存 **1 個** access token。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。詳見 [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。
+> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.ApiBridge.ClientInfo` 或 `Polhem.UI.Core.UIServices`**：`ClientInfo` 把一個已登入的 client 存在 static 屬性，一個 process 內只能存 **1 個** access token。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。`UIServices.Provider` 同樣是整個 process 共用。Blazor 端引用 `Polhem.UI.Core` 只為了與 native 各端共用的值規則；它使用 `UIServices` 或引用 `Polhem.UI.ApiBridge` 時，`UIServicesUsageGateTests` 會失敗。詳見 [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) 與 [ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)（英文）。

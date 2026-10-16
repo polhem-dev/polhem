@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: acecc33c01178065e997c398f9aa8908f569961d -->
+<!-- source: en/reference/terminology.md blob: ab5a737304c0dd8a2e62fd2f845a1a8c9b4d6f00 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -316,13 +316,27 @@
 
 ### 跨平台 UI 共通層（`Polhem.UI.Core`）
 
+`Polhem.UI.Core` 是所有前端共用的一層。它只引用 `Polhem.Api.Contracts`，不帶任何傳輸；連上 Polhem 後端的部分在下方的 `Polhem.UI.ApiBridge`。
+
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
+| `IFormApiConnector` | 表單 API 連接器介面 | 前端對單一表單使用的 connector 契約：清單、查詢（lookup）、新增、載入、儲存與刪除，回傳契約層的回應介面。與 `IFormApiConnectorFactory` 一同宣告於 `Polhem.Api.Contracts`（命名空間 `Polhem.Api.Contracts.Form`）；用戶端的 `FormApiConnector` 實作它，沒有 Polhem 後端的應用程式則在自己的資料上實作它 |
+| `UIServices` | UI 服務 | Static 類別，持有由 markup 建立的控制項用來解析服務（`IFormApiConnectorFactory`、`IFormDefinitionSource`、`IUserContext`）的 `IServiceProvider`。單一使用者的 head 在啟動時設定一次 `Provider`；未設定時，控制項依 host 設在它們身上的值運作。屬整個 process 共用的狀態：**不要用於 Blazor Server** |
+| `IUserContext` | 使用者情境介面 | 前端所見的已登入使用者：`User`、`Capabilities`、`Company` 與 `DefaultLanguage`。未註冊時，畫面把使用者視為匿名且不受限制 |
+| `IFormDefinitionSource` | 表單定義來源介面 | 依目前 UI 語系提供畫面所需的 `FormSchema`、`FormLayout`、幣別與單位主檔（命名空間 `Polhem.UI.Core.Definitions`）。`StorageDefinitionSource` 從 `IDefineStorage` 照原樣讀取；bridge 的實作從後端讀取 |
+| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件），Avalonia 與 Blazor 的 `FormDataObject` 都使用 |
+
+### API 橋接（`Polhem.UI.ApiBridge`）
+
+`Polhem.UI.ApiBridge` 將單一使用者的 head（桌面、瀏覽器（WASM）、iOS、Android）接上 Polhem 後端。它引用 `Polhem.UI.Core` 與 `Polhem.Api.Client`，與 UI 框架無關。
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `AddPolhemUIApiBridge` | API 橋接註冊擴充方法 | `IServiceCollection` 擴充方法，註冊以 API 為後盾的 `IFormApiConnectorFactory`、`IFormDefinitionSource` 與 `IUserContext`，三者都從 `ClientInfo` 讀取。head 把建好的 provider 指定給 `UIServices.Provider` |
 | `ClientInfo` | 用戶端資訊 | Static class，管理連線狀態（head 唯一的 `PolhemApiClient`、endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`。設計給 Avalonia 各端與其他 native UI 的「一個 process = 一個使用者」模型。**不要用於 Blazor Server**，後者一個 process 服務多個 user circuit |
 | `IEndpointStorage` | 端點儲存介面 | 抽象 API endpoint 的用戶端持久化機制。`ClientInfo.EndpointStorage` 的預設值為 `FileEndpointStorage` |
 | `FileEndpointStorage` | 檔案端點儲存 | 檔案後端的 `IEndpointStorage` 與 `IApiKeyStorage`：endpoint 存於 `endpoint.txt`、API key 存於 `apikey.txt`，位於 `LocalApplicationData/<appName>/` 下。它是 `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 兩者的預設值；瀏覽器（WASM）端改以瀏覽器儲存空間的實作取代兩者 |
-| `IUIViewService` | UI 視圖服務介面 | 由宿主提供的 dialog service，當 `ClientInfo.InitializeAsync` 需要詢問使用者 endpoint 時呼叫（`ShowApiConnectAsync`）；具體實作依 UI 框架而定（Avalonia Window / MAUI ContentPage / WinForms Form 等） |
-| `SupportedConnectTypes` | 支援連線類型 | 控制 `ClientInfo.InitializeAsync` 允許哪些連線模式（`Local` / `Remote` / `Both`）的 Flags；宣告於 `Polhem.Api.Client` |
+| `SupportedConnectTypes` | 支援連線類型 | 控制 `ClientInfo.InitializeAsync` 允許哪些連線模式（`Local` / `Remote` / `Both`）的 Flags；已儲存的 endpoint 不存在或連不上時，`InitializeAsync` 回傳 `false`，由 host 顯示自己的連線設定。宣告於 `Polhem.Api.Client` |
 
 ### Avalonia 控制項套件（`Polhem.UI.Avalonia`）
 
@@ -334,7 +348,7 @@
 | `FormScope` | 表單作用域 | 可繼承的 attached properties（`DataObject` / `FormMode`）：容器設一次，子孫編輯器憑 `FieldName` 自動綁定 |
 | `GridEditMode` | 表格編輯模式 | `GridControl` 的 UI 層編輯模型：`InCell`（逐格）/ `EditForm`（彈窗整列） |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm 模式的編輯面，由 field editors 組成；走暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`） |
-| `FormView` | 表單檢視 | Avalonia 單筆容器：master 區 + 明細 `GridControl` + toolbar（New / Save / Delete）；清單側為 `ListView`。host 只設 `ProgId` 時，自動向 `ClientInfo` 取 `Schema` / `FormConnector` / `AccessToken` |
+| `FormView` | 表單檢視 | Avalonia 單筆容器：master 區 + 明細 `GridControl` + toolbar（New / Save / Delete）；清單側為 `ListView`。host 只設 `ProgId` 時，透過 `DefinitionSource` 與 `UIServices.Provider` 中註冊的服務取得 `Schema`、`Layout` 與 `FormConnector`；未註冊時由 host 自行設定 |
 | `FormDataObject` | 表單資料物件 | Avalonia 控件綁定的 view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，並提供暫存列編輯協定 |
 
 ### Web 前端（`Polhem.Web.Blazor.Server`）
@@ -344,7 +358,7 @@
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `DynamicForm`（Razor 元件） | 動態表單元件 | Blazor 元件，依 FormSchema 動態渲染表單 |
-| `FormDataObject` | 表單資料物件 | Blazor `DynamicForm` 綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.Api.Client`（`FormValueBinding`、`FormDataGuard`） |
+| `FormDataObject` | 表單資料物件 | Blazor `DynamicForm` 綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.UI.Core`（`FormValueBinding`、`FormDataGuard`） |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（每個 circuit 一個 DI scope 的 `PolhemApiClient`） |
 
 ### API 連線提供者（`Polhem.Api.Client`）

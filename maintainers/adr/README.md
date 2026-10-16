@@ -74,3 +74,4 @@ understanding why the design is the way it is.
 | [051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) | Remove the types the move to Polhem.JsonRpc left behind, within 1.x | ✅ Accepted |
 | [052](adr-052-breaking-changes-in-1-x-minors.md) | Breaking changes are allowed in 1.x minor versions; strict semantic versioning starts at 2.0 | ✅ Accepted |
 | [053](adr-053-api-client-composition-root.md) | `PolhemApiClient` owns the connection and the signed-in identity | ✅ Accepted |
+| [054](adr-054-front-end-decoupled-from-api-client.md) | Front ends reach the connector through injected contracts; `Polhem.UI.Core` carries no transport | ✅ Accepted |

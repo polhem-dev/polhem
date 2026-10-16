@@ -184,12 +184,14 @@ See `samples/QuickStart.Console/Program.cs`: create the client with
 
 #### Console template (auth=yes)
 
-`ClientInfo` lives in `Polhem.UI.Core`, so in addition to `Polhem.Api.Client` from the Console template above, the csproj
-also needs `<ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />`.
+`ClientInfo` lives in `Polhem.UI.ApiBridge`, so in addition to `Polhem.Api.Client` from the Console template above, the
+csproj also needs `<ProjectReference Include="..\..\src\Polhem.UI.ApiBridge\Polhem.UI.ApiBridge.csproj" />`. An Avalonia
+sample that uses `FormView` / `ListView` against the backend also sets
+`UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();` at startup.
 
 ```csharp
 using Polhem.Api.Client;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 
 namespace {Sample.Name};
 

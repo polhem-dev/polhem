@@ -38,7 +38,7 @@ entry point (service locator).
 Host package selection:
 
 - **ASP.NET Core web host**: reference `Polhem.Hosting` and `Polhem.JsonRpc.AspNetCore`. Add `using Polhem.Hosting;` for `AddPolhemFramework` and `AddPolhemApiKeyGateCheck`, and `using Polhem.JsonRpc.AspNetCore;` for `AddJsonRpcServer` and `MapJsonRpc`. `services.AddJsonRpcServer()` builds on the JSON-RPC options `AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` publishes the `POST /api` endpoint; there is no controller to write.
-- **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to `PolhemApiClient.CreateLocal(provider)`, or, in a head that uses `Polhem.UI.Core`, assign it to `ClientInfo.LocalServiceProvider`.
+- **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to `PolhemApiClient.CreateLocal(provider)`, or, in a head that uses `Polhem.UI.ApiBridge`, assign it to `ClientInfo.LocalServiceProvider`.
 
 `AddPolhemFramework` also registers hosted services, among them the startup registration of the reserved progIds, the cross-process cache-notify poller and the expired-session cleanup. They start only when the provider belongs to a .NET Generic Host (`WebApplication`, `Host.CreateApplicationBuilder`); a provider built with `BuildServiceProvider()` alone does not start them.
 
@@ -785,7 +785,8 @@ The two .NET UI families consume the API in structurally different ways. For the
 What kind of frontend are you building?
 │
 ├── Avalonia (desktop, browser, iOS, Android), or your own WinForms / WPF host
-│   → Use the Polhem.UI.* family via the ClientInfo static singleton
+│   → Use the Polhem.UI.* family; Polhem.UI.ApiBridge connects it to the backend
+│     through the ClientInfo static singleton
 │   → See "Polhem.UI.* heads" below
 │
 ├── Blazor Server (ASP.NET Core server-rendered)
@@ -799,43 +800,41 @@ What kind of frontend are you building?
 
 > The framework ships two UI packages: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server`.
 > Any other .NET frontend — WinForms, WPF, a Blazor WebAssembly app of your own — has no framework UI
-> package and uses `Polhem.UI.Core` (`ClientInfo`) or `Polhem.Api.Client` directly. A client without .NET
+> package and uses `Polhem.UI.ApiBridge` (`ClientInfo`) or `Polhem.Api.Client` directly. A client without .NET
 > follows [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md).
 
 ### Polhem.UI.* heads (ClientInfo)
 
-These heads manage connection state through the `Polhem.UI.Core.ClientInfo` static singleton, which fits the "one process = one user" model. The code below is the same in every head that uses it: the Avalonia desktop, browser (WebAssembly), iOS and Android heads, and a WinForms or WPF host of your own. What differs per platform is setup — the endpoint and API key storage in the browser, the publish settings, and which connection types apply — and that is covered by [Platform Support § Checklist for a browser or mobile head](../getting-started/platform-support.md#3-checklist-for-a-browser-or-mobile-head). A Local connection (the backend in the same process) is a desktop option; the browser and mobile heads connect Remote.
+These heads manage connection state through the `Polhem.UI.ApiBridge.ClientInfo` static singleton, which fits the "one process = one user" model. The code below is the same in every head that uses it: the Avalonia desktop, browser (WebAssembly), iOS and Android heads, and a WinForms or WPF host of your own. What differs per platform is setup — the endpoint and API key storage in the browser, the publish settings, and which connection types apply — and that is covered by [Platform Support § Checklist for a browser or mobile head](../getting-started/platform-support.md#3-checklist-for-a-browser-or-mobile-head). A Local connection (the backend in the same process) is a desktop option; the browser and mobile heads connect Remote.
 
-**1. Call `InitializeAsync` at app startup**:
+**1. Register the bridge and call `InitializeAsync` at app startup**:
 
 ```csharp
-// MyApp/Program.cs (or App.axaml.cs, etc.)
-using Polhem.Api.Client;
-using Polhem.UI.Core;
+// MyApp/App.axaml.cs (or Program.cs, etc.)
+using Microsoft.Extensions.DependencyInjection;   // ServiceCollection
+using Polhem.Api.Client;                          // SupportedConnectTypes
+using Polhem.UI.ApiBridge;                        // ClientInfo
+using Polhem.UI.ApiBridge.DependencyInjection;    // AddPolhemUIApiBridge
+using Polhem.UI.Core;                             // UIServices
 
-// 1. Implement IUIViewService (provides the connection settings dialog)
-public sealed class MyUIViewService : IUIViewService
-{
-    public async Task<bool> ShowApiConnectAsync()
-    {
-        // Ask the user for the endpoint with your own dialog (an Avalonia view, a WinForms Form, …).
-        string? endpoint = await ShowEndpointDialogAsync();
-        if (endpoint is null) { return false; }      // the user cancelled
-        await ClientInfo.SetEndpointAsync(endpoint);  // validates, connects and stores it
-        return true;
-    }
-}
+// 1. Register the bridge once, before any view is created. The views resolve their connector,
+//    definitions and user context from this provider; the bridge reads them from ClientInfo,
+//    so the registration holds across the connection, sign-in and company steps.
+UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
 
-// 2. Initialize at startup — the accessors are asynchronous end-to-end, so await it.
+// 2. Connect with the stored endpoint. The accessors are asynchronous end-to-end, so await it.
 var supportedConnectTypes = SupportedConnectTypes.Remote; // Both allows Local as well (desktop only)
-if (!await ClientInfo.InitializeAsync(new MyUIViewService(), supportedConnectTypes))
+if (!await ClientInfo.InitializeAsync(supportedConnectTypes))
 {
-    // The user cancelled connection setup; exit the app.
-    return;
+    // The stored endpoint is missing, malformed or unreachable: show your own connection setup
+    // (an Avalonia view, a WinForms Form, …) and connect with the endpoint the user entered.
+    string? endpoint = await ShowConnectionSetupAsync();
+    if (endpoint is null) { return; }             // the user cancelled; exit the app
+    await ClientInfo.InitializeAsync(endpoint);   // validates, connects and stores it
 }
 ```
 
-`InitializeAsync` reads the stored endpoint from `ClientInfo.EndpointStorage`, validates it and initializes the system connector; when the endpoint is missing or unreachable it calls `IUIViewService.ShowApiConnectAsync()`. The default storage is `FileEndpointStorage` (`Polhem.UI.Core`), which keeps the endpoint and the API key in a folder named after the entry assembly under the per-user local application data directory. An `Endpoint=<url>` or `ApiKey=<key>` command-line argument overrides the stored value for that run. A browser head replaces both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`, because WebAssembly has no persistent file system.
+`InitializeAsync(SupportedConnectTypes)` reads the stored endpoint from `ClientInfo.EndpointStorage`, validates it and initializes the system connector. It returns `false` when the endpoint is missing, malformed or unreachable; the framework shows no connection screen of its own, so the head shows its setup and then calls `InitializeAsync(endpoint)` (or `SetEndpointAsync(endpoint)`) with what the user entered. The default storage is `FileEndpointStorage` (`Polhem.UI.ApiBridge`), which keeps the endpoint and the API key in a folder named after the entry assembly under the per-user local application data directory. An `Endpoint=<url>` or `ApiKey=<key>` command-line argument overrides the stored value for that run. A browser head replaces both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`, because WebAssembly has no persistent file system. `ServiceCollection` comes from the `Microsoft.Extensions.DependencyInjection` package, which the head references itself.
 
 **2. Sign in, apply the result, enter a company**:
 
@@ -865,7 +864,7 @@ var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name
 FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer");
 ```
 
-`GetListAsync` without paging options returns the first page of `PagingOptions.MaxPageSize` rows; pass a `PagingOptions` to page through more. `ClientInfo.DefineAccess` returns definitions as stored, with no localization or tenant overlay. The Avalonia `FormView`, `ListView` and `LookupDialog` load their definitions through `ClientInfo.DefinitionLoader` instead — captions in the user's language, the tenant's customization layer and the company's number formats — and code can call `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)` itself. `ClientInfo.UseDefinitionLoader` is on by default; setting it to `false` at startup renders definitions as stored and saves the loader's extra round trips.
+`GetListAsync` without paging options returns the first page of `PagingOptions.MaxPageSize` rows; pass a `PagingOptions` to page through more. `ClientInfo.DefineAccess` returns definitions as stored, with no localization or tenant overlay. The Avalonia `FormView`, `ListView` and `LookupDialog` load their definitions through the `IFormDefinitionSource` that `AddPolhemUIApiBridge` registers, which goes through `ClientInfo.DefinitionLoader` — captions in the user's language, the tenant's customization layer and the company's number formats — and code can call `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)` itself. `ClientInfo.UseDefinitionLoader` is on by default; setting it to `false` at startup renders definitions as stored and saves the loader's extra round trips.
 
 **4. Switch endpoint (user changes server)**:
 
@@ -943,7 +942,7 @@ The mode is chosen in `AddPolhemBlazor`, and each circuit's `PolhemApiClient` is
 
 ### Avalonia (Polhem.UI.Avalonia)
 
-`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**, so its API-connection pattern is the one in "Polhem.UI.* heads" above — the `ClientInfo` static singleton with a per-process identity model — on every Avalonia head.
+`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**. It does not reference the API client: its views take an `IFormApiConnector` (`Polhem.Api.Contracts.Form`). A head with a Polhem backend references `Polhem.UI.ApiBridge` as well and connects as in "Polhem.UI.* heads" above — the `ClientInfo` static singleton with a per-process identity model — on every Avalonia head.
 
 It ships FormSchema-driven controls: `FormView` for a single record, `ListView` for the list, `GridControl` for grids, plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`. The package targets `net10.0`; the platform target framework belongs to each head project.
 
@@ -957,9 +956,36 @@ public static void Main(string[] args)
 
     BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 }
+
+// App.axaml.cs — register the bridge before the first view is created.
+public override void OnFrameworkInitializationCompleted()
+{
+    UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServiceProvider();
+    // … create the main window …
+    base.OnFrameworkInitializationCompleted();
+}
 ```
 
-`FormView` resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host only sets `ProgId`. `GridControl` (a `ContentControl` composite exposing an inner `DataGrid` as `InnerGrid`) renders cells through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch (not `Binding "[FieldName]"`) — see [ADR-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md) for why — and offers two editing models through `GridEditMode` (`InCell` cell editing / `EditForm` popup row editing); see [ADR-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md). Field editors bind ambiently: set `FormScope.DataObject` once on a container and every descendant editor with a `FieldName` wires itself.
+When the host sets only `ProgId`, `FormView` and `ListView` resolve what they need in this order: their own property (`Schema`, `Layout`, `FormConnector`, `DefinitionSource`), then their `protected virtual` `Resolve*` hook, then the service registered in `UIServices.Provider` (`IFormDefinitionSource`, `IFormApiConnectorFactory`, `IUserContext`). `GridControl` (a `ContentControl` composite exposing an inner `DataGrid` as `InnerGrid`) renders cells through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch (not `Binding "[FieldName]"`) — see [ADR-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md) for why — and offers two editing models through `GridEditMode` (`InCell` cell editing / `EditForm` popup row editing); see [ADR-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md). Field editors bind ambiently: set `FormScope.DataObject` once on a container and every descendant editor with a `FieldName` wires itself.
+
+#### A view without a Polhem backend
+
+The views also run on data the application supplies itself. Register nothing in `UIServices.Provider`; set `Schema`, `Layout` and `FormConnector` on the views, where the connector is the application's own `IFormApiConnector` over its data. The response types in `Polhem.UI.Core.Connectors` (`FormListResult`, `FormDataResult`, `FormDeleteResult`) save it from writing its own.
+
+```csharp
+using Polhem.Api.Contracts.Form;     // IFormApiConnector
+using Polhem.Definition.Layouts;     // FormLayoutGenerator
+using Polhem.UI.Avalonia.Views;      // ListView, FormView
+
+FormSchema schema = BuildSchema();                                 // built in code or read from a file
+FormLayout layout = FormLayoutGenerator.Generate(schema, schema.ProgId);
+IFormApiConnector connector = new MyFormApiConnector(schema);      // the application's implementation
+
+var list = new ListView { Schema = schema, FormConnector = connector };
+var record = new FormView { Schema = schema, Layout = layout, FormConnector = connector };
+```
+
+To read the definitions from a local folder instead, set the views' `DefinitionSource` to a `StorageDefinitionSource` (`Polhem.UI.Core.Definitions`) over a `FileDefineStorage`; it returns the definitions as stored, with no language resources or tenant customization. With no user context registered, the views treat the user as anonymous and unrestricted. A working example is [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/), which shows `ListView` and `FormView` over an in-memory connector.
 
 Worked examples: [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) (full CRUD flow; desktop, browser, iOS and Android heads over one shared UI project) and [`samples/Avalonia.DemoCenter`](../../../samples/Avalonia.DemoCenter/README.md) (control demo center).
 
@@ -967,7 +993,7 @@ Worked examples: [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README
 
 | Frontend | Connection abstraction | Token tenancy | Endpoint persistence | Mode | Registration |
 |---------|-----------------------|---------------|--------------------|------|-------------|
-| `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (the static `ClientInfo.ApiClient`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `ClientInfo.InitializeAsync` at startup |
+| `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (the static `ClientInfo.ApiClient`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `UIServices.Provider = …AddPolhemUIApiBridge()…` and `ClientInfo.InitializeAsync` at startup |
 | Blazor Server | DI scope | **N users / process** (per SignalR circuit) | Startup configuration (`UseRemoteProvider(endpoint, apiKey)`) | Local or Remote | `AddPolhemBlazor` (+ `AddPolhemFramework` for Local) |
 
-> ⚠️ **Do not use `Polhem.UI.Core.ClientInfo` in Blazor Server.** It keeps one signed-in client in a static property — only **one** access token per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. See [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md).
+> ⚠️ **Do not use `Polhem.UI.ApiBridge.ClientInfo` or `Polhem.UI.Core.UIServices` in Blazor Server.** `ClientInfo` keeps one signed-in client in a static property — only **one** access token per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. `UIServices.Provider` is process-wide in the same way. The Blazor head references `Polhem.UI.Core` only for the value rules it shares with the native heads; `UIServicesUsageGateTests` fails when it uses `UIServices` or references `Polhem.UI.ApiBridge`. See [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) and [ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).

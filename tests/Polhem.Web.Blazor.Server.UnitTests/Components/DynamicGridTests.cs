@@ -1,9 +1,9 @@
-using Polhem.Api.Client;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
+using Polhem.UI.Core;
 using Polhem.Web.Blazor.Server.Components;
 using Microsoft.AspNetCore.Components;
 using Polhem.Tests.Shared;
@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// <summary>
     /// Structural and pure-logic tests covering the static helper methods of <see cref="DynamicGrid"/>
     /// (<c>FormatCell</c>, <c>BuildColumnStyle</c>, and the row-id read it delegates to
-    /// <see cref="Polhem.Api.Client.FormDataGuard.TryGetRowId"/>) and
+    /// <see cref="FormDataGuard.TryGetRowId"/>) and
     /// the private computed property <c>VisibleColumns</c>.
     /// The render cycle is covered with bUnit by <see cref="DynamicGridRenderTests"/>.
     /// </summary>

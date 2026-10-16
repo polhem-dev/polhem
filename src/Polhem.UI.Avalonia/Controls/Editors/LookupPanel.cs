@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Api.Client.Connectors;
+using Polhem.Api.Contracts.Form;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 
@@ -14,7 +14,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// The selection surface of a lookup picker: a search box, a
     /// <see cref="GridControl"/> bound to the target form's lookup layout
     /// (see <see cref="FormSchema.GetLookupLayout"/>), and OK / Cancel buttons.
-    /// Rows come from <see cref="FormApiConnector.GetLookupAsync"/>, so the
+    /// Rows come from <see cref="IFormApiConnector.GetLookupAsync"/>, so the
     /// projection and search semantics are server-resolved.
     /// </summary>
     /// <remarks>
@@ -35,7 +35,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         private readonly GridControl _grid;
         private readonly Button _okButton;
         private readonly TextBlock _errorLabel;
-        private FormApiConnector? _connector;
+        private IFormApiConnector? _connector;
 
         /// <summary>
         /// Raised when a row is committed (OK button or row double-click).
@@ -137,7 +137,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         /// <param name="schema">The target form's schema.</param>
         /// <param name="connector">The connector for the target form.</param>
-        public void Bind(FormSchema schema, FormApiConnector connector)
+        public void Bind(FormSchema schema, IFormApiConnector connector)
         {
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(connector);

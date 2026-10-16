@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Polhem.Api.Client;
 using Polhem.Api.Core.Messages.Form;
+using Polhem.UI.Core;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Core.Exceptions;
 using Polhem.Core.Serialization;

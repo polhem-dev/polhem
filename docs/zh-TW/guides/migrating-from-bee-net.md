@@ -1,4 +1,4 @@
-<!-- source: en/guides/migrating-from-bee-net.md blob: d1a551ad2d492759cad2fe3b59586f09b4e41826 -->
+<!-- source: en/guides/migrating-from-bee-net.md blob: 81a1ac00bc11da02c8b73be57597343891bd6acf -->
 # 從 Bee.NET 遷移
 
 [English](../../en/guides/migrating-from-bee-net.md) · [← 文件索引](../README.md)
@@ -32,12 +32,14 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](../../../CHANGELOG.zh-TW.md)
 | `NullAuditLogWriter` | `NullLogWriter` |
 | `UserID`（`SessionUser`、`CreateSessionArgs`） | `UserId` |
 | `AuditEntry.AccessToken` | `AuditEntry.TokenFingerprint` |
-| `ApiClientInfo`（`Endpoint`、`ApiKey`、`PayloadOptions`、`DefaultLanguage`、`ConnectType`） | `PolhemApiClient` 的成員，以 `PolhemApiClient.CreateRemote(endpoint, apiKey)` 建立（以 `IsLocal` 取代 `ConnectType`）；`SupportedConnectTypes` 移到 `ClientInfo`（`Polhem.UI.Core`） |
+| `ApiClientInfo`（`Endpoint`、`ApiKey`、`PayloadOptions`、`DefaultLanguage`、`ConnectType`） | `PolhemApiClient` 的成員，以 `PolhemApiClient.CreateRemote(endpoint, apiKey)` 建立（以 `IsLocal` 取代 `ConnectType`）；`SupportedConnectTypes` 移到 `ClientInfo`（`Polhem.UI.ApiBridge`） |
 | `ApiClientInfo.ApiEncryptionKey`、`ApiClientInfo.UserTimeZoneId` | `PolhemApiClient.Session.Credentials`，由 `LoginAsync` 設定 |
 | `ApiClientInfo.LocalServiceProvider` | 把 `IServiceProvider` 傳給 `PolhemApiClient.CreateLocal` |
 | `new SystemApiConnector(endpoint, accessToken)`、`new FormApiConnector(endpoint, accessToken, progId)` | `PolhemApiClient` 的 `client.System`、`client.Form(progId)`；`LoginAsync` 之後 client 會保存 access token |
-| `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.Core.FileEndpointStorage` |
-| `Bee.UI.Core.Permissions` 中的 `ElementCapabilityResolver`、`IElementCapabilityResolver`、`FieldCapability` | `Polhem.Api.Client.Permissions` 中的同名型別 |
+| `Bee.UI.Core` 中的 `ClientInfo`、`IEndpointStorage`、`IApiKeyStorage` | `Polhem.UI.ApiBridge` 中的同名型別（套件 `Polhem.UI.ApiBridge`） |
+| `IUIViewService`、`ClientInfo.InitializeAsync(IUIViewService, SupportedConnectTypes)` | 已移除：`ClientInfo.InitializeAsync(SupportedConnectTypes)` 回傳 `false` 時由 head 顯示自己的連線設定，再呼叫 `ClientInfo.InitializeAsync(endpoint)` |
+| `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.ApiBridge.FileEndpointStorage` |
+| `Bee.UI.Core.Permissions` 中的 `ElementCapabilityResolver`、`IElementCapabilityResolver`、`FieldCapability` | `Polhem.UI.Core.Permissions` 中的同名型別 |
 | `Bee.ObjectCaching.Services` 中的 `DeploymentAuthorizationService`、`EmployeeContextResolver` | `Polhem.Business.Security.DeploymentAuthorizationService`、`Polhem.Business.Session.EmployeeContextResolver` |
 | `JsonRpcExecutor.Execute`、`ApiServiceController` | 1.2.0 起移除：改由 `Polhem.JsonRpc.Server` 的 dispatcher 處理，以 `app.MapJsonRpc("/api")` 發布 |
 | `BusinessObject.SessionInfo` | 在業務物件內使用 `SessionInfoService.Get(AccessToken)` |

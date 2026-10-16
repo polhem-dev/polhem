@@ -3,7 +3,7 @@ using System.Globalization;
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
 using Polhem.Northwind.UI.Models;
-using Polhem.UI.Core;
+using Polhem.UI.ApiBridge;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
