@@ -214,3 +214,13 @@ Polhem.Api.Contracts.AuditLog.IAuditLogListResponse.Table.get -> System.Data.Dat
 Polhem.Api.Contracts.System.ICreateSessionRequest.UserId.get -> string!
 Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>!
 Polhem.Api.Contracts.System.ILoginResponse.Culture.get -> string!
+Polhem.Api.Contracts.Form.IFormApiConnector
+Polhem.Api.Contracts.Form.IFormApiConnector.DeleteAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IDeleteResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnector.GetDataAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetDataResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnector.GetListAsync(string! selectFields = "", Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, Polhem.Definition.Paging.PagingOptions? paging = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetListResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnector.GetLookupAsync(string! searchText = "", Polhem.Definition.Paging.PagingOptions? paging = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetLookupResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnector.GetNewDataAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetNewDataResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnector.ProgId.get -> string!
+Polhem.Api.Contracts.Form.IFormApiConnector.SaveAsync(System.Data.DataSet! dataSet, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISaveResponse!>!
+Polhem.Api.Contracts.Form.IFormApiConnectorFactory
+Polhem.Api.Contracts.Form.IFormApiConnectorFactory.Create(string! progId) -> Polhem.Api.Contracts.Form.IFormApiConnector!

@@ -12,6 +12,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-16
+
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.7.0.md](docs/zh-TW/changelogs/1.7.0.md)
 
 - **破壞性：** 前端不再參考 API client：`ClientInfo` 與端點儲存移到新套件 `Polhem.UI.ApiBridge`，表單檢視改透過

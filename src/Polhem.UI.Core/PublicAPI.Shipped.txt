@@ -1,58 +1,94 @@
 #nullable enable
-Polhem.UI.Core.ClientInfo
-Polhem.UI.Core.IApiKeyStorage
-Polhem.UI.Core.IApiKeyStorage.LoadApiKey() -> string!
-Polhem.UI.Core.IApiKeyStorage.SaveApiKey(string! apiKey) -> void
-Polhem.UI.Core.IApiKeyStorage.SetApiKey(string! apiKey) -> void
-Polhem.UI.Core.IEndpointStorage
-Polhem.UI.Core.IEndpointStorage.LoadEndpoint() -> string!
-Polhem.UI.Core.IEndpointStorage.SaveEndpoint(string! endpoint) -> void
-Polhem.UI.Core.IEndpointStorage.SetEndpoint(string! endpoint) -> void
-Polhem.UI.Core.IUIViewService
-static Polhem.UI.Core.ClientInfo.AccessToken.get -> System.Guid
-static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.get -> bool
-static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.set -> void
-static Polhem.UI.Core.ClientInfo.ApiClient.get -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.UI.Core.ClientInfo.ApiKeyStorage.get -> Polhem.UI.Core.IApiKeyStorage!
-static Polhem.UI.Core.ClientInfo.ApiKeyStorage.set -> void
-static Polhem.UI.Core.ClientInfo.ApplyApiKey(string! defaultApiKey = "") -> void
-static Polhem.UI.Core.ClientInfo.ApplyEnterCompanyResult(Polhem.Api.Core.Messages.System.EnterCompanyResponse! response) -> void
-static Polhem.UI.Core.ClientInfo.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! loginResponse) -> void
-static Polhem.UI.Core.ClientInfo.ClearCompanyContext() -> void
-static Polhem.UI.Core.ClientInfo.Company.get -> Polhem.Definition.Identity.CompanyInfo?
-static Polhem.UI.Core.ClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
-static Polhem.UI.Core.ClientInfo.CreateFormApiConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
-static Polhem.UI.Core.ClientInfo.DefineAccess.get -> Polhem.Api.Client.ClientDefineAccess!
-static Polhem.UI.Core.ClientInfo.EndpointStorage.get -> Polhem.UI.Core.IEndpointStorage!
-static Polhem.UI.Core.ClientInfo.EndpointStorage.set -> void
-static Polhem.UI.Core.ClientInfo.GetApiKey() -> string!
-static Polhem.UI.Core.ClientInfo.GetEndpoint() -> string!
-static Polhem.UI.Core.ClientInfo.ResetDefineCache() -> void
-static Polhem.UI.Core.ClientInfo.SetApiKey(string! apiKey) -> void
-static Polhem.UI.Core.ClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
-static Polhem.UI.Core.ClientInfo.SupportedConnectTypes.set -> void
-static Polhem.UI.Core.ClientInfo.SystemApiConnector.get -> Polhem.Api.Client.Connectors.SystemApiConnector!
-static Polhem.UI.Core.ClientInfo.UIViewService.get -> Polhem.UI.Core.IUIViewService?
-static Polhem.UI.Core.ClientInfo.UserInfo.get -> Polhem.Definition.Identity.UserInfo?
-Polhem.UI.Core.FileEndpointStorage
-Polhem.UI.Core.FileEndpointStorage.ApiKeyFilePath.get -> string!
-Polhem.UI.Core.FileEndpointStorage.FileEndpointStorage(string! appName) -> void
-Polhem.UI.Core.FileEndpointStorage.FilePath.get -> string!
-Polhem.UI.Core.FileEndpointStorage.LoadApiKey() -> string!
-Polhem.UI.Core.FileEndpointStorage.LoadEndpoint() -> string!
-Polhem.UI.Core.FileEndpointStorage.SaveApiKey(string! apiKey) -> void
-Polhem.UI.Core.FileEndpointStorage.SaveEndpoint(string! endpoint) -> void
-Polhem.UI.Core.FileEndpointStorage.SetApiKey(string! apiKey) -> void
-Polhem.UI.Core.FileEndpointStorage.SetEndpoint(string! endpoint) -> void
-Polhem.UI.Core.IUIViewService.ShowApiConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
-static Polhem.UI.Core.ClientInfo.Arguments.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
-static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
-static Polhem.UI.Core.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!
-static Polhem.UI.Core.ClientInfo.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
-static Polhem.UI.Core.ClientInfo.InitializeAsync(Polhem.UI.Core.IUIViewService! service, Polhem.Api.Client.SupportedConnectTypes connectTypes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
-static Polhem.UI.Core.ClientInfo.InitializeAsync(string! endpoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-static Polhem.UI.Core.ClientInfo.LocalServiceProvider.get -> System.IServiceProvider?
-static Polhem.UI.Core.ClientInfo.LocalServiceProvider.set -> void
-static Polhem.UI.Core.ClientInfo.SetEndpointAsync(string! endpoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.get -> bool
-static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.set -> void
+Polhem.UI.Core.Connectors.FormDataResult
+Polhem.UI.Core.Connectors.FormDataResult.<Clone>$() -> Polhem.UI.Core.Connectors.FormDataResult!
+Polhem.UI.Core.Connectors.FormDataResult.AffectedRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, int>!
+Polhem.UI.Core.Connectors.FormDataResult.AffectedRows.init -> void
+Polhem.UI.Core.Connectors.FormDataResult.DataSet.get -> System.Data.DataSet?
+Polhem.UI.Core.Connectors.FormDataResult.DataSet.init -> void
+Polhem.UI.Core.Connectors.FormDataResult.Deconstruct(out System.Data.DataSet? DataSet) -> void
+Polhem.UI.Core.Connectors.FormDataResult.Equals(Polhem.UI.Core.Connectors.FormDataResult? other) -> bool
+Polhem.UI.Core.Connectors.FormDataResult.FormDataResult(System.Data.DataSet? DataSet) -> void
+Polhem.UI.Core.Connectors.FormDeleteResult
+Polhem.UI.Core.Connectors.FormDeleteResult.<Clone>$() -> Polhem.UI.Core.Connectors.FormDeleteResult!
+Polhem.UI.Core.Connectors.FormDeleteResult.Deconstruct(out int RowsAffected) -> void
+Polhem.UI.Core.Connectors.FormDeleteResult.Equals(Polhem.UI.Core.Connectors.FormDeleteResult? other) -> bool
+Polhem.UI.Core.Connectors.FormDeleteResult.FormDeleteResult(int RowsAffected) -> void
+Polhem.UI.Core.Connectors.FormDeleteResult.RowsAffected.get -> int
+Polhem.UI.Core.Connectors.FormDeleteResult.RowsAffected.init -> void
+Polhem.UI.Core.Connectors.FormListResult
+Polhem.UI.Core.Connectors.FormListResult.<Clone>$() -> Polhem.UI.Core.Connectors.FormListResult!
+Polhem.UI.Core.Connectors.FormListResult.Deconstruct(out System.Data.DataTable? Table, out Polhem.Definition.Paging.PagingInfo? Paging) -> void
+Polhem.UI.Core.Connectors.FormListResult.Equals(Polhem.UI.Core.Connectors.FormListResult? other) -> bool
+Polhem.UI.Core.Connectors.FormListResult.FormListResult(System.Data.DataTable? Table, Polhem.Definition.Paging.PagingInfo? Paging = null) -> void
+Polhem.UI.Core.Connectors.FormListResult.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.UI.Core.Connectors.FormListResult.Paging.init -> void
+Polhem.UI.Core.Connectors.FormListResult.Table.get -> System.Data.DataTable?
+Polhem.UI.Core.Connectors.FormListResult.Table.init -> void
+Polhem.UI.Core.Definitions.IFormDefinitionSource
+Polhem.UI.Core.Definitions.IFormDefinitionSource.GetCurrencySettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.CurrencySettings?>!
+Polhem.UI.Core.Definitions.IFormDefinitionSource.GetFormLayoutAsync(string! progId, Polhem.Definition.Forms.FormSchema! schema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+Polhem.UI.Core.Definitions.IFormDefinitionSource.GetFormSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema!>!
+Polhem.UI.Core.Definitions.IFormDefinitionSource.GetUnitSettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.UnitSettings?>!
+Polhem.UI.Core.Definitions.StorageDefinitionSource
+Polhem.UI.Core.Definitions.StorageDefinitionSource.GetCurrencySettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.CurrencySettings?>!
+Polhem.UI.Core.Definitions.StorageDefinitionSource.GetFormLayoutAsync(string! progId, Polhem.Definition.Forms.FormSchema! schema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+Polhem.UI.Core.Definitions.StorageDefinitionSource.GetFormSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema!>!
+Polhem.UI.Core.Definitions.StorageDefinitionSource.GetUnitSettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.UnitSettings?>!
+Polhem.UI.Core.Definitions.StorageDefinitionSource.StorageDefinitionSource(Polhem.Definition.Storage.IDefineStorage! storage) -> void
+Polhem.UI.Core.FormDataGuard
+Polhem.UI.Core.FormValueBinding
+Polhem.UI.Core.IUserContext
+Polhem.UI.Core.IUserContext.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
+Polhem.UI.Core.IUserContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.UI.Core.IUserContext.DefaultLanguage.get -> string!
+Polhem.UI.Core.IUserContext.User.get -> Polhem.Definition.Identity.UserInfo?
+Polhem.UI.Core.Permissions.ElementCapabilityResolver
+Polhem.UI.Core.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+Polhem.UI.Core.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
+Polhem.UI.Core.Permissions.ElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
+Polhem.UI.Core.Permissions.FieldCapability
+Polhem.UI.Core.Permissions.FieldCapability.Deconstruct(out bool Visible, out bool ReadOnly) -> void
+Polhem.UI.Core.Permissions.FieldCapability.Equals(Polhem.UI.Core.Permissions.FieldCapability other) -> bool
+Polhem.UI.Core.Permissions.FieldCapability.FieldCapability() -> void
+Polhem.UI.Core.Permissions.FieldCapability.FieldCapability(bool Visible, bool ReadOnly) -> void
+Polhem.UI.Core.Permissions.FieldCapability.ReadOnly.get -> bool
+Polhem.UI.Core.Permissions.FieldCapability.ReadOnly.init -> void
+Polhem.UI.Core.Permissions.FieldCapability.Visible.get -> bool
+Polhem.UI.Core.Permissions.FieldCapability.Visible.init -> void
+Polhem.UI.Core.Permissions.IElementCapabilityResolver
+Polhem.UI.Core.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+Polhem.UI.Core.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
+Polhem.UI.Core.UIServices
+override Polhem.UI.Core.Connectors.FormDataResult.Equals(object? obj) -> bool
+override Polhem.UI.Core.Connectors.FormDataResult.GetHashCode() -> int
+override Polhem.UI.Core.Connectors.FormDataResult.ToString() -> string!
+override Polhem.UI.Core.Connectors.FormDeleteResult.Equals(object? obj) -> bool
+override Polhem.UI.Core.Connectors.FormDeleteResult.GetHashCode() -> int
+override Polhem.UI.Core.Connectors.FormDeleteResult.ToString() -> string!
+override Polhem.UI.Core.Connectors.FormListResult.Equals(object? obj) -> bool
+override Polhem.UI.Core.Connectors.FormListResult.GetHashCode() -> int
+override Polhem.UI.Core.Connectors.FormListResult.ToString() -> string!
+override Polhem.UI.Core.Permissions.FieldCapability.GetHashCode() -> int
+static Polhem.UI.Core.Connectors.FormDataResult.operator !=(Polhem.UI.Core.Connectors.FormDataResult? left, Polhem.UI.Core.Connectors.FormDataResult? right) -> bool
+static Polhem.UI.Core.Connectors.FormDataResult.operator ==(Polhem.UI.Core.Connectors.FormDataResult? left, Polhem.UI.Core.Connectors.FormDataResult? right) -> bool
+static Polhem.UI.Core.Connectors.FormDeleteResult.operator !=(Polhem.UI.Core.Connectors.FormDeleteResult? left, Polhem.UI.Core.Connectors.FormDeleteResult? right) -> bool
+static Polhem.UI.Core.Connectors.FormDeleteResult.operator ==(Polhem.UI.Core.Connectors.FormDeleteResult? left, Polhem.UI.Core.Connectors.FormDeleteResult? right) -> bool
+static Polhem.UI.Core.Connectors.FormListResult.operator !=(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
+static Polhem.UI.Core.Connectors.FormListResult.operator ==(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
+static Polhem.UI.Core.FormDataGuard.RequireConnector<TConnector>(TConnector? connector, string! operation) -> TConnector!
+static Polhem.UI.Core.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
+static Polhem.UI.Core.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
+static Polhem.UI.Core.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Forms.FormSchema! schema) -> System.Data.DataSet!
+static Polhem.UI.Core.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
+static Polhem.UI.Core.FormValueBinding.ToBindingString(object? raw) -> string!
+static Polhem.UI.Core.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
+static Polhem.UI.Core.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool
+static Polhem.UI.Core.Permissions.FieldCapability.operator !=(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
+static Polhem.UI.Core.Permissions.FieldCapability.operator ==(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
+static Polhem.UI.Core.UIServices.Get<T>() -> T?
+static Polhem.UI.Core.UIServices.Provider.get -> System.IServiceProvider?
+static Polhem.UI.Core.UIServices.Provider.set -> void
+static readonly Polhem.UI.Core.Permissions.ElementCapabilityResolver.Default -> Polhem.UI.Core.Permissions.ElementCapabilityResolver!
+static readonly Polhem.UI.Core.Permissions.FieldCapability.Allowed -> Polhem.UI.Core.Permissions.FieldCapability
+~override Polhem.UI.Core.Permissions.FieldCapability.Equals(object obj) -> bool
+~override Polhem.UI.Core.Permissions.FieldCapability.ToString() -> string

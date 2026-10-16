@@ -1,49 +1,9 @@
 #nullable enable
-Polhem.Api.Core.Authorization.ApiAuthorizationContext
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiAuthorizationContext() -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKey.get -> string!
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKey.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKeyValidation.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.Authorization.get -> string!
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.Authorization.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.Method.get -> string!
-Polhem.Api.Core.Authorization.ApiAuthorizationContext.Method.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationResult
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.AccessToken.get -> System.Guid
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.AccessToken.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.ApiAuthorizationResult() -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.Code.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.Code.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.ErrorMessage.get -> string!
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.ErrorMessage.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.IsValid.get -> bool
-Polhem.Api.Core.Authorization.ApiAuthorizationResult.IsValid.set -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationValidator
-Polhem.Api.Core.Authorization.ApiAuthorizationValidator.ApiAuthorizationValidator() -> void
-Polhem.Api.Core.Authorization.ApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
-Polhem.Api.Core.Authorization.IApiAuthorizationValidator
-Polhem.Api.Core.Authorization.IApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
 Polhem.Api.Core.Conversion.ApiOutputConverter
-Polhem.Api.Core.Dispatch.PolhemAccessFilter
-Polhem.Api.Core.Dispatch.PolhemAccessFilter.InvokeAsync(Polhem.JsonRpc.Server.JsonRpcRequestContext! context, Polhem.JsonRpc.Server.JsonRpcFilterDelegate! next) -> System.Threading.Tasks.ValueTask
-Polhem.Api.Core.Dispatch.PolhemAccessFilter.PolhemAccessFilter() -> void
-Polhem.Api.Core.Dispatch.PolhemExceptionMapper
-Polhem.Api.Core.Dispatch.PolhemJsonRpc
-Polhem.Api.Core.Dispatch.PolhemMethodPolicy
-Polhem.Api.Core.Dispatch.PolhemMethodPolicy.IsCallable(System.Reflection.MethodInfo! method) -> bool
-Polhem.Api.Core.Dispatch.PolhemMethodPolicy.PolhemMethodPolicy() -> void
-Polhem.Api.Core.Dispatch.PolhemObjectFactory
-Polhem.Api.Core.Dispatch.PolhemObjectFactory.CreateObject(string! progId, Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> object?
-Polhem.Api.Core.Dispatch.PolhemObjectFactory.PolhemObjectFactory() -> void
-Polhem.Api.Core.Dispatch.PolhemParameterBinder
-Polhem.Api.Core.Dispatch.PolhemParameterBinder.Bind(Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> object?
-Polhem.Api.Core.Dispatch.PolhemParameterBinder.PolhemParameterBinder() -> void
-Polhem.Api.Core.Dispatch.PolhemPayloadFilter
-Polhem.Api.Core.Dispatch.PolhemPayloadFilter.InvokeAsync(Polhem.JsonRpc.Server.JsonRpcRequestContext! context, Polhem.JsonRpc.Server.JsonRpcFilterDelegate! next) -> System.Threading.Tasks.ValueTask
-Polhem.Api.Core.Dispatch.PolhemPayloadFilter.PolhemPayloadFilter() -> void
 Polhem.Api.Core.JsonRpc.DateTimeWireGuard
 Polhem.Api.Core.JsonRpc.DateTimeZoneConverter
+Polhem.Api.Core.JsonRpc.IInProcessTransportFactory
+Polhem.Api.Core.JsonRpc.IInProcessTransportFactory.Create(System.IServiceProvider! services, System.Guid accessToken) -> Polhem.JsonRpc.IJsonRpcTransport!
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.CompanyAccessDenied = -32003 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
 Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.CompanyNotEntered = -32002 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
@@ -483,17 +443,6 @@ Polhem.Api.Core.Transformers.MessagePackPayloadCodec.Name.get -> string!
 Polhem.Api.Core.Transformers.MessagePackPayloadCodec.Serialize(object! value, System.Type! type) -> byte[]!
 Polhem.Api.Core.Transformers.PayloadCodecNames
 Polhem.Api.Core.Transformers.PolhemPayload
-Polhem.Api.Core.Validator.ApiAccessValidator
-Polhem.Api.Core.Validator.ApiCallContext
-Polhem.Api.Core.Validator.ApiCallContext.AccessToken.get -> System.Guid
-Polhem.Api.Core.Validator.ApiCallContext.AccessToken.set -> void
-Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext() -> void
-Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.JsonRpc.Payload.PayloadFormat format) -> void
-Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.JsonRpc.Payload.PayloadFormat
-Polhem.Api.Core.Validator.ApiCallContext.Format.set -> void
-Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.get -> bool
-Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.set -> void
-const Polhem.Api.Core.Dispatch.PolhemJsonRpc.AccessTokenItem = "Polhem.AccessToken" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.ApiKey = "X-Api-Key" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.Authorization = "Authorization" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!
@@ -501,12 +450,8 @@ const Polhem.Api.Core.Transformers.PayloadCodecNames.Json = "json" -> string!
 const Polhem.Api.Core.Transformers.PayloadCodecNames.MessagePack = "messagepack" -> string!
 override Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(object? obj) -> bool
 override Polhem.Api.Core.JsonRpc.PayloadSwap.GetHashCode() -> int
-static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Fail(Polhem.Api.Core.JsonRpc.JsonRpcErrorCode code, string! errorMessage) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
-static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Success(System.Guid accessToken) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
 static Polhem.Api.Core.Conversion.ApiOutputConverter.Convert(object! boResult) -> object?
 static Polhem.Api.Core.Conversion.ApiOutputConverter.ConvertResultValue<T>(object! value) -> T?
-static Polhem.Api.Core.Dispatch.PolhemExceptionMapper.Map(System.Exception! exception, Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> Polhem.JsonRpc.JsonRpcError!
-static Polhem.Api.Core.Dispatch.PolhemJsonRpc.CreateServerOptions() -> Polhem.JsonRpc.Server.JsonRpcServerOptions!
 static Polhem.Api.Core.JsonRpc.DateTimeWireGuard.Validate(object? value) -> void
 static Polhem.Api.Core.JsonRpc.DateTimeZoneConverter.ConvertFilterValue(object? value, string! timeZoneId, bool toUtc) -> object?
 static Polhem.Api.Core.JsonRpc.DateTimeZoneConverter.UtcToUser(System.Data.DataSet? dataSet, string! timeZoneId) -> System.Data.DataSet?
@@ -518,7 +463,3 @@ static Polhem.Api.Core.JsonRpc.PayloadZoneConverter.IsolateRequest(object? paylo
 static Polhem.Api.Core.JsonRpc.PayloadZoneConverter.ToUserZone(object? payload, string! timeZoneId) -> void
 static Polhem.Api.Core.Transformers.PolhemPayload.Apply(Polhem.JsonRpc.Payload.PayloadOptions! options, Polhem.Definition.Settings.ApiPayloadOptions! settings, bool isDebugMode) -> void
 static Polhem.Api.Core.Transformers.PolhemPayload.CreateOptions(Polhem.Definition.Settings.ApiPayloadOptions? settings = null, bool isDebugMode = false) -> Polhem.JsonRpc.Payload.PayloadOptions!
-static Polhem.Api.Core.Validator.ApiAccessValidator.FindAccessControl(System.Reflection.MethodInfo! method) -> Polhem.Definition.Attributes.ApiAccessControlAttribute?
-static Polhem.Api.Core.Validator.ApiAccessValidator.ValidateAccess(System.Reflection.MethodInfo! method, Polhem.Api.Core.Validator.ApiCallContext! context, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator) -> void
-virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsApiKeyRequired(string! method) -> bool
-virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsAuthorizationRequired(string! method) -> bool
