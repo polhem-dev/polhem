@@ -17,6 +17,7 @@ it works or has to write a client of their own.
 |----------------|---------------|-------------|
 | Blazor Server (in-process) | `Polhem.Api.Client` (Local) | Direct DI dispatch, no HTTP |
 | Blazor WASM | `Polhem.Api.Client` (Remote) | MessagePack + AES-CBC-HMAC over HTTP |
+| Avalonia (`Polhem.UI.Avalonia`: desktop, browser, iOS, Android) | `Polhem.UI.ApiBridge` over `Polhem.Api.Client` (Remote, or Local on desktop) | Same as above |
 | .NET MAUI / WPF / WinForms | `Polhem.Api.Client` (Remote) | Same as above |
 | **React / Vue / Angular / vanilla JS** | **fetch + JSON-RPC** (this guide) | **Plain JSON over HTTPS** |
 | TypeScript SPA / Node.js client | Same — fetch + JSON-RPC, with optional TS types | Plain JSON over HTTPS |
