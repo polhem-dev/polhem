@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: ea7798c468806decdc8bd7f1dc6aa3e68148463a -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 3d6dc4c6d7c5ca80bd135d476e2baf40bdbdd59c -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -17,6 +17,7 @@
 |----------|-------------|-------------|
 | Blazor Server（in-process） | `Polhem.Api.Client`（Local） | 直接 DI 派遣，不走 HTTP |
 | Blazor WASM | `Polhem.Api.Client`（Remote） | HTTP + MessagePack + AES-CBC-HMAC |
+| Avalonia（`Polhem.UI.Avalonia`：桌面、瀏覽器、iOS、Android） | `Polhem.UI.ApiBridge`，底層為 `Polhem.Api.Client`（Remote；桌面也可 Local） | 同上 |
 | .NET MAUI / WPF / WinForms | `Polhem.Api.Client`（Remote） | 同上 |
 | **React / Vue / Angular / vanilla JS** | **fetch + JSON-RPC**（本指引） | **HTTPS + 純 JSON** |
 | TypeScript SPA / Node.js client | 同上 — fetch + JSON-RPC，可加 TS 型別 | HTTPS + 純 JSON |

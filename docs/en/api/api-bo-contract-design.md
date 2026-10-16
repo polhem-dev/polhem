@@ -308,13 +308,15 @@ Using `GetOrder` as an example:
 ## Assembly Dependency Direction
 
 ```
-Polhem.Api.Contracts           <-- Contract interfaces (shared by API & BO)
+Polhem.Api.Contracts           <-- Contract interfaces (shared by front end, API & BO)
     |
     +-- Polhem.Api.Core        <-- API types (with serialization)
     |       |
-    |       +-- Polhem.Api.Client  <-- Client (uses Request / Response only)
+    |       +-- Polhem.Api.Client  <-- Client (uses Request / Response only; implements IFormApiConnector)
     |
     +-- Polhem.Business        <-- BO types (pure POCO) + BO interfaces
+    |
+    +-- Polhem.UI.Core         <-- Front-end layer (calls IFormApiConnector, never the client)
 ```
 
-**Principle:** Arrows indicate dependency direction. `Polhem.Api.Core` and `Polhem.Business` do not depend on each other; the contracts they share live in `Polhem.Api.Contracts`. Both have other dependencies as well (such as `Polhem.Definition`); the full graph is in the [Project Dependency Map](../architecture/dependency-map.md).
+**Principle:** Arrows indicate dependency direction. `Polhem.Api.Core` and `Polhem.Business` do not depend on each other; the contracts they share live in `Polhem.Api.Contracts`. The front end reaches the backend through the same contracts: `Polhem.UI.Core` depends on `IFormApiConnector`, and `Polhem.UI.ApiBridge` supplies the client's implementation to a head that has a Polhem backend ([ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)). Both have other dependencies as well (such as `Polhem.Definition`); the full graph is in the [Project Dependency Map](../architecture/dependency-map.md).

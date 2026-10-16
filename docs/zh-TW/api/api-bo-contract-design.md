@@ -1,4 +1,4 @@
-<!-- source: en/api/api-bo-contract-design.md blob: 7c66e880e61fa83420115e1735b33b041a162fd5 -->
+<!-- source: en/api/api-bo-contract-design.md blob: fe9dcb5d837541f55e0c6c770559cc739be4262a -->
 # API 合約與 BO 參數設計原則
 
 [English](../../en/api/api-bo-contract-design.md) · [← 文件索引](../README.md)
@@ -296,13 +296,15 @@ public LoginResult Login(LoginArgs args) { ... }
 ## 組件相依方向
 
 ```
-Polhem.Api.Contracts           ← 合約介面（API 與 BO 共用）
+Polhem.Api.Contracts           ← 合約介面（前端、API 與 BO 共用）
     │
     ├── Polhem.Api.Core        ← API 型別（含序列化）
     │       │
-    │       └── Polhem.Api.Client  ← 用戶端（只用 Request / Response）
+    │       └── Polhem.Api.Client  ← 用戶端（只用 Request / Response；實作 IFormApiConnector）
     │
-    └── Polhem.Business        ← BO 型別（純 POCO）+ BO 介面
+    ├── Polhem.Business        ← BO 型別（純 POCO）+ BO 介面
+    │
+    └── Polhem.UI.Core         ← 前端層（呼叫 IFormApiConnector，不直接用用戶端）
 ```
 
-**原則**：箭頭方向為相依方向。`Polhem.Api.Core` 與 `Polhem.Business` 彼此不相依，兩者共用的合約放在 `Polhem.Api.Contracts`。兩者也各有其他相依（例如 `Polhem.Definition`）；完整的相依圖見 [專案相依性全景圖](../architecture/dependency-map.md)。
+**原則**：箭頭方向為相依方向。`Polhem.Api.Core` 與 `Polhem.Business` 彼此不相依，兩者共用的合約放在 `Polhem.Api.Contracts`。前端也透過同一層合約連到後端：`Polhem.UI.Core` 依賴 `IFormApiConnector`，有 Polhem 後端的 head 由 `Polhem.UI.ApiBridge` 提供用戶端的實作（[ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)）。兩者也各有其他相依（例如 `Polhem.Definition`）；完整的相依圖見 [專案相依性全景圖](../architecture/dependency-map.md)。
