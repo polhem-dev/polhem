@@ -10,6 +10,7 @@ build applications with Polhem is under [`docs/`](../docs/README.md). The reason
 | [gotchas/](gotchas/README.md) | Pitfalls that have been hit and are likely to be hit again, with the symptom, the root cause and the fix |
 | [branch-protection-setup.md](branch-protection-setup.md) | Branch protection and repository settings |
 | [ci-sonarcloud-setup.md](ci-sonarcloud-setup.md) | SonarCloud setup |
+| [changelog-format.md](changelog-format.md) | How the changelog and the per-version release notes are written |
 | [public-api-baseline.md](public-api-baseline.md) | Maintaining the public API baseline (`PublicAPI.*.txt`) |
 | [testing-patterns.md](testing-patterns.md) | Copy-ready test templates |
 | [load-testing.md](load-testing.md) | How load tests are measured and read |

@@ -60,7 +60,7 @@ Wanting to cite a plan means the content has not reached its proper place yet:
 - A design decision and its reasons → the relevant **ADR**, the long-lived decision record.
 - How something is used or behaves → the relevant public document under `docs/`.
 - Where something is implemented → the **source path** itself (`src/Polhem.Db/DbAccess.cs`).
-- A version change → `CHANGELOG.md`.
+- A version change → `CHANGELOG.md` and the version's release notes, written as `maintainers/changelog-format.md` describes.
 - Work that other maintainers need to see → a GitHub issue or pull request.
 
 If the history only exists in a plan and is not worth promoting, **do not cite it**.

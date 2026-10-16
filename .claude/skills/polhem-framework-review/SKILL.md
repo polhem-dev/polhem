@@ -240,7 +240,9 @@ The scope is **public documentation** (written for NuGet package consumers): the
 - **Bilingual sync**: compare section structure and amount of content in bilingual pairs; find one-sided updates; find
   documents that should be bilingual but exist in only one language.
 - **CHANGELOG**: the `Version.props` version vs the commits after the tag; are all commits marked `!` recorded;
-  is there an Unreleased section; have existing statements been overturned by later commits.
+  is there an Unreleased section; have existing statements been overturned by later commits; does each version follow
+  `maintainers/changelog-format.md` (a short index entry, and a migration step for every breaking change in the
+  release notes).
 - **Quantitative baselines**: project counts / dependency edges / package lists claimed by docs vs the actual csproj
   files.
 

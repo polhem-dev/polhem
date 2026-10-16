@@ -9,6 +9,11 @@ change that breaks it waits for the next major version") and the statement in th
 1.1.0 on, 1.x follows semantic versioning without exceptions" ([ADR-048](adr-048-rename-base-to-core-in-1-1.md)).
 The decisions of ADR-046 themselves stay; how they apply from 2.0 is under decision 5.
 
+**Amended (2026-10-16):** decision 1 placed the migration step of each breaking change in `CHANGELOG.md`. It now goes
+in the version's release notes under `docs/en/changelogs/`, and the changelog marks the change **Breaking:** in one
+sentence that links there. The wire breaks of decision 2 are marked **Breaking (wire):** in the same way. The format is
+in [changelog-format.md](../changelog-format.md). The policy itself does not change.
+
 ## Context
 
 1.0.0 fixed a public API baseline and declared semantic versioning. Within the next four minor versions, four changes
