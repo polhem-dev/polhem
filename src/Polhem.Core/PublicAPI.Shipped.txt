@@ -127,9 +127,6 @@ Polhem.Core.Expressions.IExpressionEvaluator.Evaluate<T>(string! expression, Sys
 Polhem.Core.Expressions.IExpressionEvaluator.GetReferencedVariables(string! expression) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Core.FileUtilities
 Polhem.Core.FrameworkClock
-Polhem.Core.IDisplayName
-Polhem.Core.IDisplayName.DisplayName.get -> string!
-Polhem.Core.IDisplayName.DisplayName.set -> void
 Polhem.Core.IKeyObject
 Polhem.Core.IKeyObject.GetKey() -> string!
 Polhem.Core.ISysInfoConfiguration
@@ -147,7 +144,6 @@ Polhem.Core.Security.AesCbcHmacCryptor
 Polhem.Core.Security.AesCbcHmacKeyGenerator
 Polhem.Core.Security.ApiKeyFormat
 Polhem.Core.Security.ApiKeyHasher
-Polhem.Core.Security.FileHashValidator
 Polhem.Core.Security.PasswordHasher
 Polhem.Core.Security.RsaCryptor
 Polhem.Core.Serialization.DataSetJsonConverter
@@ -242,8 +238,6 @@ static Polhem.Core.Security.ApiKeyFormat.IsValidSysId(string? sysId) -> bool
 static Polhem.Core.Security.ApiKeyFormat.TryParse(string? key, out string! sysId, out string! secret) -> bool
 static Polhem.Core.Security.ApiKeyHasher.HashSecret(string! secret) -> string!
 static Polhem.Core.Security.ApiKeyHasher.VerifySecret(string? secret, string? hashedSecret) -> bool
-static Polhem.Core.Security.FileHashValidator.ComputeSha256(string! filePath) -> string!
-static Polhem.Core.Security.FileHashValidator.VerifySha256(string! filePath, string! expectedSha256Hex) -> bool
 static Polhem.Core.Security.PasswordHasher.HashPassword(string! password) -> string!
 static Polhem.Core.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -> bool
 static Polhem.Core.Security.PasswordHasher.VerifyPassword(string! password, string! hashedPassword) -> bool

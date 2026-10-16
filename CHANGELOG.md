@@ -13,6 +13,8 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-16
+
 Details and migration steps: [docs/en/changelogs/1.7.0.md](docs/en/changelogs/1.7.0.md)
 
 - **Breaking:** Front ends no longer reference the API client: `ClientInfo` and the endpoint storage move to the new

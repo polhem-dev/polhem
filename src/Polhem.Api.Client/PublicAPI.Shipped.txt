@@ -84,24 +84,6 @@ Polhem.Api.Client.Definitions.SnapshotLanguageService.SnapshotLanguageService(Sy
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! fullKey, out string! text) -> bool
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
-Polhem.Api.Client.FormDataGuard
-Polhem.Api.Client.FormValueBinding
-Polhem.Api.Client.Permissions.ElementCapabilityResolver
-Polhem.Api.Client.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
-Polhem.Api.Client.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
-Polhem.Api.Client.Permissions.ElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
-Polhem.Api.Client.Permissions.FieldCapability
-Polhem.Api.Client.Permissions.FieldCapability.Deconstruct(out bool Visible, out bool ReadOnly) -> void
-Polhem.Api.Client.Permissions.FieldCapability.Equals(Polhem.Api.Client.Permissions.FieldCapability other) -> bool
-Polhem.Api.Client.Permissions.FieldCapability.FieldCapability() -> void
-Polhem.Api.Client.Permissions.FieldCapability.FieldCapability(bool Visible, bool ReadOnly) -> void
-Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.get -> bool
-Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.init -> void
-Polhem.Api.Client.Permissions.FieldCapability.Visible.get -> bool
-Polhem.Api.Client.Permissions.FieldCapability.Visible.init -> void
-Polhem.Api.Client.Permissions.IElementCapabilityResolver
-Polhem.Api.Client.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
-Polhem.Api.Client.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
 Polhem.Api.Client.PolhemApiClient
 Polhem.Api.Client.PolhemApiClient.ApiKey.get -> string!
 Polhem.Api.Client.PolhemApiClient.ApiKey.set -> void
@@ -121,26 +103,13 @@ Polhem.Api.Client.SupportedConnectTypes.Local = 1 -> Polhem.Api.Client.Supported
 Polhem.Api.Client.SupportedConnectTypes.None = 0 -> Polhem.Api.Client.SupportedConnectTypes
 Polhem.Api.Client.SupportedConnectTypes.Remote = 2 -> Polhem.Api.Client.SupportedConnectTypes
 override Polhem.Api.Client.Definitions.LanguageLayers.GetHashCode() -> int
-override Polhem.Api.Client.Permissions.FieldCapability.GetHashCode() -> int
 static Polhem.Api.Client.ApiConnectValidator.ValidateAsync(string! endpoint, Polhem.Api.Client.SupportedConnectTypes supportedConnectTypes, bool allowGenerateSettings = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Client.ConnectType>!
 static Polhem.Api.Client.ApiSessionCredentials.Anonymous.get -> Polhem.Api.Client.ApiSessionCredentials!
 static Polhem.Api.Client.Definitions.LanguageLayers.operator !=(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
 static Polhem.Api.Client.Definitions.LanguageLayers.operator ==(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
 static Polhem.Api.Client.Definitions.SnapshotLanguageService.BuildKey(string! lang, string! ns) -> string!
-static Polhem.Api.Client.FormDataGuard.RequireConnector(Polhem.Api.Client.Connectors.FormApiConnector? connector, string! operation) -> Polhem.Api.Client.Connectors.FormApiConnector!
-static Polhem.Api.Client.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
-static Polhem.Api.Client.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
-static Polhem.Api.Client.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Forms.FormSchema! schema) -> System.Data.DataSet!
-static Polhem.Api.Client.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
-static Polhem.Api.Client.FormValueBinding.ToBindingString(object? raw) -> string!
-static Polhem.Api.Client.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
-static Polhem.Api.Client.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool
-static Polhem.Api.Client.Permissions.FieldCapability.operator !=(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
-static Polhem.Api.Client.Permissions.FieldCapability.operator ==(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
 static Polhem.Api.Client.PolhemApiClient.CreateLocal(System.IServiceProvider! services, Polhem.JsonRpc.Payload.PayloadOptions? payloadOptions = null) -> Polhem.Api.Client.PolhemApiClient!
 static Polhem.Api.Client.PolhemApiClient.CreateRemote(string! endpoint, string! apiKey, Polhem.JsonRpc.Payload.PayloadOptions? payloadOptions = null) -> Polhem.Api.Client.PolhemApiClient!
-static readonly Polhem.Api.Client.Permissions.ElementCapabilityResolver.Default -> Polhem.Api.Client.Permissions.ElementCapabilityResolver!
-static readonly Polhem.Api.Client.Permissions.FieldCapability.Allowed -> Polhem.Api.Client.Permissions.FieldCapability
 virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetAccessLogAsync(Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
 virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetApiAnomalyLogAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
 virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetApiAnomalySummaryAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse!>!
@@ -184,5 +153,3 @@ virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyExpiryAsync(str
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetDeploymentAdminAsync(string! userId, bool isDeploymentAdmin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse!>!
 ~override Polhem.Api.Client.Definitions.LanguageLayers.Equals(object obj) -> bool
 ~override Polhem.Api.Client.Definitions.LanguageLayers.ToString() -> string
-~override Polhem.Api.Client.Permissions.FieldCapability.Equals(object obj) -> bool
-~override Polhem.Api.Client.Permissions.FieldCapability.ToString() -> string
