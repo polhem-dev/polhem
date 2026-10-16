@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>The server side of the Polhem JSON-RPC API: the dispatcher setup, the access and payload filters, API key and authorization checks, and the exception mapping.</Description>
+    <PackageTags>polhem;api;jsonrpc;server;dispatcher;authorization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The executor logs the real message of a failure whose caller only sees a generic one. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
+  <!--
+    Framework convention analyzers applied to this project itself, as in Polhem.Api.Core.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The JSON-RPC dispatcher and the server half of the payload envelope. PolhemJsonRpcSource switches to a local
+       checkout; see PolhemJsonRpc.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload.Server" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload.Server/Polhem.JsonRpc.Payload.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    IMPORTANT: this assembly reads internals of Polhem.Api.Core (InternalsVisibleTo), so the two packages only work
+    from the same release. NuGet writes a project reference as a minimum version, which would let a consumer upgrade
+    Polhem.Api.Core alone; this pins it to the exact version instead (ADR-055). It edits the item NuGet's
+    _GetProjectReferenceVersions target produces, which is not a public extension point, so the pack fails rather than
+    silently publishing a minimum version: when that item no longer names Polhem.Api.Core, and, through
+    VerifyPolhemApiCorePinned, when the nuspec is generated without the pin having run at all.
+  -->
+  <Target Name="PinPolhemApiCoreVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_PolhemApiCoreReference Include="@(_ProjectReferencesWithVersions)"
+                               Condition="'%(Filename)' == 'Polhem.Api.Core'" />
+      <_ProjectReferencesWithVersions Condition="'%(Filename)' == 'Polhem.Api.Core'">
+        <ProjectVersion>[%(ProjectVersion)]</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+    </ItemGroup>
+    <Error Condition="'@(_PolhemApiCoreReference)' == ''"
+           Text="Polhem.Api.Server must depend on Polhem.Api.Core at an exact version, but NuGet's project reference list no longer contains it. Find where NuGet now computes project reference versions and update the PinPolhemApiCoreVersion target (ADR-055)." />
+    <PropertyGroup>
+      <_PolhemApiCorePinned>true</_PolhemApiCorePinned>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="VerifyPolhemApiCorePinned" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(_PolhemApiCorePinned)' != 'true'"
+           Text="The nuspec of Polhem.Api.Server is being generated without PinPolhemApiCoreVersion having run, so Polhem.Api.Core would be published as a minimum version. NuGet no longer runs _GetProjectReferenceVersions; hook the pin onto the target that now computes project reference versions (ADR-055)." />
+  </Target>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Api.Server.UnitTests" />
+    <!-- The error contract has two halves: PolhemExceptionMapper.MapCode maps an exception to a
+         code, and ApiConnector maps that code back to an exception. Only a test
+         that sees both can assert they agree, and the client test project references both assemblies. -->
+    <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+  </ItemGroup>
+
+</Project>

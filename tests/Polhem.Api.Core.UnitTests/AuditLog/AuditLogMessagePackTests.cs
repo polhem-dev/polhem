@@ -159,38 +159,13 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             {
                 SysRowId = Guid.NewGuid(),
                 ChangeKind = ChangeKind.Update,
-                DataSet = NewChangeDataSet(),
+                DataSet = AuditLogChangeData.NewChangeDataSet(),
             };
 
             var restored = MessagePackCodec.Deserialize<GetChangeDetailResponse>(MessagePackCodec.Serialize(response));
 
             Assert.NotNull(restored?.DataSet);
-            AssertChangeDataSet(restored!.DataSet!);
-        }
-
-        /// <summary>One Modified row (Alice → Alice Wang) and one Unchanged row.</summary>
-        internal static DataSet NewChangeDataSet()
-        {
-            var dataSet = new DataSet("Employee");
-            var table = dataSet.Tables.Add("Employee");
-            table.Columns.Add("sys_rowid", typeof(string));
-            table.Columns.Add("name", typeof(string));
-            var modified = table.Rows.Add("R-1", "Alice");
-            table.Rows.Add("R-2", "Bob");
-            dataSet.AcceptChanges();
-            modified["name"] = "Alice Wang";
-            return dataSet;
-        }
-
-        internal static void AssertChangeDataSet(DataSet dataSet)
-        {
-            var rows = dataSet.Tables["Employee"]!.Rows;
-            Assert.Equal(2, rows.Count);
-            Assert.Equal(DataRowState.Modified, rows[0].RowState);
-            Assert.Equal("Alice", rows[0]["name", DataRowVersion.Original]);
-            Assert.Equal("Alice Wang", rows[0]["name", DataRowVersion.Current]);
-            Assert.Equal(DataRowState.Unchanged, rows[1].RowState);
-            Assert.Equal("Bob", rows[1]["name"]);
+            AuditLogChangeData.AssertChangeDataSet(restored!.DataSet!);
         }
 
         [Fact]

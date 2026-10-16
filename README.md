@@ -47,8 +47,9 @@ dotnet add package Polhem.Db
 
 [Getting Started](https://github.com/polhem-dev/polhem/blob/main/docs/en/getting-started/getting-started.md) continues from there.
 
-> **1.x minor versions may contain breaking changes**, each listed with its migration step in the
-> [changelog](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md). Pin the packages to one minor version,
+> **1.x minor versions may contain breaking changes**, each marked in the
+> [changelog](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md) and described with its migration steps in
+> that version's release notes. Pin the packages to one minor version,
 > for example `Version="[1.5,1.6)"`. Semantic versioning applies from 2.0.0.
 
 ### Shared (Frontend / Backend)
@@ -59,7 +60,7 @@ dotnet add package Polhem.Db
 | **Polhem.Definition.dll** | Defines system-wide structured types including FormSchema, field schemas, and layout configurations. |
 | **Polhem.Expressions.dll** | Portable, sandboxed expression evaluator (DynamicExpresso-backed) for computed fields and validation rules; shared by backend save and Avalonia client live preview so both sides compute identically. |
 | **Polhem.Api.Contracts.dll** | Shared data contracts (request/response models) and the form connector contract (`IFormApiConnector`) used by both frontend and backend. |
-| **Polhem.Api.Core.dll** | Encapsulates API support such as model definitions, payload encryption, and serialization pipeline. |
+| **Polhem.Api.Core.dll** | The API wire layer both ends share: request and response messages, payload encryption, and the serialization pipeline. |
 
 ### Backend
 
@@ -70,6 +71,7 @@ dotnet add package Polhem.Db
 | **Polhem.Db.dll** | Database abstraction with dynamic SQL command generation and connection binding; ships dialects for SQL Server, PostgreSQL, SQLite, MySQL, and Oracle. |
 | **Polhem.Repository.dll** | Common repository base classes and FormSchema-driven data access mechanisms. |
 | **Polhem.Business.dll** | Core business logic (Business Object / BO) implementing use-case workflows. |
+| **Polhem.Api.Server.dll** | The server side of the JSON-RPC API: dispatching calls to business objects, API key and authorization checks, method-level access control, and error mapping. |
 | **Polhem.Hosting.dll** | Composition root — `AddPolhemFramework` extension registering all backend services into any `IServiceCollection` (no ASP.NET Core dependency). Used by ASP.NET Core, WinForms, Console, and Worker Service hosts. |
 
 ### Frontend

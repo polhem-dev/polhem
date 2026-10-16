@@ -343,7 +343,9 @@ jobs:
     # was found by a manual scan, not by CI.
     # The other projects in the list test the rest of what a mobile head ships: the expression interpreter
     # (Polhem.Expressions), the API client (Polhem.Api.Client), the bridge between them (Polhem.UI.ApiBridge) and
-    # the two UI layers (Polhem.UI.Core, Polhem.UI.Avalonia). Test projects of server-only packages stay out.
+    # the two UI layers (Polhem.UI.Core, Polhem.UI.Avalonia). Test projects of server-only packages stay out, with one
+    # exception: the dispatch round trips in Polhem.Api.Server.UnitTests encode and decode every message the way a
+    # mobile client does, and they ran in this gate as part of Polhem.Api.Core.UnitTests until ADR-055 moved them.
     #
     # Known blind spot: this gate runs on CoreCLR, where MakeGenericType / MakeGenericMethod are not affected by
     # the switch. MakeGenericType is exactly why ADR-037 requires closed generic instantiations to be registered,
@@ -358,6 +360,7 @@ jobs:
       run: |
         for proj in \
           tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj \
+          tests/Polhem.Api.Server.UnitTests/Polhem.Api.Server.UnitTests.csproj \
           tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj \
           tests/Polhem.Core.UnitTests/Polhem.Core.UnitTests.csproj \
           tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj \

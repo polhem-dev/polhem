@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: ab5a737304c0dd8a2e62fd2f845a1a8c9b4d6f00 -->
+<!-- source: en/reference/terminology.md blob: ce1f9603c8d6e2492c2c44a06d15847f5d275f7f -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -14,7 +14,7 @@
 3. [資料庫層（Polhem.Db）](#3-資料庫層polhemdb)
 4. [業務邏輯層（Polhem.Business）](#4-業務邏輯層polhembusiness)
 5. [Repository 層（Polhem.Repository）](#5-repository-層polhemrepository)
-6. [API 層（Polhem.Api.Core）](#6-api-層polhemapicore)
+6. [API 層（Polhem.Api.Core、Polhem.Api.Server）](#6-api-層polhemapicorepolhemapiserver)
 7. [快取層（Polhem.ObjectCaching）](#7-快取層polhemobjectcaching)
 8. [連線層（Polhem.Api.Client）](#8-連線層polhemapiclient)
 9. [基礎設施（Polhem.Core）](#9-基礎設施polhemcore)
@@ -163,7 +163,7 @@
 
 ---
 
-## 6. API 層（Polhem.Api.Core）
+## 6. API 層（Polhem.Api.Core、Polhem.Api.Server）
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
@@ -171,6 +171,7 @@
 | `PolhemPayload` | Polhem payload 設定 | 以框架的方式組出 payload 選項：MessagePack 為預設 codec、框架的型別名稱，以及 `ApiPayloadOptions` 指名的壓縮器與加密器 |
 | `ExecFuncArgs` | 自訂函式執行參數 | 呼叫自訂業務函式時傳遞的參數物件 |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | 宣告 API 端點的保護等級與認證需求 |
+| `IApiAuthorizationValidator` | API 授權驗證介面 | 請求授權（API 金鑰與 Bearer token），位於 `Polhem.Api.Server`；`AddPolhemFramework` 註冊預設的 `ApiAuthorizationValidator`，宿主註冊自己的實作即可替換 |
 
 ### 安全性
 

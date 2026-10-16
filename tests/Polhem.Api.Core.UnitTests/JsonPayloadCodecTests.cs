@@ -43,12 +43,12 @@ namespace Polhem.Api.Core.UnitTests
             var value = new GetChangeDetailResponse
             {
                 SysRowId = Guid.NewGuid(),
-                DataSet = AuditLogMessagePackTests.NewChangeDataSet(),
+                DataSet = AuditLogChangeData.NewChangeDataSet(),
             };
 
             var restored = Assert.IsType<GetChangeDetailResponse>(RoundTrip(value, PayloadCodecNames.Json));
             Assert.NotNull(restored.DataSet);
-            AuditLogMessagePackTests.AssertChangeDataSet(restored.DataSet!);
+            AuditLogChangeData.AssertChangeDataSet(restored.DataSet!);
         }
 
         [Theory]

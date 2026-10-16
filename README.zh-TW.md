@@ -47,8 +47,8 @@ dotnet add package Polhem.Db
 
 接下來的步驟見[快速上手](docs/zh-TW/getting-started/getting-started.md)。
 
-> **1.x 的 minor 版可能含破壞性變更**，每一項都會連同遷移步驟列在[變更記錄](CHANGELOG.zh-TW.md)。請把套件鎖定在
-> 一個 minor 版內，例如 `Version="[1.5,1.6)"`。自 2.0.0 起依循語意化版本。
+> **1.x 的 minor 版可能含破壞性變更**，每一項都會在[變更記錄](CHANGELOG.zh-TW.md)標示，遷移步驟寫在該版的發佈說明。
+> 請把套件鎖定在一個 minor 版內，例如 `Version="[1.5,1.6)"`。自 2.0.0 起依循語意化版本。
 
 ### 共用（前端 / 後端）
 
@@ -58,7 +58,7 @@ dotnet add package Polhem.Db
 | **Polhem.Definition.dll** | 定義系統結構化資料，包含 FormSchema、欄位結構描述與版面配置。 |
 | **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia 前端即時預覽共用，兩端算法一致。 |
 | **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）與表單連接器契約（`IFormApiConnector`）。 |
-| **Polhem.Api.Core.dll** | 提供 API 核心支援，包含資料模型、Payload 加解密與序列化管線。 |
+| **Polhem.Api.Core.dll** | 前後端共用的 API wire 層：請求與回應訊息、Payload 加解密與序列化管線。 |
 
 ### 後端
 
@@ -69,6 +69,7 @@ dotnet add package Polhem.Db
 | **Polhem.Db.dll** | 封裝資料庫操作邏輯，支援動態 SQL 命令產生與連線綁定；內建 SQL Server、PostgreSQL、SQLite、MySQL、Oracle 五種 dialect。 |
 | **Polhem.Repository.dll** | 提供共用的 Repository 基底類別與 FormSchema 驅動的資料存取機制。 |
 | **Polhem.Business.dll** | 實作業務邏輯核心（Business Object / BO），負責 Use Case 工作流程。 |
+| **Polhem.Api.Server.dll** | JSON-RPC API 的伺服器端：把呼叫派送到商業物件、API 金鑰與授權檢查、方法層級存取控制，以及錯誤對應。 |
 | **Polhem.Hosting.dll** | Composition root — 提供 `AddPolhemFramework` 擴充方法，將所有後端服務註冊至 `IServiceCollection`（不依賴 ASP.NET Core），可用於 ASP.NET Core、WinForms、Console、Worker Service 等各種宿主。 |
 
 ### 前端

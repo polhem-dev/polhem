@@ -178,7 +178,8 @@ Two behaviours differ by platform without any setup:
 - **The unsupported configurations**: POLHEM9004, in `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`.
 - **Running without dynamic code**: this repository's CI runs the test projects of every package a client head ships
   (`Polhem.Core`, `Polhem.Definition`, `Polhem.Expressions`, `Polhem.Api.Core`, `Polhem.Api.Client`, `Polhem.UI.Core`,
-  `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`) a second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets.
+  `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`) a second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets,
+  plus `Polhem.Api.Server.UnitTests` for the dispatch round trips, which encode and decode every message as a client does.
 - **The expression descriptor**: `TrimmerDescriptorGateTests` in `tests/Polhem.Expressions.UnitTests`.
 - **The heads themselves**: the Northwind browser, iOS and Android heads are the reference configuration, but this
   repository's CI does not build them. A change to one of the settings above is checked by building and running the

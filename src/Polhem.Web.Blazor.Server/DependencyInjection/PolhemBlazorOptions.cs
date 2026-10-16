@@ -84,7 +84,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// <param name="endpoint">The remote API endpoint URL (must be non-empty).</param>
         /// <param name="apiKey">
         /// The key the server issued for this application, sent as the <c>X-Api-Key</c> header. The server's
-        /// default <see cref="Polhem.Api.Core.Authorization.ApiAuthorizationValidator"/> refuses every method except
+        /// default <c>ApiAuthorizationValidator</c> (Polhem.Api.Server) refuses every method except
         /// <c>System.Ping</c> without an accepted key, so with an empty one the first call (usually the sign-in)
         /// fails with <c>401 Unauthorized</c>. The key identifies the calling application, not a circuit's user, so
         /// every circuit sends the same one.

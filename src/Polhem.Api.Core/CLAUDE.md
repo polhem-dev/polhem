@@ -103,11 +103,15 @@ Fixed by adr-037: every wire type is now registered explicitly, and `object` mem
 **This section stays because it shows a recurring mistake**: when a measurement disproves a guess, first ask "does my
 sample cover the path the guess is about?" The guess named contractless, but the samples were all attributed types.
 
-### Regression gate (one line, no csproj change)
+### Regression gate (no csproj change)
 
 ```bash
 dotnet test tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj -c Release --settings .runsettings -p:DynamicCodeSupport=false
+dotnet test tests/Polhem.Api.Server.UnitTests/Polhem.Api.Server.UnitTests.csproj -c Release --settings .runsettings -p:DynamicCodeSupport=false
 ```
+
+The second line covers the dispatch round trips (`*JsonRpcRoundTripTests`), which encode and decode every message
+through the dispatcher; they moved to the server's test project with the dispatcher (ADR-055).
 
 `DynamicCodeSupport` is a standard .NET SDK property and is mapped to the `RuntimeHostConfigurationOption` for
 `RuntimeFeature.IsDynamicCodeSupported`, exactly as the iOS SDK does. **Zero failures are expected**; CI runs the

@@ -29,6 +29,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Business\Polhem.Business.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+    <!-- The error-contract drift test and the in-process client tests need the server half; the dependency gate
+         reads Polhem.Api.Client's own closure, so this reference does not leak into it. -->
+    <ProjectReference Include="..\..\src\Polhem.Api.Server\Polhem.Api.Server.csproj" />
     <ProjectReference Include="..\Polhem.Tests.Shared\Polhem.Tests.Shared.csproj" />
   </ItemGroup>
 

@@ -146,7 +146,7 @@ other sessions.
 
 | Forbidden | Reason | Correct Approach |
 |-----------|--------|------------------|
-| API layer directly references the Repository layer (`Polhem.Api.Core`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
+| API layer directly references the Repository layer (`Polhem.Api.Core`, `Polhem.Api.Server`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
 | Business Object directly creates a `DbConnection` | Bypasses connection management and logging | Put the query in a repository (next row); the repository uses `DbAccess` |
 | BO references `Polhem.Db` (`Polhem.Business.csproj` has no `ProjectReference` to `Polhem.Db`) | BO is a thin shell over business logic; data access belongs to Repository | FormSchema-driven CRUD → `IDataFormRepository`; custom queries → ad-hoc bo repo with `IDbAccessFactory` |
 | BO hard-codes a `databaseId` string or reads `SessionInfo.CompanyId` / `CompanyInfo` directly | Couples BO to the routing implementation; breaks when deployments change | Use `BusinessObject.ResolveDatabaseId(DbScope)` (custom bo repo) or `CreateDataFormRepository(progId)` (FormSchema CRUD); the helpers delegate to `IRepositoryDatabaseRouter` which is the single source of truth |
@@ -355,7 +355,7 @@ used. Both refusals are `ReplayRejectedException` of `Polhem.JsonRpc.Payload` (`
   Only inside an Encrypted payload does the payload HMAC cover the frame. So a remote call from a
   signed-in session to a `UniqueSequence` method is refused with `-32602 InvalidParams` unless it is
   Encrypted (the refusal is the `PayloadFilter` of Polhem.JsonRpc.Payload; `WireFrameReplayTests` in
-  `tests/Polhem.Api.Core.UnitTests` holds it for Plain and Encoded calls), and **the client session
+  `tests/Polhem.Api.Server.UnitTests` holds it for Plain and Encoded calls), and **the client session
   needs an encryption key** to call these methods. The .NET `ApiConnector` falls back to Encoded while
   its session has no key, and such calls are then refused. The client must also write the frame:
   polhem-connector-js does not, so a browser client built on it cannot call these methods while the

@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 3d6dc4c6d7c5ca80bd135d476e2baf40bdbdd59c -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: ac287a2e7d098cea03a4f1999abb9fe25f6a6f14 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -122,7 +122,7 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
   自訂 `JsonConverter` 以 inline 的 `kind` discriminator 處理，不依賴外層 `type`
 
 你想送 `params.type` 也可以（Plain 路徑會忽略），省略則 payload 較小。
-回歸保障：[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
+回歸保障：[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Server.UnitTests/Dispatch/DispatchTests.cs)
 驗證了省略 / 空字串 / 帶錯誤型別字串三種情境都會成功。
 
 ### Plain body 裡的值
@@ -463,5 +463,6 @@ export const formApi = (progId: string) => ({
 - [`wire-contracts/README.md`](../../../wire-contracts/README.md) — 產生出來的 TypeScript 合約，以及它如何與伺服端保持一致
 - [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — 前端連線策略全景
 - [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) — 逐請求的 codec 協商
-- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.zh-TW.md) — server 端派遣內部細節
+- [`src/Polhem.Api.Server/README.md`](../../../src/Polhem.Api.Server/README.zh-TW.md) — server 端派遣內部細節
+- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.zh-TW.md) — 前後端共用的 wire 層
 - [`src/Polhem.Api.Client/README.md`](../../../src/Polhem.Api.Client/README.zh-TW.md) — 本指引對應的 .NET client

@@ -53,6 +53,10 @@ namespace Polhem.Api.Client
         /// The payload options to read and write the envelope with; <c>null</c> creates the framework's defaults.
         /// </param>
         /// <returns>The client.</returns>
+        /// <remarks>
+        /// The provider must register <see cref="Polhem.Api.Core.JsonRpc.IInProcessTransportFactory"/>, as
+        /// <c>AddPolhemFramework</c> does. Without it the first call throws <see cref="InvalidOperationException"/>.
+        /// </remarks>
         public static PolhemApiClient CreateLocal(IServiceProvider services, PayloadOptions? payloadOptions = null)
         {
             ArgumentNullException.ThrowIfNull(services);

@@ -1,12 +1,13 @@
 # Polhem.Api.Core
 
-> Core API framework handling JSON-RPC execution, the payload encryption pipeline, authorization validation, and type mapping.
+> The wire layer the Polhem API client and server share: request and response messages, the payload codecs, compression and encryption, the error contract, and type mapping.
 
 [繁體中文](README.zh-TW.md)
 
 ## Architecture Position
 
-- **Layer**: API Layer (core engine)
+- **Layer**: API Layer (shared by both ends). The server side (dispatch, authorization, access control) is
+  [`Polhem.Api.Server`](../Polhem.Api.Server/README.md); see [ADR-055](../../maintainers/adr/adr-055-api-core-split-from-server.md).
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 
 ## Target Framework
@@ -15,19 +16,17 @@
 
 ## Key Features
 
-### JSON-RPC Execution
+### Error Contract
 
-- The protocol is [`Polhem.JsonRpc.Server`](https://github.com/polhem-dev/polhem-jsonrpc): its dispatcher parses
-  `ProgId.Action` method identifiers and invokes the target method. Which methods an action name can reach is decided
-  by `JsonRpcMethod.IsResolvableAction` there.
-- `Dispatch/` plugs Polhem into it: `PolhemObjectFactory` checks the API key and the `Authorization` header of an HTTP
-  call and obtains the business object from `IBusinessObjectFactory`; `PolhemAccessFilter` applies
-  `[ApiAccessControl]`; `PolhemPayloadFilter` opens and writes the payload envelope through
-  `Polhem.JsonRpc.Payload.Server`; `PolhemParameterBinder` binds the argument; `PolhemExceptionMapper` maps errors.
-  `PolhemJsonRpc.CreateServerOptions` assembles them.
-- Error responses -- a framework exception meant for the end user (`UserMessageException` and related types)
-  reaches the caller with its message; other exceptions answer a fixed message per error code, and the real
-  message is logged by `PolhemExceptionMapper`.
+- `JsonRpcErrorCode` and `JsonRpcErrorContract` -- the error codes and the table that pairs each with an exception
+  type. The server maps an exception to a code with it, and `ApiConnector` (`Polhem.Api.Client`) rebuilds the
+  exception from the code, so both ends read the same table.
+
+### In-Process Calls
+
+- `IInProcessTransportFactory` -- creates the transport an in-process client (`PolhemApiClient.CreateLocal`) sends
+  its calls through. `AddPolhemFramework` registers the implementation from `Polhem.Api.Server`, so a client does
+  not reference the server side; `ApiClientDependencyGateTests` (`tests/Polhem.Api.Client.UnitTests`) fails when it does.
 
 ### Payload Security Pipeline
 
@@ -66,14 +65,6 @@ frame and is not checked, and an `Encoded` frame is not authenticated, so declar
 `Encrypted` protection level. See [ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md) for the rollout order
 and the details.
 
-### Authorization & Access Control
-
-- `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- validates authorization context for incoming requests.
-  `AddPolhemFramework` registers the default; a host replaces it by registering its own.
-- `ApiAuthorizationContext` / `ApiAuthorizationResult` -- authorization input and outcome types.
-- `ApiAccessValidator` -- enforces method-level protection via `ApiAccessControlAttribute`.
-- `ApiCallContext` -- per-call metadata (token, protection level, caller identity).
-
 ### Type Mapping
 
 - `ApiOutputConverter` -- converts a business object result into the wire response type (property copy by name;
@@ -107,33 +98,28 @@ and the details.
 
 | Class / Interface | Purpose |
 |-------------------|---------|
-| `PolhemJsonRpc` | Creates the JSON-RPC server options the framework serves its API with |
 | `PolhemPayload` | Builds the payload options the framework's way |
 | `MessagePackPayloadCodec` | The `messagepack` body codec |
-| `ApiAccessValidator` | Method-level protection via `ApiAccessControlAttribute` |
-| `ApiAuthorizationValidator` | Request authorization validation |
-| `ApiCallContext` | Per-call metadata (token, protection, identity) |
+| `JsonRpcErrorContract` | The error codes both ends map exceptions with |
+| `IInProcessTransportFactory` | The transport of an in-process client |
 
 ## Design Conventions
 
 - **Strategy Pattern** -- the codec, compressor and encryptor are interfaces of the payload package (`IPayloadCodec`, `IPayloadCompressor`, `IPayloadEncryptor`), each replaceable on `PayloadOptions`.
 - **Strict pipeline ordering** -- the payload package runs Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
 - **Type whitelist** -- MessagePack deserialization accepts only an explicit allow-list of types.
-- **Reflection-based dispatch** -- the dispatcher resolves and invokes business object methods by name, decoupling the transport layer from concrete BO types.
+- **No server side** -- this package references no JSON-RPC server package; `POLHEM9001` (`src/Directory.Build.targets`) and `ApiClientDependencyGateTests` (`tests/Polhem.Api.Client.UnitTests`) fail when one is added.
 - **Protection levels** -- `ApiAccessControlAttribute` declares a method's `ApiProtectionLevel` and `ApiAccessRequirement`; the members and their meaning are in the XML documentation of those enums (`Polhem.Definition.Security`).
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-- `Authorization/` -- `IApiAuthorizationValidator`, `ApiAuthorizationValidator`, `ApiAuthorizationContext`, `ApiAuthorizationResult`
 - `Conversion/` -- .NET object-model conversion between API and BO types (`ApiOutputConverter`)
 - `Json/` -- JSON converters for `object`-typed members
-- `Dispatch/` -- the components that plug Polhem into the `Polhem.JsonRpc.Server` dispatcher
-- `JsonRpc/` -- `ActionPayloadType`, `DateTimeWireGuard`, the error codes and the error contract
+- `JsonRpc/` -- `ActionPayloadType`, `DateTimeWireGuard`, the error codes and the error contract, `IInProcessTransportFactory`
 - `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
 - `MessagePack/` -- the internal MessagePack infrastructure and formatters
-- `Transformers/` -- Polhem's side of the payload pipeline (`PolhemPayload`, `MessagePackPayloadCodec`, `PayloadCodecNames`)
-- `Validator/` -- `ApiAccessValidator`, `ApiCallContext`
+- `Transformers/` -- Polhem's side of the payload pipeline (`PolhemPayload`, `MessagePackPayloadCodec`, `PayloadCodecNames`, and the internal type resolver that names payload types on the wire)
 - `Wire/` -- `WireValueCode` (the discriminator both wires share)
 
 The namespace layout follows the design principles in [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md):

@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: d3c92ce6a72612449b794c6a06192c71738c1cda -->
+<!-- source: en/getting-started/getting-started.md blob: fff8b1823f358e0e9364e03ff7c38c0c25250eb1 -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -117,7 +117,6 @@ DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;

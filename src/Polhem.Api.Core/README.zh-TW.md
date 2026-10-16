@@ -1,12 +1,13 @@
 # Polhem.Api.Core
 
-> 核心 API 框架，負責 JSON-RPC 執行、Payload 加密管線、授權驗證與型別對應。
+> Polhem API 用戶端與伺服器端共用的 wire 層：請求與回應訊息、payload codec、壓縮與加密、錯誤契約，以及型別對應。
 
 [English](README.md)
 
 ## 架構定位
 
-- **層級**：API 層（核心引擎）
+- **層級**：API 層（前後端共用）。伺服器端（派送、授權、存取控制）在
+  [`Polhem.Api.Server`](../Polhem.Api.Server/README.zh-TW.md)；見 [ADR-055](../../maintainers/adr/adr-055-api-core-split-from-server.md)。
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 
 ## 目標框架
@@ -15,17 +16,16 @@
 
 ## 主要功能
 
-### JSON-RPC 執行
+### 錯誤契約
 
-- 協定由 [`Polhem.JsonRpc.Server`](https://github.com/polhem-dev/polhem-jsonrpc) 處理：它的 dispatcher 解析
-  `ProgId.Action` 方法識別碼並呼叫目標方法。一個 action 名稱能呼叫到哪些方法，由該套件的
-  `JsonRpcMethod.IsResolvableAction` 決定。
-- `Dispatch/` 把 Polhem 接上它：`PolhemObjectFactory` 檢查 HTTP 呼叫的 API key 與 `Authorization` header，並從
-  `IBusinessObjectFactory` 取得商業物件；`PolhemAccessFilter` 套用 `[ApiAccessControl]`；`PolhemPayloadFilter` 經
-  `Polhem.JsonRpc.Payload.Server` 開啟與寫出 payload 外殼；`PolhemParameterBinder` 繫結參數；`PolhemExceptionMapper` 對應錯誤。
-  `PolhemJsonRpc.CreateServerOptions` 把它們組起來。
-- 錯誤回應 -- 給終端使用者看的框架例外（`UserMessageException` 及相關型別）會帶著訊息回到呼叫端；
-  其他例外則依錯誤碼回應固定訊息，實際訊息由 `PolhemExceptionMapper` 寫入 log。
+- `JsonRpcErrorCode` 與 `JsonRpcErrorContract` -- 錯誤碼，以及把每個錯誤碼對應到例外型別的對照表。伺服器端用它把例外對應成錯誤碼，
+  `ApiConnector`（`Polhem.Api.Client`）再用錯誤碼重建例外，所以兩端讀的是同一份表。
+
+### 同程序呼叫
+
+- `IInProcessTransportFactory` -- 建立同程序用戶端（`PolhemApiClient.CreateLocal`）送出呼叫用的 transport。
+  實作來自 `Polhem.Api.Server`，由 `AddPolhemFramework` 註冊，所以用戶端本身不參考伺服器端；
+  參考時 `ApiClientDependencyGateTests`（`tests/Polhem.Api.Client.UnitTests`）會失敗。
 
 ### Payload 安全管線
 
@@ -59,14 +59,6 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 `Encoded` 的 frame 沒有經過驗證，因此需要防重放的方法請宣告為 `Encrypted` 保護等級。推行順序與細節見
 [ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md)。
 
-### 授權與存取控制
-
-- `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- 驗證傳入請求的授權上下文。`AddPolhemFramework` 註冊預設值，
-  host 註冊自己的實作即可替換。
-- `ApiAuthorizationContext` / `ApiAuthorizationResult` -- 授權輸入與結果型別。
-- `ApiAccessValidator` -- 透過 `ApiAccessControlAttribute` 強制方法層級保護。
-- `ApiCallContext` -- 每次呼叫的中繼資料（Token、保護等級、呼叫者身分）。
-
 ### 型別對應
 
 - `ApiOutputConverter` -- 把商業物件結果轉成 wire 回應型別（依名稱複製屬性；入站方向為 internal）。
@@ -96,33 +88,28 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 | 類別 / 介面 | 用途 |
 |-------------|------|
-| `PolhemJsonRpc` | 建立框架提供 API 用的 JSON-RPC 伺服器選項 |
 | `PolhemPayload` | 以框架的方式組出 payload 選項 |
 | `MessagePackPayloadCodec` | `messagepack` body codec |
-| `ApiAccessValidator` | 透過 `ApiAccessControlAttribute` 的方法層級保護 |
-| `ApiAuthorizationValidator` | 請求授權驗證 |
-| `ApiCallContext` | 每次呼叫的中繼資料（Token、保護、身分） |
+| `JsonRpcErrorContract` | 兩端用來對應例外的錯誤碼 |
+| `IInProcessTransportFactory` | 同程序用戶端的 transport |
 
 ## 設計慣例
 
 - **策略模式（Strategy Pattern）** -- codec、壓縮器、加密器是 payload 套件的介面（`IPayloadCodec`、`IPayloadCompressor`、`IPayloadEncryptor`），各自可在 `PayloadOptions` 上替換。
 - **嚴格管線順序** -- payload 套件在出站時執行「序列化 -> 壓縮 -> 加密」，入站時執行「解密 -> 解壓縮 -> 反序列化」；此順序不可更動。
 - **型別白名單** -- MessagePack 反序列化只接受明確允許清單內的型別。
-- **反射式分派** -- dispatcher 依名稱解析並呼叫商業物件方法，將傳輸層與具體 BO 型別解耦。
+- **不含伺服器端** -- 本套件不參考任何 JSON-RPC 伺服器端套件；加入時 `POLHEM9001`（`src/Directory.Build.targets`）與 `ApiClientDependencyGateTests`（`tests/Polhem.Api.Client.UnitTests`）會失敗。
 - **保護等級** -- `ApiAccessControlAttribute` 宣告方法的 `ApiProtectionLevel` 與 `ApiAccessRequirement`；成員與意義見這兩個列舉的 XML 文件（`Polhem.Definition.Security`）。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構
 
-- `Authorization/` -- `IApiAuthorizationValidator`、`ApiAuthorizationValidator`、`ApiAuthorizationContext`、`ApiAuthorizationResult`
 - `Conversion/` -- API 型別與 BO 型別之間的 .NET 物件模型轉換（`ApiOutputConverter`）
 - `Json/` -- `object` 型別成員的 JSON converter
-- `Dispatch/` -- 把 Polhem 接上 `Polhem.JsonRpc.Server` dispatcher 的元件
-- `JsonRpc/` -- `ActionPayloadType`、`DateTimeWireGuard`、錯誤碼與錯誤合約
+- `JsonRpc/` -- `ActionPayloadType`、`DateTimeWireGuard`、錯誤碼與錯誤合約、`IInProcessTransportFactory`
 - `Messages/` -- `ApiRequest`、`ApiResponse`、`ApiHeaders`、`ExecFunc*`，以及 `System/`、`Form/`、`AuditLog/` 訊息
 - `MessagePack/` -- 內部的 MessagePack 基礎設施與 formatter
-- `Transformers/` -- payload 管線中 Polhem 這一側（`PolhemPayload`、`MessagePackPayloadCodec`、`PayloadCodecNames`）
-- `Validator/` -- `ApiAccessValidator`、`ApiCallContext`
+- `Transformers/` -- payload 管線中 Polhem 這一側（`PolhemPayload`、`MessagePackPayloadCodec`、`PayloadCodecNames`，以及在 wire 上為 payload 型別命名的內部型別解析器）
 - `Wire/` -- `WireValueCode`（兩種 wire 共用的鑑別碼）
 
 命名空間佈局遵循 [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md) 的設計原則：

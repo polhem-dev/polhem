@@ -13,7 +13,7 @@ This document provides a standard term reference for technical writing, ensuring
 3. [Database Layer (Polhem.Db)](#3-database-layer-polhemdb)
 4. [Business Logic Layer (Polhem.Business)](#4-business-logic-layer-polhembusiness)
 5. [Repository Layer (Polhem.Repository)](#5-repository-layer-polhemrepository)
-6. [API Layer (Polhem.Api.Core)](#6-api-layer-polhemapicore)
+6. [API Layer (Polhem.Api.Core, Polhem.Api.Server)](#6-api-layer-polhemapicore-polhemapiserver)
 7. [Caching Layer (Polhem.ObjectCaching)](#7-caching-layer-polhemobjectcaching)
 8. [Connector Layer (Polhem.Api.Client)](#8-connector-layer-polhemapiclient)
 9. [Infrastructure (Polhem.Core)](#9-infrastructure-polhemcore)
@@ -162,7 +162,7 @@ This document provides a standard term reference for technical writing, ensuring
 
 ---
 
-## 6. API Layer (Polhem.Api.Core)
+## 6. API Layer (Polhem.Api.Core, Polhem.Api.Server)
 
 | English | 中文 | Description |
 |---------|------|-------------|
@@ -170,6 +170,7 @@ This document provides a standard term reference for technical writing, ensuring
 | `PolhemPayload` | Polhem payload 設定 | Builds the payload options the framework's way: MessagePack as the default codec, the framework's type names, and the compressor and encryptor `ApiPayloadOptions` names |
 | `ExecFuncArgs` | 自訂函式執行參數 | Parameter object passed when invoking custom business functions |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | Declares the protection level and authentication requirement of API endpoints |
+| `IApiAuthorizationValidator` | API 授權驗證介面 | Request authorization (API key and Bearer token), in `Polhem.Api.Server`; `AddPolhemFramework` registers the default `ApiAuthorizationValidator`, and a host replaces it by registering its own |
 
 ### Security
 

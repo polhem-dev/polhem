@@ -1,4 +1,3 @@
-using Polhem.Api.Core.Dispatch;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
 using Polhem.JsonRpc.Payload;

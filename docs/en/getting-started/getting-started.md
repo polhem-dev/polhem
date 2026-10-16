@@ -118,7 +118,6 @@ The whole `Program.cs`, starting with the two registrations of step 3:
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;

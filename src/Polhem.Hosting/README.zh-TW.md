@@ -34,7 +34,7 @@
 
 | 類別 / 成員 | 用途 |
 |------------|------|
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、JSON-RPC dispatcher 與其選項、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、JSON-RPC dispatcher 與其選項、`IInProcessTransportFactory`（供 `PolhemApiClient.CreateLocal` 使用）、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | 尚未發行 API key 時於啟動時記錄 log。供以 HTTP 提供 API 的宿主使用 |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |

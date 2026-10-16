@@ -129,7 +129,7 @@ choice. Plain format does not need it at all:
 
 You may send `params.type` if you want (it's ignored on Plain); leaving it out
 keeps payloads smaller. Regression coverage:
-[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
+[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Server.UnitTests/Dispatch/DispatchTests.cs)
 asserts omitted, empty, and bogus `type` values all succeed.
 
 ### Values in a Plain body
@@ -493,5 +493,6 @@ to a Plain body: an `object`-typed member such as a filter value is a bare JSON 
 - [`wire-contracts/README.md`](../../../wire-contracts/README.md) — the generated TypeScript contract and how it is kept in step with the server
 - [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — broader frontend connection policy
 - [ADR-044](../../../maintainers/adr/adr-044-payload-codec-negotiation.md) — per-request codec negotiation
-- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.md) — server-side dispatch internals
+- [`src/Polhem.Api.Server/README.md`](../../../src/Polhem.Api.Server/README.md) — server-side dispatch internals
+- [`src/Polhem.Api.Core/README.md`](../../../src/Polhem.Api.Core/README.md) — the wire layer both ends share
 - [`src/Polhem.Api.Client/README.md`](../../../src/Polhem.Api.Client/README.md) — the .NET client this guide is the JS counterpart to
