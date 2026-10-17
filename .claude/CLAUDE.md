@@ -87,9 +87,6 @@ to an ADR in `maintainers/adr/`; work that other maintainers need to see belongs
 - Never commit anything under `local/`, never add it with `git add -f`, and never link to it or name a file in it
   from a committed file. `./check-public-docs.sh` reports such references.
 - The language rule above does not apply to `local/`, because its documents are not maintained together.
-- A session in a git worktree cannot see `local/` in its own checkout. Write to the main working tree's `local/`
-  directly with shell commands and absolute paths: write the content to the scratchpad first, then `cp` it there.
-  Do not hand the work off to another session or open a worktree for it.
 
 ### Changes reach `main` through pull requests
 
