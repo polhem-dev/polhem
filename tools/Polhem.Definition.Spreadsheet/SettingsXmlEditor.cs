@@ -146,6 +146,39 @@ internal static class SettingsXmlEditor
         return changed;
     }
 
+    /// <summary>
+    /// Adds to a TableSchema document the <c>DbField</c> and <c>DbTableIndex</c> elements of
+    /// <paramref name="generatedXml"/> it lacks, matched by field name and index name. Existing elements are not
+    /// changed, so lengths, captions, columns that are not on the form and hand-made indexes stay.
+    /// </summary>
+    /// <returns><see langword="true"/> when the document changed.</returns>
+    public static bool MergeTableSchema(XDocument document, string generatedXml)
+    {
+        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreWhitespace = true };
+        using var reader = XmlReader.Create(new StringReader(generatedXml), settings);
+        var generated = XDocument.Load(reader).Root!;
+        var root = document.Root!;
+        bool changed = AddMissing(root, generated, "Fields", "DbField", "FieldName");
+        changed |= AddMissing(root, generated, "Indexes", "DbTableIndex", "Name");
+        return changed;
+    }
+
+    private static bool AddMissing(XElement root, XElement generated, string container, string element, string key)
+    {
+        var source = generated.Element(container);
+        if (source is null) return false;
+        var target = Child(root, container);
+        bool changed = false;
+        foreach (var item in source.Elements(element))
+        {
+            var name = (string?)item.Attribute(key) ?? string.Empty;
+            if (target.Elements(element).Any(e => Is(e, key, name, StringComparison.OrdinalIgnoreCase))) continue;
+            target.Add(new XElement(item));
+            changed = true;
+        }
+        return changed;
+    }
+
     private static int NextOrder(XElement items)
         => (items.Elements().Select(e => (int?)e.Attribute("Order") ?? 0).DefaultIfEmpty(0).Max() / 10 + 1) * 10;
 

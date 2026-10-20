@@ -77,13 +77,16 @@ internal static class FormsCommand
     private static int Import(string[] args)
     {
         var options = Parse(args, "import", PrintImportHelp,
-            valueOptions: ["--define"], flags: ["--regenerate-layout", "--dry-run"], positionals: 1);
+            valueOptions: ["--define", "--tables"], flags: ["--regenerate-layout", "--dry-run"], positionals: 1);
         if (options is null) return ExitCodes.Success;
         var input = options.Positionals.Count == 1
             ? options.Positionals[0]
             : throw new UsageException("missing required argument: <file.xlsx>");
         var define = Required(options, "--define", "<directory>");
         bool dryRun = options.Flags.Contains("--dry-run");
+        var tableMode = options.Values.TryGetValue("--tables", out var tables)
+            ? ParseTableMode(tables)
+            : TableSchemaImportMode.Merge;
 
         FormWorkbookReadResult read;
         using (var stream = File.OpenRead(input))
@@ -99,6 +102,7 @@ internal static class FormsCommand
         {
             DefinePath = define,
             RegenerateLayout = options.Flags.Contains("--regenerate-layout"),
+            TableSchemaMode = tableMode,
         });
         PrintIssues(plan.Issues);
         if (plan.HasErrors)
@@ -120,6 +124,14 @@ internal static class FormsCommand
         Console.WriteLine($"Imported '{read.Content!.Schema.ProgId}' into {root}: {plan.Files.Count(f => f.Writes)} file(s) written.");
         return ExitCodes.Success;
     }
+
+    private static TableSchemaImportMode ParseTableMode(string value) => value switch
+    {
+        "merge" => TableSchemaImportMode.Merge,
+        "keep" => TableSchemaImportMode.Keep,
+        "overwrite" => TableSchemaImportMode.Overwrite,
+        _ => throw new UsageException($"--tables must be merge, keep or overwrite, not '{value}'"),
+    };
 
     private static void PrintIssues(IEnumerable<DefinitionIssue> issues)
     {
@@ -229,6 +241,10 @@ internal static class FormsCommand
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --define <dir>       The definition folder to write to. Required.");
+        writer.WriteLine("  --tables <mode>      What to do with an existing TableSchema:");
+        writer.WriteLine("                         merge      add the columns and indexes the form brings (default)");
+        writer.WriteLine("                         keep       leave it as it is");
+        writer.WriteLine("                         overwrite  replace it with the one generated from the form");
         writer.WriteLine("  --regenerate-layout  Replace an existing FormLayout. Default: keep it (it may be hand-tuned).");
         writer.WriteLine("  --dry-run            List the files that would change without writing them.");
         writer.WriteLine("  --help, -h           Print this help text.");

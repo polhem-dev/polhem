@@ -3,6 +3,7 @@ using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Definition.Spreadsheet.UnitTests
 {
@@ -146,6 +147,99 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             Assert.Contains("    <ProgramItem ProgId=\"Order\" DisplayName=\"Orders\" />", lines);
             Assert.Contains("    <ProgramItem ProgId=\"Quote\" DisplayName=\"Quotes\" />", lines);
             Assert.Equal("</ProgramSettings>", lines[^1]);
+        }
+
+        private const string HandTunedTable = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <!-- Hand-tuned: lengths, an extra column and an index the form does not know about. -->
+            <TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_quote_line" DisplayName="Quote Lines">
+              <Fields>
+                <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
+                <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+                <DbField FieldName="legacy_code" Caption="Legacy Code" DbType="String" Length="12" />
+              </Fields>
+              <Indexes>
+                <DbTableIndex Name="ix_{0}_legacy" Unique="false">
+                  <IndexFields>
+                    <IndexField FieldName="legacy_code" />
+                  </IndexFields>
+                </DbTableIndex>
+              </Indexes>
+            </TableSchema>
+            """;
+
+        private string QuoteLineTablePath => PathOf("TableSchema", "company", "ft_quote_line.TableSchema.xml");
+
+        [Fact]
+        [DisplayName("Merging into an existing TableSchema adds the form's columns and keeps the hand-made ones")]
+        public void Import_MergeTableSchema_AddsAndKeeps()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(QuoteLineTablePath)!);
+            File.WriteAllText(QuoteLineTablePath, HandTunedTable);
+
+            var plan = FormImporter.Plan(Quote(), Options());
+            FormImporter.Apply(plan);
+
+            Assert.Equal(PlannedFileAction.Update, plan.Files.Single(f => f.Path == QuoteLineTablePath).Action);
+            var xml = File.ReadAllText(QuoteLineTablePath);
+            Assert.Contains("Hand-tuned", xml, StringComparison.Ordinal);
+            Assert.Contains("FieldName=\"legacy_code\" Caption=\"Legacy Code\" DbType=\"String\" Length=\"12\"", xml, StringComparison.Ordinal);
+            Assert.Contains("ix_{0}_legacy", xml, StringComparison.Ordinal);
+            var table = XmlCodec.DeserializeFromFile<TableSchema>(QuoteLineTablePath)!;
+            Assert.Contains(table.Fields!, f => f.FieldName == "qty");
+            Assert.Contains(table.Fields!, f => f.FieldName == "sys_master_rowid");
+        }
+
+        [Theory]
+        [InlineData(TableSchemaImportMode.Keep, PlannedFileAction.Skip)]
+        [InlineData(TableSchemaImportMode.Overwrite, PlannedFileAction.Overwrite)]
+        [DisplayName("Keep leaves an existing TableSchema alone and overwrite replaces it")]
+        public void Import_TableSchemaMode_DecidesAction(TableSchemaImportMode mode, PlannedFileAction expected)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(QuoteLineTablePath)!);
+            File.WriteAllText(QuoteLineTablePath, HandTunedTable);
+
+            var plan = FormImporter.Plan(Quote(), new FormImportOptions { DefinePath = _define, TableSchemaMode = mode });
+
+            Assert.Equal(expected, plan.Files.Single(f => f.Path == QuoteLineTablePath).Action);
+        }
+
+        public static TheoryData<string> NorthwindForms()
+        {
+            const string suffix = ".FormSchema.xml";
+            var data = new TheoryData<string>();
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(NorthwindDefine, "FormSchema"), "*" + suffix).Order(StringComparer.Ordinal))
+                data.Add(Path.GetFileName(file)[..^suffix.Length]);
+            return data;
+        }
+
+        private static string NorthwindDefine => Path.Combine(RepoRoot.Find(), "apps", "Polhem.Northwind", "Define");
+
+        [Theory]
+        [MemberData(nameof(NorthwindForms))]
+        [DisplayName("A Northwind form exported and imported back into a copy of its folder writes nothing")]
+        public void ExportThenImport_Northwind_WritesNothing(string progId)
+        {
+            CopyDirectory(NorthwindDefine, _define);
+            using var stream = new MemoryStream();
+            FormWorkbookWriter.Write(FormExporter.Load(_define, progId), stream);
+            stream.Position = 0;
+            var read = FormWorkbookReader.Read(stream);
+
+            var plan = FormImporter.Plan(read.Content!, Options());
+
+            Assert.False(plan.HasErrors);
+            Assert.DoesNotContain(plan.Files, f => f.Writes);
+        }
+
+        private static void CopyDirectory(string source, string target)
+        {
+            foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+            {
+                var destination = Path.Combine(target, Path.GetRelativePath(source, file));
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                File.Copy(file, destination, overwrite: true);
+            }
         }
 
         [Fact]
