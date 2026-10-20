@@ -14,7 +14,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// two-way bound to a <see cref="FormDataObject"/> field, applying
     /// <see cref="Polhem.Definition.Forms.FormField.MaxLength"/> and the layout read-only flag automatically.
     /// </summary>
-    public class TextEdit : TextBox, IFieldEditor
+    public class TextEdit : TextBox, IFieldEditor, IFieldEditorBinderHost
     {
         /// <summary>
         /// Identifies the <see cref="FieldName"/> styled property.
@@ -23,6 +23,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             AvaloniaProperty.Register<TextEdit, string>(nameof(FieldName), string.Empty);
 
         private readonly FieldEditorBinder _binder;
+
+        FieldEditorBinder IFieldEditorBinderHost.Binder => _binder;
 
         static TextEdit()
         {

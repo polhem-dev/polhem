@@ -29,7 +29,6 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     public class FormViewTests
     {
         private const string TestProgId = "Category";
-        private static readonly Type[] s_buildInputParams = [typeof(LayoutField)];
 
         // ---- shared builders ----
 
@@ -125,16 +124,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             SetPrivateField(view, "_formLayout", layout);
             SetPrivateField(view, "_dataObject", dataObject);
             InvokePrivate(view, "Rebuild");
-            return GetPrivateField<StackPanel>(view, "_formHost");
+            return GetPrivateField<FormLayoutPresenter>(view, "_presenter").Host;
         }
 
         private static Control InvokeBuildInputControl(FormView view, FormDataObject dataObject, LayoutField field)
         {
-            SetPrivateField(view, "_dataObject", dataObject);
-            var method = typeof(FormView).GetMethod(
-                "BuildInputControl", BindingFlags.NonPublic | BindingFlags.Instance, null, s_buildInputParams, null);
-            Assert.NotNull(method);
-            return (Control)method!.Invoke(view, new object[] { field })!;
+            var presenter = GetPrivateField<FormLayoutPresenter>(view, "_presenter");
+            presenter.DataObject = dataObject;
+            return presenter.BuildInputControl(field);
         }
 
         private static StackPanel GetGridToolbar(GridControl grid)

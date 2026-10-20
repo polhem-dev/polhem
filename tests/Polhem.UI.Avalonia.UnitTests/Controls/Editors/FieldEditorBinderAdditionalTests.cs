@@ -71,5 +71,52 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             FormScope.SetFormMode(editor, SingleFormMode.Edit);
             Assert.True(editor.IsReadOnly);
         }
+
+        [Fact]
+        [DisplayName("AttachLayout applies the layout's ReadOnly to an editor that has no data object")]
+        public void AttachLayout_NoDataObject_AppliesReadOnly()
+        {
+            var editor = new TextEdit();
+            var binder = ((IFieldEditorBinderHost)editor).Binder;
+
+            binder.AttachLayout(new LayoutField { FieldName = "emp_name", ReadOnly = true });
+
+            Assert.False(binder.IsBound);
+            Assert.True(editor.IsReadOnly);
+        }
+
+        [Fact]
+        [DisplayName("The attached layout survives Unbind and still decides AllowsEdit")]
+        public void AttachLayout_SurvivesUnbind()
+        {
+            var editor = new TextEdit();
+            var binder = ((IFieldEditorBinderHost)editor).Binder;
+            var field = new LayoutField { FieldName = "emp_name", AllowEditModes = FormEditModes.Add };
+            binder.AttachLayout(field);
+            editor.Bind(BuildDataObject(), "emp_name");
+
+            editor.Unbind();
+
+            Assert.Same(field, binder.LayoutField);
+            Assert.False(binder.AllowsEdit(SingleFormMode.Edit));
+            Assert.True(binder.AllowsEdit(SingleFormMode.Add));
+        }
+
+        [Fact]
+        [DisplayName("A bind by field name only keeps the attached layout, and an explicit layout bind wins over it")]
+        public void AttachLayout_BindByNameKeepsIt_ExplicitLayoutWins()
+        {
+            var editor = new TextEdit();
+            var binder = ((IFieldEditorBinderHost)editor).Binder;
+            var attached = new LayoutField { FieldName = "emp_name", ReadOnly = true };
+            var explicitField = new LayoutField { FieldName = "emp_name" };
+            binder.AttachLayout(attached);
+
+            editor.Bind(BuildDataObject(), "emp_name");
+            Assert.Same(attached, binder.LayoutField);
+
+            editor.Bind(BuildDataObject(), explicitField);
+            Assert.Same(explicitField, binder.LayoutField);
+        }
     }
 }

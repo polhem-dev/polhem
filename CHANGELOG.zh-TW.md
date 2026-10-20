@@ -12,6 +12,10 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 ## [Unreleased]
 
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.8.0.md](docs/zh-TW/changelogs/1.8.0.md)
+
+- `FormLayoutPresenter` 不帶資料渲染表單版面，設計工具可以依 `FormView` 的畫法預覽 layout。
+
 ## [1.7.0] - 2026-10-16
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.7.0.md](docs/zh-TW/changelogs/1.7.0.md)

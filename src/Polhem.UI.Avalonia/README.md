@@ -22,7 +22,8 @@ Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.D
 | Component | Description |
 |---|---|
 | `ListView` | Read-only master list of a form; raises view / edit / add requests for the host to open the record surface. Resolves its schema and connector as described under [How the views resolve their services](#how-the-views-resolve-their-services) when the host sets only `ProgId`. |
-| `FormView` | Top-level container: list (`GridControl`) + master/detail form + New / Save / Delete toolbar. Renders the master sections of a `FormLayout` (one field editor per `LayoutField`) followed by the detail grids (`FormLayout.Details`) directly — there is no separate `DynamicForm` control; `DetailEditMode` picks the detail editing model. Resolves `Schema` / `Layout` / `FormConnector` as described under [How the views resolve their services](#how-the-views-resolve-their-services) when the host sets only `ProgId`. |
+| `FormView` | Top-level container: list (`GridControl`) + master/detail form + New / Save / Delete toolbar. Renders the record through a `FormLayoutPresenter` and binds it to the loaded data; `DetailEditMode` picks the detail editing model. Resolves `Schema` / `Layout` / `FormConnector` as described under [How the views resolve their services](#how-the-views-resolve-their-services) when the host sets only `ProgId`. |
+| `FormLayoutPresenter` | Renders the body of a form from a `FormLayout` alone: the master sections (one field editor per `LayoutField`, laid out by `ColumnCount` and the spans) followed by the detail grids (`FormLayout.Details`). Needs no data, schema or backend; see [Previewing a layout](#previewing-a-layout). |
 | `GridControl` | `ContentControl` hosting a `DataGrid` (exposed as `InnerGrid`), driven by a `LayoutGrid`; implements `IBindTableControl` / `IUIControl`. Cell rendering goes through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` (see ADR-020). |
 | Field editors (`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `TimeEdit` / `NumericEdit` / `DropDownEdit` / `CheckEdit`) | One per `ControlType` value (`Auto` picks one from the field); native-control subclasses implementing `IBindFieldControl` / `IUIControl`, auto-applying `FormField` metadata (MaxLength, ListItems). |
 | `FormScope` | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and every descendant editor with a `FieldName` binds itself. |
@@ -90,6 +91,21 @@ var record = new FormView { Schema = schema, Layout = layout, FormConnector = co
 To read the schema and layout from definition files instead, set `DefinitionSource` to a
 `StorageDefinitionSource` over a `FileDefineStorage`. A complete example is the "Without a Backend" module of the demo
 center, [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/).
+
+### Previewing a layout
+
+`FormLayoutPresenter` draws what `FormView` draws for a layout, with no record behind it, so a design tool can show a
+layout while it is being edited:
+
+```csharp
+var preview = new FormLayoutPresenter { Layout = layout };
+FormScope.SetFormMode(preview, SingleFormMode.Edit);
+```
+
+Without data, the editors still follow the layout's `ReadOnly` and `AllowEditModes` under the form mode, and the detail
+grids show the toolbar their `AllowActions` allow, with the buttons disabled. What comes from the schema or the data
+(drop-down items, field values, lookup text, computed fields) is not shown. Changing a property renders again; after
+changing the layout in place, call `Refresh()`. `IsCompact` renders the phone-sized form.
 
 ### How the views resolve their services
 

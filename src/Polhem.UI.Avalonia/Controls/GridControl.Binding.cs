@@ -34,6 +34,7 @@ namespace Polhem.UI.Avalonia.Controls
             ArgumentNullException.ThrowIfNull(layout);
             _layout = layout;
             _listFormTable = null;
+            _isLayoutOnly = false;
             TableName = layout.TableName;
             // Bind before building columns: lookup-column detection resolves the
             // FormField metadata through the bound data object.
@@ -77,9 +78,34 @@ namespace Polhem.UI.Avalonia.Controls
             // subscription so a stale DataSetReplaced cannot overwrite these rows.
             _binder.Unbind();
             _listFormTable = formTable;
+            _isLayoutOnly = false;
             _layout = layout;
             TableName = layout.TableName;
             _dataTable = rows;
+            RebuildColumns();
+            RebuildRows();
+            SetControlState(GetValue(FormScope.FormModeProperty));
+        }
+
+        /// <summary>
+        /// Renders <paramref name="layout"/> as a form detail grid with no data object behind it: the column
+        /// headers, and the toolbar the layout's <see cref="LayoutGrid.AllowActions"/> and the ambient form mode
+        /// allow, with its buttons disabled.
+        /// </summary>
+        /// <param name="layout">The grid layout that defines the columns.</param>
+        /// <remarks>
+        /// A list-mode bind (<see cref="Bind(LayoutGrid, DataTable?)"/>) hides the toolbar, so it cannot show what
+        /// a detail grid looks like on a form. An explicit or ambient bind to a data object leaves this state.
+        /// </remarks>
+        internal void BindLayout(LayoutGrid layout)
+        {
+            ArgumentNullException.ThrowIfNull(layout);
+            _binder.Unbind();
+            _listFormTable = null;
+            _layout = layout;
+            _isLayoutOnly = true;
+            TableName = layout.TableName;
+            _dataTable = null;
             RebuildColumns();
             RebuildRows();
             SetControlState(GetValue(FormScope.FormModeProperty));

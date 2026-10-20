@@ -22,6 +22,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         private bool _updatingBinding;
         private bool _attached;
         private bool _boundFromAmbient;
+        private LayoutFieldBase? _boundLayoutField;
+        private LayoutFieldBase? _attachedLayoutField;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FieldEditorBinder"/>.
@@ -49,10 +51,10 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         public string FieldName { get; private set; } = string.Empty;
 
         /// <summary>
-        /// Gets the layout field (or grid column) supplied to the explicit bind, or
-        /// <c>null</c> when the binding came from the ambient scope or by field name only.
+        /// Gets the layout field (or grid column) that describes the editor: the one supplied to the explicit
+        /// bind, else the one attached with <see cref="AttachLayout"/>, else <c>null</c>.
         /// </summary>
-        public LayoutFieldBase? LayoutField { get; private set; }
+        public LayoutFieldBase? LayoutField => _boundLayoutField ?? _attachedLayoutField;
 
         /// <summary>
         /// Gets the row a row-scoped bind targets, or <c>null</c> for master-row
@@ -98,6 +100,24 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                     || field.AllowEditModes.Allows(formMode));
 
         /// <summary>
+        /// Attaches the layout field that describes the editor, independent of any data binding, and applies
+        /// its metadata and the current form mode at once.
+        /// </summary>
+        /// <param name="layoutField">The layout field carrying the rendering attributes.</param>
+        /// <remarks>
+        /// The attachment outlives <see cref="Unbind"/>, so the editor keeps its read-only state and its
+        /// <see cref="Polhem.Definition.Layouts.LayoutField.AllowEditModes"/> with no data object at all (a
+        /// layout preview), and an ambient bind made later still sees the layout.
+        /// </remarks>
+        public void AttachLayout(LayoutFieldBase layoutField)
+        {
+            ArgumentNullException.ThrowIfNull(layoutField);
+            _attachedLayoutField = layoutField;
+            RunSuppressed(_applyMetadata);
+            _editor.SetControlState(_owner.GetValue(FormScope.FormModeProperty));
+        }
+
+        /// <summary>
         /// Binds explicitly, replacing any current binding. Explicit bindings take
         /// precedence over the ambient scope while the editor stays attached.
         /// </summary>
@@ -141,7 +161,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 DataObject.RowEditFieldChanged -= OnFieldValueChanged;
             }
             DataObject = null;
-            LayoutField = null;
+            _boundLayoutField = null;
             FormField = null;
             TargetRow = null;
             FieldName = string.Empty;
@@ -250,7 +270,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             {
                 DataObject = dataObject;
                 FieldName = fieldName;
-                LayoutField = layoutField;
+                _boundLayoutField = layoutField;
                 TargetRow = row;
                 FormField = row is not null
                     ? dataObject.GetFormField(row.Table.TableName, fieldName)

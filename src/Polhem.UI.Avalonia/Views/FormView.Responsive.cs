@@ -1,6 +1,4 @@
 using Avalonia;
-using Polhem.Definition.Layouts;
-using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -65,37 +63,6 @@ namespace Polhem.UI.Avalonia.Views
         {
             if (_formLayout is not null && _dataObject is not null)
                 Rebuild();
-        }
-
-        // Master fields collapse to a single column on a compact viewport; otherwise the layout's
-        // own column count applies.
-        private int EffectiveColumnCount()
-            => _isCompact ? 1 : NormalizeColumnCount(_formLayout?.ColumnCount);
-
-        // Detail grids edit in a form on a compact viewport; otherwise the preferred mode applies.
-        private GridEditMode EffectiveDetailEditMode()
-            => _isCompact ? GridEditMode.EditForm : DetailEditMode;
-
-        private IEnumerable<LayoutSection> EnumerateSections()
-            => _formLayout?.Sections ?? Enumerable.Empty<LayoutSection>();
-
-        private IEnumerable<LayoutGrid> EnumerateDetails()
-            => _formLayout?.Details ?? Enumerable.Empty<LayoutGrid>();
-
-        private static IEnumerable<LayoutField> EnumerateFields(LayoutSection section)
-            => section.Fields?.Where(f => f.Visible) ?? Enumerable.Empty<LayoutField>();
-
-        private static int NormalizeColumnCount(int? columnCount)
-        {
-            var n = columnCount ?? 1;
-            return n < 1 ? 1 : n;
-        }
-
-        private static (int rowSpan, int columnSpan) NormalizeSpans(LayoutField field)
-        {
-            var rowSpan = field.RowSpan < 1 ? 1 : field.RowSpan;
-            var colSpan = field.ColumnSpan < 1 ? 1 : field.ColumnSpan;
-            return (rowSpan, colSpan);
         }
 
         private void ReportError(Exception ex)

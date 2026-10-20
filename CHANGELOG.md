@@ -13,6 +13,10 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.8.0.md)
+
+- `FormLayoutPresenter` renders a form layout without data, so a design tool can preview a layout as `FormView` draws it.
+
 ## [1.7.0] - 2026-10-16
 
 Details and migration steps: [docs/en/changelogs/1.7.0.md](docs/en/changelogs/1.7.0.md)

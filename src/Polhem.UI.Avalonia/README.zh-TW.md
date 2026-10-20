@@ -21,7 +21,8 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 | 元件 | 說明 |
 |---|---|
 | `ListView` | 表單的唯讀主檔清單；發出檢視 / 編輯 / 新增請求，由 host 開啟單筆畫面。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 schema 與連接器。 |
-| `FormView` | 頂層容器：列表（`GridControl`）+ 主檔／明細表單 + New / Save / Delete 工具列。直接渲染 `FormLayout` 的主檔 sections（每個 `LayoutField` 一個 field editor），其後渲染明細（`FormLayout.Details`）——沒有獨立的 `DynamicForm` 控件；`DetailEditMode` 決定明細編輯模型。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 `Schema` / `Layout` / `FormConnector`。 |
+| `FormView` | 頂層容器：列表（`GridControl`）+ 主檔／明細表單 + New / Save / Delete 工具列。透過 `FormLayoutPresenter` 渲染記錄，並綁上載入的資料；`DetailEditMode` 決定明細編輯模型。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 `Schema` / `Layout` / `FormConnector`。 |
+| `FormLayoutPresenter` | 只依 `FormLayout` 渲染表單本體：主檔 sections（每個 `LayoutField` 一個 field editor，依 `ColumnCount` 與跨欄跨列排列），其後是明細（`FormLayout.Details`）。不需要資料、schema 或後端；見[預覽版面](#預覽版面)。 |
 | `GridControl` | `ContentControl`，內含 `DataGrid`（經 `InnerGrid` 公開），由 `LayoutGrid` 驅動；實作 `IBindTableControl` / `IUIControl`。cell 顯示走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`（見 ADR-020）。 |
 | Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `TimeEdit` / `NumericEdit` / `DropDownEdit` / `CheckEdit`） | 與 `ControlType` 的值一一對應（`Auto` 依欄位挑選）；繼承原生控件並實作 `IBindFieldControl` / `IUIControl`，自動套用 `FormField` metadata（MaxLength、ListItems）。 |
 | `FormScope` | 可繼承的 attached properties（`DataObject` / `FormMode`）：容器設一次，子孫編輯器憑 `FieldName` 自動綁定。 |
@@ -86,6 +87,20 @@ var record = new FormView { Schema = schema, Layout = layout, FormConnector = co
 若要改從定義檔讀取 schema 與 layout，把 `DefinitionSource` 設為以 `FileDefineStorage` 為基礎的
 `StorageDefinitionSource`。完整範例見 demo center 的「Without a Backend」模組：
 [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/)。
+
+### 預覽版面
+
+`FormLayoutPresenter` 畫出的是 `FormView` 依同一份 layout 會畫出的畫面，但背後沒有任何記錄，
+因此設計工具可以在編輯 layout 的同時顯示它：
+
+```csharp
+var preview = new FormLayoutPresenter { Layout = layout };
+FormScope.SetFormMode(preview, SingleFormMode.Edit);
+```
+
+沒有資料時，欄位編輯器仍依表單模式套用 layout 的 `ReadOnly` 與 `AllowEditModes`，明細則依 `AllowActions`
+顯示工具列，但按鈕停用。來自 schema 或資料的部分（下拉選項、欄位值、lookup 顯示文字、計算欄位）不會顯示。
+修改屬性會重新渲染；就地修改 layout 之後，呼叫 `Refresh()`。`IsCompact` 會畫出手機尺寸的版面。
 
 ### 畫面如何解析服務
 
