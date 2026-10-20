@@ -23,16 +23,19 @@ How a workbook is filled in and what the import does is described for its users 
 
 ## The template
 
-MiniExcel fills a template but cannot create drop-downs, so the layout lives in `Templates/FormSchema.xlsx`, which is
-generated from `FormWorkbookCatalog` with ClosedXML in the test project and committed. Do not edit it in Excel.
-After changing the catalog, regenerate it:
+MiniExcel fills a template but cannot create drop-downs, so the layout lives in templates under `Templates/`, one per
+`FormWorkbookLanguage` (`FormSchema.en.xlsx`, `FormSchema.zh-TW.xlsx`). They are generated from `FormWorkbookCatalog`
+with ClosedXML in the test project and committed; every header, explanation and instruction line in the catalog carries
+both languages, and only those texts differ between the templates. Do not edit them in Excel. After changing the
+catalog, regenerate them:
 
 ```bash
 POLHEM_REGENERATE_FORM_TEMPLATE=1 dotnet test tests/Polhem.Definition.Spreadsheet.UnitTests \
     --filter FullyQualifiedName~FormWorkbookTemplateTests
 ```
 
-`FormWorkbookTemplateTests` fails while the template and the catalog disagree, and `FormWorkbookCoverageTests` fails
+`FormWorkbookTemplateTests` fails while a template and the catalog disagree or the two templates differ in anything but
+those texts, `FormWorkbookLanguageTests` fails when a text is in one language only, and `FormWorkbookCoverageTests` fails
 when a serialized property of `FormSchema`, `FormTable`, `FormField` or `FormRule` has no column.
 
 ## Staying trim- and AOT-safe

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO.Compression;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Cli.UnitTests
@@ -29,6 +30,8 @@ namespace Polhem.Cli.UnitTests
         [InlineData(new[] { "forms", "import", "a.xlsx", "b.xlsx" }, "unknown option for 'import': 'b.xlsx'")]
         [InlineData(new[] { "forms", "import", "a.xlsx", "--bogus" }, "unknown option for 'import': '--bogus'")]
         [InlineData(new[] { "forms", "import", "a.xlsx", "--define", "d", "--tables", "all" }, "--tables must be merge, keep or overwrite, not 'all'")]
+        [InlineData(new[] { "forms", "template", "--out", "a.xlsx", "--lang", "fr" }, "--lang must be en or zh-TW, not 'fr'")]
+        [InlineData(new[] { "forms", "import", "a.xlsx", "--lang", "en" }, "unknown option for 'import': '--lang'")]
         [DisplayName("A malformed forms command line exits with Usage and names the problem on stderr")]
         public void Forms_MalformedCommandLine_ExitsWithUsage(string[] args, string expectedMessage)
         {
@@ -48,6 +51,41 @@ namespace Polhem.Cli.UnitTests
 
             Assert.Equal(ExitCodes.Success, exitCode);
             Assert.True(new FileInfo(output).Length > 0);
+        }
+
+        [Theory]
+        [InlineData(null, "Instructions")]
+        [InlineData("en", "Instructions")]
+        [InlineData("zh-TW", "說明")]
+        [DisplayName("forms template writes the workbook of the language --lang names, English by default")]
+        public void Template_Lang_PicksWorkbookLanguage(string? lang, string instructionsSheet)
+        {
+            var output = Path.Combine(_root, "Blank.xlsx");
+            string[] args = lang is null
+                ? ["forms", "template", "--out", output]
+                : ["forms", "template", "--out", output, "--lang", lang];
+
+            Assert.Equal(ExitCodes.Success, ConsoleCapture.Run(args).ExitCode);
+
+            Assert.Contains($"name=\"{instructionsSheet}\"", WorkbookXml(output), StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [InlineData("en")]
+        [InlineData("zh-TW")]
+        [DisplayName("A form exported in either language imports into the same definition files")]
+        public void ExportInLanguage_ThenImport_WritesDefinitions(string lang)
+        {
+            var workbook = Path.Combine(_root, $"Order.{lang}.xlsx");
+            var define = Path.Combine(_root, "Define");
+            Assert.Equal(ExitCodes.Success, ConsoleCapture.Run(
+                "forms", "export", "Order", "--define", NorthwindDefine, "--out", workbook, "--lang", lang).ExitCode);
+
+            var (exitCode, _, _) = ConsoleCapture.Run("forms", "import", workbook, "--define", define);
+
+            Assert.Equal(ExitCodes.Success, exitCode);
+            Assert.True(File.Exists(Path.Combine(define, "FormSchema", "Order.FormSchema.xml")));
+            Assert.True(File.Exists(Path.Combine(define, "TableSchema", "company", "ft_order_detail.TableSchema.xml")));
         }
 
         [Fact]
@@ -97,6 +135,14 @@ namespace Polhem.Cli.UnitTests
             Assert.Equal(ExitCodes.Error, exitCode);
             Assert.Contains("ProgId", error, StringComparison.Ordinal);
             Assert.False(Directory.Exists(define));
+        }
+
+        /// <summary>Reads the part of a workbook that lists its sheets by name.</summary>
+        private static string WorkbookXml(string path)
+        {
+            using var archive = ZipFile.OpenRead(path);
+            using var reader = new StreamReader(archive.GetEntry("xl/workbook.xml")!.Open());
+            return reader.ReadToEnd();
         }
     }
 }

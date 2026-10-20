@@ -29,6 +29,13 @@ The workbook has a Form sheet (key/value rows) and Tables, Fields and Rules shee
 found by a hidden key row, not by position, so a person can reorder, reword or add columns. Display texts have an
 English column, which goes into the definition, and a zh-TW column, which goes into the language resource.
 
+The workbook itself comes in English and in Traditional Chinese (`FormWorkbookLanguage`). Only the texts shown to the
+person filling it in follow the language: the headers, the explanations and the instructions sheet, whose name is the
+one sheet name that changes (`Instructions` or `說明`). The sheets the reader opens, the hidden key row, the drop-down
+values and both text columns are the same in either, so the reader needs no language and reads both. The writer takes
+the language; the CLI defaults to English, matching the English source of every other text, and DefineEditor follows
+its interface language.
+
 ### 3. MiniExcel fills a template generated from a catalog
 
 `FormWorkbookCatalog` is the single description of the sheets, columns and drop-down lists. The reader and the writer
@@ -44,9 +51,10 @@ The library choice was measured on 2026-10-20 (`net10.0`):
 
 MiniExcel keeps the data validation of a template when it fills it (measured: drop-downs, frozen panes, the hidden key
 row and the hidden Lists sheet all survive), and the layout of a form workbook never changes; only the rows do. So the
-layout is drawn once into `Templates/FormSchema.xlsx`, and MiniExcel fills it. ClosedXML draws that template from the
-catalog in the test project only. The template is binary and cannot be reviewed in a diff, so
-`FormWorkbookTemplateTests` compares its content with what the catalog lays out and fails until it is regenerated.
+layout is drawn once per language into `Templates/FormSchema.<tag>.xlsx`, and MiniExcel fills it. ClosedXML draws
+those templates from the catalog in the test project only, so a text has one source for both languages. The templates
+are binary and cannot be reviewed in a diff, so `FormWorkbookTemplateTests` compares their content with what the
+catalog lays out, and checks that they differ only in the texts shown to people, and fails until they are regenerated.
 
 MiniExcel is pinned to 1.x: 2.0 splits the package and changes the API.
 

@@ -22,15 +22,17 @@
 
 ## 範本
 
-MiniExcel 會填範本，但無法建立下拉選單，所以版面放在 `Templates/FormSchema.xlsx`。它由測試專案以 ClosedXML 依
-`FormWorkbookCatalog` 產生後 commit。請勿用 Excel 修改。改了欄位目錄後重新產生：
+MiniExcel 會填範本，但無法建立下拉選單，所以版面放在 `Templates/` 下的範本，每個 `FormWorkbookLanguage` 一份
+（`FormSchema.en.xlsx`、`FormSchema.zh-TW.xlsx`）。它們由測試專案以 ClosedXML 依 `FormWorkbookCatalog` 產生後 commit；
+目錄中的每個標題、說明與說明工作表文字都有兩種語言，兩份範本也只差這些文字。請勿用 Excel 修改。改了欄位目錄後重新產生：
 
 ```bash
 POLHEM_REGENERATE_FORM_TEMPLATE=1 dotnet test tests/Polhem.Definition.Spreadsheet.UnitTests \
     --filter FullyQualifiedName~FormWorkbookTemplateTests
 ```
 
-範本與欄位目錄不一致時 `FormWorkbookTemplateTests` 會失敗；`FormSchema`、`FormTable`、`FormField` 或 `FormRule`
+範本與欄位目錄不一致、或兩份範本除了這些文字之外還有差異時，`FormWorkbookTemplateTests` 會失敗；文字只有一種語言時，
+`FormWorkbookLanguageTests` 會失敗；`FormSchema`、`FormTable`、`FormField` 或 `FormRule`
 有序列化屬性沒有對應欄位時，`FormWorkbookCoverageTests` 會失敗。
 
 ## 維持 trim 與 AOT 安全
