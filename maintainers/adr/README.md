@@ -76,3 +76,4 @@ understanding why the design is the way it is.
 | [053](adr-053-api-client-composition-root.md) | `PolhemApiClient` owns the connection and the signed-in identity | ✅ Accepted |
 | [054](adr-054-front-end-decoupled-from-api-client.md) | Front ends reach the connector through injected contracts; `Polhem.UI.Core` carries no transport | ✅ Accepted |
 | [055](adr-055-api-core-split-from-server.md) | The server side of the API moves from `Polhem.Api.Core` to `Polhem.Api.Server` | ✅ Accepted |
+| [056](adr-056-form-workbooks.md) | Forms can be described in an Excel workbook and imported as definitions | ✅ Accepted |

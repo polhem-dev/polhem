@@ -1,0 +1,128 @@
+# Modeling Forms in Excel
+
+[繁體中文](../../zh-TW/guides/excel-form-modeling.md) · [← Docs Index](../README.md)
+
+> Describe a form in an Excel workbook, import it, and get a form that runs: list, new, edit, delete, lookups,
+> computed fields and validation rules, with no code
+
+---
+
+## Table of Contents
+
+1. [Who This Is For](#1-who-this-is-for)
+2. [The Round Trip](#2-the-round-trip)
+3. [The Workbook](#3-the-workbook)
+4. [What the Import Fills In](#4-what-the-import-fills-in)
+5. [What the Import Writes](#5-what-the-import-writes)
+6. [Importing Again](#6-importing-again)
+7. [Limits](#7-limits)
+
+---
+
+## 1. Who This Is For
+
+Early in a project, the people who know the business (analysts, key users) describe the forms, and developers turn
+the description into definition files. A form workbook lets the first group write the description in a format the
+framework reads directly. One workbook describes one form: its tables, its fields, its validation rules and where it
+sits in the menu. Importing it produces every definition file the form needs, so the form can be opened and used at
+once, and refined in DefineEditor afterwards.
+
+The workbook is not a second source of truth that lives next to the definition files. Once a form is imported, the
+FormSchema is the definition; export it to a new workbook whenever the analyst should edit it again.
+
+## 2. The Round Trip
+
+The commands are in `dotnet polhem` ([Polhem.Cli](../../../tools/Polhem.Cli/README.md)); DefineEditor offers the same
+import and export from its menus.
+
+```bash
+# An empty workbook for a new form
+dotnet polhem forms template --out Quote.xlsx
+
+# The workbook of an existing form, to change it
+dotnet polhem forms export Quote --define ./Define --out Quote.xlsx
+
+# See what an import would change, then import
+dotnet polhem forms import Quote.xlsx --define ./Define --dry-run
+dotnet polhem forms import Quote.xlsx --define ./Define
+```
+
+`--define` is the definition folder, the one that holds `FormSchema/`. The import writes definitions only; creating
+the tables is the application's job. The Northwind demo, for example, builds every table registered in
+`DbCategorySettings.xml` when its server starts (`NorthwindSchemaSeeder`), so there a restart is all it takes for the
+form to appear in the menu and work.
+
+## 3. The Workbook
+
+| Sheet | What it holds |
+|-------|---------------|
+| `說明` (instructions) | How to fill in the workbook, and every column with its meaning |
+| `Form` | The form itself: program id, display name, database category, list fields, menu placement |
+| `Tables` | One row per table: the first row is the master table, the others are detail tables |
+| `Fields` | One row per field, naming the table it belongs to |
+| `Rules` | One row per validation rule, as described in [Expressions and Rules](../definitions/expression-rules.md) |
+
+The instructions sheet of the workbook is the reference for the columns; this guide does not repeat them. Columns
+that take a fixed set of values (data type, control type, number kind, yes/no) offer a drop-down. The columns most
+forms never need are grouped and collapsed at the right of the Fields sheet.
+
+Every display text has an English column and a zh-TW column. The English text goes into the definition, and the zh-TW
+text into the language resource, as described in [Tenant Customization](../definitions/customization.md).
+
+A cell holds a small list as `a=b; c=d`: a field's list items (`Draft=Draft; Sent=Sent`, or just `Draft; Sent` when
+the value and the text are the same) and the field mappings of a relation or a lookup (`sys_id=ref_customer_id`).
+
+The second row of each tabular sheet is hidden and holds the key of each column. The import finds columns by these
+keys, not by their position, so you can reorder columns, reword the headers or insert columns of your own; a column
+without a key is ignored. Do not delete the hidden row.
+
+## 4. What the Import Fills In
+
+The workbook only needs the business fields. The import adds what the framework's conventions decide, and only where
+the workbook leaves it out:
+
+- **The database category** defaults to `company`, where business data belongs.
+- **The master table** is named after the program id. A workbook without a Tables sheet row gets one.
+- **Database table names** default to `ft_` plus the table name in snake case: `QuoteLine` becomes `ft_quote_line`.
+- **System fields**: every table gets `sys_no` and `sys_rowid`, and every detail table `sys_master_rowid`, hidden.
+- **Relation fields**: a field with a related form (`customer_rowid` related to `Customer`) becomes a `Guid` and gets
+  the two fields that show the related record, `ref_customer_id` and `ref_customer_name`, mapped from the related
+  form's `sys_id` and `sys_name`. Their captions follow the relation field's: `Customer Code`, `客戶代號`.
+
+## 5. What the Import Writes
+
+| File | When it already exists |
+|------|------------------------|
+| `FormSchema/<ProgId>.FormSchema.xml` | Replaced, unless it already describes the same form |
+| `TableSchema/<category>/<table>.TableSchema.xml`, one per table | Replaced, unless it already describes the same table. An existing database is brought in line by the [schema upgrade](../database/database-schema-upgrade.md) |
+| `FormLayout/<ProgId>.FormLayout.xml` | **Kept**; see [Importing Again](#6-importing-again) |
+| `DbCategorySettings.xml` | The tables are added to the category when missing |
+| `ProgramSettings.xml` | The program is added when missing |
+| `MenuSettings.xml` | An entry is added to the folder named on the Form sheet when no entry opens the form yet; a missing folder is created |
+| `Language/zh-TW/<ProgId>.Language.xml` and `Language/zh-TW/Menu.Language.xml` | The workbook's zh-TW texts are set; other keys stay |
+
+The settings and language files are edited in place: the entries are added and the rest of each file, comments
+included, stays as it was.
+
+Before anything is written, the form is checked with the same validation DefineEditor runs. An error, located at the
+workbook row it comes from (`Fields!12 (Quote.qty.UnitField)`), stops the import, and nothing is written. A warning,
+such as a relation to a form the folder does not have yet, is shown and does not stop it.
+
+## 6. Importing Again
+
+Change the workbook and import it again; the files that already describe what the workbook says stay untouched.
+
+The FormLayout is the exception. The import generates one only when the form has none, because a layout is usually
+arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout`, or use
+**Generate FormLayout** on the FormSchema in DefineEditor. A field added to the workbook later does not appear on an
+existing layout until it is placed there.
+
+## 7. Limits
+
+- One workbook describes one form.
+- The workbook carries the definition, not the layout: sections, column counts and the order of fields on screen are
+  arranged in DefineEditor.
+- Business logic a definition cannot express (a custom business object or repository) is written in code and
+  registered in `ProgramSettings.xml`, as for any form.
+- The import does not touch a database. New tables are created by whatever the application uses to build its schema,
+  and existing ones are changed through the [schema upgrade](../database/database-schema-upgrade.md).
