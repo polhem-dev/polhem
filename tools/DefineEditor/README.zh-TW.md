@@ -31,9 +31,9 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 `[Description]`，值與預設值不同時以粗體顯示、可用右鍵選單重設，密碼會遮蔽，集合在對話框中編輯。分組與說明會跟著介面語言切換；
 屬性名稱維持原文，因為它們就是定義檔的屬性名。
 
-每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾與最近開啟；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
+每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟與加入缺少的框架預設檔；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
 
-> File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單（儲存、全部儲存、驗證、關閉分頁），執行的是同一組指令；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有。
+> File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單（加入缺少的框架預設檔、儲存、全部儲存、驗證、關閉分頁），執行的是同一組指令；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有。
 
 ## 開發期跑法
 
@@ -43,7 +43,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug
 ```
 
-啟動後以「Open Folder...」選一個 DefinePath 資料夾即可。編輯器會就地存檔，所以要拿 `tests/Define/` 的測試 fixture 來試，請先複製該資料夾：測試共用那些檔案，不能讓它們被改動。
+啟動後以「Open Folder...」選一個 DefinePath 資料夾即可。開啟資料夾只會讀取；要替新的 DefinePath 補上框架的預設定義（`st_*` 資料表結構、Department、Employee 與 AuditRule 表單，以及各設定檔），請用 File → 加入缺少的框架預設檔...，它會先列出要寫入的檔案，既有檔案不會變動。編輯器會就地存檔，所以要拿 `tests/Define/` 的測試 fixture 來試，請先複製該資料夾：測試共用那些檔案，不能讓它們被改動。
 
 ### Headless smoke
 
