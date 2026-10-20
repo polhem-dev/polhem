@@ -1,6 +1,7 @@
 using Polhem.Core;
 using Polhem.Core.Security;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
@@ -146,8 +147,8 @@ namespace Polhem.Hosting.Database
 
         private static Guid FindRowId(DbAccess dbAccess, DatabaseType databaseType, string table, string sysId)
         {
-            var sql = $"SELECT {databaseType.QuoteIdentifier("sys_rowid")} FROM {databaseType.QuoteIdentifier(table)} " +
-                      $"WHERE {databaseType.QuoteIdentifier("sys_id")} = {{0}}";
+            var sql = $"SELECT {databaseType.QuoteIdentifier(SysFields.RowId)} FROM {databaseType.QuoteIdentifier(table)} " +
+                      $"WHERE {databaseType.QuoteIdentifier(SysFields.Id)} = {{0}}";
             var scalar = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, sql, sysId)).Scalar;
             return scalar is null || scalar is DBNull ? Guid.Empty : ValueUtilities.CGuid(scalar);
         }
@@ -165,7 +166,7 @@ namespace Polhem.Hosting.Database
         {
             // time_zone and culture are left empty so the user follows the deployment defaults.
             var sql = BuildInsert(databaseType, "st_user",
-                "sys_rowid", "sys_id", "sys_name", "password", "email", "note", "time_zone", "culture", "deployment_admin");
+                SysFields.RowId, SysFields.Id, SysFields.Name, "password", "email", "note", "time_zone", "culture", "deployment_admin");
             return new DbCommandSpec(DbCommandKind.NonQuery, sql,
                 rowId, seed.UserId, userName, PasswordHasher.HashPassword(seed.Password),
                 string.Empty, string.Empty, string.Empty, string.Empty, seed.DeploymentAdmin);
@@ -177,7 +178,7 @@ namespace Polhem.Hosting.Database
             // The three XML columns are Text, which MySQL gives no default, so they are written
             // explicitly as empty strings.
             var sql = BuildInsert(databaseType, "st_company",
-                "sys_rowid", "sys_id", "sys_name", "company_database_id", "customize_id",
+                SysFields.RowId, SysFields.Id, SysFields.Name, "company_database_id", "customize_id",
                 "number_formats_xml", "default_currency", "cash_rounding_xml", "allowed_currencies_xml", "enabled");
             return new DbCommandSpec(DbCommandKind.NonQuery, sql,
                 rowId, seed.CompanyId, companyName, companyDatabaseId, string.Empty,
@@ -186,7 +187,7 @@ namespace Polhem.Hosting.Database
 
         private static DbCommandSpec InsertAccess(DatabaseType databaseType, Guid userRowId, Guid companyRowId)
         {
-            var sql = BuildInsert(databaseType, "st_user_company", "sys_rowid", "user_rowid", "company_rowid");
+            var sql = BuildInsert(databaseType, "st_user_company", SysFields.RowId, "user_rowid", "company_rowid");
             return new DbCommandSpec(DbCommandKind.NonQuery, sql, Guid.NewGuid(), userRowId, companyRowId);
         }
 

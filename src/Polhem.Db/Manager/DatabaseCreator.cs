@@ -131,14 +131,11 @@ namespace Polhem.Db.Manager
                     $"{MaxDatabaseNameLength} characters long.");
             }
 
-            foreach (var character in databaseName)
+            if (databaseName.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
             {
-                if (!char.IsAsciiLetterOrDigit(character) && character != '_')
-                {
-                    throw new InvalidOperationException(
-                        $"Refusing to create a database named '{databaseName}': only ASCII letters, digits and " +
-                        "underscore are allowed, because a database name cannot be passed as a parameter.");
-                }
+                throw new InvalidOperationException(
+                    $"Refusing to create a database named '{databaseName}': only ASCII letters, digits and " +
+                    "underscore are allowed, because a database name cannot be passed as a parameter.");
             }
         }
 
@@ -164,10 +161,8 @@ namespace Polhem.Db.Manager
 
         private static string GetAdminConnectionString(DatabaseType databaseType, DbConnectionStringBuilder builder)
         {
-            foreach (var key in s_databaseKeys)
-            {
-                if (builder.ContainsKey(key)) builder.Remove(key);
-            }
+            foreach (var key in s_databaseKeys.Where(builder.ContainsKey))
+                builder.Remove(key);
 
             // MySQL connects without a default database; the other two need their system database.
             switch (databaseType)

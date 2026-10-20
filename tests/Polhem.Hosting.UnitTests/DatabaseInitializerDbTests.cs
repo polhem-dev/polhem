@@ -26,6 +26,8 @@ namespace Polhem.Hosting.UnitTests
     {
         private const string Password = "Initial-Pass-1";
 
+        public DatabaseInitializerDbTests(SharedDbFixture _) { }
+
         private static readonly string[] s_categories = [DbCategoryIds.Common, DbCategoryIds.Company, DbCategoryIds.Log];
 
         [DbFact(DatabaseType.SQLServer)]

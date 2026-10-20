@@ -22,7 +22,7 @@ namespace Polhem.Hosting.UnitTests
         private readonly DbConnectionManagerService _connectionManager;
         private readonly DatabaseInitializer _initializer;
 
-        public DatabaseInitializerValidationTests()
+        public DatabaseInitializerValidationTests(Polhem.Tests.Shared.SharedDbFixture _)
         {
             Defaults.MaterializeTo(_definePath);
             var paths = new PathOptions { DefinePath = _definePath };

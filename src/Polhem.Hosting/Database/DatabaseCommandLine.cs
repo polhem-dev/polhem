@@ -37,6 +37,8 @@ namespace Polhem.Hosting.Database
         /// <summary>The exit code for a command line that could not be understood.</summary>
         public const int UsageError = 2;
 
+        private const string CreatedText = "created";
+
         private const string Usage =
             "Usage:\n" +
             "  db create                     Create the databases named in DatabaseSettings that do not exist.\n" +
@@ -136,7 +138,7 @@ namespace Polhem.Hosting.Database
             {
                 var status = entry.Result switch
                 {
-                    DatabaseCreateResult.Created => "created",
+                    DatabaseCreateResult.Created => CreatedText,
                     DatabaseCreateResult.AlreadyExists => "exists",
                     DatabaseCreateResult.NotApplicable => "skipped (nothing to create on this engine)",
                     _ => "FAILED: " + entry.Error,
@@ -180,7 +182,7 @@ namespace Polhem.Hosting.Database
         {
             var status = table.Outcome switch
             {
-                TableUpgradeOutcome.Created => "created",
+                TableUpgradeOutcome.Created => CreatedText,
                 TableUpgradeOutcome.Upgraded => "upgraded",
                 TableUpgradeOutcome.Unchanged => "unchanged",
                 TableUpgradeOutcome.Planned => "planned",
@@ -214,10 +216,10 @@ namespace Polhem.Hosting.Database
 
             var result = services.GetRequiredService<IDatabaseInitializer>().SeedAdministrator(seed);
             output.WriteLine($"  user {seed.UserId}: " + (result.UserCreated
-                ? "created"
+                ? CreatedText
                 : "exists, left unchanged (the password and the deployment administrator option were not applied)"));
             output.WriteLine($"  company {seed.CompanyId} (database {result.CompanyDatabaseId}): " +
-                             (result.CompanyCreated ? "created" : "exists, left unchanged"));
+                             (result.CompanyCreated ? CreatedText : "exists, left unchanged"));
             output.WriteLine($"  access {seed.UserId} -> {seed.CompanyId}: {(result.AccessGranted ? "granted" : "exists")}");
             output.WriteLine("Done.");
             return Success;

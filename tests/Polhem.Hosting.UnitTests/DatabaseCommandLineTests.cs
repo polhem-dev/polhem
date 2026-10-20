@@ -171,19 +171,21 @@ namespace Polhem.Hosting.UnitTests
             Assert.Contains("provider not registered", output.ToString(), StringComparison.Ordinal);
         }
 
-        public static TheoryData<Exception> InitializerFailures =>
-        [
-            new InvalidOperationException("settings could not be decrypted"),
-            new IOException("definition file unreadable"),
-            new UnauthorizedAccessException("directory not writable"),
-            new FakeDbException("server unreachable"),
-        ];
-
         [Theory]
-        [MemberData(nameof(InitializerFailures))]
+        [InlineData("InvalidOperation")]
+        [InlineData("IO")]
+        [InlineData("UnauthorizedAccess")]
+        [InlineData("Db")]
         [DisplayName("Each failure type the initializer can throw is reported with its message and the failure code")]
-        public void TryRun_InitializerFailureTypes_ReturnFailure(Exception failure)
+        public void TryRun_InitializerFailureTypes_ReturnFailure(string kind)
         {
+            Exception failure = kind switch
+            {
+                "InvalidOperation" => new InvalidOperationException("settings could not be decrypted"),
+                "IO" => new IOException("definition file unreadable"),
+                "UnauthorizedAccess" => new UnauthorizedAccessException("directory not writable"),
+                _ => new FakeDbException("server unreachable"),
+            };
             var (services, fake) = CreateServices();
             fake.CreateException = failure;
             var output = new StringWriter();
