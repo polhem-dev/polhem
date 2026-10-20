@@ -94,9 +94,32 @@ namespace Polhem.Hosting.Database
             }
             catch (DbException ex)
             {
-                output.WriteLine($"Failed: {ex.Message}");
-                return Failure;
+                return WriteFailure(output, ex);
             }
+            catch (InvalidOperationException ex)
+            {
+                return WriteFailure(output, ex);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // A database id with no item, or an engine with no registered provider.
+                return WriteFailure(output, ex);
+            }
+            catch (IOException ex)
+            {
+                // A definition file that is missing or unreadable, or a SQLite directory that cannot be made.
+                return WriteFailure(output, ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return WriteFailure(output, ex);
+            }
+        }
+
+        private static int WriteFailure(TextWriter output, Exception exception)
+        {
+            output.WriteLine($"Failed: {exception.Message}");
+            return Failure;
         }
 
         private static int RunCreate(IServiceProvider services, string[] options, TextWriter output)
@@ -185,7 +208,9 @@ namespace Polhem.Hosting.Database
             seed.Password = ReadPassword(output, readSecret, getEnvironmentVariable);
 
             var result = services.GetRequiredService<IDatabaseInitializer>().SeedAdministrator(seed);
-            output.WriteLine($"  user {seed.UserId}: {(result.UserCreated ? "created" : "exists, left unchanged")}");
+            output.WriteLine($"  user {seed.UserId}: " + (result.UserCreated
+                ? "created"
+                : "exists, left unchanged (the password and the deployment administrator option were not applied)"));
             output.WriteLine($"  company {seed.CompanyId} (database {result.CompanyDatabaseId}): " +
                              (result.CompanyCreated ? "created" : "exists, left unchanged"));
             output.WriteLine($"  access {seed.UserId} -> {seed.CompanyId}: {(result.AccessGranted ? "granted" : "exists")}");
@@ -256,10 +281,15 @@ namespace Polhem.Hosting.Database
         private static void RejectUnknown(string[] options)
         {
             if (options.Length == 0) return;
-            // A password typed on the command line by mistake must not be echoed back.
-            if (Array.Exists(options, o => string.Equals(o, "--password", StringComparison.Ordinal)))
+            // Only an option name is echoed, never a value: a password typed on the command line by
+            // mistake (`--password=x`, or a bare argument) must not reach the terminal or a CI log.
+            var first = options[0];
+            if (first.StartsWith("--password", StringComparison.Ordinal))
                 throw new ArgumentException($"There is no --password option; set {PasswordVariable} or answer the prompt.");
-            throw new ArgumentException($"Unknown option '{options[0]}'.");
+            if (!first.StartsWith("--", StringComparison.Ordinal))
+                throw new ArgumentException("Unexpected argument; values follow the option they belong to.");
+            var equals = first.IndexOf('=', StringComparison.Ordinal);
+            throw new ArgumentException($"Unknown option '{(equals < 0 ? first : first[..equals])}'.");
         }
 
         private static int WriteUsage(TextWriter output, string? error)

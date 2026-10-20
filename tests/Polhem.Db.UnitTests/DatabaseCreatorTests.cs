@@ -58,6 +58,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DatabaseType.SQLite, "Data Source=:memory:", "")]
         [InlineData(DatabaseType.SQLite, "Data Source=file:x?mode=memory&cache=shared", "")]
         [InlineData(DatabaseType.SQLite, "Data Source=x;Mode=Memory", "")]
+        [InlineData(DatabaseType.SQLite, "Data Source=|DataDirectory|app.db", "")]
         [InlineData(DatabaseType.Oracle, "Data Source=localhost:1521/FREEPDB1;User Id=u", "")]
         [DisplayName("GetDatabaseName reads the database or file a connection string names")]
         public void GetDatabaseName_ConnectionString_ReturnsName(DatabaseType databaseType, string connectionString, string expected)

@@ -62,6 +62,11 @@ namespace Polhem.Hosting.Database
             {
                 return Failed(item.Id, databaseName, ex.Message);
             }
+            catch (ArgumentException ex)
+            {
+                // A connection string the provider's builder cannot parse.
+                return Failed(item.Id, databaseName, ex.Message);
+            }
             catch (DbException ex)
             {
                 return Failed(item.Id, databaseName, ex.Message);
@@ -144,6 +149,10 @@ namespace Polhem.Hosting.Database
                 return WithError(entry, ex.Message);
             }
             catch (InvalidOperationException ex)
+            {
+                return WithError(entry, ex.Message);
+            }
+            catch (ArgumentException ex)
             {
                 return WithError(entry, ex.Message);
             }

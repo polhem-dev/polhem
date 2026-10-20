@@ -80,6 +80,8 @@ every run. Both are fixed here:
   `DbType="Boolean" DefaultValue="0"` and were rebuilt on every upgrade.
 - `OracleTableSchemaProvider` reads `DATA_DEFAULT_VC` instead of the LONG `DATA_DEFAULT`, which ODP.NET does not fetch by
   default. Every non-built-in default on Oracle read back empty, and each such column was modified on every upgrade.
+  `DATA_DEFAULT_VC` exists from Oracle 12.2; the Oracle dialect already relies on 12c identity columns and targets 19c
+  and later.
 
 ## Consequences
 

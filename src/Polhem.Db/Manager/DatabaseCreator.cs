@@ -225,7 +225,7 @@ namespace Polhem.Db.Manager
 
         /// <summary>
         /// Returns the file a SQLite connection string opens, or an empty string for an in-memory
-        /// database.
+        /// database or a path this method cannot resolve.
         /// </summary>
         private static string GetSqliteFilePath(DbConnectionStringBuilder builder)
         {
@@ -237,6 +237,11 @@ namespace Polhem.Db.Manager
 
             var source = ReadFirst(builder, s_sqliteFileKeys);
             if (source.Length == 0 || string.Equals(source, ":memory:", StringComparison.Ordinal))
+                return string.Empty;
+
+            // The provider resolves `|DataDirectory|` itself, so this method cannot tell which file it
+            // would open. Reporting nothing to create is safer than creating a folder of that name.
+            if (source.Contains("|DataDirectory|", StringComparison.OrdinalIgnoreCase))
                 return string.Empty;
 
             if (source.StartsWith("file:", StringComparison.OrdinalIgnoreCase))

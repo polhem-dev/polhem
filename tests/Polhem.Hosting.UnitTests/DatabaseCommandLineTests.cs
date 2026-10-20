@@ -17,6 +17,8 @@ namespace Polhem.Hosting.UnitTests
         private static readonly string[] s_seedNoCompany = ["db", "seed-admin"];
         private static readonly string[] s_seedWithPassword = ["db", "seed-admin", "--company", "ACME", "--password", Secret];
         private static readonly string[] s_unknown = ["db", "drop"];
+        private static readonly string[] s_seedWithPasswordAssignment = ["db", "seed-admin", "--company", "ACME", "--password=" + Secret];
+        private static readonly string[] s_seedWithBareSecret = ["db", "seed-admin", "--company", "ACME", Secret];
 
         [Fact]
         [DisplayName("TryRun returns null for arguments that are not a db command")]
@@ -140,6 +142,32 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
+        [DisplayName("db seed-admin rejects --password=value and a bare argument without echoing the value")]
+        public void TryRun_SeedAdminWithInlineSecret_RejectsWithoutEcho()
+        {
+            var (services, fake) = CreateServices();
+            foreach (var args in new[] { s_seedWithPasswordAssignment, s_seedWithBareSecret })
+            {
+                var output = new StringWriter();
+                Assert.Equal(DatabaseCommandLine.UsageError, Run(services, args, output));
+                Assert.DoesNotContain(Secret, output.ToString(), StringComparison.Ordinal);
+            }
+            Assert.Null(fake.LastSeed);
+        }
+
+        [Fact]
+        [DisplayName("A failure the initializer throws is reported as a failed command rather than escaping")]
+        public void TryRun_InitializerThrows_ReturnsFailure()
+        {
+            var (services, fake) = CreateServices();
+            fake.CreateException = new KeyNotFoundException("Database provider not registered: Oracle");
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_create, output));
+            Assert.Contains("provider not registered", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("An unknown db command prints the usage and returns the usage error code")]
         public void TryRun_UnknownCommand_ReturnsUsageError()
         {
@@ -168,7 +196,10 @@ namespace Polhem.Hosting.UnitTests
             public bool LastDryRun { get; private set; }
             public AdministratorSeed? LastSeed { get; private set; }
 
-            public IReadOnlyList<DatabaseCreateEntry> CreateDatabases() => CreateEntries;
+            public Exception? CreateException { get; set; }
+
+            public IReadOnlyList<DatabaseCreateEntry> CreateDatabases()
+                => CreateException is null ? CreateEntries : throw CreateException;
 
             public TableUpgradeReport UpgradeTables(UpgradeOptions? options = null, bool dryRun = false)
             {
