@@ -83,6 +83,12 @@ the form has and the file lacks, at the XML level, and changes or removes nothin
 replaces it. With `Merge`, importing the exported Northwind workbooks back into a copy of the Northwind folder writes
 no file at all, which `FormImporterTests.ExportThenImport_Northwind_WritesNothing` checks for each form.
 
+When the TableSchema of a framework table (`st_employee`, `st_department`, `st_audit_rule`) is created or
+overwritten, the framework's embedded TableSchema for it (`Defaults`) is the base and the form's columns are merged in.
+Running Northwind on a folder rebuilt from its workbooks showed why: generated from the form alone, `st_employee` lacked
+`user_rowid`, and sign-in failed with "no such column". With the framework's TableSchema as the base, the rebuilt folder
+signs in, lists, reads back relations and saves (2026-10-20).
+
 ### 6. The layout is generated once
 
 An existing FormLayout is kept unless the import is asked to regenerate it. A layout is the part people arrange by

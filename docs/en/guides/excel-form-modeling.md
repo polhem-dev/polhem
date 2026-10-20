@@ -88,6 +88,9 @@ the workbook leaves it out:
 - **Relation fields**: a field with a related form (`customer_rowid` related to `Customer`) becomes a `Guid` and gets
   the two fields that show the related record, `ref_customer_id` and `ref_customer_name`, mapped from the related
   form's `sys_id` and `sys_name`. Their captions follow the relation field's: `Customer Code`, `客戶代號`.
+- **Framework tables**: a form on a table the framework owns, such as `st_employee` or `st_department`, gets the
+  framework's own TableSchema for it, with the form's columns added. Those tables have columns the framework reads that
+  are not on the form (`st_employee.user_rowid`, which sign-in uses).
 
 ## 5. What the Import Writes
 

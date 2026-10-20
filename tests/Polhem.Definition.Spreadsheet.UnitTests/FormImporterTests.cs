@@ -1,3 +1,4 @@
+using Polhem.Core.Data;
 using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
@@ -240,6 +241,25 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 File.Copy(file, destination, overwrite: true);
             }
+        }
+
+        [Fact]
+        [DisplayName("A framework table created by an import starts from the framework's TableSchema and adds the form's columns")]
+        public void Import_FrameworkTable_StartsFromFrameworkDefault()
+        {
+            var schema = new FormSchema("Employee", "Employee") { CategoryId = "company" };
+            var table = schema.Tables!.Add("Employee", "Employee");
+            table.DbTableName = "st_employee";
+            table.Fields!.Add("sys_id", "Employee Code", FieldDbType.String);
+            table.Fields.Add("sys_name", "Employee Name", FieldDbType.String);
+            table.Fields.Add("title", "Title", FieldDbType.String);
+
+            FormImporter.Apply(FormImporter.Plan(new FormWorkbookContent(schema), Options()));
+
+            var created = XmlCodec.DeserializeFromFile<TableSchema>(PathOf("TableSchema", "company", "st_employee.TableSchema.xml"))!;
+            // `user_rowid` is not on the form; sign-in reads it, so it must come from the framework's TableSchema.
+            Assert.Contains(created.Fields!, f => f.FieldName == "user_rowid");
+            Assert.Contains(created.Fields!, f => f.FieldName == "title");
         }
 
         [Fact]
