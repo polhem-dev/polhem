@@ -46,8 +46,8 @@ public static class FormImporter
         var categoryId = TableSchemaGenerator.GetCategoryId(schema);
         foreach (var table in schema.Tables!)
         {
-            files.Add(PlanDefinition(paths.GetTableSchemaFilePath(categoryId, table.DbTableName),
-                table.GenerateDbTable(), $"TableSchema {categoryId}/{table.DbTableName}"));
+            files.Add(PlanTableSchema(paths.GetTableSchemaFilePath(categoryId, table.DbTableName),
+                table.GenerateDbTable(), $"TableSchema {categoryId}/{table.DbTableName}", options.TableSchemaMode));
         }
 
         var layoutPath = paths.GetFormLayoutFilePath(schema.ProgId);
@@ -67,10 +67,11 @@ public static class FormImporter
             doc => SettingsXmlEditor.AddProgramItem(doc, schema.ProgId, menuCaption)));
 
         var entryId = MenuEntryId(schema.ProgId);
-        files.Add(PlanSettings(paths.GetMenuSettingsFilePath(), "MenuSettings",
+        var menuFile = PlanSettings(paths.GetMenuSettingsFilePath(), "MenuSettings",
             $"MenuSettings: add '{schema.ProgId}' to the menu",
             doc => SettingsXmlEditor.AddMenuEntry(doc, content.Menu.FolderId, content.Menu.FolderCaption,
-                entryId, schema.ProgId, menuCaption)));
+                entryId, schema.ProgId, menuCaption));
+        files.Add(menuFile);
 
         if (content.ZhTw.Count > 0)
         {
@@ -79,7 +80,7 @@ public static class FormImporter
                 doc => SettingsXmlEditor.MergeLanguageItems(doc, schema.ProgId, ZhTw, content.ZhTw.OrderBy(p => p.Key, StringComparer.Ordinal))));
         }
 
-        var menuTexts = MenuTranslations(content, entryId);
+        var menuTexts = MenuTranslations(content, entryId, entryAdded: menuFile.Writes);
         if (menuTexts.Count > 0)
         {
             files.Add(PlanSettings(paths.GetLanguageFilePath(ZhTw, MenuLocalizer.Namespace), "LanguageResource",
@@ -135,6 +136,23 @@ public static class FormImporter
             : new PlannedFile(path, PlannedFileAction.Overwrite, description, xml);
     }
 
+    private static PlannedFile PlanTableSchema(string path, TableSchema generated, string description, TableSchemaImportMode mode)
+    {
+        if (!File.Exists(path) || mode == TableSchemaImportMode.Overwrite)
+            return PlanDefinition(path, generated, description);
+
+        if (mode == TableSchemaImportMode.Keep)
+        {
+            var unchanged = PlanDefinition(path, generated, description);
+            return unchanged.Action == PlannedFileAction.Unchanged
+                ? unchanged
+                : new PlannedFile(path, PlannedFileAction.Skip, $"{description}: kept as it is", null);
+        }
+
+        return PlanSettings(path, "TableSchema", $"{description}: add the columns and indexes the form brings",
+            document => SettingsXmlEditor.MergeTableSchema(document, XmlCodec.Serialize(generated)));
+    }
+
     private static PlannedFile PlanSettings(string path, string rootName, string description, Func<System.Xml.Linq.XDocument, bool> edit)
     {
         bool exists = File.Exists(path);
@@ -145,11 +163,17 @@ public static class FormImporter
             SettingsXmlEditor.Serialize(document));
     }
 
-    private static List<KeyValuePair<string, string>> MenuTranslations(FormWorkbookContent content, string entryId)
+    /// <summary>
+    /// The zh-TW menu texts to set. The form's zh-TW display name stands in for a missing entry caption only when
+    /// this import adds the entry; an entry that already exists keeps whatever text it has.
+    /// </summary>
+    private static List<KeyValuePair<string, string>> MenuTranslations(FormWorkbookContent content, string entryId, bool entryAdded)
     {
         var texts = new List<KeyValuePair<string, string>>();
-        var entryText = FirstNonEmpty(content.Menu.EntryCaptionZhTw,
-            content.ZhTw.TryGetValue(FormSchemaLocalizer.SchemaDisplayNameKey, out var name) ? name : string.Empty);
+        var fallback = entryAdded && content.ZhTw.TryGetValue(FormSchemaLocalizer.SchemaDisplayNameKey, out var name)
+            ? name
+            : string.Empty;
+        var entryText = FirstNonEmpty(content.Menu.EntryCaptionZhTw, fallback);
         if (entryText.Length > 0)
             texts.Add(new(FormWorkbookWriter.Key(MenuLocalizer.EntryCaptionKeyFormat, entryId), entryText));
         if (content.Menu.FolderId.Length > 0 && content.Menu.FolderCaptionZhTw.Length > 0)

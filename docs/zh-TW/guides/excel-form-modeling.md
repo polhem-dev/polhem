@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: 9bd3c6bc0f3f97fdd92196880c9105974eac8c6f -->
+<!-- source: en/guides/excel-form-modeling.md blob: 7b6ea745f2b09ad21558d6aec3e976ae38795a15 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -88,7 +88,7 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 | 檔案 | 已存在時 |
 |------|----------|
 | `FormSchema/<ProgId>.FormSchema.xml` | 覆寫，除非內容已經描述同一張表單 |
-| `TableSchema/<範圍>/<資料表>.TableSchema.xml`，每張表一份 | 覆寫，除非內容已經描述同一張資料表。既有資料庫透過 [結構升級](../database/database-schema-upgrade.md) 同步 |
+| `TableSchema/<範圍>/<資料表>.TableSchema.xml`，每張表一份 | 依 TableSchema 模式而定，見 [再次匯入](#6-再次匯入)。既有資料庫透過 [結構升級](../database/database-schema-upgrade.md) 同步 |
 | `FormLayout/<ProgId>.FormLayout.xml` | **保留**，見 [再次匯入](#6-再次匯入) |
 | `DbCategorySettings.xml` | 資料表尚未登記時，加入對應的範圍 |
 | `ProgramSettings.xml` | 程式尚未登記時加入 |
@@ -104,6 +104,15 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 ## 6. 再次匯入
 
 修改活頁簿後再匯入一次即可；內容已經與活頁簿一致的檔案不會被動到。
+
+TableSchema 常常包含表單推導不出來的內容：欄位長度、表單上沒有的欄位、手動加的索引。匯入時如何處理既有的
+TableSchema，以 `--tables` 選擇（DefineEditor 會詢問）：
+
+| 模式 | 效果 |
+|------|------|
+| `merge`（預設） | 加入表單有、檔案沒有的欄位與索引。檔案中既有的內容不會被修改或刪除，所以移除欄位或變更資料型別要在 DefineEditor 處理 |
+| `keep` | 檔案維持原狀 |
+| `overwrite` | 以表單產生的 TableSchema 取代 |
 
 FormLayout 是例外。只有表單還沒有版面時才會產生，因為版面通常會在之後手動調整。要換成重新產生的版面，加上
 `--regenerate-layout`，或在 DefineEditor 對 FormSchema 執行 **產生 FormLayout**。之後才加進活頁簿的欄位，要放進

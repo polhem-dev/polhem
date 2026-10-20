@@ -28,6 +28,7 @@ namespace Polhem.Cli.UnitTests
         [InlineData(new[] { "forms", "export", "Order" }, "missing required option: --define")]
         [InlineData(new[] { "forms", "import", "a.xlsx", "b.xlsx" }, "unknown option for 'import': 'b.xlsx'")]
         [InlineData(new[] { "forms", "import", "a.xlsx", "--bogus" }, "unknown option for 'import': '--bogus'")]
+        [InlineData(new[] { "forms", "import", "a.xlsx", "--define", "d", "--tables", "all" }, "--tables must be merge, keep or overwrite, not 'all'")]
         [DisplayName("A malformed forms command line exits with Usage and names the problem on stderr")]
         public void Forms_MalformedCommandLine_ExitsWithUsage(string[] args, string expectedMessage)
         {

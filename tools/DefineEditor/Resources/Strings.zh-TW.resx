@@ -274,4 +274,9 @@
   <data name="Status_FormImportFailed" xml:space="preserve"><value>匯入失敗：{0}</value></data>
   <data name="Status_FormWorkbookExported" xml:space="preserve"><value>已匯出 {0}</value></data>
   <data name="Status_FormWorkbookExportFailed" xml:space="preserve"><value>匯出失敗：{0}</value></data>
+  <data name="Choice_TableSchemaModeMessage" xml:space="preserve"><value>這張表單有些資料表已經有 TableSchema，裡面可能有欄位長度、表單上沒有的欄位，以及手動建立的索引。匯入時要怎麼處理？</value></data>
+  <data name="Choice_TableSchemaMerge" xml:space="preserve"><value>合併：只加入表單新增的欄位與索引，其他不變（建議）</value></data>
+  <data name="Choice_TableSchemaKeep" xml:space="preserve"><value>保留：既有的 TableSchema 檔案維持原狀</value></data>
+  <data name="Choice_TableSchemaOverwrite" xml:space="preserve"><value>覆寫：以表單產生的 TableSchema 取代</value></data>
+  <data name="Action_Next" xml:space="preserve"><value>下一步</value></data>
 </root>

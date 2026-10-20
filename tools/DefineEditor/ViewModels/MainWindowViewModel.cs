@@ -322,6 +322,31 @@ public partial class MainWindowViewModel : ViewModelBase
             var plan = read.HasErrors
                 ? null
                 : FormImporter.Plan(read.Content!, new FormImportOptions { DefinePath = definePath });
+
+            // An existing TableSchema may carry what the form cannot derive (lengths, extra columns, indexes), so the
+            // user picks how to treat it; the plan above used the default, Merge.
+            if (plan is { HasErrors: false } && owner is not null
+                && plan.Files.Any(f => IsTableSchema(f.Path) && File.Exists(f.Path)))
+            {
+                var mode = await ConfirmationDialog.ShowChoiceAsync(owner, L("Confirm_ImportFormTitle"),
+                    L("Choice_TableSchemaModeMessage"),
+                    [L("Choice_TableSchemaMerge"), L("Choice_TableSchemaKeep"), L("Choice_TableSchemaOverwrite")],
+                    selectedIndex: 0, confirmLabel: L("Action_Next"));
+                if (mode is null)
+                {
+                    StatusText = L("Status_FormImportCancelled");
+                    return;
+                }
+                if (mode != 0)
+                {
+                    // The conventions already ran on this content and change nothing when applied again.
+                    plan = FormImporter.Plan(read.Content!, new FormImportOptions
+                    {
+                        DefinePath = definePath,
+                        TableSchemaMode = mode == 1 ? TableSchemaImportMode.Keep : TableSchemaImportMode.Overwrite,
+                    });
+                }
+            }
             var issues = read.Issues.Concat(plan?.Issues ?? []).ToList();
             if (plan is null || plan.HasErrors)
             {
@@ -396,6 +421,9 @@ public partial class MainWindowViewModel : ViewModelBase
         PlannedFileAction.Update => L("ImportAction_Update"),
         _ => L("ImportAction_Skip"),
     };
+
+    private static bool IsTableSchema(string path)
+        => path.EndsWith(".TableSchema.xml", StringComparison.OrdinalIgnoreCase);
 
     private static bool SamePath(string a, string b)
         => string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
