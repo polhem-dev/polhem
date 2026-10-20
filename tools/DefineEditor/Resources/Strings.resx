@@ -27,6 +27,7 @@
 
   <data name="MenuItem_OpenFolder" xml:space="preserve"><value>Open Folder...</value></data>
   <data name="MenuItem_OpenRecent" xml:space="preserve"><value>Open Recent</value></data>
+  <data name="MenuItem_AddFrameworkDefaults" xml:space="preserve"><value>Add Missing Framework Defaults...</value></data>
   <data name="MenuItem_ClearRecent" xml:space="preserve"><value>Clear Recent</value></data>
   <data name="MenuItem_CloseActiveTab" xml:space="preserve"><value>Close Tab</value></data>
   <data name="MenuItem_Save" xml:space="preserve"><value>Save</value></data>
@@ -79,6 +80,7 @@
   <data name="Action_SaveAnyway" xml:space="preserve"><value>Save anyway</value></data>
   <data name="Action_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Action_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Action_Add" xml:space="preserve"><value>Add</value></data>
 
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>Close tab</value></data>
@@ -187,7 +189,10 @@
   <data name="Status_ValidationPassed" xml:space="preserve"><value>Validation passed: no issues found.</value></data>
   <data name="Status_ValidationCompleted" xml:space="preserve"><value>Validation completed: {0} issues ({1} errors / {2} warnings).</value></data>
   <data name="Status_SolutionLoaded" xml:space="preserve"><value>Loaded {0} FormSchemas</value></data>
-  <data name="Status_FrameworkDefaultsMaterialised" xml:space="preserve"><value>Materialised {0} framework default file(s)</value></data>
+  <data name="Status_FrameworkDefaultsMaterialised" xml:space="preserve"><value>Added {0} framework default file(s)</value></data>
+  <data name="Status_FrameworkDefaultsComplete" xml:space="preserve"><value>Every framework default file is already present.</value></data>
+  <data name="Status_FrameworkDefaultsCancelled" xml:space="preserve"><value>Adding framework defaults cancelled.</value></data>
+  <data name="Status_FrameworkDefaultsFailed" xml:space="preserve"><value>Adding framework defaults failed: {0}</value></data>
   <data name="Status_OpenSolutionFailed" xml:space="preserve"><value>Open failed: {0}</value></data>
   <data name="Status_PermissionRuleCovered" xml:space="preserve"><value>This model already covers every PermissionActions — no more rules to add.</value></data>
   <data name="Status_SingletonHint" xml:space="preserve"><value>(Property edits commit to memory on focus loss; Save (⌘S) refreshes the tree headers and writes back to XML.)</value></data>
@@ -196,6 +201,12 @@
   <data name="Confirm_DeleteTitle" xml:space="preserve"><value>Confirm deletion</value></data>
   <data name="Confirm_DeleteMessage" xml:space="preserve"><value>Delete "{0}"?
 Removed from memory; press Save (⌘S) to persist.</value></data>
+  <data name="Confirm_AddFrameworkDefaultsTitle" xml:space="preserve"><value>Add framework defaults</value></data>
+  <data name="Confirm_AddFrameworkDefaultsMessage" xml:space="preserve"><value>These framework default files are missing from {0} and will be written there:
+
+{1}
+
+Existing files are left unchanged.</value></data>
   <data name="Confirm_CloseUnsavedTitle" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Confirm_CloseUnsavedMessage" xml:space="preserve"><value>"{0}" has unsaved changes.
 Do you want to save them before closing?</value></data>

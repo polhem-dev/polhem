@@ -175,6 +175,7 @@ internal static class Smoke
             RunFormLayoutSmoke,
             RunLanguageSmoke,
             RunTabCommandsSmoke,
+            RunFrameworkDefaultsSmoke,
         };
         foreach (var phase in phases)
         {
@@ -689,6 +690,47 @@ internal static class Smoke
         }
         catch (Exception ex) { return Fail(138, $"Tab commands smoke crashed: {ex.Message}"); }
         finally { TryDelete(tempDir); }
+    }
+
+    private static int RunFrameworkDefaultsSmoke()
+    {
+        var tempDir = MakeTempDir("defaults");
+        try
+        {
+            // A file the solution already has must survive the command untouched.
+            const string kept = "<UnitSettings />";
+            var keptPath = Path.Combine(tempDir, "UnitSettings.xml");
+            File.WriteAllText(keptPath, kept);
+
+            // SolutionPath is set directly: OpenSolution also records the folder in the user's
+            // recent list, which a smoke run must not touch.
+            var vm = new MainWindowViewModel { SolutionPath = tempDir };
+            vm.AddMissingFrameworkDefaultsAsync().GetAwaiter().GetResult();
+
+            var absent = Polhem.Definition.Defaults.ListEmbedded()
+                .Where(rel => !File.Exists(Path.Combine(tempDir, rel)))
+                .ToList();
+            if (absent.Count > 0)
+                return Fail(142, $"Framework defaults not written: {string.Join(", ", absent)}");
+            if (File.ReadAllText(keptPath) != kept)
+                return Fail(143, "Adding framework defaults overwrote an existing file");
+            if (vm.Nodes.Count != 1 || !ContainsFile(vm.Nodes[0], Path.Combine(tempDir, "PermissionModels.xml")))
+                return Fail(144, "The tree was not rescanned after adding framework defaults");
+
+            var afterFirst = vm.StatusText;
+            vm.AddMissingFrameworkDefaultsAsync().GetAwaiter().GetResult();
+            if (vm.StatusText == afterFirst)
+                return Fail(145, "A second run should report that nothing is missing");
+
+            Console.WriteLine("[smoke:framework-defaults] OK");
+            return 0;
+        }
+        catch (Exception ex) { return Fail(146, $"Framework defaults smoke crashed: {ex.Message}"); }
+        finally { TryDelete(tempDir); }
+
+        static bool ContainsFile(Polhem.DefineEditor.Models.DefineNode node, string filePath) =>
+            string.Equals(node.FilePath, filePath, StringComparison.OrdinalIgnoreCase)
+            || node.Children.Any(child => ContainsFile(child, filePath));
     }
 
     private static string MakeTempDir(string tag)

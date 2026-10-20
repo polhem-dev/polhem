@@ -252,6 +252,55 @@ public partial class MainWindowViewModel : ViewModelBase
         if (node is not null) SelectedNode = node;
     }
 
+    /// <summary>
+    /// Writes the framework default define files the open solution does not have yet, after the user
+    /// confirms the list. Existing files are never touched.
+    /// </summary>
+    public async Task AddMissingFrameworkDefaultsAsync()
+    {
+        if (!IsSolutionOpened) return;
+        var definePath = SolutionPath;
+
+        var missing = Defaults.ListEmbedded()
+            .Where(rel => !File.Exists(Path.Combine(definePath, rel)))
+            .ToList();
+        if (missing.Count == 0)
+        {
+            StatusText = L("Status_FrameworkDefaultsComplete");
+            return;
+        }
+
+        var owner = GetOwnerWindow();
+        if (owner is not null)
+        {
+            var confirmed = await ConfirmationDialog.ShowAsync(
+                owner,
+                L("Confirm_AddFrameworkDefaultsTitle"),
+                L("Confirm_AddFrameworkDefaultsMessage", definePath,
+                    string.Join("\n", missing.Select(rel => "• " + rel))),
+                confirmLabel: L("Action_Add"));
+            if (!confirmed)
+            {
+                StatusText = L("Status_FrameworkDefaultsCancelled");
+                return;
+            }
+        }
+
+        try
+        {
+            // The filter keeps the write to exactly the list the user confirmed.
+            var shown = missing.ToHashSet(StringComparer.Ordinal);
+            var result = Defaults.MaterializeTo(definePath, new MaterializeOptions { Filter = shown.Contains });
+
+            RebuildTrees(definePath);
+            StatusText = L("Status_FrameworkDefaultsMaterialised", result.WrittenCount);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            StatusText = L("Status_FrameworkDefaultsFailed", ex.Message);
+        }
+    }
+
     private static DefineNode? FindNodeByFilePath(DefineNode node, string filePath)
     {
         if (node.Kind == DefineNodeKind.DefineFile
@@ -515,12 +564,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            // Materialise any missing framework-default define files into the
-            // opened folder before scanning. SkipExisting=true (the default)
-            // guarantees consumer customisations are never overwritten — only
-            // files the consumer hasn't created yet get written.
-            var materialiseResult = Defaults.MaterializeTo(definePath, MaterializeOptions.Default);
-
+            // NOTE: opening only reads. A DefinePath may leave out the framework defaults it does not
+            // use (Northwind has no UnitSettings or PermissionModels), and writing them on open dirtied
+            // committed folders. Adding them is the explicit `AddMissingFrameworkDefaultsAsync` command.
             RebuildTrees(definePath);
             DisposeAndClearOpenDocuments();
             ActiveDocument = null;
@@ -537,10 +583,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             SolutionPath = definePath;
 
-            var loadedMsg = L("Status_SolutionLoaded", Solution.AvailableProgIds.Count);
-            StatusText = materialiseResult.WrittenCount > 0
-                ? $"{L("Status_FrameworkDefaultsMaterialised", materialiseResult.WrittenCount)} · {loadedMsg}"
-                : loadedMsg;
+            StatusText = L("Status_SolutionLoaded", Solution.AvailableProgIds.Count);
         }
         catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException)
         {

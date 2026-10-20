@@ -14,6 +14,7 @@
 
   <data name="MenuItem_OpenFolder" xml:space="preserve"><value>開啟方案...</value></data>
   <data name="MenuItem_OpenRecent" xml:space="preserve"><value>開啟最近方案</value></data>
+  <data name="MenuItem_AddFrameworkDefaults" xml:space="preserve"><value>加入缺少的框架預設檔...</value></data>
   <data name="MenuItem_ClearRecent" xml:space="preserve"><value>清除最近紀錄</value></data>
   <data name="MenuItem_CloseActiveTab" xml:space="preserve"><value>關閉分頁</value></data>
   <data name="MenuItem_Save" xml:space="preserve"><value>儲存</value></data>
@@ -66,6 +67,7 @@
   <data name="Action_SaveAnyway" xml:space="preserve"><value>仍要存檔</value></data>
   <data name="Action_Delete" xml:space="preserve"><value>刪除</value></data>
   <data name="Action_OK" xml:space="preserve"><value>確定</value></data>
+  <data name="Action_Add" xml:space="preserve"><value>加入</value></data>
 
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>尚未存檔</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>關閉分頁</value></data>
@@ -174,7 +176,10 @@
   <data name="Status_ValidationPassed" xml:space="preserve"><value>驗證通過：未發現任何問題。</value></data>
   <data name="Status_ValidationCompleted" xml:space="preserve"><value>驗證完成：{0} 個問題（{1} Error / {2} Warning）。</value></data>
   <data name="Status_SolutionLoaded" xml:space="preserve"><value>已載入 {0} 個 FormSchema</value></data>
-  <data name="Status_FrameworkDefaultsMaterialised" xml:space="preserve"><value>已物化 {0} 個框架預設檔</value></data>
+  <data name="Status_FrameworkDefaultsMaterialised" xml:space="preserve"><value>已加入 {0} 個框架預設檔</value></data>
+  <data name="Status_FrameworkDefaultsComplete" xml:space="preserve"><value>框架預設檔皆已存在。</value></data>
+  <data name="Status_FrameworkDefaultsCancelled" xml:space="preserve"><value>已取消加入框架預設檔。</value></data>
+  <data name="Status_FrameworkDefaultsFailed" xml:space="preserve"><value>加入框架預設檔失敗：{0}</value></data>
   <data name="Status_OpenSolutionFailed" xml:space="preserve"><value>開啟失敗：{0}</value></data>
   <data name="Status_PermissionRuleCovered" xml:space="preserve"><value>此模型已涵蓋所有 PermissionActions，無法再新增 Rule。</value></data>
   <data name="Status_SingletonHint" xml:space="preserve"><value>（屬性編輯於離開欄位時寫入記憶體；按儲存（⌘S）會刷新樹節點顯示並寫回 XML）</value></data>
@@ -183,6 +188,12 @@
   <data name="Confirm_DeleteTitle" xml:space="preserve"><value>確認刪除</value></data>
   <data name="Confirm_DeleteMessage" xml:space="preserve"><value>確定要刪除「{0}」？
 從記憶體移除後仍需按儲存（⌘S）才會寫回檔案。</value></data>
+  <data name="Confirm_AddFrameworkDefaultsTitle" xml:space="preserve"><value>加入框架預設檔</value></data>
+  <data name="Confirm_AddFrameworkDefaultsMessage" xml:space="preserve"><value>{0} 缺少下列框架預設檔，將寫入該資料夾：
+
+{1}
+
+既有檔案不會變動。</value></data>
   <data name="Confirm_CloseUnsavedTitle" xml:space="preserve"><value>未儲存的變更</value></data>
   <data name="Confirm_CloseUnsavedMessage" xml:space="preserve"><value>「{0}」有未儲存的變更。
 關閉前要先儲存嗎？</value></data>
