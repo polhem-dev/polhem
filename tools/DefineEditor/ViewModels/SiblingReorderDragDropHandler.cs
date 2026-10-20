@@ -25,7 +25,7 @@ public sealed class SiblingReorderDragDropHandler(ObjectTreeDocumentViewModelBas
         list.RemoveAt(IndexOf(list, node.Value));
         var index = IndexOf(list, target.Value) + (position == TreeNodeDropPosition.After ? 1 : 0);
         list.Insert(index, node.Value);
-        document.IsDirty = true;
+        document.MarkChanged();
     }
 
     /// <summary>

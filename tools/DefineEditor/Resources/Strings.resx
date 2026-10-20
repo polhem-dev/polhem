@@ -84,6 +84,12 @@
   <data name="ConfirmDialog_DefaultTitle" xml:space="preserve"><value>Confirm</value></data>
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>Validation results</value></data>
+  <data name="Preview_Title" xml:space="preserve"><value>Preview</value></data>
+  <data name="Preview_Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Preview_ViewMode" xml:space="preserve"><value>View mode</value></data>
+  <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
+  <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>
+  <data name="Preview_RenderFailed" xml:space="preserve"><value>The preview could not render this layout: {0}</value></data>
   <data name="Action_Apply" xml:space="preserve"><value>Apply</value></data>
 
   <!-- DbCategorySettings -->

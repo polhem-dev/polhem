@@ -16,6 +16,7 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.8.0.md)
 
 - `FormLayoutPresenter` renders a form layout without data, so a design tool can preview a layout as `FormView` draws it.
+- DefineEditor previews the FormLayout being edited, live, under the property grid.
 
 ## [1.7.0] - 2026-10-16
 
