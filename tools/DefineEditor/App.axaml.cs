@@ -35,6 +35,9 @@ public partial class App : Application
     public IRelayCommand ValidateActiveCommand { get; }
     public IRelayCommand CloseActiveTabCommand { get; }
 
+    // Enabled only while a solution is open; re-evaluated when SolutionPath changes.
+    public IRelayCommand AddFrameworkDefaultsCommand { get; }
+
     /// <summary>
     /// Short product name shown as the macOS application-menu title and inside
     /// the About / Hide / Quit item labels. VS Code shows "Code", not its full
@@ -62,6 +65,7 @@ public partial class App : Application
         SaveAllCommand = new RelayCommand(ExecuteSaveAll, CanExecuteSaveAll);
         ValidateActiveCommand = new RelayCommand(ExecuteActiveValidate, CanExecuteActiveValidate);
         CloseActiveTabCommand = new RelayCommand(ExecuteCloseActiveTab, CanExecuteCloseActiveTab);
+        AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
     }
 
     public override void Initialize()
@@ -129,6 +133,7 @@ public partial class App : Application
                     // OpenSolution touched UserSettings.RecentSolutions just
                     // before assigning SolutionPath — refresh the submenu.
                     RebuildRecentMenu();
+                    AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
                 }
             };
 
@@ -149,7 +154,8 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
+                    AddFrameworkDefaultsCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand,
+                    CloseActiveTabCommand);
             }
         }
 
@@ -201,6 +207,8 @@ public partial class App : Application
         openRecent.Menu = _recentMenu;
         fileMenu.Menu.Add(openRecent);
         RebuildRecentMenu();
+        fileMenu.Menu.Add(new NativeMenuItemSeparator());
+        fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_Save", SaveActiveCommand,
             new KeyGesture(Key.S, KeyModifiers.Meta)));
@@ -417,6 +425,12 @@ public partial class App : Application
     private static MainWindowViewModel? GetMainViewModel() =>
         (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow
             ?.DataContext as MainWindowViewModel;
+
+    private static bool CanExecuteAddFrameworkDefaults() =>
+        GetMainViewModel()?.IsSolutionOpened ?? false;
+
+    private static Task ExecuteAddFrameworkDefaultsAsync() =>
+        GetMainViewModel()?.AddMissingFrameworkDefaultsAsync() ?? Task.CompletedTask;
 
     private static bool CanExecuteSaveAll() =>
         GetMainViewModel()?.HasDirtyDocuments ?? false;

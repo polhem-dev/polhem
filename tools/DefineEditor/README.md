@@ -33,9 +33,9 @@ that differs from its default is in bold and its context menu resets it, a passw
 in a dialog. Categories and descriptions follow the UI language; property names stay as written, since they are the
 attribute names of the define files.
 
-Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder and Open Recent; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent and Add Missing Framework Defaults; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
-> The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with Save, Save All, Validate and Close Tab, which run the same commands; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
+> The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with Add Missing Framework Defaults, Save, Save All, Validate and Close Tab, which run the same commands; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
 
 ## Running during development
 
@@ -45,7 +45,7 @@ Start it directly from source:
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug
 ```
 
-After it starts, choose "Open Folder..." and pick a DefinePath folder. The editor saves in place, so to explore with the test fixtures in `tests/Define/`, copy the folder first: the tests share those files and must not see them change.
+After it starts, choose "Open Folder..." and pick a DefinePath folder. Opening a folder only reads it; to seed a new DefinePath with the framework's default definitions (the `st_*` table schemas, the Department, Employee and AuditRule forms, and the settings files), choose File → Add Missing Framework Defaults..., which lists the files it will write and leaves existing ones alone. The editor saves in place, so to explore with the test fixtures in `tests/Define/`, copy the folder first: the tests share those files and must not see them change.
 
 ### Headless smoke
 

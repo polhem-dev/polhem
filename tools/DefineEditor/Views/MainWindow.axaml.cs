@@ -43,12 +43,15 @@ public partial class MainWindow : Window
     /// The welcome panel's "File → Open Folder" hint is hidden at the same time: this menu does not
     /// carry Open Folder, and the panel's own button is the way to open a solution here.
     /// </remarks>
+    /// <param name="addFrameworkDefaults">Adds the framework default files the open solution lacks.</param>
     /// <param name="save">Saves the active document.</param>
     /// <param name="saveAll">Saves every dirty document.</param>
     /// <param name="validate">Validates the active document.</param>
     /// <param name="closeTab">Closes the active tab.</param>
-    public void ShowInWindowFileMenu(ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
+    public void ShowInWindowFileMenu(
+        ICommand addFrameworkDefaults, ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
     {
+        AddFrameworkDefaultsMenuItem.Command = addFrameworkDefaults;
         SaveMenuItem.Command = save;
         SaveAllMenuItem.Command = saveAll;
         ValidateMenuItem.Command = validate;

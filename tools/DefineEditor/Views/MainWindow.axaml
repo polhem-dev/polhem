@@ -27,6 +27,8 @@
              macOS only, and its items run the same commands as the macOS File menu. -->
         <Menu x:Name="InWindowMenu" DockPanel.Dock="Top" IsVisible="False">
             <MenuItem Header="{loc:Loc Menu_File}">
+                <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
+                <Separator/>
                 <MenuItem x:Name="SaveMenuItem" Header="{loc:Loc MenuItem_Save}"
                           InputGesture="Ctrl+S" HotKey="Ctrl+S"/>
                 <!-- NOTE: no shortcut for Save All. The macOS one is Cmd+Option+S, but Ctrl+Alt is AltGr on
