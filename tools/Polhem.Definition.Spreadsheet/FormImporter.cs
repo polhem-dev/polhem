@@ -47,6 +47,7 @@ public static class FormImporter
         foreach (var table in schema.Tables!)
         {
             files.Add(PlanTableSchema(paths.GetTableSchemaFilePath(categoryId, table.DbTableName),
+                $"TableSchema/{categoryId}/{table.DbTableName}.TableSchema.xml",
                 table.GenerateDbTable(), $"TableSchema {categoryId}/{table.DbTableName}", options.TableSchemaMode));
         }
 
@@ -136,10 +137,36 @@ public static class FormImporter
             : new PlannedFile(path, PlannedFileAction.Overwrite, description, xml);
     }
 
-    private static PlannedFile PlanTableSchema(string path, TableSchema generated, string description, TableSchemaImportMode mode)
+    /// <summary>
+    /// Plans one TableSchema file.
+    /// </summary>
+    /// <remarks>
+    /// A framework table such as <c>st_employee</c> has columns the framework reads that are not on its form
+    /// (<c>user_rowid</c>, which sign-in uses). When the file is created or overwritten, the framework's own
+    /// TableSchema for that table (<see cref="Defaults"/>) is the base, and the form's columns are merged into it;
+    /// generating such a table from the form alone breaks sign-in.
+    /// </remarks>
+    private static PlannedFile PlanTableSchema(
+        string path, string relativePath, TableSchema generated, string description, TableSchemaImportMode mode)
     {
-        if (!File.Exists(path) || mode == TableSchemaImportMode.Overwrite)
-            return PlanDefinition(path, generated, description);
+        bool exists = File.Exists(path);
+        if (!exists || mode == TableSchemaImportMode.Overwrite)
+        {
+            if (!Defaults.ListEmbedded().Contains(relativePath, StringComparer.Ordinal))
+                return PlanDefinition(path, generated, description);
+
+            System.Xml.Linq.XDocument document;
+            using (var stream = Defaults.OpenEmbedded(relativePath))
+                document = SettingsXmlEditor.Load(stream);
+            SettingsXmlEditor.MergeTableSchema(document, XmlCodec.Serialize(generated));
+            var xml = SettingsXmlEditor.Serialize(document);
+            description += ": the framework's TableSchema with the form's columns";
+            if (!exists)
+                return new PlannedFile(path, PlannedFileAction.Create, description, xml);
+            return File.ReadAllText(path) == xml
+                ? new PlannedFile(path, PlannedFileAction.Unchanged, description, null)
+                : new PlannedFile(path, PlannedFileAction.Overwrite, description, xml);
+        }
 
         if (mode == TableSchemaImportMode.Keep)
         {

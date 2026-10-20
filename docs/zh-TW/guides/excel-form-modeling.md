@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: 7b6ea745f2b09ad21558d6aec3e976ae38795a15 -->
+<!-- source: en/guides/excel-form-modeling.md blob: e87b7590df8f5a62b342b4a0360828411773ea06 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -82,6 +82,8 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 - **關聯欄位**：指定了關聯表單的欄位（`customer_rowid` 關聯 `Customer`）會設為 `Guid`，並補上顯示關聯資料的兩個欄位
   `ref_customer_id` 與 `ref_customer_name`，分別對應關聯表單的 `sys_id` 與 `sys_name`。它們的標題沿用關聯欄位的
   標題：`Customer Code`、`客戶代號`。
+- **框架資料表**：建立在框架資料表（例如 `st_employee`、`st_department`）上的表單，會以框架本身的 TableSchema 為基礎，
+  再加入表單的欄位。這些資料表有框架會讀取、但不在表單上的欄位（例如登入時使用的 `st_employee.user_rowid`）。
 
 ## 5. 匯入會寫入的檔案
 
