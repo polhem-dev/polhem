@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
+using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 
 namespace Polhem.DefineEditor.Views;
@@ -113,10 +114,14 @@ public partial class FormLayoutPreview : UserControl
         }
     }
 
-    // Every render builds new editors, so turning the names off needs no clean-up. An editor that already has a
-    // placeholder (the date-time input pattern) keeps it.
+    // Every render builds new editors and grids, so turning the names off needs no clean-up. An editor that already
+    // has a placeholder (the date-time input pattern) keeps it; a detail grid, which has no rows to hold one, shows
+    // each field name under its column caption.
     private void ShowFieldNames()
     {
+        foreach (var grid in LayoutPresenter.GetLogicalDescendants().OfType<GridControl>())
+            ShowColumnFieldNames(grid);
+
         foreach (var editor in LayoutPresenter.GetLogicalDescendants().OfType<IFieldEditor>())
         {
             switch (editor)
@@ -128,6 +133,21 @@ public partial class FormLayoutPreview : UserControl
                     comboBox.PlaceholderText = editor.FieldName;
                     break;
             }
+        }
+    }
+
+    private static void ShowColumnFieldNames(GridControl grid)
+    {
+        if (grid.Layout?.Columns is not { } layoutColumns) return;
+        // NOTE: the grid builds one column per visible layout column, in layout order.
+        var visible = layoutColumns.Where(c => c.Visible).ToList();
+        var columns = grid.InnerGrid.Columns;
+        for (var i = 0; i < Math.Min(columns.Count, visible.Count); i++)
+        {
+            var caption = columns[i].Header as Control ?? new TextBlock { Text = columns[i].Header?.ToString() };
+            var fieldName = new TextBlock { Text = visible[i].FieldName, FontSize = 11 };
+            fieldName.Classes.Add("muted");
+            columns[i].Header = new StackPanel { Children = { caption, fieldName } };
         }
     }
 
