@@ -9,22 +9,27 @@
 
     <DockPanel>
         <Border DockPanel.Dock="Top" Classes="surface-sunken" Padding="12,6">
+            <!-- The title keeps its place; when the pane is too narrow, the options wrap onto another line
+                 instead of running over it. -->
             <DockPanel>
-                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsPreviewVisible}" Content="{loc:Loc Preview_Show}"/>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="16" Margin="0,0,16,0"
-                            IsVisible="{Binding IsPreviewVisible}">
-                    <CheckBox IsChecked="{Binding IsPreviewViewMode}" Content="{loc:Loc Preview_ViewMode}"/>
-                    <CheckBox IsChecked="{Binding IsPreviewCompact}" Content="{loc:Loc Preview_PhoneWidth}"/>
-                    <CheckBox IsChecked="{Binding ShowPreviewFieldNames}" Content="{loc:Loc Preview_FieldNames}"/>
-                </StackPanel>
-                <TextBlock Classes="h2" Text="{loc:Loc Preview_Title}" VerticalAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Left" Classes="h2" Text="{loc:Loc Preview_Title}" VerticalAlignment="Center"
+                           Margin="0,0,16,0"/>
+                <WrapPanel HorizontalAlignment="Right" ItemSpacing="16" LineSpacing="4">
+                    <CheckBox IsChecked="{Binding IsPreviewViewMode}" Content="{loc:Loc Preview_ViewMode}"
+                              IsVisible="{Binding IsPreviewVisible}"/>
+                    <CheckBox IsChecked="{Binding IsPreviewCompact}" Content="{loc:Loc Preview_PhoneWidth}"
+                              IsVisible="{Binding IsPreviewVisible}"/>
+                    <CheckBox IsChecked="{Binding ShowPreviewFieldNames}" Content="{loc:Loc Preview_FieldNames}"
+                              IsVisible="{Binding IsPreviewVisible}"/>
+                    <CheckBox IsChecked="{Binding IsPreviewVisible}" Content="{loc:Loc Preview_Show}"/>
+                </WrapPanel>
             </DockPanel>
         </Border>
 
         <DockPanel IsVisible="{Binding IsPreviewVisible}">
             <TextBlock x:Name="ErrorText" DockPanel.Dock="Top" IsVisible="False" TextWrapping="Wrap" Margin="12,8,12,0"
                        Foreground="{DynamicResource SemiColorDanger}"/>
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled">
                 <controls:FormLayoutPresenter x:Name="LayoutPresenter" Margin="12"/>
             </ScrollViewer>
         </DockPanel>

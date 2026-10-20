@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
@@ -19,8 +20,9 @@ public partial class FormLayoutPreview : UserControl
     // instead of rebuilding the whole form on each one.
     private static readonly TimeSpan RenderDelay = TimeSpan.FromMilliseconds(300);
 
-    // The width a phone-sized form gets; below the framework's compact threshold, like a phone in portrait.
-    private const double CompactWidth = 400;
+    // The phone form gets a fixed width, the logical width of a common phone in portrait (iPhone 12 to 16), so it
+    // keeps its size whatever the width of the pane. It is below the framework's compact threshold.
+    private const double CompactWidth = 390;
 
     private readonly DispatcherTimer _renderTimer;
     private FormLayoutDocumentViewModel? _document;
@@ -86,8 +88,10 @@ public partial class FormLayoutPreview : UserControl
         }
 
         var compact = document.IsPreviewCompact;
-        LayoutPresenter.MaxWidth = compact ? CompactWidth : double.PositiveInfinity;
+        LayoutPresenter.Width = compact ? CompactWidth : double.NaN;
         LayoutPresenter.HorizontalAlignment = compact ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+        // A pane narrower than the phone scrolls sideways instead of squeezing the phone form.
+        PreviewScroller.HorizontalScrollBarVisibility = compact ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
         try
         {
             FormScope.SetFormMode(LayoutPresenter, document.PreviewFormMode);
