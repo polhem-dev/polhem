@@ -77,3 +77,4 @@ understanding why the design is the way it is.
 | [054](adr-054-front-end-decoupled-from-api-client.md) | Front ends reach the connector through injected contracts; `Polhem.UI.Core` carries no transport | ✅ Accepted |
 | [055](adr-055-api-core-split-from-server.md) | The server side of the API moves from `Polhem.Api.Core` to `Polhem.Api.Server` | ✅ Accepted |
 | [056](adr-056-form-workbooks.md) | Forms can be described in an Excel workbook and imported as definitions | ✅ Accepted |
+| [057](adr-057-database-initialization.md) | The framework initializes a new deployment's databases, and the host runs it as `db` commands | ✅ Accepted |

@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: 89ea130cb8de728adc051ef26370f61fbda5bad3 -->
+<!-- source: en/database/database-settings-guide.md blob: ea09a6b8545150d46ee79c6dcb6b647ef697d987 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -13,6 +13,7 @@
 4. [存取入口與快取](#4-存取入口與快取)
 5. [CategoryId 串接](#5-categoryid-串接)
 6. [檔案位置與範例](#6-檔案位置與範例)
+7. [初始化新部署](#7-初始化新部署)
 
 ---
 
@@ -529,6 +530,53 @@ BO 方法透過 `BusinessObject.ResolveDatabaseId(DbScope)` 或（FormSchema-dri
   </Categories>
 </DbCategorySettings>
 ```
+
+---
+
+## 7. 初始化新部署
+
+以 `AddPolhemFramework` 建立的主機，可以用三個指令把空白的資料庫伺服器帶到能登入的狀態。主機在建好 service
+provider 之後，透過 `Polhem.Hosting` 的 `DatabaseCommandLine` 執行它們：
+
+```csharp
+var app = builder.Build();
+if (DatabaseCommandLine.TryRun(app.Services, args) is int exitCode) return exitCode;
+app.Run();
+```
+
+```bash
+dotnet run -- db create
+dotnet run -- db upgrade
+dotnet run -- db seed-admin --company ACME
+```
+
+程式中也可以透過 `IDatabaseInitializer` 使用相同的操作。每個指令都可以重複執行：已存在的東西維持原狀。
+
+| 指令 | 作用 |
+|------|------|
+| `db create` | 對每個 `DatabaseItem`，連線字串所指的資料庫不存在時建立它。 |
+| `db upgrade [--dry-run] [--allow-narrowing]` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。 |
+| `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
+
+**各引擎的 `db create`。** 連線字串中的登入帳號需要建立資料庫的權限；沒有的話，請 DBA 建好資料庫後直接執行
+`db upgrade`。
+
+| 引擎 | 行為 |
+|------|------|
+| SQL Server、PostgreSQL、MySQL | 連到引擎的管理資料庫，建立指定名稱的資料庫。資料庫名稱無法以參數傳遞，因此名稱只能包含 ASCII 英文字母、數字與底線，最長 63 個字元。 |
+| SQLite | 建立資料庫檔案與所在目錄。記憶體資料庫沒有東西要建立。 |
+| Oracle | 不建立任何東西：schema 由 DBA 建立。 |
+
+**`db upgrade`** 需要每個有資料表的分類都有對應的 `DatabaseItem`。`CategoryId` 空白的資料庫項目，視為屬於其
+`Id` 所指的分類。
+
+**`db seed-admin`** 不會變更任何已存在的資料列，尤其不會取代既有使用者的密碼。密碼從環境變數
+`POLHEM_ADMIN_PASSWORD` 讀取，或以不回顯的提示輸入；沒有對應的命令列選項。`company` 分類恰有一個 `DatabaseItem`
+時，可以省略 `--company-database`。使用者預設建立為部署管理員（見
+[權限與授權指南 §12](../security/permission-authorization.md#12-指派管理員)），除非指定 `--no-deployment-admin`。
+不會建立角色：沒有權限模型的表單不需要角色。
+
+結束碼：成功為 `0`，有項目失敗為 `1`，無法解讀命令列為 `2`。
 
 ---
 

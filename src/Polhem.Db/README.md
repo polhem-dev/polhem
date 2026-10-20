@@ -151,6 +151,7 @@ converted — see [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.
 | `DbDialectRegistry` | `DatabaseType` → `IDialectFactory` registry |
 | `IDbConnectionManager` | Connection information registry |
 | `DbProviderRegistry` | ADO.NET `DbProviderFactory` resolution |
+| `DatabaseCreator` | Creates the database a connection string names when it is missing (SQL Server, PostgreSQL, MySQL, SQLite files) |
 | `TableSchemaCommandBuilder` | Schema-based IUD command generation |
 
 ## Design Conventions

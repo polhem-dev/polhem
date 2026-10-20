@@ -12,6 +12,7 @@
 4. [Access Entry Points & Caching](#4-access-entry-points--caching)
 5. [CategoryId Wiring](#5-categoryid-wiring)
 6. [File Locations & Examples](#6-file-locations--examples)
+7. [Initializing a New Deployment](#7-initializing-a-new-deployment)
 
 ---
 
@@ -529,6 +530,55 @@ Start from the file the framework ships, [`src/Polhem.Definition/Defaults/DbCate
   </Categories>
 </DbCategorySettings>
 ```
+
+---
+
+## 7. Initializing a New Deployment
+
+A host built with `AddPolhemFramework` can bring an empty database server up to a first sign-in with three commands.
+The host runs them through `DatabaseCommandLine` (in `Polhem.Hosting`) after it builds its service provider:
+
+```csharp
+var app = builder.Build();
+if (DatabaseCommandLine.TryRun(app.Services, args) is int exitCode) return exitCode;
+app.Run();
+```
+
+```bash
+dotnet run -- db create
+dotnet run -- db upgrade
+dotnet run -- db seed-admin --company ACME
+```
+
+The same operations are available in code through `IDatabaseInitializer`. Each command can be run again: what
+already exists is left as it is.
+
+| Command | What it does |
+|---------|--------------|
+| `db create` | For each `DatabaseItem`, creates the database its connection string names when it does not exist. |
+| `db upgrade [--dry-run] [--allow-narrowing]` | For each category in `DbCategorySettings`, builds or upgrades every table in every `DatabaseItem` whose `CategoryId` is that category. `--dry-run` prints the statements without running them; `--allow-narrowing` permits changes that shorten a column. |
+| `db seed-admin --company <id> [options]` | Creates the first user, a company and the user's access to it in the common database. Options: `--user` (default `admin`), `--name`, `--company-name`, `--company-database`, `--currency` (default `USD`), `--no-deployment-admin`. |
+
+**`db create` per engine.** The login in the connection string needs permission to create databases. When it has
+none, have a DBA create them and continue with `db upgrade`.
+
+| Engine | Behavior |
+|--------|----------|
+| SQL Server, PostgreSQL, MySQL | Connects to the engine's administrative database and creates the named database. The name may contain only ASCII letters, digits and underscore, up to 63 characters, because a database name cannot be passed as a parameter. |
+| SQLite | Creates the database file and its directory. An in-memory database has nothing to create. |
+| Oracle | Creates nothing: the schema is created by a DBA. |
+
+**`db upgrade`** needs a `DatabaseItem` for every category that has tables. A database item with an empty
+`CategoryId` counts as belonging to the category its `Id` names.
+
+**`db seed-admin`** never changes a row that already exists; in particular it never replaces an existing user's
+password. The password is read from the `POLHEM_ADMIN_PASSWORD` environment variable, or prompted for without echoing;
+there is no command-line option for it. `--company-database` may be omitted when exactly one `DatabaseItem` belongs to
+the `company` category. The user is created as a deployment administrator (see
+[Permission & Authorization §12](../security/permission-authorization.md#12-appointing-an-administrator)) unless
+`--no-deployment-admin` is given. No roles are created: forms without a permission model need none.
+
+The exit code is `0` on success, `1` when an item failed and `2` when the command line could not be understood.
 
 ---
 

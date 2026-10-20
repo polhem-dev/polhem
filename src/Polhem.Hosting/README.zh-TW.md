@@ -38,6 +38,8 @@
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | 尚未發行 API key 時於啟動時記錄 log。供以 HTTP 提供 API 的宿主使用 |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |
+| `IDatabaseInitializer` | 建立 `DatabaseSettings` 的資料庫、建立或升級 `DbCategorySettings` 的資料表，並建立第一位管理員與公司。由 `AddPolhemFramework` 註冊 |
+| `DatabaseCommandLine.TryRun` | 從主機的命令列執行 `db create`、`db upgrade` 與 `db seed-admin`，背後是 `IDatabaseInitializer` |
 
 ## 使用方式
 
@@ -101,6 +103,17 @@ var login = await client.System.LoginAsync("demo", "demo");
 建立在 [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md) 上的單一使用者 head 則把 `host.Services`
 指派給 `ClientInfo.LocalServiceProvider`，行程內的 `ClientInfo.ApiClient` 會派遣到它。
 
+### 初始化資料庫
+
+主機可以從自己的命令列建立資料庫、建立資料表並建立第一位管理員。在建好主機之後、啟動之前檢查 `db` 指令：
+
+```csharp
+if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exitCode;
+```
+
+之後 `dotnet run -- db create`、`db upgrade` 與 `db seed-admin --company <id>` 就會在不啟動主機的情況下執行。
+指令與選項說明見 [DatabaseSettings 指引](../../docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)。
+
 ## 設計慣例
 
 - **組合根** — DI 註冊集中於此，與 HTTP 端點（由 `Polhem.JsonRpc.AspNetCore` 提供）分離
@@ -113,6 +126,6 @@ var login = await client.System.LoginAsync("demo", "demo");
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` 與其輔助方法
 - `Audit/` -- `IAuditLogSink` 與內部的稽核寫入器
 - `CacheNotify/` -- cache-notify 輪詢器
-- `Database/` -- 啟動時檢查 `DatabaseSettings` 具備框架必需的項目
+- `Database/` -- 啟動時檢查 `DatabaseSettings` 具備框架必需的項目，以及 `db` 指令背後的資料庫初始化
 - `Session/` -- 過期 session 清理
 - `Registry/` -- 啟動時的註冊與警告服務

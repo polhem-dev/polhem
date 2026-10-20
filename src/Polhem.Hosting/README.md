@@ -41,6 +41,8 @@ this package. A head that runs the backend in its own process references both: i
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
+| `IDatabaseInitializer` | Creates the databases of `DatabaseSettings`, builds or upgrades the tables of `DbCategorySettings`, and seeds the first administrator and company. Registered by `AddPolhemFramework` |
+| `DatabaseCommandLine.TryRun` | Runs `db create`, `db upgrade` and `db seed-admin` from a host's command line, backed by `IDatabaseInitializer` |
 
 ## Usage
 
@@ -105,6 +107,19 @@ var login = await client.System.LoginAsync("demo", "demo");
 A single-user head built on [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md) assigns `host.Services` to
 `ClientInfo.LocalServiceProvider` instead, and the in-process `ClientInfo.ApiClient` dispatches to it.
 
+### Initializing the databases
+
+A host can create its databases, build its tables and seed the first administrator from its own command line. Check
+for a `db` command after building the host and before starting it:
+
+```csharp
+if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exitCode;
+```
+
+`dotnet run -- db create`, `db upgrade` and `db seed-admin --company <id>` then run without starting the host. The
+commands and their options are described in the
+[DatabaseSettings guide](../../docs/en/database/database-settings-guide.md#7-initializing-a-new-deployment).
+
 ## Design Conventions
 
 - **Composition root** — DI registration lives here, separated from the HTTP endpoint (which `Polhem.JsonRpc.AspNetCore` provides)
@@ -117,6 +132,6 @@ A single-user head built on [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/READM
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
 - `Audit/` -- `IAuditLogSink` and the internal audit writers
 - `CacheNotify/` -- the cache-notify poller
-- `Database/` -- the startup check that `DatabaseSettings` has the items the framework requires
+- `Database/` -- the startup check that `DatabaseSettings` has the items the framework requires, and the database initialization behind the `db` commands
 - `Session/` -- expired session cleanup
 - `Registry/` -- startup registration and warning services

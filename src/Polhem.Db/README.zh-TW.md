@@ -148,6 +148,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 | `DbDialectRegistry` | `DatabaseType` → `IDialectFactory` 註冊中心 |
 | `IDbConnectionManager` | 連線資訊註冊中心 |
 | `DbProviderRegistry` | ADO.NET `DbProviderFactory` 解析 |
+| `DatabaseCreator` | 連線字串所指的資料庫不存在時建立它（SQL Server、PostgreSQL、MySQL、SQLite 檔案） |
 | `TableSchemaCommandBuilder` | 依結構描述產生 IUD 命令 |
 
 ## 設計慣例

@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: 6633ae5b7dcab8888f42ba27c3fccedd96ec65a6 -->
+<!-- source: en/security/permission-authorization.md blob: a0c1d8794735a2085fe6c8af1f172125b521edcf -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -254,7 +254,7 @@ API 金鑰方法**只對遠端呼叫**做這道判定。行程內呼叫免管理
 
 ## 12. 指派管理員
 
-`SystemBusinessObject.SetDeploymentAdmin`（用戶端為 `SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)`）是框架提供給 `st_user.deployment_admin` 的**唯一**寫入路徑，且為 `LocalOnly`：第一位管理員在主機上指派，之後就能由部署端自建的管理介面接手。
+`SystemBusinessObject.SetDeploymentAdmin`（用戶端為 `SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)`）是指派或撤銷既有使用者的途徑，且為 `LocalOnly`：在主機上指派，之後就能由部署端自建的管理介面接手。唯一的另一個寫入是全新部署的種子（見下文），它會在所建立的使用者上設定這個旗標。
 
 框架在 runtime 讓 FormSchema 驅動的資料路徑碰不到這個欄位，不是靠約定：`ProtectedFields` 列有該欄，寫入路徑（`DataFormRepository.Save`）會把它從所有 INSERT / UPDATE 剔除，**即使表單宣告了它**。少了這道，部署端只要自建一張 `st_user` 維護表單，就等於給了一般使用者自我提權的路。讀取也受保護，因為可以被篩選或排序的欄位，就能一次比對一點地被讀出來：在選取清單、篩選或排序中指名受保護欄位的查詢會被拒絕，要求所有欄位的查詢則會略過它。
 
@@ -262,7 +262,7 @@ API 金鑰方法**只對遠端呼叫**做這道判定。行程內呼叫免管理
 
 > **升級注意：** 若部署端原本是透過自建的 `st_user` 維護表單設定密碼，此改動之後該欄會在存檔時被靜默剔除。請改走專門的密碼操作、由它負責雜湊；表單無法產生 `VerifyPassword` 接受的值。
 
-框架不出貨任何 `st_user` 資料列，因此「全新部署要不要預先標一位管理員」由部署端的 seeder 決定；無論如何欄位預設都是「非管理員」。
+框架不出貨任何 `st_user` 資料列。全新部署的第一位使用者由主機的 `db seed-admin` 指令建立（見[初始化新部署](../database/database-settings-guide.md#7-初始化新部署)），除非指定 `--no-deployment-admin`，否則建立為部署管理員。它不會變更既有使用者，也不寫稽核紀錄，因為它在沒有 session 的情況下執行。其他使用者的欄位預設都是「非管理員」。
 
 ## 13. 稽核留痕
 

@@ -209,17 +209,19 @@ namespace Polhem.Db.Providers.Oracle
         /// <remarks>
         /// CHAR_LENGTH is used over DATA_LENGTH because the framework emits
         /// <c>VARCHAR2(n CHAR)</c> with <c>NLS_LENGTH_SEMANTICS=CHAR</c> semantics, so
-        /// the character count is the meaningful length. <c>DATA_DEFAULT</c> is a LONG
-        /// column on Oracle; ODP.NET reads it as a string when InitialLONGFetchSize is
-        /// non-zero (the driver default). The trailing newline / whitespace Oracle
-        /// appends to LONG defaults is trimmed in <see cref="ParseDBDefaultValue"/>.
+        /// the character count is the meaningful length. The default expression is read from
+        /// <c>DATA_DEFAULT_VC</c>, the VARCHAR2 copy of the LONG <c>DATA_DEFAULT</c> column
+        /// (Oracle 12.2 and later). Trailing whitespace Oracle keeps in a default is trimmed
+        /// in <see cref="ParseDBDefaultValue"/>.
         /// </remarks>
         /// <param name="storageName">Table name in Oracle storage form (UPPERCASE).</param>
         private DataTable GetColumns(string storageName)
         {
-            // `DATA_DEFAULT` is a LONG column, which Oracle refuses to mix with a CHAR `''` inside
-            // COALESCE (ORA-00932). It is therefore selected as it is, and `ParseDbField` turns the
-            // resulting DBNull into an empty string through its own IsNull check.
+            // IMPORTANT: `DATA_DEFAULT_VC`, not `DATA_DEFAULT`. The latter is a LONG column, and
+            // ODP.NET does not fetch LONG data by default (`InitialLONGFetchSize` is 0), so every default
+            // read back empty: a column declaring a default other than the built-in one never matched
+            // its definition and every upgrade re-issued a MODIFY for it. A column with no default
+            // still reads DBNull, which `ParseDbField` turns into an empty string.
             //
             // Length comes from a different column per type. Character types use `CHAR_LENGTH`,
             // which counts characters, while binary and RAW types use `DATA_LENGTH`, which counts
@@ -234,7 +236,7 @@ namespace Polhem.Db.Providers.Oracle
                 "            ELSE COALESCE(c.CHAR_LENGTH, 0) END AS \"Length\", " +
                 "       COALESCE(c.DATA_PRECISION, 0) AS \"Precision\", " +
                 "       COALESCE(c.DATA_SCALE, 0) AS \"Decimals\", " +
-                "       c.DATA_DEFAULT AS \"DefaultValue\", " +
+                "       c.DATA_DEFAULT_VC AS \"DefaultValue\", " +
                 "       COALESCE(cc.COMMENTS, '') AS \"Description\" " +
                 "FROM USER_TAB_COLUMNS c " +
                 "LEFT JOIN USER_COL_COMMENTS cc ON cc.TABLE_NAME = c.TABLE_NAME AND cc.COLUMN_NAME = c.COLUMN_NAME " +
@@ -300,8 +302,7 @@ namespace Polhem.Db.Providers.Oracle
             }
 
             string originalDefaultValue = OracleSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
-            // `DATA_DEFAULT` is a LONG column and the query does not COALESCE it, so a DBNull
-            // here means the same thing as an empty string.
+            // A column without a default reads DBNull, which means the same thing as an empty string.
             string rawDefault = row.IsNull("DefaultValue") ? string.Empty : row.GetFieldValue<string>("DefaultValue");
             dbField.DefaultValue = ParseDBDefaultValue(dataType, rawDefault, originalDefaultValue);
             return dbField;
@@ -394,8 +395,8 @@ namespace Polhem.Db.Providers.Oracle
         }
 
         /// <summary>
-        /// Parses the field default value retrieved from <c>USER_TAB_COLUMNS.DATA_DEFAULT</c>
-        /// (a LONG column whose value Oracle returns with a trailing newline). For string
+        /// Parses the field default value retrieved from <c>USER_TAB_COLUMNS.DATA_DEFAULT_VC</c>
+        /// (Oracle may keep trailing whitespace in it). For string
         /// types the surrounding single quotes are stripped and embedded <c>''</c> are
         /// unescaped. Returns an empty string when the parsed value matches the framework's
         /// built-in default.
