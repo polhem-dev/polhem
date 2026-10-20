@@ -72,7 +72,7 @@ The navigation tree has two levels: **topic (`Category`) → case (`Title`)**. T
 | | Number formatting | Display decimals resolved from each column's `NumberKind`, from the row's unit, and from the company's overrides |
 | | Multi-currency amounts | Amount decimals follow the row's currency; totals per currency and in the home currency |
 | | Multi-unit quantities | Quantity decimals follow the row's unit; the total is shown only when every row has the same unit |
-| **Master-Detail** | Master + detail | `FormLayoutRenderer` renders a master section and a detail grid |
+| **Master-Detail** | Master + detail | `FormLayoutPresenter` renders a master section and a detail grid, bound through `FormScope` |
 | **Permission Capability** | Interactive permission simulator (master/detail) | Ticking simulated role grants degrades a master and its detail live, as the capability snapshot from `EnterCompany` would |
 | **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` shows a `FormField`, a `DbField` or `BackendConfiguration` from their `System.ComponentModel` annotations, with its display options and a `PropertyValueChanged` log; the `...` button of `ListItems` opens `CollectionEditDialog` |
 | **Without a Backend** | List and record over your own data | `ListView` and `FormView` driven by a `FormSchema`, a `FormLayout` and an in-memory `IFormApiConnector`; nothing is registered in `UIServices`, and the host sets `Schema`, `Layout` and `FormConnector` on the views ([`Modules/WithoutBackend/`](Modules/WithoutBackend/)) |
@@ -103,7 +103,7 @@ is generated from the registry, grouped into two levels by `Category`.
 The navigation tree and View Source pick it up automatically: `Modules/**/*.cs` is already an EmbeddedResource, and
 `GetSourceText()` resolves the resource by the type's full name (**the folder must match the namespace**). Useful
 helpers: `DataEditorParts` (single-field object / section card / live values / Compose), `SampleFormData` (Staff +
-Phones sample data), `FormLayoutRenderer` (renders a layout with the public primitives).
+Phones sample data).
 
 ## Matching library components
 

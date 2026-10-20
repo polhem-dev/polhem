@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Avalonia.Controls.Editors;
 using Avalonia.DemoCenter.Modules.Views;
 
 namespace Avalonia.DemoCenter.Modules.MasterDetail
@@ -29,7 +31,19 @@ namespace Avalonia.DemoCenter.Modules.MasterDetail
             var schema = SampleFormData.BuildSchema();
             var data = SampleFormData.BuildMasterDetail(schema);
             var layout = FormLayoutGenerator.Generate(schema, "default");
-            return FormLayoutRenderer.Render(data, layout, GridEditMode.InCell);
+            // The presenter renders the layout alone; its editors and detail grids bind to the
+            // data object the ambient FormScope hands down when they join the logical tree.
+            var root = new ScrollViewer
+            {
+                Content = new FormLayoutPresenter
+                {
+                    Layout = layout,
+                    DetailEditMode = GridEditMode.InCell,
+                    Margin = new Thickness(4),
+                },
+            };
+            FormScope.SetDataObject(root, data);
+            return root;
         }
     }
 }
