@@ -66,7 +66,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | | Number formatting | 顯示位數依各欄的 `NumberKind`、該列的單位與公司的覆寫值決定 |
 | | Multi-currency amounts | 金額位數隨該列幣別；分幣別與本國幣的合計 |
 | | Multi-unit quantities | 數量位數隨該列單位；全部同單位時才顯示合計 |
-| **Master-Detail** | Master + detail | `FormLayoutRenderer` 渲染 master 區段 + 明細 grid |
+| **Master-Detail** | Master + detail | `FormLayoutPresenter` 渲染 master 區段 + 明細 grid，經 `FormScope` 綁定 |
 | **Permission Capability** | Interactive permission simulator (master/detail) | 勾選模擬的角色授權，主檔與明細即時降級，與 `EnterCompany` 回傳的能力快照相同 |
 | **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` 依 `System.ComponentModel` 標註顯示 `FormField`、`DbField` 或 `BackendConfiguration`，可切換顯示選項並記錄 `PropertyValueChanged`；`ListItems` 的 `...` 按鈕開啟 `CollectionEditDialog` |
 | **Without a Backend** | List and record over your own data | 以 `FormSchema`、`FormLayout` 與記憶體內的 `IFormApiConnector` 驅動 `ListView` 與 `FormView`；`UIServices` 中什麼都不註冊，由 host 在畫面上設定 `Schema`、`Layout` 與 `FormConnector`（[`Modules/WithoutBackend/`](Modules/WithoutBackend/)） |
@@ -93,7 +93,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 
 導覽樹與 View Source 會自動帶出——`Modules/**/*.cs` 已設為 EmbeddedResource，`GetSourceText()` 依型別全名解析資源
 （**資料夾須對映命名空間**）。常用 helper：`DataEditorParts`（單欄物件 / 區塊卡 / 即時值 / Compose）、
-`SampleFormData`（Staff + Phones 假資料）、`FormLayoutRenderer`（公開 primitive 渲染 layout）。
+`SampleFormData`（Staff + Phones 假資料）。
 
 ## 對應 library 元件
 
