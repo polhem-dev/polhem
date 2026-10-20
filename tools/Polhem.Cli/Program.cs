@@ -4,7 +4,7 @@ namespace Polhem.Cli;
 
 /// <summary>
 /// Entry point for the <c>dotnet polhem</c> CLI. Routes to subcommand groups
-/// (<c>defines</c>, <c>keys</c>) plus a few top-level helpers (<c>--version</c>, <c>--help</c>).
+/// (<c>defines</c>, <c>keys</c>, <c>forms</c>) plus a few top-level helpers (<c>--version</c>, <c>--help</c>).
 /// </summary>
 internal static class Program
 {
@@ -42,6 +42,7 @@ internal static class Program
             "--help" or "-h" or "help" => Help(args),
             "defines" => DefinesCommand.Run(args.AsSpan(1).ToArray()),
             "keys" => KeysCommand.Run(args.AsSpan(1).ToArray()),
+            "forms" => FormsCommand.Run(args.AsSpan(1).ToArray()),
             _ => throw new UsageException($"unknown command: '{args[0]}'"),
         };
     }
@@ -55,6 +56,10 @@ internal static class Program
         else if (args.Length >= 2 && args[1] == "keys")
         {
             KeysCommand.PrintHelp(Console.Out);
+        }
+        else if (args.Length >= 2 && args[1] == "forms")
+        {
+            FormsCommand.PrintHelp(Console.Out);
         }
         else
         {
@@ -83,6 +88,7 @@ internal static class Program
         writer.WriteLine("Commands:");
         writer.WriteLine("  defines       Manage define files (materialize / list)");
         writer.WriteLine("  keys          Produce encrypted key values for SystemSettings.xml (protect)");
+        writer.WriteLine("  forms         Describe forms in Excel workbooks and import them (template / export / import)");
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --version, -v Print the CLI version and exit");

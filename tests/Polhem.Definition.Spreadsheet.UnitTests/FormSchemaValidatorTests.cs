@@ -1,11 +1,8 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
-using Polhem.DefineEditor.Models;
-using Polhem.DefineEditor.Services;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 
-namespace Polhem.DefineEditor.UnitTests
+namespace Polhem.Definition.Spreadsheet.UnitTests
 {
     /// <summary>
     /// Unit binding checks of <see cref="FormSchemaValidator"/>: a quantity or weight field must bind a UnitField,
@@ -23,10 +20,10 @@ namespace Polhem.DefineEditor.UnitTests
             return schema;
         }
 
-        private static List<ValidationIssue> UnitFieldErrors(FormSchema schema)
-            => FormSchemaValidator.Validate(schema, SolutionContext.Empty)
-                .Where(issue => issue.Severity == ValidationSeverity.Error
-                    && issue.Path.EndsWith(".UnitField", StringComparison.Ordinal))
+        private static List<DefinitionIssue> UnitFieldErrors(FormSchema schema)
+            => FormSchemaValidator.Validate(schema, [])
+                .Where(issue => issue.Severity == IssueSeverity.Error
+                    && issue.Location.EndsWith(".UnitField", StringComparison.Ordinal))
                 .ToList();
 
         [Theory]
@@ -38,7 +35,7 @@ namespace Polhem.DefineEditor.UnitTests
             var schema = SchemaWith(new FormField("qty", "數量", FieldDbType.Decimal) { NumberKind = kind });
 
             var issue = Assert.Single(UnitFieldErrors(schema));
-            Assert.Equal("OrderLine.qty.UnitField", issue.Path);
+            Assert.Equal("OrderLine.qty.UnitField", issue.Location);
         }
 
         [Fact]
@@ -62,7 +59,7 @@ namespace Polhem.DefineEditor.UnitTests
                 new FormField("qty", "數量", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity, UnitField = "uom" });
 
             var issue = Assert.Single(UnitFieldErrors(schema));
-            Assert.Equal("OrderLine.qty.UnitField", issue.Path);
+            Assert.Equal("OrderLine.qty.UnitField", issue.Location);
         }
 
         [Fact]

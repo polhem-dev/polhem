@@ -6,6 +6,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
+using Polhem.Definition.Spreadsheet;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
@@ -87,7 +88,11 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation()
-        => FormSchemaValidator.Validate(Schema, Solution);
+        => FormSchemaValidator.Validate(Schema, Solution.AvailableProgIds)
+            .Select(issue => new ValidationIssue(
+                issue.Severity == IssueSeverity.Error ? ValidationSeverity.Error : ValidationSeverity.Warning,
+                issue.Location, issue.Message))
+            .ToList();
 
     /// <summary>
     /// Adds the Relation and Lookup groups under a field node, each when the field uses it.

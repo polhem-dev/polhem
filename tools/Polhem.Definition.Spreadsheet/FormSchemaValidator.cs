@@ -1,27 +1,37 @@
-using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.DefineEditor.Models;
 
-namespace Polhem.DefineEditor.Services;
+namespace Polhem.Definition.Spreadsheet;
 
 /// <summary>
 /// Static checks over a <see cref="FormSchema"/>: required-field presence, duplicate table and
 /// field names, relation and lookup mappings and ProgIds that do not exist in the surrounding
 /// solution, list item values, and the unit binding of quantity and weight fields.
 /// </summary>
+/// <remarks>
+/// Shared by DefineEditor, which shows the issues next to the form being edited, and by
+/// <see cref="FormImporter"/>, which refuses to write a form that has errors.
+/// </remarks>
 public static class FormSchemaValidator
 {
-    public static IReadOnlyList<ValidationIssue> Validate(FormSchema schema, SolutionContext context)
+    /// <summary>
+    /// Checks <paramref name="schema"/>.
+    /// </summary>
+    /// <param name="schema">The form to check.</param>
+    /// <param name="availableProgIds">The ProgIds a relation or lookup may point to.</param>
+    /// <returns>The issues found, located by a path such as <c>Order.customer_rowid.Relation</c>.</returns>
+    public static IReadOnlyList<DefinitionIssue> Validate(FormSchema schema, IEnumerable<string> availableProgIds)
     {
-        var issues = new List<ValidationIssue>();
-        var progIdSet = new HashSet<string>(context.AvailableProgIds, StringComparer.OrdinalIgnoreCase);
+        ArgumentNullException.ThrowIfNull(schema);
+        ArgumentNullException.ThrowIfNull(availableProgIds);
+        var issues = new List<DefinitionIssue>();
+        var progIdSet = new HashSet<string>(availableProgIds, StringComparer.OrdinalIgnoreCase);
 
         if (string.IsNullOrWhiteSpace(schema.ProgId))
-            issues.Add(new(ValidationSeverity.Error, "Schema", "ProgId cannot be empty."));
+            issues.Add(new(IssueSeverity.Error, "Schema", "ProgId cannot be empty."));
 
         if (schema.Tables is null || schema.Tables.Count == 0)
         {
-            issues.Add(new(ValidationSeverity.Warning, "Schema", "Schema does not declare any FormTable."));
+            issues.Add(new(IssueSeverity.Warning, "Schema", "Schema does not declare any FormTable."));
             return issues;
         }
 
@@ -34,9 +44,9 @@ public static class FormSchemaValidator
                 : $"Tables[{ti}]";
 
             if (string.IsNullOrWhiteSpace(table.TableName))
-                issues.Add(new(ValidationSeverity.Error, tablePath, "TableName cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, tablePath, "TableName cannot be empty."));
             else if (!seenTableNames.Add(table.TableName))
-                issues.Add(new(ValidationSeverity.Error, tablePath,
+                issues.Add(new(IssueSeverity.Error, tablePath,
                     $"TableName '{table.TableName}' is a duplicate within the schema."));
 
             ValidateFields(issues, table, tablePath, progIdSet);
@@ -46,14 +56,14 @@ public static class FormSchemaValidator
     }
 
     private static void ValidateFields(
-        List<ValidationIssue> issues,
+        List<DefinitionIssue> issues,
         FormTable table,
         string tablePath,
         HashSet<string> progIdSet)
     {
         if (table.Fields is null || table.Fields.Count == 0)
         {
-            issues.Add(new(ValidationSeverity.Warning, tablePath, "FormTable does not declare any FormField."));
+            issues.Add(new(IssueSeverity.Warning, tablePath, "FormTable does not declare any FormField."));
             return;
         }
 
@@ -66,9 +76,9 @@ public static class FormSchemaValidator
                 : $"{tablePath}.Fields[{fi}]";
 
             if (string.IsNullOrWhiteSpace(field.FieldName))
-                issues.Add(new(ValidationSeverity.Error, fieldPath, "FieldName cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, fieldPath, "FieldName cannot be empty."));
             else if (!seenFieldNames.Add(field.FieldName))
-                issues.Add(new(ValidationSeverity.Error, fieldPath,
+                issues.Add(new(IssueSeverity.Error, fieldPath,
                     $"FieldName '{field.FieldName}' is a duplicate within '{table.TableName}'."));
 
             ValidateRelation(issues, field, fieldPath, progIdSet, table);
@@ -80,12 +90,12 @@ public static class FormSchemaValidator
 
     /// <summary>
     /// A quantity or weight field must bind a <see cref="FormField.UnitField"/> that names a field of the
-    /// same table. At runtime <c>FormExpressionCalculator</c> reads the unit from the row being computed,
+    /// same table. At runtime <see cref="FormExpressionCalculator"/> reads the unit from the row being computed,
     /// keyed by the declared field name with case-sensitive matching, so a unit field on another table or
     /// with different casing resolves as an empty unit code.
     /// </summary>
     private static void ValidateUnitBinding(
-        List<ValidationIssue> issues,
+        List<DefinitionIssue> issues,
         FormField field,
         string fieldPath,
         FormTable owningTable)
@@ -95,7 +105,7 @@ public static class FormSchemaValidator
         var path = $"{fieldPath}.UnitField";
         if (string.IsNullOrWhiteSpace(field.UnitField))
         {
-            issues.Add(new(ValidationSeverity.Error, path,
+            issues.Add(new(IssueSeverity.Error, path,
                 $"A {field.NumberKind} field requires a UnitField."));
             return;
         }
@@ -103,12 +113,12 @@ public static class FormSchemaValidator
         var existsOnTable = (owningTable.Fields ?? Enumerable.Empty<FormField>())
             .Any(f => string.Equals(f.FieldName, field.UnitField, StringComparison.Ordinal));
         if (!existsOnTable)
-            issues.Add(new(ValidationSeverity.Error, path,
+            issues.Add(new(IssueSeverity.Error, path,
                 $"UnitField '{field.UnitField}' does not match a field on '{owningTable.TableName}' (field names are case-sensitive here)."));
     }
 
     private static void ValidateRelation(
-        List<ValidationIssue> issues,
+        List<DefinitionIssue> issues,
         FormField field,
         string fieldPath,
         HashSet<string> progIdSet,
@@ -118,11 +128,11 @@ public static class FormSchemaValidator
         var hasProgId = !string.IsNullOrWhiteSpace(field.RelationProgId);
 
         if (hasMappings && !hasProgId)
-            issues.Add(new(ValidationSeverity.Error, $"{fieldPath}.Relation",
+            issues.Add(new(IssueSeverity.Error, $"{fieldPath}.Relation",
                 "RelationFieldMappings is present but RelationProgId is empty."));
 
         if (hasProgId && !progIdSet.Contains(field.RelationProgId))
-            issues.Add(new(ValidationSeverity.Warning, $"{fieldPath}.Relation",
+            issues.Add(new(IssueSeverity.Warning, $"{fieldPath}.Relation",
                 $"RelationProgId '{field.RelationProgId}' was not found in the current solution."));
 
         if (!hasMappings) return;
@@ -135,23 +145,23 @@ public static class FormSchemaValidator
             var mapping = field.RelationFieldMappings[mi];
             var path = $"{fieldPath}.Relation[{mi}]";
             if (string.IsNullOrWhiteSpace(mapping.SourceField))
-                issues.Add(new(ValidationSeverity.Error, path, "SourceField cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, path, "SourceField cannot be empty."));
             if (string.IsNullOrWhiteSpace(mapping.DestinationField))
-                issues.Add(new(ValidationSeverity.Error, path, "DestinationField cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, path, "DestinationField cannot be empty."));
             else
             {
                 if (!localFieldNames.Contains(mapping.DestinationField))
-                    issues.Add(new(ValidationSeverity.Error, path,
+                    issues.Add(new(IssueSeverity.Error, path,
                         $"DestinationField '{mapping.DestinationField}' does not exist on '{owningTable.TableName}'."));
                 if (!seenDest.Add(mapping.DestinationField))
-                    issues.Add(new(ValidationSeverity.Error, path,
+                    issues.Add(new(IssueSeverity.Error, path,
                         $"DestinationField '{mapping.DestinationField}' is a duplicate within the same RelationFieldMappings group."));
             }
         }
     }
 
     private static void ValidateLookup(
-        List<ValidationIssue> issues,
+        List<DefinitionIssue> issues,
         FormField field,
         string fieldPath,
         HashSet<string> progIdSet,
@@ -161,11 +171,11 @@ public static class FormSchemaValidator
         var hasProgId = !string.IsNullOrWhiteSpace(field.LookupProgId);
 
         if (hasMappings && !hasProgId)
-            issues.Add(new(ValidationSeverity.Error, $"{fieldPath}.Lookup",
+            issues.Add(new(IssueSeverity.Error, $"{fieldPath}.Lookup",
                 "LookupFieldMappings is present but LookupProgId is empty."));
 
         if (hasProgId && !progIdSet.Contains(field.LookupProgId))
-            issues.Add(new(ValidationSeverity.Warning, $"{fieldPath}.Lookup",
+            issues.Add(new(IssueSeverity.Warning, $"{fieldPath}.Lookup",
                 $"LookupProgId '{field.LookupProgId}' was not found in the current solution."));
 
         if (!hasMappings) return;
@@ -177,16 +187,16 @@ public static class FormSchemaValidator
             var mapping = field.LookupFieldMappings[mi];
             var path = $"{fieldPath}.Lookup[{mi}]";
             if (string.IsNullOrWhiteSpace(mapping.SourceField))
-                issues.Add(new(ValidationSeverity.Error, path, "SourceField cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, path, "SourceField cannot be empty."));
             if (string.IsNullOrWhiteSpace(mapping.DestinationField))
-                issues.Add(new(ValidationSeverity.Error, path, "DestinationField cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, path, "DestinationField cannot be empty."));
             else if (!localFieldNames.Contains(mapping.DestinationField))
-                issues.Add(new(ValidationSeverity.Error, path,
+                issues.Add(new(IssueSeverity.Error, path,
                     $"DestinationField '{mapping.DestinationField}' does not exist on '{owningTable.TableName}'."));
         }
     }
 
-    private static void ValidateListItems(List<ValidationIssue> issues, FormField field, string fieldPath)
+    private static void ValidateListItems(List<DefinitionIssue> issues, FormField field, string fieldPath)
     {
         if (field.ListItems is not { Count: > 0 }) return;
 
@@ -196,9 +206,9 @@ public static class FormSchemaValidator
             var item = field.ListItems[i];
             var path = $"{fieldPath}.ListItems[{i}]";
             if (string.IsNullOrWhiteSpace(item.Value))
-                issues.Add(new(ValidationSeverity.Error, path, "ListItem.Value cannot be empty."));
+                issues.Add(new(IssueSeverity.Error, path, "ListItem.Value cannot be empty."));
             else if (!seen.Add(item.Value))
-                issues.Add(new(ValidationSeverity.Error, path,
+                issues.Add(new(IssueSeverity.Error, path,
                     $"ListItem.Value '{item.Value}' is a duplicate within the same field."));
         }
     }

@@ -31,6 +31,8 @@
     <!-- References the core definition model and XmlCodec directly (not through NuGet), so no serialization conversion is needed. -->
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Core\Polhem.Core.csproj" />
+    <!-- Excel export and import of FormSchema, and the FormSchema validator shared with the CLI. -->
+    <ProjectReference Include="..\Polhem.Definition.Spreadsheet\Polhem.Definition.Spreadsheet.csproj" />
     <!-- The CREATE TABLE preview of the TableSchema editor uses the framework's own dialect builders. Polhem.Db brings
          no database driver; it depends on Polhem.Definition only. -->
     <ProjectReference Include="..\..\src\Polhem.Db\Polhem.Db.csproj" />

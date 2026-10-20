@@ -7,7 +7,7 @@ public enum ValidationSeverity
 }
 
 /// <summary>
-/// A single validation finding produced by <see cref="Services.FormSchemaValidator"/>.
+/// A single validation finding shown in a document's issue list.
 /// </summary>
 public sealed record ValidationIssue(ValidationSeverity Severity, string Path, string Message)
 {
