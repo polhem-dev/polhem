@@ -15,13 +15,13 @@ internal static class SheetColumns
     private static readonly string[] s_no = ["N", "NO", "FALSE", "0", "否"];
 
     public static SheetColumn<T> Text<T>(
-        string key, string label, Func<T, string> get, Action<T, string> set,
-        string hint = "", bool advanced = false, double width = 14, string? listName = null, bool mapsProperty = true)
+        string key, SheetText label, Func<T, string> get, Action<T, string> set,
+        SheetText hint = default, bool advanced = false, double width = 14, string? listName = null, bool mapsProperty = true)
         => new()
         {
             Key = key,
             Label = label,
-            Hint = hint,
+            Hint = hint == default ? SheetText.Empty : hint,
             Advanced = advanced,
             Width = width,
             ListName = listName,
@@ -35,13 +35,13 @@ internal static class SheetColumns
         };
 
     public static SheetColumn<T> Int<T>(
-        string key, string label, Func<T, int> get, Action<T, int> set,
-        string hint = "", bool advanced = false, double width = 10)
+        string key, SheetText label, Func<T, int> get, Action<T, int> set,
+        SheetText hint = default, bool advanced = false, double width = 10)
         => new()
         {
             Key = key,
             Label = label,
-            Hint = hint,
+            Hint = hint == default ? SheetText.Empty : hint,
             Advanced = advanced,
             Width = width,
             Export = row => get(row) is var value && value != 0 ? value : string.Empty,
@@ -62,13 +62,13 @@ internal static class SheetColumns
         };
 
     public static SheetColumn<T> Bool<T>(
-        string key, string label, Func<T, bool> get, Action<T, bool> set, bool defaultValue,
-        string hint = "", bool advanced = false, double width = 8)
+        string key, SheetText label, Func<T, bool> get, Action<T, bool> set, bool defaultValue,
+        SheetText hint = default, bool advanced = false, double width = 8)
         => new()
         {
             Key = key,
             Label = label,
-            Hint = hint,
+            Hint = hint == default ? SheetText.Empty : hint,
             Advanced = advanced,
             Width = width,
             ListName = YesNoList,
@@ -92,14 +92,14 @@ internal static class SheetColumns
     /// value is written even when it equals the default, for columns every row should show.
     /// </summary>
     public static SheetColumn<T> Enum<T, TEnum>(
-        string key, string label, Func<T, TEnum> get, Action<T, TEnum> set, TEnum defaultValue,
-        string hint = "", bool advanced = false, double width = 14, bool alwaysWrite = false)
+        string key, SheetText label, Func<T, TEnum> get, Action<T, TEnum> set, TEnum defaultValue,
+        SheetText hint = default, bool advanced = false, double width = 14, bool alwaysWrite = false)
         where TEnum : struct, System.Enum
         => new()
         {
             Key = key,
             Label = label,
-            Hint = hint,
+            Hint = hint == default ? SheetText.Empty : hint,
             Advanced = advanced,
             Width = width,
             ListName = typeof(TEnum).Name,

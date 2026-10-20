@@ -366,8 +366,10 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
                 content.Menu.EntryCaptionZhTw = saved.Menu.EntryCaptionZhTw;
             }
 
+            // The headers and instructions follow the editor's language; the values are the same in either.
+            var language = FormWorkbookLanguages.FromCulture(LocalizationService.Current.Culture);
             await using var stream = await file.OpenWriteAsync();
-            FormWorkbookWriter.Write(content, stream);
+            FormWorkbookWriter.Write(content, stream, language);
             StatusText = L("Status_FormWorkbookExported", file.Name);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)

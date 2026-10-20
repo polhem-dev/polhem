@@ -10,6 +10,8 @@ namespace Polhem.Definition.Spreadsheet;
 /// </summary>
 /// <remarks>
 /// The template carries the layout, the drop-downs and the instructions; this class only fills in the values.
+/// The language picks the template, so it changes the headers and the instructions and nothing else: the values
+/// written are the same in every language.
 /// Values are passed to MiniExcel as dictionaries, never as objects, because MiniExcel reads object
 /// properties by reflection, which trimming and NativeAOT break.
 /// </remarks>
@@ -20,20 +22,22 @@ public static class FormWorkbookWriter
     /// </summary>
     /// <param name="content">The form to write.</param>
     /// <param name="output">The stream that receives the <c>.xlsx</c> bytes.</param>
+    /// <param name="language">The language of the headers and the instructions.</param>
     /// <exception cref="InvalidOperationException">A list item or mapping contains a character the cell format reserves.</exception>
-    public static void Write(FormWorkbookContent content, Stream output)
+    public static void Write(FormWorkbookContent content, Stream output, FormWorkbookLanguage language = FormWorkbookLanguage.English)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(output);
-        output.SaveAsByTemplate(FormWorkbookTemplate.GetBytes(), BuildValues(content));
+        output.SaveAsByTemplate(FormWorkbookTemplate.GetBytes(language), BuildValues(content));
     }
 
     /// <summary>
     /// Writes an empty workbook for describing a new form.
     /// </summary>
     /// <param name="output">The stream that receives the <c>.xlsx</c> bytes.</param>
-    public static void WriteBlank(Stream output)
-        => Write(new FormWorkbookContent(new FormSchema()), output);
+    /// <param name="language">The language of the headers and the instructions.</param>
+    public static void WriteBlank(Stream output, FormWorkbookLanguage language = FormWorkbookLanguage.English)
+        => Write(new FormWorkbookContent(new FormSchema()), output, language);
 
     internal static Dictionary<string, object> BuildValues(FormWorkbookContent content)
     {

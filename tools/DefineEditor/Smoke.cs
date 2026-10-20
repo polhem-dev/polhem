@@ -743,32 +743,35 @@ internal static class Smoke
             var master = schema.Tables!.Add("Quote", "Quote");
             master.Fields!.Add("sys_id", "Quote No", FieldDbType.String);
             master.Fields.Add("quote_date", "Quote Date", FieldDbType.Date);
-            var workbookPath = Path.Combine(tempDir, "Quote.xlsx");
-            using (var stream = File.Create(workbookPath))
-                Polhem.Definition.Spreadsheet.FormWorkbookWriter.Write(new(schema), stream);
 
-            var definePath = Path.Combine(tempDir, "Define");
-            Directory.CreateDirectory(definePath);
-            var vm = new MainWindowViewModel { SolutionPath = definePath };
-            vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
+            foreach (var language in Enum.GetValues<Polhem.Definition.Spreadsheet.FormWorkbookLanguage>())
+            {
+                var workbookPath = Path.Combine(tempDir, $"Quote.{language}.xlsx");
+                using (var stream = File.Create(workbookPath))
+                    Polhem.Definition.Spreadsheet.FormWorkbookWriter.Write(new(schema), stream, language);
 
-            var schemaPath = Path.Combine(definePath, "FormSchema", "Quote.FormSchema.xml");
-            if (!File.Exists(schemaPath))
-                return Fail(147, $"Importing a workbook did not write {schemaPath}: {vm.StatusText}");
-            if (!File.Exists(Path.Combine(definePath, "TableSchema", "company", "ft_quote.TableSchema.xml")))
-                return Fail(148, "Importing a workbook did not write the TableSchema");
-            if (!string.Equals(vm.SelectedNode?.FilePath, schemaPath, StringComparison.OrdinalIgnoreCase))
-                return Fail(149, "The imported FormSchema was not selected in the rescanned tree");
+                var definePath = Path.Combine(tempDir, $"Define.{language}");
+                Directory.CreateDirectory(definePath);
+                var vm = new MainWindowViewModel { SolutionPath = definePath };
+                vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
 
-            var afterFirst = vm.StatusText;
-            vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
-            if (vm.StatusText == afterFirst)
-                return Fail(150, "Importing the same workbook again should report that nothing changed");
+                var schemaPath = Path.Combine(definePath, "FormSchema", "Quote.FormSchema.xml");
+                if (!File.Exists(schemaPath))
+                    return Fail(147, $"Importing a {language} workbook did not write {schemaPath}: {vm.StatusText}");
+                if (!File.Exists(Path.Combine(definePath, "TableSchema", "company", "ft_quote.TableSchema.xml")))
+                    return Fail(148, $"Importing a {language} workbook did not write the TableSchema");
+                if (!string.Equals(vm.SelectedNode?.FilePath, schemaPath, StringComparison.OrdinalIgnoreCase))
+                    return Fail(149, "The imported FormSchema was not selected in the rescanned tree");
+
+                var afterFirst = vm.StatusText;
+                vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
+                if (vm.StatusText == afterFirst)
+                    return Fail(150, "Importing the same workbook again should report that nothing changed");
+            }
 
             Console.WriteLine("[smoke:form-workbook] OK");
             return 0;
         }
-        catch (Exception ex) { return Fail(151, $"Form workbook import smoke crashed: {ex.Message}"); }
         finally { TryDelete(tempDir); }
     }
 

@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: e87b7590df8f5a62b342b4a0360828411773ea06 -->
+<!-- source: en/guides/excel-form-modeling.md blob: eb1d1b926e8acd92356fea2edd324a9bc6ae2712 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -35,7 +35,7 @@
 相同的匯入與匯出。
 
 ```bash
-# 新表單用的空白活頁簿
+# 新表單用的空白活頁簿（加 --lang zh-TW 改用繁體中文標題）
 dotnet polhem forms template --out Quote.xlsx
 
 # 既有表單的活頁簿，用來修改
@@ -54,16 +54,19 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 
 | 工作表 | 內容 |
 |--------|------|
-| `說明` | 填寫方式，以及每一欄的意義 |
+| `Instructions` 或 `說明` | 填寫方式，以及每一欄的意義 |
 | `Form` | 表單本身：程式代號、顯示名稱、資料庫範圍、清單欄位、選單位置 |
 | `Tables` | 每列一張資料表：第一列是主檔，其餘是明細表 |
 | `Fields` | 每列一個欄位，並註明所屬的資料表 |
 | `Rules` | 每列一條驗證規則，寫法見 [運算式與規則](../definitions/expression-rules.md) |
 
-各欄的說明以活頁簿的「說明」工作表為準，本文不重複。只能填固定值的欄位（資料型別、輸入控制項、數值種類、是／否）
+活頁簿有英文與繁體中文兩種：改變的只有標題、說明文字與說明工作表，其餘都相同。`forms template` 與 `forms export`
+預設寫英文，加 `--lang zh-TW` 改寫繁體中文；DefineEditor 依介面語言寫入。兩種語言的活頁簿都能匯入。
+
+各欄的說明以活頁簿的說明工作表為準，本文不重複。只能填固定值的欄位（資料型別、輸入控制項、數值種類、是／否）
 提供下拉選單。多數表單用不到的欄位集中在 Fields 工作表右側，預設折疊。
 
-每個顯示文字都有英文欄與中文欄。英文寫進定義檔，中文寫進語系資源，機制見 [租戶客製化](../definitions/customization.md)。
+兩種語言的活頁簿裡，每個顯示文字都有英文欄與中文欄。英文寫進定義檔，中文寫進語系資源，機制見 [租戶客製化](../definitions/customization.md)。
 
 一格可以用 `a=b; c=d` 寫一小串清單：欄位的下拉選項（`Draft=Draft; Sent=Sent`，值與文字相同時可只寫 `Draft; Sent`），
 以及關聯或查詢的欄位對應（`sys_id=ref_customer_id`）。

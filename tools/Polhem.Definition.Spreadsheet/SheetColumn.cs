@@ -9,9 +9,9 @@ internal sealed class SheetColumn<TRow> : ISheetColumn
 {
     public required string Key { get; init; }
 
-    public required string Label { get; init; }
+    public required SheetText Label { get; init; }
 
-    public string Hint { get; init; } = string.Empty;
+    public SheetText Hint { get; init; } = SheetText.Empty;
 
     public string? ListName { get; init; }
 

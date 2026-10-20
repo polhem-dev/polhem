@@ -35,8 +35,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Generated from FormWorkbookCatalog by FormWorkbookTemplateTests; do not edit it in Excel. -->
-    <EmbeddedResource Include="Templates\FormSchema.xlsx" LogicalName="Polhem.Definition.Spreadsheet.FormSchema.xlsx" />
+    <!--
+      Generated from FormWorkbookCatalog by FormWorkbookTemplateTests; do not edit them in Excel. The logical names
+      follow FormWorkbookTemplate.ResourceName. `WithCulture="false"` keeps both templates in this assembly:
+      without it, MSBuild reads the culture from the file name and moves the file into a satellite assembly.
+    -->
+    <EmbeddedResource Include="Templates\FormSchema.en.xlsx" LogicalName="Polhem.Definition.Spreadsheet.FormSchema.en.xlsx" WithCulture="false" />
+    <EmbeddedResource Include="Templates\FormSchema.zh-TW.xlsx" LogicalName="Polhem.Definition.Spreadsheet.FormSchema.zh-TW.xlsx" WithCulture="false" />
   </ItemGroup>
 
   <ItemGroup>
