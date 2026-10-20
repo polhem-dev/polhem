@@ -9,10 +9,10 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
     {
         private readonly XLWorkbook _workbook;
 
-        public FilledWorkbook()
+        public FilledWorkbook(FormWorkbookLanguage language = FormWorkbookLanguage.English)
         {
             var stream = new MemoryStream();
-            FormWorkbookWriter.WriteBlank(stream);
+            FormWorkbookWriter.WriteBlank(stream, language);
             stream.Position = 0;
             _workbook = new XLWorkbook(stream);
         }

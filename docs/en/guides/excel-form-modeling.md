@@ -36,7 +36,7 @@ The commands are in `dotnet polhem` ([Polhem.Cli](../../../tools/Polhem.Cli/READ
 import and export from its menus.
 
 ```bash
-# An empty workbook for a new form
+# An empty workbook for a new form (--lang zh-TW for Traditional Chinese headers)
 dotnet polhem forms template --out Quote.xlsx
 
 # The workbook of an existing form, to change it
@@ -56,17 +56,21 @@ form to appear in the menu and work.
 
 | Sheet | What it holds |
 |-------|---------------|
-| `說明` (instructions) | How to fill in the workbook, and every column with its meaning |
+| `Instructions` or `說明` | How to fill in the workbook, and every column with its meaning |
 | `Form` | The form itself: program id, display name, database category, list fields, menu placement |
 | `Tables` | One row per table: the first row is the master table, the others are detail tables |
 | `Fields` | One row per field, naming the table it belongs to |
 | `Rules` | One row per validation rule, as described in [Expressions and Rules](../definitions/expression-rules.md) |
 
+A workbook comes in English or Traditional Chinese: the headers, the explanations and the instructions sheet change,
+and nothing else does. `forms template` and `forms export` write English unless `--lang zh-TW` is given; DefineEditor
+writes in the language of its interface. The import reads a workbook of either language.
+
 The instructions sheet of the workbook is the reference for the columns; this guide does not repeat them. Columns
 that take a fixed set of values (data type, control type, number kind, yes/no) offer a drop-down. The columns most
 forms never need are grouped and collapsed at the right of the Fields sheet.
 
-Every display text has an English column and a zh-TW column. The English text goes into the definition, and the zh-TW
+Every display text has an English column and a zh-TW column, in both languages of the workbook. The English text goes into the definition, and the zh-TW
 text into the language resource, as described in [Tenant Customization](../definitions/customization.md).
 
 A cell holds a small list as `a=b; c=d`: a field's list items (`Draft=Draft; Sent=Sent`, or just `Draft; Sent` when

@@ -49,27 +49,29 @@ internal static class FormsCommand
 
     private static int Template(string[] args)
     {
-        var options = Parse(args, "template", PrintTemplateHelp, valueOptions: ["--out"], flags: [], positionals: 0);
+        var options = Parse(args, "template", PrintTemplateHelp, valueOptions: ["--out", "--lang"], flags: [], positionals: 0);
         if (options is null) return ExitCodes.Success;
         var output = Required(options, "--out", "<file.xlsx>");
+        var language = Language(options);
 
-        WriteFile(output, FormWorkbookWriter.WriteBlank);
+        WriteFile(output, stream => FormWorkbookWriter.WriteBlank(stream, language));
         Console.WriteLine($"Wrote an empty form workbook to {Path.GetFullPath(output)}");
         return ExitCodes.Success;
     }
 
     private static int Export(string[] args)
     {
-        var options = Parse(args, "export", PrintExportHelp, valueOptions: ["--define", "--out"], flags: [], positionals: 1);
+        var options = Parse(args, "export", PrintExportHelp, valueOptions: ["--define", "--out", "--lang"], flags: [], positionals: 1);
         if (options is null) return ExitCodes.Success;
         var progId = options.Positionals.Count == 1
             ? options.Positionals[0]
             : throw new UsageException("missing required argument: <ProgId>");
         var define = Required(options, "--define", "<directory>");
         var output = options.Values.TryGetValue("--out", out var o) ? o : $"{progId}.xlsx";
+        var language = Language(options);
 
         var content = FormExporter.Load(define, progId);
-        WriteFile(output, stream => FormWorkbookWriter.Write(content, stream));
+        WriteFile(output, stream => FormWorkbookWriter.Write(content, stream, language));
         Console.WriteLine($"Wrote the workbook of '{progId}' to {Path.GetFullPath(output)}");
         return ExitCodes.Success;
     }
@@ -123,6 +125,15 @@ internal static class FormsCommand
         FormImporter.Apply(plan);
         Console.WriteLine($"Imported '{read.Content!.Schema.ProgId}' into {root}: {plan.Files.Count(f => f.Writes)} file(s) written.");
         return ExitCodes.Success;
+    }
+
+    private static FormWorkbookLanguage Language(ParsedOptions options)
+    {
+        if (!options.Values.TryGetValue("--lang", out var tag)) return FormWorkbookLanguage.English;
+        return FormWorkbookLanguages.TryParse(tag, out var language)
+            ? language
+            : throw new UsageException(
+                $"--lang must be {FormWorkbookLanguages.EnglishTag} or {FormWorkbookLanguages.TraditionalChineseTag}, not '{tag}'");
     }
 
     private static TableSchemaImportMode ParseTableMode(string value) => value switch
@@ -210,10 +221,11 @@ internal static class FormsCommand
     {
         writer.WriteLine("dotnet polhem forms template - Write an empty workbook for describing a new form");
         writer.WriteLine();
-        writer.WriteLine("Usage: dotnet polhem forms template --out <file.xlsx>");
+        writer.WriteLine("Usage: dotnet polhem forms template --out <file.xlsx> [--lang <en|zh-TW>]");
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --out <file>         The workbook to write. Required.");
+        writer.WriteLine("  --lang <tag>         The language of the headers and instructions: en or zh-TW. Default: en");
         writer.WriteLine("  --help, -h           Print this help text.");
     }
 
@@ -221,11 +233,12 @@ internal static class FormsCommand
     {
         writer.WriteLine("dotnet polhem forms export - Write the workbook of an existing form");
         writer.WriteLine();
-        writer.WriteLine("Usage: dotnet polhem forms export <ProgId> --define <directory> [--out <file.xlsx>]");
+        writer.WriteLine("Usage: dotnet polhem forms export <ProgId> --define <directory> [--out <file.xlsx>] [--lang <en|zh-TW>]");
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --define <dir>       The definition folder that holds FormSchema/. Required.");
         writer.WriteLine("  --out <file>         The workbook to write. Default: <ProgId>.xlsx");
+        writer.WriteLine("  --lang <tag>         The language of the headers and instructions: en or zh-TW. Default: en");
         writer.WriteLine("  --help, -h           Print this help text.");
     }
 
@@ -237,7 +250,8 @@ internal static class FormsCommand
         writer.WriteLine();
         writer.WriteLine("Writes the FormSchema and a TableSchema per table, generates the FormLayout when there is none,");
         writer.WriteLine("and registers the form in DbCategorySettings, ProgramSettings, MenuSettings and the zh-TW");
-        writer.WriteLine("language files. Nothing is written when the workbook or the form has an error.");
+        writer.WriteLine("language files. A workbook of either language is read the same way. Nothing is written when the");
+        writer.WriteLine("workbook or the form has an error.");
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --define <dir>       The definition folder to write to. Required.");

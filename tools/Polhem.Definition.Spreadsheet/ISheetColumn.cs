@@ -9,11 +9,11 @@ internal interface ISheetColumn
     /// <summary>Gets the key written in the hidden key row; for a property column it is the property name.</summary>
     string Key { get; }
 
-    /// <summary>Gets the zh-TW header text shown to the person filling in the workbook.</summary>
-    string Label { get; }
+    /// <summary>Gets the header text shown to the person filling in the workbook.</summary>
+    SheetText Label { get; }
 
     /// <summary>Gets the explanation shown on the instructions sheet.</summary>
-    string Hint { get; }
+    SheetText Hint { get; }
 
     /// <summary>Gets the name of the list on the Lists sheet that feeds the column's drop-down, if any.</summary>
     string? ListName { get; }
