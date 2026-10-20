@@ -18,6 +18,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - DefineEditor 在屬性方格下方即時預覽正在編輯的 FormLayout。
 - DefineEditor 改用 VS Code Dark (Visual Studio) 與 Light (Visual Studio) 主題的配色。
 - DefineEditor 新增 VS Code 式的 Activity Bar，側欄可切換檢視檔案、功能與資料表。
+- DefineEditor 顯示正在編輯的 TableSchema 在各種支援資料庫的 CREATE TABLE 語法。
 
 ## [1.7.0] - 2026-10-16
 

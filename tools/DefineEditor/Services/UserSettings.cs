@@ -34,6 +34,12 @@ public sealed class UserSettings
     /// </summary>
     public string SidebarView { get; set; } = nameof(Models.SidebarView.Explorer);
 
+    /// <summary>
+    /// The database whose CREATE TABLE the TableSchema editor showed last, as a
+    /// <see cref="Polhem.Definition.Database.DatabaseType"/> name.
+    /// </summary>
+    public string CreateTableDatabase { get; set; } = nameof(Polhem.Definition.Database.DatabaseType.SQLServer);
+
     public const int MaxRecentSolutions = 8;
 
     /// <summary>

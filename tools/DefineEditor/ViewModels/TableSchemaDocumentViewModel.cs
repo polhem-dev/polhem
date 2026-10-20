@@ -4,6 +4,8 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Sorting;
 using Polhem.DefineEditor.Models;
 using Polhem.Definition.ObjectTree;
+using Polhem.DefineEditor.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
@@ -28,7 +30,32 @@ public sealed partial class TableSchemaDocumentViewModel : ObjectTreeDocumentVie
         Root = root;
         CommandProvider = new TableSchemaCommandProvider(this);
         InitializeTree(root);
+
+        _createTableDatabase = CreateTableScriptBuilder.Options
+            .FirstOrDefault(o => o.Type.ToString() == UserSettings.Load().CreateTableDatabase)?.Type
+            ?? DatabaseType.SQLServer;
+        RefreshCreateTableScript();
+        DocumentChanged += (_, _) => RefreshCreateTableScript();
     }
+
+    /// <summary>
+    /// The database whose CREATE TABLE the preview shows. It starts from <see cref="UserSettings"/>; the view writes a
+    /// change back, so a document used without a window leaves the user's settings alone.
+    /// </summary>
+    [ObservableProperty]
+    private DatabaseType _createTableDatabase;
+
+    /// <summary>False when the CREATE TABLE preview is collapsed to its header.</summary>
+    [ObservableProperty]
+    private bool _isCreateTablePreviewVisible = true;
+
+    /// <summary>The CREATE TABLE statement of the schema being edited, for <see cref="CreateTableDatabase"/>.</summary>
+    [ObservableProperty]
+    private string _createTableScript = string.Empty;
+
+    partial void OnCreateTableDatabaseChanged(DatabaseType value) => RefreshCreateTableScript();
+
+    private void RefreshCreateTableScript() => CreateTableScript = CreateTableScriptBuilder.Build(Root, CreateTableDatabase);
 
     public static TableSchemaDocumentViewModel Load(string filePath)
     {

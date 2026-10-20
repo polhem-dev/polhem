@@ -204,6 +204,13 @@
         <Setter Property="FontFamily" Value="ui-monospace, Menlo, Consolas, monospace"/>
     </Style>
 
+    <!-- Read-only generated code, such as the CREATE TABLE preview -->
+    <Style Selector="TextBox.code">
+        <Setter Property="FontFamily" Value="ui-monospace, Menlo, Consolas, monospace"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="12,8"/>
+    </Style>
+
     <!-- Inner document tree (left column of each editor): sunken layer -->
     <Style Selector="TreeView">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground1}"/>

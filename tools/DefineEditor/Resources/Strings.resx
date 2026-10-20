@@ -100,6 +100,10 @@
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>The preview could not render this layout: {0}</value></data>
+  <data name="CreateTable_Title" xml:space="preserve"><value>CREATE TABLE</value></data>
+  <data name="CreateTable_DatabaseTip" xml:space="preserve"><value>The database whose syntax is shown</value></data>
+  <data name="CreateTable_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Status_CreateTableCopied" xml:space="preserve"><value>CREATE TABLE copied to the clipboard</value></data>
   <data name="Action_Apply" xml:space="preserve"><value>Apply</value></data>
 
   <!-- DbCategorySettings -->
