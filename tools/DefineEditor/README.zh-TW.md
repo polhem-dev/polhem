@@ -12,7 +12,14 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 
 ## 支援的定義型別
 
-開啟方案後，左側方案樹按型別分組列出 DefinePath 下所有檔案；點選右側載對應編輯器：
+開啟方案後，最左側的 Activity Bar 可切換側欄的三種檢視（再點一次目前檢視的圖示會收合側欄）：
+
+- **檔案總管**：按型別分組列出 DefinePath 下所有檔案。
+- **功能**：`ProgramSettings.xml` 登記的每個 ProgId，列出它實際存在的檔案：FormSchema 與 FormLayout、
+  FormSchema 宣告的每個資料表的 TableSchema，以及各語系的 Language 檔。
+- **資料庫**：`DbCategorySettings.xml` 的每個類別，列出有 TableSchema 檔的已登記資料表。
+
+在任一檢視點選檔案，右側載入對應編輯器：
 
 | 型別 | 編輯器 | 主要功能 |
 |------|--------|---------|

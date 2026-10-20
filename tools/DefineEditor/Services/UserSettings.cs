@@ -28,6 +28,12 @@ public sealed class UserSettings
     /// </summary>
     public bool ShowWelcomeOnStartup { get; set; } = true;
 
+    /// <summary>
+    /// The <see cref="Models.SidebarView"/> the sidebar showed last, by name. Kept as a string so an unknown value
+    /// falls back to the default view instead of failing the whole settings file.
+    /// </summary>
+    public string SidebarView { get; set; } = nameof(Models.SidebarView.Explorer);
+
     public const int MaxRecentSolutions = 8;
 
     /// <summary>

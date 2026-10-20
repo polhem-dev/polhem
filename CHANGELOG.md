@@ -18,6 +18,7 @@ Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.
 - `FormLayoutPresenter` renders a form layout without data, so a design tool can preview a layout as `FormView` draws it.
 - DefineEditor previews the FormLayout being edited, live, under the property grid.
 - DefineEditor takes its colours from VS Code's Dark (Visual Studio) and Light (Visual Studio) themes.
+- DefineEditor has a VS Code style activity bar that switches the sidebar between the files, the programs and the database tables.
 
 ## [1.7.0] - 2026-10-16
 
