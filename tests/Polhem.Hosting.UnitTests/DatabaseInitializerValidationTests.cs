@@ -44,6 +44,8 @@ namespace Polhem.Hosting.UnitTests
         [InlineData("admin", "Long-Enough-1", "", "USD", "")]
         [InlineData("admin", "Long-Enough-1", "ACME", "XXX", "")]
         [InlineData("admin", "Long-Enough-1", "ACME", "USD", "common")]
+        [InlineData("admin", "Long-Enough-1", "ACME", "", "")]
+        [InlineData("admin", "Long-Enough-1", "ACME", "USD", "nowhere")]
         [DisplayName("SeedAdministrator rejects an invalid seed before connecting")]
         public void SeedAdministrator_InvalidSeed_Throws(
             string userId, string password, string companyId, string currency, string companyDatabaseId)
@@ -60,6 +62,17 @@ namespace Polhem.Hosting.UnitTests
 
             var exception = Assert.Throws<ArgumentException>(() => _initializer.SeedAdministrator(seed));
             Assert.DoesNotContain(password, exception.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("SeedAdministrator refuses a deployment with no company database")]
+        public void SeedAdministrator_NoCompanyDatabase_Throws()
+        {
+            SaveItems(("common", "common"));
+            var seed = new AdministratorSeed { Password = "Long-Enough-1", CompanyId = "ACME" };
+
+            var exception = Assert.Throws<ArgumentException>(() => _initializer.SeedAdministrator(seed));
+            Assert.Contains("No database item", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]

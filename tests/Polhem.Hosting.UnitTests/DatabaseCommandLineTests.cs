@@ -18,6 +18,10 @@ namespace Polhem.Hosting.UnitTests
         private static readonly string[] s_seedWithPassword = ["db", "seed-admin", "--company", "ACME", "--password", Secret];
         private static readonly string[] s_unknown = ["db", "drop"];
         private static readonly string[] s_seedWithPasswordAssignment = ["db", "seed-admin", "--company", "ACME", "--password=" + Secret];
+        private static readonly string[] s_help = ["db"];
+        private static readonly string[] s_upgrade = ["db", "upgrade"];
+        private static readonly string[] s_seedMissingValue = ["db", "seed-admin", "--company"];
+        private static readonly string[] s_createUnknownOption = ["db", "create", "--force=yes"];
         private static readonly string[] s_seedWithBareSecret = ["db", "seed-admin", "--company", "ACME", Secret];
 
         [Fact]
@@ -167,6 +171,117 @@ namespace Polhem.Hosting.UnitTests
             Assert.Contains("provider not registered", output.ToString(), StringComparison.Ordinal);
         }
 
+        public static TheoryData<Exception> InitializerFailures =>
+        [
+            new InvalidOperationException("settings could not be decrypted"),
+            new IOException("definition file unreadable"),
+            new UnauthorizedAccessException("directory not writable"),
+            new FakeDbException("server unreachable"),
+        ];
+
+        [Theory]
+        [MemberData(nameof(InitializerFailures))]
+        [DisplayName("Each failure type the initializer can throw is reported with its message and the failure code")]
+        public void TryRun_InitializerFailureTypes_ReturnFailure(Exception failure)
+        {
+            var (services, fake) = CreateServices();
+            fake.CreateException = failure;
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_create, output));
+            Assert.Contains(failure.Message, output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db create with no database items fails and says so")]
+        public void TryRun_CreateWithoutItems_ReturnsFailure()
+        {
+            var (services, _) = CreateServices();
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_create, output));
+            Assert.Contains("no database items", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db create reports an engine with nothing to create as skipped")]
+        public void TryRun_CreateNotApplicable_ReportsSkipped()
+        {
+            var (services, fake) = CreateServices();
+            fake.CreateEntries = [new DatabaseCreateEntry { DatabaseId = "common", Result = DatabaseCreateResult.NotApplicable }];
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, s_create, output));
+            Assert.Contains("common: skipped", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db upgrade writes one line per table, the problems and a summary, and fails when a table failed")]
+        public void TryRun_UpgradeWithFailures_ReportsEachLineAndSummary()
+        {
+            var (services, fake) = CreateServices();
+            fake.UpgradeReport = new TableUpgradeReport
+            {
+                Tables =
+                [
+                    new TableUpgradeEntry { DatabaseId = "common", TableName = "st_user", Outcome = TableUpgradeOutcome.Created },
+                    new TableUpgradeEntry { DatabaseId = "common", TableName = "st_company", Outcome = TableUpgradeOutcome.Upgraded },
+                    new TableUpgradeEntry { DatabaseId = "common", TableName = "st_session", Outcome = TableUpgradeOutcome.Unchanged },
+                    new TableUpgradeEntry { DatabaseId = "log", TableName = "st_log_login", Outcome = TableUpgradeOutcome.Failed, Error = "no definition" },
+                ],
+                Problems = ["No database item belongs to the 'company' category."],
+            };
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_upgrade, output));
+            var text = output.ToString();
+            Assert.Contains("common.st_user: created", text, StringComparison.Ordinal);
+            Assert.Contains("common.st_company: upgraded", text, StringComparison.Ordinal);
+            Assert.Contains("common.st_session: unchanged", text, StringComparison.Ordinal);
+            Assert.Contains("log.st_log_login: FAILED: no definition", text, StringComparison.Ordinal);
+            Assert.Contains("'company' category", text, StringComparison.Ordinal);
+            Assert.Contains("1 created, 1 upgraded, 1 unchanged, 1 failed.", text, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db with no command prints the usage and succeeds")]
+        public void TryRun_NoCommand_PrintsUsage()
+        {
+            var (services, _) = CreateServices();
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, s_help, output));
+            Assert.Contains("Usage:", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("An option without its value, or an unknown option, is a usage error that names only the option")]
+        public void TryRun_BadOptions_ReturnUsageError()
+        {
+            var (services, _) = CreateServices();
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.UsageError, Run(services, s_seedMissingValue, output));
+            Assert.Contains("--company needs a value", output.ToString(), StringComparison.Ordinal);
+
+            output = new StringWriter();
+            Assert.Equal(DatabaseCommandLine.UsageError, Run(services, s_createUnknownOption, output));
+            Assert.Contains("Unknown option '--force'", output.ToString(), StringComparison.Ordinal);
+            Assert.DoesNotContain("yes", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db seed-admin with no password source fails as a usage error")]
+        public void TryRun_SeedAdminWithoutPasswordSource_ReturnsUsageError()
+        {
+            var (services, fake) = CreateServices();
+
+            var exitCode = DatabaseCommandLine.TryRun(services, s_seed, new StringWriter(), _ => null, _ => null);
+
+            Assert.Equal(DatabaseCommandLine.UsageError, exitCode);
+            Assert.Null(fake.LastSeed);
+        }
+
         [Fact]
         [DisplayName("An unknown db command prints the usage and returns the usage error code")]
         public void TryRun_UnknownCommand_ReturnsUsageError()
@@ -187,6 +302,8 @@ namespace Polhem.Hosting.UnitTests
             var services = new ServiceCollection().AddSingleton<IDatabaseInitializer>(fake).BuildServiceProvider();
             return (services, fake);
         }
+
+        private sealed class FakeDbException(string message) : System.Data.Common.DbException(message);
 
         private sealed class FakeInitializer : IDatabaseInitializer
         {
