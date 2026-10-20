@@ -77,7 +77,7 @@ namespace Polhem.UI.Avalonia.Views
         private readonly Button _cancelButton;
         private readonly Button _backButton;
         private readonly TextBlock _errorLabel;
-        private readonly StackPanel _formHost;
+        private readonly FormLayoutPresenter _presenter;
         private FormDataObject? _dataObject;
         private FormLayout? _formLayout;
         // Client-side live recomputation of computed fields; created once with the data object.
@@ -85,9 +85,6 @@ namespace Polhem.UI.Avalonia.Views
         // Reference-aware rounding context (Tier 2) resolved once at init: rounds computed previews and
         // formats amount/quantity cells to the same decimals the server uses. Empty = framework defaults.
         private RoundingContext _roundingContext = new();
-        // Detail grids by table name, repopulated on every Rebuild so a live recompute of a detail
-        // row can refresh the matching grid (realized cells do not track later DataRow writes).
-        private readonly Dictionary<string, GridControl> _detailGrids = new(StringComparer.OrdinalIgnoreCase);
         private bool _isBusy;
         // Last applied compact-layout state. Crossing the width threshold rebuilds the form so
         // master fields reflow (multi-column <-> single) and detail grids re-render in the
@@ -134,7 +131,7 @@ namespace Polhem.UI.Avalonia.Views
             toolbar.Children.Add(_cancelButton);
             toolbar.Children.Add(_backButton);
 
-            _formHost = new StackPanel { Orientation = Orientation.Vertical, Spacing = 8 };
+            _presenter = new FormLayoutPresenter();
 
             // Error label and toolbar stay pinned at the top so the `Save`, `Cancel` and `Back`
             // buttons remain reachable, while the form body scrolls. Without this a tall
@@ -147,7 +144,7 @@ namespace Polhem.UI.Avalonia.Views
 
             var scroller = new ScrollViewer
             {
-                Content = _formHost,
+                Content = _presenter,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 Margin = new Thickness(0, 12, 0, 0),

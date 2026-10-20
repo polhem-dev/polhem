@@ -44,7 +44,8 @@ namespace Polhem.UI.Avalonia.Controls
         private void UpdateControlState()
         {
             var actions = _layout?.AllowActions ?? GridControlAllowActions.None;
-            var canEdit = AllowEdit && _binder.DataObject is not null;
+            var hasData = _binder.DataObject is not null;
+            var canEdit = AllowEdit && (hasData || _isLayoutOnly);
 
             _addButton.IsVisible = actions.HasFlag(GridControlAllowActions.Add);
             _deleteButton.IsVisible = actions.HasFlag(GridControlAllowActions.Delete);
@@ -53,6 +54,10 @@ namespace Polhem.UI.Avalonia.Controls
             _editButton.IsVisible = EditMode == GridEditMode.EditForm
                 && actions.HasFlag(GridControlAllowActions.Edit);
             _toolbar.IsVisible = canEdit && actions != GridControlAllowActions.None;
+            // A layout-only grid shows its toolbar for the look of it; with no rows to act on, the buttons stay off.
+            _addButton.IsEnabled = hasData;
+            _deleteButton.IsEnabled = hasData;
+            _editButton.IsEnabled = hasData;
 
             var inCellEdit = canEdit
                 && EditMode == GridEditMode.InCell

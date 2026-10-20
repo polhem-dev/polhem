@@ -14,7 +14,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// two-way bound to a <see cref="FormDataObject"/> field using the ISO
     /// <c>yyyy-MM-dd</c> binding format.
     /// </summary>
-    public class DateEdit : DatePicker, IFieldEditor
+    public class DateEdit : DatePicker, IFieldEditor, IFieldEditorBinderHost
     {
         /// <summary>
         /// Identifies the <see cref="FieldName"/> styled property.
@@ -38,6 +38,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 control.GetObservable(ReadOnlyTextProperty), scope, ReadOnlyFieldVisual.HostKind.DatePicker));
 
         private readonly FieldEditorBinder _binder;
+
+        FieldEditorBinder IFieldEditorBinderHost.Binder => _binder;
 
         static DateEdit()
         {

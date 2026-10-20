@@ -210,7 +210,7 @@ namespace Polhem.UI.Avalonia.Views
             if (_dataObject is not null &&
                 string.Equals(tableName, _dataObject.MasterTable.TableName, StringComparison.OrdinalIgnoreCase))
                 return;
-            if (!_detailGrids.TryGetValue(tableName, out var grid)) { return; }
+            if (_presenter.GetDetailGrid(tableName) is not { } grid) { return; }
             Dispatcher.UIThread.Post(grid.RefreshRows, DispatcherPriority.Background);
         }
     }

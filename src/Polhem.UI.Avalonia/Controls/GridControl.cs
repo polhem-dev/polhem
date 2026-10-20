@@ -95,6 +95,9 @@ namespace Polhem.UI.Avalonia.Controls
         private readonly PathIcon _editIcon;
         private readonly PathIcon _deleteIcon;
         private LayoutGrid? _layout;
+        // A form detail grid rendered from its layout alone (a layout preview): it shows the toolbar the
+        // layout and the form mode allow, with no data object behind it. Set by `BindLayout` only.
+        private bool _isLayoutOnly;
         private DataTable? _dataTable;
         // The field metadata of a list-mode bind, which has no data object to resolve it from.
         private FormTable? _listFormTable;
