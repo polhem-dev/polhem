@@ -342,6 +342,13 @@ Add it inside the `master-data` folder. `Id` is the node key and must be unique 
 
 Restart the server (it creates `ft_region`) and the desktop client. **Regions** is now in the left menu under Master Data, with working list, new, edit, delete, and a unique-code check from the `uk_` index — all from definition edits, no compilation of your own code.
 
+### Or describe it in Excel
+
+Steps 1 to 6 can also come from a workbook. `dotnet polhem forms template --out Region.xlsx` writes an empty one;
+fill in the Form sheet and the fields, then `dotnet polhem forms import Region.xlsx --define apps/Polhem.Northwind/Define`
+writes every file above, filling in the system fields and the table name by convention. Restart as in step 7. See
+[Modeling Forms in Excel](../../docs/en/guides/excel-form-modeling.md).
+
 ## Project layout
 
 ```

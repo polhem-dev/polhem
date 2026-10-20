@@ -5,6 +5,7 @@
   <Folder Name="/tools/">
     <Project Path="DefineEditor/Polhem.DefineEditor.csproj" />
     <Project Path="Polhem.Cli/Polhem.Cli.csproj" />
+    <Project Path="Polhem.Definition.Spreadsheet/Polhem.Definition.Spreadsheet.csproj" />
     <Project Path="Polhem.LoadTests/Polhem.LoadTests.csproj" />
   </Folder>
   <Folder Name="/ref-src/">

@@ -38,6 +38,9 @@ public partial class App : Application
     // Enabled only while a solution is open; re-evaluated when SolutionPath changes.
     public IRelayCommand AddFrameworkDefaultsCommand { get; }
 
+    // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
+    public IRelayCommand ImportFormWorkbookCommand { get; }
+
     /// <summary>
     /// Short product name shown as the macOS application-menu title and inside
     /// the About / Hide / Quit item labels. VS Code shows "Code", not its full
@@ -66,6 +69,7 @@ public partial class App : Application
         ValidateActiveCommand = new RelayCommand(ExecuteActiveValidate, CanExecuteActiveValidate);
         CloseActiveTabCommand = new RelayCommand(ExecuteCloseActiveTab, CanExecuteCloseActiveTab);
         AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
+        ImportFormWorkbookCommand = new AsyncRelayCommand(ExecuteImportFormWorkbookAsync, CanExecuteAddFrameworkDefaults);
     }
 
     public override void Initialize()
@@ -134,6 +138,7 @@ public partial class App : Application
                     // before assigning SolutionPath — refresh the submenu.
                     RebuildRecentMenu();
                     AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
+                    ImportFormWorkbookCommand.NotifyCanExecuteChanged();
                 }
             };
 
@@ -154,7 +159,7 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    AddFrameworkDefaultsCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand,
+                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand,
                     CloseActiveTabCommand);
             }
         }
@@ -209,6 +214,7 @@ public partial class App : Application
         RebuildRecentMenu();
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_Save", SaveActiveCommand,
             new KeyGesture(Key.S, KeyModifiers.Meta)));
@@ -431,6 +437,14 @@ public partial class App : Application
 
     private static Task ExecuteAddFrameworkDefaultsAsync() =>
         GetMainViewModel()?.AddMissingFrameworkDefaultsAsync() ?? Task.CompletedTask;
+
+    /// <summary>
+    /// Forwards "Import Form from Excel..." to <see cref="MainWindow"/>, whose storage provider runs the picker.
+    /// </summary>
+    private static Task ExecuteImportFormWorkbookAsync() =>
+        (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow main
+            ? main.PromptImportFormWorkbookAsync()
+            : Task.CompletedTask;
 
     private static bool CanExecuteSaveAll() =>
         GetMainViewModel()?.HasDirtyDocuments ?? false;

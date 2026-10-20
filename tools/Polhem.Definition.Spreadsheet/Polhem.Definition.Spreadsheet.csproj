@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Definition.Spreadsheet</RootNamespace>
+
+    <!--
+      Shipped inside Polhem.Cli (a published dotnet tool) and DefineEditor, so it keeps the strictness of
+      the published projects even though tools/ opts out of it.
+    -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      Turns on the trim and AOT analyzers for this project's own code, so a `dynamic` conversion or
+      another construct that needs dynamic code fails the build. It cannot see MiniExcel's reflection
+      paths (MiniExcel carries no annotations); the README lists the two rules that keep clear of them.
+    -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Pinned to the 1.x line. 2.0 splits the package into MiniExcel.Core / .OpenXml / .Csv and changes the
+      API, so moving to it is a deliberate migration, not a version bump.
+    -->
+    <PackageReference Include="MiniExcel" Version="1.46.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Generated from FormWorkbookCatalog by FormWorkbookTemplateTests; do not edit it in Excel. -->
+    <EmbeddedResource Include="Templates\FormSchema.xlsx" LogicalName="Polhem.Definition.Spreadsheet.FormSchema.xlsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Definition.Spreadsheet.UnitTests" />
+  </ItemGroup>
+
+</Project>

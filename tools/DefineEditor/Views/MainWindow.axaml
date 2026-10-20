@@ -39,6 +39,7 @@
         <Menu x:Name="InWindowMenu" DockPanel.Dock="Top" IsVisible="False">
             <MenuItem Header="{loc:Loc Menu_File}">
                 <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
+                <MenuItem x:Name="ImportFormWorkbookMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbook}"/>
                 <Separator/>
                 <MenuItem x:Name="SaveMenuItem" Header="{loc:Loc MenuItem_Save}"
                           InputGesture="Ctrl+S" HotKey="Ctrl+S"/>

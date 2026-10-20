@@ -9,7 +9,11 @@ public sealed class FormSchemaCommandProvider(FormSchemaDocumentViewModel docume
     protected override IEnumerable<TreeNodeCommand> GetAddCommands(ObjectTreeNode node)
     {
         if (node.Value is FormSchema)
-            return [Create("FormSchema_GenerateFormLayout", "DefFormLayout", document.GenerateFormLayoutCommand)];
+            return
+            [
+                Create("FormSchema_GenerateFormLayout", "DefFormLayout", document.GenerateFormLayoutCommand),
+                Create("FormSchema_ExportWorkbook", "IconTable", document.ExportWorkbookCommand),
+            ];
         if (node is { IsFolder: true, Value: FormTableCollection })
             return [Create("FormSchema_AddTable", "IconTable", document.AddTableCommand)];
         if (node.Value is FormTable)

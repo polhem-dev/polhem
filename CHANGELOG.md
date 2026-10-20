@@ -20,6 +20,7 @@ Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.
 - DefineEditor takes its colours from VS Code's Dark (Visual Studio) and Light (Visual Studio) themes.
 - DefineEditor has a VS Code style activity bar that switches the sidebar between the files, the programs and the database tables.
 - DefineEditor shows the CREATE TABLE statement of the TableSchema being edited, for each supported database.
+- `dotnet polhem forms` and DefineEditor describe a form in an Excel workbook and import it as the definition files of a runnable form.
 
 ## [1.7.0] - 2026-10-16
 

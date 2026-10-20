@@ -1,4 +1,4 @@
-<!-- source: en/README.md blob: 33c87c8058ca8f9a8f1243b059a3ff076bd3eca2 -->
+<!-- source: en/README.md blob: 43120fd032c8ee18593aed04d71015dc5b54572a -->
 # Polhem 文件
 
 [English](../en/README.md)
@@ -60,6 +60,7 @@
 | [DatabaseSettings 與 DbCategorySettings 指引](database/database-settings-guide.md) | 指引 | 兩個資料庫相關設定檔的結構、存取方式與運作流程 |
 | [資料庫 Schema 升級](database/database-schema-upgrade.md) | 指引 | 將定義變更同步到線上資料庫：diff → plan → execute 管線、ALTER vs 重建、乾跑 |
 | [平台支援](getting-started/platform-support.md) | 指引 | 支援的 head（桌面、瀏覽器、iOS、Android、Blazor Server）、可用的裁剪與 AOT 設定，以及瀏覽器或行動裝置 head 的檢查清單 |
+| [用 Excel 建模表單](guides/excel-form-modeling.md) | 指引 | 在 Excel 活頁簿描述表單，匯入成可執行表單的定義檔：活頁簿的結構、匯入時自動補上的慣例，以及會寫入哪些檔案 |
 | [從 Bee.NET 遷移](guides/migrating-from-bee-net.md) | 指引 | 從 `Bee.*` 套件升級應用程式：改名的套件、命名空間與型別，編譯器不會檢查的名稱、設定，以及切換時會發生的事 |
 
 ## 4. 查詢參考

@@ -50,6 +50,19 @@ public partial class ConfirmationDialog : Window
     }
 
     /// <summary>
+    /// Shows a message with a single button, for an outcome the user can only acknowledge.
+    /// </summary>
+    public static async Task ShowMessageAsync(Window owner, string title, string message)
+    {
+        var dialog = new ConfirmationDialog();
+        dialog.TitleText.Text = title;
+        dialog.MessageText.Text = message;
+        dialog.Title = title;
+        dialog.CancelButton.IsVisible = false;
+        await dialog.ShowDialog<bool>(owner);
+    }
+
+    /// <summary>
     /// Shows the three-button unsaved-changes prompt (Save / Don't Save /
     /// Cancel) modally over <paramref name="owner"/>. Closing the window
     /// without choosing counts as <see cref="ConfirmCloseResult.Cancel"/>.

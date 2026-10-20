@@ -5,6 +5,7 @@ using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
 using Polhem.Definition;
+using Polhem.Definition.Spreadsheet;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -300,6 +301,104 @@ public partial class MainWindowViewModel : ViewModelBase
             StatusText = L("Status_FrameworkDefaultsFailed", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Imports a form workbook into the open solution: reads it, shows the files the import would change
+    /// (or the problems that keep it from importing), and writes them once the user confirms.
+    /// </summary>
+    /// <param name="workbookPath">The <c>.xlsx</c> file to import.</param>
+    public async Task ImportFormWorkbookAsync(string workbookPath)
+    {
+        if (!IsSolutionOpened) return;
+        var definePath = SolutionPath;
+        var owner = GetOwnerWindow();
+
+        try
+        {
+            FormWorkbookReadResult read;
+            using (var stream = File.OpenRead(workbookPath))
+                read = FormWorkbookReader.Read(stream);
+
+            var plan = read.HasErrors
+                ? null
+                : FormImporter.Plan(read.Content!, new FormImportOptions { DefinePath = definePath });
+            var issues = read.Issues.Concat(plan?.Issues ?? []).ToList();
+            if (plan is null || plan.HasErrors)
+            {
+                if (owner is not null)
+                {
+                    await ConfirmationDialog.ShowMessageAsync(owner, L("Error_ImportFormTitle"),
+                        L("Error_ImportFormMessage", FormatIssues(issues)));
+                }
+                StatusText = L("Status_FormImportCancelled");
+                return;
+            }
+
+            var progId = read.Content!.Schema.ProgId;
+            var written = plan.Files.Where(f => f.Writes).ToList();
+            if (written.Count == 0)
+            {
+                StatusText = L("Status_FormImportUnchanged", progId);
+                return;
+            }
+
+            // An open editor holds its own copy of the file; replacing the file under unsaved edits would
+            // lose one side or the other.
+            var dirty = OpenDocuments
+                .OfType<ObjectTreeDocumentViewModelBase>()
+                .FirstOrDefault(d => d.IsDirty && written.Any(f => SamePath(f.Path, d.FilePath)));
+            if (dirty is not null)
+            {
+                StatusText = L("Status_FormImportBlockedByDirty", Path.GetFileName(dirty.FilePath));
+                return;
+            }
+
+            if (owner is not null)
+            {
+                var message = L("Confirm_ImportFormMessage", Path.GetFileName(workbookPath), definePath,
+                    string.Join("\n", plan.Files
+                        .Where(f => f.Writes || f.Action == PlannedFileAction.Skip)
+                        .Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({ActionLabel(f.Action)})")));
+                var warnings = issues.Where(i => i.Severity == IssueSeverity.Warning).ToList();
+                if (warnings.Count > 0)
+                    message += "\n\n" + L("Confirm_ImportFormWarnings", FormatIssues(warnings));
+                if (!await ConfirmationDialog.ShowAsync(owner, L("Confirm_ImportFormTitle"), message, confirmLabel: L("Action_Import")))
+                {
+                    StatusText = L("Status_FormImportCancelled");
+                    return;
+                }
+            }
+
+            FormImporter.Apply(plan);
+            CloseDocuments(OpenDocuments
+                .OfType<ObjectTreeDocumentViewModelBase>()
+                .Where(d => written.Any(f => SamePath(f.Path, d.FilePath)))
+                .ToList<DocumentViewModelBase>(), ActiveDocument);
+            RebuildTrees(definePath);
+            // The plan lists the FormSchema first.
+            var schemaNode = FindNodeByFilePath(Nodes[0], plan.Files[0].Path);
+            if (schemaNode is not null) SelectedNode = schemaNode;
+            StatusText = L("Status_FormImported", progId, written.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            StatusText = L("Status_FormImportFailed", ex.Message);
+        }
+    }
+
+    private static string FormatIssues(IEnumerable<DefinitionIssue> issues)
+        => string.Join("\n", issues.Select(i => $"• {i.Location}: {i.Message}"));
+
+    private static string ActionLabel(PlannedFileAction action) => action switch
+    {
+        PlannedFileAction.Create => L("ImportAction_Create"),
+        PlannedFileAction.Overwrite => L("ImportAction_Overwrite"),
+        PlannedFileAction.Update => L("ImportAction_Update"),
+        _ => L("ImportAction_Skip"),
+    };
+
+    private static bool SamePath(string a, string b)
+        => string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
 
     private static DefineNode? FindNodeByFilePath(DefineNode node, string filePath)
     {

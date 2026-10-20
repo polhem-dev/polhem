@@ -6,6 +6,8 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
+using Polhem.Definition.Spreadsheet;
+using Avalonia.Platform.Storage;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
@@ -87,7 +89,11 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     protected override IReadOnlyList<ValidationIssue> PerformValidation()
-        => FormSchemaValidator.Validate(Schema, Solution);
+        => FormSchemaValidator.Validate(Schema, Solution.AvailableProgIds)
+            .Select(issue => new ValidationIssue(
+                issue.Severity == IssueSeverity.Error ? ValidationSeverity.Error : ValidationSeverity.Warning,
+                issue.Location, issue.Message))
+            .ToList();
 
     /// <summary>
     /// Adds the Relation and Lookup groups under a field node, each when the field uses it.
@@ -321,6 +327,53 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
         StatusText = L("Status_FormLayoutGenerated", $"{progId}.FormLayout.xml");
         OnDefineFileGenerated(targetPath);
+    }
+
+    /// <summary>
+    /// Writes the form, as it is in the editor, to an Excel workbook together with its zh-TW texts and menu
+    /// placement from the solution.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    private async Task ExportWorkbookAsync()
+    {
+        string progId = Schema.ProgId;
+        string? schemaDir = Path.GetDirectoryName(FilePath);
+        string? definePath = schemaDir is null ? null : Path.GetDirectoryName(schemaDir);
+        var owner = GetOwnerWindow();
+        if (definePath is null || owner is null) return;
+
+        var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = L("Dialog_SaveFormWorkbook"),
+            SuggestedFileName = $"{progId}.xlsx",
+            DefaultExtension = "xlsx",
+            FileTypeChoices = [MainWindow.ExcelWorkbookFileType],
+        });
+        if (file is null) return;
+
+        try
+        {
+            // The texts and the menu come from the files; the schema is the one being edited, saved or not.
+            var saved = File.Exists(FilePath) ? FormExporter.Load(definePath, progId) : null;
+            var content = new FormWorkbookContent(Schema);
+            if (saved is not null)
+            {
+                foreach (var (key, text) in saved.ZhTw) content.ZhTw[key] = text;
+                content.Menu.FolderId = saved.Menu.FolderId;
+                content.Menu.FolderCaption = saved.Menu.FolderCaption;
+                content.Menu.FolderCaptionZhTw = saved.Menu.FolderCaptionZhTw;
+                content.Menu.EntryCaption = saved.Menu.EntryCaption;
+                content.Menu.EntryCaptionZhTw = saved.Menu.EntryCaptionZhTw;
+            }
+
+            await using var stream = await file.OpenWriteAsync();
+            FormWorkbookWriter.Write(content, stream);
+            StatusText = L("Status_FormWorkbookExported", file.Name);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            StatusText = L("Status_FormWorkbookExportFailed", ex.Message);
+        }
     }
 
     private bool CanGenerateFormLayout() =>
