@@ -155,6 +155,62 @@ namespace Polhem.Definition.UnitTests.Database
             Assert.Contains(schema.Indexes!, idx => idx.IndexFields!.Contains("dept_rowid") && !idx.Unique);
         }
 
+        [Fact]
+        [DisplayName("Generate adds the fk_{0}_master index on sys_master_rowid for a detail table")]
+        public void Generate_DetailTable_AddsMasterIndex()
+        {
+            var formTable = BuildFormTable();
+            formTable.Fields!.Add(SysFields.MasterRowId, "主檔識別", FieldDbType.Guid);
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            var index = schema.Indexes!.GetOrDefault("fk_{0}_master");
+            Assert.NotNull(index);
+            Assert.False(index!.Unique);
+            Assert.False(index.PrimaryKey);
+            Assert.Equal([SysFields.MasterRowId], index.IndexFields!.Select(f => f.FieldName));
+        }
+
+        [Fact]
+        [DisplayName("Generate adds no master index for a table without sys_master_rowid")]
+        public void Generate_MasterTable_AddsNoMasterIndex()
+        {
+            var formTable = BuildFormTable();
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            Assert.False(schema.Indexes!.Contains("fk_{0}_master"));
+            Assert.DoesNotContain(schema.Indexes!, idx => idx.IndexFields!.Contains(SysFields.MasterRowId));
+        }
+
+        [Fact]
+        [DisplayName("Generate keeps a single fk_{0}_master index when a relation field already produced that name")]
+        public void Generate_MasterIndexNameAlreadyUsed_DoesNotAddDuplicate()
+        {
+            var formTable = BuildFormTable();
+            formTable.Fields!.Add(SysFields.MasterRowId, "主檔識別", FieldDbType.Guid);
+            formTable.Fields!.Add(new FormField("master", "主檔", FieldDbType.String) { RelationProgId = "Order" });
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            Assert.Single(schema.Indexes!, idx => idx.Name == "fk_{0}_master");
+        }
+
+        [Fact]
+        [DisplayName("Generate adds no second index on sys_master_rowid when a relation on it already indexes the column")]
+        public void Generate_MasterRowIdAlreadyIndexed_DoesNotAddDuplicate()
+        {
+            var formTable = BuildFormTable();
+            formTable.Fields!.Add(new FormField(SysFields.MasterRowId, "主檔識別", FieldDbType.Guid)
+            {
+                RelationProgId = "Order"
+            });
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            Assert.Single(schema.Indexes!, idx => idx.IndexFields!.Contains(SysFields.MasterRowId));
+        }
+
         private static FormTable BuildFormTable(string dbTableName = "st_employee")
         {
             var formTable = new FormTable("Employee", "員工") { DbTableName = dbTableName };
