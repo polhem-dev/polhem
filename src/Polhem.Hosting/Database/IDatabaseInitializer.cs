@@ -26,8 +26,13 @@ namespace Polhem.Hosting.Database
         /// </summary>
         /// <param name="options">Upgrade options; <c>null</c> uses <see cref="UpgradeOptions.Default"/>.</param>
         /// <param name="dryRun">When <c>true</c>, plan the statements and do not run them.</param>
+        /// <param name="tableCompleted">
+        /// Called with each table's entry as soon as the table is done, so a caller can report progress
+        /// while the remaining tables are still being processed.
+        /// </param>
         /// <returns>The outcome of each table. A failed table does not stop the others.</returns>
-        TableUpgradeReport UpgradeTables(UpgradeOptions? options = null, bool dryRun = false);
+        TableUpgradeReport UpgradeTables(
+            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null);
 
         /// <summary>
         /// Creates the first administrator, a company, and the administrator's access to it, in the

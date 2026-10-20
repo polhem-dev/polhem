@@ -157,22 +157,11 @@ namespace Polhem.Hosting.Database
             RejectUnknown(options);
 
             var upgradeOptions = allowNarrowing ? new UpgradeOptions { AllowColumnNarrowing = true } : null;
-            var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(upgradeOptions, dryRun);
+            // Each table is written as it completes, so a caller showing the output live (DefineEditor
+            // runs this command as a child process) sees progress rather than one block at the end.
+            var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(
+                upgradeOptions, dryRun, table => WriteTable(output, table));
 
-            foreach (var table in report.Tables)
-            {
-                var status = table.Outcome switch
-                {
-                    TableUpgradeOutcome.Created => "created",
-                    TableUpgradeOutcome.Upgraded => "upgraded",
-                    TableUpgradeOutcome.Unchanged => "unchanged",
-                    TableUpgradeOutcome.Planned => "planned",
-                    _ => "FAILED: " + table.Error,
-                };
-                output.WriteLine($"  {table.DatabaseId}.{table.TableName}: {status}");
-                if (table.Outcome == TableUpgradeOutcome.Planned)
-                    output.WriteLine(Indent(table.CommandText));
-            }
             foreach (var problem in report.Problems)
                 output.WriteLine($"  {problem}");
 
@@ -185,6 +174,22 @@ namespace Polhem.Hosting.Database
             summary.Append(", ").Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Failed)).Append(" failed.");
             output.WriteLine(summary.ToString());
             return report.Succeeded ? Success : Failure;
+        }
+
+        private static void WriteTable(TextWriter output, TableUpgradeEntry table)
+        {
+            var status = table.Outcome switch
+            {
+                TableUpgradeOutcome.Created => "created",
+                TableUpgradeOutcome.Upgraded => "upgraded",
+                TableUpgradeOutcome.Unchanged => "unchanged",
+                TableUpgradeOutcome.Planned => "planned",
+                _ => "FAILED: " + table.Error,
+            };
+            output.WriteLine($"  {table.DatabaseId}.{table.TableName}: {status}");
+            if (table.Outcome == TableUpgradeOutcome.Planned)
+                output.WriteLine(Indent(table.CommandText));
+            output.Flush();
         }
 
         private static int RunSeedAdmin(

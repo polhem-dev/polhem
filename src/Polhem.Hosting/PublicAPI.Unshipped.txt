@@ -41,7 +41,7 @@ Polhem.Hosting.Database.DatabaseCreateEntry.Result.init -> void
 Polhem.Hosting.Database.IDatabaseInitializer
 Polhem.Hosting.Database.IDatabaseInitializer.CreateDatabases() -> System.Collections.Generic.IReadOnlyList<Polhem.Hosting.Database.DatabaseCreateEntry!>!
 Polhem.Hosting.Database.IDatabaseInitializer.SeedAdministrator(Polhem.Hosting.Database.AdministratorSeed! seed) -> Polhem.Hosting.Database.AdministratorSeedResult!
-Polhem.Hosting.Database.IDatabaseInitializer.UpgradeTables(Polhem.Db.Schema.UpgradeOptions? options = null, bool dryRun = false) -> Polhem.Hosting.Database.TableUpgradeReport!
+Polhem.Hosting.Database.IDatabaseInitializer.UpgradeTables(Polhem.Db.Schema.UpgradeOptions? options = null, bool dryRun = false, System.Action<Polhem.Hosting.Database.TableUpgradeEntry!>? tableCompleted = null) -> Polhem.Hosting.Database.TableUpgradeReport!
 Polhem.Hosting.Database.TableUpgradeEntry
 Polhem.Hosting.Database.TableUpgradeEntry.CategoryId.get -> string!
 Polhem.Hosting.Database.TableUpgradeEntry.CategoryId.init -> void

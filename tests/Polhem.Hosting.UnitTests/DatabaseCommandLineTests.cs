@@ -201,10 +201,13 @@ namespace Polhem.Hosting.UnitTests
             public IReadOnlyList<DatabaseCreateEntry> CreateDatabases()
                 => CreateException is null ? CreateEntries : throw CreateException;
 
-            public TableUpgradeReport UpgradeTables(UpgradeOptions? options = null, bool dryRun = false)
+            public TableUpgradeReport UpgradeTables(
+                UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null)
             {
                 LastOptions = options;
                 LastDryRun = dryRun;
+                foreach (var table in UpgradeReport.Tables)
+                    tableCompleted?.Invoke(table);
                 return UpgradeReport;
             }
 

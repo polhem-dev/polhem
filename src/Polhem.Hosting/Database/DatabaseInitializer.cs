@@ -77,7 +77,8 @@ namespace Polhem.Hosting.Database
             => new() { DatabaseId = databaseId, DatabaseName = databaseName, Error = error };
 
         /// <inheritdoc/>
-        public TableUpgradeReport UpgradeTables(UpgradeOptions? options = null, bool dryRun = false)
+        public TableUpgradeReport UpgradeTables(
+            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null)
         {
             var databaseSettings = _defineAccess.GetDatabaseSettings();
             var categories = _defineAccess.GetDbCategorySettings().Categories;
@@ -101,7 +102,11 @@ namespace Polhem.Hosting.Database
                 foreach (var databaseId in databases)
                 {
                     foreach (var table in category.Tables)
-                        tables.Add(UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun));
+                    {
+                        var entry = UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun);
+                        tables.Add(entry);
+                        tableCompleted?.Invoke(entry);
+                    }
                 }
             }
             return new TableUpgradeReport { Tables = tables, Problems = problems };

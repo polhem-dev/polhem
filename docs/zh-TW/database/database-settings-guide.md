@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: ea09a6b8545150d46ee79c6dcb6b647ef697d987 -->
+<!-- source: en/database/database-settings-guide.md blob: 2fd06f9d402b25ad7e9bbac1c35c7c32f5d4bb35 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -577,6 +577,8 @@ dotnet run -- db seed-admin --company ACME
 不會建立角色：沒有權限模型的表單不需要角色。
 
 結束碼：成功為 `0`，有項目失敗為 `1`，無法解讀命令列為 `2`。
+`db create` 與 `db upgrade` 不會等待輸入；`db upgrade` 每處理完一張表就輸出一行，最後一行是摘要，因此其他程式可以
+執行它們並即時顯示輸出。`db seed-admin` 只有在沒有設定 `POLHEM_ADMIN_PASSWORD` 時才會等待輸入。
 
 ---
 

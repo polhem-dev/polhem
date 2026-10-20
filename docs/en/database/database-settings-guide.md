@@ -579,6 +579,9 @@ the `company` category. The user is created as a deployment administrator (see
 `--no-deployment-admin` is given. No roles are created: forms without a permission model need none.
 
 The exit code is `0` on success, `1` when an item failed and `2` when the command line could not be understood.
+`db create` and `db upgrade` never wait for input, and `db upgrade` writes each table's line as soon as the table is
+done, followed by a one-line summary, so another program can run them and show the output as it arrives.
+`db seed-admin` waits only when `POLHEM_ADMIN_PASSWORD` is not set.
 
 ---
 
