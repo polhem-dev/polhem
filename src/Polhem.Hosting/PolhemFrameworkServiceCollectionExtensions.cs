@@ -166,6 +166,13 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<IDbConnectionManager>(), 0, anomalyWriterFactory, anomalyOptions);
             });
 
+            // 6a. Database initialization (create databases, build tables, seed the first
+            //     administrator), run by a host's `db` commands through DatabaseCommandLine.
+            services.AddSingleton<Database.IDatabaseInitializer>(sp => new Database.DatabaseInitializer(
+                sp.GetRequiredService<IDefineAccess>(),
+                sp.GetRequiredService<IDbConnectionManager>(),
+                sp.GetRequiredService<IDbAccessFactory>()));
+
             // 6b. Cache-notify bump primitive — stateless; builds dialect SQL per call and runs
             //     it on the caller's transaction. No consumer wired yet (poller / business
             //     repositories arrive in later stages); registered now so it is injectable.

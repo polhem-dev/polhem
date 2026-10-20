@@ -39,6 +39,44 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
+        // ---------- A default spelled out as the built-in one ----------
+        // Regression: every table schema provider reads a default equal to the built-in one back as empty,
+        // so a definition declaring `DbType="Boolean" DefaultValue="0"` never matched and every upgrade
+        // rebuilt the table again (`st_audit_rule`, `st_log_change`).
+
+        [Theory]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [InlineData(DatabaseType.MySQL)]
+        [InlineData(DatabaseType.Oracle)]
+        [InlineData(DatabaseType.SQLite)]
+        [DisplayName("A defined default equal to the built-in default matches an empty default read back")]
+        public void CompareToDiff_DefaultEqualsBuiltIn_ProducesNoChange(DatabaseType databaseType)
+        {
+            var define = BuildBaseSchema();
+            define.Fields!.Add("is_sensitive", "Sensitive", FieldDbType.Boolean).DefaultValue = "0";
+            var real = BuildRealSchema();
+            real.Fields!.Add("is_sensitive", "Sensitive", FieldDbType.Boolean);
+
+            var diff = new TableSchemaComparer(define, real, databaseType).CompareToDiff();
+
+            Assert.Empty(diff.Changes);
+        }
+
+        [Fact]
+        [DisplayName("A defined default other than the built-in one still differs from an empty default read back")]
+        public void CompareToDiff_DefaultOtherThanBuiltIn_ReportsAlterField()
+        {
+            var define = BuildBaseSchema();
+            define.Fields!.Add("enabled", "Enabled", FieldDbType.Boolean).DefaultValue = "1";
+            var real = BuildRealSchema();
+            real.Fields!.Add("enabled", "Enabled", FieldDbType.Boolean);
+
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            Assert.IsType<AlterFieldChange>(Assert.Single(diff.Changes));
+        }
+
         // ---------- Oracle: the definition's AllowNull is not comparable for String / Text ----------
         // Regression: Oracle always creates String/Text as nullable, so `OracleTableSchemaProvider` always reports
         // AllowNull=false to match definitions that say false. A definition that says AllowNull="true" never matched,

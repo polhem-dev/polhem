@@ -255,11 +255,13 @@ jobs:
           "SELECT 1 FROM pg_database WHERE datname='log'" | grep -q '1 row' || \
           psql -h 127.0.0.1 -U testuser -d postgres -c 'CREATE DATABASE log OWNER testuser'
         # MySQL: the container already created common; create company and log and grant them to testuser (needs root).
+        # The `polhem_%` grant lets the database initialization tests create and drop databases of their own.
         mysql -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" -e \
           "CREATE DATABASE IF NOT EXISTS company; \
            CREATE DATABASE IF NOT EXISTS log; \
            GRANT ALL PRIVILEGES ON company.* TO 'testuser'@'%'; \
            GRANT ALL PRIVILEGES ON log.* TO 'testuser'@'%'; \
+           GRANT ALL PRIVILEGES ON \`polhem_%\`.* TO 'testuser'@'%'; \
            FLUSH PRIVILEGES;"
 
     - name: SonarScanner Begin

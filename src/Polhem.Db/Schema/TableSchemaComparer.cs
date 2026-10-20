@@ -1,3 +1,4 @@
+using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Core;
 using Polhem.Core.Data;
@@ -97,7 +98,29 @@ namespace Polhem.Db.Schema
         /// <param name="realField">The field as read back from the database.</param>
         private bool CompareField(DbField defineField, DbField realField)
         {
-            return NormalizeNullability(defineField).Compare(NormalizeNullability(realField));
+            return NormalizeDefault(NormalizeNullability(defineField)).Compare(NormalizeNullability(realField));
+        }
+
+        /// <summary>
+        /// Clears a defined default value that equals the dialect's built-in default for the field's type.
+        /// </summary>
+        /// <remarks>
+        /// Every table schema provider reads a column default equal to the built-in one back as an empty
+        /// value, because the framework emits that default for every column that declares none. A
+        /// definition that spells the built-in default out (`DbType="Boolean" DefaultValue="0"`) therefore
+        /// never matched its own read-back, and every upgrade rebuilt or altered the table again.
+        /// </remarks>
+        /// <param name="field">The defined field.</param>
+        private DbField NormalizeDefault(DbField field)
+        {
+            if (StringUtilities.IsEmpty(field.DefaultValue) || !DbDialectRegistry.IsRegistered(this.DatabaseType))
+                return field;
+            var builtIn = DbDialectRegistry.Get(this.DatabaseType).GetDefaultValueExpression(field.DbType);
+            if (!StringUtilities.IsEquals(field.DefaultValue, builtIn))
+                return field;
+            var normalized = field.Clone();
+            normalized.DefaultValue = string.Empty;
+            return normalized;
         }
 
         /// <summary>

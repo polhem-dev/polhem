@@ -253,7 +253,7 @@ The check reads the flag from the database **on every call**, deliberately unlik
 
 ## 12. Appointing an administrator
 
-`SystemBusinessObject.SetDeploymentAdmin` (`SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)` from a client) is the **only** write path the framework provides to `st_user.deployment_admin`, and it is `LocalOnly`: the first administrator is appointed on the host, after which appointments can be made through whatever administration surface the deployment builds on top of it.
+`SystemBusinessObject.SetDeploymentAdmin` (`SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)` from a client) is how an existing user is appointed or revoked, and it is `LocalOnly`: appointments are made on the host, after which they can be made through whatever administration surface the deployment builds on top of it. The only other write is the seed of a brand-new deployment (below), which sets the flag on the user it creates.
 
 The framework keeps the FormSchema-driven data path away from the column at runtime, not by convention: `ProtectedFields` lists it, and the write path (`DataFormRepository.Save`) strips it from every INSERT and UPDATE **even if a form declares it**. Without that, a deployment that built its own user-maintenance form over `st_user` would have handed its ordinary users a route to promote themselves. Reads are guarded too, because a column that can be filtered or sorted on can be read one comparison at a time: a query that names a protected column in its select list, filter or sort is refused, and a query that asks for every field leaves it out.
 
@@ -261,7 +261,7 @@ The framework keeps the FormSchema-driven data path away from the column at runt
 
 > **Upgrading:** a deployment that set passwords through its own maintenance form over `st_user` will find that column silently dropped from the save after this change. Move it to a dedicated operation that hashes what it stores; a form has no way to produce a value `VerifyPassword` will accept.
 
-The framework ships no `st_user` rows, so seeding a first administrator on a brand-new deployment is the deployment's own decision; the column defaults to "not an administrator" either way.
+The framework ships no `st_user` rows. A brand-new deployment gets its first user from the host's `db seed-admin` command (see [Initializing a New Deployment](../database/database-settings-guide.md#7-initializing-a-new-deployment)), which creates that user as a deployment administrator unless `--no-deployment-admin` is given. It never changes an existing user, and it writes no audit entry, because it runs without a session. Any other user's column defaults to "not an administrator".
 
 ## 13. Audit trail
 
