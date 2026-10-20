@@ -287,4 +287,9 @@ Save anyway?</value></data>
   <data name="Status_FormImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>
   <data name="Status_FormWorkbookExported" xml:space="preserve"><value>Exported {0}</value></data>
   <data name="Status_FormWorkbookExportFailed" xml:space="preserve"><value>Export failed: {0}</value></data>
+  <data name="Choice_TableSchemaModeMessage" xml:space="preserve"><value>Some of the form's tables already have a TableSchema, which may hold column lengths, columns that are not on the form, and hand-made indexes. What should the import do with them?</value></data>
+  <data name="Choice_TableSchemaMerge" xml:space="preserve"><value>Merge: add the columns and indexes the form brings, change nothing else (recommended)</value></data>
+  <data name="Choice_TableSchemaKeep" xml:space="preserve"><value>Keep: leave the existing TableSchema files as they are</value></data>
+  <data name="Choice_TableSchemaOverwrite" xml:space="preserve"><value>Overwrite: replace them with the ones generated from the form</value></data>
+  <data name="Action_Next" xml:space="preserve"><value>Next</value></data>
 </root>

@@ -13,4 +13,10 @@ public sealed class FormImportOptions
     /// usually adjusted by hand after it was first generated.
     /// </summary>
     public bool RegenerateLayout { get; init; }
+
+    /// <summary>
+    /// Gets what happens to a TableSchema file that already exists. The default, <see cref="TableSchemaImportMode.Merge"/>,
+    /// only adds what the form brings.
+    /// </summary>
+    public TableSchemaImportMode TableSchemaMode { get; init; } = TableSchemaImportMode.Merge;
 }

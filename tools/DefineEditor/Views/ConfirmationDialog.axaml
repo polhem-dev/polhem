@@ -33,6 +33,9 @@
                 <Button x:Name="ConfirmButton" Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnConfirm" MinWidth="100"/>
             </StackPanel>
 
+            <!-- Options of ShowChoiceAsync, between the message and the buttons; empty otherwise. -->
+            <StackPanel x:Name="ChoicesPanel" DockPanel.Dock="Bottom" Spacing="6" Margin="0,12,0,0" IsVisible="False"/>
+
             <!-- Message body -->
             <!-- Scrolls when a message lists many files (an import plan, the missing framework defaults). -->
             <ScrollViewer MaxHeight="420" HorizontalScrollBarVisibility="Disabled">

@@ -94,7 +94,7 @@ the workbook leaves it out:
 | File | When it already exists |
 |------|------------------------|
 | `FormSchema/<ProgId>.FormSchema.xml` | Replaced, unless it already describes the same form |
-| `TableSchema/<category>/<table>.TableSchema.xml`, one per table | Replaced, unless it already describes the same table. An existing database is brought in line by the [schema upgrade](../database/database-schema-upgrade.md) |
+| `TableSchema/<category>/<table>.TableSchema.xml`, one per table | Depends on the TableSchema mode; see [Importing Again](#6-importing-again). An existing database is brought in line by the [schema upgrade](../database/database-schema-upgrade.md) |
 | `FormLayout/<ProgId>.FormLayout.xml` | **Kept**; see [Importing Again](#6-importing-again) |
 | `DbCategorySettings.xml` | The tables are added to the category when missing |
 | `ProgramSettings.xml` | The program is added when missing |
@@ -111,6 +111,15 @@ such as a relation to a form the folder does not have yet, is shown and does not
 ## 6. Importing Again
 
 Change the workbook and import it again; the files that already describe what the workbook says stay untouched.
+
+A TableSchema often holds more than the form can derive: column lengths, columns that are not on the form, indexes
+added by hand. What the import does with an existing one is chosen with `--tables` (DefineEditor asks):
+
+| Mode | Effect |
+|------|--------|
+| `merge` (default) | Adds the columns and indexes the form has and the file lacks. Nothing in the file is changed or removed, so a removed field or a changed data type is handled in DefineEditor |
+| `keep` | Leaves the file as it is |
+| `overwrite` | Replaces the file with the TableSchema generated from the form |
 
 The FormLayout is the exception. The import generates one only when the form has none, because a layout is usually
 arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout`, or use

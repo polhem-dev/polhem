@@ -63,6 +63,36 @@ public partial class ConfirmationDialog : Window
     }
 
     /// <summary>
+    /// Shows a message with one radio button per choice and returns the index of the chosen one, or
+    /// <see langword="null"/> when the user cancelled or closed the window.
+    /// </summary>
+    public static async Task<int?> ShowChoiceAsync(
+        Window owner, string title, string message, IReadOnlyList<string> choices, int selectedIndex,
+        string? confirmLabel = null)
+    {
+        var dialog = new ConfirmationDialog();
+        dialog.TitleText.Text = title;
+        dialog.MessageText.Text = message;
+        dialog.Title = title;
+        if (!string.IsNullOrEmpty(confirmLabel)) dialog.ConfirmButton.Content = confirmLabel;
+
+        var buttons = choices
+            .Select((choice, index) => new RadioButton
+            {
+                Content = new TextBlock { Text = choice, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                GroupName = "choices",
+                IsChecked = index == selectedIndex,
+            })
+            .ToList();
+        foreach (var button in buttons) dialog.ChoicesPanel.Children.Add(button);
+        dialog.ChoicesPanel.IsVisible = true;
+
+        return await dialog.ShowDialog<bool>(owner)
+            ? buttons.FindIndex(b => b.IsChecked == true)
+            : null;
+    }
+
+    /// <summary>
     /// Shows the three-button unsaved-changes prompt (Save / Don't Save /
     /// Cancel) modally over <paramref name="owner"/>. Closing the window
     /// without choosing counts as <see cref="ConfirmCloseResult.Cancel"/>.

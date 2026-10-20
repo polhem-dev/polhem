@@ -67,8 +67,21 @@ and for a relation field its `Guid` type and the `ref_*` fields mapped from `sys
 form that already follows the conventions changes nothing, which is what lets an exported form be imported again.
 
 `FormImporter.Plan` validates and lists every file with its action before anything is written; an error stops the
-whole import. Files generated from a definition (FormSchema, TableSchema) are left untouched when they already
-describe the same thing, so an unchanged workbook does not rewrite them and their comments survive.
+whole import. A FormSchema is left untouched when it already describes the same form, so an unchanged workbook does
+not rewrite it and its comments survive.
+
+### 5a. An existing TableSchema is merged by default
+
+A TableSchema is not fully derivable from its form. Exporting the nine Northwind forms and importing them into an
+empty folder (2026-10-20) rebuilt every FormSchema exactly, but none of the ten TableSchema files: the hand-written ones
+carry column lengths the forms leave out, columns that are not on any form (`dept_rowid` and `user_rowid` of
+`st_employee`, `parent_rowid` of `st_department`, which the organization features use) and indexes of their own.
+Replacing an existing TableSchema from the form would drop all of that.
+
+So the import takes a mode (`TableSchemaImportMode`, `--tables`): `Merge`, the default, adds the columns and indexes
+the form has and the file lacks, at the XML level, and changes or removes nothing; `Keep` leaves the file; `Overwrite`
+replaces it. With `Merge`, importing the exported Northwind workbooks back into a copy of the Northwind folder writes
+no file at all, which `FormImporterTests.ExportThenImport_Northwind_WritesNothing` checks for each form.
 
 ### 6. The layout is generated once
 
