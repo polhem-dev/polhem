@@ -118,7 +118,7 @@
                 </Border>
             </Grid>
 
-            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns"
                           IsVisible="{Binding IsSolutionOpened}"/>
 
             <Grid Grid.Column="2">

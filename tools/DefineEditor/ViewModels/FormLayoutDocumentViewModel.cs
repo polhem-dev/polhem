@@ -2,6 +2,7 @@ using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
@@ -20,6 +21,26 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     public override string TabIcon => "DefFormLayout";
 
     public override ITreeNodeCommandProvider CommandProvider { get; }
+
+    /// <summary>Whether the live preview under the property grid is expanded.</summary>
+    [ObservableProperty]
+    private bool _isPreviewVisible = true;
+
+    /// <summary>Whether the preview shows the form in View mode instead of Edit mode.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewFormMode))]
+    private bool _isPreviewViewMode;
+
+    /// <summary>Whether the preview renders the phone-sized (compact) form.</summary>
+    [ObservableProperty]
+    private bool _isPreviewCompact;
+
+    /// <summary>Whether empty preview fields show their field name as a placeholder.</summary>
+    [ObservableProperty]
+    private bool _showPreviewFieldNames = true;
+
+    /// <summary>The form mode the preview renders in.</summary>
+    public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
 
     private FormLayoutDocumentViewModel(string filePath, FormLayout root)
         // The root and the two folders start expanded.

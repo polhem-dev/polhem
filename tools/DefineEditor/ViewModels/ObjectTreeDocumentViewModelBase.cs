@@ -154,7 +154,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         var parent = node.Parent;
         parent?.Children.Remove(node);
         SelectedTreeNode = parent;
-        IsDirty = true;
+        MarkChanged();
         StatusText = L("Status_Deleted");
     }
 
@@ -218,7 +218,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         parent.Children.Add(node);
         parent.IsExpanded = true;
         SelectedTreeNode = node;
-        IsDirty = true;
+        MarkChanged();
         return node;
     }
 
@@ -233,11 +233,28 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// </remarks>
     public void OnPropertyEdited()
     {
-        IsDirty = true;
+        MarkChanged();
         for (var node = SelectedTreeNode; node != null; node = node.Parent)
             node.Refresh();
         if (SelectedTreeNode is { } selected)
             OnSelectedObjectEdited(selected);
+    }
+
+    /// <summary>
+    /// Occurs after every edit of the define object: a property written in the grid, a node added, deleted or
+    /// reordered, or a command that changed the selected object.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="DocumentViewModelBase.IsDirty"/> cannot stand in for it: it raises no change notification
+    /// for an edit made while the document is already dirty.
+    /// </remarks>
+    public event EventHandler? DocumentChanged;
+
+    /// <summary>Marks the document dirty and raises <see cref="DocumentChanged"/>, after an edit of the define object.</summary>
+    public void MarkChanged()
+    {
+        IsDirty = true;
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -251,7 +268,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// </summary>
     protected void OnSelectedObjectChangedByCommand()
     {
-        IsDirty = true;
+        MarkChanged();
         for (var node = SelectedTreeNode; node != null; node = node.Parent)
             node.Refresh();
         EditorRefreshRequested?.Invoke(this, EventArgs.Empty);
