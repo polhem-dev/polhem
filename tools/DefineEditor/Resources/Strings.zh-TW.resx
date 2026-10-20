@@ -34,6 +34,14 @@
   <data name="MenuItem_ShowAll" xml:space="preserve"><value>顯示全部</value></data>
   <data name="MenuItem_QuitApp" xml:space="preserve"><value>結束 {0}</value></data>
 
+  <data name="Sidebar_ExplorerTitle" xml:space="preserve"><value>檔案總管</value></data>
+  <data name="Sidebar_ProgramsTitle" xml:space="preserve"><value>功能</value></data>
+  <data name="Sidebar_DatabasesTitle" xml:space="preserve"><value>資料庫</value></data>
+  <data name="Sidebar_ExplorerTip" xml:space="preserve"><value>檔案總管：DefinePath 資料夾的檔案</value></data>
+  <data name="Sidebar_ProgramsTip" xml:space="preserve"><value>功能：ProgramSettings 的每個 ProgId 與其定義檔</value></data>
+  <data name="Sidebar_DatabasesTip" xml:space="preserve"><value>資料庫：DbCategorySettings 每個類別的資料表</value></data>
+  <data name="Sidebar_ProgramsEmpty" xml:space="preserve"><value>沒有功能：ProgramSettings.xml 不存在、是空的或無法讀取。</value></data>
+  <data name="Sidebar_DatabasesEmpty" xml:space="preserve"><value>沒有資料庫類別：DbCategorySettings.xml 不存在、是空的或無法讀取。</value></data>
   <data name="Welcome_NoSolution" xml:space="preserve"><value>尚未開啟方案</value></data>
   <data name="Welcome_OpenFolderButton" xml:space="preserve"><value>開啟方案</value></data>
   <data name="Welcome_OpenFolderTip" xml:space="preserve"><value>選擇 DefinePath 方案資料夾</value></data>

@@ -14,6 +14,10 @@
             <SolidColorBrush x:Key="SemiColorBackground3">#333333</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground4">#3C3C3C</SolidColorBrush>
             <SolidColorBrush x:Key="SidebarBackground">#252526</SolidColorBrush>
+            <!-- activityBar.background, activityBar.foreground, activityBar.inactiveForeground -->
+            <SolidColorBrush x:Key="ActivityBarBackground">#333333</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorNavBackground">#252526</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorWindow">#1E1E1E</SolidColorBrush>
 
@@ -51,6 +55,10 @@
             <SolidColorBrush x:Key="SemiColorBackground3">#E5E5E5</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground4">#DDDDDD</SolidColorBrush>
             <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
+            <!-- The Light (Visual Studio) theme keeps a dark activity bar -->
+            <SolidColorBrush x:Key="ActivityBarBackground">#2C2C2C</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorNavBackground">#F3F3F3</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorWindow">#FFFFFF</SolidColorBrush>
 

@@ -19,6 +19,17 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Resources>
+        <!-- Shared by the trees of every sidebar view -->
+        <TreeDataTemplate x:Key="DefineNodeTemplate" ItemsSource="{Binding Children}" x:DataType="models:DefineNode">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
+                <PathIcon Classes="tree-icon"
+                          Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </TreeDataTemplate>
+    </Window.Resources>
+
     <DockPanel>
         <!-- On macOS the menus live in the system menu bar at the top of the screen (set up by
              App.ConfigureApplicationMenu / ConfigureWindowMenu), following the VS Code convention there.
@@ -76,54 +87,105 @@
             </Grid>
         </Border>
 
-        <!-- Body: solution tree on the left, document tabs on the right -->
-        <Grid ColumnDefinitions="320,4,*">
-            <!-- Left: the TreeView when a solution is open, otherwise a VS Code style welcome / Open Folder.
-                 The sidebar class gives the whole column (including the space below the tree and the welcome
-                 panel) the VS Code style background. -->
-            <Grid Grid.Column="0" Classes="sidebar">
-                <TreeView IsVisible="{Binding IsSolutionOpened}"
-                          ItemsSource="{Binding Nodes}"
-                          SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
-                          Padding="6,4">
-                    <TreeView.ItemTemplate>
-                        <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:DefineNode">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
-                                <PathIcon Classes="tree-icon"
-                                          Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
-                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </TreeDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
+        <!-- Body: the activity bar, the sidebar with the view it picks, then the document tabs (VS Code layout).
+             Collapsing the sidebar zeroes its column from code-behind (MainWindow.ApplySidebarVisibility), because
+             the splitter writes that column's width and a binding would be overwritten by the first drag. -->
+        <Grid x:Name="BodyGrid" ColumnDefinitions="Auto,320,4,*">
+            <Border Grid.Column="0" Classes="activitybar">
+                <StackPanel>
+                    <Button Classes="activity" Classes.active="{Binding IsExplorerActive}"
+                            Command="{Binding ShowSidebarViewCommand}"
+                            CommandParameter="{x:Static models:SidebarView.Explorer}"
+                            ToolTip.Tip="{loc:Loc Sidebar_ExplorerTip}" ToolTip.Placement="Right">
+                        <PathIcon Data="{StaticResource IconFiles}"/>
+                    </Button>
+                    <Button Classes="activity" Classes.active="{Binding IsProgramsActive}"
+                            Command="{Binding ShowSidebarViewCommand}"
+                            CommandParameter="{x:Static models:SidebarView.Programs}"
+                            ToolTip.Tip="{loc:Loc Sidebar_ProgramsTip}" ToolTip.Placement="Right">
+                        <PathIcon Data="{StaticResource IconPrograms}"/>
+                    </Button>
+                    <Button Classes="activity" Classes.active="{Binding IsDatabasesActive}"
+                            Command="{Binding ShowSidebarViewCommand}"
+                            CommandParameter="{x:Static models:SidebarView.Databases}"
+                            ToolTip.Tip="{loc:Loc Sidebar_DatabasesTip}" ToolTip.Placement="Right">
+                        <PathIcon Data="{StaticResource IconDatabase}"/>
+                    </Button>
+                </StackPanel>
+            </Border>
 
-                <!-- VS Code style welcome, shown while no solution is open -->
-                <Border IsVisible="{Binding !IsSolutionOpened}" Padding="20">
-                    <StackPanel Spacing="14" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="{loc:Loc Welcome_NoSolution}" Classes="muted"
-                                   HorizontalAlignment="Center"/>
-                        <Button Click="OnOpenSolutionClick" Classes="welcome"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"
-                                ToolTip.Tip="{loc:Loc Welcome_OpenFolderTip}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <PathIcon Data="{StaticResource IconFolder}" Width="14" Height="14"/>
-                                <TextBlock Text="{loc:Loc Welcome_OpenFolderButton}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <TextBlock x:Name="MenuAlternativeHint"
-                                   Classes="muted" HorizontalAlignment="Center"
-                                   TextWrapping="Wrap" MaxWidth="240"
-                                   TextAlignment="Center"
-                                   Text="{loc:Loc Welcome_MenuAlternative}"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
+            <!-- The sidebar: a title for the view, then its tree when a solution is open, otherwise a VS Code style
+                 welcome / Open Folder that every view shares. The sidebar class gives the whole column the VS Code
+                 style background. -->
+            <DockPanel Grid.Column="1" x:Name="Sidebar" Classes="sidebar">
+                <Panel DockPanel.Dock="Top" Classes="sidebar-title">
+                    <TextBlock Text="{loc:Loc Sidebar_ExplorerTitle}" IsVisible="{Binding IsExplorerView}"/>
+                    <TextBlock Text="{loc:Loc Sidebar_ProgramsTitle}" IsVisible="{Binding IsProgramsView}"/>
+                    <TextBlock Text="{loc:Loc Sidebar_DatabasesTitle}" IsVisible="{Binding IsDatabasesView}"/>
+                </Panel>
 
-            <GridSplitter Grid.Column="1" ResizeDirection="Columns"
-                          IsVisible="{Binding IsSolutionOpened}"/>
+                <Panel>
+                    <Panel IsVisible="{Binding IsSolutionOpened}">
+                        <TreeView IsVisible="{Binding IsExplorerView}"
+                                  ItemsSource="{Binding Nodes}"
+                                  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                                  ItemTemplate="{StaticResource DefineNodeTemplate}"
+                                  Padding="6,4"/>
+                        <TreeView IsVisible="{Binding IsProgramsView}"
+                                  ItemsSource="{Binding ProgramNodes}"
+                                  SelectedItem="{Binding SelectedProgramNode, Mode=TwoWay}"
+                                  ItemTemplate="{StaticResource DefineNodeTemplate}"
+                                  Padding="6,4"/>
+                        <TextBlock Classes="muted sidebar-empty" Text="{loc:Loc Sidebar_ProgramsEmpty}">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsProgramsView"/>
+                                    <Binding Path="HasNoProgramNodes"/>
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+                        <TreeView IsVisible="{Binding IsDatabasesView}"
+                                  ItemsSource="{Binding DatabaseNodes}"
+                                  SelectedItem="{Binding SelectedDatabaseNode, Mode=TwoWay}"
+                                  ItemTemplate="{StaticResource DefineNodeTemplate}"
+                                  Padding="6,4"/>
+                        <TextBlock Classes="muted sidebar-empty" Text="{loc:Loc Sidebar_DatabasesEmpty}">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsDatabasesView"/>
+                                    <Binding Path="HasNoDatabaseNodes"/>
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+                    </Panel>
 
-            <Grid Grid.Column="2">
+                    <!-- VS Code style welcome, shown while no solution is open -->
+                    <Border IsVisible="{Binding !IsSolutionOpened}" Padding="20">
+                        <StackPanel Spacing="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="{loc:Loc Welcome_NoSolution}" Classes="muted"
+                                       HorizontalAlignment="Center"/>
+                            <Button Click="OnOpenSolutionClick" Classes="welcome"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="{loc:Loc Welcome_OpenFolderTip}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <PathIcon Data="{StaticResource IconFolder}" Width="14" Height="14"/>
+                                    <TextBlock Text="{loc:Loc Welcome_OpenFolderButton}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBlock x:Name="MenuAlternativeHint"
+                                       Classes="muted" HorizontalAlignment="Center"
+                                       TextWrapping="Wrap" MaxWidth="240"
+                                       TextAlignment="Center"
+                                       Text="{loc:Loc Welcome_MenuAlternative}"/>
+                        </StackPanel>
+                    </Border>
+                </Panel>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="2" x:Name="SidebarSplitter" ResizeDirection="Columns"/>
+
+            <Grid Grid.Column="3">
                 <!-- Multi-document tab area (IDE style) -->
                 <TabControl ItemsSource="{Binding OpenDocuments}"
                             SelectedItem="{Binding ActiveDocument, Mode=TwoWay}"

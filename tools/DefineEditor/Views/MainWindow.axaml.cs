@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -9,9 +10,41 @@ namespace Polhem.DefineEditor.Views;
 
 public partial class MainWindow : Window
 {
+    private GridLength _sidebarWidth = new(320);
+
+    private MainWindowViewModel? _viewModel;
+
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (_viewModel is not null) _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel = DataContext as MainWindowViewModel;
+        if (_viewModel is null) return;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        ApplySidebarVisibility(_viewModel.IsSidebarVisible);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsSidebarVisible) && _viewModel is not null)
+            ApplySidebarVisibility(_viewModel.IsSidebarVisible);
+    }
+
+    /// <summary>
+    /// Collapses or restores the sidebar column. The width the splitter last left is kept and given back on restore.
+    /// </summary>
+    private void ApplySidebarVisibility(bool visible)
+    {
+        var column = BodyGrid.ColumnDefinitions[1];
+        if (!visible && column.Width.Value > 0) _sidebarWidth = column.Width;
+        column.Width = visible ? _sidebarWidth : new GridLength(0);
+        Sidebar.IsVisible = visible;
+        SidebarSplitter.IsVisible = visible;
     }
 
     /// <summary>
