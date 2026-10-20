@@ -149,7 +149,7 @@
     </Style>
 
     <!-- =================================================================
-         Pane splitters: a quiet border line that turns the accent colour while the pointer is on it
+         Pane splitters: a faint border line that turns the focus colour while the pointer is on it
          or it is being dragged, as the sashes do in VS Code. The views set no Background of their
          own on a splitter: a local value would override these setters.
          ================================================================= -->
@@ -162,7 +162,7 @@
         </Setter>
     </Style>
     <Style Selector="GridSplitter:pointerover, GridSplitter:pressed">
-        <Setter Property="Background" Value="{DynamicResource SemiColorPrimary}"/>
+        <Setter Property="Background" Value="{DynamicResource SemiColorFocusBorder}"/>
     </Style>
 
     <!-- =================================================================

@@ -13,18 +13,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Styles/TextEmphasis.axaml"/>
+                <ResourceInclude Source="/Styles/VisualStudioTheme.axaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <ResourceDictionary.ThemeDictionaries>
-                <!-- Sidebar colors modelled on VS Code: one step darker than the (white) editor area in Light,
-                     one step lighter in Dark, so the solution tree is clearly set apart from the definition editor.
-                     The values come from sideBar.background in the VS Code default themes. -->
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="SidebarBackground">#252526</SolidColorBrush>
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
             <conv:IconKeyToGeometryConverter x:Key="IconKeyToGeometry"/>
         </ResourceDictionary>
     </Application.Resources>
