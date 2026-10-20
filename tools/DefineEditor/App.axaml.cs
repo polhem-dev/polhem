@@ -70,6 +70,7 @@ public partial class App : Application
         // the convention of VS Code's "Code". The About dialog text still uses the full name Polhem.DefineEditor.
         Name = AppMenuName;
         AvaloniaXamlLoader.Load(this);
+        VisualStudioPalette.Apply(this);
 
         // Load the persisted UI language (defaults to English) before any
         // window/menu builds — XAML's {loc:Loc ...} bindings read through

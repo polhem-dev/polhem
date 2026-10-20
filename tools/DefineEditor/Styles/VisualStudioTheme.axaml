@@ -1,0 +1,76 @@
+<!-- DefineEditor's colours, taken from VS Code's "Dark (Visual Studio)" and "Light (Visual Studio)" themes (the
+     workbench defaults those themes use). Services/VisualStudioPalette writes every SemiColor* entry into Semi's own
+     palette brush at startup, so Semi's controls follow as well as whatever asks for the key here. A token not listed
+     keeps Semi's value. Text colours are in TextEmphasis.axaml.
+     NOTE: Avalonia reads an eight-digit colour as #AARRGGBB, VS Code as #RRGGBBAA; VS Code's #80808059 is #59808080 here. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <!-- editor.background, sideBar.background, tab.inactiveBackground, activityBar.background, input.background -->
+            <SolidColorBrush x:Key="SemiColorBackground0">#1E1E1E</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground1">#252526</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground2">#2D2D2D</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground3">#333333</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground4">#3C3C3C</SolidColorBrush>
+            <SolidColorBrush x:Key="SidebarBackground">#252526</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorNavBackground">#252526</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorWindow">#1E1E1E</SolidColorBrush>
+
+            <!-- input.background, and two steps up for hover and press -->
+            <SolidColorBrush x:Key="SemiColorFill0">#3C3C3C</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorFill1">#464646</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorFill2">#505050</SolidColorBrush>
+
+            <!-- panel.border: VS Code's dividers are faint; the splitters light up on hover instead -->
+            <SolidColorBrush x:Key="SemiColorBorder">#59808080</SolidColorBrush>
+
+            <!-- statusBar.background as the accent; list.activeSelectionBackground for selection -->
+            <SolidColorBrush x:Key="SemiColorPrimary">#007ACC</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryPointerover">#1C97EA</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryActive">#0062A3</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLight">#094771</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover">#0B5385</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLightActive">#0E639C</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorFocusBorder">#007FD4</SolidColorBrush>
+
+            <!-- textLink.foreground and the diagnostic colours -->
+            <SolidColorBrush x:Key="SemiColorLink">#3794FF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorLinkPointerover">#4DA3FF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorLinkActive">#2A7FD9</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorDanger">#F48771</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorWarning">#CCA700</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorSuccess">#89D185</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorInformation">#3794FF</SolidColorBrush>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SemiColorBackground0">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground1">#F3F3F3</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground2">#ECECEC</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground3">#E5E5E5</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorBackground4">#DDDDDD</SolidColorBrush>
+            <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorNavBackground">#F3F3F3</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorWindow">#FFFFFF</SolidColorBrush>
+
+            <SolidColorBrush x:Key="SemiColorBorder">#59808080</SolidColorBrush>
+
+            <SolidColorBrush x:Key="SemiColorPrimary">#007ACC</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryPointerover">#0062A3</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryActive">#005A9E</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLight">#CCE5FF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover">#B8DBFF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorPrimaryLightActive">#A5D2FF</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorFocusBorder">#0090F1</SolidColorBrush>
+
+            <SolidColorBrush x:Key="SemiColorLink">#006AB1</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorLinkPointerover">#005A99</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorLinkActive">#004E85</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorDanger">#E51400</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorWarning">#BF8803</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorSuccess">#388A34</SolidColorBrush>
+            <SolidColorBrush x:Key="SemiColorInformation">#1A85FF</SolidColorBrush>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>
