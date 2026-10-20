@@ -127,6 +127,28 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("An entry added to an existing settings file sits on its own line, indented like its siblings")]
+        public void Import_ExistingSettings_IndentsAddedEntry()
+        {
+            const string existing = """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ProgramSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Items>
+                    <ProgramItem ProgId="Order" DisplayName="Orders" />
+                  </Items>
+                </ProgramSettings>
+                """;
+            File.WriteAllText(PathOf("ProgramSettings.xml"), existing);
+
+            FormImporter.Apply(FormImporter.Plan(Quote(), Options()));
+
+            var lines = File.ReadAllLines(PathOf("ProgramSettings.xml"));
+            Assert.Contains("    <ProgramItem ProgId=\"Order\" DisplayName=\"Orders\" />", lines);
+            Assert.Contains("    <ProgramItem ProgId=\"Quote\" DisplayName=\"Quotes\" />", lines);
+            Assert.Equal("</ProgramSettings>", lines[^1]);
+        }
+
+        [Fact]
         [DisplayName("A form with a validation error writes no file at all")]
         public void Import_ValidationError_WritesNothing()
         {

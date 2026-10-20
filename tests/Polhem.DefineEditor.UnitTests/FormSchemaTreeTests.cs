@@ -133,10 +133,12 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("The schema root offers Generate FormLayout, and the Tables folder offers Add table")]
+        [DisplayName("The schema root offers Generate FormLayout and Export to Excel, and the Tables folder offers Add table")]
         public void Commands_RootAndTablesFolder()
         {
-            Assert.Equal(LocalizationService.Current["FormSchema_GenerateFormLayout"], Assert.Single(CommandsFor(_document.RootNode)).Label);
+            Assert.Equal(
+                [LocalizationService.Current["FormSchema_GenerateFormLayout"], LocalizationService.Current["FormSchema_ExportWorkbook"]],
+                CommandsFor(_document.RootNode).Select(c => c.Label));
 
             Assert.Single(CommandsFor(_document.RootNode.Children[0])).Execute();
 

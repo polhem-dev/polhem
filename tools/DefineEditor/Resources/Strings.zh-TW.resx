@@ -248,4 +248,30 @@
   <data name="TreeNode_SystemSettings" xml:space="preserve"><value>系統設定</value></data>
   <data name="TreeNode_Tables" xml:space="preserve"><value>資料表</value></data>
   <data name="TreeNode_Website" xml:space="preserve"><value>網站</value></data>
+  <!-- Excel import and export of forms -->
+  <data name="MenuItem_ImportFormWorkbook" xml:space="preserve"><value>從 Excel 匯入表單...</value></data>
+  <data name="FormSchema_ExportWorkbook" xml:space="preserve"><value>匯出成 Excel...</value></data>
+  <data name="Dialog_PickFormWorkbook" xml:space="preserve"><value>選擇表單活頁簿</value></data>
+  <data name="Dialog_SaveFormWorkbook" xml:space="preserve"><value>儲存表單活頁簿</value></data>
+  <data name="Dialog_ExcelWorkbook" xml:space="preserve"><value>Excel 活頁簿</value></data>
+  <data name="Confirm_ImportFormTitle" xml:space="preserve"><value>匯入表單</value></data>
+  <data name="Confirm_ImportFormMessage" xml:space="preserve"><value>將 {0} 匯入 {1}，會變更下列檔案：
+{2}</value></data>
+  <data name="Confirm_ImportFormWarnings" xml:space="preserve"><value>警告：
+{0}</value></data>
+  <data name="Error_ImportFormTitle" xml:space="preserve"><value>無法匯入表單</value></data>
+  <data name="Error_ImportFormMessage" xml:space="preserve"><value>沒有寫入任何檔案。請先修正活頁簿中的下列問題：
+{0}</value></data>
+  <data name="Action_Import" xml:space="preserve"><value>匯入</value></data>
+  <data name="ImportAction_Create" xml:space="preserve"><value>新增</value></data>
+  <data name="ImportAction_Overwrite" xml:space="preserve"><value>覆寫</value></data>
+  <data name="ImportAction_Update" xml:space="preserve"><value>加入項目</value></data>
+  <data name="ImportAction_Skip" xml:space="preserve"><value>保留</value></data>
+  <data name="Status_FormImported" xml:space="preserve"><value>已匯入 {0}：寫入 {1} 個檔案</value></data>
+  <data name="Status_FormImportUnchanged" xml:space="preserve"><value>{0} 已是最新，沒有變更</value></data>
+  <data name="Status_FormImportCancelled" xml:space="preserve"><value>已取消匯入</value></data>
+  <data name="Status_FormImportBlockedByDirty" xml:space="preserve"><value>請先儲存或關閉 {0}，匯入會覆寫它</value></data>
+  <data name="Status_FormImportFailed" xml:space="preserve"><value>匯入失敗：{0}</value></data>
+  <data name="Status_FormWorkbookExported" xml:space="preserve"><value>已匯出 {0}</value></data>
+  <data name="Status_FormWorkbookExportFailed" xml:space="preserve"><value>匯出失敗：{0}</value></data>
 </root>

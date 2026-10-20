@@ -27,7 +27,14 @@ internal static class SettingsXmlEditor
                     new XAttribute(XNamespace.Xmlns + "xsi", XsiNamespace),
                     new XAttribute(XNamespace.Xmlns + "xsd", XsdNamespace)));
         }
-        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
+        // Dropping the whitespace lets the writer indent added elements like the rest of the file; with the
+        // original whitespace kept, an added element lands on the line of its last sibling.
+        var settings = new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            IgnoreWhitespace = true,
+        };
         using var reader = XmlReader.Create(path, settings);
         return XDocument.Load(reader);
     }

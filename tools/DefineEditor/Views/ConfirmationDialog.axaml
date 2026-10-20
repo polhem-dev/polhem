@@ -34,8 +34,10 @@
             </StackPanel>
 
             <!-- Message body -->
-            <TextBlock x:Name="MessageText" TextWrapping="Wrap"
-                      />
+            <!-- Scrolls when a message lists many files (an import plan, the missing framework defaults). -->
+            <ScrollViewer MaxHeight="420" HorizontalScrollBarVisibility="Disabled">
+                <TextBlock x:Name="MessageText" TextWrapping="Wrap"/>
+            </ScrollViewer>
         </DockPanel>
     </Border>
 </Window>

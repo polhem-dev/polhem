@@ -261,4 +261,30 @@ Save anyway?</value></data>
   <data name="TreeNode_SystemSettings" xml:space="preserve"><value>System Settings</value></data>
   <data name="TreeNode_Tables" xml:space="preserve"><value>Tables</value></data>
   <data name="TreeNode_Website" xml:space="preserve"><value>Website</value></data>
+  <!-- Excel import and export of forms -->
+  <data name="MenuItem_ImportFormWorkbook" xml:space="preserve"><value>Import Form from Excel...</value></data>
+  <data name="FormSchema_ExportWorkbook" xml:space="preserve"><value>Export to Excel...</value></data>
+  <data name="Dialog_PickFormWorkbook" xml:space="preserve"><value>Choose a form workbook</value></data>
+  <data name="Dialog_SaveFormWorkbook" xml:space="preserve"><value>Save the form workbook</value></data>
+  <data name="Dialog_ExcelWorkbook" xml:space="preserve"><value>Excel workbook</value></data>
+  <data name="Confirm_ImportFormTitle" xml:space="preserve"><value>Import form</value></data>
+  <data name="Confirm_ImportFormMessage" xml:space="preserve"><value>Importing {0} into {1} changes these files:
+{2}</value></data>
+  <data name="Confirm_ImportFormWarnings" xml:space="preserve"><value>Warnings:
+{0}</value></data>
+  <data name="Error_ImportFormTitle" xml:space="preserve"><value>Cannot import the form</value></data>
+  <data name="Error_ImportFormMessage" xml:space="preserve"><value>Nothing was written. Fix these problems in the workbook first:
+{0}</value></data>
+  <data name="Action_Import" xml:space="preserve"><value>Import</value></data>
+  <data name="ImportAction_Create" xml:space="preserve"><value>create</value></data>
+  <data name="ImportAction_Overwrite" xml:space="preserve"><value>overwrite</value></data>
+  <data name="ImportAction_Update" xml:space="preserve"><value>add entries</value></data>
+  <data name="ImportAction_Skip" xml:space="preserve"><value>keep</value></data>
+  <data name="Status_FormImported" xml:space="preserve"><value>Imported {0}: {1} file(s) written</value></data>
+  <data name="Status_FormImportUnchanged" xml:space="preserve"><value>{0} is already up to date</value></data>
+  <data name="Status_FormImportCancelled" xml:space="preserve"><value>Import cancelled</value></data>
+  <data name="Status_FormImportBlockedByDirty" xml:space="preserve"><value>Save or close {0} first; the import would overwrite it</value></data>
+  <data name="Status_FormImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>
+  <data name="Status_FormWorkbookExported" xml:space="preserve"><value>Exported {0}</value></data>
+  <data name="Status_FormWorkbookExportFailed" xml:space="preserve"><value>Export failed: {0}</value></data>
 </root>

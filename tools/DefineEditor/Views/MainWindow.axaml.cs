@@ -69,6 +69,32 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Pops the OS file picker for a form workbook and imports the chosen one into the open solution.
+    /// Public for the same reason as <see cref="PromptOpenSolution"/>: the picker needs this window's
+    /// <see cref="StorageProvider"/>.
+    /// </summary>
+    public async Task PromptImportFormWorkbookAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = LocalizationService.Current["Dialog_PickFormWorkbook"],
+            AllowMultiple = false,
+            FileTypeFilter = [ExcelWorkbookFileType],
+        });
+
+        if (files.Count > 0 && DataContext is MainWindowViewModel vm)
+            await vm.ImportFormWorkbookAsync(files[0].Path.LocalPath);
+    }
+
+    /// <summary>The file type of a form workbook, for the open and save pickers.</summary>
+    public static FilePickerFileType ExcelWorkbookFileType => new(LocalizationService.Current["Dialog_ExcelWorkbook"])
+    {
+        Patterns = ["*.xlsx"],
+        AppleUniformTypeIdentifiers = ["org.openxmlformats.spreadsheetml.sheet"],
+        MimeTypes = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+    };
+
+    /// <summary>
     /// Shows the in-window File menu and binds its items to the given commands. Called off macOS,
     /// where the native menu bar that <see cref="App.ConfigureWindowMenu"/> builds is not rendered.
     /// </summary>
@@ -77,14 +103,16 @@ public partial class MainWindow : Window
     /// carry Open Folder, and the panel's own button is the way to open a solution here.
     /// </remarks>
     /// <param name="addFrameworkDefaults">Adds the framework default files the open solution lacks.</param>
+    /// <param name="importFormWorkbook">Imports a form described in an Excel workbook.</param>
     /// <param name="save">Saves the active document.</param>
     /// <param name="saveAll">Saves every dirty document.</param>
     /// <param name="validate">Validates the active document.</param>
     /// <param name="closeTab">Closes the active tab.</param>
     public void ShowInWindowFileMenu(
-        ICommand addFrameworkDefaults, ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
+        ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
     {
         AddFrameworkDefaultsMenuItem.Command = addFrameworkDefaults;
+        ImportFormWorkbookMenuItem.Command = importFormWorkbook;
         SaveMenuItem.Command = save;
         SaveAllMenuItem.Command = saveAll;
         ValidateMenuItem.Command = validate;

@@ -176,6 +176,7 @@ internal static class Smoke
             RunLanguageSmoke,
             RunTabCommandsSmoke,
             RunFrameworkDefaultsSmoke,
+            RunFormWorkbookImportSmoke,
         };
         foreach (var phase in phases)
         {
@@ -731,6 +732,44 @@ internal static class Smoke
         static bool ContainsFile(Polhem.DefineEditor.Models.DefineNode node, string filePath) =>
             string.Equals(node.FilePath, filePath, StringComparison.OrdinalIgnoreCase)
             || node.Children.Any(child => ContainsFile(child, filePath));
+    }
+
+    private static int RunFormWorkbookImportSmoke()
+    {
+        var tempDir = MakeTempDir("workbook");
+        try
+        {
+            var schema = new FormSchema("Quote", "Quote");
+            var master = schema.Tables!.Add("Quote", "Quote");
+            master.Fields!.Add("sys_id", "Quote No", FieldDbType.String);
+            master.Fields.Add("quote_date", "Quote Date", FieldDbType.Date);
+            var workbookPath = Path.Combine(tempDir, "Quote.xlsx");
+            using (var stream = File.Create(workbookPath))
+                Polhem.Definition.Spreadsheet.FormWorkbookWriter.Write(new(schema), stream);
+
+            var definePath = Path.Combine(tempDir, "Define");
+            Directory.CreateDirectory(definePath);
+            var vm = new MainWindowViewModel { SolutionPath = definePath };
+            vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
+
+            var schemaPath = Path.Combine(definePath, "FormSchema", "Quote.FormSchema.xml");
+            if (!File.Exists(schemaPath))
+                return Fail(147, $"Importing a workbook did not write {schemaPath}: {vm.StatusText}");
+            if (!File.Exists(Path.Combine(definePath, "TableSchema", "company", "ft_quote.TableSchema.xml")))
+                return Fail(148, "Importing a workbook did not write the TableSchema");
+            if (!string.Equals(vm.SelectedNode?.FilePath, schemaPath, StringComparison.OrdinalIgnoreCase))
+                return Fail(149, "The imported FormSchema was not selected in the rescanned tree");
+
+            var afterFirst = vm.StatusText;
+            vm.ImportFormWorkbookAsync(workbookPath).GetAwaiter().GetResult();
+            if (vm.StatusText == afterFirst)
+                return Fail(150, "Importing the same workbook again should report that nothing changed");
+
+            Console.WriteLine("[smoke:form-workbook] OK");
+            return 0;
+        }
+        catch (Exception ex) { return Fail(151, $"Form workbook import smoke crashed: {ex.Message}"); }
+        finally { TryDelete(tempDir); }
     }
 
     private static string MakeTempDir(string tag)
