@@ -149,6 +149,23 @@
     </Style>
 
     <!-- =================================================================
+         Pane splitters: a quiet border line that turns the accent colour while the pointer is on it
+         or it is being dragged, as the sashes do in VS Code. The views set no Background of their
+         own on a splitter: a local value would override these setters.
+         ================================================================= -->
+    <Style Selector="GridSplitter">
+        <Setter Property="Background" Value="{DynamicResource SemiColorBorder}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="GridSplitter:pointerover, GridSplitter:pressed">
+        <Setter Property="Background" Value="{DynamicResource SemiColorPrimary}"/>
+    </Style>
+
+    <!-- =================================================================
          Panel backgrounds (Semi layer tokens: Bg0 main surface, Bg1 sunken, Bg2 raised)
          ================================================================= -->
     <Style Selector="Border.surface">

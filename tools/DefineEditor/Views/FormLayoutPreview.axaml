@@ -8,7 +8,7 @@
              x:CompileBindings="True">
 
     <DockPanel>
-        <Border DockPanel.Dock="Top" Classes="titlebar" BorderThickness="0,2,0,1" BorderBrush="{DynamicResource SemiColorPrimary}" Padding="12,6">
+        <Border DockPanel.Dock="Top" Classes="surface-sunken" Padding="12,6">
             <DockPanel>
                 <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsPreviewVisible}" Content="{loc:Loc Preview_Show}"/>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="16" Margin="0,0,16,0"
