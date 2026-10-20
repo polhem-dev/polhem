@@ -21,6 +21,7 @@ Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.
 - DefineEditor has a VS Code style activity bar that switches the sidebar between the files, the programs and the database tables.
 - DefineEditor shows the CREATE TABLE statement of the TableSchema being edited, for each supported database.
 - `dotnet polhem forms` and DefineEditor describe a form in an Excel workbook and import it as the definition files of a runnable form.
+- A TableSchema generated from a detail table indexes `sys_master_rowid` (`fk_{0}_master`), as the hand-written ones do.
 
 ## [1.7.0] - 2026-10-16
 

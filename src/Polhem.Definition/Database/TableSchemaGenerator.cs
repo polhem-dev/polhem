@@ -105,6 +105,25 @@ namespace Polhem.Definition.Database
                 // Include field name to avoid duplicates
                 tableSchema.Indexes!.Add($"fk_{{0}}_{fieldName}", fieldName, false);
             }
+
+            AddMasterIndex(tableSchema);
+        }
+
+        /// <summary>
+        /// Adds the index on <see cref="SysFields.MasterRowId"/> to a detail table, which links each detail row
+        /// to its master record and is read whenever the details of one master are loaded or deleted.
+        /// </summary>
+        private static void AddMasterIndex(TableSchema tableSchema)
+        {
+            const string indexName = "fk_{0}_master";
+            if (!tableSchema.Fields!.Contains(SysFields.MasterRowId))
+                return;
+
+            // A relation field could already have produced this name, or an index on the master column.
+            bool alreadyIndexed = tableSchema.Indexes!.Contains(indexName) || tableSchema.Indexes.Any(idx =>
+                idx.IndexFields!.Count == 1 && idx.IndexFields.Contains(SysFields.MasterRowId));
+            if (!alreadyIndexed)
+                tableSchema.Indexes.Add(indexName, SysFields.MasterRowId, false);
         }
     }
 }
