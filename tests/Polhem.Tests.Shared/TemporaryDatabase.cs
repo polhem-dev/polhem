@@ -41,14 +41,8 @@ namespace Polhem.Tests.Shared
             NpgsqlConnection.ClearAllPools();
             MySqlConnection.ClearAllPools();
 
-            var admin = databaseType switch
-            {
-                DatabaseType.SQLServer => "master",
-                DatabaseType.PostgreSQL => "postgres",
-                _ => "mysql",
-            };
             using var connection = GetServerFactory(databaseType).CreateConnection()!;
-            connection.ConnectionString = ConnectionStringTemplate.Resolve(connectionStringTemplate, admin, string.Empty, string.Empty);
+            connection.ConnectionString = GetAdminConnectionString(databaseType, connectionStringTemplate);
             connection.Open();
             using var command = connection.CreateCommand();
             command.CommandText = databaseType switch
@@ -60,6 +54,20 @@ namespace Polhem.Tests.Shared
                 _ => $"DROP DATABASE IF EXISTS `{databaseName}`",
             };
             command.ExecuteNonQuery();
+        }
+
+        // MySQL connects with no database at all: a login granted only some databases cannot open `mysql`.
+        private static string GetAdminConnectionString(DatabaseType databaseType, string connectionStringTemplate)
+        {
+            if (databaseType != DatabaseType.MySQL)
+            {
+                var admin = databaseType == DatabaseType.SQLServer ? "master" : "postgres";
+                return ConnectionStringTemplate.Resolve(connectionStringTemplate, admin, string.Empty, string.Empty);
+            }
+            var builder = new MySqlConnectionStringBuilder(
+                ConnectionStringTemplate.Resolve(connectionStringTemplate, "placeholder", string.Empty, string.Empty));
+            builder.Remove("Database");
+            return builder.ConnectionString;
         }
     }
 }
