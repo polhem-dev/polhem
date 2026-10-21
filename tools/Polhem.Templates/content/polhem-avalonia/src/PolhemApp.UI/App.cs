@@ -1,12 +1,12 @@
 using Polhem.UI.Avalonia.Shell;
 
-namespace PolhemApp.Desktop;
+namespace PolhemApp.UI;
 
 /// <summary>
 /// The application's front end: the Polhem shell (connect, sign in, and the forms of the server's menu) with this
-/// application's title and the values the connection and sign-in screens start with.
+/// application's title and the values the connection and sign-in screens start with. Every platform head starts it.
 /// </summary>
-public class DesktopApp : ShellApplication
+public class App : ShellApplication
 {
     /// <inheritdoc/>
     protected override ShellOptions CreateOptions() => new()

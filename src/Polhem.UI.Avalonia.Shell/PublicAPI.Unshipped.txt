@@ -42,3 +42,13 @@ const Polhem.UI.Avalonia.Shell.Preferences.ShellPreferenceKeys.Language = "langu
 override Polhem.UI.Avalonia.Shell.ShellApplication.Initialize() -> void
 override Polhem.UI.Avalonia.Shell.ShellApplication.OnFrameworkInitializationCompleted() -> void
 virtual Polhem.UI.Avalonia.Shell.ShellApplication.CreateOptions() -> Polhem.UI.Avalonia.Shell.ShellOptions!
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.BrowserLocalStorage(string! appName) -> void
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.Load(string! key) -> string!
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.LoadApiKey() -> string!
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.LoadEndpoint() -> string!
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.Save(string! key, string! value) -> void
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SaveApiKey(string! apiKey) -> void
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SaveEndpoint(string! endpoint) -> void
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SetApiKey(string! apiKey) -> void
+Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SetEndpoint(string! endpoint) -> void

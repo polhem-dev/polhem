@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: c5552709a45ec94595ad1d8b7d0ddacb83541111 -->
+<!-- source: en/getting-started/platform-support.md blob: fe52ace959ff35bac11caf9057ef8d7793e5d8d9 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -132,10 +132,10 @@ DynamicExpresso 求值的程式碼也有相同限制。
    `FileEndpointStorage`，寫入每位使用者本機應用程式資料目錄下的應用程式專屬資料夾。這個資料夾在桌面、iOS（位於 App 的
    沙箱容器內；會被納入裝置備份）與 Android（App 的私有資料目錄）上都可寫入，所以這些 head 維持預設即可。
    `FileEndpointStorage` 的 remarks 列出各平台實際解析出的路徑。**（瀏覽器）** 瀏覽器沒有持久的檔案系統：寫入只存在記憶體中，
-   重新載入後就消失。請以瀏覽器儲存體實作 `IEndpointStorage` 與 `IApiKeyStorage`，並在呼叫 `ClientInfo.InitializeAsync` 或
-   `ClientInfo.SetEndpointAsync` 之前指定這兩個屬性。Northwind 瀏覽器 head 的
-   [`BrowserLocalStorageEndpointStorage`](../../../apps/Polhem.Northwind/Polhem.Northwind.Browser/Storage/BrowserLocalStorageEndpointStorage.cs)
-   是以 `localStorage` 實作的可用範例。
+   重新載入後就消失。請在呼叫 `ClientInfo.InitializeAsync` 或 `ClientInfo.SetEndpointAsync` 之前，把這兩個屬性指定為以瀏覽器儲存體
+   實作的儲存。`Polhem.UI.Avalonia.Shell` 提供以 `localStorage` 實作的
+   [`BrowserLocalStorage`](../../../src/Polhem.UI.Avalonia.Shell/Browser/BrowserLocalStorage.cs)，同時保存殼的偏好設定；
+   Northwind 瀏覽器 head 就是用它。
 5. **維持非同步。** 以 `ClientInfo.InitializeAsync` 連線，並以 `ClientDefineAccess` 的 `…Async` 成員載入定義。絕不要阻塞等待
    Task（`.Result`、`.Wait()`、`GetAwaiter().GetResult()`）：瀏覽器執行環境是單執行緒，在那裡阻塞會擲出
    「Cannot wait on monitors on this runtime」。

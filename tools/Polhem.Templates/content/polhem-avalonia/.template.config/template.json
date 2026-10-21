@@ -8,7 +8,7 @@
   ],
   "identity": "Polhem.App.Avalonia",
   "name": "Polhem App (Avalonia)",
-  "description": "A Polhem application with an Avalonia desktop front end: a JSON-RPC server that references the Polhem packages and one database driver, a desktop client built on the Polhem shell, a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
+  "description": "A Polhem application with Avalonia front ends: a JSON-RPC server that references the Polhem packages and one database driver, a desktop client built on the Polhem shell (optionally browser, iOS and Android clients too), a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
   "shortName": "polhem-avalonia",
   "sourceName": "PolhemApp",
   "preferNameDirectory": true,
@@ -85,6 +85,27 @@
       ],
       "replaces": "POLHEM_DEFAULT_LANGUAGE"
     },
+    "browser": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Add a browser (WebAssembly) client. Needs the wasm-tools workload.",
+      "displayName": "Browser client",
+      "defaultValue": "false"
+    },
+    "ios": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Add an iOS client. Needs the ios workload and Xcode.",
+      "displayName": "iOS client",
+      "defaultValue": "false"
+    },
+    "android": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Add an Android client. Needs the android workload and the Android SDK.",
+      "displayName": "Android client",
+      "defaultValue": "false"
+    },
     "polhemVersion": {
       "type": "parameter",
       "datatype": "text",
@@ -100,6 +121,15 @@
         "high": 5299
       },
       "replaces": "5180"
+    },
+    "browserPort": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": {
+        "low": 5300,
+        "high": 5399
+      },
+      "replaces": "5380"
     },
     "dbPrefix": {
       "type": "derived",
@@ -118,6 +148,12 @@
       "valueSource": "name",
       "valueTransform": "bundleIdentifierPart",
       "replaces": "polhem-app-bundle"
+    },
+    "androidPackageName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "androidPackagePart",
+      "replaces": "polhem_app_android"
     }
   },
   "forms": {
@@ -144,8 +180,47 @@
       "identifier": "replace",
       "pattern": "[^a-z0-9.-]",
       "replacement": "-"
+    },
+    "androidPackagePart": {
+      "identifier": "chain",
+      "steps": [
+        "lowerCaseInvariant",
+        "nonPackageCharToUnderscore"
+      ]
+    },
+    "nonPackageCharToUnderscore": {
+      "identifier": "replace",
+      "pattern": "[^a-z0-9.]",
+      "replacement": "_"
     }
   },
+  "sources": [
+    {
+      "copyOnly": [
+        "**/*.png"
+      ],
+      "modifiers": [
+        {
+          "condition": "(!browser)",
+          "exclude": [
+            "src/PolhemApp.Browser/**"
+          ]
+        },
+        {
+          "condition": "(!ios)",
+          "exclude": [
+            "src/PolhemApp.iOS/**"
+          ]
+        },
+        {
+          "condition": "(!android)",
+          "exclude": [
+            "src/PolhemApp.Android/**"
+          ]
+        }
+      ]
+    }
+  ],
   "primaryOutputs": [
     {
       "path": "PolhemApp.slnx"

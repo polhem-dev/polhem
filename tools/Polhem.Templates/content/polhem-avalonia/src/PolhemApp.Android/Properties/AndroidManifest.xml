@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- DEVELOPMENT ONLY: the server is reached over plain HTTP, which Android 9 and later block by default. Serve the
+	     server over HTTPS and remove usesCleartextTraffic before shipping. -->
+	<application android:label="PolhemApp" android:icon="@drawable/Icon" android:usesCleartextTraffic="true" />
+</manifest>

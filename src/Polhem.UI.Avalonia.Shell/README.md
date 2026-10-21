@@ -66,15 +66,20 @@ public partial class AppDelegate : AvaloniaAppDelegate<MyApp> { }
 ```
 
 Every option is described in the XML documentation of `ShellOptions`. What differs per head goes through
-`ShellApplication.ConfigureOptions`. A browser head, which has no persistent file system, supplies its own preference
-storage (`IShellPreferenceStorage`), and turns the language switch off when its font cannot draw CJK text:
+`ShellApplication.ConfigureOptions`. A browser head has no persistent file system, so it keeps the endpoint, the API
+key and the shell's preferences in `localStorage` through `BrowserLocalStorage`, and turns the language switch off when
+its font cannot draw CJK text:
 
 ```csharp
+var storage = new BrowserLocalStorage("MyApp");
+ClientInfo.EndpointStorage = storage;
+ClientInfo.ApiKeyStorage = storage;
+
 AppBuilder.Configure(() => new MyApp
 {
     ConfigureOptions = options =>
     {
-        options.PreferenceStorage = myLocalStorage;
+        options.PreferenceStorage = storage;
         options.AllowLanguageSwitch = false;
     },
 });

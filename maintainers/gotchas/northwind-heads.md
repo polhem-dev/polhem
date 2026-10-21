@@ -26,6 +26,12 @@ The unit test projects of the packages a head ships run under `-p:DynamicCodeSup
 - A JDK (17) and the Android command-line tools are needed; where they live is machine-specific. **Non-interactive
   Bash does not read `~/.zshrc`** → export your own `JAVA_HOME` / `ANDROID_HOME` before running dotnet/adb, and pick
   an AVD from `emulator -list-avds`.
+- **`-t:Run` fails with XA0137 (`run-as: couldn't stat /data/user/0/<package>`) when the emulator's lock screen has a
+  credential and nobody unlocked it after boot.** The user stays `RUNNING_LOCKED` (`adb shell dumpsys user`), its
+  credential-encrypted storage is not mounted, so Fast Deployment cannot write the app's files, and with
+  `EmbedAssembliesIntoApk=true` the launch fails instead with `ActivityNotFoundException`. Every app is affected, the
+  Northwind head included, so it looks like a broken manifest but is not. Unlock the emulator once (or remove its
+  screen lock), then run again. Seen on 2026-10-22 with an AVD that had a pattern lock.
 - The emulator's loopback to the host is **`10.0.2.2`** (not localhost); set the endpoint to
   `http://10.0.2.2:5100/api`; AndroidManifest needs `<application android:usesCleartextTraffic="true">` (dev only;
   Android 9+ blocks cleartext by default).

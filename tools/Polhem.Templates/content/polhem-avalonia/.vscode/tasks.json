@@ -134,6 +134,65 @@
             "problemMatcher": [],
             "hide": true
         },
+//#if (ios)
+        {
+            "label": "Polhem: Run iOS simulator",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.iOS/PolhemApp.iOS.csproj",
+                "-t:Run",
+                "-f",
+                "net10.0-ios"
+            ],
+            // The Run target computes the launch arguments from the app bundle, so the bundle is built first.
+            "dependsOn": [
+                "polhem-ios-build"
+            ],
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "polhem-ios-build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.iOS/PolhemApp.iOS.csproj",
+                "-f",
+                "net10.0-ios"
+            ],
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+//#endif
+//#if (android)
+        {
+            "label": "Polhem: Run Android emulator",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.Android/PolhemApp.Android.csproj",
+                "-t:Run",
+                "-f",
+                "net10.0-android"
+            ],
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+//#endif
         {
             "label": "build",
             "type": "process",

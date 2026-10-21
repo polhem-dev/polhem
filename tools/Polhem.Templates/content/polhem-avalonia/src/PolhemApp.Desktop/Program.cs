@@ -1,4 +1,5 @@
 using Avalonia;
+using PolhemApp.UI;
 
 namespace PolhemApp.Desktop;
 
@@ -11,7 +12,7 @@ internal static class Program
 
     // A separate method so the Avalonia previewer can reuse the same setup.
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<DesktopApp>()
+        => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();

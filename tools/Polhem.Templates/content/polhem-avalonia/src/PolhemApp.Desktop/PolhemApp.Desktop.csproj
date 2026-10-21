@@ -14,9 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polhem.UI.Avalonia.Shell" Version="POLHEM_PACKAGE_VERSION" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PolhemApp.UI\PolhemApp.UI.csproj" />
   </ItemGroup>
 
 </Project>

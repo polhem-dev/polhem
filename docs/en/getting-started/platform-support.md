@@ -147,11 +147,10 @@ A desktop head needs none of this. The items marked **(browser)** apply only to 
    directory. That folder is writable on desktop, iOS (inside the app's sandbox container; it is included in device
    backups) and Android (the app's private data directory), so those heads keep the default. The remarks on
    `FileEndpointStorage` list the resolved path per platform. **(browser)** The browser has no persistent file system:
-   writes land in memory and are lost on reload. Implement `IEndpointStorage` and `IApiKeyStorage` over browser
-   storage and assign both properties before calling `ClientInfo.InitializeAsync` or `ClientInfo.SetEndpointAsync`.
-   The Northwind browser head's
-   [`BrowserLocalStorageEndpointStorage`](../../../apps/Polhem.Northwind/Polhem.Northwind.Browser/Storage/BrowserLocalStorageEndpointStorage.cs)
-   is a working example over `localStorage`.
+   writes land in memory and are lost on reload. Assign both properties a storage over browser storage before calling
+   `ClientInfo.InitializeAsync` or `ClientInfo.SetEndpointAsync`. `Polhem.UI.Avalonia.Shell` ships
+   [`BrowserLocalStorage`](../../../src/Polhem.UI.Avalonia.Shell/Browser/BrowserLocalStorage.cs), over `localStorage`,
+   which also keeps the shell's preferences; the Northwind browser head uses it.
 5. **Stay asynchronous.** Connect with `ClientInfo.InitializeAsync` and load definitions with the `…Async` members of
    `ClientDefineAccess`. Never block on a task (`.Result`, `.Wait()`, `GetAwaiter().GetResult()`): the browser runtime
    is single-threaded, and blocking there throws "Cannot wait on monitors on this runtime".

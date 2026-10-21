@@ -86,7 +86,7 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
     }
 
     [Fact]
-    [DisplayName("The desktop client starts with the server's endpoint, the first company and a bundle id from the name")]
+    [DisplayName("The clients start with the server's endpoint and the first company, and the desktop bundle id comes from the name")]
     public void Generate_Desktop_PointsAtTheServerAndCompany()
     {
         var output = Generate("SqlServer", "--company", "ACME");
@@ -94,11 +94,92 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
         using var launch = JsonDocument.Parse(File.ReadAllText(
             Path.Combine(output, "src", "Acme.Erp.Server", "Properties", "launchSettings.json")));
         var serverUrl = launch.RootElement.GetProperty("profiles").GetProperty("http").GetProperty("applicationUrl").GetString();
-        var app = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Desktop", "DesktopApp.cs"));
+        var app = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.UI", "App.cs"));
         Assert.Contains($"DefaultEndpoint = \"{serverUrl}/api\"", app, StringComparison.Ordinal);
         Assert.Contains("DefaultCompanyId = \"ACME\"", app, StringComparison.Ordinal);
         var project = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Desktop", "Acme.Erp.Desktop.csproj"));
         Assert.Matches(new Regex("<PolhemBundleIdentifier>com\\.example\\.acme\\.erp</PolhemBundleIdentifier>",
             RegexOptions.None, TimeSpan.FromSeconds(1)), project);
+    }
+
+    [Fact]
+    [DisplayName("Without client options polhem-avalonia generates only the server, the desktop client and the UI they share")]
+    public void Generate_NoClientOptions_HasOnlyTheDesktopClient()
+    {
+        var output = Generate("SqlServer");
+
+        Assert.Equal(["Acme.Erp.Desktop", "Acme.Erp.Server", "Acme.Erp.UI"],
+            Directory.GetDirectories(Path.Combine(output, "src")).Select(Path.GetFileName).Order(StringComparer.Ordinal));
+        Assert.DoesNotContain("Cors", File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Server", "Program.cs")),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Browser", File.ReadAllText(Path.Combine(output, ".vscode", "launch.json")),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [DisplayName("The browser, iOS and Android options add their clients to the solution, with the endpoint each one reaches the server at")]
+    public void Generate_AllClientOptions_AddTheClients()
+    {
+        var output = Generate("SqlServer", "--browser", "--ios", "--android");
+
+        var solution = File.ReadAllText(Path.Combine(output, "Acme.Erp.slnx"));
+        foreach (var head in new[] { "Android", "Browser", "Desktop", "iOS", "Server", "UI" })
+        {
+            Assert.Contains($"src/Acme.Erp.{head}/Acme.Erp.{head}.csproj", solution, StringComparison.Ordinal);
+        }
+        var serverUrl = ServerUrl(output);
+        var port = new Uri(serverUrl).Port;
+        // The Android emulator reaches the machine that runs it at 10.0.2.2; its own localhost is the emulator.
+        Assert.Contains($"DefaultEndpoint = \"http://10.0.2.2:{port}/api\"",
+            File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Android", "AndroidApp.cs")), StringComparison.Ordinal);
+        Assert.Contains("<ApplicationId>com.example.acme.erp</ApplicationId>",
+            File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Android", "Acme.Erp.Android.csproj")), StringComparison.Ordinal);
+        Assert.Contains("<string>com.example.acme.erp</string>",
+            File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.iOS", "Info.plist")), StringComparison.Ordinal);
+        Assert.Contains("UseCors", File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Server", "Program.cs")),
+            StringComparison.Ordinal);
+        var tasks = File.ReadAllText(Path.Combine(output, ".vscode", "tasks.json"));
+        Assert.Contains("Polhem: Run iOS simulator", tasks, StringComparison.Ordinal);
+        Assert.Contains("Polhem: Run Android emulator", tasks, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [DisplayName("An Android package name derived from a name with hyphens has no hyphens")]
+    public void Generate_HyphenatedName_GivesAValidAndroidPackageName()
+    {
+        var output = Path.Combine(_fx.Root, $"hyphen-{Guid.NewGuid():N}");
+        _fx.Run(_fx.Root, ["new", "polhem-avalonia", "--name", "Acme-Sales", "--output", output, "--android",
+            "--no-restore", "--debug:custom-hive", _fx.Hive]);
+
+        Assert.Contains("<ApplicationId>com.example.acme_sales</ApplicationId>",
+            File.ReadAllText(Path.Combine(output, "src", "Acme-Sales.Android", "Acme-Sales.Android.csproj")),
+            StringComparison.Ordinal);
+    }
+
+    [WorkloadFact("wasm-tools")]
+    [DisplayName("The generated browser client builds")]
+    public void Generate_Browser_Builds() => BuildHead("--browser", "Browser");
+
+    [WorkloadFact("ios")]
+    [DisplayName("The generated iOS client builds")]
+    public void Generate_iOS_Builds() => BuildHead("--ios", "iOS");
+
+    [WorkloadFact("android", "maui-android")]
+    [DisplayName("The generated Android client builds")]
+    public void Generate_Android_Builds() => BuildHead("--android", "Android");
+
+    private void BuildHead(string option, string head)
+    {
+        var output = Generate("SqlServer", option);
+
+        _fx.Run(output, "build", Path.Combine("src", $"Acme.Erp.{head}", $"Acme.Erp.{head}.csproj"),
+            $"-p:RestoreAdditionalProjectFallbackFolders={TemplatePackageFixture.GlobalPackages}");
+    }
+
+    private static string ServerUrl(string output)
+    {
+        using var launch = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(output, "src", "Acme.Erp.Server", "Properties", "launchSettings.json")));
+        return launch.RootElement.GetProperty("profiles").GetProperty("http").GetProperty("applicationUrl").GetString()!;
     }
 }
