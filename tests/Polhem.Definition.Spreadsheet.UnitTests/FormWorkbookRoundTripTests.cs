@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using ClosedXML.Excel;
 using Polhem.Core.Serialization;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Definition.Spreadsheet.UnitTests
@@ -96,6 +98,21 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
                 Assert.Equal(columns[i].Advanced, column.IsHidden);
                 Assert.Equal(columns[i].Advanced ? 1 : 0, column.OutlineLevel);
             }
+        }
+
+        [Fact]
+        [DisplayName("An exported workbook writes Auto in the control column of a field that leaves the control to the data type")]
+        public void Export_WritesAutoControl()
+        {
+            var content = FormExporter.Load(Path.Combine(RepoRoot.Find(), "apps", "Polhem.Northwind", "Define"), "Order");
+
+            using var workbook = Workbook(content);
+
+            var fields = workbook.Worksheet(FormWorkbookCatalog.FieldsSheet);
+            int control = FormWorkbookCatalog.FieldColumns.ToList().FindIndex(c => c.Key == nameof(FormField.ControlType)) + 1;
+            string ControlOf(string fieldName) => fields.RowsUsed().First(r => r.Cell(2).GetString() == fieldName).Cell(control).GetString();
+            Assert.Equal(nameof(ControlType.Auto), ControlOf("order_date"));
+            Assert.Equal(nameof(ControlType.DropDownEdit), ControlOf("status"));
         }
 
         [Fact]
