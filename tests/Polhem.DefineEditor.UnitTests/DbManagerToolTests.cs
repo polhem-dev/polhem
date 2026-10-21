@@ -11,38 +11,41 @@ namespace Polhem.DefineEditor.UnitTests
         private static readonly string s_define = Path.Combine(Path.GetTempPath(), "project", "Define");
 
         [Fact]
-        [DisplayName("The command runs the tool of this version through dotnet tool exec, in the editor's own folder, against the solution")]
+        [DisplayName("The command runs the tool of this version from nuget.org, in the given folder, with the packages folder pinned")]
         public void Command_RunsPinnedToolOutsideSolution()
         {
-            var command = DbManagerTool.Command(s_define, ["check"], "/work", "/work/nuget.config");
+            var work = Path.Combine(Path.GetTempPath(), "work");
+            var command = DbManagerTool.Command(s_define, ["check"], work);
 
             Assert.Equal("dotnet", command.Command);
-            Assert.Equal(["tool", "exec", $"Polhem.DbManager@{DbManagerTool.Version}", "--yes", "--configfile", "/work/nuget.config",
+            Assert.Equal(["tool", "exec", $"Polhem.DbManager@{DbManagerTool.Version}", "--yes", "--source", DbManagerTool.NuGetSource,
                 "--", "check", "--define", s_define], command.Arguments);
-            Assert.Equal("/work", command.WorkingDirectory);
+            Assert.Equal(work, command.WorkingDirectory);
+            Assert.Equal(DbManagerTool.GlobalPackagesFolder(), command.Environment["NUGET_PACKAGES"]);
         }
 
         [Fact]
-        [DisplayName("The work folder's NuGet configuration clears inherited sources and lists nuget.org and the extra source")]
-        public void PrepareWorkDirectory_WritesOwnSources()
+        [DisplayName("An extra source is a second --source before the separator, a local one as a full path")]
+        public void Command_ExtraSource_AddsFullPathSource()
         {
-            var root = Path.Combine(Path.GetTempPath(), $"polhem-work-{Guid.NewGuid():N}");
-            try
-            {
-                var (workDirectory, configFile) = DbManagerTool.PrepareWorkDirectory(root, "/nupkgs");
+            var arguments = DbManagerTool.Command(s_define, ["check"], "/work", "nupkgs").Arguments;
 
-                Assert.StartsWith(root, workDirectory, StringComparison.Ordinal);
-                var sources = System.Xml.Linq.XDocument.Load(configFile).Root!.Element("packageSources")!.Elements().ToList();
-                Assert.Equal("clear", sources[0].Name.LocalName);
-                Assert.Equal([DbManagerTool.NuGetSource, "/nupkgs"], sources.Skip(1).Select(s => (string)s.Attribute("value")!));
+            var separator = arguments.IndexOf("--");
+            Assert.Equal(Path.GetFullPath("nupkgs"), arguments[separator - 1]);
+            Assert.Equal("--source", arguments[separator - 2]);
+            Assert.Equal("https://feed.example.com/v3/index.json", DbManagerTool.FullSource("https://feed.example.com/v3/index.json"));
+        }
 
-                DbManagerTool.PrepareWorkDirectory(root, extraSource: null);
-                Assert.Equal(2, System.Xml.Linq.XDocument.Load(configFile).Root!.Element("packageSources")!.Elements().Count());
-            }
-            finally
-            {
-                Directory.Delete(root, recursive: true);
-            }
+        [Fact]
+        [DisplayName("The work folder is the user's own, under the local application data folder")]
+        public void WorkDirectory_IsUnderLocalApplicationData()
+        {
+            var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            var folder = DbManagerTool.WorkDirectory();
+
+            Assert.StartsWith(local, folder, StringComparison.Ordinal);
+            Assert.True(Directory.Exists(folder));
         }
 
         [Fact]

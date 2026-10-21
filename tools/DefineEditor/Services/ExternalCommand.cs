@@ -19,6 +19,9 @@ public sealed class ExternalCommand
     /// </summary>
     public string WorkingDirectory { get; set; } = string.Empty;
 
+    /// <summary>Environment variables set for the program, on top of the ones it inherits.</summary>
+    public Dictionary<string, string> Environment { get; set; } = new(StringComparer.Ordinal);
+
     /// <summary>Resolves <see cref="WorkingDirectory"/> against <paramref name="baseDirectory"/>.</summary>
     public string ResolveWorkingDirectory(string baseDirectory)
         => Path.GetFullPath(string.IsNullOrWhiteSpace(WorkingDirectory)

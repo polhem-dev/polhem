@@ -34,51 +34,53 @@ public static class DbManagerTool
     /// solution at <paramref name="definePath"/>.
     /// </summary>
     /// <remarks>
-    /// IMPORTANT: the command runs in <paramref name="workDirectory"/>, a folder of the editor's own, never in the
-    /// solution. <c>dotnet</c> reads <c>nuget.config</c> and <c>global.json</c> from the working directory and its
-    /// parents, so a folder opened from somewhere else could otherwise name the package source the tool is
-    /// downloaded from, or the SDK that runs it. The package sources come from <paramref name="configFile"/> alone.
+    /// IMPORTANT: <c>dotnet</c> reads <c>NuGet.Config</c> and <c>global.json</c> from the working directory and every
+    /// folder above it, and <c>--source</c> only replaces the package sources. So the command runs in
+    /// <paramref name="workDirectory"/>, a folder of the user's own (<see cref="WorkDirectory"/>), never in the opened
+    /// solution or a shared temporary folder, where someone else's files could choose the SDK or the packages folder.
+    /// The sources are passed on the command line, and the packages folder is pinned with <c>NUGET_PACKAGES</c>, the
+    /// one <see cref="IsCached"/> looks in.
     /// </remarks>
     /// <param name="definePath">The DefinePath of the solution.</param>
     /// <param name="arguments">The command and its options, for example <c>upgrade --table ft_order</c>.</param>
-    /// <param name="workDirectory">The folder the command runs in; see <see cref="PrepareWorkDirectory"/>.</param>
-    /// <param name="configFile">The NuGet configuration the tool is restored with; see <see cref="PrepareWorkDirectory"/>.</param>
+    /// <param name="workDirectory">The folder the command runs in.</param>
+    /// <param name="extraSource">An extra package source, or <see langword="null"/>; see <see cref="SourceVariable"/>.</param>
     public static ExternalCommand Command(
-        string definePath, IEnumerable<string> arguments, string workDirectory, string configFile)
+        string definePath, IEnumerable<string> arguments, string workDirectory, string? extraSource = null)
     {
         var command = new ExternalCommand
         {
             Command = "dotnet",
             // --yes answers the download question dotnet asks itself; the editor asks the user before the first run.
-            Arguments = ["tool", "exec", $"{PackageId}@{Version}", "--yes", "--configfile", configFile, "--"],
+            Arguments = ["tool", "exec", $"{PackageId}@{Version}", "--yes", "--source", NuGetSource],
             WorkingDirectory = workDirectory,
         };
+        if (!string.IsNullOrWhiteSpace(extraSource)) command.Arguments.AddRange(["--source", FullSource(extraSource)]);
+        command.Arguments.Add("--");
         command.Arguments.AddRange(arguments);
         command.Arguments.AddRange(["--define", definePath]);
+        command.Environment["NUGET_PACKAGES"] = GlobalPackagesFolder();
         return command;
     }
 
     /// <summary>
-    /// Creates the editor's own folder for running the tool, with a NuGet configuration that lists nuget.org and,
-    /// when given, <paramref name="extraSource"/> (see <see cref="SourceVariable"/>), and returns both paths.
+    /// The folder the tool runs in, created when missing: <c>Polhem.DefineEditor/dbmanager</c> in the user's local
+    /// application data folder, which only the user and the system can write to or above.
     /// </summary>
-    /// <param name="root">The folder to create it in, normally the user's temporary folder.</param>
-    /// <param name="extraSource">An extra package source, or <see langword="null"/>.</param>
-    public static (string WorkDirectory, string ConfigFile) PrepareWorkDirectory(string root, string? extraSource)
+    public static string WorkDirectory()
     {
-        var workDirectory = Path.Combine(root, "Polhem.DefineEditor");
-        Directory.CreateDirectory(workDirectory);
-        var configFile = Path.Combine(workDirectory, "nuget.config");
-        var sources = new System.Xml.Linq.XElement("packageSources",
-            new System.Xml.Linq.XElement("clear"),
-            Source("nuget.org", NuGetSource));
-        if (!string.IsNullOrWhiteSpace(extraSource)) sources.Add(Source("polhem-dbmanager-extra", extraSource));
-        new System.Xml.Linq.XDocument(new System.Xml.Linq.XElement("configuration", sources)).Save(configFile);
-        return (workDirectory, configFile);
+        var folder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create),
+            "Polhem.DefineEditor", "dbmanager");
+        Directory.CreateDirectory(folder);
+        return folder;
     }
 
-    private static System.Xml.Linq.XElement Source(string key, string value)
-        => new("add", new System.Xml.Linq.XAttribute("key", key), new System.Xml.Linq.XAttribute("value", value));
+    /// <summary>
+    /// A local source as a full path, since the tool runs in another folder; a URL as it is.
+    /// </summary>
+    public static string FullSource(string source)
+        => Uri.TryCreate(source, UriKind.Absolute, out var uri) && !uri.IsFile ? source : Path.GetFullPath(source);
 
     /// <summary>The <c>upgrade</c> arguments: a <c>--table</c> for each of <paramref name="tableNames"/>, and <c>--dry-run</c> for a preview.</summary>
     public static IReadOnlyList<string> UpgradeArguments(IEnumerable<string> tableNames, bool dryRun)

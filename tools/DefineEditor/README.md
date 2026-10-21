@@ -89,9 +89,10 @@ by the database manager [Polhem.DbManager](../DbManager/README.md) (`polhem-db`)
 supported database. The editor runs it through `dotnet tool exec` at exactly its own version, against the open
 DefinePath, so nothing has to be installed and no project is needed. The first run asks before the tool is downloaded,
 naming the package, the version and the package source; later runs reuse the copy in the NuGet global packages folder.
-`dotnet tool exec` needs the .NET SDK. The tool runs in a folder of the editor's own under the temporary folder, with
-its own NuGet configuration (nuget.org only), so a `nuget.config` or `global.json` in or above the opened folder cannot
-choose where the tool comes from or which SDK runs it.
+`dotnet tool exec` needs the .NET SDK. The tool runs in a folder of the user's own (`Polhem.DefineEditor/dbmanager` in
+the local application data folder), with its package source (nuget.org) given on the command line and the global
+packages folder pinned, so a `NuGet.Config` or `global.json` in or above the opened folder cannot choose where the tool
+comes from or which SDK runs it.
 
 - **Test Connections**, at the top of the DatabaseSettings editor and in the **File** menu, opens a connection to each
   database item.
@@ -105,7 +106,7 @@ choose where the tool comes from or which SDK runs it.
 
 When the editor runs from source, no tool of its version is published yet. Pack one with
 `dotnet pack tools/DbManager/Polhem.DbManager.csproj -o <folder>` and name the folder in the `POLHEM_DBMANAGER_SOURCE`
-environment variable; the editor adds it to that NuGet configuration as a second package source.
+environment variable; the editor passes it as a second package source.
 
 ### Headless smoke
 

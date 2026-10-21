@@ -44,9 +44,13 @@ namespace Polhem.DbManager.UnitTests
             foreach (var arg in args) startInfo.ArgumentList.Add(arg);
             using var process = System.Diagnostics.Process.Start(startInfo)!;
             var error = process.StandardError.ReadToEndAsync();
-            var output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            return (process.ExitCode, output + error.Result);
+            var output = process.StandardOutput.ReadToEndAsync();
+            if (!process.WaitForExit(TimeSpan.FromMinutes(2)))
+            {
+                process.Kill(entireProcessTree: true);
+                Assert.Fail($"polhem-db {string.Join(' ', args)} did not finish within two minutes.");
+            }
+            return (process.ExitCode, output.Result + error.Result);
         }
 
         private string RunForOutput(params string[] args)

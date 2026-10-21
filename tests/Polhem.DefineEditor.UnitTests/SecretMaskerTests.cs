@@ -15,7 +15,9 @@ namespace Polhem.DefineEditor.UnitTests
         [InlineData("Data Source=x;User Password=Secret1!", "Data Source=x;User Password=********")]
         [InlineData("Failed: login failed, password = Secret1!", "Failed: login failed, password = ********")]
         [InlineData("Password=\"a;b c\";Server=db", "Password=********;Server=db")]
-        [InlineData("--add-source https://feed:Secret1!@pkgs.example.com/v3/index.json", "--add-source https://feed:********@pkgs.example.com/v3/index.json")]
+        [InlineData("--source https://feed:Secret1!@pkgs.example.com/v3/index.json", "--source https://********@pkgs.example.com/v3/index.json")]
+        [InlineData("--source https://Secret1!@pkgs.example.com/v3", "--source https://********@pkgs.example.com/v3")]
+        [InlineData("https://me:a@Secret1!@host/feed and more", "https://********@host/feed and more")]
         public void Hide_PasswordValue_IsMasked(string text, string expected)
         {
             Assert.Equal(expected, SecretMasker.Hide(text));

@@ -20,16 +20,16 @@ public static class SecretMasker
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     private static readonly Regex s_urlUserInfo = new(
-        @"(?<scheme>\b[a-z][a-z0-9+.-]*://)(?<user>[^/@:\s]+):(?<secret>[^/@\s]+)@",
+        @"(?<scheme>\b[a-z][a-z0-9+.-]*://)(?<userinfo>[^/\s]+)@(?=[^@/\s]*(?:[/\s]|$))",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     /// <summary>
-    /// Returns <paramref name="text"/> with the value of every password key, and the password in a URL's user info
-    /// (<c>https://user:token@host</c>), replaced by <see cref="Mask"/>.
+    /// Returns <paramref name="text"/> with the value of every password key, and the whole user info of a URL
+    /// (<c>https://user:token@host</c>, <c>https://token@host</c>), replaced by <see cref="Mask"/>.
     /// </summary>
     public static string Hide(string text)
     {
         var masked = s_passwordValue.Replace(text, m => m.Groups["value"].Length == 0 ? m.Value : m.Groups["key"].Value + Mask);
-        return s_urlUserInfo.Replace(masked, m => m.Groups["scheme"].Value + m.Groups["user"].Value + ":" + Mask + "@");
+        return s_urlUserInfo.Replace(masked, m => m.Groups["scheme"].Value + Mask + "@");
     }
 }

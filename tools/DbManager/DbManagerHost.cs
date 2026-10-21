@@ -22,6 +22,9 @@ namespace Polhem.DbManager;
 /// </summary>
 internal static class DbManagerHost
 {
+    // The variable Polhem.Definition's MasterKeyProvider reads when the source names none; it is private there.
+    private const string DefaultMasterKeyVariable = "POLHEM_MASTER_KEY";
+
     /// <summary>Builds the host for <paramref name="definePath"/>. The host is not started.</summary>
     /// <remarks>
     /// The master key comes from the source SystemSettings names, as for the server. When an environment-variable
@@ -49,17 +52,18 @@ internal static class DbManagerHost
     private static bool AllowProcessMasterKey(SecurityKeySettings keys)
     {
         var source = keys.MasterKeySource;
+        // An empty value means the framework's default variable (MasterKeyProvider).
+        var variable = string.IsNullOrWhiteSpace(source.Value) ? DefaultMasterKeyVariable : source.Value;
         if (source.Type != MasterKeySourceType.Environment
-            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(source.Value)))
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
         {
             return false;
         }
-        var hasEncryptedKey = new[] { keys.ApiEncryptionKey, keys.CookieEncryptionKey, keys.ConfigEncryptionKey, keys.DatabaseEncryptionKey }
-            .Any(key => !string.IsNullOrEmpty(key));
-        if (hasEncryptedKey)
+        // The keys decrypted with the master key when the framework starts.
+        if (!string.IsNullOrEmpty(keys.ApiEncryptionKey) || !string.IsNullOrEmpty(keys.ConfigEncryptionKey))
         {
             throw new InvalidOperationException(
-                $"The master key environment variable '{source.Value}' is not set, and SystemSettings holds encrypted keys "
+                $"The master key environment variable '{variable}' is not set, and SystemSettings holds encrypted keys "
                 + "that need it. Set it to the key the server uses.");
         }
         return true;

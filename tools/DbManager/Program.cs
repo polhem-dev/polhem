@@ -92,6 +92,12 @@ internal static class Program
             output.WriteLine($"Failed: {ex.Message}");
             return DatabaseCommandLine.Failure;
         }
+        catch (ArgumentException ex)
+        {
+            // Settings the framework rejects while the services are built.
+            output.WriteLine($"Failed: {ex.Message}");
+            return DatabaseCommandLine.Failure;
+        }
         catch (System.Security.Cryptography.CryptographicException ex)
         {
             // An encrypted key in SystemSettings that the master key in use cannot decrypt.

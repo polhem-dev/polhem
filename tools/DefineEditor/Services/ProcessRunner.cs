@@ -43,6 +43,7 @@ public static class ProcessRunner
             StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var argument in command.Arguments) startInfo.ArgumentList.Add(argument);
+        foreach (var (name, value) in command.Environment) startInfo.Environment[name] = value;
 
         using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += (_, e) => { if (e.Data is not null) onLine(SecretMasker.Hide(e.Data)); };

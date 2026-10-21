@@ -67,16 +67,16 @@ public partial class MainWindowViewModel
                 L("DbCommand_DownloadMessage", DbManagerTool.PackageId, DbManagerTool.Version,
                     SecretMasker.Hide(string.IsNullOrWhiteSpace(extraSource)
                         ? DbManagerTool.NuGetSource
-                        : DbManagerTool.NuGetSource + ", " + extraSource)),
+                        : DbManagerTool.NuGetSource + ", " + DbManagerTool.FullSource(extraSource))),
                 confirmLabel: L("Action_Download")))
         {
             return;
         }
 
-        string workDirectory, configFile;
+        string workDirectory;
         try
         {
-            (workDirectory, configFile) = DbManagerTool.PrepareWorkDirectory(Path.GetTempPath(), extraSource);
+            workDirectory = DbManagerTool.WorkDirectory();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -85,7 +85,7 @@ public partial class MainWindowViewModel
         }
 
         _dbCommandWindow?.Close();
-        var command = DbManagerTool.Command(definePath, arguments, workDirectory, configFile);
+        var command = DbManagerTool.Command(definePath, arguments, workDirectory, extraSource);
         _dbCommandWindow = DbCommandWindow.Start(owner, new DbCommandViewModel(command, definePath, kind));
     }
 }

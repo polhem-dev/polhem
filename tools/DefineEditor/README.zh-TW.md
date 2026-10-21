@@ -81,8 +81,9 @@ clone 之後以 `dotnet tool restore` 重新安裝。套件只帶 macOS、64 位
 編輯器不帶資料庫驅動。測試連線、升級資料表與預覽升級，由資料庫管理工具 [Polhem.DbManager](../DbManager/README.zh-TW.md)
 （`polhem-db`）執行，它帶有所有支援資料庫的驅動。編輯器以 `dotnet tool exec` 執行與自己版號相同的工具，對象是目前開啟的
 DefinePath，所以不必事先安裝，也不需要專案。第一次執行前會詢問是否下載，並列出套件、版號與套件來源；之後重複使用 NuGet
-全域套件資料夾中的那一份。`dotnet tool exec` 需要 .NET SDK。工具在暫存資料夾下編輯器自己的資料夾執行，並使用自己的 NuGet
-設定（只有 nuget.org），所以開啟的資料夾或其上層的 `nuget.config`、`global.json` 都無法決定工具從哪裡來、由哪個 SDK 執行。
+全域套件資料夾中的那一份。`dotnet tool exec` 需要 .NET SDK。工具在使用者自己的資料夾（本機應用程式資料夾下的
+`Polhem.DefineEditor/dbmanager`）執行，套件來源（nuget.org）由命令列指定，全域套件資料夾也固定，所以開啟的資料夾或其上層的
+`NuGet.Config`、`global.json` 都無法決定工具從哪裡來、由哪個 SDK 執行。
 
 - **測試連線**：在 DatabaseSettings 編輯器上方與 **File** 選單，逐一連線每個資料庫項目。
 - **File → 升級資料庫**建立或升級所有已登記的資料表；**預覽資料庫升級**只列出陳述式、不執行。匯入後的完成對話框只升級
@@ -92,7 +93,7 @@ DefinePath，所以不必事先安裝，也不需要專案。第一次執行前�
 - 工具讀的是磁碟上的檔案，所以有未儲存的編輯時會先詢問是否儲存。
 
 從原始碼執行編輯器時，還沒有與它同版號的已發佈工具。以 `dotnet pack tools/DbManager/Polhem.DbManager.csproj -o <資料夾>`
-打包，並把該資料夾設在環境變數 `POLHEM_DBMANAGER_SOURCE`；編輯器會把它加進上述 NuGet 設定，成為第二個套件來源。
+打包，並把該資料夾設在環境變數 `POLHEM_DBMANAGER_SOURCE`；編輯器會把它當成第二個套件來源傳入。
 
 ### Headless smoke
 

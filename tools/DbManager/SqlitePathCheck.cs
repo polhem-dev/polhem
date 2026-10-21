@@ -37,6 +37,10 @@ internal static class SqlitePathCheck
             {
                 continue;
             }
+            catch (ArgumentException)
+            {
+                continue; // A connection string or template the db command reports as that item's failure.
+            }
             if (info.DatabaseType != DatabaseType.SQLite) continue;
 
             var path = RelativePath(info.ConnectionString);
@@ -50,7 +54,8 @@ internal static class SqlitePathCheck
         return problems;
     }
 
-    private static string? RelativePath(string connectionString)
+    /// <summary>The file path of a SQLite connection string when it is relative; otherwise <see langword="null"/>.</summary>
+    internal static string? RelativePath(string connectionString)
     {
         SqliteConnectionStringBuilder builder;
         try
@@ -66,11 +71,23 @@ internal static class SqlitePathCheck
         var path = builder.DataSource;
         if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
         {
+            if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.IsFile && !string.IsNullOrEmpty(uri.LocalPath)
+                && path.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+            {
+                return null; // file:///absolute/path
+            }
             path = path[5..];
             var query = path.IndexOf('?', StringComparison.Ordinal);
-            if (query >= 0) path = path[..query];
+            if (query >= 0)
+            {
+                // file:name?mode=memory is an in-memory database, whatever the name looks like.
+                if (path[query..].Contains("mode=memory", StringComparison.OrdinalIgnoreCase)) return null;
+                path = path[..query];
+            }
         }
         if (path.Length == 0 || string.Equals(path, ":memory:", StringComparison.Ordinal)) return null;
-        return Path.IsPathRooted(path) ? null : path;
+        // IsPathFullyQualified rather than IsPathRooted: on Windows `C:x.db` and `\x.db` are rooted yet still depend on
+        // the current drive or directory.
+        return Path.IsPathFullyQualified(path) ? null : path;
     }
 }
