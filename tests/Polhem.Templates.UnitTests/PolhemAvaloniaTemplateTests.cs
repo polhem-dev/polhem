@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
@@ -82,5 +83,22 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
         Assert.Contains("\"ACME\"", tasks, StringComparison.Ordinal);
         var settings = XmlCodec.DeserializeFromFile<DatabaseSettings>(Path.Combine(output, "Define", "DatabaseSettings.xml"))!;
         Assert.Equal("Secret_1", Assert.Single(settings.Servers!).Password);
+    }
+
+    [Fact]
+    [DisplayName("The desktop client starts with the server's endpoint, the first company and a bundle id from the name")]
+    public void Generate_Desktop_PointsAtTheServerAndCompany()
+    {
+        var output = Generate("SqlServer", "--company", "ACME");
+
+        using var launch = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(output, "src", "Acme.Erp.Server", "Properties", "launchSettings.json")));
+        var serverUrl = launch.RootElement.GetProperty("profiles").GetProperty("http").GetProperty("applicationUrl").GetString();
+        var app = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Desktop", "DesktopApp.cs"));
+        Assert.Contains($"DefaultEndpoint = \"{serverUrl}/api\"", app, StringComparison.Ordinal);
+        Assert.Contains("DefaultCompanyId = \"ACME\"", app, StringComparison.Ordinal);
+        var project = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Desktop", "Acme.Erp.Desktop.csproj"));
+        Assert.Matches(new Regex("<PolhemBundleIdentifier>com\\.example\\.acme\\.erp</PolhemBundleIdentifier>",
+            RegexOptions.None, TimeSpan.FromSeconds(1)), project);
     }
 }

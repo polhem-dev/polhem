@@ -14,12 +14,13 @@ namespace Polhem.Templates.UnitTests;
 /// </remarks>
 public sealed class TemplatePackageFixture : IDisposable
 {
-    // The framework packages a generated server references, directly or through Polhem.Hosting.
+    // The framework packages a generated server and desktop client reference, directly or transitively.
     private static readonly string[] s_frameworkProjects =
     [
         "Polhem.Core", "Polhem.Expressions", "Polhem.Definition", "Polhem.ObjectCaching", "Polhem.Db",
         "Polhem.Api.Contracts", "Polhem.Business", "Polhem.Api.Core", "Polhem.Api.Server",
         "Polhem.Repository.Abstractions", "Polhem.Repository", "Polhem.Hosting",
+        "Polhem.Api.Client", "Polhem.UI.Core", "Polhem.UI.ApiBridge", "Polhem.UI.Avalonia", "Polhem.UI.Avalonia.Shell",
     ];
 
     private static readonly TimeSpan s_timeout = TimeSpan.FromMinutes(10);
@@ -42,7 +43,11 @@ public sealed class TemplatePackageFixture : IDisposable
                 $"  <Project Path=\"{Path.Combine(TemplatePaths.RepositoryRoot, "src", p, p + ".csproj")}\" />"),
             "</Solution>",
         ]);
-        Run(Root, "pack", solution, "--configuration", "Release", "--output", Feed, $"-p:PackageVersion={PackageVersion}");
+        // Build first: outside CI, src/Directory.Build.props turns on GeneratePackageOnBuild, under which `dotnet pack`
+        // does not build, so a project not yet built in Release would have nothing to pack.
+        Run(Root, "build", solution, "--configuration", "Release");
+        Run(Root, "pack", solution, "--configuration", "Release", "--no-build", "--output", Feed,
+            $"-p:PackageVersion={PackageVersion}");
         Run(Root, "pack", TemplatePaths.TemplateProject, "--configuration", "Release", "--output", Feed,
             $"-p:PackageVersion={PackageVersion}");
         Run(Root, "new", "install", Path.Combine(Feed, $"Polhem.Templates.{PackageVersion}.nupkg"),
