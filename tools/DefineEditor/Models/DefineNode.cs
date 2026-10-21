@@ -40,7 +40,11 @@ public sealed class DefineNode
     /// </summary>
     public string Icon { get; init; } = "DefUnknown";
 
-    public bool IsExpanded { get; set; } = true;
+    /// <summary>
+    /// Whether the node shows its children. Bound two-way to the sidebar's tree items, so the value survives in the
+    /// model and <see cref="Services.TreeExpansion"/> can carry it over when a tree is rebuilt.
+    /// </summary>
+    public bool IsExpanded { get; set; }
 
     public ObservableCollection<DefineNode> Children { get; } = new();
 }

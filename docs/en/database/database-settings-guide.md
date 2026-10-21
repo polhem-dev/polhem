@@ -556,7 +556,7 @@ already exists is left as it is.
 | Command | What it does |
 |---------|--------------|
 | `db create` | For each `DatabaseItem`, creates the database its connection string names when it does not exist. |
-| `db upgrade [--dry-run] [--allow-narrowing]` | For each category in `DbCategorySettings`, builds or upgrades every table in every `DatabaseItem` whose `CategoryId` is that category. `--dry-run` prints the statements without running them; `--allow-narrowing` permits changes that shorten a column. |
+| `db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...` | For each category in `DbCategorySettings`, builds or upgrades every table in every `DatabaseItem` whose `CategoryId` is that category. `--table` limits it to the named tables and can be repeated; a name no category registers is reported and fails the command. `--dry-run` prints the statements without running them; `--allow-narrowing` permits changes that shorten a column. |
 | `db seed-admin --company <id> [options]` | Creates the first user, a company and the user's access to it in the common database. Options: `--user` (default `admin`), `--name`, `--company-name`, `--company-database`, `--currency` (default `USD`), `--no-deployment-admin`. |
 
 **`db create` per engine.** The login in the connection string needs permission to create databases. When it has
@@ -581,7 +581,8 @@ the `company` category. The user is created as a deployment administrator (see
 The exit code is `0` on success, `1` when an item failed and `2` when the command line could not be understood.
 `db create` and `db upgrade` never wait for input, and `db upgrade` writes each table's line as soon as the table is
 done, followed by a one-line summary, so another program can run them and show the output as it arrives.
-`db seed-admin` waits only when `POLHEM_ADMIN_PASSWORD` is not set.
+`db seed-admin` waits only when `POLHEM_ADMIN_PASSWORD` is not set. DefineEditor runs `db upgrade` this way after
+importing a form (see [its README](../../../tools/DefineEditor/README.md#upgrading-the-database)).
 
 ---
 

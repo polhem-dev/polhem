@@ -8,7 +8,7 @@ namespace Polhem.DefineEditor.Services;
 /// classes: required fields (Server/Item Ids), reference integrity (Item.ServerId
 /// must exist), placeholder integrity (when ConnectionString uses
 /// <c>{@UserId}</c>/<c>{@Password}</c>/<c>{@DbName}</c>, the corresponding field
-/// must be non-empty), and dialect consistency (the connection string should
+/// must be non-empty; a server's <c>{@DbName}</c> is filled by its items), and dialect consistency (the connection string should
 /// match the selected DatabaseType).
 /// </summary>
 public static class DatabaseSettingsValidator
@@ -27,7 +27,9 @@ public static class DatabaseSettingsValidator
             else if (!serverIds.Add(server.Id))
                 issues.Add(new(ValidationSeverity.Error, path, $"Server.Id '{server.Id}' is a duplicate."));
 
-            ValidatePlaceholders(issues, path, server.ConnectionString, server.UserId, server.Password, dbName: null);
+            // A server's connection string is a template its items share; each item fills {@DbName} with its own
+            // DbName, so the server is not checked for one.
+            ValidatePlaceholders(issues, path, server.ConnectionString, server.UserId, server.Password, dbName: null, checkDbName: false);
             CheckDialect(issues, path, server.ConnectionString, server.DatabaseType);
         }
 
@@ -62,7 +64,7 @@ public static class DatabaseSettingsValidator
     private static void ValidatePlaceholders(
         List<ValidationIssue> issues, string path,
         string connectionString,
-        string userId, string password, string? dbName)
+        string userId, string password, string? dbName, bool checkDbName = true)
     {
         if (string.IsNullOrEmpty(connectionString)) return;
         if (connectionString.Contains("{@UserId}", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(userId))
@@ -71,7 +73,8 @@ public static class DatabaseSettingsValidator
         if (connectionString.Contains("{@Password}", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(password))
             issues.Add(new(ValidationSeverity.Warning, path,
                 "ConnectionString contains a {@Password} placeholder but the Password field is empty."));
-        if (connectionString.Contains("{@DbName}", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dbName))
+        if (checkDbName && string.IsNullOrEmpty(dbName)
+            && connectionString.Contains("{@DbName}", StringComparison.OrdinalIgnoreCase))
             issues.Add(new(ValidationSeverity.Warning, path,
                 "ConnectionString contains a {@DbName} placeholder but the DbName field is empty."));
     }

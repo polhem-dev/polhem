@@ -45,6 +45,7 @@ public static class DefinePathScanner
             Kind = DefineNodeKind.Root,
             FilePath = definePath,
             Icon = IconRoot,
+            IsExpanded = true,
         };
 
         AddSingletonGroup(root, definePath);

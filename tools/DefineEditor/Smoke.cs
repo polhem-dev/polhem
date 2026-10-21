@@ -177,6 +177,7 @@ internal static class Smoke
             RunTabCommandsSmoke,
             RunFrameworkDefaultsSmoke,
             RunFormWorkbookImportSmoke,
+            RunDatabaseUpgradeSmoke,
         };
         foreach (var phase in phases)
         {
@@ -741,8 +742,8 @@ internal static class Smoke
         {
             var schema = new FormSchema("Quote", "Quote");
             var master = schema.Tables!.Add("Quote", "Quote");
-            master.Fields!.Add("sys_id", "Quote No", FieldDbType.String);
-            master.Fields.Add("quote_date", "Quote Date", FieldDbType.Date);
+            master.Fields!.Add(new FormField("sys_id", "Quote No", FieldDbType.String) { MaxLength = 20 });
+            master.Fields!.Add("quote_date", "Quote Date", FieldDbType.Date);
 
             foreach (var language in Enum.GetValues<Polhem.Definition.Spreadsheet.FormWorkbookLanguage>())
             {
@@ -770,6 +771,34 @@ internal static class Smoke
             }
 
             Console.WriteLine("[smoke:form-workbook] OK");
+            return 0;
+        }
+        finally { TryDelete(tempDir); }
+    }
+
+    /// <summary>
+    /// The database upgrade path without a database: a solution's DefineEditor.json is read and its command runs
+    /// through the upgrade window's view-model. <c>dotnet --version</c> stands in for the host's <c>db upgrade</c>.
+    /// </summary>
+    private static int RunDatabaseUpgradeSmoke()
+    {
+        var tempDir = MakeTempDir("db-upgrade");
+        try
+        {
+            new SolutionSettings
+            {
+                DatabaseUpgrade = new ExternalCommand { Command = "dotnet", Arguments = ["--version"] },
+            }.Save(tempDir);
+            var command = SolutionSettings.Load(tempDir).DatabaseUpgrade;
+            if (!command.IsConfigured)
+                return Fail(151, $"The upgrade command did not load back from {SolutionSettings.FileName}");
+
+            using var vm = new DatabaseUpgradeViewModel(command, tempDir, dryRun: false);
+            vm.RunAsync().GetAwaiter().GetResult();
+            if (vm.Succeeded != true || vm.OutputText.Trim().Length == 0)
+                return Fail(152, $"The upgrade command did not run: {vm.StatusText} {vm.OutputText}");
+
+            Console.WriteLine("[smoke:db-upgrade] OK");
             return 0;
         }
         finally { TryDelete(tempDir); }

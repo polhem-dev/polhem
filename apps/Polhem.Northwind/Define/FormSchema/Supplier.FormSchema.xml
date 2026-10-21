@@ -5,13 +5,13 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Supplier Code" DbType="String" />
-        <FormField FieldName="sys_name" Caption="Company Name" DbType="String" />
-        <FormField FieldName="contact_name" Caption="Contact Name" DbType="String" />
-        <FormField FieldName="contact_title" Caption="Contact Title" DbType="String" />
-        <FormField FieldName="city" Caption="City" DbType="String" />
-        <FormField FieldName="country" Caption="Country" DbType="String" />
-        <FormField FieldName="phone" Caption="Phone" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Supplier Code" DbType="String" MaxLength="20" />
+        <FormField FieldName="sys_name" Caption="Company Name" DbType="String" MaxLength="80" />
+        <FormField FieldName="contact_name" Caption="Contact Name" DbType="String" MaxLength="60" />
+        <FormField FieldName="contact_title" Caption="Contact Title" DbType="String" MaxLength="40" />
+        <FormField FieldName="city" Caption="City" DbType="String" MaxLength="40" />
+        <FormField FieldName="country" Caption="Country" DbType="String" MaxLength="30" />
+        <FormField FieldName="phone" Caption="Phone" DbType="String" MaxLength="30" />
       </Fields>
     </FormTable>
   </Tables>

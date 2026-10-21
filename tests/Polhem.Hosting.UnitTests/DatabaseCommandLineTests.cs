@@ -83,6 +83,30 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
+        [DisplayName("db upgrade passes every --table it is given, and none when it is given none")]
+        public void TryRun_UpgradeTables_PassesTableNames()
+        {
+            var (services, fake) = CreateServices();
+
+            Assert.Equal(DatabaseCommandLine.Success,
+                Run(services, ["db", "upgrade", "--table", "ft_order", "--dry-run", "--table", "ft_order_detail"], new StringWriter()));
+            Assert.Equal(["ft_order", "ft_order_detail"], fake.LastTableNames);
+            Assert.True(fake.LastDryRun);
+
+            Run(services, s_upgrade, new StringWriter());
+            Assert.Empty(fake.LastTableNames!);
+        }
+
+        [Fact]
+        [DisplayName("db upgrade --table without a name is a usage error")]
+        public void TryRun_UpgradeTableWithoutName_IsUsageError()
+        {
+            var (services, _) = CreateServices();
+
+            Assert.Equal(DatabaseCommandLine.UsageError, Run(services, ["db", "upgrade", "--table"], new StringWriter()));
+        }
+
+        [Fact]
         [DisplayName("db seed-admin reads the password from the prompt and never writes it to the output")]
         public void TryRun_SeedAdmin_PromptsForPasswordAndHidesIt()
         {
@@ -320,11 +344,15 @@ namespace Polhem.Hosting.UnitTests
             public IReadOnlyList<DatabaseCreateEntry> CreateDatabases()
                 => CreateException is null ? CreateEntries : throw CreateException;
 
+            public IReadOnlyCollection<string>? LastTableNames { get; private set; }
+
             public TableUpgradeReport UpgradeTables(
-                UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null)
+                UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
+                IReadOnlyCollection<string>? tableNames = null)
             {
                 LastOptions = options;
                 LastDryRun = dryRun;
+                LastTableNames = tableNames;
                 foreach (var table in UpgradeReport.Tables)
                     tableCompleted?.Invoke(table);
                 return UpgradeReport;

@@ -78,17 +78,25 @@ namespace Polhem.Hosting.Database
 
         /// <inheritdoc/>
         public TableUpgradeReport UpgradeTables(
-            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null)
+            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
+            IReadOnlyCollection<string>? tableNames = null)
         {
             var databaseSettings = _defineAccess.GetDatabaseSettings();
             var categories = _defineAccess.GetDbCategorySettings().Categories;
             var tables = new List<TableUpgradeEntry>();
             var problems = new List<string>();
-            if (categories is null) return new TableUpgradeReport();
+            var wanted = tableNames is { Count: > 0 }
+                ? new HashSet<string>(tableNames, StringComparer.OrdinalIgnoreCase)
+                : null;
+            var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var category in categories)
+            foreach (var category in categories ?? [])
             {
-                if (category.Tables is null || category.Tables.Count == 0) continue;
+                var categoryTables = (category.Tables ?? [])
+                    .Where(t => wanted is null || wanted.Contains(t.TableName))
+                    .ToList();
+                if (categoryTables.Count == 0) continue;
+                found.UnionWith(categoryTables.Select(t => t.TableName));
 
                 var databases = GetCategoryDatabases(databaseSettings, category.Id);
                 if (databases.Count == 0)
@@ -101,13 +109,18 @@ namespace Polhem.Hosting.Database
 
                 foreach (var databaseId in databases)
                 {
-                    foreach (var table in category.Tables)
+                    foreach (var table in categoryTables)
                     {
                         var entry = UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun);
                         tables.Add(entry);
                         tableCompleted?.Invoke(entry);
                     }
                 }
+            }
+            if (wanted is not null)
+            {
+                problems.AddRange(wanted.Where(name => !found.Contains(name)).Order(StringComparer.OrdinalIgnoreCase)
+                    .Select(name => $"Table '{name}' is not registered in the database category settings, so it was not built."));
             }
             return new TableUpgradeReport { Tables = tables, Problems = problems };
         }

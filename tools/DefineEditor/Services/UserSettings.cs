@@ -40,7 +40,23 @@ public sealed class UserSettings
     /// </summary>
     public string CreateTableDatabase { get; set; } = nameof(Polhem.Definition.Database.DatabaseType.SQLServer);
 
+    /// <summary>
+    /// The <see cref="ExternalCommand.Fingerprint"/> of each solution command the user has approved to run. A
+    /// solution brings its commands along in <see cref="SolutionSettings"/>, so opening someone else's folder must not
+    /// be enough to run what it names; the approval lives here, with the user, and not in the folder.
+    /// </summary>
+    public List<string> TrustedCommands { get; set; } = new();
+
     public const int MaxRecentSolutions = 8;
+
+    /// <summary>True when the user has approved <paramref name="fingerprint"/>.</summary>
+    public bool IsCommandTrusted(string fingerprint) => TrustedCommands.Contains(fingerprint, StringComparer.Ordinal);
+
+    /// <summary>Records the user's approval of <paramref name="fingerprint"/>.</summary>
+    public void TrustCommand(string fingerprint)
+    {
+        if (!IsCommandTrusted(fingerprint)) TrustedCommands.Add(fingerprint);
+    }
 
     /// <summary>
     /// Records <paramref name="path"/> as the most recently opened solution:

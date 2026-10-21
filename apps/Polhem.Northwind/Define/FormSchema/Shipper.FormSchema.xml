@@ -5,9 +5,9 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Shipper Code" DbType="String" />
-        <FormField FieldName="sys_name" Caption="Company Name" DbType="String" />
-        <FormField FieldName="phone" Caption="Phone" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Shipper Code" DbType="String" MaxLength="20" />
+        <FormField FieldName="sys_name" Caption="Company Name" DbType="String" MaxLength="80" />
+        <FormField FieldName="phone" Caption="Phone" DbType="String" MaxLength="30" />
       </Fields>
     </FormTable>
   </Tables>

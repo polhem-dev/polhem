@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: eb1d1b926e8acd92356fea2edd324a9bc6ae2712 -->
+<!-- source: en/guides/excel-form-modeling.md blob: 801780e1f7f76680c9c3b1a7df8ca4e095450657 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -48,7 +48,9 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 
 `--define` 是定義資料夾，也就是放 `FormSchema/` 的那一層。匯入只寫定義檔；建立資料表是應用程式的工作。以 Northwind
 示範為例，它的伺服器啟動時會建立 `DbCategorySettings.xml` 中註冊的所有資料表（`NorthwindSchemaSeeder`），所以在那裡
-只要重新啟動，表單就會出現在選單中並可以使用。
+只要重新啟動，表單就會出現在選單中並可以使用。以 `AddPolhemFramework` 建置的伺服器以它的 `db upgrade` 指令建立資料表，
+`--table` 可限定只處理這張表單的資料表（[初始化新部署](../database/database-settings-guide.md#7-初始化新部署)）；
+DefineEditor 匯入後可直接執行（[升級資料庫](../../../tools/DefineEditor/README.zh-TW.md#升級資料庫)）。
 
 ## 3. 活頁簿
 
@@ -106,6 +108,10 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 （`Fields!12 (Quote.qty.UnitField)`），只要有錯誤就停止匯入，不寫入任何檔案。警告（例如關聯到資料夾中還沒有的表單）
 只會顯示，不會中止匯入。
 
+會建成資料表欄位的 **String** 欄位必須填**最大長度**：沒有長度的文字欄位任何資料庫都建不出來，所以匯入會在該欄位就停下，
+而不是留到升級資料庫時才失敗。既有 TableSchema 已有長度的欄位不必填。匯出長度只記在 TableSchema 的表單時，
+活頁簿會帶上這些長度。
+
 ## 6. 再次匯入
 
 修改活頁簿後再匯入一次即可；內容已經與活頁簿一致的檔案不會被動到。
@@ -115,12 +121,12 @@ TableSchema，以 `--tables` 選擇（DefineEditor 會詢問）：
 
 | 模式 | 效果 |
 |------|------|
-| `merge`（預設） | 加入表單有、檔案沒有的欄位與索引。檔案中既有的內容不會被修改或刪除，所以移除欄位或變更資料型別要在 DefineEditor 處理 |
+| `merge`（預設） | 加入表單有、檔案沒有的欄位與索引。檔案中既有的內容不會被修改或刪除，所以移除欄位或變更資料型別要在 DefineEditor 處理。唯一的例外是沒有長度的 String 欄位，會採用活頁簿的長度 |
 | `keep` | 檔案維持原狀 |
 | `overwrite` | 以表單產生的 TableSchema 取代 |
 
 FormLayout 是例外。只有表單還沒有版面時才會產生，因為版面通常會在之後手動調整。要換成重新產生的版面，加上
-`--regenerate-layout`，或在 DefineEditor 對 FormSchema 執行 **產生 FormLayout**。之後才加進活頁簿的欄位，要放進
+`--regenerate-layout`（表單已有版面時 DefineEditor 會詢問），或在 DefineEditor 對 FormSchema 執行 **產生 FormLayout**。之後才加進活頁簿的欄位，要放進
 既有版面才會出現在畫面上。
 
 ## 7. 限制

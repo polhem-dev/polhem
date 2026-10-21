@@ -50,7 +50,11 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 `--define` is the definition folder, the one that holds `FormSchema/`. The import writes definitions only; creating
 the tables is the application's job. The Northwind demo, for example, builds every table registered in
 `DbCategorySettings.xml` when its server starts (`NorthwindSchemaSeeder`), so there a restart is all it takes for the
-form to appear in the menu and work.
+form to appear in the menu and work. A server built with `AddPolhemFramework` builds them with its `db upgrade` command,
+which `--table` limits to the form's tables
+([Initializing a New Deployment](../database/database-settings-guide.md#7-initializing-a-new-deployment)); DefineEditor
+offers to run it right after an import
+([Upgrading the database](../../../tools/DefineEditor/README.md#upgrading-the-database)).
 
 ## 3. The Workbook
 
@@ -115,6 +119,11 @@ Before anything is written, the form is checked with the same validation DefineE
 workbook row it comes from (`Fields!12 (Quote.qty.UnitField)`), stops the import, and nothing is written. A warning,
 such as a relation to a form the folder does not have yet, is shown and does not stop it.
 
+A **String** field that becomes a table column needs a **Max length**: no database builds a text column without one, so
+the import stops at the field rather than leaving the failure to the database upgrade. A column the existing
+TableSchema already sizes needs none. Exporting a form whose lengths are kept only in its TableSchema writes them into
+the workbook.
+
 ## 6. Importing Again
 
 Change the workbook and import it again; the files that already describe what the workbook says stay untouched.
@@ -124,13 +133,13 @@ added by hand. What the import does with an existing one is chosen with `--table
 
 | Mode | Effect |
 |------|--------|
-| `merge` (default) | Adds the columns and indexes the form has and the file lacks. Nothing in the file is changed or removed, so a removed field or a changed data type is handled in DefineEditor |
+| `merge` (default) | Adds the columns and indexes the form has and the file lacks. Nothing in the file is changed or removed, so a removed field or a changed data type is handled in DefineEditor. The one exception is a String column without a length, which takes the workbook's |
 | `keep` | Leaves the file as it is |
 | `overwrite` | Replaces the file with the TableSchema generated from the form |
 
 The FormLayout is the exception. The import generates one only when the form has none, because a layout is usually
-arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout`, or use
-**Generate FormLayout** on the FormSchema in DefineEditor. A field added to the workbook later does not appear on an
+arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout` (DefineEditor asks
+when the form has a layout), or use **Generate FormLayout** on the FormSchema in DefineEditor. A field added to the workbook later does not appear on an
 existing layout until it is placed there.
 
 ## 7. Limits

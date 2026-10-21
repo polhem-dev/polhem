@@ -41,6 +41,10 @@
                 <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
                 <MenuItem x:Name="ImportFormWorkbookMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbook}"/>
                 <Separator/>
+                <MenuItem x:Name="UpgradeDatabaseMenuItem" Header="{loc:Loc MenuItem_UpgradeDatabase}"/>
+                <MenuItem x:Name="PreviewDatabaseUpgradeMenuItem" Header="{loc:Loc MenuItem_PreviewDatabaseUpgrade}"/>
+                <MenuItem x:Name="SolutionSettingsMenuItem" Header="{loc:Loc MenuItem_SolutionSettings}"/>
+                <Separator/>
                 <MenuItem x:Name="SaveMenuItem" Header="{loc:Loc MenuItem_Save}"
                           InputGesture="Ctrl+S" HotKey="Ctrl+S"/>
                 <!-- NOTE: no shortcut for Save All. The macOS one is Cmd+Option+S, but Ctrl+Alt is AltGr on
@@ -119,6 +123,11 @@
                  welcome / Open Folder that every view shares. The sidebar class gives the whole column the VS Code
                  style background. -->
             <DockPanel Grid.Column="1" x:Name="Sidebar" Classes="sidebar">
+                <DockPanel.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:DefineNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                </DockPanel.Styles>
                 <Panel DockPanel.Dock="Top" Classes="sidebar-title">
                     <TextBlock Text="{loc:Loc Sidebar_ExplorerTitle}" IsVisible="{Binding IsExplorerView}"/>
                     <TextBlock Text="{loc:Loc Sidebar_ProgramsTitle}" IsVisible="{Binding IsProgramsView}"/>

@@ -1,4 +1,6 @@
+using Polhem.Core.Data;
 using Polhem.Core.Serialization;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
@@ -32,6 +34,7 @@ public static class FormExporter
         var schema = XmlCodec.DeserializeFromFile<FormSchema>(schemaPath)
             ?? throw new InvalidOperationException($"The FormSchema file for '{progId}' is empty.");
 
+        FillColumnLengths(paths, schema);
         var content = new FormWorkbookContent(schema);
         var formTexts = LoadLanguage(paths.GetLanguageFilePath(ZhTw, schema.ProgId));
         if (formTexts is not null)
@@ -42,6 +45,30 @@ public static class FormExporter
 
         LoadMenu(paths, schema.ProgId, content.Menu);
         return content;
+    }
+
+    /// <summary>
+    /// Shows the length of a text column the form leaves unsized but its TableSchema sizes. A form often keeps
+    /// lengths only in the TableSchema; without them the workbook would describe columns no import can build.
+    /// </summary>
+    private static void FillColumnLengths(PathOptions paths, FormSchema schema)
+    {
+        var categoryId = TableSchemaGenerator.GetCategoryId(schema);
+        foreach (var table in schema.Tables ?? [])
+        {
+            if (string.IsNullOrEmpty(table.DbTableName) || table.Fields is null) continue;
+            var tablePath = paths.GetTableSchemaFilePath(categoryId, table.DbTableName);
+            if (!File.Exists(tablePath)) continue;
+            var columns = XmlCodec.DeserializeFromFile<TableSchema>(tablePath)?.Fields;
+            if (columns is null) continue;
+
+            foreach (var field in table.Fields.Where(f =>
+                         f.Type == FieldType.DbField && f.DbType == FieldDbType.String && f.MaxLength == 0))
+            {
+                if (columns.Contains(field.FieldName) && columns[field.FieldName].Length > 0)
+                    field.MaxLength = columns[field.FieldName].Length;
+            }
+        }
     }
 
     private static void LoadMenu(PathOptions paths, string progId, MenuPlacement menu)

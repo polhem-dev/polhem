@@ -5,8 +5,8 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Product Code" DbType="String" />
-        <FormField FieldName="sys_name" Caption="Product Name" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Product Code" DbType="String" MaxLength="20" />
+        <FormField FieldName="sys_name" Caption="Product Name" DbType="String" MaxLength="80" />
         <FormField FieldName="supplier_rowid" Caption="Supplier" DbType="Guid" RelationProgId="Supplier">
           <RelationFieldMappings>
             <FieldMapping SourceField="sys_id" DestinationField="ref_supplier_id" />

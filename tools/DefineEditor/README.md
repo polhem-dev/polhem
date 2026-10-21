@@ -6,8 +6,8 @@ A desktop tool for maintaining the Polhem definition files (the XML under Define
 
 ## Positioning
 
-- **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx` and is not published to NuGet. Its unit tests, `tests/Polhem.DefineEditor.UnitTests`, are part of the main `Polhem.slnx`, so CI builds the tool and runs them.
-- **Purely offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database.
+- **A development-time tool**: not a framework library and not a sample; it lives in `tools/` and has its own `Polhem.Tools.slnx`. It is published to NuGet as the dotnet tool `Polhem.DefineEditor` (see [Installing it in a project](#installing-it-in-a-project)). Its unit tests, `tests/Polhem.DefineEditor.UnitTests`, are part of the main `Polhem.slnx`, so CI builds the tool and runs them.
+- **Offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database. The one thing it runs is the project's own database upgrade command, when asked (see [Upgrading the database](#upgrading-the-database)).
 - **In sync with the framework**: references `Polhem.Definition`, `Polhem.Core` and `Polhem.UI.Avalonia` (for `ObjectTreeView` and `PropertyGridControl`) through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
 
 ## Supported definition types
@@ -41,9 +41,13 @@ that differs from its default is in bold and its context menu resets it, a passw
 in a dialog. Categories and descriptions follow the UI language; property names stay as written, since they are the
 attribute names of the define files.
 
-Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent and Add Missing Framework Defaults; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+Importing a workbook asks how to treat a TableSchema or a FormLayout the form already has (merge, keep or overwrite the
+TableSchema; keep or regenerate the layout), lists the files it will change, and ends with a dialog that offers to
+upgrade the database for the form's tables.
 
-> The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with Add Missing Framework Defaults, Save, Save All, Validate and Close Tab, which run the same commands; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
+Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Upgrade Database, Preview Database Upgrade and Solution Settings; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+
+> The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
 
 ## Running during development
 
@@ -54,6 +58,60 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configurati
 ```
 
 After it starts, choose "Open Folder..." and pick a DefinePath folder. Opening a folder only reads it; to seed a new DefinePath with the framework's default definitions (the `st_*` table schemas, the Department, Employee and AuditRule forms, and the settings files), choose File → Add Missing Framework Defaults..., which lists the files it will write and leaves existing ones alone. The editor saves in place, so to explore with the test fixtures in `tests/Define/`, copy the folder first: the tests share those files and must not see them change.
+
+To open a folder at startup, pass it on the command line; a relative path is resolved against the current directory:
+
+```bash
+dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj -- path/to/Define
+```
+
+## Installing it in a project
+
+A project pins the editor in its local tool manifest, so everyone who clones it gets the same version, and opens its
+own definitions with it:
+
+```bash
+dotnet new tool-manifest            # once per project, when it has no .config/dotnet-tools.json yet
+dotnet tool install Polhem.DefineEditor
+dotnet polhem-define Define         # opens the project's Define folder
+```
+
+After a clone, `dotnet tool restore` installs it again. The package carries the native libraries for macOS, 64-bit
+Windows and 64-bit Linux only. On macOS a tool runs as a plain executable rather than an `.app`; when the editor has to
+be an application (for example for automation that addresses apps by bundle id), build the `.app` described below and
+start it with `open -a Polhem.DefineEditor.app --args <DefinePath>`. An `.app` that is already running only comes to the
+front; it does not open the folder.
+
+## Upgrading the database
+
+The editor carries no database driver. It runs the project's own command instead, typically the server's
+`db upgrade` (see [Initializing a New Deployment](../../docs/en/database/database-settings-guide.md#7-initializing-a-new-deployment)).
+The command is kept with the definitions in `DefineEditor.json`, in the DefinePath folder, so it goes with the project:
+
+```json
+{
+  "databaseUpgrade": {
+    "command": "dotnet",
+    "arguments": [ "run", "--project", "../MyApp.Server", "--", "db", "upgrade" ],
+    "workingDirectory": ".."
+  }
+}
+```
+
+The arguments are passed one by one, without a shell. A relative working directory is resolved against the DefinePath
+folder; empty means the folder itself. Edit it in **File → Solution Settings**; the dialog warns when the command line
+carries a password, which belongs in DatabaseSettings or an environment variable instead.
+
+- **File → Upgrade Database** runs the command for every registered table; **Preview Database Upgrade** adds
+  `--dry-run`. After an import, the completion dialog runs it for the imported form's tables only, adding a
+  `--table <name>` option for each, since a database can hold thousands of tables.
+- A window shows the command line and its output as it is written, and reads the exit code: 0 done, 1 a table failed,
+  2 a command line the server did not understand. Closing the window or **Cancel** stops the command and the processes
+  it started. Password values in the command line and the output are shown as `********`.
+- Unsaved edits are offered for saving first, since the command reads the files on disk.
+- The first time a solution's command runs, the editor shows it and asks for approval: a folder opened from somewhere
+  else would otherwise run whatever it names. The approval is kept in the user's settings, not in the project, and is
+  asked again whenever the command changes.
 
 ### Headless smoke
 
@@ -154,7 +212,7 @@ An `.app` you build yourself on the local machine has no quarantine flag and doe
 
 ### Why the RID cannot be omitted
 
-Omitting `-r` to build a portable app is also framework-dependent, but Avalonia's native dependencies (Skia / Avalonia.Native and so on) then bring along `runtimes/<rid>/native/*` for every platform, and the result is actually larger than self-contained (measured at 564 MB). So even for framework-dependent builds, specify the RID.
+Omitting `-r` to build a portable app is also framework-dependent, but Avalonia's native dependencies (Skia / Avalonia.Native and so on) then bring along `runtimes/<rid>/native/*` for every platform, and the result is actually larger than self-contained (measured at 564 MB). So even for framework-dependent builds, specify the RID. The dotnet tool package is the exception: it has to be portable, so the project file keeps only the desktop runtimes' native libraries (the `KeepDesktopNativeRuntimes` target).
 
 ### Options known to stay off
 
@@ -165,6 +223,6 @@ Omitting `-r` to build a portable app is also framework-dependent, but Avalonia'
 ## Out of the tool's scope
 
 - Connecting to a remote Polhem server / JSON-RPC API (local files only)
-- Live connection tests for DatabaseSettings (left to server-side health checks)
+- Live connection tests for DatabaseSettings (the editor has no database driver; left to the server)
 - Multi-user collaboration / locking
 - Editing Customize-layer overrides (the solution tree currently does not mark overrides)

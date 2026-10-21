@@ -12,7 +12,7 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Order No" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Order No" DbType="String" MaxLength="20" />
         <FormField FieldName="order_date" Caption="Order Date" DbType="Date" />
         <FormField FieldName="customer_rowid" Caption="Customer" DbType="Guid" RelationProgId="Customer">
           <RelationFieldMappings>
@@ -39,7 +39,7 @@
         <FormField FieldName="ref_shipper_id" Caption="Shipper Code" DbType="String" Type="RelationField" />
         <FormField FieldName="ref_shipper_name" Caption="Shipper Name" DbType="String" Type="RelationField" />
         <FormField FieldName="freight" Caption="Freight" DbType="Currency" />
-        <FormField FieldName="status" Caption="Status" DbType="String" ControlType="DropDownEdit" DefaultValue="Draft">
+        <FormField FieldName="status" Caption="Status" DbType="String" MaxLength="12" ControlType="DropDownEdit" DefaultValue="Draft">
           <ListItems>
             <ListItem Value="Draft" Text="Draft" />
             <ListItem Value="Confirmed" Text="Confirmed" />

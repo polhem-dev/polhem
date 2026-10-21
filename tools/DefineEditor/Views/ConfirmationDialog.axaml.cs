@@ -24,6 +24,12 @@ public partial class ConfirmationDialog : Window
     /// </summary>
     private bool _isUnsavedMode;
 
+    /// <summary>
+    /// True when the dialog runs in the <see cref="ShowActionsAsync"/> mode, where the buttons close with the index
+    /// of an action instead of a bool.
+    /// </summary>
+    private bool _isActionsMode;
+
     public ConfirmationDialog()
     {
         InitializeComponent();
@@ -50,11 +56,13 @@ public partial class ConfirmationDialog : Window
     }
 
     /// <summary>
-    /// Shows a message with a single button, for an outcome the user can only acknowledge.
+    /// Shows a message with a single button, for an outcome the user can only acknowledge. Pass
+    /// <paramref name="success"/> for good news, which shows a check mark instead of the warning sign.
     /// </summary>
-    public static async Task ShowMessageAsync(Window owner, string title, string message)
+    public static async Task ShowMessageAsync(Window owner, string title, string message, bool success = false)
     {
         var dialog = new ConfirmationDialog();
+        if (success) dialog.ShowSuccessIcon();
         dialog.TitleText.Text = title;
         dialog.MessageText.Text = message;
         dialog.Title = title;
@@ -113,17 +121,50 @@ public partial class ConfirmationDialog : Window
         return await dialog.ShowDialog<ConfirmCloseResult?>(owner) ?? ConfirmCloseResult.Cancel;
     }
 
+    /// <summary>
+    /// Shows a message with two actions and a close button, and returns 0 for <paramref name="primaryLabel"/>, 1 for
+    /// <paramref name="secondaryLabel"/>, or <see langword="null"/> when the user closed the dialog.
+    /// </summary>
+    public static async Task<int?> ShowActionsAsync(
+        Window owner, string title, string message, string primaryLabel, string secondaryLabel, string closeLabel)
+    {
+        var dialog = new ConfirmationDialog();
+        dialog._isActionsMode = true;
+        dialog.ShowSuccessIcon();
+        dialog.TitleText.Text = title;
+        dialog.MessageText.Text = message;
+        dialog.Title = title;
+        dialog.ConfirmButton.Content = primaryLabel;
+        dialog.DiscardButton.Content = secondaryLabel;
+        dialog.DiscardButton.IsVisible = true;
+        dialog.CancelButton.Content = closeLabel;
+        return await dialog.ShowDialog<int?>(owner);
+    }
+
+    private void ShowSuccessIcon()
+    {
+        IconText.Text = "✓";
+        IconBadge.Background = this.TryFindResource("SemiColorSuccess", ActualThemeVariant, out var brush)
+            && brush is Avalonia.Media.IBrush success ? success : IconBadge.Background;
+    }
+
     private void OnConfirm(object? sender, RoutedEventArgs e)
     {
-        if (_isUnsavedMode) Close(ConfirmCloseResult.Save);
+        if (_isActionsMode) Close((int?)0);
+        else if (_isUnsavedMode) Close(ConfirmCloseResult.Save);
         else Close(true);
     }
 
     private void OnCancel(object? sender, RoutedEventArgs e)
     {
-        if (_isUnsavedMode) Close(ConfirmCloseResult.Cancel);
+        if (_isActionsMode) Close((int?)null);
+        else if (_isUnsavedMode) Close(ConfirmCloseResult.Cancel);
         else Close(false);
     }
 
-    private void OnDiscard(object? sender, RoutedEventArgs e) => Close(ConfirmCloseResult.Discard);
+    private void OnDiscard(object? sender, RoutedEventArgs e)
+    {
+        if (_isActionsMode) Close((int?)1);
+        else Close(ConfirmCloseResult.Discard);
+    }
 }

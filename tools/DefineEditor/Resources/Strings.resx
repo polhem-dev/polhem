@@ -292,4 +292,50 @@ Save anyway?</value></data>
   <data name="Choice_TableSchemaKeep" xml:space="preserve"><value>Keep: leave the existing TableSchema files as they are</value></data>
   <data name="Choice_TableSchemaOverwrite" xml:space="preserve"><value>Overwrite: replace them with the ones generated from the form</value></data>
   <data name="Action_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Action_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Action_SaveAll" xml:space="preserve"><value>Save All</value></data>
+  <data name="Action_ContinueWithoutSaving" xml:space="preserve"><value>Continue Without Saving</value></data>
+  <data name="Action_Run" xml:space="preserve"><value>Run</value></data>
+  <data name="Action_UpgradeDatabase" xml:space="preserve"><value>Upgrade Database</value></data>
+  <data name="Action_PreviewUpgrade" xml:space="preserve"><value>Preview (Dry Run)</value></data>
+  <data name="MenuItem_UpgradeDatabase" xml:space="preserve"><value>Upgrade Database...</value></data>
+  <data name="MenuItem_PreviewDatabaseUpgrade" xml:space="preserve"><value>Preview Database Upgrade...</value></data>
+  <data name="MenuItem_SolutionSettings" xml:space="preserve"><value>Solution Settings...</value></data>
+  <data name="Imported_Title" xml:space="preserve"><value>Import Complete</value></data>
+  <data name="Imported_UpgradeHint" xml:space="preserve"><value>Upgrade the database now so its tables match the imported definitions? Only this form's tables are upgraded: {0}. The preview shows the changes without making them.</value></data>
+  <data name="Imported_NoUpgradeCommand" xml:space="preserve"><value>To upgrade the database from here, set the database upgrade command in File → Solution Settings (saved in {0}).</value></data>
+  <data name="Upgrade_Title" xml:space="preserve"><value>Upgrade Database</value></data>
+  <data name="Upgrade_DryRunTitle" xml:space="preserve"><value>Preview Database Upgrade</value></data>
+  <data name="Upgrade_NoCommand" xml:space="preserve"><value>This solution has no database upgrade command. Set it in File → Solution Settings (saved in {0}).</value></data>
+  <data name="Upgrade_UnsavedMessage" xml:space="preserve"><value>Some files have unsaved changes. The upgrade command reads the files on disk, so unsaved changes are not included.</value></data>
+  <data name="Upgrade_TrustTitle" xml:space="preserve"><value>Run This Command?</value></data>
+  <data name="Upgrade_TrustMessage" xml:space="preserve"><value>The solution's {0} asks to run this command:
+
+{1}
+
+in {2}
+
+Run it only if you trust this solution. You are asked again whenever the command changes.</value></data>
+  <data name="Upgrade_WorkingDirectory" xml:space="preserve"><value>Working directory:</value></data>
+  <data name="Upgrade_StatusRunning" xml:space="preserve"><value>Running...</value></data>
+  <data name="Upgrade_StatusSucceeded" xml:space="preserve"><value>Done: the database is up to date.</value></data>
+  <data name="Upgrade_StatusDryRunSucceeded" xml:space="preserve"><value>Done: the preview made no changes.</value></data>
+  <data name="Upgrade_StatusFailed" xml:space="preserve"><value>Failed (exit code {0}). See the output above.</value></data>
+  <data name="Upgrade_StatusUsageError" xml:space="preserve"><value>The command line was not understood (exit code {0}). Check the arguments in Solution Settings.</value></data>
+  <data name="Upgrade_StatusStartFailed" xml:space="preserve"><value>The command could not start: {0}</value></data>
+  <data name="Upgrade_StatusCancelled" xml:space="preserve"><value>Cancelled.</value></data>
+  <data name="Status_SolutionSettingsSaved" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="Status_SolutionSettingsFailed" xml:space="preserve"><value>Could not read or write the solution settings: {0}</value></data>
+  <data name="Status_StartupPathNotFound" xml:space="preserve"><value>The folder on the command line does not exist: {0}</value></data>
+  <data name="SolutionSettings_Title" xml:space="preserve"><value>Solution Settings</value></data>
+  <data name="SolutionSettings_UpgradeSection" xml:space="preserve"><value>Database upgrade command</value></data>
+  <data name="SolutionSettings_UpgradeHint" xml:space="preserve"><value>The command that builds or upgrades the database tables, usually the server's db upgrade command. The preview adds --dry-run. Saved in DefineEditor.json in this folder, so it goes with the project.</value></data>
+  <data name="SolutionSettings_Command" xml:space="preserve"><value>Program</value></data>
+  <data name="SolutionSettings_Arguments" xml:space="preserve"><value>Arguments (separated by spaces; quote an argument that contains spaces)</value></data>
+  <data name="SolutionSettings_WorkingDirectory" xml:space="preserve"><value>Working directory</value></data>
+  <data name="SolutionSettings_WorkingDirectoryHint" xml:space="preserve"><value>Relative to this folder; leave empty for this folder itself.</value></data>
+  <data name="SolutionSettings_SecretWarning" xml:space="preserve"><value>The command contains a password. This file is committed with the project; keep passwords in DatabaseSettings or in an environment variable instead.</value></data>
+  <data name="Choice_FormLayoutMessage" xml:space="preserve"><value>This form already has a FormLayout, which may have been adjusted by hand. How should the import treat it?</value></data>
+  <data name="Choice_FormLayoutKeep" xml:space="preserve"><value>Keep: leave the existing FormLayout as it is; new fields appear in the list but not on the edit screen (recommended when the layout was adjusted)</value></data>
+  <data name="Choice_FormLayoutRegenerate" xml:space="preserve"><value>Regenerate: lay the form out again from the workbook, replacing any adjustments</value></data>
 </root>

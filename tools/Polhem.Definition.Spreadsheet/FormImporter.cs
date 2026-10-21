@@ -46,10 +46,14 @@ public static class FormImporter
         var categoryId = TableSchemaGenerator.GetCategoryId(schema);
         foreach (var table in schema.Tables!)
         {
-            files.Add(PlanTableSchema(paths.GetTableSchemaFilePath(categoryId, table.DbTableName),
+            var tableFile = PlanTableSchema(paths.GetTableSchemaFilePath(categoryId, table.DbTableName),
                 $"TableSchema/{categoryId}/{table.DbTableName}.TableSchema.xml",
-                table.GenerateDbTable(), $"TableSchema {categoryId}/{table.DbTableName}", options.TableSchemaMode));
+                table.GenerateDbTable(), $"TableSchema {categoryId}/{table.DbTableName}", options.TableSchemaMode);
+            files.Add(tableFile);
+            issues.AddRange(UnsizedTextColumns(table, tableFile).Select(i => Locate(i, content)));
         }
+        if (issues.Any(i => i.Severity == IssueSeverity.Error))
+            return new FormImportPlan(issues, []);
 
         var layoutPath = paths.GetFormLayoutFilePath(schema.ProgId);
         files.Add(File.Exists(layoutPath) && !options.RegenerateLayout
@@ -178,6 +182,34 @@ public static class FormImporter
 
         return PlanSettings(path, "TableSchema", $"{description}: add the columns and indexes the form brings",
             document => SettingsXmlEditor.MergeTableSchema(document, XmlCodec.Serialize(generated)));
+    }
+
+    /// <summary>
+    /// Reports the text columns of <paramref name="table"/> that the planned TableSchema would write without a
+    /// length. No database builds such a column (SQL Server and PostgreSQL reject a zero length), and the framework
+    /// does not pick a length on the user's behalf, so the import stops at the workbook row instead of at the
+    /// database upgrade. A column the existing TableSchema already sizes is not reported: a merge keeps it as it is.
+    /// A file the import leaves unchanged is checked too, since it already is what the form generates; a file the
+    /// user chose to keep is not.
+    /// </summary>
+    private static IEnumerable<DefinitionIssue> UnsizedTextColumns(Forms.FormTable table, PlannedFile tableFile)
+    {
+        var xml = tableFile.Action == PlannedFileAction.Unchanged ? File.ReadAllText(tableFile.Path) : tableFile.Content;
+        if (xml is null) yield break;
+        var written = System.Xml.Linq.XDocument.Parse(xml).Root!
+            .Element("Fields")?.Elements("DbField") ?? [];
+        foreach (var column in written)
+        {
+            var fieldName = (string?)column.Attribute("FieldName") ?? string.Empty;
+            if ((string?)column.Attribute("DbType") != nameof(Polhem.Core.Data.FieldDbType.String)
+                || ((int?)column.Attribute("Length") ?? 0) > 0
+                || table.Fields?.Contains(fieldName) != true)
+            {
+                continue;
+            }
+            yield return new DefinitionIssue(IssueSeverity.Error, $"{table.TableName}.{fieldName}",
+                "A String field that becomes a table column needs a max length.");
+        }
     }
 
     private static PlannedFile PlanSettings(string path, string rootName, string description, Func<System.Xml.Linq.XDocument, bool> edit)

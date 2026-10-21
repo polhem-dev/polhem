@@ -205,6 +205,103 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             Assert.Equal(expected, plan.Files.Single(f => f.Path == QuoteLineTablePath).Action);
         }
 
+        private static FormWorkbookContent QuoteWithNotes()
+        {
+            var content = Quote();
+            content.Schema.Tables!["Quote"].Fields!.Add("notes", "Notes", FieldDbType.String);
+            return content;
+        }
+
+        [Fact]
+        [DisplayName("A String column without a max length stops the import at its field, since no database builds it")]
+        public void Import_UnsizedStringColumn_IsError()
+        {
+            var plan = FormImporter.Plan(QuoteWithNotes(), Options());
+
+            Assert.True(plan.HasErrors);
+            Assert.Empty(plan.Files);
+            var issue = Assert.Single(plan.Issues, i => i.Severity == IssueSeverity.Error);
+            Assert.Contains("Quote.notes", issue.Location, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("An unsized String column is reported even when the existing TableSchema already matches the form")]
+        public void Import_UnsizedStringColumnAlreadyWritten_IsError()
+        {
+            var path = PathOf("TableSchema", "company", "ft_quote.TableSchema.xml");
+            var content = QuoteWithNotes();
+            var generated = FormImporter.Plan(Quote(), Options());
+            Assert.False(generated.HasErrors);
+            FormImporter.Apply(generated);
+            var unsized = XmlCodec.DeserializeFromFile<TableSchema>(path)!;
+            unsized.Fields!.Add("notes", "Notes", FieldDbType.String);
+            File.WriteAllText(path, XmlCodec.Serialize(unsized));
+
+            var plan = FormImporter.Plan(content, new FormImportOptions { DefinePath = _define, TableSchemaMode = TableSchemaImportMode.Overwrite });
+
+            Assert.True(plan.HasErrors);
+        }
+
+        [Fact]
+        [DisplayName("Merging gives an existing unsized String column the workbook's length, and keeps a sized one")]
+        public void Import_MergeIntoUnsizedColumn_TakesFormLength()
+        {
+            var path = PathOf("TableSchema", "company", "ft_quote.TableSchema.xml");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, """
+                <?xml version="1.0" encoding="utf-8"?>
+                <TableSchema TableName="ft_quote" DisplayName="Quote">
+                  <Fields>
+                    <DbField FieldName="sys_id" Caption="Quote No" DbType="String" />
+                    <DbField FieldName="legacy" Caption="Legacy" DbType="String" Length="8" />
+                  </Fields>
+                </TableSchema>
+                """);
+
+            var plan = FormImporter.Plan(Quote(), Options());
+            FormImporter.Apply(plan);
+
+            Assert.False(plan.HasErrors);
+            var table = XmlCodec.DeserializeFromFile<TableSchema>(path)!;
+            Assert.Equal(20, table.Fields!["sys_id"].Length);
+            Assert.Equal(8, table.Fields["legacy"].Length);
+        }
+
+        [Fact]
+        [DisplayName("A String column the existing TableSchema already sizes imports, since the merge keeps its length")]
+        public void Import_UnsizedStringColumnSizedInExistingTable_Imports()
+        {
+            var path = PathOf("TableSchema", "company", "ft_quote.TableSchema.xml");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, """
+                <?xml version="1.0" encoding="utf-8"?>
+                <TableSchema TableName="ft_quote" DisplayName="Quote">
+                  <Fields>
+                    <DbField FieldName="notes" Caption="Notes" DbType="String" Length="200" />
+                  </Fields>
+                </TableSchema>
+                """);
+
+            var plan = FormImporter.Plan(QuoteWithNotes(), Options());
+
+            Assert.False(plan.HasErrors);
+        }
+
+        [Fact]
+        [DisplayName("Exporting a form whose lengths live only in its TableSchema shows them in the workbook, so it imports again")]
+        public void Export_LengthOnlyInTableSchema_FillsMaxLength()
+        {
+            FormImporter.Apply(FormImporter.Plan(Quote(), Options()));
+            var schemaPath = PathOf("FormSchema", "Quote.FormSchema.xml");
+            var schema = XmlCodec.DeserializeFromFile<FormSchema>(schemaPath)!;
+            schema.Tables!["Quote"].Fields!["sys_id"].MaxLength = 0;
+            File.WriteAllText(schemaPath, XmlCodec.Serialize(schema));
+
+            var exported = FormExporter.Load(_define, "Quote");
+
+            Assert.Equal(20, exported.Schema.Tables!["Quote"].Fields!["sys_id"].MaxLength);
+        }
+
         public static TheoryData<string> NorthwindForms()
         {
             const string suffix = ".FormSchema.xml";
@@ -252,7 +349,7 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             table.DbTableName = "st_employee";
             table.Fields!.Add("sys_id", "Employee Code", FieldDbType.String);
             table.Fields.Add("sys_name", "Employee Name", FieldDbType.String);
-            table.Fields.Add("title", "Title", FieldDbType.String);
+            table.Fields!.Add(new FormField("title", "Title", FieldDbType.String) { MaxLength = 50 });
 
             FormImporter.Apply(FormImporter.Plan(new FormWorkbookContent(schema), Options()));
 

@@ -3,9 +3,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
-using Polhem.DefineEditor.Views;
-using Polhem.Definition;
-using Polhem.Definition.Spreadsheet;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -189,7 +186,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Rebuilds every sidebar view from <paramref name="definePath"/>, or clears them when it is empty.
     /// </summary>
-    private void RebuildTrees(string definePath)
+    /// <remarks>
+    /// The nodes expanded before stay expanded when the same solution is rebuilt, and the ancestors of
+    /// <paramref name="revealFilePath"/> are expanded so the file about to be selected is in view.
+    /// </remarks>
+    private void RebuildTrees(string definePath, string? revealFilePath = null)
     {
         if (string.IsNullOrEmpty(definePath))
         {
@@ -200,6 +201,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
         var root = DefinePathScanner.Scan(definePath);
+        if (IsShownSolution(definePath)) TreeExpansion.Restore([root], TreeExpansion.Capture(Nodes));
+        if (revealFilePath is not null) TreeExpansion.Reveal([root], revealFilePath);
         Nodes = new ObservableCollection<DefineNode> { root };
         Solution = SolutionContext.FromTree(root);
         RebuildContentTrees(definePath);
@@ -208,9 +211,18 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Rebuilds the views that are built from file contents rather than from the folder layout.</summary>
     private void RebuildContentTrees(string definePath)
     {
-        ProgramNodes = new ObservableCollection<DefineNode>(ProgramTreeBuilder.Build(definePath));
-        DatabaseNodes = new ObservableCollection<DefineNode>(DbCategoryTreeBuilder.Build(definePath));
+        var keep = IsShownSolution(definePath);
+        var programs = ProgramTreeBuilder.Build(definePath).ToList();
+        if (keep) TreeExpansion.Restore(programs, TreeExpansion.Capture(ProgramNodes));
+        var databases = DbCategoryTreeBuilder.Build(definePath).ToList();
+        if (keep) TreeExpansion.Restore(databases, TreeExpansion.Capture(DatabaseNodes));
+        ProgramNodes = new ObservableCollection<DefineNode>(programs);
+        DatabaseNodes = new ObservableCollection<DefineNode>(databases);
     }
+
+    /// <summary>True when <paramref name="definePath"/> is the solution already shown, so its tree state carries over.</summary>
+    private bool IsShownSolution(string definePath)
+        => string.Equals(SolutionPath, definePath, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Documents whose PropertyChanged we are currently subscribed to for
@@ -247,183 +259,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(SolutionPath)) return;
 
-        RebuildTrees(SolutionPath);
+        RebuildTrees(SolutionPath, revealFilePath: filePath);
 
         var node = FindNodeByFilePath(Nodes[0], filePath);
         if (node is not null) SelectedNode = node;
     }
-
-    /// <summary>
-    /// Writes the framework default define files the open solution does not have yet, after the user
-    /// confirms the list. Existing files are never touched.
-    /// </summary>
-    public async Task AddMissingFrameworkDefaultsAsync()
-    {
-        if (!IsSolutionOpened) return;
-        var definePath = SolutionPath;
-
-        var missing = Defaults.ListEmbedded()
-            .Where(rel => !File.Exists(Path.Combine(definePath, rel)))
-            .ToList();
-        if (missing.Count == 0)
-        {
-            StatusText = L("Status_FrameworkDefaultsComplete");
-            return;
-        }
-
-        var owner = GetOwnerWindow();
-        if (owner is not null)
-        {
-            var confirmed = await ConfirmationDialog.ShowAsync(
-                owner,
-                L("Confirm_AddFrameworkDefaultsTitle"),
-                L("Confirm_AddFrameworkDefaultsMessage", definePath,
-                    string.Join("\n", missing.Select(rel => "• " + rel))),
-                confirmLabel: L("Action_Add"));
-            if (!confirmed)
-            {
-                StatusText = L("Status_FrameworkDefaultsCancelled");
-                return;
-            }
-        }
-
-        try
-        {
-            // The filter keeps the write to exactly the list the user confirmed.
-            var shown = missing.ToHashSet(StringComparer.Ordinal);
-            var result = Defaults.MaterializeTo(definePath, new MaterializeOptions { Filter = shown.Contains });
-
-            RebuildTrees(definePath);
-            StatusText = L("Status_FrameworkDefaultsMaterialised", result.WrittenCount);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            StatusText = L("Status_FrameworkDefaultsFailed", ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Imports a form workbook into the open solution: reads it, shows the files the import would change
-    /// (or the problems that keep it from importing), and writes them once the user confirms.
-    /// </summary>
-    /// <param name="workbookPath">The <c>.xlsx</c> file to import.</param>
-    public async Task ImportFormWorkbookAsync(string workbookPath)
-    {
-        if (!IsSolutionOpened) return;
-        var definePath = SolutionPath;
-        var owner = GetOwnerWindow();
-
-        try
-        {
-            FormWorkbookReadResult read;
-            using (var stream = File.OpenRead(workbookPath))
-                read = FormWorkbookReader.Read(stream);
-
-            var plan = read.HasErrors
-                ? null
-                : FormImporter.Plan(read.Content!, new FormImportOptions { DefinePath = definePath });
-
-            // An existing TableSchema may carry what the form cannot derive (lengths, extra columns, indexes), so the
-            // user picks how to treat it; the plan above used the default, Merge.
-            if (plan is { HasErrors: false } && owner is not null
-                && plan.Files.Any(f => IsTableSchema(f.Path) && File.Exists(f.Path)))
-            {
-                var mode = await ConfirmationDialog.ShowChoiceAsync(owner, L("Confirm_ImportFormTitle"),
-                    L("Choice_TableSchemaModeMessage"),
-                    [L("Choice_TableSchemaMerge"), L("Choice_TableSchemaKeep"), L("Choice_TableSchemaOverwrite")],
-                    selectedIndex: 0, confirmLabel: L("Action_Next"));
-                if (mode is null)
-                {
-                    StatusText = L("Status_FormImportCancelled");
-                    return;
-                }
-                if (mode != 0)
-                {
-                    // The conventions already ran on this content and change nothing when applied again.
-                    plan = FormImporter.Plan(read.Content!, new FormImportOptions
-                    {
-                        DefinePath = definePath,
-                        TableSchemaMode = mode == 1 ? TableSchemaImportMode.Keep : TableSchemaImportMode.Overwrite,
-                    });
-                }
-            }
-            var issues = read.Issues.Concat(plan?.Issues ?? []).ToList();
-            if (plan is null || plan.HasErrors)
-            {
-                if (owner is not null)
-                {
-                    await ConfirmationDialog.ShowMessageAsync(owner, L("Error_ImportFormTitle"),
-                        L("Error_ImportFormMessage", FormatIssues(issues)));
-                }
-                StatusText = L("Status_FormImportCancelled");
-                return;
-            }
-
-            var progId = read.Content!.Schema.ProgId;
-            var written = plan.Files.Where(f => f.Writes).ToList();
-            if (written.Count == 0)
-            {
-                StatusText = L("Status_FormImportUnchanged", progId);
-                return;
-            }
-
-            // An open editor holds its own copy of the file; replacing the file under unsaved edits would
-            // lose one side or the other.
-            var dirty = OpenDocuments
-                .OfType<ObjectTreeDocumentViewModelBase>()
-                .FirstOrDefault(d => d.IsDirty && written.Any(f => SamePath(f.Path, d.FilePath)));
-            if (dirty is not null)
-            {
-                StatusText = L("Status_FormImportBlockedByDirty", Path.GetFileName(dirty.FilePath));
-                return;
-            }
-
-            if (owner is not null)
-            {
-                var message = L("Confirm_ImportFormMessage", Path.GetFileName(workbookPath), definePath,
-                    string.Join("\n", plan.Files
-                        .Where(f => f.Writes || f.Action == PlannedFileAction.Skip)
-                        .Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({ActionLabel(f.Action)})")));
-                var warnings = issues.Where(i => i.Severity == IssueSeverity.Warning).ToList();
-                if (warnings.Count > 0)
-                    message += "\n\n" + L("Confirm_ImportFormWarnings", FormatIssues(warnings));
-                if (!await ConfirmationDialog.ShowAsync(owner, L("Confirm_ImportFormTitle"), message, confirmLabel: L("Action_Import")))
-                {
-                    StatusText = L("Status_FormImportCancelled");
-                    return;
-                }
-            }
-
-            FormImporter.Apply(plan);
-            CloseDocuments(OpenDocuments
-                .OfType<ObjectTreeDocumentViewModelBase>()
-                .Where(d => written.Any(f => SamePath(f.Path, d.FilePath)))
-                .ToList<DocumentViewModelBase>(), ActiveDocument);
-            RebuildTrees(definePath);
-            // The plan lists the FormSchema first.
-            var schemaNode = FindNodeByFilePath(Nodes[0], plan.Files[0].Path);
-            if (schemaNode is not null) SelectedNode = schemaNode;
-            StatusText = L("Status_FormImported", progId, written.Count);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
-        {
-            StatusText = L("Status_FormImportFailed", ex.Message);
-        }
-    }
-
-    private static string FormatIssues(IEnumerable<DefinitionIssue> issues)
-        => string.Join("\n", issues.Select(i => $"• {i.Location}: {i.Message}"));
-
-    private static string ActionLabel(PlannedFileAction action) => action switch
-    {
-        PlannedFileAction.Create => L("ImportAction_Create"),
-        PlannedFileAction.Overwrite => L("ImportAction_Overwrite"),
-        PlannedFileAction.Update => L("ImportAction_Update"),
-        _ => L("ImportAction_Skip"),
-    };
-
-    private static bool IsTableSchema(string path)
-        => path.EndsWith(".TableSchema.xml", StringComparison.OrdinalIgnoreCase);
 
     private static bool SamePath(string a, string b)
         => string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
@@ -527,162 +367,6 @@ public partial class MainWindowViewModel : ViewModelBase
         ActiveDocument = doc;
     }
 
-    [RelayCommand]
-    private async Task CloseDocument(DocumentViewModelBase? doc)
-    {
-        if (doc is null) return;
-        var idx = OpenDocuments.IndexOf(doc);
-        if (idx < 0) return;
-        if (!await PrepareCloseAsync(new List<DocumentViewModelBase> { doc })) return;
-
-        OpenDocuments.Remove(doc);
-        doc.Dispose();
-
-        if (ActiveDocument == doc)
-        {
-            ActiveDocument = OpenDocuments.Count == 0
-                ? null
-                : OpenDocuments[Math.Min(idx, OpenDocuments.Count - 1)];
-        }
-    }
-
-    [RelayCommand]
-    private async Task CloseOtherDocuments(DocumentViewModelBase? doc)
-    {
-        if (doc is null) return;
-        var targets = OpenDocuments.Where(d => d != doc).ToList();
-        if (!await PrepareCloseAsync(targets)) return;
-        CloseDocuments(targets, activate: doc);
-    }
-
-    [RelayCommand]
-    private async Task CloseDocumentsToTheRight(DocumentViewModelBase? doc)
-    {
-        if (doc is null) return;
-        var idx = OpenDocuments.IndexOf(doc);
-        if (idx < 0) return;
-        var targets = OpenDocuments.Skip(idx + 1).ToList();
-        if (!await PrepareCloseAsync(targets)) return;
-        CloseDocuments(targets, activate: doc);
-    }
-
-    // Only ever closes clean tabs, so no unsaved-changes prompt is needed.
-    [RelayCommand]
-    private void CloseSavedDocuments() =>
-        CloseDocuments(OpenDocuments.Where(d => !d.IsDirty).ToList(), activate: ActiveDocument);
-
-    [RelayCommand]
-    private async Task CloseAllDocuments()
-    {
-        var targets = OpenDocuments.ToList();
-        if (!await PrepareCloseAsync(targets)) return;
-        CloseDocuments(targets, activate: null);
-    }
-
-    /// <summary>
-    /// Gatekeeper run before any tab-close action. When <paramref name="docs"/>
-    /// contains dirty documents, prompts Save / Don't Save / Cancel (VS Code
-    /// style). "Save" runs each dirty editor's own Save flow — if any of them
-    /// is backed out (validation-error prompt cancelled) the document stays
-    /// dirty and the whole close is aborted so no edits are lost. Returns
-    /// <c>true</c> when the caller may proceed with closing. Headless contexts
-    /// (no main window) skip the prompt, consistent with the other dialogs.
-    /// </summary>
-    private static async Task<bool> PrepareCloseAsync(IReadOnlyList<DocumentViewModelBase> docs)
-    {
-        var dirty = docs.Where(d => d.IsDirty).ToList();
-        if (dirty.Count == 0) return true;
-
-        var owner = GetOwnerWindow();
-        if (owner is null) return true;
-
-        var message = dirty.Count == 1
-            ? L("Confirm_CloseUnsavedMessage", dirty[0].Title)
-            : L("Confirm_CloseUnsavedMessageMulti", dirty.Count,
-                string.Join("\n", dirty.Select(d => "• " + d.Title)));
-
-        var choice = await ConfirmationDialog.ShowUnsavedAsync(
-            owner,
-            L("Confirm_CloseUnsavedTitle"),
-            message,
-            saveLabel: L("Action_Save"),
-            discardLabel: L("Action_DontSave"),
-            cancelLabel: L("Action_Cancel"));
-
-        switch (choice)
-        {
-            case ConfirmCloseResult.Discard:
-                return true;
-            case ConfirmCloseResult.Save:
-                foreach (var doc in dirty)
-                {
-                    if (doc.FileSaveCommand is IAsyncRelayCommand asyncSave)
-                        await asyncSave.ExecuteAsync(null);
-                    else
-                        doc.FileSaveCommand?.Execute(null);
-                }
-                return dirty.All(d => !d.IsDirty);
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>
-    /// Removes and disposes <paramref name="docs"/>, then re-points
-    /// <see cref="ActiveDocument"/>: prefer <paramref name="activate"/> when it
-    /// survived the close, otherwise fall back to the last remaining tab (or
-    /// null when none are left). Shared by the tab context-menu close actions.
-    /// </summary>
-    private void CloseDocuments(IReadOnlyList<DocumentViewModelBase> docs, DocumentViewModelBase? activate)
-    {
-        foreach (var doc in docs)
-        {
-            OpenDocuments.Remove(doc);
-            doc.Dispose();
-        }
-
-        if (activate is not null && OpenDocuments.Contains(activate))
-            ActiveDocument = activate;
-        else if (ActiveDocument is null || !OpenDocuments.Contains(ActiveDocument))
-            ActiveDocument = OpenDocuments.LastOrDefault();
-    }
-
-    /// <summary>
-    /// Saves every dirty document that supports saving, reusing each editor's
-    /// own Save flow (including the save-despite-validation-errors prompt — a
-    /// cancelled prompt leaves that document dirty and the batch moves on).
-    /// </summary>
-    [RelayCommand]
-    private async Task SaveAll()
-    {
-        var targets = OpenDocuments
-            .Where(d => d.IsDirty && d.FileSaveCommand is not null)
-            .ToList();
-        if (targets.Count == 0) return;
-
-        var saved = 0;
-        foreach (var doc in targets)
-        {
-            if (doc.FileSaveCommand is IAsyncRelayCommand asyncSave)
-                await asyncSave.ExecuteAsync(null);
-            else
-                doc.FileSaveCommand!.Execute(null);
-            if (!doc.IsDirty) saved++;
-        }
-        StatusText = L("Status_SavedAll", saved, targets.Count);
-    }
-
-    /// <summary>
-    /// Drops every open document tab and disposes the view-models so their
-    /// <see cref="LocalizationService.CultureChanged"/> subscriptions release.
-    /// Used by <see cref="OpenSolution"/> when switching solutions.
-    /// </summary>
-    private void DisposeAndClearOpenDocuments()
-    {
-        foreach (var doc in OpenDocuments) doc.Dispose();
-        OpenDocuments.Clear();
-    }
-
     /// <summary>
     /// Opens a DefinePath folder as the solution and rebuilds the tree. Any open
     /// document tabs from a previous solution are dropped.
@@ -723,6 +407,16 @@ public partial class MainWindowViewModel : ViewModelBase
             SolutionPath = string.Empty;
             StatusText = L("Status_OpenSolutionFailed", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Opens the DefinePath named on the command line, or reports in the status bar that it is not a folder. The app
+    /// still starts either way, so a project task that passed a wrong path shows why instead of exiting.
+    /// </summary>
+    public void OpenSolutionFromCommandLine(string definePath)
+    {
+        if (Directory.Exists(definePath)) OpenSolution(definePath);
+        else StatusText = L("Status_StartupPathNotFound", definePath);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822",

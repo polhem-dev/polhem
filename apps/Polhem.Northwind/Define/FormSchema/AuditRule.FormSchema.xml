@@ -24,8 +24,8 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Program Id" DbType="String" Required="true" />
-        <FormField FieldName="sys_name" Caption="Form Name" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Program Id" DbType="String" MaxLength="50" Required="true" />
+        <FormField FieldName="sys_name" Caption="Form Name" DbType="String" MaxLength="100" />
         <FormField FieldName="change_mode" Caption="Change Log" DbType="Integer" ControlType="DropDownEdit" DefaultValue="0">
           <ListItems>
             <ListItem Value="0" Text="Inherit" />
@@ -41,7 +41,7 @@
           </ListItems>
         </FormField>
         <FormField FieldName="is_sensitive" Caption="Sensitive" DbType="Boolean" ControlType="CheckEdit" />
-        <FormField FieldName="remark" Caption="Remark" DbType="String" />
+        <FormField FieldName="remark" Caption="Remark" DbType="String" MaxLength="255" />
         <FormField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" Visible="false" ReadOnly="true" />
       </Fields>
     </FormTable>
