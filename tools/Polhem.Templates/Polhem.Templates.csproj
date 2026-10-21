@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Package metadata shared with the src/ packages: icon, license, repository. -->
+  <Import Project="..\..\Package.props" />
+
+  <PropertyGroup>
+    <!--
+      A `dotnet new` template package (`dotnet new install Polhem.Templates`, then `dotnet new polhem-app`). It carries
+      only the files under content/; the target framework is required by the SDK and nothing is compiled.
+      Overrides tools/Directory.Build.props (IsPackable=false).
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <PackageId>Polhem.Templates</PackageId>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <!-- content/ holds .template.config, .vscode, .config and .gitignore, which NuGet leaves out by default. -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- NU5128: a template package has no lib/ folder, by design. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <PackageOutputPath>../../nupkgs</PackageOutputPath>
+    <Description>Project templates for Polhem. `dotnet new polhem-app` creates an application whose server references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
+    <PackageTags>polhem;dotnet-new;templates</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\polhem-app\.template.config\template.json"
+          Pack="true" PackagePath="content\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    The generated application references the Polhem packages and tools of this package's own version. template.json
+    carries a placeholder as the default of polhemVersion, and the packed copy carries the version, so the version
+    has one source (Version.props, or the /p:Version of the release) and template.json never has to be edited for a
+    release. Installing the template from the content folder keeps the placeholder; pass polhem-version then.
+  -->
+  <Target Name="StampTemplateVersion" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_PolhemTemplateJson>content\polhem-app\.template.config\template.json</_PolhemTemplateJson>
+      <_PolhemStampedTemplateJson>$(IntermediateOutputPath)polhem-app\template.json</_PolhemStampedTemplateJson>
+      <_PolhemTemplateText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\$(_PolhemTemplateJson)'))</_PolhemTemplateText>
+    </PropertyGroup>
+    <Error Condition="!$(_PolhemTemplateText.Contains('&quot;0.0.0-unpacked&quot;'))"
+           Text="$(_PolhemTemplateJson) no longer holds the placeholder 0.0.0-unpacked that StampTemplateVersion replaces with the package version." />
+    <WriteLinesToFile File="$(_PolhemStampedTemplateJson)"
+                      Lines="$(_PolhemTemplateText.Replace('&quot;0.0.0-unpacked&quot;', '&quot;$(PackageVersion)&quot;'))"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\polhem-app\.template.config\template.json" />
+    </ItemGroup>
+  </Target>
+
+</Project>

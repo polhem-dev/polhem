@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "polhem.defineeditor": {
+      "version": "POLHEM_PACKAGE_VERSION",
+      "commands": [
+        "polhem-define"
+      ],
+      "rollForward": false
+    },
+    "polhem.dbmanager": {
+      "version": "POLHEM_PACKAGE_VERSION",
+      "commands": [
+        "polhem-db"
+      ],
+      "rollForward": false
+    }
+  }
+}

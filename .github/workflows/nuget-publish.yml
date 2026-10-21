@@ -37,11 +37,12 @@ jobs:
     - name: Restore dependencies
       run: |
         dotnet restore Polhem.slnx
-        # tools/Polhem.Cli, tools/DefineEditor and tools/DbManager are not part of Polhem.slnx (tools live in
-        # Polhem.Tools.slnx); restore them explicitly so the subsequent build --no-restore step works.
+        # tools/Polhem.Cli, tools/DefineEditor, tools/DbManager and tools/Polhem.Templates are not part of Polhem.slnx
+        # (tools live in Polhem.Tools.slnx); restore them explicitly so the subsequent build --no-restore step works.
         dotnet restore tools/Polhem.Cli/Polhem.Cli.csproj
         dotnet restore tools/DefineEditor/Polhem.DefineEditor.csproj
         dotnet restore tools/DbManager/Polhem.DbManager.csproj
+        dotnet restore tools/Polhem.Templates/Polhem.Templates.csproj
 
     # Build and pack run in one step and share one list.
     #
@@ -82,6 +83,8 @@ jobs:
           'tools/DefineEditor/Polhem.DefineEditor.csproj'
           # Database manager (dotnet tool `polhem-db`); DefineEditor runs the one of its own version.
           'tools/DbManager/Polhem.DbManager.csproj'
+          # `dotnet new polhem-app`; the generated application references the packages of this version.
+          'tools/Polhem.Templates/Polhem.Templates.csproj'
         )
 
         Write-Host "== build =="

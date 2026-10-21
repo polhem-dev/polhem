@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Settings for development. Before deploying, review:
+    - CommonConfiguration/IsDebugMode: turn it off, so error responses carry no details.
+    - BackendConfiguration/SecurityKeySettings/MasterKeySource: the master key is the file Master.key in this folder,
+      created on the first run of the server and ignored by git. A deployment usually reads it from an environment
+      variable instead (Type Environment, Value the variable name).
+    - BackendConfiguration/SecurityKeySettings/ConfigEncryptionKey: without it the passwords in DatabaseSettings.xml
+      are stored in clear text, and the server logs a warning. Generate one with `dotnet polhem keys protect`
+      (the Polhem.Cli tool).
+    - BackendConfiguration/DefaultTimeZone: the IANA time zone of users who have none of their own; empty means UTC.
+-->
+<SystemSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CommonConfiguration>
+    <Version>1.0.0</Version>
+    <IsDebugMode>true</IsDebugMode>
+    <DefaultLanguage>POLHEM_DEFAULT_LANGUAGE</DefaultLanguage>
+    <AllowedTypeNamespaces></AllowedTypeNamespaces>
+    <ApiPayloadOptions>
+      <Compressor>gzip</Compressor>
+      <Encryptor>aes-cbc-hmac</Encryptor>
+    </ApiPayloadOptions>
+  </CommonConfiguration>
+  <BackendConfiguration>
+    <LogOptions>
+      <DbAccess>
+        <Level>Warning</Level>
+        <AffectedRowThreshold>10000</AffectedRowThreshold>
+        <ResultRowThreshold>10000</ResultRowThreshold>
+        <ExecutionTimeThreshold>300</ExecutionTimeThreshold>
+      </DbAccess>
+    </LogOptions>
+    <SecurityKeySettings>
+      <MasterKeySource>
+        <Type>File</Type>
+        <Value>Master.key</Value>
+      </MasterKeySource>
+    </SecurityKeySettings>
+    <DefaultTimeZone></DefaultTimeZone>
+  </BackendConfiguration>
+  <FrontendConfiguration />
+  <WebsiteConfiguration />
+  <BackgroundServiceConfiguration />
+</SystemSettings>

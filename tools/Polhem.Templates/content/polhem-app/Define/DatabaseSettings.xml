@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The three databases the framework reaches for: common (users, sessions, companies), company (business data) and log
+  (the audit trail). Each item names its category; a deployment with several companies adds one company item per
+  company. The server, the user name and the password are in the DatabaseServer entry they share.
+  Edit them in DefineEditor (Database settings), where "Test connection" checks them.
+-->
+<DatabaseSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Servers>
+<!--#if (database == "SqlServer") -->
+    <DatabaseServer Id="local" DisplayName="Local SQL Server" DatabaseType="SQLServer"
+                    ConnectionString="Server=localhost,1433;Database={@DbName};User ID={@UserId};Password={@Password};TrustServerCertificate=True"
+                    UserId="sa" Password="POLHEM_DB_PASSWORD" />
+<!--#elif (database == "PostgreSql") -->
+    <DatabaseServer Id="local" DisplayName="Local PostgreSQL" DatabaseType="PostgreSQL"
+                    ConnectionString="Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Password}"
+                    UserId="postgres" Password="POLHEM_DB_PASSWORD" />
+<!--#elif (database == "MySql") -->
+    <DatabaseServer Id="local" DisplayName="Local MySQL" DatabaseType="MySQL"
+                    ConnectionString="Server=localhost;Port=3306;Database={@DbName};User ID={@UserId};Password={@Password}"
+                    UserId="root" Password="POLHEM_DB_PASSWORD" />
+<!--#elif (database == "Oracle") -->
+    <!-- Oracle keeps each database in its own schema, which a DBA creates; `db create` creates nothing on Oracle. -->
+    <DatabaseServer Id="local" DisplayName="Local Oracle" DatabaseType="Oracle"
+                    ConnectionString="Data Source=localhost:1521/FREEPDB1;User Id={@UserId};Password={@Password}"
+                    Password="POLHEM_DB_PASSWORD" />
+<!--#else -->
+    <!-- The path is relative to the working directory of the process that opens it: the server sets it to the
+         folder above Define. polhem-db refuses relative SQLite paths, so DefineEditor cannot upgrade these
+         databases after an import; run the "Polhem: Upgrade database" task instead. -->
+    <DatabaseServer Id="local" DisplayName="Local SQLite" DatabaseType="SQLite"
+                    ConnectionString="Data Source=App_Data/{@DbName}.db" />
+<!--#endif -->
+  </Servers>
+  <Items>
+<!--#if (database == "Oracle") -->
+    <DatabaseItem Id="common" CategoryId="common" DisplayName="Common database" ServerId="local" UserId="polhem_app_db_common" />
+    <DatabaseItem Id="company" CategoryId="company" DisplayName="Company database" ServerId="local" UserId="polhem_app_db_company" />
+    <DatabaseItem Id="log" CategoryId="log" DisplayName="Log database" ServerId="local" UserId="polhem_app_db_log" />
+<!--#else -->
+    <DatabaseItem Id="common" CategoryId="common" DisplayName="Common database" ServerId="local" DbName="polhem_app_db_common" />
+    <DatabaseItem Id="company" CategoryId="company" DisplayName="Company database" ServerId="local" DbName="polhem_app_db_company" />
+    <DatabaseItem Id="log" CategoryId="log" DisplayName="Log database" ServerId="local" DbName="polhem_app_db_log" />
+<!--#endif -->
+  </Items>
+</DatabaseSettings>
