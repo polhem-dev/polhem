@@ -36,7 +36,7 @@ forms from Excel, press F5.
 | `--database` | `SqlServer` | `SqlServer`, `PostgreSql`, `MySql`, `Oracle` or `Sqlite`: the driver package, its registration and the connection in `DatabaseSettings.xml` |
 | `--company` | `DEMO` | The id of the first company, which the **Polhem: Initialize database** task creates |
 | `--db-password` | empty | The database password written to `DatabaseSettings.xml`; when empty, enter it in DefineEditor |
-| `--language` | `en-US` | `en-US` or `zh-TW`: the default language of users who have none of their own |
+| `--default-language` | `en-US` | `en-US` or `zh-TW`: the default language of users who have none of their own |
 
 The generated application references the Polhem packages of the same version as this template package.
 

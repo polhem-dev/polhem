@@ -5,6 +5,6 @@
     { "id": "database", "isVisible": true },
     { "id": "company", "isVisible": true },
     { "id": "dbPassword", "isVisible": true },
-    { "id": "language", "isVisible": true }
+    { "id": "defaultLanguage", "isVisible": true }
   ]
 }

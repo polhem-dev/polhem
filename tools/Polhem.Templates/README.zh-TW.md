@@ -34,7 +34,7 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 | `--database` | `SqlServer` | `SqlServer`、`PostgreSql`、`MySql`、`Oracle` 或 `Sqlite`：決定驅動套件、驅動註冊與 `DatabaseSettings.xml` 的連線 |
 | `--company` | `DEMO` | 第一家公司的代號，由 **Polhem: Initialize database** 工作建立 |
 | `--db-password` | 空白 | 寫入 `DatabaseSettings.xml` 的資料庫密碼；空白時在 DefineEditor 填入 |
-| `--language` | `en-US` | `en-US` 或 `zh-TW`：沒有個人語言設定的使用者所用的預設語言 |
+| `--default-language` | `en-US` | `en-US` 或 `zh-TW`：沒有個人語言設定的使用者所用的預設語言 |
 
 產生的應用程式引用與本範本套件同版號的 Polhem 套件。
 
