@@ -28,6 +28,7 @@
 | 表單 | 選單由伺服器的 `MenuSettings` 產生；每個項目以分頁開啟表單，先顯示 `ListView`，選取記錄後換成 `FormView`。 |
 
 登入前的介面語言跟隨作業系統（英文或繁體中文；其他語言退回英文），可在連線與登入畫面切換，選擇會被記住。
+命令列加上 `Language=en` 或 `Language=zh-TW` 可指定單次執行的語言，不會改動記住的選擇；smoke test 這類自動化執行就是用它。
 登入後改由帳號的 culture 決定：`ClientInfo.ApplyLoginResult` 會把它設為整個 process 的 culture。
 
 殼會套用 Semi 主題（預設深色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，

@@ -13,7 +13,7 @@ public class ShellLanguageTests
     [InlineData("ZH-tw", "en-US", "zh-TW")]
     public void ResolveInitial_Remembered_Wins(string remembered, string system, string expected)
     {
-        Assert.Equal(expected, ShellLanguage.ResolveInitial(remembered, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, CultureInfo.GetCultureInfo(system)));
     }
 
     [Theory]
@@ -25,7 +25,7 @@ public class ShellLanguageTests
     [InlineData("fr", "zh-TW", "zh-TW")]
     public void ResolveInitial_NoRemembered_MapsSystem(string remembered, string system, string expected)
     {
-        Assert.Equal(expected, ShellLanguage.ResolveInitial(remembered, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, CultureInfo.GetCultureInfo(system)));
     }
 
     [Theory]
@@ -35,13 +35,36 @@ public class ShellLanguageTests
     [InlineData("ja-JP")]
     public void ResolveInitial_UnofferedSystem_FallsBackToEnglish(string system)
     {
-        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(null, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(null, null, CultureInfo.GetCultureInfo(system)));
     }
 
     [Fact]
     [DisplayName("ResolveInitial falls back to English for the invariant culture")]
     public void ResolveInitial_Invariant_FallsBackToEnglish()
     {
-        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(string.Empty, CultureInfo.InvariantCulture));
+        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(string.Empty, string.Empty, CultureInfo.InvariantCulture));
+    }
+
+    [Theory]
+    [DisplayName("ResolveInitial prefers the language requested for the run over the remembered one")]
+    [InlineData("en", "zh-TW", "zh-TW", "en")]
+    [InlineData("zh-tw", "en", "en-US", "zh-TW")]
+    [InlineData("fr", "zh-TW", "en-US", "zh-TW")]
+    [InlineData("", "zh-TW", "en-US", "zh-TW")]
+    public void ResolveInitial_Requested_WinsOverRemembered(string requested, string remembered, string system, string expected)
+    {
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(requested, remembered, CultureInfo.GetCultureInfo(system)));
+    }
+
+    [Theory]
+    [DisplayName("FindArgument reads Language= from the command line after the program and ignores other arguments")]
+    [InlineData(new[] { "app", "Language=en" }, "en")]
+    [InlineData(new[] { "app", "Endpoint=http://x", "language= zh-TW " }, "zh-TW")]
+    [InlineData(new[] { "app", "Language=en", "Language=zh-TW" }, "zh-TW")]
+    [InlineData(new[] { "Language=en" }, "")]
+    [InlineData(new[] { "app", "Lang=en" }, "")]
+    public void FindArgument_ReadsLanguageArgument(string[] args, string expected)
+    {
+        Assert.Equal(expected, ShellLanguage.FindArgument(args));
     }
 }
