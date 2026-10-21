@@ -21,6 +21,8 @@
     <ToolCommandName>polhem-define</ToolCommandName>
     <PackageId>Polhem.DefineEditor</PackageId>
     <PackageOutputPath>../../nupkgs</PackageOutputPath>
+    <!-- Keep only the desktop runtimes' native libraries in the tool package (tools/Directory.Build.targets). -->
+    <PolhemKeepDesktopNativeRuntimes>true</PolhemKeepDesktopNativeRuntimes>
     <Description>Polhem DefineEditor, the desktop editor for Polhem definition files, as a dotnet tool invoked as `polhem-define [DefinePath]`. Imports forms from Excel workbooks and runs the project's database upgrade command.</Description>
     <PackageTags>polhem;defineeditor;dotnet-tool;defines;excel;avalonia</PackageTags>
   </PropertyGroup>
@@ -29,23 +31,6 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <!--
-    A RID-agnostic tool carries the native libraries (SkiaSharp, HarfBuzzSharp, Avalonia.Native, ANGLE) of every
-    runtime its packages support. With all of them the package was 197 MB, near the 250 MB limit of nuget.org, and
-    most of it was for runtimes a desktop editor never runs on, or debug symbols of the native Windows libraries.
-    The editor keeps macOS and the 64-bit Windows and Linux runtimes without those symbols; the rest is dropped from
-    the build output and from the deps file alike.
-  -->
-  <PropertyGroup>
-    <_ToolNativeRuntimes>;osx;win-x64;win-arm64;linux-x64;linux-arm64;</_ToolNativeRuntimes>
-  </PropertyGroup>
-  <Target Name="KeepDesktopNativeRuntimes" AfterTargets="ResolvePackageAssets">
-    <ItemGroup>
-      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
-          Condition="!$(_ToolNativeRuntimes.Contains(';%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier);'))
-                     or '%(RuntimeTargetsCopyLocalItems.Extension)' == '.pdb'" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <!-- Assets/brand holds the SVG sources of the icons, which scripts/build-icon.swift reads; the app does not. -->

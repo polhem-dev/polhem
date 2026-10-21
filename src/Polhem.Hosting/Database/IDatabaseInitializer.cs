@@ -21,6 +21,16 @@ namespace Polhem.Hosting.Database
         IReadOnlyList<DatabaseCreateEntry> CreateDatabases();
 
         /// <summary>
+        /// Opens a connection to each database item in the database settings and closes it again.
+        /// </summary>
+        /// <returns>One entry per database item. A failed item does not stop the others.</returns>
+        /// <remarks>
+        /// Nothing is created or changed. A database that does not exist yet fails here; run
+        /// <see cref="CreateDatabases"/> first.
+        /// </remarks>
+        IReadOnlyList<DatabaseCheckEntry> CheckConnections();
+
+        /// <summary>
         /// Builds or upgrades the tables registered in the database category settings, in every
         /// database item whose category they belong to: every table, or only those named in
         /// <paramref name="tableNames"/>.

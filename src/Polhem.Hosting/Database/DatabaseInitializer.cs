@@ -77,6 +77,45 @@ namespace Polhem.Hosting.Database
             => new() { DatabaseId = databaseId, DatabaseName = databaseName, Error = error };
 
         /// <inheritdoc/>
+        public IReadOnlyList<DatabaseCheckEntry> CheckConnections()
+        {
+            var settings = _defineAccess.GetDatabaseSettings();
+            return (settings.Items ?? []).Select(item => CheckConnection(settings, item)).ToList();
+        }
+
+        private DatabaseCheckEntry CheckConnection(DatabaseSettings settings, DatabaseItem item)
+        {
+            var databaseName = string.Empty;
+            try
+            {
+                var info = _connectionManager.GetConnectionInfo(item.Id);
+                databaseName = DatabaseCreator.GetDatabaseName(info.DatabaseType, info.Provider, info.ConnectionString);
+                using var connection = _connectionManager.CreateConnection(item.Id);
+                connection.Open();
+                return new DatabaseCheckEntry { DatabaseId = item.Id, DatabaseName = databaseName };
+            }
+            catch (KeyNotFoundException)
+            {
+                return CheckFailed(item.Id, databaseName, ProviderNotRegistered(GetDatabaseType(settings, item)));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return CheckFailed(item.Id, databaseName, ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return CheckFailed(item.Id, databaseName, ex.Message);
+            }
+            catch (DbException ex)
+            {
+                return CheckFailed(item.Id, databaseName, ex.Message);
+            }
+        }
+
+        private static DatabaseCheckEntry CheckFailed(string databaseId, string databaseName, string error)
+            => new() { DatabaseId = databaseId, DatabaseName = databaseName, Error = error };
+
+        /// <inheritdoc/>
         public TableUpgradeReport UpgradeTables(
             UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
             IReadOnlyCollection<string>? tableNames = null)

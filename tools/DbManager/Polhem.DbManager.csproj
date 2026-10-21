@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Package metadata shared with the src/ packages: icon, license, repository, SourceLink, symbols. -->
+  <Import Project="..\..\Package.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.DbManager</RootNamespace>
+
+    <!--
+      dotnet tool packaging, so DefineEditor (or a person) can run the db commands of Polhem.Hosting against any
+      DefinePath without a project (`polhem-db upgrade` in the definition folder). Overrides tools/Directory.Build.props
+      (IsPackable=false).
+    -->
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>polhem-db</ToolCommandName>
+    <PackageId>Polhem.DbManager</PackageId>
+    <PackageOutputPath>../../nupkgs</PackageOutputPath>
+    <!-- Keep only the desktop runtimes' native libraries in the tool package (tools/Directory.Build.targets). -->
+    <PolhemKeepDesktopNativeRuntimes>true</PolhemKeepDesktopNativeRuntimes>
+
+    <!-- Published like the src/ packages, so it keeps their strictness even though tools/ opts out of it. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Required by EnforceCodeStyleInBuild for IDE0005 (unnecessary usings) to run during the build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <Description>Polhem database manager, a dotnet tool invoked as `polhem-db`. Creates, checks and upgrades the databases a Polhem definition folder describes, for SQL Server, PostgreSQL, MySQL, Oracle and SQLite, without an application project.</Description>
+    <PackageTags>polhem;dotnet-tool;database;schema;upgrade;sqlserver;postgresql;mysql;oracle;sqlite</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Hosting\Polhem.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Db\Polhem.Db.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.301" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <!-- Force the SQLitePCLRaw native bundle to 3.x: Microsoft.Data.Sqlite still pulls the 2.1.x line transitively,
+         and 2.1.x (<= 2.1.11) carries advisory GHSA-2m69-gcr7-jv3q. Same pin as tests/Polhem.Tests.Shared. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <!-- Pin System.Security.Cryptography.Pkcs above the transitive 9.0.18 that Microsoft.Data.SqlClient 7.1.1
+         and Oracle.ManagedDataAccess.Core 23.26.301 pull in (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7).
+         Same pin as tests/Polhem.Tests.Shared; drop both once the drivers require 9.0.21 or later. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <!-- The Oracle driver's license requires a copy of it with every distribution. -->
+    <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
+    <None Include="licenses\**" Pack="true" PackagePath="licenses\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.DbManager.UnitTests" />
+  </ItemGroup>
+
+</Project>

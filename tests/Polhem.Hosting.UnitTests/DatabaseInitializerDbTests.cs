@@ -101,6 +101,10 @@ namespace Polhem.Hosting.UnitTests
             var second = initializer.CreateDatabases();
             expected = databaseType == DatabaseType.Oracle ? DatabaseCreateResult.NotApplicable : DatabaseCreateResult.AlreadyExists;
             Assert.All(second, entry => Assert.Equal(expected, entry.Result));
+
+            var check = initializer.CheckConnections();
+            Assert.Equal(s_categories.Length, check.Count);
+            Assert.All(check, entry => Assert.True(entry.Succeeded, entry.Error));
         }
 
         private static void AssertUpgrade(DatabaseType databaseType, DatabaseInitializer initializer)

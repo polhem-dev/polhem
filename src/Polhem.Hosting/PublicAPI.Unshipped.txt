@@ -74,3 +74,13 @@ const Polhem.Hosting.Database.DatabaseCommandLine.PasswordVariable = "POLHEM_ADM
 const Polhem.Hosting.Database.DatabaseCommandLine.Success = 0 -> int
 const Polhem.Hosting.Database.DatabaseCommandLine.UsageError = 2 -> int
 static Polhem.Hosting.Database.DatabaseCommandLine.TryRun(System.IServiceProvider! services, string![]! args) -> int?
+Polhem.Hosting.Database.DatabaseCheckEntry
+Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseCheckEntry() -> void
+Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseId.get -> string!
+Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseId.init -> void
+Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseName.get -> string!
+Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseName.init -> void
+Polhem.Hosting.Database.DatabaseCheckEntry.Error.get -> string?
+Polhem.Hosting.Database.DatabaseCheckEntry.Error.init -> void
+Polhem.Hosting.Database.DatabaseCheckEntry.Succeeded.get -> bool
+Polhem.Hosting.Database.IDatabaseInitializer.CheckConnections() -> System.Collections.Generic.IReadOnlyList<Polhem.Hosting.Database.DatabaseCheckEntry!>!

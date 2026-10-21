@@ -10,4 +10,26 @@
   -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.targets" />
 
+  <!--
+    A RID-agnostic dotnet tool carries the native libraries (SkiaSharp, HarfBuzzSharp, e_sqlite3, SNI and others) of
+    every runtime its packages support. With all of them the DefineEditor package was 197 MB, near the 250 MB limit
+    of nuget.org, and most of it was for runtimes a desktop developer never runs on, or debug symbols of native Windows
+    libraries. A tool that sets PolhemKeepDesktopNativeRuntimes keeps the native libraries of macOS and the 64-bit Windows
+    and Linux runtimes, without those symbols; the rest is dropped from the build output and from the deps file alike.
+  -->
+  <PropertyGroup>
+    <_PolhemDesktopNativeRuntimes>;osx;osx-arm64;osx-x64;win-x64;win-arm64;linux-x64;linux-arm64;</_PolhemDesktopNativeRuntimes>
+  </PropertyGroup>
+  <Target Name="KeepDesktopNativeRuntimes" AfterTargets="ResolvePackageAssets"
+          Condition="'$(PolhemKeepDesktopNativeRuntimes)' == 'true'">
+    <ItemGroup>
+      <!-- Native assets only: a RID-specific managed assembly (Microsoft.Data.SqlClient's runtimes/unix/lib) is the
+           real implementation on that platform, and without it the reference stub runs instead. -->
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
+          Condition="'%(RuntimeTargetsCopyLocalItems.AssetType)' == 'native'
+                     and (!$(_PolhemDesktopNativeRuntimes.Contains(';%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier);'))
+                          or '%(RuntimeTargetsCopyLocalItems.Extension)' == '.pdb')" />
+    </ItemGroup>
+  </Target>
+
 </Project>

@@ -124,28 +124,17 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(20));
         }
 
-        [Fact]
-        [DisplayName("An upgrade run names each table with --table and ends a preview with --dry-run")]
-        public void BuildRun_TablesAndDryRun_AppendOptions()
-        {
-            var command = new ExternalCommand { Command = "dotnet", Arguments = ["run", "--", "db", "upgrade"] };
-
-            var run = DatabaseUpgradeViewModel.BuildRun(command, ["ft_order", "ft_order_detail"], dryRun: true);
-
-            Assert.Equal(["run", "--", "db", "upgrade", "--table", "ft_order", "--table", "ft_order_detail", "--dry-run"], run.Arguments);
-            Assert.Equal(["run", "--", "db", "upgrade"], DatabaseUpgradeViewModel.BuildRun(command, [], dryRun: false).Arguments);
-        }
-
         [Theory]
-        [DisplayName("The upgrade window's status follows the exit codes of the db commands")]
-        [InlineData("exit 0", false, "Upgrade_StatusSucceeded")]
-        [InlineData("exit 0", true, "Upgrade_StatusDryRunSucceeded")]
-        [InlineData("exit 1", false, "Upgrade_StatusFailed")]
-        [InlineData("exit 2", false, "Upgrade_StatusUsageError")]
-        public async Task UpgradeViewModel_ExitCode_SetsStatus(string script, bool dryRun, string statusKey)
+        [DisplayName("The command window's status follows the exit codes of the db commands and what the command does")]
+        [InlineData("exit 0", DbCommandKind.Upgrade, "DbCommand_StatusUpgradeSucceeded")]
+        [InlineData("exit 0", DbCommandKind.Preview, "DbCommand_StatusPreviewSucceeded")]
+        [InlineData("exit 0", DbCommandKind.Check, "DbCommand_StatusCheckSucceeded")]
+        [InlineData("exit 1", DbCommandKind.Upgrade, "DbCommand_StatusFailed")]
+        [InlineData("exit 2", DbCommandKind.Check, "DbCommand_StatusUsageError")]
+        public async Task CommandViewModel_ExitCode_SetsStatus(string script, DbCommandKind kind, string statusKey)
         {
             if (OperatingSystem.IsWindows()) return;
-            using var viewModel = new DatabaseUpgradeViewModel(Shell("echo line; " + script), s_baseDirectory, dryRun);
+            using var viewModel = new DbCommandViewModel(Shell("echo line; " + script), s_baseDirectory, kind);
 
             await viewModel.RunAsync();
 

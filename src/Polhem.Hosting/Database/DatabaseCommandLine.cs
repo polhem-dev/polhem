@@ -7,7 +7,7 @@ using Polhem.Db.Schema;
 namespace Polhem.Hosting.Database
 {
     /// <summary>
-    /// Runs the <c>db</c> commands of a host: <c>db create</c>, <c>db upgrade</c> and
+    /// Runs the <c>db</c> commands of a host: <c>db create</c>, <c>db check</c>, <c>db upgrade</c> and
     /// <c>db seed-admin</c>, backed by <see cref="IDatabaseInitializer"/>.
     /// </summary>
     /// <remarks>
@@ -42,6 +42,7 @@ namespace Polhem.Hosting.Database
         private const string Usage =
             "Usage:\n" +
             "  db create                     Create the databases named in DatabaseSettings that do not exist.\n" +
+            "  db check                      Open a connection to each database in DatabaseSettings.\n" +
             "  db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
             "                                Build or upgrade the tables registered in DbCategorySettings: every\n" +
             "                                table, or only the ones named with --table.\n" +
@@ -85,6 +86,7 @@ namespace Polhem.Hosting.Database
                 return command switch
                 {
                     "create" => RunCreate(services, options, output),
+                    "check" => RunCheck(services, options, output),
                     "upgrade" => RunUpgrade(services, options, output),
                     "seed-admin" => RunSeedAdmin(services, options, output, readSecret, getEnvironmentVariable),
                     _ => WriteUsage(output, command.Length == 0 || command == "help"
@@ -149,6 +151,28 @@ namespace Polhem.Hosting.Database
             }
 
             var failed = entries.Count(e => e.Result is null);
+            output.WriteLine(failed == 0 ? "Done." : $"{failed} database(s) failed.");
+            return failed == 0 ? Success : Failure;
+        }
+
+        private static int RunCheck(IServiceProvider services, string[] options, TextWriter output)
+        {
+            RejectUnknown(options);
+            var entries = services.GetRequiredService<IDatabaseInitializer>().CheckConnections();
+            if (entries.Count == 0)
+            {
+                output.WriteLine("DatabaseSettings has no database items; nothing to check.");
+                return Failure;
+            }
+
+            foreach (var entry in entries)
+            {
+                var name = entry.DatabaseName.Length == 0 ? string.Empty : $" ({entry.DatabaseName})";
+                output.WriteLine($"  {entry.DatabaseId}{name}: {(entry.Succeeded ? "ok" : "FAILED: " + entry.Error)}");
+                output.Flush();
+            }
+
+            var failed = entries.Count(e => !e.Succeeded);
             output.WriteLine(failed == 0 ? "Done." : $"{failed} database(s) failed.");
             return failed == 0 ? Success : Failure;
         }

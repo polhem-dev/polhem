@@ -29,7 +29,6 @@ namespace Polhem.DefineEditor.UnitTests
         public void Hide_NoPasswordValue_Unchanged(string text)
         {
             Assert.Equal(text, SecretMasker.Hide(text));
-            Assert.False(SecretMasker.ContainsSecret(text));
         }
     }
 }

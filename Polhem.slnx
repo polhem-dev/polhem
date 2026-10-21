@@ -35,6 +35,7 @@
     <Project Path="tests/Polhem.Cli.UnitTests/Polhem.Cli.UnitTests.csproj" />
     <Project Path="tests/Polhem.Business.UnitTests/Polhem.Business.UnitTests.csproj" />
     <Project Path="tests/Polhem.Db.UnitTests/Polhem.Db.UnitTests.csproj" />
+    <Project Path="tests/Polhem.DbManager.UnitTests/Polhem.DbManager.UnitTests.csproj" />
     <Project Path="tests/Polhem.DefineEditor.UnitTests/Polhem.DefineEditor.UnitTests.csproj" />
     <Project Path="tests/Polhem.Definition.Spreadsheet.UnitTests/Polhem.Definition.Spreadsheet.UnitTests.csproj" />
     <Project Path="tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj" />

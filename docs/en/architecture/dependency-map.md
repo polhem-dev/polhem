@@ -130,10 +130,8 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` globa
 | Package | Command | Description |
 |---------|---------|-------------|
 | **Polhem.Cli** (`tools/Polhem.Cli/`) | `dotnet polhem` | Framework CLI; `dotnet polhem --help` lists its commands. References `Polhem.Definition`, whose public `Defaults` API it calls for materialise / list operations on embedded framework defaults. Versioned with the framework (both read `Version.props`). |
-
-Also under `tools/` but not on NuGet:
-
-- **Polhem.DefineEditor** (`tools/DefineEditor/`) — Avalonia desktop tool for visually editing the define types. Distributed as a downloadable `.app` / `.exe` rather than as a library or dotnet tool. Calls `Polhem.Definition.Defaults.MaterializeTo(...)` in-process on folder open.
+| **Polhem.DefineEditor** (`tools/DefineEditor/`) | `polhem-define` | Avalonia desktop tool for visually editing the define types; also built as a macOS `.app`. Carries no database driver: it runs Polhem.DbManager for database work. |
+| **Polhem.DbManager** (`tools/DbManager/`) | `polhem-db` | Runs the `db` commands of `Polhem.Hosting` against a definition folder, with the drivers of every supported database. |
 
 ## Architectural Notes
 

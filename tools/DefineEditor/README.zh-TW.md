@@ -7,7 +7,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 ## 定位
 
 - **開發期工具**：非框架函式庫、非 sample；放在 `tools/`，獨立 `Polhem.Tools.slnx`。以 dotnet tool `Polhem.DefineEditor` 發佈到 NuGet（見[安裝到專案](#安裝到專案)）。它的單元測試 `tests/Polhem.DefineEditor.UnitTests` 屬於主 `Polhem.slnx`，所以 CI 會建置此工具並執行這些測試。
-- **offline**：直接讀寫 DefinePath 下的 XML，不連遠端 server、不連資料庫。唯一會執行的是專案自己的資料庫升級指令，而且要由使用者觸發（見[升級資料庫](#升級資料庫)）。
+- **offline**：直接讀寫 DefinePath 下的 XML，不連遠端 server，也不帶資料庫驅動。需要資料庫相關工作時，交給資料庫管理工具處理（見[資料庫相關工作](#資料庫相關工作)）。
 - **與框架同步**：以 ProjectReference 連 `Polhem.Definition`、`Polhem.Core` 與 `Polhem.UI.Avalonia`（用於 `ObjectTreeView` 與 `PropertyGridControl`），所有讀寫走 `XmlCodec.SerializeToFile` / `DeserializeFromFile`，零序列化轉換。
 
 ## 支援的定義型別
@@ -41,7 +41,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 從活頁簿匯入時，若表單已有 TableSchema 或 FormLayout，會先詢問如何處理（TableSchema 合併、保留或覆寫；版面保留或重新產生），
 再列出會變更的檔案，最後的對話框可接著替這張表單的資料表升級資料庫。
 
-每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟、加入缺少的框架預設檔、從 Excel 匯入表單、升級資料庫、預覽資料庫升級與方案設定；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
+每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟、加入缺少的框架預設檔、從 Excel 匯入表單、測試資料庫連線、升級資料庫與預覽資料庫升級；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
 
 > File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單，指令相同，但沒有開啟資料夾與最近開啟；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有。
 
@@ -76,32 +76,22 @@ clone 之後以 `dotnet tool restore` 重新安裝。套件只帶 macOS、64 位
 請建置下文的 `.app`，以 `open -a Polhem.DefineEditor.app --args <DefinePath>` 啟動。已在執行的 `.app` 只會切到前景，
 不會開啟該資料夾。
 
-## 升級資料庫
+## 資料庫相關工作
 
-編輯器不帶資料庫驅動，改為執行專案自己的指令，通常是 Server 的 `db upgrade`
-（見[初始化新部署](../../docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)）。
-指令和定義一起放在 DefinePath 資料夾的 `DefineEditor.json`，隨專案保存：
+編輯器不帶資料庫驅動。測試連線、升級資料表與預覽升級，由資料庫管理工具 [Polhem.DbManager](../DbManager/README.zh-TW.md)
+（`polhem-db`）執行，它帶有所有支援資料庫的驅動。編輯器以 `dotnet tool exec` 執行與自己版號相同的工具，對象是目前開啟的
+DefinePath，所以不必事先安裝，也不需要專案。第一次執行前會詢問是否從 NuGet 下載，並列出套件與版號；之後重複使用 NuGet
+全域套件資料夾中的那一份。`dotnet tool exec` 需要 .NET SDK。
 
-```json
-{
-  "databaseUpgrade": {
-    "command": "dotnet",
-    "arguments": [ "run", "--project", "../MyApp.Server", "--", "db", "upgrade" ],
-    "workingDirectory": ".."
-  }
-}
-```
+- **測試連線**：在 DatabaseSettings 編輯器上方與 **File** 選單，逐一連線每個資料庫項目。
+- **File → 升級資料庫**建立或升級所有已登記的資料表；**預覽資料庫升級**只列出陳述式、不執行。匯入後的完成對話框只升級
+  匯入的表單的資料表（每張表一個 `--table`），因為資料庫可能有上千個資料表。
+- 視窗顯示指令列與即時輸出，並依結束碼判讀：0 完成、1 有項目失敗、2 指令列無法解讀。關閉視窗或按**取消**會停止工具。
+  輸出中的密碼值顯示為 `********`。
+- 工具讀的是磁碟上的檔案，所以有未儲存的編輯時會先詢問是否儲存。
 
-參數逐一傳入，不經 shell。相對的工作目錄以 DefinePath 資料夾解析；空白表示資料夾本身。在 **File → 方案設定**
-編輯；指令含密碼時對話框會警告，密碼應放在 DatabaseSettings 或環境變數。
-
-- **File → 升級資料庫**對所有已登記的資料表執行；**預覽資料庫升級**另加 `--dry-run`。匯入後的完成對話框只對
-  匯入的表單的資料表執行，每張表加一個 `--table <名稱>`，因為資料庫可能有上千個資料表。
-- 視窗顯示指令列與即時輸出，並依結束碼判讀：0 完成、1 有資料表失敗、2 Server 無法解讀指令列。關閉視窗或按
-  **取消**會停止指令及其啟動的程序。指令列與輸出中的密碼值顯示為 `********`。
-- 有未儲存的編輯時會先詢問是否儲存，因為指令讀的是磁碟上的檔案。
-- 某個方案的指令第一次執行前，編輯器會列出指令並要求核准：否則開啟別處來的資料夾就會執行它指定的程式。
-  核准記在使用者的設定，不在專案裡；指令內容變更後會再詢問一次。
+從原始碼執行編輯器時，還沒有與它同版號的已發佈工具。以 `dotnet pack tools/DbManager/Polhem.DbManager.csproj -o <資料夾>`
+打包，並把該資料夾設在環境變數 `POLHEM_DBMANAGER_SOURCE`；編輯器會把它當成額外的套件來源傳給 `dotnet tool exec`。
 
 ### Headless smoke
 
@@ -202,7 +192,7 @@ Polhem.DefineEditor.app/
 
 ### RID 為何不可省略
 
-省略 `-r` 改打 portable 雖然也是 framework-dependent，但 Avalonia 的原生依賴（Skia / Avalonia.Native 等）會把所有平台的 `runtimes/<rid>/native/*` 全帶上，結果反而比 self-contained 還大（實測 564 MB）。所以即使是 framework-dependent，仍指定 RID。 dotnet tool 套件是例外：它必須是 portable，因此專案檔只保留桌面平台的原生程式庫（`KeepDesktopNativeRuntimes` target）。
+省略 `-r` 改打 portable 雖然也是 framework-dependent，但 Avalonia 的原生依賴（Skia / Avalonia.Native 等）會把所有平台的 `runtimes/<rid>/native/*` 全帶上，結果反而比 self-contained 還大（實測 564 MB）。所以即使是 framework-dependent，仍指定 RID。 dotnet tool 套件是例外：它必須是 portable，因此專案檔只保留桌面平台的原生程式庫（`tools/Directory.Build.targets` 的 `PolhemKeepDesktopNativeRuntimes`）。
 
 ### 已知不打開的選項
 
@@ -213,6 +203,5 @@ Polhem.DefineEditor.app/
 ## 不在工具範圍
 
 - 連遠端 Polhem server / JSON-RPC API（純本機檔）
-- DatabaseSettings 實連測試（編輯器沒有資料庫驅動，交給 Server）
 - 多人協作 / 鎖定機制
 - Customize 層覆蓋編輯（目前在方案樹上不標示覆蓋）

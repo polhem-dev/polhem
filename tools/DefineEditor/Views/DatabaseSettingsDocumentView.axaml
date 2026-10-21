@@ -27,6 +27,16 @@
 
     <DockPanel>
 
+        <Border DockPanel.Dock="Top" Padding="8,6">
+            <Button Classes="tool" HorizontalAlignment="Left" Command="{Binding TestConnectionsCommand}"
+                    ToolTip.Tip="{loc:Loc DatabaseSettings_TestConnectionsTooltip}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="{StaticResource IconDatabase}"/>
+                    <TextBlock Text="{loc:Loc DatabaseSettings_TestConnections}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Border>
+
         <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
             <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
         </Border>

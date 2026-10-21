@@ -22,7 +22,4 @@ public static class SecretMasker
     /// <summary>Returns <paramref name="text"/> with the value of every password key replaced by <see cref="Mask"/>.</summary>
     public static string Hide(string text)
         => s_passwordValue.Replace(text, m => m.Groups["value"].Length == 0 ? m.Value : m.Groups["key"].Value + Mask);
-
-    /// <summary>True when <paramref name="text"/> holds a password key with a value.</summary>
-    public static bool ContainsSecret(string text) => !string.Equals(Hide(text), text, StringComparison.Ordinal);
 }

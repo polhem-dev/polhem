@@ -3,6 +3,7 @@
     <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/tools/">
+    <Project Path="DbManager/Polhem.DbManager.csproj" />
     <Project Path="DefineEditor/Polhem.DefineEditor.csproj" />
     <Project Path="Polhem.Cli/Polhem.Cli.csproj" />
     <Project Path="Polhem.Definition.Spreadsheet/Polhem.Definition.Spreadsheet.csproj" />
