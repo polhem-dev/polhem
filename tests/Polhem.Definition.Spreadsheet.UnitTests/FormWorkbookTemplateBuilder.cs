@@ -139,7 +139,11 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             int firstAdvanced = columns.ToList().FindIndex(c => c.Advanced);
             if (firstAdvanced >= 0)
             {
-                sheet.Columns(firstAdvanced + 1, columns.Count).Group(true);
+                // `Group(true)` only marks the group collapsed; Excel and LibreOffice open it expanded unless the
+                // columns themselves are hidden, which is what `Collapse` adds.
+                var advanced = sheet.Columns(firstAdvanced + 1, columns.Count);
+                advanced.Group();
+                advanced.Collapse();
             }
         }
     }

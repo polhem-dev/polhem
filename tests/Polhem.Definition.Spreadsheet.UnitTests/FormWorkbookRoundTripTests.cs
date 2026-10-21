@@ -80,6 +80,25 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("An exported workbook opens with the advanced field columns collapsed and the others shown")]
+        public void Export_CollapsesAdvancedColumns()
+        {
+            var content = FormExporter.Load(Path.Combine(RepoRoot.Find(), "apps", "Polhem.Northwind", "Define"), "Order");
+
+            using var workbook = Workbook(content);
+
+            var fields = workbook.Worksheet(FormWorkbookCatalog.FieldsSheet);
+            var columns = FormWorkbookCatalog.FieldColumns.ToList();
+            Assert.Contains(columns, c => c.Advanced);
+            for (int i = 0; i < columns.Count; i++)
+            {
+                var column = fields.Column(i + 1);
+                Assert.Equal(columns[i].Advanced, column.IsHidden);
+                Assert.Equal(columns[i].Advanced ? 1 : 0, column.OutlineLevel);
+            }
+        }
+
+        [Fact]
         [DisplayName("A blank workbook reads back as an empty form with only a master table")]
         public void Blank_ReadsBackEmpty()
         {
