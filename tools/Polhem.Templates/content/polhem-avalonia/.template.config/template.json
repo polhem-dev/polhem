@@ -8,7 +8,7 @@
   ],
   "identity": "Polhem.App.Avalonia",
   "name": "Polhem App (Avalonia)",
-  "description": "A Polhem application: a JSON-RPC server that references the Polhem packages and one database driver, a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
+  "description": "A Polhem application with an Avalonia desktop front end: a JSON-RPC server that references the Polhem packages and one database driver, a desktop client built on the Polhem shell, a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
   "shortName": "polhem-avalonia",
   "sourceName": "PolhemApp",
   "preferNameDirectory": true,
@@ -112,6 +112,12 @@
       "datatype": "bool",
       "description": "Skip the automatic restore of the project on create.",
       "defaultValue": "false"
+    },
+    "bundleName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "bundleIdentifierPart",
+      "replaces": "polhem-app-bundle"
     }
   },
   "forms": {
@@ -126,6 +132,18 @@
       "identifier": "replace",
       "pattern": "[^a-z0-9_]",
       "replacement": "_"
+    },
+    "bundleIdentifierPart": {
+      "identifier": "chain",
+      "steps": [
+        "lowerCaseInvariant",
+        "nonBundleCharToHyphen"
+      ]
+    },
+    "nonBundleCharToHyphen": {
+      "identifier": "replace",
+      "pattern": "[^a-z0-9.-]",
+      "replacement": "-"
     }
   },
   "primaryOutputs": [

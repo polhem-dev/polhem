@@ -14,17 +14,17 @@ In VS Code with the C# Dev Kit, the template is listed as **Polhem App (Avalonia
 
 ## `polhem-avalonia`
 
-Creates an application with an Avalonia front end. In this version it creates the server, the definitions and the
-tools; the Avalonia desktop project is not part of it yet. The server references the Polhem packages and the driver of
-one database:
+Creates an application with an Avalonia desktop front end. The server references the Polhem packages and the driver
+of one database:
 
 | Path | Content |
 |------|---------|
 | `src/<Name>.Server` | An ASP.NET Core host serving the JSON-RPC API, with the `db create`, `db check`, `db upgrade` and `db seed-admin` commands of `Polhem.Hosting` (`dotnet run -- db ...`) |
+| `src/<Name>.Desktop` | An Avalonia desktop client built on [Polhem.UI.Avalonia.Shell](../../src/Polhem.UI.Avalonia.Shell/README.md), starting with the server's endpoint and the first company; `-p:PolhemMacAppBundle=true` on `dotnet publish` makes a macOS `.app` |
 | `Define/` | `SystemSettings.xml` set up for development and a `DatabaseSettings.xml` with the common, company and log databases. The server adds the framework's other default definitions on its first run |
 | `Excel/` | The place for form workbooks, imported into `Define/` with DefineEditor |
 | `.config/dotnet-tools.json` | DefineEditor (`polhem-define`) and DbManager (`polhem-db`), at the version of the Polhem packages |
-| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, and the F5 launch of the server |
+| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, and the F5 launch **Server + Desktop** |
 
 The generated `README.md` walks through the first run: set the database password, initialize the database, import
 forms from Excel, press F5.

@@ -14,16 +14,16 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 
 ## `polhem-avalonia`
 
-建立以 Avalonia 為前端的應用程式。目前版本建立 Server、定義與工具，尚未包含 Avalonia 桌面專案。Server 已引用 Polhem
-套件與所選資料庫的驅動：
+建立以 Avalonia 桌面程式為前端的應用程式。Server 已引用 Polhem 套件與所選資料庫的驅動：
 
 | 路徑 | 內容 |
 |------|------|
 | `src/<名稱>.Server` | 提供 JSON-RPC API 的 ASP.NET Core host，附 `Polhem.Hosting` 的 `db create`、`db check`、`db upgrade`、`db seed-admin` 指令（`dotnet run -- db ...`） |
+| `src/<名稱>.Desktop` | 以 [Polhem.UI.Avalonia.Shell](../../src/Polhem.UI.Avalonia.Shell/README.zh-TW.md) 建立的 Avalonia 桌面用戶端，預設連到 Server 的端點並進入第一家公司；`dotnet publish` 加 `-p:PolhemMacAppBundle=true` 可產生 macOS `.app` |
 | `Define/` | 開發用的 `SystemSettings.xml`，以及含 common、company、log 三個資料庫的 `DatabaseSettings.xml`。框架的其他預設定義由 Server 第一次執行時補上 |
 | `Excel/` | 放表單活頁簿的位置，以 DefineEditor 匯入 `Define/` |
 | `.config/dotnet-tools.json` | DefineEditor（`polhem-define`）與 DbManager（`polhem-db`），版號與 Polhem 套件相同 |
-| `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以及以 F5 啟動 Server |
+| `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以及以 F5 同時啟動 **Server + Desktop** |
 
 產生的 `README.md` 說明第一次執行的步驟：設定資料庫密碼、初始化資料庫、從 Excel 匯入表單、按 F5。
 
