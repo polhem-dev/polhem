@@ -23,6 +23,8 @@ public sealed partial class DbCommandViewModel : ViewModelBase, IDisposable
     private readonly StringBuilder _output = new();
     private readonly CancellationTokenSource _cancellation = new();
     private bool _disposed;
+    private bool _flushPending;
+    private SynchronizationContext? _context;
 
     /// <param name="command">The command to run.</param>
     /// <param name="baseDirectory">The folder a relative working directory is resolved against.</param>
@@ -81,19 +83,16 @@ public sealed partial class DbCommandViewModel : ViewModelBase, IDisposable
     {
         if (IsRunning || Result is not null) return;
         IsRunning = true;
-        var context = SynchronizationContext.Current;
+        _context = SynchronizationContext.Current;
         try
         {
-            Result = await ProcessRunner.RunAsync(_command, _baseDirectory, line =>
-            {
-                if (context is null) AppendLine(line);
-                else context.Post(_ => AppendLine(line), null);
-            }, _cancellation.Token);
+            Result = await ProcessRunner.RunAsync(_command, _baseDirectory, AppendLine, _cancellation.Token);
         }
         finally
         {
             IsRunning = false;
         }
+        Flush();
 
         Succeeded = Result.Succeeded;
         StatusText = Result switch
@@ -116,6 +115,20 @@ public sealed partial class DbCommandViewModel : ViewModelBase, IDisposable
         lock (_output)
         {
             _output.AppendLine(line);
+            // Lines that arrive together are shown in one update: rebuilding the text for each line of a long upgrade
+            // would cost time in proportion to the square of its length.
+            if (_flushPending) return;
+            _flushPending = true;
+        }
+        if (_context is null) Flush();
+        else _context.Post(_ => Flush(), null);
+    }
+
+    private void Flush()
+    {
+        lock (_output)
+        {
+            _flushPending = false;
             OutputText = _output.ToString();
         }
     }

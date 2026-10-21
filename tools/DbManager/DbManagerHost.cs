@@ -11,6 +11,7 @@ using Polhem.Db.Providers.SqlServer;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Security;
+using Polhem.Definition.Settings;
 using Polhem.Hosting;
 
 namespace Polhem.DbManager;
@@ -23,11 +24,12 @@ internal static class DbManagerHost
 {
     /// <summary>Builds the host for <paramref name="definePath"/>. The host is not started.</summary>
     /// <remarks>
-    /// The master key comes from the source SystemSettings names, as for the server. An environment-variable source
-    /// with no key gets a key for this process only, which is enough unless DatabaseSettings holds encrypted
-    /// passwords; a file source is never created here, so a missing key file fails instead of leaving a new key in
-    /// the project.
+    /// The master key comes from the source SystemSettings names, as for the server. When an environment-variable
+    /// source has no key and SystemSettings holds no encrypted key, a key for this process only is enough, since
+    /// nothing has to be decrypted; with an encrypted key the variable is required. A file source is never created
+    /// here, so a missing key file fails instead of leaving a new key in the project.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">The master key is needed and cannot be found.</exception>
     public static IHost Build(string definePath)
     {
         RegisterProviders();
@@ -39,10 +41,28 @@ internal static class DbManagerHost
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Logging.AddSimpleConsole(options => options.SingleLine = true).SetMinimumLevel(LogLevel.Warning);
         builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
-        var autoCreateMasterKey =
-            settings.BackendConfiguration.SecurityKeySettings.MasterKeySource.Type == MasterKeySourceType.Environment;
-        builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey);
+        builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths,
+            AllowProcessMasterKey(settings.BackendConfiguration.SecurityKeySettings));
         return builder.Build();
+    }
+
+    private static bool AllowProcessMasterKey(SecurityKeySettings keys)
+    {
+        var source = keys.MasterKeySource;
+        if (source.Type != MasterKeySourceType.Environment
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(source.Value)))
+        {
+            return false;
+        }
+        var hasEncryptedKey = new[] { keys.ApiEncryptionKey, keys.CookieEncryptionKey, keys.ConfigEncryptionKey, keys.DatabaseEncryptionKey }
+            .Any(key => !string.IsNullOrEmpty(key));
+        if (hasEncryptedKey)
+        {
+            throw new InvalidOperationException(
+                $"The master key environment variable '{source.Value}' is not set, and SystemSettings holds encrypted keys "
+                + "that need it. Set it to the key the server uses.");
+        }
+        return true;
     }
 
     private static void RegisterProviders()

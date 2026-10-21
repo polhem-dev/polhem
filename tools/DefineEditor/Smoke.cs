@@ -791,9 +791,12 @@ internal static class Smoke
             if (vm.Succeeded != true || vm.OutputText.Trim().Length == 0)
                 return Fail(151, $"The command did not run: {vm.StatusText} {vm.OutputText}");
 
-            var upgrade = DbManagerTool.Command(tempDir, DbManagerTool.UpgradeArguments(["ft_quote"], dryRun: true));
+            var (workDirectory, configFile) = DbManagerTool.PrepareWorkDirectory(tempDir, extraSource: null);
+            var upgrade = DbManagerTool.Command(tempDir, DbManagerTool.UpgradeArguments(["ft_quote"], dryRun: true),
+                workDirectory, configFile);
             if (!upgrade.Arguments.SequenceEqual(["tool", "exec", $"{DbManagerTool.PackageId}@{DbManagerTool.Version}", "--yes",
-                    "--", "upgrade", "--table", "ft_quote", "--dry-run", "--define", tempDir]))
+                    "--configfile", configFile, "--", "upgrade", "--table", "ft_quote", "--dry-run", "--define", tempDir])
+                || !File.Exists(configFile))
             {
                 return Fail(152, $"Unexpected database manager command line: {upgrade.ToDisplayString()}");
             }

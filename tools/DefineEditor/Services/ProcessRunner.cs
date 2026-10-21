@@ -73,6 +73,14 @@ public static class ProcessRunner
             {
                 // The process exited between the cancellation and the kill.
             }
+            catch (AggregateException)
+            {
+                // Some processes of the tree could not be killed; the wait below still ends with the main one.
+            }
+            catch (Win32Exception)
+            {
+                // The process could not be killed (already exiting, or not ours to end).
+            }
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
             return new ProcessRunResult(null, null, true);
         }

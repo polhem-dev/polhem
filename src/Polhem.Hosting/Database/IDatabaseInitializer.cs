@@ -25,8 +25,9 @@ namespace Polhem.Hosting.Database
         /// </summary>
         /// <returns>One entry per database item. A failed item does not stop the others.</returns>
         /// <remarks>
-        /// Nothing is created or changed. A database that does not exist yet fails here; run
-        /// <see cref="CreateDatabases"/> first.
+        /// The initializer creates and changes nothing; a server database that does not exist yet fails here, so run
+        /// <see cref="CreateDatabases"/> first. Opening a SQLite connection creates an empty database file when the
+        /// connection string allows it (the default mode), and the check then succeeds.
         /// </remarks>
         IReadOnlyList<DatabaseCheckEntry> CheckConnections();
 

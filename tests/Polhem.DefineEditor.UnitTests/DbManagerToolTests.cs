@@ -11,25 +11,38 @@ namespace Polhem.DefineEditor.UnitTests
         private static readonly string s_define = Path.Combine(Path.GetTempPath(), "project", "Define");
 
         [Fact]
-        [DisplayName("The command runs the tool of this version through dotnet tool exec, against the solution folder")]
-        public void Command_RunsPinnedToolAgainstSolution()
+        [DisplayName("The command runs the tool of this version through dotnet tool exec, in the editor's own folder, against the solution")]
+        public void Command_RunsPinnedToolOutsideSolution()
         {
-            var command = DbManagerTool.Command(s_define, ["check"]);
+            var command = DbManagerTool.Command(s_define, ["check"], "/work", "/work/nuget.config");
 
             Assert.Equal("dotnet", command.Command);
-            Assert.Equal(["tool", "exec", $"Polhem.DbManager@{DbManagerTool.Version}", "--yes", "--", "check", "--define", s_define],
-                command.Arguments);
-            Assert.Equal(s_define, command.ResolveWorkingDirectory(s_define));
+            Assert.Equal(["tool", "exec", $"Polhem.DbManager@{DbManagerTool.Version}", "--yes", "--configfile", "/work/nuget.config",
+                "--", "check", "--define", s_define], command.Arguments);
+            Assert.Equal("/work", command.WorkingDirectory);
         }
 
         [Fact]
-        [DisplayName("An extra package source is passed to dotnet tool exec, before the tool's own arguments")]
-        public void Command_ExtraSource_AddsSourceBeforeSeparator()
+        [DisplayName("The work folder's NuGet configuration clears inherited sources and lists nuget.org and the extra source")]
+        public void PrepareWorkDirectory_WritesOwnSources()
         {
-            var arguments = DbManagerTool.Command(s_define, ["check"], "/nupkgs").Arguments;
+            var root = Path.Combine(Path.GetTempPath(), $"polhem-work-{Guid.NewGuid():N}");
+            try
+            {
+                var (workDirectory, configFile) = DbManagerTool.PrepareWorkDirectory(root, "/nupkgs");
 
-            Assert.True(arguments.IndexOf("--add-source") < arguments.IndexOf("--"));
-            Assert.Equal("/nupkgs", arguments[arguments.IndexOf("--add-source") + 1]);
+                Assert.StartsWith(root, workDirectory, StringComparison.Ordinal);
+                var sources = System.Xml.Linq.XDocument.Load(configFile).Root!.Element("packageSources")!.Elements().ToList();
+                Assert.Equal("clear", sources[0].Name.LocalName);
+                Assert.Equal([DbManagerTool.NuGetSource, "/nupkgs"], sources.Skip(1).Select(s => (string)s.Attribute("value")!));
+
+                DbManagerTool.PrepareWorkDirectory(root, extraSource: null);
+                Assert.Equal(2, System.Xml.Linq.XDocument.Load(configFile).Root!.Element("packageSources")!.Elements().Count());
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
         }
 
         [Fact]
@@ -50,14 +63,18 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("The tool counts as cached when its version folder is in the global packages folder")]
+        [DisplayName("The tool counts as cached once its hash file is written, not when only its folder exists")]
         public void IsCached_LooksForVersionFolder()
         {
             var packages = Path.Combine(Path.GetTempPath(), $"polhem-packages-{Guid.NewGuid():N}");
             try
             {
                 Assert.False(DbManagerTool.IsCached(packages));
-                Directory.CreateDirectory(Path.Combine(packages, "polhem.dbmanager", DbManagerTool.Version.ToLowerInvariant()));
+                var version = DbManagerTool.Version.ToLowerInvariant();
+                var folder = Path.Combine(packages, "polhem.dbmanager", version);
+                Directory.CreateDirectory(folder);
+                Assert.False(DbManagerTool.IsCached(packages));
+                File.WriteAllText(Path.Combine(folder, $"polhem.dbmanager.{version}.nupkg.sha512"), "x");
                 Assert.True(DbManagerTool.IsCached(packages));
             }
             finally

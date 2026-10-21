@@ -307,9 +307,11 @@
   <data name="DbCommand_UnsavedTitle" xml:space="preserve"><value>有未儲存的變更</value></data>
   <data name="DbCommand_UnsavedMessage" xml:space="preserve"><value>有檔案尚未儲存。資料庫管理工具讀取的是磁碟上的檔案，未儲存的變更不會納入。</value></data>
   <data name="DbCommand_DownloadTitle" xml:space="preserve"><value>要下載資料庫管理工具嗎？</value></data>
-  <data name="DbCommand_DownloadMessage" xml:space="preserve"><value>DefineEditor 不帶資料庫驅動，資料庫相關工作由 dotnet tool {0} {1} 執行。第一次使用時從 NuGet 下載，之後重複使用。</value></data>
+  <data name="DbCommand_DownloadMessage" xml:space="preserve"><value>DefineEditor 不帶資料庫驅動，資料庫相關工作由 dotnet tool {0} {1} 執行。第一次使用時下載，之後重複使用。套件來源：{2}</value></data>
   <data name="Action_Download" xml:space="preserve"><value>下載並執行</value></data>
   <data name="MenuItem_CheckDatabaseConnections" xml:space="preserve"><value>測試資料庫連線...</value></data>
   <data name="DatabaseSettings_TestConnections" xml:space="preserve"><value>測試連線</value></data>
   <data name="DatabaseSettings_TestConnectionsTooltip" xml:space="preserve"><value>以已儲存的設定逐一連線每個資料庫</value></data>
+  <data name="DbCommand_BusyTitle" xml:space="preserve"><value>有資料庫指令正在執行</value></data>
+  <data name="DbCommand_BusyMessage" xml:space="preserve"><value>請等它結束或取消後，再執行新的指令。</value></data>
 </root>

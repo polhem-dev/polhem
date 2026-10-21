@@ -15,10 +15,10 @@
     every runtime its packages support. With all of them the DefineEditor package was 197 MB, near the 250 MB limit
     of nuget.org, and most of it was for runtimes a desktop developer never runs on, or debug symbols of native Windows
     libraries. A tool that sets PolhemKeepDesktopNativeRuntimes keeps the native libraries of macOS and the 64-bit Windows
-    and Linux runtimes, without those symbols; the rest is dropped from the build output and from the deps file alike.
+    and Linux (glibc and musl) runtimes, without those symbols; the rest is dropped from the build output and from the deps file alike.
   -->
   <PropertyGroup>
-    <_PolhemDesktopNativeRuntimes>;osx;osx-arm64;osx-x64;win-x64;win-arm64;linux-x64;linux-arm64;</_PolhemDesktopNativeRuntimes>
+    <_PolhemDesktopNativeRuntimes>;osx;osx-arm64;osx-x64;win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64;</_PolhemDesktopNativeRuntimes>
   </PropertyGroup>
   <Target Name="KeepDesktopNativeRuntimes" AfterTargets="ResolvePackageAssets"
           Condition="'$(PolhemKeepDesktopNativeRuntimes)' == 'true'">

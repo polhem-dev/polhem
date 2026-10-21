@@ -49,6 +49,7 @@ public partial class MainWindowViewModel
         if (_dbCommandWindow is { IsRunning: true })
         {
             _dbCommandWindow.Activate();
+            await ConfirmationDialog.ShowMessageAsync(_dbCommandWindow, L("DbCommand_BusyTitle"), L("DbCommand_BusyMessage"));
             return;
         }
 
@@ -60,17 +61,31 @@ public partial class MainWindowViewModel
             if (choice == ConfirmCloseResult.Save) await SaveAll();
         }
 
+        var extraSource = Environment.GetEnvironmentVariable(DbManagerTool.SourceVariable);
         if (!DbManagerTool.IsCached()
             && !await ConfirmationDialog.ShowAsync(owner, L("DbCommand_DownloadTitle"),
-                L("DbCommand_DownloadMessage", DbManagerTool.PackageId, DbManagerTool.Version),
+                L("DbCommand_DownloadMessage", DbManagerTool.PackageId, DbManagerTool.Version,
+                    SecretMasker.Hide(string.IsNullOrWhiteSpace(extraSource)
+                        ? DbManagerTool.NuGetSource
+                        : DbManagerTool.NuGetSource + ", " + extraSource)),
                 confirmLabel: L("Action_Download")))
         {
             return;
         }
 
+        string workDirectory, configFile;
+        try
+        {
+            (workDirectory, configFile) = DbManagerTool.PrepareWorkDirectory(Path.GetTempPath(), extraSource);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            StatusText = L("DbCommand_StatusStartFailed", ex.Message);
+            return;
+        }
+
         _dbCommandWindow?.Close();
-        var command = DbManagerTool.Command(definePath, arguments,
-            Environment.GetEnvironmentVariable(DbManagerTool.SourceVariable));
+        var command = DbManagerTool.Command(definePath, arguments, workDirectory, configFile);
         _dbCommandWindow = DbCommandWindow.Start(owner, new DbCommandViewModel(command, definePath, kind));
     }
 }

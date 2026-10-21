@@ -12,6 +12,11 @@ namespace Polhem.DbManager.UnitTests
     /// The <c>polhem-db</c> command line: how it finds the definition folder, and the db commands run end to end
     /// against SQLite files in a temporary folder.
     /// </summary>
+    /// <remarks>
+    /// A test that builds the framework's services runs the tool as a child process, as DefineEditor does: the
+    /// framework's definition cache is process-wide, so a second definition folder in the same process would be served
+    /// the first one's settings.
+    /// </remarks>
     public sealed class ProgramTests : IDisposable
     {
         private readonly string _definePath = Path.Combine(Path.GetTempPath(), $"polhem-dbmanager-{Guid.NewGuid():N}");
@@ -25,6 +30,24 @@ namespace Polhem.DbManager.UnitTests
         }
 
         private int Run(params string[] args) => Program.Run(args, new StringWriter(), _definePath);
+
+        private static (int ExitCode, string Output) RunTool(string workingDirectory, params string[] args)
+        {
+            var startInfo = new System.Diagnostics.ProcessStartInfo("dotnet")
+            {
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            startInfo.ArgumentList.Add(typeof(Program).Assembly.Location);
+            foreach (var arg in args) startInfo.ArgumentList.Add(arg);
+            using var process = System.Diagnostics.Process.Start(startInfo)!;
+            var error = process.StandardError.ReadToEndAsync();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            return (process.ExitCode, output + error.Result);
+        }
 
         private string RunForOutput(params string[] args)
         {
@@ -75,13 +98,52 @@ namespace Polhem.DbManager.UnitTests
             var other = Path.Combine(_definePath, "elsewhere");
             Directory.CreateDirectory(other);
 
-            Assert.Equal(DatabaseCommandLine.Success, Program.Run(["create", "--define", definePath], new StringWriter(), other));
-            Assert.Equal(DatabaseCommandLine.Success, Program.Run(["check", "--define", "../Define"], new StringWriter(), other));
-            Assert.Equal(DatabaseCommandLine.Success,
-                Program.Run(["upgrade", "--table", "st_user", "--define", definePath], new StringWriter(), other));
+            Assert.Equal(DatabaseCommandLine.Success, RunTool(other, "create", "--define", definePath).ExitCode);
+            Assert.Equal(DatabaseCommandLine.Success, RunTool(other, "check", "--define", "../Define").ExitCode);
+            Assert.Equal(DatabaseCommandLine.Success, RunTool(other, "upgrade", "--table", "st_user", "--define", definePath).ExitCode);
 
             Assert.True(TableExists(definePath, DbCategoryIds.Common, "st_user"));
             Assert.False(TableExists(definePath, DbCategoryIds.Common, "st_session"));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A SQLite item with a relative path fails with an explanation and creates no file")]
+        public void Run_RelativeSqlitePath_FailsWithoutCreatingFile()
+        {
+            var definePath = Path.Combine(_definePath, "Define");
+            Defaults.MaterializeTo(definePath);
+            var settings = new DatabaseSettings();
+            settings.Items!.Add(new DatabaseItem
+            {
+                Id = DbCategoryIds.Common, CategoryId = DbCategoryIds.Common, DatabaseType = DatabaseType.SQLite,
+                ConnectionString = "Data Source=relative.db",
+            });
+            File.WriteAllText(Path.Combine(definePath, "DatabaseSettings.xml"), Polhem.Core.Serialization.XmlCodec.Serialize(settings));
+            var (exitCode, output) = RunTool(_definePath, "check", "--define", definePath);
+
+            Assert.Equal(DatabaseCommandLine.Failure, exitCode);
+            Assert.Contains("'relative.db' is relative", output, StringComparison.Ordinal);
+            Assert.False(File.Exists(Path.Combine(_definePath, "relative.db")));
+            Assert.False(File.Exists(Path.Combine(definePath, "relative.db")));
+        }
+
+        [Fact]
+        [DisplayName("An unset master key variable fails with its name when SystemSettings holds an encrypted key")]
+        public void Run_MissingMasterKeyWithEncryptedKey_NamesVariable()
+        {
+            var definePath = Path.Combine(_definePath, "Define");
+            Defaults.MaterializeTo(definePath);
+            var variable = $"POLHEM_TEST_UNSET_{Guid.NewGuid():N}";
+            var systemSettings = Path.Combine(definePath, "SystemSettings.xml");
+            var document = System.Xml.Linq.XDocument.Load(systemSettings);
+            var keys = document.Descendants("SecurityKeySettings").Single();
+            keys.Element("MasterKeySource")!.Element("Value")!.Value = variable;
+            keys.Add(new System.Xml.Linq.XElement("ConfigEncryptionKey", "encrypted-value"));
+            document.Save(systemSettings);
+            var (exitCode, output) = RunTool(_definePath, "check", "--define", definePath);
+
+            Assert.Equal(DatabaseCommandLine.Failure, exitCode);
+            Assert.Contains(variable, output, StringComparison.Ordinal);
         }
 
         private static void SaveSqliteSettings(string definePath)

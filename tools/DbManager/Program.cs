@@ -67,6 +67,13 @@ internal static class Program
         try
         {
             using var host = DbManagerHost.Build(definePath);
+            var relative = SqlitePathCheck.FindRelativePaths(host.Services);
+            if (relative.Count > 0)
+            {
+                foreach (var line in relative) output.WriteLine(line);
+                output.WriteLine("Failed: SQLite database paths must be absolute for polhem-db.");
+                return DatabaseCommandLine.Failure;
+            }
             return DatabaseCommandLine.TryRun(host.Services, ["db", .. rest]) ?? DatabaseCommandLine.UsageError;
         }
         catch (InvalidOperationException ex)
@@ -83,6 +90,13 @@ internal static class Program
         catch (UnauthorizedAccessException ex)
         {
             output.WriteLine($"Failed: {ex.Message}");
+            return DatabaseCommandLine.Failure;
+        }
+        catch (System.Security.Cryptography.CryptographicException ex)
+        {
+            // An encrypted key in SystemSettings that the master key in use cannot decrypt.
+            output.WriteLine($"Failed: the master key cannot decrypt the keys in SystemSettings ({ex.Message}). "
+                + "Use the master key the server uses.");
             return DatabaseCommandLine.Failure;
         }
     }

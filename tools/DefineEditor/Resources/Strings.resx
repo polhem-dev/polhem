@@ -320,9 +320,11 @@ Save anyway?</value></data>
   <data name="DbCommand_UnsavedTitle" xml:space="preserve"><value>Unsaved Changes</value></data>
   <data name="DbCommand_UnsavedMessage" xml:space="preserve"><value>Some files have unsaved changes. The database manager reads the files on disk, so unsaved changes are not included.</value></data>
   <data name="DbCommand_DownloadTitle" xml:space="preserve"><value>Download the Database Manager?</value></data>
-  <data name="DbCommand_DownloadMessage" xml:space="preserve"><value>DefineEditor carries no database driver. Database work is done by the dotnet tool {0} {1}, which is downloaded from NuGet the first time and reused afterwards.</value></data>
+  <data name="DbCommand_DownloadMessage" xml:space="preserve"><value>DefineEditor carries no database driver. Database work is done by the dotnet tool {0} {1}, which is downloaded the first time and reused afterwards. Package source: {2}</value></data>
   <data name="Action_Download" xml:space="preserve"><value>Download and Run</value></data>
   <data name="MenuItem_CheckDatabaseConnections" xml:space="preserve"><value>Test Database Connections...</value></data>
   <data name="DatabaseSettings_TestConnections" xml:space="preserve"><value>Test Connections</value></data>
   <data name="DatabaseSettings_TestConnectionsTooltip" xml:space="preserve"><value>Open a connection to each database, using the saved settings</value></data>
+  <data name="DbCommand_BusyTitle" xml:space="preserve"><value>A Database Command Is Running</value></data>
+  <data name="DbCommand_BusyMessage" xml:space="preserve"><value>Wait for it to finish, or cancel it, then run the new one.</value></data>
 </root>

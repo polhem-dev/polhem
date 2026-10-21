@@ -29,7 +29,10 @@ dotnet tool exec Polhem.DbManager@<版號> -- upgrade --define ./Define
 
 這些指令與應用程式 Server 以 `dotnet run -- db <指令>` 執行的相同，結束碼等細節見
 [初始化新部署](https://github.com/polhem-dev/polhem/blob/main/docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)。
-工具讀取定義資料夾的方式與 Server 相同，包括主金鑰：來源是環境變數而沒有金鑰時，只為這次執行產生金鑰，DatabaseSettings
-沒有加密密碼時就夠用；不會建立金鑰檔。
+工具讀取定義資料夾的方式與 Server 相同，包括主金鑰。主金鑰的環境變數沒有設定時，只有 SystemSettings 沒有任何加密金鑰
+才能執行，否則會指出要設定哪個變數。不會建立金鑰檔。
+
+使用相對路徑的 SQLite 項目會被拒絕：相對路徑以開啟它的程序的工作目錄解析，對應用程式而言是 Server 的目錄，工具會用到
+另一個檔案。請改用絕對路徑，或在 Server 專案執行 `db` 子指令。
 
 工具會重新散佈資料庫驅動，各驅動的授權列在 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。

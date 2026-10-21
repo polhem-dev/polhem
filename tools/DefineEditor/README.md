@@ -87,9 +87,11 @@ front; it does not open the folder.
 The editor carries no database driver. Testing the connections, upgrading the tables and previewing an upgrade are done
 by the database manager [Polhem.DbManager](../DbManager/README.md) (`polhem-db`), which carries the drivers of every
 supported database. The editor runs it through `dotnet tool exec` at exactly its own version, against the open
-DefinePath, so nothing has to be installed and no project is needed. The first run asks before the tool is downloaded
-from NuGet, naming the package and the version; later runs reuse the copy in the NuGet global packages folder. `dotnet
-tool exec` needs the .NET SDK.
+DefinePath, so nothing has to be installed and no project is needed. The first run asks before the tool is downloaded,
+naming the package, the version and the package source; later runs reuse the copy in the NuGet global packages folder.
+`dotnet tool exec` needs the .NET SDK. The tool runs in a folder of the editor's own under the temporary folder, with
+its own NuGet configuration (nuget.org only), so a `nuget.config` or `global.json` in or above the opened folder cannot
+choose where the tool comes from or which SDK runs it.
 
 - **Test Connections**, at the top of the DatabaseSettings editor and in the **File** menu, opens a connection to each
   database item.
@@ -103,7 +105,7 @@ tool exec` needs the .NET SDK.
 
 When the editor runs from source, no tool of its version is published yet. Pack one with
 `dotnet pack tools/DbManager/Polhem.DbManager.csproj -o <folder>` and name the folder in the `POLHEM_DBMANAGER_SOURCE`
-environment variable; the editor passes it to `dotnet tool exec` as an extra package source.
+environment variable; the editor adds it to that NuGet configuration as a second package source.
 
 ### Headless smoke
 
