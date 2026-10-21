@@ -21,7 +21,9 @@ launch:
   app_name: Polhem.Northwind
   # Avalonia desktop ships a plain .NET executable (no .app bundle). Launch the built
   # host DLL via `dotnet` rather than `dotnet run` so we avoid the file-watch loop.
-  launch_cmd: dotnet apps/Polhem.Northwind/Polhem.Northwind.Desktop/bin/Debug/net10.0/Polhem.Northwind.Desktop.dll
+  # `Language=en` starts the shell in English for this run, whatever the system language or a remembered choice;
+  # the expected texts below are English. The `demo` account's culture keeps it English after sign-in.
+  launch_cmd: dotnet apps/Polhem.Northwind/Polhem.Northwind.Desktop/bin/Debug/net10.0/Polhem.Northwind.Desktop.dll Language=en
 
 flow:
   - step: take initial screenshot

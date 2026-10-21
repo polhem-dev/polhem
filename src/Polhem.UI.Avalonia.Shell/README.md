@@ -28,8 +28,10 @@
 | Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. |
 
 The interface language before sign-in follows the operating system (English or Traditional Chinese; anything else
-falls back to English) and can be switched on the connection and sign-in screens; the choice is remembered. After
-sign-in the account's culture decides, as `ClientInfo.ApplyLoginResult` makes it the process culture.
+falls back to English) and can be switched on the connection and sign-in screens; the choice is remembered. A
+`Language=en` or `Language=zh-TW` argument on the command line sets it for one run without changing the remembered
+choice, which is what scripted runs such as smoke tests use. After sign-in the account's culture decides, as
+`ClientInfo.ApplyLoginResult` makes it the process culture.
 
 The shell applies the Semi theme (dark by default, with a light/dark switch on the forms screen) and registers the API
 bridge as `UIServices.Provider`. It adds no font: the head chooses one.
