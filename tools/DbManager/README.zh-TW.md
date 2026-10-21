@@ -22,7 +22,7 @@ dotnet tool exec Polhem.DbManager@<版號> -- upgrade --define ./Define
 
 | 指令 | 作用 |
 |------|------|
-| `create` | 建立 DatabaseSettings 中還不存在的資料庫 |
+| `create` | 建立 DatabaseSettings 中還不存在的資料庫；SystemSettings 指定的主金鑰檔不存在時一併建立 |
 | `check` | 逐一連線 DatabaseSettings 中的每個資料庫 |
 | `upgrade` | 建立或升級 DbCategorySettings 登記的資料表；`--table` 只處理指定的表，`--dry-run` 只列出陳述式 |
 | `seed-admin` | 建立第一位管理者、一家公司，以及兩者之間的權限 |
@@ -30,7 +30,8 @@ dotnet tool exec Polhem.DbManager@<版號> -- upgrade --define ./Define
 這些指令與應用程式 Server 以 `dotnet run -- db <指令>` 執行的相同，結束碼等細節見
 [初始化新部署](https://github.com/polhem-dev/polhem/blob/main/docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)。
 工具讀取定義資料夾的方式與 Server 相同，包括主金鑰。主金鑰的環境變數沒有設定時，只有 SystemSettings 沒有任何加密金鑰
-才能執行，否則會指出要設定哪個變數。不會建立金鑰檔。
+才能執行，否則會指出要設定哪個變數。主金鑰檔不存在時，只有 `create` 會建立，方式與 Server 相同：產生新金鑰，寫入只有擁有者能讀的
+檔案，並輸出檔案路徑（不會印出金鑰本身）。其他指令遇到缺少金鑰檔會失敗，避免路徑打錯時多留下一把金鑰。
 
 使用相對路徑的 SQLite 項目會被拒絕：相對路徑以開啟它的程序的工作目錄解析，對應用程式而言是 Server 的目錄，工具會用到
 另一個檔案。請改用絕對路徑，或在 Server 專案執行 `db` 子指令。
