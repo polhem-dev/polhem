@@ -6,6 +6,10 @@
 
 This walkthrough builds **your own project**. If you would rather see the framework running before writing anything, the repository's [`samples/`](../../../samples/README.md) folder has ready-to-run demos — `QuickStart.Server` + `QuickStart.Console` are the two this page mirrors.
 
+To skip the wiring and start from a project that already has it, use the template:
+`dotnet new install Polhem.Templates`, then `dotnet new polhem-avalonia -n MyApp --database Sqlite` (see
+[Polhem.Templates](../../../tools/Polhem.Templates/README.md)). This page shows what the template sets up.
+
 Each step links to the document that covers it in depth. Everything shown here is the minimum that runs; nothing is repeated from those documents.
 
 ---

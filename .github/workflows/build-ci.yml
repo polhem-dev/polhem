@@ -335,6 +335,7 @@ jobs:
         # the same way (through their tests/*.UnitTests), so they are packed here on the same terms.
         dotnet pack tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Release --output ./nupkgs
         dotnet pack tools/DbManager/Polhem.DbManager.csproj --configuration Release --output ./nupkgs
+        dotnet pack tools/Polhem.Templates/Polhem.Templates.csproj --configuration Release --output ./nupkgs
 
     # Mobile AOT gate: `DynamicCodeSupport=false` is exactly what the .NET for iOS SDK sets for every
     # iOS / tvOS / MacCatalyst build, mapped to the RuntimeHostConfigurationOption of

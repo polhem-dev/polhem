@@ -8,6 +8,7 @@
     <Project Path="Polhem.Cli/Polhem.Cli.csproj" />
     <Project Path="Polhem.Definition.Spreadsheet/Polhem.Definition.Spreadsheet.csproj" />
     <Project Path="Polhem.LoadTests/Polhem.LoadTests.csproj" />
+    <Project Path="Polhem.Templates/Polhem.Templates.csproj" />
   </Folder>
   <Folder Name="/ref-src/">
     <Project Path="../src/Polhem.Definition/Polhem.Definition.csproj" />

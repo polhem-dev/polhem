@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Polhem contributors",
+  "classifications": [
+    "Polhem",
+    "Avalonia",
+    "Desktop"
+  ],
+  "identity": "Polhem.App.Avalonia",
+  "name": "Polhem App (Avalonia)",
+  "description": "A Polhem application: a JSON-RPC server that references the Polhem packages and one database driver, a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
+  "shortName": "polhem-avalonia",
+  "sourceName": "PolhemApp",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "symbols": {
+    "database": {
+      "type": "parameter",
+      "datatype": "choice",
+      "description": "The database engine the application uses.",
+      "displayName": "Database",
+      "defaultValue": "SqlServer",
+      "choices": [
+        {
+          "choice": "SqlServer",
+          "displayName": "SQL Server",
+          "description": "Microsoft SQL Server"
+        },
+        {
+          "choice": "PostgreSql",
+          "displayName": "PostgreSQL",
+          "description": "PostgreSQL"
+        },
+        {
+          "choice": "MySql",
+          "displayName": "MySQL",
+          "description": "MySQL"
+        },
+        {
+          "choice": "Oracle",
+          "displayName": "Oracle",
+          "description": "Oracle Database"
+        },
+        {
+          "choice": "Sqlite",
+          "displayName": "SQLite",
+          "description": "SQLite database files under App_Data"
+        }
+      ]
+    },
+    "company": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The id of the first company, created when the database is initialized.",
+      "displayName": "Company id",
+      "defaultValue": "DEMO",
+      "replaces": "POLHEM_COMPANY_ID"
+    },
+    "dbPassword": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The database password written to Define/DatabaseSettings.xml. Leave it empty to enter it later in DefineEditor.",
+      "displayName": "Database password",
+      "defaultValue": "",
+      "replaces": "POLHEM_DB_PASSWORD"
+    },
+    "language": {
+      "type": "parameter",
+      "datatype": "choice",
+      "description": "The default language of users who have none of their own.",
+      "displayName": "Default language",
+      "defaultValue": "en-US",
+      "choices": [
+        {
+          "choice": "en-US",
+          "displayName": "English"
+        },
+        {
+          "choice": "zh-TW",
+          "displayName": "繁體中文"
+        }
+      ],
+      "replaces": "POLHEM_DEFAULT_LANGUAGE"
+    },
+    "polhemVersion": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The version of the Polhem packages and tools the application references.",
+      "defaultValue": "0.0.0-unpacked",
+      "replaces": "POLHEM_PACKAGE_VERSION"
+    },
+    "httpPort": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": {
+        "low": 5100,
+        "high": 5299
+      },
+      "replaces": "5180"
+    },
+    "dbPrefix": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "databaseName",
+      "replaces": "polhem_app_db"
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Skip the automatic restore of the project on create.",
+      "defaultValue": "false"
+    }
+  },
+  "forms": {
+    "databaseName": {
+      "identifier": "chain",
+      "steps": [
+        "lowerCaseInvariant",
+        "nonAlphanumericToUnderscore"
+      ]
+    },
+    "nonAlphanumericToUnderscore": {
+      "identifier": "replace",
+      "pattern": "[^a-z0-9_]",
+      "replacement": "_"
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "PolhemApp.slnx"
+    }
+  ],
+  "postActions": [
+    {
+      "id": "restore",
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

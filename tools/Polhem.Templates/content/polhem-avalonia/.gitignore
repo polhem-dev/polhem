@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+*.user
+
+# The master key that protects the keys in Define/SystemSettings.xml. Created on the first run of the server; keep it
+# out of source control and give each environment its own.
+Define/Master.key
+
+# SQLite database files.
+App_Data/
