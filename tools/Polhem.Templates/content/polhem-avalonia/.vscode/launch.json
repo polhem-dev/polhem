@@ -5,15 +5,25 @@
             "name": "Server",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/PolhemApp.Server/PolhemApp.Server.csproj"
+            "projectPath": "${workspaceFolder}/src/PolhemApp.Server/PolhemApp.Server.csproj",
+            "presentation": {
+                "group": "parts",
+                "order": 1
+            }
         },
         {
             "name": "Desktop",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/PolhemApp.Desktop/PolhemApp.Desktop.csproj"
+            "projectPath": "${workspaceFolder}/src/PolhemApp.Desktop/PolhemApp.Desktop.csproj",
+            "presentation": {
+                "group": "parts",
+                "order": 1
+            }
         }
     ],
+    // VS Code selects the first entry of the sorted list in a new workspace. Group "app" sorts before "parts",
+    // so F5 starts the server and the desktop client together.
     "compounds": [
         {
             "name": "Server + Desktop",
@@ -21,7 +31,11 @@
                 "Server",
                 "Desktop"
             ],
-            "stopAll": true
+            "stopAll": true,
+            "presentation": {
+                "group": "app",
+                "order": 1
+            }
         }
     ]
 }

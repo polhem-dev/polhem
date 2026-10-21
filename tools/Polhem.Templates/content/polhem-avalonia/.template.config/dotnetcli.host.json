@@ -4,7 +4,7 @@
     "database": { "longName": "database", "shortName": "d" },
     "company": { "longName": "company", "shortName": "" },
     "dbPassword": { "longName": "db-password", "shortName": "" },
-    "language": { "longName": "language", "shortName": "" },
+    "defaultLanguage": { "longName": "default-language", "shortName": "" },
     "polhemVersion": { "longName": "polhem-version", "shortName": "", "isHidden": true },
     "skipRestore": { "longName": "no-restore", "shortName": "" }
   }

@@ -67,7 +67,7 @@
       "defaultValue": "",
       "replaces": "POLHEM_DB_PASSWORD"
     },
-    "language": {
+    "defaultLanguage": {
       "type": "parameter",
       "datatype": "choice",
       "description": "The default language of users who have none of their own.",
