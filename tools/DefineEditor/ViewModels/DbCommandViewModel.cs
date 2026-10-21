@@ -6,14 +6,15 @@ using CommunityToolkit.Mvvm.Input;
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// Runs a solution's database upgrade command and collects what it writes, for the database upgrade window.
+/// Runs a database manager command and collects what it writes, for the database command window.
 /// </summary>
 /// <remarks>
-/// The exit codes are those of the host's <c>db</c> commands (<c>Polhem.Hosting.Database.DatabaseCommandLine</c>):
-/// 0 when every table went through, 1 when at least one failed, 2 for a command line the host did not understand.
-/// DefineEditor does not reference <c>Polhem.Hosting</c>, which would bring the server side along.
+/// The exit codes are those of the <c>db</c> commands (<c>Polhem.Hosting.Database.DatabaseCommandLine</c>), which
+/// <see cref="DbManagerTool"/> runs: 0 when every item went through, 1 when at least one failed, 2 for a command line
+/// that was not understood. DefineEditor does not reference <c>Polhem.Hosting</c>, which would bring the server side
+/// along.
 /// </remarks>
-public sealed partial class DatabaseUpgradeViewModel : ViewModelBase, IDisposable
+public sealed partial class DbCommandViewModel : ViewModelBase, IDisposable
 {
     private const int UsageErrorExitCode = 2;
 
@@ -22,34 +23,29 @@ public sealed partial class DatabaseUpgradeViewModel : ViewModelBase, IDisposabl
     private readonly StringBuilder _output = new();
     private readonly CancellationTokenSource _cancellation = new();
     private bool _disposed;
+    private bool _flushPending;
+    private SynchronizationContext? _context;
 
-    /// <param name="command">The command to run, with <c>--dry-run</c> already added for a preview.</param>
+    /// <param name="command">The command to run.</param>
     /// <param name="baseDirectory">The folder a relative working directory is resolved against.</param>
-    /// <param name="dryRun">Whether this run only previews the changes.</param>
-    public DatabaseUpgradeViewModel(ExternalCommand command, string baseDirectory, bool dryRun)
+    /// <param name="kind">What the command does.</param>
+    public DbCommandViewModel(ExternalCommand command, string baseDirectory, DbCommandKind kind)
     {
         _command = command;
         _baseDirectory = baseDirectory;
-        IsDryRun = dryRun;
-        _statusText = L("Upgrade_StatusRunning");
+        Kind = kind;
+        _statusText = L("DbCommand_StatusRunning");
     }
 
-    /// <summary>Whether this run only previews the changes.</summary>
-    public bool IsDryRun { get; }
+    /// <summary>What the command does.</summary>
+    public DbCommandKind Kind { get; }
 
-    /// <summary>
-    /// The command line of one run: the solution's upgrade command with a <c>--table</c> option for each of
-    /// <paramref name="tableNames"/> and, for a preview, <c>--dry-run</c>.
-    /// </summary>
-    public static ExternalCommand BuildRun(ExternalCommand command, IEnumerable<string> tableNames, bool dryRun)
+    public string Title => L(Kind switch
     {
-        var run = command;
-        foreach (var tableName in tableNames)
-            run = run.WithArgument("--table").WithArgument(tableName);
-        return dryRun ? run.WithArgument("--dry-run") : run;
-    }
-
-    public string Title => L(IsDryRun ? "Upgrade_DryRunTitle" : "Upgrade_Title");
+        DbCommandKind.Preview => "DbCommand_PreviewTitle",
+        DbCommandKind.Check => "DbCommand_CheckTitle",
+        _ => "DbCommand_UpgradeTitle",
+    });
 
     /// <summary>The command line being run, with password values hidden.</summary>
     public string CommandLine => SecretMasker.Hide(_command.ToDisplayString());
@@ -87,28 +83,30 @@ public sealed partial class DatabaseUpgradeViewModel : ViewModelBase, IDisposabl
     {
         if (IsRunning || Result is not null) return;
         IsRunning = true;
-        var context = SynchronizationContext.Current;
+        _context = SynchronizationContext.Current;
         try
         {
-            Result = await ProcessRunner.RunAsync(_command, _baseDirectory, line =>
-            {
-                if (context is null) AppendLine(line);
-                else context.Post(_ => AppendLine(line), null);
-            }, _cancellation.Token);
+            Result = await ProcessRunner.RunAsync(_command, _baseDirectory, AppendLine, _cancellation.Token);
         }
         finally
         {
             IsRunning = false;
         }
+        Flush();
 
         Succeeded = Result.Succeeded;
         StatusText = Result switch
         {
-            { Cancelled: true } => L("Upgrade_StatusCancelled"),
-            { StartError: { } error } => L("Upgrade_StatusStartFailed", error),
-            { ExitCode: 0 } => L(IsDryRun ? "Upgrade_StatusDryRunSucceeded" : "Upgrade_StatusSucceeded"),
-            { ExitCode: UsageErrorExitCode } => L("Upgrade_StatusUsageError", UsageErrorExitCode),
-            _ => L("Upgrade_StatusFailed", Result.ExitCode),
+            { Cancelled: true } => L("DbCommand_StatusCancelled"),
+            { StartError: { } error } => L("DbCommand_StatusStartFailed", error),
+            { ExitCode: 0 } => L(Kind switch
+            {
+                DbCommandKind.Preview => "DbCommand_StatusPreviewSucceeded",
+                DbCommandKind.Check => "DbCommand_StatusCheckSucceeded",
+                _ => "DbCommand_StatusUpgradeSucceeded",
+            }),
+            { ExitCode: UsageErrorExitCode } => L("DbCommand_StatusUsageError", UsageErrorExitCode),
+            _ => L("DbCommand_StatusFailed", Result.ExitCode),
         };
     }
 
@@ -117,6 +115,20 @@ public sealed partial class DatabaseUpgradeViewModel : ViewModelBase, IDisposabl
         lock (_output)
         {
             _output.AppendLine(line);
+            // Lines that arrive together are shown in one update: rebuilding the text for each line of a long upgrade
+            // would cost time in proportion to the square of its length.
+            if (_flushPending) return;
+            _flushPending = true;
+        }
+        if (_context is null) Flush();
+        else _context.Post(_ => Flush(), null);
+    }
+
+    private void Flush()
+    {
+        lock (_output)
+        {
+            _flushPending = false;
             OutputText = _output.ToString();
         }
     }

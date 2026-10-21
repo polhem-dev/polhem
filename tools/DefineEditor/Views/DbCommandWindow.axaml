@@ -5,8 +5,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="520"
-        x:Class="Polhem.DefineEditor.Views.DatabaseUpgradeWindow"
-        x:DataType="vm:DatabaseUpgradeViewModel"
+        x:Class="Polhem.DefineEditor.Views.DbCommandWindow"
+        x:DataType="vm:DbCommandViewModel"
         x:CompileBindings="True"
         Width="760" Height="520" MinWidth="480" MinHeight="320"
         WindowStartupLocation="CenterOwner"
@@ -19,7 +19,7 @@
                 <TextBlock Classes="h1" Text="{Binding Title}"/>
                 <TextBlock Classes="path" Text="{Binding CommandLine}" TextWrapping="Wrap"/>
                 <TextBlock Classes="muted" TextWrapping="Wrap">
-                    <Run Text="{loc:Loc Upgrade_WorkingDirectory}"/>
+                    <Run Text="{loc:Loc DbCommand_WorkingDirectory}"/>
                     <Run Text="{Binding WorkingDirectory}"/>
                 </TextBlock>
             </StackPanel>

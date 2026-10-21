@@ -120,6 +120,22 @@ namespace Polhem.Hosting.UnitTests
             Assert.Equal(DatabaseCreateResult.Created, entries.Single(e => e.DatabaseId == DbCategoryIds.Common).Result);
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("CheckConnections opens each database and reports a broken item without stopping at it")]
+        public void CheckConnections_BrokenItem_ReportsItAndContinues()
+        {
+            SaveSqliteItems();
+            var settings = _access.GetDatabaseSettings();
+            settings.Items!.Add(new DatabaseItem { Id = "orphan", DatabaseType = DatabaseType.SQLite, ServerId = "missing" });
+            _access.SaveDatabaseSettings(settings);
+
+            var entries = _initializer.CheckConnections();
+
+            Assert.NotNull(entries.Single(e => e.DatabaseId == "orphan").Error);
+            Assert.All(entries.Where(e => e.DatabaseId != "orphan"), e => Assert.True(e.Succeeded, e.Error));
+            Assert.Equal(4, entries.Count);
+        }
+
         private void SaveSqliteItems()
         {
             var settings = new DatabaseSettings();

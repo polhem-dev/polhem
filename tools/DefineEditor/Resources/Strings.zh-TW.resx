@@ -282,47 +282,36 @@
   <data name="Action_Close" xml:space="preserve"><value>關閉</value></data>
   <data name="Action_SaveAll" xml:space="preserve"><value>全部儲存</value></data>
   <data name="Action_ContinueWithoutSaving" xml:space="preserve"><value>不儲存並繼續</value></data>
-  <data name="Action_Run" xml:space="preserve"><value>執行</value></data>
   <data name="Action_UpgradeDatabase" xml:space="preserve"><value>升級資料庫</value></data>
   <data name="Action_PreviewUpgrade" xml:space="preserve"><value>預覽（dry-run）</value></data>
   <data name="MenuItem_UpgradeDatabase" xml:space="preserve"><value>升級資料庫...</value></data>
   <data name="MenuItem_PreviewDatabaseUpgrade" xml:space="preserve"><value>預覽資料庫升級...</value></data>
-  <data name="MenuItem_SolutionSettings" xml:space="preserve"><value>方案設定...</value></data>
   <data name="Imported_Title" xml:space="preserve"><value>匯入完成</value></data>
   <data name="Imported_UpgradeHint" xml:space="preserve"><value>要接著升級資料庫，讓資料表符合匯入的定義嗎？只會升級這張表單的資料表：{0}。預覽只列出變更，不會實際執行。</value></data>
-  <data name="Imported_NoUpgradeCommand" xml:space="preserve"><value>若要在這裡升級資料庫，請在「檔案 → 方案設定」設定資料庫升級指令（存於 {0}）。</value></data>
-  <data name="Upgrade_Title" xml:space="preserve"><value>升級資料庫</value></data>
-  <data name="Upgrade_DryRunTitle" xml:space="preserve"><value>預覽資料庫升級</value></data>
-  <data name="Upgrade_NoCommand" xml:space="preserve"><value>這個方案沒有設定資料庫升級指令。請在「檔案 → 方案設定」設定（存於 {0}）。</value></data>
-  <data name="Upgrade_UnsavedMessage" xml:space="preserve"><value>有檔案尚未儲存。升級指令讀取的是磁碟上的檔案，未儲存的變更不會納入。</value></data>
-  <data name="Upgrade_TrustTitle" xml:space="preserve"><value>要執行這個指令嗎？</value></data>
-  <data name="Upgrade_TrustMessage" xml:space="preserve"><value>這個方案的 {0} 要求執行下列指令：
-
-{1}
-
-工作目錄：{2}
-
-請只在信任這個方案時執行。指令內容變更後會再詢問一次。</value></data>
-  <data name="Upgrade_WorkingDirectory" xml:space="preserve"><value>工作目錄：</value></data>
-  <data name="Upgrade_StatusRunning" xml:space="preserve"><value>執行中...</value></data>
-  <data name="Upgrade_StatusSucceeded" xml:space="preserve"><value>完成：資料庫已是最新。</value></data>
-  <data name="Upgrade_StatusDryRunSucceeded" xml:space="preserve"><value>完成：預覽沒有做任何變更。</value></data>
-  <data name="Upgrade_StatusFailed" xml:space="preserve"><value>失敗（結束碼 {0}），請看上方的輸出。</value></data>
-  <data name="Upgrade_StatusUsageError" xml:space="preserve"><value>指令無法解讀（結束碼 {0}），請檢查方案設定中的參數。</value></data>
-  <data name="Upgrade_StatusStartFailed" xml:space="preserve"><value>無法啟動指令：{0}</value></data>
-  <data name="Upgrade_StatusCancelled" xml:space="preserve"><value>已取消。</value></data>
-  <data name="Status_SolutionSettingsSaved" xml:space="preserve"><value>已儲存 {0}</value></data>
-  <data name="Status_SolutionSettingsFailed" xml:space="preserve"><value>無法讀寫方案設定：{0}</value></data>
   <data name="Status_StartupPathNotFound" xml:space="preserve"><value>命令列指定的資料夾不存在：{0}</value></data>
-  <data name="SolutionSettings_Title" xml:space="preserve"><value>方案設定</value></data>
-  <data name="SolutionSettings_UpgradeSection" xml:space="preserve"><value>資料庫升級指令</value></data>
-  <data name="SolutionSettings_UpgradeHint" xml:space="preserve"><value>建立或升級資料表的指令，通常是 Server 的 db upgrade 子指令。預覽時會加上 --dry-run。存於此資料夾的 DefineEditor.json，隨專案一起保存。</value></data>
-  <data name="SolutionSettings_Command" xml:space="preserve"><value>程式</value></data>
-  <data name="SolutionSettings_Arguments" xml:space="preserve"><value>參數（以空白分隔；含空白的參數請加雙引號）</value></data>
-  <data name="SolutionSettings_WorkingDirectory" xml:space="preserve"><value>工作目錄</value></data>
-  <data name="SolutionSettings_WorkingDirectoryHint" xml:space="preserve"><value>相對於此資料夾；留空表示此資料夾本身。</value></data>
-  <data name="SolutionSettings_SecretWarning" xml:space="preserve"><value>指令中含有密碼。這個檔案會隨專案提交，密碼請放在 DatabaseSettings 或環境變數。</value></data>
   <data name="Choice_FormLayoutMessage" xml:space="preserve"><value>這張表單已有 FormLayout，可能經過手動調整。匯入時要如何處理？</value></data>
   <data name="Choice_FormLayoutKeep" xml:space="preserve"><value>保留：維持現有的 FormLayout；新欄位會出現在清單，不會出現在編輯畫面（版面調整過時建議）</value></data>
   <data name="Choice_FormLayoutRegenerate" xml:space="preserve"><value>重新產生：依活頁簿重新排版，手動調整會被取代</value></data>
+  <data name="DbCommand_UpgradeTitle" xml:space="preserve"><value>升級資料庫</value></data>
+  <data name="DbCommand_PreviewTitle" xml:space="preserve"><value>預覽資料庫升級</value></data>
+  <data name="DbCommand_CheckTitle" xml:space="preserve"><value>測試資料庫連線</value></data>
+  <data name="DbCommand_WorkingDirectory" xml:space="preserve"><value>工作目錄：</value></data>
+  <data name="DbCommand_StatusRunning" xml:space="preserve"><value>執行中...</value></data>
+  <data name="DbCommand_StatusUpgradeSucceeded" xml:space="preserve"><value>完成：資料庫已是最新。</value></data>
+  <data name="DbCommand_StatusPreviewSucceeded" xml:space="preserve"><value>完成：預覽沒有做任何變更。</value></data>
+  <data name="DbCommand_StatusCheckSucceeded" xml:space="preserve"><value>完成：所有資料庫都能連線。</value></data>
+  <data name="DbCommand_StatusFailed" xml:space="preserve"><value>失敗（結束碼 {0}），請看上方的輸出。</value></data>
+  <data name="DbCommand_StatusUsageError" xml:space="preserve"><value>指令無法解讀（結束碼 {0}）。</value></data>
+  <data name="DbCommand_StatusStartFailed" xml:space="preserve"><value>無法啟動資料庫管理工具：{0}。它透過 .NET SDK 的 dotnet 指令執行。</value></data>
+  <data name="DbCommand_StatusCancelled" xml:space="preserve"><value>已取消。</value></data>
+  <data name="DbCommand_UnsavedTitle" xml:space="preserve"><value>有未儲存的變更</value></data>
+  <data name="DbCommand_UnsavedMessage" xml:space="preserve"><value>有檔案尚未儲存。資料庫管理工具讀取的是磁碟上的檔案，未儲存的變更不會納入。</value></data>
+  <data name="DbCommand_DownloadTitle" xml:space="preserve"><value>要下載資料庫管理工具嗎？</value></data>
+  <data name="DbCommand_DownloadMessage" xml:space="preserve"><value>DefineEditor 不帶資料庫驅動，資料庫相關工作由 dotnet tool {0} {1} 執行。第一次使用時下載，之後重複使用。套件來源：{2}</value></data>
+  <data name="Action_Download" xml:space="preserve"><value>下載並執行</value></data>
+  <data name="MenuItem_CheckDatabaseConnections" xml:space="preserve"><value>測試資料庫連線...</value></data>
+  <data name="DatabaseSettings_TestConnections" xml:space="preserve"><value>測試連線</value></data>
+  <data name="DatabaseSettings_TestConnectionsTooltip" xml:space="preserve"><value>以已儲存的設定逐一連線每個資料庫</value></data>
+  <data name="DbCommand_BusyTitle" xml:space="preserve"><value>有資料庫指令正在執行</value></data>
+  <data name="DbCommand_BusyMessage" xml:space="preserve"><value>請等它結束或取消後，再執行新的指令。</value></data>
 </root>

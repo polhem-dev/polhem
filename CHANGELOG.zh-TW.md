@@ -21,8 +21,9 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - DefineEditor 顯示正在編輯的 TableSchema 在各種支援資料庫的 CREATE TABLE 語法。
 - `dotnet polhem forms` 與 DefineEditor 可以在 Excel 活頁簿中描述表單，並匯入成可執行表單的定義檔。
 - 由明細表產生的 TableSchema 會替 `sys_master_rowid` 建立索引（`fk_{0}_master`），與手寫的一致。
-- DefineEditor 以 dotnet tool `Polhem.DefineEditor` 發佈（`polhem-define [DefinePath]`），可由命令列指定要開啟的資料夾，並可執行專案的資料庫升級指令；匯入後只升級該表單的資料表。
-- `db upgrade --table <名稱>` 只建立或升級指定的資料表。
+- DefineEditor 以 dotnet tool `Polhem.DefineEditor` 發佈（`polhem-define [DefinePath]`），可由命令列指定要開啟的資料夾。
+- 新的 dotnet tool `Polhem.DbManager`（`polhem-db`）對定義資料夾執行 `db` 指令，支援所有資料庫，不需要專案。DefineEditor 以它測試 DatabaseSettings 的連線與升級資料庫；匯入後只升級該表單的資料表。
+- `db check` 逐一連線每個資料庫；`db upgrade --table <名稱>` 只建立或升級指定的資料表。
 - Excel 匯入遇到會建成資料表欄位、卻沒有最大長度的 String 欄位時會停止；匯出會帶上只記在 TableSchema 的長度。
 
 ## [1.7.0] - 2026-10-16

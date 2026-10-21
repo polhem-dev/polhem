@@ -3,9 +3,8 @@
   <!--
     The package metadata and reproducibility settings of every project published to NuGet.
 
-    Imported by src/Directory.Build.props (the framework packages) and by the two dotnet tools,
-    tools/Polhem.Cli/Polhem.Cli.csproj and tools/DefineEditor/Polhem.DefineEditor.csproj, which live under tools/ and
-    deliberately do not inherit the src/ build baseline.
+    Imported by src/Directory.Build.props (the framework packages) and by the dotnet tools under tools/
+    (Polhem.Cli, DefineEditor and DbManager), which deliberately do not inherit the src/ build baseline.
     Before this file existed the CLI carried a hand-copied subset of this metadata, and it had already lost the
     icon, the repository link, SourceLink and the symbol package.
 

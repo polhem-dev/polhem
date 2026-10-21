@@ -3,9 +3,9 @@
   <!--
     tools/ holds development-time tools and is independent of the build baseline of the core packages.
     It does not import src/Directory.Build.props, so tools/ is self-contained: its projects are not packed and
-    do not get the strict analysis settings of src/. Polhem.Cli and DefineEditor are the exceptions: they are
-    published to NuGet as dotnet tools, so their project files turn packing back on and import Package.props, and
-    Polhem.Cli also turns the strict settings back on.
+    do not get the strict analysis settings of src/. Polhem.Cli, DefineEditor and DbManager are the exceptions: they
+    are published to NuGet as dotnet tools, so their project files turn packing back on and import Package.props, and
+    Polhem.Cli and DbManager also turn the strict settings back on.
 
     The version is the one exception, and it is deliberate: Polhem.Cli lives under tools/ but IS published to
     NuGet (see .github/workflows/nuget-publish.yml). It used to carry its own version, which fell twelve minor

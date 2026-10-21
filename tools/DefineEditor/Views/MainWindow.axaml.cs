@@ -104,20 +104,20 @@ public partial class MainWindow : Window
     /// </remarks>
     /// <param name="addFrameworkDefaults">Adds the framework default files the open solution lacks.</param>
     /// <param name="importFormWorkbook">Imports a form described in an Excel workbook.</param>
-    /// <param name="solutionSettings">Edits the settings kept with the open solution.</param>
-    /// <param name="upgradeDatabase">Runs the solution's database upgrade command.</param>
-    /// <param name="previewDatabaseUpgrade">Runs the database upgrade command as a dry run.</param>
+    /// <param name="checkConnections">Opens a connection to each database of the open solution.</param>
+    /// <param name="upgradeDatabase">Builds or upgrades the open solution's database tables.</param>
+    /// <param name="previewDatabaseUpgrade">Lists what the upgrade would change without changing it.</param>
     /// <param name="save">Saves the active document.</param>
     /// <param name="saveAll">Saves every dirty document.</param>
     /// <param name="validate">Validates the active document.</param>
     /// <param name="closeTab">Closes the active tab.</param>
     public void ShowInWindowFileMenu(
-        ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand solutionSettings, ICommand upgradeDatabase,
+        ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand checkConnections, ICommand upgradeDatabase,
         ICommand previewDatabaseUpgrade, ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
     {
         AddFrameworkDefaultsMenuItem.Command = addFrameworkDefaults;
         ImportFormWorkbookMenuItem.Command = importFormWorkbook;
-        SolutionSettingsMenuItem.Command = solutionSettings;
+        CheckConnectionsMenuItem.Command = checkConnections;
         UpgradeDatabaseMenuItem.Command = upgradeDatabase;
         PreviewDatabaseUpgradeMenuItem.Command = previewDatabaseUpgrade;
         SaveMenuItem.Command = save;

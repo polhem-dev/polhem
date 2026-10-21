@@ -777,28 +777,29 @@ internal static class Smoke
     }
 
     /// <summary>
-    /// The database upgrade path without a database: a solution's DefineEditor.json is read and its command runs
-    /// through the upgrade window's view-model. <c>dotnet --version</c> stands in for the host's <c>db upgrade</c>.
+    /// The database command path without a database or a download: the command window's view-model runs a command
+    /// and collects its output. <c>dotnet --version</c> stands in for the database manager.
     /// </summary>
     private static int RunDatabaseUpgradeSmoke()
     {
-        var tempDir = MakeTempDir("db-upgrade");
+        var tempDir = MakeTempDir("db-command");
         try
         {
-            new SolutionSettings
-            {
-                DatabaseUpgrade = new ExternalCommand { Command = "dotnet", Arguments = ["--version"] },
-            }.Save(tempDir);
-            var command = SolutionSettings.Load(tempDir).DatabaseUpgrade;
-            if (!command.IsConfigured)
-                return Fail(151, $"The upgrade command did not load back from {SolutionSettings.FileName}");
-
-            using var vm = new DatabaseUpgradeViewModel(command, tempDir, dryRun: false);
+            var command = new ExternalCommand { Command = "dotnet", Arguments = ["--version"] };
+            using var vm = new DbCommandViewModel(command, tempDir, DbCommandKind.Check);
             vm.RunAsync().GetAwaiter().GetResult();
             if (vm.Succeeded != true || vm.OutputText.Trim().Length == 0)
-                return Fail(152, $"The upgrade command did not run: {vm.StatusText} {vm.OutputText}");
+                return Fail(151, $"The command did not run: {vm.StatusText} {vm.OutputText}");
 
-            Console.WriteLine("[smoke:db-upgrade] OK");
+            var upgrade = DbManagerTool.Command(tempDir, DbManagerTool.UpgradeArguments(["ft_quote"], dryRun: true), tempDir);
+            string[] expected = ["tool", "exec", $"{DbManagerTool.PackageId}@{DbManagerTool.Version}", "--yes",
+                "--source", DbManagerTool.NuGetSource, "--", "upgrade", "--table", "ft_quote", "--dry-run", "--define", tempDir];
+            if (!upgrade.Arguments.SequenceEqual(expected) || !upgrade.Environment.ContainsKey("NUGET_PACKAGES"))
+            {
+                return Fail(152, $"Unexpected database manager command line: {upgrade.ToDisplayString()}");
+            }
+
+            Console.WriteLine("[smoke:db-command] OK");
             return 0;
         }
         finally { TryDelete(tempDir); }

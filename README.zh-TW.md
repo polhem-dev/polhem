@@ -87,6 +87,8 @@ dotnet add package Polhem.Db
 | 套件 | 安裝 | 說明 |
 |---|---|---|
 | **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>升版：`dotnet tool update -g Polhem.Cli` | 框架 CLI，命令名 `dotnet polhem`。`defines` 系列命令用來 materialize 與列出 `Polhem.Definition.dll` 內嵌的框架預設定義檔（供新消費者 bootstrap `DefinePath`）；`keys` 系列命令產生 `SystemSettings.xml` 所用的受保護金鑰。見 [Polhem.Cli README](tools/Polhem.Cli/README.zh-TW.md)；各選項以 `dotnet polhem --help` 列出。 |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor`（本機工具） | 定義檔的桌面編輯器，命令名 `polhem-define [DefinePath]`；可從 Excel 活頁簿匯入表單。見 [DefineEditor README](tools/DefineEditor/README.zh-TW.md)。 |
+| **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | 資料庫管理工具，命令名 `polhem-db`：依定義資料夾建立、檢查與升級資料庫，支援所有資料庫，不需要專案。DefineEditor 需要時會執行它。見 [DbManager README](tools/DbManager/README.zh-TW.md)。 |
 
 ## 🚀 Quick Start
 

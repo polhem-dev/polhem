@@ -43,6 +43,7 @@ public static class ProcessRunner
             StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var argument in command.Arguments) startInfo.ArgumentList.Add(argument);
+        foreach (var (name, value) in command.Environment) startInfo.Environment[name] = value;
 
         using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += (_, e) => { if (e.Data is not null) onLine(SecretMasker.Hide(e.Data)); };
@@ -72,6 +73,14 @@ public static class ProcessRunner
             catch (InvalidOperationException)
             {
                 // The process exited between the cancellation and the kill.
+            }
+            catch (AggregateException)
+            {
+                // Some processes of the tree could not be killed; the wait below still ends with the main one.
+            }
+            catch (Win32Exception)
+            {
+                // The process could not be killed (already exiting, or not ours to end).
             }
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
             return new ProcessRunResult(null, null, true);

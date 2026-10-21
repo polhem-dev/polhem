@@ -50,11 +50,10 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 `--define` is the definition folder, the one that holds `FormSchema/`. The import writes definitions only; creating
 the tables is the application's job. The Northwind demo, for example, builds every table registered in
 `DbCategorySettings.xml` when its server starts (`NorthwindSchemaSeeder`), so there a restart is all it takes for the
-form to appear in the menu and work. A server built with `AddPolhemFramework` builds them with its `db upgrade` command,
-which `--table` limits to the form's tables
+form to appear in the menu and work. The `db upgrade` command builds them, and `--table` limits it to the form's tables
 ([Initializing a New Deployment](../database/database-settings-guide.md#7-initializing-a-new-deployment)); DefineEditor
-offers to run it right after an import
-([Upgrading the database](../../../tools/DefineEditor/README.md#upgrading-the-database)).
+offers to run it right after an import, through the database manager tool
+([Database work](../../../tools/DefineEditor/README.md#database-work)).
 
 ## 3. The Workbook
 

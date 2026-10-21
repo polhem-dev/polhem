@@ -20,6 +20,7 @@ namespace Polhem.Hosting.UnitTests
         private static readonly string[] s_seedWithPasswordAssignment = ["db", "seed-admin", "--company", "ACME", "--password=" + Secret];
         private static readonly string[] s_help = ["db"];
         private static readonly string[] s_upgrade = ["db", "upgrade"];
+        private static readonly string[] s_check = ["db", "check"];
         private static readonly string[] s_seedMissingValue = ["db", "seed-admin", "--company"];
         private static readonly string[] s_createUnknownOption = ["db", "create", "--force=yes"];
         private static readonly string[] s_seedWithBareSecret = ["db", "seed-admin", "--company", "ACME", Secret];
@@ -47,6 +48,37 @@ namespace Polhem.Hosting.UnitTests
             Assert.Equal(DatabaseCommandLine.Success, Run(services, s_create, output));
             Assert.Contains("common (app_common): created", output.ToString(), StringComparison.Ordinal);
             Assert.Contains("log (app_log): exists", output.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db check reports each database and fails when one could not be opened")]
+        public void TryRun_Check_ReportsEachDatabase()
+        {
+            var (services, fake) = CreateServices();
+            fake.CheckEntries =
+            [
+                new DatabaseCheckEntry { DatabaseId = "common", DatabaseName = "app_common" },
+                new DatabaseCheckEntry { DatabaseId = "log", DatabaseName = "app_log", Error = "login failed" },
+            ];
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_check, output));
+            var text = output.ToString();
+            Assert.Contains("common (app_common): ok", text, StringComparison.Ordinal);
+            Assert.Contains("log (app_log): FAILED: login failed", text, StringComparison.Ordinal);
+            Assert.Contains("1 database(s) failed.", text, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("db check succeeds when every database opened, and fails when the settings have none")]
+        public void TryRun_CheckAllOpen_Succeeds()
+        {
+            var (services, fake) = CreateServices();
+            fake.CheckEntries = [new DatabaseCheckEntry { DatabaseId = "common" }];
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, s_check, new StringWriter()));
+
+            fake.CheckEntries = [];
+            Assert.Equal(DatabaseCommandLine.Failure, Run(services, s_check, new StringWriter()));
         }
 
         [Fact]
@@ -343,6 +375,10 @@ namespace Polhem.Hosting.UnitTests
 
             public IReadOnlyList<DatabaseCreateEntry> CreateDatabases()
                 => CreateException is null ? CreateEntries : throw CreateException;
+
+            public IReadOnlyList<DatabaseCheckEntry> CheckEntries { get; set; } = [];
+
+            public IReadOnlyList<DatabaseCheckEntry> CheckConnections() => CheckEntries;
 
             public IReadOnlyCollection<string>? LastTableNames { get; private set; }
 

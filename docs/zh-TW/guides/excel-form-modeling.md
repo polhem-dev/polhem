@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: 801780e1f7f76680c9c3b1a7df8ca4e095450657 -->
+<!-- source: en/guides/excel-form-modeling.md blob: b6331cb56d8c679e2a2bfc119bbecb507e76473d -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -48,9 +48,9 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 
 `--define` 是定義資料夾，也就是放 `FormSchema/` 的那一層。匯入只寫定義檔；建立資料表是應用程式的工作。以 Northwind
 示範為例，它的伺服器啟動時會建立 `DbCategorySettings.xml` 中註冊的所有資料表（`NorthwindSchemaSeeder`），所以在那裡
-只要重新啟動，表單就會出現在選單中並可以使用。以 `AddPolhemFramework` 建置的伺服器以它的 `db upgrade` 指令建立資料表，
-`--table` 可限定只處理這張表單的資料表（[初始化新部署](../database/database-settings-guide.md#7-初始化新部署)）；
-DefineEditor 匯入後可直接執行（[升級資料庫](../../../tools/DefineEditor/README.zh-TW.md#升級資料庫)）。
+只要重新啟動，表單就會出現在選單中並可以使用。`db upgrade` 指令會建立資料表，`--table` 可限定只處理這張表單的資料表
+（[初始化新部署](../database/database-settings-guide.md#7-初始化新部署)）；DefineEditor 匯入後可透過資料庫管理工具直接執行
+（[資料庫相關工作](../../../tools/DefineEditor/README.zh-TW.md#資料庫相關工作)）。
 
 ## 3. 活頁簿
 

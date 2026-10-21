@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 7e22615102b9da1e4a01fb6316c5416919ceb380 -->
+<!-- source: en/architecture/dependency-map.md blob: 9ffef2bc4265c1c787180813c8b297a82fc81b0b -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -128,10 +128,8 @@ graph BT
 | 套件 | 命令 | 說明 |
 |------|------|------|
 | **Polhem.Cli**（`tools/Polhem.Cli/`） | `dotnet polhem` | 框架 CLI；`dotnet polhem --help` 列出其命令。引用 `Polhem.Definition`，呼叫其公開 `Defaults` API 處理 embedded 框架預設的 materialize / list。版本與框架一致（兩者都讀 `Version.props`）。 |
-
-同位於 `tools/` 但不上 NuGet：
-
-- **Polhem.DefineEditor**（`tools/DefineEditor/`）—— Avalonia 桌面工具，可視覺化編輯各種定義類型。以 `.app` / `.exe` 形式對外發行而非套件或 dotnet tool。開啟資料夾時 in-process 呼叫 `Polhem.Definition.Defaults.MaterializeTo(...)`。
+| **Polhem.DefineEditor**（`tools/DefineEditor/`） | `polhem-define` | Avalonia 桌面工具，可視覺化編輯各種定義類型；也可建置成 macOS `.app`。不帶資料庫驅動：資料庫相關工作交給 Polhem.DbManager。 |
+| **Polhem.DbManager**（`tools/DbManager/`） | `polhem-db` | 以所有支援資料庫的驅動，對定義資料夾執行 `Polhem.Hosting` 的 `db` 指令。 |
 
 ## 架構要點
 

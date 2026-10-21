@@ -89,6 +89,8 @@ dotnet add package Polhem.Db
 | Package | Install | Description |
 |---|---|---|
 | **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`. The `defines` commands materialise and list the framework default define files embedded in `Polhem.Definition.dll` (to bootstrap a new consumer's `DefinePath`); the `keys` commands generate protected keys for `SystemSettings.xml`. See the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists the options. |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor` (local tool) | Desktop editor for the definition files, invoked as `polhem-define [DefinePath]`; imports forms from Excel workbooks. See the [DefineEditor README](https://github.com/polhem-dev/polhem/blob/main/tools/DefineEditor/README.md). |
+| **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | Database manager invoked as `polhem-db`: creates, checks and upgrades the databases a definition folder describes, for every supported database, without a project. DefineEditor runs it on demand. See the [DbManager README](https://github.com/polhem-dev/polhem/blob/main/tools/DbManager/README.md). |
 
 
 ## 🚀 Quick Start

@@ -56,6 +56,16 @@ public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocume
         _ => "DefUnknown",
     };
 
+    /// <summary>
+    /// Opens a connection to each database with the database manager. The manager reads the saved file, so unsaved
+    /// edits are offered for saving first.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822",
+        Justification = "RelayCommand handler bound from XAML must remain instance.")]
+    [RelayCommand]
+    private Task TestConnections()
+        => (GetOwnerWindow()?.DataContext as MainWindowViewModel)?.CheckDatabaseConnectionsAsync() ?? Task.CompletedTask;
+
     [RelayCommand(CanExecute = nameof(CanAddServer))]
     private void AddServer()
     {
