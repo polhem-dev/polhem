@@ -1,0 +1,22 @@
+<!-- The DefineEditor-only workbench colours, from VS Code's "Dark (Visual Studio)" and "Light (Visual Studio)" themes.
+     The Semi palette colours of those themes are Polhem.UI.Avalonia's VisualStudioTheme, applied in App.axaml.cs. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <!-- sideBar.background; activityBar.background, activityBar.foreground, activityBar.inactiveForeground -->
+            <SolidColorBrush x:Key="SidebarBackground">#252526</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarBackground">#333333</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
+            <!-- The Light (Visual Studio) theme keeps a dark activity bar -->
+            <SolidColorBrush x:Key="ActivityBarBackground">#2C2C2C</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

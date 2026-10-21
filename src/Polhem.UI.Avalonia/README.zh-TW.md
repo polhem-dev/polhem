@@ -14,7 +14,7 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 
 ## 目標框架
 
-單一 `net10.0` TFM。下限版本：`Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`；host 可透過 transitive 帶更新的 `Avalonia 12.x`。本套件不內建主題——由 host 自選（Semi.Avalonia、Fluent…），所有控件透過 `StyleKeyOverride` 沿用 host 主題。
+單一 `net10.0` TFM。下限版本：`Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`；host 可透過 transitive 帶更新的 `Avalonia 12.x`。本套件不內建主題——由 host 自選（Semi.Avalonia、Fluent…），所有控件透過 `StyleKeyOverride` 沿用 host 主題。使用 Semi 的 host 可在加入 Semi 樣式後呼叫 `Themes.VisualStudioTheme.Apply(app)`，把 Semi 改成 VS Code Dark / Light (Visual Studio) 的配色；DefineEditor 與 `Polhem.UI.Avalonia.Shell` 都用它。它只加入資源鍵，所以本套件仍不相依 Semi。
 
 ## 主要元件
 

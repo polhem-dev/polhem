@@ -53,6 +53,7 @@
           <Button x:Name="SignInButton"
                   Content="{l:ShellText Login_SignIn}"
                   Classes="Primary"
+                  Theme="{DynamicResource SolidButton}"
                   IsDefault="True"
                   Command="{Binding LoginCommand}"
                   IsEnabled="{Binding IsNotBusy}" />

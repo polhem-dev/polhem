@@ -48,6 +48,7 @@
           <Button x:Name="ConnectButton"
                   Content="{l:ShellText Connection_Connect}"
                   Classes="Primary"
+                  Theme="{DynamicResource SolidButton}"
                   IsDefault="True"
                   Command="{Binding ConnectCommand}"
                   IsEnabled="{Binding IsNotBusy}" />

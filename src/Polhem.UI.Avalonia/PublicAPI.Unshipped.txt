@@ -15,3 +15,5 @@ static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditModePr
 static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.IsCompactProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.LayoutProperty -> Avalonia.StyledProperty<Polhem.Definition.Layouts.FormLayout?>!
 static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContextProperty -> Avalonia.StyledProperty<Polhem.Definition.RoundingContext?>!
+Polhem.UI.Avalonia.Themes.VisualStudioTheme
+static Polhem.UI.Avalonia.Themes.VisualStudioTheme.Apply(Avalonia.Application! app) -> void

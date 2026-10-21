@@ -1,10 +1,12 @@
-<!-- DefineEditor's colours, taken from VS Code's "Dark (Visual Studio)" and "Light (Visual Studio)" themes (the
-     workbench defaults those themes use). Services/VisualStudioPalette writes every SemiColor* entry into Semi's own
-     palette brush at startup, so Semi's controls follow as well as whatever asks for the key here. A token not listed
-     keeps Semi's value. Text colours are in TextEmphasis.axaml.
+<!-- The colours of VS Code's "Dark (Visual Studio)" and "Light (Visual Studio)" themes (the workbench defaults those
+     themes use), as Semi palette keys. VisualStudioTheme.Apply merges this dictionary into the application's resources
+     and writes every entry into Semi's own palette brush, so Semi's controls follow as well as whatever asks for the
+     key. A token not listed keeps Semi's value. Text colours and weights are in VisualStudioText.axaml.
      NOTE: Avalonia reads an eight-digit colour as #AARRGGBB, VS Code as #RRGGBBAA; VS Code's #80808059 is #59808080 here. -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    x:Class="Polhem.UI.Avalonia.Themes.VisualStudioColors"
+                    x:ClassModifier="internal">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
             <!-- editor.background, sideBar.background, tab.inactiveBackground, activityBar.background, input.background -->
@@ -13,11 +15,6 @@
             <SolidColorBrush x:Key="SemiColorBackground2">#2D2D2D</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground3">#333333</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground4">#3C3C3C</SolidColorBrush>
-            <SolidColorBrush x:Key="SidebarBackground">#252526</SolidColorBrush>
-            <!-- activityBar.background, activityBar.foreground, activityBar.inactiveForeground -->
-            <SolidColorBrush x:Key="ActivityBarBackground">#333333</SolidColorBrush>
-            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
-            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorNavBackground">#252526</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorWindow">#1E1E1E</SolidColorBrush>
 
@@ -54,11 +51,6 @@
             <SolidColorBrush x:Key="SemiColorBackground2">#ECECEC</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground3">#E5E5E5</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorBackground4">#DDDDDD</SolidColorBrush>
-            <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
-            <!-- The Light (Visual Studio) theme keeps a dark activity bar -->
-            <SolidColorBrush x:Key="ActivityBarBackground">#2C2C2C</SolidColorBrush>
-            <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
-            <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorNavBackground">#F3F3F3</SolidColorBrush>
             <SolidColorBrush x:Key="SemiColorWindow">#FFFFFF</SolidColorBrush>
 

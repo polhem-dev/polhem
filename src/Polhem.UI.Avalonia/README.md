@@ -15,7 +15,7 @@ Belongs to the `Polhem.UI.*` family and builds on [`Polhem.UI.Core`](../Polhem.U
 
 ## Target Framework
 
-Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`; hosts may bring a newer `Avalonia 12.x` transitively. The library ships no theme — the host picks one (Semi.Avalonia, Fluent, …); every control keeps the host theme through `StyleKeyOverride`.
+Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`; hosts may bring a newer `Avalonia 12.x` transitively. The library ships no theme — the host picks one (Semi.Avalonia, Fluent, …); every control keeps the host theme through `StyleKeyOverride`. A host on Semi can call `Themes.VisualStudioTheme.Apply(app)` after adding the Semi styles to recolour Semi with VS Code's Dark / Light (Visual Studio) colours; DefineEditor and `Polhem.UI.Avalonia.Shell` use it. It adds resource keys only, so the package still takes no dependency on Semi.
 
 ## Key Components
 

@@ -56,7 +56,7 @@
     <SplitView IsPaneOpen="{Binding IsPaneOpen}"
                DisplayMode="Inline"
                OpenPaneLength="220"
-               PaneBackground="{DynamicResource SemiColorBackground0}">
+               PaneBackground="{DynamicResource SemiColorBackground1}">
 
       <SplitView.Pane>
         <ListBox x:Name="NavList"

@@ -10,6 +10,7 @@ using Polhem.UI.Avalonia.Shell.Localization;
 using Polhem.UI.Avalonia.Shell.Preferences;
 using Polhem.UI.Avalonia.Shell.ViewModels;
 using Polhem.UI.Avalonia.Shell.Views;
+using Polhem.UI.Avalonia.Themes;
 using Polhem.UI.Core;
 using Semi.Avalonia;
 using Semi.Avalonia.DataGrid;
@@ -27,7 +28,8 @@ namespace Polhem.UI.Avalonia.Shell
     /// screens start with; the shell itself names no application.
     /// </para>
     /// <para>
-    /// The shell applies the Semi theme (dark by default; the forms screen has a light/dark switch), registers the
+    /// The shell applies the Semi theme recoloured by <see cref="VisualStudioTheme"/>, the definition editor's colours
+    /// (dark by default; the forms screen has a light/dark switch), registers the
     /// API bridge as <see cref="UIServices.Provider"/>, and configures <see cref="ClientInfo"/> for a remote
     /// backend with <see cref="ShellOptions.DefaultApiKey"/> as the first-run key. Fonts are the head's choice, so the
     /// shell adds none.
@@ -64,6 +66,7 @@ namespace Polhem.UI.Avalonia.Shell
             RequestedThemeVariant = ThemeVariant.Dark;
             Styles.Add(new SemiTheme());
             Styles.Add(new DataGridSemiTheme());
+            VisualStudioTheme.Apply(this);
             DataTemplates.Add(new ShellViewLocator());
         }
 

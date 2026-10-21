@@ -239,7 +239,7 @@
     </Style>
 
     <!-- VS Code activity bar: icon-only buttons, dimmed until hovered; the shown view gets full colour and a bar on
-         its left edge. Its colours come from VisualStudioTheme.axaml. -->
+         its left edge. Its colours come from WorkbenchColors.axaml. -->
     <Style Selector="Border.activitybar">
         <Setter Property="Background" Value="{DynamicResource ActivityBarBackground}"/>
         <Setter Property="Width" Value="48"/>
