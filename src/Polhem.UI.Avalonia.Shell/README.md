@@ -33,7 +33,7 @@ falls back to English) and can be switched on the connection and sign-in screens
 choice, which is what scripted runs such as smoke tests use. After sign-in the account's culture decides, as
 `ClientInfo.ApplyLoginResult` makes it the process culture.
 
-The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; dark by default, with a light/dark switch on the forms screen) and registers the API
+The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; light by default, with a light/dark switch on the forms screen) and registers the API
 bridge as `UIServices.Provider`. It adds no font: the head chooses one.
 
 ## Usage

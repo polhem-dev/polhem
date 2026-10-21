@@ -29,7 +29,7 @@ namespace Polhem.UI.Avalonia.Shell
     /// </para>
     /// <para>
     /// The shell applies the Semi theme recoloured by <see cref="VisualStudioTheme"/>, the definition editor's colours
-    /// (dark by default; the forms screen has a light/dark switch), registers the
+    /// (light by default; the forms screen has a light/dark switch), registers the
     /// API bridge as <see cref="UIServices.Provider"/>, and configures <see cref="ClientInfo"/> for a remote
     /// backend with <see cref="ShellOptions.DefaultApiKey"/> as the first-run key. Fonts are the head's choice, so the
     /// shell adds none.
@@ -63,7 +63,7 @@ namespace Polhem.UI.Avalonia.Shell
             // reads it once and shows "Avalonia Application" otherwise.
             Name = options.AppTitle;
 
-            RequestedThemeVariant = ThemeVariant.Dark;
+            RequestedThemeVariant = ThemeVariant.Light;
             Styles.Add(new SemiTheme());
             Styles.Add(new DataGridSemiTheme());
             VisualStudioTheme.Apply(this);

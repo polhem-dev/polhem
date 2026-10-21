@@ -45,7 +45,7 @@
         <ToggleSwitch Grid.Column="3"
                       x:Name="ThemeToggle"
                       OnContent="{l:ShellText Forms_Dark}" OffContent="{l:ShellText Forms_Light}"
-                      IsChecked="True"
+                      IsChecked="False"
                       VerticalAlignment="Center"
                       IsCheckedChanged="OnThemeToggled" />
       </Grid>
