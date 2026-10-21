@@ -45,7 +45,7 @@ CORS 政策（`PolhemDevWasm`，由 `IsDevelopment()` 把關），允許任何 `
 
 | 關注點 | 原因 | 位置 |
 |--------|------|------|
-| 以 `localStorage` 持久化 endpoint 與 API 金鑰 | 預設的 `FileEndpointStorage` 會寫檔，而瀏覽器的檔案系統在記憶體中，重新載入後值就不見了 | `Storage/BrowserLocalStorageEndpointStorage.cs`，於 `Program.cs` 設定 |
+| 以 `localStorage` 持久化 endpoint 與 API 金鑰 | 預設的 `FileEndpointStorage` 會寫檔，而瀏覽器的檔案系統在記憶體中，重新載入後值就不見了 | `Polhem.UI.Avalonia.Shell` 的 `BrowserLocalStorage`，於 `Program.cs` 設定 |
 | `JsonSerializerIsReflectionEnabledByDefault=true` | browser-wasm 預設停用 System.Text.Json 的反射；Polhem 的 `JsonCodec` 以反射為基礎 | `Polhem.Northwind.Browser.csproj` |
 | 非同步連線／定義載入 | sync-over-async 在單一執行緒上會擲出 *"Cannot wait on monitors"* —— 改用 `ClientInfo.InitializeAsync` / `ClientInfo.DefineAccess.GetMenuSettingsAsync()` | `ConnectionViewModel`、`FormsViewModel` |
 | UI 語系起始為 `en-US` | 內嵌字型 Inter 沒有 CJK 字形，而瀏覽器沒有系統字型可借用。登入後會像其他 head 一樣套用帳號的語系，所以在這裡請用語系為 `en-US` 的帳號 | `Program.cs` |

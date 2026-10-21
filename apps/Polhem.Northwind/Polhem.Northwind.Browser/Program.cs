@@ -1,9 +1,9 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Browser;
-using Polhem.Northwind.Browser.Storage;
 using Polhem.Northwind.UI;
 using Polhem.UI.ApiBridge;
+using Polhem.UI.Avalonia.Shell.Browser;
 
 internal sealed partial class Program
 {
@@ -32,7 +32,7 @@ internal sealed partial class Program
         // The browser has no persistent file system, so the endpoint, the API key and the shell's preferences go
         // through localStorage instead of the default files. The language switch stays off: the bundled font has no
         // CJK glyphs (see above).
-        var storage = new BrowserLocalStorageEndpointStorage("Polhem.Northwind");
+        var storage = new BrowserLocalStorage("Polhem.Northwind");
         ClientInfo.EndpointStorage = storage;
         ClientInfo.ApiKeyStorage = storage;
 

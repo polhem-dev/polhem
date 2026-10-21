@@ -64,15 +64,19 @@ public partial class AppDelegate : AvaloniaAppDelegate<MyApp> { }
 ```
 
 每個選項的說明在 `ShellOptions` 的 XML 文件。各端不同的設定透過 `ShellApplication.ConfigureOptions` 調整。
-瀏覽器端沒有可持久保存的檔案系統，要自行提供偏好設定儲存（`IShellPreferenceStorage`）；字型畫不出中日韓文字時，
-也要關掉語言切換：
+瀏覽器端沒有可持久保存的檔案系統，因此以 `BrowserLocalStorage` 把端點、API 金鑰與殼的偏好設定存在 `localStorage`；
+字型畫不出中日韓文字時，也要關掉語言切換：
 
 ```csharp
+var storage = new BrowserLocalStorage("MyApp");
+ClientInfo.EndpointStorage = storage;
+ClientInfo.ApiKeyStorage = storage;
+
 AppBuilder.Configure(() => new MyApp
 {
     ConfigureOptions = options =>
     {
-        options.PreferenceStorage = myLocalStorage;
+        options.PreferenceStorage = storage;
         options.AllowLanguageSwitch = false;
     },
 });

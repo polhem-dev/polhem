@@ -20,6 +20,18 @@
                 "group": "parts",
                 "order": 1
             }
+//#if (browser)
+        },
+        {
+            "name": "Browser",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/PolhemApp.Browser/PolhemApp.Browser.csproj",
+            "presentation": {
+                "group": "parts",
+                "order": 1
+            }
+//#endif
         }
     ],
     // VS Code selects the first entry of the sorted list in a new workspace. Group "app" sorts before "parts",
@@ -36,6 +48,20 @@
                 "group": "app",
                 "order": 1
             }
+//#if (browser)
+        },
+        {
+            "name": "Server + Browser",
+            "configurations": [
+                "Server",
+                "Browser"
+            ],
+            "stopAll": true,
+            "presentation": {
+                "group": "app",
+                "order": 2
+            }
+//#endif
         }
     ]
 }

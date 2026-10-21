@@ -49,7 +49,7 @@ commented at its source:
 
 | Concern | Why | Where |
 |---------|-----|-------|
-| Endpoint and API key persistence via `localStorage` | the default `FileEndpointStorage` writes files, and the browser's file system is in memory, so the values would be gone after a reload | `Storage/BrowserLocalStorageEndpointStorage.cs`, set in `Program.cs` |
+| Endpoint and API key persistence via `localStorage` | the default `FileEndpointStorage` writes files, and the browser's file system is in memory, so the values would be gone after a reload | `BrowserLocalStorage` from `Polhem.UI.Avalonia.Shell`, set in `Program.cs` |
 | `JsonSerializerIsReflectionEnabledByDefault=true` | browser-wasm disables System.Text.Json reflection by default; Polhem's `JsonCodec` is reflection-based | `Polhem.Northwind.Browser.csproj` |
 | Async connect / define load | sync-over-async throws *"Cannot wait on monitors"* on the single thread — use `ClientInfo.InitializeAsync` / `ClientInfo.DefineAccess.GetMenuSettingsAsync()` | `ConnectionViewModel`, `FormsViewModel` |
 | UI culture starts as `en-US` | Inter, the bundled font, has no CJK glyphs and the browser has no system font to fall back on. Signing in then applies the account's culture, as on every head, so use an account whose culture is `en-US` here | `Program.cs` |

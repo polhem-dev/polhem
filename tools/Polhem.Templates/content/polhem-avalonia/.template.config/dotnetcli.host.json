@@ -5,6 +5,9 @@
     "company": { "longName": "company", "shortName": "" },
     "dbPassword": { "longName": "db-password", "shortName": "" },
     "defaultLanguage": { "longName": "default-language", "shortName": "" },
+    "browser": { "longName": "browser", "shortName": "" },
+    "ios": { "longName": "ios", "shortName": "" },
+    "android": { "longName": "android", "shortName": "" },
     "polhemVersion": { "longName": "polhem-version", "shortName": "", "isHidden": true },
     "skipRestore": { "longName": "no-restore", "shortName": "" }
   }

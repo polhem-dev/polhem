@@ -61,12 +61,27 @@ builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
+#if (browser)
+
+// Development only: the browser head is served by its own development server on another localhost port, so its calls
+// to this server are cross-origin. In production, serve the published browser head from this server's origin and
+// remove the policy.
+const string DevelopmentCorsPolicy = "Development";
+builder.Services.AddCors(options => options.AddPolicy(DevelopmentCorsPolicy, policy => policy
+    .SetIsOriginAllowed(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+        && uri.Host is "localhost" or "127.0.0.1")
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
+#endif
 
 var app = builder.Build();
 
 // `dotnet run -- db create | check | upgrade | seed-admin` runs a database command and exits without starting the server.
 if (DatabaseCommandLine.TryRun(app.Services, args) is int exitCode) return exitCode;
 
+#if (browser)
+if (app.Environment.IsDevelopment()) app.UseCors(DevelopmentCorsPolicy);
+#endif
 app.MapJsonRpc("/api");
 app.Run();
 return 0;

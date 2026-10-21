@@ -3,7 +3,17 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+<!--#if (android) -->
+    <Project Path="src/PolhemApp.Android/PolhemApp.Android.csproj" />
+<!--#endif -->
+<!--#if (browser) -->
+    <Project Path="src/PolhemApp.Browser/PolhemApp.Browser.csproj" />
+<!--#endif -->
     <Project Path="src/PolhemApp.Desktop/PolhemApp.Desktop.csproj" />
+<!--#if (ios) -->
+    <Project Path="src/PolhemApp.iOS/PolhemApp.iOS.csproj" />
+<!--#endif -->
     <Project Path="src/PolhemApp.Server/PolhemApp.Server.csproj" />
+    <Project Path="src/PolhemApp.UI/PolhemApp.UI.csproj" />
   </Folder>
 </Solution>

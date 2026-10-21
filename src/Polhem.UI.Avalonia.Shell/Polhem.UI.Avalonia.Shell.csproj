@@ -6,6 +6,8 @@
     <Description>A ready-made Avalonia front end for a Polhem backend: connect, sign in to a company, and open every form of the server's menu. Shared by the desktop, browser, iOS and Android heads.</Description>
     <PackageTags>polhem;avalonia;ui;shell;client</PackageTags>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- The [JSImport] source generator behind Browser/LocalStorageInterop emits unsafe marshalling code. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
