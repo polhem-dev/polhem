@@ -8,7 +8,7 @@ internal static class TemplatePaths
     public static string TemplateProject => Path.Combine(RepositoryRoot, "tools", "Polhem.Templates", "Polhem.Templates.csproj");
 
     public static string TemplateJson => Path.Combine(
-        RepositoryRoot, "tools", "Polhem.Templates", "content", "polhem-app", ".template.config", "template.json");
+        RepositoryRoot, "tools", "Polhem.Templates", "content", "polhem-avalonia", ".template.config", "template.json");
 
     private static string FindRepositoryRoot()
     {

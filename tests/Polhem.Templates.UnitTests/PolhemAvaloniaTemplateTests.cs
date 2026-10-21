@@ -6,16 +6,16 @@ using Polhem.Definition.Settings;
 
 namespace Polhem.Templates.UnitTests;
 
-public class PolhemAppTemplateTests : IClassFixture<TemplatePackageFixture>
+public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
 {
     private readonly TemplatePackageFixture _fx;
 
-    public PolhemAppTemplateTests(TemplatePackageFixture fx) => _fx = fx;
+    public PolhemAvaloniaTemplateTests(TemplatePackageFixture fx) => _fx = fx;
 
     private string Generate(string database, params string[] options)
     {
         var output = Path.Combine(_fx.Root, $"{database}-{Guid.NewGuid():N}");
-        _fx.Run(_fx.Root, ["new", "polhem-app", "--name", "Acme.Erp", "--output", output, "--database", database,
+        _fx.Run(_fx.Root, ["new", "polhem-avalonia", "--name", "Acme.Erp", "--output", output, "--database", database,
             "--no-restore", "--debug:custom-hive", _fx.Hive, .. options]);
         return output;
     }
@@ -26,7 +26,7 @@ public class PolhemAppTemplateTests : IClassFixture<TemplatePackageFixture>
     [InlineData("MySql")]
     [InlineData("Oracle")]
     [InlineData("Sqlite")]
-    [DisplayName("polhem-app generates an application that builds for each database")]
+    [DisplayName("polhem-avalonia generates an application that builds for each database")]
     public void Generate_EachDatabase_Builds(string database)
     {
         var output = Generate(database);

@@ -25,7 +25,7 @@ Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.
 - DefineEditor is published as the dotnet tool `Polhem.DefineEditor` (`polhem-define [DefinePath]`) and opens the folder named on its command line.
 - The new dotnet tool `Polhem.DbManager` (`polhem-db`) runs the `db` commands against a definition folder, for every supported database, without a project. DefineEditor runs it to test the DatabaseSettings connections and to upgrade the database, for the imported form's tables after an import.
 - `db check` opens a connection to each database, and `db upgrade --table <name>` builds or upgrades only the named tables.
-- The new template package `Polhem.Templates` creates a Polhem application with `dotnet new polhem-app --database <engine>`: a server with the packages and the driver referenced, a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.
+- The new template package `Polhem.Templates` creates a Polhem application with `dotnet new polhem-avalonia --database <engine>`: a server with the packages and the driver referenced, a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.
 - The Excel import stops at a String field that becomes a column without a max length; the export writes the lengths a form keeps only in its TableSchema.
 
 ## [1.7.0] - 2026-10-16

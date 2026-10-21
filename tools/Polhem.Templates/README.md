@@ -2,18 +2,21 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
-`dotnet new` templates for [Polhem](https://github.com/polhem-dev/polhem).
+`dotnet new` templates for [Polhem](https://github.com/polhem-dev/polhem). Each template is named after the front-end
+technology of the application it creates (`polhem-<front end>`); the database is an option of the template.
 
 ```bash
 dotnet new install Polhem.Templates
-dotnet new polhem-app -n Acme.Erp --database SqlServer
+dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 ```
 
-In VS Code with the C# Dev Kit, the template is listed as **Polhem Application** under **New .NET Project**.
+In VS Code with the C# Dev Kit, the template is listed as **Polhem App (Avalonia)** under **New .NET Project**.
 
-## `polhem-app`
+## `polhem-avalonia`
 
-Creates an application whose server references the Polhem packages and the driver of one database:
+Creates an application with an Avalonia front end. In this version it creates the server, the definitions and the
+tools; the Avalonia desktop project is not part of it yet. The server references the Polhem packages and the driver of
+one database:
 
 | Path | Content |
 |------|---------|

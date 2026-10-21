@@ -13,7 +13,7 @@ public class TemplateOptionsTests
     }
 
     [Fact]
-    [DisplayName("The database choices of polhem-app are exactly the DatabaseType members")]
+    [DisplayName("The database choices of polhem-avalonia are exactly the DatabaseType members")]
     public void DatabaseChoices_MatchDatabaseType()
     {
         var choices = Symbol("database").GetProperty("choices").EnumerateArray()

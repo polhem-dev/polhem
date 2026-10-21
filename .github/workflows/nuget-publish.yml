@@ -83,7 +83,7 @@ jobs:
           'tools/DefineEditor/Polhem.DefineEditor.csproj'
           # Database manager (dotnet tool `polhem-db`); DefineEditor runs the one of its own version.
           'tools/DbManager/Polhem.DbManager.csproj'
-          # `dotnet new polhem-app`; the generated application references the packages of this version.
+          # `dotnet new polhem-avalonia`; the generated application references the packages of this version.
           'tools/Polhem.Templates/Polhem.Templates.csproj'
         )
 

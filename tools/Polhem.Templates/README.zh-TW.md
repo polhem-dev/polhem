@@ -2,18 +2,20 @@
 
 [English](README.md) | **繁體中文**
 
-[Polhem](https://github.com/polhem-dev/polhem) 的 `dotnet new` 範本。
+[Polhem](https://github.com/polhem-dev/polhem) 的 `dotnet new` 範本。範本以所建立應用程式的前端技術命名
+（`polhem-<前端>`）；資料庫是範本的選項。
 
 ```bash
 dotnet new install Polhem.Templates
-dotnet new polhem-app -n Acme.Erp --database SqlServer
+dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 ```
 
-在安裝了 C# Dev Kit 的 VS Code 中，範本會出現在「New .NET Project」的清單，名稱是 **Polhem Application**。
+在安裝了 C# Dev Kit 的 VS Code 中，範本會出現在「New .NET Project」的清單，名稱是 **Polhem App (Avalonia)**。
 
-## `polhem-app`
+## `polhem-avalonia`
 
-建立一個應用程式，其 Server 已引用 Polhem 套件與所選資料庫的驅動：
+建立以 Avalonia 為前端的應用程式。目前版本建立 Server、定義與工具，尚未包含 Avalonia 桌面專案。Server 已引用 Polhem
+套件與所選資料庫的驅動：
 
 | 路徑 | 內容 |
 |------|------|

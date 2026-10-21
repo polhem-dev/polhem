@@ -3,13 +3,13 @@
   "author": "Polhem contributors",
   "classifications": [
     "Polhem",
-    "Web",
-    "API"
+    "Avalonia",
+    "Desktop"
   ],
-  "identity": "Polhem.Templates.App",
-  "name": "Polhem Application",
+  "identity": "Polhem.App.Avalonia",
+  "name": "Polhem App (Avalonia)",
   "description": "A Polhem application: a JSON-RPC server that references the Polhem packages and one database driver, a definition folder, and VS Code tasks that initialize the database and open DefineEditor.",
-  "shortName": "polhem-app",
+  "shortName": "polhem-avalonia",
   "sourceName": "PolhemApp",
   "preferNameDirectory": true,
   "tags": {

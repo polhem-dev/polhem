@@ -5,7 +5,7 @@
 
   <PropertyGroup>
     <!--
-      A `dotnet new` template package (`dotnet new install Polhem.Templates`, then `dotnet new polhem-app`). It carries
+      A `dotnet new` template package (`dotnet new install Polhem.Templates`, then `dotnet new polhem-avalonia`). It carries
       only the files under content/; the target framework is required by the SDK and nothing is compiled.
       Overrides tools/Directory.Build.props (IsPackable=false).
     -->
@@ -21,13 +21,13 @@
     <!-- NU5128: a template package has no lib/ folder, by design. -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <PackageOutputPath>../../nupkgs</PackageOutputPath>
-    <Description>Project templates for Polhem. `dotnet new polhem-app` creates an application whose server references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
+    <Description>Project templates for Polhem. `dotnet new polhem-avalonia` creates an application whose server references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
     <PackageTags>polhem;dotnet-new;templates</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\polhem-app\.template.config\template.json"
+    <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\polhem-avalonia\.template.config\template.json"
           Pack="true" PackagePath="content\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
@@ -39,8 +39,8 @@
   -->
   <Target Name="StampTemplateVersion" BeforeTargets="_GetPackageFiles">
     <PropertyGroup>
-      <_PolhemTemplateJson>content\polhem-app\.template.config\template.json</_PolhemTemplateJson>
-      <_PolhemStampedTemplateJson>$(IntermediateOutputPath)polhem-app\template.json</_PolhemStampedTemplateJson>
+      <_PolhemTemplateJson>content\polhem-avalonia\.template.config\template.json</_PolhemTemplateJson>
+      <_PolhemStampedTemplateJson>$(IntermediateOutputPath)polhem-avalonia\template.json</_PolhemStampedTemplateJson>
       <_PolhemTemplateText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\$(_PolhemTemplateJson)'))</_PolhemTemplateText>
     </PropertyGroup>
     <Error Condition="!$(_PolhemTemplateText.Contains('&quot;0.0.0-unpacked&quot;'))"
@@ -49,7 +49,7 @@
                       Lines="$(_PolhemTemplateText.Replace('&quot;0.0.0-unpacked&quot;', '&quot;$(PackageVersion)&quot;'))"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup>
-      <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\polhem-app\.template.config\template.json" />
+      <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\polhem-avalonia\.template.config\template.json" />
     </ItemGroup>
   </Target>
 
