@@ -31,7 +31,7 @@
 命令列加上 `Language=en` 或 `Language=zh-TW` 可指定單次執行的語言，不會改動記住的選擇；smoke test 這類自動化執行就是用它。
 登入後改由帳號的 culture 決定：`ClientInfo.ApplyLoginResult` 會把它設為整個 process 的 culture。
 
-殼會以 DefineEditor 的配色套用 Semi 主題（`Polhem.UI.Avalonia` 的 `VisualStudioTheme`；預設深色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，
+殼會以 DefineEditor 的配色套用 Semi 主題（`Polhem.UI.Avalonia` 的 `VisualStudioTheme`；預設淺色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，
 由各端自行選擇。
 
 ## 用法

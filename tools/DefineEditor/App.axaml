@@ -3,7 +3,7 @@
              x:Class="Polhem.DefineEditor.App"
              xmlns:local="using:Polhem.DefineEditor"
              xmlns:conv="using:Polhem.DefineEditor.Converters"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
