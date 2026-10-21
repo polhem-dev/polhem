@@ -24,7 +24,7 @@ used. Run `polhem-db --help` for the commands and their options.
 
 | Command | What it does |
 |---------|--------------|
-| `create` | Creates the databases named in DatabaseSettings that do not exist |
+| `create` | Creates the databases named in DatabaseSettings that do not exist, and the master key file SystemSettings names when it is missing |
 | `check` | Opens a connection to each database in DatabaseSettings |
 | `upgrade` | Builds or upgrades the tables registered in DbCategorySettings; `--table` limits it to named tables, `--dry-run` only lists the statements |
 | `seed-admin` | Creates the first administrator, a company and the access between them |
@@ -33,7 +33,9 @@ The commands are those an application's server runs with `dotnet run -- db <comm
 in [Initializing a New Deployment](https://github.com/polhem-dev/polhem/blob/main/docs/en/database/database-settings-guide.md#7-initializing-a-new-deployment).
 The tool reads the definition folder the way the server does, master key included. When the master key's environment
 variable is not set, the tool runs only if SystemSettings holds no encrypted key; otherwise it names the variable to
-set. A key file is never created.
+set. A missing key file is created by `create` only, the way the server creates one: a new key in a file only its owner
+can read, reported by path (the key itself is never printed). The other commands fail without it, so a mistyped path
+does not leave a second key behind.
 
 A SQLite item with a relative path is refused: such a path is resolved against the working directory of the process
 that opens it, which for an application is its server's directory, so the tool would use a different file. Use an

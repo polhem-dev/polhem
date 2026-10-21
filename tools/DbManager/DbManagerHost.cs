@@ -25,15 +25,23 @@ internal static class DbManagerHost
     // The variable Polhem.Definition's MasterKeyProvider reads when the source names none; it is private there.
     private const string DefaultMasterKeyVariable = "POLHEM_MASTER_KEY";
 
+    // The file MasterKeyProvider reads when a file source names none.
+    private const string DefaultMasterKeyFile = "Master.key";
+
     /// <summary>Builds the host for <paramref name="definePath"/>. The host is not started.</summary>
     /// <remarks>
     /// The master key comes from the source SystemSettings names, as for the server. When an environment-variable
     /// source has no key and SystemSettings holds no encrypted key, a key for this process only is enough, since
-    /// nothing has to be decrypted; with an encrypted key the variable is required. A file source is never created
-    /// here, so a missing key file fails instead of leaving a new key in the project.
+    /// nothing has to be decrypted; with an encrypted key the variable is required. A missing key file is created only
+    /// when <paramref name="createKeyFile"/> is set (the <c>create</c> command, which sets up a new deployment), the
+    /// way the framework creates one (<c>MasterKeyProvider</c>: a new key in an owner-only file); for the other
+    /// commands it fails, so a mistyped path does not leave a second key behind.
     /// </remarks>
+    /// <param name="definePath">The definition folder.</param>
+    /// <param name="createKeyFile">Whether a missing master key file may be created.</param>
+    /// <param name="createdKeyFile">The key file this call created, or <see langword="null"/>.</param>
     /// <exception cref="InvalidOperationException">The master key is needed and cannot be found.</exception>
-    public static IHost Build(string definePath)
+    public static IHost Build(string definePath, bool createKeyFile, out string? createdKeyFile)
     {
         RegisterProviders();
 
@@ -44,9 +52,24 @@ internal static class DbManagerHost
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Logging.AddSimpleConsole(options => options.SingleLine = true).SetMinimumLevel(LogLevel.Warning);
         builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+        var keys = settings.BackendConfiguration.SecurityKeySettings;
+        var keyFile = KeyFilePath(keys.MasterKeySource, definePath);
+        var createFile = createKeyFile && keyFile is not null && !File.Exists(keyFile);
         builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths,
-            AllowProcessMasterKey(settings.BackendConfiguration.SecurityKeySettings));
+            createFile || AllowProcessMasterKey(keys));
+        createdKeyFile = createFile && File.Exists(keyFile) ? keyFile : null;
         return builder.Build();
+    }
+
+    /// <summary>
+    /// The master key file a file source names, resolved as <c>MasterKeyProvider</c> resolves it; <see langword="null"/>
+    /// for another source.
+    /// </summary>
+    internal static string? KeyFilePath(MasterKeySource source, string definePath)
+    {
+        if (source.Type != MasterKeySourceType.File) return null;
+        var path = string.IsNullOrWhiteSpace(source.Value) ? DefaultMasterKeyFile : source.Value;
+        return Path.GetFullPath(Path.IsPathRooted(path) ? path : Path.Combine(definePath, path));
     }
 
     private static bool AllowProcessMasterKey(SecurityKeySettings keys)

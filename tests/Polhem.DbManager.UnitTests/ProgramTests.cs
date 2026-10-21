@@ -150,6 +150,60 @@ namespace Polhem.DbManager.UnitTests
             Assert.Contains(variable, output, StringComparison.Ordinal);
         }
 
+        private static string UseKeyFile(string definePath)
+        {
+            var systemSettings = Path.Combine(definePath, "SystemSettings.xml");
+            var document = System.Xml.Linq.XDocument.Load(systemSettings);
+            var source = document.Descendants("SecurityKeySettings").Single().Element("MasterKeySource")!;
+            source.Element("Type")!.Value = "File";
+            source.Element("Value")!.Value = "Master.key";
+            document.Save(systemSettings);
+            return Path.Combine(definePath, "Master.key");
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("create makes a missing master key file, owner-only, and reports its path without the key")]
+        public void Run_CreateWithoutKeyFile_CreatesKeyFile()
+        {
+            var definePath = Path.Combine(_definePath, "Define");
+            Defaults.MaterializeTo(definePath);
+            SaveSqliteSettings(definePath);
+            var keyFile = UseKeyFile(definePath);
+
+            var (exitCode, output) = RunTool(_definePath, "create", "--define", definePath);
+
+            Assert.Equal(DatabaseCommandLine.Success, exitCode);
+            Assert.True(File.Exists(keyFile));
+            Assert.Contains($"master key: created {keyFile}", output, StringComparison.Ordinal);
+            Assert.DoesNotContain(File.ReadAllText(keyFile).Trim(), output, StringComparison.Ordinal);
+            if (!OperatingSystem.IsWindows())
+            {
+                Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(keyFile));
+            }
+
+            var key = File.ReadAllText(keyFile);
+            var (again, secondOutput) = RunTool(_definePath, "create", "--define", definePath);
+            Assert.Equal(DatabaseCommandLine.Success, again);
+            Assert.Equal(key, File.ReadAllText(keyFile));
+            Assert.DoesNotContain("master key: created", secondOutput, StringComparison.Ordinal);
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("Commands other than create fail without the master key file and do not create it")]
+        public void Run_CheckWithoutKeyFile_FailsWithoutCreating()
+        {
+            var definePath = Path.Combine(_definePath, "Define");
+            Defaults.MaterializeTo(definePath);
+            SaveSqliteSettings(definePath);
+            var keyFile = UseKeyFile(definePath);
+
+            var (exitCode, output) = RunTool(_definePath, "check", "--define", definePath);
+
+            Assert.Equal(DatabaseCommandLine.Failure, exitCode);
+            Assert.Contains("Master key file not found", output, StringComparison.Ordinal);
+            Assert.False(File.Exists(keyFile));
+        }
+
         private static void SaveSqliteSettings(string definePath)
         {
             var settings = new DatabaseSettings();

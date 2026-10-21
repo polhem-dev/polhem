@@ -13,7 +13,8 @@ internal static class Program
         "Usage: polhem-db <command> [options] [--define <DefinePath>]\n" +
         "\n" +
         "Commands:\n" +
-        "  create                       Create the databases named in DatabaseSettings that do not exist.\n" +
+        "  create                       Create the databases named in DatabaseSettings that do not exist, and the\n" +
+        "                               master key file SystemSettings names when it is missing.\n" +
         "  check                        Open a connection to each database in DatabaseSettings.\n" +
         "  upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
         "                               Build or upgrade the tables registered in DbCategorySettings.\n" +
@@ -66,7 +67,13 @@ internal static class Program
 
         try
         {
-            using var host = DbManagerHost.Build(definePath);
+            var command = rest.FirstOrDefault(a => !a.StartsWith('-'));
+            using var host = DbManagerHost.Build(definePath, createKeyFile: command == "create", out var createdKeyFile);
+            if (createdKeyFile is not null)
+            {
+                output.WriteLine($"  master key: created {createdKeyFile} (readable by its owner only). The server reads the "
+                    + "same file; keep it out of source control and back it up, since anything encrypted with it needs it.");
+            }
             var relative = SqlitePathCheck.FindRelativePaths(host.Services);
             if (relative.Count > 0)
             {
