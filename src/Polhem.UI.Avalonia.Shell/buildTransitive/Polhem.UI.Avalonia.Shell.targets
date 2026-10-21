@@ -1,0 +1,69 @@
+<Project>
+
+  <!--
+    Packages a published macOS head as an application bundle, so it opens from Finder and the Dock and other tools
+    can address it by its bundle identifier.
+
+      dotnet publish <head>.csproj -c Release -r osx-arm64 -p:PolhemMacAppBundle=true
+
+    The whole publish folder goes into Contents/MacOS/ unchanged, so the bundle runs exactly what was published
+    (no single-file requirement). Properties:
+
+      PolhemMacAppBundle      true to package; nothing happens otherwise.
+      PolhemBundleIdentifier  Required. Reverse-DNS identifier, letters, digits, '.' and '-' (tw.example.app).
+      PolhemBundleName        Bundle and display name. Default: the assembly name.
+      PolhemBundleIcon        Path to an .icns file. Optional.
+
+    The version is $(Version) without its pre-release suffix. The bundle is unsigned; a machine that downloads it
+    sees Gatekeeper's quarantine prompt.
+
+    A package reference imports this file through buildTransitive/. A head in the Polhem repository references the
+    shell as a project and imports the same file explicitly.
+  -->
+
+  <Target Name="PolhemMacAppBundle"
+          AfterTargets="Publish"
+          Condition="'$(PolhemMacAppBundle)' == 'true'">
+
+    <Error Condition="!$(RuntimeIdentifier.StartsWith('osx'))"
+           Text="PolhemMacAppBundle needs a macOS runtime identifier. Publish with -r osx-arm64 or -r osx-x64." />
+    <Error Condition="'$(PolhemBundleIdentifier)' == ''"
+           Text="PolhemMacAppBundle needs PolhemBundleIdentifier, a reverse-DNS identifier such as tw.example.app. Set it in the head's project file." />
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(PolhemBundleIdentifier)', '^[A-Za-z0-9][A-Za-z0-9.\-]*$'))"
+           Text="PolhemBundleIdentifier '$(PolhemBundleIdentifier)' may contain only letters, digits, '.' and '-'." />
+    <Error Condition="'$(UseAppHost)' == 'false'"
+           Text="PolhemMacAppBundle needs the native launcher; remove UseAppHost=false." />
+    <Error Condition="'$(PolhemBundleIcon)' != '' And !Exists('$(PolhemBundleIcon)')"
+           Text="PolhemBundleIcon '$(PolhemBundleIcon)' does not exist." />
+
+    <PropertyGroup>
+      <_PolhemBundleName>$(PolhemBundleName)</_PolhemBundleName>
+      <_PolhemBundleName Condition="'$(_PolhemBundleName)' == ''">$(AssemblyName)</_PolhemBundleName>
+      <_PolhemBundleDir>$([MSBuild]::EnsureTrailingSlash('$([System.IO.Path]::GetFullPath('$(PublishDir)'))'))$(_PolhemBundleName).app/</_PolhemBundleDir>
+      <_PolhemBundleVersion>$(Version.Split('-')[0])</_PolhemBundleVersion>
+      <_PolhemBundleIconName Condition="'$(PolhemBundleIcon)' != ''">$([System.IO.Path]::GetFileNameWithoutExtension('$(PolhemBundleIcon)'))</_PolhemBundleIconName>
+      <_PolhemBundleIconLine Condition="'$(PolhemBundleIcon)' != ''">  &lt;key&gt;CFBundleIconFile&lt;/key&gt;&lt;string&gt;$(_PolhemBundleIconName)&lt;/string&gt;</_PolhemBundleIconLine>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PolhemBundlePayload Include="$(PublishDir)**/*" Exclude="$(PublishDir)*.app/**" />
+    </ItemGroup>
+
+    <RemoveDir Directories="$(_PolhemBundleDir)" />
+    <Copy SourceFiles="@(_PolhemBundlePayload)"
+          DestinationFiles="@(_PolhemBundlePayload->'$(_PolhemBundleDir)Contents/MacOS/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy Condition="'$(PolhemBundleIcon)' != ''"
+          SourceFiles="$(PolhemBundleIcon)"
+          DestinationFolder="$(_PolhemBundleDir)Contents/Resources/" />
+
+    <WriteLinesToFile File="$(_PolhemBundleDir)Contents/Info.plist" Overwrite="true"
+                      Lines="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;;&lt;plist version=&quot;1.0&quot;&gt;;&lt;dict&gt;;  &lt;key&gt;CFBundleExecutable&lt;/key&gt;&lt;string&gt;$(AssemblyName)&lt;/string&gt;;  &lt;key&gt;CFBundleIdentifier&lt;/key&gt;&lt;string&gt;$(PolhemBundleIdentifier)&lt;/string&gt;;  &lt;key&gt;CFBundleName&lt;/key&gt;&lt;string&gt;$(_PolhemBundleName)&lt;/string&gt;;  &lt;key&gt;CFBundleDisplayName&lt;/key&gt;&lt;string&gt;$(_PolhemBundleName)&lt;/string&gt;;  &lt;key&gt;CFBundleVersion&lt;/key&gt;&lt;string&gt;$(_PolhemBundleVersion)&lt;/string&gt;;  &lt;key&gt;CFBundleShortVersionString&lt;/key&gt;&lt;string&gt;$(_PolhemBundleVersion)&lt;/string&gt;;  &lt;key&gt;CFBundlePackageType&lt;/key&gt;&lt;string&gt;APPL&lt;/string&gt;;  &lt;key&gt;LSMinimumSystemVersion&lt;/key&gt;&lt;string&gt;11.0&lt;/string&gt;;  &lt;key&gt;NSHighResolutionCapable&lt;/key&gt;&lt;true/&gt;;$(_PolhemBundleIconLine);&lt;/dict&gt;;&lt;/plist&gt;" />
+
+    <!-- The launcher must stay executable; a copy on some file systems drops the mode bits. -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) Or $([MSBuild]::IsOSPlatform('Linux'))"
+          Command="chmod +x &quot;$(_PolhemBundleDir)Contents/MacOS/$(AssemblyName)&quot;" />
+
+    <Message Importance="high" Text="$(MSBuildProjectName) -> $(_PolhemBundleDir) ($(PolhemBundleIdentifier))" />
+  </Target>
+
+</Project>

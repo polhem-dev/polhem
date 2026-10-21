@@ -230,8 +230,8 @@ session 的客製化代碼，以及 [`NorthwindBackend`](Polhem.Northwind.Server
 
 把這些組裝起來是 client 的工作、不是 server 的：API 一律把定義原樣送出，由
 `FormDefinitionLoader` 取回兩層、套用疊加，再把在地化後的 schema 交給畫面。整個 client 只有一個
-開關 —— `ClientInfo.UseDefinitionLoader`，預設開啟，demo 也在
-[`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) 裡明確設定。同一個檔案把 `AddPolhemUIApiBridge()`
+開關 —— `ClientInfo.UseDefinitionLoader`，預設開啟。demo 所用的殼
+[`Polhem.UI.Avalonia.Shell`](../../src/Polhem.UI.Avalonia.Shell/README.zh-TW.md) 把 `AddPolhemUIApiBridge()`
 註冊到 `UIServices.Provider`，單筆表單、清單與 lookup 對話框都從它註冊的 `IFormDefinitionSource`
 讀取定義，而它經由 `ClientInfo.DefinitionLoader` 取得。關掉時，畫面照原樣渲染定義：英文標題，版面也是
 `Define/FormLayout/` 裡的套裝版面而非租戶的。
@@ -354,7 +354,7 @@ apps/Polhem.Northwind/
 │   └── Language/{lang}/          在地化標題，每個 progId 一個檔
 ├── Customize/{customizeId}/      租戶客製層（結構與 Define/ 相同，只放要覆寫的檔）
 ├── Polhem.Northwind.Server/         JSON-RPC 後端、OrderBO、JSON 種子資料
-├── Polhem.Northwind.UI/             Avalonia 共用 UI（views、view models、導航）
+├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）
 ├── Polhem.Northwind.iOS/            iOS 進入點（Avalonia.iOS）

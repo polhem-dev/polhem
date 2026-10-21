@@ -10,6 +10,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- macOS application bundle: dotnet publish -c Release -r osx-arm64 -p:PolhemMacAppBundle=true -->
+    <PolhemBundleIdentifier>tw.polhem.northwind</PolhemBundleIdentifier>
+    <PolhemBundleName>Polhem.Northwind</PolhemBundleName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,5 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Northwind.UI\Polhem.Northwind.UI.csproj" />
   </ItemGroup>
+
+  <!-- A package reference imports this through buildTransitive/; a project reference does not. -->
+  <Import Project="..\..\..\src\Polhem.UI.Avalonia.Shell\buildTransitive\Polhem.UI.Avalonia.Shell.targets" />
 
 </Project>

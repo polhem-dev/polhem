@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>語言</value>
+  </data>
+  <data name="Connection_Endpoint" xml:space="preserve">
+    <value>服務端點</value>
+  </data>
+  <data name="Connection_ApiKey" xml:space="preserve">
+    <value>API 金鑰</value>
+  </data>
+  <data name="Connection_Connect" xml:space="preserve">
+    <value>連線</value>
+  </data>
+  <data name="Connection_Hint" xml:space="preserve">
+    <value>輸入 Polhem 伺服器的 JSON-RPC 端點，然後連線。</value>
+  </data>
+  <data name="Status_Idle" xml:space="preserve">
+    <value>連線前請先確認伺服器已啟動。</value>
+  </data>
+  <data name="Status_EndpointEmpty" xml:space="preserve">
+    <value>請輸入服務端點。</value>
+  </data>
+  <data name="Status_Pinging" xml:space="preserve">
+    <value>正在連線到 {0}…</value>
+  </data>
+  <data name="Status_Connected" xml:space="preserve">
+    <value>已連線到 {0}。</value>
+  </data>
+  <data name="Status_ConnectFailed" xml:space="preserve">
+    <value>連線失敗：{0}</value>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>登入</value>
+  </data>
+  <data name="Login_CompanyId" xml:space="preserve">
+    <value>公司代號</value>
+  </data>
+  <data name="Login_UserId" xml:space="preserve">
+    <value>帳號</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>密碼</value>
+  </data>
+  <data name="Login_SignIn" xml:space="preserve">
+    <value>登入</value>
+  </data>
+  <data name="Status_Authenticating" xml:space="preserve">
+    <value>正在登入…</value>
+  </data>
+  <data name="Status_CompanyEmpty" xml:space="preserve">
+    <value>請輸入公司代號。</value>
+  </data>
+  <data name="Status_Welcome" xml:space="preserve">
+    <value>歡迎，{0}。</value>
+  </data>
+  <data name="Status_LoginFailed" xml:space="preserve">
+    <value>登入失敗：{0}</value>
+  </data>
+  <data name="Forms_ToggleMenu" xml:space="preserve">
+    <value>顯示或隱藏選單</value>
+  </data>
+  <data name="Forms_Dark" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="Forms_Light" xml:space="preserve">
+    <value>淺色</value>
+  </data>
+  <data name="Forms_MenuLoadFailed" xml:space="preserve">
+    <value>（選單載入失敗：{0}）</value>
+  </data>
+</root>

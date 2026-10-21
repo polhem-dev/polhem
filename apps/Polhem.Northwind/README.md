@@ -240,7 +240,7 @@ just happens to have one of each.
 Assembling all of this is the client's job, not the server's: the APIs serve definitions exactly
 as stored, and `FormDefinitionLoader` fetches both layers, applies the overlay, and hands the view
 a localized schema. One switch covers the whole client — `ClientInfo.UseDefinitionLoader`, on by
-default and set explicitly in [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs). The same file
+default. The shell the demo runs on, [`Polhem.UI.Avalonia.Shell`](../../src/Polhem.UI.Avalonia.Shell/README.md),
 registers `AddPolhemUIApiBridge()` in `UIServices.Provider`, and the record form, the list and the
 lookup dialog all read their definitions from the `IFormDefinitionSource` it registers, which goes
 through `ClientInfo.DefinitionLoader`. With it off,
@@ -366,7 +366,7 @@ apps/Polhem.Northwind/
 │   └── Language/{lang}/          localized captions, one file per progId
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
 ├── Polhem.Northwind.Server/         JSON-RPC backend, OrderBO, JSON seed data
-├── Polhem.Northwind.UI/             Avalonia shared UI (views, view models, navigation)
+├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)
 ├── Polhem.Northwind.iOS/            iOS entry point (Avalonia.iOS)
