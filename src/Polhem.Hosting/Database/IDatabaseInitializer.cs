@@ -21,8 +21,9 @@ namespace Polhem.Hosting.Database
         IReadOnlyList<DatabaseCreateEntry> CreateDatabases();
 
         /// <summary>
-        /// Builds or upgrades every table registered in the database category settings, in every
-        /// database item whose category it belongs to.
+        /// Builds or upgrades the tables registered in the database category settings, in every
+        /// database item whose category they belong to: every table, or only those named in
+        /// <paramref name="tableNames"/>.
         /// </summary>
         /// <param name="options">Upgrade options; <c>null</c> uses <see cref="UpgradeOptions.Default"/>.</param>
         /// <param name="dryRun">When <c>true</c>, plan the statements and do not run them.</param>
@@ -30,9 +31,15 @@ namespace Polhem.Hosting.Database
         /// Called with each table's entry as soon as the table is done, so a caller can report progress
         /// while the remaining tables are still being processed.
         /// </param>
+        /// <param name="tableNames">
+        /// The tables to process, matched by name without regard to case; <c>null</c> or empty processes every
+        /// registered table. A deployment can hold thousands of tables, so a caller that changed a few names them.
+        /// A name that no category registers is reported in <see cref="TableUpgradeReport.Problems"/>.
+        /// </param>
         /// <returns>The outcome of each table. A failed table does not stop the others.</returns>
         TableUpgradeReport UpgradeTables(
-            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null);
+            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
+            IReadOnlyCollection<string>? tableNames = null);
 
         /// <summary>
         /// Creates the first administrator, a company, and the administrator's access to it, in the

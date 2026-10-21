@@ -55,6 +55,20 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
+        [DisplayName("Naming tables processes only those, and a name no category registers is reported")]
+        public void UpgradeTables_TableNames_ProcessesOnlyThose()
+        {
+            SaveSqliteItems();
+
+            var report = _initializer.UpgradeTables(dryRun: true, tableNames: ["ST_USER", "st_company", "ft_missing"]);
+
+            Assert.Equal(["st_company", "st_user"], report.Tables.Select(t => t.TableName).Order(StringComparer.Ordinal));
+            var problem = Assert.Single(report.Problems);
+            Assert.Contains("ft_missing", problem, StringComparison.Ordinal);
+            Assert.False(report.Succeeded);
+        }
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("A registered table without a TableSchema fails on its own while the other tables are built")]
         public void UpgradeTables_MissingDefinition_FailsOnlyThatTable()
         {

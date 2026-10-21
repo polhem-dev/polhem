@@ -41,6 +41,11 @@ public partial class App : Application
     // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
     public IRelayCommand ImportFormWorkbookCommand { get; }
 
+    // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
+    public IRelayCommand SolutionSettingsCommand { get; }
+    public IRelayCommand UpgradeDatabaseCommand { get; }
+    public IRelayCommand PreviewDatabaseUpgradeCommand { get; }
+
     /// <summary>
     /// Short product name shown as the macOS application-menu title and inside
     /// the About / Hide / Quit item labels. VS Code shows "Code", not its full
@@ -70,6 +75,12 @@ public partial class App : Application
         CloseActiveTabCommand = new RelayCommand(ExecuteCloseActiveTab, CanExecuteCloseActiveTab);
         AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbookCommand = new AsyncRelayCommand(ExecuteImportFormWorkbookAsync, CanExecuteAddFrameworkDefaults);
+        SolutionSettingsCommand = new AsyncRelayCommand(
+            () => GetMainViewModel()?.EditSolutionSettingsAsync() ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
+        UpgradeDatabaseCommand = new AsyncRelayCommand(
+            () => GetMainViewModel()?.UpgradeDatabaseAsync(dryRun: false) ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
+        PreviewDatabaseUpgradeCommand = new AsyncRelayCommand(
+            () => GetMainViewModel()?.UpgradeDatabaseAsync(dryRun: true) ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
     }
 
     public override void Initialize()
@@ -111,9 +122,13 @@ public partial class App : Application
             };
             desktop.MainWindow = mainWindow;
 
+            // A DefinePath on the command line (a project task opening its own definitions) opens straight into
+            // that solution; the Welcome tab would only cover it.
+            var startupPath = StartupArguments.GetSolutionPath(desktop.Args, Environment.CurrentDirectory);
+
             // VS Code-style Welcome tab on startup; opt-out via the checkbox
             // on the page itself, reachable any time through View → Welcome.
-            if (UserSettings.Load().ShowWelcomeOnStartup)
+            if (startupPath is null && UserSettings.Load().ShowWelcomeOnStartup)
                 vm.ShowWelcome();
 
             // Re-evaluate the File menu's Save / Validate availability when
@@ -139,6 +154,9 @@ public partial class App : Application
                     RebuildRecentMenu();
                     AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbookCommand.NotifyCanExecuteChanged();
+                    SolutionSettingsCommand.NotifyCanExecuteChanged();
+                    UpgradeDatabaseCommand.NotifyCanExecuteChanged();
+                    PreviewDatabaseUpgradeCommand.NotifyCanExecuteChanged();
                 }
             };
 
@@ -159,9 +177,12 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand,
-                    CloseActiveTabCommand);
+                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, SolutionSettingsCommand, UpgradeDatabaseCommand,
+                    PreviewDatabaseUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
             }
+
+            if (startupPath is not null)
+                mainWindow.Opened += (_, _) => vm.OpenSolutionFromCommandLine(startupPath);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -215,6 +236,10 @@ public partial class App : Application
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
+        fileMenu.Menu.Add(new NativeMenuItemSeparator());
+        fileMenu.Menu.Add(LocItem("MenuItem_UpgradeDatabase", UpgradeDatabaseCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_PreviewDatabaseUpgrade", PreviewDatabaseUpgradeCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_SolutionSettings", SolutionSettingsCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_Save", SaveActiveCommand,
             new KeyGesture(Key.S, KeyModifiers.Meta)));

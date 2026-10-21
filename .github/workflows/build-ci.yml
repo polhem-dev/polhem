@@ -331,6 +331,9 @@ jobs:
         # through the ProjectReference of tests/Polhem.Cli.UnitTests, and a project outside the solution is built
         # in its default Debug configuration. So this pack builds it in Release itself, and has no --no-build.
         dotnet pack tools/Polhem.Cli/Polhem.Cli.csproj --configuration Release --output ./nupkgs
+        # tools/DefineEditor is published as a dotnet tool as well, and reaches the solution build the same way
+        # (through tests/Polhem.DefineEditor.UnitTests), so it is packed here on the same terms.
+        dotnet pack tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Release --output ./nupkgs
 
     # Mobile AOT gate: `DynamicCodeSupport=false` is exactly what the .NET for iOS SDK sets for every
     # iOS / tvOS / MacCatalyst build, mapped to the RuntimeHostConfigurationOption of

@@ -155,7 +155,8 @@ internal static class SettingsXmlEditor
     /// <summary>
     /// Adds to a TableSchema document the <c>DbField</c> and <c>DbTableIndex</c> elements of
     /// <paramref name="generatedXml"/> it lacks, matched by field name and index name. Existing elements are not
-    /// changed, so lengths, captions, columns that are not on the form and hand-made indexes stay.
+    /// changed, so lengths, captions, columns that are not on the form and hand-made indexes stay. The one exception
+    /// is a <c>String</c> column without a length, which no database can build: it takes the form's length.
     /// </summary>
     /// <returns><see langword="true"/> when the document changed.</returns>
     public static bool MergeTableSchema(XDocument document, string generatedXml)
@@ -165,7 +166,25 @@ internal static class SettingsXmlEditor
         var generated = XDocument.Load(reader).Root!;
         var root = document.Root!;
         bool changed = AddMissing(root, generated, "Fields", "DbField", "FieldName");
+        changed |= FillMissingLengths(root, generated);
         changed |= AddMissing(root, generated, "Indexes", "DbTableIndex", "Name");
+        return changed;
+    }
+
+    private static bool FillMissingLengths(XElement root, XElement generated)
+    {
+        var lengths = (generated.Element("Fields")?.Elements("DbField") ?? [])
+            .Where(f => ((int?)f.Attribute("Length") ?? 0) > 0)
+            .ToDictionary(f => (string?)f.Attribute("FieldName") ?? string.Empty, f => (string)f.Attribute("Length")!,
+                StringComparer.OrdinalIgnoreCase);
+        bool changed = false;
+        foreach (var field in root.Element("Fields")?.Elements("DbField") ?? [])
+        {
+            if ((string?)field.Attribute("DbType") != "String" || ((int?)field.Attribute("Length") ?? 0) > 0) continue;
+            if (!lengths.TryGetValue((string?)field.Attribute("FieldName") ?? string.Empty, out var length)) continue;
+            field.SetAttributeValue("Length", length);
+            changed = true;
+        }
         return changed;
     }
 

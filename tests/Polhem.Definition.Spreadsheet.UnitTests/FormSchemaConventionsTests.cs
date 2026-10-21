@@ -15,8 +15,8 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         {
             var schema = new FormSchema("Quote", "Quote");
             var master = schema.Tables!.Add("Quote", "Quote");
-            master.Fields!.Add("sys_id", "Quote No", FieldDbType.String);
-            master.Fields.Add("quote_date", "Quote Date", FieldDbType.Date);
+            master.Fields!.Add(new FormField("sys_id", "Quote No", FieldDbType.String) { MaxLength = 20 });
+            master.Fields!.Add("quote_date", "Quote Date", FieldDbType.Date);
             master.Fields!.Add(new FormField("customer_rowid", "Customer", FieldDbType.String) { RelationProgId = "Customer" });
             var lines = schema.Tables.Add("QuoteLine", "Quote Lines");
             lines.Fields!.Add("qty", "Quantity", FieldDbType.Integer);

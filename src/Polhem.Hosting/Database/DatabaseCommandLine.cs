@@ -42,8 +42,9 @@ namespace Polhem.Hosting.Database
         private const string Usage =
             "Usage:\n" +
             "  db create                     Create the databases named in DatabaseSettings that do not exist.\n" +
-            "  db upgrade [--dry-run] [--allow-narrowing]\n" +
-            "                                Build or upgrade every table registered in DbCategorySettings.\n" +
+            "  db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
+            "                                Build or upgrade the tables registered in DbCategorySettings: every\n" +
+            "                                table, or only the ones named with --table.\n" +
             "  db seed-admin --company <id> [--company-name <name>] [--company-database <id>]\n" +
             "                [--user <id>] [--name <name>] [--currency <code>] [--no-deployment-admin]\n" +
             "                                Create the first administrator, a company and the access between them.\n" +
@@ -156,13 +157,16 @@ namespace Polhem.Hosting.Database
         {
             var dryRun = TakeFlag(ref options, "--dry-run");
             var allowNarrowing = TakeFlag(ref options, "--allow-narrowing");
+            var tableNames = new List<string>();
+            while (TakeValue(ref options, "--table") is { } tableName)
+                tableNames.Add(tableName);
             RejectUnknown(options);
 
             var upgradeOptions = allowNarrowing ? new UpgradeOptions { AllowColumnNarrowing = true } : null;
             // Each table is written as it completes, so a caller showing the output live (DefineEditor
             // runs this command as a child process) sees progress rather than one block at the end.
             var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(
-                upgradeOptions, dryRun, table => WriteTable(output, table));
+                upgradeOptions, dryRun, table => WriteTable(output, table), tableNames);
 
             foreach (var problem in report.Problems)
                 output.WriteLine($"  {problem}");

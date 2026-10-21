@@ -5,9 +5,9 @@
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" Visible="false" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" Visible="false" />
-        <FormField FieldName="sys_id" Caption="Employee Code" DbType="String" />
-        <FormField FieldName="sys_name" Caption="Employee Name" DbType="String" />
-        <FormField FieldName="title" Caption="Title" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Employee Code" DbType="String" MaxLength="20" />
+        <FormField FieldName="sys_name" Caption="Employee Name" DbType="String" MaxLength="50" />
+        <FormField FieldName="title" Caption="Title" DbType="String" MaxLength="40" />
         <FormField FieldName="hire_date" Caption="Hire Date" DbType="Date" />
         <FormField FieldName="dept_rowid" Caption="Department" DbType="Guid" RelationProgId="Department">
           <RelationFieldMappings>

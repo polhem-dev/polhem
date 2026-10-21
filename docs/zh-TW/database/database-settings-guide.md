@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: 2fd06f9d402b25ad7e9bbac1c35c7c32f5d4bb35 -->
+<!-- source: en/database/database-settings-guide.md blob: ff150787ca359919c5ab11f966a1c87eb8706ccb -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -555,7 +555,7 @@ dotnet run -- db seed-admin --company ACME
 | 指令 | 作用 |
 |------|------|
 | `db create` | 對每個 `DatabaseItem`，連線字串所指的資料庫不存在時建立它。 |
-| `db upgrade [--dry-run] [--allow-narrowing]` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。 |
+| `db upgrade [--dry-run] [--allow-narrowing] [--table <名稱>]...` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--table` 只處理指定的資料表，可重複；沒有任何分類登記的名稱會被列出，指令以失敗結束。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。 |
 | `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
 
 **各引擎的 `db create`。** 連線字串中的登入帳號需要建立資料庫的權限；沒有的話，請 DBA 建好資料庫後直接執行
@@ -578,7 +578,8 @@ dotnet run -- db seed-admin --company ACME
 
 結束碼：成功為 `0`，有項目失敗為 `1`，無法解讀命令列為 `2`。
 `db create` 與 `db upgrade` 不會等待輸入；`db upgrade` 每處理完一張表就輸出一行，最後一行是摘要，因此其他程式可以
-執行它們並即時顯示輸出。`db seed-admin` 只有在沒有設定 `POLHEM_ADMIN_PASSWORD` 時才會等待輸入。
+執行它們並即時顯示輸出。`db seed-admin` 只有在沒有設定 `POLHEM_ADMIN_PASSWORD` 時才會等待輸入。DefineEditor 匯入表單後就是這樣執行
+`db upgrade`（見[它的 README](../../../tools/DefineEditor/README.zh-TW.md#升級資料庫)）。
 
 ---
 
