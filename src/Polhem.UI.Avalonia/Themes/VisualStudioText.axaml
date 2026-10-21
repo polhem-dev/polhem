@@ -1,8 +1,10 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    x:Class="Polhem.UI.Avalonia.Themes.VisualStudioText"
+                    x:ClassModifier="internal">
 
-    <!-- Text weight and brightness modelled on VS Code. Semi's defaults are hard to read for long sessions in an
-         editor: body text is near-white in Dark and buttons, links and the selected tab are drawn at weight 600.
+    <!-- Text weight and brightness modelled on VS Code. Semi's defaults are hard to read for long sessions: body
+         text is near-white in Dark and buttons, links and the selected tab are drawn at weight 600.
          VS Code keeps body text dimmed, uses regular weight throughout, and saves full brightness for whatever has
          the focus (the selected tree node, the active tab, the hovered menu item).
 

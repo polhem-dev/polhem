@@ -17,7 +17,9 @@ FluentTheme and do not build your own color dictionaries. Entry point:
 `<StyleInclude Source="avares://Semi.Avalonia/Index.axaml"/>` (in v12 it is at the assembly root); light/dark goes
 through `RequestedThemeVariant`; semantic colors use Semi tokens (`SemiColorText0-3` / `SemiColorBackground0-4` /
 `SemiColorBorder` / `SemiColorWarning` / `SemiColorDanger`); the primary action button is `Classes="Primary"` +
-`Theme="{DynamicResource SolidButton}"`. Reference implementation: `tools/DefineEditor`.
+`Theme="{DynamicResource SolidButton}"`. Reference implementation: `tools/DefineEditor`. The colours on top of Semi
+(VS Code's Dark / Light (Visual Studio)) live once, in `Themes/VisualStudioTheme`; DefineEditor and the shell apply
+it, so change them there rather than in either head.
 
 ## Role in the UI architecture
 
