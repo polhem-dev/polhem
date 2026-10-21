@@ -23,7 +23,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - 由明細表產生的 TableSchema 會替 `sys_master_rowid` 建立索引（`fk_{0}_master`），與手寫的一致。
 - DefineEditor 以 dotnet tool `Polhem.DefineEditor` 發佈（`polhem-define [DefinePath]`），可由命令列指定要開啟的資料夾。
 - 新的 dotnet tool `Polhem.DbManager`（`polhem-db`）對定義資料夾執行 `db` 指令，支援所有資料庫，不需要專案。DefineEditor 以它測試 DatabaseSettings 的連線與升級資料庫；匯入後只升級該表單的資料表。
-- 新的範本套件 `Polhem.Templates` 以 `dotnet new polhem-avalonia --database <資料庫>` 建立 Polhem 應用程式：已引用套件與驅動的 Server、定義資料夾、DefineEditor 與 DbManager 工具，以及初始化資料庫、開啟 DefineEditor 的 VS Code 工作。
+- 新的範本套件 `Polhem.Templates` 以 `dotnet new polhem-avalonia --database <資料庫>` 建立 Polhem 應用程式：已引用套件與驅動的 Server、以 `Polhem.UI.Avalonia.Shell` 建立的 Avalonia 桌面用戶端、定義資料夾、DefineEditor 與 DbManager 工具，以及初始化資料庫、開啟 DefineEditor 的 VS Code 工作。
 - `db check` 逐一連線每個資料庫；`db upgrade --table <名稱>` 只建立或升級指定的資料表。
 - 新套件 `Polhem.UI.Avalonia.Shell` 是現成的 Avalonia 前端：連線、登入公司並開啟伺服器選單上的表單，各端共用；也能把 macOS 端包成 `.app`。
 - Excel 匯入遇到會建成資料表欄位、卻沒有最大長度的 String 欄位時會停止；匯出會帶上只記在 TableSchema 的長度。

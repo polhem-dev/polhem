@@ -3,6 +3,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/PolhemApp.Desktop/PolhemApp.Desktop.csproj" />
     <Project Path="src/PolhemApp.Server/PolhemApp.Server.csproj" />
   </Folder>
 </Solution>
