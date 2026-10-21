@@ -34,6 +34,8 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(Path.GetFullPath("nupkgs"), arguments[separator - 1]);
             Assert.Equal("--source", arguments[separator - 2]);
             Assert.Equal("https://feed.example.com/v3/index.json", DbManagerTool.FullSource("https://feed.example.com/v3/index.json"));
+            var local = Path.Combine(Path.GetTempPath(), "nupkgs");
+            Assert.Equal(local, DbManagerTool.FullSource(new Uri(local).AbsoluteUri));
         }
 
         [Fact]

@@ -29,6 +29,8 @@ namespace Polhem.DefineEditor.UnitTests
         [InlineData("  company.ft_customer: created")]
         [InlineData("db seed-admin reads the password from POLHEM_ADMIN_PASSWORD")]
         [InlineData("Password=;Server=db")]
+        [InlineData("https://host?q=a@b.com")]
+        [InlineData("see https://host#x@y and more")]
         public void Hide_NoPasswordValue_Unchanged(string text)
         {
             Assert.Equal(text, SecretMasker.Hide(text));

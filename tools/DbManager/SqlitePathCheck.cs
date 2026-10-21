@@ -84,6 +84,8 @@ internal static class SqlitePathCheck
                 if (path[query..].Contains("mode=memory", StringComparison.OrdinalIgnoreCase)) return null;
                 path = path[..query];
             }
+            // file:/C:/x.db is a Windows drive path written as a URI path.
+            if (path.Length > 3 && path[0] == '/' && char.IsAsciiLetter(path[1]) && path[2] == ':') path = path[1..];
         }
         if (path.Length == 0 || string.Equals(path, ":memory:", StringComparison.Ordinal)) return null;
         // IsPathFullyQualified rather than IsPathRooted: on Windows `C:x.db` and `\x.db` are rooted yet still depend on

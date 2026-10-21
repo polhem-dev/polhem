@@ -62,12 +62,21 @@ public partial class MainWindowViewModel
         }
 
         var extraSource = Environment.GetEnvironmentVariable(DbManagerTool.SourceVariable);
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(extraSource)) extraSource = DbManagerTool.FullSource(extraSource);
+        }
+        catch (ArgumentException ex)
+        {
+            StatusText = L("DbCommand_StatusStartFailed", ex.Message);
+            return;
+        }
         if (!DbManagerTool.IsCached()
             && !await ConfirmationDialog.ShowAsync(owner, L("DbCommand_DownloadTitle"),
                 L("DbCommand_DownloadMessage", DbManagerTool.PackageId, DbManagerTool.Version,
                     SecretMasker.Hide(string.IsNullOrWhiteSpace(extraSource)
                         ? DbManagerTool.NuGetSource
-                        : DbManagerTool.NuGetSource + ", " + DbManagerTool.FullSource(extraSource))),
+                        : DbManagerTool.NuGetSource + ", " + extraSource)),
                 confirmLabel: L("Action_Download")))
         {
             return;

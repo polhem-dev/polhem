@@ -55,7 +55,7 @@ internal static class DbManagerHost
         // An empty value means the framework's default variable (MasterKeyProvider).
         var variable = string.IsNullOrWhiteSpace(source.Value) ? DefaultMasterKeyVariable : source.Value;
         if (source.Type != MasterKeySourceType.Environment
-            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(variable)))
         {
             return false;
         }

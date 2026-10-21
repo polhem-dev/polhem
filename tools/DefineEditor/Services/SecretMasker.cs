@@ -20,7 +20,7 @@ public static class SecretMasker
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     private static readonly Regex s_urlUserInfo = new(
-        @"(?<scheme>\b[a-z][a-z0-9+.-]*://)(?<userinfo>[^/\s]+)@(?=[^@/\s]*(?:[/\s]|$))",
+        @"(?<scheme>\b[a-z][a-z0-9+.-]*://)(?<userinfo>[^/?#\s]+)@(?=[^@/?#\s]*(?:[/?#\s]|$))",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     /// <summary>
@@ -29,7 +29,19 @@ public static class SecretMasker
     /// </summary>
     public static string Hide(string text)
     {
-        var masked = s_passwordValue.Replace(text, m => m.Groups["value"].Length == 0 ? m.Value : m.Groups["key"].Value + Mask);
-        return s_urlUserInfo.Replace(masked, m => m.Groups["scheme"].Value + Mask + "@");
+        try
+        {
+            var masked = s_passwordValue.Replace(text, m => m.Groups["value"].Length == 0 ? m.Value : m.Groups["key"].Value + Mask);
+            return s_urlUserInfo.Replace(masked, m => m.Groups["scheme"].Value + Mask + "@");
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // A line too long to check within the timeout is not shown, rather than shown unchecked; the exception
+            // would otherwise end the process from the output event's thread.
+            return HiddenLine;
+        }
     }
+
+    /// <summary>What a line too long to check is replaced with.</summary>
+    public const string HiddenLine = "[line hidden: too long to check for passwords]";
 }

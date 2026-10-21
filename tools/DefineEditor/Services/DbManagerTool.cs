@@ -69,9 +69,11 @@ public static class DbManagerTool
     /// </summary>
     public static string WorkDirectory()
     {
-        var folder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create),
-            "Polhem.DefineEditor", "dbmanager");
+        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);
+        // An empty result (no profile, no HOME) would give a relative folder, resolved against wherever the editor runs.
+        if (!Path.IsPathFullyQualified(root))
+            throw new IOException("The local application data folder cannot be found, so the database manager has no folder to run in.");
+        var folder = Path.Combine(root, "Polhem.DefineEditor", "dbmanager");
         Directory.CreateDirectory(folder);
         return folder;
     }
@@ -80,7 +82,10 @@ public static class DbManagerTool
     /// A local source as a full path, since the tool runs in another folder; a URL as it is.
     /// </summary>
     public static string FullSource(string source)
-        => Uri.TryCreate(source, UriKind.Absolute, out var uri) && !uri.IsFile ? source : Path.GetFullPath(source);
+    {
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri)) return Path.GetFullPath(source);
+        return uri.IsFile ? uri.LocalPath : source;
+    }
 
     /// <summary>The <c>upgrade</c> arguments: a <c>--table</c> for each of <paramref name="tableNames"/>, and <c>--dry-run</c> for a preview.</summary>
     public static IReadOnlyList<string> UpgradeArguments(IEnumerable<string> tableNames, bool dryRun)
@@ -110,7 +115,7 @@ public static class DbManagerTool
         var configured = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         return string.IsNullOrWhiteSpace(configured)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages")
-            : configured;
+            : Path.GetFullPath(configured);
     }
 
     private static string GetVersion()
