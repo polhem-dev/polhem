@@ -42,8 +42,8 @@ UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServic
 | `IUserContext`（`Polhem.UI.Core`） | `ClientUserContext` | `ClientInfo.UserInfo`、`Capabilities`、`Company` |
 
 每個實作在每次呼叫時才讀 `ClientInfo`，因此這次註冊在連線、登入與進入公司各步驟之間都有效；
-endpoint 或使用者改變時不需要重新註冊。[`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.zh-TW.md)
-在 `Polhem.Northwind.UI/App.axaml.cs` 就是這樣接線的。
+endpoint 或使用者改變時不需要重新註冊。[`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.zh-TW.md)
+在 `ShellApplication` 就是這樣接線的。
 
 ## 主要型別
 

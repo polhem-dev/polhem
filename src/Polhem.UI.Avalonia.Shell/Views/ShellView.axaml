@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Polhem.UI.Avalonia.Shell.ViewModels"
+             xmlns:l="clr-namespace:Polhem.UI.Avalonia.Shell.Localization"
+             x:Class="Polhem.UI.Avalonia.Shell.Views.ShellView"
+             x:ClassModifier="internal"
+             x:DataType="vm:ShellViewModel">
+
+  <!-- Platform-neutral root: the desktop head wraps it in a ShellWindow, the single-view heads (browser, iOS,
+       Android) show it directly. ShellViewLocator resolves CurrentView to the step's view. -->
+  <Panel>
+    <ContentControl Content="{Binding CurrentView}" />
+
+    <StackPanel Orientation="Horizontal" Spacing="8" Margin="12"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                IsVisible="{Binding IsLanguageSwitchVisible}">
+      <TextBlock Text="{l:ShellText Shell_Language}" VerticalAlignment="Center"
+                 Foreground="{DynamicResource SemiColorText2}" />
+      <ComboBox x:Name="LanguageBox"
+                ItemsSource="{Binding Languages}"
+                SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                MinWidth="120" />
+    </StackPanel>
+  </Panel>
+
+</UserControl>

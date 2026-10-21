@@ -44,8 +44,7 @@ UIServices.Provider = new ServiceCollection().AddPolhemUIApiBridge().BuildServic
 
 Each implementation reads `ClientInfo` on every call, so the registration holds across the connection, sign-in and
 company steps; nothing has to be re-registered when the endpoint or the user changes.
-[`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md) wires it this way in
-`Polhem.Northwind.UI/App.axaml.cs`.
+[`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.md) wires it this way in `ShellApplication`.
 
 ## Key Types
 

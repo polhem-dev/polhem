@@ -52,6 +52,7 @@ graph BT
     UICore["Polhem.UI.Core"]
     UIAvalonia["Polhem.UI.Avalonia"]
     UIApiBridge["Polhem.UI.ApiBridge"]
+    UIShell["Polhem.UI.Avalonia.Shell"]
   end
 
   subgraph WebFrontend [Web Frontend]
@@ -85,6 +86,8 @@ graph BT
   UIAvalonia --> Definition
   UIApiBridge --> UICore
   UIApiBridge --> Client
+  UIShell --> UIAvalonia
+  UIShell --> UIApiBridge
   BlazorSrv --> Client
   BlazorSrv --> UICore
 ```
@@ -107,6 +110,7 @@ graph BT
 | Polhem.UI.Avalonia | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x |
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
+| Polhem.UI.Avalonia.Shell | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x, Semi.Avalonia 12.x, Semi.Avalonia.DataGrid 12.x, CommunityToolkit.Mvvm 8.x, Microsoft.Extensions.DependencyInjection 10.x |
 | Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core | *(none)* |
 
 > `Polhem.Api.Core`'s MessagePack reference is the only transport-format package in the framework, and
@@ -146,7 +150,8 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` globa
 - **Polhem.UI.Core** is the layer every front end shares, and it carries no transport: it references `Polhem.Api.Contracts` only. It holds the UI's service contracts (`IFormDefinitionSource`, `IUserContext`) and `UIServices`, through which controls created from markup resolve them; the form value rules every head shares (`FormValueBinding`, `FormDataGuard`, and the element capability resolver in `Polhem.UI.Core.Permissions`); `StorageDefinitionSource`, a definition source over `IDefineStorage` for an application without a backend; and simple response types for an application that implements `IFormApiConnector` itself. It contains no platform-specific UI code.
 - **Polhem.UI.ApiBridge** connects a single-user head (desktop, browser (WASM), iOS, Android) to a Polhem backend. It references `Polhem.UI.Core` and `Polhem.Api.Client`, and is itself UI-framework-agnostic. It holds `ClientInfo` (the head's connection state) and the endpoint and API key storage (`IEndpointStorage`, `IApiKeyStorage`, `FileEndpointStorage`), and registers the API-backed implementations of the `Polhem.UI.Core` services with `AddPolhemUIApiBridge()`. The dependency points from the bridge to both sides: `Polhem.Api.Client` never references the UI.
 - **Polhem.UI.Avalonia** is the Avalonia control library for the desktop, browser (WASM), iOS and Android heads; what each head needs is in [Platform Support](../getting-started/platform-support.md). Ships FormSchema-driven controls (`FormView` for a single record, `ListView` for the list, `GridControl` for grids, plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`) over a single `net10.0` TFM. It references `Polhem.UI.Core`, `Polhem.Definition` and `Polhem.Expressions`, not `Polhem.Api.Client`: the controls take an `IFormApiConnector`, so they work without a Polhem backend when the application supplies its own connector. Its `Avalonia` and `Avalonia.Controls.DataGrid` references are lower bounds; a host may bring a newer `Avalonia 12.x`. See [adr-020](../../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md) for the DataGrid binding strategy and [adr-021](../../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md) for the editing strategy.
+- **Polhem.UI.Avalonia.Shell** is a ready-made front end on top of the two packages above: connect, sign in to a company, and open the forms of the server's menu in tabs. It sits at head level, beside an application's own UI project, because it needs `Polhem.UI.ApiBridge`, which `Polhem.UI.Avalonia` must not reference. It also applies the Semi theme, so the theme becomes a dependency only of an application that takes the shell. An application derives from `ShellApplication`; the package README has the details.
 - **`Polhem.UI.*` family criterion**: every front end references `Polhem.UI.Core`, so referencing it no longer decides the family. What decides it is whether the package builds on the single-user model, where one process serves one signed-in user and the services come from the process-wide `UIServices.Provider` (and, with a backend, from `Polhem.UI.ApiBridge`).
-  - Single-user → `Polhem.UI.*` (current: `Polhem.UI.Core`, `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`; future: `Polhem.UI.WinForms`, `Polhem.UI.Wpf`, etc.)
+  - Single-user → `Polhem.UI.*` (current: `Polhem.UI.Core`, `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`, `Polhem.UI.Avalonia.Shell`; future: `Polhem.UI.WinForms`, `Polhem.UI.Wpf`, etc.)
   - Serves several users from one process, with its own state management → independent family prefix (e.g. `Polhem.Web.Blazor.*`). The Blazor head used to stay away from `Polhem.UI.Core` because that package held the process-wide `ClientInfo`; that state now lives in `Polhem.UI.ApiBridge`, so the Blazor head references `Polhem.UI.Core` for the shared value rules but must not use `UIServices` or reference `Polhem.UI.ApiBridge`. `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when it does.
 - The **Web frontend layer** (`Polhem.Web.Blazor.Server`) is a Razor Class Library (RCL). It depends on `Polhem.Api.Client`, and on `Polhem.UI.Core` for the value rules it shares with the native heads; the host application chooses the transport in `AddPolhemBlazor`: `UseRemoteProvider` (each circuit's `PolhemApiClient` calls over HTTP) or `UseLocalProvider` (in process, for trusted users only, which also needs `AddPolhemFramework` on the same service collection).

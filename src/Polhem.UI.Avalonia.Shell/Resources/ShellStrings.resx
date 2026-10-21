@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Shell_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Connection_Endpoint" xml:space="preserve">
+    <value>Endpoint</value>
+  </data>
+  <data name="Connection_ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="Connection_Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="Connection_Hint" xml:space="preserve">
+    <value>Point this app at the JSON-RPC endpoint of a Polhem server and connect.</value>
+  </data>
+  <data name="Status_Idle" xml:space="preserve">
+    <value>Make sure the server is running before connecting.</value>
+  </data>
+  <data name="Status_EndpointEmpty" xml:space="preserve">
+    <value>Enter an endpoint.</value>
+  </data>
+  <data name="Status_Pinging" xml:space="preserve">
+    <value>Connecting to {0} …</value>
+  </data>
+  <data name="Status_Connected" xml:space="preserve">
+    <value>Connected to {0}.</value>
+  </data>
+  <data name="Status_ConnectFailed" xml:space="preserve">
+    <value>Connection failed: {0}</value>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Login_CompanyId" xml:space="preserve">
+    <value>Company ID</value>
+  </data>
+  <data name="Login_UserId" xml:space="preserve">
+    <value>User ID</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login_SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Status_Authenticating" xml:space="preserve">
+    <value>Signing in …</value>
+  </data>
+  <data name="Status_CompanyEmpty" xml:space="preserve">
+    <value>Enter a company ID.</value>
+  </data>
+  <data name="Status_Welcome" xml:space="preserve">
+    <value>Welcome, {0}.</value>
+  </data>
+  <data name="Status_LoginFailed" xml:space="preserve">
+    <value>Sign-in failed: {0}</value>
+  </data>
+  <data name="Forms_ToggleMenu" xml:space="preserve">
+    <value>Toggle menu</value>
+  </data>
+  <data name="Forms_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Forms_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Forms_MenuLoadFailed" xml:space="preserve">
+    <value>(menu load failed: {0})</value>
+  </data>
+</root>

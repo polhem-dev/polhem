@@ -1,13 +1,14 @@
 using System.Runtime.InteropServices.JavaScript;
 using Polhem.UI.ApiBridge;
+using Polhem.UI.Avalonia.Shell.Preferences;
 
 namespace Polhem.Northwind.Browser.Storage;
 
 /// <summary>
-/// <see cref="IEndpointStorage"/> / <see cref="IApiKeyStorage"/> implementation backed by the
-/// browser's <c>window.localStorage</c>. The browser (WASM) runtime has no persistent file system,
-/// so the default file-backed <see cref="FileEndpointStorage"/> would lose its writes on reload;
-/// this persists the endpoint and the API key under per-app localStorage keys instead.
+/// <see cref="IEndpointStorage"/> / <see cref="IApiKeyStorage"/> / <see cref="IShellPreferenceStorage"/>
+/// implementation backed by the browser's <c>window.localStorage</c>. The browser (WASM) runtime has no persistent
+/// file system, so the default file-backed storage would lose its writes on reload; this persists the endpoint, the
+/// API key and the shell's preferences under per-app localStorage keys instead.
 /// </summary>
 /// <remarks>
 /// Hosts opt in by assigning
@@ -20,12 +21,14 @@ namespace Polhem.Northwind.Browser.Storage;
 /// input does not hit the JS boundary on every keystroke.
 /// </para>
 /// </remarks>
-public sealed class BrowserLocalStorageEndpointStorage : IEndpointStorage, IApiKeyStorage
+public sealed class BrowserLocalStorageEndpointStorage : IEndpointStorage, IApiKeyStorage, IShellPreferenceStorage
 {
     private const string KeyPrefix = "Polhem.Endpoint.";
     private const string ApiKeyPrefix = "Polhem.ApiKey.";
+    private const string PreferencePrefix = "Polhem.Preference.";
     private readonly string _key;
     private readonly string _apiKeyKey;
+    private readonly string _appName;
     private string? _cachedEndpoint;
     private string? _cachedApiKey;
 
@@ -40,6 +43,7 @@ public sealed class BrowserLocalStorageEndpointStorage : IEndpointStorage, IApiK
         ArgumentException.ThrowIfNullOrWhiteSpace(appName);
         _key = KeyPrefix + appName;
         _apiKeyKey = ApiKeyPrefix + appName;
+        _appName = appName;
     }
 
     /// <inheritdoc/>
@@ -81,6 +85,20 @@ public sealed class BrowserLocalStorageEndpointStorage : IEndpointStorage, IApiK
         _cachedApiKey = apiKey;
         LocalStorageInterop.SetItem(_apiKeyKey, apiKey);
     }
+
+    /// <inheritdoc/>
+    public string Load(string key)
+        => LocalStorageInterop.GetItem(PreferencePrefix + _appName + "." + key) ?? string.Empty;
+
+    /// <inheritdoc/>
+    public void Save(string key, string value)
+    {
+        var storageKey = PreferencePrefix + _appName + "." + key;
+        if (string.IsNullOrEmpty(value))
+            LocalStorageInterop.RemoveItem(storageKey);
+        else
+            LocalStorageInterop.SetItem(storageKey, value);
+    }
 }
 
 /// <summary>
@@ -94,4 +112,7 @@ internal static partial class LocalStorageInterop
 
     [JSImport("globalThis.localStorage.setItem")]
     internal static partial void SetItem(string key, string value);
+
+    [JSImport("globalThis.localStorage.removeItem")]
+    internal static partial void RemoveItem(string key);
 }

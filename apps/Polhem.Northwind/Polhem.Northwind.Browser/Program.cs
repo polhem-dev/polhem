@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Browser;
-using Polhem.Api.Client;
 using Polhem.Northwind.Browser.Storage;
 using Polhem.Northwind.UI;
 using Polhem.UI.ApiBridge;
@@ -9,8 +8,8 @@ using Polhem.UI.ApiBridge;
 internal sealed partial class Program
 {
     /// <summary>
-    /// Browser (WASM) head entry point. Wires the Polhem client-side singletons before any
-    /// Avalonia control runs, then starts the Avalonia browser app against the
+    /// Browser (WASM) head entry point. Replaces the client's storage before any Avalonia control
+    /// runs, then starts the Avalonia browser app against the
     /// <c>&lt;div id="out"&gt;</c> mount point in <c>wwwroot/index.html</c>.
     /// </summary>
     private static Task Main(string[] args)
@@ -30,22 +29,25 @@ internal sealed partial class Program
         // the gap instead: use the demo account in this head.
         CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
-        // Same client contract as the desktop head (Remote connector to the JSON-RPC
-        // backend), but the browser has no persistent file system, so the endpoint and the
-        // API key go through localStorage instead of the default `FileEndpointStorage`.
-        ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
+        // The browser has no persistent file system, so the endpoint, the API key and the shell's preferences go
+        // through localStorage instead of the default files. The language switch stays off: the bundled font has no
+        // CJK glyphs (see above).
         var storage = new BrowserLocalStorageEndpointStorage("Polhem.Northwind");
         ClientInfo.EndpointStorage = storage;
         ClientInfo.ApiKeyStorage = storage;
-        // The shipped key only seeds empty storage on first run; after that the stored value wins,
-        // so swapping keys is a settings change rather than a rebuild.
-        ClientInfo.ApplyApiKey(AppDefaults.ApiKey);
 
-        return BuildAvaloniaApp()
+        return AppBuilder.Configure(() => new NorthwindApp
+            {
+                ConfigureOptions = options =>
+                {
+                    options.PreferenceStorage = storage;
+                    options.AllowLanguageSwitch = false;
+                },
+            })
             .WithInterFont()
             .StartBrowserAppAsync("out");
     }
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>();
+        => AppBuilder.Configure<NorthwindApp>();
 }

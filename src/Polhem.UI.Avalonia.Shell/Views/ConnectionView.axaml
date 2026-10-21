@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Polhem.UI.Avalonia.Shell.ViewModels"
+             xmlns:l="clr-namespace:Polhem.UI.Avalonia.Shell.Localization"
+             x:Class="Polhem.UI.Avalonia.Shell.Views.ConnectionView"
+             x:ClassModifier="internal"
+             x:DataType="vm:ConnectionViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.status">
+      <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
+    </Style>
+    <Style Selector="TextBlock.status.error">
+      <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <Border Width="420" Margin="24,56,24,24"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource SemiColorBackground0}"
+            BorderBrush="{DynamicResource SemiColorBorder}"
+            BorderThickness="1" CornerRadius="8" Padding="28">
+      <StackPanel Spacing="14">
+
+        <TextBlock Text="{Binding AppTitle}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" />
+
+        <TextBlock Text="{Binding Description}" TextWrapping="Wrap"
+                   Foreground="{DynamicResource SemiColorText2}" />
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{l:ShellText Connection_Endpoint}" Foreground="{DynamicResource SemiColorText1}" />
+          <TextBox x:Name="EndpointBox"
+                   Text="{Binding Endpoint, Mode=TwoWay}"
+                   PlaceholderText="http://host:port/api"
+                   IsEnabled="{Binding IsNotBusy}" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{l:ShellText Connection_ApiKey}" Foreground="{DynamicResource SemiColorText1}" />
+          <TextBox x:Name="ApiKeyBox"
+                   Text="{Binding ApiKey, Mode=TwoWay}"
+                   PlaceholderText="app-id.secret"
+                   IsEnabled="{Binding IsNotBusy}" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button x:Name="ConnectButton"
+                  Content="{l:ShellText Connection_Connect}"
+                  Classes="Primary"
+                  IsDefault="True"
+                  Command="{Binding ConnectCommand}"
+                  IsEnabled="{Binding IsNotBusy}" />
+          <ProgressBar IsIndeterminate="True" Width="120" VerticalAlignment="Center"
+                       IsVisible="{Binding IsBusy}" />
+        </StackPanel>
+
+        <TextBlock Classes="status" Classes.error="{Binding IsError}"
+                   Text="{Binding Status}" TextWrapping="Wrap" />
+
+      </StackPanel>
+    </Border>
+  </ScrollViewer>
+
+</UserControl>

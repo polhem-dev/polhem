@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Polhem.UI.Avalonia.Shell.ViewModels"
+             xmlns:l="clr-namespace:Polhem.UI.Avalonia.Shell.Localization"
+             x:Class="Polhem.UI.Avalonia.Shell.Views.LoginView"
+             x:ClassModifier="internal"
+             x:DataType="vm:LoginViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.status">
+      <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
+    </Style>
+    <Style Selector="TextBlock.status.error">
+      <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <Border Width="380" Margin="24,56,24,24"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource SemiColorBackground0}"
+            BorderBrush="{DynamicResource SemiColorBorder}"
+            BorderThickness="1" CornerRadius="8" Padding="28">
+      <StackPanel Spacing="14">
+
+        <TextBlock Text="{l:ShellText Login_Title}" FontSize="22" FontWeight="Bold" />
+        <TextBlock Text="{Binding SignInHint}" IsVisible="{Binding HasSignInHint}" TextWrapping="Wrap"
+                   Foreground="{DynamicResource SemiColorText2}" />
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{l:ShellText Login_CompanyId}" Foreground="{DynamicResource SemiColorText1}" />
+          <TextBox x:Name="CompanyIdBox"
+                   Text="{Binding CompanyId, Mode=TwoWay}"
+                   IsEnabled="{Binding IsNotBusy}" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{l:ShellText Login_UserId}" Foreground="{DynamicResource SemiColorText1}" />
+          <TextBox x:Name="UserIdBox"
+                   Text="{Binding UserId, Mode=TwoWay}"
+                   IsEnabled="{Binding IsNotBusy}" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{l:ShellText Login_Password}" Foreground="{DynamicResource SemiColorText1}" />
+          <TextBox x:Name="PasswordBox"
+                   Text="{Binding Password, Mode=TwoWay}"
+                   PasswordChar="●"
+                   IsEnabled="{Binding IsNotBusy}" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button x:Name="SignInButton"
+                  Content="{l:ShellText Login_SignIn}"
+                  Classes="Primary"
+                  IsDefault="True"
+                  Command="{Binding LoginCommand}"
+                  IsEnabled="{Binding IsNotBusy}" />
+          <ProgressBar IsIndeterminate="True" Width="120" VerticalAlignment="Center"
+                       IsVisible="{Binding IsBusy}" />
+        </StackPanel>
+
+        <TextBlock Classes="status" Classes.error="{Binding IsError}"
+                   Text="{Binding Status}" TextWrapping="Wrap" />
+
+      </StackPanel>
+    </Border>
+  </ScrollViewer>
+
+</UserControl>
