@@ -66,6 +66,14 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             => CurrentView = new LoginViewModel(_options, _preferences, NavigateToForms);
 
         private void NavigateToForms()
-            => CurrentView = new FormsViewModel(_options, NavigateToLogin);
+            => CurrentView = new FormsViewModel(_options, NavigateToLoginAfterSignOut);
+
+        private void NavigateToLoginAfterSignOut()
+        {
+            // Signing in made the account's culture the shell's language. Back on the sign-in screen the switch
+            // decides again, so the screen shows the language the switch names.
+            ShellLocalizer.Current.Culture = System.Globalization.CultureInfo.GetCultureInfo(SelectedLanguage.Code);
+            NavigateToLogin();
+        }
     }
 }

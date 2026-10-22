@@ -87,7 +87,8 @@ namespace Polhem.UI.Avalonia.Shell
             var remembered = options.AllowLanguageSwitch ? preferences.Load(ShellPreferenceKeys.Language) : string.Empty;
             ShellLocalizer.Current.Culture = CultureInfo.GetCultureInfo(
                 ShellLanguage.ResolveInitial(
-                    ShellLanguage.FindArgument(Environment.GetCommandLineArgs()), remembered, CultureInfo.CurrentUICulture));
+                    ShellLanguage.FindArgument(Environment.GetCommandLineArgs()), remembered, options.DefaultLanguage,
+                    CultureInfo.CurrentUICulture));
 
             var viewModel = new ShellViewModel(options, preferences);
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

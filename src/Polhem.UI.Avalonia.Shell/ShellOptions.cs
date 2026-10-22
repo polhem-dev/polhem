@@ -79,6 +79,17 @@ namespace Polhem.UI.Avalonia.Shell
         /// </remarks>
         public bool AllowLanguageSwitch { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the interface language before sign-in when the viewer has not chosen one, as a culture name
+        /// such as <c>en-US</c> or <c>zh-TW</c>. Empty follows the operating system.
+        /// </summary>
+        /// <remarks>
+        /// A language named for the run (<c>Language=</c> on the command line) and the viewer's own choice in the
+        /// language switch both win over it. A culture the shell has no text for is ignored. After sign-in the
+        /// account's culture decides, whatever this says.
+        /// </remarks>
+        public string DefaultLanguage { get; set; } = string.Empty;
+
         internal string ResolveStorageName()
             => string.IsNullOrWhiteSpace(StorageName) ? AppTitle : StorageName;
     }

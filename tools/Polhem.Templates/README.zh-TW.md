@@ -36,7 +36,7 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 | `--database` | `SqlServer` | `SqlServer`、`PostgreSql`、`MySql`、`Oracle` 或 `Sqlite`：決定驅動套件、驅動註冊與 `DatabaseSettings.xml` 的連線 |
 | `--company` | `DEMO` | 第一家公司的代號，由 **Polhem: Initialize database** 工作建立 |
 | `--db-password` | 空白 | 寫入 `DatabaseSettings.xml` 的資料庫密碼；空白時在 DefineEditor 填入 |
-| `--default-language` | `en-US` | `en-US` 或 `zh-TW`：沒有個人語言設定的使用者所用的預設語言 |
+| `--default-language` | `en-US` | `en-US` 或 `zh-TW`：沒有個人語言設定的使用者所用的預設語言，也是用戶端連線與登入畫面的預設語言（使用者切換後以其選擇為準） |
 | `--browser` | 關 | 加入瀏覽器用戶端。建置需要 `wasm-tools` workload |
 | `--ios` | 關 | 加入 iOS 用戶端。建置需要 macOS、`ios` workload 與該 workload 指定的 Xcode |
 | `--android` | 關 | 加入 Android 用戶端。建置需要 `android` workload 與 Android SDK |
