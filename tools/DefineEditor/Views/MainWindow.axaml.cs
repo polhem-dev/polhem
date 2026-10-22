@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
+using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.DefineEditor.Views;
 
@@ -17,6 +18,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ExplorerTree.KeepSelectionSingle();
+        ProgramsTree.KeepSelectionSingle();
+        DatabasesTree.KeepSelectionSingle();
     }
 
     protected override void OnDataContextChanged(EventArgs e)
