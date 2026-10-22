@@ -141,6 +141,11 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
         var tasks = File.ReadAllText(Path.Combine(output, ".vscode", "tasks.json"));
         Assert.Contains("Polhem: Run iOS simulator", tasks, StringComparison.Ordinal);
         Assert.Contains("Polhem: Run Android emulator", tasks, StringComparison.Ordinal);
+        foreach (var task in new[] { "polhem-run-server", "polhem-run-browser", "polhem-run-ios", "polhem-run-android",
+            "polhem-run-desktop" })
+        {
+            Assert.Contains($"\"{task}\"", tasks, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

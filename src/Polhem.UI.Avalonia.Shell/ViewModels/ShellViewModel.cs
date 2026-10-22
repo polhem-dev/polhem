@@ -5,7 +5,8 @@ using Polhem.UI.Avalonia.Shell.Preferences;
 namespace Polhem.UI.Avalonia.Shell.ViewModels
 {
     /// <summary>
-    /// The root view model: drives the connection → sign-in → forms flow by swapping <see cref="CurrentView"/>, and
+    /// The root view model: drives the connection → sign-in → forms flow (and back to sign-in on sign-out) by swapping
+    /// <see cref="CurrentView"/>, and
     /// owns the interface language before sign-in.
     /// </summary>
     /// <remarks>
@@ -65,6 +66,6 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             => CurrentView = new LoginViewModel(_options, _preferences, NavigateToForms);
 
         private void NavigateToForms()
-            => CurrentView = new FormsViewModel(_options);
+            => CurrentView = new FormsViewModel(_options, NavigateToLogin);
     }
 }

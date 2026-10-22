@@ -81,4 +81,7 @@
   <data name="Forms_MenuLoadFailed" xml:space="preserve">
     <value>(menu load failed: {0})</value>
   </data>
+  <data name="Forms_SignOut" xml:space="preserve">
+    <value>Sign out</value>
+  </data>
 </root>
