@@ -134,6 +134,148 @@
             "problemMatcher": [],
             "hide": true
         },
+        {
+            "label": "Polhem: Run all",
+            // Builds the solution once, then starts the server and every client side by side. The clients are not
+            // rebuilt as they start: parallel builds of the shared UI project would collide over its obj folder.
+            // A definition changed while they run shows after signing out and in again; the server picks up the
+            // changed files by itself.
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build",
+                "polhem-run-parallel"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "polhem-run-parallel",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "polhem-run-server",
+//#if (browser)
+                "polhem-run-browser",
+//#endif
+//#if (ios)
+                "polhem-run-ios",
+//#endif
+//#if (android)
+                "polhem-run-android",
+//#endif
+                "polhem-run-desktop"
+            ],
+            "problemMatcher": [],
+            "hide": true
+        },
+        {
+            "label": "polhem-run-server",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Server/PolhemApp.Server.csproj",
+                "--no-build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+        {
+            "label": "polhem-run-desktop",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Desktop/PolhemApp.Desktop.csproj",
+                "--no-build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+//#if (browser)
+        {
+            "label": "polhem-run-browser",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Browser/PolhemApp.Browser.csproj",
+                "--no-build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+//#endif
+//#if (ios)
+        {
+            "label": "polhem-run-ios",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.iOS/PolhemApp.iOS.csproj",
+                "-t:Run",
+                "-f",
+                "net10.0-ios",
+                "-p:BuildProjectReferences=false"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+//#endif
+//#if (android)
+        {
+            "label": "polhem-run-android",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.Android/PolhemApp.Android.csproj",
+                "-t:Run",
+                "-f",
+                "net10.0-android",
+                "-p:BuildProjectReferences=false"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+//#endif
 //#if (ios)
         {
             "label": "Polhem: Run iOS simulator",

@@ -26,7 +26,7 @@ server references the Polhem packages and the driver of one database:
 | `Define/` | `SystemSettings.xml` set up for development and a `DatabaseSettings.xml` with the common, company and log databases. The server adds the framework's other default definitions on its first run |
 | `Excel/` | The place for form workbooks, imported into `Define/` with DefineEditor |
 | `.config/dotnet-tools.json` | DefineEditor (`polhem-define`) and DbManager (`polhem-db`), at the version of the Polhem packages |
-| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, the F5 launch **Server + Desktop**, and with the other clients **Server + Browser**, **Polhem: Run iOS simulator** and **Polhem: Run Android emulator** |
+| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, the F5 launch **Server + Desktop**, and with the other clients **Server + Browser**, **Polhem: Run iOS simulator**, **Polhem: Run Android emulator** and **Polhem: Run all** (the server and every client at once) |
 
 The generated `README.md` walks through the first run: set the database password, initialize the database, import
 forms from Excel, press F5.

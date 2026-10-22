@@ -75,6 +75,10 @@ Start the server first (F5, or the **Server** launch configuration). Every clien
   machine. `AndroidManifest.xml` allows plain HTTP for development; remove `usesCleartextTraffic` before shipping.
 <!--#endif -->
 
+To start the server and every client at once, run the **Polhem: Run all** task (start the Android emulator first).
+It builds the solution, then runs each one in its own terminal. A definition changed while they run shows after
+**Sign out** and signing in again; nothing needs restarting, because the server picks up the changed files itself.
+
 <!--#endif -->
 ## Packaging the desktop client for macOS
 

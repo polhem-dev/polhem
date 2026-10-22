@@ -81,4 +81,7 @@
   <data name="Forms_MenuLoadFailed" xml:space="preserve">
     <value>（選單載入失敗：{0}）</value>
   </data>
+  <data name="Forms_SignOut" xml:space="preserve">
+    <value>登出</value>
+  </data>
 </root>

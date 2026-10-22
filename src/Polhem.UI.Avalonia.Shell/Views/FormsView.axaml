@@ -26,14 +26,14 @@
 
   <DockPanel>
 
-    <!-- Top bar: hamburger toggles the navigation pane; brand sits next to it; the
-         right-aligned switch flips the app-wide Light / Dark theme variant. -->
+    <!-- Top bar: hamburger toggles the navigation pane; brand sits next to it; on the right the switch flips the
+         app-wide Light / Dark theme variant, and Sign out returns to the sign-in screen. -->
     <Border DockPanel.Dock="Top"
             Background="{DynamicResource SemiColorBackground1}"
             BorderBrush="{DynamicResource SemiColorBorder}"
             BorderThickness="0,0,0,1"
             Padding="8,6">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto" VerticalAlignment="Center">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" VerticalAlignment="Center">
         <Button Grid.Column="0"
                 Command="{Binding TogglePaneCommand}"
                 Classes="Tertiary"
@@ -48,6 +48,12 @@
                       IsChecked="False"
                       VerticalAlignment="Center"
                       IsCheckedChanged="OnThemeToggled" />
+        <Button Grid.Column="4"
+                Command="{Binding SignOutCommand}"
+                Classes="Tertiary"
+                Padding="8,4"
+                Margin="12,0,0,0"
+                Content="{l:ShellText Forms_SignOut}" />
       </Grid>
     </Border>
 

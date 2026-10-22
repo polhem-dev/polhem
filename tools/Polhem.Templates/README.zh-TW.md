@@ -25,7 +25,7 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 | `Define/` | 開發用的 `SystemSettings.xml`，以及含 common、company、log 三個資料庫的 `DatabaseSettings.xml`。框架的其他預設定義由 Server 第一次執行時補上 |
 | `Excel/` | 放表單活頁簿的位置，以 DefineEditor 匯入 `Define/` |
 | `.config/dotnet-tools.json` | DefineEditor（`polhem-define`）與 DbManager（`polhem-db`），版號與 Polhem 套件相同 |
-| `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以 F5 同時啟動 **Server + Desktop**；有其他用戶端時另有 **Server + Browser**、**Polhem: Run iOS simulator**、**Polhem: Run Android emulator** |
+| `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以 F5 同時啟動 **Server + Desktop**；有其他用戶端時另有 **Server + Browser**、**Polhem: Run iOS simulator**、**Polhem: Run Android emulator**，以及一次啟動伺服器與所有用戶端的 **Polhem: Run all** |
 
 產生的 `README.md` 說明第一次執行的步驟：設定資料庫密碼、初始化資料庫、從 Excel 匯入表單、按 F5。
 

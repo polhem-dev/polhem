@@ -25,7 +25,7 @@
 |------|--------|
 | Connect | Endpoint and API key, pinged before moving on. Both are remembered. |
 | Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. |
-| Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. |
+| Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. **Sign out** returns to sign-in; signing in again fetches every definition anew, so a definition changed while the application runs shows without restarting it. |
 
 The interface language before sign-in follows the operating system (English or Traditional Chinese; anything else
 falls back to English) and can be switched on the connection and sign-in screens; the choice is remembered. A
