@@ -15,6 +15,17 @@ Polhem Framework is an **N-Tier + Clean Architecture + MVVM** hybrid designed to
 
 All packages target **`net10.0`**.
 
+## 🎬 Watch it in action
+
+[![Polhem in 3 minutes](https://img.youtube.com/vi/8siOaMTqPV8/hqdefault.jpg)](https://youtu.be/8siOaMTqPV8)
+
+From an empty project to a running app: create a project from the `polhem-avalonia` template, describe the forms in Excel, import them in DefineEditor, and run. Change the workbook, import it again, and the app follows.
+
+- [Polhem in 3 minutes](https://youtu.be/8siOaMTqPV8) (highlights)
+- [Full walkthrough](https://youtu.be/YvNxWuglovk) (about 10 minutes)
+
+Recorded with Polhem 1.8.0; English narration with English and Traditional Chinese subtitles.
+
 ## ✨ Features
 
 - **Definition-Driven Architecture**: `FormSchema` serves as the single source of truth, automatically deriving UI layout (`FormLayout`), database schema (`TableSchema`), and validation rules — define once, sync everywhere.

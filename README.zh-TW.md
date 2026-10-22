@@ -15,6 +15,17 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 所有套件目標框架為 **`net10.0`**。
 
+## 🎬 影片示範
+
+[![Polhem in 3 minutes](https://img.youtube.com/vi/8siOaMTqPV8/hqdefault.jpg)](https://youtu.be/8siOaMTqPV8)
+
+從空專案到可執行的系統：用 `polhem-avalonia` 範本建立專案、在 Excel 描述表單、用 DefineEditor 匯入後執行。修改活頁簿再匯入一次，系統就跟著改變。
+
+- [3 分鐘精華版](https://youtu.be/8siOaMTqPV8)
+- [完整版](https://youtu.be/YvNxWuglovk)（約 10 分鐘）
+
+以 Polhem 1.8.0 錄製；英文旁白，附英文與繁體中文字幕。
+
 ## ✨ 特色
 
 - **定義導向架構（Definition-Driven Architecture）**：以 `FormSchema` 作為系統唯一定義來源，自動推導 UI 配置（`FormLayout`）、資料表結構（`TableSchema`）與驗證規則，定義一處即全層同步。
