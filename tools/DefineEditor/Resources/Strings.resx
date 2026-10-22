@@ -327,4 +327,57 @@ Save anyway?</value></data>
   <data name="DatabaseSettings_TestConnectionsTooltip" xml:space="preserve"><value>Open a connection to each database, using the saved settings</value></data>
   <data name="DbCommand_BusyTitle" xml:space="preserve"><value>A Database Command Is Running</value></data>
   <data name="DbCommand_BusyMessage" xml:space="preserve"><value>Wait for it to finish, or cancel it, then run the new one.</value></data>
+  <data name="MenuItem_ImportFormWorkbooks" xml:space="preserve"><value>Import Forms from Excel (Batch)...</value></data>
+  <data name="Dialog_PickFormWorkbooks" xml:space="preserve"><value>Choose form workbooks</value></data>
+  <data name="ImportBatch_Title" xml:space="preserve"><value>Import Forms from Excel</value></data>
+  <data name="ImportBatch_StepFiles" xml:space="preserve"><value>Step 1 of 4: Choose the workbooks</value></data>
+  <data name="ImportBatch_StepOptions" xml:space="preserve"><value>Step 2 of 4: Import options</value></data>
+  <data name="ImportBatch_StepConfirm" xml:space="preserve"><value>Step 3 of 4: Confirm</value></data>
+  <data name="ImportBatch_StepRun" xml:space="preserve"><value>Step 4 of 4: Import</value></data>
+  <data name="ImportBatch_FilesHint" xml:space="preserve"><value>The workbooks are imported one at a time, in this order. A form that relates to another form goes after it. The import stops at the first workbook that has an error.</value></data>
+  <data name="ImportBatch_AddFiles" xml:space="preserve"><value>Add Files...</value></data>
+  <data name="ImportBatch_MoveUp" xml:space="preserve"><value>Move Up</value></data>
+  <data name="ImportBatch_MoveDown" xml:space="preserve"><value>Move Down</value></data>
+  <data name="ImportBatch_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="ImportBatch_TableSchemaHeader" xml:space="preserve"><value>When a table already has a TableSchema</value></data>
+  <data name="ImportBatch_FormLayoutHeader" xml:space="preserve"><value>When a form already has a FormLayout</value></data>
+  <data name="ImportBatch_DatabaseHeader" xml:space="preserve"><value>Database</value></data>
+  <data name="ImportBatch_UpgradeDatabase" xml:space="preserve"><value>Upgrade the database after each import (only the tables of that form)</value></data>
+  <data name="ImportBatch_ConfirmMessage" xml:space="preserve"><value>{0} workbook(s) will be imported into {1}, in this order:
+
+{2}
+
+Existing TableSchema: {3}
+Existing FormLayout: {4}
+Database: {5}
+
+The import stops at the first workbook that has an error or whose database upgrade fails. The workbooks imported before it stay imported.</value></data>
+  <data name="ImportBatch_TableSchemaMerge" xml:space="preserve"><value>merge</value></data>
+  <data name="ImportBatch_TableSchemaKeep" xml:space="preserve"><value>keep</value></data>
+  <data name="ImportBatch_TableSchemaOverwrite" xml:space="preserve"><value>overwrite</value></data>
+  <data name="ImportBatch_LayoutKeep" xml:space="preserve"><value>keep</value></data>
+  <data name="ImportBatch_LayoutRegenerate" xml:space="preserve"><value>regenerate</value></data>
+  <data name="ImportBatch_UpgradeYes" xml:space="preserve"><value>upgraded after each import</value></data>
+  <data name="ImportBatch_UpgradeNo" xml:space="preserve"><value>not upgraded</value></data>
+  <data name="ImportBatch_StatusPending" xml:space="preserve"><value>Waiting</value></data>
+  <data name="ImportBatch_StatusImporting" xml:space="preserve"><value>Importing...</value></data>
+  <data name="ImportBatch_StatusUpgrading" xml:space="preserve"><value>Upgrading the database...</value></data>
+  <data name="ImportBatch_StatusDone" xml:space="preserve"><value>Done</value></data>
+  <data name="ImportBatch_StatusFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ImportBatch_StatusNotRun" xml:space="preserve"><value>Not run</value></data>
+  <data name="ImportBatch_Importing" xml:space="preserve"><value>Importing {0}...</value></data>
+  <data name="ImportBatch_Stopping" xml:space="preserve"><value>Stopping after the current workbook...</value></data>
+  <data name="ImportBatch_HasErrors" xml:space="preserve"><value>The workbook has errors, so nothing was written and the import stops here.</value></data>
+  <data name="ImportBatch_Unchanged" xml:space="preserve"><value>No file changed.</value></data>
+  <data name="ImportBatch_Written" xml:space="preserve"><value>{0} file(s) written:</value></data>
+  <data name="ImportBatch_RunSucceeded" xml:space="preserve"><value>All {0} workbook(s) were imported.</value></data>
+  <data name="ImportBatch_RunFailed" xml:space="preserve"><value>Stopped at {0}. The workbooks before it were imported; Back lists the ones still to import.</value></data>
+  <data name="ImportBatch_RunStopped" xml:space="preserve"><value>Stopped after {0} of {1} workbook(s). Back lists the ones still to import.</value></data>
+  <data name="ImportBatch_UnsavedTitle" xml:space="preserve"><value>Save Changes First</value></data>
+  <data name="ImportBatch_UnsavedMessage" xml:space="preserve"><value>The import writes definition files on disk, and some open editors have unsaved changes. Save all of them and continue?</value></data>
+  <data name="ImportBatch_NoDbManager" xml:space="preserve"><value>The database manager was not prepared for this import.</value></data>
+  <data name="Status_BatchImported" xml:space="preserve"><value>Batch import wrote {0} file(s).</value></data>
+  <data name="Action_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Action_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="Action_StopAfterCurrent" xml:space="preserve"><value>Stop After This One</value></data>
 </root>

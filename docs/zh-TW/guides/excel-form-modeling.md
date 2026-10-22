@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: b6331cb56d8c679e2a2bfc119bbecb507e76473d -->
+<!-- source: en/guides/excel-form-modeling.md blob: 24350d7e74ccb2f9206cc45d19628aeb48850a3a -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -32,7 +32,8 @@
 ## 2. 來回流程
 
 指令在 `dotnet polhem` 中（[Polhem.Cli](../../../tools/Polhem.Cli/README.zh-TW.md)）；DefineEditor 的選單也提供
-相同的匯入與匯出。
+相同的匯入與匯出；它的**從 Excel 批次匯入表單**精靈可依序匯入多份活頁簿，每份匯入後升級該表單的資料表，遇到第一份失敗就停止
+（[DefineEditor](../../../tools/DefineEditor/README.zh-TW.md)）。
 
 ```bash
 # 新表單用的空白活頁簿（加 --lang zh-TW 改用繁體中文標題）

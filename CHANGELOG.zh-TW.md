@@ -20,6 +20,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - DefineEditor 新增 VS Code 式的 Activity Bar，側欄可切換檢視檔案、功能與資料表。
 - DefineEditor 顯示正在編輯的 TableSchema 在各種支援資料庫的 CREATE TABLE 語法。
 - `dotnet polhem forms` 與 DefineEditor 可以在 Excel 活頁簿中描述表單，並匯入成可執行表單的定義檔。
+- DefineEditor 以精靈依序匯入多份表單活頁簿，每份匯入後升級該表單的資料表，遇到第一份失敗就停止。
 - 由明細表產生的 TableSchema 會替 `sys_master_rowid` 建立索引（`fk_{0}_master`），與手寫的一致。
 - DefineEditor 以 dotnet tool `Polhem.DefineEditor` 發佈（`polhem-define [DefinePath]`），可由命令列指定要開啟的資料夾。
 - 新的 dotnet tool `Polhem.DbManager`（`polhem-db`）對定義資料夾執行 `db` 指令，支援所有資料庫，不需要專案。DefineEditor 以它測試 DatabaseSettings 的連線與升級資料庫；匯入後只升級該表單的資料表。

@@ -71,13 +71,9 @@ public partial class MainWindowViewModel
 
         try
         {
-            FormWorkbookReadResult read;
-            using (var stream = File.OpenRead(workbookPath))
-                read = FormWorkbookReader.Read(stream);
-
-            var plan = read.HasErrors
-                ? null
-                : FormImporter.Plan(read.Content!, new FormImportOptions { DefinePath = definePath });
+            var prepared = FormWorkbookImport.Prepare(workbookPath, new FormImportOptions { DefinePath = definePath });
+            var read = prepared.Read;
+            var plan = prepared.Plan;
 
             // An existing TableSchema may carry what the form cannot derive (lengths, extra columns, indexes), and an
             // existing FormLayout may have been adjusted by hand, so the user picks how to treat each; the plan above
@@ -85,7 +81,7 @@ public partial class MainWindowViewModel
             if (plan is { HasErrors: false } && owner is not null)
             {
                 var tableSchemaMode = TableSchemaImportMode.Merge;
-                if (plan.Files.Any(f => IsTableSchema(f.Path) && File.Exists(f.Path)))
+                if (plan.Files.Any(f => FormWorkbookImport.IsTableSchema(f.Path) && File.Exists(f.Path)))
                 {
                     var mode = await ConfirmationDialog.ShowChoiceAsync(owner, L("Confirm_ImportFormTitle"),
                         L("Choice_TableSchemaModeMessage"),
@@ -105,7 +101,7 @@ public partial class MainWindowViewModel
                 }
 
                 var regenerateLayout = false;
-                if (plan.Files.Any(f => IsFormLayout(f.Path) && f.Action == PlannedFileAction.Skip))
+                if (plan.Files.Any(f => FormWorkbookImport.IsFormLayout(f.Path) && f.Action == PlannedFileAction.Skip))
                 {
                     var layout = await ConfirmationDialog.ShowChoiceAsync(owner, L("Confirm_ImportFormTitle"),
                         L("Choice_FormLayoutMessage"),
@@ -136,7 +132,7 @@ public partial class MainWindowViewModel
                 if (owner is not null)
                 {
                     await ConfirmationDialog.ShowMessageAsync(owner, L("Error_ImportFormTitle"),
-                        L("Error_ImportFormMessage", FormatIssues(issues)));
+                        L("Error_ImportFormMessage", FormWorkbookImport.FormatIssues(issues)));
                 }
                 StatusText = L("Status_FormImportCancelled");
                 return;
@@ -166,10 +162,10 @@ public partial class MainWindowViewModel
                 var message = L("Confirm_ImportFormMessage", Path.GetFileName(workbookPath), definePath,
                     string.Join("\n", plan.Files
                         .Where(f => f.Writes || f.Action == PlannedFileAction.Skip)
-                        .Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({ActionLabel(f.Action)})")));
+                        .Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({FormWorkbookImport.ActionLabel(f.Action)})")));
                 var warnings = issues.Where(i => i.Severity == IssueSeverity.Warning).ToList();
                 if (warnings.Count > 0)
-                    message += "\n\n" + L("Confirm_ImportFormWarnings", FormatIssues(warnings));
+                    message += "\n\n" + L("Confirm_ImportFormWarnings", FormWorkbookImport.FormatIssues(warnings));
                 if (!await ConfirmationDialog.ShowAsync(owner, L("Confirm_ImportFormTitle"), message, confirmLabel: L("Action_Import")))
                 {
                     StatusText = L("Status_FormImportCancelled");
@@ -187,12 +183,9 @@ public partial class MainWindowViewModel
             var schemaNode = FindNodeByFilePath(Nodes[0], plan.Files[0].Path);
             if (schemaNode is not null) SelectedNode = schemaNode;
             StatusText = L("Status_FormImported", progId, written.Count);
-            importedTables = plan.Files
-                .Where(f => IsTableSchema(f.Path))
-                .Select(f => Path.GetFileName(f.Path)[..^".TableSchema.xml".Length])
-                .ToList();
+            importedTables = FormWorkbookImport.TableNames(plan);
             imported = L("Status_FormImported", progId, written.Count) + "\n" + string.Join("\n",
-                written.Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({ActionLabel(f.Action)})"));
+                written.Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({FormWorkbookImport.ActionLabel(f.Action)})"));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -202,21 +195,4 @@ public partial class MainWindowViewModel
         if (imported is not null && owner is not null)
             await OfferDatabaseUpgradeAsync(owner, imported, importedTables);
     }
-
-    private static string FormatIssues(IEnumerable<DefinitionIssue> issues)
-        => string.Join("\n", issues.Select(i => $"• {i.Location}: {i.Message}"));
-
-    private static string ActionLabel(PlannedFileAction action) => action switch
-    {
-        PlannedFileAction.Create => L("ImportAction_Create"),
-        PlannedFileAction.Overwrite => L("ImportAction_Overwrite"),
-        PlannedFileAction.Update => L("ImportAction_Update"),
-        _ => L("ImportAction_Skip"),
-    };
-
-    private static bool IsTableSchema(string path)
-        => path.EndsWith(".TableSchema.xml", StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsFormLayout(string path)
-        => path.EndsWith(".FormLayout.xml", StringComparison.OrdinalIgnoreCase);
 }

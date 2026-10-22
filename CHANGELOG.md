@@ -21,6 +21,7 @@ Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.
 - DefineEditor has a VS Code style activity bar that switches the sidebar between the files, the programs and the database tables.
 - DefineEditor shows the CREATE TABLE statement of the TableSchema being edited, for each supported database.
 - `dotnet polhem forms` and DefineEditor describe a form in an Excel workbook and import it as the definition files of a runnable form.
+- DefineEditor imports several form workbooks in a row with a wizard, upgrading each form's tables after it and stopping at the first one that fails.
 - A TableSchema generated from a detail table indexes `sys_master_rowid` (`fk_{0}_master`), as the hand-written ones do.
 - DefineEditor is published as the dotnet tool `Polhem.DefineEditor` (`polhem-define [DefinePath]`) and opens the folder named on its command line.
 - The new dotnet tool `Polhem.DbManager` (`polhem-db`) runs the `db` commands against a definition folder, for every supported database, without a project. DefineEditor runs it to test the DatabaseSettings connections and to upgrade the database, for the imported form's tables after an import.

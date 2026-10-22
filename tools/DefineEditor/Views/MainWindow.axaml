@@ -40,6 +40,7 @@
             <MenuItem Header="{loc:Loc Menu_File}">
                 <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
                 <MenuItem x:Name="ImportFormWorkbookMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbook}"/>
+                <MenuItem x:Name="ImportFormWorkbooksMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbooks}"/>
                 <Separator/>
                 <MenuItem x:Name="CheckConnectionsMenuItem" Header="{loc:Loc MenuItem_CheckDatabaseConnections}"/>
                 <MenuItem x:Name="UpgradeDatabaseMenuItem" Header="{loc:Loc MenuItem_UpgradeDatabase}"/>
