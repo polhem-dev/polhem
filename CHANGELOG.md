@@ -13,22 +13,22 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-22
+
 Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.8.0.md)
 
-- `FormLayoutPresenter` renders a form layout without data, so a design tool can preview a layout as `FormView` draws it.
-- DefineEditor previews the FormLayout being edited, live, under the property grid.
-- DefineEditor takes its colours from VS Code's Dark (Visual Studio) and Light (Visual Studio) themes.
-- DefineEditor has a VS Code style activity bar that switches the sidebar between the files, the programs and the database tables.
-- DefineEditor shows the CREATE TABLE statement of the TableSchema being edited, for each supported database.
-- `dotnet polhem forms` and DefineEditor describe a form in an Excel workbook and import it as the definition files of a runnable form.
-- DefineEditor imports several form workbooks in a row with a wizard, upgrading each form's tables after it and stopping at the first one that fails.
-- A TableSchema generated from a detail table indexes `sys_master_rowid` (`fk_{0}_master`), as the hand-written ones do.
-- DefineEditor is published as the dotnet tool `Polhem.DefineEditor` (`polhem-define [DefinePath]`) and opens the folder named on its command line.
-- The new dotnet tool `Polhem.DbManager` (`polhem-db`) runs the `db` commands against a definition folder, for every supported database, without a project. DefineEditor runs it to test the DatabaseSettings connections and to upgrade the database, for the imported form's tables after an import.
-- `db check` opens a connection to each database, and `db upgrade --table <name>` builds or upgrades only the named tables.
-- The new template package `Polhem.Templates` creates a Polhem application with `dotnet new polhem-avalonia --database <engine>`: a server with the packages and the driver referenced, an Avalonia desktop client on `Polhem.UI.Avalonia.Shell` (and browser, iOS and Android clients with `--browser`, `--ios`, `--android`), a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database, open DefineEditor and start the server with every client at once.
-- The new package `Polhem.UI.Avalonia.Shell` is a ready-made Avalonia front end: connect, sign in to a company, open the forms of the server's menu, and sign out so that changed definitions show on the next sign-in, on every head; it can package a macOS head as a `.app`, and `BrowserLocalStorage` keeps a browser head's settings in `localStorage`. It wears DefineEditor's colours, which `Polhem.UI.Avalonia` now offers to any Semi host as `VisualStudioTheme`.
-- The Excel import stops at a String field that becomes a column without a max length; the export writes the lengths a form keeps only in its TableSchema.
+- A form can be described in an Excel workbook and imported as the definition files of a runnable form, with
+  `dotnet polhem forms` or DefineEditor, whose wizard imports several workbooks in a row and upgrades each form's tables.
+- The new template package `Polhem.Templates` creates an application with `dotnet new polhem-avalonia`: a server, an
+  Avalonia desktop client (browser, iOS and Android clients on request), a definition folder, the tools, and VS Code
+  tasks that initialize the database, open DefineEditor and start everything at once.
+- The new package `Polhem.UI.Avalonia.Shell` is a ready-made Avalonia front end for every head: connect, sign in, open
+  the server's forms, and sign out to see changed definitions; `Polhem.UI.Avalonia` gains `VisualStudioTheme`.
+- DefineEditor ships as the dotnet tool `Polhem.DefineEditor`, and the new dotnet tool `Polhem.DbManager` runs the `db`
+  commands against a definition folder without a project; `db check` and `db upgrade --table <name>` are new.
+- DefineEditor previews the FormLayout being edited (through the new `FormLayoutPresenter`), shows the CREATE TABLE
+  statement of a TableSchema, switches its sidebar between files, programs and tables, and takes VS Code's colours.
+- A generated detail TableSchema indexes `sys_master_rowid` (`fk_{0}_master`), as the hand-written ones do.
 
 ## [1.7.0] - 2026-10-16
 
