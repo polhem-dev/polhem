@@ -314,4 +314,57 @@
   <data name="DatabaseSettings_TestConnectionsTooltip" xml:space="preserve"><value>以已儲存的設定逐一連線每個資料庫</value></data>
   <data name="DbCommand_BusyTitle" xml:space="preserve"><value>有資料庫指令正在執行</value></data>
   <data name="DbCommand_BusyMessage" xml:space="preserve"><value>請等它結束或取消後，再執行新的指令。</value></data>
+  <data name="MenuItem_ImportFormWorkbooks" xml:space="preserve"><value>從 Excel 批次匯入表單...</value></data>
+  <data name="Dialog_PickFormWorkbooks" xml:space="preserve"><value>選擇表單活頁簿</value></data>
+  <data name="ImportBatch_Title" xml:space="preserve"><value>從 Excel 批次匯入表單</value></data>
+  <data name="ImportBatch_StepFiles" xml:space="preserve"><value>步驟 1／4：選擇活頁簿</value></data>
+  <data name="ImportBatch_StepOptions" xml:space="preserve"><value>步驟 2／4：匯入選項</value></data>
+  <data name="ImportBatch_StepConfirm" xml:space="preserve"><value>步驟 3／4：確認</value></data>
+  <data name="ImportBatch_StepRun" xml:space="preserve"><value>步驟 4／4：匯入</value></data>
+  <data name="ImportBatch_FilesHint" xml:space="preserve"><value>活頁簿依這個順序逐份匯入；關聯到其他表單的表單要排在它後面。任何一份有錯誤，匯入就停在那一份。</value></data>
+  <data name="ImportBatch_AddFiles" xml:space="preserve"><value>加入檔案...</value></data>
+  <data name="ImportBatch_MoveUp" xml:space="preserve"><value>上移</value></data>
+  <data name="ImportBatch_MoveDown" xml:space="preserve"><value>下移</value></data>
+  <data name="ImportBatch_Remove" xml:space="preserve"><value>移除</value></data>
+  <data name="ImportBatch_TableSchemaHeader" xml:space="preserve"><value>資料表已有 TableSchema 時</value></data>
+  <data name="ImportBatch_FormLayoutHeader" xml:space="preserve"><value>表單已有 FormLayout 時</value></data>
+  <data name="ImportBatch_DatabaseHeader" xml:space="preserve"><value>資料庫</value></data>
+  <data name="ImportBatch_UpgradeDatabase" xml:space="preserve"><value>每份匯入後升級資料庫（只升級該表單的資料表）</value></data>
+  <data name="ImportBatch_ConfirmMessage" xml:space="preserve"><value>將依下列順序把 {0} 份活頁簿匯入 {1}：
+
+{2}
+
+既有 TableSchema：{3}
+既有 FormLayout：{4}
+資料庫：{5}
+
+任何一份有錯誤或資料庫升級失敗，匯入就停在那一份；在它之前已匯入的會保留。</value></data>
+  <data name="ImportBatch_TableSchemaMerge" xml:space="preserve"><value>合併</value></data>
+  <data name="ImportBatch_TableSchemaKeep" xml:space="preserve"><value>保留</value></data>
+  <data name="ImportBatch_TableSchemaOverwrite" xml:space="preserve"><value>覆寫</value></data>
+  <data name="ImportBatch_LayoutKeep" xml:space="preserve"><value>保留</value></data>
+  <data name="ImportBatch_LayoutRegenerate" xml:space="preserve"><value>重新產生</value></data>
+  <data name="ImportBatch_UpgradeYes" xml:space="preserve"><value>每份匯入後升級</value></data>
+  <data name="ImportBatch_UpgradeNo" xml:space="preserve"><value>不升級</value></data>
+  <data name="ImportBatch_StatusPending" xml:space="preserve"><value>等待中</value></data>
+  <data name="ImportBatch_StatusImporting" xml:space="preserve"><value>匯入中...</value></data>
+  <data name="ImportBatch_StatusUpgrading" xml:space="preserve"><value>升級資料庫中...</value></data>
+  <data name="ImportBatch_StatusDone" xml:space="preserve"><value>完成</value></data>
+  <data name="ImportBatch_StatusFailed" xml:space="preserve"><value>失敗</value></data>
+  <data name="ImportBatch_StatusNotRun" xml:space="preserve"><value>未執行</value></data>
+  <data name="ImportBatch_Importing" xml:space="preserve"><value>正在匯入 {0}...</value></data>
+  <data name="ImportBatch_Stopping" xml:space="preserve"><value>做完目前這一份就停止...</value></data>
+  <data name="ImportBatch_HasErrors" xml:space="preserve"><value>活頁簿有錯誤，沒有寫入任何檔案，匯入停在這裡。</value></data>
+  <data name="ImportBatch_Unchanged" xml:space="preserve"><value>沒有檔案變動。</value></data>
+  <data name="ImportBatch_Written" xml:space="preserve"><value>寫入 {0} 個檔案：</value></data>
+  <data name="ImportBatch_RunSucceeded" xml:space="preserve"><value>{0} 份活頁簿全部匯入完成。</value></data>
+  <data name="ImportBatch_RunFailed" xml:space="preserve"><value>停在 {0}。在它之前的已匯入；按「上一步」會列出還沒匯入的活頁簿。</value></data>
+  <data name="ImportBatch_RunStopped" xml:space="preserve"><value>已匯入 {1} 份中的 {0} 份後停止。按「上一步」會列出還沒匯入的活頁簿。</value></data>
+  <data name="ImportBatch_UnsavedTitle" xml:space="preserve"><value>先儲存變更</value></data>
+  <data name="ImportBatch_UnsavedMessage" xml:space="preserve"><value>匯入會寫入磁碟上的定義檔，而開啟中的編輯器有未儲存的變更。要全部儲存後繼續嗎？</value></data>
+  <data name="ImportBatch_NoDbManager" xml:space="preserve"><value>這次匯入沒有準備好資料庫管理工具。</value></data>
+  <data name="Status_BatchImported" xml:space="preserve"><value>批次匯入寫入 {0} 個檔案。</value></data>
+  <data name="Action_Back" xml:space="preserve"><value>上一步</value></data>
+  <data name="Action_Start" xml:space="preserve"><value>開始</value></data>
+  <data name="Action_StopAfterCurrent" xml:space="preserve"><value>做完這一份就停止</value></data>
 </root>

@@ -1,0 +1,129 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="540"
+        x:Class="Polhem.DefineEditor.Views.ImportBatchWindow"
+        x:DataType="vm:ImportBatchViewModel"
+        x:CompileBindings="True"
+        Width="760" Height="540" MinWidth="560" MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Title="{loc:Loc ImportBatch_Title}">
+
+    <Border Padding="22,20">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,14">
+                <TextBlock Classes="h1" Text="{loc:Loc ImportBatch_Title}"/>
+                <TextBlock Classes="muted" Text="{Binding StepTitle}"/>
+            </StackPanel>
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="tool" MinWidth="90" Content="{loc:Loc Action_Back}" Command="{Binding BackCommand}"/>
+                    <Button Classes="tool Primary" MinWidth="100" Content="{Binding NextLabel}" Command="{Binding NextCommand}"
+                            IsVisible="{Binding IsNextVisible}"/>
+                    <Button Classes="tool" MinWidth="90" Content="{Binding CancelLabel}" Command="{Binding CancelOrCloseCommand}"/>
+                </StackPanel>
+                <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="60" Margin="0,0,8,0"
+                                 IsVisible="{Binding IsRunning}"/>
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" VerticalAlignment="Center"
+                               FontWeight="SemiBold" Classes.danger="{Binding HasFailed}"/>
+                </DockPanel>
+            </DockPanel>
+
+            <Panel>
+                <!-- Step 1: the workbooks and their order. -->
+                <DockPanel IsVisible="{Binding IsFilesStep}">
+                    <TextBlock DockPanel.Dock="Top" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,8"
+                               Text="{loc:Loc ImportBatch_FilesHint}"/>
+                    <StackPanel DockPanel.Dock="Right" Spacing="6" Margin="12,0,0,0" MinWidth="120">
+                        <Button Classes="tool" HorizontalAlignment="Stretch" Content="{loc:Loc ImportBatch_AddFiles}"
+                                Click="OnAddFiles"/>
+                        <Button Classes="tool" HorizontalAlignment="Stretch" Content="{loc:Loc ImportBatch_MoveUp}"
+                                Command="{Binding MoveUpCommand}"/>
+                        <Button Classes="tool" HorizontalAlignment="Stretch" Content="{loc:Loc ImportBatch_MoveDown}"
+                                Command="{Binding MoveDownCommand}"/>
+                        <Button Classes="tool" HorizontalAlignment="Stretch" Content="{loc:Loc ImportBatch_Remove}"
+                                Command="{Binding RemoveCommand}"/>
+                    </StackPanel>
+                    <Border Classes="surface-sunken" CornerRadius="3">
+                        <ListBox Background="Transparent" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ImportBatchItem">
+                                    <TextBlock Text="{Binding FileName}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </DockPanel>
+
+                <!-- Step 2: options for the whole batch. -->
+                <ScrollViewer IsVisible="{Binding IsOptionsStep}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="h2" Text="{loc:Loc ImportBatch_TableSchemaHeader}"/>
+                        <RadioButton GroupName="TableSchema" IsChecked="{Binding MergeTableSchemas}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc Choice_TableSchemaMerge}"/>
+                        </RadioButton>
+                        <RadioButton GroupName="TableSchema" IsChecked="{Binding KeepTableSchemas}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc Choice_TableSchemaKeep}"/>
+                        </RadioButton>
+                        <RadioButton GroupName="TableSchema" IsChecked="{Binding OverwriteTableSchemas}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc Choice_TableSchemaOverwrite}"/>
+                        </RadioButton>
+
+                        <TextBlock Classes="h2" Text="{loc:Loc ImportBatch_FormLayoutHeader}" Margin="0,12,0,0"/>
+                        <RadioButton GroupName="FormLayout" IsChecked="{Binding KeepLayouts}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc Choice_FormLayoutKeep}"/>
+                        </RadioButton>
+                        <RadioButton GroupName="FormLayout" IsChecked="{Binding RegenerateLayouts}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc Choice_FormLayoutRegenerate}"/>
+                        </RadioButton>
+
+                        <TextBlock Classes="h2" Text="{loc:Loc ImportBatch_DatabaseHeader}" Margin="0,12,0,0"/>
+                        <CheckBox IsChecked="{Binding UpgradeDatabase}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Loc ImportBatch_UpgradeDatabase}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Step 3: what is about to happen. -->
+                <ScrollViewer IsVisible="{Binding IsConfirmStep}">
+                    <SelectableTextBlock Text="{Binding ConfirmText}" TextWrapping="Wrap"/>
+                </ScrollViewer>
+
+                <!-- Step 4: the run, one row per workbook, and what each step reported. -->
+                <Grid IsVisible="{Binding IsRunStep}" RowDefinitions="Auto,8,*">
+                    <ListBox Background="Transparent" ItemsSource="{Binding Files}" MaxHeight="190">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ImportBatchItem">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" Margin="12,0,0,0"
+                                               FontWeight="SemiBold" Classes.danger="{Binding HasFailed}"
+                                               Classes.success="{Binding IsDone}"/>
+                                    <TextBlock Text="{Binding FileName}"/>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBox Grid.Row="2" x:Name="OutputBox" Classes="code" IsReadOnly="True" AcceptsReturn="True"
+                             TextWrapping="NoWrap" Text="{Binding OutputText}"
+                             VerticalAlignment="Stretch" VerticalContentAlignment="Top"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"/>
+                </Grid>
+            </Panel>
+        </DockPanel>
+    </Border>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.danger">
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}"/>
+        </Style>
+        <Style Selector="TextBlock.success">
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorSuccess}"/>
+        </Style>
+    </Window.Styles>
+</Window>

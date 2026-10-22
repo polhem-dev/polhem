@@ -61,6 +61,24 @@ public partial class MainWindowViewModel
             if (choice == ConfirmCloseResult.Save) await SaveAll();
         }
 
+        var launch = await ResolveDbManagerAsync(owner);
+        if (launch is null) return;
+
+        _dbCommandWindow?.Close();
+        var command = DbManagerTool.Command(definePath, arguments, launch.WorkDirectory, launch.ExtraSource);
+        _dbCommandWindow = DbCommandWindow.Start(owner, new DbCommandViewModel(command, definePath, kind));
+    }
+
+    /// <summary>Where and with which extra package source the database manager runs.</summary>
+    private sealed record DbManagerLaunch(string WorkDirectory, string? ExtraSource);
+
+    /// <summary>
+    /// Resolves the extra package source and the folder the database manager runs in, and asks before the first run
+    /// downloads the tool. Returns <see langword="null"/>, with the reason in the status bar, when it cannot run or the
+    /// user declined the download.
+    /// </summary>
+    private async Task<DbManagerLaunch?> ResolveDbManagerAsync(Avalonia.Controls.Window owner)
+    {
         var extraSource = Environment.GetEnvironmentVariable(DbManagerTool.SourceVariable);
         try
         {
@@ -69,7 +87,7 @@ public partial class MainWindowViewModel
         catch (ArgumentException ex)
         {
             StatusText = L("DbCommand_StatusStartFailed", ex.Message);
-            return;
+            return null;
         }
         if (!DbManagerTool.IsCached()
             && !await ConfirmationDialog.ShowAsync(owner, L("DbCommand_DownloadTitle"),
@@ -79,7 +97,7 @@ public partial class MainWindowViewModel
                         : DbManagerTool.NuGetSource + ", " + extraSource)),
                 confirmLabel: L("Action_Download")))
         {
-            return;
+            return null;
         }
 
         string workDirectory;
@@ -90,11 +108,9 @@ public partial class MainWindowViewModel
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             StatusText = L("DbCommand_StatusStartFailed", ex.Message);
-            return;
+            return null;
         }
 
-        _dbCommandWindow?.Close();
-        var command = DbManagerTool.Command(definePath, arguments, workDirectory, extraSource);
-        _dbCommandWindow = DbCommandWindow.Start(owner, new DbCommandViewModel(command, definePath, kind));
+        return new DbManagerLaunch(workDirectory, extraSource);
     }
 }

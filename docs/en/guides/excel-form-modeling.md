@@ -33,7 +33,9 @@ FormSchema is the definition; export it to a new workbook whenever the analyst s
 ## 2. The Round Trip
 
 The commands are in `dotnet polhem` ([Polhem.Cli](../../../tools/Polhem.Cli/README.md)); DefineEditor offers the same
-import and export from its menus.
+import and export from its menus, and its **Import Forms from Excel (Batch)** wizard imports several workbooks in a row,
+upgrading each form's tables after it and stopping at the first one that fails
+([DefineEditor](../../../tools/DefineEditor/README.md)).
 
 ```bash
 # An empty workbook for a new form (--lang zh-TW for Traditional Chinese headers)

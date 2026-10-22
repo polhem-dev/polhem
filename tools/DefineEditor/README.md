@@ -45,7 +45,13 @@ Importing a workbook asks how to treat a TableSchema or a FormLayout the form al
 TableSchema; keep or regenerate the layout), lists the files it will change, and ends with a dialog that offers to
 upgrade the database for the form's tables.
 
-Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Test Database Connections, Upgrade Database and Preview Database Upgrade; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+**Import Forms from Excel (Batch)** is a wizard for several workbooks: choose them and their order, choose those two
+answers once for the whole batch and whether to upgrade the database, confirm, and the workbooks are imported one at a
+time in that order, each followed by an upgrade of its own tables. A form that relates to another goes after it, since
+each workbook is planned only once the ones before it are written. The batch stops at the first workbook that has an
+error or whose upgrade fails; the ones imported before it stay, and **Back** lists the workbooks still to import.
+
+Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database and Preview Database Upgrade; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
 

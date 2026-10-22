@@ -43,6 +43,9 @@ public partial class App : Application
     public IRelayCommand ImportFormWorkbookCommand { get; }
 
     // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
+    public IRelayCommand ImportFormWorkbooksCommand { get; }
+
+    // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
     public IRelayCommand CheckDatabaseConnectionsCommand { get; }
     public IRelayCommand UpgradeDatabaseCommand { get; }
     public IRelayCommand PreviewDatabaseUpgradeCommand { get; }
@@ -76,6 +79,7 @@ public partial class App : Application
         CloseActiveTabCommand = new RelayCommand(ExecuteCloseActiveTab, CanExecuteCloseActiveTab);
         AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbookCommand = new AsyncRelayCommand(ExecuteImportFormWorkbookAsync, CanExecuteAddFrameworkDefaults);
+        ImportFormWorkbooksCommand = new RelayCommand(() => GetMainViewModel()?.OpenImportBatch(), CanExecuteAddFrameworkDefaults);
         CheckDatabaseConnectionsCommand = new AsyncRelayCommand(
             () => GetMainViewModel()?.CheckDatabaseConnectionsAsync() ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
         UpgradeDatabaseCommand = new AsyncRelayCommand(
@@ -155,6 +159,7 @@ public partial class App : Application
                     RebuildRecentMenu();
                     AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbookCommand.NotifyCanExecuteChanged();
+                    ImportFormWorkbooksCommand.NotifyCanExecuteChanged();
                     CheckDatabaseConnectionsCommand.NotifyCanExecuteChanged();
                     UpgradeDatabaseCommand.NotifyCanExecuteChanged();
                     PreviewDatabaseUpgradeCommand.NotifyCanExecuteChanged();
@@ -178,7 +183,7 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
+                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
                     PreviewDatabaseUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
             }
 
@@ -237,6 +242,7 @@ public partial class App : Application
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbooks", ImportFormWorkbooksCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_CheckDatabaseConnections", CheckDatabaseConnectionsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_UpgradeDatabase", UpgradeDatabaseCommand, gesture: null));
