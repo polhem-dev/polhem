@@ -1,19 +1,1 @@
 #nullable enable
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditMode.set -> void
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.IsCompact.get -> bool
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.IsCompact.set -> void
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.Layout.get -> Polhem.Definition.Layouts.FormLayout?
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.Layout.set -> void
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.Refresh() -> void
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.RoundingContext?
-Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContext.set -> void
-override Polhem.UI.Avalonia.Controls.FormLayoutPresenter.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
-static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
-static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.IsCompactProperty -> Avalonia.StyledProperty<bool>!
-static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.LayoutProperty -> Avalonia.StyledProperty<Polhem.Definition.Layouts.FormLayout?>!
-static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContextProperty -> Avalonia.StyledProperty<Polhem.Definition.RoundingContext?>!
-Polhem.UI.Avalonia.Themes.VisualStudioTheme
-static Polhem.UI.Avalonia.Themes.VisualStudioTheme.Apply(Avalonia.Application! app) -> void

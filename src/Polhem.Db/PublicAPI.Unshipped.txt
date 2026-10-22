@@ -1,10 +1,1 @@
 #nullable enable
-Polhem.Db.Manager.DatabaseCreateResult
-Polhem.Db.Manager.DatabaseCreateResult.AlreadyExists = 1 -> Polhem.Db.Manager.DatabaseCreateResult
-Polhem.Db.Manager.DatabaseCreateResult.Created = 0 -> Polhem.Db.Manager.DatabaseCreateResult
-Polhem.Db.Manager.DatabaseCreateResult.NotApplicable = 2 -> Polhem.Db.Manager.DatabaseCreateResult
-Polhem.Db.Manager.DatabaseCreator
-const Polhem.Db.Manager.DatabaseCreator.MaxDatabaseNameLength = 63 -> int
-static Polhem.Db.Manager.DatabaseCreator.EnsureExists(Polhem.Definition.Database.DatabaseType databaseType, System.Data.Common.DbProviderFactory! provider, string! connectionString) -> Polhem.Db.Manager.DatabaseCreateResult
-static Polhem.Db.Manager.DatabaseCreator.GetDatabaseName(Polhem.Definition.Database.DatabaseType databaseType, System.Data.Common.DbProviderFactory! provider, string! connectionString) -> string!
-static Polhem.Db.Manager.DatabaseCreator.ValidateDatabaseName(string! databaseName) -> void
