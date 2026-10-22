@@ -18,5 +18,7 @@ public class App : ShellApplication
         DefaultApiKey = "development",
         DefaultCompanyId = "POLHEM_COMPANY_ID",
         DefaultUserId = "admin",
+        // The language of the connection and sign-in screens until the viewer picks another one.
+        DefaultLanguage = "POLHEM_DEFAULT_LANGUAGE",
     };
 }

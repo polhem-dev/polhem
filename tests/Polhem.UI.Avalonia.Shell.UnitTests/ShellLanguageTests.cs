@@ -13,7 +13,7 @@ public class ShellLanguageTests
     [InlineData("ZH-tw", "en-US", "zh-TW")]
     public void ResolveInitial_Remembered_Wins(string remembered, string system, string expected)
     {
-        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, null, CultureInfo.GetCultureInfo(system)));
     }
 
     [Theory]
@@ -25,7 +25,7 @@ public class ShellLanguageTests
     [InlineData("fr", "zh-TW", "zh-TW")]
     public void ResolveInitial_NoRemembered_MapsSystem(string remembered, string system, string expected)
     {
-        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, null, CultureInfo.GetCultureInfo(system)));
     }
 
     [Theory]
@@ -35,14 +35,14 @@ public class ShellLanguageTests
     [InlineData("ja-JP")]
     public void ResolveInitial_UnofferedSystem_FallsBackToEnglish(string system)
     {
-        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(null, null, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(null, null, null, CultureInfo.GetCultureInfo(system)));
     }
 
     [Fact]
     [DisplayName("ResolveInitial falls back to English for the invariant culture")]
     public void ResolveInitial_Invariant_FallsBackToEnglish()
     {
-        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(string.Empty, string.Empty, CultureInfo.InvariantCulture));
+        Assert.Equal(ShellLanguage.English, ShellLanguage.ResolveInitial(string.Empty, string.Empty, null, CultureInfo.InvariantCulture));
     }
 
     [Theory]
@@ -53,7 +53,19 @@ public class ShellLanguageTests
     [InlineData("", "zh-TW", "en-US", "zh-TW")]
     public void ResolveInitial_Requested_WinsOverRemembered(string requested, string remembered, string system, string expected)
     {
-        Assert.Equal(expected, ShellLanguage.ResolveInitial(requested, remembered, CultureInfo.GetCultureInfo(system)));
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(requested, remembered, null, CultureInfo.GetCultureInfo(system)));
+    }
+
+    [Theory]
+    [DisplayName("ResolveInitial uses the application's default language before the system language")]
+    [InlineData("", "en-US", "zh-TW", "en")]
+    [InlineData("", "zh-TW", "en-US", "zh-TW")]
+    [InlineData("zh-TW", "en-US", "en-US", "zh-TW")]
+    [InlineData("", "fr-FR", "zh-TW", "zh-TW")]
+    [InlineData("", "not-a-culture", "zh-TW", "zh-TW")]
+    public void ResolveInitial_Configured_WinsOverSystem(string remembered, string configured, string system, string expected)
+    {
+        Assert.Equal(expected, ShellLanguage.ResolveInitial(null, remembered, configured, CultureInfo.GetCultureInfo(system)));
     }
 
     [Theory]

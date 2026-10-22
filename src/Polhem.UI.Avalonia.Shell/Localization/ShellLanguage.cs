@@ -27,17 +27,18 @@ namespace Polhem.UI.Avalonia.Shell.Localization
 
         /// <summary>
         /// Chooses the language the shell starts with: the language requested for this run, else the remembered
-        /// choice, each only when it is one the shell offers; otherwise the system language mapped onto the offered
-        /// ones, otherwise English.
+        /// choice, each only when it is one the shell offers; otherwise the application's default language, otherwise
+        /// the system language, each mapped onto the offered ones; otherwise English.
         /// </summary>
         /// <param name="requested">The language named on the command line; empty when none was.</param>
         /// <param name="remembered">The stored choice; empty when the viewer never chose.</param>
+        /// <param name="configured">The application's <see cref="ShellOptions.DefaultLanguage"/>; empty when it has none.</param>
         /// <param name="system">The operating system's interface culture.</param>
-        public static string ResolveInitial(string? requested, string? remembered, CultureInfo system)
+        public static string ResolveInitial(string? requested, string? remembered, string? configured, CultureInfo system)
         {
             ArgumentNullException.ThrowIfNull(system);
 
-            return Find(requested) ?? Find(remembered) ?? Map(system) ?? English;
+            return Find(requested) ?? Find(remembered) ?? MapName(configured) ?? Map(system) ?? English;
         }
 
         /// <summary>
@@ -53,6 +54,19 @@ namespace Polhem.UI.Avalonia.Shell.Localization
                 .Where(a => a.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 .Select(a => a[prefix.Length..].Trim())
                 .LastOrDefault() ?? string.Empty;
+        }
+
+        private static string? MapName(string? culture)
+        {
+            if (string.IsNullOrWhiteSpace(culture)) return null;
+            try
+            {
+                return Map(CultureInfo.GetCultureInfo(culture.Trim()));
+            }
+            catch (CultureNotFoundException)
+            {
+                return null;
+            }
         }
 
         private static string? Find(string? code)

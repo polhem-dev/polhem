@@ -138,6 +138,8 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
             File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.iOS", "Info.plist")), StringComparison.Ordinal);
         Assert.Contains("UseCors", File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Server", "Program.cs")),
             StringComparison.Ordinal);
+        Assert.Contains("DefaultLanguage = \"en-US\"",
+            File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.UI", "App.cs")), StringComparison.Ordinal);
         var tasks = File.ReadAllText(Path.Combine(output, ".vscode", "tasks.json"));
         Assert.Contains("Polhem: Run iOS simulator", tasks, StringComparison.Ordinal);
         Assert.Contains("Polhem: Run Android emulator", tasks, StringComparison.Ordinal);

@@ -38,7 +38,7 @@ forms from Excel, press F5.
 | `--database` | `SqlServer` | `SqlServer`, `PostgreSql`, `MySql`, `Oracle` or `Sqlite`: the driver package, its registration and the connection in `DatabaseSettings.xml` |
 | `--company` | `DEMO` | The id of the first company, which the **Polhem: Initialize database** task creates |
 | `--db-password` | empty | The database password written to `DatabaseSettings.xml`; when empty, enter it in DefineEditor |
-| `--default-language` | `en-US` | `en-US` or `zh-TW`: the default language of users who have none of their own |
+| `--default-language` | `en-US` | `en-US` or `zh-TW`: the default language of users who have none of their own, and the language of the client's connection and sign-in screens until the viewer picks another |
 | `--browser` | off | Add the browser client. Building it needs the `wasm-tools` workload |
 | `--ios` | off | Add the iOS client. Building it needs macOS, the `ios` workload and the Xcode that workload names |
 | `--android` | off | Add the Android client. Building it needs the `android` workload and the Android SDK |

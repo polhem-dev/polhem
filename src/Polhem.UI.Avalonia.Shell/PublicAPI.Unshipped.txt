@@ -16,6 +16,8 @@ Polhem.UI.Avalonia.Shell.ShellApplication.ShellApplication() -> void
 Polhem.UI.Avalonia.Shell.ShellOptions
 Polhem.UI.Avalonia.Shell.ShellOptions.AllowLanguageSwitch.get -> bool
 Polhem.UI.Avalonia.Shell.ShellOptions.AllowLanguageSwitch.set -> void
+Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.get -> string!
+Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.set -> void
 Polhem.UI.Avalonia.Shell.ShellOptions.AppTitle.get -> string!
 Polhem.UI.Avalonia.Shell.ShellOptions.AppTitle.set -> void
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultApiKey.get -> string!

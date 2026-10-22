@@ -27,11 +27,11 @@
 | Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. |
 | Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. **Sign out** returns to sign-in; signing in again fetches every definition anew, so a definition changed while the application runs shows without restarting it. |
 
-The interface language before sign-in follows the operating system (English or Traditional Chinese; anything else
-falls back to English) and can be switched on the connection and sign-in screens; the choice is remembered. A
+The interface language before sign-in is `ShellOptions.DefaultLanguage` when the application sets one, and otherwise
+follows the operating system (English or Traditional Chinese; anything else falls back to English). It can be switched on the connection and sign-in screens; the choice is remembered. A
 `Language=en` or `Language=zh-TW` argument on the command line sets it for one run without changing the remembered
 choice, which is what scripted runs such as smoke tests use. After sign-in the account's culture decides, as
-`ClientInfo.ApplyLoginResult` makes it the process culture.
+`ClientInfo.ApplyLoginResult` makes it the process culture; signing out returns to the language the switch shows.
 
 The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; light by default, with a light/dark switch on the forms screen) and registers the API
 bridge as `UIServices.Provider`. It adds no font: the head chooses one.
