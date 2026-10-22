@@ -62,6 +62,7 @@
 
   <!-- Welcome tab -->
   <data name="MenuItem_Welcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="MenuItem_ToggleSidebar" xml:space="preserve"><value>Toggle Side Bar</value></data>
   <data name="Welcome_TabTitle" xml:space="preserve"><value>Welcome</value></data>
   <data name="Welcome_SectionStart" xml:space="preserve"><value>Start</value></data>
   <data name="Welcome_SectionRecent" xml:space="preserve"><value>Recent</value></data>

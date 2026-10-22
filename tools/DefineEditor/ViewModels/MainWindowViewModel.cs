@@ -156,6 +156,12 @@ public partial class MainWindowViewModel : ViewModelBase
         IsSidebarVisible = true;
     }
 
+    /// <summary>
+    /// Collapses the sidebar, or brings it back with the view it showed last, as VS Code's View → Toggle Side Bar does.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleSidebar() => IsSidebarVisible = !IsSidebarVisible;
+
     partial void OnActiveSidebarViewChanged(SidebarView value)
     {
         OnPropertyChanged(nameof(IsExplorerView));
