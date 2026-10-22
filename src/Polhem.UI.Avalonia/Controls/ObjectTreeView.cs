@@ -24,7 +24,8 @@ namespace Polhem.UI.Avalonia.Controls
     /// that single root. Each item shows the node's <see cref="ObjectTreeNode.Label"/>, after an icon when
     /// <see cref="IconSelector"/> returns one, and binds <see cref="TreeViewItem.IsExpanded"/> both ways to
     /// <see cref="ObjectTreeNode.IsExpanded"/>. <see cref="TreeView.SelectedItem"/> is the selected
-    /// <see cref="ObjectTreeNode"/>. Labels are localized through <see cref="ObjectTreeOptions.LabelTranslator"/>
+    /// <see cref="ObjectTreeNode"/>, also when a row is selected through the accessibility interface
+    /// (<see cref="TreeViewExtensions.KeepSelectionSingle"/>). Labels are localized through <see cref="ObjectTreeOptions.LabelTranslator"/>
     /// when the tree is built. When <see cref="CommandProvider"/> is set, the control owns its
     /// <see cref="Control.ContextMenu"/> and fills it with the selected node's commands each time it opens. When
     /// <see cref="DragDropHandler"/> is set, nodes can be dragged and dropped before or after another node; the
@@ -84,6 +85,7 @@ namespace Polhem.UI.Avalonia.Controls
             AddHandler(DragDrop.DragOverEvent, OnDragOver);
             AddHandler(DragDrop.DragLeaveEvent, (_, _) => HideDropIndicator());
             AddHandler(DragDrop.DropEvent, OnDrop);
+            this.KeepSelectionSingle();
             ItemTemplate = CreateItemTemplate();
             Styles.Add(new Style(x => x.OfType<TreeViewItem>())
             {

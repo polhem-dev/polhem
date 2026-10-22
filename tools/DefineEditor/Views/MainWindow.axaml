@@ -137,12 +137,12 @@
 
                 <Panel>
                     <Panel IsVisible="{Binding IsSolutionOpened}">
-                        <TreeView IsVisible="{Binding IsExplorerView}"
+                        <TreeView x:Name="ExplorerTree" IsVisible="{Binding IsExplorerView}"
                                   ItemsSource="{Binding Nodes}"
                                   SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
                                   Padding="6,4"/>
-                        <TreeView IsVisible="{Binding IsProgramsView}"
+                        <TreeView x:Name="ProgramsTree" IsVisible="{Binding IsProgramsView}"
                                   ItemsSource="{Binding ProgramNodes}"
                                   SelectedItem="{Binding SelectedProgramNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
@@ -155,7 +155,7 @@
                                 </MultiBinding>
                             </TextBlock.IsVisible>
                         </TextBlock>
-                        <TreeView IsVisible="{Binding IsDatabasesView}"
+                        <TreeView x:Name="DatabasesTree" IsVisible="{Binding IsDatabasesView}"
                                   ItemsSource="{Binding DatabaseNodes}"
                                   SelectedItem="{Binding SelectedDatabaseNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
