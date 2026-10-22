@@ -49,6 +49,7 @@
 
   <!-- Welcome tab -->
   <data name="MenuItem_Welcome" xml:space="preserve"><value>歡迎</value></data>
+  <data name="MenuItem_ToggleSidebar" xml:space="preserve"><value>切換側欄</value></data>
   <data name="Welcome_TabTitle" xml:space="preserve"><value>歡迎</value></data>
   <data name="Welcome_SectionStart" xml:space="preserve"><value>開始</value></data>
   <data name="Welcome_SectionRecent" xml:space="preserve"><value>最近</value></data>

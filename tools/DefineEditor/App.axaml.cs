@@ -25,6 +25,7 @@ public partial class App : Application
     public IRelayCommand OpenSolutionCommand { get; }
     public IRelayCommand ToggleThemeCommand { get; }
     public IRelayCommand WelcomeCommand { get; }
+    public IRelayCommand ToggleSidebarCommand { get; }
 
     // Proxies that forward File menu Save / Validate to whichever document is
     // currently active. CanExecute is re-evaluated each time ActiveDocument
@@ -73,6 +74,7 @@ public partial class App : Application
         OpenSolutionCommand = new RelayCommand(PromptOpenSolution);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         WelcomeCommand = new RelayCommand(() => GetMainViewModel()?.ShowWelcome());
+        ToggleSidebarCommand = new RelayCommand(() => GetMainViewModel()?.ToggleSidebarCommand.Execute(null));
         SaveActiveCommand = new RelayCommand(ExecuteActiveSave, CanExecuteActiveSave);
         SaveAllCommand = new RelayCommand(ExecuteSaveAll, CanExecuteSaveAll);
         ValidateActiveCommand = new RelayCommand(ExecuteActiveValidate, CanExecuteActiveValidate);
@@ -185,6 +187,12 @@ public partial class App : Application
                 mainWindow.ShowInWindowFileMenu(
                     AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
                     PreviewDatabaseUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
+                // The in-window menu has no View menu, so the shortcut carries Toggle Side Bar there.
+                mainWindow.KeyBindings.Add(new KeyBinding
+                {
+                    Gesture = new KeyGesture(Key.B, KeyModifiers.Control),
+                    Command = vm.ToggleSidebarCommand,
+                });
             }
 
             if (startupPath is not null)
@@ -265,6 +273,9 @@ public partial class App : Application
         var viewMenu = LocItem("Menu_View", command: null, gesture: null);
         viewMenu.Menu = new NativeMenu();
         viewMenu.Menu.Add(LocItem("MenuItem_Welcome", WelcomeCommand, gesture: null));
+        // VS Code's macOS shortcut for "Toggle Primary Side Bar Visibility" is Cmd+B; reused.
+        viewMenu.Menu.Add(LocItem("MenuItem_ToggleSidebar", ToggleSidebarCommand,
+            new KeyGesture(Key.B, KeyModifiers.Meta)));
         viewMenu.Menu.Add(new NativeMenuItemSeparator());
         viewMenu.Menu.Add(LocItem("MenuItem_ToggleTheme", ToggleThemeCommand, gesture: null));
         viewMenu.Menu.Add(new NativeMenuItemSeparator());
