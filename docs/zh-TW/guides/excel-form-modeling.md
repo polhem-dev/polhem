@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: f9d40859165359ecae218aa9d9754b074b70f769 -->
+<!-- source: en/guides/excel-form-modeling.md blob: a583654f54c19b06a7d86250f43e90f4b6423251 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -133,7 +133,7 @@ FormLayout 是例外。只有表單還沒有版面時才會產生，因為版面
 
 ## 7. 在 DefineEditor 修改表單
 
-也可以直接在 DefineEditor 修改表單，不必回到活頁簿。在 FormSchema 加入欄位或明細表後，對表單節點按右鍵：
+也可以直接在 DefineEditor 修改表單，不必回到活頁簿。在 FormSchema 加入欄位或明細表後，對表單節點按右鍵，或在 FormSchema 為作用中分頁時使用 **File** 選單的同名指令：
 
 | 命令 | 效果 |
 |------|------|

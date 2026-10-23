@@ -335,13 +335,13 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     /// </summary>
     public event EventHandler<FormSchemaAction>? ActionRequested;
 
-    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    [RelayCommand(CanExecute = nameof(CanActOnForm))]
     private void SyncDefinitions() => ActionRequested?.Invoke(this, FormSchemaAction.SyncDefinitions);
 
-    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    [RelayCommand(CanExecute = nameof(CanActOnForm))]
     private void UpgradeTables() => ActionRequested?.Invoke(this, FormSchemaAction.UpgradeTables);
 
-    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    [RelayCommand(CanExecute = nameof(CanActOnForm))]
     private void PreviewUpgradeTables() => ActionRequested?.Invoke(this, FormSchemaAction.PreviewUpgradeTables);
 
     /// <summary>
@@ -395,6 +395,10 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
     private bool CanGenerateFormLayout() =>
         SelectedTreeNode?.Value is FormSchema && !string.IsNullOrWhiteSpace(Schema.ProgId);
+
+    // The sync and upgrade commands act on the whole form, so they do not depend on the selected node: the File menu
+    // runs them whatever node is selected, while the tree's context menu offers them on the schema node only.
+    private bool CanActOnForm() => !string.IsNullOrWhiteSpace(Schema.ProgId);
 
     private static async Task<bool> ConfirmOverwriteFormLayoutAsync(string progId)
     {

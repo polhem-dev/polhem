@@ -148,7 +148,8 @@ is placed there.
 ## 7. Changing a Form in DefineEditor
 
 A form can also be changed in DefineEditor without going back to the workbook. After adding fields or a detail table to
-the FormSchema, right-click the schema node:
+the FormSchema, right-click the schema node, or use the same commands in the **File** menu while the FormSchema is the
+active tab:
 
 | Command | Effect |
 |---------|--------|

@@ -112,13 +112,17 @@ public partial class MainWindow : Window
     /// <param name="checkConnections">Opens a connection to each database of the open solution.</param>
     /// <param name="upgradeDatabase">Builds or upgrades the open solution's database tables.</param>
     /// <param name="previewDatabaseUpgrade">Lists what the upgrade would change without changing it.</param>
+    /// <param name="syncForm">Syncs the active FormSchema to its TableSchemas and FormLayout.</param>
+    /// <param name="upgradeFormTables">Upgrades the active FormSchema's tables only.</param>
+    /// <param name="previewFormUpgrade">Lists what upgrading the active FormSchema's tables would change.</param>
     /// <param name="save">Saves the active document.</param>
     /// <param name="saveAll">Saves every dirty document.</param>
     /// <param name="validate">Validates the active document.</param>
     /// <param name="closeTab">Closes the active tab.</param>
     public void ShowInWindowFileMenu(
         ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand importFormWorkbooks, ICommand checkConnections, ICommand upgradeDatabase,
-        ICommand previewDatabaseUpgrade, ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
+        ICommand previewDatabaseUpgrade, ICommand syncForm, ICommand upgradeFormTables, ICommand previewFormUpgrade,
+        ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
     {
         AddFrameworkDefaultsMenuItem.Command = addFrameworkDefaults;
         ImportFormWorkbookMenuItem.Command = importFormWorkbook;
@@ -126,6 +130,9 @@ public partial class MainWindow : Window
         CheckConnectionsMenuItem.Command = checkConnections;
         UpgradeDatabaseMenuItem.Command = upgradeDatabase;
         PreviewDatabaseUpgradeMenuItem.Command = previewDatabaseUpgrade;
+        SyncFormMenuItem.Command = syncForm;
+        UpgradeFormTablesMenuItem.Command = upgradeFormTables;
+        PreviewFormUpgradeMenuItem.Command = previewFormUpgrade;
         SaveMenuItem.Command = save;
         SaveAllMenuItem.Command = saveAll;
         ValidateMenuItem.Command = validate;
