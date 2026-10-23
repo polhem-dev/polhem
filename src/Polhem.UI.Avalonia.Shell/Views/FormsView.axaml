@@ -79,7 +79,8 @@
                  Background="Transparent"
                  BorderThickness="0"
                  Padding="6,8"
-                 Tapped="OnNavTapped">
+                 Tapped="OnNavTapped"
+                 SelectionChanged="OnNavSelectionChanged">
           <ListBox.Styles>
             <!-- Header rows are labels, not choices: disable so selection skips them. -->
             <Style Selector="ListBoxItem">

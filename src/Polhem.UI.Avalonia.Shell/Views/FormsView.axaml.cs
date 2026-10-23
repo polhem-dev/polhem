@@ -17,8 +17,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
     /// one tab per form, de-duplicated by program id.
     /// </summary>
     /// <remarks>
-    /// Opening is driven from the menu's <c>Tapped</c> event rather than <c>SelectionChanged</c>
-    /// so tapping an already-selected entry still re-opens its tab. The code-behind relies on the
+    /// Opening is driven from both the menu's <c>Tapped</c> event, so tapping an already-selected entry
+    /// still re-opens its tab, and <c>SelectionChanged</c>, so a selection made through the accessibility
+    /// interface opens the entry too. The code-behind relies on the
     /// source-generated <c>InitializeComponent</c> so the <c>x:Name</c> controls are wired into
     /// fields.
     /// <para>
@@ -31,6 +32,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
     {
         private readonly bool _singleForm = OperatingSystem.IsIOS() || OperatingSystem.IsAndroid();
         private bool _initialSelectionDone;
+        private bool _selectingInCode;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormsView"/>.
@@ -83,12 +85,34 @@ namespace Polhem.UI.Avalonia.Shell.Views
             var first = vm.NavItems.FirstOrDefault(n => !n.IsHeader);
             if (first is not null)
             {
-                NavList.SelectedItem = first;
+                SelectInCode(first);
                 OpenForm(first);
             }
         }
 
-        private void OnNavTapped(object? sender, TappedEventArgs e)
+        private void OnNavTapped(object? sender, TappedEventArgs e) => OpenSelectedEntry();
+
+        // A selection made through the accessibility interface (VoiceOver, UI automation) never raises Tapped, so
+        // a changed selection opens the entry as well. Tapped stays for tapping the entry that is already selected.
+        private void OnNavSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (!_selectingInCode) OpenSelectedEntry();
+        }
+
+        private void SelectInCode(NavItem? item)
+        {
+            _selectingInCode = true;
+            try
+            {
+                NavList.SelectedItem = item;
+            }
+            finally
+            {
+                _selectingInCode = false;
+            }
+        }
+
+        private void OpenSelectedEntry()
         {
             // By the time Tapped fires the click has already updated the selection, so the
             // tapped entry is SelectedItem — including when it was already selected.
@@ -228,9 +252,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
         private void SyncNavToActiveTab()
         {
             var activeProgId = (Tabs.SelectedItem as TabItem)?.Tag as string;
-            NavList.SelectedItem = activeProgId is null
+            SelectInCode(activeProgId is null
                 ? null
-                : NavList.Items.OfType<NavItem>().FirstOrDefault(n => n.ProgId == activeProgId);
+                : NavList.Items.OfType<NavItem>().FirstOrDefault(n => n.ProgId == activeProgId));
         }
 
         private void OnThemeToggled(object? sender, RoutedEventArgs e)
