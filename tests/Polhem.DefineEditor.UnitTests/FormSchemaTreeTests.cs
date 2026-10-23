@@ -137,7 +137,9 @@ namespace Polhem.DefineEditor.UnitTests
         public void Commands_RootAndTablesFolder()
         {
             Assert.Equal(
-                [LocalizationService.Current["FormSchema_GenerateFormLayout"], LocalizationService.Current["FormSchema_ExportWorkbook"]],
+                [LocalizationService.Current["FormSchema_GenerateFormLayout"], LocalizationService.Current["FormSchema_ExportWorkbook"],
+                    LocalizationService.Current["FormSchema_SyncDefinitions"], LocalizationService.Current["FormSchema_UpgradeTables"],
+                    LocalizationService.Current["FormSchema_PreviewUpgradeTables"]],
                 CommandsFor(_document.RootNode).Select(c => c.Label));
 
             Assert.Single(CommandsFor(_document.RootNode.Children[0])).Execute();

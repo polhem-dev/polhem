@@ -27,8 +27,8 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             if (Directory.Exists(_define)) Directory.Delete(_define, recursive: true);
         }
 
-        private FormImportOptions Options(bool regenerateLayout = false)
-            => new() { DefinePath = _define, RegenerateLayout = regenerateLayout };
+        private FormImportOptions Options(FormLayoutImportMode layoutMode = FormLayoutImportMode.Keep)
+            => new() { DefinePath = _define, LayoutMode = layoutMode };
 
         private static FormWorkbookContent Quote()
         {
@@ -93,7 +93,7 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             File.WriteAllText(PathOf("FormLayout", "Quote.FormLayout.xml"),
                 XmlCodec.Serialize(new FormLayout { LayoutId = "Quote", Caption = "Hand tuned" }));
 
-            var plan = FormImporter.Plan(Quote(), Options(regenerateLayout: true));
+            var plan = FormImporter.Plan(Quote(), Options(FormLayoutImportMode.Regenerate));
 
             var layout = Assert.Single(plan.Files, f => f.Path.EndsWith(".FormLayout.xml", StringComparison.Ordinal));
             Assert.Equal(PlannedFileAction.Overwrite, layout.Action);

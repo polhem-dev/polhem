@@ -269,7 +269,7 @@ public sealed partial class ImportBatchViewModel : ViewModelBase
         {
             DefinePath = _definePath,
             TableSchemaMode = TableSchemaMode,
-            RegenerateLayout = RegenerateLayouts,
+            LayoutMode = RegenerateLayouts ? FormLayoutImportMode.Regenerate : FormLayoutImportMode.Keep,
         };
         var written = new List<string>();
         string? lastSchemaPath = null;

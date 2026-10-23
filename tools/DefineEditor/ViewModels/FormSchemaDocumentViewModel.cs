@@ -330,6 +330,21 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
+    /// Raised when the user asks for a command that the main window carries out on this form: syncing its derived
+    /// files or upgrading its tables.
+    /// </summary>
+    public event EventHandler<FormSchemaAction>? ActionRequested;
+
+    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    private void SyncDefinitions() => ActionRequested?.Invoke(this, FormSchemaAction.SyncDefinitions);
+
+    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    private void UpgradeTables() => ActionRequested?.Invoke(this, FormSchemaAction.UpgradeTables);
+
+    [RelayCommand(CanExecute = nameof(CanGenerateFormLayout))]
+    private void PreviewUpgradeTables() => ActionRequested?.Invoke(this, FormSchemaAction.PreviewUpgradeTables);
+
+    /// <summary>
     /// Writes the form, as it is in the editor, to an Excel workbook together with its zh-TW texts and menu
     /// placement from the solution.
     /// </summary>

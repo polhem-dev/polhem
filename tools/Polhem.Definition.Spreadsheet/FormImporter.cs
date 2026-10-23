@@ -56,10 +56,7 @@ public static class FormImporter
             return new FormImportPlan(issues, []);
 
         var layoutPath = paths.GetFormLayoutFilePath(schema.ProgId);
-        files.Add(File.Exists(layoutPath) && !options.RegenerateLayout
-            ? new PlannedFile(layoutPath, PlannedFileAction.Skip,
-                $"FormLayout {schema.ProgId}: kept, it may have been adjusted by hand (regenerate it on request)", null)
-            : PlanDefinition(layoutPath, FormLayoutGenerator.Generate(schema, schema.ProgId), $"FormLayout {schema.ProgId}"));
+        files.Add(PlanLayout(layoutPath, schema, options.LayoutMode));
 
         files.Add(PlanSettings(paths.GetDbCategorySettingsFilePath(), "DbCategorySettings",
             $"DbCategorySettings: register the tables under '{categoryId}'",
@@ -139,6 +136,30 @@ public static class FormImporter
         return existing is not null && XmlCodec.Serialize(existing) == xml
             ? new PlannedFile(path, PlannedFileAction.Unchanged, description, null)
             : new PlannedFile(path, PlannedFileAction.Overwrite, description, xml);
+    }
+
+    /// <summary>
+    /// Plans the FormLayout file. A missing one is generated; an existing one is kept, completed with the fields it
+    /// lacks or regenerated, as <paramref name="mode"/> says.
+    /// </summary>
+    private static PlannedFile PlanLayout(string path, Forms.FormSchema schema, FormLayoutImportMode mode)
+    {
+        var description = $"FormLayout {schema.ProgId}";
+        if (!File.Exists(path) || mode == FormLayoutImportMode.Regenerate)
+            return PlanDefinition(path, FormLayoutGenerator.Generate(schema, schema.ProgId), description);
+        if (mode == FormLayoutImportMode.Keep)
+        {
+            return new PlannedFile(path, PlannedFileAction.Skip,
+                $"{description}: kept, it may have been adjusted by hand (regenerate it on request)", null);
+        }
+
+        var layout = XmlCodec.DeserializeFromFile<FormLayout>(path)
+            ?? throw new InvalidDataException($"The FormLayout file cannot be read: {path}");
+        var added = FormLayoutGenerator.Merge(layout, schema);
+        return added.Count == 0
+            ? new PlannedFile(path, PlannedFileAction.Unchanged, description, null)
+            : new PlannedFile(path, PlannedFileAction.Update,
+                $"{description}: add {string.Join(", ", added)}", XmlCodec.Serialize(layout));
     }
 
     /// <summary>

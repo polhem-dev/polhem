@@ -9,10 +9,10 @@ public sealed class FormImportOptions
     public required string DefinePath { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether an existing FormLayout is replaced. By default it is kept, because it is
-    /// usually adjusted by hand after it was first generated.
+    /// Gets what happens to a FormLayout file that already exists. The default, <see cref="FormLayoutImportMode.Keep"/>,
+    /// leaves it, because it is usually adjusted by hand after it was first generated.
     /// </summary>
-    public bool RegenerateLayout { get; init; }
+    public FormLayoutImportMode LayoutMode { get; init; } = FormLayoutImportMode.Keep;
 
     /// <summary>
     /// Gets what happens to a TableSchema file that already exists. The default, <see cref="TableSchemaImportMode.Merge"/>,

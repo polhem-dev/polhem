@@ -13,6 +13,9 @@ public sealed class FormSchemaCommandProvider(FormSchemaDocumentViewModel docume
             [
                 Create("FormSchema_GenerateFormLayout", "DefFormLayout", document.GenerateFormLayoutCommand),
                 Create("FormSchema_ExportWorkbook", "IconTable", document.ExportWorkbookCommand),
+                Create("FormSchema_SyncDefinitions", "IconSync", document.SyncDefinitionsCommand),
+                Create("FormSchema_UpgradeTables", "IconDatabase", document.UpgradeTablesCommand),
+                Create("FormSchema_PreviewUpgradeTables", "IconDatabase", document.PreviewUpgradeTablesCommand),
             ];
         if (node is { IsFolder: true, Value: FormTableCollection })
             return [Create("FormSchema_AddTable", "IconTable", document.AddTableCommand)];

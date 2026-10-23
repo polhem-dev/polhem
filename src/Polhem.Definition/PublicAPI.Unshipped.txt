@@ -1,1 +1,2 @@
 #nullable enable
+static Polhem.Definition.Layouts.FormLayoutGenerator.Merge(Polhem.Definition.Layouts.FormLayout! layout, Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<string!>!

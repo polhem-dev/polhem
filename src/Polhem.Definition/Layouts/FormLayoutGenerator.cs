@@ -50,6 +50,154 @@ namespace Polhem.Definition.Layouts
         }
 
         /// <summary>
+        /// Adds to <paramref name="layout"/> the fields of <paramref name="schema"/> that
+        /// <see cref="Generate"/> would lay out and <paramref name="layout"/> does not have yet,
+        /// and the detail grids it lacks. Everything already in the layout stays as it is.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This keeps a layout that was adjusted by hand in step with its schema after fields are
+        /// added. A field is placed next to its neighbour in the schema: after the nearest earlier
+        /// field the layout already shows, in that field's section, or else before the nearest later
+        /// one. A field with neither goes to the end of the last section; a detail column goes before
+        /// the hidden identity columns at the end of its grid.
+        /// </para>
+        /// <para>
+        /// Fields are matched by name, ignoring case. Nothing is removed or changed: a field the schema
+        /// no longer has stays in the layout, and so does a field whose type changed.
+        /// </para>
+        /// <para>
+        /// IMPORTANT: The layout is changed in place. Do not pass a layout taken from the definition
+        /// cache; clone it first.
+        /// </para>
+        /// </remarks>
+        /// <param name="layout">The layout to complete.</param>
+        /// <param name="schema">The form schema the layout belongs to.</param>
+        /// <returns>
+        /// The fields added, as <c>TableName.FieldName</c>, in the order they were added; empty when
+        /// the layout already had them all.
+        /// </returns>
+        public static IReadOnlyList<string> Merge(FormLayout layout, FormSchema schema)
+        {
+            ArgumentNullException.ThrowIfNull(layout);
+            ArgumentNullException.ThrowIfNull(schema);
+
+            var generated = Generate(schema, layout.LayoutId);
+            var added = new List<string>();
+            MergeSections(layout, generated, schema.MasterTable?.TableName ?? string.Empty, added);
+            MergeDetails(layout, generated, added);
+            return added;
+        }
+
+        private static void MergeSections(FormLayout layout, FormLayout generated, string tableName, List<string> added)
+        {
+            if (generated.Sections!.Count == 0) return;
+            var source = generated.Sections[0].Fields!.ToList();
+            var sections = layout.Sections!;
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (FindField(sections, source[i].FieldName) is not null) continue;
+
+                var (target, index) = FindAnchor(source, i, name => FindField(sections, name))
+                    ?? (LastSection(layout, generated.Sections[0]).Fields!, -1);
+                if (index < 0) target.Add(source[i]);
+                else target.Insert(index, source[i]);
+                added.Add($"{tableName}.{source[i].FieldName}");
+            }
+        }
+
+        private static void MergeDetails(FormLayout layout, FormLayout generated, List<string> added)
+        {
+            foreach (var generatedGrid in generated.Details!.ToList())
+            {
+                var grid = layout.Details!.FirstOrDefault(g => StringUtilities.IsEquals(g.TableName, generatedGrid.TableName));
+                if (grid is null)
+                {
+                    layout.Details!.Add(generatedGrid);
+                    added.AddRange(generatedGrid.Columns!.Select(c => $"{generatedGrid.TableName}.{c.FieldName}"));
+                    continue;
+                }
+
+                var source = generatedGrid.Columns!.ToList();
+                var columns = grid.Columns!;
+                for (int i = 0; i < source.Count; i++)
+                {
+                    if (IndexOf(columns, source[i].FieldName) >= 0) continue;
+
+                    var anchor = FindAnchor<LayoutColumn, LayoutColumnCollection>(source, i,
+                        name => IndexOf(columns, name) is var at and >= 0 ? (columns, at) : null);
+                    int index = anchor?.Index ?? TrailingIdentityStart(columns);
+                    columns.Insert(index, source[i]);
+                    added.Add($"{grid.TableName}.{source[i].FieldName}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Where to insert <c>source[i]</c>: after the nearest earlier item that <paramref name="find"/>
+        /// locates, else before the nearest later one; <see langword="null"/> when it locates neither.
+        /// </summary>
+        private static (TList List, int Index)? FindAnchor<TItem, TList>(
+            List<TItem> source, int i, Func<string, (TList List, int Index)?> find)
+            where TItem : LayoutFieldBase
+        {
+            for (int j = i - 1; j >= 0; j--)
+            {
+                if (find(source[j].FieldName) is { } before) return (before.List, before.Index + 1);
+            }
+            for (int j = i + 1; j < source.Count; j++)
+            {
+                if (find(source[j].FieldName) is { } after) return after;
+            }
+            return null;
+        }
+
+        private static (LayoutFieldCollection List, int Index)? FindField(LayoutSectionCollection sections, string fieldName)
+        {
+            foreach (var section in sections)
+            {
+                int index = IndexOf(section.Fields!, fieldName);
+                if (index >= 0) return (section.Fields!, index);
+            }
+            return null;
+        }
+
+        private static int IndexOf<T>(IList<T> items, string fieldName) where T : LayoutFieldBase
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (StringUtilities.IsEquals(items[i].FieldName, fieldName)) return i;
+            }
+            return -1;
+        }
+
+        private static LayoutSection LastSection(FormLayout layout, LayoutSection generated)
+        {
+            if (layout.Sections!.Count > 0) return layout.Sections[^1];
+            var section = new LayoutSection
+            {
+                Name = generated.Name,
+                Caption = generated.Caption,
+                ShowCaption = generated.ShowCaption,
+            };
+            layout.Sections.Add(section);
+            return section;
+        }
+
+        /// <summary>The index of the first of the hidden identity columns at the end of a grid.</summary>
+        private static int TrailingIdentityStart(LayoutColumnCollection columns)
+        {
+            int index = columns.Count;
+            while (index > 0 && !columns[index - 1].Visible
+                && s_gridIdentityFields.Any(s => StringUtilities.IsEquals(s, columns[index - 1].FieldName)))
+            {
+                index--;
+            }
+            return index;
+        }
+
+        /// <summary>
         /// Adds the master area as a single default section "Main".
         /// </summary>
         private static void AddSections(FormSchema schema, FormLayout layout)

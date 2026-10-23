@@ -247,12 +247,14 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             doc.PropertyChanged -= OnDocumentPropertyChanged;
             doc.DefineFileGenerated -= OnDefineFileGenerated;
+            if (doc is FormSchemaDocumentViewModel form) form.ActionRequested -= OnFormSchemaActionRequested;
         }
         _dirtySubscriptions.Clear();
         foreach (var doc in OpenDocuments)
         {
             doc.PropertyChanged += OnDocumentPropertyChanged;
             doc.DefineFileGenerated += OnDefineFileGenerated;
+            if (doc is FormSchemaDocumentViewModel form) form.ActionRequested += OnFormSchemaActionRequested;
             _dirtySubscriptions.Add(doc);
         }
         OnPropertyChanged(nameof(HasDirtyDocuments));
