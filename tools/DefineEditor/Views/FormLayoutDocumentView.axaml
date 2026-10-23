@@ -16,6 +16,42 @@
 
     <DockPanel>
 
+        <!-- What the right-hand side shows. Each option is a button of its own, so the macOS accessibility API can
+             press it (AXPress) without opening a menu first. -->
+        <Border DockPanel.Dock="Top" Padding="8,6">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPropertiesAndPreviewLayout}"
+                            Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PropertiesAndPreview}"
+                            ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PropertiesAndPreview}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesAndPreview}">
+                        <PathIcon Data="{StaticResource IconPaneBoth}"/>
+                    </Button>
+                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPreviewOnlyLayout}"
+                            Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PreviewOnly}"
+                            ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PreviewOnly}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PreviewOnly}">
+                        <PathIcon Data="{StaticResource IconPanePreview}"/>
+                    </Button>
+                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPropertiesOnlyLayout}"
+                            Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PropertiesOnly}"
+                            ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}">
+                        <PathIcon Data="{StaticResource IconPaneProperties}"/>
+                    </Button>
+                </StackPanel>
+                <Button Classes="tool" HorizontalAlignment="Left" Command="{Binding EditPropertiesCommand}"
+                        IsVisible="{Binding !IsPropertyPaneVisible}"
+                        ToolTip.Tip="{loc:Loc FormLayout_EditPropertiesTooltip}"
+                        AutomationProperties.Name="{loc:Loc FormLayout_EditProperties}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource IconSettings}"/>
+                        <TextBlock Text="{loc:Loc FormLayout_EditProperties}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
+        </Border>
+
         <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
             <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
         </Border>
@@ -43,9 +79,16 @@
                                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4"/>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
             <Grid x:Name="RightPane" Grid.Column="2" RowDefinitions="*,4,*">
-                <views:EditorPane Grid.Row="0" Context="{Binding SelectedEditorContext}"/>
-                <GridSplitter x:Name="PreviewSplitter" Grid.Row="1" ResizeDirection="Rows" IsVisible="{Binding IsPreviewVisible}"/>
-                <views:FormLayoutPreview Grid.Row="2"/>
+                <views:EditorPane Grid.Row="0" Context="{Binding SelectedEditorContext}" IsVisible="{Binding IsPropertyPaneVisible}"/>
+                <GridSplitter x:Name="PreviewSplitter" Grid.Row="1" ResizeDirection="Rows">
+                    <GridSplitter.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="IsPreviewVisible"/>
+                            <Binding Path="IsPropertiesAndPreviewLayout"/>
+                        </MultiBinding>
+                    </GridSplitter.IsVisible>
+                </GridSplitter>
+                <views:FormLayoutPreview Grid.Row="2" IsVisible="{Binding IsPreviewPaneVisible}"/>
             </Grid>
         </Grid>
     </DockPanel>

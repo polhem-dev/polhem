@@ -112,6 +112,10 @@ public sealed class EditorPane : UserControl
             _grid.ValueSuggestionProvider = ValueSuggestionProvider;
         else if (change.Property == CollectionEditorProviderProperty)
             _grid.CollectionEditorProvider = CollectionEditorProvider;
+        // A hidden pane misses the edits made elsewhere meanwhile, such as in the FormLayout editor's properties
+        // dialog, so it reads its object again when it is shown.
+        else if (change.Property == IsVisibleProperty && IsVisible)
+            _grid.Refresh();
     }
 
     /// <inheritdoc/>

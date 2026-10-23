@@ -82,5 +82,53 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(2, folder.Children.Count);
             Assert.Same(folder.Children[1], _document.SelectedTreeNode);
         }
+            [Fact]
+        [DisplayName("A node offers Properties last, in a group of its own, when the side shows only the preview")]
+        public void GetCommands_PreviewOnly_OffersPropertiesLast()
+        {
+            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+
+            var commands = CommandsFor(SectionsFolder.Children[0]);
+
+            var last = commands[^1];
+            Assert.Equal(LocalizationService.Current["FormLayout_EditProperties"], last.Label);
+            Assert.True(last.BeginsGroup);
+            Assert.True(last.IsEnabled);
+        }
+
+        [Fact]
+        [DisplayName("The root offers Properties when the side shows only the preview")]
+        public void GetCommands_PreviewOnly_RootOffersProperties()
+        {
+            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+
+            var command = Assert.Single(CommandsFor(_document.RootNode));
+
+            Assert.Equal(LocalizationService.Current["FormLayout_EditProperties"], command.Label);
+        }
+
+        [Theory]
+        [InlineData(FormLayoutPaneLayout.PropertiesAndPreview)]
+        [InlineData(FormLayoutPaneLayout.PropertiesOnly)]
+        [DisplayName("No node offers Properties while the side shows the property grid")]
+        public void GetCommands_PropertyGridShown_OffersNoProperties(FormLayoutPaneLayout layout)
+        {
+            _document.PaneLayout = layout;
+
+            var labels = CommandsFor(SectionsFolder.Children[0]).Select(c => c.Label);
+
+            Assert.DoesNotContain(LocalizationService.Current["FormLayout_EditProperties"], labels);
+        }
+
+        [Fact]
+        [DisplayName("A folder offers no Properties when the side shows only the preview")]
+        public void GetCommands_PreviewOnly_FolderOffersNoProperties()
+        {
+            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+
+            var command = Assert.Single(CommandsFor(SectionsFolder));
+
+            Assert.Equal(LocalizationService.Current["FormLayout_AddSection"], command.Label);
+        }
     }
 }

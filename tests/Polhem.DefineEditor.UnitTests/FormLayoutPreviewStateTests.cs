@@ -98,5 +98,62 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(SingleFormMode.View, _document.PreviewFormMode);
             Assert.Contains(nameof(FormLayoutDocumentViewModel.PreviewFormMode), notified);
         }
+            [Fact]
+        [DisplayName("The side starts with the property grid above the preview")]
+        public void PaneLayout_DefaultsToPropertiesAndPreview()
+        {
+            Assert.Equal(FormLayoutPaneLayout.PropertiesAndPreview, _document.PaneLayout);
+            Assert.True(_document.IsPropertyPaneVisible);
+            Assert.True(_document.IsPreviewPaneVisible);
+        }
+
+        [Theory]
+        [InlineData(FormLayoutPaneLayout.PreviewOnly, false, true)]
+        [InlineData(FormLayoutPaneLayout.PropertiesOnly, true, false)]
+        [InlineData(FormLayoutPaneLayout.PropertiesAndPreview, true, true)]
+        [DisplayName("Choosing a side layout shows the panes it names and notifies their visibility")]
+        public void SetPaneLayout_ShowsTheNamedPanes(FormLayoutPaneLayout layout, bool properties, bool preview)
+        {
+            // Start from another layout, so the command really changes it.
+            _document.PaneLayout = layout == FormLayoutPaneLayout.PropertiesOnly
+                ? FormLayoutPaneLayout.PreviewOnly
+                : FormLayoutPaneLayout.PropertiesOnly;
+            var notified = new List<string?>();
+            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
+
+            _document.SetPaneLayoutCommand.Execute(layout);
+
+            Assert.Equal(layout, _document.PaneLayout);
+            Assert.Equal(properties, _document.IsPropertyPaneVisible);
+            Assert.Equal(preview, _document.IsPreviewPaneVisible);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsPropertyPaneVisible), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsPreviewPaneVisible), notified);
+        }
+
+        [Fact]
+        [DisplayName("Showing only the preview expands a collapsed preview")]
+        public void SetPaneLayout_PreviewOnly_ExpandsThePreview()
+        {
+            _document.IsPreviewVisible = false;
+
+            _document.SetPaneLayoutCommand.Execute(FormLayoutPaneLayout.PreviewOnly);
+
+            Assert.True(_document.IsPreviewVisible);
+        }
+
+        [Fact]
+        [DisplayName("Properties can be edited in a dialog for a node, not for a folder")]
+        public void EditPropertiesCommand_FollowsTheSelectedNode()
+        {
+            var changed = 0;
+            _document.EditPropertiesCommand.CanExecuteChanged += (_, _) => changed++;
+
+            _document.SelectedTreeNode = SectionsFolder;
+            Assert.False(_document.EditPropertiesCommand.CanExecute(null));
+
+            _document.SelectedTreeNode = MainSection;
+            Assert.True(_document.EditPropertiesCommand.CanExecute(null));
+            Assert.Equal(2, changed);
+        }
     }
 }
