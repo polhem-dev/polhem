@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Packaged zh-TW captions and rule messages for the Order form. The FormSchema carries the
+<!-- Packaged zh-TW captions, rule messages and status names for the Order form. The FormSchema carries the
      English text inline, so there is no en-US resource: a key missing here leaves the schema's own
-     caption or rule message in place, which lands en-US on that text with nothing duplicated.
+     caption or rule message in place, which lands en-US on that text with nothing duplicated. The
+     status field's static ListItems are its English fall-back the same way; OrderStatus below
+     replaces them for zh-TW.
      Customize/northwind-demo/Language/zh-TW/Order.Language.xml overrides two of these keys and
      inherits the rest — that per-key inheritance is the whole point of the customization layer. -->
 <LanguageResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Namespace="Order" Lang="zh-TW">
@@ -34,5 +36,11 @@
     <LanguageItem Key="Rule.product_required.Message" Value="每一筆明細都必須選擇產品。" />
     <LanguageItem Key="Rule.quantity_positive.Message" Value="每一筆明細的數量都必須大於零。" />
   </Items>
-  <Enums />
+  <Enums>
+    <LanguageEnum Name="OrderStatus">
+      <Entry Code="Draft" Text="草稿" />
+      <Entry Code="Confirmed" Text="已確認" />
+      <Entry Code="Shipped" Text="已出貨" />
+    </LanguageEnum>
+  </Enums>
 </LanguageResource>
