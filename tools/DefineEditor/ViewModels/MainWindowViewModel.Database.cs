@@ -9,10 +9,13 @@ public partial class MainWindowViewModel
     /// Tells the user what an import wrote and offers to upgrade the database next. The upgrade covers only
     /// <paramref name="tableNames"/>, the tables of the imported form, since an ERP database can hold thousands of tables.
     /// </summary>
-    private async Task OfferDatabaseUpgradeAsync(Avalonia.Controls.Window owner, string imported, IReadOnlyList<string> tableNames)
+    /// <param name="titleKey">The resource key of the dialog title.</param>
+    /// <param name="hintKey">The resource key of the upgrade question, which takes the table names.</param>
+    private async Task OfferDatabaseUpgradeAsync(Avalonia.Controls.Window owner, string imported, IReadOnlyList<string> tableNames,
+        string titleKey = "Imported_Title", string hintKey = "Imported_UpgradeHint")
     {
-        var action = await ConfirmationDialog.ShowActionsAsync(owner, L("Imported_Title"),
-            imported + "\n\n" + L("Imported_UpgradeHint", string.Join(", ", tableNames)),
+        var action = await ConfirmationDialog.ShowActionsAsync(owner, L(titleKey),
+            imported + "\n\n" + L(hintKey, string.Join(", ", tableNames)),
             primaryLabel: L("Action_UpgradeDatabase"), secondaryLabel: L("Action_PreviewUpgrade"),
             closeLabel: L("Action_Close"));
         if (action is not null)

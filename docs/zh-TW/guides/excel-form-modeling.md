@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: 24350d7e74ccb2f9206cc45d19628aeb48850a3a -->
+<!-- source: en/guides/excel-form-modeling.md blob: f9d40859165359ecae218aa9d9754b074b70f769 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -16,7 +16,8 @@
 4. [匯入時自動補上的內容](#4-匯入時自動補上的內容)
 5. [匯入會寫入的檔案](#5-匯入會寫入的檔案)
 6. [再次匯入](#6-再次匯入)
-7. [限制](#7-限制)
+7. [在 DefineEditor 修改表單](#7-在-defineeditor-修改表單)
+8. [限制](#8-限制)
 
 ---
 
@@ -127,10 +128,27 @@ TableSchema，以 `--tables` 選擇（DefineEditor 會詢問）：
 | `overwrite` | 以表單產生的 TableSchema 取代 |
 
 FormLayout 是例外。只有表單還沒有版面時才會產生，因為版面通常會在之後手動調整。要換成重新產生的版面，加上
-`--regenerate-layout`（表單已有版面時 DefineEditor 會詢問），或在 DefineEditor 對 FormSchema 執行 **產生 FormLayout**。之後才加進活頁簿的欄位，要放進
-既有版面才會出現在畫面上。
+`--regenerate-layout`，或在 DefineEditor 對 FormSchema 執行 **產生 FormLayout**。表單已有版面時，DefineEditor
+會詢問要保留、補上缺少的欄位，還是重新產生。保留的版面不會顯示之後才加進活頁簿的欄位，要放進版面才會出現在畫面上。
 
-## 7. 限制
+## 7. 在 DefineEditor 修改表單
+
+也可以直接在 DefineEditor 修改表單，不必回到活頁簿。在 FormSchema 加入欄位或明細表後，對表單節點按右鍵：
+
+| 命令 | 效果 |
+|------|------|
+| **同步 TableSchema 與 FormLayout...** | 讓表單的 TableSchema 與 FormLayout 跟上已儲存的 FormSchema，做法與 `merge` 匯入相同，並把新的明細表登記到 `DbCategorySettings.xml`。寫入前列出會變更的檔案與各自新增的欄位，完成後提示升級這張表單的資料表 |
+| **升級此表單的資料表...** / **預覽此表單的資料表升級** | 只對這張表單的資料表執行資料庫管理工具的 `upgrade`（每張表一個 `--table`） |
+
+- 新欄位會放在表單上相鄰欄位的旁邊：TableSchema 中放在前一個已存在的欄位之後；FormLayout 中放在前一個已存在的欄位之後，
+  落在該欄位所在的區段或明細表格。之後不必再調整版面。版面的部分是 `FormLayoutGenerator.Merge`，應用程式也可以呼叫。
+- 同步只會新增。從表單移除的欄位仍留在 TableSchema 與 FormLayout；型別或大小改變的欄位維持 TableSchema 的設定。
+  預覽會把這兩種情況列為需要手動編輯的項目。
+- 刻意從版面拿掉的欄位會被補回來，所以版面缺少欄位時，同步會詢問要補上還是保留版面。
+- 同步讀取的是已儲存的 FormSchema，所以尚未儲存的修改會先儲存。
+- 表單的資料表指主檔與明細表，不含關聯欄位指向的其他表單的資料表，那些屬於各自的表單。
+
+## 8. 限制
 
 - 一份活頁簿描述一張表單。
 - 活頁簿承載的是定義，不是版面：區段、欄數與欄位在畫面上的順序，在 DefineEditor 中安排。

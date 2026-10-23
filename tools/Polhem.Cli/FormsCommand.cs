@@ -103,7 +103,7 @@ internal static class FormsCommand
         var plan = FormImporter.Plan(read.Content!, new FormImportOptions
         {
             DefinePath = define,
-            RegenerateLayout = options.Flags.Contains("--regenerate-layout"),
+            LayoutMode = options.Flags.Contains("--regenerate-layout") ? FormLayoutImportMode.Regenerate : FormLayoutImportMode.Keep,
             TableSchemaMode = tableMode,
         });
         PrintIssues(plan.Issues);

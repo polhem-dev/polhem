@@ -311,6 +311,7 @@ Save anyway?</value></data>
   <data name="Status_StartupPathNotFound" xml:space="preserve"><value>The folder on the command line does not exist: {0}</value></data>
   <data name="Choice_FormLayoutMessage" xml:space="preserve"><value>This form already has a FormLayout, which may have been adjusted by hand. How should the import treat it?</value></data>
   <data name="Choice_FormLayoutKeep" xml:space="preserve"><value>Keep: leave the existing FormLayout as it is; new fields appear in the list but not on the edit screen (recommended when the layout was adjusted)</value></data>
+  <data name="Choice_FormLayoutMerge" xml:space="preserve"><value>Add fields: keep the existing FormLayout and add the fields it lacks, each next to its neighbour on the form</value></data>
   <data name="Choice_FormLayoutRegenerate" xml:space="preserve"><value>Regenerate: lay the form out again from the workbook, replacing any adjustments</value></data>
   <data name="DbCommand_UpgradeTitle" xml:space="preserve"><value>Upgrade Database</value></data>
   <data name="DbCommand_PreviewTitle" xml:space="preserve"><value>Preview Database Upgrade</value></data>
@@ -387,4 +388,31 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Action_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Action_Start" xml:space="preserve"><value>Start</value></data>
   <data name="Action_StopAfterCurrent" xml:space="preserve"><value>Stop After This One</value></data>
+  <data name="FormSchema_SyncDefinitions" xml:space="preserve"><value>Sync TableSchema and FormLayout...</value></data>
+  <data name="FormSchema_UpgradeTables" xml:space="preserve"><value>Upgrade This Form's Tables...</value></data>
+  <data name="FormSchema_PreviewUpgradeTables" xml:space="preserve"><value>Preview Upgrade of This Form's Tables</value></data>
+  <data name="Confirm_SyncFormTitle" xml:space="preserve"><value>Sync form</value></data>
+  <data name="Confirm_SyncFormMessage" xml:space="preserve"><value>Syncing {0} in {1} changes these files (+ marks what is added):
+{2}</value></data>
+  <data name="Sync_SaveFirst" xml:space="preserve"><value>{0} has unsaved changes. The sync reads the saved FormSchema, so it is saved first.</value></data>
+  <data name="Action_SaveAndContinue" xml:space="preserve"><value>Save and Continue</value></data>
+  <data name="Action_Sync" xml:space="preserve"><value>Sync</value></data>
+  <data name="Choice_SyncFormLayoutMessage" xml:space="preserve"><value>The FormLayout lacks some of the form's fields. A field removed from the layout on purpose would be added back. How should the sync treat the layout?</value></data>
+  <data name="Sync_ManualAttention" xml:space="preserve"><value>Not changed by the sync; edit these by hand if needed:
+{0}</value></data>
+  <data name="Sync_UpToDateWithWarnings" xml:space="preserve"><value>The TableSchema and FormLayout of {0} already have every field of the form. Not changed by the sync; edit these by hand if needed:
+{1}</value></data>
+  <data name="Error_SyncFormTitle" xml:space="preserve"><value>Cannot sync the form</value></data>
+  <data name="Error_SyncFormMessage" xml:space="preserve"><value>Nothing was written. Fix these problems in the FormSchema first:
+{0}</value></data>
+  <data name="Error_UpgradeFormTablesTitle" xml:space="preserve"><value>Cannot upgrade the form's tables</value></data>
+  <data name="Sync_UnregisteredTables" xml:space="preserve"><value>DbCategorySettings does not register these tables, so the database manager would not build them: {0}. Run Sync TableSchema and FormLayout first.</value></data>
+  <data name="Status_FormSyncCancelled" xml:space="preserve"><value>Sync cancelled</value></data>
+  <data name="Status_FormSyncUnchanged" xml:space="preserve"><value>{0}: the TableSchema and FormLayout are up to date</value></data>
+  <data name="Status_FormSyncBlockedByDirty" xml:space="preserve"><value>Save or close {0} first; the sync would overwrite it</value></data>
+  <data name="Status_FormSyncFailed" xml:space="preserve"><value>Sync failed: {0}</value></data>
+  <data name="Status_FormSynced" xml:space="preserve"><value>Synced {0}: {1} file(s) written</value></data>
+  <data name="Status_FormTablesUnregistered" xml:space="preserve"><value>Not registered in DbCategorySettings: {0}</value></data>
+  <data name="Synced_Title" xml:space="preserve"><value>Sync Complete</value></data>
+  <data name="Synced_UpgradeHint" xml:space="preserve"><value>Upgrade the database now so its tables match the synced definitions? Only this form's tables are upgraded: {0}. The preview shows the changes without making them.</value></data>
 </root>

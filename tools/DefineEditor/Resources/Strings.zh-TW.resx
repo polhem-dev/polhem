@@ -298,6 +298,7 @@
   <data name="Status_StartupPathNotFound" xml:space="preserve"><value>命令列指定的資料夾不存在：{0}</value></data>
   <data name="Choice_FormLayoutMessage" xml:space="preserve"><value>這張表單已有 FormLayout，可能經過手動調整。匯入時要如何處理？</value></data>
   <data name="Choice_FormLayoutKeep" xml:space="preserve"><value>保留：維持現有的 FormLayout；新欄位會出現在清單，不會出現在編輯畫面（版面調整過時建議）</value></data>
+  <data name="Choice_FormLayoutMerge" xml:space="preserve"><value>補上新欄位：保留現有的 FormLayout，把缺少的欄位補在表單上相鄰欄位的旁邊</value></data>
   <data name="Choice_FormLayoutRegenerate" xml:space="preserve"><value>重新產生：依活頁簿重新排版，手動調整會被取代</value></data>
   <data name="DbCommand_UpgradeTitle" xml:space="preserve"><value>升級資料庫</value></data>
   <data name="DbCommand_PreviewTitle" xml:space="preserve"><value>預覽資料庫升級</value></data>
@@ -374,4 +375,31 @@
   <data name="Action_Back" xml:space="preserve"><value>上一步</value></data>
   <data name="Action_Start" xml:space="preserve"><value>開始</value></data>
   <data name="Action_StopAfterCurrent" xml:space="preserve"><value>做完這一份就停止</value></data>
+  <data name="FormSchema_SyncDefinitions" xml:space="preserve"><value>同步 TableSchema 與 FormLayout...</value></data>
+  <data name="FormSchema_UpgradeTables" xml:space="preserve"><value>升級此表單的資料表...</value></data>
+  <data name="FormSchema_PreviewUpgradeTables" xml:space="preserve"><value>預覽此表單的資料表升級</value></data>
+  <data name="Confirm_SyncFormTitle" xml:space="preserve"><value>同步表單</value></data>
+  <data name="Confirm_SyncFormMessage" xml:space="preserve"><value>在 {1} 同步 {0}，會變更下列檔案（+ 表示新增的項目）：
+{2}</value></data>
+  <data name="Sync_SaveFirst" xml:space="preserve"><value>{0} 有尚未儲存的修改。同步讀取的是已儲存的 FormSchema，所以會先儲存。</value></data>
+  <data name="Action_SaveAndContinue" xml:space="preserve"><value>儲存並繼續</value></data>
+  <data name="Action_Sync" xml:space="preserve"><value>同步</value></data>
+  <data name="Choice_SyncFormLayoutMessage" xml:space="preserve"><value>FormLayout 缺少表單上的部分欄位。刻意從版面移除的欄位也會被補回來。同步時要如何處理版面？</value></data>
+  <data name="Sync_ManualAttention" xml:space="preserve"><value>同步不會變更下列項目，需要時請手動編輯：
+{0}</value></data>
+  <data name="Sync_UpToDateWithWarnings" xml:space="preserve"><value>{0} 的 TableSchema 與 FormLayout 已有表單上的所有欄位。同步不會變更下列項目，需要時請手動編輯：
+{1}</value></data>
+  <data name="Error_SyncFormTitle" xml:space="preserve"><value>無法同步表單</value></data>
+  <data name="Error_SyncFormMessage" xml:space="preserve"><value>沒有寫入任何檔案。請先修正 FormSchema 的下列問題：
+{0}</value></data>
+  <data name="Error_UpgradeFormTablesTitle" xml:space="preserve"><value>無法升級此表單的資料表</value></data>
+  <data name="Sync_UnregisteredTables" xml:space="preserve"><value>DbCategorySettings 沒有登記下列資料表，資料庫管理工具不會建立它們：{0}。請先執行「同步 TableSchema 與 FormLayout」。</value></data>
+  <data name="Status_FormSyncCancelled" xml:space="preserve"><value>已取消同步</value></data>
+  <data name="Status_FormSyncUnchanged" xml:space="preserve"><value>{0}：TableSchema 與 FormLayout 已是最新</value></data>
+  <data name="Status_FormSyncBlockedByDirty" xml:space="preserve"><value>請先儲存或關閉 {0}，同步會覆寫它</value></data>
+  <data name="Status_FormSyncFailed" xml:space="preserve"><value>同步失敗：{0}</value></data>
+  <data name="Status_FormSynced" xml:space="preserve"><value>已同步 {0}：寫入 {1} 個檔案</value></data>
+  <data name="Status_FormTablesUnregistered" xml:space="preserve"><value>DbCategorySettings 未登記：{0}</value></data>
+  <data name="Synced_Title" xml:space="preserve"><value>同步完成</value></data>
+  <data name="Synced_UpgradeHint" xml:space="preserve"><value>要接著升級資料庫，讓資料表符合同步後的定義嗎？只會升級這張表單的資料表：{0}。預覽只列出變更，不會實際執行。</value></data>
 </root>

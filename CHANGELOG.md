@@ -13,6 +13,10 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+- DefineEditor syncs a FormSchema to its TableSchemas and FormLayout (**Sync TableSchema and FormLayout** on the schema
+  node) and upgrades only that form's tables. A new field is placed next to its neighbour on the form in both files,
+  through the new `FormLayoutGenerator.Merge`; the form workbook import can merge into an existing layout the same way.
+
 ## [1.8.0] - 2026-10-22
 
 Details and migration steps: [docs/en/changelogs/1.8.0.md](docs/en/changelogs/1.8.0.md)

@@ -157,6 +157,8 @@ internal static class SettingsXmlEditor
     /// <paramref name="generatedXml"/> it lacks, matched by field name and index name. Existing elements are not
     /// changed, so lengths, captions, columns that are not on the form and hand-made indexes stay. The one exception
     /// is a <c>String</c> column without a length, which no database can build: it takes the form's length.
+    /// A missing column goes where the form has it: after the nearest earlier column the document already has, or
+    /// else before the nearest later one, and at the end only when it has neither. Missing indexes go at the end.
     /// </summary>
     /// <returns><see langword="true"/> when the document changed.</returns>
     public static bool MergeTableSchema(XDocument document, string generatedXml)
@@ -165,7 +167,7 @@ internal static class SettingsXmlEditor
         using var reader = XmlReader.Create(new StringReader(generatedXml), settings);
         var generated = XDocument.Load(reader).Root!;
         var root = document.Root!;
-        bool changed = AddMissing(root, generated, "Fields", "DbField", "FieldName");
+        bool changed = AddMissingInOrder(root, generated, "Fields", "DbField", "FieldName");
         changed |= FillMissingLengths(root, generated);
         changed |= AddMissing(root, generated, "Indexes", "DbTableIndex", "Name");
         return changed;
@@ -183,6 +185,29 @@ internal static class SettingsXmlEditor
             if ((string?)field.Attribute("DbType") != "String" || ((int?)field.Attribute("Length") ?? 0) > 0) continue;
             if (!lengths.TryGetValue((string?)field.Attribute("FieldName") ?? string.Empty, out var length)) continue;
             field.SetAttributeValue("Length", length);
+            changed = true;
+        }
+        return changed;
+    }
+
+    private static bool AddMissingInOrder(XElement root, XElement generated, string container, string element, string key)
+    {
+        var source = generated.Element(container)?.Elements(element).ToList();
+        if (source is null) return false;
+        var target = Child(root, container);
+        XElement? Find(XElement item) => target.Elements(element)
+            .FirstOrDefault(e => Is(e, key, (string?)item.Attribute(key) ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+
+        bool changed = false;
+        for (int i = 0; i < source.Count; i++)
+        {
+            if (Find(source[i]) is not null) continue;
+            var copy = new XElement(source[i]);
+            var before = source.Take(i).Reverse().Select(Find).FirstOrDefault(e => e is not null);
+            var after = before is null ? source.Skip(i + 1).Select(Find).FirstOrDefault(e => e is not null) : null;
+            if (before is not null) before.AddAfterSelf(copy);
+            else if (after is not null) after.AddBeforeSelf(copy);
+            else target.Add(copy);
             changed = true;
         }
         return changed;

@@ -15,7 +15,8 @@
 4. [What the Import Fills In](#4-what-the-import-fills-in)
 5. [What the Import Writes](#5-what-the-import-writes)
 6. [Importing Again](#6-importing-again)
-7. [Limits](#7-limits)
+7. [Changing a Form in DefineEditor](#7-changing-a-form-in-defineeditor)
+8. [Limits](#8-limits)
 
 ---
 
@@ -139,11 +140,33 @@ added by hand. What the import does with an existing one is chosen with `--table
 | `overwrite` | Replaces the file with the TableSchema generated from the form |
 
 The FormLayout is the exception. The import generates one only when the form has none, because a layout is usually
-arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout` (DefineEditor asks
-when the form has a layout), or use **Generate FormLayout** on the FormSchema in DefineEditor. A field added to the workbook later does not appear on an
-existing layout until it is placed there.
+arranged by hand afterwards. To replace it with a freshly generated one, pass `--regenerate-layout`, or use
+**Generate FormLayout** on the FormSchema in DefineEditor. When the form has a layout, DefineEditor asks whether to keep
+it, add the fields it lacks, or regenerate it. A kept layout does not show a field added to the workbook later until it
+is placed there.
 
-## 7. Limits
+## 7. Changing a Form in DefineEditor
+
+A form can also be changed in DefineEditor without going back to the workbook. After adding fields or a detail table to
+the FormSchema, right-click the schema node:
+
+| Command | Effect |
+|---------|--------|
+| **Sync TableSchema and FormLayout…** | Brings the form's TableSchemas and FormLayout up to date with the saved FormSchema, the way a `merge` import does, and registers a new detail table in `DbCategorySettings.xml`. It lists the files it changes and the fields each gains before writing, and then offers to upgrade the form's tables |
+| **Upgrade This Form's Tables…** / **Preview Upgrade of This Form's Tables** | Runs the database manager's `upgrade` for the form's tables only (`--table` for each) |
+
+- A new field goes next to its neighbour on the form: in the TableSchema after the nearest earlier column, and in the
+  FormLayout after the nearest earlier field, in that field's section or grid. The layout needs no rearranging
+  afterwards. The layout half is `FormLayoutGenerator.Merge`, which an application can call as well.
+- The sync only adds. A field removed from the form stays in the TableSchema and the FormLayout, and a column whose type
+  or size changed keeps the TableSchema's; the preview lists both under the things to edit by hand.
+- A field taken off the layout on purpose would come back, so when the layout lacks fields the sync asks whether to add
+  them or keep the layout.
+- The sync reads the saved FormSchema, so unsaved edits are saved first.
+- A form's tables are its master table and its detail tables. The tables of the forms its relation fields point to are
+  not included; they belong to those forms.
+
+## 8. Limits
 
 - One workbook describes one form.
 - The workbook carries the definition, not the layout: sections, column counts and the order of fields on screen are

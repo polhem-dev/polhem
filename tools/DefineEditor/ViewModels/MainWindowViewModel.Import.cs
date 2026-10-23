@@ -100,29 +100,34 @@ public partial class MainWindowViewModel
                     };
                 }
 
-                var regenerateLayout = false;
+                var layoutMode = FormLayoutImportMode.Keep;
                 if (plan.Files.Any(f => FormWorkbookImport.IsFormLayout(f.Path) && f.Action == PlannedFileAction.Skip))
                 {
                     var layout = await ConfirmationDialog.ShowChoiceAsync(owner, L("Confirm_ImportFormTitle"),
                         L("Choice_FormLayoutMessage"),
-                        [L("Choice_FormLayoutKeep"), L("Choice_FormLayoutRegenerate")],
+                        [L("Choice_FormLayoutKeep"), L("Choice_FormLayoutMerge"), L("Choice_FormLayoutRegenerate")],
                         selectedIndex: 0, confirmLabel: L("Action_Next"));
                     if (layout is null)
                     {
                         StatusText = L("Status_FormImportCancelled");
                         return;
                     }
-                    regenerateLayout = layout == 1;
+                    layoutMode = layout switch
+                    {
+                        1 => FormLayoutImportMode.Merge,
+                        2 => FormLayoutImportMode.Regenerate,
+                        _ => FormLayoutImportMode.Keep,
+                    };
                 }
 
-                if (tableSchemaMode != TableSchemaImportMode.Merge || regenerateLayout)
+                if (tableSchemaMode != TableSchemaImportMode.Merge || layoutMode != FormLayoutImportMode.Keep)
                 {
                     // The conventions already ran on this content and change nothing when applied again.
                     plan = FormImporter.Plan(read.Content!, new FormImportOptions
                     {
                         DefinePath = definePath,
                         TableSchemaMode = tableSchemaMode,
-                        RegenerateLayout = regenerateLayout,
+                        LayoutMode = layoutMode,
                     });
                 }
             }

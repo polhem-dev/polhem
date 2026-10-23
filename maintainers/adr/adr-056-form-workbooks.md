@@ -102,6 +102,13 @@ signs in, lists, reads back relations and saves (2026-10-20).
 An existing FormLayout is kept unless the import is asked to regenerate it. A layout is the part people arrange by
 hand after the first draft, and the workbook does not describe arrangement.
 
+Since 2026-10-23 the import can also merge into it (`FormLayoutImportMode.Merge`): `FormLayoutGenerator.Merge` adds the
+fields and detail grids the layout lacks, each after the nearest earlier field the layout already shows (in that
+field's section or grid), and changes nothing else. DefineEditor's sync of a FormSchema to its derived files
+(`FormSync`) uses the same merge, and `MergeTableSchema` places a new column the same way, so a field added between two
+others lands between them in both files. Keep stays the default, since a field someone took off the layout on purpose
+would come back.
+
 ### 7. Shared settings files are edited, not re-serialized
 
 `DbCategorySettings.xml`, `ProgramSettings.xml`, `MenuSettings.xml` and the language files are edited at the XML level:
