@@ -11,13 +11,18 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
-## [Unreleased]
+## [1.9.0] - 2026-10-23
 
-- DefineEditor syncs a FormSchema to its TableSchemas and FormLayout (**Sync TableSchema and FormLayout** on the schema
-  node, or the **File** menu while the FormSchema is the active tab) and upgrades only that form's tables. A new field is placed next to its neighbour on the form in both files,
-  through the new `FormLayoutGenerator.Merge`, and a new visible master field is appended to the form's `ListFields`
-  (an empty one, which lists every field, stays empty); the form workbook import can merge into an existing layout the
-  same way.
+Details and migration steps: [docs/en/changelogs/1.9.0.md](docs/en/changelogs/1.9.0.md)
+
+- DefineEditor syncs a FormSchema's new fields into its TableSchemas and FormLayout and upgrades only that form's
+  tables, through the new `FormLayoutGenerator.Merge`, which the form workbook import can use too.
+- DefineEditor's FormLayout editor can show the property grid, the preview or both, with a properties dialog when the
+  grid is hidden, and **View › Toggle Side Bar** (⌘B) collapses the sidebar.
+- On iOS and Android, `Polhem.UI.Avalonia.Shell` shows one form at a time with a menu that closes after a pick, and
+  the new `ShellOptions.DefaultThemeVariant` sets the starting theme; new template projects and Northwind start dark.
+- The shell's menu and tab close icons draw on the browser head, and menu entries and tree rows selected through
+  accessibility now open and follow (`TreeViewExtensions.KeepSelectionSingle`).
 
 ## [1.8.0] - 2026-10-22
 

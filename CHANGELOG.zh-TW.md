@@ -10,9 +10,14 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
-## [Unreleased]
+## [1.9.0] - 2026-10-23
 
-- DefineEditor 可把 FormSchema 同步到它的 TableSchema 與 FormLayout（schema 節點的 **同步 TableSchema 與 FormLayout**，或 FormSchema 為作用中分頁時的 **File** 選單），並只升級該表單的資料表。新欄位在兩份檔案中都放在表單上相鄰欄位的旁邊，由新的 `FormLayoutGenerator.Merge` 處理，主檔新增的可見欄位也會加到表單的 `ListFields`（空白代表列出所有欄位，維持空白）；表單活頁簿匯入也能以同樣方式補進既有版面。
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.9.0.md](docs/zh-TW/changelogs/1.9.0.md)
+
+- DefineEditor 可把 FormSchema 新增的欄位同步到它的 TableSchema 與 FormLayout，並只升級該表單的資料表；版面部分由新的 `FormLayoutGenerator.Merge` 處理，表單活頁簿匯入也能使用。
+- DefineEditor 的 FormLayout 編輯器可選擇顯示屬性格、預覽或兩者，隱藏屬性格時以對話框編輯屬性；**View › Toggle Side Bar**（⌘B）可收合側欄。
+- 在 iOS 與 Android 上，`Polhem.UI.Avalonia.Shell` 一次只顯示一個表單，選單選好後自動收起；新的 `ShellOptions.DefaultThemeVariant` 設定啟動時的主題，新建的範本專案與 Northwind 預設為深色。
+- 殼的選單鈕與分頁關閉鈕在瀏覽器端可正常顯示；透過無障礙介面選取的選單項目與樹狀清單列，現在會開啟並跟著切換（`TreeViewExtensions.KeepSelectionSingle`）。
 
 ## [1.8.0] - 2026-10-22
 

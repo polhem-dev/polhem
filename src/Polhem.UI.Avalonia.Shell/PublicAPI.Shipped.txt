@@ -38,6 +38,8 @@ Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.get -> string!
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.set -> void
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultPassword.get -> string!
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultPassword.set -> void
+Polhem.UI.Avalonia.Shell.ShellOptions.DefaultThemeVariant.get -> Avalonia.Styling.ThemeVariant!
+Polhem.UI.Avalonia.Shell.ShellOptions.DefaultThemeVariant.set -> void
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultUserId.get -> string!
 Polhem.UI.Avalonia.Shell.ShellOptions.DefaultUserId.set -> void
 Polhem.UI.Avalonia.Shell.ShellOptions.Description.get -> string!

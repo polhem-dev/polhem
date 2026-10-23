@@ -2122,6 +2122,7 @@ static Polhem.Definition.Language.PolhemUIText.Get(Microsoft.Extensions.Localiza
 static Polhem.Definition.Layouts.FormEditModesExtensions.Allows(this Polhem.Definition.Layouts.FormEditModes modes, Polhem.Definition.Layouts.SingleFormMode formMode) -> bool
 static Polhem.Definition.Layouts.FormLayoutCaptionApplier.Apply(Polhem.Definition.Layouts.FormLayout! layout, Polhem.Definition.Forms.FormSchema! schema) -> void
 static Polhem.Definition.Layouts.FormLayoutGenerator.Generate(Polhem.Definition.Forms.FormSchema! schema, string! layoutId) -> Polhem.Definition.Layouts.FormLayout!
+static Polhem.Definition.Layouts.FormLayoutGenerator.Merge(Polhem.Definition.Layouts.FormLayout! layout, Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Polhem.Definition.Layouts.LayoutColumnCollectionExtensions.Add(this Polhem.Definition.Layouts.LayoutColumnCollection? collection, string! fieldName, string! caption, Polhem.Definition.Layouts.ControlType controlType) -> Polhem.Definition.Layouts.LayoutColumn!
 static Polhem.Definition.Logging.AuditColumn.operator !=(Polhem.Definition.Logging.AuditColumn left, Polhem.Definition.Logging.AuditColumn right) -> bool
 static Polhem.Definition.Logging.AuditColumn.operator ==(Polhem.Definition.Logging.AuditColumn left, Polhem.Definition.Logging.AuditColumn right) -> bool
