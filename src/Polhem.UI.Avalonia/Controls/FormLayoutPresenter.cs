@@ -228,8 +228,9 @@ namespace Polhem.UI.Avalonia.Controls
             // A required field's caption is blue; a read-only field's caption stays the theme
             // default — its cue is the editor's read-only underline (the detail grid, which has no
             // such per-cell visual, parenthesises the header instead). See FieldCaptionStyle.
-            if (FieldCaptionStyle.GetCaptionForeground(field.ReadOnly, field.Required) is { } brush)
-                caption.Foreground = brush;
+            // The schema's Required counts as well as the layout's: the server enforces the schema's.
+            var required = field.Required || DataObject?.GetFormField(field.FieldName)?.Required == true;
+            FieldCaptionStyle.ApplyCaptionForeground(caption, field.ReadOnly, required);
             stack.Children.Add(caption);
             stack.Children.Add(BuildInputControl(field));
             return stack;

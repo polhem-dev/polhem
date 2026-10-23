@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: ffd1465acce9258e024daf1391da42eea6197da3 -->
+<!-- source: en/guides/excel-form-modeling.md blob: 794c29c738cf9105a07e0d8549abf7fc22d572cf -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -137,7 +137,7 @@ FormLayout 是例外。只有表單還沒有版面時才會產生，因為版面
 
 | 命令 | 效果 |
 |------|------|
-| **同步 TableSchema 與 FormLayout...** | 讓表單的 TableSchema 與 FormLayout 跟上已儲存的 FormSchema，做法與 `merge` 匯入相同，把新的明細表登記到 `DbCategorySettings.xml`，並把主檔新增的可見欄位加到表單的清單欄位（`ListFields`；空白代表列出所有欄位，維持空白）。寫入前列出會變更的檔案與各自新增的欄位，完成後提示升級這張表單的資料表 |
+| **同步 TableSchema 與 FormLayout...** | 讓表單的 TableSchema 與 FormLayout 跟上已儲存的 FormSchema，做法與 `merge` 匯入相同，把新的明細表登記到 `DbCategorySettings.xml`，並把主檔新增的可見欄位加到表單的清單欄位（`ListFields`；空白代表列出所有欄位，維持空白）。表單已有 zh-TW 語系檔時，語系檔裡沒有標題的新欄位會補上一筆，值先放欄位本身的標題，等待翻譯。寫入前列出會變更的檔案與各自新增的欄位與鍵，完成後提示升級這張表單的資料表 |
 | **升級此表單的資料表...** / **預覽此表單的資料表升級** | 只對這張表單的資料表執行資料庫管理工具的 `upgrade`（每張表一個 `--table`） |
 
 - 新欄位會放在表單上相鄰欄位的旁邊：TableSchema 中放在前一個已存在的欄位之後；FormLayout 中放在前一個已存在的欄位之後，

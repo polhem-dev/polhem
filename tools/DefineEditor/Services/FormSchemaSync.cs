@@ -13,8 +13,8 @@ namespace Polhem.DefineEditor.Services;
 public static class FormSchemaSync
 {
     /// <summary>
-    /// One bullet line per file <paramref name="plan"/> writes: its path, what happens to it, and the fields and tables
-    /// an existing file gains, including the fields a FormSchema's <see cref="FormSchema.ListFields"/> gains.
+    /// One bullet line per file <paramref name="plan"/> writes: its path, what happens to it, and the fields, tables and
+    /// language keys an existing file gains, including the fields a FormSchema's <see cref="FormSchema.ListFields"/> gains.
     /// </summary>
     /// <param name="plan">A plan from <see cref="FormSync.Plan"/>.</param>
     /// <param name="definePath">The definition folder the paths are shown relative to.</param>
@@ -34,8 +34,8 @@ public static class FormSchemaSync
     }
 
     /// <summary>
-    /// The tables and fields named in <paramref name="updated"/> that <paramref name="existing"/> does not name, in
-    /// document order.
+    /// The tables, fields and language keys named in <paramref name="updated"/> that <paramref name="existing"/> does
+    /// not name, in document order.
     /// </summary>
     public static IReadOnlyList<string> AddedNames(string existing, string updated)
     {
@@ -73,15 +73,20 @@ public static class FormSchemaSync
     }
 
     /// <summary>
-    /// The names a definition file holds: each <c>TableName</c>, and each <c>FieldName</c> qualified with the
+    /// The names a definition file holds: each <c>TableName</c>, each <c>FieldName</c> qualified with the
     /// <c>TableName</c> of the element it sits in below the root, so a detail column is told apart from a master
-    /// field of the same name.
+    /// field of the same name, and the <c>Key</c> of each language item.
     /// </summary>
     private static IEnumerable<string> Names(string xml)
     {
         var root = Load(xml).Root!;
         foreach (var element in root.Descendants())
         {
+            if (element.Name.LocalName == "LanguageItem" && (string?)element.Attribute("Key") is { Length: > 0 } key)
+            {
+                yield return key;
+                continue;
+            }
             if ((string?)element.Attribute("TableName") is { Length: > 0 } table) yield return table;
             if ((string?)element.Attribute("FieldName") is not { Length: > 0 } field) continue;
             var owner = element.Ancestors().TakeWhile(a => a != root)

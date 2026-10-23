@@ -4,6 +4,7 @@ using System.Data;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -538,6 +539,71 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             qtyEditor.Text = "12";
             qtyEditor.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
             Assert.Equal(12, table.Rows[0]["qty"]);
+        }
+
+        [Fact]
+        [DisplayName("Escape in the text cell editor keeps the original value when the editor then loses focus")]
+        public void BuildCellEditor_Escape_DoesNotWriteOnLostFocus()
+        {
+            var table = new DataTable("Items");
+            table.Columns.Add("qty", typeof(int));
+            table.Rows.Add(40);
+            var grid = new GridControl();
+            grid.Bind(new LayoutGrid("Items", "Items"), table);
+
+            var method = typeof(GridControl).GetMethod(
+                "BuildCellEditor", BindingFlags.NonPublic | BindingFlags.Instance);
+            var editor = Assert.IsType<TextBox>(method!.Invoke(
+                grid, new object?[] { table.DefaultView[0], new LayoutColumn { FieldName = "qty" } }));
+
+            editor.Text = "540";
+            editor.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+            editor.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
+
+            Assert.Equal(40, table.Rows[0]["qty"]);
+        }
+
+        private static TextBox PrepareTextCell(RoutedEventArgs? gesture)
+        {
+            var editor = new TextBox { Text = "40" };
+            var method = typeof(GridControl).GetMethod(
+                "OnPreparingCellForEdit", BindingFlags.NonPublic | BindingFlags.Static);
+            method!.Invoke(null, new object?[]
+            {
+                null,
+                new DataGridPreparingCellForEditEventArgs(new DataGridTemplateColumn(), new DataGridRow(), gesture!, editor),
+            });
+            return editor;
+        }
+
+        [Fact]
+        [DisplayName("A text cell entering edit by pointer selects its whole text, so typing replaces the value")]
+        public void PreparingCellForEdit_Pointer_SelectsAllText()
+        {
+            var editor = PrepareTextCell(null);
+
+            Assert.Equal("40", editor.SelectedText);
+        }
+
+        [Fact]
+        [DisplayName("A text cell entering edit by typing starts from the typed text with the caret after it")]
+        public void PreparingCellForEdit_TextInput_StartsFromTypedText()
+        {
+            var editor = PrepareTextCell(new TextInputEventArgs { RoutedEvent = InputElement.TextInputEvent, Text = "5" });
+
+            Assert.Equal("5", editor.Text);
+            Assert.Equal(1, editor.CaretIndex);
+        }
+
+        [Fact]
+        [DisplayName("A text cell entering edit by F2 keeps its text and puts the caret at the end")]
+        public void PreparingCellForEdit_F2_PutsCaretAtEnd()
+        {
+            var editor = PrepareTextCell(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.F2 });
+
+            Assert.Equal("40", editor.Text);
+            Assert.Equal(2, editor.CaretIndex);
+            Assert.Equal(string.Empty, editor.SelectedText);
         }
 
         [Fact]

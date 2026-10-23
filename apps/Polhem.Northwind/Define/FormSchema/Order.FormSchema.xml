@@ -39,7 +39,7 @@
         <FormField FieldName="ref_shipper_id" Caption="Shipper Code" DbType="String" Type="RelationField" />
         <FormField FieldName="ref_shipper_name" Caption="Shipper Name" DbType="String" Type="RelationField" />
         <FormField FieldName="freight" Caption="Freight" DbType="Currency" />
-        <FormField FieldName="status" Caption="Status" DbType="String" MaxLength="12" ControlType="DropDownEdit" DefaultValue="Draft">
+        <FormField FieldName="status" Caption="Status" DbType="String" MaxLength="12" ControlType="DropDownEdit" DefaultValue="Draft" LangEnumName="OrderStatus">
           <ListItems>
             <ListItem Value="Draft" Text="Draft" />
             <ListItem Value="Confirmed" Text="Confirmed" />

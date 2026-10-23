@@ -1,6 +1,7 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 
 namespace Polhem.Definition.Spreadsheet;
@@ -11,10 +12,17 @@ namespace Polhem.Definition.Spreadsheet;
 /// <see cref="TableSchemaImportMode.Merge"/> mode, so it only adds.
 /// </summary>
 /// <remarks>
+/// <para>
 /// It also adds each new visible column of the master table to the form's <see cref="FormSchema.ListFields"/>, so a
-/// field added in the editor shows in the list as well as on the edit screen. A field is new when the master table's
+/// field added in the editor shows in the list as well as on the edit screen. A field is new when its table's
 /// TableSchema does not have its column yet; fields the list already names stay where they are. An empty list already
 /// shows every field, so it stays empty.
+/// </para>
+/// <para>
+/// When the form already has a zh-TW language resource, each new field that lacks a caption there gets one holding
+/// the form's own caption, so the translator finds every key to translate in the file. A form without that resource
+/// is not translated, and none is created for it.
+/// </para>
 /// </remarks>
 public static class FormSync
 {
@@ -35,6 +43,7 @@ public static class FormSync
         var content = FormExporter.Load(definePath, progId);
         var paths = new PathOptions { DefinePath = Path.GetFullPath(definePath) };
         var listed = AddNewColumnsToListFields(paths, content.Schema);
+        AddMissingCaptionTranslations(paths, content);
         var plan = FormImporter.Plan(content, new FormImportOptions
         {
             DefinePath = definePath,
@@ -74,6 +83,33 @@ public static class FormSync
             .ToList();
         if (added.Count > 0) schema.ListFields = string.Join(",", listed.Concat(added));
         return added;
+    }
+
+    /// <summary>
+    /// Gives each new stored field of <paramref name="content"/> that has no zh-TW caption one holding its own caption.
+    /// A field is new when its table's TableSchema does not have its column yet; a table without a TableSchema file is
+    /// new as a whole and gets nothing, nor does a form with no zh-TW texts at all.
+    /// </summary>
+    private static void AddMissingCaptionTranslations(PathOptions paths, FormWorkbookContent content)
+    {
+        if (content.ZhTw.Count == 0) return;
+        var schema = content.Schema;
+        var categoryId = TableSchemaGenerator.GetCategoryId(schema);
+        foreach (var table in schema.Tables ?? [])
+        {
+            if (table.Fields is null || string.IsNullOrEmpty(table.DbTableName)) continue;
+            var path = paths.GetTableSchemaFilePath(categoryId, table.DbTableName);
+            if (!File.Exists(path)) continue;
+            var existing = XmlCodec.DeserializeFromFile<TableSchema>(path);
+            if (existing?.Fields is null) continue;
+
+            foreach (var field in table.Fields.Where(f => f.Type == FieldType.DbField && !existing.Fields.Contains(f.FieldName)))
+            {
+                var key = FormWorkbookWriter.Key(FormSchemaLocalizer.FieldCaptionKeyFormat, field.FieldName);
+                if (!content.ZhTw.ContainsKey(key))
+                    content.ZhTw[key] = string.IsNullOrEmpty(field.Caption) ? field.FieldName : field.Caption;
+            }
+        }
     }
 
     /// <summary>The database tables of <paramref name="schema"/>: the master table and every detail table.</summary>

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 
@@ -130,6 +131,44 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             FormImporter.Apply(FormSync.Plan(_define, "Quote"));
 
             Assert.Equal(string.Empty, XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+        }
+
+        private string LanguagePath => PathOf("Language", "zh-TW", "Quote.Language.xml");
+
+        [Fact]
+        [DisplayName("A field added to a translated form gets a zh-TW caption key holding its own caption")]
+        public void Plan_NewField_AddsZhTwCaptionKey()
+        {
+            EditSchema(s => s.Tables!["Quote"].Fields!.Add(new FormField("grade", "Grade", FieldDbType.String) { MaxLength = 10 }));
+
+            var plan = FormSync.Plan(_define, "Quote");
+            FormImporter.Apply(plan);
+
+            Assert.False(plan.HasErrors);
+            Assert.Equal(PlannedFileAction.Update, plan.Files.Single(f => f.Path == LanguagePath).Action);
+            var items = XmlCodec.DeserializeFromFile<LanguageResource>(LanguagePath)!.Items;
+            Assert.Equal("Grade", items["Field.grade.Caption"].Value);
+            Assert.Equal("客戶", items["Field.customer_rowid.Caption"].Value);
+        }
+
+        [Fact]
+        [DisplayName("A zh-TW caption already given for a new field is kept, and a form without zh-TW texts gets no language file")]
+        public void Plan_NewField_KeepsTranslationAndCreatesNoLanguageFile()
+        {
+            var language = XmlCodec.DeserializeFromFile<LanguageResource>(LanguagePath)!;
+            language.Items.Add(new LanguageItem { Key = "Field.grade.Caption", Value = "客戶等級" });
+            File.WriteAllText(LanguagePath, XmlCodec.Serialize(language));
+            EditSchema(s => s.Tables!["Quote"].Fields!.Add(new FormField("grade", "Grade", FieldDbType.String) { MaxLength = 10 }));
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            Assert.Equal("客戶等級", XmlCodec.DeserializeFromFile<LanguageResource>(LanguagePath)!.Items["Field.grade.Caption"].Value);
+
+            File.Delete(LanguagePath);
+            EditSchema(s => s.Tables!["Quote"].Fields!.Add(new FormField("rank", "Rank", FieldDbType.String) { MaxLength = 10 }));
+            var plan = FormSync.Plan(_define, "Quote");
+
+            Assert.DoesNotContain(plan.Files, f => f.Path == LanguagePath && f.Writes);
         }
 
         [Fact]
