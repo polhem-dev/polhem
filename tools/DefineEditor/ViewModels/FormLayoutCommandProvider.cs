@@ -5,7 +5,7 @@ namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
 /// The context-menu commands of the FormLayout tree: add a section, field, grid or column where
-/// the node allows it, then Delete.
+/// the node allows it, then Delete, and Properties when the property grid is off the side.
 /// </summary>
 public sealed class FormLayoutCommandProvider(FormLayoutDocumentViewModel document) : TreeCommandProviderBase(document)
 {
@@ -17,4 +17,9 @@ public sealed class FormLayoutCommandProvider(FormLayoutDocumentViewModel docume
         { Value: LayoutGrid } => [Create("FormLayout_AddColumn", "IconColumn", document.AddLayoutColumnCommand)],
         _ => [],
     };
+
+    protected override IEnumerable<TreeNodeCommand> GetTrailingCommands(ObjectTreeNode node) =>
+        document.IsPropertyPaneVisible || node.IsFolder
+            ? []
+            : [Create("FormLayout_EditProperties", "IconSettings", document.EditPropertiesCommand, beginsGroup: true)];
 }

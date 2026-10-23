@@ -42,6 +42,30 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
 
+    /// <summary>What the right-hand side shows: the property grid, the preview, or both.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPropertyPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsPreviewPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsPropertiesAndPreviewLayout))]
+    [NotifyPropertyChangedFor(nameof(IsPreviewOnlyLayout))]
+    [NotifyPropertyChangedFor(nameof(IsPropertiesOnlyLayout))]
+    private FormLayoutPaneLayout _paneLayout;
+
+    /// <summary>Whether the property grid is on the right-hand side.</summary>
+    public bool IsPropertyPaneVisible => PaneLayout != FormLayoutPaneLayout.PreviewOnly;
+
+    /// <summary>Whether the preview is on the right-hand side.</summary>
+    public bool IsPreviewPaneVisible => PaneLayout != FormLayoutPaneLayout.PropertiesOnly;
+
+    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PropertiesAndPreview"/>.</summary>
+    public bool IsPropertiesAndPreviewLayout => PaneLayout == FormLayoutPaneLayout.PropertiesAndPreview;
+
+    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PreviewOnly"/>.</summary>
+    public bool IsPreviewOnlyLayout => PaneLayout == FormLayoutPaneLayout.PreviewOnly;
+
+    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PropertiesOnly"/>.</summary>
+    public bool IsPropertiesOnlyLayout => PaneLayout == FormLayoutPaneLayout.PropertiesOnly;
+
     private FormLayoutDocumentViewModel(string filePath, FormLayout root)
         // The root and the two folders start expanded.
         : base(filePath, "FormLayout", keyText: root.LayoutId, new ObjectTreeOptions { ExpandDepth = 2 })
@@ -49,6 +73,11 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         Root = root;
         CommandProvider = new FormLayoutCommandProvider(this);
         InitializeTree(root);
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SelectedTreeNode))
+                EditPropertiesCommand.NotifyCanExecuteChanged();
+        };
     }
 
     public static FormLayoutDocumentViewModel Load(string filePath)
@@ -60,6 +89,34 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
             ?? throw new InvalidOperationException($"FormLayout deserialized to null: {filePath}");
         return new FormLayoutDocumentViewModel(filePath, root);
     }
+
+    [RelayCommand]
+    private void SetPaneLayout(FormLayoutPaneLayout layout) => PaneLayout = layout;
+
+    // The preview is the only thing on the side, so a collapsed preview would leave it empty.
+    partial void OnPaneLayoutChanged(FormLayoutPaneLayout value)
+    {
+        if (value == FormLayoutPaneLayout.PreviewOnly)
+            IsPreviewVisible = true;
+    }
+
+    /// <summary>
+    /// Opens the selected node's properties in a dialog, for the layouts that leave the property grid off the side.
+    /// </summary>
+    /// <remarks>
+    /// The dialog shows the same <see cref="ObjectTreeDocumentViewModelBase.SelectedEditorContext"/> in the same
+    /// grid, so its edits reach the document exactly as the side's do.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(CanEditProperties))]
+    private async Task EditProperties()
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null) return;
+        var label = SelectedTreeNode?.Label;
+        await Views.NodePropertiesDialog.ShowAsync(owner, this,
+            L("NodePropertiesDialog_Title", string.IsNullOrEmpty(label) ? "—" : label));
+    }
+    private bool CanEditProperties() => SelectedEditorContext is not null;
 
     public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
     {

@@ -95,6 +95,12 @@
   <data name="ConfirmDialog_DefaultTitle" xml:space="preserve"><value>Confirm</value></data>
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>Validation results</value></data>
+  <data name="FormLayout_PaneLayout_PropertiesAndPreview" xml:space="preserve"><value>Show properties and preview</value></data>
+  <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>Show preview only</value></data>
+  <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>Show properties only</value></data>
+  <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
+  <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>
+  <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>Properties — {0}</value></data>
   <data name="Preview_Title" xml:space="preserve"><value>Preview</value></data>
   <data name="Preview_Show" xml:space="preserve"><value>Show</value></data>
   <data name="Preview_ViewMode" xml:space="preserve"><value>View mode</value></data>

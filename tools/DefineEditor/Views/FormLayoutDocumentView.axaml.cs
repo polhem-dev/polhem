@@ -6,7 +6,9 @@ namespace Polhem.DefineEditor.Views;
 
 public partial class FormLayoutDocumentView : UserControl
 {
-    // The preview row's height while it is expanded; a collapsed preview keeps only its header row.
+    // The rows' heights while both are shown; a collapsed preview keeps only its header row, and the layouts that show
+    // one pane give it the whole side.
+    private GridLength _editorHeight = new(1, GridUnitType.Star);
     private GridLength _expandedPreviewHeight = new(1, GridUnitType.Star);
     private FormLayoutDocumentViewModel? _document;
 
@@ -20,28 +22,36 @@ public partial class FormLayoutDocumentView : UserControl
         _document = DataContext as FormLayoutDocumentViewModel;
         if (_document is not null)
             _document.PropertyChanged += OnDocumentPropertyChanged;
-        ApplyPreviewRow();
+        ApplyRows();
     }
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FormLayoutDocumentViewModel.IsPreviewVisible))
-            ApplyPreviewRow();
+        if (e.PropertyName is nameof(FormLayoutDocumentViewModel.IsPreviewVisible)
+            or nameof(FormLayoutDocumentViewModel.PaneLayout))
+            ApplyRows();
     }
 
-    private void ApplyPreviewRow()
+    private void ApplyRows()
     {
+        var editorRow = RightPane.RowDefinitions[0];
         var previewRow = RightPane.RowDefinitions[2];
-        if (_document?.IsPreviewVisible ?? true)
+        // Keep the heights the user dragged the splitter to, so showing both again restores them. Only the layout
+        // that shows both with the preview expanded leaves star heights that came from the splitter.
+        if (editorRow.Height.IsStar && previewRow.Height.IsStar && editorRow.Height.Value > 0 && previewRow.Height.Value > 0)
         {
-            previewRow.Height = _expandedPreviewHeight;
+            _editorHeight = editorRow.Height;
+            _expandedPreviewHeight = previewRow.Height;
         }
-        else
+
+        var layout = _document?.PaneLayout ?? FormLayoutPaneLayout.PropertiesAndPreview;
+        var previewExpanded = _document?.IsPreviewVisible ?? true;
+        editorRow.Height = layout == FormLayoutPaneLayout.PreviewOnly ? new GridLength(0) : _editorHeight;
+        previewRow.Height = layout switch
         {
-            // Keep the height the user dragged the splitter to, so expanding again restores it.
-            if (previewRow.Height.IsStar)
-                _expandedPreviewHeight = previewRow.Height;
-            previewRow.Height = GridLength.Auto;
-        }
+            FormLayoutPaneLayout.PropertiesOnly => new GridLength(0),
+            FormLayoutPaneLayout.PreviewOnly => new GridLength(1, GridUnitType.Star),
+            _ => previewExpanded ? _expandedPreviewHeight : GridLength.Auto,
+        };
     }
 }
