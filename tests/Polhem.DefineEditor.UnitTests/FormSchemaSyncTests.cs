@@ -79,6 +79,23 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("The preview of a sync names the fields the form's ListFields gains")]
+        public void DescribeWrites_NamesAddedListFields()
+        {
+            var schema = Quote();
+            Import(schema);
+            schema = XmlCodec.DeserializeFromFile<FormSchema>(Path.Combine(_define, "FormSchema", "Quote.FormSchema.xml"))!;
+            schema.ListFields = "sys_id,quote_date";
+            schema.Tables!["Quote"].Fields!.Add("remark", "Remark", FieldDbType.Text);
+            File.WriteAllText(Path.Combine(_define, "FormSchema", "Quote.FormSchema.xml"), XmlCodec.Serialize(schema));
+
+            var text = FormSchemaSync.DescribeWrites(FormSync.Plan(_define, "Quote"), _define);
+
+            Assert.Contains(Path.Combine("FormSchema", "Quote.FormSchema.xml"), text, StringComparison.Ordinal);
+            Assert.Contains("ListFields + remark", text, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A table the DbCategorySettings does not register is reported before an upgrade")]
         public void UnregisteredTables_NewDetailTable_IsReported()
         {

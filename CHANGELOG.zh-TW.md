@@ -12,7 +12,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 ## [Unreleased]
 
-- DefineEditor 可把 FormSchema 同步到它的 TableSchema 與 FormLayout（schema 節點的 **同步 TableSchema 與 FormLayout**，或 FormSchema 為作用中分頁時的 **File** 選單），並只升級該表單的資料表。新欄位在兩份檔案中都放在表單上相鄰欄位的旁邊，由新的 `FormLayoutGenerator.Merge` 處理；表單活頁簿匯入也能以同樣方式補進既有版面。
+- DefineEditor 可把 FormSchema 同步到它的 TableSchema 與 FormLayout（schema 節點的 **同步 TableSchema 與 FormLayout**，或 FormSchema 為作用中分頁時的 **File** 選單），並只升級該表單的資料表。新欄位在兩份檔案中都放在表單上相鄰欄位的旁邊，由新的 `FormLayoutGenerator.Merge` 處理，主檔新增的可見欄位也會加到表單的 `ListFields`（空白代表列出所有欄位，維持空白）；表單活頁簿匯入也能以同樣方式補進既有版面。
 
 ## [1.8.0] - 2026-10-22
 

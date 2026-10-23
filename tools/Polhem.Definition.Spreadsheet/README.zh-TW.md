@@ -19,7 +19,7 @@
 | `FormSchemaValidator` | DefineEditor 顯示在表單旁的檢查；匯入器遇到有錯誤的表單就拒絕 |
 | `FormImporter` | 規劃匯入要寫的每個檔案（這份規劃就是 dry-run 報告），再寫入 |
 | `FormExporter` | 從定義資料夾收集表單、它的中文文字與選單位置 |
-| `FormSync` | 規劃讓已儲存的 FormSchema 的 TableSchema、FormLayout 與資料表登記跟上它：等於以資料夾中現有的表單做一次匯入，只新增不修改 |
+| `FormSync` | 規劃讓已儲存的 FormSchema 的 TableSchema、FormLayout 與資料表登記跟上它：等於以資料夾中現有的表單做一次匯入，只新增不修改；主檔新增的可見欄位也會加到非空白的 `ListFields` |
 
 ## 範本
 
