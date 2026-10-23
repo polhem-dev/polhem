@@ -45,10 +45,20 @@ namespace Polhem.Definition.Collections
         /// <summary>
         /// Gets or sets the display text.
         /// </summary>
+        /// <remarks>
+        /// When no text is set, the getter returns <see cref="Value"/>, so an item declared with only a value
+        /// shows that value in every drop-down. The form workbook import reads a list item without a text the
+        /// same way.
+        /// </remarks>
         [XmlAttribute]
-        [Description("Display text.")]
+        [Description("Display text. When empty, the value is shown.")]
         [Category(PropertyCategories.Data)]
-        public string Text { get; set; } = string.Empty;
+        public string Text
+        {
+            get { return string.IsNullOrEmpty(_text) ? Value : _text; }
+            set { _text = value; }
+        }
+        private string _text = string.Empty;
 
         /// <summary>
         /// Creates a deep copy of this instance. Result is unparented (no owning collection).

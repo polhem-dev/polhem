@@ -21,6 +21,34 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
+        [DisplayName("ListItem Text falls back to Value when no text is set")]
+        public void Text_NotSet_ReturnsValue()
+        {
+            var item = new ListItem { Value = "B" };
+
+            Assert.Equal("B", item.Text);
+        }
+
+        [Fact]
+        [DisplayName("ListItem Text set to an empty string falls back to Value")]
+        public void Text_Empty_ReturnsValue()
+        {
+            var item = new ListItem("B", string.Empty);
+
+            Assert.Equal("B", item.Text);
+        }
+
+        [Fact]
+        [DisplayName("ListItem read from XML without a Text attribute shows its value")]
+        public void Text_MissingInXml_ReturnsValue()
+        {
+            var items = Polhem.Core.Serialization.XmlCodec.Deserialize<ListItemCollection>(
+                "<ArrayOfListItem><ListItem Value=\"A\" /></ArrayOfListItem>");
+
+            Assert.Equal("A", items![0].Text);
+        }
+
+        [Fact]
         [DisplayName("ListItem ToString returns Text")]
         public void ListItem_ToString_ReturnsText()
         {
