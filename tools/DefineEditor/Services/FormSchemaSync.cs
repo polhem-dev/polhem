@@ -14,7 +14,7 @@ public static class FormSchemaSync
 {
     /// <summary>
     /// One bullet line per file <paramref name="plan"/> writes: its path, what happens to it, and the fields and tables
-    /// an existing file gains.
+    /// an existing file gains, including the fields a FormSchema's <see cref="FormSchema.ListFields"/> gains.
     /// </summary>
     /// <param name="plan">A plan from <see cref="FormSync.Plan"/>.</param>
     /// <param name="definePath">The definition folder the paths are shown relative to.</param>
@@ -24,8 +24,12 @@ public static class FormSchemaSync
         return string.Join("\n", plan.Files.Where(f => f.Writes).Select(f =>
         {
             var line = $"• {Path.GetRelativePath(definePath, f.Path)} ({FormWorkbookImport.ActionLabel(f.Action)})";
-            var added = File.Exists(f.Path) ? AddedNames(File.ReadAllText(f.Path), f.Content!) : [];
-            return added.Count == 0 ? line : $"{line}: + {string.Join(", ", added)}";
+            if (!File.Exists(f.Path)) return line;
+            var existing = File.ReadAllText(f.Path);
+            var added = AddedNames(existing, f.Content!);
+            if (added.Count > 0) line = $"{line}: + {string.Join(", ", added)}";
+            var listed = AddedListFields(existing, f.Content!);
+            return listed.Count == 0 ? line : $"{line}: {nameof(FormSchema.ListFields)} + {string.Join(", ", listed)}";
         }));
     }
 
@@ -38,6 +42,20 @@ public static class FormSchemaSync
         var before = Names(existing).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return Names(updated).Where(before.Add).ToList();
     }
+
+    /// <summary>
+    /// The fields the root's <c>ListFields</c> in <paramref name="updated"/> names that it does not name in
+    /// <paramref name="existing"/>; empty for a file that is not a FormSchema.
+    /// </summary>
+    public static IReadOnlyList<string> AddedListFields(string existing, string updated)
+    {
+        var before = ListFields(existing).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return ListFields(updated).Where(before.Add).ToList();
+    }
+
+    private static IEnumerable<string> ListFields(string xml) =>
+        ((string?)Load(xml).Root!.Attribute(nameof(FormSchema.ListFields)) ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     /// <summary>
     /// The tables of <paramref name="schema"/> that the DbCategorySettings of <paramref name="definePath"/> does not

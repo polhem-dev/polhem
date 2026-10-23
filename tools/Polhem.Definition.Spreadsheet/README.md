@@ -20,7 +20,7 @@ How a workbook is filled in and what the import does is described for its users 
 | `FormSchemaValidator` | The checks DefineEditor shows next to a form; the importer refuses a form with errors |
 | `FormImporter` | Plan every file an import writes (the plan is the dry-run report), then write it |
 | `FormExporter` | Gather a form, its zh-TW texts and its menu placement from a definition folder |
-| `FormSync` | Plan bringing the TableSchemas, FormLayout and table registrations of a saved FormSchema up to date with it: an import of the form as the folder holds it, adding only |
+| `FormSync` | Plan bringing the TableSchemas, FormLayout and table registrations of a saved FormSchema up to date with it: an import of the form as the folder holds it, adding only. New visible master fields are also appended to a non-empty `ListFields` |
 
 ## The template
 

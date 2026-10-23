@@ -82,6 +82,57 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("A visible field added to the master table is appended to the form's ListFields")]
+        public void Plan_NewField_IsAddedToListFields()
+        {
+            EditSchema(s =>
+            {
+                s.ListFields = "sys_id,quote_date";
+                s.Tables!["Quote"].Fields!.Add(new FormField("grade", "Grade", FieldDbType.String) { MaxLength = 10 });
+                s.Tables!["Quote"].Fields!.Add(new FormField("internal_note", "Internal Note", FieldDbType.String) { MaxLength = 40, Visible = false });
+            });
+
+            var plan = FormSync.Plan(_define, "Quote");
+            FormImporter.Apply(plan);
+
+            var schemaFile = plan.Files.Single(f => f.Path == SchemaPath);
+            Assert.Equal(PlannedFileAction.Update, schemaFile.Action);
+            Assert.Equal("sys_id,quote_date,grade", XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+        }
+
+        [Fact]
+        [DisplayName("A field the ListFields already names is not added again, and a synced form is not touched twice")]
+        public void Plan_ListedField_IsNotAddedAgain()
+        {
+            EditSchema(s =>
+            {
+                s.Tables!["Quote"].Fields!.Add(new FormField("grade", "Grade", FieldDbType.String) { MaxLength = 10 });
+                s.ListFields = "grade,sys_id";
+            });
+            var listFields = XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields;
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            Assert.Equal(listFields, XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+            Assert.DoesNotContain(FormSync.Plan(_define, "Quote").Files, f => f.Writes);
+        }
+
+        [Fact]
+        [DisplayName("An empty ListFields, which lists every field, stays empty when a field is added")]
+        public void Plan_EmptyListFields_StaysEmpty()
+        {
+            EditSchema(s =>
+            {
+                s.ListFields = string.Empty;
+                s.Tables!["Quote"].Fields!.Add(new FormField("grade", "Grade", FieldDbType.String) { MaxLength = 10 });
+            });
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            Assert.Equal(string.Empty, XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+        }
+
+        [Fact]
         [DisplayName("Syncing with the layout kept leaves the FormLayout alone and still updates the TableSchema")]
         public void Plan_KeepLayout_SkipsLayout()
         {

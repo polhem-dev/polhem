@@ -10,6 +10,12 @@ namespace Polhem.Definition.Spreadsheet;
 /// table registrations. It is an import of the form as the definition folder already holds it, in
 /// <see cref="TableSchemaImportMode.Merge"/> mode, so it only adds.
 /// </summary>
+/// <remarks>
+/// It also adds each new visible column of the master table to the form's <see cref="FormSchema.ListFields"/>, so a
+/// field added in the editor shows in the list as well as on the edit screen. A field is new when the master table's
+/// TableSchema does not have its column yet; fields the list already names stay where they are. An empty list already
+/// shows every field, so it stays empty.
+/// </remarks>
 public static class FormSync
 {
     /// <summary>
@@ -27,6 +33,8 @@ public static class FormSync
     public static FormImportPlan Plan(string definePath, string progId, FormLayoutImportMode layoutMode = FormLayoutImportMode.Merge)
     {
         var content = FormExporter.Load(definePath, progId);
+        var paths = new PathOptions { DefinePath = Path.GetFullPath(definePath) };
+        var listed = AddNewColumnsToListFields(paths, content.Schema);
         var plan = FormImporter.Plan(content, new FormImportOptions
         {
             DefinePath = definePath,
@@ -35,10 +43,37 @@ public static class FormSync
         });
         if (plan.HasErrors) return plan;
 
-        var paths = new PathOptions { DefinePath = Path.GetFullPath(definePath) };
         var schema = content.Schema;
         var warnings = ColumnDifferences(paths, schema).Concat(StaleLayoutFields(paths, schema));
-        return new FormImportPlan([.. plan.Issues, .. warnings], plan.Files);
+        var schemaPath = paths.GetFormSchemaFilePath(schema.ProgId);
+        var files = plan.Files.Select(f => listed.Count > 0 && f.Path == schemaPath && f.Writes
+            ? f with { Action = PlannedFileAction.Update, Description = $"{f.Description}: list {string.Join(", ", listed)}" }
+            : f).ToList();
+        return new FormImportPlan([.. plan.Issues, .. warnings], files);
+    }
+
+    /// <summary>
+    /// Appends to <see cref="FormSchema.ListFields"/> the visible stored fields of the master table whose column its
+    /// TableSchema does not have yet, and returns their names. A form without a master TableSchema file is new, and an
+    /// empty list shows every field; both are left as the form gives them.
+    /// </summary>
+    private static List<string> AddNewColumnsToListFields(PathOptions paths, FormSchema schema)
+    {
+        var master = schema.MasterTable;
+        if (master?.Fields is null || string.IsNullOrWhiteSpace(schema.ListFields)) return [];
+        var path = paths.GetTableSchemaFilePath(TableSchemaGenerator.GetCategoryId(schema), master.DbTableName);
+        if (!File.Exists(path)) return [];
+        var existing = XmlCodec.DeserializeFromFile<TableSchema>(path);
+        if (existing?.Fields is null) return [];
+
+        var listed = schema.ListFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        var added = master.Fields
+            .Where(f => f.Type == FieldType.DbField && f.Visible && !existing.Fields.Contains(f.FieldName))
+            .Select(f => f.FieldName)
+            .Where(name => !listed.Contains(name, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        if (added.Count > 0) schema.ListFields = string.Join(",", listed.Concat(added));
+        return added;
     }
 
     /// <summary>The database tables of <paramref name="schema"/>: the master table and every detail table.</summary>

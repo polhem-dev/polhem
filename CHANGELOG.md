@@ -15,7 +15,9 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 - DefineEditor syncs a FormSchema to its TableSchemas and FormLayout (**Sync TableSchema and FormLayout** on the schema
   node, or the **File** menu while the FormSchema is the active tab) and upgrades only that form's tables. A new field is placed next to its neighbour on the form in both files,
-  through the new `FormLayoutGenerator.Merge`; the form workbook import can merge into an existing layout the same way.
+  through the new `FormLayoutGenerator.Merge`, and a new visible master field is appended to the form's `ListFields`
+  (an empty one, which lists every field, stays empty); the form workbook import can merge into an existing layout the
+  same way.
 
 ## [1.8.0] - 2026-10-22
 
