@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.Views
         private readonly Button _newButton;
         private readonly Button _editButton;
         private readonly Button _deleteButton;
-        private readonly TextBlock _errorLabel;
+        private readonly MessageBar _errorLabel;
         private readonly TextBlock _loadingLabel;
         private readonly TextBlock _emptyListLabel;
         private readonly GridControl _grid;
@@ -76,7 +76,7 @@ namespace Polhem.UI.Avalonia.Views
         /// </summary>
         public ListView()
         {
-            _errorLabel = new TextBlock { Foreground = Brushes.Red, IsVisible = false };
+            _errorLabel = new MessageBar { Margin = new Thickness(0, 0, 0, 8) };
             _loadingLabel = new TextBlock { Text = UIText.Get(PolhemUIText.Loading), IsVisible = true };
 
             // Tag each command with the permission action it requires; the capability resolver

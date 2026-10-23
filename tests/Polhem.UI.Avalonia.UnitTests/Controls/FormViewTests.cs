@@ -933,7 +933,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.False(saveCalled);
             Assert.False(saved);
             Assert.Null(reported);
-            var label = GetPrivateField<TextBlock>(view, "_errorLabel");
+            var label = GetPrivateField<MessageBar>(view, "_errorLabel");
             Assert.True(label.IsVisible);
             Assert.Equal("Fill in the required fields: Category Name", label.Text);
         }

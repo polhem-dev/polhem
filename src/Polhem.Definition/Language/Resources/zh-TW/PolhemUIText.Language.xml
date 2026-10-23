@@ -18,6 +18,7 @@
     <LanguageItem Key="Cancel" Value="取消" />
     <LanguageItem Key="Back" Value="返回" />
     <LanguageItem Key="OK" Value="確定" />
+    <LanguageItem Key="Dismiss" Value="關閉" />
     <LanguageItem Key="Search" Value="搜尋" />
     <LanguageItem Key="Unsaved" Value="● 尚未儲存" />
     <LanguageItem Key="True" Value="是" />

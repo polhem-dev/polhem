@@ -49,6 +49,8 @@ namespace Polhem.Definition.Language
         public const string Back = "Back";
         /// <summary>Key of the confirm command.</summary>
         public const string Ok = "OK";
+        /// <summary>Key of the command that dismisses a message.</summary>
+        public const string Dismiss = "Dismiss";
         /// <summary>Key of the search command and placeholder.</summary>
         public const string Search = "Search";
         /// <summary>Key of the unsaved-changes marker.</summary>
@@ -115,6 +117,7 @@ namespace Polhem.Definition.Language
             [Cancel] = "Cancel",
             [Back] = "Back",
             [Ok] = "OK",
+            [Dismiss] = "Dismiss",
             [Search] = "Search",
             [Unsaved] = "● unsaved",
             [True] = "Yes",

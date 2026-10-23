@@ -67,8 +67,7 @@ namespace Polhem.UI.Avalonia.Views
 
         private void ReportError(Exception ex)
         {
-            _errorLabel.Text = ex.Message;
-            _errorLabel.IsVisible = true;
+            _errorLabel.Show(ex.Message);
             ErrorOccurred?.Invoke(this, ex);
         }
 
@@ -76,14 +75,12 @@ namespace Polhem.UI.Avalonia.Views
         // `ErrorOccurred`, because nothing went wrong that a host needs to log.
         private void ShowMessage(string message)
         {
-            _errorLabel.Text = message;
-            _errorLabel.IsVisible = true;
+            _errorLabel.Show(message);
         }
 
         private void ClearError()
         {
-            _errorLabel.Text = string.Empty;
-            _errorLabel.IsVisible = false;
+            _errorLabel.Clear();
         }
     }
 }

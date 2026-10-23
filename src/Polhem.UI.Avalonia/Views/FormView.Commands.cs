@@ -1,8 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Avalonia.Permissions;
 using Polhem.UI.Core.Permissions;
@@ -88,6 +90,7 @@ namespace Polhem.UI.Avalonia.Views
             if (missing.Count > 0)
             {
                 ShowMessage(RequiredFieldCheck.FormatPrompt(UIText.Localizer, missing));
+                FocusMissingField(missing[0]);
                 return;
             }
 
@@ -212,6 +215,17 @@ namespace Polhem.UI.Avalonia.Views
                 return;
             if (_presenter.GetDetailGrid(tableName) is not { } grid) { return; }
             Dispatcher.UIThread.Post(grid.RefreshRows, DispatcherPriority.Background);
+        }
+
+        // Puts the cursor in the first empty required master field, so the user can fill it in straight
+        // after reading the message. A field in a detail grid has no single editor to focus.
+        private void FocusMissingField(MissingRequiredField missing)
+        {
+            if (missing.IsDetail) return;
+            var editor = _presenter.GetVisualDescendants()
+                .OfType<IFieldEditor>()
+                .FirstOrDefault(e => string.Equals(e.FieldName, missing.Field.FieldName, StringComparison.OrdinalIgnoreCase));
+            (editor as Control)?.Focus();
         }
     }
 }
