@@ -149,6 +149,24 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Add rule on the Rules folder adds a rule that refuses nothing yet, selects it, and the rule can be deleted")]
+        public void AddRule_OnRulesFolder_AddsSelectsAndDeletes()
+        {
+            var rules = _document.RootNode.Children[1];
+
+            Assert.Single(CommandsFor(rules)).Execute();
+
+            var rule = Assert.Single(_document.Schema.Rules!);
+            Assert.Equal("new_rule", rule.RuleId);
+            Assert.Equal("true", rule.Condition);
+            Assert.Same(rule, _document.SelectedTreeNode!.Value);
+            Assert.Single(CommandsFor(_document.SelectedTreeNode),
+                c => c.Label == LocalizationService.Current["FormSchema_AddRule"]);
+            Assert.Contains(CommandsFor(_document.SelectedTreeNode),
+                c => c.Label == LocalizationService.Current["Action_Delete"]);
+        }
+
+        [Fact]
         [DisplayName("A mapping can be deleted, a folder cannot")]
         public void Delete_AvailableForMapping()
         {

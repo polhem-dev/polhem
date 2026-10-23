@@ -160,6 +160,7 @@
   <!-- FormSchema -->
   <data name="FormSchema_AddTable" xml:space="preserve"><value>Add FormTable</value></data>
   <data name="FormSchema_AddField" xml:space="preserve"><value>Add FormField</value></data>
+  <data name="FormSchema_AddRule" xml:space="preserve"><value>Add FormRule</value></data>
   <data name="FormSchema_AddLookupMapping" xml:space="preserve"><value>Add Lookup Mapping</value></data>
   <data name="FormSchema_AddRelationMapping" xml:space="preserve"><value>Add Relation Mapping</value></data>
   <data name="FormSchema_GenerateFormLayout" xml:space="preserve"><value>Generate FormLayout</value></data>
