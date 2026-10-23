@@ -62,6 +62,16 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("The added names of a language resource are its new keys")]
+        public void AddedNames_LanguageResource_ListsNewKeys()
+        {
+            const string before = """<LanguageResource><Items><LanguageItem Key="Field.sys_id.Caption" Value="代號" /></Items></LanguageResource>""";
+            const string after = """<LanguageResource><Items><LanguageItem Key="Field.grade.Caption" Value="Grade" /><LanguageItem Key="Field.sys_id.Caption" Value="代號" /></Items></LanguageResource>""";
+
+            Assert.Equal(["Field.grade.Caption"], FormSchemaSync.AddedNames(before, after));
+        }
+
+        [Fact]
         [DisplayName("The preview of a sync lists each written file with the fields it gains")]
         public void DescribeWrites_ListsFilesAndAddedFields()
         {

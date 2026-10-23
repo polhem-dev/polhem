@@ -153,7 +153,7 @@ active tab:
 
 | Command | Effect |
 |---------|--------|
-| **Sync TableSchema and FormLayout…** | Brings the form's TableSchemas and FormLayout up to date with the saved FormSchema, the way a `merge` import does, registers a new detail table in `DbCategorySettings.xml`, and appends each new visible field of the master table to the form's list fields (`ListFields`; an empty one already lists every field and stays empty). It lists the files it changes and the fields each gains before writing, and then offers to upgrade the form's tables |
+| **Sync TableSchema and FormLayout…** | Brings the form's TableSchemas and FormLayout up to date with the saved FormSchema, the way a `merge` import does, registers a new detail table in `DbCategorySettings.xml`, and appends each new visible field of the master table to the form's list fields (`ListFields`; an empty one already lists every field and stays empty). When the form has a zh-TW language resource, each new field that has no caption there gets one holding its own caption, ready to translate. It lists the files it changes and the fields and keys each gains before writing, and then offers to upgrade the form's tables |
 | **Upgrade This Form's Tables…** / **Preview Upgrade of This Form's Tables** | Runs the database manager's `upgrade` for the form's tables only (`--table` for each) |
 
 - A new field goes next to its neighbour on the form: in the TableSchema after the nearest earlier column, and in the
