@@ -1,1 +1,2 @@
 #nullable enable
+const Polhem.Definition.Language.PolhemUIText.Dismiss = "Dismiss" -> string!

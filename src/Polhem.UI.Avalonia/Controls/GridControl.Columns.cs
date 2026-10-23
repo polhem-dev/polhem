@@ -108,18 +108,20 @@ namespace Polhem.UI.Avalonia.Controls
         // column's caption is blue (see FieldCaptionStyle). Keyed on the layout ReadOnly flag, NOT
         // the DataGrid column IsReadOnly: lookup and popup-editor columns set IsReadOnly to bypass
         // the edit pipeline while staying editable through click-to-swap, so they must not show
-        // the read-only cue.
-        private static object BuildColumnHeader(LayoutColumn column)
+        // the read-only cue. In a bound detail grid the schema's Required counts as well as the
+        // layout's, because the server enforces the schema's; a list grid shows no required cue
+        // from the schema, since nothing is entered there.
+        private object BuildColumnHeader(LayoutColumn column)
         {
             var caption = FieldCaptionStyle.FormatCaption(column.Caption, column.ReadOnly);
-            var brush = FieldCaptionStyle.GetCaptionForeground(column.ReadOnly, column.Required);
-            if (brush is null)
+            var required = column.Required
+                || (_binder.DataObject is { } dataObject
+                    && dataObject.GetFormField(TableName, column.FieldName)?.Required == true);
+            if (FieldCaptionStyle.GetCaptionForeground(column.ReadOnly, required) is null)
                 return caption;
-            return new TextBlock
-            {
-                Text = caption,
-                Foreground = brush,
-            };
+            var header = new TextBlock { Text = caption };
+            FieldCaptionStyle.ApplyCaptionForeground(header, column.ReadOnly, required);
+            return header;
         }
     }
 }
