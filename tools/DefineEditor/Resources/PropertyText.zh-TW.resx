@@ -37,7 +37,7 @@
   <data name="PropDesc_CashRoundingItem_CurrencyCode" xml:space="preserve"><value>此覆寫套用之幣別的 ISO 4217 三碼代碼。</value><comment>ISO 4217 alpha-3 code of the currency the override applies to.</comment></data>
   <data name="PropDesc_CashRoundingItem_Unit" xml:space="preserve"><value>套用於最終應付金額的現金進位單位，例如 0.05。</value><comment>Cash-rounding unit applied to the final payable amount, for example 0.05.</comment></data>
   <data name="PropDesc_ListItem_Value" xml:space="preserve"><value>選項值。</value><comment>Item value.</comment></data>
-  <data name="PropDesc_ListItem_Text" xml:space="preserve"><value>顯示文字。</value><comment>Display text.</comment></data>
+  <data name="PropDesc_ListItem_Text" xml:space="preserve"><value>顯示文字；空白時顯示選項值。</value><comment>Display text. When empty, the value is shown.</comment></data>
   <data name="PropDesc_Property_Name" xml:space="preserve"><value>屬性名稱。</value><comment>Property name.</comment></data>
   <data name="PropDesc_Property_Value" xml:space="preserve"><value>屬性值。</value><comment>Property value.</comment></data>
   <data name="PropDesc_DbField_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
