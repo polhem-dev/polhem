@@ -59,7 +59,7 @@ Start the server first (F5, or the **Server** launch configuration). Every clien
 
 <!--#if (browser) -->
 - **Browser.** The **Server + Browser** launch configuration starts the server and the browser client's development
-  server and opens `http://localhost:5380`. In development the server allows calls from any `localhost` origin (CORS);
+  server and opens `http://localhost:5380` in Chrome; stopping the session stops both. In development the server allows calls from any `localhost` origin (CORS);
   in production, serve the published client from the server's own origin and remove that policy from `Program.cs`.
   The bundled font has no Chinese, Japanese or Korean glyphs, and the browser has no system font to borrow them from,
   so this client shows those languages as empty boxes; sign in with an account whose culture is English here.

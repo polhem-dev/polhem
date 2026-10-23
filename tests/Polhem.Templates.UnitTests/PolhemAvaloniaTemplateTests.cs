@@ -114,7 +114,38 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
             StringComparison.Ordinal);
         Assert.DoesNotContain("Browser", File.ReadAllText(Path.Combine(output, ".vscode", "launch.json")),
             StringComparison.Ordinal);
+        Assert.DoesNotContain("browser", File.ReadAllText(Path.Combine(output, ".vscode", "tasks.json")),
+            StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    [DisplayName("The Browser launch configuration serves the browser client and opens its own URL, and stopping it ends the server")]
+    public void Generate_Browser_LaunchOpensTheBrowserClientUrl()
+    {
+        var output = Generate("SqlServer", "--browser");
+
+        using var settings = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(output, "src", "Acme.Erp.Browser", "Properties", "launchSettings.json")));
+        var browserUrl = settings.RootElement.GetProperty("profiles").GetProperty("Acme.Erp.Browser")
+            .GetProperty("applicationUrl").GetString();
+        var launch = ParseJsonWithComments(Path.Combine(output, ".vscode", "launch.json"));
+        var browser = launch.RootElement.GetProperty("configurations").EnumerateArray()
+            .Single(c => c.GetProperty("name").GetString() == "Browser");
+        Assert.Equal(browserUrl, browser.GetProperty("url").GetString());
+        Assert.Equal("polhem-serve-browser", browser.GetProperty("preLaunchTask").GetString());
+        Assert.Equal("polhem-stop-browser", browser.GetProperty("postDebugTask").GetString());
+
+        var tasks = ParseJsonWithComments(Path.Combine(output, ".vscode", "tasks.json"));
+        var labels = tasks.RootElement.GetProperty("tasks").EnumerateArray().Select(t => t.GetProperty("label").GetString()).ToList();
+        Assert.Contains("polhem-serve-browser", labels);
+        Assert.Contains("polhem-stop-browser", labels);
+        Assert.Equal("polhem-serve-browser",
+            tasks.RootElement.GetProperty("inputs")[0].GetProperty("args").GetString());
+    }
+
+    // VS Code reads its settings files as JSON with comments; the template's conditional markers are comments too.
+    private static JsonDocument ParseJsonWithComments(string path)
+        => JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip });
 
     [Fact]
     [DisplayName("The browser, iOS and Android options add their clients to the solution, with the endpoint each one reaches the server at")]
