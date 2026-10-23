@@ -1,3 +1,1 @@
 #nullable enable
-Polhem.UI.Avalonia.Controls.TreeViewExtensions
-static Polhem.UI.Avalonia.Controls.TreeViewExtensions.KeepSelectionSingle(this Avalonia.Controls.TreeView! treeView) -> void
