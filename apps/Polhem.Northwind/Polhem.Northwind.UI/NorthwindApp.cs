@@ -1,3 +1,4 @@
+using Avalonia.Styling;
 using Polhem.UI.Avalonia.Shell;
 
 namespace Polhem.Northwind.UI;
@@ -24,5 +25,6 @@ public class NorthwindApp : ShellApplication
         DefaultPassword = "demo",
         // The seeder writes `demo-tw` as well: the same account with a zh-TW culture.
         SignInHint = "Use demo / demo, or demo-tw / demo for Traditional Chinese.",
+        DefaultThemeVariant = ThemeVariant.Dark,
     };
 }

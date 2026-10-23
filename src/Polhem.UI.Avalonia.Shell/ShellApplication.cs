@@ -63,7 +63,7 @@ namespace Polhem.UI.Avalonia.Shell
             // reads it once and shows "Avalonia Application" otherwise.
             Name = options.AppTitle;
 
-            RequestedThemeVariant = ThemeVariant.Light;
+            RequestedThemeVariant = options.DefaultThemeVariant;
             Styles.Add(new SemiTheme());
             Styles.Add(new DataGridSemiTheme());
             VisualStudioTheme.Apply(this);

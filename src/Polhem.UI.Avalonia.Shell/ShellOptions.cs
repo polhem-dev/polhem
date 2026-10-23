@@ -1,3 +1,4 @@
+using Avalonia.Styling;
 using Polhem.UI.Avalonia.Shell.Preferences;
 
 namespace Polhem.UI.Avalonia.Shell
@@ -89,6 +90,13 @@ namespace Polhem.UI.Avalonia.Shell
         /// account's culture decides, whatever this says.
         /// </remarks>
         public string DefaultLanguage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the theme variant the application starts with: <see cref="ThemeVariant.Light"/> or
+        /// <see cref="ThemeVariant.Dark"/>. The light/dark switch on the forms screen changes it for the running
+        /// application only.
+        /// </summary>
+        public ThemeVariant DefaultThemeVariant { get; set; } = ThemeVariant.Light;
 
         internal string ResolveStorageName()
             => string.IsNullOrWhiteSpace(StorageName) ? AppTitle : StorageName;

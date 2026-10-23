@@ -41,6 +41,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
         {
             InitializeComponent();
 
+            // The switch starts from the theme the application was given (ShellOptions.DefaultThemeVariant).
+            ThemeToggle.IsChecked = global::Avalonia.Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+
             if (_singleForm)
             {
                 Tabs.IsVisible = false;
