@@ -55,6 +55,24 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
+        [DisplayName("A list item declared without text shows its value as the selected text")]
+        public void Bind_ItemWithoutText_ShowsValue()
+        {
+            var schema = new FormSchema("Customer", "Customer");
+            var grade = schema.Tables!.Add("Customer", "Customer").Fields!.Add("grade", "Grade", FieldDbType.String);
+            grade.ListItems!.Add(new ListItem { Value = "A" });
+            grade.ListItems.Add(new ListItem { Value = "B" });
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+            dataObject.SetField("grade", "B");
+
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, "grade");
+
+            Assert.Equal("B", editor.ReadOnlyText);
+        }
+
+        [Fact]
         [DisplayName("A selection change is written back as ListItem.Value")]
         public void SelectionChanged_AfterBind_WritesBackValue()
         {
