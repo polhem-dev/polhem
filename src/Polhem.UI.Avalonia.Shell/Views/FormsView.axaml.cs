@@ -21,9 +21,15 @@ namespace Polhem.UI.Avalonia.Shell.Views
     /// so tapping an already-selected entry still re-opens its tab. The code-behind relies on the
     /// source-generated <c>InitializeComponent</c> so the <c>x:Name</c> controls are wired into
     /// fields.
+    /// <para>
+    /// The iOS and Android heads work like a phone app instead: one form fills the screen, picking
+    /// another menu entry replaces it, and the menu slides over the form and closes once an entry is
+    /// picked.
+    /// </para>
     /// </remarks>
     internal sealed partial class FormsView : UserControl
     {
+        private readonly bool _singleForm = OperatingSystem.IsIOS() || OperatingSystem.IsAndroid();
         private bool _initialSelectionDone;
 
         /// <summary>
@@ -32,7 +38,16 @@ namespace Polhem.UI.Avalonia.Shell.Views
         public FormsView()
         {
             InitializeComponent();
+
+            if (_singleForm)
+            {
+                Tabs.IsVisible = false;
+                SingleHost.IsVisible = true;
+                Split.DisplayMode = SplitViewDisplayMode.Overlay;
+            }
         }
+
+        private bool HasOpenForm => _singleForm ? SingleHost.Content is not null : Tabs.Items.Count > 0;
 
         /// <inheritdoc/>
         protected override void OnLoaded(RoutedEventArgs e)
@@ -46,6 +61,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
 
             if (DataContext is FormsViewModel vm)
             {
+                if (_singleForm) vm.IsPaneOpen = false;
                 _ = OpenFirstFormAsync(vm);
             }
         }
@@ -62,7 +78,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
             await vm.MenuLoaded.ConfigureAwait(true);
 
             // The user may have opened a form in the meantime; do not take the tab away from them.
-            if (Tabs.Items.Count > 0) return;
+            if (HasOpenForm) return;
 
             var first = vm.NavItems.FirstOrDefault(n => !n.IsHeader);
             if (first is not null)
@@ -84,8 +100,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
                 // so collapse it after a selection; on a wide layout it stays open. Same width
                 // threshold as the responsive form layout, so menu and form switch together.
                 if (DataContext is FormsViewModel vm
-                    && Bounds.Width > 0
-                    && Bounds.Width < FormView.DefaultCompactWidthThreshold)
+                    && (_singleForm || (Bounds.Width > 0 && Bounds.Width < FormView.DefaultCompactWidthThreshold)))
                 {
                     vm.IsPaneOpen = false;
                 }
@@ -94,6 +109,17 @@ namespace Polhem.UI.Avalonia.Shell.Views
 
         private void OpenForm(NavItem item)
         {
+            if (_singleForm)
+            {
+                if ((string?)SingleHost.Tag != item.ProgId)
+                {
+                    SingleHost.Tag = item.ProgId;
+                    SingleHost.Content = new FormWorkspace(item.ProgId);
+                }
+
+                return;
+            }
+
             foreach (var existing in Tabs.Items.OfType<TabItem>())
             {
                 if ((string?)existing.Tag == item.ProgId)
@@ -160,14 +186,21 @@ namespace Polhem.UI.Avalonia.Shell.Views
         /// <summary>
         /// Handles a platform back request (Android hardware / gesture back) for the shell, unwinding
         /// one navigation level: a record returns to its list, otherwise the active document tab is
-        /// closed. Routed here from <see cref="ShellView"/>'s <c>TopLevel.BackRequested</c> handler.
+        /// closed. On the iOS and Android heads, which show one form and no tabs, only the record
+        /// returns to its list. Routed here from <see cref="ShellView"/>'s <c>TopLevel.BackRequested</c> handler.
         /// </summary>
         /// <returns>
         /// <see langword="true"/> if a level was unwound and the request was consumed;
-        /// <see langword="false"/> when no tabs remain, letting the platform handle back (exit the app).
+        /// <see langword="false"/> when nothing is left to unwind, letting the platform handle back (exit the app).
         /// </returns>
         public bool TryHandleBack()
         {
+            if (_singleForm)
+            {
+                // One form fills the screen, so after its record returns to the list there is nothing left to unwind.
+                return SingleHost.Content is FormWorkspace single && single.TryGoBack();
+            }
+
             if (Tabs.SelectedItem is not TabItem active)
             {
                 // No open tab — let the platform exit.

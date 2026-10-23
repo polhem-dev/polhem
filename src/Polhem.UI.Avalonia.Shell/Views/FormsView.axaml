@@ -67,7 +67,8 @@
 
     <!-- Collapsible navigation menu + content host. Inline display mode slides the whole
          pane away when collapsed so the form area takes the full width. -->
-    <SplitView IsPaneOpen="{Binding IsPaneOpen}"
+    <SplitView x:Name="Split"
+               IsPaneOpen="{Binding IsPaneOpen}"
                DisplayMode="Inline"
                OpenPaneLength="220"
                PaneBackground="{DynamicResource SemiColorBackground1}">
@@ -106,8 +107,12 @@
 
       <!-- Open forms as IDE-style document tabs. Selecting a menu entry opens a new tab
            (a fresh FormView so it runs its attach-time initialisation) or switches to the
-           existing one; tabs are built and de-duplicated in code-behind. -->
-      <TabControl x:Name="Tabs" Margin="8" />
+           existing one; tabs are built and de-duplicated in code-behind. The iOS and Android
+           heads show one form at a time in SingleHost instead. -->
+      <Panel>
+        <TabControl x:Name="Tabs" Margin="8" />
+        <ContentControl x:Name="SingleHost" Margin="8" IsVisible="False" />
+      </Panel>
 
     </SplitView>
 
