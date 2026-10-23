@@ -20,7 +20,7 @@ namespace Polhem.DefineEditor.ViewModels;
 /// FormSchema editor. Loads the schema via <see cref="XmlCodec"/>, shows it as an
 /// <see cref="ObjectTreeBuilder"/> tree (Tables and Rules folders, fields directly under
 /// each table) with the selected object in the property grid, and offers Add commands for
-/// tables, fields and mappings. Each field also gets Relation / Lookup group nodes, which the
+/// tables, fields, rules and mappings. Each field also gets Relation / Lookup group nodes, which the
 /// annotations cannot express; see <see cref="AddFieldGroups"/>. A field's list items are
 /// edited in the grid's collection dialog.
 /// </summary>
@@ -174,6 +174,22 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     private bool CanAddField() => FindAncestor<FormTable>(SelectedTreeNode) is not null;
+
+    [RelayCommand(CanExecute = nameof(CanAddRule))]
+    private void AddRule()
+    {
+        var folder = FindAncestor<FormRuleCollection>(SelectedTreeNode) ?? FolderOf<FormRuleCollection>();
+        if (folder is null) return;
+
+        var name = UniqueKey(Schema.Rules!.Select(r => r.RuleId), "new_rule");
+        // `true` holds for every record, so the new rule refuses nothing until its condition is written.
+        var rule = new FormRule(name, "true", "New rule");
+        Schema.Rules!.Add(rule);
+        AddNode(folder, rule);
+        StatusText = L("Status_AddedNamed", "FormRule", name);
+    }
+
+    private bool CanAddRule() => SelectedTreeNode is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddMapping))]
     private void AddRelationMapping() => AddMapping(isRelation: true);
@@ -417,6 +433,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         FormTable t => () => Schema.Tables!.Remove(t),
         FormField f when node.Parent?.Value is FormTable t => () => t.Fields!.Remove(f),
         FieldMapping m when node.Parent?.Value is FieldMappingCollection mappings => () => mappings.Remove(m),
+        FormRule r => () => Schema.Rules!.Remove(r),
         _ => null,
     };
 }

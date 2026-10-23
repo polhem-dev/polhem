@@ -21,6 +21,8 @@ public sealed class FormSchemaCommandProvider(FormSchemaDocumentViewModel docume
             return [Create("FormSchema_AddTable", "IconTable", document.AddTableCommand)];
         if (node.Value is FormTable)
             return [Create("FormSchema_AddField", "IconAdd", document.AddFieldCommand)];
+        if (node is { IsFolder: true, Value: FormRuleCollection } || node.Value is FormRule)
+            return [Create("FormSchema_AddRule", "IconAdd", document.AddRuleCommand)];
         if (FormSchemaDocumentViewModel.IsRelationGroup(node))
             return [Create("FormSchema_AddRelationMapping", "IconLink", document.AddRelationMappingCommand)];
         if (FormSchemaDocumentViewModel.IsLookupGroup(node))
