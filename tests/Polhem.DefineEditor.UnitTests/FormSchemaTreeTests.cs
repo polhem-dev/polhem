@@ -240,5 +240,17 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.Equal(["sys_id", "sys_name"], customer.RelationFieldMappings!.Select(m => m.SourceField));
         }
+
+        [Fact]
+        [DisplayName("The sync and upgrade commands run whatever node is selected, as the File menu needs")]
+        public void FormCommands_FieldSelected_CanExecute()
+        {
+            _document.SelectedTreeNode = Field("status");
+
+            Assert.True(_document.SyncDefinitionsCommand.CanExecute(null));
+            Assert.True(_document.UpgradeTablesCommand.CanExecute(null));
+            Assert.True(_document.PreviewUpgradeTablesCommand.CanExecute(null));
+            Assert.False(_document.GenerateFormLayoutCommand.CanExecute(null));
+        }
     }
 }
