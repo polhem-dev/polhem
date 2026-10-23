@@ -7,6 +7,13 @@
              x:ClassModifier="internal"
              x:DataType="vm:FormsViewModel">
 
+  <!-- Icons are geometry, not text: the embedded Inter font has no glyph for characters such as U+2630 or U+2715,
+       and the browser head has no system font to fall back on. -->
+  <UserControl.Resources>
+    <StreamGeometry x:Key="ShellIconMenu">M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z</StreamGeometry>
+    <StreamGeometry x:Key="ShellIconClose">M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z</StreamGeometry>
+  </UserControl.Resources>
+
   <UserControl.Styles>
     <!-- Tab close button: flat by default, a subtle fill block only on hover / press. -->
     <Style Selector="Button.tabclose">
@@ -38,8 +45,9 @@
                 Command="{Binding TogglePaneCommand}"
                 Classes="Tertiary"
                 Padding="8,4"
-                ToolTip.Tip="{l:ShellText Forms_ToggleMenu}"
-                Content="☰" />
+                ToolTip.Tip="{l:ShellText Forms_ToggleMenu}">
+          <PathIcon Data="{StaticResource ShellIconMenu}" Width="16" Height="16" />
+        </Button>
         <TextBlock Grid.Column="1" Text="{Binding AppTitle}" FontSize="16" FontWeight="SemiBold"
                    VerticalAlignment="Center" Margin="10,0,0,0" />
         <ToggleSwitch Grid.Column="3"

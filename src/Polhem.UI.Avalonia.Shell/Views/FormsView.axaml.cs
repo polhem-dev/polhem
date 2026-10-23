@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Polhem.UI.Avalonia.Shell.Controls;
 using Polhem.UI.Avalonia.Shell.Navigation;
@@ -117,10 +118,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
             var text = new TextBlock { Text = title, VerticalAlignment = VerticalAlignment.Center };
             var close = new Button
             {
-                Content = "✕",
+                Content = new PathIcon { Data = (Geometry)this.FindResource("ShellIconClose")!, Width = 10, Height = 10 },
                 Tag = tag,
                 Classes = { "tabclose" },
-                FontSize = 11,
                 VerticalAlignment = VerticalAlignment.Center,
             };
             close.Click += OnCloseTabClick;
