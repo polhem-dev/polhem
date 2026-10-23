@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Polhem.Core.Data;
 using Polhem.Core.Serialization;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Avalonia.DataObjects;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {
@@ -241,6 +244,49 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             presenter.Layout = null;
 
             Assert.Empty(presenter.Host.Children);
+        }
+
+        private static TextBlock CaptionOf(FormLayoutPresenter presenter, string caption)
+            => Assert.Single(FindAll<TextBlock>(presenter), t => t.Text == caption);
+
+        private static FormLayoutPresenter RenderWithSchemaRequired(bool schemaRequired)
+        {
+            var schema = new FormSchema("Customer", "Customer");
+            var master = schema.Tables!.Add("Customer", "Customer");
+            master.Fields!.Add("contact_name", "Contact Name", FieldDbType.String).Required = schemaRequired;
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+
+            var layout = new FormLayout();
+            var section = new LayoutSection { Name = "Main" };
+            section.Fields!.Add(new LayoutField { FieldName = "contact_name", Caption = "Contact Name" });
+            layout.Sections!.Add(section);
+
+            var presenter = new FormLayoutPresenter();
+            presenter.Update(p =>
+            {
+                p.Layout = layout;
+                p.DataObject = dataObject;
+            });
+            return presenter;
+        }
+
+        [Fact]
+        [DisplayName("A field the schema marks Required gets the required caption colour even when the layout does not")]
+        public void Render_SchemaRequired_ColoursCaption()
+        {
+            var presenter = RenderWithSchemaRequired(schemaRequired: true);
+
+            Assert.True(CaptionOf(presenter, "Contact Name").IsSet(TextBlock.ForegroundProperty));
+        }
+
+        [Fact]
+        [DisplayName("A field neither the schema nor the layout marks Required keeps the default caption colour")]
+        public void Render_NotRequired_LeavesCaptionDefault()
+        {
+            var presenter = RenderWithSchemaRequired(schemaRequired: false);
+
+            Assert.False(CaptionOf(presenter, "Contact Name").IsSet(TextBlock.ForegroundProperty));
         }
 
         [Fact]

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -32,6 +33,15 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             var brush = Assert.IsType<ISolidColorBrush>(
                 FieldCaptionStyle.GetCaptionForeground(readOnly: false, required: true), exactMatch: false);
             Assert.Equal(Color.FromRgb(0x25, 0x63, 0xEB), brush.Color);
+        }
+
+        [Fact]
+        [DisplayName("A required field caption on the dark theme variant is a lighter blue")]
+        public void GetCaptionForeground_RequiredDark_ReturnsLighterBlue()
+        {
+            var brush = Assert.IsType<ISolidColorBrush>(
+                FieldCaptionStyle.GetCaptionForeground(readOnly: false, required: true, ThemeVariant.Dark), exactMatch: false);
+            Assert.Equal(Color.FromRgb(0x60, 0xA5, 0xFA), brush.Color);
         }
 
         [Fact]

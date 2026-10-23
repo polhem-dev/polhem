@@ -352,14 +352,55 @@ namespace Polhem.UI.Avalonia.Controls
             // the standalone TextEdit — so a field's value (and any dependent recalculation)
             // is written once the entry is complete. This LostFocus runs before the swap-back
             // one wired by WireInlineEditEnd (subscribed first), so the row is updated before
-            // the display re-reads it.
-            textBox.LostFocus += (_, _) => WriteCell(rowView, dataColumn, textBox.Text);
+            // the display re-reads it. Escape cancels: the grid tears the editor down, and the
+            // LostFocus that follows must not write the abandoned text.
+            var cancelled = false;
+            textBox.LostFocus += (_, _) =>
+            {
+                if (!cancelled)
+                    WriteCell(rowView, dataColumn, textBox.Text);
+            };
             textBox.KeyDown += (_, e) =>
             {
                 if (e.Key == Key.Enter)
                     WriteCell(rowView, dataColumn, textBox.Text);
+                else if (e.Key == Key.Escape)
+                    cancelled = true;
             };
             return textBox;
+        }
+
+        // A text cell enters editing with its content selected, so typing replaces the value the
+        // way a spreadsheet does; F2 keeps the caret at the end to amend it. An edit started by
+        // typing on a selected cell begins with the typed text. `DataGridTextColumn` does the same
+        // for its own editor, but a template column leaves the caret wherever the click put it.
+        private static void OnPreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
+        {
+            if (e.EditingElement is not TextBox textBox) return;
+            switch (e.EditingEventArgs)
+            {
+                case TextInputEventArgs { Text: { } typed }:
+                    textBox.Text = typed;
+                    textBox.CaretIndex = typed.Length;
+                    break;
+                case KeyEventArgs { Key: Key.F2 }:
+                    textBox.CaretIndex = textBox.Text?.Length ?? 0;
+                    break;
+                default:
+                    textBox.SelectAll();
+                    break;
+            }
+        }
+
+        // Typing on a selected, editable text cell starts editing it with the typed text. The inner
+        // grid does not do this on its own; an editor that already has focus handles the input first,
+        // so this only sees text typed while no cell is being edited.
+        private void OnGridTextInput(object? sender, TextInputEventArgs e)
+        {
+            if (e.Handled || _grid.IsReadOnly || string.IsNullOrEmpty(e.Text) || char.IsControl(e.Text[0])) return;
+            if (_grid.CurrentColumn is not DataGridTemplateColumn { CellEditingTemplate: not null }) return;
+            if (_grid.BeginEdit(e))
+                e.Handled = true;
         }
 
         // The in-cell counterpart of DateTimeEdit: the same culture display and parsing, committed on
