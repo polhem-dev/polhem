@@ -46,6 +46,10 @@
                 <MenuItem x:Name="UpgradeDatabaseMenuItem" Header="{loc:Loc MenuItem_UpgradeDatabase}"/>
                 <MenuItem x:Name="PreviewDatabaseUpgradeMenuItem" Header="{loc:Loc MenuItem_PreviewDatabaseUpgrade}"/>
                 <Separator/>
+                <MenuItem x:Name="SyncFormMenuItem" Header="{loc:Loc FormSchema_SyncDefinitions}"/>
+                <MenuItem x:Name="UpgradeFormTablesMenuItem" Header="{loc:Loc FormSchema_UpgradeTables}"/>
+                <MenuItem x:Name="PreviewFormUpgradeMenuItem" Header="{loc:Loc FormSchema_PreviewUpgradeTables}"/>
+                <Separator/>
                 <MenuItem x:Name="SaveMenuItem" Header="{loc:Loc MenuItem_Save}"
                           InputGesture="Ctrl+S" HotKey="Ctrl+S"/>
                 <!-- NOTE: no shortcut for Save All. The macOS one is Cmd+Option+S, but Ctrl+Alt is AltGr on

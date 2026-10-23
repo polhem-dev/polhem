@@ -29,7 +29,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 | **PermissionModels**（單例） | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Models → Rules 兩層；Action 下拉只列單一動作，Scope 下拉列出策略；含 `PermissionModels.Validate()` 整合 |
 | **MenuSettings**（單例） | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry 樹狀結構 |
 | **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；Server 或 Item 的右鍵選單可在對話框中**貼上並拆解連線字串**（SQL Server / PostgreSQL / MySQL / Oracle）；Item 的 ServerId 會列出可用的 Server；含靜態驗證（`Services/DatabaseSettingsValidator.cs`） |
-| **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應。選取 Relation 或 Lookup 群組時，右側只顯示該欄位的 Relation 屬性；RelationProgId / LookupProgId 會列出方案內其他 FormSchema，對應的欄位會列出兩張表單的欄位，LangEnumName 會列出方案內語系檔的列舉。欄位的 ListItems 在屬性方格的集合對話框中編輯。schema 節點右鍵可**產生 FormLayout**、**匯出成 Excel**、**同步 TableSchema 與 FormLayout**（先列出要變更的檔案，再把表單新增的欄位補進 TableSchema 與 FormLayout，放在表單上相鄰欄位的旁邊）或**升級此表單的資料表**；**File → 從 Excel 匯入表單**會先列出要變更的檔案，再把表單活頁簿轉成定義檔（見 [用 Excel 建模表單](../../docs/zh-TW/guides/excel-form-modeling.md)） |
+| **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應。選取 Relation 或 Lookup 群組時，右側只顯示該欄位的 Relation 屬性；RelationProgId / LookupProgId 會列出方案內其他 FormSchema，對應的欄位會列出兩張表單的欄位，LangEnumName 會列出方案內語系檔的列舉。欄位的 ListItems 在屬性方格的集合對話框中編輯。schema 節點右鍵可**產生 FormLayout**、**匯出成 Excel**、**同步 TableSchema 與 FormLayout**（先列出要變更的檔案，再把表單新增的欄位補進 TableSchema 與 FormLayout，放在表單上相鄰欄位的旁邊）或**升級此表單的資料表**（FormSchema 為作用中分頁時，**File** 選單也有這兩個指令）；**File → 從 Excel 匯入表單**會先列出要變更的檔案，再把表單活頁簿轉成定義檔（見 [用 Excel 建模表單](../../docs/zh-TW/guides/excel-form-modeling.md)） |
 | **TableSchema**（多份） | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Fields + Indexes 兩個 group；IndexField 含 SortDirection；驗證 PrimaryKey 唯一性；屬性方格下方的 CREATE TABLE 面板顯示 SQL Server、PostgreSQL、MySQL、Oracle 或 SQLite 的建表語法，由框架本身的方言產生器產出 |
 | **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗。屬性方格下方的即時預覽會隨編輯重畫表單，畫法與 `FormView` 相同但不帶資料；可切換為檢視模式或手機寬度，也可在空白欄位顯示欄位名稱。編輯器上方的按鈕決定右側顯示什麼：屬性方格與預覽、只有預覽，或只有屬性方格；不顯示屬性方格時，以**屬性設定…**（工具列或節點的右鍵選單）在對話框中編輯所選節點 |
 | **Language**（多份） | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items（Key/Value）+ Enums（→ Entry code/text） |
@@ -45,7 +45,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 每份匯入後只升級該表單的資料表。每份活頁簿都在前面的寫入之後才規劃，所以關聯到其他表單的表單要排在它後面。任何一份有錯誤或升級失敗，
 批次就停在那一份；在它之前匯入的會保留，按**上一步**會列出還沒匯入的活頁簿。
 
-每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟、加入缺少的框架預設檔、從 Excel 匯入表單、從 Excel 批次匯入表單、測試資料庫連線、升級資料庫與預覽資料庫升級；**View** 選單可顯示或隱藏側欄（⌘B），也切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
+每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟、加入缺少的框架預設檔、從 Excel 匯入表單、從 Excel 批次匯入表單、測試資料庫連線、升級資料庫、預覽資料庫升級，以及作用中 FormSchema 的同步 TableSchema 與 FormLayout、升級此表單的資料表、預覽此表單的資料表升級；**View** 選單可顯示或隱藏側欄（⌘B），也切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
 
 > File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單，指令相同，但沒有開啟資料夾與最近開啟；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有；在 Windows 與 Linux 上，Ctrl+B 可顯示或隱藏側欄。
 

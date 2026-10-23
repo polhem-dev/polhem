@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -51,6 +52,13 @@ public partial class App : Application
     public IRelayCommand UpgradeDatabaseCommand { get; }
     public IRelayCommand PreviewDatabaseUpgradeCommand { get; }
 
+    // The active FormSchema tab's commands, which its tree's context menu also carries; enabled only while a
+    // FormSchema is the active tab. In the menu bar they also run from the keyboard and through accessibility,
+    // where a context menu is out of reach.
+    public IRelayCommand SyncActiveFormCommand { get; }
+    public IRelayCommand UpgradeActiveFormTablesCommand { get; }
+    public IRelayCommand PreviewActiveFormUpgradeCommand { get; }
+
     /// <summary>
     /// Short product name shown as the macOS application-menu title and inside
     /// the About / Hide / Quit item labels. VS Code shows "Code", not its full
@@ -88,6 +96,9 @@ public partial class App : Application
             () => GetMainViewModel()?.UpgradeDatabaseAsync(dryRun: false) ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
         PreviewDatabaseUpgradeCommand = new AsyncRelayCommand(
             () => GetMainViewModel()?.UpgradeDatabaseAsync(dryRun: true) ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
+        SyncActiveFormCommand = ActiveFormCommand(form => form.SyncDefinitionsCommand);
+        UpgradeActiveFormTablesCommand = ActiveFormCommand(form => form.UpgradeTablesCommand);
+        PreviewActiveFormUpgradeCommand = ActiveFormCommand(form => form.PreviewUpgradeTablesCommand);
     }
 
     public override void Initialize()
@@ -149,6 +160,9 @@ public partial class App : Application
                     ((RelayCommand)SaveActiveCommand).NotifyCanExecuteChanged();
                     ((RelayCommand)ValidateActiveCommand).NotifyCanExecuteChanged();
                     ((RelayCommand)CloseActiveTabCommand).NotifyCanExecuteChanged();
+                    SyncActiveFormCommand.NotifyCanExecuteChanged();
+                    UpgradeActiveFormTablesCommand.NotifyCanExecuteChanged();
+                    PreviewActiveFormUpgradeCommand.NotifyCanExecuteChanged();
                 }
                 else if (e.PropertyName == nameof(MainWindowViewModel.HasDirtyDocuments))
                 {
@@ -186,7 +200,8 @@ public partial class App : Application
             {
                 mainWindow.ShowInWindowFileMenu(
                     AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
-                    PreviewDatabaseUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
+                    PreviewDatabaseUpgradeCommand, SyncActiveFormCommand, UpgradeActiveFormTablesCommand,
+                    PreviewActiveFormUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
                 // The in-window menu has no View menu, so the shortcut carries Toggle Side Bar there.
                 mainWindow.KeyBindings.Add(new KeyBinding
                 {
@@ -255,6 +270,10 @@ public partial class App : Application
         fileMenu.Menu.Add(LocItem("MenuItem_CheckDatabaseConnections", CheckDatabaseConnectionsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_UpgradeDatabase", UpgradeDatabaseCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_PreviewDatabaseUpgrade", PreviewDatabaseUpgradeCommand, gesture: null));
+        fileMenu.Menu.Add(new NativeMenuItemSeparator());
+        fileMenu.Menu.Add(LocItem("FormSchema_SyncDefinitions", SyncActiveFormCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("FormSchema_UpgradeTables", UpgradeActiveFormTablesCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("FormSchema_PreviewUpgradeTables", PreviewActiveFormUpgradeCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_Save", SaveActiveCommand,
             new KeyGesture(Key.S, KeyModifiers.Meta)));
@@ -420,6 +439,14 @@ public partial class App : Application
 
     private static void ExecuteActiveValidate() =>
         GetActiveDocument()?.FileValidateCommand?.Execute(null);
+
+    /// <summary>A command that runs <paramref name="select"/>'s command of the active FormSchema tab.</summary>
+    private static RelayCommand ActiveFormCommand(Func<FormSchemaDocumentViewModel, ICommand> select) =>
+        new(() =>
+            {
+                if (GetActiveDocument() is FormSchemaDocumentViewModel form) select(form).Execute(null);
+            },
+            () => GetActiveDocument() is FormSchemaDocumentViewModel form && select(form).CanExecute(null));
 
     /// <summary>
     /// Repopulates the File → Open Recent submenu from the persisted recent
