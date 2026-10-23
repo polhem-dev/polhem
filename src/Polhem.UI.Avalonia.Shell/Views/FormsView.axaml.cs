@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Polhem.UI.Avalonia.Shell.Controls;
 using Polhem.UI.Avalonia.Shell.Navigation;
@@ -16,14 +17,22 @@ namespace Polhem.UI.Avalonia.Shell.Views
     /// one tab per form, de-duplicated by program id.
     /// </summary>
     /// <remarks>
-    /// Opening is driven from the menu's <c>Tapped</c> event rather than <c>SelectionChanged</c>
-    /// so tapping an already-selected entry still re-opens its tab. The code-behind relies on the
+    /// Opening is driven from both the menu's <c>Tapped</c> event, so tapping an already-selected entry
+    /// still re-opens its tab, and <c>SelectionChanged</c>, so a selection made through the accessibility
+    /// interface opens the entry too. The code-behind relies on the
     /// source-generated <c>InitializeComponent</c> so the <c>x:Name</c> controls are wired into
     /// fields.
+    /// <para>
+    /// The iOS and Android heads work like a phone app instead: one form fills the screen, picking
+    /// another menu entry replaces it, and the menu slides over the form and closes once an entry is
+    /// picked.
+    /// </para>
     /// </remarks>
     internal sealed partial class FormsView : UserControl
     {
+        private readonly bool _singleForm = OperatingSystem.IsIOS() || OperatingSystem.IsAndroid();
         private bool _initialSelectionDone;
+        private bool _selectingInCode;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormsView"/>.
@@ -31,7 +40,19 @@ namespace Polhem.UI.Avalonia.Shell.Views
         public FormsView()
         {
             InitializeComponent();
+
+            // The switch starts from the theme the application was given (ShellOptions.DefaultThemeVariant).
+            ThemeToggle.IsChecked = global::Avalonia.Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+
+            if (_singleForm)
+            {
+                Tabs.IsVisible = false;
+                SingleHost.IsVisible = true;
+                Split.DisplayMode = SplitViewDisplayMode.Overlay;
+            }
         }
+
+        private bool HasOpenForm => _singleForm ? SingleHost.Content is not null : Tabs.Items.Count > 0;
 
         /// <inheritdoc/>
         protected override void OnLoaded(RoutedEventArgs e)
@@ -45,6 +66,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
 
             if (DataContext is FormsViewModel vm)
             {
+                if (_singleForm) vm.IsPaneOpen = false;
                 _ = OpenFirstFormAsync(vm);
             }
         }
@@ -61,17 +83,39 @@ namespace Polhem.UI.Avalonia.Shell.Views
             await vm.MenuLoaded.ConfigureAwait(true);
 
             // The user may have opened a form in the meantime; do not take the tab away from them.
-            if (Tabs.Items.Count > 0) return;
+            if (HasOpenForm) return;
 
             var first = vm.NavItems.FirstOrDefault(n => !n.IsHeader);
             if (first is not null)
             {
-                NavList.SelectedItem = first;
+                SelectInCode(first);
                 OpenForm(first);
             }
         }
 
-        private void OnNavTapped(object? sender, TappedEventArgs e)
+        private void OnNavTapped(object? sender, TappedEventArgs e) => OpenSelectedEntry();
+
+        // A selection made through the accessibility interface (VoiceOver, UI automation) never raises Tapped, so
+        // a changed selection opens the entry as well. Tapped stays for tapping the entry that is already selected.
+        private void OnNavSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (!_selectingInCode) OpenSelectedEntry();
+        }
+
+        private void SelectInCode(NavItem? item)
+        {
+            _selectingInCode = true;
+            try
+            {
+                NavList.SelectedItem = item;
+            }
+            finally
+            {
+                _selectingInCode = false;
+            }
+        }
+
+        private void OpenSelectedEntry()
         {
             // By the time Tapped fires the click has already updated the selection, so the
             // tapped entry is SelectedItem — including when it was already selected.
@@ -83,8 +127,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
                 // so collapse it after a selection; on a wide layout it stays open. Same width
                 // threshold as the responsive form layout, so menu and form switch together.
                 if (DataContext is FormsViewModel vm
-                    && Bounds.Width > 0
-                    && Bounds.Width < FormView.DefaultCompactWidthThreshold)
+                    && (_singleForm || (Bounds.Width > 0 && Bounds.Width < FormView.DefaultCompactWidthThreshold)))
                 {
                     vm.IsPaneOpen = false;
                 }
@@ -93,6 +136,17 @@ namespace Polhem.UI.Avalonia.Shell.Views
 
         private void OpenForm(NavItem item)
         {
+            if (_singleForm)
+            {
+                if ((string?)SingleHost.Tag != item.ProgId)
+                {
+                    SingleHost.Tag = item.ProgId;
+                    SingleHost.Content = new FormWorkspace(item.ProgId);
+                }
+
+                return;
+            }
+
             foreach (var existing in Tabs.Items.OfType<TabItem>())
             {
                 if ((string?)existing.Tag == item.ProgId)
@@ -117,10 +171,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
             var text = new TextBlock { Text = title, VerticalAlignment = VerticalAlignment.Center };
             var close = new Button
             {
-                Content = "✕",
+                Content = new PathIcon { Data = (Geometry)this.FindResource("ShellIconClose")!, Width = 10, Height = 10 },
                 Tag = tag,
                 Classes = { "tabclose" },
-                FontSize = 11,
                 VerticalAlignment = VerticalAlignment.Center,
             };
             close.Click += OnCloseTabClick;
@@ -160,14 +213,21 @@ namespace Polhem.UI.Avalonia.Shell.Views
         /// <summary>
         /// Handles a platform back request (Android hardware / gesture back) for the shell, unwinding
         /// one navigation level: a record returns to its list, otherwise the active document tab is
-        /// closed. Routed here from <see cref="ShellView"/>'s <c>TopLevel.BackRequested</c> handler.
+        /// closed. On the iOS and Android heads, which show one form and no tabs, only the record
+        /// returns to its list. Routed here from <see cref="ShellView"/>'s <c>TopLevel.BackRequested</c> handler.
         /// </summary>
         /// <returns>
         /// <see langword="true"/> if a level was unwound and the request was consumed;
-        /// <see langword="false"/> when no tabs remain, letting the platform handle back (exit the app).
+        /// <see langword="false"/> when nothing is left to unwind, letting the platform handle back (exit the app).
         /// </returns>
         public bool TryHandleBack()
         {
+            if (_singleForm)
+            {
+                // One form fills the screen, so after its record returns to the list there is nothing left to unwind.
+                return SingleHost.Content is FormWorkspace single && single.TryGoBack();
+            }
+
             if (Tabs.SelectedItem is not TabItem active)
             {
                 // No open tab — let the platform exit.
@@ -195,9 +255,9 @@ namespace Polhem.UI.Avalonia.Shell.Views
         private void SyncNavToActiveTab()
         {
             var activeProgId = (Tabs.SelectedItem as TabItem)?.Tag as string;
-            NavList.SelectedItem = activeProgId is null
+            SelectInCode(activeProgId is null
                 ? null
-                : NavList.Items.OfType<NavItem>().FirstOrDefault(n => n.ProgId == activeProgId);
+                : NavList.Items.OfType<NavItem>().FirstOrDefault(n => n.ProgId == activeProgId));
         }
 
         private void OnThemeToggled(object? sender, RoutedEventArgs e)

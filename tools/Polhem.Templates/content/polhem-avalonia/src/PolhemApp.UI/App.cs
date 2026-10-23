@@ -1,3 +1,4 @@
+using Avalonia.Styling;
 using Polhem.UI.Avalonia.Shell;
 
 namespace PolhemApp.UI;
@@ -20,5 +21,7 @@ public class App : ShellApplication
         DefaultUserId = "admin",
         // The language of the connection and sign-in screens until the viewer picks another one.
         DefaultLanguage = "POLHEM_DEFAULT_LANGUAGE",
+        // Light or dark at startup; the switch on the forms screen changes it while the application runs.
+        DefaultThemeVariant = ThemeVariant.Dark,
     };
 }
