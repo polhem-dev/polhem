@@ -23,10 +23,15 @@
 //#if (browser)
         },
         {
+            // The "dotnet" launch type cannot start a WebAssembly head (it starts nothing and reports nothing). The
+            // development server runs as a background task instead, and VS Code's built-in JavaScript debugger opens
+            // the page in Chrome once the server prints its URL. Stopping the session stops the server.
             "name": "Browser",
-            "type": "dotnet",
+            "type": "chrome",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/PolhemApp.Browser/PolhemApp.Browser.csproj",
+            "url": "http://localhost:5380",
+            "preLaunchTask": "polhem-serve-browser",
+            "postDebugTask": "polhem-stop-browser",
             "presentation": {
                 "group": "parts",
                 "order": 1

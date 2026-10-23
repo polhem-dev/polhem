@@ -208,6 +208,50 @@
         },
 //#if (browser)
         {
+            // Started by the Browser launch configuration: the WebAssembly development server, ready once it prints
+            // its URL.
+            "label": "polhem-serve-browser",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Browser/PolhemApp.Browser.csproj"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "polhem-browser",
+                "pattern": {
+                    "regexp": "^\\s*error\\s+(.*)$",
+                    "message": 1
+                },
+                "background": {
+                    "activeBegins": true,
+                    "beginsPattern": "^.*$",
+                    "endsPattern": "^App url:"
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "hide": true
+        },
+        {
+            // Run after a Browser debug session: ends the development server task, so the next start can bind the port.
+            "label": "polhem-stop-browser",
+            "type": "shell",
+            "command": "echo ${input:polhem-terminate-browser}",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "never"
+            },
+            "hide": true
+        },
+        {
             "label": "polhem-run-browser",
             "type": "process",
             "command": "dotnet",
@@ -350,5 +394,15 @@
                 "isDefault": true
             }
         }
+//#if (browser)
+    ],
+    "inputs": [
+        {
+            "id": "polhem-terminate-browser",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "polhem-serve-browser"
+        }
+//#endif
     ]
 }
