@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
-using Avalonia.Media;
 using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -76,7 +75,7 @@ namespace Polhem.UI.Avalonia.Views
         private readonly Button _saveButton;
         private readonly Button _cancelButton;
         private readonly Button _backButton;
-        private readonly TextBlock _errorLabel;
+        private readonly MessageBar _errorLabel;
         private readonly FormLayoutPresenter _presenter;
         private FormDataObject? _dataObject;
         private FormLayout? _formLayout;
@@ -112,7 +111,7 @@ namespace Polhem.UI.Avalonia.Views
             // change handler cannot cover this — the default value never raises a change).
             FormScope.SetFormMode(this, FormMode);
 
-            _errorLabel = new TextBlock { Foreground = Brushes.Red, IsVisible = false };
+            _errorLabel = new MessageBar();
 
             _saveButton = new Button { Content = UIText.Get(PolhemUIText.Save) };
             // Save persists via Create (Add mode) or Update (Edit mode); any-of semantics show it

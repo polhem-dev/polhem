@@ -129,15 +129,13 @@ namespace Polhem.UI.Avalonia.Views
 
         private void ReportError(Exception ex)
         {
-            _errorLabel.Text = ex.Message;
-            _errorLabel.IsVisible = true;
+            _errorLabel.Show(ex.Message);
             ErrorOccurred?.Invoke(this, ex);
         }
 
         private void ClearError()
         {
-            _errorLabel.Text = string.Empty;
-            _errorLabel.IsVisible = false;
+            _errorLabel.Clear();
         }
     }
 }

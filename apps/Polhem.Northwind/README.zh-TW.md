@@ -201,7 +201,9 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 訂單表單的標題有兩套來源。英文那套內嵌在 `FormSchema` 的 `Caption`，所以英文根本不需要語系檔
 —— 查不到 key 時 schema 自己的字原樣留著。zh-TW 那套來自
 `Define/Language/zh-TW/Order.Language.xml`，key 的慣例到處都一樣（`Schema.DisplayName`、
-`Table.{表}.DisplayName`、`Field.{欄位}.Caption`）。以 `demo-tw` 登入就會看到：session 的文化取自該帳號的 `st_user` 資料列。
+`Table.{表}.DisplayName`、`Field.{欄位}.Caption`）。狀態名稱也是同樣的做法：`status` 欄位內嵌英文的
+`ListItems`，並以 `LangEnumName` 指名 `OrderStatus` 列舉；只有 zh-TW 語系檔定義了它，所以英文會退回內嵌的選項。
+以 `demo-tw` 登入就會看到：session 的文化取自該帳號的 `st_user` 資料列。
 
 client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 `st_user.culture` 的值，
 `ClientInfo.ApplyLoginResult` 再把它設為 client 的 UI 語系。種子寫入的 `demo` 帳號是 `en-US`

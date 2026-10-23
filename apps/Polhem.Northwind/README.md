@@ -206,7 +206,9 @@ The Order form is captioned twice over. `FormSchema` carries the English caption
 English needs no resource file at all — a missing key leaves the schema's own text in place.
 `Define/Language/zh-TW/Order.Language.xml` supplies the zh-TW captions, keyed by the same
 convention everywhere (`Schema.DisplayName`, `Table.{table}.DisplayName`, `Field.{field}.Caption`).
-Sign in as `demo-tw` to see them: the session's culture comes from that account's `st_user` row.
+The status names work the same way: the `status` field keeps English `ListItems` inline and names
+the `OrderStatus` enum (`LangEnumName`), which only the zh-TW file defines, so English falls back to
+the inline items. Sign in as `demo-tw` to see them: the session's culture comes from that account's `st_user` row.
 
 Which language a client shows is the signed-in **account's** culture: `Login` returns the
 `st_user.culture` value, and `ClientInfo.ApplyLoginResult` makes it the client's UI culture. The

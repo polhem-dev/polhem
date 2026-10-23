@@ -154,6 +154,8 @@ namespace Polhem.UI.Avalonia.Controls
                 SelectionMode = DataGridSelectionMode.Single,
             };
             _grid.SelectionChanged += OnSelectionChangedCore;
+            _grid.PreparingCellForEdit += OnPreparingCellForEdit;
+            _grid.AddHandler(TextInputEvent, OnGridTextInput);
             _grid.DoubleTapped += async (_, _) =>
             {
                 if (!CanUseEditForm) return;
