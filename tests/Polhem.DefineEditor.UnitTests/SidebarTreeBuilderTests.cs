@@ -115,7 +115,7 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Databases lists each category with the tables that have a TableSchema file")]
+        [DisplayName("Table Schemas lists each category by its id with the tables that have a TableSchema file")]
         public void DbCategoryTree_Categories_ListTablesWithTableSchema()
         {
             Write("DbCategorySettings.xml",
@@ -136,7 +136,7 @@ namespace Polhem.DefineEditor.UnitTests
 
             var categories = DbCategoryTreeBuilder.Build(_directory);
 
-            Assert.Equal(["common - Common", "log"], categories.Select(c => c.Name));
+            Assert.Equal(["common", "log"], categories.Select(c => c.Name));
             var table = Assert.Single(categories[0].Children);
             Assert.Equal("st_user - Users", table.Name);
             Assert.Equal(DefineNodeKind.DefineFile, table.Kind);
@@ -146,7 +146,7 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Databases is empty when DbCategorySettings.xml is missing")]
+        [DisplayName("Table Schemas is empty when DbCategorySettings.xml is missing")]
         public void DbCategoryTree_NoDbCategorySettings_ReturnsEmpty()
         {
             Assert.Empty(DbCategoryTreeBuilder.Build(_directory));

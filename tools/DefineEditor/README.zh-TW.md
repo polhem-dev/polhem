@@ -17,7 +17,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 - **檔案總管**：按型別分組列出 DefinePath 下所有檔案。
 - **功能**：`ProgramSettings.xml` 登記的每個 ProgId，列出它實際存在的檔案：FormSchema 與 FormLayout、
   FormSchema 宣告的每個資料表的 TableSchema，以及各語系的 Language 檔。
-- **資料庫**：`DbCategorySettings.xml` 的每個類別，列出有 TableSchema 檔的已登記資料表。
+- **資料表結構**：`DbCategorySettings.xml` 的每個資料庫分類，列出有 TableSchema 檔的已登記資料表。分類是結構而非連線：多租戶環境下，一個 `company` 分類代表 `DatabaseSettings.xml` 裡的所有公司資料庫。
 
 在任一檢視點選檔案，右側載入對應編輯器：
 
