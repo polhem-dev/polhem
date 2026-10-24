@@ -21,6 +21,13 @@ public partial class MainWindow : Window
         ExplorerTree.KeepSelectionSingle();
         ProgramsTree.KeepSelectionSingle();
         TableSchemasTree.KeepSelectionSingle();
+
+        if (OperatingSystem.IsMacOS())
+        {
+            ExtendClientAreaToDecorationsHint = true;
+            ExtendClientAreaTitleBarHeightHint = WindowTitleBar.Height;
+            WindowTitleBar.IsVisible = true;
+        }
     }
 
     protected override void OnDataContextChanged(EventArgs e)
