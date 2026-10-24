@@ -115,11 +115,11 @@
                             ToolTip.Tip="{loc:Loc Sidebar_ProgramsTip}" ToolTip.Placement="Right">
                         <PathIcon Data="{StaticResource IconPrograms}"/>
                     </Button>
-                    <Button Classes="activity" Classes.active="{Binding IsDatabasesActive}"
+                    <Button Classes="activity" Classes.active="{Binding IsTableSchemasActive}"
                             Command="{Binding ShowSidebarViewCommand}"
-                            CommandParameter="{x:Static models:SidebarView.Databases}"
-                            ToolTip.Tip="{loc:Loc Sidebar_DatabasesTip}" ToolTip.Placement="Right">
-                        <PathIcon Data="{StaticResource IconDatabase}"/>
+                            CommandParameter="{x:Static models:SidebarView.TableSchemas}"
+                            ToolTip.Tip="{loc:Loc Sidebar_TableSchemasTip}" ToolTip.Placement="Right">
+                        <PathIcon Data="{StaticResource DefTableSchema}"/>
                     </Button>
                 </StackPanel>
             </Border>
@@ -136,7 +136,7 @@
                 <Panel DockPanel.Dock="Top" Classes="sidebar-title">
                     <TextBlock Text="{loc:Loc Sidebar_ExplorerTitle}" IsVisible="{Binding IsExplorerView}"/>
                     <TextBlock Text="{loc:Loc Sidebar_ProgramsTitle}" IsVisible="{Binding IsProgramsView}"/>
-                    <TextBlock Text="{loc:Loc Sidebar_DatabasesTitle}" IsVisible="{Binding IsDatabasesView}"/>
+                    <TextBlock Text="{loc:Loc Sidebar_TableSchemasTitle}" IsVisible="{Binding IsTableSchemasView}"/>
                 </Panel>
 
                 <Panel>
@@ -159,16 +159,16 @@
                                 </MultiBinding>
                             </TextBlock.IsVisible>
                         </TextBlock>
-                        <TreeView x:Name="DatabasesTree" IsVisible="{Binding IsDatabasesView}"
-                                  ItemsSource="{Binding DatabaseNodes}"
-                                  SelectedItem="{Binding SelectedDatabaseNode, Mode=TwoWay}"
+                        <TreeView x:Name="TableSchemasTree" IsVisible="{Binding IsTableSchemasView}"
+                                  ItemsSource="{Binding TableSchemaNodes}"
+                                  SelectedItem="{Binding SelectedTableSchemaNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
                                   Padding="6,4"/>
-                        <TextBlock Classes="muted sidebar-empty" Text="{loc:Loc Sidebar_DatabasesEmpty}">
+                        <TextBlock Classes="muted sidebar-empty" Text="{loc:Loc Sidebar_TableSchemasEmpty}">
                             <TextBlock.IsVisible>
                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                    <Binding Path="IsDatabasesView"/>
-                                    <Binding Path="HasNoDatabaseNodes"/>
+                                    <Binding Path="IsTableSchemasView"/>
+                                    <Binding Path="HasNoTableSchemaNodes"/>
                                 </MultiBinding>
                             </TextBlock.IsVisible>
                         </TextBlock>

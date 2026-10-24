@@ -17,9 +17,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<DefineNode> _programNodes = new();
 
-    /// <summary>The Databases view of the sidebar, built by <see cref="DbCategoryTreeBuilder"/>.</summary>
+    /// <summary>The Table Schemas view of the sidebar, built by <see cref="DbCategoryTreeBuilder"/>.</summary>
     [ObservableProperty]
-    private ObservableCollection<DefineNode> _databaseNodes = new();
+    private ObservableCollection<DefineNode> _tableSchemaNodes = new();
 
     /// <summary>The view the sidebar shows; picked from the activity bar and remembered in <see cref="UserSettings"/>.</summary>
     [ObservableProperty]
@@ -33,18 +33,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public bool IsProgramsView => ActiveSidebarView == SidebarView.Programs;
 
-    public bool IsDatabasesView => ActiveSidebarView == SidebarView.Databases;
+    public bool IsTableSchemasView => ActiveSidebarView == SidebarView.TableSchemas;
 
     /// <summary>Highlights the activity bar icon of the shown view; no icon is highlighted while the sidebar is collapsed.</summary>
     public bool IsExplorerActive => IsSidebarVisible && IsExplorerView;
 
     public bool IsProgramsActive => IsSidebarVisible && IsProgramsView;
 
-    public bool IsDatabasesActive => IsSidebarVisible && IsDatabasesView;
+    public bool IsTableSchemasActive => IsSidebarVisible && IsTableSchemasView;
 
     public bool HasNoProgramNodes => ProgramNodes.Count == 0;
 
-    public bool HasNoDatabaseNodes => DatabaseNodes.Count == 0;
+    public bool HasNoTableSchemaNodes => TableSchemaNodes.Count == 0;
 
     /// <summary>
     /// Open document tabs. New tabs are appended; selecting an already-open
@@ -80,7 +80,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private DefineNode? _selectedProgramNode;
 
     [ObservableProperty]
-    private DefineNode? _selectedDatabaseNode;
+    private DefineNode? _selectedTableSchemaNode;
 
     /// <summary>
     /// Solution-wide context (currently: the set of available FormSchema ProgIds)
@@ -166,7 +166,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsExplorerView));
         OnPropertyChanged(nameof(IsProgramsView));
-        OnPropertyChanged(nameof(IsDatabasesView));
+        OnPropertyChanged(nameof(IsTableSchemasView));
         NotifyActivityBar();
 
         var settings = UserSettings.Load();
@@ -180,14 +180,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsExplorerActive));
         OnPropertyChanged(nameof(IsProgramsActive));
-        OnPropertyChanged(nameof(IsDatabasesActive));
+        OnPropertyChanged(nameof(IsTableSchemasActive));
     }
 
     partial void OnProgramNodesChanged(ObservableCollection<DefineNode> value)
         => OnPropertyChanged(nameof(HasNoProgramNodes));
 
-    partial void OnDatabaseNodesChanged(ObservableCollection<DefineNode> value)
-        => OnPropertyChanged(nameof(HasNoDatabaseNodes));
+    partial void OnTableSchemaNodesChanged(ObservableCollection<DefineNode> value)
+        => OnPropertyChanged(nameof(HasNoTableSchemaNodes));
 
     /// <summary>
     /// Rebuilds every sidebar view from <paramref name="definePath"/>, or clears them when it is empty.
@@ -203,7 +203,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Nodes = new ObservableCollection<DefineNode>();
             Solution = SolutionContext.Empty;
             ProgramNodes = new ObservableCollection<DefineNode>();
-            DatabaseNodes = new ObservableCollection<DefineNode>();
+            TableSchemaNodes = new ObservableCollection<DefineNode>();
             return;
         }
         var root = DefinePathScanner.Scan(definePath);
@@ -221,9 +221,9 @@ public partial class MainWindowViewModel : ViewModelBase
         var programs = ProgramTreeBuilder.Build(definePath).ToList();
         if (keep) TreeExpansion.Restore(programs, TreeExpansion.Capture(ProgramNodes));
         var databases = DbCategoryTreeBuilder.Build(definePath).ToList();
-        if (keep) TreeExpansion.Restore(databases, TreeExpansion.Capture(DatabaseNodes));
+        if (keep) TreeExpansion.Restore(databases, TreeExpansion.Capture(TableSchemaNodes));
         ProgramNodes = new ObservableCollection<DefineNode>(programs);
-        DatabaseNodes = new ObservableCollection<DefineNode>(databases);
+        TableSchemaNodes = new ObservableCollection<DefineNode>(databases);
     }
 
     /// <summary>True when <paramref name="definePath"/> is the solution already shown, so its tree state carries over.</summary>
@@ -296,7 +296,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (e.PropertyName != nameof(DocumentViewModelBase.IsDirty)) return;
         OnPropertyChanged(nameof(HasDirtyDocuments));
 
-        // A saved ProgramSettings, DbCategorySettings or FormSchema can change what the Programs and Databases views
+        // A saved ProgramSettings, DbCategorySettings or FormSchema can change what the Programs and Table Schemas views
         // list, so they are rebuilt when such a document turns clean.
         if (sender is ProgramSettingsDocumentViewModel or DbCategorySettingsDocumentViewModel or FormSchemaDocumentViewModel
             && sender is DocumentViewModelBase { IsDirty: false }
@@ -345,7 +345,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedProgramNodeChanged(DefineNode? value) => OpenNode(value);
 
-    partial void OnSelectedDatabaseNodeChanged(DefineNode? value) => OpenNode(value);
+    partial void OnSelectedTableSchemaNodeChanged(DefineNode? value) => OpenNode(value);
 
     /// <summary>
     /// Opens the define file of <paramref name="value"/> in a tab, or activates its tab when it is already open.
@@ -391,7 +391,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ActiveDocument = null;
             SelectedNode = null;
             SelectedProgramNode = null;
-            SelectedDatabaseNode = null;
+            SelectedTableSchemaNode = null;
 
             // Record for File → Open Recent before assigning SolutionPath —
             // its PropertyChanged fires synchronously and the App-side menu
@@ -411,7 +411,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ActiveDocument = null;
             SelectedNode = null;
             SelectedProgramNode = null;
-            SelectedDatabaseNode = null;
+            SelectedTableSchemaNode = null;
             SolutionPath = string.Empty;
             StatusText = L("Status_OpenSolutionFailed", ex.Message);
         }

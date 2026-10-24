@@ -20,7 +20,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         ExplorerTree.KeepSelectionSingle();
         ProgramsTree.KeepSelectionSingle();
-        DatabasesTree.KeepSelectionSingle();
+        TableSchemasTree.KeepSelectionSingle();
     }
 
     protected override void OnDataContextChanged(EventArgs e)
