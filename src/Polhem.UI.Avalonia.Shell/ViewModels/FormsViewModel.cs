@@ -32,7 +32,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Gets or sets whether the navigation pane is open.</summary>
         [ObservableProperty]
-        private bool _isPaneOpen = true;
+        public partial bool IsPaneOpen { get; set; } = true;
 
         /// <summary>Initializes the forms screen, signing out through <see cref="ClientInfo.ApiClient"/>.</summary>
         /// <param name="options">The application's options.</param>

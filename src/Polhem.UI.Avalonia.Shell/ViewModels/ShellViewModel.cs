@@ -22,9 +22,14 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// <summary>Gets the view model of the step on screen.</summary>
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsLanguageSwitchVisible))]
-        private ViewModelBase _currentView;
+        public partial ViewModelBase CurrentView { get; set; }
 
         /// <summary>Gets or sets the language chosen in the switch.</summary>
+        /// <remarks>
+        /// Kept as a field rather than a partial property: the constructor writes the field so that
+        /// <see cref="OnSelectedLanguageChanged(ShellLanguageOption)"/> does not run at start-up, which would save the language preference
+        /// and could switch the interface language before anyone chose one.
+        /// </remarks>
         [ObservableProperty]
         private ShellLanguageOption _selectedLanguage;
 
@@ -39,7 +44,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             var culture = ShellLocalizer.Current.Culture.Name;
             _selectedLanguage = Languages.FirstOrDefault(o => string.Equals(o.Code, culture, StringComparison.OrdinalIgnoreCase))
                 ?? Languages[0];
-            _currentView = new ConnectionViewModel(options, NavigateToLogin);
+            CurrentView = new ConnectionViewModel(options, NavigateToLogin);
 
             // The shell lives as long as the application, so this subscription needs no removal.
             ShellLocalizer.Current.CultureChanged += (_, _) => CurrentView.RefreshText();

@@ -1,15 +1,11 @@
 {
   "issues": {
-    "external_roslyn:MVVMTK0042": {
-      "keys": [
-        "AaFhy6B4yLYg0y0cUtWy", "AaFhy6B4yLYg0y0cUtWz", "AaFhy6B4yLYg0y0cUtW0", "AaFhy6B4yLYg0y0cUtW1",
-        "AaFhy6B7yLYg0y0cUtW2", "AaFhy5-8yLYg0y0cUtWq", "AaFhy5-8yLYg0y0cUtWr", "AaFhy5-8yLYg0y0cUtWs",
-        "AaFhy5-8yLYg0y0cUtWt", "AaFhy6BxyLYg0y0cUtWu", "AaFhy6BxyLYg0y0cUtWv", "AaFhy6B1yLYg0y0cUtWw",
-        "AaFhy6B1yLYg0y0cUtWx"
-      ],
-      "component": "src/Polhem.UI.Avalonia.Shell/ViewModels/",
+    "AaFhy6BxyLYg0y0cUtWv": {
+      "rule": "external_roslyn:MVVMTK0042",
+      "component": "src/Polhem.UI.Avalonia.Shell/ViewModels/ShellViewModel.cs",
+      "field": "_selectedLanguage",
       "attempts": 0,
-      "reason": "Not in the rule table. Converting the [ObservableProperty] fields to partial properties is not a mechanical fix: the constructors assign the backing fields directly (for example `_selectedLanguage`) so that OnXChanged hooks do not run during construction. Needs a human decision on the constructor semantics.",
+      "reason": "Kept as a field on purpose (Won't Fix in SonarCloud). The constructor writes the field so that OnSelectedLanguageChanged does not run at start-up. A partial property can only be set through its generated setter, so the hook would save the language preference on every launch and, when the current culture is not in Languages, switch the interface language to Languages[0].",
       "lastAttempt": "2026-10-24"
     }
   },

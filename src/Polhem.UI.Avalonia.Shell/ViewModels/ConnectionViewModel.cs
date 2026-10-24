@@ -17,23 +17,23 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Gets or sets the JSON-RPC endpoint: the stored one, else the application's default.</summary>
         [ObservableProperty]
-        private string _endpoint;
+        public partial string Endpoint { get; set; }
 
         /// <summary>
-        /// Gets or sets the API key sent as <c>X-Api-Key</c>. Editing it persists the new value, so pointing the
+        /// Gets or sets the API key sent as <c>X-Api-Key</c>. Connecting persists the new value, so pointing the
         /// application at a backend that issued its own key needs no rebuild.
         /// </summary>
         [ObservableProperty]
-        private string _apiKey = ClientInfo.GetApiKey();
+        public partial string ApiKey { get; set; } = ClientInfo.GetApiKey();
 
         /// <summary>Gets the text under the title.</summary>
         [ObservableProperty]
-        private string _description = string.Empty;
+        public partial string Description { get; set; } = string.Empty;
 
         /// <summary>Gets whether a connection attempt is in flight.</summary>
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotBusy))]
-        private bool _isBusy;
+        public partial bool IsBusy { get; set; }
 
         /// <summary>
         /// Initializes a new instance.
@@ -48,7 +48,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             _onConnected = onConnected;
 
             var stored = ClientInfo.GetEndpoint();
-            _endpoint = string.IsNullOrWhiteSpace(stored) ? options.DefaultEndpoint : stored;
+            Endpoint = string.IsNullOrWhiteSpace(stored) ? options.DefaultEndpoint : stored;
             RefreshText();
             SetStatus("Status_Idle", isError: false);
         }
