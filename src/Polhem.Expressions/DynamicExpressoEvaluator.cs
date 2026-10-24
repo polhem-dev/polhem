@@ -91,13 +91,13 @@ namespace Polhem.Expressions
                 .ToHashSet();
 
         /// <summary>
-        /// Gets the compiled delegates in the cache.
+        /// Returns a snapshot of the compiled delegates in the cache.
         /// </summary>
         /// <remarks>
         /// Exposed for <c>InterpretedInvokerGateTests</c>, which checks that none of them is a runtime-generated
         /// thunk when the evaluator interprets.
         /// </remarks>
-        internal IReadOnlyCollection<Delegate> CompiledInvokers => _cache.Values.ToArray();
+        internal IReadOnlyCollection<Delegate> GetCompiledInvokers() => _cache.Values.ToArray();
 
         /// <summary>
         /// The time zone the helper functions read, for the duration of one <c>Evaluate</c> call.

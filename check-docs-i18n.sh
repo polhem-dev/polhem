@@ -202,7 +202,7 @@ expected_switch() {
 }
 
 validate_config() {
-  local l t d
+  local l t
   for l in $(langs_in_order); do
     autonym "$l" > /dev/null || { echo "Configuration error: language $l has no autonym." >&2; exit 2; }
   done

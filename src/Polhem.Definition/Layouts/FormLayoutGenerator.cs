@@ -155,10 +155,10 @@ namespace Polhem.Definition.Layouts
 
         private static (LayoutFieldCollection List, int Index)? FindField(LayoutSectionCollection sections, string fieldName)
         {
-            foreach (var section in sections)
+            foreach (var fields in sections.Select(section => section.Fields!))
             {
-                int index = IndexOf(section.Fields!, fieldName);
-                if (index >= 0) return (section.Fields!, index);
+                int index = IndexOf(fields, fieldName);
+                if (index >= 0) return (fields, index);
             }
             return null;
         }

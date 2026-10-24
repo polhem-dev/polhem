@@ -63,8 +63,8 @@ namespace Polhem.Repository.UnitTests
                 var table = ReadList(form);
 
                 Assert.Equal(typeof(bool), table.Columns[FlagColumn]!.DataType);
-                Assert.Equal(true, table.Rows[0][FlagColumn]);
-                Assert.Equal(false, table.Rows[1][FlagColumn]);
+                Assert.True(Assert.IsType<bool>(table.Rows[0][FlagColumn]));
+                Assert.False(Assert.IsType<bool>(table.Rows[1][FlagColumn]));
             });
 
         [DbFact(DatabaseType.SQLite)]

@@ -399,7 +399,7 @@ namespace Polhem.UI.Avalonia.Controls
                 node => node.Children);
         }
 
-        private static Control BuildItem(ObjectTreeNode node, Func<ObjectTreeNode, Geometry?>? iconSelector)
+        private static StackPanel BuildItem(ObjectTreeNode node, Func<ObjectTreeNode, Geometry?>? iconSelector)
         {
             var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
             if (iconSelector?.Invoke(node) is { } icon)

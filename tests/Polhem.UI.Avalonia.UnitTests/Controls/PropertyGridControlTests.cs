@@ -35,7 +35,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         {
             var grid = new PropertyGridControl { SelectedObject = new PropertyGridSample() };
 
-            Assert.Equal(["General", "Layout", "Misc"], grid.CategoryHeaders);
+            Assert.Equal(["General", "Layout", "Misc"], grid.GetCategoryHeaders());
             Assert.DoesNotContain(grid.Rows, r => r.Property.Name == nameof(PropertyGridSample.Hidden));
             Assert.Contains(grid.Rows, r => r.Property.Name == nameof(PropertyGridSample.Count));
         }
@@ -46,7 +46,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         {
             var grid = new PropertyGridControl { ShowCategories = false, SelectedObject = new PropertyGridSample() };
 
-            Assert.Empty(grid.CategoryHeaders);
+            Assert.Empty(grid.GetCategoryHeaders());
             Assert.NotEmpty(grid.Rows);
         }
 
@@ -92,8 +92,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.NotNull(raised);
             Assert.Same(sample, raised.Component);
             Assert.Equal(nameof(PropertyGridSample.Enabled), raised.Property.Name);
-            Assert.Equal(false, raised.OldValue);
-            Assert.Equal(true, raised.NewValue);
+            Assert.False(Assert.IsType<bool>(raised.OldValue));
+            Assert.True(Assert.IsType<bool>(raised.NewValue));
         }
 
         [Fact]
@@ -236,7 +236,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             grid.LabelTranslator = text => text.Text.ToUpperInvariant();
 
-            Assert.Equal(["GENERAL", "LAYOUT", "MISC"], grid.CategoryHeaders);
+            Assert.Equal(["GENERAL", "LAYOUT", "MISC"], grid.GetCategoryHeaders());
             Assert.Equal("NAME", Row(grid, nameof(PropertyGridSample.Name)).Label.Text);
             Assert.Equal(nameof(PropertyGridSample.Name), grid.SelectedRow?.Property.Name);
             Assert.Equal("THE SAMPLE'S NAME.", grid.DescriptionText);
@@ -335,7 +335,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             grid.PropertyFilter = p => p.Category == "Layout";
 
-            Assert.Equal(["Layout"], grid.CategoryHeaders);
+            Assert.Equal(["Layout"], grid.GetCategoryHeaders());
             Assert.All(grid.Rows, r => Assert.Equal("Layout", r.Property.Category));
 
             grid.PropertyFilter = null;

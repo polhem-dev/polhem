@@ -280,7 +280,7 @@ namespace Polhem.UI.Avalonia.Controls
             }
             catch (TargetInvocationException ex) when (ex.InnerException is ArgumentException or InvalidOperationException)
             {
-                error = ex.InnerException!.Message;
+                error = ex.InnerException.Message;
                 return false;
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
@@ -333,7 +333,7 @@ namespace Polhem.UI.Avalonia.Controls
             }
             catch (TargetInvocationException ex) when (ex.InnerException is ArgumentException or InvalidOperationException)
             {
-                error = ex.InnerException!.Message;
+                error = ex.InnerException.Message;
                 return false;
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)

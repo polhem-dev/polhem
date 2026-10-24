@@ -38,7 +38,7 @@ namespace Polhem.Expressions.UnitTests
         };
 
         [Theory]
-        [MemberData(nameof(Cases))]
+        [MemberData(nameof(Cases), DisableDiscoveryEnumeration = true)]
         [DisplayName("An interpreted expression evaluates correctly behind a thunk that needs no dynamic code")]
         public void Evaluate_Interpreted_UsesNoRuntimeGeneratedThunk(
             string expression, Dictionary<string, object?> variables, Type returnType, object expected)
@@ -48,7 +48,7 @@ namespace Polhem.Expressions.UnitTests
             var result = evaluator.Evaluate(expression, variables, returnType);
 
             Assert.Equal(expected, result);
-            var invoker = Assert.Single(evaluator.CompiledInvokers);
+            var invoker = Assert.Single(evaluator.GetCompiledInvokers());
             Assert.False(IsRuntimeGeneratedThunk(invoker),
                 $"`{expression}` is invoked through a DynamicMethod thunk ({invoker.Method}), which iOS cannot run.");
         }

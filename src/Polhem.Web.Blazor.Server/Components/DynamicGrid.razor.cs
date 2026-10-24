@@ -99,6 +99,20 @@ namespace Polhem.Web.Blazor.Server.Components
             }
 
             var culture = CultureInfo.CurrentCulture;
+            return FormatByColumn(raw, column, culture) ?? raw switch
+            {
+                bool b => Text(b ? PolhemUIText.True : PolhemUIText.False),
+                DateTime dt => dt.TimeOfDay == TimeSpan.Zero
+                    ? dt.ToString("d", culture)
+                    : dt.ToString("G", culture),
+                IFormattable f => f.ToString(null, culture),
+                _ => raw.ToString() ?? string.Empty,
+            };
+        }
+
+        // The formats the column declares, or null when none applies to this value.
+        private static string? FormatByColumn(object raw, LayoutColumn column, CultureInfo culture)
+        {
             if (column.ControlType == ControlType.DateTimeEdit && string.IsNullOrEmpty(column.DisplayFormat)
                 && raw is DateTime instant)
             {
@@ -108,16 +122,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 return formattableDisplay.ToString(column.DisplayFormat, culture);
             if (!string.IsNullOrEmpty(column.NumberFormat) && raw is IFormattable formattableNumber)
                 return formattableNumber.ToString(column.NumberFormat, culture);
-
-            return raw switch
-            {
-                bool b => Text(b ? PolhemUIText.True : PolhemUIText.False),
-                DateTime dt => dt.TimeOfDay == TimeSpan.Zero
-                    ? dt.ToString("d", culture)
-                    : dt.ToString("G", culture),
-                IFormattable f => f.ToString(null, culture),
-                _ => raw.ToString() ?? string.Empty,
-            };
+            return null;
         }
 
         private ListItemCollection? ResolveListItems(string fieldName)

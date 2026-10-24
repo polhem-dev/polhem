@@ -164,7 +164,7 @@ namespace Polhem.UI.Avalonia.Controls
             Cancel();
         }
 
-        private Control BuildLayout(bool compact)
+        private DockPanel BuildLayout(bool compact)
         {
             var toolbar = new StackPanel
             {

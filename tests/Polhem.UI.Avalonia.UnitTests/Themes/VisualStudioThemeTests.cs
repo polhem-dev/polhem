@@ -34,8 +34,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Themes
 
             Assert.True(app.Resources.TryGetResource("SemiColorBackground0", ThemeVariant.Dark, out var dark));
             Assert.True(app.Resources.TryGetResource("SemiColorBackground0", ThemeVariant.Light, out var light));
-            Assert.Equal(Color.Parse("#1E1E1E"), Assert.IsAssignableFrom<ISolidColorBrush>(dark).Color);
-            Assert.Equal(Color.Parse("#FFFFFF"), Assert.IsAssignableFrom<ISolidColorBrush>(light).Color);
+            Assert.Equal(Color.Parse("#1E1E1E"), Assert.IsType<ISolidColorBrush>(dark, exactMatch: false).Color);
+            Assert.Equal(Color.Parse("#FFFFFF"), Assert.IsType<ISolidColorBrush>(light, exactMatch: false).Color);
         }
 
         [Fact]

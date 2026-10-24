@@ -118,8 +118,6 @@ namespace Polhem.UI.Avalonia.Controls
         // which do not fire for values set from code (gotcha #6). _isLoading keeps a load from writing back.
         private void AttachEditor(PropertyGridRow row)
         {
-            var property = row.Property;
-            var component = row.Component;
             if (row.Kind == PropertyGridEditorKind.Suggestion)
             {
                 AttachSuggestionEditor(row, (ComboBox)row.Editor);
@@ -128,73 +126,106 @@ namespace Polhem.UI.Avalonia.Controls
             switch (row.Editor)
             {
                 case CheckBox checkBox:
-                    row.Load = () => checkBox.IsChecked = property.GetValue(component) is true;
-                    checkBox.PropertyChanged += (_, e) =>
-                    {
-                        if (e.Property == CheckBox.IsCheckedProperty && !_isLoading)
-                            WriteValue(row, checkBox.IsChecked == true, reloadOnError: true);
-                    };
+                    AttachCheckBoxEditor(row, checkBox);
                     break;
                 case ComboBox comboBox:
-                    row.Load = () => comboBox.SelectedItem = property.GetValue(component);
-                    comboBox.PropertyChanged += (_, e) =>
-                    {
-                        if (e.Property == ComboBox.SelectedItemProperty && !_isLoading && comboBox.SelectedItem is { } item)
-                            WriteValue(row, item, reloadOnError: true);
-                    };
+                    AttachComboBoxEditor(row, comboBox);
                     break;
                 case NumericUpDown numeric:
-                    row.Load = () => numeric.Value = property.GetValue(component) is { } number
-                        ? Convert.ToDecimal(number, CultureInfo.InvariantCulture)
-                        : null;
-                    numeric.PropertyChanged += (_, e) =>
-                    {
-                        if (e.Property != NumericUpDown.ValueProperty || _isLoading) { return; }
-                        if (numeric.Value is { } number && PropertyGridMetadata.FromNumber(property.PropertyType, number) is { } value)
-                            WriteValue(row, value, reloadOnError: true);
-                        else
-                            LoadAll();
-                    };
+                    AttachNumericEditor(row, numeric);
                     break;
                 case DatePicker datePicker:
-                    row.Load = () => datePicker.SelectedDate = PropertyGridMetadata.ToPickerDate(property.GetValue(component));
-                    datePicker.PropertyChanged += (_, e) =>
-                    {
-                        if (e.Property != DatePicker.SelectedDateProperty || _isLoading) { return; }
-                        if (datePicker.SelectedDate is { } picked)
-                            WriteValue(row, PropertyGridMetadata.FromPickerDate(property.PropertyType, picked, property.GetValue(component)), reloadOnError: true);
-                        else
-                            LoadAll();
-                    };
+                    AttachDateEditor(row, datePicker);
                     break;
                 case TextBox textBox:
-                    row.Load = () =>
-                    {
-                        row.LoadedText = PropertyGridMetadata.FormatText(property, property.GetValue(component));
-                        textBox.Text = row.LoadedText;
-                    };
-                    textBox.LostFocus += (_, _) => CommitText(row);
-                    textBox.KeyDown += (_, e) =>
-                    {
-                        if (e.Key != Key.Enter) { return; }
-                        CommitText(row);
-                        e.Handled = true;
-                    };
+                    AttachTextEditor(row, textBox);
                     break;
                 case DockPanel { Children: [Button editButton, TextBlock summary] }:
-                    row.Load = () =>
-                    {
-                        var value = property.GetValue(component);
-                        summary.Text = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.CollectionSummary),
-                            value is ICollection collection ? collection.Count : 0);
-                        editButton.IsEnabled = CanEditCollection(value);
-                    };
-                    editButton.Click += async (_, _) => await EditCollectionAsync(row);
+                    AttachCollectionEditor(row, editButton, summary);
                     break;
                 case TextBlock summary:
-                    row.Load = () => summary.Text = PropertyGridMetadata.FormatText(property, property.GetValue(component));
+                    row.Load = () => summary.Text = PropertyGridMetadata.FormatText(row.Property, row.Property.GetValue(row.Component));
                     break;
             }
+        }
+
+        private void AttachCheckBoxEditor(PropertyGridRow row, CheckBox checkBox)
+        {
+            row.Load = () => checkBox.IsChecked = row.Property.GetValue(row.Component) is true;
+            checkBox.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == CheckBox.IsCheckedProperty && !_isLoading)
+                    WriteValue(row, checkBox.IsChecked == true, reloadOnError: true);
+            };
+        }
+
+        private void AttachComboBoxEditor(PropertyGridRow row, ComboBox comboBox)
+        {
+            row.Load = () => comboBox.SelectedItem = row.Property.GetValue(row.Component);
+            comboBox.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == ComboBox.SelectedItemProperty && !_isLoading && comboBox.SelectedItem is { } item)
+                    WriteValue(row, item, reloadOnError: true);
+            };
+        }
+
+        private void AttachNumericEditor(PropertyGridRow row, NumericUpDown numeric)
+        {
+            var property = row.Property;
+            row.Load = () => numeric.Value = property.GetValue(row.Component) is { } number
+                ? Convert.ToDecimal(number, CultureInfo.InvariantCulture)
+                : null;
+            numeric.PropertyChanged += (_, e) =>
+            {
+                if (e.Property != NumericUpDown.ValueProperty || _isLoading) { return; }
+                if (numeric.Value is { } number && PropertyGridMetadata.FromNumber(property.PropertyType, number) is { } value)
+                    WriteValue(row, value, reloadOnError: true);
+                else
+                    LoadAll();
+            };
+        }
+
+        private void AttachDateEditor(PropertyGridRow row, DatePicker datePicker)
+        {
+            var property = row.Property;
+            var component = row.Component;
+            row.Load = () => datePicker.SelectedDate = PropertyGridMetadata.ToPickerDate(property.GetValue(component));
+            datePicker.PropertyChanged += (_, e) =>
+            {
+                if (e.Property != DatePicker.SelectedDateProperty || _isLoading) { return; }
+                if (datePicker.SelectedDate is { } picked)
+                    WriteValue(row, PropertyGridMetadata.FromPickerDate(property.PropertyType, picked, property.GetValue(component)), reloadOnError: true);
+                else
+                    LoadAll();
+            };
+        }
+
+        private void AttachTextEditor(PropertyGridRow row, TextBox textBox)
+        {
+            row.Load = () =>
+            {
+                row.LoadedText = PropertyGridMetadata.FormatText(row.Property, row.Property.GetValue(row.Component));
+                textBox.Text = row.LoadedText;
+            };
+            textBox.LostFocus += (_, _) => CommitText(row);
+            textBox.KeyDown += (_, e) =>
+            {
+                if (e.Key != Key.Enter) { return; }
+                CommitText(row);
+                e.Handled = true;
+            };
+        }
+
+        private void AttachCollectionEditor(PropertyGridRow row, Button editButton, TextBlock summary)
+        {
+            row.Load = () =>
+            {
+                var value = row.Property.GetValue(row.Component);
+                summary.Text = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.CollectionSummary),
+                    value is ICollection collection ? collection.Count : 0);
+                editButton.IsEnabled = CanEditCollection(value);
+            };
+            editButton.Click += async (_, _) => await EditCollectionAsync(row);
         }
 
         // An editable drop-down writes its text the way a text box does: on Enter, when it loses focus, and when the
