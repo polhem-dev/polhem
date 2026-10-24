@@ -211,11 +211,14 @@ namespace Polhem.UI.Avalonia.Controls
             ArgumentNullException.ThrowIfNull(prefix);
             ArgumentNullException.ThrowIfNull(existing);
             var used = new HashSet<string>(existing.Where(k => k is not null), StringComparer.OrdinalIgnoreCase);
-            for (var n = 1; ; n++)
+            var n = 1;
+            var key = prefix + n.ToString(CultureInfo.InvariantCulture);
+            while (used.Contains(key))
             {
-                var key = prefix + n.ToString(CultureInfo.InvariantCulture);
-                if (!used.Contains(key)) { return key; }
+                n++;
+                key = prefix + n.ToString(CultureInfo.InvariantCulture);
             }
+            return key;
         }
 
         /// <summary>

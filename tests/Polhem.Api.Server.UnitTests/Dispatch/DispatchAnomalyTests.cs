@@ -78,7 +78,7 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
             CompanyId = "C1",
         };
 
-        private IServiceProvider AuditServices(IAnomalyLogWriter? writer, AuditLogOptions? options, ISessionInfoService? session)
+        private TestOverrideServiceProvider AuditServices(IAnomalyLogWriter? writer, AuditLogOptions? options, ISessionInfoService? session)
             => new TestOverrideServiceProvider(_fx.Provider,
                 (typeof(IAnomalyLogWriter), writer),
                 (typeof(AuditLogOptions), options),

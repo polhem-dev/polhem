@@ -28,7 +28,7 @@ namespace Polhem.Api.Server.Dispatch
             int threshold = options.ApiSlowThresholdMs;
             if (threshold > 0 && stopwatch.ElapsedMilliseconds > threshold)
             {
-                Write(services, method, state, AnomalyKind.Slow, stopwatch.ElapsedMilliseconds, thresholdMs: threshold);
+                Write(services, method, state, new AnomalyDetail(AnomalyKind.Slow, stopwatch.ElapsedMilliseconds, ThresholdMs: threshold));
             }
         }
 
@@ -37,8 +37,8 @@ namespace Polhem.Api.Server.Dispatch
             var stopwatch = state.Stopwatch;
             if (stopwatch == null) { return; }
             stopwatch.Stop();
-            Write(services, method, state, Classify(rootEx), stopwatch.ElapsedMilliseconds,
-                errorType: rootEx.GetType().Name, errorMessage: Sanitize(rootEx.Message));
+            Write(services, method, state, new AnomalyDetail(Classify(rootEx), stopwatch.ElapsedMilliseconds,
+                ErrorType: rootEx.GetType().Name, ErrorMessage: Sanitize(rootEx.Message)));
         }
 
         private static AnomalyKind Classify(Exception rootEx)
@@ -49,8 +49,7 @@ namespace Polhem.Api.Server.Dispatch
                 : AnomalyKind.Error;
         }
 
-        private static void Write(IServiceProvider services, string method, PolhemCallState state, AnomalyKind kind,
-            long elapsedMs, int? thresholdMs = null, string? errorType = null, string? errorMessage = null)
+        private static void Write(IServiceProvider services, string method, PolhemCallState state, AnomalyDetail detail)
         {
             var writer = services.GetService<IAnomalyLogWriter>();
             var sessions = services.GetService<ISessionInfoService>();
@@ -65,11 +64,11 @@ namespace Polhem.Api.Server.Dispatch
                 ApiKeyId = NullIfEmpty(state.ApiKeyValidation.SysId),
                 ApiKeyName = NullIfEmpty(state.ApiKeyValidation.SysName),
                 Method = method,
-                Kind = kind,
-                ElapsedMs = elapsedMs > int.MaxValue ? int.MaxValue : (int)elapsedMs,
-                ThresholdMs = thresholdMs,
-                ErrorType = errorType,
-                ErrorMessage = errorMessage,
+                Kind = detail.Kind,
+                ElapsedMs = detail.ElapsedMs > int.MaxValue ? int.MaxValue : (int)detail.ElapsedMs,
+                ThresholdMs = detail.ThresholdMs,
+                ErrorType = detail.ErrorType,
+                ErrorMessage = detail.ErrorMessage,
                 Source = method,
             });
         }
@@ -82,5 +81,8 @@ namespace Polhem.Api.Server.Dispatch
             var oneLine = message.Replace('\r', ' ').Replace('\n', ' ');
             return oneLine.Length <= 1000 ? oneLine : oneLine[..1000];
         }
+
+        private readonly record struct AnomalyDetail(AnomalyKind Kind, long ElapsedMs, int? ThresholdMs = null,
+            string? ErrorType = null, string? ErrorMessage = null);
     }
 }

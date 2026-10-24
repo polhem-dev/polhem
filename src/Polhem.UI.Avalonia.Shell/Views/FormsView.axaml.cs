@@ -166,7 +166,7 @@ namespace Polhem.UI.Avalonia.Shell.Views
             Tabs.SelectedItem = tab;
         }
 
-        private Control BuildTabHeader(string title, string tag)
+        private StackPanel BuildTabHeader(string title, string tag)
         {
             var text = new TextBlock { Text = title, VerticalAlignment = VerticalAlignment.Center };
             var close = new Button

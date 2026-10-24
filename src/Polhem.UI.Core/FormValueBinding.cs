@@ -109,15 +109,11 @@ namespace Polhem.UI.Core
                 return false;
 
             string value = ToBindingString(raw);
-            foreach (var item in items)
-            {
-                if (string.Equals(item.Value, value, StringComparison.Ordinal))
-                {
-                    text = item.Text;
-                    return true;
-                }
-            }
-            return false;
+            var match = items.FirstOrDefault(item => string.Equals(item.Value, value, StringComparison.Ordinal));
+            if (match is null)
+                return false;
+            text = match.Text;
+            return true;
         }
 
         /// <summary>

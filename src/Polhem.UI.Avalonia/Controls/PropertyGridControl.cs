@@ -316,8 +316,8 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>Gets the text of the description bar.</summary>
         internal string? DescriptionText => _descriptionText.Text;
 
-        /// <summary>Gets the category headers currently shown, in display order.</summary>
-        internal IReadOnlyList<string> CategoryHeaders =>
+        /// <summary>Returns a snapshot of the category headers currently shown, in display order.</summary>
+        internal IReadOnlyList<string> GetCategoryHeaders() =>
             _rowsHost.Children.OfType<Border>().Where(b => b.Tag is CategoryTag).Select(b => ((CategoryTag)b.Tag!).Text).ToList();
 
         /// <summary>

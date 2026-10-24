@@ -104,8 +104,8 @@ namespace Polhem.Db.UnitTests
                 var table = dbAccess.Execute(TypedSelect()).Table!;
 
                 Assert.Equal(typeof(bool), table.Columns["flag"]!.DataType);
-                Assert.Equal(true, table.Rows[0]["flag"]);
-                Assert.Equal(false, table.Rows[1]["flag"]);
+                Assert.True(Assert.IsType<bool>(table.Rows[0]["flag"]));
+                Assert.False(Assert.IsType<bool>(table.Rows[1]["flag"]));
             });
 
         [DbFact(DatabaseType.SQLite)]
@@ -178,7 +178,7 @@ namespace Polhem.Db.UnitTests
 
                 Assert.Equal(typeof(decimal), table.Columns["amount"]!.DataType);
                 Assert.Equal(100.5m, table.Rows[1]["amount"]);
-                Assert.Equal(true, table.Rows[0]["flag"]);
+                Assert.True(Assert.IsType<bool>(table.Rows[0]["flag"]));
             });
 
         [DbFact(DatabaseType.SQLite)]

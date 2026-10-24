@@ -347,6 +347,11 @@ namespace Polhem.UI.Avalonia.Controls
                 return combo;
             }
 
+            return BuildTextCellEditor(rowView, dataColumn, current);
+        }
+
+        private static TextBox BuildTextCellEditor(DataRowView rowView, DataColumn dataColumn, string current)
+        {
             var textBox = new TextBox { Text = current };
             // Commit on leaving the cell editor (or Enter) rather than per keystroke, matching
             // the standalone TextEdit — so a field's value (and any dependent recalculation)

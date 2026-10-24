@@ -21,7 +21,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             return (items, panel);
         }
 
-        private static IReadOnlyList<string> Labels(CollectionEditPanel panel) =>
+        private static List<string> Labels(CollectionEditPanel panel) =>
             panel.List.ItemsSource!.Cast<object>().Select(e => e.ToString()!).ToList();
 
         [Fact]

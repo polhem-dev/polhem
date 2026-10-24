@@ -65,10 +65,9 @@ namespace Polhem.Repository.Form
         {
             if (formTable.Fields == null) { return; }
 
-            foreach (FormField field in formTable.Fields)
+            foreach (var field in formTable.Fields.Where(field => IsTypedBeforeRead(field.DbType)))
             {
-                if (IsTypedBeforeRead(field.DbType))
-                    spec.ColumnTypes[field.FieldName] = DbTypeConverter.ToType(field.DbType);
+                spec.ColumnTypes[field.FieldName] = DbTypeConverter.ToType(field.DbType);
             }
         }
 
