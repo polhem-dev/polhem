@@ -41,7 +41,7 @@ namespace Polhem.DefineEditor.UnitTests
 
             vm.ToggleSidebarCommand.Execute(null);
 
-            Assert.False(vm.IsExplorerActive || vm.IsProgramsActive || vm.IsDatabasesActive);
+            Assert.False(vm.IsExplorerActive || vm.IsProgramsActive || vm.IsTableSchemasActive);
         }
     }
 }

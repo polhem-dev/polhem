@@ -49,12 +49,12 @@
 
   <data name="Sidebar_ExplorerTitle" xml:space="preserve"><value>EXPLORER</value></data>
   <data name="Sidebar_ProgramsTitle" xml:space="preserve"><value>PROGRAMS</value></data>
-  <data name="Sidebar_DatabasesTitle" xml:space="preserve"><value>DATABASES</value></data>
+  <data name="Sidebar_TableSchemasTitle" xml:space="preserve"><value>TABLE SCHEMAS</value></data>
   <data name="Sidebar_ExplorerTip" xml:space="preserve"><value>Explorer: the files of the DefinePath folder</value></data>
   <data name="Sidebar_ProgramsTip" xml:space="preserve"><value>Programs: each ProgId in ProgramSettings with its define files</value></data>
-  <data name="Sidebar_DatabasesTip" xml:space="preserve"><value>Databases: the tables of each category in DbCategorySettings</value></data>
+  <data name="Sidebar_TableSchemasTip" xml:space="preserve"><value>Table schemas: the tables of each database category in DbCategorySettings, not the databases in DatabaseSettings</value></data>
   <data name="Sidebar_ProgramsEmpty" xml:space="preserve"><value>No programs: ProgramSettings.xml is missing, empty or cannot be read.</value></data>
-  <data name="Sidebar_DatabasesEmpty" xml:space="preserve"><value>No database categories: DbCategorySettings.xml is missing, empty or cannot be read.</value></data>
+  <data name="Sidebar_TableSchemasEmpty" xml:space="preserve"><value>No database categories: DbCategorySettings.xml is missing, empty or cannot be read.</value></data>
   <data name="Welcome_NoSolution" xml:space="preserve"><value>No solution open</value></data>
   <data name="Welcome_OpenFolderButton" xml:space="preserve"><value>Open Folder</value></data>
   <data name="Welcome_OpenFolderTip" xml:space="preserve"><value>Select a DefinePath solution folder</value></data>

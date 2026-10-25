@@ -20,7 +20,14 @@ public partial class MainWindow : Window
         InitializeComponent();
         ExplorerTree.KeepSelectionSingle();
         ProgramsTree.KeepSelectionSingle();
-        DatabasesTree.KeepSelectionSingle();
+        TableSchemasTree.KeepSelectionSingle();
+
+        if (OperatingSystem.IsMacOS())
+        {
+            ExtendClientAreaToDecorationsHint = true;
+            ExtendClientAreaTitleBarHeightHint = WindowTitleBar.Height;
+            WindowTitleBar.IsVisible = true;
+        }
     }
 
     protected override void OnDataContextChanged(EventArgs e)

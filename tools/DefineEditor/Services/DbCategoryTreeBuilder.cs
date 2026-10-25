@@ -5,8 +5,10 @@ using Polhem.DefineEditor.Models;
 namespace Polhem.DefineEditor.Services;
 
 /// <summary>
-/// Builds the Databases view of the sidebar: one node per <see cref="DbCategory"/> in <c>DbCategorySettings.xml</c>,
-/// holding the tables registered in it. A table node opens <c>TableSchema/{category}/{table}.TableSchema.xml</c>.
+/// Builds the Table Schemas view of the sidebar: one node per <see cref="DbCategory"/> in <c>DbCategorySettings.xml</c>,
+/// holding the tables registered in it. A category node shows only its id: a category is a schema, and its display
+/// name usually describes a database, which misleads when several databases share the category.
+/// A table node opens <c>TableSchema/{category}/{table}.TableSchema.xml</c>.
 /// </summary>
 /// <remarks>
 /// A registered table without a TableSchema file is not listed, and a TableSchema file that no category registers
@@ -34,7 +36,7 @@ public static class DbCategoryTreeBuilder
             if (string.IsNullOrWhiteSpace(category.Id)) continue;
             var node = new DefineNode
             {
-                Name = DefineFileReader.Label(category.Id, category.DisplayName),
+                Name = category.Id,
                 Kind = DefineNodeKind.Group,
                 KeyText = category.Id,
                 Icon = IconCategory,

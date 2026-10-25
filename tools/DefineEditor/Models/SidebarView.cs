@@ -10,5 +10,5 @@ public enum SidebarView
     /// <summary>The programs registered in ProgramSettings, each with the define files that belong to it.</summary>
     Programs,
     /// <summary>The database categories in DbCategorySettings, each with its tables.</summary>
-    Databases
+    TableSchemas
 }

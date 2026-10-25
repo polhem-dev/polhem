@@ -18,7 +18,7 @@ After a solution is opened, the activity bar on the far left switches the sideba
 - **Explorer**: every file under DefinePath, grouped by type.
 - **Programs**: each ProgId registered in `ProgramSettings.xml`, with the files that exist for it: its FormSchema and
   FormLayout, the TableSchema of each table its FormSchema declares, and its Language file in each language.
-- **Databases**: each category in `DbCategorySettings.xml`, with the registered tables that have a TableSchema file.
+- **Table Schemas**: each database category in `DbCategorySettings.xml`, with the registered tables that have a TableSchema file. A category is a schema, not a connection: in a multi-tenant setup one `company` category stands for every company database in `DatabaseSettings.xml`.
 
 Select a file in any view to load the matching editor on the right:
 
