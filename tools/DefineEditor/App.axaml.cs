@@ -170,9 +170,6 @@ public partial class App : Application
                 }
                 else if (e.PropertyName == nameof(MainWindowViewModel.SolutionPath))
                 {
-                    // OpenSolution touched UserSettings.RecentSolutions just
-                    // before assigning SolutionPath — refresh the submenu.
-                    RebuildRecentMenu();
                     AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbookCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbooksCommand.NotifyCanExecuteChanged();
@@ -181,6 +178,8 @@ public partial class App : Application
                     PreviewDatabaseUpgradeCommand.NotifyCanExecuteChanged();
                 }
             };
+
+            vm.RecentSolutionsChanged += (_, _) => RebuildRecentMenu();
 
             // The "Clear Recent" label inside the dynamically rebuilt submenu
             // doesn't go through LocItem (rebuilding would pile up culture
@@ -459,11 +458,11 @@ public partial class App : Application
     {
         _recentMenu.Items.Clear();
 
-        var recents = UserSettings.Load().RecentSolutions;
-        foreach (var path in recents)
+        var recents = RecentSolutionLabels.Build(UserSettings.Load().RecentSolutions);
+        foreach (var recent in recents)
         {
-            var captured = path;
-            _recentMenu.Add(new NativeMenuItem(path)
+            var captured = recent.Path;
+            _recentMenu.Add(new NativeMenuItem(recent.MenuLabel)
             {
                 Command = new RelayCommand(() => OpenRecentSolution(captured)),
             });
@@ -481,13 +480,8 @@ public partial class App : Application
     private static void OpenRecentSolution(string path) =>
         GetMainViewModel()?.OpenSolution(path);
 
-    private void ClearRecentSolutions()
-    {
-        var settings = UserSettings.Load();
-        settings.RecentSolutions.Clear();
-        settings.Save();
-        RebuildRecentMenu();
-    }
+    private static void ClearRecentSolutions() =>
+        GetMainViewModel()?.ClearRecentSolutions();
 
     private static bool CanExecuteCloseActiveTab() => GetActiveDocument() is not null;
 

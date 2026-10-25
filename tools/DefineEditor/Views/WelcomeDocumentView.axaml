@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:m="using:Polhem.DefineEditor.Models"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -22,6 +23,24 @@
         <Style Selector="Button.link:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="TextElement.Foreground" Value="{DynamicResource SemiColorPrimaryPointerover}"/>
+        </Style>
+        <!-- Recent entries: the remove button shows only while the pointer is over its row, like VS Code -->
+        <Style Selector="Button.removeRecent">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}"/>
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Grid.recent:pointerover Button.removeRecent">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <!-- A recent folder that no longer exists stays listed, dimmed, so it can still be removed -->
+        <Style Selector="Grid.recent.missing Button.link">
+            <Setter Property="Opacity" Value="0.45"/>
         </Style>
     </UserControl.Styles>
 
@@ -47,13 +66,33 @@
                     <ItemsControl ItemsSource="{Binding RecentSolutions}"
                                   IsVisible="{Binding HasRecentSolutions}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Button Classes="link"
-                                        Command="{Binding $parent[ItemsControl].((vm:WelcomeDocumentViewModel)DataContext).OpenRecentCommand}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip.Tip="{Binding}">
-                                    <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" MaxWidth="380"/>
-                                </Button>
+                            <DataTemplate x:DataType="m:RecentSolution">
+                                <Grid Classes="recent" Classes.missing="{Binding !Exists}"
+                                      ColumnDefinitions="*,Auto" Background="Transparent">
+                                    <Button Classes="link"
+                                            Command="{Binding $parent[ItemsControl].((vm:WelcomeDocumentViewModel)DataContext).OpenRecentCommand}"
+                                            CommandParameter="{Binding Path}">
+                                        <ToolTip.Tip>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Path}"/>
+                                                <TextBlock Text="{loc:Loc Welcome_RecentMissing}"
+                                                           IsVisible="{Binding !Exists}"/>
+                                            </StackPanel>
+                                        </ToolTip.Tip>
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Text="{Binding Name}"/>
+                                            <TextBlock Grid.Column="1" Classes="muted" Margin="12,0,0,0"
+                                                       Text="{Binding Location}"
+                                                       TextTrimming="PathSegmentEllipsis"/>
+                                        </Grid>
+                                    </Button>
+                                    <Button Grid.Column="1" Classes="removeRecent"
+                                            Command="{Binding $parent[ItemsControl].((vm:WelcomeDocumentViewModel)DataContext).RemoveRecentCommand}"
+                                            CommandParameter="{Binding Path}"
+                                            ToolTip.Tip="{loc:Loc Welcome_RemoveRecent}">
+                                        <PathIcon Data="{StaticResource IconClear}" Width="10" Height="10"/>
+                                    </Button>
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
