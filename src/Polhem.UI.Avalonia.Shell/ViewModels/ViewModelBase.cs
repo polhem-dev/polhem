@@ -14,11 +14,11 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Gets the status line text in the interface language.</summary>
         [ObservableProperty]
-        private string _status = string.Empty;
+        public partial string Status { get; set; } = string.Empty;
 
         /// <summary>Gets whether <see cref="Status"/> reports an error; the views colour it.</summary>
         [ObservableProperty]
-        private bool _isError;
+        public partial bool IsError { get; set; }
 
         /// <summary>
         /// Re-renders the text this view model holds after the interface language changed. The views' own text binds

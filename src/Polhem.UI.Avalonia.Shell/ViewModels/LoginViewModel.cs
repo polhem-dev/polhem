@@ -28,20 +28,20 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Gets or sets the company id entered after sign-in.</summary>
         [ObservableProperty]
-        private string _companyId;
+        public partial string CompanyId { get; set; }
 
         /// <summary>Gets or sets the user id.</summary>
         [ObservableProperty]
-        private string _userId;
+        public partial string UserId { get; set; }
 
         /// <summary>Gets or sets the password.</summary>
         [ObservableProperty]
-        private string _password;
+        public partial string Password { get; set; }
 
         /// <summary>Gets whether the sign-in round trip is in flight.</summary>
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotBusy))]
-        private bool _isBusy;
+        public partial bool IsBusy { get; set; }
 
         /// <summary>
         /// Initializes a new instance that signs in through <see cref="ClientInfo.SystemApiConnector"/>.
@@ -70,10 +70,10 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             _onLoggedIn = onLoggedIn;
 
             SignInHint = options.SignInHint;
-            _userId = options.DefaultUserId;
-            _password = options.DefaultPassword;
+            UserId = options.DefaultUserId;
+            Password = options.DefaultPassword;
             var remembered = preferences.Load(ShellPreferenceKeys.CompanyId);
-            _companyId = string.IsNullOrWhiteSpace(remembered) ? options.DefaultCompanyId : remembered;
+            CompanyId = string.IsNullOrWhiteSpace(remembered) ? options.DefaultCompanyId : remembered;
         }
 
         /// <summary>Gets the line shown under the title; empty shows none.</summary>
