@@ -44,7 +44,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly Guid s_aliceRowId = new("aaaaaaaa-0000-0000-0000-000000000001");
         private static readonly Guid s_bobRowId = new("aaaaaaaa-0000-0000-0000-000000000002");
 
-        private static FormSchema BuildSchema(bool nameRequired = false, bool withComputed = false)
+        private static FormSchema BuildSchema(bool nameRequired = false, bool withComputed = false,
+            string amountExpression = "price * qty")
         {
             var schema = new FormSchema(TestProgId, TestProgId) { ListFields = "emp_name" };
             var master = schema.Tables!.Add(TestProgId, TestProgId);
@@ -57,7 +58,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 master.Fields.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
                 {
                     NumberKind = NumberKind.Amount,
-                    ValueExpression = "price * qty",
+                    ValueExpression = amountExpression,
                     ReadOnly = true,
                 });
             }
@@ -188,9 +189,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private FakeBackend? _backend;
 
         private FakeBackend RegisterBackend(bool hasLayout = true, bool nameRequired = false,
-            LanguageResource? zhTw = null, bool useDefinitionLoader = true, bool withComputed = false)
+            LanguageResource? zhTw = null, bool useDefinitionLoader = true, bool withComputed = false,
+            string amountExpression = "price * qty")
         {
-            _backend = new FakeBackend(BuildSchema(nameRequired, withComputed), hasLayout, zhTw);
+            _backend = new FakeBackend(BuildSchema(nameRequired, withComputed, amountExpression), hasLayout, zhTw);
             Services.AddPolhemBlazor(options =>
             {
                 options.UseLocalProvider();
@@ -474,6 +476,29 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             cut.Find("#polhem-form-qty").Change("3");
 
             cut.WaitForAssertion(() => Assert.StartsWith("30", cut.Find("#polhem-form-amount").GetAttribute("value"), StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A computed field whose expression cannot be parsed names the field in a notice that stays after Save")]
+        public void Edit_TypeMismatchedExpression_ShowsLiveComputationNotice()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend(withComputed: true, amountExpression: "price * 1.05");
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
+            Assert.Empty(cut.FindAll("div.polhem-form-page__notice"));
+
+            cut.Find("#polhem-form-price").Change("10");
+
+            cut.WaitForAssertion(() => Assert.StartsWith("Amount is no longer calculated as you edit",
+                cut.Find("div.polhem-form-page__notice").TextContent, StringComparison.Ordinal));
+            Assert.DoesNotContain("1.05", cut.Find("div.polhem-form-page__notice").TextContent, StringComparison.Ordinal);
+
+            Click(cut, PolhemUIText.Save);
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll("div.polhem-form-page__notice")));
         }
 
         [Fact]

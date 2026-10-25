@@ -38,7 +38,7 @@ namespace Polhem.UI.Core
         private readonly Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<string>>> _dependencyByTable
             = new(StringComparer.OrdinalIgnoreCase);
         private bool _recomputing;
-        private bool _degraded;
+        private LiveComputationDegradation? _degradation;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormLiveComputationEngine"/>.
@@ -77,7 +77,22 @@ namespace Polhem.UI.Core
         /// rather than throw on every keystroke the service disables client-side preview for the session
         /// and lets the server compute the fields authoritatively on save.
         /// </summary>
-        public bool IsDegraded => _degraded;
+        public bool IsDegraded => _degradation is not null;
+
+        /// <summary>
+        /// Gets what made live computation degrade, or <c>null</c> while it still runs.
+        /// </summary>
+        public LiveComputationDegradation? Degradation => _degradation;
+
+        /// <summary>
+        /// Occurs once, when live computation degrades; <see cref="Degradation"/> holds the cause.
+        /// </summary>
+        /// <remarks>
+        /// Raised on the thread of the call that failed, after the failing pass has ended, so a handler may
+        /// show a message or log without the form's change events firing underneath it. A head should tell
+        /// the user, because the computed fields stop following their sources until the record is saved.
+        /// </remarks>
+        public event EventHandler? Degraded;
 
         /// <summary>
         /// Recomputes the computed fields of <paramref name="row"/> when <paramref name="changedField"/> is a
@@ -97,7 +112,7 @@ namespace Polhem.UI.Core
 
             // A recompute's own write-backs re-raise the change event; do not recurse. Once degraded,
             // preview stays off for the session (the server computes on save).
-            if (_recomputing || _degraded) { return []; }
+            if (_recomputing || IsDegraded) { return []; }
 
             var formTable = _schema.Tables?.GetOrDefault(tableName);
             if (formTable?.Fields is null) { return []; }
@@ -105,7 +120,7 @@ namespace Polhem.UI.Core
             // A computed field changing is the result of a recompute, never a trigger for one.
             if (IsComputedField(formTable, changedField)) { return []; }
 
-            return RunGuarded(() =>
+            return RunGuarded(formTable, () =>
             {
                 // Skip the whole pass when no computed field references the changed field.
                 if (!GetDependencyMap(formTable).ContainsKey(changedField)) { return []; }
@@ -126,11 +141,11 @@ namespace Polhem.UI.Core
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
             ArgumentNullException.ThrowIfNull(row);
 
-            if (_degraded) { return []; }
+            if (IsDegraded) { return []; }
             var formTable = _schema.Tables?.GetOrDefault(tableName);
             if (formTable?.Fields is null) { return []; }
 
-            return RunGuarded(() => _calculator.ApplyDefaultRow(formTable, row, _timeZoneProvider()));
+            return RunGuarded(formTable, () => _calculator.ApplyDefaultRow(formTable, row, _timeZoneProvider()));
         }
 
         /// <summary>
@@ -147,11 +162,11 @@ namespace Polhem.UI.Core
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
             ArgumentNullException.ThrowIfNull(row);
 
-            if (_degraded) { return []; }
+            if (IsDegraded) { return []; }
             var formTable = _schema.Tables?.GetOrDefault(tableName);
             if (formTable?.Fields is null) { return []; }
 
-            return RunGuarded(() =>
+            return RunGuarded(formTable, () =>
             {
                 var changed = new List<string>();
                 changed.AddRange(_calculator.ApplyDefaultRow(formTable, row, _timeZoneProvider()));
@@ -171,39 +186,32 @@ namespace Polhem.UI.Core
         /// field type (<see cref="FormatException"/> / <see cref="InvalidCastException"/> /
         /// <see cref="OverflowException"/> — for example a malformed GUID key stored as text) would
         /// otherwise surface inside a data object's change handler and break the form, so it disables
-        /// preview for the session and lets the server compute the fields authoritatively on save.
+        /// preview for the session, records the cause in <see cref="Degradation"/>, and lets the server
+        /// compute the fields authoritatively on save.
         /// </summary>
-        private IReadOnlyList<string> RunGuarded(Func<IReadOnlyList<string>> compute)
+        private IReadOnlyList<string> RunGuarded(FormTable formTable, Func<IReadOnlyList<string>> compute)
         {
+            LiveComputationDegradation? degradation = null;
+            IReadOnlyList<string> changed;
             _recomputing = true;
             try
             {
-                return compute();
+                changed = compute();
             }
-            catch (ExpressionEvaluationException)
+            catch (Exception ex) when (ex is ExpressionEvaluationException or FormatException
+                                           or InvalidCastException or OverflowException)
             {
-                Degrade();
-                return [];
-            }
-            catch (FormatException)
-            {
-                Degrade();
-                return [];
-            }
-            catch (InvalidCastException)
-            {
-                Degrade();
-                return [];
-            }
-            catch (OverflowException)
-            {
-                Degrade();
-                return [];
+                degradation = LiveComputationDegradation.From(formTable, ex);
+                changed = [];
             }
             finally
             {
                 _recomputing = false;
             }
+
+            // Raised outside the guard so a handler that touches the form sees a settled engine.
+            if (degradation is not null) { Degrade(degradation); }
+            return changed;
         }
 
         private IReadOnlyDictionary<string, IReadOnlyList<string>> GetDependencyMap(FormTable formTable)
@@ -218,7 +226,12 @@ namespace Polhem.UI.Core
 
         // Latches live computation off after a deterministic evaluation failure (a bad definition-authored
         // expression). The form stays usable and the server computes the affected fields on save.
-        private void Degrade() => _degraded = true;
+        private void Degrade(LiveComputationDegradation degradation)
+        {
+            if (_degradation is not null) { return; }
+            _degradation = degradation;
+            Degraded?.Invoke(this, EventArgs.Empty);
+        }
 
         private static bool IsComputedField(FormTable formTable, string fieldName)
         {

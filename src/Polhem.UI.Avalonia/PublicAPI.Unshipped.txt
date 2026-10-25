@@ -1,1 +1,4 @@
 #nullable enable
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Degraded -> System.EventHandler?
+Polhem.UI.Avalonia.Views.FormView.LiveComputationDegraded -> System.EventHandler<Polhem.UI.Core.LiveComputationDegradation!>?

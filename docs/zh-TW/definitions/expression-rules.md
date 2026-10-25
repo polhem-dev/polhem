@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: c0d8ca9d4cbaa014c8ee54ba6a369311bed1152b -->
+<!-- source: en/definitions/expression-rules.md blob: a3f1018b2f6fd0b5e041e41e0fa7a9df38537ab8 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -15,7 +15,7 @@
 | 欄位預設值 | `FormField.DefaultValueExpression` | 建立新列時（蓋過字面預設值）；存檔時只填新列中仍為空的欄位 |
 | 驗證 / 前置檢查 | `FormSchema` 下的 `FormRule` | `BeforeSave` / `BeforeDelete` |
 
-> **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia UI 的即時運算（`FormLiveComputation`；Blazor 元件沒有這項功能）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
+> **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia 與 Blazor.Server 兩個 head 的即時運算（各 head 的 `FormLiveComputation`，底層共用 `FormLiveComputationEngine`）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
 
 ## 運算式語法
 
@@ -39,7 +39,8 @@
   > 以使用者時區呈現，即時預覽時把 `UtcNow()` 寫進儲存格，畫面上的值會差一個時差。存檔時伺服端
   > 不採用用戶端送來的 `DateTime`，會重新求值或保留資料庫的值，所以存下的資料不受影響；
   > 錯的是存檔前畫面上的值。
-- **未知識別字**：未開放的型別名（`File`、`Process`…）或拼錯的欄位名會解析失敗。在伺服端，該次存檔或刪除隨之失敗；在用戶端，該表單的即時運算會自行關閉。
+- **數值型別不會隱含混算**：變數的型別是其欄位 `DbType` 對應的 CLR 型別（對照見 [`DbTypeConverter.ToType`](../../../src/Polhem.Core/Data/DbTypeConverter.cs)），運算子規則與 C# 相同：`decimal` 不能與 `double` 一起運算。帶小數點的字面值是 `double`，所以當 `amount` 是 `Currency` 或 `Decimal` 欄位時，`amount * 1.05` 會解析失敗。請把字面值寫成 decimal：`amount * 1.05m`，或只用整數：`amount * 105 / 100`。
+- **運算式解析失敗時**：未開放的型別名（`File`、`Process`…）、拼錯的欄位名，或無法一起運算的運算元型別（見上一點）。在伺服端，該次存檔或刪除隨之失敗。在用戶端，該表單在開啟期間停止即時運算：head 會顯示一則訊息，指出欄位與原因，計算欄位則在存檔時由伺服端計算。Avalonia 的 `FormView` 會觸發 `LiveComputationDegraded`，Blazor 的 `FormPage` 會寫一筆 warning 到它的 `ILogger`，兩者都帶著運算式，讓 host 記錄需要修正的地方。
 - **這不是安全沙箱。** 值的成員是以反射解析的，解析器擋不住運算式往更深處觸及。運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。絕對不要用使用者輸入組出運算式文字。
 - **經裁剪的應用程式**：運算式呼叫的成員是以反射找到的，裁剪器看不到。`Polhem.Expressions` 內附一份保留這些成員的裁剪描述檔，見[平台支援](../getting-started/platform-support.md#套件內附的裁剪描述檔)。
 - **空值**：空欄（`DBNull`）以型別預設值代入（數值 0、字串空字串、`Guid.Empty`…），所以 `unit_price * qty` 遇空值算 0 而不會出錯。

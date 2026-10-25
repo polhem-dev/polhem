@@ -1,2 +1,3 @@
 #nullable enable
 const Polhem.Definition.Language.PolhemUIText.Dismiss = "Dismiss" -> string!
+const Polhem.Definition.Language.PolhemUIText.LiveComputationStopped = "LiveComputationStopped" -> string!

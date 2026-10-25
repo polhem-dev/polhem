@@ -28,6 +28,11 @@
             <div class="polhem-form-page__notice" role="alert">@_notice</div>
         }
 
+        @if (LiveComputationNotice is { } liveComputationNotice)
+        {
+            <div class="polhem-form-page__notice" role="status">@liveComputationNotice</div>
+        }
+
         <DynamicGrid Layout="_listLayout"
                      Rows="_listRows"
                      FormTable="_schema?.MasterTable"
