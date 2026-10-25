@@ -54,6 +54,21 @@ namespace Polhem.Web.Blazor.Server.Components
         public EventCallback<Guid> OnRowSelected { get; set; }
 
         /// <summary>
+        /// Invoked when the user double-clicks a row, the gesture that confirms a choice in a picker;
+        /// receives the row's <see cref="SysFields.RowId"/> Guid.
+        /// </summary>
+        [Parameter]
+        public EventCallback<Guid> OnRowActivated { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="SysFields.RowId"/> of the row to show as selected, or <c>null</c>
+        /// for none. The grid does not track a selection itself; the host passes back the id
+        /// <see cref="OnRowSelected"/> gave it.
+        /// </summary>
+        [Parameter]
+        public Guid? SelectedRowId { get; set; }
+
+        /// <summary>
         /// Gets or sets the placeholder text shown when there is no data. <c>null</c> — the
         /// default — shows the localized <see cref="PolhemUIText.NoData"/> text.
         /// </summary>
@@ -77,6 +92,18 @@ namespace Polhem.Web.Blazor.Server.Components
             if (!FormDataGuard.TryGetRowId(row, out var rowId)) return;
             await OnRowSelected.InvokeAsync(rowId);
         }
+
+        private async Task OnRowDoubleClickAsync(DataRow row)
+        {
+            if (!OnRowActivated.HasDelegate) return;
+            if (!FormDataGuard.TryGetRowId(row, out var rowId)) return;
+            await OnRowActivated.InvokeAsync(rowId);
+        }
+
+        private string RowClass(DataRow row)
+            => SelectedRowId is { } selected && FormDataGuard.TryGetRowId(row, out var rowId) && rowId == selected
+                ? "polhem-dynamic-grid__row polhem-dynamic-grid__row--selected"
+                : "polhem-dynamic-grid__row";
 
 
         /// <summary>

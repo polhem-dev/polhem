@@ -14,7 +14,8 @@
     <h2>Every control type</h2>
     <p>
         One <code>FormLayoutPresenter</code> over an in-memory <code>FormDataObject</code>. Switch the form mode,
-        or write a value from code to see the editors refresh.
+        or write a value from code to see the editors refresh. The team field opens a lookup over an in-memory
+        list (Delete clears it).
     </p>
     <div class="polhem-demo-toolbar">
         @foreach (var mode in s_modes)
@@ -95,6 +96,12 @@
         fields.Add("starts", "Starts (TimeEdit)", FieldDbType.Time);
         fields.Add("updated", "Updated (DateTimeEdit)", FieldDbType.DateTime);
         fields.Add("active", "Active (CheckEdit)", FieldDbType.Boolean);
+        var team = fields.Add("team_rowid", "Team (ButtonEdit, lookup)", FieldDbType.Guid);
+        team.RelationProgId = DemoLookupSource.ProgId;
+        team.RelationFieldMappings!.Add("sys_id", "ref_team_id");
+        team.RelationFieldMappings.Add("sys_name", "ref_team_name");
+        fields.Add("ref_team_id", "Team ID", FieldDbType.String).Visible = false;
+        fields.Add("ref_team_name", "Team Name", FieldDbType.String).Visible = false;
         var dept = fields.Add("dept", "Department (DropDownEdit)", FieldDbType.String);
         dept.ControlType = ControlType.DropDownEdit;
         dept.ListItems!.Add("HR", "Human Resources");

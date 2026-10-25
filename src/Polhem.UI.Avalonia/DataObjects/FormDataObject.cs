@@ -2,8 +2,8 @@ using System.Data;
 using Polhem.UI.Core;
 using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.DataObjects
 {
@@ -403,26 +403,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// source field — the mapping must stay within the target form's lookup field set.
         /// </exception>
         public void ApplyLookupSelection(FormField field, DataRow selectedRow, DataRow? targetRow = null)
-        {
-            ArgumentNullException.ThrowIfNull(field);
-            ArgumentNullException.ThrowIfNull(selectedRow);
-
-            if (!selectedRow.Table.Columns.Contains(SysFields.RowId))
-                throw new InvalidOperationException("The lookup selection is missing the sys_rowid column.");
-
-            SetLookupField(targetRow, field.FieldName, FormValueBinding.ToBindingString(selectedRow[SysFields.RowId]));
-
-            foreach (var mapping in ResolveLookupMappings(field))
-            {
-                // A silently skipped mapping would leave stale display values behind,
-                // so a source field outside the lookup result is a hard error.
-                if (!selectedRow.Table.Columns.Contains(mapping.SourceField))
-                    throw new InvalidOperationException(
-                        $"Lookup source field '{mapping.SourceField}' is not in the lookup result; " +
-                        "declare it in the target form's LookupFields.");
-                SetLookupField(targetRow, mapping.DestinationField, FormValueBinding.ToBindingString(selectedRow[mapping.SourceField]));
-            }
-        }
+            => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value));
 
         /// <summary>
         /// Clears a lookup selection: resets <paramref name="field"/> and every mapped
@@ -432,13 +413,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <param name="field">The relation field the lookup belongs to.</param>
         /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
         public void ClearLookupSelection(FormField field, DataRow? targetRow = null)
-        {
-            ArgumentNullException.ThrowIfNull(field);
-
-            SetLookupField(targetRow, field.FieldName, null);
-            foreach (var mapping in ResolveLookupMappings(field))
-                SetLookupField(targetRow, mapping.DestinationField, null);
-        }
+            => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value));
 
         private void SetLookupField(DataRow? targetRow, string fieldName, string? value)
         {
@@ -446,15 +421,6 @@ namespace Polhem.UI.Avalonia.DataObjects
                 SetField(targetRow, fieldName, value);
             else
                 SetField(fieldName, value);
-        }
-
-        private static FieldMappingCollection ResolveLookupMappings(FormField field)
-        {
-            if (field.LookupFieldMappings is { Count: > 0 } lookupMappings)
-                return lookupMappings;
-            if (field.RelationFieldMappings is { Count: > 0 } relationMappings)
-                return relationMappings;
-            return [];
         }
     }
 }

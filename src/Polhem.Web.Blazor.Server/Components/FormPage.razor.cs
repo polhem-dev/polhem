@@ -109,22 +109,17 @@ namespace Polhem.Web.Blazor.Server.Components
 
             try
             {
-                var loader = DefinitionLoader
-                    ?? (Options.UseDefinitionLoader
-                        ? new FormDefinitionLoader(new ClientDefineAccess(Client.System), Options.DefaultLanguage)
-                        : null);
+                var loader = CircuitDefinitions.CreateLoader(Client, Options, DefinitionLoader);
                 // Without a loader both definitions are fetched exactly as stored. With one, both
                 // layers of language and layout are fetched and assembled, so the captions are in the
                 // circuit's language and tenant customization takes effect.
+                _schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, ProgId).ConfigureAwait(true)
+                    ?? throw new InvalidOperationException($"No FormSchema definition found for '{ProgId}'.");
                 if (loader is null)
                 {
-                    var system = Client.System;
-                    _schema = await system
-                        .GetDefineAsync<FormSchema>(DefineType.FormSchema, [ProgId])
-                        .ConfigureAwait(true);
                     // A layout is authored at design time, so a missing one is a configuration
                     // error rather than a cue to derive one from the schema.
-                    _formLayout = await system
+                    _formLayout = await Client.System
                         .GetDefineAsync<FormLayout>(DefineType.FormLayout, [ProgId])
                         .ConfigureAwait(true)
                         ?? throw new InvalidOperationException(
@@ -133,9 +128,6 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
                 else
                 {
-                    _schema = await loader
-                        .GetLocalizedSchemaAsync(ProgId, CultureInfo.CurrentUICulture.Name)
-                        .ConfigureAwait(true);
                     _formLayout = await loader
                         .GetRuntimeLayoutAsync(ProgId, _schema).ConfigureAwait(true);
                 }
