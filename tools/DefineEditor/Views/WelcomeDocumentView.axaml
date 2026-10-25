@@ -38,6 +38,10 @@
         <Style Selector="Grid.recent:pointerover Button.removeRecent">
             <Setter Property="Opacity" Value="1"/>
         </Style>
+        <!-- A recent folder that no longer exists stays listed, dimmed, so it can still be removed -->
+        <Style Selector="Grid.recent.missing Button.link">
+            <Setter Property="Opacity" Value="0.45"/>
+        </Style>
     </UserControl.Styles>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
@@ -63,11 +67,18 @@
                                   IsVisible="{Binding HasRecentSolutions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="m:RecentSolution">
-                                <Grid Classes="recent" ColumnDefinitions="*,Auto" Background="Transparent">
+                                <Grid Classes="recent" Classes.missing="{Binding !Exists}"
+                                      ColumnDefinitions="*,Auto" Background="Transparent">
                                     <Button Classes="link"
                                             Command="{Binding $parent[ItemsControl].((vm:WelcomeDocumentViewModel)DataContext).OpenRecentCommand}"
-                                            CommandParameter="{Binding Path}"
-                                            ToolTip.Tip="{Binding Path}">
+                                            CommandParameter="{Binding Path}">
+                                        <ToolTip.Tip>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Path}"/>
+                                                <TextBlock Text="{loc:Loc Welcome_RecentMissing}"
+                                                           IsVisible="{Binding !Exists}"/>
+                                            </StackPanel>
+                                        </ToolTip.Tip>
                                         <Grid ColumnDefinitions="Auto,*">
                                             <TextBlock Text="{Binding Name}"/>
                                             <TextBlock Grid.Column="1" Classes="muted" Margin="12,0,0,0"

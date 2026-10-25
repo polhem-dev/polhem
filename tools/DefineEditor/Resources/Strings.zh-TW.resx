@@ -56,6 +56,7 @@
   <data name="Welcome_SectionTips" xml:space="preserve"><value>操作提示</value></data>
   <data name="Welcome_NoRecent" xml:space="preserve"><value>（尚無最近開啟的方案）</value></data>
   <data name="Welcome_RemoveRecent" xml:space="preserve"><value>從最近清單移除</value></data>
+  <data name="Welcome_RecentMissing" xml:space="preserve"><value>這個資料夾已不存在。</value></data>
   <data name="Welcome_Tip1" xml:space="preserve"><value>從左側方案樹點選定義檔即開啟編輯分頁；點選已開啟的檔案會切換到既有分頁。</value></data>
   <data name="Welcome_Tip2" xml:space="preserve"><value>⌘S 儲存目前分頁、⌥⌘S 儲存所有未存分頁、⇧⌘B 驗證目前定義。</value></data>
   <data name="Welcome_Tip3" xml:space="preserve"><value>支援 9 種定義型別：FormSchema、TableSchema、FormLayout、Language 與各 Settings 單例定義。</value></data>

@@ -16,12 +16,14 @@ public static class RecentSolutionLabels
 
     /// <summary>Builds the entries for <paramref name="paths"/> against the current user's home directory.</summary>
     public static IReadOnlyList<RecentSolution> Build(IReadOnlyList<string> paths) =>
-        Build(paths, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        Build(paths, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Directory.Exists);
 
     /// <summary>Builds the entries for <paramref name="paths"/>, keeping their order.</summary>
     /// <param name="paths">The recorded DefinePath folders.</param>
     /// <param name="homeDirectory">The folder shown as <c>~</c>; empty to show every location in full.</param>
-    public static IReadOnlyList<RecentSolution> Build(IReadOnlyList<string> paths, string homeDirectory)
+    /// <param name="folderExists">Tells whether a recorded folder is still there.</param>
+    public static IReadOnlyList<RecentSolution> Build(
+        IReadOnlyList<string> paths, string homeDirectory, Func<string, bool> folderExists)
     {
         var anchors = paths.Select(GetAnchor).ToArray();
         var depths = new int[paths.Count];
@@ -48,7 +50,8 @@ public static class RecentSolutionLabels
         return paths.Select((path, i) => new RecentSolution(
                 path,
                 JoinTail(anchors[i], depths[i]),
-                ShortenHome(Ascend(anchors[i], depths[i]), homeDirectory)))
+                ShortenHome(Ascend(anchors[i], depths[i]), homeDirectory),
+                folderExists(path)))
             .ToArray();
     }
 
