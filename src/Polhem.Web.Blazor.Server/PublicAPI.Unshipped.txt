@@ -270,3 +270,5 @@ virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Placeholder.get -> st
 virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ShouldWriteBackText.get -> bool
 ~override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.Degraded -> System.EventHandler?

@@ -35,6 +35,7 @@
     <LanguageItem Key="CollectionKeyMissing" Value="有項目沒有鍵值。" />
     <LanguageItem Key="CollectionKeyDuplicate" Value="有多個項目使用相同的鍵值「{0}」。" />
     <LanguageItem Key="CollectionKeyTaken" Value="已有其他項目使用鍵值「{0}」。" />
+    <LanguageItem Key="LiveComputationStopped" Value="「{0}」已停止在編輯時即時計算，將於存檔時計算。原因：{1}" />
   </Items>
   <Enums />
 </LanguageResource>

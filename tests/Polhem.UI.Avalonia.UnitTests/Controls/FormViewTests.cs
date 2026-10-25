@@ -11,6 +11,7 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Views;
 using Polhem.UI.Avalonia.Controls.Editors;
@@ -623,7 +624,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
         private const string OrderProgId = "Order";
 
-        private static FormSchema BuildComputedSchema(bool withDetail = false)
+        private static FormSchema BuildComputedSchema(bool withDetail = false, string amountExpression = "price * qty")
         {
             var schema = new FormSchema(OrderProgId, OrderProgId);
             var master = schema.Tables!.Add(OrderProgId, OrderProgId);
@@ -633,7 +634,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             master.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
-                ValueExpression = "price * qty",
+                ValueExpression = amountExpression,
                 ReadOnly = true,
             });
             master.Fields!.Add(new FormField("order_date", "Order Date", FieldDbType.DateTime)
@@ -693,6 +694,40 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             view.DataObject!.SetField("qty", "5");
 
             Assert.Equal(50m, view.DataObject!.MasterRow!["amount"]);
+        }
+
+        [Fact]
+        [DisplayName("A computed field whose expression cannot be parsed shows a message naming it and raises LiveComputationDegraded once")]
+        public async Task LiveRecompute_TypeMismatchedExpression_ShowsMessageAndRaisesDegraded()
+        {
+            var rowId = Guid.NewGuid();
+            var dataSet = new DataSet(OrderProgId);
+            dataSet.Tables.Add(BuildOrderMasterTable(rowId, price: 10m, qty: 2m, amount: 20m));
+            dataSet.AcceptChanges();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = dataSet },
+            };
+            var computedSchema = BuildComputedSchema(amountExpression: "price * 1.05");
+            var view = new TestFormView
+            {
+                Schema = computedSchema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(computedSchema, TestProgId),
+            };
+            var reported = new List<LiveComputationDegradation>();
+            view.LiveComputationDegraded += (_, degradation) => reported.Add(degradation);
+
+            await view.EditAsync(rowId);
+            view.DataObject!.SetField("price", "12");
+            view.DataObject!.SetField("qty", "3");
+
+            var degradation = Assert.Single(reported);
+            Assert.Equal("amount", degradation.Field?.FieldName);
+            Assert.Equal("price * 1.05", degradation.Expression);
+            var label = GetPrivateField<MessageBar>(view, "_errorLabel");
+            Assert.True(label.IsVisible);
+            Assert.StartsWith("Amount is no longer calculated as you edit", label.Text, StringComparison.Ordinal);
         }
 
         [Fact]

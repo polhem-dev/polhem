@@ -10,6 +10,8 @@ using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Polhem.Web.Blazor.Server.Components
 {
@@ -143,6 +145,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 _roundingContext = await CircuitDefinitions.LoadRoundingContextAsync(Client, loader).ConfigureAwait(true);
                 _liveComputation = new FormLiveComputation(
                     _schema, _roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                _liveComputation.Degraded += OnLiveComputationDegraded;
                 _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
                 _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
                 _dataObject.RowAdded += OnLiveRowAdded;
@@ -171,6 +174,21 @@ namespace Polhem.Web.Blazor.Server.Components
             if (_liveComputation is null || _liveComputation.IsRecomputing) return;
             _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
         }
+
+        // The message stays on screen for the rest of the page's life, because computation stays off until
+        // then (see the markup). The edit that failed came from a child editor, so this page re-renders itself.
+        // The expression and the exception go to the log only.
+        private void OnLiveComputationDegraded(object? sender, EventArgs e)
+        {
+            if (_liveComputation?.Degradation is not { } degradation) return;
+            Services?.GetService<ILogger<FormPage>>()?.LogWarning(degradation.Exception,
+                "Live computation of form {ProgId} stopped at table {TableName}, field {FieldName}, expression {Expression}.",
+                ProgId, degradation.Table.TableName, degradation.Field?.FieldName, degradation.Expression);
+            _ = InvokeAsync(StateHasChanged);
+        }
+
+        private string? LiveComputationNotice
+            => _liveComputation?.Degradation?.FormatMessage(PolhemBlazorText.GetLocalizer(Services));
 
         // Fills a newly added detail row's default-value expressions and computes its computed fields.
         private void OnLiveRowAdded(object? sender, RowChangedEventArgs e)

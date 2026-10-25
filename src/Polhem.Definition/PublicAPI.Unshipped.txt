@@ -1,5 +1,6 @@
 #nullable enable
 const Polhem.Definition.Language.PolhemUIText.Dismiss = "Dismiss" -> string!
+const Polhem.Definition.Language.PolhemUIText.LiveComputationStopped = "LiveComputationStopped" -> string!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpressions(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormExpressionIssue!>!
 Polhem.Definition.Forms.FormExpressionIssue
 Polhem.Definition.Forms.FormExpressionIssue.Expression.get -> string!

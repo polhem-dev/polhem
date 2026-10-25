@@ -40,3 +40,14 @@ static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.
 static Polhem.UI.Core.Fields.NumericFieldFormat.ToWriteBackValue(string? text, string! lastRaw) -> string!
 static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseInput(string? text, out decimal value) -> bool
 static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseRaw(string? raw, out decimal value) -> bool
+Polhem.UI.Core.FormLiveComputationEngine.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
+Polhem.UI.Core.FormLiveComputationEngine.Degraded -> System.EventHandler?
+Polhem.UI.Core.LiveComputationDegradation
+Polhem.UI.Core.LiveComputationDegradation.DisplayText.get -> string!
+Polhem.UI.Core.LiveComputationDegradation.Exception.get -> System.Exception!
+Polhem.UI.Core.LiveComputationDegradation.Expression.get -> string?
+Polhem.UI.Core.LiveComputationDegradation.Field.get -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Core.LiveComputationDegradation.FormatMessage(Microsoft.Extensions.Localization.IStringLocalizer! localizer) -> string!
+Polhem.UI.Core.LiveComputationDegradation.LiveComputationDegradation(Polhem.Definition.Forms.FormTable! table, Polhem.Definition.Forms.FormField? field, System.Exception! exception) -> void
+Polhem.UI.Core.LiveComputationDegradation.Reason.get -> string!
+Polhem.UI.Core.LiveComputationDegradation.Table.get -> Polhem.Definition.Forms.FormTable!

@@ -21,6 +21,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.Web.Blazor.Server` 新增查詢流程：`ButtonEdit`、`LookupDialog`、`LookupPanel`。
 - `Polhem.Web.Blazor.Server` 透過新的 `FormLiveComputation` 即時重算計算欄位；其 `FormDataObject` 新增新資料列預設值、資料列事件與資料列編輯暫存。
 - `Polhem.Web.Blazor.Server` 呈現明細資料表：`GridControl`（儲存格內編輯或編輯表單）、`RowEditPanel`、`RowEditDialog`，由 `FormLayoutPresenter` 與 `FormPage` 顯示；`FormPage` 也會依公司、幣別與單位的 rounding context 預覽數值。
+- 即時計算不再無聲停止：運算式無法評估時，Avalonia 的 `FormView` 與 Blazor 的 `FormPage` 會指出欄位與原因，原因以 `LiveComputationDegradation` 公開。
 - `Polhem.UI.Core` 新增兩端共用的欄位規則：`FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`，以及即時計算引擎 `FormLiveComputationEngine`。
 - DefineEditor 驗證或存檔表單時，會列出執行時會失敗的 FormSchema 運算式（例如 decimal 欄位寫成 `amount * 1.05`），
   透過新的 `FormExpressionCalculator.ValidateExpressions`。

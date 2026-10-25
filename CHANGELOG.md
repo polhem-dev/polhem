@@ -26,6 +26,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - `Polhem.Web.Blazor.Server` renders detail tables: `GridControl` (in-cell or edit-form editing), `RowEditPanel`
   and `RowEditDialog`, shown by `FormLayoutPresenter` and `FormPage`, which also previews numbers with the
   company, currency and unit rounding context.
+- Live computation no longer stops silently: when an expression cannot be evaluated, the Avalonia `FormView` and the
+  Blazor `FormPage` name the field and the reason, and the cause is exposed as `LiveComputationDegradation`.
 - `Polhem.UI.Core` gains the field rules both heads share: `FieldEditRules`, `FieldValueFormatter`,
   `NumericFieldFormat`, `DateTimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules` and
   the live computation engine `FormLiveComputationEngine`.
