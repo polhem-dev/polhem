@@ -11,6 +11,16 @@ UI 用戶端（輸入時的即時預覽）共用，因此同一個計算欄位�
 |------|------|
 | `DynamicExpressoEvaluator` | 預設的 `IExpressionEvaluator`。解析與編譯一次，以「運算式文字 + 參數簽章」快取，之後逐列呼叫 |
 
+## 只檢查、不執行運算式
+
+`Validate` 依變數型別解析運算式，使用與 `Evaluate` 相同的註冊型別與 helper 函式，解析失敗時丟出
+`ExpressionEvaluationException`，不會編譯任何東西。`FormExpressionCalculator.ValidateExpressions`（`Polhem.Definition`）
+以執行期相同的欄位型別，對 FormSchema 的每個運算式執行這項檢查；DefineEditor 驗證或存檔表單時會顯示結果。
+
+這項檢查對數值常值最有用：帶小數點的常值是 `double`，而 `decimal` 與 `double` 之間沒有運算子，所以 decimal 欄位寫成
+`amount * 1.05` 無法解析，要寫 `amount * 1.05m`。這樣的運算式在伺服器端會讓存檔失敗；在用戶端的即時預覽中，
+只會讓計算欄位不再更新。
+
 ## 抽象位於 `Polhem.Core`
 
 `IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException` 在

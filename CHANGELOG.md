@@ -11,6 +11,13 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [Unreleased]
+
+- **Breaking:** `IExpressionEvaluator` gains `Validate`, which parses an expression against variable types without
+  evaluating it; an evaluator implemented outside the framework has to implement it.
+- DefineEditor lists the FormSchema expressions that would fail at run time, such as `amount * 1.05` on a decimal
+  field, when it validates or saves a form, through the new `FormExpressionCalculator.ValidateExpressions`.
+
 ## [1.9.0] - 2026-10-23
 
 Details and migration steps: [docs/en/changelogs/1.9.0.md](docs/en/changelogs/1.9.0.md)

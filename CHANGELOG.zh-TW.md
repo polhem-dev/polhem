@@ -10,6 +10,13 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
+## [Unreleased]
+
+- **破壞性：** `IExpressionEvaluator` 新增 `Validate`，依變數型別解析運算式而不執行；在框架以外自行實作的 evaluator
+  必須實作它。
+- DefineEditor 驗證或存檔表單時，會列出執行時會失敗的 FormSchema 運算式（例如 decimal 欄位寫成 `amount * 1.05`），
+  透過新的 `FormExpressionCalculator.ValidateExpressions`。
+
 ## [1.9.0] - 2026-10-23
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.9.0.md](docs/zh-TW/changelogs/1.9.0.md)

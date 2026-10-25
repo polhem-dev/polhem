@@ -7,6 +7,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
 using Polhem.Definition.Spreadsheet;
+using Polhem.Expressions;
 using Avalonia.Platform.Storage;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
@@ -93,7 +94,23 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
             .Select(issue => new ValidationIssue(
                 issue.Severity == IssueSeverity.Error ? ValidationSeverity.Error : ValidationSeverity.Warning,
                 issue.Location, issue.Message))
+            .Concat(s_expressionCalculator.ValidateExpressions(Schema).Select(ToValidationIssue))
             .ToList();
+
+    /// <summary>
+    /// Parses the schema's expressions with the evaluator the runtime uses. An expression that does not parse
+    /// fails the server's save, and on the client it silently stops the live computation, so it is an error here.
+    /// </summary>
+    /// <remarks>Shared across documents: the evaluator is thread-safe and building its interpreter is not free.</remarks>
+    private static readonly FormExpressionCalculator s_expressionCalculator = new(new DynamicExpressoEvaluator());
+
+    private static ValidationIssue ToValidationIssue(FormExpressionIssue issue)
+    {
+        var owner = issue.FieldName is not null
+            ? $"{issue.TableName}.{issue.FieldName}"
+            : $"Rules.{issue.RuleId}";
+        return new ValidationIssue(ValidationSeverity.Error, $"{owner}.{issue.PropertyName}", issue.Message);
+    }
 
     /// <summary>
     /// Adds the Relation and Lookup groups under a field node, each when the field uses it.

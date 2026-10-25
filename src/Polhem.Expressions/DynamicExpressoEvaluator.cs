@@ -241,9 +241,49 @@ namespace Polhem.Expressions
             }
             catch (ParseException ex)
             {
-                throw new ExpressionEvaluationException(
-                    $"Failed to parse expression: {ex.Message}", ex) { Expression = expression };
+                throw ToEvaluationException(ex, expression);
             }
+        }
+
+        /// <inheritdoc />
+        /// <remarks>
+        /// Parses with the interpreter <see cref="Evaluate(string, IReadOnlyDictionary{string, object?}, Type, string, DateTimeBasis)"/>
+        /// uses, and stops there: nothing is compiled and nothing enters the compiled-expression cache.
+        /// </remarks>
+        public void Validate(string expression, IReadOnlyDictionary<string, Type> variableTypes, Type returnType)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(expression);
+            ArgumentNullException.ThrowIfNull(variableTypes);
+            ArgumentNullException.ThrowIfNull(returnType);
+
+            var parameters = variableTypes.Select(pair => new Parameter(pair.Key, pair.Value)).ToArray();
+            try
+            {
+                lock (_parseLock)
+                {
+                    _interpreter.Parse(expression, returnType, parameters);
+                }
+            }
+            catch (ParseException ex)
+            {
+                throw ToEvaluationException(ex, expression);
+            }
+        }
+
+        /// <summary>
+        /// Wraps a parse failure in the exception the <see cref="IExpressionEvaluator"/> contract declares.
+        /// </summary>
+        /// <remarks>
+        /// A type error reaches DynamicExpresso as an <see cref="InvalidOperationException"/> from
+        /// <see cref="Expression"/>, which it reports only as "Invalid Operation" with a position. The inner message
+        /// is the one that names the operator and the operand types, so it is appended.
+        /// </remarks>
+        private static ExpressionEvaluationException ToEvaluationException(ParseException ex, string expression)
+        {
+            var message = ex.InnerException is { } inner
+                ? $"Failed to parse expression: {ex.Message} {inner.Message}"
+                : $"Failed to parse expression: {ex.Message}";
+            return new ExpressionEvaluationException(message, ex) { Expression = expression };
         }
 
         /// <summary>
@@ -272,8 +312,7 @@ namespace Polhem.Expressions
                 }
                 catch (ParseException ex)
                 {
-                    throw new ExpressionEvaluationException(
-                        $"Failed to parse expression: {ex.Message}", ex) { Expression = expression };
+                    throw ToEvaluationException(ex, expression);
                 }
                 // Never `lambda.Invoke` or `lambda.Compile`: both compile the typed delegate that a runtime
                 // without dynamic code cannot create (see the class remarks).
