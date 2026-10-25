@@ -1,0 +1,49 @@
+@namespace Polhem.Web.Blazor.Server.Controls
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Server.Controls.Editors
+
+@if (Layout is null)
+{
+    <div class="polhem-form-layout polhem-form-layout--empty"></div>
+}
+else
+{
+    <FormScope DataObject="DataObject" FormMode="FormMode">
+        <div class="polhem-form-layout">
+            @foreach (var section in EnumerateSections())
+            {
+                <fieldset class="polhem-form-layout__section">
+                    @if (section.ShowCaption && !string.IsNullOrEmpty(section.Caption))
+                    {
+                        <legend class="polhem-form-layout__section-caption">@section.Caption</legend>
+                    }
+                    <div class="polhem-form-layout__grid" style="@BuildGridStyle()">
+                        @foreach (var field in EnumerateFields(section))
+                        {
+                            <div class="polhem-form-layout__field" style="@BuildFieldStyle(field)">
+                                <label class="@LabelClass(field)" for="@FieldInputId(field)">@field.Caption</label>
+                                <DynamicComponent Type="FieldEditorFactory.GetEditorType(field.ControlType)"
+                                                  Parameters="BuildEditorParameters(field)" />
+                            </div>
+                        }
+                    </div>
+                </fieldset>
+            }
+            @foreach (var detail in EnumerateDetails())
+            {
+                <fieldset class="polhem-form-layout__detail">
+                    @if (!string.IsNullOrEmpty(detail.Caption))
+                    {
+                        <legend class="polhem-form-layout__detail-caption">@detail.Caption</legend>
+                    }
+                    <GridControl Layout="detail"
+                                 EditMode="EffectiveDetailEditMode"
+                                 Compact="IsCompact"
+                                 CurrencySettings="RoundingContext?.CurrencySettings"
+                                 UnitSettings="RoundingContext?.UnitSettings"
+                                 DefaultCurrencyCode="@(RoundingContext?.Company?.DefaultCurrency ?? string.Empty)" />
+                </fieldset>
+            }
+        </div>
+    </FormScope>
+}

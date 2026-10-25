@@ -1,5 +1,6 @@
 using System.Globalization;
 using Polhem.Definition.Layouts;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -27,10 +28,6 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// </remarks>
     public sealed class DateTimeEdit : TextEdit
     {
-        // The binding string format written back: the invariant round-trip shape the data objects
-        // parse, with the time kept even at midnight.
-        private const string BindingFormat = "yyyy-MM-ddTHH:mm:ss";
-
         // The text shown for the committed value. A commit happens only when Text differs from it.
         private string _display = string.Empty;
 
@@ -39,58 +36,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         public DateTimeEdit()
         {
-            PlaceholderText = GetInputPattern(CultureInfo.CurrentCulture);
+            PlaceholderText = DateTimeFieldFormat.GetInputPattern(CultureInfo.CurrentCulture);
             // Subscribed after the base TextEdit commit handler (registered in its constructor), so
             // this runs once the value is written and replaces the typed text with its formatted form.
             LostFocus += (_, _) => Text = _display;
         }
-
-        /// <summary>
-        /// Formats <paramref name="value"/> the way the editor and the grid cells display an instant:
-        /// the user's culture short date with its long time (<c>G</c>), also at midnight.
-        /// </summary>
-        /// <param name="value">The value to format.</param>
-        internal static string FormatDisplay(DateTime value)
-            => value.ToString("G", CultureInfo.CurrentCulture);
-
-        /// <summary>
-        /// Formats a binding string (the invariant form a data object hands to editors) for display;
-        /// an empty or unparseable string gives an empty display.
-        /// </summary>
-        /// <param name="bindingValue">The binding string.</param>
-        internal static string FormatBindingValue(string? bindingValue)
-            => TryParseBindingValue(bindingValue, out var value) ? FormatDisplay(value) : string.Empty;
-
-        /// <summary>
-        /// Parses user input: the user's culture first, then the invariant culture, so an ISO
-        /// <c>yyyy-MM-dd HH:mm</c> is always accepted.
-        /// </summary>
-        /// <param name="input">The typed text.</param>
-        /// <param name="value">The parsed value, with an unspecified kind.</param>
-        /// <returns><c>true</c> when the text is a date, with or without a time of day.</returns>
-        internal static bool TryParseInput(string? input, out DateTime value)
-        {
-            const DateTimeStyles styles = DateTimeStyles.AllowWhiteSpaces;
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                value = default;
-                return false;
-            }
-            if (DateTime.TryParse(input, CultureInfo.CurrentCulture, styles, out value)
-                || DateTime.TryParse(input, CultureInfo.InvariantCulture, styles, out value))
-            {
-                value = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Renders <paramref name="value"/> as the binding string written back to the data object.
-        /// </summary>
-        /// <param name="value">The value to write.</param>
-        internal static string ToBindingValue(DateTime value)
-            => value.ToString(BindingFormat, CultureInfo.InvariantCulture);
 
         /// <inheritdoc />
         /// <remarks>
@@ -103,14 +53,14 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             {
                 string text = Text ?? string.Empty;
                 if (string.Equals(text, _display, StringComparison.Ordinal)) return false;
-                return string.IsNullOrWhiteSpace(text) || TryParseInput(text, out _);
+                return string.IsNullOrWhiteSpace(text) || DateTimeFieldFormat.TryParseInput(text, out _);
             }
         }
 
         /// <inheritdoc />
         protected override void RefreshFromSource()
         {
-            _display = FormatBindingValue(Binder.GetValue());
+            _display = DateTimeFieldFormat.FormatBindingValue(Binder.GetValue());
             Text = _display;
         }
 
@@ -124,23 +74,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             }
 
             // ShouldWriteBackText admits only text that parses, so this always succeeds.
-            _ = TryParseInput(Text, out var value);
-            _display = FormatDisplay(value);
-            return ToBindingValue(value);
+            _ = DateTimeFieldFormat.TryParseInput(Text, out var value);
+            _display = DateTimeFieldFormat.FormatDisplay(value);
+            return DateTimeFieldFormat.ToBindingValue(value);
         }
-
-        private static bool TryParseBindingValue(string? bindingValue, out DateTime value)
-        {
-            if (!string.IsNullOrEmpty(bindingValue)
-                && DateTime.TryParse(bindingValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out value))
-            {
-                return true;
-            }
-            value = default;
-            return false;
-        }
-
-        private static string GetInputPattern(CultureInfo culture)
-            => culture.DateTimeFormat.ShortDatePattern + " " + culture.DateTimeFormat.LongTimePattern;
     }
 }

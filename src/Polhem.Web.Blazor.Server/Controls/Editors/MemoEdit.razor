@@ -1,0 +1,10 @@
+@namespace Polhem.Web.Blazor.Server.Controls.Editors
+@inherits TextEdit
+
+<textarea @attributes="AdditionalAttributes"
+          id="@Id"
+          class="@BuildCssClass(ModifierClass)"
+          readonly="@(!IsEditable)"
+          maxlength="@MaxLengthAttribute"
+          @bind:get="Text"
+          @bind:set="CommitText"></textarea>

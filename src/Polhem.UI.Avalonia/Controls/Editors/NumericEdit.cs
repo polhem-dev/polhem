@@ -1,9 +1,9 @@
 using System.Globalization;
 using Avalonia.Media;
-using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -32,10 +32,6 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         // The bound value in its raw, full-precision invariant-culture string form. The display
         // Text may be a rounded rendering of this; write-backs always use the raw value.
         private string _rawValue = string.Empty;
-
-        private const NumberStyles InputStyles =
-            NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
-            | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NumericEdit"/>.
@@ -82,53 +78,10 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         public string DefaultUnitCode { get; set; } = string.Empty;
 
-        // Reference-bound fields (amounts by currency, quantities/weights by unit) are not baked at
-        // delivery — when the matching master is supplied, resolve the format at runtime from the bound
-        // row's reference value. Otherwise prefer the delivered layout format (baked per company),
-        // falling back to the schema field's format for ambient (field-name-only) binds.
         private string NumberFormat
-        {
-            get
-            {
-                var layoutField = Binder.LayoutField;
-                if (layoutField is not null)
-                {
-                    var source = NumberKindProfile.GetDecimalsSource(layoutField.NumberKind);
-                    if (source == DecimalsSource.Currency && CurrencySettings is not null)
-                        return NumberFormatResolver.ResolveFormat(
-                            layoutField.NumberKind,
-                            new RoundingContext { CurrencySettings = CurrencySettings },
-                            ResolveReferenceCode(layoutField.CurrencyField, DefaultCurrencyCode));
-
-                    if (source == DecimalsSource.Unit && UnitSettings is not null)
-                    {
-                        string code = ResolveReferenceCode(layoutField.UnitField, DefaultUnitCode);
-                        if (StringUtilities.IsNotEmpty(code))
-                            return NumberFormatResolver.ResolveFormat(
-                                layoutField.NumberKind, new RoundingContext { UnitSettings = UnitSettings }, code);
-                    }
-                }
-
-                return layoutField?.NumberFormat is { Length: > 0 } layoutFormat
-                    ? layoutFormat
-                    : Binder.FormField?.NumberFormat ?? string.Empty;
-            }
-        }
-
-        // Per-row reference code: the field's reference field (currency key / unit) value on the bound
-        // row → the supplied fallback.
-        private string ResolveReferenceCode(string referenceField, string fallback)
-        {
-            var row = Binder.TargetRow;
-            if (row is not null
-                && StringUtilities.IsNotEmpty(referenceField)
-                && row.Table.Columns.Contains(referenceField))
-            {
-                string code = ValueUtilities.CStr(row[referenceField]);
-                if (StringUtilities.IsNotEmpty(code)) { return code; }
-            }
-            return fallback;
-        }
+            => NumericFieldFormat.ResolveFormat(
+                Binder.LayoutField, Binder.FormField, Binder.TargetRow,
+                CurrencySettings, DefaultCurrencyCode, UnitSettings, DefaultUnitCode);
 
         /// <inheritdoc />
         protected override void RefreshFromSource()
@@ -142,31 +95,12 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         {
             // Write the parsed value at full precision; reject partial/invalid input by keeping the
             // last valid raw value so a stray keystroke never corrupts the bound field.
-            if (TryParseInput(Text, out var value))
-                _rawValue = value.ToString(CultureInfo.InvariantCulture);
+            _rawValue = NumericFieldFormat.ToWriteBackValue(Text, _rawValue);
             return _rawValue;
         }
 
-        private string FormatForDisplay(string raw)
-        {
-            if (!TryParseRaw(raw, out var value))
-                return raw;
-            return string.IsNullOrEmpty(NumberFormat)
-                ? FormatForEditing(raw)
-                : CellValueFormatter.Format(value, string.Empty, NumberFormat);
-        }
+        private string FormatForDisplay(string raw) => NumericFieldFormat.FormatForDisplay(raw, NumberFormat);
 
-        // The full-precision value in the user's culture, without group separators, so what the
-        // field shows while focused parses back to the same number.
-        private static string FormatForEditing(string raw)
-            => TryParseRaw(raw, out var value) ? value.ToString(CultureInfo.CurrentCulture) : raw;
-
-        // The bound value: the invariant form the wire carries.
-        private static bool TryParseRaw(string? raw, out decimal value)
-            => decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
-
-        // What the user typed: the user's culture, sign and decimal separator only.
-        internal static bool TryParseInput(string? text, out decimal value)
-            => decimal.TryParse(text, InputStyles, CultureInfo.CurrentCulture, out value);
+        private static string FormatForEditing(string raw) => NumericFieldFormat.FormatForEditing(raw);
     }
 }

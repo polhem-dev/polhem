@@ -21,7 +21,9 @@ else
         <tbody>
             @foreach (DataRow row in Rows.Rows)
             {
-                <tr class="polhem-dynamic-grid__row" @onclick="() => OnRowClickAsync(row)">
+                <tr class="@RowClass(row)"
+                    @onclick="() => OnRowClickAsync(row)"
+                    @ondblclick="() => OnRowDoubleClickAsync(row)">
                     @foreach (var column in VisibleColumns)
                     {
                         <td class="polhem-dynamic-grid__cell">@FormatCell(row, column)</td>

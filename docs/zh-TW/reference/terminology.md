@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: ce1f9603c8d6e2492c2c44a06d15847f5d275f7f -->
+<!-- source: en/reference/terminology.md blob: 12f51fb7462cf04c896b31041d1d991e1b92a02b -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -354,12 +354,12 @@
 
 ### Web 前端（`Polhem.Web.Blazor.Server`）
 
-`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `DynamicForm`、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
+`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `FormLayoutPresenter`、欄位編輯器、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
-| `DynamicForm`（Razor 元件） | 動態表單元件 | Blazor 元件，依 FormSchema 動態渲染表單 |
-| `FormDataObject` | 表單資料物件 | Blazor `DynamicForm` 綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.UI.Core`（`FormValueBinding`、`FormDataGuard`） |
+| `FormLayoutPresenter`（Razor 元件） | 表單版面呈現元件 | Blazor 元件，呈現 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器；Avalonia 端有同名控制項 |
+| `FormDataObject` | 表單資料物件 | Blazor 欄位編輯器綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.UI.Core`（`FormValueBinding`、`FormDataGuard`） |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（每個 circuit 一個 DI scope 的 `PolhemApiClient`） |
 
 ### API 連線提供者（`Polhem.Api.Client`）

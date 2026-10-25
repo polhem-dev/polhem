@@ -50,6 +50,22 @@
 
 - `FormValueBinding` -- 在表單 `DataSet` 中的值與 UI 繫結交換的字串之間轉換，並建立表單起始用的空 `DataSet`。
 - `FormDataGuard` -- 表單的 CRUD 呼叫送到連接器前檢查的前置條件；每種失敗在所有 head 都只有一種措辭。
+- `FormLiveComputationEngine` -- 各 head 共用的計算欄位即時重算與新資料列預設值運算式評估。運算引擎
+  （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
+  整個 process 共用的狀態。
+
+### 各 head 共用的欄位編輯器規則
+
+`Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server` 的欄位編輯器共用的規則，讓兩端行為一致：
+
+- `FieldEditRules` -- 依表單模式、版面唯讀旗標與 `AllowEditModes` 判斷欄位可否輸入。
+- `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
+- `NumericFieldFormat` -- 數值格式解析（含幣別與單位的小數位數）、顯示、輸入剖析，以及寫回的值。
+- `DateTimeFieldFormat` -- 日期時間欄位的顯示、輸入與綁定字串規則。
+- `GridCellFormatter` -- grid 儲存格顯示的文字：清單項目文字、日期時間、布林值、依各列幣別與單位決定的小數位數，以及查詢
+  欄位串接後的顯示欄位。
+- `FieldCaptionRules` -- 標題慣例：唯讀的 grid 表頭加括號、必填的標題加上醒目標示，兩者同時成立時以唯讀為準。
+- `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
 
 ### 權限能力
 
@@ -72,7 +88,9 @@
 
 ## 目錄結構
 
-- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`
+- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
+- `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
+  `LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`

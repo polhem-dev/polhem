@@ -34,6 +34,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                     {
                         DefineType.FormSchema => XmlCodec.Serialize(schema),
                         DefineType.FormLayout => XmlCodec.Serialize(FormLayoutGenerator.Generate(schema, schema.ProgId)),
+                        // No currency or unit master is deployed: a real server answers with an empty definition.
+                        DefineType.CurrencySettings or DefineType.UnitSettings => string.Empty,
                         _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
                     },
                 });
