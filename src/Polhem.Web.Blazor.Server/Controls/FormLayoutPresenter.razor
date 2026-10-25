@@ -9,7 +9,7 @@
 else
 {
     <FormScope DataObject="DataObject" FormMode="FormMode">
-        <div class="polhem-form-layout">
+        <div class="@RootClass">
             @foreach (var section in EnumerateSections())
             {
                 <fieldset class="polhem-form-layout__section">
@@ -20,7 +20,7 @@ else
                     <div class="polhem-form-layout__grid" style="@BuildGridStyle()">
                         @foreach (var field in EnumerateFields(section))
                         {
-                            <div class="polhem-form-layout__field" style="@BuildFieldStyle(field)">
+                            <div class="polhem-form-layout__field" style="@BuildFieldStyle(field, EffectiveColumnCount)">
                                 <label class="@LabelClass(field)" for="@FieldInputId(field)">@field.Caption</label>
                                 <DynamicComponent Type="FieldEditorFactory.GetEditorType(field.ControlType)"
                                                   Parameters="BuildEditorParameters(field)" />

@@ -190,9 +190,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private FakeBackend RegisterBackend(bool hasLayout = true, bool nameRequired = false,
             LanguageResource? zhTw = null, bool useDefinitionLoader = true, bool withComputed = false,
-            string amountExpression = "price * qty")
+            string amountExpression = "price * qty", bool compactViewport = false)
         {
             _backend = new FakeBackend(BuildSchema(nameRequired, withComputed, amountExpression), hasLayout, zhTw);
+            CompactViewportModule.Setup(JSInterop, compactViewport);
             Services.AddPolhemBlazor(options =>
             {
                 options.UseLocalProvider();
@@ -238,6 +239,36 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             Assert.True(IsDisabled(cut, PolhemUIText.Save));
             Assert.True(IsDisabled(cut, PolhemUIText.Delete));
             Assert.Empty(cut.FindAll("div.polhem-form-page__error"));
+        }
+
+        [Fact]
+        [DisplayName("FormPage renders the compact layout when the viewport is narrower than the threshold")]
+        public void Initialize_NarrowViewport_RendersCompactLayout()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend(compactViewport: true);
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.NotNull(cut.Find("div.polhem-form-layout--compact")));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        [DisplayName("FormPage follows an IsCompact the host sets and measures nothing")]
+        public void Initialize_IsCompactSet_FollowsHostWithoutJavaScript(bool compact)
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend(compactViewport: !compact);
+
+            var cut = Render<FormPage>(p => p
+                .Add(c => c.ProgId, TestProgId)
+                .Add(c => c.IsCompact, compact));
+
+            cut.WaitForAssertion(() => Assert.NotNull(cut.Find("div.polhem-form-layout")));
+            Assert.Equal(compact, cut.FindAll("div.polhem-form-layout--compact").Count == 1);
+            Assert.Empty(JSInterop.Invocations);
         }
 
         [Fact]

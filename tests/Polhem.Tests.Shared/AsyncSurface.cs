@@ -9,7 +9,9 @@ namespace Polhem.Tests.Shared
     /// <remarks>
     /// An override of a member declared in another assembly is left out: its signature belongs to that
     /// assembly (<c>ComponentBase.OnInitializedAsync</c> is the case in the Blazor package), and the
-    /// assembly under test could not add a token to it.
+    /// assembly under test could not add a token to it. An implementation of an interface from outside
+    /// Polhem is left out for the same reason (<c>IAsyncDisposable.DisposeAsync</c>); an implementation of
+    /// a Polhem interface declared in another Polhem assembly is still checked.
     /// </remarks>
     public static class AsyncSurface
     {
@@ -25,7 +27,8 @@ namespace Polhem.Tests.Shared
                 .Where(method => (method.IsPublic || method.IsFamily || method.IsFamilyOrAssembly)
                     && !method.IsSpecialName
                     && IsAwaitable(method.ReturnType)
-                    && method.GetBaseDefinition().DeclaringType?.Assembly == assembly);
+                    && method.GetBaseDefinition().DeclaringType?.Assembly == assembly
+                    && !ImplementsForeignInterface(method));
 
         /// <summary>
         /// Returns a stable, readable name for <paramref name="method"/>, used as a theory data row.
@@ -42,6 +45,15 @@ namespace Polhem.Tests.Shared
         {
             var parameters = method.GetParameters();
             return parameters.Length > 0 && parameters[^1].ParameterType == typeof(CancellationToken);
+        }
+
+        private static bool ImplementsForeignInterface(MethodInfo method)
+        {
+            var type = method.DeclaringType!;
+            if (type.IsInterface) return false;
+            return type.GetInterfaces()
+                .Where(contract => !(contract.Assembly.GetName().Name ?? string.Empty).StartsWith("Polhem.", StringComparison.Ordinal))
+                .Any(contract => type.GetInterfaceMap(contract).TargetMethods.Contains(method));
         }
 
         private static bool IsAwaitable(Type type)

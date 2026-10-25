@@ -81,5 +81,39 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
             Assert.Empty(cut.FindAll("td.polhem-grid__cell--editor"));
             Assert.Single(cut.FindAll(".polhem-grid__button--edit"));
         }
+
+        [Fact]
+        [DisplayName("FormLayoutPresenter lays the master fields out in one column when compact, clamping wider spans")]
+        public void FormLayoutPresenter_Compact_RendersSingleColumn()
+        {
+            var schema = BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            layout.ColumnCount = 3;
+            layout.Sections![0].Fields![0].ColumnSpan = 2;
+
+            var cut = Render<FormLayoutPresenter>(p => p
+                .Add(c => c.Layout, layout)
+                .Add(c => c.IsCompact, true));
+
+            Assert.NotNull(cut.Find("div.polhem-form-layout.polhem-form-layout--compact"));
+            Assert.Contains("repeat(1,", cut.Find("div.polhem-form-layout__grid").GetAttribute("style"), StringComparison.Ordinal);
+            Assert.Contains("grid-column:span 1", cut.FindAll("div.polhem-form-layout__field")[0].GetAttribute("style"), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("FormLayoutPresenter keeps the layout's column count and spans when not compact")]
+        public void FormLayoutPresenter_NotCompact_RendersLayoutColumns()
+        {
+            var schema = BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            layout.ColumnCount = 3;
+            layout.Sections![0].Fields![0].ColumnSpan = 2;
+
+            var cut = Render<FormLayoutPresenter>(p => p.Add(c => c.Layout, layout));
+
+            Assert.Empty(cut.FindAll("div.polhem-form-layout--compact"));
+            Assert.Contains("repeat(3,", cut.Find("div.polhem-form-layout__grid").GetAttribute("style"), StringComparison.Ordinal);
+            Assert.Contains("grid-column:span 2", cut.FindAll("div.polhem-form-layout__field")[0].GetAttribute("style"), StringComparison.Ordinal);
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
     public class FormLayoutPresenterHelperTests
     {
         private static readonly Type[] s_layoutFieldParam = [typeof(LayoutField)];
+        private static readonly Type[] s_fieldStyleParams = [typeof(LayoutField), typeof(int)];
         private static readonly Type[] s_layoutSectionParam = [typeof(LayoutSection)];
 
         [Fact]
@@ -42,10 +43,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
         public void BuildFieldStyle_DefaultSpans_ReturnsSpanOneOne()
         {
             var field = new LayoutField();
-            var method = typeof(FormLayoutPresenter).GetMethod("BuildFieldStyle",
-                BindingFlags.NonPublic | BindingFlags.Static, null, s_layoutFieldParam, null);
-            Assert.NotNull(method);
-            var result = method!.Invoke(null, new object[] { field }) as string;
+            var result = InvokeBuildFieldStyle(field, columnCount: 4);
             Assert.Equal("grid-row:span 1;grid-column:span 1", result);
         }
 
@@ -56,11 +54,27 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
         public void BuildFieldStyle_CustomSpans_ReturnsCorrectStyle(int rowSpan, int colSpan, string expected)
         {
             var field = new LayoutField { RowSpan = rowSpan, ColumnSpan = colSpan };
-            var method = typeof(FormLayoutPresenter).GetMethod("BuildFieldStyle",
-                BindingFlags.NonPublic | BindingFlags.Static, null, s_layoutFieldParam, null);
-            Assert.NotNull(method);
-            var result = method!.Invoke(null, new object[] { field }) as string;
+            var result = InvokeBuildFieldStyle(field, columnCount: 4);
             Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(3, 2, "grid-row:span 1;grid-column:span 2")]
+        [InlineData(2, 1, "grid-row:span 1;grid-column:span 1")]
+        [DisplayName("BuildFieldStyle clamps a column span wider than the grid, so CSS adds no implicit column")]
+        public void BuildFieldStyle_SpanWiderThanGrid_ClampsToColumnCount(int colSpan, int columnCount, string expected)
+        {
+            var field = new LayoutField { ColumnSpan = colSpan };
+            var result = InvokeBuildFieldStyle(field, columnCount);
+            Assert.Equal(expected, result);
+        }
+
+        private static string? InvokeBuildFieldStyle(LayoutField field, int columnCount)
+        {
+            var method = typeof(FormLayoutPresenter).GetMethod("BuildFieldStyle",
+                BindingFlags.NonPublic | BindingFlags.Static, null, s_fieldStyleParams, null);
+            Assert.NotNull(method);
+            return method!.Invoke(null, new object[] { field, columnCount }) as string;
         }
 
         [Fact]
