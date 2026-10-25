@@ -54,7 +54,27 @@
     </div>
 </section>
 
+<section class="polhem-demo-section">
+    <h2>Master and detail</h2>
+    <p>
+        An order with its lines, mirroring the Avalonia DemoCenter's "Master-Detail" module. The line amount is
+        computed from quantity and price. Switch the detail editing model, or the form mode.
+    </p>
+    <div class="polhem-demo-toolbar">
+        @foreach (var mode in s_detailModes)
+        {
+            <button type="button" disabled="@(mode == _detailMode)" @onclick="() => _detailMode = mode">@mode</button>
+        }
+        @foreach (var mode in s_modes)
+        {
+            <button type="button" disabled="@(mode == _orderMode)" @onclick="() => _orderMode = mode">@mode</button>
+        }
+    </div>
+    <FormLayoutPresenter Layout="_orderLayout" DataObject="_order" FormMode="_orderMode" DetailEditMode="_detailMode" IdPrefix="order" />
+</section>
+
 @code {
+    private static readonly GridEditMode[] s_detailModes = [GridEditMode.InCell, GridEditMode.EditForm];
     private static readonly SingleFormMode[] s_modes = [SingleFormMode.View, SingleFormMode.Add, SingleFormMode.Edit];
 
     private readonly FormLayout _layout;
@@ -62,6 +82,11 @@
     private readonly FormLiveComputation _live;
     private readonly Dictionary<SingleFormMode, FormDataObject> _modeData = new();
     private SingleFormMode _mode = SingleFormMode.Edit;
+    private readonly FormLayout _orderLayout;
+    private readonly FormDataObject _order;
+    private readonly FormLiveComputation _orderLive;
+    private GridEditMode _detailMode = GridEditMode.InCell;
+    private SingleFormMode _orderMode = SingleFormMode.Edit;
 
     public FieldEditors()
     {
@@ -90,6 +115,32 @@
 
         foreach (var mode in s_modes)
             _modeData[mode] = BuildModeData();
+
+        var orderSchema = BuildOrderSchema();
+        _orderLayout = FormLayoutGenerator.Generate(orderSchema, "default");
+        _order = new FormDataObject(orderSchema);
+        _orderLive = new FormLiveComputation(orderSchema);
+        // The wiring FormPage does: recompute on edits, also inside the edit form's session, and
+        // initialize the rows the grid adds.
+        void Recompute(object? sender, FieldValueChangedEventArgs e)
+        {
+            if (!_orderLive.IsRecomputing)
+                _orderLive.Recompute(e.TableName, e.FieldName, e.Row);
+        }
+        _order.FieldValueChanged += Recompute;
+        _order.RowEditFieldChanged += Recompute;
+        _order.RowAdded += (_, e) => _orderLive.InitializeNewRow(e.TableName, e.Row);
+        _order.InitializeNewMaster();
+        _order.SetField("order_no", "SO-0001");
+        var lines = _order.DataSet.Tables["OrderLine"]!;
+        foreach (var (item, qty, price) in new[] { ("Bolt", 10m, 0.25m), ("Nut", 20m, 0.1m) })
+        {
+            var line = lines.NewRow();
+            line["item"] = item;
+            line["qty"] = qty;
+            line["price"] = price;
+            lines.Rows.Add(line);
+        }
     }
 
     private static LayoutField Field(string name, FormEditModes modes) => new() { FieldName = name, AllowEditModes = modes };
@@ -126,6 +177,29 @@
         dept.ListItems!.Add("HR", "Human Resources");
         dept.ListItems.Add("IT", "Information Technology");
         fields.Add("notes", "Notes (MemoEdit)", FieldDbType.Text);
+        return schema;
+    }
+
+    private static FormSchema BuildOrderSchema()
+    {
+        var schema = new FormSchema("Order", "Order");
+        var master = schema.Tables!.Add("Order", "Order").Fields!;
+        master.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        master.Add("order_no", "Order No", FieldDbType.String);
+        master.Add("order_date", "Order Date", FieldDbType.Date);
+        var lines = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        lines.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("sys_master_rowid", "Order", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("item", "Item", FieldDbType.String) { Required = true });
+        lines.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+        lines.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice, NumberFormat = "N2" });
+        lines.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "qty * price",
+            ReadOnly = true,
+        });
         return schema;
     }
 

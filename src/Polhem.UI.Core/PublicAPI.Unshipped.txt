@@ -1,7 +1,9 @@
 #nullable enable
 Polhem.UI.Core.Fields.DateTimeFieldFormat
+Polhem.UI.Core.Fields.FieldCaptionRules
 Polhem.UI.Core.Fields.FieldEditRules
 Polhem.UI.Core.Fields.FieldValueFormatter
+Polhem.UI.Core.Fields.GridCellFormatter
 Polhem.UI.Core.Fields.LookupDisplay
 Polhem.UI.Core.Fields.LookupFieldRules
 Polhem.UI.Core.Fields.NumericFieldFormat
@@ -19,8 +21,13 @@ static Polhem.UI.Core.Fields.DateTimeFieldFormat.GetInputPattern(System.Globaliz
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.ToBindingValue(System.DateTime value) -> string!
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseBindingValue(string? bindingValue, out System.DateTime value) -> bool
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseInput(string? input, out System.DateTime value) -> bool
+static Polhem.UI.Core.Fields.FieldCaptionRules.FormatCaption(string! caption, bool readOnly) -> string!
+static Polhem.UI.Core.Fields.FieldCaptionRules.ShowsRequiredCue(bool readOnly, bool required) -> bool
 static Polhem.UI.Core.Fields.FieldEditRules.AllowsEdit(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Layouts.LayoutFieldBase? layoutField) -> bool
 static Polhem.UI.Core.Fields.FieldValueFormatter.Format(object? raw, string! displayFormat, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.ComposeDisplayText(System.Data.DataRow? row, System.Collections.Generic.IReadOnlyList<string!>! displayFields, string! displayFormat, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.FormatCell(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.FormatColumnText(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
 static Polhem.UI.Core.Fields.LookupDisplay.Compose(System.Collections.Generic.IEnumerable<string!>! values) -> string!
 static Polhem.UI.Core.Fields.LookupFieldRules.ApplySelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Action<string!, string?>! setField) -> void
 static Polhem.UI.Core.Fields.LookupFieldRules.ClearSelection(Polhem.Definition.Forms.FormField! field, System.Action<string!, string?>! setField) -> void

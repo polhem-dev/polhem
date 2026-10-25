@@ -168,6 +168,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                     DefineType.FormSchema => _schema,
                     DefineType.FormLayout => _hasLayout ? FormLayoutGenerator.Generate(_schema, TestProgId) : null,
                     DefineType.Language => Language(request.Keys),
+                    // No currency or unit master is deployed, which a real server answers with an empty
+                    // definition; the page then previews with framework-default decimals.
+                    DefineType.CurrencySettings or DefineType.UnitSettings => null,
                     _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
                 };
                 return new GetDefineResponse { Xml = stored is null ? string.Empty : XmlCodec.Serialize(stored) };

@@ -333,12 +333,16 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
             if (_subscribed is not null)
             {
                 _subscribed.FieldValueChanged -= OnFieldValueChanged;
+                _subscribed.RowEditFieldChanged -= OnFieldValueChanged;
                 _subscribed.DataSetReplaced -= OnDataSetReplaced;
             }
             _subscribed = dataObject;
             if (dataObject is not null)
             {
                 dataObject.FieldValueChanged += OnFieldValueChanged;
+                // An editor on a row under an edit session (the edit form) hears proposed values through this
+                // event instead, such as a computed field the live computation recomputed.
+                dataObject.RowEditFieldChanged += OnFieldValueChanged;
                 dataObject.DataSetReplaced += OnDataSetReplaced;
             }
         }

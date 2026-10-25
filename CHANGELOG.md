@@ -21,9 +21,12 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - `Polhem.Web.Blazor.Server` gains the lookup flow: `ButtonEdit`, `LookupDialog` and `LookupPanel`.
 - `Polhem.Web.Blazor.Server` recomputes computed fields live through the new `FormLiveComputation`, and its
   `FormDataObject` gains new-row defaults, row events and buffered row edit sessions.
+- `Polhem.Web.Blazor.Server` renders detail tables: `GridControl` (in-cell or edit-form editing), `RowEditPanel`
+  and `RowEditDialog`, shown by `FormLayoutPresenter` and `FormPage`, which also previews numbers with the
+  company, currency and unit rounding context.
 - `Polhem.UI.Core` gains the field rules both heads share: `FieldEditRules`, `FieldValueFormatter`,
-  `NumericFieldFormat`, `DateTimeFieldFormat`, `LookupFieldRules`, `LookupDisplay` and the live computation engine
-  `FormLiveComputationEngine`.
+  `NumericFieldFormat`, `DateTimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules` and
+  the live computation engine `FormLiveComputationEngine`.
 
 ## [1.9.0] - 2026-10-23
 

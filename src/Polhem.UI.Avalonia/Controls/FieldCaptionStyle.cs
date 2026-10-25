@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -33,7 +34,7 @@ namespace Polhem.UI.Avalonia.Controls
         /// <param name="themeVariant">The caption's theme variant; the dark variant gets a lighter blue.</param>
         public static IBrush? GetCaptionForeground(bool readOnly, bool required, ThemeVariant? themeVariant = null)
         {
-            if (!required || readOnly) return null;
+            if (!FieldCaptionRules.ShowsRequiredCue(readOnly, required)) return null;
             return themeVariant == ThemeVariant.Dark ? s_requiredDarkBrush : s_requiredBrush;
         }
 
@@ -59,6 +60,6 @@ namespace Polhem.UI.Avalonia.Controls
         /// <param name="caption">The field caption.</param>
         /// <param name="readOnly">Whether the field is read-only.</param>
         public static string FormatCaption(string caption, bool readOnly)
-            => readOnly && !string.IsNullOrEmpty(caption) ? $"({caption})" : caption;
+            => FieldCaptionRules.FormatCaption(caption, readOnly);
     }
 }

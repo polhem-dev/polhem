@@ -21,12 +21,27 @@ else
                         @foreach (var field in EnumerateFields(section))
                         {
                             <div class="polhem-form-layout__field" style="@BuildFieldStyle(field)">
-                                <label class="polhem-form-layout__label" for="@FieldInputId(field)">@field.Caption</label>
+                                <label class="@LabelClass(field)" for="@FieldInputId(field)">@field.Caption</label>
                                 <DynamicComponent Type="FieldEditorFactory.GetEditorType(field.ControlType)"
                                                   Parameters="BuildEditorParameters(field)" />
                             </div>
                         }
                     </div>
+                </fieldset>
+            }
+            @foreach (var detail in EnumerateDetails())
+            {
+                <fieldset class="polhem-form-layout__detail">
+                    @if (!string.IsNullOrEmpty(detail.Caption))
+                    {
+                        <legend class="polhem-form-layout__detail-caption">@detail.Caption</legend>
+                    }
+                    <GridControl Layout="detail"
+                                 EditMode="EffectiveDetailEditMode"
+                                 Compact="IsCompact"
+                                 CurrencySettings="RoundingContext?.CurrencySettings"
+                                 UnitSettings="RoundingContext?.UnitSettings"
+                                 DefaultCurrencyCode="@(RoundingContext?.Company?.DefaultCurrency ?? string.Empty)" />
                 </fieldset>
             }
         </div>

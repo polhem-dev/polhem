@@ -57,13 +57,22 @@ decides whether `FormPage` localizes its definitions; see below.
   loads its definitions through a `FormDefinitionLoader` by default, so captions follow the circuit's UI culture
   and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
-  It recomputes computed fields (`ValueExpression`) as the user edits, through `FormLiveComputation`, with
-  framework-default decimal places; the server rounds authoritatively on save. Detail tables are not rendered.
+  It recomputes computed fields (`ValueExpression`) as the user edits, through `FormLiveComputation`, and previews
+  numbers with the entered company's decimals and the currency and unit masters when they are deployed; the server
+  rounds authoritatively on save. Detail tables render as grids below the master fields.
 - `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id on a click and
   `OnRowActivated` on a double-click, and highlights the row whose id the host passes as `SelectedRowId`.
 - `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
   its `ControlType` by `FieldEditorFactory`. Its `FormMode` parameter decides which editors accept input, following
-  each field's `ReadOnly` and `AllowEditModes`. Detail grids are not rendered.
+  each field's `ReadOnly` and `AllowEditModes`. Each detail table of the layout follows as a `GridControl`, in
+  `DetailEditMode`, or in the edit form when `IsCompact` is set (the server cannot measure the browser, so the host
+  decides).
+- `GridControl` -- a grid over a detail table of a `FormDataObject`, or over a caller-supplied `DataTable` in list
+  mode, with the editing rules of the Avalonia `GridControl`: an Add / Edit / Delete toolbar while the form mode
+  and the layout's `AllowEditModes` and `AllowActions` allow it, and `EditMode` `InCell` (each editable cell shows
+  its field editor) or `EditForm` (a row is edited in `RowEditDialog`, a modal over `RowEditPanel`, which buffers
+  the edits until OK). Cell text follows the shared `GridCellFormatter`; a read-only header is parenthesised and a
+  required one carries `polhem-grid__header--required`.
 - Field editors (`Polhem.Web.Blazor.Server.Controls.Editors`) -- `TextEdit`, `MemoEdit`, `NumericEdit`, `TimeEdit`,
   `DateTimeEdit`, `DateEdit`, `YearMonthEdit`, `CheckEdit`, `DropDownEdit` and `ButtonEdit`, with the same names, contract
   (`IFieldEditor`) and behavior as the field editors of `Polhem.UI.Avalonia`. An editor binds to a
