@@ -55,6 +55,13 @@ public sealed class UserSettings
             RecentSolutions.RemoveRange(MaxRecentSolutions, RecentSolutions.Count - MaxRecentSolutions);
     }
 
+    /// <summary>
+    /// Drops <paramref name="path"/> from the recent solutions, compared the
+    /// same case-insensitive way <see cref="TouchRecentSolution"/> de-dups.
+    /// </summary>
+    public void RemoveRecentSolution(string path) =>
+        RecentSolutions.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+
     private const string DirectoryName = "Polhem.DefineEditor";
     private const string FileName = "settings.json";
 

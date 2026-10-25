@@ -52,6 +52,12 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<DocumentViewModelBase> OpenDocuments { get; } = new();
 
+    /// <summary>
+    /// Raised after the persisted recent-solutions list changes, so the
+    /// File → Open Recent menu and an open Welcome tab can refresh.
+    /// </summary>
+    public event EventHandler? RecentSolutionsChanged;
+
     [ObservableProperty]
     private DocumentViewModelBase? _activeDocument;
 
@@ -336,9 +342,27 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var doc = new WelcomeDocumentViewModel();
+        var doc = new WelcomeDocumentViewModel(this);
         OpenDocuments.Insert(0, doc);
         ActiveDocument = doc;
+    }
+
+    /// <summary>Drops <paramref name="path"/> from the recent solutions (the Welcome page's × button).</summary>
+    public void RemoveRecentSolution(string path)
+    {
+        var settings = UserSettings.Load();
+        settings.RemoveRecentSolution(path);
+        settings.Save();
+        RecentSolutionsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Empties the recent solutions (File → Open Recent → Clear Recent).</summary>
+    public void ClearRecentSolutions()
+    {
+        var settings = UserSettings.Load();
+        settings.RecentSolutions.Clear();
+        settings.Save();
+        RecentSolutionsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     partial void OnSelectedNodeChanged(DefineNode? value) => OpenNode(value);
@@ -393,12 +417,10 @@ public partial class MainWindowViewModel : ViewModelBase
             SelectedProgramNode = null;
             SelectedTableSchemaNode = null;
 
-            // Record for File → Open Recent before assigning SolutionPath —
-            // its PropertyChanged fires synchronously and the App-side menu
-            // rebuild reads these settings in that handler.
             var settings = UserSettings.Load();
             settings.TouchRecentSolution(definePath);
             settings.Save();
+            RecentSolutionsChanged?.Invoke(this, EventArgs.Empty);
 
             SolutionPath = definePath;
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,7 +9,7 @@ namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
 /// VS Code-style Welcome tab: quick-start actions, the recent-solutions list
-/// (same source as File → Open Recent) and usage tips. Opened automatically at
+/// (same source as File → Open Recent, and removable entry by entry) and usage tips. Opened automatically at
 /// startup when <see cref="UserSettings.ShowWelcomeOnStartup"/> is set, and on
 /// demand via View → Welcome. Never dirty, never saveable — a plain closable
 /// tab in every other respect.
@@ -31,19 +32,33 @@ public sealed partial class WelcomeDocumentViewModel : DocumentViewModelBase
 
     public override string TabIcon => "DefWelcome";
 
-    public ObservableCollection<string> RecentSolutions { get; }
+    private readonly MainWindowViewModel _main;
+
+    public ObservableCollection<RecentSolution> RecentSolutions { get; } = new();
 
     public bool HasRecentSolutions => RecentSolutions.Count > 0;
 
     [ObservableProperty]
     private bool _showOnStartup;
 
-    public WelcomeDocumentViewModel()
+    public WelcomeDocumentViewModel(MainWindowViewModel main)
     {
+        _main = main;
         var settings = UserSettings.Load();
-        RecentSolutions = new ObservableCollection<string>(settings.RecentSolutions);
+        LoadRecentSolutions(settings);
         _showOnStartup = settings.ShowWelcomeOnStartup;
         StatusText = string.Empty;
+        _main.RecentSolutionsChanged += OnRecentSolutionsChanged;
+    }
+
+    private void OnRecentSolutionsChanged(object? sender, EventArgs e) => LoadRecentSolutions(UserSettings.Load());
+
+    private void LoadRecentSolutions(UserSettings settings)
+    {
+        RecentSolutions.Clear();
+        foreach (var recent in RecentSolutionLabels.Build(settings.RecentSolutions))
+            RecentSolutions.Add(recent);
+        OnPropertyChanged(nameof(HasRecentSolutions));
     }
 
     partial void OnShowOnStartupChanged(bool value)
@@ -62,13 +77,23 @@ public sealed partial class WelcomeDocumentViewModel : DocumentViewModelBase
             main.PromptOpenSolution();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822",
-        Justification = "RelayCommand handler bound from XAML must remain instance.")]
     [RelayCommand]
     private void OpenRecent(string? path)
     {
-        if (string.IsNullOrEmpty(path)) return;
-        if (GetOwnerWindow()?.DataContext is MainWindowViewModel vm)
-            vm.OpenSolution(path);
+        if (!string.IsNullOrEmpty(path))
+            _main.OpenSolution(path);
+    }
+
+    [RelayCommand]
+    private void RemoveRecent(string? path)
+    {
+        if (!string.IsNullOrEmpty(path))
+            _main.RemoveRecentSolution(path);
+    }
+
+    public override void Dispose()
+    {
+        _main.RecentSolutionsChanged -= OnRecentSolutionsChanged;
+        base.Dispose();
     }
 }
