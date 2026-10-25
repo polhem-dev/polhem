@@ -64,6 +64,7 @@ namespace Polhem.UI.Avalonia.Views
             // the server, which still rounds authoritatively on save.
             _roundingContext = await ResolveRoundingContextAsync(cancellationToken).ConfigureAwait(true);
             _liveComputation = new FormLiveComputation(Schema, _roundingContext);
+            _liveComputation.Degraded += OnLiveComputationDegraded;
             _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
             _dataObject.RowEditFieldChanged += OnLiveRowEditFieldChanged;
             _dataObject.RowAdded += OnLiveRowAdded;
@@ -187,6 +188,18 @@ namespace Polhem.UI.Avalonia.Views
         {
             if (_liveComputation is null || _liveComputation.IsRecomputing) { return; }
             _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
+        }
+
+        /// <summary>
+        /// Tells the user that the form's computed fields stopped following their sources, naming the field and
+        /// the reason, and hands the cause to the host through <see cref="LiveComputationDegraded"/> so it can log
+        /// the expression and the exception. Without this the fields would sit at stale values with no sign of why.
+        /// </summary>
+        private void OnLiveComputationDegraded(object? sender, EventArgs e)
+        {
+            if (_liveComputation?.Degradation is not { } degradation) { return; }
+            ShowMessage(degradation.FormatMessage(UIText.Localizer));
+            LiveComputationDegraded?.Invoke(this, degradation);
         }
 
         /// <summary>

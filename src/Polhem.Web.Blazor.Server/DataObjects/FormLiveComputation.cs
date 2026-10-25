@@ -55,6 +55,16 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         /// <inheritdoc cref="FormLiveComputationEngine.IsDegraded"/>
         public bool IsDegraded => _engine.IsDegraded;
 
+        /// <inheritdoc cref="FormLiveComputationEngine.Degradation"/>
+        public LiveComputationDegradation? Degradation => _engine.Degradation;
+
+        /// <inheritdoc cref="FormLiveComputationEngine.Degraded"/>
+        public event EventHandler? Degraded
+        {
+            add => _engine.Degraded += value;
+            remove => _engine.Degraded -= value;
+        }
+
         /// <inheritdoc cref="FormLiveComputationEngine.Recompute"/>
         public IReadOnlyList<string> Recompute(string tableName, string changedField, DataRow row)
             => _engine.Recompute(tableName, changedField, row);

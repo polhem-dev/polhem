@@ -250,6 +250,14 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>Raised whenever a backend round-trip throws.</summary>
         public event EventHandler<Exception>? ErrorOccurred;
 
+        /// <summary>
+        /// Raised once, when the form stops computing its fields as the user edits because an expression or a
+        /// value could not be evaluated. The view already shows the user a message; a host subscribes to log the
+        /// <see cref="Polhem.UI.Core.LiveComputationDegradation.Expression"/> and the
+        /// <see cref="Polhem.UI.Core.LiveComputationDegradation.Exception"/>.
+        /// </summary>
+        public event EventHandler<Polhem.UI.Core.LiveComputationDegradation>? LiveComputationDegraded;
+
         /// <summary>Loads a record read-only (<see cref="SingleFormMode.View"/>).</summary>
         /// <param name="rowId">The record's <see cref="SysFields.RowId"/>.</param>
         /// <param name="cancellationToken">

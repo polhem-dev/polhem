@@ -97,6 +97,12 @@ namespace Polhem.Definition.Language
         /// </summary>
         public const string CollectionKeyTaken = "CollectionKeyTaken";
 
+        /// <summary>
+        /// Key of the message shown when a form stops computing its fields as the user edits; argument 0 names
+        /// the field, argument 1 is the reason.
+        /// </summary>
+        public const string LiveComputationStopped = "LiveComputationStopped";
+
         private PolhemUIText()
         {
         }
@@ -134,6 +140,7 @@ namespace Polhem.Definition.Language
             [CollectionKeyMissing] = "An item has no key.",
             [CollectionKeyDuplicate] = "More than one item has the key \"{0}\".",
             [CollectionKeyTaken] = "Another item already has the key \"{0}\".",
+            [LiveComputationStopped] = "{0} is no longer calculated as you edit; it will be calculated when you save. Reason: {1}",
         };
 
         /// <summary>
