@@ -4,12 +4,17 @@
 @using Polhem.Definition.Collections
 @using Polhem.Definition.Forms
 @using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Server.Components
 @using Polhem.Web.Blazor.Server.Controls
 @using Polhem.Web.Blazor.Server.Controls.Editors
 @using Polhem.Web.Blazor.Server.DataObjects
 
 @* The cases mirror the Avalonia DemoCenter's "Control Types" and "FormMode States" modules, so the same
    behavior can be compared head to head. Everything here is in memory; no backend is called. *@
+
+@* A page that uses FormLayoutPresenter directly places its own observer; FormPage places one itself. Narrow
+   the window below 600px to see both forms switch to their compact layout. *@
+<CompactViewportObserver CompactChanged="compact => _isCompact = compact" />
 
 <section class="polhem-demo-section">
     <h2>Every control type</h2>
@@ -25,7 +30,7 @@
         }
         <button type="button" @onclick="WriteFromCode">Write the name from code</button>
     </div>
-    <FormLayoutPresenter Layout="_layout" DataObject="_data" FormMode="_mode" IdPrefix="all" />
+    <FormLayoutPresenter Layout="_layout" DataObject="_data" FormMode="_mode" IsCompact="_isCompact" IdPrefix="all" />
 </section>
 
 <section class="polhem-demo-section">
@@ -70,7 +75,7 @@
             <button type="button" disabled="@(mode == _orderMode)" @onclick="() => _orderMode = mode">@mode</button>
         }
     </div>
-    <FormLayoutPresenter Layout="_orderLayout" DataObject="_order" FormMode="_orderMode" DetailEditMode="_detailMode" IdPrefix="order" />
+    <FormLayoutPresenter Layout="_orderLayout" DataObject="_order" FormMode="_orderMode" DetailEditMode="_detailMode" IsCompact="_isCompact" IdPrefix="order" />
 </section>
 
 @code {
@@ -87,6 +92,7 @@
     private readonly FormLiveComputation _orderLive;
     private GridEditMode _detailMode = GridEditMode.InCell;
     private SingleFormMode _orderMode = SingleFormMode.Edit;
+    private bool _isCompact;
 
     public FieldEditors()
     {

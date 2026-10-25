@@ -272,3 +272,17 @@ virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ShouldWriteBackText.g
 ~override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
 Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.Degraded -> System.EventHandler?
+const Polhem.Web.Blazor.Server.Components.CompactViewportObserver.DefaultCompactWidthThreshold = 600 -> double
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactChanged.set -> void
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactViewportObserver() -> void
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactWidthThreshold.get -> double
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactWidthThreshold.set -> void
+Polhem.Web.Blazor.Server.Components.CompactViewportObserver.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Server.Components.FormPage.CompactWidthThreshold.get -> double
+Polhem.Web.Blazor.Server.Components.FormPage.CompactWidthThreshold.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.get -> Polhem.Web.Blazor.Server.Controls.GridEditMode
+Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.get -> bool?
+Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.set -> void

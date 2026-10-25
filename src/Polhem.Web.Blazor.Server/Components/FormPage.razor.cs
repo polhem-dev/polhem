@@ -7,6 +7,7 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.Web.Blazor.Server.Controls;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
@@ -48,6 +49,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// <see cref="RequiredFieldCheck"/>. When any is empty the page names them above the toolbar and
     /// sends nothing; the form stays open for the user to fill them in.
     /// </para>
+    /// <para>
+    /// On a viewport narrower than <see cref="CompactWidthThreshold"/> the form switches to its compact layout
+    /// (see <see cref="FormLayoutPresenter.IsCompact"/>), detected by a <see cref="CompactViewportObserver"/>.
+    /// Setting <see cref="IsCompact"/> fixes the layout instead, and the page then measures nothing.
+    /// </para>
     /// </remarks>
     public sealed partial class FormPage : ComponentBase
     {
@@ -65,6 +71,7 @@ namespace Polhem.Web.Blazor.Server.Components
         private bool _isBusy;
         // Whether the record on screen came from New and has not been saved yet.
         private bool _isNewRecord;
+        private bool _isViewportCompact;
 
         /// <summary>
         /// Gets or sets the program identifier (e.g. "Employee"). Drives the
@@ -100,6 +107,33 @@ namespace Polhem.Web.Blazor.Server.Components
         /// </remarks>
         [Parameter]
         public FormDefinitionLoader? DefinitionLoader { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the form renders in its compact layout, or <c>null</c> — the default — to decide
+        /// from the viewport width against <see cref="CompactWidthThreshold"/>. A value set here wins over the
+        /// viewport.
+        /// </summary>
+        [Parameter]
+        public bool? IsCompact { get; set; }
+
+        /// <summary>
+        /// Gets or sets the viewport width, in CSS pixels, below which the form renders in its compact layout
+        /// while <see cref="IsCompact"/> is <c>null</c>. Defaults to
+        /// <see cref="CompactViewportObserver.DefaultCompactWidthThreshold"/>.
+        /// </summary>
+        [Parameter]
+        public double CompactWidthThreshold { get; set; } = CompactViewportObserver.DefaultCompactWidthThreshold;
+
+        /// <summary>
+        /// Gets or sets the detail grids' editing model outside the compact layout, which always edits in
+        /// <see cref="GridEditMode.EditForm"/>. Defaults to <see cref="GridEditMode.InCell"/>.
+        /// </summary>
+        [Parameter]
+        public GridEditMode DetailEditMode { get; set; } = GridEditMode.InCell;
+
+        private bool EffectiveIsCompact => IsCompact ?? _isViewportCompact;
+
+        private void OnCompactChanged(bool compact) => _isViewportCompact = compact;
 
         /// <inheritdoc/>
         protected override async Task OnInitializedAsync()

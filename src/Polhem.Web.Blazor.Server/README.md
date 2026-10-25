@@ -59,14 +59,23 @@ decides whether `FormPage` localizes its definitions; see below.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
   It recomputes computed fields (`ValueExpression`) as the user edits, through `FormLiveComputation`, and previews
   numbers with the entered company's decimals and the currency and unit masters when they are deployed; the server
-  rounds authoritatively on save. Detail tables render as grids below the master fields.
+  rounds authoritatively on save. Detail tables render as grids below the master fields. On a viewport narrower
+  than `CompactWidthThreshold` (600 CSS pixels by default) the form switches to its compact layout, measured by a
+  `CompactViewportObserver`; setting `IsCompact` fixes the layout instead, and `DetailEditMode` picks the detail
+  editing model outside it.
+- `CompactViewportObserver` -- renders nothing and raises `CompactChanged` when the browser's viewport crosses
+  `CompactWidthThreshold`. A page that uses `FormLayoutPresenter` directly places one next to it and passes the value
+  to `IsCompact`. It measures the viewport through a small JavaScript module that ships in the package and loads
+  through JavaScript isolation, so the host page adds no `<script>`; the host must serve static web assets
+  (`UseStaticFiles` or `MapStaticAssets`). A prerendered page starts wide and switches once the circuit connects.
 - `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id on a click and
   `OnRowActivated` on a double-click, and highlights the row whose id the host passes as `SelectedRowId`.
 - `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
   its `ControlType` by `FieldEditorFactory`. Its `FormMode` parameter decides which editors accept input, following
   each field's `ReadOnly` and `AllowEditModes`. Each detail table of the layout follows as a `GridControl`, in
-  `DetailEditMode`, or in the edit form when `IsCompact` is set (the server cannot measure the browser, so the host
-  decides).
+  `DetailEditMode`. `IsCompact` renders for a phone-sized screen: the master fields in one column whatever the
+  layout's `ColumnCount`, and the detail grids in the edit form. The root element then also carries
+  `polhem-form-layout--compact`.
 - `GridControl` -- a grid over a detail table of a `FormDataObject`, or over a caller-supplied `DataTable` in list
   mode, with the editing rules of the Avalonia `GridControl`: an Add / Edit / Delete toolbar while the form mode
   and the layout's `AllowEditModes` and `AllowActions` allow it, and `EditMode` `InCell` (each editable cell shows
@@ -80,7 +89,7 @@ decides whether `FormPage` localizes its definitions; see below.
   the schema field's metadata (such as `MaxLength` and `ListItems`) itself and refreshes when another party writes
   its field. New editors derive from `FieldEditorBase`. Their markup carries the `polhem-field-editor` class, a
   per-editor modifier such as `polhem-field-editor--numeric`, and `polhem-field-editor--readonly` when they do not
-  accept input; the package ships no CSS of its own.
+  accept input; the package ships no CSS of its own. Its only script is the module of `CompactViewportObserver`.
 - Lookup -- a `ButtonEdit` bound to a field with a `RelationProgId` shows the field's display fields, opens
   `LookupDialog` (a modal over `LookupPanel`: search, list, OK / Cancel) from its button, writes the chosen row's id
   and mapped fields through `FormDataObject.ApplyLookupSelection`, and clears them on Delete. The dialog takes the

@@ -3,6 +3,10 @@
 @using Polhem.Web.Blazor.Server.Controls
 
 <div class="polhem-form-page">
+    @if (IsCompact is null)
+    {
+        <CompactViewportObserver CompactWidthThreshold="CompactWidthThreshold" CompactChanged="OnCompactChanged" />
+    }
     @if (_error is not null)
     {
         <div class="polhem-form-page__error">@_error</div>
@@ -41,6 +45,8 @@
         <FormLayoutPresenter Layout="_formLayout"
                              DataObject="_dataObject"
                              FormMode="FormMode"
-                             RoundingContext="_roundingContext" />
+                             RoundingContext="_roundingContext"
+                             IsCompact="EffectiveIsCompact"
+                             DetailEditMode="DetailEditMode" />
     }
 </div>

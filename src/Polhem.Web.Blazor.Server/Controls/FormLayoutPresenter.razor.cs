@@ -22,8 +22,9 @@ namespace Polhem.Web.Blazor.Server.Controls
     /// </para>
     /// <para>
     /// The layout's detail grids (<see cref="FormLayout.Details"/>) follow the master sections, each a
-    /// <see cref="GridControl"/> in <see cref="DetailEditMode"/>, or in <see cref="GridEditMode.EditForm"/>
-    /// when <see cref="IsCompact"/> is set, as the Avalonia presenter does.
+    /// <see cref="GridControl"/> in <see cref="DetailEditMode"/>. When <see cref="IsCompact"/> is set the
+    /// master fields lay out in a single column and the grids edit in <see cref="GridEditMode.EditForm"/>,
+    /// as the Avalonia presenter does.
     /// </para>
     /// </remarks>
     public sealed partial class FormLayoutPresenter : ComponentBase
@@ -55,10 +56,15 @@ namespace Polhem.Web.Blazor.Server.Controls
         public RoundingContext? RoundingContext { get; set; }
 
         /// <summary>
-        /// Gets or sets whether to render for a phone-sized screen: the detail grids then edit through the
-        /// single-column edit form whatever <see cref="DetailEditMode"/> says. The server cannot measure the
-        /// browser, so the host decides.
+        /// Gets or sets whether to render for a phone-sized screen: the master fields then lay out in a single
+        /// column, whatever <see cref="FormLayout.ColumnCount"/> says, and the detail grids edit through the
+        /// single-column edit form, whatever <see cref="DetailEditMode"/> says.
         /// </summary>
+        /// <remarks>
+        /// The presenter does not measure the browser itself. <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> sets this from a
+        /// <see cref="Polhem.Web.Blazor.Server.Components.CompactViewportObserver"/>; a page of its own can place one the same way, or set
+        /// the value directly.
+        /// </remarks>
         [Parameter]
         public bool IsCompact { get; set; }
 
@@ -118,19 +124,23 @@ namespace Polhem.Web.Blazor.Server.Controls
             return parameters;
         }
 
-        private string BuildGridStyle()
-        {
-            var columns = Layout?.ColumnCount ?? 1;
-            if (columns < 1) columns = 1;
-            return string.Create(
-                CultureInfo.InvariantCulture,
-                $"display:grid;grid-template-columns:repeat({columns},minmax(0,1fr));gap:8px");
-        }
+        private string RootClass
+            => IsCompact ? "polhem-form-layout polhem-form-layout--compact" : "polhem-form-layout";
 
-        private static string BuildFieldStyle(LayoutField field)
+        private int EffectiveColumnCount
+            => IsCompact ? 1 : Math.Max(1, Layout?.ColumnCount ?? 1);
+
+        private string BuildGridStyle()
+            => string.Create(
+                CultureInfo.InvariantCulture,
+                $"display:grid;grid-template-columns:repeat({EffectiveColumnCount},minmax(0,1fr));gap:8px");
+
+        // A CSS grid adds implicit columns for a span wider than the template, so a two-column field in the
+        // compact single column would widen the form again. Avalonia's Grid clamps the span itself.
+        private static string BuildFieldStyle(LayoutField field, int columnCount)
         {
             var rowSpan = field.RowSpan < 1 ? 1 : field.RowSpan;
-            var colSpan = field.ColumnSpan < 1 ? 1 : field.ColumnSpan;
+            var colSpan = Math.Clamp(field.ColumnSpan, 1, columnCount);
             return string.Create(
                 CultureInfo.InvariantCulture,
                 $"grid-row:span {rowSpan};grid-column:span {colSpan}");
