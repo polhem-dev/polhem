@@ -59,6 +59,7 @@
 - `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
 - `NumericFieldFormat` -- 數值格式解析（含幣別與單位的小數位數）、顯示、輸入剖析，以及寫回的值。
 - `DateTimeFieldFormat` -- 日期時間欄位的顯示、輸入與綁定字串規則。
+- `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
 
 ### 權限能力
 
@@ -83,6 +84,7 @@
 
 - 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
-- `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`
+- `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
+  `LookupFieldRules`、`LookupDisplay`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`

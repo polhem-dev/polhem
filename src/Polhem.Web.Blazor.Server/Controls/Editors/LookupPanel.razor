@@ -1,0 +1,27 @@
+@namespace Polhem.Web.Blazor.Server.Controls.Editors
+@using Polhem.Definition.Language
+@using Polhem.Web.Blazor.Server.Components
+
+<div class="polhem-lookup-panel">
+    <form class="polhem-lookup-panel__search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <input type="search"
+               class="polhem-lookup-panel__search-input"
+               placeholder="@Text(PolhemUIText.Search)"
+               @bind="SearchText" />
+        <button type="submit" class="polhem-lookup-panel__search-button">@Text(PolhemUIText.Search)</button>
+    </form>
+    @if (_error is not null)
+    {
+        <div class="polhem-lookup-panel__error" role="alert">@_error</div>
+    }
+    <DynamicGrid Layout="_layout"
+                 Rows="_rows"
+                 FormTable="Schema?.MasterTable"
+                 SelectedRowId="_selectedRowId"
+                 OnRowSelected="Select"
+                 OnRowActivated="ActivateAsync" />
+    <div class="polhem-lookup-panel__buttons">
+        <button type="button" class="polhem-lookup-panel__ok" disabled="@(SelectedRow is null)" @onclick="CommitAsync">@Text(PolhemUIText.Ok)</button>
+        <button type="button" class="polhem-lookup-panel__cancel" @onclick="CancelAsync">@Text(PolhemUIText.Cancel)</button>
+    </div>
+</div>

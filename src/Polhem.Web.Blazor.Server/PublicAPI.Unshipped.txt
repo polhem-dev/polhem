@@ -7,6 +7,17 @@
 *REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.IdPrefix.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.get -> Polhem.Definition.Layouts.FormLayout?
 *REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnRowActivated.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnRowActivated.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SelectedRowId.get -> System.Guid?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SelectedRowId.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.ButtonClick.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.ButtonClick.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.ButtonEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.HasLookup.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.LookupFailed.get -> Microsoft.AspNetCore.Components.EventCallback<System.Exception!>
+Polhem.Web.Blazor.Server.Controls.Editors.ButtonEdit.LookupFailed.set -> void
 Polhem.Web.Blazor.Server.Controls.Editors.CheckEdit
 Polhem.Web.Blazor.Server.Controls.Editors.CheckEdit.CheckEdit() -> void
 Polhem.Web.Blazor.Server.Controls.Editors.DateEdit
@@ -72,6 +83,36 @@ Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Se
 Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
 Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
 Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Unbind() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.Connector.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.DefinitionLoader.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.LookupDialog() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnCancelled.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnCommitted.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnFailed.get -> Microsoft.AspNetCore.Components.EventCallback<System.Exception!>
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnFailed.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.ProgId.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.ProgId.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.Schema.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.Connector.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.LookupPanel() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCancelled.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCommitted.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.ReloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.Schema.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.SearchText.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.SearchText.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.SelectedRow.get -> System.Data.DataRow?
 Polhem.Web.Blazor.Server.Controls.Editors.MemoEdit
 Polhem.Web.Blazor.Server.Controls.Editors.MemoEdit.MemoEdit() -> void
 Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit
@@ -114,6 +155,8 @@ Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldValueChange
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Row.get -> System.Data.DataRow!
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.ApplyLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Data.DataRow? targetRow = null) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.ClearLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow? targetRow = null) -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs!>?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!

@@ -28,6 +28,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
                 ControlType.YearMonthEdit => typeof(YearMonthEdit),
                 ControlType.MemoEdit => typeof(MemoEdit),
                 ControlType.DropDownEdit => typeof(DropDownEdit),
+                ControlType.ButtonEdit => typeof(ButtonEdit),
                 ControlType.NumericEdit => typeof(NumericEdit),
                 ControlType.TimeEdit => typeof(TimeEdit),
                 ControlType.DateTimeEdit => typeof(DateTimeEdit),

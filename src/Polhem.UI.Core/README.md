@@ -68,6 +68,8 @@ two heads behave the same:
 - `NumericFieldFormat` -- number format resolution (currency and unit decimals included), display, input parsing and
   the value written back.
 - `DateTimeFieldFormat` -- the display, input and binding-string rules of a date-and-time field.
+- `LookupFieldRules`, `LookupDisplay` -- whether a field looks up, which program it opens, which fields it shows and
+  how they are joined, and how a selection is written back or cleared.
 
 ### Permission Capabilities
 
@@ -93,6 +95,7 @@ two heads behave the same:
 
 - project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
-- `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`
+- `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
+  `LookupFieldRules`, `LookupDisplay`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

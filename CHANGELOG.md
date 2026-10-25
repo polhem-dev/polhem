@@ -18,8 +18,9 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - **Breaking:** `Polhem.Web.Blazor.Server` replaces `DynamicForm` with `FormLayoutPresenter`.
 - `Polhem.Web.Blazor.Server` gains field editors with the same names, contract and behavior as those of
   `Polhem.UI.Avalonia`, and `FormPage` now follows the form mode and each field's `AllowEditModes`.
+- `Polhem.Web.Blazor.Server` gains the lookup flow: `ButtonEdit`, `LookupDialog` and `LookupPanel`.
 - `Polhem.UI.Core` gains the field rules both heads share: `FieldEditRules`, `FieldValueFormatter`,
-  `NumericFieldFormat` and `DateTimeFieldFormat`.
+  `NumericFieldFormat`, `DateTimeFieldFormat`, `LookupFieldRules` and `LookupDisplay`.
 
 ## [1.9.0] - 2026-10-23
 

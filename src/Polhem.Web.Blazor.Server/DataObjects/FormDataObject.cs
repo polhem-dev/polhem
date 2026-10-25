@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Api.Client.Connectors;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Fields;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -267,6 +268,41 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             var table = _schema.Tables?.GetOrDefault(tableName);
             if (table?.Fields is null) return null;
             return table.Fields.Contains(fieldName) ? table.Fields[fieldName] : null;
+        }
+
+        /// <summary>
+        /// Applies a lookup selection: writes the selected row's <c>sys_rowid</c> into
+        /// <paramref name="field"/> and copies each mapped source field to its local destination field.
+        /// The rules are <see cref="LookupFieldRules.ApplySelection"/>, shared with the Avalonia head.
+        /// </summary>
+        /// <remarks>
+        /// The locally written display values are display-only between saves: a reload re-derives them
+        /// from the server-side relation join, which stays the single source of truth.
+        /// </remarks>
+        /// <param name="field">The relation field the lookup belongs to.</param>
+        /// <param name="selectedRow">The row picked in the lookup.</param>
+        /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="selectedRow"/> lacks <c>sys_rowid</c> or a mapped source field.
+        /// </exception>
+        public void ApplyLookupSelection(FormField field, DataRow selectedRow, DataRow? targetRow = null)
+            => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value));
+
+        /// <summary>
+        /// Clears a lookup selection: resets <paramref name="field"/> and every mapped destination field
+        /// to the column default (the empty-input rule of <see cref="SetField(string, string?)"/>).
+        /// </summary>
+        /// <param name="field">The relation field the lookup belongs to.</param>
+        /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
+        public void ClearLookupSelection(FormField field, DataRow? targetRow = null)
+            => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value));
+
+        private void SetLookupField(DataRow? targetRow, string fieldName, string? value)
+        {
+            if (targetRow is not null)
+                SetField(targetRow, fieldName, value);
+            else
+                SetField(fieldName, value);
         }
 
         /// <summary>

@@ -58,3 +58,17 @@ body {
 .polhem-field-editor--memo { min-height: 4.5em; resize: vertical; }
 /* Read-only reads as a record, not a grid of input boxes: the box collapses to a bottom line, as in the Avalonia head. */
 .polhem-field-editor--readonly { border-width: 0 0 1px; border-radius: 0; background: transparent; }
+
+.polhem-button-edit { position: relative; display: block; }
+.polhem-button-edit .polhem-field-editor { padding-right: 30px; }
+.polhem-button-edit__button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: inherit; opacity: 0.65; cursor: pointer; padding: 4px; line-height: 0; }
+
+.polhem-lookup-dialog__card { background: white; border-radius: 6px; padding: 16px; width: 520px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-lookup-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-lookup-dialog__error, .polhem-lookup-panel__error { color: #cf222e; margin-bottom: 12px; }
+.polhem-lookup-panel__search { display: flex; gap: 8px; margin-bottom: 12px; }
+.polhem-lookup-panel__search-input { flex: 1; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 4px; font: inherit; }
+.polhem-lookup-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.polhem-lookup-panel__buttons button, .polhem-lookup-panel__search-button { padding: 4px 14px; }
+.polhem-dynamic-grid__row { cursor: pointer; }
+.polhem-dynamic-grid__row--selected { background: #ddf4ff; }

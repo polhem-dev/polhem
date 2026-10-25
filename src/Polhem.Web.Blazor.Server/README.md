@@ -58,18 +58,25 @@ decides whether `FormPage` localizes its definitions; see below.
   and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
   Detail tables are not rendered.
-- `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id.
+- `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id on a click and
+  `OnRowActivated` on a double-click, and highlights the row whose id the host passes as `SelectedRowId`.
 - `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
   its `ControlType` by `FieldEditorFactory`. Its `FormMode` parameter decides which editors accept input, following
   each field's `ReadOnly` and `AllowEditModes`. Detail grids are not rendered.
 - Field editors (`Polhem.Web.Blazor.Server.Controls.Editors`) -- `TextEdit`, `MemoEdit`, `NumericEdit`, `TimeEdit`,
-  `DateTimeEdit`, `DateEdit`, `YearMonthEdit`, `CheckEdit` and `DropDownEdit`, with the same names, contract
+  `DateTimeEdit`, `DateEdit`, `YearMonthEdit`, `CheckEdit`, `DropDownEdit` and `ButtonEdit`, with the same names, contract
   (`IFieldEditor`) and behavior as the field editors of `Polhem.UI.Avalonia`. An editor binds to a
   `FormDataObject` through its `DataObject` parameter, an enclosing `FormScope`, or an explicit `Bind`; it applies
   the schema field's metadata (such as `MaxLength` and `ListItems`) itself and refreshes when another party writes
   its field. New editors derive from `FieldEditorBase`. Their markup carries the `polhem-field-editor` class, a
   per-editor modifier such as `polhem-field-editor--numeric`, and `polhem-field-editor--readonly` when they do not
   accept input; the package ships no CSS of its own.
+- Lookup -- a `ButtonEdit` bound to a field with a `RelationProgId` shows the field's display fields, opens
+  `LookupDialog` (a modal over `LookupPanel`: search, list, OK / Cancel) from its button, writes the chosen row's id
+  and mapped fields through `FormDataObject.ApplyLookupSelection`, and clears them on Delete. The dialog takes the
+  target schema and connector from its parameters, else from an `IFormDefinitionSource` and an
+  `IFormApiConnectorFactory` registered in the container (scoped, so each circuit has its own), else from the circuit's
+  `PolhemApiClient`; an application with a Polhem backend registers nothing.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`.
 - `PolhemAccessTokenProvider` -- holds the page's signed-in state (the access token) and cascades it to descendant
   components. The calls themselves use the circuit's `PolhemApiClient`, which the sign-in has signed in.

@@ -2,8 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Polhem.Core;
 using Polhem.Definition.Layouts;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -83,8 +83,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// Gets a value indicating whether the bound field carries relation metadata
         /// and therefore uses the built-in lookup flow.
         /// </summary>
-        public bool HasLookup =>
-            Binder.FormField is { } formField && StringUtilities.IsNotEmpty(formField.RelationProgId);
+        public bool HasLookup => LookupFieldRules.HasLookup(Binder.FormField);
 
         /// <inheritdoc />
         public override void SetControlState(SingleFormMode formMode)
@@ -198,9 +197,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             var dataObject = Binder.DataObject;
             if (field is null || dataObject is null || !_allowLookupEdit) return;
 
-            var progId = StringUtilities.IsNotEmpty(field.LookupProgId)
-                ? field.LookupProgId
-                : field.RelationProgId;
+            var progId = LookupFieldRules.ResolveProgId(field);
             try
             {
                 var selected = await LookupDialog.ShowAsync(this, progId).ConfigureAwait(true);
@@ -220,15 +217,6 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         }
 
         private IReadOnlyList<string> ResolveDisplayFieldNames()
-        {
-            // A layout-level override wins over the schema-level resolution.
-            var fromLayout = Binder.LayoutField?.DisplayFields;
-            if (!string.IsNullOrEmpty(fromLayout))
-            {
-                return fromLayout.Split(',',
-                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            }
-            return Binder.FormField?.GetDisplayFields() ?? [];
-        }
+            => LookupFieldRules.ResolveDisplayFieldNames(Binder.LayoutField, Binder.FormField);
     }
 }

@@ -5,7 +5,6 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls
