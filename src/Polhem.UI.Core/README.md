@@ -56,6 +56,9 @@ application's own data through its own implementation of `IFormApiConnector`.
   builds the empty `DataSet` a form starts from.
 - `FormDataGuard` -- the preconditions a form's CRUD calls check before they reach the connector, with one wording of
   each failure for every head.
+- `FormLiveComputationEngine` -- the live recomputation of computed fields and new-row default expressions that
+  every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
+  user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
 
 ### Field Editor Rules Shared by Every Head
 
@@ -93,7 +96,7 @@ two heads behave the same:
 
 ## Directory Structure
 
-- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`
+- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `LookupFieldRules`, `LookupDisplay`

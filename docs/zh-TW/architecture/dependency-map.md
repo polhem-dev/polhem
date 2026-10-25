@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 939f9ea9588e75a7b4a40b90b44779c8d0b15220 -->
+<!-- source: en/architecture/dependency-map.md blob: 79d3a3f32e0820e2d775e7faddd4ee030f51680b -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -90,6 +90,7 @@ graph BT
   UIShell --> UIApiBridge
   BlazorSrv --> Client
   BlazorSrv --> UICore
+  BlazorSrv --> Expressions
 ```
 
 ## 外部相依套件
@@ -138,7 +139,7 @@ graph BT
 ## 架構要點
 
 - **Polhem.Core** 為最底層基礎套件，無任何內部相依性。
-- **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 的前端即時預覽）才引用本套件。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
+- **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server` 的前端即時預覽）才引用本套件；兩端共用的即時預覽引擎 `Polhem.UI.Core` 的 `FormLiveComputationEngine` 由它們傳入運算引擎。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
 - **Polhem.Definition** 為被依賴次數最多的專案，直接相依者為 Contracts、Db、RepoAbs、Caching、Business、Api.Core 與 UI.Avalonia。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入 **共用契約層**，而非 API 應用層。
 - **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Server`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上獨立列為 **組合根** 而非歸入 API 層：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的是**它本身不含資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
@@ -152,4 +153,4 @@ graph BT
 - **`Polhem.UI.*` family 判別準則**：所有前端都引用 `Polhem.UI.Core`，所以是否引用它已不能決定 family。決定的是套件是否建立在單一使用者模型上：一個 process 服務一位已登入使用者，服務來自整個 process 共用的 `UIServices.Provider`（有後端時再加上 `Polhem.UI.ApiBridge`）。
   - 單一使用者 → 歸 `Polhem.UI.*`（目前：`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`、`Polhem.UI.Avalonia.Shell`；未來：`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理）
   - 一個 process 服務多位使用者、自有狀態管理 → 走獨立 family prefix（如 `Polhem.Web.Blazor.*`）。Blazor 端過去不引用 `Polhem.UI.Core`，是因為該套件持有整個 process 共用的 `ClientInfo`；這份狀態已移到 `Polhem.UI.ApiBridge`，所以 Blazor 端現在為了共用的值規則引用 `Polhem.UI.Core`，但不得使用 `UIServices`，也不得引用 `Polhem.UI.ApiBridge`。違反時 `UIServicesUsageGateTests`（`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗。
-- **Web 前端層**（`Polhem.Web.Blazor.Server`）為 RCL（Razor Class Library）元件庫，相依 `Polhem.Api.Client`，並為了與 native 各端共用的值規則相依 `Polhem.UI.Core`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（每個 circuit 的 `PolhemApiClient` 經 HTTP 呼叫），或 `UseLocalProvider`（in-process 呼叫，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。
+- **Web 前端層**（`Polhem.Web.Blazor.Server`）為 RCL（Razor Class Library）元件庫，相依 `Polhem.Api.Client`，為了與 native 各端共用的值規則相依 `Polhem.UI.Core`，並為了計算欄位的即時預覽相依 `Polhem.Expressions`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（每個 circuit 的 `PolhemApiClient` 經 HTTP 呼叫），或 `UseLocalProvider`（in-process 呼叫，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。

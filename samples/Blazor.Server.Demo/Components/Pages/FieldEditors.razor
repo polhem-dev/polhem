@@ -1,5 +1,6 @@
 @page "/editors"
 @using Polhem.Core.Data
+@using Polhem.Definition
 @using Polhem.Definition.Collections
 @using Polhem.Definition.Forms
 @using Polhem.Definition.Layouts
@@ -14,7 +15,7 @@
     <h2>Every control type</h2>
     <p>
         One <code>FormLayoutPresenter</code> over an in-memory <code>FormDataObject</code>. Switch the form mode,
-        or write a value from code to see the editors refresh. The team field opens a lookup over an in-memory
+        or write a value from code to see the editors refresh. Changing the amount recomputes the amount with tax. The team field opens a lookup over an in-memory
         list (Delete clears it).
     </p>
     <div class="polhem-demo-toolbar">
@@ -58,6 +59,7 @@
 
     private readonly FormLayout _layout;
     private readonly FormDataObject _data;
+    private readonly FormLiveComputation _live;
     private readonly Dictionary<SingleFormMode, FormDataObject> _modeData = new();
     private SingleFormMode _mode = SingleFormMode.Edit;
 
@@ -76,6 +78,16 @@
         _data.SetField("active", bool.TrueString);
         _data.SetField("dept", "IT");
 
+        // FormPage wires live computation itself; a page of its own subscribes the same way. The engine's
+        // guard makes the handler ignore the writes a recompute makes.
+        _live = new FormLiveComputation(schema);
+        _data.FieldValueChanged += (_, e) =>
+        {
+            if (!_live.IsRecomputing)
+                _live.Recompute(e.TableName, e.FieldName, e.Row);
+        };
+        _live.InitializeNewRow("Showcase", _data.MasterRow!);
+
         foreach (var mode in s_modes)
             _modeData[mode] = BuildModeData();
     }
@@ -91,6 +103,13 @@
         fields.Add("name", "Name (TextEdit)", FieldDbType.String).MaxLength = 50;
         var amount = fields.Add("amount", "Amount (NumericEdit)", FieldDbType.Decimal);
         amount.NumberFormat = "N2";
+        fields.Add(new FormField("amount_with_tax", "Amount with 5% tax (computed)", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "amount * 105 / 100",
+            ReadOnly = true,
+        });
         fields.Add("hired", "Hired (DateEdit)", FieldDbType.Date);
         fields.Add("period", "Period (YearMonthEdit)", FieldDbType.String).ControlType = ControlType.YearMonthEdit;
         fields.Add("starts", "Starts (TimeEdit)", FieldDbType.Time);
