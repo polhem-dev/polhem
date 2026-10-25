@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />
+    <!-- The engine tests need a real evaluator; the package itself takes one from its caller. -->
+    <ProjectReference Include="..\..\src\Polhem.Expressions\Polhem.Expressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

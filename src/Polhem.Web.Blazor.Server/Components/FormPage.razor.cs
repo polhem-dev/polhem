@@ -53,6 +53,7 @@ namespace Polhem.Web.Blazor.Server.Components
         private FormLayout? _formLayout;
         private LayoutGrid? _listLayout;
         private FormDataObject? _dataObject;
+        private FormLiveComputation? _liveComputation;
         private DataTable? _listRows;
         private string? _error;
         // A message for the user that leaves the form on screen, unlike `_error`, which replaces it.
@@ -134,6 +135,14 @@ namespace Polhem.Web.Blazor.Server.Components
                 _listLayout = _schema.GetListLayout();
 
                 _dataObject = new FormDataObject(_schema, Client.Form(ProgId));
+                // Live preview recomputes computed fields as the user edits. It is subscribed once because the
+                // data object keeps these events across DataSet replacements on Load, New and Save. Rounding
+                // uses framework-default decimal places; the server rounds authoritatively on save.
+                _liveComputation = new FormLiveComputation(
+                    _schema, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
+                _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
+                _dataObject.RowAdded += OnLiveRowAdded;
                 await ReloadListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -150,6 +159,19 @@ namespace Polhem.Web.Blazor.Server.Components
             => _dataObject?.MasterRow is null
                 ? SingleFormMode.View
                 : _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+
+        // Recomputes the edited row's computed fields. The write-backs re-raise the change event; the
+        // engine's guard makes this handler a no-op for those echoes, so one edit yields one pass. A row
+        // under an edit session takes the results into its proposed version, so Cancel rolls them back.
+        private void OnLiveFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
+        {
+            if (_liveComputation is null || _liveComputation.IsRecomputing) return;
+            _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
+        }
+
+        // Fills a newly added detail row's default-value expressions and computes its computed fields.
+        private void OnLiveRowAdded(object? sender, RowChangedEventArgs e)
+            => _liveComputation?.InitializeNewRow(e.TableName, e.Row);
 
         private async Task ReloadListAsync()
         {
@@ -174,6 +196,11 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.NewAsync().ConfigureAwait(true);
+                // The server's GetNewData has evaluated the default-value expressions, but computed fields
+                // are left to the client. The master row is populated before the event bridge attaches and
+                // raises no RowAdded, so it is initialized here.
+                if (_dataObject.MasterRow is { } master)
+                    _liveComputation?.InitializeNewRow(_dataObject.MasterTable.TableName, master);
                 _isNewRecord = true;
             }).ConfigureAwait(true);
         }

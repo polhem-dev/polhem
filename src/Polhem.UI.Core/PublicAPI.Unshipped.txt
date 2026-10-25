@@ -5,6 +5,13 @@ Polhem.UI.Core.Fields.FieldValueFormatter
 Polhem.UI.Core.Fields.LookupDisplay
 Polhem.UI.Core.Fields.LookupFieldRules
 Polhem.UI.Core.Fields.NumericFieldFormat
+Polhem.UI.Core.FormLiveComputationEngine
+Polhem.UI.Core.FormLiveComputationEngine.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Core.FormLiveComputationEngine.FormLiveComputationEngine(Polhem.Definition.Forms.FormSchema! schema, Polhem.Core.Expressions.IExpressionEvaluator! evaluator, System.Func<string!>! timeZoneProvider, Polhem.Definition.RoundingContext? roundingContext = null) -> void
+Polhem.UI.Core.FormLiveComputationEngine.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Core.FormLiveComputationEngine.IsDegraded.get -> bool
+Polhem.UI.Core.FormLiveComputationEngine.IsRecomputing.get -> bool
+Polhem.UI.Core.FormLiveComputationEngine.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
 const Polhem.UI.Core.Fields.LookupDisplay.Separator = " - " -> string!
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatBindingValue(string? bindingValue) -> string!
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatDisplay(System.DateTime value) -> string!

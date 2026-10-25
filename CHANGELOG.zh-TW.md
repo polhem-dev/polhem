@@ -17,7 +17,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性：** `Polhem.Web.Blazor.Server` 以 `FormLayoutPresenter` 取代 `DynamicForm`。
 - `Polhem.Web.Blazor.Server` 新增欄位編輯器，名稱、契約與行為都和 `Polhem.UI.Avalonia` 的相同；`FormPage` 現在會依表單模式與各欄位的 `AllowEditModes` 決定可否編輯。
 - `Polhem.Web.Blazor.Server` 新增查詢流程：`ButtonEdit`、`LookupDialog`、`LookupPanel`。
-- `Polhem.UI.Core` 新增兩端共用的欄位規則：`FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`。
+- `Polhem.Web.Blazor.Server` 透過新的 `FormLiveComputation` 即時重算計算欄位；其 `FormDataObject` 新增新資料列預設值、資料列事件與資料列編輯暫存。
+- `Polhem.UI.Core` 新增兩端共用的欄位規則：`FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`，以及即時計算引擎 `FormLiveComputationEngine`。
 
 ## [1.9.0] - 2026-10-23
 

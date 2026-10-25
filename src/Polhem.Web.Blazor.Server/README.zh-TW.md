@@ -51,7 +51,8 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 
 - `FormPage` -- 單一程式的清單加主檔記錄編輯，透過共用的 `FormDataObject` 串接。預設經由 `FormDefinitionLoader`
   載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
-  載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。明細資料表不會呈現。
+  載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。使用者編輯時透過 `FormLiveComputation`
+  即時重算計算欄位（`ValueExpression`），小數位數用框架預設值，儲存時由伺服器做權威的四捨五入。明細資料表不會呈現。
 - `DynamicGrid` -- 以 `LayoutGrid` 呈現的純顯示清單；點選資料列時以列 id 觸發 `OnRowSelected`，雙擊時觸發
   `OnRowActivated`，並以高亮顯示 host 透過 `SelectedRowId` 傳入的資料列。
 - `FormLayoutPresenter` -- 渲染 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器，由 `FieldEditorFactory` 依
@@ -74,6 +75,12 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   使用 circuit 的 `PolhemApiClient`，登入時已在其上完成登入。
 - `FormDataObject` -- 由 `FormSchema` 衍生記憶體內 `DataSet`（主檔列 + 明細資料表），提供 `GetField` /
   `SetField`（主檔列或指定的資料列）雙向綁定，值變更時觸發 `FieldValueChanged` 與 `DataSetReplaced`，並透過連接器執行 `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`。
+  新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）並觸發 `RowAdded`；
+  `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發 `RowEditFieldChanged`，
+  提交時才發布。
+- `FormLiveComputation` -- 重算表單的計算欄位並評估新資料列的預設值運算式，規則與 Avalonia 端相同（`Polhem.UI.Core`
+  的 `FormLiveComputationEngine`）。自訂頁面訂閱 `FieldValueChanged` 並呼叫 `Recompute`；時區要傳 circuit 自己的，
+  不可用整個 process 共用的。
 
 ## 相依限制
 

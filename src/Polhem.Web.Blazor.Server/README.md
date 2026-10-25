@@ -57,7 +57,8 @@ decides whether `FormPage` localizes its definitions; see below.
   loads its definitions through a `FormDefinitionLoader` by default, so captions follow the circuit's UI culture
   and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
-  Detail tables are not rendered.
+  It recomputes computed fields (`ValueExpression`) as the user edits, through `FormLiveComputation`, with
+  framework-default decimal places; the server rounds authoritatively on save. Detail tables are not rendered.
 - `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id on a click and
   `OnRowActivated` on a double-click, and highlights the row whose id the host passes as `SelectedRowId`.
 - `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
@@ -83,7 +84,12 @@ decides whether `FormPage` localizes its definitions; see below.
 - `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
   `GetField` / `SetField` (for the master row or a given row) for two-way binding, raises `FieldValueChanged` and
   `DataSetReplaced` when its values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
-  through the connector.
+  through the connector. A new row is seeded with the schema's defaults (a fresh `sys_rowid`, the link to the
+  master, non-null values by type) and raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer
+  the edits of one row, which raise `RowEditFieldChanged` until the commit publishes them.
+- `FormLiveComputation` -- recomputes a form's computed fields and evaluates new-row default expressions, with the
+  same rules as the Avalonia head (`FormLiveComputationEngine` in `Polhem.UI.Core`). A page of its own subscribes
+  `FieldValueChanged` and calls `Recompute`; pass the circuit's time zone, never a process-wide one.
 
 ## Dependency Constraints
 

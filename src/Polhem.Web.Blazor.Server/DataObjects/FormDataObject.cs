@@ -73,6 +73,10 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(schema), notify: false);
         }
 
+        // The signed-in user's IANA time zone id from the circuit's client, or blank (UTC) before sign-in or
+        // without a connector. Read per use: the data object can outlive a sign-in.
+        private string UserTimeZoneId => _connector?.Client.Session.Credentials.UserTimeZoneId ?? string.Empty;
+
         /// <summary>
         /// Gets the underlying dataset that holds the master row and detail tables.
         /// </summary>
@@ -142,6 +146,17 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         public event EventHandler? IsDirtyChanged;
 
         /// <summary>
+        /// Raised after a row is added to any table of the <see cref="DataSet"/> (for example a new detail
+        /// row), once it has been seeded with its defaults.
+        /// </summary>
+        public event EventHandler<RowChangedEventArgs>? RowAdded;
+
+        /// <summary>
+        /// Raised after a row of any table of the <see cref="DataSet"/> is deleted.
+        /// </summary>
+        public event EventHandler<RowChangedEventArgs>? RowDeleted;
+
+        /// <summary>
         /// Raised after the underlying <see cref="DataSet"/> is replaced or reset
         /// (<see cref="LoadAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>,
         /// <see cref="NewAsync"/>, <see cref="InitializeNewMaster"/>). Bound editors re-read their values.
@@ -165,7 +180,8 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
         /// <summary>
         /// Reads the field value from <paramref name="row"/> (master or detail) and renders it as a
-        /// binding string.
+        /// binding string. While the row is in an edit session (<see cref="BeginRowEdit"/>), the proposed
+        /// value is returned.
         /// </summary>
         /// <param name="row">The row to read from; it must belong to <see cref="DataSet"/>.</param>
         /// <param name="fieldName">The field (column) name.</param>

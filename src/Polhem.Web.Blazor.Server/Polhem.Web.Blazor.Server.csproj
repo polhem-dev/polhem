@@ -20,6 +20,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Api.Client\Polhem.Api.Client.csproj" />
     <ProjectReference Include="..\Polhem.UI.Core\Polhem.UI.Core.csproj" />
+    <!-- The default expression evaluator for FormLiveComputation. This head runs on the server, so the
+         engine stays out of the browser; Polhem.UI.Core itself takes the evaluator from its caller. -->
+    <ProjectReference Include="..\Polhem.Expressions\Polhem.Expressions.csproj" />
   </ItemGroup>
 
 </Project>

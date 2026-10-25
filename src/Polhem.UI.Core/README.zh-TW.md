@@ -50,6 +50,9 @@
 
 - `FormValueBinding` -- 在表單 `DataSet` 中的值與 UI 繫結交換的字串之間轉換，並建立表單起始用的空 `DataSet`。
 - `FormDataGuard` -- 表單的 CRUD 呼叫送到連接器前檢查的前置條件；每種失敗在所有 head 都只有一種措辭。
+- `FormLiveComputationEngine` -- 各 head 共用的計算欄位即時重算與新資料列預設值運算式評估。運算引擎
+  （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
+  整個 process 共用的狀態。
 
 ### 各 head 共用的欄位編輯器規則
 
@@ -82,7 +85,7 @@
 
 ## 目錄結構
 
-- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`
+- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `LookupFieldRules`、`LookupDisplay`

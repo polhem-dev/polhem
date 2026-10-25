@@ -156,13 +156,30 @@ Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Row.get -> Syste
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.ApplyLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Data.DataRow? targetRow = null) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.BeginRowEdit(System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.CancelRowEdit(System.Data.DataRow! row) -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.ClearLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow? targetRow = null) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.CommitRowEdit(System.Data.DataRow! row) -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs!>?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetFormField(string! tableName, string! fieldName) -> Polhem.Definition.Forms.FormField?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsDirtyChanged -> System.EventHandler?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.RowAdded -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs!>?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.RowDeleted -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs!>?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs!>?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null, System.Func<string!>? timeZoneProvider = null) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.IsDegraded.get -> bool
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.IsRecomputing.get -> bool
+Polhem.Web.Blazor.Server.DataObjects.FormLiveComputation.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs
+Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs.RowChangedEventArgs(string! tableName, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Server.DataObjects.RowChangedEventArgs.TableName.get -> string!
 abstract Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.RefreshFromSource() -> void
 override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.RefreshFromSource() -> void
 override Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.OnParametersSet() -> void
