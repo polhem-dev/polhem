@@ -145,8 +145,8 @@ the current code:
 
 - **2026-09-27: the UI layer and the public documents exist.** "The UI layer and the public documents are not
   implemented yet" in "Consequences" describes the time of the decision. The Avalonia editor is
-  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor Server form handles `ControlType.TimeEdit` in
-  `src/Polhem.Web.Blazor.Server/Components/DynamicForm.razor` and `DynamicForm.razor.cs`; both normalize input with
+  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor Server editor of the same name is
+  `src/Polhem.Web.Blazor.Server/Controls/Editors/TimeEdit.cs` (it replaced `DynamicForm` on 2026-10-25); both normalize input with
   `ValueUtilities.CTimeString` and store an empty string for an emptied box. The consumer guidance is
   [Temporal Types](../../docs/en/database/temporal-types.md).
 

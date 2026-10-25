@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.Components
 {
     /// <summary>
     /// Code-behind for <c>FormPage.razor</c>. Wires <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>
-    /// (list view) to <see cref="DynamicForm"/> (master detail) via a shared
+    /// (list view) to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> (master record and detail grids) via a shared
     /// <see cref="FormDataObject"/>: selecting a list row drives
     /// <see cref="FormDataObject.LoadAsync"/>; the toolbar buttons fan out to
     /// <see cref="FormDataObject.NewAsync"/> / <c>SaveAsync</c> / <c>DeleteAsync</c>.
@@ -37,6 +37,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// a language switch takes effect on pages opened afterwards.
     /// </para>
     /// <para>
+    /// The record is edited in <see cref="SingleFormMode.Add"/> after New, in <see cref="SingleFormMode.Edit"/>
+    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record,
+    /// so each field's <see cref="LayoutField.AllowEditModes"/> applies.
+    /// </para>
+    /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
     /// <see cref="RequiredFieldCheck"/>. When any is empty the page names them above the toolbar and
     /// sends nothing; the form stays open for the user to fill them in.
@@ -48,12 +53,16 @@ namespace Polhem.Web.Blazor.Server.Components
         private FormLayout? _formLayout;
         private LayoutGrid? _listLayout;
         private FormDataObject? _dataObject;
+        private FormLiveComputation? _liveComputation;
+        private RoundingContext? _roundingContext;
         private DataTable? _listRows;
         private string? _error;
         // A message for the user that leaves the form on screen, unlike `_error`, which replaces it.
         private string? _notice;
         private bool _isInitializing = true;
         private bool _isBusy;
+        // Whether the record on screen came from New and has not been saved yet.
+        private bool _isNewRecord;
 
         /// <summary>
         /// Gets or sets the program identifier (e.g. "Employee"). Drives the
@@ -102,22 +111,17 @@ namespace Polhem.Web.Blazor.Server.Components
 
             try
             {
-                var loader = DefinitionLoader
-                    ?? (Options.UseDefinitionLoader
-                        ? new FormDefinitionLoader(new ClientDefineAccess(Client.System), Options.DefaultLanguage)
-                        : null);
+                var loader = CircuitDefinitions.CreateLoader(Client, Options, DefinitionLoader);
                 // Without a loader both definitions are fetched exactly as stored. With one, both
                 // layers of language and layout are fetched and assembled, so the captions are in the
                 // circuit's language and tenant customization takes effect.
+                _schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, ProgId).ConfigureAwait(true)
+                    ?? throw new InvalidOperationException($"No FormSchema definition found for '{ProgId}'.");
                 if (loader is null)
                 {
-                    var system = Client.System;
-                    _schema = await system
-                        .GetDefineAsync<FormSchema>(DefineType.FormSchema, [ProgId])
-                        .ConfigureAwait(true);
                     // A layout is authored at design time, so a missing one is a configuration
                     // error rather than a cue to derive one from the schema.
-                    _formLayout = await system
+                    _formLayout = await Client.System
                         .GetDefineAsync<FormLayout>(DefineType.FormLayout, [ProgId])
                         .ConfigureAwait(true)
                         ?? throw new InvalidOperationException(
@@ -126,15 +130,22 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
                 else
                 {
-                    _schema = await loader
-                        .GetLocalizedSchemaAsync(ProgId, CultureInfo.CurrentUICulture.Name)
-                        .ConfigureAwait(true);
                     _formLayout = await loader
                         .GetRuntimeLayoutAsync(ProgId, _schema).ConfigureAwait(true);
                 }
                 _listLayout = _schema.GetListLayout();
 
                 _dataObject = new FormDataObject(_schema, Client.Form(ProgId));
+                // Live preview recomputes computed fields as the user edits. It is subscribed once because the
+                // data object keeps these events across DataSet replacements on Load, New and Save. The
+                // rounding context (company decimals, currency and unit masters) aligns previews and the
+                // numeric editors to the server, which still rounds authoritatively on save.
+                _roundingContext = await CircuitDefinitions.LoadRoundingContextAsync(Client, loader).ConfigureAwait(true);
+                _liveComputation = new FormLiveComputation(
+                    _schema, _roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
+                _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
+                _dataObject.RowAdded += OnLiveRowAdded;
                 await ReloadListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -147,6 +158,24 @@ namespace Polhem.Web.Blazor.Server.Components
             }
         }
 
+        private SingleFormMode FormMode
+            => _dataObject?.MasterRow is null
+                ? SingleFormMode.View
+                : _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+
+        // Recomputes the edited row's computed fields. The write-backs re-raise the change event; the
+        // engine's guard makes this handler a no-op for those echoes, so one edit yields one pass. A row
+        // under an edit session takes the results into its proposed version, so Cancel rolls them back.
+        private void OnLiveFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
+        {
+            if (_liveComputation is null || _liveComputation.IsRecomputing) return;
+            _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
+        }
+
+        // Fills a newly added detail row's default-value expressions and computes its computed fields.
+        private void OnLiveRowAdded(object? sender, RowChangedEventArgs e)
+            => _liveComputation?.InitializeNewRow(e.TableName, e.Row);
+
         private async Task ReloadListAsync()
         {
             var connector = Client.Form(ProgId);
@@ -157,13 +186,26 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task OnRowSelectedAsync(Guid rowId)
         {
             if (_dataObject is null) return;
-            await RunGuardedAsync(() => _dataObject.LoadAsync(rowId)).ConfigureAwait(true);
+            await RunGuardedAsync(async () =>
+            {
+                await _dataObject.LoadAsync(rowId).ConfigureAwait(true);
+                _isNewRecord = false;
+            }).ConfigureAwait(true);
         }
 
         private async Task OnNewAsync()
         {
             if (_dataObject is null) return;
-            await RunGuardedAsync(() => _dataObject.NewAsync()).ConfigureAwait(true);
+            await RunGuardedAsync(async () =>
+            {
+                await _dataObject.NewAsync().ConfigureAwait(true);
+                // The server's GetNewData has evaluated the default-value expressions, but computed fields
+                // are left to the client. The master row is populated before the event bridge attaches and
+                // raises no RowAdded, so it is initialized here.
+                if (_dataObject.MasterRow is { } master)
+                    _liveComputation?.InitializeNewRow(_dataObject.MasterTable.TableName, master);
+                _isNewRecord = true;
+            }).ConfigureAwait(true);
         }
 
         private async Task OnSaveAsync()
@@ -184,6 +226,7 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.SaveAsync().ConfigureAwait(true);
+                _isNewRecord = false;
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }
@@ -194,6 +237,7 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.DeleteAsync().ConfigureAwait(true);
+                _isNewRecord = false;
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }

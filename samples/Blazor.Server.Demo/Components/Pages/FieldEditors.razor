@@ -1,0 +1,226 @@
+@page "/editors"
+@using Polhem.Core.Data
+@using Polhem.Definition
+@using Polhem.Definition.Collections
+@using Polhem.Definition.Forms
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Server.Controls
+@using Polhem.Web.Blazor.Server.Controls.Editors
+@using Polhem.Web.Blazor.Server.DataObjects
+
+@* The cases mirror the Avalonia DemoCenter's "Control Types" and "FormMode States" modules, so the same
+   behavior can be compared head to head. Everything here is in memory; no backend is called. *@
+
+<section class="polhem-demo-section">
+    <h2>Every control type</h2>
+    <p>
+        One <code>FormLayoutPresenter</code> over an in-memory <code>FormDataObject</code>. Switch the form mode,
+        or write a value from code to see the editors refresh. Changing the amount recomputes the amount with tax. The team field opens a lookup over an in-memory
+        list (Delete clears it).
+    </p>
+    <div class="polhem-demo-toolbar">
+        @foreach (var mode in s_modes)
+        {
+            <button type="button" disabled="@(mode == _mode)" @onclick="() => _mode = mode">@mode</button>
+        }
+        <button type="button" @onclick="WriteFromCode">Write the name from code</button>
+    </div>
+    <FormLayoutPresenter Layout="_layout" DataObject="_data" FormMode="_mode" IdPrefix="all" />
+</section>
+
+<section class="polhem-demo-section">
+    <h2>The three form modes, with AllowEditModes</h2>
+    <p>
+        name: All · code: Add only · dept: Edit only · audit: None. Each column is pinned to one mode through a
+        <code>FormScope</code>.
+    </p>
+    <div class="polhem-demo-columns">
+        @foreach (var mode in s_modes)
+        {
+            <div class="polhem-demo-card">
+                <h3>@mode</h3>
+                <FormScope DataObject="_modeData[mode]" FormMode="mode">
+                    <label>name</label>
+                    <TextEdit LayoutField="@(Field("name", FormEditModes.All))" />
+                    <label>code</label>
+                    <TextEdit LayoutField="@(Field("code", FormEditModes.Add))" />
+                    <label>dept</label>
+                    <DropDownEdit LayoutField="@(Field("dept", FormEditModes.Edit))" />
+                    <label>audit</label>
+                    <TextEdit LayoutField="@(Field("audit", FormEditModes.None))" />
+                </FormScope>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="polhem-demo-section">
+    <h2>Master and detail</h2>
+    <p>
+        An order with its lines, mirroring the Avalonia DemoCenter's "Master-Detail" module. The line amount is
+        computed from quantity and price. Switch the detail editing model, or the form mode.
+    </p>
+    <div class="polhem-demo-toolbar">
+        @foreach (var mode in s_detailModes)
+        {
+            <button type="button" disabled="@(mode == _detailMode)" @onclick="() => _detailMode = mode">@mode</button>
+        }
+        @foreach (var mode in s_modes)
+        {
+            <button type="button" disabled="@(mode == _orderMode)" @onclick="() => _orderMode = mode">@mode</button>
+        }
+    </div>
+    <FormLayoutPresenter Layout="_orderLayout" DataObject="_order" FormMode="_orderMode" DetailEditMode="_detailMode" IdPrefix="order" />
+</section>
+
+@code {
+    private static readonly GridEditMode[] s_detailModes = [GridEditMode.InCell, GridEditMode.EditForm];
+    private static readonly SingleFormMode[] s_modes = [SingleFormMode.View, SingleFormMode.Add, SingleFormMode.Edit];
+
+    private readonly FormLayout _layout;
+    private readonly FormDataObject _data;
+    private readonly FormLiveComputation _live;
+    private readonly Dictionary<SingleFormMode, FormDataObject> _modeData = new();
+    private SingleFormMode _mode = SingleFormMode.Edit;
+    private readonly FormLayout _orderLayout;
+    private readonly FormDataObject _order;
+    private readonly FormLiveComputation _orderLive;
+    private GridEditMode _detailMode = GridEditMode.InCell;
+    private SingleFormMode _orderMode = SingleFormMode.Edit;
+
+    public FieldEditors()
+    {
+        var schema = BuildAllTypesSchema();
+        _layout = FormLayoutGenerator.Generate(schema, "default");
+        _data = new FormDataObject(schema);
+        _data.InitializeNewMaster();
+        _data.SetField("name", "Alice Chen");
+        _data.SetField("amount", "1234.5");
+        _data.SetField("hired", "2024-04-01");
+        _data.SetField("period", "2026-03");
+        _data.SetField("starts", "08:30");
+        _data.SetField("updated", "2026-10-25T14:30:00");
+        _data.SetField("active", bool.TrueString);
+        _data.SetField("dept", "IT");
+
+        // FormPage wires live computation itself; a page of its own subscribes the same way. The engine's
+        // guard makes the handler ignore the writes a recompute makes.
+        _live = new FormLiveComputation(schema);
+        _data.FieldValueChanged += (_, e) =>
+        {
+            if (!_live.IsRecomputing)
+                _live.Recompute(e.TableName, e.FieldName, e.Row);
+        };
+        _live.InitializeNewRow("Showcase", _data.MasterRow!);
+
+        foreach (var mode in s_modes)
+            _modeData[mode] = BuildModeData();
+
+        var orderSchema = BuildOrderSchema();
+        _orderLayout = FormLayoutGenerator.Generate(orderSchema, "default");
+        _order = new FormDataObject(orderSchema);
+        _orderLive = new FormLiveComputation(orderSchema);
+        // The wiring FormPage does: recompute on edits, also inside the edit form's session, and
+        // initialize the rows the grid adds.
+        void Recompute(object? sender, FieldValueChangedEventArgs e)
+        {
+            if (!_orderLive.IsRecomputing)
+                _orderLive.Recompute(e.TableName, e.FieldName, e.Row);
+        }
+        _order.FieldValueChanged += Recompute;
+        _order.RowEditFieldChanged += Recompute;
+        _order.RowAdded += (_, e) => _orderLive.InitializeNewRow(e.TableName, e.Row);
+        _order.InitializeNewMaster();
+        _order.SetField("order_no", "SO-0001");
+        var lines = _order.DataSet.Tables["OrderLine"]!;
+        foreach (var (item, qty, price) in new[] { ("Bolt", 10m, 0.25m), ("Nut", 20m, 0.1m) })
+        {
+            var line = lines.NewRow();
+            line["item"] = item;
+            line["qty"] = qty;
+            line["price"] = price;
+            lines.Rows.Add(line);
+        }
+    }
+
+    private static LayoutField Field(string name, FormEditModes modes) => new() { FieldName = name, AllowEditModes = modes };
+
+    private void WriteFromCode() => _data.SetField("name", "Written at " + DateTime.Now.ToLongTimeString());
+
+    private static FormSchema BuildAllTypesSchema()
+    {
+        var schema = new FormSchema("Showcase", "Showcase");
+        var fields = schema.Tables!.Add("Showcase", "Showcase").Fields!;
+        fields.Add("name", "Name (TextEdit)", FieldDbType.String).MaxLength = 50;
+        var amount = fields.Add("amount", "Amount (NumericEdit)", FieldDbType.Decimal);
+        amount.NumberFormat = "N2";
+        fields.Add(new FormField("amount_with_tax", "Amount with 5% tax (computed)", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "amount * 105 / 100",
+            ReadOnly = true,
+        });
+        fields.Add("hired", "Hired (DateEdit)", FieldDbType.Date);
+        fields.Add("period", "Period (YearMonthEdit)", FieldDbType.String).ControlType = ControlType.YearMonthEdit;
+        fields.Add("starts", "Starts (TimeEdit)", FieldDbType.Time);
+        fields.Add("updated", "Updated (DateTimeEdit)", FieldDbType.DateTime);
+        fields.Add("active", "Active (CheckEdit)", FieldDbType.Boolean);
+        var team = fields.Add("team_rowid", "Team (ButtonEdit, lookup)", FieldDbType.Guid);
+        team.RelationProgId = DemoLookupSource.ProgId;
+        team.RelationFieldMappings!.Add("sys_id", "ref_team_id");
+        team.RelationFieldMappings.Add("sys_name", "ref_team_name");
+        fields.Add("ref_team_id", "Team ID", FieldDbType.String).Visible = false;
+        fields.Add("ref_team_name", "Team Name", FieldDbType.String).Visible = false;
+        var dept = fields.Add("dept", "Department (DropDownEdit)", FieldDbType.String);
+        dept.ControlType = ControlType.DropDownEdit;
+        dept.ListItems!.Add("HR", "Human Resources");
+        dept.ListItems.Add("IT", "Information Technology");
+        fields.Add("notes", "Notes (MemoEdit)", FieldDbType.Text);
+        return schema;
+    }
+
+    private static FormSchema BuildOrderSchema()
+    {
+        var schema = new FormSchema("Order", "Order");
+        var master = schema.Tables!.Add("Order", "Order").Fields!;
+        master.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        master.Add("order_no", "Order No", FieldDbType.String);
+        master.Add("order_date", "Order Date", FieldDbType.Date);
+        var lines = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        lines.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("sys_master_rowid", "Order", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("item", "Item", FieldDbType.String) { Required = true });
+        lines.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+        lines.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice, NumberFormat = "N2" });
+        lines.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "qty * price",
+            ReadOnly = true,
+        });
+        return schema;
+    }
+
+    private static FormDataObject BuildModeData()
+    {
+        var schema = new FormSchema("Demo", "Demo");
+        var fields = schema.Tables!.Add("Demo", "Demo").Fields!;
+        fields.Add("name", "Name", FieldDbType.String);
+        fields.Add("code", "Code", FieldDbType.String);
+        var dept = fields.Add("dept", "Department", FieldDbType.String);
+        dept.ListItems!.Add("HR", "Human Resources");
+        dept.ListItems.Add("IT", "Information Technology");
+        dept.ListItems.Add("FIN", "Finance");
+        fields.Add("audit", "Audit", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("name", "Alice Chen");
+        data.SetField("code", "EMP-001");
+        data.SetField("dept", "IT");
+        data.SetField("audit", "system");
+        return data;
+    }
+}

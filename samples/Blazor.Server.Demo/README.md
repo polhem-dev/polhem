@@ -25,7 +25,7 @@ On first run:
 3. After a successful login, `<FormPage ProgId="Staff" />` renders:
    - Top toolbar: `New` / `Save` / `Delete`
    - Middle: staff grid (`DynamicGrid`, columns from `FormSchema.ListFields`)
-   - Bottom: edit form (`DynamicForm`) appears when a row is selected
+   - Bottom: edit form (`FormLayoutPresenter`) appears when a row is selected
 4. Click `New` → edit fields → `Save`; the new staff record appears in the grid
 
 ## What this maps to in the library
@@ -36,7 +36,7 @@ On first run:
 | Entering the company | `SystemApiConnector.EnterCompanyAsync` |
 | Signed-in state on the page | `PolhemAccessTokenProvider` |
 | Staff grid rendering | `DynamicGrid` + `FormSchema.GetListLayout()` |
-| Staff edit form | `DynamicForm` + the stored `FormLayout` definition (`Define/FormLayout/Staff.FormLayout.xml`) |
+| Staff edit form | `FormLayoutPresenter` + the stored `FormLayout` definition (`Define/FormLayout/Staff.FormLayout.xml`) |
 | Grid + form integration | `FormPage` |
 | CRUD through Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local in-process dispatch | `PolhemBlazorOptions.UseLocalProvider()` |

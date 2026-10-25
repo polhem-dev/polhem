@@ -13,8 +13,22 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1.10.0.md)
+
+- **Breaking:** `Polhem.Web.Blazor.Server` replaces `DynamicForm` with `FormLayoutPresenter`.
 - **Breaking:** `IExpressionEvaluator` gains `Validate`, which parses an expression against variable types without
   evaluating it; an evaluator implemented outside the framework has to implement it.
+- `Polhem.Web.Blazor.Server` gains field editors with the same names, contract and behavior as those of
+  `Polhem.UI.Avalonia`, and `FormPage` now follows the form mode and each field's `AllowEditModes`.
+- `Polhem.Web.Blazor.Server` gains the lookup flow: `ButtonEdit`, `LookupDialog` and `LookupPanel`.
+- `Polhem.Web.Blazor.Server` recomputes computed fields live through the new `FormLiveComputation`, and its
+  `FormDataObject` gains new-row defaults, row events and buffered row edit sessions.
+- `Polhem.Web.Blazor.Server` renders detail tables: `GridControl` (in-cell or edit-form editing), `RowEditPanel`
+  and `RowEditDialog`, shown by `FormLayoutPresenter` and `FormPage`, which also previews numbers with the
+  company, currency and unit rounding context.
+- `Polhem.UI.Core` gains the field rules both heads share: `FieldEditRules`, `FieldValueFormatter`,
+  `NumericFieldFormat`, `DateTimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules` and
+  the live computation engine `FormLiveComputationEngine`.
 - DefineEditor lists the FormSchema expressions that would fail at run time, such as `amount * 1.05` on a decimal
   field, when it validates or saves a form, through the new `FormExpressionCalculator.ValidateExpressions`.
 

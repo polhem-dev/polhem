@@ -56,6 +56,27 @@ application's own data through its own implementation of `IFormApiConnector`.
   builds the empty `DataSet` a form starts from.
 - `FormDataGuard` -- the preconditions a form's CRUD calls check before they reach the connector, with one wording of
   each failure for every head.
+- `FormLiveComputationEngine` -- the live recomputation of computed fields and new-row default expressions that
+  every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
+  user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
+
+### Field Editor Rules Shared by Every Head
+
+`Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` both use, so the
+two heads behave the same:
+
+- `FieldEditRules` -- whether a field accepts input, from the form mode, the layout read-only flag and
+  `AllowEditModes`.
+- `FieldValueFormatter` -- the display of a value in the user's culture, for form fields and grid cells.
+- `NumericFieldFormat` -- number format resolution (currency and unit decimals included), display, input parsing and
+  the value written back.
+- `DateTimeFieldFormat` -- the display, input and binding-string rules of a date-and-time field.
+- `GridCellFormatter` -- the text a grid cell shows: list item text, instants, Booleans, per-row currency and unit
+  decimals, and the composed display fields of a lookup column.
+- `FieldCaptionRules` -- the caption convention: a read-only grid header is parenthesised, a required caption is
+  highlighted, and read-only wins.
+- `LookupFieldRules`, `LookupDisplay` -- whether a field looks up, which program it opens, which fields it shows and
+  how they are joined, and how a selection is written back or cleared.
 
 ### Permission Capabilities
 
@@ -79,7 +100,9 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 ## Directory Structure
 
-- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`
+- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
+- `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
+  `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

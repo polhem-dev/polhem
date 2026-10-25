@@ -44,12 +44,23 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly Guid s_aliceRowId = new("aaaaaaaa-0000-0000-0000-000000000001");
         private static readonly Guid s_bobRowId = new("aaaaaaaa-0000-0000-0000-000000000002");
 
-        private static FormSchema BuildSchema(bool nameRequired = false)
+        private static FormSchema BuildSchema(bool nameRequired = false, bool withComputed = false)
         {
             var schema = new FormSchema(TestProgId, TestProgId) { ListFields = "emp_name" };
             var master = schema.Tables!.Add(TestProgId, TestProgId);
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
             master.Fields.Add("emp_name", "Name", FieldDbType.String).Required = nameRequired;
+            if (withComputed)
+            {
+                master.Fields!.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice });
+                master.Fields.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+                master.Fields.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
+                {
+                    NumberKind = NumberKind.Amount,
+                    ValueExpression = "price * qty",
+                    ReadOnly = true,
+                });
+            }
             return schema;
         }
 
@@ -157,6 +168,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                     DefineType.FormSchema => _schema,
                     DefineType.FormLayout => _hasLayout ? FormLayoutGenerator.Generate(_schema, TestProgId) : null,
                     DefineType.Language => Language(request.Keys),
+                    // No currency or unit master is deployed, which a real server answers with an empty
+                    // definition; the page then previews with framework-default decimals.
+                    DefineType.CurrencySettings or DefineType.UnitSettings => null,
                     _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
                 };
                 return new GetDefineResponse { Xml = stored is null ? string.Empty : XmlCodec.Serialize(stored) };
@@ -174,9 +188,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private FakeBackend? _backend;
 
         private FakeBackend RegisterBackend(bool hasLayout = true, bool nameRequired = false,
-            LanguageResource? zhTw = null, bool useDefinitionLoader = true)
+            LanguageResource? zhTw = null, bool useDefinitionLoader = true, bool withComputed = false)
         {
-            _backend = new FakeBackend(BuildSchema(nameRequired), hasLayout, zhTw);
+            _backend = new FakeBackend(BuildSchema(nameRequired, withComputed), hasLayout, zhTw);
             Services.AddPolhemBlazor(options =>
             {
                 options.UseLocalProvider();
@@ -443,6 +457,38 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             cut.WaitForAssertion(() => Assert.Single(form.Saved));
             Assert.Empty(cut.FindAll("div.polhem-form-page__notice"));
+        }
+
+        [Fact]
+        [DisplayName("Editing a source field recomputes the computed field on the open record")]
+        public void Edit_SourceField_RecomputesComputedField()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend(withComputed: true);
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
+
+            cut.Find("#polhem-form-price").Change("10");
+            cut.Find("#polhem-form-qty").Change("3");
+
+            cut.WaitForAssertion(() => Assert.StartsWith("30", cut.Find("#polhem-form-amount").GetAttribute("value"), StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A loaded record is edited in Edit mode and the page shows View mode without a record")]
+        public void FormMode_FollowsRecordState()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend();
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            Assert.True(cut.Find("#polhem-form-emp_name").HasAttribute("readonly"));
+
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.False(cut.Find("#polhem-form-emp_name").HasAttribute("readonly")));
         }
     }
 }

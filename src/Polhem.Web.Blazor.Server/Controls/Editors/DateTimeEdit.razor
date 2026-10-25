@@ -1,0 +1,24 @@
+@namespace Polhem.Web.Blazor.Server.Controls.Editors
+@inherits TextEdit
+
+@if (IsEditable)
+{
+    @* Not @bind: on a datetime-local input it binds a DateTime, and the browser only ever reports a
+       complete value or an empty one, so there is no rejected input to push back. *@
+    <input @attributes="AdditionalAttributes"
+           id="@Id"
+           type="datetime-local"
+           step="1"
+           class="@BuildCssClass(ModifierClass)"
+           value="@Text"
+           @onchange="e => CommitText(e.Value?.ToString())" />
+}
+else
+{
+    <input @attributes="AdditionalAttributes"
+           id="@Id"
+           type="text"
+           class="@BuildCssClass(ModifierClass)"
+           readonly
+           value="@ReadOnlyText" />
+}
