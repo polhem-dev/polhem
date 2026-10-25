@@ -52,12 +52,19 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 - `FormPage` -- 單一程式的清單加主檔記錄編輯，透過共用的 `FormDataObject` 串接。預設經由 `FormDefinitionLoader`
   載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
   載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。使用者編輯時透過 `FormLiveComputation`
-  即時重算計算欄位（`ValueExpression`），小數位數用框架預設值，儲存時由伺服器做權威的四捨五入。明細資料表不會呈現。
+  即時重算計算欄位（`ValueExpression`）；部署了幣別與單位主檔時，數值預覽會依登入公司的小數位數與這些主檔決定，儲存時由
+  伺服器做權威的四捨五入。明細資料表以 grid 呈現在主檔欄位下方。
 - `DynamicGrid` -- 以 `LayoutGrid` 呈現的純顯示清單；點選資料列時以列 id 觸發 `OnRowSelected`，雙擊時觸發
   `OnRowActivated`，並以高亮顯示 host 透過 `SelectedRowId` 傳入的資料列。
 - `FormLayoutPresenter` -- 渲染 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器，由 `FieldEditorFactory` 依
   `ControlType` 選擇。`FormMode` 參數決定哪些編輯器可輸入，並依各欄位的 `ReadOnly` 與 `AllowEditModes`。
-  不呈現明細 grid。
+  版面的每個明細資料表接著以 `GridControl` 呈現，編輯模式依 `DetailEditMode`；設定 `IsCompact` 時改用編輯表單
+  （伺服器無法量測瀏覽器寬度，所以由 host 決定）。
+- `GridControl` -- 呈現 `FormDataObject` 的明細資料表，或 list 模式下由呼叫端提供的 `DataTable`，編輯規則與 Avalonia 的
+  `GridControl` 相同：表單模式與版面的 `AllowEditModes`、`AllowActions` 允許時顯示 Add / Edit / Delete 工具列；
+  `EditMode` 為 `InCell`（每個可編輯的儲存格顯示欄位編輯器）或 `EditForm`（在 `RowEditDialog` 編輯資料列，它是包著
+  `RowEditPanel` 的強制回應視窗，按 OK 前都只暫存編輯）。儲存格文字依共用的 `GridCellFormatter`；唯讀欄位的表頭加括號，
+  必填欄位的表頭帶有 `polhem-grid__header--required`。
 - 欄位編輯器（`Polhem.Web.Blazor.Server.Controls.Editors`）-- `TextEdit`、`MemoEdit`、`NumericEdit`、`TimeEdit`、
   `DateTimeEdit`、`DateEdit`、`YearMonthEdit`、`CheckEdit`、`DropDownEdit`、`ButtonEdit`，名稱、契約（`IFieldEditor`）與行為
   都和 `Polhem.UI.Avalonia` 的欄位編輯器相同。編輯器可透過 `DataObject` 參數、外層的 `FormScope` 或明確呼叫

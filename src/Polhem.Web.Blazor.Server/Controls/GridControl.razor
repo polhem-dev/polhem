@@ -1,0 +1,83 @@
+@namespace Polhem.Web.Blazor.Server.Controls
+@using System.Data
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Fields
+@using Polhem.Web.Blazor.Server.Controls.Editors
+
+<div class="polhem-grid">
+    @if (ShowToolbar)
+    {
+        @* The glyphs are the Avalonia GridControl's, embedded so both heads show the same toolbar. *@
+        <div class="polhem-grid__toolbar">
+            @if (Actions.HasFlag(GridControlAllowActions.Add))
+            {
+                <button type="button" class="polhem-grid__button polhem-grid__button--add" title="@Text(PolhemUIText.Add)"
+                        aria-label="@Text(PolhemUIText.Add)" disabled="@(!HasData)" @onclick="OnAddClicked">
+                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="@AddIconGeometry" /></svg>
+                </button>
+            }
+            @if (EditMode == GridEditMode.EditForm && Actions.HasFlag(GridControlAllowActions.Edit))
+            {
+                <button type="button" class="polhem-grid__button polhem-grid__button--edit" title="@Text(PolhemUIText.Edit)"
+                        aria-label="@Text(PolhemUIText.Edit)" disabled="@(!HasData)" @onclick="EditSelectedRow">
+                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="@EditIconGeometry" /></svg>
+                </button>
+            }
+            @if (Actions.HasFlag(GridControlAllowActions.Delete))
+            {
+                <button type="button" class="polhem-grid__button polhem-grid__button--delete" title="@Text(PolhemUIText.Delete)"
+                        aria-label="@Text(PolhemUIText.Delete)" disabled="@(!HasData)" @onclick="DeleteSelectedRow">
+                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="@DeleteIconGeometry" /></svg>
+                </button>
+            }
+        </div>
+    }
+    <table class="polhem-grid__table">
+        <thead>
+            <tr>
+                @foreach (var column in VisibleColumns)
+                {
+                    <th class="@HeaderClass(column)" style="@ColumnStyle(column)">@FieldCaptionRules.FormatCaption(column.Caption, column.ReadOnly)</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in VisibleRows)
+            {
+                var current = row;
+                <tr class="@RowClass(current)" @onclick="() => SelectRowAsync(current)" @ondblclick="() => ActivateRow(current)">
+                    @foreach (var column in VisibleColumns)
+                    {
+                        @if (IsInCellEditor(column))
+                        {
+                            <td class="polhem-grid__cell polhem-grid__cell--editor">
+                                <DynamicComponent Type="FieldEditorFactory.GetEditorType(column.ControlType)"
+                                                  Parameters="BuildEditorParameters(column, current)" />
+                            </td>
+                        }
+                        else if (column.ControlType == ControlType.CheckEdit)
+                        {
+                            <td class="polhem-grid__cell polhem-grid__cell--check">
+                                <input type="checkbox" disabled checked="@IsChecked(current, column)" aria-label="@column.Caption" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="polhem-grid__cell">@FormatCell(current, column)</td>
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (_editingRow is not null && BoundDataObject is not null && Layout is not null)
+{
+    <RowEditDialog DataObject="BoundDataObject"
+                   Layout="Layout"
+                   Row="_editingRow"
+                   Compact="Compact"
+                   EditCommitted="OnEditCommitted"
+                   EditCancelled="OnEditCancelled" />
+}

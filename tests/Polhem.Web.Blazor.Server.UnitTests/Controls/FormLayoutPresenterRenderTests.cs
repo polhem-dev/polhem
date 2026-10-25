@@ -62,5 +62,24 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 
             Assert.Empty(cut.FindAll("legend.polhem-form-layout__section-caption"));
         }
+
+        [Fact]
+        [DisplayName("FormLayoutPresenter renders a detail grid after the sections, in edit-form mode when compact")]
+        public void FormLayoutPresenter_Details_RenderGrid()
+        {
+            var schema = OrderTestData.BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            var dataObject = OrderTestData.BuildOrder(schema);
+
+            var cut = Render<FormLayoutPresenter>(p => p
+                .Add(c => c.Layout, layout)
+                .Add(c => c.DataObject, dataObject)
+                .Add(c => c.IsCompact, true));
+
+            Assert.Equal("Lines", cut.Find("legend.polhem-form-layout__detail-caption").TextContent);
+            Assert.Equal(2, cut.FindAll("tr.polhem-grid__row").Count);
+            Assert.Empty(cut.FindAll("td.polhem-grid__cell--editor"));
+            Assert.Single(cut.FindAll(".polhem-grid__button--edit"));
+        }
     }
 }

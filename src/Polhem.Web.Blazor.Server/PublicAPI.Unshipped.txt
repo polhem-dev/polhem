@@ -125,6 +125,35 @@ Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.set -> voi
 Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.NumericEdit() -> void
 Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Compact.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Compact.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.EditCancelled.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.EditCommitted.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Layout.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.Row.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.RowEditDialog() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Dispose() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCancelled.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCommitted.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Layout.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Row.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Row.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.RowEditPanel() -> void
 Polhem.Web.Blazor.Server.Controls.Editors.TextEdit
 Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.CommitText(string? text) -> void
 Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLength.get -> int
@@ -140,15 +169,55 @@ Polhem.Web.Blazor.Server.Controls.Editors.YearMonthEdit.YearMonthEdit() -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.Web.Blazor.Server.Controls.GridEditMode
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.set -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.set -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.get -> string!
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact.get -> bool
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact.set -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.get -> Polhem.Definition.Layouts.FormLayout?
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.set -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.RoundingContext?
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl
+Polhem.Web.Blazor.Server.Controls.GridControl.AddRow() -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.GridControl.AllowEdit.get -> bool?
+Polhem.Web.Blazor.Server.Controls.GridControl.AllowEdit.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.Compact.get -> bool
+Polhem.Web.Blazor.Server.Controls.GridControl.Compact.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Web.Blazor.Server.Controls.GridControl.CurrencySettings.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.GridControl.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.DataTable.get -> System.Data.DataTable?
+Polhem.Web.Blazor.Server.Controls.GridControl.DataTable.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.DefaultCurrencyCode.get -> string!
+Polhem.Web.Blazor.Server.Controls.GridControl.DefaultCurrencyCode.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.DeleteSelectedRow() -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.Dispose() -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.EditMode.get -> Polhem.Web.Blazor.Server.Controls.GridEditMode
+Polhem.Web.Blazor.Server.Controls.GridControl.EditMode.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.EndEdit() -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.FormTable.get -> Polhem.Definition.Forms.FormTable?
+Polhem.Web.Blazor.Server.Controls.GridControl.FormTable.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.GridControl() -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Server.Controls.GridControl.Layout.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.RefreshRows() -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.RowSelected.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
+Polhem.Web.Blazor.Server.Controls.GridControl.RowSelected.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.SelectedRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.GridControl.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.TableName.get -> string!
+Polhem.Web.Blazor.Server.Controls.GridControl.TableName.set -> void
+Polhem.Web.Blazor.Server.Controls.GridControl.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Web.Blazor.Server.Controls.GridControl.UnitSettings.set -> void
+Polhem.Web.Blazor.Server.Controls.GridEditMode
+Polhem.Web.Blazor.Server.Controls.GridEditMode.EditForm = 1 -> Polhem.Web.Blazor.Server.Controls.GridEditMode
+Polhem.Web.Blazor.Server.Controls.GridEditMode.InCell = 0 -> Polhem.Web.Blazor.Server.Controls.GridEditMode
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldName.get -> string!
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row) -> void

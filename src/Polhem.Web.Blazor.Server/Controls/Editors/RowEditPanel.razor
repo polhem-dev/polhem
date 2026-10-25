@@ -1,0 +1,22 @@
+@namespace Polhem.Web.Blazor.Server.Controls.Editors
+@using Polhem.Definition.Language
+
+@if (_row is not null && DataObject is not null && Layout is not null)
+{
+    <div class="polhem-row-edit-panel">
+        <div class="polhem-row-edit-panel__fields" style="@FieldsStyle">
+            @foreach (var column in EnumerateVisibleColumns())
+            {
+                <div class="polhem-row-edit-panel__field">
+                    <label class="polhem-row-edit-panel__label" for="@InputId(column)">@column.Caption</label>
+                    <DynamicComponent Type="FieldEditorFactory.GetEditorType(column.ControlType)"
+                                      Parameters="BuildEditorParameters(column)" />
+                </div>
+            }
+        </div>
+        <div class="polhem-row-edit-panel__buttons">
+            <button type="button" class="polhem-row-edit-panel__ok" @onclick="CommitAsync">@Text(PolhemUIText.Ok)</button>
+            <button type="button" class="polhem-row-edit-panel__cancel" @onclick="CancelAsync">@Text(PolhemUIText.Cancel)</button>
+        </div>
+    </div>
+}

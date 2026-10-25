@@ -72,3 +72,22 @@ body {
 .polhem-lookup-panel__buttons button, .polhem-lookup-panel__search-button { padding: 4px 14px; }
 .polhem-dynamic-grid__row { cursor: pointer; }
 .polhem-dynamic-grid__row--selected { background: #ddf4ff; }
+
+.polhem-form-layout__label--required { color: #2563eb; }
+.polhem-form-layout__detail { border: 0; margin: 12px 0 0; padding: 0; }
+.polhem-form-layout__detail-caption { font-weight: 600; margin-bottom: 6px; }
+.polhem-grid__toolbar { display: flex; gap: 4px; margin-bottom: 4px; }
+.polhem-grid__button { padding: 4px 6px; line-height: 0; cursor: pointer; }
+.polhem-grid__table { width: 100%; border-collapse: collapse; }
+.polhem-grid__header { text-align: left; font-weight: 600; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid #d0d7de; }
+.polhem-grid__header--required { color: #2563eb; }
+.polhem-grid__row { cursor: pointer; }
+.polhem-grid__row--selected { background: #ddf4ff; }
+.polhem-grid__cell { padding: 4px 8px; border-bottom: 1px solid #eaeef2; }
+.polhem-grid__cell--editor { padding: 2px 4px; }
+.polhem-row-edit-dialog__card { background: white; border-radius: 6px; padding: 16px; width: 560px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-row-edit-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-row-edit-panel__field { display: flex; flex-direction: column; gap: 4px; }
+.polhem-row-edit-panel__label { font-size: 0.85rem; color: #57606a; }
+.polhem-row-edit-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.polhem-row-edit-panel__buttons button { padding: 4px 14px; }

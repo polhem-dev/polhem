@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.Components
 {
     /// <summary>
     /// Code-behind for <c>FormPage.razor</c>. Wires <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>
-    /// (list view) to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> (master record) via a shared
+    /// (list view) to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> (master record and detail grids) via a shared
     /// <see cref="FormDataObject"/>: selecting a list row drives
     /// <see cref="FormDataObject.LoadAsync"/>; the toolbar buttons fan out to
     /// <see cref="FormDataObject.NewAsync"/> / <c>SaveAsync</c> / <c>DeleteAsync</c>.
@@ -54,6 +54,7 @@ namespace Polhem.Web.Blazor.Server.Components
         private LayoutGrid? _listLayout;
         private FormDataObject? _dataObject;
         private FormLiveComputation? _liveComputation;
+        private RoundingContext? _roundingContext;
         private DataTable? _listRows;
         private string? _error;
         // A message for the user that leaves the form on screen, unlike `_error`, which replaces it.
@@ -136,10 +137,12 @@ namespace Polhem.Web.Blazor.Server.Components
 
                 _dataObject = new FormDataObject(_schema, Client.Form(ProgId));
                 // Live preview recomputes computed fields as the user edits. It is subscribed once because the
-                // data object keeps these events across DataSet replacements on Load, New and Save. Rounding
-                // uses framework-default decimal places; the server rounds authoritatively on save.
+                // data object keeps these events across DataSet replacements on Load, New and Save. The
+                // rounding context (company decimals, currency and unit masters) aligns previews and the
+                // numeric editors to the server, which still rounds authoritatively on save.
+                _roundingContext = await CircuitDefinitions.LoadRoundingContextAsync(Client, loader).ConfigureAwait(true);
                 _liveComputation = new FormLiveComputation(
-                    _schema, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                    _schema, _roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
                 _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
                 _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
                 _dataObject.RowAdded += OnLiveRowAdded;
