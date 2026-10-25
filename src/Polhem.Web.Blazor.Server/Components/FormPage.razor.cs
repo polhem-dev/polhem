@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.Components
 {
     /// <summary>
     /// Code-behind for <c>FormPage.razor</c>. Wires <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>
-    /// (list view) to <see cref="DynamicForm"/> (master detail) via a shared
+    /// (list view) to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> (master record) via a shared
     /// <see cref="FormDataObject"/>: selecting a list row drives
     /// <see cref="FormDataObject.LoadAsync"/>; the toolbar buttons fan out to
     /// <see cref="FormDataObject.NewAsync"/> / <c>SaveAsync</c> / <c>DeleteAsync</c>.
@@ -37,6 +37,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// a language switch takes effect on pages opened afterwards.
     /// </para>
     /// <para>
+    /// The record is edited in <see cref="SingleFormMode.Add"/> after New, in <see cref="SingleFormMode.Edit"/>
+    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record,
+    /// so each field's <see cref="LayoutField.AllowEditModes"/> applies.
+    /// </para>
+    /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
     /// <see cref="RequiredFieldCheck"/>. When any is empty the page names them above the toolbar and
     /// sends nothing; the form stays open for the user to fill them in.
@@ -54,6 +59,8 @@ namespace Polhem.Web.Blazor.Server.Components
         private string? _notice;
         private bool _isInitializing = true;
         private bool _isBusy;
+        // Whether the record on screen came from New and has not been saved yet.
+        private bool _isNewRecord;
 
         /// <summary>
         /// Gets or sets the program identifier (e.g. "Employee"). Drives the
@@ -147,6 +154,11 @@ namespace Polhem.Web.Blazor.Server.Components
             }
         }
 
+        private SingleFormMode FormMode
+            => _dataObject?.MasterRow is null
+                ? SingleFormMode.View
+                : _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+
         private async Task ReloadListAsync()
         {
             var connector = Client.Form(ProgId);
@@ -157,13 +169,21 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task OnRowSelectedAsync(Guid rowId)
         {
             if (_dataObject is null) return;
-            await RunGuardedAsync(() => _dataObject.LoadAsync(rowId)).ConfigureAwait(true);
+            await RunGuardedAsync(async () =>
+            {
+                await _dataObject.LoadAsync(rowId).ConfigureAwait(true);
+                _isNewRecord = false;
+            }).ConfigureAwait(true);
         }
 
         private async Task OnNewAsync()
         {
             if (_dataObject is null) return;
-            await RunGuardedAsync(() => _dataObject.NewAsync()).ConfigureAwait(true);
+            await RunGuardedAsync(async () =>
+            {
+                await _dataObject.NewAsync().ConfigureAwait(true);
+                _isNewRecord = true;
+            }).ConfigureAwait(true);
         }
 
         private async Task OnSaveAsync()
@@ -184,6 +204,7 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.SaveAsync().ConfigureAwait(true);
+                _isNewRecord = false;
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }
@@ -194,6 +215,7 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.DeleteAsync().ConfigureAwait(true);
+                _isNewRecord = false;
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }

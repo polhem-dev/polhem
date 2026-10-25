@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -86,18 +87,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         public bool IsLayoutReadOnly => LayoutField?.ReadOnly ?? false;
 
         /// <summary>
-        /// Determines whether the bound field is editable in the specified form
-        /// mode, combining the mode, the layout read-only flag and the master
-        /// field's <see cref="Polhem.Definition.Layouts.LayoutField.AllowEditModes"/>.
-        /// Row-scoped grid columns carry no per-mode setting (the grid gates them
-        /// as a whole) and follow the mode alone.
+        /// Determines whether the bound field is editable in the specified form mode; the rule is
+        /// <see cref="FieldEditRules.AllowsEdit"/>, which every UI head shares.
         /// </summary>
         /// <param name="formMode">The single-record form mode.</param>
-        public bool AllowsEdit(SingleFormMode formMode)
-            => formMode != SingleFormMode.View
-                && !IsLayoutReadOnly
-                && (LayoutField is not Polhem.Definition.Layouts.LayoutField field
-                    || field.AllowEditModes.Allows(formMode));
+        public bool AllowsEdit(SingleFormMode formMode) => FieldEditRules.AllowsEdit(formMode, LayoutField);
 
         /// <summary>
         /// Attaches the layout field that describes the editor, independent of any data binding, and applies

@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -414,7 +415,7 @@ namespace Polhem.UI.Avalonia.Controls
         private static TextBox BuildDateTimeCellEditor(DataRowView rowView, DataColumn dataColumn)
         {
             var raw = rowView.Row[dataColumn];
-            var display = raw is DateTime current ? DateTimeEdit.FormatDisplay(current) : string.Empty;
+            var display = raw is DateTime current ? DateTimeFieldFormat.FormatDisplay(current) : string.Empty;
             var textBox = new TextBox { Text = display };
 
             void Commit()
@@ -425,9 +426,9 @@ namespace Polhem.UI.Avalonia.Controls
                 {
                     WriteCell(rowView, dataColumn, string.Empty);
                 }
-                else if (DateTimeEdit.TryParseInput(text, out var value))
+                else if (DateTimeFieldFormat.TryParseInput(text, out var value))
                 {
-                    WriteCell(rowView, dataColumn, DateTimeEdit.ToBindingValue(value));
+                    WriteCell(rowView, dataColumn, DateTimeFieldFormat.ToBindingValue(value));
                 }
                 else
                 {

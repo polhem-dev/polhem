@@ -12,10 +12,15 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// The components ship no CSS of their own; the class names on their markup are the contract a
     /// consuming application styles against, and the demo stylesheet is the one consumer in this
     /// repository. A selector that no markup carries matches nothing and fails silently, which is
-    /// what a class renamed on one side only looks like.
+    /// what a class renamed on one side only looks like. Class names written in C# code-behind count as
+    /// markup, because the field editors build their class attribute there.
     /// </remarks>
     public class CssClassNameGateTests
     {
+        private static bool IsBuildOutput(string path)
+            => path.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                || path.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+
         private static readonly Regex s_selector = new(@"\.(polhem-[A-Za-z0-9_-]+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         private static readonly Regex s_markupClass = new(@"polhem-[A-Za-z0-9_-]+", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
@@ -32,7 +37,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests
                     Path.Combine(root, "src", "Polhem.Web.Blazor.Server"),
                     Path.Combine(root, "samples", "Blazor.Server.Demo"),
                 }
-                .SelectMany(dir => Directory.EnumerateFiles(dir, "*.razor", SearchOption.AllDirectories))
+                // Code-behind counts too: an editor composes its class attribute in C#
+                // (`FieldEditorBase.BuildCssClass`), so the read-only modifier exists only there.
+                .SelectMany(dir => Directory.EnumerateFiles(dir, "*.razor", SearchOption.AllDirectories)
+                    .Concat(Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories)
+                        .Where(file => !IsBuildOutput(file))))
                 .SelectMany(file => s_markupClass.Matches(File.ReadAllText(file)).Select(m => m.Value))
                 .ToHashSet(StringComparer.Ordinal);
 

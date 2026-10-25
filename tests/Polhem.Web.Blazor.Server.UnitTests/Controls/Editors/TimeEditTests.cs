@@ -4,20 +4,20 @@ using AngleSharp.Dom;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.Controls.Editors;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Bunit;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Components
+namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// Behavior tests for the DynamicForm time input (<see cref="ControlType.TimeEdit"/>), aligned with Avalonia's
+    /// Behavior tests for <see cref="TimeEdit"/> (<see cref="ControlType.TimeEdit"/>), aligned with Avalonia's
     /// <c>TimeEdit</c>: loose input is normalized to fixed-width HH:mm, an empty input means unset, and unparsable input keeps the last valid value.
     /// </summary>
-    public class DynamicFormTimeEditTests : BunitContext
+    public class TimeEditTests : BunitContext
     {
         private const string FieldName = "work_start";
-        private const string TimeInputSelector = "input.polhem-dynamic-form__input--time";
+        private const string TimeInputSelector = "input.polhem-field-editor--time";
 
         private static FormSchema BuildSchema()
         {
@@ -26,9 +26,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return schema;
         }
 
-        private IRenderedComponent<DynamicForm> RenderForm(FormSchema schema, FormDataObject dataObject)
-            => Render<DynamicForm>(p => p
-                .Add(c => c.Layout, FormLayoutGenerator.Generate(schema, "default"))
+        private IRenderedComponent<TimeEdit> RenderForm(FormDataObject dataObject)
+            => Render<TimeEdit>(p => p
+                .Add(c => c.FieldName, FieldName)
                 .Add(c => c.DataObject, dataObject));
 
         private static FormDataObject BuildDataObject(FormSchema schema)
@@ -38,7 +38,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return dataObject;
         }
 
-        private static IElement TimeInput(IRenderedComponent<DynamicForm> cut) => cut.Find(TimeInputSelector);
+        private static IElement TimeInput(IRenderedComponent<TimeEdit> cut) => cut.Find(TimeInputSelector);
 
         [Fact]
         [DisplayName("The time input renders as fixed-width HH:mm")]
@@ -50,7 +50,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             // without the component doing any normalising of its own.
             dataObject.MasterRow![FieldName] = "8:30";
 
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             Assert.Equal("08:30", TimeInput(cut).GetAttribute("value"));
         }
@@ -61,7 +61,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var schema = BuildSchema();
             var dataObject = BuildDataObject(schema);
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             TimeInput(cut).Change("8:30");
 
@@ -77,7 +77,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var schema = BuildSchema();
             var dataObject = BuildDataObject(schema);
             dataObject.SetField(FieldName, "08:30");
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             TimeInput(cut).Change(empty);
 
@@ -90,7 +90,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var schema = BuildSchema();
             var dataObject = BuildDataObject(schema);
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             TimeInput(cut).Change("00:00");
 
@@ -107,7 +107,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var schema = BuildSchema();
             var dataObject = BuildDataObject(schema);
             dataObject.SetField(FieldName, "08:30");
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             TimeInput(cut).Change(invalid);
 
@@ -120,7 +120,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var schema = BuildSchema();
             var dataObject = BuildDataObject(schema);
-            var cut = RenderForm(schema, dataObject);
+            var cut = RenderForm(dataObject);
 
             // A rejected input leaves the model unchanged, so the re-render emits the same `value` as
             // before and the browser would keep showing the typo. The renderer only pushes the kept value
@@ -138,7 +138,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         // Reflection keeps the render tree types out of the source: `GetCurrentRenderTreeFrames` is
         // protected on the renderer, and naming the frame types directly is rejected by BL0006.
-        private List<object> CurrentFrames(IRenderedComponent<DynamicForm> cut)
+        private List<object> CurrentFrames(IRenderedComponent<TimeEdit> cut)
         {
             var method = Renderer.GetType().GetMethod("GetCurrentRenderTreeFrames",
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

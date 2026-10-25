@@ -355,12 +355,12 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 ### Web Frontend (`Polhem.Web.Blazor.Server`)
 
-`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
+`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `FormLayoutPresenter`, the field editors, `DynamicGrid` and `FormDataObject`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `DynamicForm` (Razor component) | 動態表單元件 | Blazor component that renders a FormSchema-driven form |
-| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.UI.Core` (`FormValueBinding`, `FormDataGuard`) |
+| `FormLayoutPresenter` (Razor component) | 表單版面呈現元件 | Blazor component that renders the master sections of a `FormLayout`, one field editor per field; the Avalonia head has a control of the same name |
+| `FormDataObject` | 表單資料物件 | Data-binding object the Blazor field editors bind to. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.UI.Core` (`FormValueBinding`, `FormDataGuard`) |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (a DI-scoped `PolhemApiClient` per circuit) |
 
 ### Api Client Providers (`Polhem.Api.Client`)

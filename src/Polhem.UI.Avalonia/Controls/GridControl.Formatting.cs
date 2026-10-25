@@ -6,6 +6,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -35,7 +36,7 @@ namespace Polhem.UI.Avalonia.Controls
             if (row is null) return string.Empty;
             var dataRow = row.Row;
             if (!dataRow.Table.Columns.Contains(fieldName)) return string.Empty;
-            return CellValueFormatter.Format(dataRow[fieldName], displayFormat, numberFormat);
+            return FieldValueFormatter.Format(dataRow[fieldName], displayFormat, numberFormat);
         }
 
         /// <summary>
@@ -79,13 +80,13 @@ namespace Polhem.UI.Avalonia.Controls
             if (string.IsNullOrEmpty(column.DisplayFormat))
             {
                 if (column.ControlType == ControlType.DateTimeEdit && raw is DateTime instant)
-                    return DateTimeEdit.FormatDisplay(instant);
+                    return DateTimeFieldFormat.FormatDisplay(instant);
                 if (raw is bool flag)
                     return UIText.Get(flag ? PolhemUIText.True : PolhemUIText.False);
             }
 
             string numberFormat = ResolveCellNumberFormat(dataRow, column);
-            return CellValueFormatter.Format(raw, column.DisplayFormat, numberFormat);
+            return FieldValueFormatter.Format(raw, column.DisplayFormat, numberFormat);
         }
 
         // The schema field behind a column: through the bound data object for a detail grid, through the

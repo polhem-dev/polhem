@@ -25,7 +25,7 @@ dotnet run
 3. 登入成功後顯示 `<FormPage ProgId="Staff" />`：
    - 上方 toolbar：`New` / `Save` / `Delete`
    - 中段：人員列表（`DynamicGrid` 依 `FormSchema.ListFields` 動態渲染）
-   - 下段：選中 row 後出現的編輯表單（`DynamicForm`）
+   - 下段：選中 row 後出現的編輯表單（`FormLayoutPresenter`）
 4. 點 `New` → 改欄位 → `Save`，新人員會出現在列表
 
 ## 對應到 library
@@ -36,7 +36,7 @@ dotnet run
 | 進入公司 | `SystemApiConnector.EnterCompanyAsync` |
 | 頁面上的登入狀態 | `PolhemAccessTokenProvider` |
 | 人員列表渲染 | `DynamicGrid` + `FormSchema.GetListLayout()` |
-| 人員編輯表單 | `DynamicForm` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Staff.FormLayout.xml`） |
+| 人員編輯表單 | `FormLayoutPresenter` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Staff.FormLayout.xml`） |
 | 列表 + 表單整合 | `FormPage` |
 | CRUD 走 Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local 模式 in-process 派遣 | `PolhemBlazorOptions.UseLocalProvider()` |

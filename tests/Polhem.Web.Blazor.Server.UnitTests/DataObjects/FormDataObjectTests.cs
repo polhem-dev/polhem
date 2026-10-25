@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
     /// <summary>
     /// Verifies that <see cref="FormDataObject"/> derives the correct <see cref="DataSet"/>
     /// shape from <see cref="FormSchema"/>, round-trips values through
-    /// <see cref="FormDataObject.GetField"/> / <see cref="FormDataObject.SetField"/>, and
+    /// <see cref="FormDataObject.GetField(string)"/> / <see cref="FormDataObject.SetField(string, string?)"/>, and
     /// drives the four async server methods through a supplied
     /// <see cref="FormApiConnector"/>.
     /// </summary>

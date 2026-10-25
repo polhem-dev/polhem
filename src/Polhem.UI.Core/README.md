@@ -57,6 +57,18 @@ application's own data through its own implementation of `IFormApiConnector`.
 - `FormDataGuard` -- the preconditions a form's CRUD calls check before they reach the connector, with one wording of
   each failure for every head.
 
+### Field Editor Rules Shared by Every Head
+
+`Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` both use, so the
+two heads behave the same:
+
+- `FieldEditRules` -- whether a field accepts input, from the form mode, the layout read-only flag and
+  `AllowEditModes`.
+- `FieldValueFormatter` -- the display of a value in the user's culture, for form fields and grid cells.
+- `NumericFieldFormat` -- number format resolution (currency and unit decimals included), display, input parsing and
+  the value written back.
+- `DateTimeFieldFormat` -- the display, input and binding-string rules of a date-and-time field.
+
 ### Permission Capabilities
 
 - `Permissions/IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability` -- turn the user's
@@ -81,5 +93,6 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 - project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
+- `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`
