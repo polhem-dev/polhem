@@ -1,17 +1,17 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.Controls;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Bunit;
 using Polhem.Definition.Layouts;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Components
+namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 {
     /// <summary>
-    /// Render tests: they run BuildRenderTree of DynamicForm.razor to cover the lines of the .razor template.
+    /// Render tests: they run BuildRenderTree of FormLayoutPresenter.razor to cover the lines of the .razor template.
     /// </summary>
-    public class DynamicFormRenderTests : BunitContext
+    public class FormLayoutPresenterRenderTests : BunitContext
     {
         private static FormSchema BuildSchema()
         {
@@ -24,31 +24,31 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm renders the empty-state div when Layout is null")]
-        public void DynamicForm_NullLayout_RendersEmptyDiv()
+        [DisplayName("FormLayoutPresenter renders the empty-state div when Layout is null")]
+        public void FormLayoutPresenter_NullLayout_RendersEmptyDiv()
         {
-            var cut = Render<DynamicForm>();
-            Assert.NotNull(cut.Find("div.polhem-dynamic-form--empty"));
+            var cut = Render<FormLayoutPresenter>();
+            Assert.NotNull(cut.Find("div.polhem-form-layout--empty"));
         }
 
         [Fact]
-        [DisplayName("DynamicForm renders the form container when given Layout and DataObject")]
-        public void DynamicForm_WithLayoutAndDataObject_RendersFormContainer()
+        [DisplayName("FormLayoutPresenter renders the form container when given Layout and DataObject")]
+        public void FormLayoutPresenter_WithLayoutAndDataObject_RendersFormContainer()
         {
             var schema = BuildSchema();
             var layout = FormLayoutGenerator.Generate(schema, "default");
             var dataObject = new FormDataObject(schema);
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.NotNull(cut.Find("div.polhem-dynamic-form"));
+            Assert.NotNull(cut.Find("div.polhem-form-layout"));
         }
 
         [Fact]
-        [DisplayName("DynamicForm does not render a legend element when the Section's ShowCaption is false")]
-        public void DynamicForm_SectionShowCaptionFalse_DoesNotRenderLegend()
+        [DisplayName("FormLayoutPresenter does not render a legend element when the Section's ShowCaption is false")]
+        public void FormLayoutPresenter_SectionShowCaptionFalse_DoesNotRenderLegend()
         {
             var schema = BuildSchema();
             var layout = FormLayoutGenerator.Generate(schema, "default");
@@ -56,11 +56,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 section.ShowCaption = false;
             var dataObject = new FormDataObject(schema);
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.Empty(cut.FindAll("legend.polhem-dynamic-form__section-caption"));
+            Assert.Empty(cut.FindAll("legend.polhem-form-layout__section-caption"));
         }
     }
 }

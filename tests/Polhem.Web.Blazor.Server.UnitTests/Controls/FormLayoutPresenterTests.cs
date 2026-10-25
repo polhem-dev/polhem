@@ -2,20 +2,19 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.Controls;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Microsoft.AspNetCore.Components;
 using Polhem.Definition.Layouts;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Components
+namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 {
     /// <summary>
-    /// Structural checks for <see cref="DynamicForm"/>: the public component surface, and that wiring through
+    /// Structural checks for <see cref="FormLayoutPresenter"/>: the public component surface, and that wiring through
     /// <see cref="FormLayoutGenerator.Generate"/> produces a layout the component is willing to consume. Rendering is
-    /// covered with bUnit by <see cref="DynamicFormRenderTests"/>, <see cref="DynamicFormControlTypeRenderTests"/> and
-    /// <see cref="DynamicFormTimeEditTests"/>.
+    /// covered with bUnit by <see cref="FormLayoutPresenterRenderTests"/> and <see cref="FormLayoutPresenterControlTypeRenderTests"/>.
     /// </summary>
-    public class DynamicFormTests
+    public class FormLayoutPresenterTests
     {
         private static FormSchema BuildSchema()
         {
@@ -29,23 +28,23 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static PropertyInfo GetProperty(string name)
         {
-            var property = typeof(DynamicForm).GetProperty(
+            var property = typeof(FormLayoutPresenter).GetProperty(
                 name, BindingFlags.Public | BindingFlags.Instance);
             Assert.NotNull(property);
             return property!;
         }
 
         [Fact]
-        [DisplayName("DynamicForm is a subclass of Blazor ComponentBase")]
+        [DisplayName("FormLayoutPresenter is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
-            Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(DynamicForm)));
+            Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(FormLayoutPresenter)));
         }
 
         [Theory]
-        [InlineData(nameof(DynamicForm.Layout))]
-        [InlineData(nameof(DynamicForm.DataObject))]
-        [InlineData(nameof(DynamicForm.IdPrefix))]
+        [InlineData(nameof(FormLayoutPresenter.Layout))]
+        [InlineData(nameof(FormLayoutPresenter.DataObject))]
+        [InlineData(nameof(FormLayoutPresenter.IdPrefix))]
         [DisplayName("Public properties are all marked with [Parameter]")]
         public void PublicProperties_AreMarkedAsParameters(string name)
         {
@@ -54,21 +53,21 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm can be instantiated and its Layout/DataObject parameters assigned through reflection")]
+        [DisplayName("FormLayoutPresenter can be instantiated and its Layout/DataObject parameters assigned through reflection")]
         public void CanInstantiateAndAssignParameters()
         {
             var schema = BuildSchema();
             var layout = FormLayoutGenerator.Generate(schema, "default");
             var dataObject = new FormDataObject(schema);
 
-            var component = new DynamicForm();
+            var component = new FormLayoutPresenter();
 
             // Use reflection to bypass BL0005 — production callers assign parameters
             // through the Blazor renderer (SetParametersAsync), which is hard to drive
             // outside bUnit; this is a structural smoke check only.
-            GetProperty(nameof(DynamicForm.Layout)).SetValue(component, layout);
-            GetProperty(nameof(DynamicForm.DataObject)).SetValue(component, dataObject);
-            GetProperty(nameof(DynamicForm.IdPrefix)).SetValue(component, "test-prefix");
+            GetProperty(nameof(FormLayoutPresenter.Layout)).SetValue(component, layout);
+            GetProperty(nameof(FormLayoutPresenter.DataObject)).SetValue(component, dataObject);
+            GetProperty(nameof(FormLayoutPresenter.IdPrefix)).SetValue(component, "test-prefix");
 
             Assert.Same(layout, component.Layout);
             Assert.Same(dataObject, component.DataObject);
@@ -76,7 +75,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("The FormLayout produced by FormLayoutGenerator contains at least one Section that DynamicForm can consume")]
+        [DisplayName("The FormLayout produced by FormLayoutGenerator contains at least one Section that FormLayoutPresenter can consume")]
         public void GeneratedLayout_HasAtLeastOneSection()
         {
             var schema = BuildSchema();

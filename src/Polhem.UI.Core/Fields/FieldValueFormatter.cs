@@ -1,18 +1,18 @@
 using System.Globalization;
 
-namespace Polhem.UI.Avalonia.Controls
+namespace Polhem.UI.Core.Fields
 {
     /// <summary>
-    /// Formats a raw field value into its display string, shared by <see cref="GridControl"/> cells and
-    /// the <see cref="Polhem.UI.Avalonia.Controls.Editors.NumericEdit"/> editor so a value renders identically in a grid and in a form field.
-    /// Formatting uses <see cref="CultureInfo.CurrentCulture"/>, the signed-in user's culture, for
-    /// separators and date patterns; an explicit <c>DisplayFormat</c> wins over the numeric format.
+    /// Formats a raw field value into its display string, so a value renders identically in a grid cell
+    /// and in a form field, and in every UI head. Formatting uses <see cref="CultureInfo.CurrentCulture"/>,
+    /// the signed-in user's culture, for separators and date patterns; an explicit display format wins
+    /// over the numeric format.
     /// </summary>
     /// <remarks>
     /// Display only. The values themselves travel in the invariant culture, so the display culture
     /// never reaches the wire or a stored value.
     /// </remarks>
-    internal static class CellValueFormatter
+    public static class FieldValueFormatter
     {
         /// <summary>
         /// Formats <paramref name="raw"/> using <paramref name="displayFormat"/> when set, otherwise
@@ -22,6 +22,7 @@ namespace Polhem.UI.Avalonia.Controls
         /// <param name="raw">The raw field value.</param>
         /// <param name="displayFormat">An explicit display format string, or empty.</param>
         /// <param name="numberFormat">The numeric format string (e.g. <c>"N2"</c>), or empty.</param>
+        /// <returns>The display string.</returns>
         public static string Format(object? raw, string displayFormat, string numberFormat)
         {
             if (raw is null || raw == DBNull.Value) return string.Empty;

@@ -1,1 +1,19 @@
 #nullable enable
+Polhem.UI.Core.Fields.DateTimeFieldFormat
+Polhem.UI.Core.Fields.FieldEditRules
+Polhem.UI.Core.Fields.FieldValueFormatter
+Polhem.UI.Core.Fields.NumericFieldFormat
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatBindingValue(string? bindingValue) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatDisplay(System.DateTime value) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.GetInputPattern(System.Globalization.CultureInfo! culture) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.ToBindingValue(System.DateTime value) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseBindingValue(string? bindingValue, out System.DateTime value) -> bool
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseInput(string? input, out System.DateTime value) -> bool
+static Polhem.UI.Core.Fields.FieldEditRules.AllowsEdit(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Layouts.LayoutFieldBase? layoutField) -> bool
+static Polhem.UI.Core.Fields.FieldValueFormatter.Format(object? raw, string! displayFormat, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForDisplay(string! raw, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForEditing(string! raw) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField, System.Data.DataRow? row, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, string! defaultUnitCode) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.ToWriteBackValue(string? text, string! lastRaw) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseInput(string? text, out decimal value) -> bool
+static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseRaw(string? raw, out decimal value) -> bool

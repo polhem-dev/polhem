@@ -59,13 +59,23 @@ decides whether `FormPage` localizes its definitions; see below.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
   Detail tables are not rendered.
 - `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id.
-- `DynamicForm` -- renders the master section(s) of a `FormLayout`, choosing the input element from each field's
-  `ControlType` (text, date, month, time, checkbox, textarea, dropdown).
+- `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
+  its `ControlType` by `FieldEditorFactory`. Its `FormMode` parameter decides which editors accept input, following
+  each field's `ReadOnly` and `AllowEditModes`. Detail grids are not rendered.
+- Field editors (`Polhem.Web.Blazor.Server.Controls.Editors`) -- `TextEdit`, `MemoEdit`, `NumericEdit`, `TimeEdit`,
+  `DateTimeEdit`, `DateEdit`, `YearMonthEdit`, `CheckEdit` and `DropDownEdit`, with the same names, contract
+  (`IFieldEditor`) and behavior as the field editors of `Polhem.UI.Avalonia`. An editor binds to a
+  `FormDataObject` through its `DataObject` parameter, an enclosing `FormScope`, or an explicit `Bind`; it applies
+  the schema field's metadata (such as `MaxLength` and `ListItems`) itself and refreshes when another party writes
+  its field. New editors derive from `FieldEditorBase`. Their markup carries the `polhem-field-editor` class, a
+  per-editor modifier such as `polhem-field-editor--numeric`, and `polhem-field-editor--readonly` when they do not
+  accept input; the package ships no CSS of its own.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`.
 - `PolhemAccessTokenProvider` -- holds the page's signed-in state (the access token) and cascades it to descendant
   components. The calls themselves use the circuit's `PolhemApiClient`, which the sign-in has signed in.
 - `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
-  `GetField` / `SetField` for two-way binding, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
+  `GetField` / `SetField` (for the master row or a given row) for two-way binding, raises `FieldValueChanged` and
+  `DataSetReplaced` when its values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
   through the connector.
 
 ## Dependency Constraints

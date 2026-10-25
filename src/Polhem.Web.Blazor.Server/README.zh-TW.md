@@ -53,13 +53,21 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
   載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。明細資料表不會呈現。
 - `DynamicGrid` -- 以 `LayoutGrid` 呈現的純顯示清單；點選資料列時以列 id 觸發 `OnRowSelected`。
-- `DynamicForm` -- 渲染 `FormLayout` 的主檔 section，依欄位的 `ControlType` 選擇輸入元素（text、date、month、
-  time、checkbox、textarea、dropdown）。
+- `FormLayoutPresenter` -- 渲染 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器，由 `FieldEditorFactory` 依
+  `ControlType` 選擇。`FormMode` 參數決定哪些編輯器可輸入，並依各欄位的 `ReadOnly` 與 `AllowEditModes`。
+  不呈現明細 grid。
+- 欄位編輯器（`Polhem.Web.Blazor.Server.Controls.Editors`）-- `TextEdit`、`MemoEdit`、`NumericEdit`、`TimeEdit`、
+  `DateTimeEdit`、`DateEdit`、`YearMonthEdit`、`CheckEdit`、`DropDownEdit`，名稱、契約（`IFieldEditor`）與行為
+  都和 `Polhem.UI.Avalonia` 的欄位編輯器相同。編輯器可透過 `DataObject` 參數、外層的 `FormScope` 或明確呼叫
+  `Bind` 綁定 `FormDataObject`；它自行套用 schema 欄位的中繼資料（例如 `MaxLength`、`ListItems`），其他來源寫入
+  該欄位時會自動更新。新的編輯器繼承 `FieldEditorBase`。標記上帶有 `polhem-field-editor` class、各編輯器的
+  修飾 class（例如 `polhem-field-editor--numeric`），不可輸入時再加上 `polhem-field-editor--readonly`；
+  套件本身不附 CSS。
 - `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。
 - `PolhemAccessTokenProvider` -- 持有頁面的登入狀態（存取權杖），並以 cascading value 提供給子元件。實際的呼叫
   使用 circuit 的 `PolhemApiClient`，登入時已在其上完成登入。
 - `FormDataObject` -- 由 `FormSchema` 衍生記憶體內 `DataSet`（主檔列 + 明細資料表），提供 `GetField` /
-  `SetField` 雙向綁定，並透過連接器執行 `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`。
+  `SetField`（主檔列或指定的資料列）雙向綁定，值變更時觸發 `FieldValueChanged` 與 `DataSetReplaced`，並透過連接器執行 `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`。
 
 ## 相依限制
 

@@ -4,17 +4,19 @@ using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.Controls;
+using Polhem.Web.Blazor.Server.Controls.Editors;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Bunit;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Components
+namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// The DynamicForm date-and-time input (<see cref="ControlType.DateTimeEdit"/>) keeps the time of an
-    /// instant, which a date input cannot show at all.
+    /// <see cref="DateTimeEdit"/> (<see cref="ControlType.DateTimeEdit"/>) keeps the time of an instant, which a
+    /// date input cannot show at all. Rendered through <see cref="FormLayoutPresenter"/>, so the layout's
+    /// read-only flag reaches the editor the way it does on a page.
     /// </summary>
-    public class DynamicFormDateTimeEditTests : BunitContext
+    public class DateTimeEditTests : BunitContext
     {
         private const string FieldName = "occurred_at";
 
@@ -34,8 +36,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return dataObject;
         }
 
-        private IRenderedComponent<DynamicForm> RenderForm(FormSchema schema, FormDataObject dataObject)
-            => Render<DynamicForm>(p => p
+        private IRenderedComponent<FormLayoutPresenter> RenderForm(FormSchema schema, FormDataObject dataObject)
+            => Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, FormLayoutGenerator.Generate(schema, "default"))
                 .Add(c => c.DataObject, dataObject));
 
@@ -90,7 +92,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var cut = RenderForm(schema, dataObject);
 
             Assert.Empty(cut.FindAll("input[type='datetime-local']"));
-            var input = cut.Find("input.polhem-dynamic-form__input--datetime");
+            var input = cut.Find("input.polhem-field-editor--datetime");
             Assert.Equal(value.ToString("G", CultureInfo.CurrentCulture), input.GetAttribute("value"));
             Assert.True(input.HasAttribute("readonly"));
         }
@@ -104,7 +106,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var layout = FormLayoutGenerator.Generate(schema, "default");
             layout.Sections![0].Fields![0].ControlType = ControlType.DateEdit;
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 

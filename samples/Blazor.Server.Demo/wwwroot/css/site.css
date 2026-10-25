@@ -39,3 +39,22 @@ body {
 .polhem-form-page__error { color: #cf222e; padding: 10px; background: #ffebe9; border-radius: 4px; }
 .polhem-form-page__loading { color: #57606a; }
 .polhem-form-page__notice { color: #9a6700; padding: 8px 10px; margin: 8px 0; background: #fff8c5; border: 1px solid #d4a72c; border-radius: 4px; }
+
+.polhem-demo-nav { display: flex; gap: 16px; margin-top: 8px; }
+.polhem-demo-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.polhem-demo-toolbar button { padding: 4px 12px; }
+.polhem-demo-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.polhem-demo-card { display: flex; flex-direction: column; gap: 4px; border: 1px solid #d0d7de; border-radius: 4px; padding: 12px; }
+.polhem-demo-card h3 { margin: 0 0 8px; font-size: 1rem; }
+
+.polhem-form-layout__section { border: 0; margin: 0 0 12px; padding: 0; }
+.polhem-form-layout__section-caption { font-weight: 600; margin-bottom: 8px; }
+.polhem-form-layout__field { display: flex; flex-direction: column; gap: 4px; }
+.polhem-form-layout__label { font-size: 0.85rem; color: #57606a; }
+
+.polhem-field-editor { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 4px; font: inherit; }
+.polhem-field-editor--checkbox { width: auto; }
+.polhem-field-editor--numeric { text-align: right; }
+.polhem-field-editor--memo { min-height: 4.5em; resize: vertical; }
+/* Read-only reads as a record, not a grid of input boxes: the box collapses to a bottom line, as in the Avalonia head. */
+.polhem-field-editor--readonly { border-width: 0 0 1px; border-radius: 0; background: transparent; }

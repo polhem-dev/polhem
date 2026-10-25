@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />
+    <Compile Include="..\Polhem.Tests.Shared\CultureScope.cs" Link="CultureScope.cs" />
   </ItemGroup>
 
   <ItemGroup>

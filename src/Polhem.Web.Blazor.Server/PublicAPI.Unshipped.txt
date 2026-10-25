@@ -1,1 +1,143 @@
 #nullable enable
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.DataObject.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.DynamicForm() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.IdPrefix.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.IdPrefix.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.get -> Polhem.Definition.Layouts.FormLayout?
+*REMOVED*Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.CheckEdit
+Polhem.Web.Blazor.Server.Controls.Editors.CheckEdit.CheckEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.DateEdit
+Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.CommitInput(string? input) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.DateEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.InputValue.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ReadOnlyText.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.DateTimeEdit
+Polhem.Web.Blazor.Server.Controls.Editors.DateTimeEdit.DateTimeEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.DropDownEdit
+Polhem.Web.Blazor.Server.Controls.Editors.DropDownEdit.DropDownEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.AdditionalAttributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.AdditionalAttributes.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.AllowsEdit(Polhem.Definition.Layouts.SingleFormMode formMode) -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.BoundDataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.BoundFieldName.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.BoundLayoutField.get -> Polhem.Definition.Layouts.LayoutFieldBase?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.BuildCssClass(string! modifierClass) -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Dispose() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FieldEditorBase() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FieldName.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FieldName.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FieldValue.get -> object?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FieldValue.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FormField.get -> Polhem.Definition.Forms.FormField?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.GetValue() -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Id.get -> string?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Id.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.IsBound.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.IsEditable.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.IsLayoutReadOnly.get -> bool
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.LayoutField.get -> Polhem.Definition.Layouts.LayoutFieldBase?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.LayoutField.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Row.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Row.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.TargetRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Unbind() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.WatchFieldNames.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.WatchFieldNames.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.WriteBack(string? value) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorFactory
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.ChildContent.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.FormMode.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.FormScope() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.Server.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor
+Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.Server.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.IFieldEditor.Unbind() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.MemoEdit
+Polhem.Web.Blazor.Server.Controls.Editors.MemoEdit.MemoEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.CurrencySettings.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultCurrencyCode.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultCurrencyCode.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.NumericEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.CommitText(string? text) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLength.get -> int
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLength.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLengthAttribute.get -> int?
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Text.get -> string!
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Text.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.TextEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.TimeEdit
+Polhem.Web.Blazor.Server.Controls.Editors.TimeEdit.TimeEdit() -> void
+Polhem.Web.Blazor.Server.Controls.Editors.YearMonthEdit
+Polhem.Web.Blazor.Server.Controls.Editors.YearMonthEdit.YearMonthEdit() -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.get -> string!
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.get -> Polhem.Definition.Layouts.FormLayout?
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.set -> void
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.RoundingContext?
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.set -> void
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldName.get -> string!
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetFormField(string! tableName, string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsDirtyChanged -> System.EventHandler?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
+abstract Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.OnParametersSet() -> void
+override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ApplyMetadata() -> void
+override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.RefreshFromSource() -> void
+static Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.DisplayFormat.get -> string!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.InputType.get -> string!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ModifierClass.get -> string!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ValueFormat.get -> string!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.ApplyMetadata() -> void
+virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Dispose(bool disposing) -> void
+virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.GetWriteBackValue() -> string?
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.InputMode.get -> string?
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ModifierClass.get -> string!
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Pattern.get -> string?
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Placeholder.get -> string?
+virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ShouldWriteBackText.get -> bool
+~override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

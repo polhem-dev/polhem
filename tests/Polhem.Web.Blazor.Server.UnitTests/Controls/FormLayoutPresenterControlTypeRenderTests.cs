@@ -3,16 +3,16 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.Controls;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Bunit;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Components
+namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 {
     /// <summary>
-    /// Covers rendering of the YearMonthEdit, MemoEdit and DropDownEdit branches of the switch in DynamicForm.razor.
+    /// Checks that FormLayoutPresenter renders the editor <see cref="Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorFactory"/> picks for a YearMonthEdit, MemoEdit and DropDownEdit field.
     /// </summary>
-    public class DynamicFormControlTypeRenderTests : BunitContext
+    public class FormLayoutPresenterControlTypeRenderTests : BunitContext
     {
         private static void SetFirstFieldControlType(FormLayout layout, ControlType controlType)
         {
@@ -20,8 +20,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm renders an input[type=month] element for a YearMonthEdit field")]
-        public void DynamicForm_YearMonthEditField_RendersMonthInput()
+        [DisplayName("FormLayoutPresenter renders an input[type=month] element for a YearMonthEdit field")]
+        public void FormLayoutPresenter_YearMonthEditField_RendersMonthInput()
         {
             var schema = new FormSchema("T", "T");
             schema.Tables!.Add("T", "T").Fields!.Add("report_month", "Month", FieldDbType.String);
@@ -29,7 +29,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             SetFirstFieldControlType(layout, ControlType.YearMonthEdit);
             var dataObject = new FormDataObject(schema);
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
@@ -37,8 +37,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm renders a textarea element for a MemoEdit field")]
-        public void DynamicForm_MemoEditField_RendersTextarea()
+        [DisplayName("FormLayoutPresenter renders a textarea element for a MemoEdit field")]
+        public void FormLayoutPresenter_MemoEditField_RendersTextarea()
         {
             var schema = new FormSchema("T", "T");
             schema.Tables!.Add("T", "T").Fields!.Add("remark", "Remark", FieldDbType.String);
@@ -46,16 +46,16 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             SetFirstFieldControlType(layout, ControlType.MemoEdit);
             var dataObject = new FormDataObject(schema);
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.Single(cut.FindAll("textarea.polhem-dynamic-form__input--memo"));
+            Assert.Single(cut.FindAll("textarea.polhem-field-editor--memo"));
         }
 
         [Fact]
-        [DisplayName("DynamicForm renders a select element with the options for a DropDownEdit field")]
-        public void DynamicForm_DropDownEditField_RendersSelectWithOptions()
+        [DisplayName("FormLayoutPresenter renders a select element with the options for a DropDownEdit field")]
+        public void FormLayoutPresenter_DropDownEditField_RendersSelectWithOptions()
         {
             var schema = new FormSchema("T", "T");
             var master = schema.Tables!.Add("T", "T");
@@ -66,12 +66,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             SetFirstFieldControlType(layout, ControlType.DropDownEdit);
             var dataObject = new FormDataObject(schema);
 
-            var cut = Render<DynamicForm>(p => p
+            var cut = Render<FormLayoutPresenter>(p => p
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.NotNull(cut.Find("select.polhem-dynamic-form__input--select"));
-            Assert.Equal(2, cut.FindAll("option").Count);
+            Assert.NotNull(cut.Find("select.polhem-field-editor--select"));
+            // The two items, plus the empty option shown while the stored value matches neither.
+            Assert.Equal(3, cut.FindAll("option").Count);
         }
     }
 }

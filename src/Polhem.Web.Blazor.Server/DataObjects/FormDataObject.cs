@@ -10,7 +10,8 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// <summary>
     /// Holds the in-memory <see cref="System.Data.DataSet"/> for a single form view
     /// (one master row plus zero or more detail tables) and exposes a small string-based
-    /// access surface for two-way binding by <see cref="Polhem.Web.Blazor.Server.Components.DynamicForm"/> / <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>.
+    /// access surface for two-way binding by the field editors in
+    /// <see cref="Polhem.Web.Blazor.Server.Controls.Editors"/> and by <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -43,10 +44,11 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// its UI thread.
     /// </para>
     /// </remarks>
-    public sealed class FormDataObject
+    public sealed partial class FormDataObject
     {
         private readonly FormSchema _schema;
         private readonly FormApiConnector? _connector;
+        private bool _isDirty;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormDataObject"/> and derives the
@@ -66,7 +68,8 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
             _schema = schema;
             _connector = connector;
-            DataSet = FormValueBinding.BuildEmptyDataSet(schema);
+            DataSet = null!;
+            ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(schema), notify: false);
         }
 
         /// <summary>
@@ -108,10 +111,41 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         public bool IsLoading { get; private set; }
 
         /// <summary>
-        /// Gets a value indicating whether the master row has been modified since the
-        /// last load/save.
+        /// Gets a value indicating whether any row has been modified since the last load/save.
         /// </summary>
-        public bool IsDirty { get; private set; }
+        public bool IsDirty
+        {
+            get => _isDirty;
+            private set
+            {
+                if (_isDirty == value) return;
+                _isDirty = value;
+                IsDirtyChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Raised after any field value changes in any table of the <see cref="DataSet"/>, master and
+        /// detail alike, whatever the write path. The event is bridged from the
+        /// <see cref="DataTable.ColumnChanged"/> event so no writer has to remember to raise it.
+        /// </summary>
+        /// <remarks>
+        /// Raised on the thread that wrote the value. A component that re-renders in response marshals
+        /// through <c>InvokeAsync</c>, as the field editors do.
+        /// </remarks>
+        public event EventHandler<FieldValueChangedEventArgs>? FieldValueChanged;
+
+        /// <summary>
+        /// Raised when <see cref="IsDirty"/> flips.
+        /// </summary>
+        public event EventHandler? IsDirtyChanged;
+
+        /// <summary>
+        /// Raised after the underlying <see cref="DataSet"/> is replaced or reset
+        /// (<see cref="LoadAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>,
+        /// <see cref="NewAsync"/>, <see cref="InitializeNewMaster"/>). Bound editors re-read their values.
+        /// </summary>
+        public event EventHandler? DataSetReplaced;
 
         /// <summary>
         /// Reads the field value from the master row and renders it as a string suitable
@@ -125,16 +159,34 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
             var row = MasterRow;
             if (row is null) return string.Empty;
-            if (!row.Table.Columns.Contains(fieldName)) return string.Empty;
+            return GetField(row, fieldName);
+        }
 
-            var raw = row[fieldName];
-            return FormValueBinding.ToBindingString(raw);
+        /// <summary>
+        /// Reads the field value from <paramref name="row"/> (master or detail) and renders it as a
+        /// binding string.
+        /// </summary>
+        /// <param name="row">The row to read from; it must belong to <see cref="DataSet"/>.</param>
+        /// <param name="fieldName">The field (column) name.</param>
+        public string GetField(DataRow row, string fieldName)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            ArgumentException.ThrowIfNullOrWhiteSpace(fieldName);
+            EnsureOwnedRow(row);
+
+            if (!row.Table.Columns.Contains(fieldName)) return string.Empty;
+            return FormValueBinding.ToBindingString(row[fieldName]);
         }
 
         /// <summary>
         /// Writes <paramref name="value"/> to the master row after coercing it to the
-        /// column's declared CLR type. An empty input becomes <see cref="DBNull"/>.
+        /// column's declared CLR type. An empty input falls back to the column default
+        /// (or <see cref="DBNull"/> when the column allows nulls).
         /// </summary>
+        /// <remarks>
+        /// A value equal to the stored one is not written, so re-committing an unchanged input neither
+        /// dirties the object nor raises <see cref="FieldValueChanged"/>.
+        /// </remarks>
         /// <param name="fieldName">The field (column) name.</param>
         /// <param name="value">The string value supplied by the bound input.</param>
         public void SetField(string fieldName, string? value)
@@ -143,11 +195,32 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
             var row = MasterRow;
             if (row is null) return;
+            SetField(row, fieldName, value);
+        }
+
+        /// <summary>
+        /// Writes <paramref name="value"/> to <paramref name="row"/> (master or detail) after coercing
+        /// it to the column's declared CLR type, with the same empty-input and unchanged-value rules as
+        /// the master overload.
+        /// </summary>
+        /// <param name="row">The row to write to; it must belong to <see cref="DataSet"/>.</param>
+        /// <param name="fieldName">The field (column) name.</param>
+        /// <param name="value">The string value supplied by the bound input.</param>
+        public void SetField(DataRow row, string fieldName, string? value)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            ArgumentException.ThrowIfNullOrWhiteSpace(fieldName);
+            EnsureOwnedRow(row);
+
             if (!row.Table.Columns.Contains(fieldName)) return;
 
             var column = row.Table.Columns[fieldName]!;
-            row[fieldName] = FormValueBinding.ToColumnValue(value, column);
-            IsDirty = true;
+            var newValue = FormValueBinding.ToColumnValue(value, column);
+            if (Equals(newValue, row[fieldName])) return;
+
+            // The write raises FieldValueChanged and marks the object dirty through the DataTable
+            // event bridge.
+            row[fieldName] = newValue;
         }
 
         /// <summary>
@@ -162,6 +235,8 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             MasterTable.Rows.Clear();
             MasterTable.Rows.Add(MasterTable.NewRow());
             IsDirty = false;
+            // The dataset instance is unchanged, but its content was reset: bound editors re-read.
+            DataSetReplaced?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -176,6 +251,22 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             var master = _schema.MasterTable;
             if (master?.Fields is null) return null;
             return master.Fields.Contains(fieldName) ? master.Fields[fieldName] : null;
+        }
+
+        /// <summary>
+        /// Looks up the <see cref="FormField"/> metadata on the named table (master or detail), or
+        /// <c>null</c> if the table or field does not exist.
+        /// </summary>
+        /// <param name="tableName">The schema table name.</param>
+        /// <param name="fieldName">The field (column) name.</param>
+        public FormField? GetFormField(string tableName, string fieldName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(fieldName);
+
+            var table = _schema.Tables?.GetOrDefault(tableName);
+            if (table?.Fields is null) return null;
+            return table.Fields.Contains(fieldName) ? table.Fields[fieldName] : null;
         }
 
         /// <summary>
@@ -200,7 +291,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
                     throw new InvalidOperationException(
                         $"No master row found for {SysFields.RowId} = {rowId}.");
 
-                DataSet = response.DataSet;
+                ReplaceDataSet(response.DataSet);
                 IsDirty = false;
             }
             finally
@@ -227,7 +318,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             {
                 var response = await connector.SaveAsync(DataSet, cancellationToken).ConfigureAwait(true);
                 if (response.DataSet is not null)
-                    DataSet = response.DataSet;
+                    ReplaceDataSet(response.DataSet);
                 IsDirty = false;
             }
             finally
@@ -255,7 +346,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             try
             {
                 await connector.DeleteAsync(rowId, cancellationToken).ConfigureAwait(true);
-                DataSet = FormValueBinding.BuildEmptyDataSet(_schema);
+                ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(_schema));
                 IsDirty = false;
             }
             finally
@@ -286,7 +377,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
                     throw new InvalidOperationException(
                         "GetNewData returned a null DataSet; cannot initialize a new master row.");
 
-                DataSet = response.DataSet;
+                ReplaceDataSet(response.DataSet);
                 IsDirty = false;
             }
             finally

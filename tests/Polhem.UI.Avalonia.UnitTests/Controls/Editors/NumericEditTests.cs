@@ -271,18 +271,5 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             Assert.Equal("7", dataObject.GetField("amount"));
         }
-
-        [Theory]
-        [InlineData("de-DE", "-1,25", -1.25)]
-        [InlineData("en-US", "-1.25", -1.25)]
-        [InlineData("fr-FR", " 3,5 ", 3.5)]
-        [DisplayName("TryParseInput reads a sign and the culture's decimal separator")]
-        public void TryParseInput_UserCulture_ParsesDecimalSeparator(string culture, string input, double expected)
-        {
-            using var _ = new CultureScope(culture);
-
-            Assert.True(NumericEdit.TryParseInput(input, out decimal value));
-            Assert.Equal((decimal)expected, value);
-        }
     }
 }

@@ -51,6 +51,15 @@
 - `FormValueBinding` -- 在表單 `DataSet` 中的值與 UI 繫結交換的字串之間轉換，並建立表單起始用的空 `DataSet`。
 - `FormDataGuard` -- 表單的 CRUD 呼叫送到連接器前檢查的前置條件；每種失敗在所有 head 都只有一種措辭。
 
+### 各 head 共用的欄位編輯器規則
+
+`Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server` 的欄位編輯器共用的規則，讓兩端行為一致：
+
+- `FieldEditRules` -- 依表單模式、版面唯讀旗標與 `AllowEditModes` 判斷欄位可否輸入。
+- `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
+- `NumericFieldFormat` -- 數值格式解析（含幣別與單位的小數位數）、顯示、輸入剖析，以及寫回的值。
+- `DateTimeFieldFormat` -- 日期時間欄位的顯示、輸入與綁定字串規則。
+
 ### 權限能力
 
 - `Permissions/IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability` -- 把使用者依模型的能力
@@ -74,5 +83,6 @@
 
 - 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
+- `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`
