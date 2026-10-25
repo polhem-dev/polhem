@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.Controls
     /// <summary>
     /// Renders the master sections of a single-record form from a <see cref="FormLayout"/>, one field
     /// editor per <see cref="LayoutField"/>, chosen by <see cref="FieldEditorFactory"/> from its
-    /// <see cref="ControlType"/>. The counterpart of the Avalonia head's <c>FormLayoutPresenter</c>.
+    /// <see cref="ControlType"/>. The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.FormLayoutPresenter</c>.
     /// </summary>
     /// <remarks>
     /// <para>

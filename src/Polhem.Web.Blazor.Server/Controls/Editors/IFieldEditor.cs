@@ -7,7 +7,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// Contract shared by the field editor components that pair each <see cref="ControlType"/> with an
     /// input bound to a <see cref="FormDataObject"/> field. Extends the definition-layer
     /// <see cref="IBindFieldControl"/> / <see cref="IUIControl"/> contracts with the explicit binding
-    /// surface, matching the <c>IFieldEditor</c> of the Avalonia head member for member.
+    /// surface, matching the <c>Polhem.UI.Avalonia.Controls.Editors.IFieldEditor</c> of the Avalonia head member for member.
     /// </summary>
     /// <remarks>
     /// Editors usually bind declaratively instead: set <see cref="IBindFieldControl.FieldName"/> (and

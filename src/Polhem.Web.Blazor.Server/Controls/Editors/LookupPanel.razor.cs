@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// The selection surface of a lookup picker: a search box, a list over the target form's lookup layout
     /// (see <see cref="FormSchema.GetLookupLayout"/>), and OK / Cancel buttons. Rows come from
     /// <see cref="IFormApiConnector.GetLookupAsync"/>, so the projection and the search are server-resolved.
-    /// The counterpart of the Avalonia head's <c>LookupPanel</c>.
+    /// The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.LookupPanel</c>.
     /// </summary>
     /// <remarks>
     /// <para>

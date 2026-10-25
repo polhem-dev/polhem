@@ -10,7 +10,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// <summary>
     /// Client-side live recomputation of a form's computed fields (<see cref="FormField.ValueExpression"/>)
     /// and new-row default expressions (<see cref="FormField.DefaultValueExpression"/>) for this head, the
-    /// counterpart of the Avalonia head's <c>FormLiveComputation</c>. The recompute rules are
+    /// counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.DataObjects.FormLiveComputation</c>. The recompute rules are
     /// <see cref="FormLiveComputationEngine"/>, which both heads share; this type supplies this head's
     /// defaults. <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> wires it to its data object.
     /// </summary>

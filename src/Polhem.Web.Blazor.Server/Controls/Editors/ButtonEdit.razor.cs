@@ -16,7 +16,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// selection writes the row id and the mapped fields back through the data object, and Delete or
     /// Backspace clears the selection. Without relation metadata the button only raises
     /// <see cref="ButtonClick"/> and the editor behaves like a plain <see cref="TextEdit"/>. This is the
-    /// behavior of the Avalonia head's <c>ButtonEdit</c>.
+    /// behavior of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.ButtonEdit</c>.
     /// </summary>
     /// <remarks>
     /// In lookup mode the input is always read-only: the display value is not hand-editable, and the lookup

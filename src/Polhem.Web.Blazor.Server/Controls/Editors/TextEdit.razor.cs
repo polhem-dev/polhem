@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// <para>
     /// The value is committed when the user leaves the input or presses Enter (the browser's
     /// <c>change</c> event), not per keystroke, so any recalculation that depends on it runs once the
-    /// user finishes the value. This matches the Avalonia head's <c>TextEdit</c>.
+    /// user finishes the value. This matches the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.TextEdit</c>.
     /// </para>
     /// <para>
     /// The input is bound with <c>@bind:get</c> / <c>@bind:set</c> rather than a <c>value</c> attribute and

@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// <summary>
     /// Modal presentation of <see cref="LookupPanel"/>: shows the lookup picker for a target program over
     /// the page and reports the committed row through <see cref="OnCommitted"/>, or a cancellation through
-    /// <see cref="OnCancelled"/>. The counterpart of the Avalonia head's <c>LookupDialog</c>; the host
+    /// <see cref="OnCancelled"/>. The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.LookupDialog</c>; the host
     /// renders it while the lookup is open and removes it when either callback runs.
     /// </summary>
     /// <remarks>

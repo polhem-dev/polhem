@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// The editing surface of the <see cref="GridEditMode.EditForm"/> mode: one field editor per visible
     /// <see cref="LayoutColumn"/>, bound to a single row through the buffered edit protocol of
     /// <see cref="FormDataObject"/>. OK commits (<see cref="FormDataObject.CommitRowEdit"/>), Cancel restores
-    /// (<see cref="FormDataObject.CancelRowEdit"/>). The counterpart of the Avalonia head's <c>RowEditPanel</c>.
+    /// (<see cref="FormDataObject.CancelRowEdit"/>). The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.RowEditPanel</c>.
     /// </summary>
     /// <remarks>
     /// <para>

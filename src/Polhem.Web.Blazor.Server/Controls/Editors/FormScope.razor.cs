@@ -6,7 +6,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
 {
     /// <summary>
     /// Gives the field editors inside it an ambient binding scope: a data object to bind to and the form
-    /// mode to follow. The counterpart of the Avalonia head's <c>FormScope</c> attached properties.
+    /// mode to follow. The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.FormScope</c> attached properties.
     /// </summary>
     /// <remarks>
     /// An editor binds through the scope when it has a field name and no explicit bind or

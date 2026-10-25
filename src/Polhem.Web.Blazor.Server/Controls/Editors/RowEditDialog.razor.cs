@@ -8,7 +8,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// <summary>
     /// Modal presentation of <see cref="RowEditPanel"/>: edits one row over the page and reports the outcome
     /// through <see cref="EditCommitted"/> or <see cref="EditCancelled"/>. The counterpart of the Avalonia
-    /// head's <c>RowEditDialog</c>; the host renders it while the row is being edited and removes it when
+    /// head's <c>Polhem.UI.Avalonia.Controls.Editors.RowEditDialog</c>; the host renders it while the row is being edited and removes it when
     /// either callback runs.
     /// </summary>
     /// <remarks>

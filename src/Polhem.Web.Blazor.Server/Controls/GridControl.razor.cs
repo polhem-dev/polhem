@@ -18,7 +18,7 @@ namespace Polhem.Web.Blazor.Server.Controls
     /// Tabular control that renders a <see cref="LayoutGrid"/> over a detail table of a
     /// <see cref="FormDataObject"/>, or over a caller-supplied <see cref="System.Data.DataTable"/> in list
     /// mode, with an Add / Edit / Delete toolbar while editing is allowed. The counterpart of the Avalonia
-    /// head's <c>GridControl</c>, with the same editing rules.
+    /// head's <c>Polhem.UI.Avalonia.Controls.GridControl</c>, with the same editing rules.
     /// </summary>
     /// <remarks>
     /// <para>

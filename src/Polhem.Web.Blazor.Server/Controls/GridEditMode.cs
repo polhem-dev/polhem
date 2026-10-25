@@ -2,7 +2,7 @@ namespace Polhem.Web.Blazor.Server.Controls
 {
     /// <summary>
     /// The editing model of a <see cref="GridControl"/>, the same choice as the Avalonia head's
-    /// <c>GridEditMode</c>.
+    /// <c>Polhem.UI.Avalonia.Controls.GridEditMode</c>.
     /// </summary>
     public enum GridEditMode
     {

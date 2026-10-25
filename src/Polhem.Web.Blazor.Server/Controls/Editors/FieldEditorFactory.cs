@@ -4,11 +4,11 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
 {
     /// <summary>
     /// Maps a <see cref="ControlType"/> to the field editor component that renders it, the same mapping as
-    /// the Avalonia head's <c>FieldEditorFactory</c>.
+    /// the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.FieldEditorFactory</c>.
     /// </summary>
     /// <remarks>
     /// Blazor creates components itself, so this returns the component type for a
-    /// <c>DynamicComponent</c> or a render tree builder instead of an instance.
+    /// <see cref="Microsoft.AspNetCore.Components.DynamicComponent"/> or a render tree builder instead of an instance.
     /// </remarks>
     public static class FieldEditorFactory
     {

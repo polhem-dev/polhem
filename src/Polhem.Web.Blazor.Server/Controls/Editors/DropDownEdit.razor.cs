@@ -10,7 +10,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// </summary>
     /// <remarks>
     /// A stored value that matches no item shows an empty selection, as the Avalonia head's
-    /// <c>DropDownEdit</c> does, rather than the first item, which a select would otherwise show without
+    /// <c>Polhem.UI.Avalonia.Controls.Editors.DropDownEdit</c> does, rather than the first item, which a select would otherwise show without
     /// the value being written.
     /// </remarks>
     public sealed partial class DropDownEdit : FieldEditorBase

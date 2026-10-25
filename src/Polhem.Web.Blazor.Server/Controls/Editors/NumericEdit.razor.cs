@@ -14,7 +14,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// </summary>
     /// <remarks>
     /// Display, input and format resolution are <see cref="NumericFieldFormat"/>, shared with the
-    /// Avalonia head's <c>NumericEdit</c>: the user's culture for separators, a sign and the decimal
+    /// Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.NumericEdit</c>: the user's culture for separators, a sign and the decimal
     /// separator only on input, and the invariant form for the bound value.
     /// </remarks>
     public sealed partial class NumericEdit : TextEdit
