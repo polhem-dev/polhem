@@ -12,6 +12,17 @@ while typing), so a computed field yields the same result on both sides.
 |------|---------|
 | `DynamicExpressoEvaluator` | The default `IExpressionEvaluator`. Parses and compiles once, caches by expression text plus parameter signature, then invokes per row |
 
+## Checking an expression without evaluating it
+
+`Validate` parses an expression against the types of its variables, with the same registered types and helper
+functions as `Evaluate`, and throws `ExpressionEvaluationException` when it does not parse. Nothing is compiled.
+`FormExpressionCalculator.ValidateExpressions` (`Polhem.Definition`) runs it over every expression of a FormSchema,
+with each field typed as the runtime types it, and DefineEditor shows the result when it validates or saves a form.
+
+The check matters most for numeric literals: a literal with a decimal point is a `double`, and there is no operator
+between `decimal` and `double`, so `amount * 1.05` on a decimal field does not parse. Write `amount * 1.05m`. On the
+server such an expression fails the save; in a client's live preview it only stops the computed field from updating.
+
 ## The abstraction lives in `Polhem.Core`
 
 `IExpressionEvaluator`, `ExpressionPolicy` and `ExpressionEvaluationException` are in

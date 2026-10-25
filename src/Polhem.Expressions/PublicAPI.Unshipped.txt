@@ -1,1 +1,2 @@
 #nullable enable
+Polhem.Expressions.DynamicExpressoEvaluator.Validate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> void

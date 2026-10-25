@@ -66,5 +66,24 @@ namespace Polhem.Core.Expressions
         /// <param name="expression">The expression text.</param>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed.</exception>
         IReadOnlyList<string> GetReferencedVariables(string expression);
+
+        /// <summary>
+        /// Checks that <paramref name="expression"/> parses against variables of the given types, without
+        /// evaluating it. Used at design time to reject an expression that would fail at run time, such as
+        /// <c>amount * 1.05</c> on a <see cref="decimal"/> field (no <see cref="decimal"/> × <see cref="double"/>
+        /// operator).
+        /// </summary>
+        /// <param name="expression">The expression text.</param>
+        /// <param name="variableTypes">The type of each variable the expression may reference, by name.</param>
+        /// <param name="returnType">The result type the expression is parsed for; <see cref="object"/> accepts
+        /// any result.</param>
+        /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed for these variable
+        /// types: a syntax error, an unknown identifier, or an operator not defined for its operand types.</exception>
+        /// <remarks>
+        /// An implementation applies the same configuration <see cref="Evaluate(string, IReadOnlyDictionary{string, object?}, Type, string, DateTimeBasis)"/>
+        /// uses (registered types and helper functions), so an expression that passes here parses there for
+        /// variables of the same types.
+        /// </remarks>
+        void Validate(string expression, IReadOnlyDictionary<string, Type> variableTypes, Type returnType);
     }
 }
