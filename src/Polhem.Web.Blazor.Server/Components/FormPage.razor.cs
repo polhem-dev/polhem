@@ -196,9 +196,13 @@ namespace Polhem.Web.Blazor.Server.Components
         }
 
         private SingleFormMode FormMode
-            => _dataObject?.MasterRow is null
-                ? SingleFormMode.View
-                : _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+        {
+            get
+            {
+                if (_dataObject?.MasterRow is null) return SingleFormMode.View;
+                return _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+            }
+        }
 
         // Recomputes the edited row's computed fields. The write-backs re-raise the change event; the
         // engine's guard makes this handler a no-op for those echoes, so one edit yields one pass. A row
