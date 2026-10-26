@@ -387,13 +387,13 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <summary>
         /// Applies a lookup selection to the bound row: writes the selected row's
         /// <c>sys_rowid</c> into <paramref name="field"/> and copies each mapped source
-        /// field to its local destination field. <see cref="FormField.LookupFieldMappings"/>
-        /// wins over <see cref="FormField.RelationFieldMappings"/> when both are declared.
+        /// field of <see cref="FormField.RelationFieldMappings"/> to its local destination field,
+        /// <see cref="FieldMapping.LookupOnly"/> entries included.
         /// </summary>
         /// <remarks>
-        /// The locally written <c>ref_*</c> values are display-only between saves — a
-        /// reload re-derives them from the server-side relation JOIN, which stays the
-        /// single source of truth.
+        /// A value copied into a relation field (<c>ref_*</c>) is display-only between saves: a
+        /// reload re-derives it from the server-side relation join, which stays the single source
+        /// of truth. A value a lookup-only mapping copies into a stored field is saved with the row.
         /// </remarks>
         /// <param name="field">The relation field the lookup belongs to.</param>
         /// <param name="selectedRow">The row picked in the lookup window.</param>

@@ -50,9 +50,8 @@ namespace Polhem.UI.Core.Fields
 
         /// <summary>
         /// Writes a lookup selection: the selected row's <c>sys_rowid</c> into <paramref name="field"/>, then
-        /// each mapped source field into its local destination field.
-        /// <see cref="FormField.LookupFieldMappings"/> wins over <see cref="FormField.RelationFieldMappings"/>
-        /// when both are declared.
+        /// the source field of every <see cref="FormField.RelationFieldMappings"/> entry into its local
+        /// destination field, <see cref="FieldMapping.LookupOnly"/> entries included.
         /// </summary>
         /// <param name="field">The lookup field.</param>
         /// <param name="selectedRow">The row picked in the lookup.</param>
@@ -79,7 +78,7 @@ namespace Polhem.UI.Core.Fields
                 if (!selectedRow.Table.Columns.Contains(mapping.SourceField))
                     throw new InvalidOperationException(
                         $"Lookup source field '{mapping.SourceField}' is not in the lookup result; " +
-                        "declare it in the target form's LookupFields.");
+                        $"declare it in the LookupFields of form '{field.RelationProgId}'.");
                 setField(mapping.DestinationField, FormValueBinding.ToBindingString(selectedRow[mapping.SourceField]));
             }
         }
@@ -101,12 +100,6 @@ namespace Polhem.UI.Core.Fields
         }
 
         private static FieldMappingCollection ResolveMappings(FormField field)
-        {
-            if (field.LookupFieldMappings is { Count: > 0 } lookupMappings)
-                return lookupMappings;
-            if (field.RelationFieldMappings is { Count: > 0 } relationMappings)
-                return relationMappings;
-            return [];
-        }
+            => field.RelationFieldMappings ?? [];
     }
 }
