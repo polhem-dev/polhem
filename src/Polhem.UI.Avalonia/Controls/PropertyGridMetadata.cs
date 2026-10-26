@@ -108,6 +108,27 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
+        /// Returns the editor <paramref name="provider"/> supplies for <paramref name="property"/> on
+        /// <paramref name="component"/>, or <c>null</c> when the row gets no button.
+        /// </summary>
+        /// <remarks>
+        /// Only a row of <paramref name="kind"/> <see cref="PropertyGridEditorKind.Text"/> or
+        /// <see cref="PropertyGridEditorKind.Suggestion"/> is asked, and never a password.
+        /// </remarks>
+        internal static Func<Task<bool>>? GetValueEditor(PropertyDescriptor property, object component,
+            PropertyGridEditorKind kind, Func<PropertyDescriptor, object, Func<Task<bool>>?>? provider)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+            ArgumentNullException.ThrowIfNull(component);
+            if (provider is null || kind is not (PropertyGridEditorKind.Text or PropertyGridEditorKind.Suggestion)
+                || IsPassword(property))
+            {
+                return null;
+            }
+            return provider(property, component);
+        }
+
+        /// <summary>
         /// Returns whether <paramref name="type"/> is shown as a collection: it implements <see cref="IList"/> and is not
         /// a <see cref="string"/>.
         /// </summary>

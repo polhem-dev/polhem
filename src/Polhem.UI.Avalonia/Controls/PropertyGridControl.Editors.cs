@@ -76,6 +76,19 @@ namespace Polhem.UI.Avalonia.Controls
 
         private static DockPanel CreateCollectionEditor()
         {
+            var button = CreateEllipsisButton();
+            var summary = new TextBlock
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(6, 0),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            };
+            return new DockPanel { Children = { button, summary } };
+        }
+
+        /// <summary>Creates the small button docked to the right of a row that opens an editor of its own.</summary>
+        private static Button CreateEllipsisButton()
+        {
             var button = new Button
             {
                 // Three periods rather than the ellipsis character, which the theme's font draws as a short dash.
@@ -89,13 +102,7 @@ namespace Polhem.UI.Avalonia.Controls
                 Margin = new Thickness(4, 0, 0, 0),
             };
             DockPanel.SetDock(button, Dock.Right);
-            var summary = new TextBlock
-            {
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(6, 0),
-                TextTrimming = TextTrimming.CharacterEllipsis,
-            };
-            return new DockPanel { Children = { button, summary } };
+            return button;
         }
 
         private static NumericUpDown CreateNumericEditor(Type propertyType, bool isReadOnly)
