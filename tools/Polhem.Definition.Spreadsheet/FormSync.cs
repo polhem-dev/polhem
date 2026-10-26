@@ -20,8 +20,9 @@ namespace Polhem.Definition.Spreadsheet;
 /// </para>
 /// <para>
 /// When the form already has a zh-TW language resource, each new field that lacks a caption there gets one holding
-/// the form's own caption, so the translator finds every key to translate in the file. A form without that resource
-/// is not translated, and none is created for it.
+/// the form's own caption, so the translator finds every key to translate in the file. A relation field has no column
+/// to tell whether it is new, so every relation field that lacks a caption gets one. A form without that resource is
+/// not translated, and none is created for it.
 /// </para>
 /// </remarks>
 public static class FormSync
@@ -86,10 +87,15 @@ public static class FormSync
     }
 
     /// <summary>
-    /// Gives each new stored field of <paramref name="content"/> that has no zh-TW caption one holding its own caption.
-    /// A field is new when its table's TableSchema does not have its column yet; a table without a TableSchema file is
-    /// new as a whole and gets nothing, nor does a form with no zh-TW texts at all.
+    /// Gives each new stored field and each relation field of <paramref name="content"/> that has no zh-TW caption one.
+    /// A stored field is new when its table's TableSchema does not have its column yet; a table without a TableSchema
+    /// file is new as a whole and gets nothing, nor does a form with no zh-TW texts at all.
     /// </summary>
+    /// <remarks>
+    /// A field gets its own caption, for the translator to replace. A relation field that a regular mapping fills from
+    /// <c>sys_id</c> or <c>sys_name</c> gets the zh-TW caption of its foreign key followed by 代號 or 名稱 instead,
+    /// when the foreign key has one, the way the workbook import names these fields.
+    /// </remarks>
     private static void AddMissingCaptionTranslations(PathOptions paths, FormWorkbookContent content)
     {
         if (content.ZhTw.Count == 0) return;
@@ -103,14 +109,40 @@ public static class FormSync
             var existing = XmlCodec.DeserializeFromFile<TableSchema>(path);
             if (existing?.Fields is null) continue;
 
-            foreach (var field in table.Fields.Where(f => f.Type == FieldType.DbField && !existing.Fields.Contains(f.FieldName)))
+            foreach (var field in table.Fields.Where(f => f.Type == FieldType.RelationField
+                || (f.Type == FieldType.DbField && !existing.Fields.Contains(f.FieldName))))
             {
-                var key = FormWorkbookWriter.Key(FormSchemaLocalizer.FieldCaptionKeyFormat, field.FieldName);
+                var key = CaptionKey(field.FieldName);
                 if (!content.ZhTw.ContainsKey(key))
-                    content.ZhTw[key] = string.IsNullOrEmpty(field.Caption) ? field.FieldName : field.Caption;
+                    content.ZhTw[key] = RelationCaption(content, table, field)
+                        ?? (string.IsNullOrEmpty(field.Caption) ? field.FieldName : field.Caption);
             }
         }
     }
+
+    /// <summary>
+    /// The zh-TW caption of the relation field <paramref name="field"/> when a regular mapping of a foreign key with a
+    /// zh-TW caption fills it from <c>sys_id</c> or <c>sys_name</c>; otherwise <c>null</c>.
+    /// </summary>
+    private static string? RelationCaption(FormWorkbookContent content, FormTable table, FormField field)
+    {
+        if (field.Type != FieldType.RelationField) return null;
+        foreach (var foreignKey in table.Fields!)
+        {
+            var mapping = foreignKey.RelationFieldMappings?.FirstOrDefault(m => !m.LookupOnly
+                && string.Equals(m.DestinationField, field.FieldName, StringComparison.OrdinalIgnoreCase));
+            if (mapping is null) continue;
+            var suffix = string.Equals(mapping.SourceField, SysFields.Id, StringComparison.OrdinalIgnoreCase) ? "代號"
+                : string.Equals(mapping.SourceField, SysFields.Name, StringComparison.OrdinalIgnoreCase) ? "名稱"
+                : null;
+            if (suffix is not null && content.ZhTw.TryGetValue(CaptionKey(foreignKey.FieldName), out var text) && text.Length > 0)
+                return text + suffix;
+        }
+        return null;
+    }
+
+    private static string CaptionKey(string fieldName) =>
+        FormWorkbookWriter.Key(FormSchemaLocalizer.FieldCaptionKeyFormat, fieldName);
 
     /// <summary>The database tables of <paramref name="schema"/>: the master table and every detail table.</summary>
     /// <remarks>

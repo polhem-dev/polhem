@@ -152,6 +152,26 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("A relation field without a zh-TW caption gets one: its foreign key's caption plus 名稱 when it maps sys_name, otherwise its own")]
+        public void Plan_RelationField_AddsZhTwCaptionKey()
+        {
+            EditSchema(s =>
+            {
+                var fields = s.Tables!["Quote"].Fields!;
+                fields.Add(new FormField("ref_customer_short", "Customer Short Name", FieldDbType.String, FieldType.RelationField));
+                fields.Add(new FormField("ref_customer_tel", "Customer Tel", FieldDbType.String, FieldType.RelationField));
+                fields["customer_rowid"].RelationFieldMappings!.Add(new FieldMapping("sys_name", "ref_customer_short"));
+                fields["customer_rowid"].RelationFieldMappings!.Add(new FieldMapping("tel", "ref_customer_tel"));
+            });
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            var items = XmlCodec.DeserializeFromFile<LanguageResource>(LanguagePath)!.Items;
+            Assert.Equal("客戶名稱", items["Field.ref_customer_short.Caption"].Value);
+            Assert.Equal("Customer Tel", items["Field.ref_customer_tel.Caption"].Value);
+        }
+
+        [Fact]
         [DisplayName("A zh-TW caption already given for a new field is kept, and a form without zh-TW texts gets no language file")]
         public void Plan_NewField_KeepsTranslationAndCreatesNoLanguageFile()
         {
