@@ -42,6 +42,15 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>Gets the editor.</summary>
         internal Control Editor { get; }
 
+        /// <summary>
+        /// Gets or sets the editor <see cref="PropertyGridControl.ValueEditorProvider"/> supplied for the property, or
+        /// <c>null</c> when the row has none.
+        /// </summary>
+        internal Func<Task<bool>>? ValueEditor { get; set; }
+
+        /// <summary>Gets or sets the button that runs <see cref="ValueEditor"/>, or <c>null</c> when the row has none.</summary>
+        internal Button? ValueEditorButton { get; set; }
+
         /// <summary>Gets or sets the action that shows the property's current value in the editor.</summary>
         internal Action Load { get; set; } = static () => { };
 

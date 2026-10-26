@@ -2,3 +2,6 @@
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Degraded -> System.EventHandler?
 Polhem.UI.Avalonia.Views.FormView.LiveComputationDegraded -> System.EventHandler<Polhem.UI.Core.LiveComputationDegradation!>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProvider.get -> System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Func<System.Threading.Tasks.Task<bool>!>?>?
+Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProvider.set -> void
+static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProviderProperty -> Avalonia.StyledProperty<System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Func<System.Threading.Tasks.Task<bool>!>?>?>!

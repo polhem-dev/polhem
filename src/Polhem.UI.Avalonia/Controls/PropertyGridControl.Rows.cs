@@ -87,20 +87,31 @@ namespace Polhem.UI.Avalonia.Controls
             BindResource(labelHost, Border.BorderBrushProperty, "SemiColorBorder", Brushes.LightGray);
 
             var editor = CreateEditor(kind, property, isReadOnly, suggestions);
+            var valueEditor = PropertyGridMetadata.GetValueEditor(property, component, kind, ValueEditorProvider);
+            var valueEditorButton = valueEditor is null ? null : CreateEllipsisButton();
             var editorHost = new Border
             {
                 Padding = new Thickness(2),
                 // Keeps the rows of check boxes and summaries as tall as the rows of text boxes.
                 MinHeight = EditorRowHeight,
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Child = editor,
+                Child = valueEditorButton is null ? editor : new DockPanel { Children = { valueEditorButton, editor } },
             };
             BindResource(editorHost, Border.BorderBrushProperty, "SemiColorBorder", Brushes.LightGray);
             Grid.SetColumn(editorHost, 1);
 
-            var row = new PropertyGridRow(component, property, kind, isReadOnly, labelHost, label, editor);
+            var row = new PropertyGridRow(component, property, kind, isReadOnly, labelHost, label, editor)
+            {
+                ValueEditor = valueEditor,
+                ValueEditorButton = valueEditorButton,
+            };
             _rows.Add(row);
             AttachEditor(row);
+            if (valueEditorButton is not null)
+            {
+                valueEditorButton.IsEnabled = !isReadOnly;
+                valueEditorButton.Click += async (_, _) => await EditValueAsync(row);
+            }
             labelHost.ContextMenu = CreateRowMenu(row);
             labelHost.PointerPressed += (_, _) => SelectRow(row);
             editor.GotFocus += (_, _) => SelectRow(row);

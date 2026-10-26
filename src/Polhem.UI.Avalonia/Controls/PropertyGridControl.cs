@@ -22,8 +22,9 @@ namespace Polhem.UI.Avalonia.Controls
     /// A text box hides its text for a property marked <c>[PasswordPropertyText(true)]</c>, and a <see cref="string"/>
     /// property gets a drop-down that also takes typed text when <see cref="ValueSuggestionProvider"/> offers values.
     /// A collection shows its item count and a button that opens it in <see cref="CollectionEditDialog"/>, or in
-    /// whatever <see cref="CollectionEditorProvider"/> supplies. Any other value, such as a nested object, shows its
-    /// text and cannot be edited here.
+    /// whatever <see cref="CollectionEditorProvider"/> supplies. A text row also gets a button when
+    /// <see cref="ValueEditorProvider"/> supplies an editor of its own for the property. Any other value, such as a
+    /// nested object, shows its text and cannot be edited here.
     /// </para>
     /// <para>
     /// A value that differs from its <c>[DefaultValue]</c> is shown in bold, and the label's context menu resets it.
@@ -86,6 +87,13 @@ namespace Polhem.UI.Avalonia.Controls
         /// </summary>
         public static readonly StyledProperty<Func<CollectionEditContext, Task<bool>?>?> CollectionEditorProviderProperty =
             AvaloniaProperty.Register<PropertyGridControl, Func<CollectionEditContext, Task<bool>?>?>(nameof(CollectionEditorProvider));
+
+        /// <summary>
+        /// Defines the <see cref="ValueEditorProvider"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Func<PropertyDescriptor, object, Func<Task<bool>>?>?> ValueEditorProviderProperty =
+            AvaloniaProperty.Register<PropertyGridControl, Func<PropertyDescriptor, object, Func<Task<bool>>?>?>(
+                nameof(ValueEditorProvider));
 
         private const double EditorRowHeight = 36;
 
@@ -255,6 +263,29 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
+        /// Gets or sets the function that supplies an editor of its own for a property shown as text; <c>null</c>
+        /// supplies none.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The function receives the property and the object that owns it, and returns <c>null</c> to keep the row as
+        /// it is, or a function that edits the object in its own way, typically in a dialog, and completes with whether
+        /// it changed it. When it returns one, the row keeps its text box or drop-down and gains a button that calls it.
+        /// Text typed into the row is written before the function runs. When the function reports a change, the control
+        /// reloads its rows and raises <see cref="PropertyValueChanged"/> with the property's values before and after.
+        /// </para>
+        /// <para>
+        /// It is asked when the rows are built, only for a row that shows its value as text (a text box or an editable
+        /// drop-down) and never for a password. The button is disabled while the row is read-only.
+        /// </para>
+        /// </remarks>
+        public Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider
+        {
+            get { return GetValue(ValueEditorProviderProperty); }
+            set { SetValue(ValueEditorProviderProperty, value); }
+        }
+
+        /// <summary>
         /// Occurs after the control has written a new value to a property of <see cref="SelectedObject"/>.
         /// </summary>
         /// <remarks>
@@ -294,7 +325,8 @@ namespace Polhem.UI.Avalonia.Controls
             }
             else if (change.Property == ShowCategoriesProperty || change.Property == IsReadOnlyProperty
                 || change.Property == LabelTranslatorProperty || change.Property == CollectionEditorProviderProperty
-                || change.Property == ValueSuggestionProviderProperty || change.Property == PropertyFilterProperty)
+                || change.Property == ValueSuggestionProviderProperty || change.Property == PropertyFilterProperty
+                || change.Property == ValueEditorProviderProperty)
             {
                 Refresh();
             }
@@ -368,6 +400,23 @@ namespace Polhem.UI.Avalonia.Controls
                 ?? CollectionEditDialog.ShowAsync(this, context, this, CancellationToken.None);
             if (!await edit) { return false; }
             OnValueWritten(row, context.Collection);
+            return true;
+        }
+
+        /// <summary>
+        /// Commits the text of <paramref name="row"/>, then runs the editor <see cref="ValueEditorProvider"/> supplied
+        /// for it.
+        /// </summary>
+        /// <returns><c>true</c> when the editor changed the object.</returns>
+        internal async Task<bool> EditValueAsync(PropertyGridRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            if (row.ValueEditor is not { } edit || row.IsReadOnly) { return false; }
+            SelectRow(row);
+            CommitText(row);
+            var oldValue = row.Property.GetValue(row.Component);
+            if (!await edit()) { return false; }
+            OnValueWritten(row, oldValue);
             return true;
         }
 
