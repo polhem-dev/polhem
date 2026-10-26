@@ -8,7 +8,8 @@ namespace Polhem.UI.Core.Fields
 {
     /// <summary>
     /// The rules of a lookup (relation) field that every UI head shares: whether a field looks up at all,
-    /// which program it looks up, which fields it shows, and how a selection is written back.
+    /// which fields it shows, and how a selection is written back. The program a lookup opens is the field's
+    /// <see cref="FormField.RelationProgId"/>.
     /// </summary>
     public static class LookupFieldRules
     {
@@ -20,18 +21,6 @@ namespace Polhem.UI.Core.Fields
         /// <returns><c>true</c> for a lookup field.</returns>
         public static bool HasLookup(FormField? field)
             => field is not null && StringUtilities.IsNotEmpty(field.RelationProgId);
-
-        /// <summary>
-        /// Resolves the program a lookup opens: <see cref="FormField.LookupProgId"/> when set, else
-        /// <see cref="FormField.RelationProgId"/>.
-        /// </summary>
-        /// <param name="field">The lookup field.</param>
-        /// <returns>The program identifier.</returns>
-        public static string ResolveProgId(FormField field)
-        {
-            ArgumentNullException.ThrowIfNull(field);
-            return StringUtilities.IsNotEmpty(field.LookupProgId) ? field.LookupProgId : field.RelationProgId;
-        }
 
         /// <summary>
         /// Resolves the local fields whose values a lookup field shows: the layout field's

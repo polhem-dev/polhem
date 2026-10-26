@@ -25,8 +25,6 @@ public sealed class FormSchemaCommandProvider(FormSchemaDocumentViewModel docume
             return [Create("FormSchema_AddRule", "IconAdd", document.AddRuleCommand)];
         if (FormSchemaDocumentViewModel.IsRelationGroup(node))
             return [Create("FormSchema_AddRelationMapping", "IconLink", document.AddRelationMappingCommand)];
-        if (FormSchemaDocumentViewModel.IsLookupGroup(node))
-            return [Create("FormSchema_AddLookupMapping", "IconLink", document.AddLookupMappingCommand)];
         return [];
     }
 }

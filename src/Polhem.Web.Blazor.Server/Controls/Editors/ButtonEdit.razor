@@ -30,7 +30,7 @@
 </span>
 @if (_lookupOpen && FormField is { } lookupField)
 {
-    <LookupDialog ProgId="@LookupFieldRules.ResolveProgId(lookupField)"
+    <LookupDialog ProgId="@lookupField.RelationProgId"
                   OnCommitted="ApplySelectionAsync"
                   OnCancelled="CloseLookup"
                   OnFailed="ReportFailureAsync" />

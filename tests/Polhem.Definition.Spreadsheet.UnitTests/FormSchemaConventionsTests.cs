@@ -67,6 +67,20 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("A relation field with only lookup-only mappings still gets the conventional join mappings after them")]
+        public void Apply_RelationFieldWithOnlyLookupOnly_AddsJoinMappings()
+        {
+            var content = MinimalQuote();
+            var relation = content.Schema.Tables!["Quote"].Fields!["customer_rowid"];
+            relation.RelationFieldMappings!.Add(new FieldMapping("sales_rowid", "sales_rowid") { LookupOnly = true });
+
+            FormSchemaConventions.Apply(content);
+
+            Assert.Equal(["sales_rowid->sales_rowid (lookup)", "sys_id->ref_customer_id", "sys_name->ref_customer_name"],
+                relation.RelationFieldMappings!.Select(m => m.ToString().Replace(" -> ", "->", StringComparison.Ordinal)));
+        }
+
+        [Fact]
         [DisplayName("Applying the conventions twice changes nothing the second time")]
         public void Apply_Twice_IsIdempotent()
         {

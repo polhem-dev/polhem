@@ -82,6 +82,12 @@ renders a ButtonEdit popup, writes back the display values, and recomputes them 
 ```
 - The source table's FormSchema needs `LookupFields="sys_id,sys_name"` (composite display "code - name").
 - Business tables can point to framework tables (such as Order.employee → `st_employee`), and vice versa.
+- To carry more along with a selection than the join reads (picking an employee also fills the form's own
+  `dept_rowid`), add those mappings with `LookupOnly="true"`: they are written back on selection but never joined. Their
+  source fields must be in the target's `LookupFields`, and a `ref_*` field still needs a regular mapping on its own
+  foreign key (POLHEM1006). Details: `docs/en/definitions/formschema-data-access.md` §3.4.
+- There is no separate lookup program or lookup mapping list: the lookup opens `RelationProgId`. To narrow the
+  candidates, override the target BO's `GetLookupFilter`, or point `RelationProgId` at another form over the same table.
 
 ### Master-detail (documents)
 The master table has `FormTable.TableName == ProgId` (a framework invariant). The detail is a second `FormTable` whose

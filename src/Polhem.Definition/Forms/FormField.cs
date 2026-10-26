@@ -19,7 +19,6 @@ namespace Polhem.Definition.Forms
     public sealed class FormField : KeyCollectionItem
     {
         private FieldMappingCollection? _relationFieldMappings = null;
-        private FieldMappingCollection? _lookupFieldMappings = null;
         private ListItemCollection? _listItems = null;
 
         #region Constructors
@@ -261,41 +260,6 @@ namespace Polhem.Definition.Forms
         public bool RelationFieldMappingsSpecified => _relationFieldMappings is { Count: > 0 };
 
         /// <summary>
-        /// Gets or sets the program ID of the UI lookup/selection window.
-        /// When a field requires data to be selected from a popup window, set this property to determine which lookup window to open.
-        /// </summary>
-        [XmlAttribute]
-        [Category("Relation")]
-        [Description("Program ID of the UI lookup/selection window.")]
-        [DefaultValue("")]
-        public string LookupProgId { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets the field mapping collection for the lookup/selection window.
-        /// Defines how fields returned from the lookup window are mapped back to local fields.
-        /// </summary>
-        [Category("Relation")]
-        [Description("Field mapping collection for the lookup/selection window.")]
-        [DefaultValue(null)]
-        public FieldMappingCollection? LookupFieldMappings
-        {
-            get
-            {
-                if (_lookupFieldMappings == null) { _lookupFieldMappings = []; }
-                return _lookupFieldMappings;
-            }
-        }
-
-        /// <summary>
-        /// Gets whether <see cref="LookupFieldMappings"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool LookupFieldMappingsSpecified => _lookupFieldMappings is { Count: > 0 };
-
-        /// <summary>
         /// Gets or sets the local fields whose values are displayed in place of this
         /// field's bound value, with multiple fields separated by commas. Used by lookup
         /// editors: the field itself stores a row identifier (Guid), while the editor
@@ -495,7 +459,6 @@ namespace Polhem.Definition.Forms
                 CurrencyField = CurrencyField,
                 UnitField = UnitField,
                 RelationProgId = RelationProgId,
-                LookupProgId = LookupProgId,
                 DisplayFields = DisplayFields,
                 Visible = Visible,
                 ReadOnly = ReadOnly,
@@ -508,9 +471,6 @@ namespace Polhem.Definition.Forms
             if (_relationFieldMappings != null)
                 foreach (var mapping in _relationFieldMappings)
                     copy.RelationFieldMappings!.Add(mapping.Clone());
-            if (_lookupFieldMappings != null)
-                foreach (var mapping in _lookupFieldMappings)
-                    copy.LookupFieldMappings!.Add(mapping.Clone());
             if (_listItems != null)
                 foreach (var item in _listItems)
                     copy.ListItems!.Add(item.Clone());

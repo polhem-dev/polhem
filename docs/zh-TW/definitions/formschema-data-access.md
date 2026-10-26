@@ -1,4 +1,4 @@
-<!-- source: en/definitions/formschema-data-access.md blob: 3dc796af77abc4312c37f32cc98d8ce73aab113b -->
+<!-- source: en/definitions/formschema-data-access.md blob: 378f0ca82b87c67019aa850c5d8a282039ffa617 -->
 # FormSchema 驅動的資料庫存取
 
 [English](../../en/definitions/formschema-data-access.md) · [← 文件索引](../README.md)
@@ -102,6 +102,38 @@ Definition-Driven Architecture（整體架構）
 ```
 
 執行期產生 SQL 是 DDA 在資料存取層的具體做法，與 `FormLayout` / `TableSchema` 並列為 `FormSchema` 的三大投影面向。
+
+### 3.4 只在查詢選取時套用的對應（LookupOnly）
+
+同一組 `RelationFieldMappings` 也決定使用者在查詢視窗選取資料後要回寫什麼：選到那筆的 `sys_rowid` 寫進外鍵欄位，每筆對應的來源值寫進目的欄位。有時選取時要帶回的不只 JOIN 會讀的那些。以同時存放員工與部門的請假單為例，選員工時應該一併填入請假單自己的部門：
+
+```xml
+<FormField FieldName="emp_rowid" RelationProgId="Employee">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"        DestinationField="ref_emp_id" />
+    <FieldMapping SourceField="sys_name"      DestinationField="ref_emp_name" />
+    <FieldMapping SourceField="dept_rowid"    DestinationField="dept_rowid"    LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_id"   DestinationField="ref_dept_id"   LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_name" DestinationField="ref_dept_name" LookupOnly="true" />
+  </RelationFieldMappings>
+</FormField>
+<FormField FieldName="dept_rowid" RelationProgId="Department">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"   DestinationField="ref_dept_id" />
+    <FieldMapping SourceField="sys_name" DestinationField="ref_dept_name" />
+  </RelationFieldMappings>
+</FormField>
+```
+
+標記 `LookupOnly="true"` 的對應會在查詢選取時回寫，但**完全不參與 SQL 產生**：
+
+- `dept_rowid` 是請假單自己存的欄位。若員工的關聯把它也 JOIN 進來，對 `dept_rowid` 下的 `WHERE` 和 `ORDER BY` 就會讀到員工**目前**的部門，而不是請假單上存的部門。
+- `ref_dept_id` / `ref_dept_name` 由 `dept_rowid` 的 JOIN 帶出。LookupOnly 的那兩筆只是讓畫面在存檔、重新載入之前保持一致。
+
+兩個條件：
+
+- 來源欄位必須列在目標表單的 `LookupFields` 裡，因為查詢視窗只回傳這些欄位。缺少時，套用選取結果的當下就會報錯。
+- 只被 LookupOnly 對應寫入的關聯欄位（`Type="RelationField"`）每次重新載入都是空的。analyzer POLHEM1006 會回報；請在該值來源的外鍵上補一筆一般對應。
 
 ---
 

@@ -22,7 +22,7 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
     /// The options on the left switch the object and the grid's display settings; the log under them lists each
     /// <see cref="PropertyGridControl.PropertyValueChanged"/>. The translator option upper-cases every label to show
     /// where <see cref="PropertyGridControl.LabelTranslator"/> applies, and the suggestion option offers form ids for
-    /// the FormField's <c>RelationProgId</c> and <c>LookupProgId</c> through
+    /// the FormField's <c>RelationProgId</c> through
     /// <see cref="PropertyGridControl.ValueSuggestionProvider"/>.
     /// </remarks>
     public sealed class PropertyGridModule : DemoModuleBase
@@ -44,7 +44,7 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
             + "FormField's ListItems, opens CollectionEditDialog: add, delete and reorder the items and edit the selected one "
             + "in a grid of its own; Cancel leaves the collection as it was. Nested settings objects show their text. The "
             + "DatabaseServer's Password is masked, the PermissionRule's Action offers single actions, and the suggestion "
-            + "option turns the FormField's RelationProgId and LookupProgId into drop-downs that still take typed text. "
+            + "option turns the FormField's RelationProgId into a drop-down that still takes typed text. "
             + "In the nested collections object, a group's Entries open a second dialog from inside the first; the "
             + "inner OK only reaches the outer dialog's copy, so Cancel on the outer dialog discards both.";
 
@@ -122,7 +122,7 @@ namespace Avalonia.DemoCenter.Modules.PropertyEditing
 
         private static IReadOnlyList<string>? SuggestProgIds(PropertyDescriptor property, object component)
         {
-            return component is FormField && property.Name is nameof(FormField.RelationProgId) or nameof(FormField.LookupProgId)
+            return component is FormField && property.Name == nameof(FormField.RelationProgId)
                 ? s_progIds
                 : null;
         }

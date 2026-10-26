@@ -110,7 +110,7 @@ namespace Polhem.DefineEditor.UnitTests
             var filter = Assert.IsType<Func<PropertyDescriptor, bool>>(_document.SelectedPropertyFilter);
             var shown = TypeDescriptor.GetProperties(typeof(FormField)).Cast<PropertyDescriptor>().Where(filter).Select(p => p.Name).ToList();
             Assert.Contains(nameof(FormField.RelationProgId), shown);
-            Assert.Contains(nameof(FormField.LookupFieldMappings), shown);
+            Assert.Contains(nameof(FormField.RelationFieldMappings), shown);
             Assert.DoesNotContain(nameof(FormField.FieldName), shown);
 
             _document.SelectedTreeNode = Field("customer_rowid");
@@ -219,16 +219,16 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Opening the lookup mappings of a field without a Lookup group adds the group after the Relation group")]
+        [DisplayName("Opening the relation mappings of a field without a Relation group adds the group")]
         public async Task EditMappingsInTree_AddsMissingGroup()
         {
-            var customer = (FormField)Field("customer_rowid").Value;
-            _document.SelectedTreeNode = Field("customer_rowid");
+            var field = (FormField)Field("sys_id").Value;
+            _document.SelectedTreeNode = Field("sys_id");
 
-            Assert.False(await _document.EditMappingsInTree(new(customer, TypeDescriptor.GetProperties(customer)[nameof(FormField.LookupFieldMappings)]!))!);
+            Assert.False(await _document.EditMappingsInTree(new(field, TypeDescriptor.GetProperties(field)[nameof(FormField.RelationFieldMappings)]!))!);
 
-            Assert.Equal(["Relation", "Lookup"], Field("customer_rowid").Children.Select(c => c.Label));
-            Assert.True(FormSchemaDocumentViewModel.IsLookupGroup(_document.SelectedTreeNode!));
+            Assert.Equal(["Relation"], Field("sys_id").Children.Select(c => c.Label));
+            Assert.True(FormSchemaDocumentViewModel.IsRelationGroup(_document.SelectedTreeNode!));
         }
 
         [Fact]
