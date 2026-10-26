@@ -186,7 +186,7 @@ namespace Polhem.Definition.Forms
                     ValueUtilities.IsEmpty(field.RelationFieldMappings!))
                     continue;
 
-                foreach (var mapping in field.RelationFieldMappings!)
+                foreach (var mapping in field.RelationFieldMappings!.Where(m => !m.LookupOnly))
                 {
                     string destField = mapping.DestinationField;
                     if (!Fields.Contains(destField))

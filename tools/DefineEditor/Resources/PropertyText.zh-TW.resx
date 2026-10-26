@@ -58,6 +58,7 @@
   <data name="PropDesc_TableSchema_DisplayName" xml:space="preserve"><value>顯示名稱。</value><comment>Display name.</comment></data>
   <data name="PropDesc_FieldMapping_SourceField" xml:space="preserve"><value>來源欄位。</value><comment>Source field.</comment></data>
   <data name="PropDesc_FieldMapping_DestinationField" xml:space="preserve"><value>目的欄位。</value><comment>Destination field.</comment></data>
+  <data name="PropDesc_FieldMapping_LookupOnly" xml:space="preserve"><value>只在查詢視窗選取資料時套用，查詢的 JOIN 不使用。</value><comment>Applies only when a row is picked in a lookup; not used by the query join.</comment></data>
   <data name="PropDesc_FormField_FieldName" xml:space="preserve"><value>欄位名稱。</value><comment>Field name.</comment></data>
   <data name="PropDesc_FormField_Caption" xml:space="preserve"><value>標題文字。</value><comment>Caption text.</comment></data>
   <data name="PropDesc_FormField_DbType" xml:space="preserve"><value>資料庫欄位型別。</value><comment>Database field type.</comment></data>

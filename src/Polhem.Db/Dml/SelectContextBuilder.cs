@@ -171,7 +171,8 @@ namespace Polhem.Db.Dml
 
         /// <summary>
         /// For the specified foreign key field, returns a new field mapping collection containing only
-        /// the relation fields that are present in <c>_usedFieldNames</c>.
+        /// the relation fields that are present in <c>_usedFieldNames</c>, skipping
+        /// <see cref="FieldMapping.LookupOnly"/> mappings.
         /// </summary>
         /// <param name="foreignKeyField">The foreign key field.</param>
         /// <returns>The matching field mapping collection.</returns>
@@ -181,7 +182,9 @@ namespace Polhem.Db.Dml
             if (foreignKeyField.RelationFieldMappings == null)
                 return result;
 
-            foreach (var mapping in foreignKeyField.RelationFieldMappings.Where(m => _usedFieldNames.Contains(m.DestinationField)))
+            // NOTE: A lookup-only mapping may target a column of the main table, such as a copied department id.
+            // Joining it would make WHERE and ORDER BY read that column from the related row instead.
+            foreach (var mapping in foreignKeyField.RelationFieldMappings.Where(m => !m.LookupOnly && _usedFieldNames.Contains(m.DestinationField)))
             {
                 result.Add(mapping.SourceField, mapping.DestinationField);
             }
@@ -195,7 +198,8 @@ namespace Polhem.Db.Dml
         /// <param name="destinationField">The destination field name.</param>
         private static FieldMappingCollection GetSingleRelationFieldMappings(FormField foreignKeyField, string destinationField)
         {
-            var fieldMapping = foreignKeyField.RelationFieldMappings!.FindByDestination(destinationField);
+            var fieldMapping = foreignKeyField.RelationFieldMappings!.FirstOrDefault(
+                m => !m.LookupOnly && StringUtilities.IsEquals(m.DestinationField, destinationField));
             var result = new FieldMappingCollection
             {
                 { fieldMapping!.SourceField, fieldMapping.DestinationField }

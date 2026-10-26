@@ -235,6 +235,10 @@ namespace Polhem.Definition.Forms
         /// <summary>
         /// Gets the field mapping collection that maps relation source fields to local fields.
         /// </summary>
+        /// <remarks>
+        /// Every mapping is written back when a row is picked in a lookup. The query join reads only the mappings
+        /// that are not <see cref="FieldMapping.LookupOnly"/>.
+        /// </remarks>
         [Category("Relation")]
         [Description("Field mapping collection from the relation source to local fields.")]
         [DefaultValue(null)]
@@ -441,7 +445,8 @@ namespace Polhem.Definition.Forms
         /// Resolves the effective display fields for lookup editors. An explicit
         /// <see cref="DisplayFields"/> declaration wins; relation fields fall back to
         /// the <see cref="RelationFieldMappings"/> entries whose source fields are
-        /// <c>sys_id</c> and <c>sys_name</c> (in that order, skipping absent mappings).
+        /// <c>sys_id</c> and <c>sys_name</c> (in that order, skipping absent mappings and
+        /// <see cref="FieldMapping.LookupOnly"/> ones, which the join does not fill).
         /// Returns an empty list when no display field applies; editors join the
         /// resolved values with " - " (a plain space would be ambiguous because
         /// names themselves contain spaces).
@@ -459,7 +464,7 @@ namespace Polhem.Definition.Forms
             foreach (var sourceField in new[] { SysFields.Id, SysFields.Name })
             {
                 var mapping = _relationFieldMappings?.FirstOrDefault(
-                    m => StringUtilities.IsEquals(m.SourceField, sourceField));
+                    m => !m.LookupOnly && StringUtilities.IsEquals(m.SourceField, sourceField));
                 if (mapping is not null && StringUtilities.IsNotEmpty(mapping.DestinationField))
                     fields.Add(mapping.DestinationField);
             }

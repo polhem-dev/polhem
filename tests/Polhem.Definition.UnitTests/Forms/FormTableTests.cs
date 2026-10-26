@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.UnitTests.Forms
@@ -96,6 +97,26 @@ namespace Polhem.Definition.UnitTests.Forms
 
             Assert.Single(refs);
             Assert.Equal("name", refs[0].FieldName);
+        }
+
+        [Fact]
+        [DisplayName("RelationFieldReferences skips lookup-only mappings, so they may share a destination with another relation")]
+        public void RelationFieldReferences_LookupOnlyMapping_IsSkipped()
+        {
+            var ft = BuildBasic();
+            ft.Fields!.Add(new FormField("ref_dept_name", "Department", FieldDbType.String) { Type = FieldType.RelationField });
+
+            var dept = new FormField("dept_rowid", "Department", FieldDbType.Guid) { RelationProgId = "Department" };
+            dept.RelationFieldMappings!.Add(new FieldMapping("sys_name", "ref_dept_name"));
+            var emp = new FormField("emp_rowid", "Employee", FieldDbType.Guid) { RelationProgId = "Employee" };
+            emp.RelationFieldMappings!.Add(new FieldMapping("dept_rowid", "dept_rowid") { LookupOnly = true });
+            emp.RelationFieldMappings!.Add(new FieldMapping("ref_dept_name", "ref_dept_name") { LookupOnly = true });
+            ft.Fields!.Add(dept);
+            ft.Fields!.Add(emp);
+
+            var reference = Assert.Single(ft.RelationFieldReferences);
+            Assert.Equal("ref_dept_name", reference.FieldName);
+            Assert.Same(dept, reference.ForeignKeyField);
         }
     }
 }
