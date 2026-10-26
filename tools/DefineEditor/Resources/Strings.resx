@@ -416,4 +416,35 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Status_FormTablesUnregistered" xml:space="preserve"><value>Not registered in DbCategorySettings: {0}</value></data>
   <data name="Synced_Title" xml:space="preserve"><value>Sync Complete</value></data>
   <data name="Synced_UpgradeHint" xml:space="preserve"><value>Upgrade the database now so its tables match the synced definitions? Only this form's tables are upgraded: {0}. The preview shows the changes without making them.</value></data>
+  <data name="Relation_Title" xml:space="preserve"><value>Relation: {0}</value></data>
+  <data name="Relation_Form" xml:space="preserve"><value>Related form</value></data>
+  <data name="Relation_FormWatermark" xml:space="preserve"><value>Type a ProgId or name to filter</value></data>
+  <data name="Relation_NoFormSchemaShort" xml:space="preserve"><value>no FormSchema</value></data>
+  <data name="Relation_Include" xml:space="preserve"><value>Map</value></data>
+  <data name="Relation_SourceField" xml:space="preserve"><value>Source field</value></data>
+  <data name="Relation_Caption" xml:space="preserve"><value>Caption</value></data>
+  <data name="Relation_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Relation_Destination" xml:space="preserve"><value>Destination field</value></data>
+  <data name="Relation_LookupOnly" xml:space="preserve"><value>Lookup only</value></data>
+  <data name="Relation_NewFieldType" xml:space="preserve"><value>New field type</value></data>
+  <data name="Relation_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Relation_Status_Existing" xml:space="preserve"><value>Existing</value></data>
+  <data name="Relation_Status_New" xml:space="preserve"><value>Added on apply</value></data>
+  <data name="Relation_Status_TypeMismatch" xml:space="preserve"><value>Type differs</value></data>
+  <data name="Relation_Status_MissingDestination" xml:space="preserve"><value>No destination</value></data>
+  <data name="Relation_Status_DestinationIsForeignKey" xml:space="preserve"><value>Cannot be the foreign key</value></data>
+  <data name="Relation_Status_DuplicateDestination" xml:space="preserve"><value>Duplicate destination</value></data>
+  <data name="Relation_RemoveOrphans" xml:space="preserve"><value>Also delete the relation fields no mapping writes any more: {0}</value></data>
+  <data name="Relation_ProgramSettingsMissing" xml:space="preserve"><value>ProgramSettings.xml could not be read, so the forms are listed by their FormSchema files.</value></data>
+  <data name="Relation_UnknownProgId" xml:space="preserve"><value>'{0}' is not a form of this solution.</value></data>
+  <data name="Relation_Unregistered" xml:space="preserve"><value>{0} is not registered in ProgramSettings.</value></data>
+  <data name="Relation_NoFormSchema" xml:space="preserve"><value>{0} has no FormSchema in this solution, so it has no fields to map.</value></data>
+  <data name="Relation_ForeignKeyRetyped" xml:space="preserve"><value>{0} will become a Guid field, since it holds the picked row's sys_rowid.</value></data>
+  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} is not in the LookupFields of {1}, so a pick cannot write it back.</value></data>
+  <data name="Relation_Removing" xml:space="preserve"><value>No form is selected: applying removes the relation of {0} and all its mappings.</value></data>
+  <data name="Confirm_RemoveRelationTitle" xml:space="preserve"><value>Remove Relation</value></data>
+  <data name="Confirm_RemoveRelationMessage" xml:space="preserve"><value>Remove the relation of {0} and all its mappings?</value></data>
+  <data name="Action_RemoveRelation" xml:space="preserve"><value>Remove</value></data>
+  <data name="Status_RelationApplied" xml:space="preserve"><value>Relation of {0} updated (unsaved)</value></data>
+  <data name="Status_RelationAppliedWithFields" xml:space="preserve"><value>Relation of {0} updated, fields added: {1}. Run Sync TableSchema and FormLayout to add them to the derived files (unsaved)</value></data>
 </root>

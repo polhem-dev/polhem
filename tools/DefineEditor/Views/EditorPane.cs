@@ -43,6 +43,12 @@ public sealed class EditorPane : UserControl
     public static readonly StyledProperty<Func<CollectionEditContext, Task<bool>?>?> CollectionEditorProviderProperty =
         AvaloniaProperty.Register<EditorPane, Func<CollectionEditContext, Task<bool>?>?>(nameof(CollectionEditorProvider));
 
+    /// <summary>
+    /// Defines the <see cref="ValueEditorProvider"/> property.
+    /// </summary>
+    public static readonly StyledProperty<Func<PropertyDescriptor, object, Func<Task<bool>>?>?> ValueEditorProviderProperty =
+        AvaloniaProperty.Register<EditorPane, Func<PropertyDescriptor, object, Func<Task<bool>>?>?>(nameof(ValueEditorProvider));
+
     private readonly ContentControl _templated;
     private readonly Border _templatedHost;
     private ObjectTreeDocumentViewModelBase? _document;
@@ -97,6 +103,13 @@ public sealed class EditorPane : UserControl
         set { SetValue(CollectionEditorProviderProperty, value); }
     }
 
+    /// <summary>Gets or sets the grid's <see cref="PropertyGridControl.ValueEditorProvider"/>.</summary>
+    public Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider
+    {
+        get { return GetValue(ValueEditorProviderProperty); }
+        set { SetValue(ValueEditorProviderProperty, value); }
+    }
+
     /// <summary>Gets the grid that shows objects no template covers.</summary>
     internal PropertyGridControl Grid => _grid;
 
@@ -112,6 +125,8 @@ public sealed class EditorPane : UserControl
             _grid.ValueSuggestionProvider = ValueSuggestionProvider;
         else if (change.Property == CollectionEditorProviderProperty)
             _grid.CollectionEditorProvider = CollectionEditorProvider;
+        else if (change.Property == ValueEditorProviderProperty)
+            _grid.ValueEditorProvider = ValueEditorProvider;
         // A hidden pane misses the edits made elsewhere meanwhile, such as in the FormLayout editor's properties
         // dialog, so it reads its object again when it is shown.
         else if (change.Property == IsVisibleProperty && IsVisible)

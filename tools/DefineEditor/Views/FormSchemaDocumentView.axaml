@@ -54,7 +54,8 @@
             <views:EditorPane Grid.Column="2" Context="{Binding SelectedEditorContext}"
                               PropertyFilter="{Binding SelectedPropertyFilter}"
                               ValueSuggestionProvider="{Binding ValueSuggestionProvider}"
-                              CollectionEditorProvider="{Binding CollectionEditorProvider}"/>
+                              CollectionEditorProvider="{Binding CollectionEditorProvider}"
+                              ValueEditorProvider="{Binding ValueEditorProvider}"/>
         </Grid>
     </DockPanel>
 

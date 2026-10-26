@@ -22,8 +22,9 @@ namespace Polhem.DefineEditor.ViewModels;
 /// <see cref="ObjectTreeBuilder"/> tree (Tables and Rules folders, fields directly under
 /// each table) with the selected object in the property grid, and offers Add commands for
 /// tables, fields, rules and mappings. Each field with a relation also gets a Relation group node, which the
-/// annotations cannot express; see <see cref="AddFieldGroups"/>. A field's list items are
-/// edited in the grid's collection dialog.
+/// annotations cannot express; see <see cref="AddFieldGroups"/>. A stored field's relation is set up in
+/// <see cref="RelationDialog"/>, opened beside its RelationProgId or its RelationFieldMappings in the grid. A field's
+/// list items are edited in the grid's collection dialog.
 /// </summary>
 public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
@@ -66,6 +67,9 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
     /// <inheritdoc/>
     public override Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider => EditMappingsInTree;
+
+    /// <inheritdoc/>
+    public override Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider => ProvideRelationEditor;
 
     private FormSchemaDocumentViewModel(string filePath, FormSchema schema, SolutionContext solution)
         // The root, its folders and the tables start expanded; fields start collapsed.
@@ -284,8 +288,9 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
-    /// Keeps a field's relation mappings in the tree: opening the collection from the grid selects the Relation group
-    /// node instead, adding the group when the field has none yet. Every other collection opens in the grid's dialog.
+    /// Opens a field's relation mappings where they are edited: a stored field's in <see cref="RelationDialog"/>; any
+    /// other field's by selecting its Relation group node, adding the group when the field has none yet. Every other
+    /// collection opens in the grid's dialog.
     /// </summary>
     public Task<bool>? EditMappingsInTree(CollectionEditContext context)
     {
@@ -294,6 +299,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         {
             return null;
         }
+        if (CanSetUpRelation(field)) return EditRelationAsync(field);
         var fieldNode = FindAncestor<FormField>(SelectedTreeNode);
         if (fieldNode is null || !ReferenceEquals(fieldNode.Value, field)) return Task.FromResult(false);
         var group = EnsureRelationGroup(fieldNode, field);
@@ -301,6 +307,106 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         SelectedTreeNode = group;
         // Nothing in the collection changed; the grid must not report an edit.
         return Task.FromResult(false);
+    }
+
+    /// <summary>
+    /// The relation dialog beside a stored field's RelationProgId; no editor for any other property.
+    /// </summary>
+    public Func<Task<bool>>? ProvideRelationEditor(PropertyDescriptor property, object component) =>
+        component is FormField field && property.Name == nameof(FormField.RelationProgId) && CanSetUpRelation(field)
+            ? () => EditRelationAsync(field)
+            : null;
+
+    // A foreign key holds the picked row's id, so only a stored field can carry a relation the dialog sets up.
+    private static bool CanSetUpRelation(FormField field) => field.Type == FieldType.DbField && field.Table is not null;
+
+    /// <summary>
+    /// Shows <see cref="RelationDialog"/> for <paramref name="field"/> and applies what the user confirms; returns
+    /// whether the field changed.
+    /// </summary>
+    private async Task<bool> EditRelationAsync(FormField field)
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null) return false; // smoke / headless
+        var dialog = new RelationDialogViewModel(Schema, field, Solution);
+        if (!await RelationDialog.ShowAsync(owner, dialog)) return false;
+        if (dialog.IsRemoving && !await ConfirmationDialog.ShowAsync(owner,
+                L("Confirm_RemoveRelationTitle"),
+                L("Confirm_RemoveRelationMessage", field.FieldName),
+                confirmLabel: L("Action_RemoveRelation"),
+                cancelLabel: L("Action_Cancel")))
+        {
+            return false;
+        }
+        ApplyRelationSetup(dialog);
+        return true;
+    }
+
+    /// <summary>
+    /// Writes the result of <paramref name="dialog"/> to its field, then brings the tree in line: the field's Relation
+    /// group is rebuilt from its new mappings, and the fields the setup added or removed gain or lose their nodes.
+    /// </summary>
+    public RelationSetupChanges ApplyRelationSetup(RelationDialogViewModel dialog)
+    {
+        ArgumentNullException.ThrowIfNull(dialog);
+        var field = dialog.Field;
+        var table = field.Table!;
+        var wasGroupSelected = SelectedTreeNode is { } selected && IsRelationGroup(selected)
+            && ReferenceEquals(OwningField(selected), field);
+        var changes = dialog.ApplyTo();
+
+        var tableNode = FindNode(RootNode, table);
+        if (tableNode is not null)
+        {
+            foreach (var removed in changes.RemovedFields)
+            {
+                if (tableNode.Children.FirstOrDefault(c => ReferenceEquals(c.Value, removed)) is { } node)
+                    tableNode.Children.Remove(node);
+            }
+            foreach (var added in changes.AddedFields)
+            {
+                var index = table.Fields!.IndexOf(added);
+                var previous = index > 0 ? table.Fields![index - 1] : null;
+                var after = previous is null ? -1 : tableNode.Children.ToList().FindIndex(c => ReferenceEquals(c.Value, previous));
+                var node = Builder.Build(added);
+                node.IsExpanded = false;
+                tableNode.Children.Insert(after + 1, node);
+            }
+        }
+
+        var fieldNode = tableNode?.Children.FirstOrDefault(c => ReferenceEquals(c.Value, field));
+        if (fieldNode is not null)
+        {
+            var mappings = field.RelationFieldMappings!;
+            if (fieldNode.Children.FirstOrDefault(c => c.IsFolder && ReferenceEquals(c.Value, mappings)) is { } stale)
+                fieldNode.Children.Remove(stale);
+            if (!string.IsNullOrEmpty(field.RelationProgId) || mappings.Count > 0)
+            {
+                var group = EnsureRelationGroup(fieldNode, field);
+                if (wasGroupSelected) SelectedTreeNode = group;
+            }
+            else if (wasGroupSelected)
+            {
+                SelectedTreeNode = fieldNode;
+            }
+            fieldNode.Refresh();
+        }
+
+        MarkChanged();
+        StatusText = changes.AddedFields.Count > 0
+            ? L("Status_RelationAppliedWithFields", field.FieldName, string.Join(", ", changes.AddedFields.Select(f => f.FieldName)))
+            : L("Status_RelationApplied", field.FieldName);
+        return changes;
+    }
+
+    private static ObjectTreeNode? FindNode(ObjectTreeNode node, object value)
+    {
+        if (ReferenceEquals(node.Value, value)) return node;
+        foreach (var child in node.Children)
+        {
+            if (FindNode(child, value) is { } found) return found;
+        }
+        return null;
     }
 
     /// <summary>

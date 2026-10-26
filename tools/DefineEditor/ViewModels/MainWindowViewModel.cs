@@ -216,7 +216,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (IsShownSolution(definePath)) TreeExpansion.Restore([root], TreeExpansion.Capture(Nodes));
         if (revealFilePath is not null) TreeExpansion.Reveal([root], revealFilePath);
         Nodes = new ObservableCollection<DefineNode> { root };
-        Solution = SolutionContext.FromTree(root);
+        Solution = SolutionContext.FromTree(root) with { DefinePath = definePath };
         RebuildContentTrees(definePath);
     }
 

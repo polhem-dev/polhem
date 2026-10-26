@@ -61,6 +61,11 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// </summary>
     public virtual Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider => null;
 
+    /// <summary>
+    /// The editors of their own the property grid offers beside a text row, as a button; <c>null</c> offers none.
+    /// </summary>
+    public virtual Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider => null;
+
     /// <summary>Underlying mutable object handed to <see cref="XmlCodec.SerializeToFile"/>.</summary>
     protected abstract object RootObject { get; }
 

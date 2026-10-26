@@ -21,6 +21,7 @@
         <views:EditorPane x:Name="Pane" Context="{Binding SelectedEditorContext}"
                           PropertyFilter="{Binding SelectedPropertyFilter}"
                           ValueSuggestionProvider="{Binding ValueSuggestionProvider}"
-                          CollectionEditorProvider="{Binding CollectionEditorProvider}"/>
+                          CollectionEditorProvider="{Binding CollectionEditorProvider}"
+                          ValueEditorProvider="{Binding ValueEditorProvider}"/>
     </DockPanel>
 </Window>
