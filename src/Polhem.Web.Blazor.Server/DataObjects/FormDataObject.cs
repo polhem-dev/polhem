@@ -292,8 +292,9 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         /// The rules are <see cref="LookupFieldRules.ApplySelection"/>, shared with the Avalonia head.
         /// </summary>
         /// <remarks>
-        /// The locally written display values are display-only between saves: a reload re-derives them
-        /// from the server-side relation join, which stays the single source of truth.
+        /// A value copied into a relation field (<c>ref_*</c>) is display-only between saves: a reload
+        /// re-derives it from the server-side relation join, which stays the single source of truth. A value
+        /// a <see cref="FieldMapping.LookupOnly"/> mapping copies into a stored field is saved with the row.
         /// </remarks>
         /// <param name="field">The relation field the lookup belongs to.</param>
         /// <param name="selectedRow">The row picked in the lookup.</param>

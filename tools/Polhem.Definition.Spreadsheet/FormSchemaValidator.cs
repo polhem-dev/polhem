@@ -1,3 +1,4 @@
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.Spreadsheet;
@@ -85,6 +86,34 @@ public static class FormSchemaValidator
             ValidateLookup(issues, field, fieldPath, progIdSet, table);
             ValidateListItems(issues, field, fieldPath);
             ValidateUnitBinding(issues, field, fieldPath, table);
+        }
+
+        ValidateLookupOnlyRelationFields(issues, table, tablePath);
+    }
+
+    /// <summary>
+    /// A relation field written only by <see cref="FieldMapping.LookupOnly"/> mappings shows the picked value while
+    /// the row is edited, but the query join never fills it, so it is empty again once the row is reloaded.
+    /// </summary>
+    private static void ValidateLookupOnlyRelationFields(List<DefinitionIssue> issues, FormTable table, string tablePath)
+    {
+        var mappings = table.Fields!
+            .Where(f => f.RelationFieldMappings is { Count: > 0 })
+            .SelectMany(f => f.RelationFieldMappings!)
+            .ToList();
+        var joined = mappings.Where(m => !m.LookupOnly)
+            .Select(m => m.DestinationField)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var lookupOnly = mappings.Where(m => m.LookupOnly)
+            .Select(m => m.DestinationField)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var field in table.Fields!.Where(f => f.Type == FieldType.RelationField))
+        {
+            if (lookupOnly.Contains(field.FieldName) && !joined.Contains(field.FieldName))
+                issues.Add(new(IssueSeverity.Warning, $"{tablePath}.{field.FieldName}",
+                    $"Relation field '{field.FieldName}' is written only by lookup-only mappings, so it is empty " +
+                    "after a reload. Add a regular mapping on the foreign key it comes from."));
         }
     }
 

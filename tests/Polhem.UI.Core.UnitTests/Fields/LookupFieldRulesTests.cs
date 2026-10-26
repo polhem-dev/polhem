@@ -80,13 +80,29 @@ namespace Polhem.UI.Core.UnitTests.Fields
         }
 
         [Fact]
+        [DisplayName("ApplySelection and ClearSelection include lookup-only mappings")]
+        public void ApplySelection_LookupOnlyMapping_IsWrittenAndCleared()
+        {
+            var field = BuildLookupField();
+            field.RelationFieldMappings!.Add(new FieldMapping("sys_id", "dept_code") { LookupOnly = true });
+            var written = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+            LookupFieldRules.ApplySelection(field, BuildSelectedRow(Guid.NewGuid()), (name, value) => written[name] = value);
+            Assert.Equal("D01", written["dept_code"]);
+
+            LookupFieldRules.ClearSelection(field, (name, value) => written[name] = value);
+            Assert.Null(written["dept_code"]);
+        }
+
+        [Fact]
         [DisplayName("ApplySelection rejects a mapped source field missing from the lookup result")]
         public void ApplySelection_MissingSourceField_Throws()
         {
             var row = BuildSelectedRow(Guid.NewGuid(), includeName: false);
 
-            Assert.Throws<InvalidOperationException>(
+            var ex = Assert.Throws<InvalidOperationException>(
                 () => LookupFieldRules.ApplySelection(BuildLookupField(), row, (_, _) => { }));
+            Assert.Contains("LookupFields of form 'Dept'", ex.Message);
         }
 
         [Fact]

@@ -23,7 +23,7 @@ build time, where the message can name both the cause and the fix.
 | POLHEM1003 | Error | `@DbType` on `FormField` and `DbField` must name a `FieldDbType` member |
 | POLHEM1004 | Error | `ListFields` / `LookupFields` may only reference declared fields |
 | POLHEM1005 | Error | A relation mapping's `DestinationField` must be a declared field |
-| POLHEM1006 | Warning | A field marked `Type="RelationField"` should be populated by a mapping |
+| POLHEM1006 | Warning | A field marked `Type="RelationField"` should be populated by a mapping the query join reads (one without `LookupOnly="true"`) |
 | POLHEM1007 | Error | A table must not declare the same field name twice |
 | POLHEM1008 | Info | A form schema with no `PermissionModelId` is open to every authenticated caller — layer-1 authorization is a no-op for it |
 

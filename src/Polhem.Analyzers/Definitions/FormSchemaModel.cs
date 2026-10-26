@@ -60,9 +60,9 @@ namespace Polhem.Analyzers.Definitions
         public IEnumerable<XElement> Fields => Root.Descendants("FormField");
 
         /// <summary>
-        /// Gets every <c>FieldMapping</c> element across all fields.
+        /// Gets every <c>FieldMapping</c> element inside a <c>RelationFieldMappings</c> element, across all fields.
         /// </summary>
-        public IEnumerable<XElement> FieldMappings => Root.Descendants("FieldMapping");
+        public IEnumerable<XElement> RelationFieldMappings => Root.Descendants("RelationFieldMappings").Elements("FieldMapping");
 
         /// <summary>
         /// Gets the names of every field declared in the schema, compared case-insensitively.

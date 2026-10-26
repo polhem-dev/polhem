@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -11,7 +12,8 @@ namespace Polhem.Analyzers.Definitions
     /// <remarks>
     /// Both rules share one traversal because they are two views of the same relationship: POLHEM1005
     /// catches a mapping writing into a field that does not exist, POLHEM1006 catches a field declared to
-    /// receive a mapping that never arrives.
+    /// receive a mapping that never arrives. POLHEM1005 checks every relation mapping; POLHEM1006 counts
+    /// only the ones the query join reads, not those marked <c>LookupOnly</c>.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class RelationMappingAnalyzer : DiagnosticAnalyzer
@@ -36,13 +38,15 @@ namespace Polhem.Analyzers.Definitions
             id: DiagnosticIds.UnmappedRelationField,
             title: "Relation field should be populated by a mapping",
             messageFormat: "Field '{1}' in FormSchema '{0}' is declared as a relation field, but no "
-                         + "FieldMapping writes into it, so it stays empty at run time. Fix: add a "
-                         + "FieldMapping with DestinationField=\"{1}\", or remove the field.",
+                         + "FieldMapping the query join reads writes into it, so it is empty whenever the row is "
+                         + "loaded. Fix: add a FieldMapping with DestinationField=\"{1}\" and without "
+                         + "LookupOnly=\"true\" on the foreign key it comes from, or remove the field.",
             category: "Polhem.Definition",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
-            description: "Relation fields hold values copied from a referenced schema. One that no "
-                       + "mapping populates is always empty.",
+            description: "Relation fields hold values copied from a referenced schema by the query join. "
+                       + "A lookup-only mapping fills one only while a lookup selection is being edited, so it "
+                       + "does not count; one that no join mapping populates is empty after every load.",
             helpLinkUri: null,
             customTags: WellKnownDiagnosticTags.CompilationEnd);
 
@@ -69,13 +73,14 @@ namespace Polhem.Analyzers.Definitions
                 var declared = schema.DeclaredFieldNames;
                 var destinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                foreach (var mapping in schema.FieldMappings)
+                foreach (var mapping in schema.RelationFieldMappings)
                 {
                     var destination = mapping.Attribute("DestinationField");
                     if (destination is null || string.IsNullOrEmpty(destination.Value))
                         continue;
 
-                    destinations.Add(destination.Value);
+                    if (!IsLookupOnly(mapping))
+                        destinations.Add(destination.Value);
 
                     if (declared.Contains(destination.Value))
                         continue;
@@ -90,6 +95,10 @@ namespace Polhem.Analyzers.Definitions
                 ReportUnmappedRelationFields(context, schema, destinations);
             }
         }
+
+        // Matches how `XmlSerializer` reads an `xs:boolean`: "true" and "1" are true, case-sensitively.
+        private static bool IsLookupOnly(XElement mapping)
+            => mapping.Attribute("LookupOnly")?.Value is "true" or "1";
 
         private static void ReportUnmappedRelationFields(
             CompilationAnalysisContext context,

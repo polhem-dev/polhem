@@ -242,6 +242,22 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
+        [DisplayName("GetDisplayFields ignores lookup-only mappings, which the join does not fill")]
+        public void GetDisplayFields_LookupOnlyMappings_AreIgnored()
+        {
+            var formField = new FormField("emp_rowid", "Employee", FieldDbType.Guid)
+            {
+                RelationProgId = "Employee",
+            };
+            formField.RelationFieldMappings!.Add(new FieldMapping("sys_id", "ref_dept_id") { LookupOnly = true });
+            formField.RelationFieldMappings!.Add("sys_name", "ref_emp_name");
+
+            var actual = formField.GetDisplayFields();
+
+            Assert.Equal(["ref_emp_name"], actual);
+        }
+
+        [Fact]
         [DisplayName("GetDisplayFields returns only the ID field when a transactional target maps only sys_id (document number display)")]
         public void GetDisplayFields_IdMappingOnly_ReturnsIdField()
         {

@@ -10,7 +10,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 {
     /// <summary>
     /// FormDataObject lookup write-back tests: ApplyLookupSelection writes the rowid and the mapped fields,
-    /// LookupFieldMappings take precedence, a missing source field is a hard error, and ClearLookupSelection clears them.
+    /// lookup-only mappings are written too, a missing source field is a hard error, and ClearLookupSelection clears them.
     /// </summary>
     public class FormDataObjectLookupTests
     {
@@ -61,22 +61,37 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("ApplyLookupSelection gives LookupFieldMappings precedence over RelationFieldMappings")]
-        public void ApplyLookupSelection_LookupMappingsWin()
+        [DisplayName("ApplyLookupSelection also writes lookup-only mappings, such as the customer's salesperson into the order's own field")]
+        public void ApplyLookupSelection_LookupOnlyMappings_AreWritten()
         {
             var schema = BuildOrderSchema();
-            var schemaField = schema.MasterTable!.Fields!["customer_rowid"];
-            schemaField.LookupFieldMappings!.Add(SysFields.Id, "ref_customer_id");
+            var table = schema.MasterTable!;
+            table.Fields!.Add(new FormField("sales_rowid", "業務", FieldDbType.Guid) { RelationProgId = "Employee" });
+            table.Fields!.Add(new FormField("ref_sales_name", "業務名稱", FieldDbType.String, FieldType.RelationField));
+            var customerField = table.Fields!["customer_rowid"];
+            customerField.RelationFieldMappings!.Add(new FieldMapping("sales_rowid", "sales_rowid") { LookupOnly = true });
+            customerField.RelationFieldMappings!.Add(new FieldMapping("ref_sales_name", "ref_sales_name") { LookupOnly = true });
 
             var dataObject = new FormDataObject(schema);
             dataObject.InitializeNewMaster();
             var field = dataObject.GetFormField("customer_rowid")!;
+            var selected = BuildSelectedRow(Guid.NewGuid(), "C002", "客戶乙");
+            var salesId = Guid.NewGuid();
+            selected.Table.Columns.Add("sales_rowid", typeof(Guid));
+            selected.Table.Columns.Add("ref_sales_name", typeof(string));
+            selected["sales_rowid"] = salesId;
+            selected["ref_sales_name"] = "王小明";
 
-            dataObject.ApplyLookupSelection(field, BuildSelectedRow(Guid.NewGuid(), "C002", "客戶乙"));
+            dataObject.ApplyLookupSelection(field, selected);
 
-            Assert.Equal("C002", dataObject.GetField("ref_customer_id"));
-            // The `sys_name` mapping from `RelationFieldMappings` must not be applied.
-            Assert.Equal(string.Empty, dataObject.GetField("ref_customer_name"));
+            Assert.Equal("客戶乙", dataObject.GetField("ref_customer_name"));
+            Assert.Equal(salesId.ToString(), dataObject.GetField("sales_rowid"));
+            Assert.Equal("王小明", dataObject.GetField("ref_sales_name"));
+
+            dataObject.ClearLookupSelection(field);
+
+            Assert.Equal(Guid.Empty.ToString(), dataObject.GetField("sales_rowid"));
+            Assert.Equal(string.Empty, dataObject.GetField("ref_sales_name"));
         }
 
         [Fact]
