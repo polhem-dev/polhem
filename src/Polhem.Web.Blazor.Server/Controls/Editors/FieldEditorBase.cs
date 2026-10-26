@@ -318,13 +318,17 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
             BoundFieldName = fieldName;
             BoundLayoutField = layoutField;
             TargetRow = row;
-            FormField = dataObject is null || fieldName.Length == 0
-                ? null
-                : row is not null
-                    ? dataObject.GetFormField(row.Table.TableName, fieldName)
-                    : dataObject.GetFormField(fieldName);
+            FormField = ResolveFormField(dataObject, fieldName, row);
             ApplyMetadata();
             RefreshFromSource();
+        }
+
+        private static FormField? ResolveFormField(FormDataObject? dataObject, string fieldName, DataRow? row)
+        {
+            if (dataObject is null || fieldName.Length == 0) return null;
+            return row is not null
+                ? dataObject.GetFormField(row.Table.TableName, fieldName)
+                : dataObject.GetFormField(fieldName);
         }
 
         private void Subscribe(FormDataObject? dataObject)

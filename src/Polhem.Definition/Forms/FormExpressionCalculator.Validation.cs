@@ -38,10 +38,10 @@ namespace Polhem.Definition.Forms
                 var variableTypes = BuildVariableTypes(formTable);
                 foreach (var field in formTable.Fields)
                 {
-                    ValidateExpression(issues, field.DefaultValueExpression, variableTypes, typeof(object),
-                        formTable, field.FieldName, null, nameof(FormField.DefaultValueExpression));
-                    ValidateExpression(issues, field.ValueExpression, variableTypes, typeof(object),
-                        formTable, field.FieldName, null, nameof(FormField.ValueExpression));
+                    ValidateFieldExpression(issues, variableTypes, formTable, field,
+                        field.DefaultValueExpression, nameof(FormField.DefaultValueExpression));
+                    ValidateFieldExpression(issues, variableTypes, formTable, field,
+                        field.ValueExpression, nameof(FormField.ValueExpression));
                 }
             }
 
@@ -51,27 +51,45 @@ namespace Polhem.Definition.Forms
                 var formTable = ResolveRuleTable(rule, schema);
                 if (formTable?.Fields == null) { continue; }
                 var variableTypes = BuildVariableTypes(formTable);
-                ValidateExpression(issues, rule.When, variableTypes, typeof(bool),
-                    formTable, null, rule.RuleId, nameof(FormRule.When));
-                ValidateExpression(issues, rule.Condition, variableTypes, typeof(bool),
-                    formTable, null, rule.RuleId, nameof(FormRule.Condition));
+                ValidateRuleExpression(issues, variableTypes, formTable, rule, rule.When, nameof(FormRule.When));
+                ValidateRuleExpression(issues, variableTypes, formTable, rule,
+                    rule.Condition, nameof(FormRule.Condition));
             }
             return issues;
         }
 
-        private void ValidateExpression(List<FormExpressionIssue> issues, string expression,
-            IReadOnlyDictionary<string, Type> variableTypes, Type returnType, FormTable formTable,
-            string? fieldName, string? ruleId, string propertyName)
+        private void ValidateFieldExpression(List<FormExpressionIssue> issues,
+            IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormField field,
+            string expression, string propertyName)
         {
-            if (StringUtilities.IsEmpty(expression)) { return; }
+            var message = FindParseError(expression, variableTypes, typeof(object));
+            if (message is null) { return; }
+            issues.Add(new FormExpressionIssue(formTable.TableName, field.FieldName, null, propertyName,
+                expression, message));
+        }
+
+        private void ValidateRuleExpression(List<FormExpressionIssue> issues,
+            IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormRule rule,
+            string expression, string propertyName)
+        {
+            var message = FindParseError(expression, variableTypes, typeof(bool));
+            if (message is null) { return; }
+            issues.Add(new FormExpressionIssue(formTable.TableName, null, rule.RuleId, propertyName,
+                expression, message));
+        }
+
+        private string? FindParseError(string expression, IReadOnlyDictionary<string, Type> variableTypes,
+            Type returnType)
+        {
+            if (StringUtilities.IsEmpty(expression)) { return null; }
             try
             {
                 _evaluator.Validate(expression, variableTypes, returnType);
+                return null;
             }
             catch (ExpressionEvaluationException ex)
             {
-                issues.Add(new FormExpressionIssue(formTable.TableName, fieldName, ruleId, propertyName,
-                    expression, ex.Message));
+                return ex.Message;
             }
         }
 
