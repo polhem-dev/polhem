@@ -403,4 +403,35 @@
   <data name="Status_FormTablesUnregistered" xml:space="preserve"><value>DbCategorySettings 未登記：{0}</value></data>
   <data name="Synced_Title" xml:space="preserve"><value>同步完成</value></data>
   <data name="Synced_UpgradeHint" xml:space="preserve"><value>要接著升級資料庫，讓資料表符合同步後的定義嗎？只會升級這張表單的資料表：{0}。預覽只列出變更，不會實際執行。</value></data>
+  <data name="Relation_Title" xml:space="preserve"><value>關聯設定：{0}</value></data>
+  <data name="Relation_Form" xml:space="preserve"><value>關聯表單</value></data>
+  <data name="Relation_FormWatermark" xml:space="preserve"><value>輸入 ProgId 或名稱過濾</value></data>
+  <data name="Relation_NoFormSchemaShort" xml:space="preserve"><value>無 FormSchema</value></data>
+  <data name="Relation_Include" xml:space="preserve"><value>帶回</value></data>
+  <data name="Relation_SourceField" xml:space="preserve"><value>來源欄位</value></data>
+  <data name="Relation_Caption" xml:space="preserve"><value>說明</value></data>
+  <data name="Relation_Type" xml:space="preserve"><value>型別</value></data>
+  <data name="Relation_Destination" xml:space="preserve"><value>目的欄位</value></data>
+  <data name="Relation_LookupOnly" xml:space="preserve"><value>僅選取時</value></data>
+  <data name="Relation_NewFieldType" xml:space="preserve"><value>新欄位型別</value></data>
+  <data name="Relation_Status" xml:space="preserve"><value>狀態</value></data>
+  <data name="Relation_Status_Existing" xml:space="preserve"><value>既有</value></data>
+  <data name="Relation_Status_New" xml:space="preserve"><value>確定時新增</value></data>
+  <data name="Relation_Status_TypeMismatch" xml:space="preserve"><value>型別不符</value></data>
+  <data name="Relation_Status_MissingDestination" xml:space="preserve"><value>未填目的欄位</value></data>
+  <data name="Relation_Status_DestinationIsForeignKey" xml:space="preserve"><value>不可為外鍵本身</value></data>
+  <data name="Relation_Status_DuplicateDestination" xml:space="preserve"><value>目的欄位重複</value></data>
+  <data name="Relation_RemoveOrphans" xml:space="preserve"><value>一併刪除不再被任何對應寫入的關聯欄位：{0}</value></data>
+  <data name="Relation_ProgramSettingsMissing" xml:space="preserve"><value>讀不到 ProgramSettings.xml，改以 FormSchema 檔列出表單。</value></data>
+  <data name="Relation_UnknownProgId" xml:space="preserve"><value>「{0}」不是此方案的表單。</value></data>
+  <data name="Relation_Unregistered" xml:space="preserve"><value>{0} 未登記在 ProgramSettings。</value></data>
+  <data name="Relation_NoFormSchema" xml:space="preserve"><value>{0} 在此方案中沒有 FormSchema，沒有欄位可對應。</value></data>
+  <data name="Relation_ForeignKeyRetyped" xml:space="preserve"><value>{0} 會改為 Guid 欄位（存放選取列的 sys_rowid）。</value></data>
+  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} 不在 {1} 的 LookupFields 中，選取時無法帶回。</value></data>
+  <data name="Relation_Removing" xml:space="preserve"><value>未選擇表單：確定後會移除 {0} 的關聯與所有對應。</value></data>
+  <data name="Confirm_RemoveRelationTitle" xml:space="preserve"><value>移除關聯</value></data>
+  <data name="Confirm_RemoveRelationMessage" xml:space="preserve"><value>要移除 {0} 的關聯與所有對應嗎？</value></data>
+  <data name="Action_RemoveRelation" xml:space="preserve"><value>移除</value></data>
+  <data name="Status_RelationApplied" xml:space="preserve"><value>已更新 {0} 的關聯（尚未存檔）</value></data>
+  <data name="Status_RelationAppliedWithFields" xml:space="preserve"><value>已更新 {0} 的關聯，新增欄位：{1}。執行「同步 TableSchema 與 FormLayout」即可加到衍生檔（尚未存檔）</value></data>
 </root>

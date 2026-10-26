@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.ObjectTree;
@@ -204,8 +205,8 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Opening a field's relation mappings from the grid selects their tree group and reports no change")]
-        public async Task EditMappingsInTree_SelectsGroup()
+        [DisplayName("Opening a stored field's relation mappings from the grid goes to the relation dialog, which does nothing headless")]
+        public async Task EditMappingsInTree_StoredField_OpensDialog()
         {
             var customer = (FormField)Field("customer_rowid").Value;
             _document.SelectedTreeNode = Field("customer_rowid");
@@ -214,20 +215,21 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.NotNull(edit);
             Assert.False(await edit);
-            Assert.Same(Field("customer_rowid").Children[0], _document.SelectedTreeNode);
+            Assert.Same(Field("customer_rowid"), _document.SelectedTreeNode);
             Assert.Null(_document.EditMappingsInTree(new(customer, TypeDescriptor.GetProperties(customer)[nameof(FormField.ListItems)]!)));
         }
 
         [Fact]
-        [DisplayName("Opening the relation mappings of a field without a Relation group adds the group")]
-        public async Task EditMappingsInTree_AddsMissingGroup()
+        [DisplayName("Opening the relation mappings of a field that is not stored selects its Relation group, adding it when missing")]
+        public async Task EditMappingsInTree_RelationField_SelectsGroup()
         {
-            var field = (FormField)Field("sys_id").Value;
-            _document.SelectedTreeNode = Field("sys_id");
+            var field = (FormField)Field("ref_customer_name").Value;
+            field.Type = FieldType.RelationField;
+            _document.SelectedTreeNode = Field("ref_customer_name");
 
             Assert.False(await _document.EditMappingsInTree(new(field, TypeDescriptor.GetProperties(field)[nameof(FormField.RelationFieldMappings)]!))!);
 
-            Assert.Equal(["Relation"], Field("sys_id").Children.Select(c => c.Label));
+            Assert.Equal(["Relation"], Field("ref_customer_name").Children.Select(c => c.Label));
             Assert.True(FormSchemaDocumentViewModel.IsRelationGroup(_document.SelectedTreeNode!));
         }
 

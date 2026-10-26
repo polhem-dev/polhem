@@ -2,6 +2,7 @@ using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
+using Polhem.Definition.Settings;
 using Polhem.DefineEditor.Models;
 
 namespace Polhem.DefineEditor.Services;
@@ -19,6 +20,9 @@ public sealed record SolutionContext(IReadOnlyList<string> AvailableProgIds)
     /// <summary>The FormSchema file of each ProgId in <see cref="AvailableProgIds"/>, when the tree gave one.</summary>
     public IReadOnlyDictionary<string, string> FormSchemaPaths { get; init; } =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The definition folder of the solution, the one that holds <c>ProgramSettings.xml</c>; empty when unknown.</summary>
+    public string DefinePath { get; init; } = string.Empty;
 
     /// <summary>The Language files of the solution.</summary>
     public IReadOnlyList<string> LanguagePaths { get; init; } = [];
@@ -58,20 +62,35 @@ public sealed record SolutionContext(IReadOnlyList<string> AvailableProgIds)
     /// The field names of the master table of the FormSchema for <paramref name="progId"/>, read from its file each
     /// time; empty when the ProgId is unknown or the file cannot be read.
     /// </summary>
-    public IReadOnlyList<string> MasterFieldNames(string progId)
+    public IReadOnlyList<string> MasterFieldNames(string progId) =>
+        LoadFormSchema(progId)?.MasterTable?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray() ?? [];
+
+    /// <summary>
+    /// The FormSchema for <paramref name="progId"/>, read from its file each time; <c>null</c> when the ProgId is unknown
+    /// or the file cannot be read.
+    /// </summary>
+    public FormSchema? LoadFormSchema(string? progId)
     {
-        if (string.IsNullOrEmpty(progId) || !FormSchemaPaths.TryGetValue(progId, out var path)) return [];
+        if (string.IsNullOrEmpty(progId) || !FormSchemaPaths.TryGetValue(progId, out var path)) return null;
         try
         {
-            var schema = XmlCodec.DeserializeFromFile<FormSchema>(path);
-            return schema?.MasterTable?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray() ?? [];
+            return XmlCodec.DeserializeFromFile<FormSchema>(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            // A file that cannot be read offers no suggestions; validation reports the broken file elsewhere.
-            return [];
+            // A file that cannot be read offers no fields; validation reports the broken file elsewhere.
+            return null;
         }
     }
+
+    /// <summary>
+    /// The solution's ProgramSettings, read from <see cref="DefinePath"/> each time; <c>null</c> when the path is unknown
+    /// or the file is missing or cannot be read.
+    /// </summary>
+    public ProgramSettings? ReadProgramSettings() =>
+        string.IsNullOrEmpty(DefinePath)
+            ? null
+            : DefineFileReader.TryRead<ProgramSettings>(Path.Combine(DefinePath, "ProgramSettings.xml"));
 
     /// <summary>
     /// Walks the solution tree and collects all FormSchema ProgIds present.
