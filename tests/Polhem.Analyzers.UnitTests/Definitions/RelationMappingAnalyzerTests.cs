@@ -127,6 +127,77 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             Assert.Empty(diagnostics);
         }
 
+        /// <summary>
+        /// A leave request whose employee lookup also copies the department: `dept_rowid` is a stored field and
+        /// `ref_dept_name` a relation field, both written by lookup-only mappings. The department foreign key may or
+        /// may not join `ref_dept_name` itself.
+        /// </summary>
+        private static string LeaveSchema(string deptMappings) => $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <FormSchema ProgId="Leave" CategoryId="company">
+              <Tables>
+                <FormTable TableName="Leave" DbTableName="ft_leave">
+                  <Fields>
+                    <FormField FieldName="emp_rowid" DbType="Guid" RelationProgId="Employee">
+                      <RelationFieldMappings>
+                        <FieldMapping SourceField="dept_rowid" DestinationField="dept_rowid" LookupOnly="true" />
+                        <FieldMapping SourceField="ref_dept_name" DestinationField="ref_dept_name" LookupOnly="true" />
+                      </RelationFieldMappings>
+                    </FormField>
+                    <FormField FieldName="dept_rowid" DbType="Guid" RelationProgId="Department">
+                      {deptMappings}
+                    </FormField>
+                    <FormField FieldName="ref_dept_name" DbType="String" Type="RelationField" />
+                  </Fields>
+                </FormTable>
+              </Tables>
+            </FormSchema>
+            """;
+
+        [Fact]
+        [DisplayName("A RelationField written only by lookup-only mappings reports POLHEM1006")]
+        public void RelationFieldOnlyLookupOnly_ReportsDiagnostic()
+        {
+            // Act
+            var diagnostics = AnalyzerRunner.Run(new RelationMappingAnalyzer(), (SchemaPath, LeaveSchema(string.Empty)));
+
+            // Assert
+            var diagnostic = Assert.Single(diagnostics);
+            Assert.Equal("POLHEM1006", diagnostic.Id);
+            Assert.Contains("'ref_dept_name'", diagnostic.GetMessage(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Lookup-only mappings into a stored field and into a joined RelationField report nothing")]
+        public void LookupOnlyWithJoinedRelationField_ReportsNothing()
+        {
+            const string deptMappings = """
+                <RelationFieldMappings>
+                  <FieldMapping SourceField="sys_name" DestinationField="ref_dept_name" />
+                </RelationFieldMappings>
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.Run(new RelationMappingAnalyzer(), (SchemaPath, LeaveSchema(deptMappings)));
+
+            // Assert
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        [DisplayName("A lookup-only mapping into an undeclared field still reports POLHEM1005")]
+        public void LookupOnlyUnknownDestination_ReportsDiagnostic()
+        {
+            var xml = LeaveSchema(string.Empty).Replace(
+                "DestinationField=\"dept_rowid\"", "DestinationField=\"dept_code\"", StringComparison.Ordinal);
+
+            // Act
+            var diagnostics = AnalyzerRunner.Run(new RelationMappingAnalyzer(), (SchemaPath, xml));
+
+            // Assert
+            Assert.Contains(diagnostics, d => d.Id == "POLHEM1005");
+        }
+
         [Fact]
         [DisplayName("A missing mapping target does not also report POLHEM1006 for the same field")]
         public void MissingDestination_DoesNotAlsoReportUnmapped()

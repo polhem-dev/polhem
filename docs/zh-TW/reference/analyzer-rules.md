@@ -1,4 +1,4 @@
-<!-- source: en/reference/analyzer-rules.md blob: b1e47ea578539ec6eb8397d711d54601aef882de -->
+<!-- source: en/reference/analyzer-rules.md blob: 64cd2f4a9b1c8ad0c3e07c516e863b979d78a2a4 -->
 # Analyzer 規則
 
 [English](../../en/reference/analyzer-rules.md) · [← 文件索引](../README.md)
@@ -21,7 +21,7 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 | POLHEM1003 | Error | `FormField` 與 `DbField` 的 `@DbType` 必須是 `FieldDbType` 的成員 |
 | POLHEM1004 | Error | `ListFields` / `LookupFields` 只能引用已宣告的欄位 |
 | POLHEM1005 | Error | 關聯對應的 `DestinationField` 必須是已宣告欄位 |
-| POLHEM1006 | Warning | 標記 `Type="RelationField"` 的欄位應有對應寫入 |
+| POLHEM1006 | Warning | 標記 `Type="RelationField"` 的欄位應有查詢 JOIN 會讀的對應寫入（不含 `LookupOnly="true"` 的對應） |
 | POLHEM1007 | Error | 同一張表不得重複宣告同名欄位 |
 | POLHEM1008 | Info | 未宣告 `PermissionModelId` 的 FormSchema 對所有已認證呼叫者全開 —— 層一授權對它是 no-op |
 
