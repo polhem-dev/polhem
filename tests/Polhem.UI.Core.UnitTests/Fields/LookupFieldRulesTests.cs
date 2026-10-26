@@ -44,17 +44,6 @@ namespace Polhem.UI.Core.UnitTests.Fields
         }
 
         [Fact]
-        [DisplayName("ResolveProgId prefers LookupProgId over RelationProgId")]
-        public void ResolveProgId_LookupProgId_Wins()
-        {
-            var field = BuildLookupField();
-            Assert.Equal("Dept", LookupFieldRules.ResolveProgId(field));
-
-            field.LookupProgId = "DeptActive";
-            Assert.Equal("DeptActive", LookupFieldRules.ResolveProgId(field));
-        }
-
-        [Fact]
         [DisplayName("ResolveDisplayFieldNames prefers the layout's DisplayFields over the schema convention")]
         public void ResolveDisplayFieldNames_LayoutWinsOverSchema()
         {

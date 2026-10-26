@@ -18,7 +18,7 @@ public static class FormSchemaValidator
     /// Checks <paramref name="schema"/>.
     /// </summary>
     /// <param name="schema">The form to check.</param>
-    /// <param name="availableProgIds">The ProgIds a relation or lookup may point to.</param>
+    /// <param name="availableProgIds">The ProgIds a relation may point to.</param>
     /// <returns>The issues found, located by a path such as <c>Order.customer_rowid.Relation</c>.</returns>
     public static IReadOnlyList<DefinitionIssue> Validate(FormSchema schema, IEnumerable<string> availableProgIds)
     {
@@ -83,7 +83,6 @@ public static class FormSchemaValidator
                     $"FieldName '{field.FieldName}' is a duplicate within '{table.TableName}'."));
 
             ValidateRelation(issues, field, fieldPath, progIdSet, table);
-            ValidateLookup(issues, field, fieldPath, progIdSet, table);
             ValidateListItems(issues, field, fieldPath);
             ValidateUnitBinding(issues, field, fieldPath, table);
         }
@@ -186,42 +185,6 @@ public static class FormSchemaValidator
                     issues.Add(new(IssueSeverity.Error, path,
                         $"DestinationField '{mapping.DestinationField}' is a duplicate within the same RelationFieldMappings group."));
             }
-        }
-    }
-
-    private static void ValidateLookup(
-        List<DefinitionIssue> issues,
-        FormField field,
-        string fieldPath,
-        HashSet<string> progIdSet,
-        FormTable owningTable)
-    {
-        var hasMappings = field.LookupFieldMappings is { Count: > 0 };
-        var hasProgId = !string.IsNullOrWhiteSpace(field.LookupProgId);
-
-        if (hasMappings && !hasProgId)
-            issues.Add(new(IssueSeverity.Error, $"{fieldPath}.Lookup",
-                "LookupFieldMappings is present but LookupProgId is empty."));
-
-        if (hasProgId && !progIdSet.Contains(field.LookupProgId))
-            issues.Add(new(IssueSeverity.Warning, $"{fieldPath}.Lookup",
-                $"LookupProgId '{field.LookupProgId}' was not found in the current solution."));
-
-        if (!hasMappings) return;
-        var localFieldNames = (owningTable.Fields ?? Enumerable.Empty<FormField>())
-            .Select(f => f.FieldName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        for (int mi = 0; mi < field.LookupFieldMappings!.Count; mi++)
-        {
-            var mapping = field.LookupFieldMappings[mi];
-            var path = $"{fieldPath}.Lookup[{mi}]";
-            if (string.IsNullOrWhiteSpace(mapping.SourceField))
-                issues.Add(new(IssueSeverity.Error, path, "SourceField cannot be empty."));
-            if (string.IsNullOrWhiteSpace(mapping.DestinationField))
-                issues.Add(new(IssueSeverity.Error, path, "DestinationField cannot be empty."));
-            else if (!localFieldNames.Contains(mapping.DestinationField))
-                issues.Add(new(IssueSeverity.Error, path,
-                    $"DestinationField '{mapping.DestinationField}' does not exist on '{owningTable.TableName}'."));
         }
     }
 

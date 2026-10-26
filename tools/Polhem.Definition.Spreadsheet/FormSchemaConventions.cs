@@ -101,7 +101,7 @@ public static class FormSchemaConventions
     }
 
     /// <summary>
-    /// For a relation field without mappings, maps <c>sys_id</c> and <c>sys_name</c> of the related form to
+    /// For a relation field without join mappings (lookup-only ones do not count), maps <c>sys_id</c> and <c>sys_name</c> of the related form to
     /// <c>ref_&lt;base&gt;_id</c> and <c>ref_&lt;base&gt;_name</c>, and adds those two fields after it when they
     /// are missing. <c>&lt;base&gt;</c> is the field name without its <c>_rowid</c> suffix.
     /// </summary>
@@ -112,7 +112,7 @@ public static class FormSchemaConventions
         {
             if (field.Type != FieldType.DbField
                 || string.IsNullOrWhiteSpace(field.RelationProgId)
-                || field.RelationFieldMappings is { Count: > 0 })
+                || field.RelationFieldMappings!.Any(m => !m.LookupOnly))
             {
                 continue;
             }

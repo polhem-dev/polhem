@@ -179,5 +179,28 @@ namespace Polhem.Definition.UnitTests.Forms
 
             Assert.Equal("qty_uom", clone.UnitField);
         }
+
+        [Fact]
+        [DisplayName("XML written before LookupProgId and LookupFieldMappings were removed still loads, with both ignored")]
+        public void Deserialize_RemovedLookupProperties_AreIgnored()
+        {
+            const string xml = """
+                <FormField FieldName="emp_rowid" DbType="Guid" RelationProgId="Employee" LookupProgId="EmployeeActive">
+                  <RelationFieldMappings>
+                    <FieldMapping SourceField="sys_name" DestinationField="ref_emp_name" />
+                  </RelationFieldMappings>
+                  <LookupFieldMappings>
+                    <FieldMapping SourceField="sys_id" DestinationField="ref_emp_id" />
+                  </LookupFieldMappings>
+                </FormField>
+                """;
+
+            var field = XmlCodec.Deserialize<FormField>(xml)!;
+
+            Assert.Equal("Employee", field.RelationProgId);
+            var mapping = Assert.Single(field.RelationFieldMappings!);
+            Assert.Equal("ref_emp_name", mapping.DestinationField);
+            Assert.DoesNotContain("Lookup", XmlCodec.Serialize(field));
+        }
     }
 }

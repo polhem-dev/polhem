@@ -33,7 +33,6 @@ static Polhem.UI.Core.Fields.LookupFieldRules.ApplySelection(Polhem.Definition.F
 static Polhem.UI.Core.Fields.LookupFieldRules.ClearSelection(Polhem.Definition.Forms.FormField! field, System.Action<string!, string?>! setField) -> void
 static Polhem.UI.Core.Fields.LookupFieldRules.HasLookup(Polhem.Definition.Forms.FormField? field) -> bool
 static Polhem.UI.Core.Fields.LookupFieldRules.ResolveDisplayFieldNames(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField) -> System.Collections.Generic.IReadOnlyList<string!>!
-static Polhem.UI.Core.Fields.LookupFieldRules.ResolveProgId(Polhem.Definition.Forms.FormField! field) -> string!
 static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForDisplay(string! raw, string! numberFormat) -> string!
 static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForEditing(string! raw) -> string!
 static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField, System.Data.DataRow? row, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, string! defaultUnitCode) -> string!

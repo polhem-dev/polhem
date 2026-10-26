@@ -197,7 +197,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             var dataObject = Binder.DataObject;
             if (field is null || dataObject is null || !_allowLookupEdit) return;
 
-            var progId = LookupFieldRules.ResolveProgId(field);
+            var progId = field.RelationProgId;
             try
             {
                 var selected = await LookupDialog.ShowAsync(this, progId).ConfigureAwait(true);

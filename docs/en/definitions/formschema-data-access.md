@@ -102,6 +102,38 @@ Definition-Driven Architecture (overall architecture)
 
 Runtime SQL generation is the data-access manifestation of DDA, sitting alongside `FormLayout` and `TableSchema` as the three projection facets of `FormSchema`.
 
+### 3.4 Lookup-only Mappings
+
+The same `RelationFieldMappings` also tell the UI what to write back when the user picks a row in the lookup window: the picked row's `sys_rowid` goes into the foreign-key field, and every mapping's source value goes into its destination. Sometimes a selection should carry more along than the join reads. On a leave request that stores both the employee and the department, picking an employee should also fill the request's own department:
+
+```xml
+<FormField FieldName="emp_rowid" RelationProgId="Employee">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"        DestinationField="ref_emp_id" />
+    <FieldMapping SourceField="sys_name"      DestinationField="ref_emp_name" />
+    <FieldMapping SourceField="dept_rowid"    DestinationField="dept_rowid"    LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_id"   DestinationField="ref_dept_id"   LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_name" DestinationField="ref_dept_name" LookupOnly="true" />
+  </RelationFieldMappings>
+</FormField>
+<FormField FieldName="dept_rowid" RelationProgId="Department">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"   DestinationField="ref_dept_id" />
+    <FieldMapping SourceField="sys_name" DestinationField="ref_dept_name" />
+  </RelationFieldMappings>
+</FormField>
+```
+
+A mapping marked `LookupOnly="true"` is written back on a lookup selection but **takes no part in SQL generation**:
+
+- `dept_rowid` is a stored column of the leave request. If the employee relation joined it, `WHERE` and `ORDER BY` on `dept_rowid` would read the employee's *current* department instead of the one saved on the request.
+- `ref_dept_id` / `ref_dept_name` are filled by the join through `dept_rowid`. The lookup-only copies only keep the screen in step until the row is saved and reloaded.
+
+Two requirements:
+
+- The source fields must be listed in the target form's `LookupFields`, because the lookup query returns only those. A missing one is reported when the selection is applied.
+- A relation field (`Type="RelationField"`) filled only by lookup-only mappings is empty after every reload. Analyzer POLHEM1006 reports it; add a regular mapping on the foreign key the value comes from.
+
 ---
 
 ## 4. Examples

@@ -51,7 +51,6 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [Theory]
         [InlineData(nameof(FormField.ListItems))]
         [InlineData(nameof(FormField.RelationFieldMappings))]
-        [InlineData(nameof(FormField.LookupFieldMappings))]
         [DisplayName("The collections of FormField that the grid shows get the collection editor kind")]
         public void GetEditorKind_FormFieldCollections_AreCollections(string name)
         {

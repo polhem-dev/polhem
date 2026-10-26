@@ -163,7 +163,6 @@
   <data name="FormSchema_AddTable" xml:space="preserve"><value>Add FormTable</value></data>
   <data name="FormSchema_AddField" xml:space="preserve"><value>Add FormField</value></data>
   <data name="FormSchema_AddRule" xml:space="preserve"><value>Add FormRule</value></data>
-  <data name="FormSchema_AddLookupMapping" xml:space="preserve"><value>Add Lookup Mapping</value></data>
   <data name="FormSchema_AddRelationMapping" xml:space="preserve"><value>Add Relation Mapping</value></data>
   <data name="FormSchema_GenerateFormLayout" xml:space="preserve"><value>Generate FormLayout</value></data>
   <data name="Status_FormLayoutGenerated" xml:space="preserve"><value>Generated {0}</value></data>
@@ -253,7 +252,6 @@ Save anyway?</value></data>
   <data name="TreeNode_Indexes" xml:space="preserve"><value>Indexes</value></data>
   <data name="TreeNode_Items" xml:space="preserve"><value>Items</value></data>
   <data name="TreeNode_Logging" xml:space="preserve"><value>Logging</value></data>
-  <data name="TreeNode_Lookup" xml:space="preserve"><value>Lookup</value></data>
   <data name="TreeNode_MenuSettings" xml:space="preserve"><value>Menu Settings</value></data>
   <data name="TreeNode_Models" xml:space="preserve"><value>Models</value></data>
   <data name="TreeNode_PermissionModels" xml:space="preserve"><value>Permission Models</value></data>

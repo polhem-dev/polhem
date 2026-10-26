@@ -9,7 +9,7 @@ namespace Polhem.DefineEditor.Services;
 /// <summary>
 /// A snapshot of solution-wide information that individual document editors
 /// need but cannot derive from a single file (currently: the set of FormSchema
-/// ProgIds in the same DefinePath, used to drive RelationProgId / LookupProgId
+/// ProgIds in the same DefinePath, used to drive RelationProgId
 /// dropdowns and "unknown ProgId" validation).
 /// </summary>
 public sealed record SolutionContext(IReadOnlyList<string> AvailableProgIds)

@@ -113,7 +113,7 @@ namespace Polhem.UI.Avalonia.Controls
             var dataObject = _binder.DataObject;
             if (dataObject is null) return;
 
-            var progId = LookupFieldRules.ResolveProgId(lookupField);
+            var progId = lookupField.RelationProgId;
             try
             {
                 var selected = await LookupDialog.ShowAsync(this, progId).ConfigureAwait(true);

@@ -1,4 +1,8 @@
 #nullable enable
+*REMOVED*Polhem.Definition.Forms.FormField.LookupFieldMappings.get -> Polhem.Definition.Forms.FieldMappingCollection?
+*REMOVED*Polhem.Definition.Forms.FormField.LookupFieldMappingsSpecified.get -> bool
+*REMOVED*Polhem.Definition.Forms.FormField.LookupProgId.get -> string!
+*REMOVED*Polhem.Definition.Forms.FormField.LookupProgId.set -> void
 Polhem.Definition.Forms.FieldMapping.LookupOnly.get -> bool
 Polhem.Definition.Forms.FieldMapping.LookupOnly.set -> void
 const Polhem.Definition.Language.PolhemUIText.Dismiss = "Dismiss" -> string!
