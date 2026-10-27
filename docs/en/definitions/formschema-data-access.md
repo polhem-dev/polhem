@@ -131,8 +131,32 @@ A mapping marked `LookupOnly="true"` is written back on a lookup selection but *
 
 Two requirements:
 
-- The source fields must be listed in the target form's `LookupFields`, because the lookup query returns only those. A missing one is reported when the selection is applied.
+- The source fields must be listed in the target form's `LookupFields`, because the lookup query returns only those. A missing one is reported when the selection is applied, unless the foreign key calls back the server (§3.5).
 - A relation field (`Type="RelationField"`) filled only by lookup-only mappings is empty after every reload. Analyzer POLHEM1006 reports it; add a regular mapping on the foreign key the value comes from.
+
+### 3.5 Filling the Row from the Server on Change
+
+A lookup window shows a few columns, while a selection often needs more: the employee's department, or a part's warehouse, stock and price. Instead of widening `LookupFields`, mark the field with `ValueChangeCallback="true"`:
+
+```xml
+<FormField FieldName="emp_rowid" RelationProgId="Employee" ValueChangeCallback="true">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"        DestinationField="ref_emp_id" />
+    <FieldMapping SourceField="sys_name"      DestinationField="ref_emp_name" />
+    <FieldMapping SourceField="dept_rowid"    DestinationField="dept_rowid"    LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_id"   DestinationField="ref_dept_id"   LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_name" DestinationField="ref_dept_name" LookupOnly="true" />
+  </RelationFieldMappings>
+</FormField>
+```
+
+When the user picks an employee or types a value into the field, the UI calls `FieldValueChange` on **the form being edited** (here the leave request) with the field, its new value and a copy of the row:
+
+- For a relation field the server reads the picked row from the related form and returns every mapping's value, the ones the lookup did not show included. The row is read under the related form's lookup rules, so an id the user could not have picked returns an error instead of data.
+- The answer is written into the row; its errors and warnings are shown to the user.
+- Any other field can use the same flag: the form's BO overrides `FieldValueChange`, calls the base method, and adds values by field name, for example a part number that brings back the price and checks the stock. The method is described in the [API method reference](../api/api-method-reference.md).
+
+Only the user's own change calls back. Values a callback writes, the writes of a lookup pick and clearing a lookup never call back again, even when their fields carry the flag, so one change makes at most one call. DefineEditor's relation dialog ticks the flag by default when a mapping's source is not in the related form's `LookupFields`. The reasons for the design are in [ADR-058](../../../maintainers/adr/adr-058-field-value-change-callback.md).
 
 ---
 
@@ -300,6 +324,7 @@ The following "limitations" are deliberate tradeoffs aligned with the `FormSchem
 
 - [Architecture Overview](../architecture/architecture-overview.md): the overall Polhem architecture
 - [ADR-005: FormSchema-Driven Architecture](../../../maintainers/adr/adr-005-formschema-driven.md): the upstream design decision behind this approach
+- [ADR-058: Field Change Callback](../../../maintainers/adr/adr-058-field-value-change-callback.md): why a field change fills the row from its own form's BO
 - [Terminology Reference](../reference/terminology.md): EN/ZH terminology mapping
 - [Polhem.Db README](../../../src/Polhem.Db/README.md): Polhem.Db package overview
 - [Development Cookbook](../guides/development-cookbook.md): FormSchema-driven development and the dual-track strategy

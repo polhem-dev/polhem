@@ -1,4 +1,4 @@
-<!-- source: en/definitions/formschema-data-access.md blob: 378f0ca82b87c67019aa850c5d8a282039ffa617 -->
+<!-- source: en/definitions/formschema-data-access.md blob: d60f72fe34508ac237d907e0b75083c442755a75 -->
 # FormSchema 驅動的資料庫存取
 
 [English](../../en/definitions/formschema-data-access.md) · [← 文件索引](../README.md)
@@ -132,8 +132,32 @@ Definition-Driven Architecture（整體架構）
 
 兩個條件：
 
-- 來源欄位必須列在目標表單的 `LookupFields` 裡，因為查詢視窗只回傳這些欄位。缺少時，套用選取結果的當下就會報錯。
+- 來源欄位必須列在目標表單的 `LookupFields` 裡，因為查詢視窗只回傳這些欄位。缺少時，套用選取結果的當下就會報錯；外鍵設定了回呼後端時例外（§3.5）。
 - 只被 LookupOnly 對應寫入的關聯欄位（`Type="RelationField"`）每次重新載入都是空的。analyzer POLHEM1006 會回報；請在該值來源的外鍵上補一筆一般對應。
+
+### 3.5 欄位異動時由後端帶回整列的值
+
+查詢視窗只顯示幾個欄位，選取時卻常需要更多：員工的部門，或料號的倉庫、存量、單價。不必放寬 `LookupFields`，而是在欄位上標 `ValueChangeCallback="true"`：
+
+```xml
+<FormField FieldName="emp_rowid" RelationProgId="Employee" ValueChangeCallback="true">
+  <RelationFieldMappings>
+    <FieldMapping SourceField="sys_id"        DestinationField="ref_emp_id" />
+    <FieldMapping SourceField="sys_name"      DestinationField="ref_emp_name" />
+    <FieldMapping SourceField="dept_rowid"    DestinationField="dept_rowid"    LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_id"   DestinationField="ref_dept_id"   LookupOnly="true" />
+    <FieldMapping SourceField="ref_dept_name" DestinationField="ref_dept_name" LookupOnly="true" />
+  </RelationFieldMappings>
+</FormField>
+```
+
+使用者選取員工或在欄位手動輸入值時，UI 會呼叫**正在編輯的表單**（這裡是請假單）的 `FieldValueChange`，帶上欄位、新值與這一列的複本：
+
+- 關聯欄位由後端從被關聯表單讀出選取的那一筆，回傳每筆對應的值，包括查詢視窗沒有顯示的欄位。讀取套用被關聯表單開窗查詢的規則，使用者本來選不到的 id 會回傳錯誤，而不是資料。
+- 回傳的值寫入這一列，錯誤與警告會提示使用者。
+- 其他欄位也能用同一個旗標：表單的 BO 覆寫 `FieldValueChange`，先呼叫基底方法，再依欄位名稱補值，例如輸入料號時帶回單價並檢查存量。方法說明見 [API 方法參考](../api/api-method-reference.md)。
+
+只有使用者自己的變更會回呼。回呼寫入的值、開窗選取的寫入、清空開窗，都不會再引發回呼，即使那些欄位也標了旗標，所以一次變更最多呼叫一次。DefineEditor 的關聯對話框在對應的來源不在被關聯表單的 `LookupFields` 時，預設勾選這個旗標。設計理由見 [ADR-058](../../../maintainers/adr/adr-058-field-value-change-callback.md)。
 
 ---
 
@@ -301,6 +325,7 @@ ORDER BY A.[sys_id] ASC
 
 - [架構總覽](../architecture/architecture-overview.md)：Polhem 的整體架構
 - [ADR-005：FormSchema 定義驅動架構](../../../maintainers/adr/adr-005-formschema-driven.md)：本文做法上位的設計決策
+- [ADR-058：欄位異動回呼](../../../maintainers/adr/adr-058-field-value-change-callback.md)：欄位異動為何由自身表單的 BO 帶回整列的值
 - [專有名詞對照表](../reference/terminology.md)：相關名詞的中英文對照
 - [Polhem.Db README](../../../src/Polhem.Db/README.zh-TW.md)：Polhem.Db 套件總覽
 - [開發指引](../guides/development-cookbook.md)：FormSchema 驅動開發、雙軌策略

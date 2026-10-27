@@ -49,6 +49,9 @@
             </StackPanel>
 
             <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,10,0,0">
+                <CheckBox IsVisible="{Binding IsRelating}" IsChecked="{Binding ValueChangeCallback, Mode=TwoWay}">
+                    <TextBlock Text="{loc:Loc Relation_ValueChangeCallback}" TextWrapping="Wrap"/>
+                </CheckBox>
                 <CheckBox IsVisible="{Binding HasOrphans}" IsChecked="{Binding RemoveOrphans, Mode=TwoWay}">
                     <TextBlock Text="{Binding OrphansText}" TextWrapping="Wrap"/>
                 </CheckBox>
