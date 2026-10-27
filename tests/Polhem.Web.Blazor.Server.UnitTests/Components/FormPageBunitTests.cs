@@ -17,14 +17,18 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
     /// Renders <see cref="FormPage"/> with bUnit and drives it through its markup: the list loads on initialization,
-    /// clicking a list row loads the record, the toolbar buttons call New / Save / Delete on the connector, and a
-    /// failure replaces the page with the error message.
+    /// clicking a list row loads the record, the toolbar buttons call New / Save / Delete on the connector, a
+    /// failed action is shown as a notice over the form, a new ProgId reloads the page, and the user's capabilities
+    /// hide commands and sensitive fields.
     /// </summary>
     /// <remarks>
     /// The services are what <see cref="PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor"/> registers,
@@ -41,16 +45,27 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class FormPageBunitTests : BunitContext
     {
         private const string TestProgId = "BunitProg";
+        private const string OtherProgId = "BunitOther";
         private static readonly Guid s_aliceRowId = new("aaaaaaaa-0000-0000-0000-000000000001");
         private static readonly Guid s_bobRowId = new("aaaaaaaa-0000-0000-0000-000000000002");
 
+        private const string TestPermissionModelId = "BunitModel";
+
         private static FormSchema BuildSchema(bool nameRequired = false, bool withComputed = false,
-            string amountExpression = "price * qty")
+            string amountExpression = "price * qty", bool permissionBound = false)
         {
             var schema = new FormSchema(TestProgId, TestProgId) { ListFields = "emp_name" };
+            if (permissionBound) { schema.PermissionModelId = TestPermissionModelId; }
             var master = schema.Tables!.Add(TestProgId, TestProgId);
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
             master.Fields.Add("emp_name", "Name", FieldDbType.String).Required = nameRequired;
+            if (permissionBound)
+            {
+                master.Fields!.Add(new FormField("salary", "Salary", FieldDbType.Decimal)
+                {
+                    SensitiveCategory = SensitiveCategory.Amount,
+                });
+            }
             if (withComputed)
             {
                 master.Fields!.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice });
@@ -101,7 +116,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _hasLayout = hasLayout;
                 _zhTw = zhTw;
                 Server = new FakeApiServer()
-                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", _ => GetList())
+                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields))
                     .On<GetDataRequest>($"{TestProgId}.{FormActions.GetData}", request => GetData(request.RowId))
                     .On<GetNewDataRequest>($"{TestProgId}.{FormActions.GetNewData}", _ => GetNewData())
                     .On<SaveRequest>($"{TestProgId}.{FormActions.Save}", request => Save(request.DataSet!))
@@ -110,23 +125,33 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                     .On<GetFormLayoutRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeFormLayout}",
                         _ => new GetFormLayoutResponse())
                     .On<GetLanguageRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeLanguage}",
-                        _ => new GetLanguageResponse());
+                        _ => new GetLanguageResponse())
+                    .On<EnterCompanyRequest>($"{SysProgIds.System}.{SystemActions.EnterCompany}",
+                        request => new EnterCompanyResponse
+                        {
+                            Company = new CompanyInfo { CompanyId = request.CompanyId },
+                            Capabilities = new Dictionary<string, PermissionActions>(Capabilities, StringComparer.Ordinal),
+                        });
             }
 
             public FakeApiServer Server { get; }
 
             public int GetListCount { get; private set; }
+            public List<string> ListSelectFields { get; } = [];
             public List<Guid> Loaded { get; } = [];
             public int NewCount { get; private set; }
             public List<DataSet> Saved { get; } = [];
             public List<Guid> Deleted { get; } = [];
             public string? GetDataFailure { get; set; }
+            public string? SaveFailure { get; set; }
+            public Dictionary<string, PermissionActions> Capabilities { get; } = new(StringComparer.Ordinal);
             public string NewName { get; set; } = "New employee";
             public int LanguageFetchCount { get; private set; }
 
-            private GetListResponse GetList()
+            private GetListResponse GetList(string selectFields)
             {
                 GetListCount++;
+                ListSelectFields.Add(selectFields);
                 var table = new DataTable(TestProgId);
                 table.Columns.Add(SysFields.RowId, typeof(Guid));
                 table.Columns.Add("emp_name", typeof(string));
@@ -152,6 +177,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             private SaveResponse Save(DataSet dataSet)
             {
+                if (SaveFailure != null) { throw new UserMessageException(SaveFailure); }
                 Saved.Add(dataSet);
                 return new SaveResponse { DataSet = dataSet };
             }
@@ -190,9 +216,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private FakeBackend RegisterBackend(bool hasLayout = true, bool nameRequired = false,
             LanguageResource? zhTw = null, bool useDefinitionLoader = true, bool withComputed = false,
-            string amountExpression = "price * qty", bool compactViewport = false)
+            string amountExpression = "price * qty", bool compactViewport = false, bool permissionBound = false)
         {
-            _backend = new FakeBackend(BuildSchema(nameRequired, withComputed, amountExpression), hasLayout, zhTw);
+            _backend = new FakeBackend(BuildSchema(nameRequired, withComputed, amountExpression, permissionBound), hasLayout, zhTw);
             CompactViewportModule.Setup(JSInterop, compactViewport);
             Services.AddPolhemBlazor(options =>
             {
@@ -217,6 +243,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return cut.FindAll("div.polhem-form-page__toolbar button").Single(b => b.TextContent == text);
         }
 
+        private bool HasToolbarButton(IRenderedComponent<FormPage> cut, string textKey)
+        {
+            string text = PolhemUIText.Get(Services.GetRequiredService<IStringLocalizer<PolhemUIText>>(), textKey);
+            return cut.FindAll("div.polhem-form-page__toolbar button").Any(b => b.TextContent == text);
+        }
+
         private bool IsDisabled(IRenderedComponent<FormPage> cut, string textKey)
             => ToolbarButton(cut, textKey).HasAttribute("disabled");
 
@@ -239,6 +271,19 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             Assert.True(IsDisabled(cut, PolhemUIText.Save));
             Assert.True(IsDisabled(cut, PolhemUIText.Delete));
             Assert.Empty(cut.FindAll("div.polhem-form-page__error"));
+        }
+
+        [Fact]
+        [DisplayName("The list asks for sys_rowid ahead of the form's ListFields, so a listed row can be opened")]
+        public void Initialize_ListRequest_AsksForRowIdFirst()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            Assert.Equal($"{SysFields.RowId},emp_name", Assert.Single(form.ListSelectFields));
         }
 
         [Fact]
@@ -357,8 +402,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("A failing action replaces the page with its error message")]
-        public void Action_Fails_ShowsErrorMessage()
+        [DisplayName("A failing action shows its message as a notice and keeps the form on screen")]
+        public void Action_Fails_ShowsNoticeAndKeepsForm()
         {
             using var culture = new CultureScope("en-US");
             var form = RegisterBackend();
@@ -369,8 +414,178 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
 
             cut.WaitForAssertion(() => Assert.Equal(
-                "Record is locked by another user.", cut.Find("div.polhem-form-page__error").TextContent));
-            Assert.Empty(cut.FindAll("div.polhem-form-page__toolbar"));
+                "Record is locked by another user.", cut.Find("div.polhem-form-page__notice").TextContent));
+            Assert.Single(cut.FindAll("div.polhem-form-page__toolbar"));
+            Assert.Empty(cut.FindAll("div.polhem-form-page__error"));
+        }
+
+        [Fact]
+        [DisplayName("A save the server rejects keeps the edited value on screen and names the reason")]
+        public void Save_ServerRejects_KeepsEditedValueAndShowsNotice()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.SaveFailure = "An order needs at least one line.";
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
+            cut.Find("#polhem-form-emp_name").Change("Alice Edited");
+
+            Click(cut, PolhemUIText.Save);
+
+            cut.WaitForAssertion(() => Assert.Equal(
+                "An order needs at least one line.", cut.Find("div.polhem-form-page__notice").TextContent));
+            Assert.Equal("Alice Edited", cut.Find("#polhem-form-emp_name").GetAttribute("value"));
+            Assert.False(IsDisabled(cut, PolhemUIText.Save));
+        }
+
+        [Fact]
+        [DisplayName("Setting a new ProgId on the same page loads that program's list")]
+        public void ProgIdChanged_ReloadsForNewProgram()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.Server.On<GetListRequest>($"{OtherProgId}.{FormActions.GetList}", _ =>
+            {
+                var table = new DataTable(OtherProgId);
+                table.Columns.Add(SysFields.RowId, typeof(Guid));
+                table.Columns.Add("emp_name", typeof(string));
+                table.Rows.Add(Guid.NewGuid(), "Carol");
+                return new GetListResponse { Table = table };
+            });
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.Render(p => p.Add(c => c.ProgId, OtherProgId));
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll("tr.polhem-dynamic-grid__row")));
+            Assert.Contains("Carol", cut.Find("table.polhem-dynamic-grid").TextContent, StringComparison.Ordinal);
+            Assert.Contains($"{OtherProgId}.{FormActions.GetList}", form.Server.Calls);
+        }
+
+        [Fact]
+        [DisplayName("Setting the same ProgId again does not reload the page")]
+        public void ProgIdUnchanged_DoesNotReload()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.Render(p => p.Add(c => c.ProgId, TestProgId));
+
+            Assert.Equal(1, form.GetListCount);
+        }
+
+        [Fact]
+        [DisplayName("A user who may only read a permission-bound form sees no New, Save or Delete")]
+        public async Task Capabilities_ReadOnly_HidesCommands()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            Assert.False(HasToolbarButton(cut, PolhemUIText.New));
+            Assert.False(HasToolbarButton(cut, PolhemUIText.Save));
+            Assert.False(HasToolbarButton(cut, PolhemUIText.Delete));
+        }
+
+        [Fact]
+        [DisplayName("A user who may create and update but not delete sees New and Save only")]
+        public async Task Capabilities_CreateAndUpdate_ShowsNewAndSaveOnly()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Create | PermissionActions.Update;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.True(HasToolbarButton(cut, PolhemUIText.New)));
+            Assert.True(HasToolbarButton(cut, PolhemUIText.Save));
+            Assert.False(HasToolbarButton(cut, PolhemUIText.Delete));
+        }
+
+        [Fact]
+        [DisplayName("A user who may read but not update a permission-bound form opens a record read-only")]
+        public async Task Capabilities_ReadOnly_OpensRecordInViewMode()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.Equal([s_aliceRowId], form.Loaded));
+            Assert.True(cut.Find("#polhem-form-emp_name").HasAttribute("readonly"));
+        }
+
+        [Fact]
+        [DisplayName("A user who may update a permission-bound form opens a record for editing")]
+        public async Task Capabilities_Update_OpensRecordInEditMode()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.False(cut.Find("#polhem-form-emp_name").HasAttribute("readonly")));
+        }
+
+        [Fact]
+        [DisplayName("Without an entered company the page treats the user as unrestricted")]
+        public void Capabilities_NoCompanyEntered_ShowsEveryCommand()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend(permissionBound: true);
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.True(HasToolbarButton(cut, PolhemUIText.New)));
+            Assert.True(HasToolbarButton(cut, PolhemUIText.Save));
+            Assert.True(HasToolbarButton(cut, PolhemUIText.Delete));
+        }
+
+        [Fact]
+        [DisplayName("A sensitive field whose category the user may not read is left out of the form")]
+        public async Task Capabilities_SensitiveFieldWithoutRead_IsHidden()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll("#polhem-form-emp_name")));
+            Assert.Empty(cut.FindAll("#polhem-form-salary"));
+        }
+
+        [Fact]
+        [DisplayName("A sensitive field is shown when the capability snapshot grants its category")]
+        public async Task Capabilities_SensitiveFieldWithRead_IsShown()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
+            form.Capabilities[SensitiveCategory.Amount.ToPermissionModelId()] = PermissionActions.Read | PermissionActions.Update;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll("#polhem-form-salary")));
         }
 
         [Fact]

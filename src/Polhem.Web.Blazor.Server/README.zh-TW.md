@@ -33,7 +33,8 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
 ```
 
 `AddPolhemBlazor` 註冊 `PolhemBlazorOptions`、每個 circuit 一個、供元件注入以呼叫後端的 `PolhemApiClient`（每個
-circuit 在自己的 client 上登入，所以一位使用者的身分不會進到另一位使用者的呼叫），以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
+circuit 在自己的 client 上登入，所以一位使用者的身分不會進到另一位使用者的呼叫）、每個 circuit 一個
+`CircuitUserContext`（同時註冊為該 circuit 的 `IUserContext`），以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
 `options.UseDefinitionLoader`（預設開啟）決定 `FormPage` 是否在地化定義，見下文。
 
 > **Remote 模式需要應用程式的 API key。** 伺服器預設的 `ApiAuthorizationValidator` 在 `X-Api-Key` 標頭缺少或不是
@@ -55,7 +56,11 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   即時重算計算欄位（`ValueExpression`）；部署了幣別與單位主檔時，數值預覽會依登入公司的小數位數與這些主檔決定，儲存時由
   伺服器做權威的四捨五入。明細資料表以 grid 呈現在主檔欄位下方。viewport 寬度小於 `CompactWidthThreshold`（預設 600 CSS
   像素）時，表單改用精簡版面，寬度由 `CompactViewportObserver` 量測；設定 `IsCompact` 則固定版面、不量測，
-  `DetailEditMode` 決定非精簡版面時的明細編輯模式。
+  `DetailEditMode` 決定非精簡版面時的明細編輯模式。`ProgId` 變更時頁面會重新載入，所以一個路由頁面（`/form/{ProgId}`）
+  可以服務所有程式。載入記錄、儲存或刪除失敗時，訊息以提示顯示在表單上方，使用者輸入的內容保留；只有無法載入定義的頁面
+  才以錯誤取代表單。circuit 的 `IUserContext` 有能力快照時，使用者缺少表單權限模型的 `Create`、`Create` 或 `Update`、
+  `Delete` 時分別隱藏 New、Save、Delete，缺少 `Update` 時以唯讀開啟記錄，敏感欄位依其類別隱藏或唯讀，經由 `Polhem.UI.Core` 的 `LayoutCapabilityApplier`；
+  數值預覽採用登入公司的小數位數。後端仍會檢查每一個呼叫。
 - `CompactViewportObserver` -- 不輸出任何標記，瀏覽器 viewport 跨過 `CompactWidthThreshold` 時觸發 `CompactChanged`。
   直接使用 `FormLayoutPresenter` 的頁面在旁邊放一個，把值傳給 `IsCompact`。它透過套件內附的一支小型 JavaScript module
   量測 viewport，以 JavaScript isolation 載入，host 頁面不必加 `<script>`；host 必須提供 static web assets
@@ -83,7 +88,10 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   `FormDataObject.ApplyLookupSelection` 寫回，按 Delete 則清除。對話框依序從參數、容器中註冊的
   `IFormDefinitionSource` 與 `IFormApiConnectorFactory`（以 scoped 註冊，每個 circuit 各一份）、circuit 的
   `PolhemApiClient` 取得目標 schema 與連接器；有 Polhem 後端的應用程式不需註冊任何東西。
-- `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。
+- `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。登入成功時也會記錄到 circuit 的
+  `CircuitUserContext`。
+- `CircuitUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`
+  登出，讓 context 與 client 保持一致。直接透過 client 進入公司的話，context 沒有能力快照，頁面會把使用者視為不受限。
 - `PolhemAccessTokenProvider` -- 持有頁面的登入狀態（存取權杖），並以 cascading value 提供給子元件。實際的呼叫
   使用 circuit 的 `PolhemApiClient`，登入時已在其上完成登入。
 - `FormDataObject` -- 由 `FormSchema` 衍生記憶體內 `DataSet`（主檔列 + 明細資料表），提供 `GetField` /

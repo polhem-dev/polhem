@@ -1,9 +1,8 @@
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
-using Polhem.UI.Core.Permissions;
 
-namespace Polhem.UI.Avalonia.Permissions
+namespace Polhem.UI.Core.Permissions
 {
     /// <summary>
     /// Applies a client capability snapshot onto a form's layout by hiding / marking read-only its
@@ -11,14 +10,13 @@ namespace Polhem.UI.Avalonia.Permissions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// IMPORTANT: mutating in place is safe only because each caller hands over a layout that belongs
-    /// to one view. <see cref="Polhem.UI.Avalonia.Views.FormView"/> gets its layout from
-    /// <see cref="Polhem.UI.Avalonia.Views.FormView.ResolveLayoutAsync"/>, whose default clones on
-    /// every path, the host-supplied <see cref="Polhem.UI.Avalonia.Views.FormView.Layout"/> included
-    /// (pinned by <c>FormViewTests.EnsureDataObject_HostSuppliedLayout_LeavesHostInstanceUnchanged</c>),
-    /// and whose remarks require an override to do the same;
-    /// <see cref="Polhem.UI.Avalonia.Views.ListView"/> projects a fresh list layout from the schema on
-    /// each attach. A new caller that passes a cached or host-owned layout must clone it first.
+    /// IMPORTANT: it mutates the layout in place, so a caller hands over a layout that belongs to one view and
+    /// clones a cached or host-owned one first. The Avalonia <c>FormView</c> gets its layout from
+    /// <c>FormView.ResolveLayoutAsync</c>, whose default clones on every path (pinned by
+    /// <c>FormViewTests.EnsureDataObject_HostSuppliedLayout_LeavesHostInstanceUnchanged</c>), and its <c>ListView</c>
+    /// projects a fresh list layout from the schema on each attach. The Blazor <c>FormPage</c> applies it to the
+    /// layout its definition loader assembled for that page, which the loader clones, or to one it fetched and
+    /// deserialized itself.
     /// </para>
     /// <para>
     /// Detail grid actions (Add / Edit / Delete rows) are deliberately NOT gated here. A detail grid
@@ -27,12 +25,15 @@ namespace Polhem.UI.Avalonia.Permissions
     /// Add / Edit requires the master model's Create / Update). Only sensitive columns are degraded.
     /// </para>
     /// </remarks>
-    internal static class LayoutCapabilityApplier
+    public static class LayoutCapabilityApplier
     {
         /// <summary>
         /// Degrades every master section field and detail grid of a form layout. No-op when the
         /// capability snapshot is <c>null</c> (enforcement inactive) or the schema is missing.
         /// </summary>
+        /// <param name="layout">The layout to degrade in place.</param>
+        /// <param name="schema">The schema the layout belongs to.</param>
+        /// <param name="capabilities">The user's capability snapshot, or <c>null</c> when enforcement is inactive.</param>
         public static void Apply(FormLayout? layout, FormSchema? schema, IReadOnlyDictionary<string, PermissionActions>? capabilities)
         {
             if (layout == null || schema == null || capabilities == null) { return; }
@@ -53,6 +54,9 @@ namespace Polhem.UI.Avalonia.Permissions
         /// Hides / marks read-only any sensitive columns of a single grid. No-op when the snapshot
         /// is <c>null</c>. Grid actions are not touched — they follow the form's edit mode.
         /// </summary>
+        /// <param name="grid">The grid to degrade in place.</param>
+        /// <param name="schema">The schema the grid's table belongs to.</param>
+        /// <param name="capabilities">The user's capability snapshot, or <c>null</c> when enforcement is inactive.</param>
         public static void ApplyGrid(LayoutGrid? grid, FormSchema? schema, IReadOnlyDictionary<string, PermissionActions>? capabilities)
         {
             if (grid == null || schema == null || capabilities == null) { return; }

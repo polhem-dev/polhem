@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// Covers the four action handlers of <see cref="FormPage"/> when <c>_dataObject</c> is not null,
     /// and <c>ReloadListAsync</c>.
     /// The action handlers trigger an exception with a <see cref="FormDataObject"/> that has no connector.
-    /// <c>RunGuardedAsync</c> catches it and sets <c>_error</c>.
+    /// <c>RunGuardedAsync</c> catches it and sets <c>_notice</c>, leaving the form on screen.
     /// <c>ReloadListAsync</c> runs its full path against a <see cref="FakeApiServer"/>.
     /// </summary>
     public class FormPageNonNullDataObjectTests
@@ -25,8 +25,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly FieldInfo s_dataObjectField =
             typeof(FormPage).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        private static readonly FieldInfo s_errorField =
-            typeof(FormPage).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        private static readonly FieldInfo s_noticeField =
+            typeof(FormPage).GetField("_notice", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_listRowsField =
             typeof(FormPage).GetField("_listRows", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -54,39 +54,39 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowSelectedAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
-        public async Task OnRowSelectedAsync_NonNullDataObjectNoConnector_SetsError()
+        [DisplayName("OnRowSelectedAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
+        public async Task OnRowSelectedAsync_NonNullDataObjectNoConnector_SetsNotice()
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnRowSelectedAsync", new object[] { Guid.NewGuid() });
-            Assert.StartsWith("LoadAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("LoadAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("OnNewAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
-        public async Task OnNewAsync_NonNullDataObjectNoConnector_SetsError()
+        [DisplayName("OnNewAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
+        public async Task OnNewAsync_NonNullDataObjectNoConnector_SetsNotice()
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnNewAsync", null);
-            Assert.StartsWith("NewAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("NewAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("OnSaveAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
-        public async Task OnSaveAsync_NonNullDataObjectNoConnector_SetsError()
+        [DisplayName("OnSaveAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
+        public async Task OnSaveAsync_NonNullDataObjectNoConnector_SetsNotice()
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnSaveAsync", null);
-            Assert.StartsWith("SaveAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("SaveAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("OnDeleteAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
-        public async Task OnDeleteAsync_NonNullDataObjectNoConnector_SetsError()
+        [DisplayName("OnDeleteAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
+        public async Task OnDeleteAsync_NonNullDataObjectNoConnector_SetsNotice()
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnDeleteAsync", null);
-            Assert.StartsWith("DeleteAsync requires a form connector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.StartsWith("DeleteAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]

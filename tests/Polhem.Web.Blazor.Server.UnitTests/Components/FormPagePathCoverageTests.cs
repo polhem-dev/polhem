@@ -5,7 +5,7 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId.
+    /// Covers <see cref="FormPage.OnParametersSetAsync"/> with a valid ProgId.
     /// When Factory is not injected (null), a NullReferenceException is thrown inside the try block,
     /// the catch sets _error and the finally resets _isInitializing,
     /// so all three branches of try-catch-finally are covered without a Blazor renderer.
@@ -18,10 +18,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static FieldInfo GetIsInitializingField() =>
             typeof(FormPage).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        private static async Task InvokeOnInitializedAsync(FormPage page)
+        private static async Task InvokeOnParametersSetAsync(FormPage page)
         {
             var method = typeof(FormPage).GetMethod(
-                "OnInitializedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+                "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;
             await task;
@@ -36,21 +36,21 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync enters the catch and sets an error message for a valid ProgId when Factory is not injected")]
-        public async Task OnInitializedAsync_ValidProgIdNullFactory_CatchesExceptionAndSetsError()
+        [DisplayName("OnParametersSetAsync enters the catch and sets an error message for a valid ProgId when Factory is not injected")]
+        public async Task OnParametersSetAsync_ValidProgIdNullFactory_CatchesExceptionAndSetsError()
         {
             var page = CreatePageWithProgId("TestProg");
-            await InvokeOnInitializedAsync(page);
+            await InvokeOnParametersSetAsync(page);
             var error = GetErrorField().GetValue(page) as string;
             Assert.NotNull(error);
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync sets _isInitializing to false in finally for a valid ProgId when Factory is not injected")]
-        public async Task OnInitializedAsync_ValidProgIdNullFactory_FinallyResetsIsInitializing()
+        [DisplayName("OnParametersSetAsync sets _isInitializing to false in finally for a valid ProgId when Factory is not injected")]
+        public async Task OnParametersSetAsync_ValidProgIdNullFactory_FinallyResetsIsInitializing()
         {
             var page = CreatePageWithProgId("TestProg");
-            await InvokeOnInitializedAsync(page);
+            await InvokeOnParametersSetAsync(page);
             Assert.False((bool)GetIsInitializingField().GetValue(page)!);
         }
     }

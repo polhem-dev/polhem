@@ -4,6 +4,7 @@ using Polhem.Api.Client.Definitions;
 using Polhem.Core.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Identity;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.Components
@@ -51,7 +52,7 @@ namespace Polhem.Web.Blazor.Server.Components
 
         /// <summary>
         /// Builds the rounding context a form previews numbers with: the entered company from the loader's
-        /// <see cref="FormDefinitionLoader.CompanyAccessor"/>, and the currency and unit masters, as the
+        /// <see cref="FormDefinitionLoader.CompanyAccessor"/> or else the circuit's user context, and the currency and unit masters, as the
         /// Avalonia <c>FormView</c> does.
         /// </summary>
         /// <remarks>
@@ -61,12 +62,14 @@ namespace Polhem.Web.Blazor.Server.Components
         /// </remarks>
         /// <param name="client">The circuit's client.</param>
         /// <param name="loader">The loader, or <c>null</c>.</param>
-        internal static async Task<RoundingContext> LoadRoundingContextAsync(PolhemApiClient client, FormDefinitionLoader? loader)
+        /// <param name="company">The company the circuit's user entered, used when the loader names none.</param>
+        internal static async Task<RoundingContext> LoadRoundingContextAsync(PolhemApiClient client, FormDefinitionLoader? loader,
+            CompanyInfo? company)
         {
             var access = new ClientDefineAccess(client.System);
             return new RoundingContext
             {
-                Company = loader?.CompanyAccessor?.Invoke(),
+                Company = loader?.CompanyAccessor?.Invoke() ?? company,
                 CurrencySettings = await TryLoadAsync(() => access.GetCurrencySettingsAsync()).ConfigureAwait(true),
                 UnitSettings = await TryLoadAsync(() => access.GetUnitSettingsAsync()).ConfigureAwait(true),
             };

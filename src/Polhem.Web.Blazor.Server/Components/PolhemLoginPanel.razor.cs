@@ -3,6 +3,8 @@ using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Definition.Language;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
+using Polhem.Web.Blazor.Server.Identity;
 
 namespace Polhem.Web.Blazor.Server.Components
 {
@@ -25,6 +27,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// (<see cref="LoginResponse.Culture"/>). A circuit's culture is fixed when it starts, so a host
     /// that renders in the user's language persists that culture — typically as the ASP.NET Core
     /// request-localization cookie — and reloads.
+    /// </para>
+    /// <para>
+    /// A successful sign-in is also recorded on the circuit's <see cref="CircuitUserContext"/>, before
+    /// <see cref="OnLoggedIn"/> runs, so the host only has to enter the company through
+    /// <see cref="CircuitUserContext.EnterCompanyAsync"/>.
     /// </para>
     /// </remarks>
     public sealed partial class PolhemLoginPanel : ComponentBase
@@ -98,6 +105,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
 
                 _password = string.Empty;
+                Services?.GetService<CircuitUserContext>()?.ApplyLoginResult(response);
 
                 if (OnLoggedIn.HasDelegate)
                 {

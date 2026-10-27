@@ -20,10 +20,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return method!;
         }
 
-        private static FieldInfo GetErrorField()
+        private static FieldInfo GetNoticeField()
         {
             var field = typeof(FormPage).GetField(
-                "_error", BindingFlags.NonPublic | BindingFlags.Instance);
+                "_notice", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(field);
             return field!;
         }
@@ -60,17 +60,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("RunGuardedAsync sets _error and restores _isBusy to false after an action that throws")]
-        public async Task RunGuardedAsync_ThrowingAction_SetsErrorAndResetsBusy()
+        [DisplayName("RunGuardedAsync sets _notice and restores _isBusy to false after an action that throws")]
+        public async Task RunGuardedAsync_ThrowingAction_SetsNoticeAndResetsBusy()
         {
             var page = new FormPage();
             var method = GetRunGuardedAsync();
-            var errorField = GetErrorField();
+            var noticeField = GetNoticeField();
             var busyField = GetBusyField();
             Func<Task> action = () => throw new InvalidOperationException("test error");
             var task = (Task)method.Invoke(page, new object[] { action })!;
             await task;
-            Assert.Equal("test error", errorField.GetValue(page) as string);
+            Assert.Equal("test error", noticeField.GetValue(page) as string);
             Assert.False((bool)busyField.GetValue(page)!);
         }
 

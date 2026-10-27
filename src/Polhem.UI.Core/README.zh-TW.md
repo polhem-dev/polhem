@@ -71,6 +71,8 @@
 
 - `Permissions/IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability` -- 把使用者依模型的能力
   轉成元素層級的決策（欄位可見或唯讀）。
+- `Permissions/LayoutCapabilityApplier` -- 把這些決策直接套到表單版面或 grid 上，隱藏敏感欄位或設為唯讀；Avalonia 的
+  view 與 Blazor 的 `FormPage` 都使用它。
 
 > 用戶端能力解析**僅為 UX 降級**。後端仍是權威的安全邊界。
 
@@ -92,5 +94,5 @@
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`
-- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
-- `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`
+- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`、`ListSelectFields`
+- `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

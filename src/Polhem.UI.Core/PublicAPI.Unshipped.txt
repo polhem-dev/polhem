@@ -77,3 +77,8 @@ Polhem.UI.Core.Fields.FieldValueOrigin.RowEditCommit = 3 -> Polhem.UI.Core.Field
 Polhem.UI.Core.Fields.FieldValueOrigin.User = 0 -> Polhem.UI.Core.Fields.FieldValueOrigin
 Polhem.UI.Core.Fields.FieldValueOrigin.ValueChangeResult = 2 -> Polhem.UI.Core.Fields.FieldValueOrigin
 Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnLookupSelectedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.Permissions.LayoutCapabilityApplier
+static Polhem.UI.Core.Permissions.LayoutCapabilityApplier.Apply(Polhem.Definition.Layouts.FormLayout? layout, Polhem.Definition.Forms.FormSchema? schema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> void
+static Polhem.UI.Core.Permissions.LayoutCapabilityApplier.ApplyGrid(Polhem.Definition.Layouts.LayoutGrid? grid, Polhem.Definition.Forms.FormSchema? schema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> void
+Polhem.UI.Core.Connectors.ListSelectFields
+static Polhem.UI.Core.Connectors.ListSelectFields.For(Polhem.Definition.Forms.FormSchema! schema) -> string!

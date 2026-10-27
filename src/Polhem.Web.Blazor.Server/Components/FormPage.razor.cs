@@ -8,7 +8,11 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Controls;
+using Polhem.UI.Core;
+using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
+using Polhem.UI.Core.Permissions;
+using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
@@ -42,8 +46,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// </para>
     /// <para>
     /// The record is edited in <see cref="SingleFormMode.Add"/> after New, in <see cref="SingleFormMode.Edit"/>
-    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record,
-    /// so each field's <see cref="LayoutField.AllowEditModes"/> applies.
+    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record or
+    /// the user's capabilities lack <c>Update</c> on the form's permission model, so each field's
+    /// <see cref="LayoutField.AllowEditModes"/> applies.
     /// </para>
     /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
@@ -56,7 +61,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// Setting <see cref="IsCompact"/> fixes the layout instead, and the page then measures nothing.
     /// </para>
     /// </remarks>
-    public sealed partial class FormPage : ComponentBase
+    public sealed partial class FormPage : ComponentBase, IDisposable
     {
         private FormSchema? _schema;
         private FormLayout? _formLayout;
@@ -66,13 +71,18 @@ namespace Polhem.Web.Blazor.Server.Components
         private RoundingContext? _roundingContext;
         private DataTable? _listRows;
         private string? _error;
-        // A message for the user that leaves the form on screen, unlike `_error`, which replaces it.
+        // A message for the user that leaves the form on screen, unlike `_error`, which replaces it and is kept for a
+        // page that could not load.
         private string? _notice;
         private bool _isInitializing = true;
         private bool _isBusy;
         // Whether the record on screen came from New and has not been saved yet.
         private bool _isNewRecord;
         private bool _isViewportCompact;
+        private bool _hasLoaded;
+        private string? _loadedProgId;
+        private FormDefinitionLoader? _loadedDefinitionLoader;
+        private int _loadVersion;
 
         /// <summary>
         /// Gets or sets the program identifier (e.g. "Employee"). Drives the
@@ -137,8 +147,44 @@ namespace Polhem.Web.Blazor.Server.Components
         private void OnCompactChanged(bool compact) => _isViewportCompact = compact;
 
         /// <inheritdoc/>
-        protected override async Task OnInitializedAsync()
+        /// <remarks>
+        /// The page loads when it first renders and again whenever <see cref="ProgId"/> or
+        /// <see cref="DefinitionLoader"/> changes, because a host that routes several programs to one page
+        /// (<c>/form/{ProgId}</c>) keeps the same component instance and only sets new parameters.
+        /// </remarks>
+        protected override async Task OnParametersSetAsync()
         {
+            if (_hasLoaded
+                && string.Equals(_loadedProgId, ProgId, StringComparison.Ordinal)
+                && ReferenceEquals(_loadedDefinitionLoader, DefinitionLoader))
+                return;
+
+            _hasLoaded = true;
+            _loadedProgId = ProgId;
+            _loadedDefinitionLoader = DefinitionLoader;
+            await LoadFormAsync().ConfigureAwait(true);
+        }
+
+        /// <inheritdoc/>
+        public void Dispose() => DetachForm();
+
+        private async Task LoadFormAsync()
+        {
+            // A load that a newer one overtook leaves the page to the newer one.
+            int version = ++_loadVersion;
+            DetachForm();
+            _schema = null;
+            _formLayout = null;
+            _listLayout = null;
+            _dataObject = null;
+            _liveComputation = null;
+            _roundingContext = null;
+            _listRows = null;
+            _error = null;
+            _notice = null;
+            _isNewRecord = false;
+            _isInitializing = true;
+
             if (string.IsNullOrWhiteSpace(ProgId))
             {
                 _error = "FormPage.ProgId must be set.";
@@ -152,13 +198,14 @@ namespace Polhem.Web.Blazor.Server.Components
                 // Without a loader both definitions are fetched exactly as stored. With one, both
                 // layers of language and layout are fetched and assembled, so the captions are in the
                 // circuit's language and tenant customization takes effect.
-                _schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, ProgId).ConfigureAwait(true)
+                var schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, ProgId).ConfigureAwait(true)
                     ?? throw new InvalidOperationException($"No FormSchema definition found for '{ProgId}'.");
+                FormLayout formLayout;
                 if (loader is null)
                 {
                     // A layout is authored at design time, so a missing one is a configuration
                     // error rather than a cue to derive one from the schema.
-                    _formLayout = await Client.System
+                    formLayout = await Client.System
                         .GetDefineAsync<FormLayout>(DefineType.FormLayout, [ProgId])
                         .ConfigureAwait(true)
                         ?? throw new InvalidOperationException(
@@ -167,43 +214,80 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
                 else
                 {
-                    _formLayout = await loader
-                        .GetRuntimeLayoutAsync(ProgId, _schema).ConfigureAwait(true);
+                    formLayout = await loader
+                        .GetRuntimeLayoutAsync(ProgId, schema).ConfigureAwait(true);
                 }
-                _listLayout = _schema.GetListLayout();
+                // Both paths hand over a layout this page owns (the loader clones, the direct fetch
+                // deserializes), so the sensitive fields are degraded in place.
+                var capabilities = UserContext?.Capabilities;
+                LayoutCapabilityApplier.Apply(formLayout, schema, capabilities);
+                var listLayout = schema.GetListLayout();
+                LayoutCapabilityApplier.ApplyGrid(listLayout, schema, capabilities);
 
-                _dataObject = new FormDataObject(_schema, Client.Form(ProgId));
-                // Live preview recomputes computed fields as the user edits. It is subscribed once because the
-                // data object keeps these events across DataSet replacements on Load, New and Save. The
-                // rounding context (company decimals, currency and unit masters) aligns previews and the
-                // numeric editors to the server, which still rounds authoritatively on save.
-                _roundingContext = await CircuitDefinitions.LoadRoundingContextAsync(Client, loader).ConfigureAwait(true);
+                // Live preview recomputes computed fields as the user edits. The rounding context (company
+                // decimals, currency and unit masters) aligns previews and the numeric editors to the server,
+                // which still rounds authoritatively on save.
+                var roundingContext = await CircuitDefinitions
+                    .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
+                var listRows = (await Client.Form(ProgId).GetListAsync(ListSelectFields.For(schema)).ConfigureAwait(true)).Table;
+                if (version != _loadVersion) return;
+
+                _schema = schema;
+                _formLayout = formLayout;
+                _listLayout = listLayout;
+                _roundingContext = roundingContext;
+                _listRows = listRows;
+                _dataObject = new FormDataObject(schema, Client.Form(ProgId));
                 _liveComputation = new FormLiveComputation(
-                    _schema, _roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                    schema, roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
+                // Subscribed once per load because the data object keeps these events across DataSet
+                // replacements on Load, New and Save.
                 _liveComputation.Degraded += OnLiveComputationDegraded;
                 _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
                 _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
                 _dataObject.RowAdded += OnLiveRowAdded;
                 _dataObject.FieldValueChangeApplied += OnFieldValueChangeApplied;
                 _dataObject.FieldValueChangeFailed += OnFieldValueChangeFailed;
-                await ReloadListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
-                _error = ex.Message;
+                if (version == _loadVersion) _error = ex.Message;
             }
             finally
             {
-                _isInitializing = false;
+                if (version == _loadVersion) _isInitializing = false;
             }
         }
+
+        // Unhooks the previous program's data object, so its late callbacks no longer re-render this page.
+        private void DetachForm()
+        {
+            if (_liveComputation is not null)
+                _liveComputation.Degraded -= OnLiveComputationDegraded;
+            if (_dataObject is null) return;
+            _dataObject.FieldValueChanged -= OnLiveFieldValueChanged;
+            _dataObject.RowEditFieldChanged -= OnLiveFieldValueChanged;
+            _dataObject.RowAdded -= OnLiveRowAdded;
+            _dataObject.FieldValueChangeApplied -= OnFieldValueChangeApplied;
+            _dataObject.FieldValueChangeFailed -= OnFieldValueChangeFailed;
+        }
+
+        // Nullable: a page rendered without AddPolhemBlazor has no context and treats the user as unrestricted.
+        private IUserContext? UserContext => Services?.GetService<IUserContext>();
+
+        // Whether the user may run a toolbar command. The backend still checks the call itself.
+        private bool Can(PermissionActions action)
+            => _schema is null || ElementCapabilityResolver.Default.Can(_schema, action, UserContext?.Capabilities);
 
         private SingleFormMode FormMode
         {
             get
             {
                 if (_dataObject?.MasterRow is null) return SingleFormMode.View;
-                return _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+                if (_isNewRecord) return SingleFormMode.Add;
+                // A user who may not update the form reads the record, as the Avalonia views only enter Edit
+                // through a command the same permission hides.
+                return Can(PermissionActions.Update) ? SingleFormMode.Edit : SingleFormMode.View;
             }
         }
 
@@ -254,7 +338,8 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task ReloadListAsync()
         {
             var connector = Client.Form(ProgId);
-            var response = await connector.GetListAsync().ConfigureAwait(true);
+            var response = await connector
+                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema)).ConfigureAwait(true);
             _listRows = response.Table;
         }
 
@@ -321,7 +406,6 @@ namespace Polhem.Web.Blazor.Server.Components
         {
             if (_isBusy) return;
             _isBusy = true;
-            _error = null;
             _notice = null;
             try
             {
@@ -329,7 +413,8 @@ namespace Polhem.Web.Blazor.Server.Components
             }
             catch (Exception ex)
             {
-                _error = ex.Message;
+                // The form stays on screen with what the user entered, so a rejected save can be corrected.
+                _notice = ex.Message;
             }
             finally
             {

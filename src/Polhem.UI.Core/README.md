@@ -82,6 +82,8 @@ two heads behave the same:
 
 - `Permissions/IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability` -- turn the user's
   per-model capabilities into element-level decisions (whether a field is visible or read-only).
+- `Permissions/LayoutCapabilityApplier` -- applies those decisions to a form layout or a grid in place, hiding or
+  marking read-only the sensitive fields; both the Avalonia views and the Blazor `FormPage` use it.
 
 > Client-side capability resolution is **UX degradation only**. The backend remains the
 > authoritative security boundary.
@@ -104,5 +106,5 @@ two heads behave the same:
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules`
-- `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
-- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`
+- `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`, `ListSelectFields`
+- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`
