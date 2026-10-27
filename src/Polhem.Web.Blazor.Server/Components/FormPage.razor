@@ -18,23 +18,42 @@
     }
     else
     {
+        @* A command the user lacks the permission for is hidden, as in the Avalonia views. *@
         <div class="polhem-form-page__toolbar">
-            @* A command the user lacks the permission for is hidden, as in the Avalonia views. *@
-            @if (Can(PermissionActions.Create))
+            @if (!_isShowingRecord)
             {
-                <button type="button" disabled="@_isBusy" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
+                @if (Can(PermissionActions.Read))
+                {
+                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnViewAsync">@Text(PolhemUIText.View)</button>
+                }
+                @if (Can(PermissionActions.Create))
+                {
+                    <button type="button" disabled="@_isBusy" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
+                }
+                @if (Can(PermissionActions.Update))
+                {
+                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnEditAsync">@Text(PolhemUIText.Edit)</button>
+                }
+                @if (Can(PermissionActions.Delete))
+                {
+                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
+                }
             }
-            @if (Can(PermissionActions.Create | PermissionActions.Update))
+            else if (IsEditing)
             {
-                <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnSaveAsync">@Text(PolhemUIText.Save)</button>
+                @if (Can(PermissionActions.Create | PermissionActions.Update))
+                {
+                    <button type="button" disabled="@_isBusy" @onclick="OnSaveAsync">@Text(PolhemUIText.Save)</button>
+                }
+                <button type="button" disabled="@_isBusy" @onclick="OnClose">@Text(PolhemUIText.Cancel)</button>
+                @if (_dataObject.IsDirty)
+                {
+                    <span class="polhem-form-page__dirty">@Text(PolhemUIText.Unsaved)</span>
+                }
             }
-            @if (Can(PermissionActions.Delete))
+            else
             {
-                <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
-            }
-            @if (_dataObject.IsDirty)
-            {
-                <span class="polhem-form-page__dirty">@Text(PolhemUIText.Unsaved)</span>
+                <button type="button" disabled="@_isBusy" @onclick="OnClose">@Text(PolhemUIText.Back)</button>
             }
         </div>
 
@@ -48,16 +67,23 @@
             <div class="polhem-form-page__notice" role="status">@liveComputationNotice</div>
         }
 
-        <DynamicGrid Layout="_listLayout"
-                     Rows="_listRows"
-                     FormTable="_schema?.MasterTable"
-                     OnRowSelected="OnRowSelectedAsync" />
-
-        <FormLayoutPresenter Layout="_formLayout"
-                             DataObject="_dataObject"
-                             FormMode="FormMode"
-                             RoundingContext="_roundingContext"
-                             IsCompact="EffectiveIsCompact"
-                             DetailEditMode="DetailEditMode" />
+        @if (!_isShowingRecord)
+        {
+            <DynamicGrid Layout="_listLayout"
+                         Rows="_listRows"
+                         FormTable="_schema?.MasterTable"
+                         SelectedRowId="_selectedRowId"
+                         OnRowSelected="OnRowSelected"
+                         OnRowActivated="OnRowActivatedAsync" />
+        }
+        else
+        {
+            <FormLayoutPresenter Layout="_formLayout"
+                                 DataObject="_dataObject"
+                                 FormMode="FormMode"
+                                 RoundingContext="_roundingContext"
+                                 IsCompact="EffectiveIsCompact"
+                                 DetailEditMode="DetailEditMode" />
+        }
     }
 </div>

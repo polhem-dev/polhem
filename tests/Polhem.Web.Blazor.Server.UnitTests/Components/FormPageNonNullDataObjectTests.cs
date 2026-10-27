@@ -54,11 +54,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowSelectedAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
-        public async Task OnRowSelectedAsync_NonNullDataObjectNoConnector_SetsNotice()
+        [DisplayName("OnRowActivatedAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
+        public async Task OnRowActivatedAsync_NonNullDataObjectNoConnector_SetsNotice()
         {
             var page = CreatePageWithDataObject();
-            await InvokeMethodAsync(page, "OnRowSelectedAsync", new object[] { Guid.NewGuid() });
+            await InvokeMethodAsync(page, "OnRowActivatedAsync", new object[] { Guid.NewGuid() });
             Assert.StartsWith("LoadAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
@@ -81,12 +81,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnDeleteAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _notice")]
-        public async Task OnDeleteAsync_NonNullDataObjectNoConnector_SetsNotice()
+        [DisplayName("OnDeleteAsync without a selected row does nothing and reports nothing")]
+        public async Task OnDeleteAsync_NoSelectedRow_DoesNothing()
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnDeleteAsync", null);
-            Assert.StartsWith("DeleteAsync requires a form connector", s_noticeField.GetValue(page) as string, StringComparison.Ordinal);
+            Assert.Null(s_noticeField.GetValue(page));
         }
 
         [Fact]

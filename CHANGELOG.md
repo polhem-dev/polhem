@@ -18,8 +18,9 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - **Breaking:** `Polhem.Web.Blazor.Server` replaces `DynamicForm` with `FormLayoutPresenter`.
 - **Breaking:** `IExpressionEvaluator` gains `Validate`, which parses an expression against variable types without
   evaluating it; an evaluator implemented outside the framework has to implement it.
-- **Breaking:** `Polhem.Web.Blazor.Server`'s `FormPage` shows a failed load, save or delete as a notice over the form
-  instead of replacing the form with the error.
+- **Breaking:** `Polhem.Web.Blazor.Server`'s `FormPage` shows the list and the record one at a time, switched by View,
+  New, Edit, Save, Cancel and Back as in the Avalonia views, and shows a failed action as a notice instead of
+  replacing the form with the error.
 - **Breaking:** `FormField.LookupProgId` and `FormField.LookupFieldMappings` are removed. A lookup opens
   `RelationProgId` and writes back `RelationFieldMappings`; definitions that still carry the two are read without them.
 - `FieldMapping.LookupOnly` marks a relation mapping that a lookup selection writes back but the query join does not

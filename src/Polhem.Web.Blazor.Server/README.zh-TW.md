@@ -50,16 +50,17 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 
 ## 元件
 
-- `FormPage` -- 單一程式的清單加主檔記錄編輯，透過共用的 `FormDataObject` 串接。預設經由 `FormDefinitionLoader`
+- `FormPage` -- 單一程式的清單與記錄，一次顯示其中之一，與 Avalonia 的 `ListView`、`FormView` 相同：清單有 View、New、Edit、
+  Delete（點選選取資料列、雙擊以檢視開啟），檢視中的記錄有 Back，編輯中的記錄有 Save 與 Cancel；儲存成功後回到重新載入的清單。預設經由 `FormDefinitionLoader`
   載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
   載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。使用者編輯時透過 `FormLiveComputation`
   即時重算計算欄位（`ValueExpression`）；部署了幣別與單位主檔時，數值預覽會依登入公司的小數位數與這些主檔決定，儲存時由
-  伺服器做權威的四捨五入。明細資料表以 grid 呈現在主檔欄位下方。viewport 寬度小於 `CompactWidthThreshold`（預設 600 CSS
+  伺服器做權威的四捨五入。記錄的明細資料表以 grid 呈現在主檔欄位下方。viewport 寬度小於 `CompactWidthThreshold`（預設 600 CSS
   像素）時，表單改用精簡版面，寬度由 `CompactViewportObserver` 量測；設定 `IsCompact` 則固定版面、不量測，
   `DetailEditMode` 決定非精簡版面時的明細編輯模式。`ProgId` 變更時頁面會重新載入，所以一個路由頁面（`/form/{ProgId}`）
   可以服務所有程式。載入記錄、儲存或刪除失敗時，訊息以提示顯示在表單上方，使用者輸入的內容保留；只有無法載入定義的頁面
-  才以錯誤取代表單。circuit 的 `IUserContext` 有能力快照時，使用者缺少表單權限模型的 `Create`、`Create` 或 `Update`、
-  `Delete` 時分別隱藏 New、Save、Delete，缺少 `Update` 時以唯讀開啟記錄，敏感欄位依其類別隱藏或唯讀，經由 `Polhem.UI.Core` 的 `LayoutCapabilityApplier`；
+  才以錯誤取代表單。circuit 的 `IUserContext` 有能力快照時，使用者缺少表單權限模型的 `Read`、`Create`、`Update`、
+  `Delete` 時分別隱藏 View、New、Edit、Delete，`Create` 與 `Update` 都沒有時隱藏 Save，敏感欄位依其類別隱藏或唯讀，經由 `Polhem.UI.Core` 的 `LayoutCapabilityApplier`；
   數值預覽採用登入公司的小數位數。後端仍會檢查每一個呼叫。
 - `CompactViewportObserver` -- 不輸出任何標記，瀏覽器 viewport 跨過 `CompactWidthThreshold` 時觸發 `CompactChanged`。
   直接使用 `FormLayoutPresenter` 的頁面在旁邊放一個，把值傳給 `IsCompact`。它透過套件內附的一支小型 JavaScript module

@@ -54,20 +54,22 @@ decides whether `FormPage` localizes its definitions; see below.
 
 ## Components
 
-- `FormPage` -- list plus master-record editing of one program, wired through a shared `FormDataObject`. It
+- `FormPage` -- the list and the record of one program, one at a time, as the Avalonia `ListView` and `FormView`:
+  the list has View, New, Edit and Delete (a click selects a row, a double-click views it), a viewed record has Back
+  and an edited one Save and Cancel; a successful save returns to the reloaded list. It
   loads its definitions through a `FormDefinitionLoader` by default, so captions follow the circuit's UI culture
   and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
   It recomputes computed fields (`ValueExpression`) as the user edits, through `FormLiveComputation`, and previews
   numbers with the entered company's decimals and the currency and unit masters when they are deployed; the server
-  rounds authoritatively on save. Detail tables render as grids below the master fields. On a viewport narrower
+  rounds authoritatively on save. A record's detail tables render as grids below its master fields. On a viewport narrower
   than `CompactWidthThreshold` (600 CSS pixels by default) the form switches to its compact layout, measured by a
   `CompactViewportObserver`; setting `IsCompact` fixes the layout instead, and `DetailEditMode` picks the detail
   editing model outside it. The page loads again when `ProgId` changes, so one routed page (`/form/{ProgId}`) can serve
   every program. A failed load, save or delete is shown as a notice above the form, which keeps what the user entered;
   only a page that cannot load its definitions shows the error in place of the form. With a capability snapshot on the
-  circuit's `IUserContext`, New, Save and Delete are hidden when the user lacks `Create`, `Create` or `Update`, and
-  `Delete` on the form's permission model, a record opens read-only without `Update`, and sensitive fields are hidden or read-only by their category, through
+  circuit's `IUserContext`, View, New, Edit and Delete are hidden when the user lacks `Read`, `Create`, `Update` and
+  `Delete` on the form's permission model, Save when they lack both `Create` and `Update`, and sensitive fields are hidden or read-only by their category, through
   `LayoutCapabilityApplier` (`Polhem.UI.Core`); the numbers preview with the entered company's decimals. The backend
   still checks every call.
 - `CompactViewportObserver` -- renders nothing and raises `CompactChanged` when the browser's viewport crosses

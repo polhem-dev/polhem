@@ -22,11 +22,10 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Web.Blazor.Server.Components
 {
     /// <summary>
-    /// Code-behind for <c>FormPage.razor</c>. Wires <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>
-    /// (list view) to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> (master record and detail grids) via a shared
-    /// <see cref="FormDataObject"/>: selecting a list row drives
-    /// <see cref="FormDataObject.LoadAsync"/>; the toolbar buttons fan out to
-    /// <see cref="FormDataObject.NewAsync"/> / <c>SaveAsync</c> / <c>DeleteAsync</c>.
+    /// Code-behind for <c>FormPage.razor</c>. Shows one program as a list, a
+    /// <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>, or as one record, a
+    /// <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> over a <see cref="FormDataObject"/> with its
+    /// detail grids, one at a time, as the Avalonia <c>ListView</c> and <c>FormView</c> do.
     /// </summary>
     /// <remarks>
     /// FormPage calls with the circuit's <see cref="PolhemApiClient"/>, so it acts as whoever signed in
@@ -45,10 +44,12 @@ namespace Polhem.Web.Blazor.Server.Components
     /// a language switch takes effect on pages opened afterwards.
     /// </para>
     /// <para>
-    /// The record is edited in <see cref="SingleFormMode.Add"/> after New, in <see cref="SingleFormMode.Edit"/>
-    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record or
-    /// the user's capabilities lack <c>Update</c> on the form's permission model, so each field's
-    /// <see cref="LayoutField.AllowEditModes"/> applies.
+    /// The list's toolbar has View, New, Edit and Delete; a click selects a row and a double-click opens it with
+    /// View. The record opens in <see cref="SingleFormMode.View"/> after View, in <see cref="SingleFormMode.Edit"/>
+    /// after Edit and in <see cref="SingleFormMode.Add"/> after New, so each field's
+    /// <see cref="LayoutField.AllowEditModes"/> applies. A viewed record has Back; an edited one has Save and Cancel.
+    /// A save that succeeds, Cancel and Back return to the list, which reloads after a save; Cancel discards the
+    /// edits. Delete removes the selected row from the list.
     /// </para>
     /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
@@ -76,8 +77,11 @@ namespace Polhem.Web.Blazor.Server.Components
         private string? _notice;
         private bool _isInitializing = true;
         private bool _isBusy;
-        // Whether the record on screen came from New and has not been saved yet.
-        private bool _isNewRecord;
+        // Whether the record is on screen instead of the list, and the mode it was opened in.
+        private bool _isShowingRecord;
+        private SingleFormMode _recordMode = SingleFormMode.View;
+        // The list row the toolbar acts on.
+        private Guid? _selectedRowId;
         private bool _isViewportCompact;
         private bool _hasLoaded;
         private string? _loadedProgId;
@@ -182,7 +186,9 @@ namespace Polhem.Web.Blazor.Server.Components
             _listRows = null;
             _error = null;
             _notice = null;
-            _isNewRecord = false;
+            _isShowingRecord = false;
+            _recordMode = SingleFormMode.View;
+            _selectedRowId = null;
             _isInitializing = true;
 
             if (string.IsNullOrWhiteSpace(ProgId))
@@ -280,16 +286,9 @@ namespace Polhem.Web.Blazor.Server.Components
             => _schema is null || ElementCapabilityResolver.Default.Can(_schema, action, UserContext?.Capabilities);
 
         private SingleFormMode FormMode
-        {
-            get
-            {
-                if (_dataObject?.MasterRow is null) return SingleFormMode.View;
-                if (_isNewRecord) return SingleFormMode.Add;
-                // A user who may not update the form reads the record, as the Avalonia views only enter Edit
-                // through a command the same permission hides.
-                return Can(PermissionActions.Update) ? SingleFormMode.Edit : SingleFormMode.View;
-            }
-        }
+            => _isShowingRecord && _dataObject?.MasterRow is not null ? _recordMode : SingleFormMode.View;
+
+        private bool IsEditing => FormMode != SingleFormMode.View;
 
         // Recomputes the edited row's computed fields. The write-backs re-raise the change event; the
         // engine's guard makes this handler a no-op for those echoes, so one edit yields one pass. A row
@@ -343,13 +342,29 @@ namespace Polhem.Web.Blazor.Server.Components
             _listRows = response.Table;
         }
 
-        private async Task OnRowSelectedAsync(Guid rowId)
+        private void OnRowSelected(Guid rowId) => _selectedRowId = rowId;
+
+        // Opening a row from the list is a read-only View; editing is the explicit Edit command, so clicking
+        // through the list never changes a record by accident.
+        private Task OnRowActivatedAsync(Guid rowId)
+        {
+            _selectedRowId = rowId;
+            return OpenRecordAsync(rowId, SingleFormMode.View);
+        }
+
+        private Task OnViewAsync()
+            => _selectedRowId is { } rowId ? OpenRecordAsync(rowId, SingleFormMode.View) : Task.CompletedTask;
+
+        private Task OnEditAsync()
+            => _selectedRowId is { } rowId ? OpenRecordAsync(rowId, SingleFormMode.Edit) : Task.CompletedTask;
+
+        private async Task OpenRecordAsync(Guid rowId, SingleFormMode mode)
         {
             if (_dataObject is null) return;
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.LoadAsync(rowId).ConfigureAwait(true);
-                _isNewRecord = false;
+                ShowRecord(mode);
             }).ConfigureAwait(true);
         }
 
@@ -364,7 +379,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 // raises no RowAdded, so it is initialized here.
                 if (_dataObject.MasterRow is { } master)
                     _liveComputation?.InitializeNewRow(_dataObject.MasterTable.TableName, master);
-                _isNewRecord = true;
+                ShowRecord(SingleFormMode.Add);
             }).ConfigureAwait(true);
         }
 
@@ -386,21 +401,40 @@ namespace Polhem.Web.Blazor.Server.Components
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.SaveAsync().ConfigureAwait(true);
-                _isNewRecord = false;
+                if (_dataObject.MasterRow is { } master && FormDataGuard.TryGetRowId(master, out var savedRowId))
+                    _selectedRowId = savedRowId;
+                ShowList();
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }
 
+        // Cancel (Add / Edit) and Back (View) leave the record without saving; the next View, Edit or New reloads
+        // the data object, so the edits are dropped with it.
+        private void OnClose()
+        {
+            if (_isBusy) return;
+            _notice = null;
+            ShowList();
+        }
+
         private async Task OnDeleteAsync()
         {
-            if (_dataObject is null) return;
+            if (_selectedRowId is not { } rowId) return;
             await RunGuardedAsync(async () =>
             {
-                await _dataObject.DeleteAsync().ConfigureAwait(true);
-                _isNewRecord = false;
+                await Client.Form(ProgId).DeleteAsync(rowId).ConfigureAwait(true);
+                _selectedRowId = null;
                 await ReloadListAsync().ConfigureAwait(true);
             }).ConfigureAwait(true);
         }
+
+        private void ShowRecord(SingleFormMode mode)
+        {
+            _recordMode = mode;
+            _isShowingRecord = true;
+        }
+
+        private void ShowList() => _isShowingRecord = false;
 
         private async Task RunGuardedAsync(Func<Task> action)
         {
