@@ -24,7 +24,7 @@ From an empty project to a running app: create a project from the `polhem-avalon
 - [Polhem in 3 minutes](https://youtu.be/OAlAgAuGdKE) (highlights)
 - [Full walkthrough](https://youtu.be/5WjUTwoPyGw) (about 10 minutes)
 
-Recorded with Polhem 1.8.0; English narration with English and Traditional Chinese subtitles.
+Recorded with Polhem 1.9.0; English narration with English and Traditional Chinese subtitles.
 
 ## ✨ Features
 
