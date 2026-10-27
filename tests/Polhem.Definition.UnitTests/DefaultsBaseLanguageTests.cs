@@ -25,8 +25,8 @@ namespace Polhem.Definition.UnitTests
         private static readonly string[] s_copyRoots = ["tests/Define", "samples/Define", "apps/Polhem.Northwind/Define"];
 
         /// <summary>
-        /// Copies that differ from the shipped file on purpose: deployment settings, and forms or tables
-        /// a test or demo extends. Every other copy must match byte for byte.
+        /// Copies that differ from the shipped file on purpose: deployment settings and registries (the demo's
+        /// permission models), and forms or tables a test or demo extends. Every other copy must match byte for byte.
         /// </summary>
         private static readonly HashSet<string> s_intentionalDivergences = new(StringComparer.Ordinal)
         {
@@ -45,6 +45,7 @@ namespace Polhem.Definition.UnitTests
             "apps/Polhem.Northwind/Define/DatabaseSettings.xml",
             "apps/Polhem.Northwind/Define/DbCategorySettings.xml",
             "apps/Polhem.Northwind/Define/SystemSettings.xml",
+            "apps/Polhem.Northwind/Define/PermissionModels.xml",
             "apps/Polhem.Northwind/Define/FormSchema/AuditRule.FormSchema.xml",
             "apps/Polhem.Northwind/Define/FormSchema/Department.FormSchema.xml",
             "apps/Polhem.Northwind/Define/FormSchema/Employee.FormSchema.xml",
