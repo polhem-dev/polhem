@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Polhem.Northwind.Server.BusinessObjects;
+namespace Polhem.Northwind.Backend.BusinessObjects;
 
 /// <summary>
 /// Pure order business rules — order-number formatting, line-amount arithmetic, and
@@ -71,4 +71,13 @@ internal static class OrderRules
         }
         return string.Create(CultureInfo.InvariantCulture, $"ORD-{yearMonth}-{next:D3}");
     }
+
+    /// <summary>
+    /// The warning shown on an order line whose quantity exceeds the product's units in stock.
+    /// </summary>
+    /// <param name="quantity">The line's quantity.</param>
+    /// <param name="unitsInStock">The product's units in stock.</param>
+    public static string ShortOfStockMessage(int quantity, int unitsInStock)
+        => string.Format(CultureInfo.InvariantCulture,
+            "Only {0} in stock; {1} ordered. The line can still be saved.", unitsInStock, quantity);
 }

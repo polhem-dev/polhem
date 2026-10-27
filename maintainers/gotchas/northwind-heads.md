@@ -1,9 +1,12 @@
-# Pitfall log: the four Northwind heads and the standalone repository sync
+# Pitfall log: the Northwind heads and the standalone repository sync
 
-Since 2026-06-26, `apps/Polhem.Northwind` has had **four heads: Desktop / Browser / iOS / Android**, sharing
-`Polhem.Northwind.UI` (Avalonia App/VM/View) and the backend `Polhem.Northwind.Server`.
-The web case is an **Avalonia Browser (WASM) backend**, **not a separate Blazor app** (`.UseBrowser` vs `.UseDesktop`
-are symmetric).
+Since 2026-06-26, `apps/Polhem.Northwind` has had **four Avalonia heads: Desktop / Browser / iOS / Android**, sharing
+`Polhem.Northwind.UI` (Avalonia App/VM/View) and calling the JSON-RPC host `Polhem.Northwind.Server`. The Avalonia
+web case is a **Browser (WASM) head** (`.UseBrowser` vs `.UseDesktop` are symmetric).
+
+Since 2026-10-27 there is also a **Blazor Server head, `Polhem.Northwind.Blazor`**, and the backend itself (business
+objects, repository, seeder, seed data) is the class library **`Polhem.Northwind.Backend`**, which the JSON-RPC host
+and the Blazor head both run. See "Blazor Server head" below.
 
 `apps/` is not built by polhem's CI (see [test-ci-release.md](test-ci-release.md)): if **this copy** breaks, nobody
 will tell you. **Where the heads get built today**: the in-repo heads (Desktop, Browser, iOS, Android) are built only
@@ -144,6 +147,27 @@ preview (`.claude/launch.json` needs `autoPort:false`); **synthetic pointer even
 not reach Avalonia's input layer** (intercepted by `div.avalonia-native-host` over the canvas), so verifying UI clicks
 needs a real browser.
 
+## Blazor Server head
+
+- **It runs the backend in process by default** (`UseLocalProvider`), so `dotnet run` on it needs no other server.
+  `--Northwind:Mode=Remote` makes it call a running `Polhem.Northwind.Server` instead; the endpoint and API key are in
+  its `appsettings.json`, and `.claude/launch.json` has both (`northwind-blazor`, `northwind-blazor-remote`).
+- **Both hosts open the same `northwind.db`**, next to `Define/`. `DatabaseSettings.xml` names the file under
+  `|DataDirectory|` (Microsoft.Data.Sqlite's substitution), and `AddNorthwindBackend` sets the `DataDirectory` app
+  domain value to the folder that holds `Define/`. Before that the path was relative to the working directory, so each
+  host would have seeded its own database and an order saved in one head would not show in another.
+- **Seed data reaches each host's output through the project reference**: the JSON files are `None` items with
+  `CopyToOutputDirectory` in the Backend csproj, and the seeder reads them from `AppContext.BaseDirectory`.
+- **The sign-in belongs to the circuit.** A reload, a typed URL or a new tab is a new circuit and shows the sign-in
+  again. The language is fixed per circuit too, so it is picked on the sign-in screen (a culture cookie and a reload);
+  the account's own culture is not applied afterwards.
+- **The browser pane drives it**: unlike the WASM head's canvas, it is real DOM, so `find`, clicks and `form_input` all
+  work. Click list rows by their row, not the text inside a cell.
+- What this head found in `Polhem.Web.Blazor.Server` before 1.10.0 shipped: `FormPage` did not reload on a new
+  `ProgId`, replaced the form with the error of a failed action, did not degrade by permissions, listed rows without
+  `sys_rowid` (no row could be opened against a real backend; the bUnit fake always returned the column), and opened a
+  record for editing without `Update`. All were fixed in the framework.
+
 ## The back key (shared UI)
 
 `MainView` handles `TopLevel.BackRequested` level by level: record → back to the list (`FormWorkspace.TryGoBack()`),
@@ -187,7 +211,8 @@ CI will be green.
    the NuGet framework description) get overwritten. `.smoke.yaml` is kept apart for the same reason: its paths are
    relative to the root of each repository, `src/<Project>` there and `apps/Polhem.Northwind/<Project>` here, and
    the standalone copy and its solution, launch settings, docs and CI workflow all name the `src/` paths.
-   The Server csproj also differs in shape, not only in reference type: in polhem the convention analyzer is a
+   The backend csproj (`Polhem.Northwind.Backend` since 2026-10-27; the Server csproj before, and still in a standalone
+   copy not yet synced past that date) also differs in shape, not only in reference type: in polhem the convention analyzer is a
    ProjectReference and the definitions are listed as `AdditionalFiles`, because `buildTransitive/` only reaches a
    package consumer; the standalone repository gets both from the `Polhem.Definition` package and only sets
    `PolhemDefinitionFilesGlob`.

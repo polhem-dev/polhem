@@ -31,6 +31,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.Web.Blazor.Server` 呈現明細資料表：`GridControl`（儲存格內編輯或編輯表單）、`RowEditPanel`、`RowEditDialog`，由 `FormLayoutPresenter` 與 `FormPage` 顯示；`FormPage` 也會依公司、幣別與單位的 rounding context 預覽數值。
 - `Polhem.Web.Blazor.Server` 的 `FormPage` 在 `ProgId` 變更時重新載入、可開啟真實後端列出的資料列，並依新的 per-circuit `CircuitUserContext`
   上的能力隱藏指令、降級敏感欄位。
+- Northwind 示範新增在同一個行程執行後端的 Blazor Server head、會回呼帶回商品單價的訂單明細，以及配合新 Order 權限模型的
+  唯讀帳號。
 - `Polhem.Web.Blazor.Server` 的 `FormPage` 在窄 viewport 上改用精簡版面（主檔單欄、明細以表單編輯），寬度由新的
   `CompactViewportObserver` 在瀏覽器量測。
 - 即時計算不再無聲停止：運算式無法評估時，Avalonia 的 `FormView` 與 Blazor 的 `FormPage` 會指出欄位與原因，原因以 `LiveComputationDegradation` 公開。

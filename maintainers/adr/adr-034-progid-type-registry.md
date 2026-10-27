@@ -180,7 +180,7 @@ implementing every member, just without saying so. The BO obtains it through its
 private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>();
 ```
 
-For an example, see `apps/Polhem.Northwind/Polhem.Northwind.Server/Repositories/IOrderRepository.cs` and
+For an example, see `apps/Polhem.Northwind/Polhem.Northwind.Backend/Repositories/IOrderRepository.cs` and
 `OrderRepository.cs` in the same directory.
 
 ## Implementation evolution

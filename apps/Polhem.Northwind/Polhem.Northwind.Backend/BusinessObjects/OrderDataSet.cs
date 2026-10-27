@@ -2,7 +2,7 @@ using System.Data;
 using Polhem.Core;
 using Polhem.Core.Exceptions;
 
-namespace Polhem.Northwind.Server.BusinessObjects;
+namespace Polhem.Northwind.Backend.BusinessObjects;
 
 /// <summary>
 /// Database-free <c>DataSet</c> operations for the order form: locating the master / detail

@@ -384,7 +384,7 @@ Path resolution: [`PathOptions.GetTableSchemaFilePath(categoryId, tableName)`](.
 
 ### 5.3 Deployment Phase: Deriving the Table List for Each Physical DB
 
-`DatabaseItem.CategoryId` is used at the schema deployment phase (when creating or upgrading physical database table structures). The framework supplies the pieces (the category registry, the TableSchema files, and the schema comparison and upgrade API described in [Database Schema Upgrade](database-schema-upgrade.md)) but no runner that walks the DatabaseItems: that step belongs to the host, for example the schema seeder of the Northwind demo (`apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindSchemaSeeder.cs`). **The unit of computation is DatabaseItem**: for each DatabaseItem, the derivation and DDL flow runs once, applying to the physical DB pointed to by that DatabaseItem's connection.
+`DatabaseItem.CategoryId` is used at the schema deployment phase (when creating or upgrading physical database table structures). The framework supplies the pieces (the category registry, the TableSchema files, and the schema comparison and upgrade API described in [Database Schema Upgrade](database-schema-upgrade.md)) but no runner that walks the DatabaseItems: that step belongs to the host, for example the schema seeder of the Northwind demo (`apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindSchemaSeeder.cs`). **The unit of computation is DatabaseItem**: for each DatabaseItem, the derivation and DDL flow runs once, applying to the physical DB pointed to by that DatabaseItem's connection.
 
 Derivation flow for a single DatabaseItem:
 

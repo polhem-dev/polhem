@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Northwind.Blazor</RootNamespace>
+    <AssemblyName>Polhem.Northwind.Blazor</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- The Blazor Server head runs the Northwind backend in its own process by default; see Program.cs for the
+       Remote switch. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Northwind.Backend\Polhem.Northwind.Backend.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
+  </ItemGroup>
+
+</Project>

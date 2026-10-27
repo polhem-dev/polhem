@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: b8a6ac72bebc65ec331decfc36e8c67a4c4e5701 -->
+<!-- source: en/database/database-settings-guide.md blob: 256b0fad49749dac736f8690b157318e1396e890 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -384,7 +384,7 @@ FormSchema 衍生的 TableSchema 依 CategoryId 分目錄存放：
 
 ### 5.3 部署階段：實體 DB 的表清單推導
 
-`DatabaseItem.CategoryId` 在 schema 部署階段（建立或升級實體資料庫表結構時）使用。框架提供各個零件（分類登錄表、TableSchema 檔，以及 [資料庫 Schema 升級](database-schema-upgrade.md) 說明的 schema 比對與升級 API），但沒有逐筆走訪 DatabaseItem 的執行器：這一步屬於 host，例如 Northwind 示範的 schema seeder（`apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindSchemaSeeder.cs`）。**運算單位是 DatabaseItem**：對每筆 DatabaseItem 各自跑一次推導與建表流程，建到該 DatabaseItem 連線指向的實體 DB 上。
+`DatabaseItem.CategoryId` 在 schema 部署階段（建立或升級實體資料庫表結構時）使用。框架提供各個零件（分類登錄表、TableSchema 檔，以及 [資料庫 Schema 升級](database-schema-upgrade.md) 說明的 schema 比對與升級 API），但沒有逐筆走訪 DatabaseItem 的執行器：這一步屬於 host，例如 Northwind 示範的 schema seeder（`apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindSchemaSeeder.cs`）。**運算單位是 DatabaseItem**：對每筆 DatabaseItem 各自跑一次推導與建表流程，建到該 DatabaseItem 連線指向的實體 DB 上。
 
 對單筆 DatabaseItem 的推導流程：
 

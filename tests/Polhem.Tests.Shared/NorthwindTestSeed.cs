@@ -13,7 +13,7 @@ namespace Polhem.Tests.Shared
     /// Seeds the Northwind business tables (the 7 <c>ft_*</c> tables plus the upgraded
     /// <c>st_department</c> / <c>st_employee</c>) of the per-database <c>company</c> category
     /// from JSON embedded in this assembly. Mirrors the demo's
-    /// <c>Polhem.Northwind.Server.NorthwindSchemaSeeder</c> insert logic but is dialect-portable:
+    /// <c>Polhem.Northwind.Backend.NorthwindSchemaSeeder</c> insert logic but is dialect-portable:
     /// identifiers are quoted per <see cref="DatabaseType"/> (Oracle folds unquoted names to
     /// upper case) and JSON string values are converted to the CLR type implied by each
     /// column's <see cref="FieldDbType"/> (the seed JSON stores every value as a string,

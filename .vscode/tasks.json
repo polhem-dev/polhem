@@ -124,6 +124,20 @@
             "group": "build"
         },
         {
+            "label": "build-northwind-blazor",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Blazor/Polhem.Northwind.Blazor.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
             "label": "build-blazor-server-demo",
             "type": "process",
             "command": "dotnet",

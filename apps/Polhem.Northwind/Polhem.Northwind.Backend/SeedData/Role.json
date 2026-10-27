@@ -1,0 +1,4 @@
+[
+  { "sys_id": "OrderClerk", "sys_name": "Order Clerk" },
+  { "sys_id": "OrderViewer", "sys_name": "Order Viewer" }
+]

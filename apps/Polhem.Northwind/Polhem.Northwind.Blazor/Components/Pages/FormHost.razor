@@ -1,0 +1,12 @@
+@page "/form/{ProgId}"
+
+<PageTitle>@ProgId · Polhem.Northwind</PageTitle>
+
+@* One page serves every program: FormPage loads again when the route gives it a new ProgId. *@
+<FormPage ProgId="@ProgId" />
+
+@code {
+    /// <summary>The program the route names.</summary>
+    [Parameter]
+    public string ProgId { get; set; } = string.Empty;
+}

@@ -1,0 +1,60 @@
+@using Polhem.Api.Core.Messages.System
+@inject CircuitUserContext UserContext
+@inject NavigationManager Navigation
+
+<section class="nw-card nw-signin">
+    <h1 class="nw-signin__title">Polhem.Northwind</h1>
+    <p class="nw-signin__hint">@ShellText.Get("Hint")</p>
+    <div class="polhem-login-panel__field nw-signin__company">
+        <label for="nw-company">@ShellText.Get("Company")</label>
+        <input id="nw-company" class="polhem-login-panel__input" @bind="_companyId" />
+    </div>
+    <PolhemLoginPanel OnLoggedIn="OnLoggedInAsync" />
+    @if (_error is not null)
+    {
+        <div class="polhem-login-panel__error" role="alert">@_error</div>
+    }
+    <div class="nw-signin__languages">
+        <button type="button" disabled="@IsCurrent("en-US")" @onclick='() => SwitchLanguage("en-US")'>English</button>
+        <button type="button" disabled="@IsCurrent("zh-TW")" @onclick='() => SwitchLanguage("zh-TW")'>繁體中文</button>
+    </div>
+</section>
+
+@code {
+    private string _companyId = NorthwindCredentials.CompanyId;
+    private string? _error;
+
+    /// <summary>Raised once the user has signed in and entered the company.</summary>
+    [Parameter]
+    public EventCallback OnSignedIn { get; set; }
+
+    // Sign-in is two calls. The panel has signed in and recorded the user; entering the company through the
+    // circuit's user context records the capabilities the pages degrade by.
+    private async Task OnLoggedInAsync(LoginResponse response)
+    {
+        _error = null;
+        try
+        {
+            await UserContext.EnterCompanyAsync(_companyId.Trim());
+        }
+        catch (InvalidOperationException ex)
+        {
+            // The connector reports a JSON-RPC error (such as "Company access denied") this way.
+            _error = string.Format(System.Globalization.CultureInfo.CurrentCulture, ShellText.Get("EnterCompanyFailed"), ex.Message);
+            UserContext.SignOut();
+            return;
+        }
+        await OnSignedIn.InvokeAsync();
+    }
+
+    private static bool IsCurrent(string culture) => System.Globalization.CultureInfo.CurrentUICulture.Name == culture;
+
+    // The circuit's culture is fixed, so the switch writes the culture cookie and reloads the page. Nobody is
+    // signed in yet, so the reload loses nothing.
+    private void SwitchLanguage(string culture)
+    {
+        string returnTo = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"culture?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString(returnTo)}",
+            forceLoad: true);
+    }
+}

@@ -13,7 +13,7 @@
     <ProgramItem ProgId="Product" DisplayName="Products" />
     <ProgramItem ProgId="Department" DisplayName="Departments" />
     <ProgramItem ProgId="Employee" DisplayName="Employees" />
-    <ProgramItem ProgId="Order" DisplayName="Orders" BusinessObject="Polhem.Northwind.Server.BusinessObjects.OrderBO, Polhem.Northwind.Server" Repository="Polhem.Northwind.Server.Repositories.OrderRepository, Polhem.Northwind.Server" />
+    <ProgramItem ProgId="Order" DisplayName="Orders" BusinessObject="Polhem.Northwind.Backend.BusinessObjects.OrderBO, Polhem.Northwind.Backend" Repository="Polhem.Northwind.Backend.Repositories.OrderRepository, Polhem.Northwind.Backend" />
     <ProgramItem ProgId="AuditLog" DisplayName="AuditLog" BusinessObject="Polhem.Business.AuditLog.AuditLogBusinessObject, Polhem.Business" />
     <!-- No BusinessObject attribute: AuditRule is a framework-reserved progId and resolves to
          AuditRuleBusinessObject on its own. -->

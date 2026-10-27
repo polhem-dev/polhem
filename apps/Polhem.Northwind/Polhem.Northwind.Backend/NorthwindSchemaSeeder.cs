@@ -9,7 +9,7 @@ using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Storage;
 
-namespace Polhem.Northwind.Server;
+namespace Polhem.Northwind.Backend;
 
 /// <summary>
 /// Process-once helper that materializes the demo's table schema from the
@@ -120,18 +120,27 @@ public static class NorthwindSchemaSeeder
         // on and AccessEnabled off, so Order and Customer demonstrate a rule turning reads ON
         // against that default, and Category demonstrates one turning changes OFF.
         new("st_audit_rule", "AuditRule.json"),
+        // The Order form's permission model (Define/PermissionModels.xml): OrderClerk may do everything,
+        // OrderViewer may only read, and each demo account holds one of them. Enforcement is fail-closed, so an
+        // account without a role could not open orders at all. st_user_role names users by st_user.sys_id.
+        new("st_role", "Role.json"),
+        new("st_role_grant", "RoleGrant.json"),
+        new("st_user_role", "UserRole.json"),
     };
 
     private sealed record DemoAccount(string UserId, string Password, string DisplayName, string Culture);
 
-    // Both accounts see the same company and data; the second exists so the zh-TW captions and
-    // formats can be seen without editing the database.
+    // Every account sees the same company and data. The second exists so the zh-TW captions and
+    // formats can be seen without editing the database, the third so the order commands it may not run
+    // can be seen hidden.
     private static readonly DemoAccount[] s_accounts =
     {
         new(NorthwindCredentials.UserId, NorthwindCredentials.Password,
             NorthwindCredentials.DisplayName, NorthwindCredentials.Culture),
         new(NorthwindCredentials.ZhTwUserId, NorthwindCredentials.ZhTwPassword,
             NorthwindCredentials.ZhTwDisplayName, NorthwindCredentials.ZhTwCulture),
+        new(NorthwindCredentials.ReadOnlyUserId, NorthwindCredentials.ReadOnlyPassword,
+            NorthwindCredentials.ReadOnlyDisplayName, NorthwindCredentials.Culture),
     };
 
     public static void EnsureSchemaAndSeed(

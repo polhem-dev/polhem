@@ -1,0 +1,5 @@
+[
+  { "user_id": "demo", "role_id": "OrderClerk" },
+  { "user_id": "demo-tw", "role_id": "OrderClerk" },
+  { "user_id": "demo-ro", "role_id": "OrderViewer" }
+]

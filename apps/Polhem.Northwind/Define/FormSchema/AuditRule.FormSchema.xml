@@ -7,10 +7,9 @@
   (src/Polhem.Definition/Defaults/FormSchema/AuditRule.FormSchema.xml):
 
   1. No PermissionModelId. The framework declares one because audit policy is a privileged
-     operation, and enforcement is fail-closed. This demo has no permission infrastructure at all —
-     no st_role / st_role_grant / st_user_role, no PermissionModels.xml — so keeping it would make
-     the form impossible to open. A real deployment keeps the framework's declaration and grants
-     the model to an administrator role.
+     operation, and enforcement is fail-closed. The demo grants only the Order model
+     (Define/PermissionModels.xml), so keeping it would make the form impossible to open. A real
+     deployment keeps the framework's declaration and grants the model to an administrator role.
   2. Static ListItems only, without LangEnumName, and DefaultValue="0" on both mode fields. The
      demo carries no AuditRuleMode language resource (see Define/Language), so the shipped copy's
      enum would never resolve here and its static English items would be what shows anyway.

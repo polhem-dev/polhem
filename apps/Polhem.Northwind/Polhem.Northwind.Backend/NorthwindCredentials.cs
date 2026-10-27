@@ -1,4 +1,4 @@
-namespace Polhem.Northwind.Server;
+namespace Polhem.Northwind.Backend;
 
 /// <summary>
 /// The demo accounts the seeder writes into <c>st_user</c>, and the single company the session
@@ -45,6 +45,19 @@ public static class NorthwindCredentials
 
     /// <summary>The Traditional Chinese demo user's culture, seeded into <c>st_user.culture</c>.</summary>
     public const string ZhTwCulture = "zh-TW";
+
+    /// <summary>
+    /// The read-only demo user id. The account holds the <c>OrderViewer</c> role, which may read orders and
+    /// nothing else, so it shows a front end hiding the order commands the user lacks. The other accounts hold
+    /// <c>OrderClerk</c>.
+    /// </summary>
+    public const string ReadOnlyUserId = "demo-ro";
+
+    /// <summary>The read-only demo password.</summary>
+    public const string ReadOnlyPassword = "demo";
+
+    /// <summary>The read-only demo user's display name.</summary>
+    public const string ReadOnlyDisplayName = "Read-only Demo User";
 
     /// <summary>
     /// The single demo company the session auto-enters at login. Company-scoped forms

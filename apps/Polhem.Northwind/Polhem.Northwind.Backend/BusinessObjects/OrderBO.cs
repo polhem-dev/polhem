@@ -4,9 +4,9 @@ using Polhem.Core;
 using Polhem.Core.Exceptions;
 using Polhem.Business.Form;
 using Polhem.Definition;
-using Polhem.Northwind.Server.Repositories;
+using Polhem.Northwind.Backend.Repositories;
 
-namespace Polhem.Northwind.Server.BusinessObjects;
+namespace Polhem.Northwind.Backend.BusinessObjects;
 
 /// <summary>
 /// Application-layer business object for the <c>Order</c> form — the demo's deliberate
@@ -78,6 +78,44 @@ public sealed class OrderBO : FormBusinessObject
         EnforceStatusRules(dataSet, master);             // needs the stored status from the database
         AssignOrderNumber(master);                       // needs the database number sequence
         OrderDataSet.ComputeTotal(dataSet);              // aggregate — SUM of the rounded line amounts
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The order line's product and quantity are marked <c>ValueChangeCallback</c> in
+    /// <c>Order.FormSchema.xml</c>. The base call handles the product, a relation field: it brings back the
+    /// product's code, name and unit price, the price through a lookup-only mapping since the lookup window does not
+    /// show it. This override adds what no mapping can: a warning when the line's quantity exceeds the product's
+    /// units in stock. It warns rather than refuses, because an order may be taken ahead of a delivery.
+    /// </remarks>
+    public override FieldValueChangeResult FieldValueChange(FieldValueChangeArgs args)
+    {
+        var result = base.FieldValueChange(args);
+        if (args.TableName == OrderDataSet.DetailTable
+            && (args.FieldName == "quantity" || args.FieldName == "product_rowid"))
+        {
+            WarnWhenShortOfStock(args, result);
+        }
+        return result;
+    }
+
+    // The row in the arguments is the line as the user sees it, before this change's own results are written, so
+    // the product comes from the arguments when it is the field that changed.
+    private void WarnWhenShortOfStock(FieldValueChangeArgs args, FieldValueChangeResult result)
+    {
+        if (args.Row is not { Rows.Count: 1 } table) { return; }
+        var line = table.Rows[0];
+        Guid productRowId = args.FieldName == "product_rowid"
+            ? ValueUtilities.CGuid(args.Value)
+            : table.Columns.Contains("product_rowid") ? ValueUtilities.CGuid(line["product_rowid"]) : Guid.Empty;
+        int quantity = args.FieldName == "quantity"
+            ? ValueUtilities.CInt(args.Value)
+            : table.Columns.Contains("quantity") ? ValueUtilities.CInt(line["quantity"]) : 0;
+        if (productRowId == Guid.Empty || quantity <= 0) { return; }
+
+        int? stock = Repository().GetUnitsInStock(productRowId);
+        if (stock is { } units && quantity > units)
+            result.Warnings["quantity"] = OrderRules.ShortOfStockMessage(quantity, units);
     }
 
     /// <summary>
