@@ -21,6 +21,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
   並依 `RelationFieldMappings` 回寫；仍帶有這兩者的定義檔讀取時會略過它們。
 - `FieldMapping.LookupOnly` 標記「查詢選取時回寫、查詢 JOIN 不讀」的關聯對應，讓選取時可以一併帶回其他值，
   例如把員工的部門帶進請假單。
+- 標記 `FormField.ValueChangeCallback` 的欄位在使用者變更時，會呼叫所屬表單新增的 `FormBusinessObject.FieldValueChange`，
+  Avalonia 與 Blazor 兩端都會把伺服器回傳的值寫回資料列。
 - `Polhem.Web.Blazor.Server` 新增欄位編輯器，名稱、契約與行為都和 `Polhem.UI.Avalonia` 的相同；`FormPage` 現在會依表單模式與各欄位的 `AllowEditModes` 決定可否編輯。
 - `Polhem.Web.Blazor.Server` 新增查詢流程：`ButtonEdit`、`LookupDialog`、`LookupPanel`。
 - `Polhem.Web.Blazor.Server` 透過新的 `FormLiveComputation` 即時重算計算欄位；其 `FormDataObject` 新增新資料列預設值、資料列事件與資料列編輯暫存。

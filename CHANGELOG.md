@@ -22,6 +22,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
   `RelationProgId` and writes back `RelationFieldMappings`; definitions that still carry the two are read without them.
 - `FieldMapping.LookupOnly` marks a relation mapping that a lookup selection writes back but the query join does not
   read, so a selection can carry extra values along, such as an employee's department into a leave request.
+- A field marked `FormField.ValueChangeCallback` calls its form's new `FormBusinessObject.FieldValueChange` when the
+  user changes it, and both the Avalonia and the Blazor head write the values the server returns into the row.
 - `Polhem.Web.Blazor.Server` gains field editors with the same names, contract and behavior as those of
   `Polhem.UI.Avalonia`, and `FormPage` now follows the form mode and each field's `AllowEditModes`.
 - `Polhem.Web.Blazor.Server` gains the lookup flow: `ButtonEdit`, `LookupDialog` and `LookupPanel`.
