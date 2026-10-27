@@ -32,6 +32,10 @@ namespace Polhem.Api.Contracts.Form
         /// Gets a one-row table holding the edited row as it is after the change, or <c>null</c> when the client sends
         /// none. A business object reads the row's other fields from it, such as the warehouse a stock lookup needs.
         /// </summary>
+        /// <remarks>
+        /// Its <c>DateTime</c> values are in the user's time zone, as the client holds them: like the data set of a
+        /// save, a request's table is not moved to UTC. A table of more than one row is refused.
+        /// </remarks>
         DataTable? Row { get; }
     }
 }

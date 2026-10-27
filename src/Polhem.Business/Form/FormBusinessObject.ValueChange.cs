@@ -1,6 +1,7 @@
 using System.Data;
 using System.Globalization;
 using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Filters;
@@ -43,6 +44,8 @@ namespace Polhem.Business.Form
         {
             ArgumentNullException.ThrowIfNull(args);
             AuthorizeAny(PermissionActions.Create, PermissionActions.Update);
+            if (args.Row is { Rows.Count: > 1 })
+                throw new ArgumentException("FieldValueChange takes the edited row only, not a table of rows.", nameof(args));
 
             var field = DefineAccess.GetFormSchema(ProgId).Tables?.GetOrDefault(args.TableName)?.Fields?.GetOrDefault(args.FieldName)
                 ?? throw new ArgumentException(
@@ -66,9 +69,17 @@ namespace Polhem.Business.Form
         /// <param name="args">The arguments of the call.</param>
         /// <param name="result">The result to fill.</param>
         /// <remarks>
+        /// <para>
         /// An empty value clears every destination. The related row is read by the related form's own business
         /// object through <see cref="ResolveRelationRow"/>, under the rules its lookup applies, so a value the caller
         /// could not pick in the lookup brings nothing back: every destination is cleared and the field gets an error.
+        /// </para>
+        /// <para>
+        /// A cleared destination gets its type's empty value (<see cref="FieldDbTypeExtensions.GetDefaultValue"/>:
+        /// an empty string, zero, <see cref="Guid.Empty"/>), since text and numeric columns are not nullable; a date
+        /// is cleared to <see cref="DBNull"/> instead of today. A destination whose source the related form does not
+        /// have is left out of the result, so the client leaves it as it is.
+        /// </para>
         /// </remarks>
         protected virtual void ResolveRelationValues(FormField field, FieldValueChangeArgs args, FieldValueChangeResult result)
         {
@@ -87,18 +98,49 @@ namespace Polhem.Business.Form
                 }
                 if (row is null)
                 {
-                    var displayName = DefineAccess.GetFormSchema(field.RelationProgId).DisplayName;
                     result.Errors[field.FieldName] = string.Format(CultureInfo.CurrentCulture,
                         ResolveText(PolhemMessages.FieldValueChangeRelationNotFound, "No {0} record that can be picked matches this value."),
-                        StringUtilities.IsNotEmpty(displayName) ? displayName : field.RelationProgId);
+                        RelatedFormName(field.RelationProgId));
                 }
             }
 
+            var destinations = field.Table?.Fields;
             foreach (var mapping in mappings)
             {
-                var column = row?.Table.Columns[mapping.SourceField];
-                result.SetValue(mapping.DestinationField, column is null ? null : row![column], column?.DataType);
+                var destination = destinations?.GetOrDefault(mapping.DestinationField);
+                if (row is null)
+                {
+                    var (empty, type) = EmptyValue(destination);
+                    result.SetValue(mapping.DestinationField, empty, type);
+                    continue;
+                }
+                if (row.Table.Columns[mapping.SourceField] is not { } column) { continue; }
+                result.SetValue(mapping.DestinationField, row[column], column.DataType);
             }
+        }
+
+        /// <summary>
+        /// The value a cleared <paramref name="destination"/> gets, and the column type it travels in.
+        /// </summary>
+        private static (object Value, Type Type) EmptyValue(FormField? destination)
+        {
+            if (destination is null || destination.DbType is FieldDbType.Date or FieldDbType.DateTime)
+                return (DBNull.Value, destination is null ? typeof(string) : typeof(DateTime));
+            var value = destination.DbType.GetDefaultValue();
+            return (value, value is DBNull ? typeof(string) : value.GetType());
+        }
+
+        /// <summary>
+        /// The related form's display name in the session's language, falling back to its schema's own name.
+        /// </summary>
+        private string RelatedFormName(string progId)
+        {
+            var displayName = DefineAccess.GetFormSchema(progId).DisplayName;
+            var fallback = StringUtilities.IsNotEmpty(displayName) ? displayName : progId;
+            return LanguageService.TryResolveLangText(GetCurrentCustomizeId(), GetCurrentLang(), progId,
+                FormSchemaLocalizer.SchemaDisplayNameKey, out var text)
+                ? text
+                : fallback;
         }
 
         /// <summary>
@@ -108,10 +150,19 @@ namespace Polhem.Business.Form
         /// <param name="rowId">The <c>sys_rowid</c> of the row.</param>
         /// <param name="fieldNames">The fields to read; names this form's master table does not have are skipped.</param>
         /// <remarks>
+        /// <para>
         /// Another form's <see cref="ResolveRelationValues"/> calls it on this form's business object. Like
         /// <see cref="GetLookup"/> it does not require this form's <c>Read</c> permission, but it applies
         /// <see cref="GetLookupFilter"/> and, when <see cref="LookupAppliesRecordScope"/> is set, the caller's
         /// <c>Read</c> record scope. It is not an API action.
+        /// </para>
+        /// <para>
+        /// IMPORTANT: only <see cref="GetLookupFilter"/> and <see cref="LookupAppliesRecordScope"/> are shared with
+        /// <see cref="GetLookup"/>. A business object that narrows its lookup by overriding <see cref="GetLookup"/>
+        /// itself must override this method the same way, or a value its lookup would not offer still resolves here.
+        /// The fields read are the sources of the calling form's mappings, which need not be in this form's
+        /// <see cref="FormSchema.LookupFields"/>.
+        /// </para>
         /// </remarks>
         protected internal virtual DataRow? ResolveRelationRow(Guid rowId, IEnumerable<string> fieldNames)
         {

@@ -74,8 +74,7 @@ namespace Polhem.Business.UnitTests.Form
             var result = wiring.CreateBo().FieldValueChange(Args(Guid.NewGuid().ToString()));
 
             Assert.True(result.Errors.ContainsKey("emp_rowid"));
-            var values = Assert.Single(result.Values!.Rows.Cast<DataRow>());
-            Assert.All(s_destinations, name => Assert.Equal(DBNull.Value, values[name]));
+            AssertCleared(result);
         }
 
         [DbFact(DatabaseType.SQLite)]
@@ -103,14 +102,59 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("A cleared relation value clears every destination without reading the related form or reporting an error")]
+        [DisplayName("A cleared relation value gives every destination its type's empty value, not null, without an error")]
         public void FieldValueChange_EmptyValue_ClearsDestinations()
         {
             var result = new Wiring(_fx, DatabaseType.SQLite).CreateBo().FieldValueChange(Args(string.Empty));
 
             Assert.Empty(result.Errors);
+            AssertCleared(result);
+        }
+
+        [Fact]
+        [DisplayName("A row table of more than one row is refused")]
+        public void FieldValueChange_SeveralRows_Throws()
+        {
+            var rows = new DataTable(ProgId);
+            rows.Columns.Add("emp_rowid", typeof(Guid));
+            rows.Rows.Add(Guid.NewGuid());
+            rows.Rows.Add(Guid.NewGuid());
+            var args = Args(string.Empty);
+            args.Row = rows;
+
+            Assert.Throws<ArgumentException>(() => new Wiring(_fx, DatabaseType.SQLite).CreateBo().FieldValueChange(args));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a mapping whose source the related form does not have leaves its destination out of the result")]
+        public void FieldValueChange_Sqlite_MissingSource_LeavesDestinationOut()
+        {
+            var wiring = new Wiring(_fx, DatabaseType.SQLite, missingSource: true);
+            string runId = Guid.NewGuid().ToString("N")[..8];
+            var empId = Guid.NewGuid();
+            try
+            {
+                InsertEmployee(wiring, empId, $"E{runId}", "Carol", Guid.Empty);
+
+                var result = wiring.CreateBo().FieldValueChange(Args(empId.ToString()));
+
+                Assert.Empty(result.Errors);
+                Assert.Equal($"E{runId}", result.Values!.Rows[0]["ref_emp_id"]);
+                Assert.False(result.Values.Columns.Contains("ref_emp_title"));
+            }
+            finally
+            {
+                TryDelete(wiring, wiring.EmployeeSchema, "Employee", empId);
+            }
+        }
+
+        private static void AssertCleared(FieldValueChangeResult result)
+        {
             var values = Assert.Single(result.Values!.Rows.Cast<DataRow>());
-            Assert.All(s_destinations, name => Assert.Equal(DBNull.Value, values[name]));
+            Assert.Equal(string.Empty, values["ref_emp_id"]);
+            Assert.Equal(string.Empty, values["ref_emp_name"]);
+            Assert.Equal(Guid.Empty, values["dept_rowid"]);
+            Assert.Equal(string.Empty, values["ref_emp_dept_id"]);
         }
 
         [Fact]
@@ -160,14 +204,12 @@ namespace Polhem.Business.UnitTests.Form
 
             var result = bo.FieldValueChange(Args(string.Empty));
 
-            Assert.Equal(DBNull.Value, result.Values!.Rows[0]["ref_emp_id"]);
+            Assert.Equal(string.Empty, result.Values!.Rows[0]["ref_emp_id"]);
             Assert.Equal(9.5m, result.Values.Rows[0]["unit_price"]);
             Assert.Equal("Check the price list.", result.Warnings["unit_price"]);
         }
 
         private const string PermissionModelId = "FvcModel";
-
-        private static readonly string[] s_destinations = ["ref_emp_id", "ref_emp_name", "dept_rowid", "ref_emp_dept_id"];
 
         private static FieldValueChangeArgs Args(string value) =>
             new() { TableName = ProgId, FieldName = "emp_rowid", Value = value };
@@ -176,7 +218,7 @@ namespace Polhem.Business.UnitTests.Form
         /// The referencing form: <c>emp_rowid</c> relates to Employee and asks for a callback, <c>plain_rowid</c> does
         /// not ask for one.
         /// </summary>
-        private static FormSchema BuildSchema(string permissionModelId)
+        private static FormSchema BuildSchema(string permissionModelId, bool missingSource)
         {
             var schema = new FormSchema(ProgId, "Value change test") { CategoryId = CategoryId, PermissionModelId = permissionModelId };
             var table = schema.Tables!.Add(ProgId, "Value change test");
@@ -188,11 +230,13 @@ namespace Polhem.Business.UnitTests.Form
             employee.RelationFieldMappings!.Add(new FieldMapping("sys_name", "ref_emp_name"));
             employee.RelationFieldMappings!.Add(new FieldMapping("dept_rowid", "dept_rowid") { LookupOnly = true });
             employee.RelationFieldMappings!.Add(new FieldMapping("ref_dept_id", "ref_emp_dept_id"));
+            if (missingSource)
+                employee.RelationFieldMappings!.Add(new FieldMapping("no_such_source", "ref_emp_title"));
             var plain = table.Fields!.Add("plain_rowid", "Plain", FieldDbType.Guid);
             plain.RelationProgId = "Employee";
             plain.RelationFieldMappings!.Add(new FieldMapping("sys_id", "ref_plain_id"));
             table.Fields!.Add("dept_rowid", "Department", FieldDbType.Guid);
-            foreach (var name in new[] { "ref_emp_id", "ref_emp_name", "ref_emp_dept_id", "ref_plain_id" })
+            foreach (var name in new[] { "ref_emp_id", "ref_emp_name", "ref_emp_dept_id", "ref_plain_id", "ref_emp_title" })
                 table.Fields!.Add(new FormField(name, name, FieldDbType.String, FieldType.RelationField));
             table.Fields!.Add("unit_price", "Unit Price", FieldDbType.Decimal);
             return schema;
@@ -241,11 +285,11 @@ namespace Polhem.Business.UnitTests.Form
         private sealed class Wiring
         {
             public Wiring(SharedDbFixture fx, DatabaseType dbType, string permissionModelId = "",
-                ICompanyAuthorizationService? authorization = null)
+                ICompanyAuthorizationService? authorization = null, bool missingSource = false)
             {
                 DbType = dbType;
                 var inner = fx.GetRequiredService<IDefineAccess>();
-                var defineAccess = new FormSchemaOverlayDefineAccess(inner, BuildSchema(permissionModelId));
+                var defineAccess = new FormSchemaOverlayDefineAccess(inner, BuildSchema(permissionModelId, missingSource));
                 EmployeeSchema = inner.GetFormSchema("Employee");
                 DepartmentSchema = inner.GetFormSchema("Department");
 
