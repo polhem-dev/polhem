@@ -17,8 +17,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性：** `Polhem.Web.Blazor.Server` 以 `FormLayoutPresenter` 取代 `DynamicForm`。
 - **破壞性：** `IExpressionEvaluator` 新增 `Validate`，依變數型別解析運算式而不執行；在框架以外自行實作的 evaluator
   必須實作它。
-- **破壞性：** `Polhem.Web.Blazor.Server` 的 `FormPage` 載入記錄、儲存或刪除失敗時，改以提示顯示在表單上方，
-  不再以錯誤取代表單。
+- **破壞性：** `Polhem.Web.Blazor.Server` 的 `FormPage` 改為一次顯示清單或單筆，以 View、New、Edit、Save、Cancel、Back
+  切換，與 Avalonia 的 view 相同；動作失敗時改以提示顯示，不再以錯誤取代表單。
 - **破壞性：** 移除 `FormField.LookupProgId` 與 `FormField.LookupFieldMappings`。查詢視窗開啟 `RelationProgId`，
   並依 `RelationFieldMappings` 回寫；仍帶有這兩者的定義檔讀取時會略過它們。
 - `FieldMapping.LookupOnly` 標記「查詢選取時回寫、查詢 JOIN 不讀」的關聯對應，讓選取時可以一併帶回其他值，

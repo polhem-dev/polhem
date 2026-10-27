@@ -105,12 +105,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("OnRowSelectedAsync returns early without throwing when _dataObject is null")]
-        public async Task OnRowSelectedAsync_NullDataObject_ReturnsWithoutError()
+        [DisplayName("OnRowActivatedAsync returns early without throwing when _dataObject is null")]
+        public async Task OnRowActivatedAsync_NullDataObject_ReturnsWithoutError()
         {
             var page = new FormPage();
             var method = typeof(FormPage).GetMethod(
-                "OnRowSelectedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+                "OnRowActivatedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, new object[] { Guid.NewGuid() })!;
             var exception = await Record.ExceptionAsync(() => task);
