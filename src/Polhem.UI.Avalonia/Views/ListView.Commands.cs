@@ -1,8 +1,8 @@
 using System.Data;
 using Avalonia.Controls;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
@@ -32,23 +32,8 @@ namespace Polhem.UI.Avalonia.Views
             _cardList.ItemTemplate = BuildCardTemplate(columns, _grid.FormatColumnText);
         }
 
-        // FormSchema.ListFields drives the server SELECT but omits sys_rowid; prepend it so
-        // the wire response carries the identifier the record events need (mirrors FormView).
         private string ComputeSelectFields()
-        {
-            var schema = Schema;
-            if (schema is null) return string.Empty;
-
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { SysFields.RowId };
-            var parts = new List<string> { SysFields.RowId };
-            foreach (var name in (schema.ListFields ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
-            {
-                var trimmed = name.Trim();
-                if (trimmed.Length > 0 && seen.Add(trimmed))
-                    parts.Add(trimmed);
-            }
-            return string.Join(",", parts);
-        }
+            => Schema is { } schema ? ListSelectFields.For(schema) : string.Empty;
 
         private void OnRowSelected(Guid rowId)
         {

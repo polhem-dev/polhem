@@ -34,8 +34,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - `Polhem.Web.Blazor.Server` renders detail tables: `GridControl` (in-cell or edit-form editing), `RowEditPanel`
   and `RowEditDialog`, shown by `FormLayoutPresenter` and `FormPage`, which also previews numbers with the
   company, currency and unit rounding context.
-- `Polhem.Web.Blazor.Server`'s `FormPage` reloads when its `ProgId` changes, and hides commands and degrades sensitive
-  fields by the capabilities on the new per-circuit `CircuitUserContext`.
+- `Polhem.Web.Blazor.Server`'s `FormPage` reloads when its `ProgId` changes, opens the rows a real backend lists,
+  and hides commands and degrades sensitive fields by the capabilities on the new per-circuit `CircuitUserContext`.
 - `Polhem.Web.Blazor.Server`'s `FormPage` switches to a compact layout (one master column, detail rows edited in a
   form) on a narrow viewport, measured in the browser by the new `CompactViewportObserver`.
 - Live computation no longer stops silently: when an expression cannot be evaluated, the Avalonia `FormView` and the

@@ -29,7 +29,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.Web.Blazor.Server` 新增查詢流程：`ButtonEdit`、`LookupDialog`、`LookupPanel`。
 - `Polhem.Web.Blazor.Server` 透過新的 `FormLiveComputation` 即時重算計算欄位；其 `FormDataObject` 新增新資料列預設值、資料列事件與資料列編輯暫存。
 - `Polhem.Web.Blazor.Server` 呈現明細資料表：`GridControl`（儲存格內編輯或編輯表單）、`RowEditPanel`、`RowEditDialog`，由 `FormLayoutPresenter` 與 `FormPage` 顯示；`FormPage` 也會依公司、幣別與單位的 rounding context 預覽數值。
-- `Polhem.Web.Blazor.Server` 的 `FormPage` 在 `ProgId` 變更時重新載入，並依新的 per-circuit `CircuitUserContext`
+- `Polhem.Web.Blazor.Server` 的 `FormPage` 在 `ProgId` 變更時重新載入、可開啟真實後端列出的資料列，並依新的 per-circuit `CircuitUserContext`
   上的能力隱藏指令、降級敏感欄位。
 - `Polhem.Web.Blazor.Server` 的 `FormPage` 在窄 viewport 上改用精簡版面（主檔單欄、明細以表單編輯），寬度由新的
   `CompactViewportObserver` 在瀏覽器量測。

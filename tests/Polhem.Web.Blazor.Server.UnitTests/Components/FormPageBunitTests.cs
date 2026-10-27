@@ -116,7 +116,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _hasLayout = hasLayout;
                 _zhTw = zhTw;
                 Server = new FakeApiServer()
-                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", _ => GetList())
+                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields))
                     .On<GetDataRequest>($"{TestProgId}.{FormActions.GetData}", request => GetData(request.RowId))
                     .On<GetNewDataRequest>($"{TestProgId}.{FormActions.GetNewData}", _ => GetNewData())
                     .On<SaveRequest>($"{TestProgId}.{FormActions.Save}", request => Save(request.DataSet!))
@@ -137,6 +137,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             public FakeApiServer Server { get; }
 
             public int GetListCount { get; private set; }
+            public List<string> ListSelectFields { get; } = [];
             public List<Guid> Loaded { get; } = [];
             public int NewCount { get; private set; }
             public List<DataSet> Saved { get; } = [];
@@ -147,9 +148,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             public string NewName { get; set; } = "New employee";
             public int LanguageFetchCount { get; private set; }
 
-            private GetListResponse GetList()
+            private GetListResponse GetList(string selectFields)
             {
                 GetListCount++;
+                ListSelectFields.Add(selectFields);
                 var table = new DataTable(TestProgId);
                 table.Columns.Add(SysFields.RowId, typeof(Guid));
                 table.Columns.Add("emp_name", typeof(string));
@@ -269,6 +271,19 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             Assert.True(IsDisabled(cut, PolhemUIText.Save));
             Assert.True(IsDisabled(cut, PolhemUIText.Delete));
             Assert.Empty(cut.FindAll("div.polhem-form-page__error"));
+        }
+
+        [Fact]
+        [DisplayName("The list asks for sys_rowid ahead of the form's ListFields, so a listed row can be opened")]
+        public void Initialize_ListRequest_AsksForRowIdFirst()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+            Assert.Equal($"{SysFields.RowId},emp_name", Assert.Single(form.ListSelectFields));
         }
 
         [Fact]

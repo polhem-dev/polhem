@@ -9,6 +9,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Controls;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
@@ -227,7 +228,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 // which still rounds authoritatively on save.
                 var roundingContext = await CircuitDefinitions
                     .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
-                var listRows = (await Client.Form(ProgId).GetListAsync().ConfigureAwait(true)).Table;
+                var listRows = (await Client.Form(ProgId).GetListAsync(ListSelectFields.For(schema)).ConfigureAwait(true)).Table;
                 if (version != _loadVersion) return;
 
                 _schema = schema;
@@ -333,7 +334,8 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task ReloadListAsync()
         {
             var connector = Client.Form(ProgId);
-            var response = await connector.GetListAsync().ConfigureAwait(true);
+            var response = await connector
+                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema)).ConfigureAwait(true);
             _listRows = response.Table;
         }
 
