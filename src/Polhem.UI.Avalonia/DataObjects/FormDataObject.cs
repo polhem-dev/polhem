@@ -62,6 +62,7 @@ namespace Polhem.UI.Avalonia.DataObjects
 
             _schema = schema;
             _connector = connector;
+            InitializeValueChange();
             DataSet = null!;
             ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(schema), notify: false);
         }
@@ -310,8 +311,9 @@ namespace Polhem.UI.Avalonia.DataObjects
 
             foreach (var fieldName in changedFields)
             {
+                // The session already announced these values as they were typed, callbacks included.
                 FieldValueChanged?.Invoke(this, new FieldValueChangedEventArgs(
-                    row.Table.TableName, fieldName, GetField(row, fieldName), row));
+                    row.Table.TableName, fieldName, GetField(row, fieldName), row, FieldValueOrigin.RowEditCommit));
             }
         }
 
@@ -403,7 +405,11 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// source field — the mapping must stay within the target form's lookup field set.
         /// </exception>
         public void ApplyLookupSelection(FormField field, DataRow selectedRow, DataRow? targetRow = null)
-            => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value));
+        {
+            WriteAs(FieldValueOrigin.LookupSelection,
+                () => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value)));
+            NotifyLookupSelected(field, targetRow);
+        }
 
         /// <summary>
         /// Clears a lookup selection: resets <paramref name="field"/> and every mapped
@@ -413,7 +419,8 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <param name="field">The relation field the lookup belongs to.</param>
         /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
         public void ClearLookupSelection(FormField field, DataRow? targetRow = null)
-            => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value));
+            => WriteAs(FieldValueOrigin.LookupSelection,
+                () => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value)));
 
         private void SetLookupField(DataRow? targetRow, string fieldName, string? value)
         {

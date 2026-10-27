@@ -1,4 +1,5 @@
 using System.Data;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.DataObjects
 {
@@ -23,12 +24,33 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <param name="value">The new value rendered as a binding string.</param>
         /// <param name="row">The row whose field changed.</param>
         public FieldValueChangedEventArgs(string tableName, string fieldName, string value, DataRow row)
+            : this(tableName, fieldName, value, row, FieldValueOrigin.User)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="FieldValueChangedEventArgs"/> for a value written from
+        /// <paramref name="origin"/>.
+        /// </summary>
+        /// <param name="tableName">The table whose field changed.</param>
+        /// <param name="fieldName">The field (column) name whose value changed.</param>
+        /// <param name="value">The new value rendered as a binding string.</param>
+        /// <param name="row">The row whose field changed.</param>
+        /// <param name="origin">Where the new value came from.</param>
+        public FieldValueChangedEventArgs(string tableName, string fieldName, string value, DataRow row,
+            FieldValueOrigin origin)
         {
             TableName = tableName;
             FieldName = fieldName;
             Value = value;
             Row = row;
+            Origin = origin;
         }
+
+        /// <summary>
+        /// Gets where the new value came from: the user, a lookup pick, a server callback, or a committed row edit.
+        /// </summary>
+        public FieldValueOrigin Origin { get; }
 
         /// <summary>
         /// Gets the name of the table whose field changed.

@@ -1,4 +1,5 @@
 using System.Data;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.Web.Blazor.Server.DataObjects
 {
@@ -74,8 +75,9 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
             foreach (var fieldName in changedFields)
             {
+                // The session already announced these values as they were typed, callbacks included.
                 FieldValueChanged?.Invoke(this, new FieldValueChangedEventArgs(
-                    row.Table.TableName, fieldName, GetField(row, fieldName), row));
+                    row.Table.TableName, fieldName, GetField(row, fieldName), row, FieldValueOrigin.RowEditCommit));
             }
         }
 

@@ -95,6 +95,22 @@ namespace Polhem.UI.Core.UnitTests.Fields
         }
 
         [Fact]
+        [DisplayName("ApplySelection leaves a source missing from the lookup result to the callback of a field that calls back")]
+        public void ApplySelection_CallbackField_SkipsMissingSource()
+        {
+            var field = BuildLookupField();
+            field.ValueChangeCallback = true;
+            var written = new Dictionary<string, string?>();
+
+            LookupFieldRules.ApplySelection(field, BuildSelectedRow(Guid.NewGuid(), includeName: false),
+                (name, value) => written[name] = value);
+
+            Assert.True(written.ContainsKey("dept_rowid"));
+            Assert.True(written.ContainsKey("ref_dept_id"));
+            Assert.False(written.ContainsKey("ref_dept_name"));
+        }
+
+        [Fact]
         [DisplayName("ClearSelection empties the field and every mapped destination")]
         public void ClearSelection_EmptiesFieldAndMappings()
         {

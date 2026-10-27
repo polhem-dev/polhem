@@ -69,6 +69,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
 
             _schema = schema;
             _connector = connector;
+            InitializeValueChange();
             DataSet = null!;
             ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(schema), notify: false);
         }
@@ -303,7 +304,11 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         /// Thrown when <paramref name="selectedRow"/> lacks <c>sys_rowid</c> or a mapped source field.
         /// </exception>
         public void ApplyLookupSelection(FormField field, DataRow selectedRow, DataRow? targetRow = null)
-            => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value));
+        {
+            WriteAs(FieldValueOrigin.LookupSelection,
+                () => LookupFieldRules.ApplySelection(field, selectedRow, (name, value) => SetLookupField(targetRow, name, value)));
+            NotifyLookupSelected(field, targetRow);
+        }
 
         /// <summary>
         /// Clears a lookup selection: resets <paramref name="field"/> and every mapped destination field
@@ -312,7 +317,8 @@ namespace Polhem.Web.Blazor.Server.DataObjects
         /// <param name="field">The relation field the lookup belongs to.</param>
         /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
         public void ClearLookupSelection(FormField field, DataRow? targetRow = null)
-            => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value));
+            => WriteAs(FieldValueOrigin.LookupSelection,
+                () => LookupFieldRules.ClearSelection(field, (name, value) => SetLookupField(targetRow, name, value)));
 
         private void SetLookupField(DataRow? targetRow, string fieldName, string? value)
         {
