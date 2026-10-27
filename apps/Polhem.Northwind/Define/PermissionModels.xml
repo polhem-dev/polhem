@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The demo's permission model registry. One model, Order, which Order.FormSchema.xml opts into with
+  PermissionModelId. The seeder grants it through two roles: OrderClerk holds every action, OrderViewer
+  only Read, and the demo-ro account holds OrderViewer, so the front ends hide the order commands it
+  may not run. Every action reads every order (Scope All): the demo shows the action gate, not record
+  scope.
+
+  The framework's AuditRule model is left out on purpose: the demo's AuditRule form does not declare
+  it (see AuditRule.FormSchema.xml).
+-->
+<PermissionModels xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Models>
+    <PermissionModel ModelId="Order" DisplayName="Order">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+  </Models>
+</PermissionModels>

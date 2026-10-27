@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Polhem.Northwind.Server;
+namespace Polhem.Northwind.Backend;
 
 /// <summary>
 /// One-line bootstrap for the Polhem.Northwind demo. Resolves the sibling <c>Define</c>
@@ -49,6 +49,9 @@ public static class NorthwindBackend
         }
 
         string definePath = ResolveDefinePath();
+        // Define/DatabaseSettings.xml names its SQLite file under |DataDirectory|, so every host that runs
+        // this backend opens the same database next to Define/, rather than one in its own working directory.
+        AppDomain.CurrentDomain.SetData("DataDirectory", Path.GetDirectoryName(definePath));
         var paths = new PathOptions
         {
             DefinePath = definePath,

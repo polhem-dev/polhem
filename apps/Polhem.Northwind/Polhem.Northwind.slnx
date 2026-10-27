@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/Server/">
+    <Project Path="Polhem.Northwind.Backend/Polhem.Northwind.Backend.csproj" />
     <Project Path="Polhem.Northwind.Server/Polhem.Northwind.Server.csproj" />
+  </Folder>
+  <Folder Name="/Web/">
+    <Project Path="Polhem.Northwind.Blazor/Polhem.Northwind.Blazor.csproj" />
   </Folder>
   <Folder Name="/UI/">
     <Project Path="Polhem.Northwind.UI/Polhem.Northwind.UI.csproj" />

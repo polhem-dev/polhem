@@ -35,6 +35,19 @@
             "env": { "ASPNETCORE_ENVIRONMENT": "Development" }
         },
         {
+            "name": "Run Polhem.Northwind.Blazor",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-northwind-blazor",
+            "program": "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Blazor/bin/Debug/net10.0/Polhem.Northwind.Blazor.dll",
+            "cwd": "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Blazor",
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": { "ASPNETCORE_ENVIRONMENT": "Development", "ASPNETCORE_URLS": "http://localhost:5300" }
+        },
+        {
             "name": "Run Blazor.Server.Demo",
             "type": "coreclr",
             "request": "launch",

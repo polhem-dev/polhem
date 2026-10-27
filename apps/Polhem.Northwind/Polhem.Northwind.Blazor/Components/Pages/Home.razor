@@ -1,0 +1,17 @@
+@page "/"
+@inject PolhemApiClient Client
+@inject Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions Options
+@inject NavigationManager Navigation
+
+<p class="nw-main__loading">@ShellText.Get("Loading")</p>
+
+@code {
+    // Opens the first form of the menu, as the Avalonia shell does after sign-in. The layout renders this page only
+    // once a company is entered.
+    protected override async Task OnInitializedAsync()
+    {
+        var rows = await MenuRows.LoadAsync(Client, Options);
+        if (rows.FirstOrDefault(r => r.ProgId is not null) is { } first)
+            Navigation.NavigateTo($"form/{first.ProgId}", replace: true);
+    }
+}

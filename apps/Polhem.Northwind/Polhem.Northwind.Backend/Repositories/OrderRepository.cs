@@ -3,11 +3,11 @@ using Polhem.Db;
 using Polhem.Repository;
 using Polhem.Repository.Form;
 
-namespace Polhem.Northwind.Server.Repositories;
+namespace Polhem.Northwind.Backend.Repositories;
 
 /// <summary>
 /// <see cref="IOrderRepository"/> over the company database, extending the framework's
-/// schema-driven CRUD with the order's two hand-written queries.
+/// schema-driven CRUD with the order's hand-written queries.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,7 +20,7 @@ namespace Polhem.Northwind.Server.Repositories;
 /// The target database is not named here. <see cref="RepositoryBase"/> resolves it from the form
 /// schema's <c>CategoryId</c> (<c>company</c> for orders) and the session, so the query below
 /// reaches the right company's data without this class knowing how many companies exist. The
-/// business object used to run these two statements itself against
+/// business object used to run the status and number statements itself against
 /// <c>ResolveDatabaseId(DbScope.Common)</c> — a company table read through the common route, which
 /// this demo got away with only because both categories map to the same SQLite file.
 /// </para>
@@ -62,5 +62,16 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
             "SELECT MAX(sys_id) FROM ft_order WHERE sys_id LIKE {0}", likePrefix);
         return CreateDbAccess().Execute(spec).Scalar as string;
+    }
+
+    /// <inheritdoc/>
+    public int? GetUnitsInStock(Guid productRowId)
+    {
+        if (productRowId == Guid.Empty) { return null; }
+
+        var spec = new DbCommandSpec(DbCommandKind.Scalar,
+            "SELECT units_in_stock FROM ft_product WHERE sys_rowid = {0}", productRowId);
+        var value = CreateDbAccess().Execute(spec).Scalar;
+        return value is null or DBNull ? null : ValueUtilities.CInt(value);
     }
 }

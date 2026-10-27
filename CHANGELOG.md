@@ -36,6 +36,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
   company, currency and unit rounding context.
 - `Polhem.Web.Blazor.Server`'s `FormPage` reloads when its `ProgId` changes, opens the rows a real backend lists,
   and hides commands and degrades sensitive fields by the capabilities on the new per-circuit `CircuitUserContext`.
+- The Northwind demo gains a Blazor Server head that runs its backend in process, an order line that calls back for
+  the product's price, and a read-only account for its new Order permission model.
 - `Polhem.Web.Blazor.Server`'s `FormPage` switches to a compact layout (one master column, detail rows edited in a
   form) on a narrow viewport, measured in the browser by the new `CompactViewportObserver`.
 - Live computation no longer stops silently: when an expression cannot be evaluated, the Avalonia `FormView` and the

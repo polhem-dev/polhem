@@ -92,7 +92,7 @@ implementations against rows the seeder writes (Part 3). What it does add:
    category loop builds them (Part 5).
 2. **`UseXxxBackend` runs the full seeder** (Part 5) before `app.Run()`, so the hosted startup checks read seeded tables.
 
-Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindBackend.cs`.
+Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindBackend.cs`.
 
 ## Part 3 — Company context: even a single company goes through `EnterCompany`
 
@@ -125,7 +125,7 @@ The correct approach is to follow the framework's two steps; it costs less than 
 - If a form has no `PermissionModelId`, empty roles are fine — both server and front end short-circuit when
   `modelId` is empty.
 
-Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindSchemaSeeder.cs`
+Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindSchemaSeeder.cs`
 (`SeedCommon`) and `apps/Polhem.Northwind/Polhem.Northwind.UI/ViewModels/LoginViewModel.cs`.
 
 ## Part 4 — Authentication: the framework's `st_user` sign-in

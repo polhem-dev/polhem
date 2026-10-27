@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: fe52ace959ff35bac11caf9057ef8d7793e5d8d9 -->
+<!-- source: en/getting-started/platform-support.md blob: 4a9f0e426658acb06ff1b2fd8bd45e014e1758b0 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -43,7 +43,8 @@
   `LocalOnly` 檢查）：只有在網站的每位使用者都可以看到整個後端時才使用，否則請在 `AddPolhemBlazor` 中呼叫
   `UseRemoteProvider(endpoint, apiKey)`。Remote 模式需要在這裡傳入應用程式的 API key，否則伺服器會以
   `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
-  送出同一個 key；另見
+  送出同一個 key。Northwind 的 Blazor Server head 以 Local 模式執行 Northwind 後端，並可經設定切換為 Remote；見
+  [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-server)，單獨看元件則見
   [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.zh-TW.md)。
 
 ---

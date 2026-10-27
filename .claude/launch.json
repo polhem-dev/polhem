@@ -28,6 +28,34 @@
       "autoPort": false
     },
     {
+      "name": "northwind-blazor",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.Blazor/Polhem.Northwind.Blazor.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5300,
+      "autoPort": false
+    },
+    {
+      "name": "northwind-blazor-remote",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.Blazor/Polhem.Northwind.Blazor.csproj",
+        "--configuration",
+        "Debug",
+        "--",
+        "--Northwind:Mode=Remote"
+      ],
+      "port": 5300,
+      "autoPort": false
+    },
+    {
       "name": "blazor-server-demo",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [

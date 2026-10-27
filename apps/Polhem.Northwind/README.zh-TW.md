@@ -16,6 +16,9 @@
 - **宣告式規則，其餘交給一個業務邏輯物件** —— 訂單的必填欄位與每列金額宣告在它的 `FormSchema`；單據編號、狀態轉移、至少一筆明細的檢查與訂單總額是全應用**唯一**的 C# 業務邏輯，集中在一個 `OrderBO`。下方對照表精確標示哪些行為屬定義、哪些屬框架、哪些屬應用程式碼。
 - **框架系統表（`st_`）與業務表（`ft_`）並存** —— `Employee` / `Department` 是應用沿用並擴充的框架表；`Customer` / `Product` / `Order` 是應用自定義的業務表。
 - **在地化標題與租戶客製層** —— 訂單表單的 zh-TW 標題來自語系資源，客製層再改掉其中兩個、其餘照樣繼承。兩者都是定義檔，都不是程式碼。
+- **欄位異動時詢問伺服器** —— 在訂單明細挑選商品時會呼叫訂單的業務物件（`ValueChangeCallback`），帶回商品目前的單價，這個欄位查詢視窗並不顯示；修改數量時，超過庫存會出現警告。
+- **前端會依循的權限** —— 訂單表單綁定一個權限模型；`demo-ro` 帳號只能讀取訂單，所以每個 head 都會隱藏 New、Save、Delete，並以唯讀開啟訂單，而後端照樣會拒絕這些呼叫。
+- **一個後端、兩個 host** —— 業務物件、Repository 與種子資料放在一個類別庫裡，JSON-RPC server 與 Blazor Server head 都執行它，使用同一份定義與同一個資料庫。
 
 ## 執行 demo
 
@@ -43,8 +46,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 |---|---|---|---|
 | `demo` | `demo` | `en-US` | 英文標題與格式 |
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
+| `demo-ro` | `demo` | `en-US` | 同一份資料，但訂單是唯讀：New、Save、Delete 都隱藏 |
 
-兩個帳號進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，`demo-ro` 擁有 `OrderViewer`（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。
 
 ### 網頁前端（Avalonia WASM）
 
@@ -60,6 +64,27 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Browser
 開啟 <http://localhost:5200/>，以相同方式連線 / 登入。WASM 專屬接線（localStorage endpoint、
 async 連線、overlay 對話框、publish 注意事項）見
 [`Polhem.Northwind.Browser/README.md`](Polhem.Northwind.Browser/README.zh-TW.md)。
+
+### 網頁前端（Blazor Server）
+
+**`Polhem.Northwind.Blazor`** 以 `Polhem.Web.Blazor.Server` 呈現同一批表單：瀏覽器裡是 HTML，元件在伺服器上執行。
+它在自己的行程裡執行 `Polhem.Northwind.Backend` 的後端，不需要另外啟動 server：
+
+```bash
+# Blazor Server head（http://localhost:5300）
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
+```
+
+開啟 <http://localhost:5300/>，選好語言，再以上面任一個帳號登入。與 Avalonia head 不同的地方：
+
+- **後端在同一個行程**（`UseLocalProvider`），使用與 `Polhem.Northwind.Server` 相同的 `Define/` 與 `northwind.db`，
+  所以在這裡儲存的訂單，桌面 head 也看得到。Local 呼叫會略過 API 金鑰與 access token 的檢查，適合使用者都受信任的網站；
+  上述的表單權限仍會套用到登入的使用者。若要改經 JSON-RPC 呼叫執行中的 `Polhem.Northwind.Server`，先啟動它，再以
+  `--Northwind:Mode=Remote` 執行這個 head；endpoint 與 API 金鑰在 `appsettings.json`。
+- **語言在登入前選擇。** Blazor Server 的連線會一直沿用開始時的文化，所以登入畫面的切換會把它存進 cookie 並重新載入頁面；
+  `demo-tw` 會以切換所顯示的語言登入。
+- **登入狀態存在瀏覽器分頁的連線裡。** 重新載入頁面或開新分頁都要重新登入。
+- 殼層（登入、由 `MenuSettings.xml` 產生的選單、所有表單共用的一個路由頁面）是這個 head 自己的程式碼；表單則是框架的 `FormPage`。
 
 ### 行動前端（Avalonia iOS / Android）
 
@@ -81,7 +106,7 @@ dotnet build apps/Polhem.Northwind/Polhem.Northwind.Android -t:Run -f net10.0-an
 在 **Android 模擬器**，主機要用 `10.0.2.2`（非 `localhost`），endpoint 填 `http://10.0.2.2:5100/api`；
 manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:5100/api`（ATS 於 dev 允許任意連線）。
 
-> 首次執行 server 會在 server 專案資料夾（`Polhem.Northwind.Server/`，已被 `.gitignore` 涵蓋）建立 `northwind.db` 並灌入 Northwind 子集。刪除該檔即可重新建表灌種子。
+> 任一個 host 首次執行時，會在 `Define/` 旁（`apps/Polhem.Northwind/northwind.db`，已被 `.gitignore` 涵蓋）建立 `northwind.db` 並灌入 Northwind 子集；`Define/DatabaseSettings.xml` 以 `|DataDirectory|` 指定檔名，後端把它指向那裡。刪除該檔即可重新建表灌種子。舊版留在 `Polhem.Northwind.Server/` 的 `northwind.db` 不再被讀取，可以刪除。
 >
 > 桌面與行動前端用框架預設的 `FileEndpointStorage` 記住 endpoint 與 API 金鑰：本機應用程式資料目錄下、以該 head 的進入點組件命名的個人資料夾（例如 `Polhem.Northwind.Desktop`）。各平台的目錄位置見 `Polhem.UI.ApiBridge` 中 `FileEndpointStorage` 的說明。瀏覽器前端則改存在 `localStorage`。
 
@@ -113,7 +138,7 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 | Products | `Product` | `ft_product` | 業務 | **雙 lookup**（Supplier + Category） |
 | Departments | `Department` | `st_department` | 框架系統 | 沿用的框架表 |
 | Employees | `Employee` | `st_employee` | 框架系統 + 擴充 | 框架欄位 + `title` / `hire_date`；`dept` lookup 一併帶出部門經理作為主管 |
-| Orders | `Order` | `ft_order` + `ft_order_detail` | 業務（master-detail） | **主表三 lookup**（Customer / Employee / Shipper）+ 每列**商品 lookup**；唯一的 `OrderBO` |
+| Orders | `Order` | `ft_order` + `ft_order_detail` | 業務（master-detail） | **主表三 lookup**（Customer / Employee / Shipper）+ 每列**商品 lookup**，並回呼帶回單價；權限模型 `Order`；唯一的 `OrderBO` |
 | Audit Rules | `AuditRule` | `st_audit_rule` | 框架系統 | 逐張表單的稽核覆寫，位於 Administration 下；框架的業務物件 |
 
 ## 框架系統表 vs 業務表（`st_` / `ft_`）
@@ -185,16 +210,18 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 | Lookup 對話框、外鍵寫回、JOIN 重載 | **定義 + 框架** | 關連欄位 + `RelationFieldMappings`；框架 `GetLookup` |
 | Master-detail 整筆一次儲存 | **框架** | repository，由多表 `FormSchema` 驅動 |
 | 訂單的必填欄位與每列金額 | **定義** | `Order.FormSchema.xml`：`Rules`（`FormRule`）與一個 `ValueExpression` 欄位 |
+| 明細挑選商品後帶回的單價 | **定義 + 框架** | `ValueChangeCallback` + 一個 `LookupOnly` 對應；框架 `FieldValueChange` |
+| 誰可以新增、讀取、修改、刪除訂單 | **定義 + 框架** | `PermissionModels.xml`、`FormSchema.PermissionModelId`、角色資料表；框架負責強制與前端降級 |
 | progId 對業務物件與 Repository 的綁定 | **定義** | `ProgramSettings.xml`（型別註冊表） |
 | 導航選單（分組表單清單） | **定義** | `MenuSettings.xml` |
 | 在地化標題與顯示名稱 | **定義** | `Define/Language/{lang}/{progId}.Language.xml` |
 | 各租戶的標題覆寫 | **定義** | `Customize/{customizeId}/Language/…`，逐 key 決定 |
 | 登入／工作階段／加密 | **框架** | `SystemBusinessObject`、API 管線 |
-| **單據編號、狀態轉移、至少一筆明細的檢查、訂單總額** | **應用程式碼** | `OrderBO`（全應用唯一的業務邏輯） |
+| **單據編號、狀態轉移、至少一筆明細的檢查、訂單總額、庫存警告** | **應用程式碼** | `OrderBO`（全應用唯一的業務邏輯） |
 
-唯一的 C# 業務物件 [`OrderBO`](Polhem.Northwind.Server/BusinessObjects/OrderBO.cs) 覆寫 `GetNewData` 與 `DoBeforeSave`，補上一般表單無法表達的規則。其純規則拆到 [`OrderRules`](Polhem.Northwind.Server/BusinessObjects/OrderRules.cs) 與 [`OrderDataSet`](Polhem.Northwind.Server/BusinessObjects/OrderDataSet.cs)，不依賴資料庫、與協調流程分離。
+唯一的 C# 業務物件 [`OrderBO`](Polhem.Northwind.Backend/BusinessObjects/OrderBO.cs) 覆寫 `GetNewData`、`DoBeforeSave` 與 `FieldValueChange`，補上一般表單無法表達的規則。其純規則拆到 [`OrderRules`](Polhem.Northwind.Backend/BusinessObjects/OrderRules.cs) 與 [`OrderDataSet`](Polhem.Northwind.Backend/BusinessObjects/OrderDataSet.cs)，不依賴資料庫、與協調流程分離。
 
-它的兩個資料庫查詢放在 [`IOrderRepository`](Polhem.Northwind.Server/Repositories/IOrderRepository.cs) / [`OrderRepository`](Polhem.Northwind.Server/Repositories/OrderRepository.cs)，與業務物件綁在**同一筆**註冊表項目上 —— 一支程式、一個業務物件、一個 Repository。這是「表單需要產生式 CRUD 以外的資料存取」時的樣式範本：**擴充** `IDataFormRepository` 而非取代它、衍生自 `DataFormRepository`，BO 端以介面取得（`CreateFormRepository<IOrderRepository>()`）。把 SQL 移出業務物件，也正是這兩個查詢得以路由到訂單自己的公司資料庫、而非業務物件當初隨手指名那個資料庫的原因。
+它的資料庫查詢放在 [`IOrderRepository`](Polhem.Northwind.Backend/Repositories/IOrderRepository.cs) / [`OrderRepository`](Polhem.Northwind.Backend/Repositories/OrderRepository.cs)，與業務物件綁在**同一筆**註冊表項目上 —— 一支程式、一個業務物件、一個 Repository。這是「表單需要產生式 CRUD 以外的資料存取」時的樣式範本：**擴充** `IDataFormRepository` 而非取代它、衍生自 `DataFormRepository`，BO 端以介面取得（`CreateFormRepository<IOrderRepository>()`）。把 SQL 移出業務物件，也正是這些查詢得以路由到訂單自己的公司資料庫、而非業務物件當初隨手指名那個資料庫的原因。
 
 ## 在地化與租戶客製層
 
@@ -226,7 +253,7 @@ client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 
 業務員、貨運商與運費。
 
 有兩個彼此獨立的開關管著這一層，**清掉任一個就回到純套裝部署、其餘行為完全不變**：
-session 的客製化代碼，以及 [`NorthwindBackend`](Polhem.Northwind.Server/NorthwindBackend.cs) 裡的
+session 的客製化代碼，以及 [`NorthwindBackend`](Polhem.Northwind.Backend/NorthwindBackend.cs) 裡的
 `PathOptions.CustomizePath`。公司對客製化代碼是**多對一**，所以「多家公司共用一份客製」才是
 常態，demo 只是剛好各一。
 
@@ -352,10 +379,13 @@ apps/Polhem.Northwind/
 │   ├── DatabaseSettings.xml      common + company + log 三個資料庫
 │   ├── DbCategorySettings.xml    各分類有哪些表（驅動建表）
 │   ├── ProgramSettings.xml       型別註冊表（progId 對業務物件 + Repository）
+│   ├── PermissionModels.xml      訂單表單綁定的權限模型
 │   ├── MenuSettings.xml          導航選單（資料夾、排序、標題）
 │   └── Language/{lang}/          在地化標題，每個 progId 一個檔
 ├── Customize/{customizeId}/      租戶客製層（結構與 Define/ 相同，只放要覆寫的檔）
-├── Polhem.Northwind.Server/         JSON-RPC 後端、OrderBO、JSON 種子資料
+├── Polhem.Northwind.Backend/        兩個 host 共用的後端：OrderBO、它的 Repository、seeder 與種子資料
+├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia head 使用
+├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Server），在同一個行程執行後端
 ├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）

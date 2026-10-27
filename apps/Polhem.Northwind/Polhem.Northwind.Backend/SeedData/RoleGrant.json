@@ -1,0 +1,7 @@
+[
+  { "role_id": "OrderClerk", "model_id": "Order", "action": "1", "scope": "0" },
+  { "role_id": "OrderClerk", "model_id": "Order", "action": "2", "scope": "0" },
+  { "role_id": "OrderClerk", "model_id": "Order", "action": "4", "scope": "0" },
+  { "role_id": "OrderClerk", "model_id": "Order", "action": "8", "scope": "0" },
+  { "role_id": "OrderViewer", "model_id": "Order", "action": "2", "scope": "0" }
+]

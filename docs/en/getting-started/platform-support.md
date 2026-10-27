@@ -47,8 +47,10 @@ the head, not to the Polhem packages.
   it only when every user of the site may see the whole backend, and call `UseRemoteProvider(endpoint, apiKey)` in
   `AddPolhemBlazor` otherwise. Remote mode needs the application's API key there, or the server refuses the first
   call with `401 Unauthorized`. The remarks on `PolhemBlazorOptions` spell out what Local skips and why every
-  circuit sends the same key; see also
-  [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md).
+  circuit sends the same key. The Northwind Blazor Server head runs the Northwind backend in Local mode and switches
+  to Remote by configuration; see
+  [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md#web-client-blazor-server) and, for the components
+  on their own, [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md).
 
 ---
 

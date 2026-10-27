@@ -129,7 +129,7 @@ testable). See the reference implementation `OrderBO` (with `OrderRules` / `Orde
 
 ## Seed data (optional)
 
-To preload data: `Polhem.Northwind.Server/SeedData/<Table>.json`, with relation columns filled with the target `sys_id`
+To preload data: `Polhem.Northwind.Backend/SeedData/<Table>.json`, with relation columns filled with the target `sys_id`
 (the seeder resolves it to `sys_rowid`), plus a `SeedTable` entry in `NorthwindSchemaSeeder`'s seed list, placed after
 every table it references. Table creation is data-driven; the seed list is not. A new table that only needs CRUD does not need seed data (the user creates
 records in the UI).

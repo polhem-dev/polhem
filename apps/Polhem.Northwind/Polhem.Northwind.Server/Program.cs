@@ -1,6 +1,6 @@
 using Polhem.Hosting;
 using Polhem.JsonRpc.AspNetCore;
-using Polhem.Northwind.Server;
+using Polhem.Northwind.Backend;
 
 const string DevWasmCorsPolicy = "PolhemDevWasm";
 

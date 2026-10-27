@@ -16,6 +16,9 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 - **Declared rules, and one business-logic object for the rest** — the order's required fields and per-line amount are declared in its `FormSchema`; order numbering, status transitions, the at-least-one-line check and the order total are the *only* C# business logic in the app, in one `OrderBO`. The comparison table below shows exactly which behavior is definition, which is framework, and which is application code.
 - **Framework system tables (`st_`) alongside business tables (`ft_`)** — `Employee` / `Department` are framework tables the app reuses and extends; `Customer` / `Product` / `Order` are business tables the app defines.
 - **Localized captions and a tenant customization layer** — the Order form's zh-TW captions come from a language resource, and a customization layer renames two of them for this tenant while inheriting the rest. Both are definition files; neither is code.
+- **A field change that asks the server** — picking a product on an order line calls the order's business object (`ValueChangeCallback`), which brings back the product's current unit price, a column the lookup window does not show; changing the quantity warns when it exceeds the stock.
+- **Permissions the front ends follow** — the Order form is bound to a permission model; the `demo-ro` account may only read orders, so every head hides New, Save and Delete and opens orders read-only, while the backend refuses the calls anyway.
+- **One backend, two hosts** — the business object, the repository and the seed live in a class library that the JSON-RPC server and the Blazor Server head both run, on the same definitions and the same database.
 
 ## Running the demo
 
@@ -37,14 +40,15 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Server
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 ```
 
-Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with one of the two seeded accounts:
+Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with one of the seeded accounts:
 
 | Account | Password | Culture | What you see |
 |---|---|---|---|
 | `demo` | `demo` | `en-US` | English captions and formats |
 | `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
+| `demo-ro` | `demo` | `en-US` | the same data, but orders are read-only: New, Save and Delete are hidden |
 
-Both accounts enter the same company and see the same data; the session takes its language from the account (`st_user.culture`), not from the operating system.
+Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role and `demo-ro` holds `OrderViewer` (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`).
 
 ### Web client (Avalonia WASM)
 
@@ -60,6 +64,32 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Browser
 Open <http://localhost:5200/> and connect / sign in the same way. See
 [`Polhem.Northwind.Browser/README.md`](Polhem.Northwind.Browser/README.md) for the WASM-specific wiring
 (localStorage endpoint, async connect, overlay dialogs, publish notes).
+
+### Web client (Blazor Server)
+
+**`Polhem.Northwind.Blazor`** renders the same forms with `Polhem.Web.Blazor.Server`: HTML in the browser, the
+components running on the server. It runs the backend in its own process, from `Polhem.Northwind.Backend`, so it needs
+no other server:
+
+```bash
+# Blazor Server head (http://localhost:5300)
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
+```
+
+Open <http://localhost:5300/>, pick the language, then sign in with one of the accounts above. What differs from the
+Avalonia heads:
+
+- **The backend is in process** (`UseLocalProvider`), on the same `Define/` and the same `northwind.db` as
+  `Polhem.Northwind.Server`, so an order saved here shows in the desktop head. Local calls skip the API key and
+  access-token checks, which suits a site whose users are all trusted; the form permissions above still apply to the
+  signed-in user. To call a running `Polhem.Northwind.Server` over JSON-RPC instead, start it and run the head with
+  `--Northwind:Mode=Remote`; the endpoint and the API key are in `appsettings.json`.
+- **The language is chosen before sign-in.** A Blazor Server connection keeps the culture it started with, so the
+  sign-in screen's switch stores it in a cookie and reloads the page; `demo-tw` signs in under whichever language the
+  switch shows.
+- **The sign-in lives in the browser tab's connection.** Reloading the page or opening a new tab signs in again.
+- The shell (sign-in, the menu from `MenuSettings.xml`, one routed page for every form) is this head's own code;
+  the forms are the framework's `FormPage`.
 
 ### Mobile clients (Avalonia iOS / Android)
 
@@ -85,7 +115,7 @@ On the **Android emulator** the host machine is reached at `10.0.2.2` (not `loca
 endpoint to `http://10.0.2.2:5100/api`; the manifest enables cleartext HTTP for development. On the
 **iOS simulator** use `http://localhost:5100/api` (ATS allows arbitrary loads in dev).
 
-> The first server run creates `northwind.db` in the server project folder (`Polhem.Northwind.Server/`, where `.gitignore` covers it) and seeds a Northwind subset. Delete that file to reseed from scratch.
+> The first run of either host creates `northwind.db` next to `Define/` (`apps/Polhem.Northwind/northwind.db`, where `.gitignore` covers it) and seeds a Northwind subset; `Define/DatabaseSettings.xml` names it under `|DataDirectory|`, which the backend points there. Delete that file to reseed from scratch. A `northwind.db` left in `Polhem.Northwind.Server/` by an earlier version is no longer read and can be deleted.
 >
 > The desktop and mobile heads remember the endpoint and the API key in the framework's default `FileEndpointStorage`: a per-user folder named after the head's entry assembly (for example `Polhem.Northwind.Desktop`) under the local application data directory. Where that directory is on each platform is described on `FileEndpointStorage` in `Polhem.UI.ApiBridge`. The browser head keeps them in `localStorage` instead.
 
@@ -117,7 +147,7 @@ The same Order form rendered by all four Avalonia heads — same definitions, sa
 | Products | `Product` | `ft_product` | business | **two lookups** (Supplier + Category) |
 | Departments | `Department` | `st_department` | framework system | reused framework table |
 | Employees | `Employee` | `st_employee` | framework system + extension | framework fields + `title` / `hire_date`; `dept` lookup carries the department manager as supervisor |
-| Orders | `Order` | `ft_order` + `ft_order_detail` | business (master-detail) | **three master lookups** (Customer / Employee / Shipper) + per-row **product lookup**; the one `OrderBO` |
+| Orders | `Order` | `ft_order` + `ft_order_detail` | business (master-detail) | **three master lookups** (Customer / Employee / Shipper) + per-row **product lookup** that calls back for the price; permission model `Order`; the one `OrderBO` |
 | Audit Rules | `AuditRule` | `st_audit_rule` | framework system | per-form audit overrides, under Administration; framework business object |
 
 ## Framework system tables vs business tables (`st_` / `ft_`)
@@ -189,16 +219,18 @@ This is the whole argument in one table.
 | Lookup dialog, foreign key write-back, JOIN reload | **definition + framework** | relation field + `RelationFieldMappings`; framework `GetLookup` |
 | Master-detail save as one unit | **framework** | repository, driven by the multi-table `FormSchema` |
 | Order's required fields and per-line amount | **definition** | `Order.FormSchema.xml`: `Rules` (`FormRule`) and a `ValueExpression` field |
+| A picked product's unit price on the order line | **definition + framework** | `ValueChangeCallback` + a `LookupOnly` mapping; framework `FieldValueChange` |
+| Who may create, read, update and delete orders | **definition + framework** | `PermissionModels.xml`, `FormSchema.PermissionModelId`, the role tables; framework enforcement, front-end degradation |
 | progId to business-object and repository binding | **definition** | `ProgramSettings.xml` (the type registry) |
 | Navigation menu (grouped form list) | **definition** | `MenuSettings.xml` |
 | Localized captions and display names | **definition** | `Define/Language/{lang}/{progId}.Language.xml` |
 | Per-tenant caption overrides | **definition** | `Customize/{customizeId}/Language/…`, resolved per key |
 | Login / session / encryption | **framework** | `SystemBusinessObject`, API pipeline |
-| **Order number, status transitions, at-least-one-line check, order total** | **application code** | `OrderBO` (the only business logic in the app) |
+| **Order number, status transitions, at-least-one-line check, order total, stock warning** | **application code** | `OrderBO` (the only business logic in the app) |
 
-The single C# business object, [`OrderBO`](Polhem.Northwind.Server/BusinessObjects/OrderBO.cs), overrides `GetNewData` and `DoBeforeSave` to add what a generic form cannot express. Its pure rules are factored into [`OrderRules`](Polhem.Northwind.Server/BusinessObjects/OrderRules.cs) and [`OrderDataSet`](Polhem.Northwind.Server/BusinessObjects/OrderDataSet.cs), kept free of database dependencies and separate from the orchestration.
+The single C# business object, [`OrderBO`](Polhem.Northwind.Backend/BusinessObjects/OrderBO.cs), overrides `GetNewData`, `DoBeforeSave` and `FieldValueChange` to add what a generic form cannot express. Its pure rules are factored into [`OrderRules`](Polhem.Northwind.Backend/BusinessObjects/OrderRules.cs) and [`OrderDataSet`](Polhem.Northwind.Backend/BusinessObjects/OrderDataSet.cs), kept free of database dependencies and separate from the orchestration.
 
-Its two database queries live in [`IOrderRepository`](Polhem.Northwind.Server/Repositories/IOrderRepository.cs) / [`OrderRepository`](Polhem.Northwind.Server/Repositories/OrderRepository.cs), bound to the *same* registry entry as the business object — one progId, one business object, one repository. That is the style template for a form that needs data access beyond the generated CRUD: extend `IDataFormRepository` rather than replace it, derive from `DataFormRepository`, and let the business object ask for it by interface (`CreateFormRepository<IOrderRepository>()`). Keeping the SQL out of the business object is also what let these two queries route to the order's own company database instead of the one the business object happened to name.
+Its database queries live in [`IOrderRepository`](Polhem.Northwind.Backend/Repositories/IOrderRepository.cs) / [`OrderRepository`](Polhem.Northwind.Backend/Repositories/OrderRepository.cs), bound to the *same* registry entry as the business object — one progId, one business object, one repository. That is the style template for a form that needs data access beyond the generated CRUD: extend `IDataFormRepository` rather than replace it, derive from `DataFormRepository`, and let the business object ask for it by interface (`CreateFormRepository<IOrderRepository>()`). Keeping the SQL out of the business object is also what let these queries route to the order's own company database instead of the one the business object happened to name.
 
 ## Localization and the tenant customization layer
 
@@ -235,7 +267,7 @@ leaves the salesperson, shipper and freight off the master block.
 
 Two independent things gate the layer, and clearing either returns the demo to a plain packaged
 deployment with no other change: the session's customization code, and `PathOptions.CustomizePath`
-in [`NorthwindBackend`](Polhem.Northwind.Server/NorthwindBackend.cs). Companies map many-to-one onto
+in [`NorthwindBackend`](Polhem.Northwind.Backend/NorthwindBackend.cs). Companies map many-to-one onto
 a customization code, so one code shared by many companies is the normal arrangement — the demo
 just happens to have one of each.
 
@@ -364,10 +396,13 @@ apps/Polhem.Northwind/
 │   ├── DatabaseSettings.xml      the common + company + log databases
 │   ├── DbCategorySettings.xml    which tables exist, per category (drives schema build)
 │   ├── ProgramSettings.xml       the type registry (progId to business object + repository)
+│   ├── PermissionModels.xml      the permission model the Order form is bound to
 │   ├── MenuSettings.xml          the navigation menu (folders, order, captions)
 │   └── Language/{lang}/          localized captions, one file per progId
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
-├── Polhem.Northwind.Server/         JSON-RPC backend, OrderBO, JSON seed data
+├── Polhem.Northwind.Backend/        the backend both hosts run: OrderBO, its repository, the seeder and seed data
+├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia heads
+├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Server), running the backend in process
 ├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)

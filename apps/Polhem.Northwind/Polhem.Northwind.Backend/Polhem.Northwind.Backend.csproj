@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Northwind.Backend</RootNamespace>
+    <AssemblyName>Polhem.Northwind.Backend</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!--
+    The Northwind backend: the business objects, the repository, the seeder and the one-line bootstrap that
+    both hosts call. Polhem.Northwind.Server serves it over JSON-RPC to the Avalonia heads, and
+    Polhem.Northwind.Blazor runs it in its own process. AddNorthwindBackend extends WebApplicationBuilder,
+    hence the ASP.NET Core framework reference.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    Dogfooding the framework convention analyzers against this application's real definition files.
+    Two things have to be done by hand here that a package consumer gets for free: the analyzer has to
+    be referenced explicitly (analyzers do not flow through a ProjectReference), and the definition
+    files have to be listed as AdditionalFiles, because buildTransitive/Polhem.Definition.targets ships
+    inside the NuGet package and is not imported by a project reference. The definitions also live one
+    level up, at the solution root rather than beside this project — which for a package consumer is
+    what PolhemDefinitionFilesGlob is for.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+    <AdditionalFiles Include="..\Define\**\*.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Polhem.Business\Polhem.Business.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Db\Polhem.Db.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Hosting\Polhem.Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <!-- Force SQLitePCLRaw native bundle to 3.x (non-vulnerable SQLite engine); the 2.1.x
+         line carries advisory GHSA-2m69-gcr7-jv3q with no 2.x patch. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Northwind seed subset read by NorthwindSchemaSeeder at first run, from the output folder of whichever
+         host runs the backend; the copy flows to the projects that reference this one. -->
+    <None Update="SeedData\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

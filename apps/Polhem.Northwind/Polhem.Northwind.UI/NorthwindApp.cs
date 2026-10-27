@@ -9,7 +9,7 @@ namespace Polhem.Northwind.UI;
 /// </summary>
 /// <remarks>
 /// The values match what <c>Polhem.Northwind.Server</c> listens on and seeds. They are spelled out here rather than
-/// shared with the server's <c>NorthwindCredentials</c>: this project is a remote JSON-RPC client and references no
+/// shared with the backend's <c>NorthwindCredentials</c>: this project is a remote JSON-RPC client and references no
 /// server assembly.
 /// </remarks>
 public class NorthwindApp : ShellApplication
