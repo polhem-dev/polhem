@@ -11,7 +11,7 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
-## [Unreleased]
+## [1.10.0] - 2026-10-27
 
 Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1.10.0.md)
 
@@ -48,6 +48,30 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
   the live computation engine `FormLiveComputationEngine`.
 - DefineEditor lists the FormSchema expressions that would fail at run time, such as `amount * 1.05` on a decimal
   field, when it validates or saves a form, through the new `FormExpressionCalculator.ValidateExpressions`.
+
+- DefineEditor sets up a stored field's relation in a dialog: the related form comes from the solution's
+  `ProgramSettings`, each of its master fields maps to a destination that is added to the table when it is missing and
+  can be marked `LookupOnly` or `ValueChangeCallback`, and before applying the dialog lists what the result would
+  break.
+- DefineEditor adds and deletes a FormSchema's rules from its tree.
+- Syncing a form that already has `zh-TW` texts gives every new field a caption key to translate, relation fields
+  included.
+- DefineEditor names each recent solution after its own folder, shows where it is, dims one whose folder is gone, and
+  lets each be removed.
+- DefineEditor's **Databases** view is renamed **Table Schemas**, and on macOS its title bar carries a sidebar toggle.
+- `Polhem.UI.Avalonia`'s form and list views show a refused save or a rule message in a dismissible bar, move the
+  cursor to the first empty required field, and mark a caption required from the FormSchema as well as from the layout.
+- `GridControl`'s in-cell text editing replaces the value: the text is selected when a cell enters editing, a key
+  pressed on a selected cell starts the edit from that character, F2 keeps the caret at the end, and Escape abandons
+  the edit.
+- `Polhem.UI.Avalonia.Shell` keeps its content above the on-screen keyboard on phones and scrolls the focused editor
+  back into view.
+- `PropertyGridControl.ValueEditorProvider` gives a text or suggestion row a button that opens an editor the host
+  supplies, as `CollectionEditorProvider` does for a collection.
+- `ListItem.Text` returns the item's value when no text is set, so a drop-down shows the value instead of a blank
+  option.
+- The `polhem-avalonia` template's **Server + Browser** launch configuration starts the browser client as well, not
+  only the server.
 
 ## [1.9.0] - 2026-10-23
 

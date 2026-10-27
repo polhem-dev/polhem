@@ -10,7 +10,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
-## [Unreleased]
+## [1.10.0] - 2026-10-27
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.10.0.md](docs/zh-TW/changelogs/1.10.0.md)
 
@@ -39,6 +39,22 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.UI.Core` 新增兩端共用的欄位規則：`FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`，以及即時計算引擎 `FormLiveComputationEngine`。
 - DefineEditor 驗證或存檔表單時，會列出執行時會失敗的 FormSchema 運算式（例如 decimal 欄位寫成 `amount * 1.05`），
   透過新的 `FormExpressionCalculator.ValidateExpressions`。
+
+- DefineEditor 可在對話框中設定存檔欄位的關聯：關聯表單取自方案的 `ProgramSettings`，其主檔欄位各自對應到一個目的欄位
+  （資料表缺少時會新增），並可標記 `LookupOnly` 或 `ValueChangeCallback`；套用前會先列出結果會破壞什麼。
+- DefineEditor 可從樹狀結構新增與刪除 FormSchema 的規則。
+- 同步已有 `zh-TW` 文字的表單時，會為每個新欄位（含關聯欄位）補上可翻譯的標題 key。
+- DefineEditor 的最近使用方案改以方案資料夾命名、顯示所在位置、資料夾消失時變暗，並可逐項移除。
+- DefineEditor 的 **Databases** 檢視更名為 **Table Schemas**，macOS 的標題列新增側邊欄切換按鈕。
+- `Polhem.UI.Avalonia` 的表單與清單檢視改以可關閉的訊息列顯示被拒絕的存檔或規則訊息，並把游標移到第一個未填的必填欄位；
+  必填標題也改為依 FormSchema 與 layout 兩者判定。
+- `GridControl` 的儲存格內文字編輯改為取代原值：進入編輯時選取整段文字，在已選取的儲存格上按鍵即以該字元開始編輯，
+  F2 保留游標在尾端，Escape 放棄編輯。
+- `Polhem.UI.Avalonia.Shell` 在手機上把內容保持在螢幕鍵盤上方，並把取得焦點的編輯器捲回可見範圍。
+- `PropertyGridControl.ValueEditorProvider` 讓文字或建議輸入的屬性列帶一個按鈕，開啟由宿主提供的編輯器，
+  與 `CollectionEditorProvider` 之於集合相同。
+- `ListItem.Text` 在沒有設定文字時回傳項目的值，下拉因此顯示值而不是空白選項。
+- `polhem-avalonia` 範本的 **Server + Browser** 啟動設定會一併帶起瀏覽器用戶端，不再只起伺服器。
 
 ## [1.9.0] - 2026-10-23
 
