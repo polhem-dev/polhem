@@ -129,17 +129,59 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A lookup-only row whose source the related form's lookup does not return is reported")]
-        public void Messages_ReportSourceMissingFromLookup()
+        [DisplayName("A source the lookup does not return turns the server callback on, and the message says the callback fills it")]
+        public void SourceMissingFromLookup_TurnsCallbackOn()
         {
             var dialog = Dialog("customer_rowid");
             dialog.SearchText = "Customer";
+            Assert.False(dialog.ValueChangeCallback);
 
+            dialog.Rows.Single(r => r.SourceField == "zone_rowid").IsIncluded = true;
+
+            Assert.True(dialog.ValueChangeCallback);
+            Assert.Contains(dialog.Messages, m => m.Contains("zone_rowid", StringComparison.Ordinal)
+                && m.Contains("callback", StringComparison.OrdinalIgnoreCase));
+            _document.ApplyRelationSetup(dialog);
+            Assert.True(Field("customer_rowid").ValueChangeCallback);
+        }
+
+        [Fact]
+        [DisplayName("Once the user turns the callback off it stays off, and a source the lookup does not return is reported")]
+        public void CallbackTurnedOff_StaysOff_ReportsMissingSource()
+        {
+            var dialog = Dialog("customer_rowid");
+            dialog.SearchText = "Customer";
             var zone = dialog.Rows.Single(r => r.SourceField == "zone_rowid");
             zone.IsIncluded = true;
+
+            dialog.ValueChangeCallback = false;
             zone.LookupOnly = true;
 
-            Assert.Contains(dialog.Messages, m => m.Contains("zone_rowid", StringComparison.Ordinal) && m.Contains("LookupFields", StringComparison.Ordinal));
+            Assert.False(dialog.ValueChangeCallback);
+            Assert.Contains(dialog.Messages, m => m.Contains("zone_rowid", StringComparison.Ordinal)
+                && m.Contains("LookupFields", StringComparison.Ordinal)
+                && !m.Contains("fills", StringComparison.Ordinal));
+            _document.ApplyRelationSetup(dialog);
+            Assert.False(Field("customer_rowid").ValueChangeCallback);
+        }
+
+        [Fact]
+        [DisplayName("A field that already calls back keeps the flag, and removing the relation leaves it unchanged")]
+        public void ExistingCallback_IsKept_AndRemovalLeavesIt()
+        {
+            Field("customer_rowid").ValueChangeCallback = true;
+            var dialog = Dialog("customer_rowid");
+            dialog.SearchText = "Customer";
+            Assert.True(dialog.ValueChangeCallback);
+            _document.ApplyRelationSetup(dialog);
+
+            var again = Dialog("customer_rowid");
+            again.SearchText = "";
+            Assert.False(again.IsRelating);
+            _document.ApplyRelationSetup(again);
+
+            Assert.Equal(string.Empty, Field("customer_rowid").RelationProgId);
+            Assert.True(Field("customer_rowid").ValueChangeCallback);
         }
 
         [Fact]

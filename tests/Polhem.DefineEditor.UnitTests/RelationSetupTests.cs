@@ -245,11 +245,13 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A lookup-only source the related form's lookup query does not return is reported")]
+        [DisplayName("A source the related form's lookup query does not return is reported, whether the row is lookup-only or not")]
         public void SourcesMissingFromLookup_ReportsUnlistedSource()
         {
             var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
             Row(rows, "zone_rowid").IsIncluded = true;
+
+            Assert.Equal(["zone_rowid"], RelationSetup.SourcesMissingFromLookup(_customerForm, rows));
             Row(rows, "zone_rowid").LookupOnly = true;
 
             Assert.Equal(["zone_rowid"], RelationSetup.SourcesMissingFromLookup(_customerForm, rows));

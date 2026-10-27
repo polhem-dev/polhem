@@ -440,7 +440,9 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Relation_Unregistered" xml:space="preserve"><value>{0} is not registered in ProgramSettings.</value></data>
   <data name="Relation_NoFormSchema" xml:space="preserve"><value>{0} has no FormSchema in this solution, so it has no fields to map.</value></data>
   <data name="Relation_ForeignKeyRetyped" xml:space="preserve"><value>{0} will become a Guid field, since it holds the picked row's sys_rowid.</value></data>
-  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} is not in the LookupFields of {1}, so a pick cannot write it back.</value></data>
+  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} is not in the LookupFields of {1}, so a pick cannot write it back. Turn on the server callback below, or add it to LookupFields.</value></data>
+  <data name="Relation_ValueChangeCallback" xml:space="preserve"><value>Call back the server when this field changes (ValueChangeCallback), so it fills the fields the lookup does not return</value></data>
+  <data name="Relation_FilledByCallback" xml:space="preserve"><value>{0} is not in the LookupFields of {1}; the server callback fills it after a pick.</value></data>
   <data name="Relation_Removing" xml:space="preserve"><value>No form is selected: applying removes the relation of {0} and all its mappings.</value></data>
   <data name="Confirm_RemoveRelationTitle" xml:space="preserve"><value>Remove Relation</value></data>
   <data name="Confirm_RemoveRelationMessage" xml:space="preserve"><value>Remove the relation of {0} and all its mappings?</value></data>

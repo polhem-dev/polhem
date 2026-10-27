@@ -23,6 +23,7 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
     private bool _isRebuilding;
     private bool _isUnknownText;
     private bool _isLoaded;
+    private bool _isCallbackChosen;
 
     public RelationDialogViewModel(FormSchema schema, FormField field, SolutionContext solution)
     {
@@ -37,6 +38,7 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
         Choices = RelationProgramChoice.Build(settings, solution.FormSchemaPaths.Keys.ToList(), field.RelationProgId);
         _filteredChoices = Choices;
         _searchText = field.RelationProgId;
+        _valueChangeCallback = field.ValueChangeCallback;
         LoadForm(field.RelationProgId);
     }
 
@@ -70,6 +72,7 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedName))]
     [NotifyPropertyChangedFor(nameof(IsRemoving))]
+    [NotifyPropertyChangedFor(nameof(IsRelating))]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
     private string _progId = string.Empty;
 
@@ -81,6 +84,20 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasOrphans))]
     [NotifyPropertyChangedFor(nameof(OrphansText))]
     private IReadOnlyList<string> _orphans = [];
+
+    /// <summary>
+    /// Whether the field calls back the server when its value changes (<see cref="FormField.ValueChangeCallback"/>),
+    /// so the server fills the fields the related form's lookup does not return.
+    /// </summary>
+    /// <remarks>
+    /// Until the user changes it, it follows the rows: on when an included source is missing from the lookup, and
+    /// always on for a field that already had the flag, since its form's BO may use it for logic of its own.
+    /// </remarks>
+    [ObservableProperty]
+    private bool _valueChangeCallback;
+
+    /// <summary>Whether applying would relate the field to a form, so <see cref="ValueChangeCallback"/> applies.</summary>
+    public bool IsRelating => ProgId.Length > 0;
 
     /// <summary>Whether applying also removes <see cref="Orphans"/>.</summary>
     [ObservableProperty]
@@ -117,6 +134,13 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
             LoadForm(match?.ProgId ?? string.Empty);
         else
             LoadForm(null);
+    }
+
+    partial void OnValueChangeCallbackChanged(bool value)
+    {
+        if (_isRebuilding) return;
+        _isCallbackChosen = true;
+        Recompute();
     }
 
     partial void OnSelectedChoiceChanged(RelationProgramChoice? value)
@@ -189,8 +213,15 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
             {
                 if (Field.DbType != Polhem.Core.Data.FieldDbType.Guid)
                     messages.Add(L("Relation_ForeignKeyRetyped", Field.FieldName));
-                foreach (var source in RelationSetup.SourcesMissingFromLookup(_sourceSchema, rows))
-                    messages.Add(L("Relation_NotInLookupFields", source, ProgId));
+                var missing = RelationSetup.SourcesMissingFromLookup(_sourceSchema, rows);
+                if (!_isCallbackChosen) ValueChangeCallback = Field.ValueChangeCallback || missing.Count > 0;
+                if (ValueChangeCallback && missing.Count > 0)
+                    messages.Add(L("Relation_FilledByCallback", string.Join(", ", missing), ProgId));
+                else
+                {
+                    foreach (var source in missing)
+                        messages.Add(L("Relation_NotInLookupFields", source, ProgId));
+                }
                 messages.AddRange(RelationSetup.NewIssues(_schema, Field, ProgId, rows, _solution.AvailableProgIds));
             }
             if (IsRemoving && !_isUnknownText) messages.Add(L("Relation_Removing", Field.FieldName));
@@ -211,7 +242,13 @@ public sealed partial class RelationDialogViewModel : ViewModelBase
     /// <summary>
     /// Writes the dialog's result to <see cref="Field"/> and its table.
     /// </summary>
-    public RelationSetupChanges ApplyTo() => RelationSetup.Apply(Field, ProgId, Rows.ToList(), RemoveOrphans);
+    /// <remarks>Removing the relation leaves <see cref="FormField.ValueChangeCallback"/> as it was.</remarks>
+    public RelationSetupChanges ApplyTo()
+    {
+        var changes = RelationSetup.Apply(Field, ProgId, Rows.ToList(), RemoveOrphans);
+        if (IsRelating) Field.ValueChangeCallback = ValueChangeCallback;
+        return changes;
+    }
 
     private static bool IsProgId(string? a, string? b) => string.Equals(a ?? string.Empty, b ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 }

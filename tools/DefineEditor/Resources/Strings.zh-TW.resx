@@ -427,7 +427,9 @@
   <data name="Relation_Unregistered" xml:space="preserve"><value>{0} 未登記在 ProgramSettings。</value></data>
   <data name="Relation_NoFormSchema" xml:space="preserve"><value>{0} 在此方案中沒有 FormSchema，沒有欄位可對應。</value></data>
   <data name="Relation_ForeignKeyRetyped" xml:space="preserve"><value>{0} 會改為 Guid 欄位（存放選取列的 sys_rowid）。</value></data>
-  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} 不在 {1} 的 LookupFields 中，選取時無法帶回。</value></data>
+  <data name="Relation_NotInLookupFields" xml:space="preserve"><value>{0} 不在 {1} 的 LookupFields 中，選取時無法帶回；請勾選下方的回呼後端，或把它加進 LookupFields。</value></data>
+  <data name="Relation_ValueChangeCallback" xml:space="preserve"><value>欄位值異動時回呼後端（ValueChangeCallback），由後端帶回開窗查詢沒有的欄位</value></data>
+  <data name="Relation_FilledByCallback" xml:space="preserve"><value>{0} 不在 {1} 的 LookupFields 中，選取後由回呼後端帶回。</value></data>
   <data name="Relation_Removing" xml:space="preserve"><value>未選擇表單：確定後會移除 {0} 的關聯與所有對應。</value></data>
   <data name="Confirm_RemoveRelationTitle" xml:space="preserve"><value>移除關聯</value></data>
   <data name="Confirm_RemoveRelationMessage" xml:space="preserve"><value>要移除 {0} 的關聯與所有對應嗎？</value></data>

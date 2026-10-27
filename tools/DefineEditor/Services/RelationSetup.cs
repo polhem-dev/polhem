@@ -172,15 +172,19 @@ public static class RelationSetup
     }
 
     /// <summary>
-    /// The included lookup-only rows whose source field the related form's lookup query does not return, so a pick
-    /// cannot write them back.
+    /// The included rows whose source field the related form's lookup query does not return, so a pick cannot write
+    /// them back unless the field calls back the server (<see cref="FormField.ValueChangeCallback"/>).
     /// </summary>
+    /// <remarks>
+    /// A regular mapping counts as well as a lookup-only one: a pick writes every mapping from the lookup result, and
+    /// the server's join only fills the regular ones when the record is read again.
+    /// </remarks>
     public static IReadOnlyList<string> SourcesMissingFromLookup(FormSchema? sourceSchema, IReadOnlyList<RelationSetupRow> rows)
     {
         ArgumentNullException.ThrowIfNull(rows);
         if (sourceSchema is null) return [];
         var lookup = sourceSchema.GetLookupFields().Select(f => f.FieldName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return rows.Where(r => r.IsIncluded && r.LookupOnly && !r.IsSourceMissing && !lookup.Contains(r.SourceField))
+        return rows.Where(r => r.IsIncluded && !r.IsSourceMissing && !lookup.Contains(r.SourceField))
             .Select(r => r.SourceField)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
