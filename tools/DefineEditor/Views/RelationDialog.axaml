@@ -6,11 +6,11 @@
         xmlns:loc="using:Polhem.DefineEditor.Markup"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="Polhem.DefineEditor.Views.RelationDialog"
         x:DataType="vm:RelationDialogViewModel"
         x:CompileBindings="True"
-        Width="900" Height="600" MinWidth="640" MinHeight="420"
+        Width="1100" Height="600" MinWidth="880" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Title="{Binding Title}">
@@ -66,7 +66,7 @@
                       CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                       SelectionMode="Single">
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="{loc:Loc Relation_Include}" Width="56">
+                    <DataGridTemplateColumn Header="{loc:Loc Relation_Include}" Width="64">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
                                 <CheckBox IsChecked="{Binding IsIncluded, Mode=TwoWay}" HorizontalAlignment="Center"/>
@@ -81,7 +81,8 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{loc:Loc Relation_Caption}" Width="*">
+                    <!-- The only star column; without a minimum the fixed columns squeeze it to nothing. -->
+                    <DataGridTemplateColumn Header="{loc:Loc Relation_Caption}" Width="*" MinWidth="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
                                 <TextBlock Text="{Binding SourceCaption}" VerticalAlignment="Center" Margin="6,0"
@@ -96,7 +97,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{loc:Loc Relation_Destination}" Width="200">
+                    <DataGridTemplateColumn Header="{loc:Loc Relation_Destination}" Width="220">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
                                 <TextBox Text="{Binding DestinationField, Mode=TwoWay}" IsEnabled="{Binding IsIncluded}"
@@ -104,7 +105,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{loc:Loc Relation_LookupOnly}" Width="80">
+                    <DataGridTemplateColumn Header="{loc:Loc Relation_LookupOnly}" Width="112">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
                                 <CheckBox IsChecked="{Binding LookupOnly, Mode=TwoWay}" IsEnabled="{Binding IsIncluded}"
