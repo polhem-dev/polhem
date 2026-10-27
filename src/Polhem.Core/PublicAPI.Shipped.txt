@@ -125,6 +125,7 @@ Polhem.Core.Expressions.IExpressionEvaluator
 Polhem.Core.Expressions.IExpressionEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object?
 Polhem.Core.Expressions.IExpressionEvaluator.Evaluate<T>(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> T
 Polhem.Core.Expressions.IExpressionEvaluator.GetReferencedVariables(string! expression) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Core.Expressions.IExpressionEvaluator.Validate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> void
 Polhem.Core.FileUtilities
 Polhem.Core.FrameworkClock
 Polhem.Core.IKeyObject

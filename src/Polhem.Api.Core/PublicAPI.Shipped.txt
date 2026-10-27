@@ -174,6 +174,24 @@ Polhem.Api.Core.Messages.Form.DeleteResponse
 Polhem.Api.Core.Messages.Form.DeleteResponse.DeleteResponse() -> void
 Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected.get -> int
 Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.FieldName.get -> string!
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.FieldName.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.FieldValueChangeRequest() -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Row.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Row.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.TableName.get -> string!
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.TableName.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Value.get -> string!
+Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Value.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Errors.get -> System.Collections.Generic.Dictionary<string!, string!>!
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Errors.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.FieldValueChangeResponse() -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Values.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Values.set -> void
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Warnings.get -> System.Collections.Generic.Dictionary<string!, string!>!
+Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Warnings.set -> void
 Polhem.Api.Core.Messages.Form.GetDataRequest
 Polhem.Api.Core.Messages.Form.GetDataRequest.GetDataRequest() -> void
 Polhem.Api.Core.Messages.Form.GetDataRequest.RowId.get -> System.Guid

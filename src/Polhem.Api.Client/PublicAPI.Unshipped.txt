@@ -1,2 +1,1 @@
 #nullable enable
-virtual Polhem.Api.Client.Connectors.FormApiConnector.FieldValueChangeAsync(string! tableName, string! fieldName, string! value, System.Data.DataTable? row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.FieldValueChangeResponse!>!

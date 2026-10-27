@@ -24,6 +24,7 @@ Polhem.UI.Core.Connectors.FormListResult.Paging.get -> Polhem.Definition.Paging.
 Polhem.UI.Core.Connectors.FormListResult.Paging.init -> void
 Polhem.UI.Core.Connectors.FormListResult.Table.get -> System.Data.DataTable?
 Polhem.UI.Core.Connectors.FormListResult.Table.init -> void
+Polhem.UI.Core.Connectors.ListSelectFields
 Polhem.UI.Core.Definitions.IFormDefinitionSource
 Polhem.UI.Core.Definitions.IFormDefinitionSource.GetCurrencySettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.CurrencySettings?>!
 Polhem.UI.Core.Definitions.IFormDefinitionSource.GetFormLayoutAsync(string! progId, Polhem.Definition.Forms.FormSchema! schema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
@@ -35,13 +36,66 @@ Polhem.UI.Core.Definitions.StorageDefinitionSource.GetFormLayoutAsync(string! pr
 Polhem.UI.Core.Definitions.StorageDefinitionSource.GetFormSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema!>!
 Polhem.UI.Core.Definitions.StorageDefinitionSource.GetUnitSettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.UnitSettings?>!
 Polhem.UI.Core.Definitions.StorageDefinitionSource.StorageDefinitionSource(Polhem.Definition.Storage.IDefineStorage! storage) -> void
+Polhem.UI.Core.Fields.DateTimeFieldFormat
+Polhem.UI.Core.Fields.FieldCaptionRules
+Polhem.UI.Core.Fields.FieldEditRules
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Errors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FieldName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FieldValueChangeAppliedEventArgs(string! tableName, string! fieldName, System.Data.DataRow! row, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! errors, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! warnings) -> void
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FormatMessages(Polhem.Definition.Forms.FormTable? table) -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.HasMessages.get -> bool
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.TableName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Warnings.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Applied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.CallsBack(string! tableName, string! fieldName) -> bool
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Failed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.FieldValueChangeCoordinator(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Contracts.Form.IFieldValueChangeConnector! connector, System.Action<System.Data.DataRow!, string!, string?>! writeValue) -> void
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnFieldValueChangedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnLookupSelectedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.Exception.get -> System.Exception!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.FieldName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.FieldValueChangeFailedEventArgs(string! tableName, string! fieldName, System.Data.DataRow! row, System.Exception! exception) -> void
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.TableName.get -> string!
+Polhem.UI.Core.Fields.FieldValueFormatter
+Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.LookupSelection = 1 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.RowEditCommit = 3 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.User = 0 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.ValueChangeResult = 2 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.GridCellFormatter
+Polhem.UI.Core.Fields.LookupDisplay
+Polhem.UI.Core.Fields.LookupFieldRules
+Polhem.UI.Core.Fields.NumericFieldFormat
 Polhem.UI.Core.FormDataGuard
+Polhem.UI.Core.FormLiveComputationEngine
+Polhem.UI.Core.FormLiveComputationEngine.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Core.FormLiveComputationEngine.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
+Polhem.UI.Core.FormLiveComputationEngine.Degraded -> System.EventHandler?
+Polhem.UI.Core.FormLiveComputationEngine.FormLiveComputationEngine(Polhem.Definition.Forms.FormSchema! schema, Polhem.Core.Expressions.IExpressionEvaluator! evaluator, System.Func<string!>! timeZoneProvider, Polhem.Definition.RoundingContext? roundingContext = null) -> void
+Polhem.UI.Core.FormLiveComputationEngine.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Core.FormLiveComputationEngine.IsDegraded.get -> bool
+Polhem.UI.Core.FormLiveComputationEngine.IsRecomputing.get -> bool
+Polhem.UI.Core.FormLiveComputationEngine.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.UI.Core.FormValueBinding
 Polhem.UI.Core.IUserContext
 Polhem.UI.Core.IUserContext.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
 Polhem.UI.Core.IUserContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 Polhem.UI.Core.IUserContext.DefaultLanguage.get -> string!
 Polhem.UI.Core.IUserContext.User.get -> Polhem.Definition.Identity.UserInfo?
+Polhem.UI.Core.LiveComputationDegradation
+Polhem.UI.Core.LiveComputationDegradation.DisplayText.get -> string!
+Polhem.UI.Core.LiveComputationDegradation.Exception.get -> System.Exception!
+Polhem.UI.Core.LiveComputationDegradation.Expression.get -> string?
+Polhem.UI.Core.LiveComputationDegradation.Field.get -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Core.LiveComputationDegradation.FormatMessage(Microsoft.Extensions.Localization.IStringLocalizer! localizer) -> string!
+Polhem.UI.Core.LiveComputationDegradation.LiveComputationDegradation(Polhem.Definition.Forms.FormTable! table, Polhem.Definition.Forms.FormField? field, System.Exception! exception) -> void
+Polhem.UI.Core.LiveComputationDegradation.Reason.get -> string!
+Polhem.UI.Core.LiveComputationDegradation.Table.get -> Polhem.Definition.Forms.FormTable!
 Polhem.UI.Core.Permissions.ElementCapabilityResolver
 Polhem.UI.Core.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
 Polhem.UI.Core.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
@@ -58,7 +112,9 @@ Polhem.UI.Core.Permissions.FieldCapability.Visible.init -> void
 Polhem.UI.Core.Permissions.IElementCapabilityResolver
 Polhem.UI.Core.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
 Polhem.UI.Core.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
+Polhem.UI.Core.Permissions.LayoutCapabilityApplier
 Polhem.UI.Core.UIServices
+const Polhem.UI.Core.Fields.LookupDisplay.Separator = " - " -> string!
 override Polhem.UI.Core.Connectors.FormDataResult.Equals(object? obj) -> bool
 override Polhem.UI.Core.Connectors.FormDataResult.GetHashCode() -> int
 override Polhem.UI.Core.Connectors.FormDataResult.ToString() -> string!
@@ -75,6 +131,31 @@ static Polhem.UI.Core.Connectors.FormDeleteResult.operator !=(Polhem.UI.Core.Con
 static Polhem.UI.Core.Connectors.FormDeleteResult.operator ==(Polhem.UI.Core.Connectors.FormDeleteResult? left, Polhem.UI.Core.Connectors.FormDeleteResult? right) -> bool
 static Polhem.UI.Core.Connectors.FormListResult.operator !=(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
 static Polhem.UI.Core.Connectors.FormListResult.operator ==(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
+static Polhem.UI.Core.Connectors.ListSelectFields.For(Polhem.Definition.Forms.FormSchema! schema) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatBindingValue(string? bindingValue) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatDisplay(System.DateTime value) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.GetInputPattern(System.Globalization.CultureInfo! culture) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.ToBindingValue(System.DateTime value) -> string!
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseBindingValue(string? bindingValue, out System.DateTime value) -> bool
+static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseInput(string? input, out System.DateTime value) -> bool
+static Polhem.UI.Core.Fields.FieldCaptionRules.FormatCaption(string! caption, bool readOnly) -> string!
+static Polhem.UI.Core.Fields.FieldCaptionRules.ShowsRequiredCue(bool readOnly, bool required) -> bool
+static Polhem.UI.Core.Fields.FieldEditRules.AllowsEdit(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Layouts.LayoutFieldBase? layoutField) -> bool
+static Polhem.UI.Core.Fields.FieldValueFormatter.Format(object? raw, string! displayFormat, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.ComposeDisplayText(System.Data.DataRow? row, System.Collections.Generic.IReadOnlyList<string!>! displayFields, string! displayFormat, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.FormatCell(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
+static Polhem.UI.Core.Fields.GridCellFormatter.FormatColumnText(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
+static Polhem.UI.Core.Fields.LookupDisplay.Compose(System.Collections.Generic.IEnumerable<string!>! values) -> string!
+static Polhem.UI.Core.Fields.LookupFieldRules.ApplySelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Action<string!, string?>! setField) -> void
+static Polhem.UI.Core.Fields.LookupFieldRules.ClearSelection(Polhem.Definition.Forms.FormField! field, System.Action<string!, string?>! setField) -> void
+static Polhem.UI.Core.Fields.LookupFieldRules.HasLookup(Polhem.Definition.Forms.FormField? field) -> bool
+static Polhem.UI.Core.Fields.LookupFieldRules.ResolveDisplayFieldNames(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForDisplay(string! raw, string! numberFormat) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForEditing(string! raw) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField, System.Data.DataRow? row, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, string! defaultUnitCode) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.ToWriteBackValue(string? text, string! lastRaw) -> string!
+static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseInput(string? text, out decimal value) -> bool
+static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseRaw(string? raw, out decimal value) -> bool
 static Polhem.UI.Core.FormDataGuard.RequireConnector<TConnector>(TConnector? connector, string! operation) -> TConnector!
 static Polhem.UI.Core.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
 static Polhem.UI.Core.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
@@ -85,6 +166,8 @@ static Polhem.UI.Core.FormValueBinding.ToColumnValue(string? value, System.Data.
 static Polhem.UI.Core.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool
 static Polhem.UI.Core.Permissions.FieldCapability.operator !=(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
 static Polhem.UI.Core.Permissions.FieldCapability.operator ==(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
+static Polhem.UI.Core.Permissions.LayoutCapabilityApplier.Apply(Polhem.Definition.Layouts.FormLayout? layout, Polhem.Definition.Forms.FormSchema? schema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> void
+static Polhem.UI.Core.Permissions.LayoutCapabilityApplier.ApplyGrid(Polhem.Definition.Layouts.LayoutGrid? grid, Polhem.Definition.Forms.FormSchema? schema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> void
 static Polhem.UI.Core.UIServices.Get<T>() -> T?
 static Polhem.UI.Core.UIServices.Provider.get -> System.IServiceProvider?
 static Polhem.UI.Core.UIServices.Provider.set -> void
