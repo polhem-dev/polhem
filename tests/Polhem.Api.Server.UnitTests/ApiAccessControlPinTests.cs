@@ -40,6 +40,7 @@ namespace Polhem.Api.Server.UnitTests
             { "BusinessObject.ExecFunc", ("Public", "Authenticated") },
             { "BusinessObject.ExecFuncAnonymous", ("Public", "Anonymous") },
             { "FormBusinessObject.Delete", ("Public", "Authenticated") },
+            { "FormBusinessObject.FieldValueChange", ("Public", "Authenticated") },
             { "FormBusinessObject.GetData", ("Public", "Authenticated") },
             { "FormBusinessObject.GetList", ("Public", "Authenticated") },
             { "FormBusinessObject.GetLookup", ("Public", "Authenticated") },
