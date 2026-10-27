@@ -24,7 +24,7 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 - [3 分鐘精華版](https://youtu.be/OAlAgAuGdKE)
 - [完整版](https://youtu.be/5WjUTwoPyGw)（約 10 分鐘）
 
-以 Polhem 1.8.0 錄製；英文旁白，附英文與繁體中文字幕。
+以 Polhem 1.9.0 錄製；英文旁白，附英文與繁體中文字幕。
 
 ## ✨ 特色
 
