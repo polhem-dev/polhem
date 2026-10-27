@@ -294,7 +294,8 @@ namespace Polhem.Business.UnitTests.Form
                 DepartmentSchema = inner.GetFormSchema("Department");
 
                 var databaseId = TestDbConventions.GetDatabaseId(dbType, CategoryId);
-                DbAccess = fx.NewDbAccess(databaseId);
+                // Opened on first use: the tests that never read a row must not need the database.
+                _dbAccess = new Lazy<DbAccess>(() => fx.NewDbAccess(databaseId));
                 var repositoryContext = TestRepositoryContext.Create(fx.GetRequiredService<IDbConnectionManager>(),
                     defineAccess: defineAccess, dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>());
                 var employees = new DataFormRepository(repositoryContext, "Employee", EmployeeSchema, databaseId);
@@ -318,7 +319,9 @@ namespace Polhem.Business.UnitTests.Form
             }
 
             public DatabaseType DbType { get; }
-            public DbAccess DbAccess { get; }
+            private readonly Lazy<DbAccess> _dbAccess;
+
+            public DbAccess DbAccess => _dbAccess.Value;
             public FormSchema EmployeeSchema { get; }
             public FormSchema DepartmentSchema { get; }
             public IBusinessObjectContext Context { get; }
