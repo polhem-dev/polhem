@@ -14,7 +14,7 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId and a working backend.
+    /// Covers <see cref="FormPage.OnParametersSetAsync"/> with a valid ProgId and a working backend.
     /// A <see cref="FakeApiServer"/> simulates the full
     /// initialization path, covering the schema fetch, layout creation, DataObject creation and ReloadList inside the try block.
     /// </summary>
@@ -61,18 +61,18 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             return schema;
         }
 
-        private static async Task InvokeOnInitializedAsync(FormPage page)
+        private static async Task InvokeOnParametersSetAsync(FormPage page)
         {
             var method = typeof(FormPage).GetMethod(
-                "OnInitializedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+                "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;
             await task;
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync completes initialization without setting _error for a valid ProgId and a working backend")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_CompletesWithoutError()
+        [DisplayName("OnParametersSetAsync completes initialization without setting _error for a valid ProgId and a working backend")]
+        public async Task OnParametersSetAsync_ValidProgIdAndWorkingBackend_CompletesWithoutError()
         {
             var schema = BuildSchema();
             var page = new FormPage();
@@ -80,7 +80,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .SetValue(page, "TestProg");
             Inject(page, schema);
 
-            await InvokeOnInitializedAsync(page);
+            await InvokeOnParametersSetAsync(page);
 
             var error = typeof(FormPage).GetField(
                 "_error", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page) as string;
@@ -88,8 +88,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync sets _isInitializing to false for a valid ProgId and a working backend")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_SetsIsInitializingFalse()
+        [DisplayName("OnParametersSetAsync sets _isInitializing to false for a valid ProgId and a working backend")]
+        public async Task OnParametersSetAsync_ValidProgIdAndWorkingBackend_SetsIsInitializingFalse()
         {
             var schema = BuildSchema();
             var page = new FormPage();
@@ -97,7 +97,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .SetValue(page, "TestProg");
             Inject(page, schema);
 
-            await InvokeOnInitializedAsync(page);
+            await InvokeOnParametersSetAsync(page);
 
             var isInitializing = (bool)typeof(FormPage).GetField(
                 "_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page)!;
@@ -105,8 +105,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync sets _dataObject to non-null for a valid ProgId and a working backend")]
-        public async Task OnInitializedAsync_ValidProgIdAndWorkingBackend_SetsDataObjectNonNull()
+        [DisplayName("OnParametersSetAsync sets _dataObject to non-null for a valid ProgId and a working backend")]
+        public async Task OnParametersSetAsync_ValidProgIdAndWorkingBackend_SetsDataObjectNonNull()
         {
             var schema = BuildSchema();
             var page = new FormPage();
@@ -114,7 +114,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .SetValue(page, "TestProg");
             Inject(page, schema);
 
-            await InvokeOnInitializedAsync(page);
+            await InvokeOnParametersSetAsync(page);
 
             var dataObject = typeof(FormPage).GetField(
                 "_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page);

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Localization;
 using Polhem.Api.Client;
 using Polhem.Definition.Language;
 using Polhem.JsonRpc.Payload;
+using Polhem.UI.Core;
+using Polhem.Web.Blazor.Server.Identity;
 
 namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
@@ -15,7 +17,8 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// <summary>
         /// Registers Polhem Blazor Server services: the resolved
         /// <see cref="PolhemBlazorOptions"/>, a <see cref="PolhemApiClient"/> per circuit, created with the
-        /// configured provider, and the
+        /// configured provider, a <see cref="CircuitUserContext"/> per circuit, also as its
+        /// <see cref="IUserContext"/>, and the
         /// <see cref="IStringLocalizer{T}"/> of <see cref="PolhemUIText"/> the components read their
         /// own text from.
         /// </summary>
@@ -49,6 +52,10 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
                 // encodes its calls uses the same compressor and encryptor on both ends.
                 ? PolhemApiClient.CreateLocal(sp, sp.GetService<PayloadOptions>())
                 : PolhemApiClient.CreateRemote(options.Endpoint, options.ApiKey));
+            // Scoped for the same reason as the client. TryAdd for the interface, so a host can supply its own
+            // context; the pages read the interface.
+            services.AddScoped<CircuitUserContext>();
+            services.TryAddScoped<IUserContext>(sp => sp.GetRequiredService<CircuitUserContext>());
             // The components' own text. TryAdd, so a host that registered its own localizer for
             // PolhemUIText — before or instead of this call — keeps it. The default answers from the
             // host's language resources when an in-process backend registered them, then from the

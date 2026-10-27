@@ -290,3 +290,13 @@ Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldValueChange
 Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Origin.get -> Polhem.UI.Core.Fields.FieldValueOrigin
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChangeApplied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChangeFailed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+Polhem.Web.Blazor.Server.Components.FormPage.Dispose() -> void
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! response) -> void
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.CircuitUserContext(Polhem.Api.Client.PolhemApiClient! client, Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options) -> void
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.DefaultLanguage.get -> string!
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.EnterCompanyAsync(string! companyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.EnterCompanyResponse!>!
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.SignOut() -> void
+Polhem.Web.Blazor.Server.Identity.CircuitUserContext.User.get -> Polhem.Definition.Identity.UserInfo?

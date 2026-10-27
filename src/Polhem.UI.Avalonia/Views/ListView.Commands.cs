@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
-using Polhem.UI.Avalonia.Permissions;
 using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views

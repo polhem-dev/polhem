@@ -34,7 +34,8 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
 ```
 
 `AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `PolhemApiClient` that components inject to reach
-the backend (each circuit signs in on its own client, so one user's identity never reaches another's calls), and the
+the backend (each circuit signs in on its own client, so one user's identity never reaches another's calls), a
+per-circuit `CircuitUserContext` (also registered as the circuit's `IUserContext`), and the
 localizer for the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
 decides whether `FormPage` localizes its definitions; see below.
 
@@ -62,7 +63,13 @@ decides whether `FormPage` localizes its definitions; see below.
   rounds authoritatively on save. Detail tables render as grids below the master fields. On a viewport narrower
   than `CompactWidthThreshold` (600 CSS pixels by default) the form switches to its compact layout, measured by a
   `CompactViewportObserver`; setting `IsCompact` fixes the layout instead, and `DetailEditMode` picks the detail
-  editing model outside it.
+  editing model outside it. The page loads again when `ProgId` changes, so one routed page (`/form/{ProgId}`) can serve
+  every program. A failed load, save or delete is shown as a notice above the form, which keeps what the user entered;
+  only a page that cannot load its definitions shows the error in place of the form. With a capability snapshot on the
+  circuit's `IUserContext`, New, Save and Delete are hidden when the user lacks `Create`, `Create` or `Update`, and
+  `Delete` on the form's permission model, and sensitive fields are hidden or read-only by their category, through
+  `LayoutCapabilityApplier` (`Polhem.UI.Core`); the numbers preview with the entered company's decimals. The backend
+  still checks every call.
 - `CompactViewportObserver` -- renders nothing and raises `CompactChanged` when the browser's viewport crosses
   `CompactWidthThreshold`. A page that uses `FormLayoutPresenter` directly places one next to it and passes the value
   to `IsCompact`. It measures the viewport through a small JavaScript module that ships in the package and loads
@@ -96,7 +103,12 @@ decides whether `FormPage` localizes its definitions; see below.
   target schema and connector from its parameters, else from an `IFormDefinitionSource` and an
   `IFormApiConnectorFactory` registered in the container (scoped, so each circuit has its own), else from the circuit's
   `PolhemApiClient`; an application with a Polhem backend registers nothing.
-- `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`.
+- `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`. A successful sign-in is
+  also recorded on the circuit's `CircuitUserContext`.
+- `CircuitUserContext` -- the signed-in user, entered company and capabilities of one circuit. The host enters the
+  company with `EnterCompanyAsync` and signs out with `SignOut`, which keep the context and the client in step.
+  Entering the company through the client directly leaves the context without capabilities, so the pages treat the
+  user as unrestricted.
 - `PolhemAccessTokenProvider` -- holds the page's signed-in state (the access token) and cascades it to descendant
   components. The calls themselves use the circuit's `PolhemApiClient`, which the sign-in has signed in.
 - `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
