@@ -42,12 +42,17 @@ namespace Polhem.UI.Core.Fields
         /// the source field of every <see cref="FormField.RelationFieldMappings"/> entry into its local
         /// destination field, <see cref="FieldMapping.LookupOnly"/> entries included.
         /// </summary>
+        /// <remarks>
+        /// A field marked <see cref="FormField.ValueChangeCallback"/> is filled by the server after the pick
+        /// (<see cref="FieldValueChangeCoordinator"/>), so its sources need not be in the target form's lookup
+        /// field set: those the selection has are written at once for display, the others are left to the callback.
+        /// </remarks>
         /// <param name="field">The lookup field.</param>
         /// <param name="selectedRow">The row picked in the lookup.</param>
         /// <param name="setField">Writes a binding string to a local field by name.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when <paramref name="selectedRow"/> lacks <c>sys_rowid</c> or a mapped source field: the
-        /// mapping must stay within the target form's lookup field set.
+        /// Thrown when <paramref name="selectedRow"/> lacks <c>sys_rowid</c>, or lacks a mapped source field of a
+        /// field that does not call back: such a mapping must stay within the target form's lookup field set.
         /// </exception>
         public static void ApplySelection(FormField field, DataRow selectedRow, Action<string, string?> setField)
         {
@@ -63,11 +68,14 @@ namespace Polhem.UI.Core.Fields
             foreach (var mapping in ResolveMappings(field))
             {
                 // A silently skipped mapping would leave stale display values behind, so a source field
-                // outside the lookup result is a hard error.
+                // outside the lookup result is a hard error, unless the server fills it through the callback.
                 if (!selectedRow.Table.Columns.Contains(mapping.SourceField))
+                {
+                    if (field.ValueChangeCallback) { continue; }
                     throw new InvalidOperationException(
                         $"Lookup source field '{mapping.SourceField}' is not in the lookup result; " +
                         $"declare it in the LookupFields of form '{field.RelationProgId}'.");
+                }
                 setField(mapping.DestinationField, FormValueBinding.ToBindingString(selectedRow[mapping.SourceField]));
             }
         }

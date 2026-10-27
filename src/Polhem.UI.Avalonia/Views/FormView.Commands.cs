@@ -7,6 +7,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Avalonia.Permissions;
+using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
@@ -68,6 +69,8 @@ namespace Polhem.UI.Avalonia.Views
             _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
             _dataObject.RowEditFieldChanged += OnLiveRowEditFieldChanged;
             _dataObject.RowAdded += OnLiveRowAdded;
+            _dataObject.FieldValueChangeApplied += OnFieldValueChangeApplied;
+            _dataObject.FieldValueChangeFailed += OnFieldValueChangeFailed;
             string layoutProgId = string.IsNullOrEmpty(ProgId) ? Schema.ProgId : ProgId;
             _formLayout = await ResolveLayoutAsync(layoutProgId, cancellationToken).ConfigureAwait(true);
             // Degrade the layout against the cached capability snapshot before it
@@ -189,6 +192,20 @@ namespace Polhem.UI.Avalonia.Views
             if (_liveComputation is null || _liveComputation.IsRecomputing) { return; }
             _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
         }
+
+        /// <summary>
+        /// Shows what a server callback reported on the fields, the same way the required-field check reports, and
+        /// refreshes the detail grid its values landed in: a grid's realized cells do not follow a write on their own.
+        /// </summary>
+        private void OnFieldValueChangeApplied(object? sender, FieldValueChangeAppliedEventArgs e)
+        {
+            RefreshDetailGrid(e.TableName);
+            if (e.HasMessages)
+                ShowMessage(e.FormatMessages(Schema?.Tables?.GetOrDefault(e.TableName)));
+        }
+
+        private void OnFieldValueChangeFailed(object? sender, FieldValueChangeFailedEventArgs e)
+            => ReportError(e.Exception);
 
         /// <summary>
         /// Tells the user that the form's computed fields stopped following their sources, naming the field and

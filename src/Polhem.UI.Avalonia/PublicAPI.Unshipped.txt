@@ -5,3 +5,7 @@ Polhem.UI.Avalonia.Views.FormView.LiveComputationDegraded -> System.EventHandler
 Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProvider.get -> System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Func<System.Threading.Tasks.Task<bool>!>?>?
 Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProvider.set -> void
 static readonly Polhem.UI.Avalonia.Controls.PropertyGridControl.ValueEditorProviderProperty -> Avalonia.StyledProperty<System.Func<System.ComponentModel.PropertyDescriptor!, object!, System.Func<System.Threading.Tasks.Task<bool>!>?>?>!
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin) -> void
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.Origin.get -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Avalonia.DataObjects.FormDataObject.FieldValueChangeApplied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.FieldValueChangeFailed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?

@@ -286,3 +286,7 @@ Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.get -> Polhem.Web.Bl
 Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.set -> void
 Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.get -> bool?
 Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.set -> void
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin) -> void
+Polhem.Web.Blazor.Server.DataObjects.FieldValueChangedEventArgs.Origin.get -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChangeApplied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FieldValueChangeFailed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?

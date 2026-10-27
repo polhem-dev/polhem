@@ -8,6 +8,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Controls;
+using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
@@ -183,6 +184,8 @@ namespace Polhem.Web.Blazor.Server.Components
                 _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
                 _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
                 _dataObject.RowAdded += OnLiveRowAdded;
+                _dataObject.FieldValueChangeApplied += OnFieldValueChangeApplied;
+                _dataObject.FieldValueChangeFailed += OnFieldValueChangeFailed;
                 await ReloadListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -222,6 +225,22 @@ namespace Polhem.Web.Blazor.Server.Components
             Services?.GetService<ILogger<FormPage>>()?.LogWarning(degradation.Exception,
                 "Live computation of form {ProgId} stopped at table {TableName}, field {FieldName}, expression {Expression}.",
                 ProgId, degradation.Table.TableName, degradation.Field?.FieldName, degradation.Expression);
+            _ = InvokeAsync(StateHasChanged);
+        }
+
+        // A server callback answers after the edit that started it has rendered, so the page re-renders itself to show
+        // the values it wrote and what it reported, the way the required-field check reports. A failure leaves the
+        // form on screen, so it is a notice too.
+        private void OnFieldValueChangeApplied(object? sender, FieldValueChangeAppliedEventArgs e)
+        {
+            if (e.HasMessages)
+                _notice = e.FormatMessages(_schema?.Tables?.GetOrDefault(e.TableName));
+            _ = InvokeAsync(StateHasChanged);
+        }
+
+        private void OnFieldValueChangeFailed(object? sender, FieldValueChangeFailedEventArgs e)
+        {
+            _notice = e.Exception.Message;
             _ = InvokeAsync(StateHasChanged);
         }
 

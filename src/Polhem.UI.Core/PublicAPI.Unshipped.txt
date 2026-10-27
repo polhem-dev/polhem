@@ -50,3 +50,30 @@ Polhem.UI.Core.LiveComputationDegradation.FormatMessage(Microsoft.Extensions.Loc
 Polhem.UI.Core.LiveComputationDegradation.LiveComputationDegradation(Polhem.Definition.Forms.FormTable! table, Polhem.Definition.Forms.FormField? field, System.Exception! exception) -> void
 Polhem.UI.Core.LiveComputationDegradation.Reason.get -> string!
 Polhem.UI.Core.LiveComputationDegradation.Table.get -> Polhem.Definition.Forms.FormTable!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Errors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FieldName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FieldValueChangeAppliedEventArgs(string! tableName, string! fieldName, System.Data.DataRow! row, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! errors, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! warnings) -> void
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.FormatMessages(Polhem.Definition.Forms.FormTable? table) -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.HasMessages.get -> bool
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.TableName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs.Warnings.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Applied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.CallsBack(string! tableName, string! fieldName) -> bool
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Failed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.FieldValueChangeCoordinator(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Contracts.Form.IFieldValueChangeConnector! connector, System.Action<System.Data.DataRow!, string!, string?>! writeValue) -> void
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnFieldValueChangedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.Exception.get -> System.Exception!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.FieldName.get -> string!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.FieldValueChangeFailedEventArgs(string! tableName, string! fieldName, System.Data.DataRow! row, System.Exception! exception) -> void
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs.TableName.get -> string!
+Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.LookupSelection = 1 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.RowEditCommit = 3 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.User = 0 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueOrigin.ValueChangeResult = 2 -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnLookupSelectedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
