@@ -72,7 +72,8 @@
                     <DataGridTemplateColumn Header="{loc:Loc Relation_Include}" Width="64">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
-                                <CheckBox IsChecked="{Binding IsIncluded, Mode=TwoWay}" HorizontalAlignment="Center"/>
+                                <CheckBox IsChecked="{Binding IsIncluded, Mode=TwoWay}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -112,7 +113,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="svc:RelationSetupRow">
                                 <CheckBox IsChecked="{Binding LookupOnly, Mode=TwoWay}" IsEnabled="{Binding IsIncluded}"
-                                          HorizontalAlignment="Center"/>
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
