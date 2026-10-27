@@ -59,7 +59,7 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   `DetailEditMode` 決定非精簡版面時的明細編輯模式。`ProgId` 變更時頁面會重新載入，所以一個路由頁面（`/form/{ProgId}`）
   可以服務所有程式。載入記錄、儲存或刪除失敗時，訊息以提示顯示在表單上方，使用者輸入的內容保留；只有無法載入定義的頁面
   才以錯誤取代表單。circuit 的 `IUserContext` 有能力快照時，使用者缺少表單權限模型的 `Create`、`Create` 或 `Update`、
-  `Delete` 時分別隱藏 New、Save、Delete，敏感欄位依其類別隱藏或唯讀，經由 `Polhem.UI.Core` 的 `LayoutCapabilityApplier`；
+  `Delete` 時分別隱藏 New、Save、Delete，缺少 `Update` 時以唯讀開啟記錄，敏感欄位依其類別隱藏或唯讀，經由 `Polhem.UI.Core` 的 `LayoutCapabilityApplier`；
   數值預覽採用登入公司的小數位數。後端仍會檢查每一個呼叫。
 - `CompactViewportObserver` -- 不輸出任何標記，瀏覽器 viewport 跨過 `CompactWidthThreshold` 時觸發 `CompactChanged`。
   直接使用 `FormLayoutPresenter` 的頁面在旁邊放一個，把值傳給 `IsCompact`。它透過套件內附的一支小型 JavaScript module

@@ -67,7 +67,7 @@ decides whether `FormPage` localizes its definitions; see below.
   every program. A failed load, save or delete is shown as a notice above the form, which keeps what the user entered;
   only a page that cannot load its definitions shows the error in place of the form. With a capability snapshot on the
   circuit's `IUserContext`, New, Save and Delete are hidden when the user lacks `Create`, `Create` or `Update`, and
-  `Delete` on the form's permission model, and sensitive fields are hidden or read-only by their category, through
+  `Delete` on the form's permission model, a record opens read-only without `Update`, and sensitive fields are hidden or read-only by their category, through
   `LayoutCapabilityApplier` (`Polhem.UI.Core`); the numbers preview with the entered company's decimals. The backend
   still checks every call.
 - `CompactViewportObserver` -- renders nothing and raises `CompactChanged` when the browser's viewport crosses

@@ -46,8 +46,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// </para>
     /// <para>
     /// The record is edited in <see cref="SingleFormMode.Add"/> after New, in <see cref="SingleFormMode.Edit"/>
-    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record,
-    /// so each field's <see cref="LayoutField.AllowEditModes"/> applies.
+    /// after a row is loaded or saved, and shown in <see cref="SingleFormMode.View"/> while there is no record or
+    /// the user's capabilities lack <c>Update</c> on the form's permission model, so each field's
+    /// <see cref="LayoutField.AllowEditModes"/> applies.
     /// </para>
     /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
@@ -283,7 +284,10 @@ namespace Polhem.Web.Blazor.Server.Components
             get
             {
                 if (_dataObject?.MasterRow is null) return SingleFormMode.View;
-                return _isNewRecord ? SingleFormMode.Add : SingleFormMode.Edit;
+                if (_isNewRecord) return SingleFormMode.Add;
+                // A user who may not update the form reads the record, as the Avalonia views only enter Edit
+                // through a command the same permission hides.
+                return Can(PermissionActions.Update) ? SingleFormMode.Edit : SingleFormMode.View;
             }
         }
 

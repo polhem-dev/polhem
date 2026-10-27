@@ -512,6 +512,39 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
+        [DisplayName("A user who may read but not update a permission-bound form opens a record read-only")]
+        public async Task Capabilities_ReadOnly_OpensRecordInViewMode()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.Equal([s_aliceRowId], form.Loaded));
+            Assert.True(cut.Find("#polhem-form-emp_name").HasAttribute("readonly"));
+        }
+
+        [Fact]
+        [DisplayName("A user who may update a permission-bound form opens a record for editing")]
+        public async Task Capabilities_Update_OpensRecordInEditMode()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend(permissionBound: true);
+            form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
+            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
+
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.False(cut.Find("#polhem-form-emp_name").HasAttribute("readonly")));
+        }
+
+        [Fact]
         [DisplayName("Without an entered company the page treats the user as unrestricted")]
         public void Capabilities_NoCompanyEntered_ShowsEveryCommand()
         {
