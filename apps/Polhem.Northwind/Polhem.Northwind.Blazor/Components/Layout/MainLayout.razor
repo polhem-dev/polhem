@@ -13,14 +13,14 @@ else
     <div class="nw-shell">
         <header class="nw-header">
             <button type="button" class="nw-header__menu" aria-label="@ShellText.Get("Menu")"
-                    @onclick="() => _isMenuOpen = !_isMenuOpen">☰</button>
+                    @onclick="() => _isMenuToggled = !_isMenuToggled">☰</button>
             <span class="nw-header__title">Polhem.Northwind</span>
             <span class="nw-header__user">@UserContext.User?.UserName · @UserContext.Company.CompanyName</span>
             <button type="button" class="nw-header__signout" @onclick="SignOut">@ShellText.Get("SignOut")</button>
         </header>
         <div class="nw-body">
-            <nav class="nw-nav @(_isMenuOpen ? "nw-nav--open" : null)">
-                <NavMenu OnNavigated="() => _isMenuOpen = false" />
+            <nav class="nw-nav @(_isMenuToggled ? "nw-nav--toggled" : null)">
+                <NavMenu OnNavigated="() => _isMenuToggled = false" />
             </nav>
             <main class="nw-main">@Body</main>
         </div>
@@ -28,7 +28,10 @@ else
 }
 
 @code {
-    private bool _isMenuOpen;
+    // One switch for both widths, read by app.css: a wide screen shows the menu until it is toggled off, a narrow
+    // one hides it until it is toggled on. Picking a form clears it, which closes the narrow overlay and changes
+    // nothing on a wide screen, where a collapsed menu has nothing to pick.
+    private bool _isMenuToggled;
 
     // The client and the context are the circuit's, so signing out is local to this browser tab.
     private void SignOut()

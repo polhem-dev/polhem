@@ -18,7 +18,7 @@ body {
 
 .nw-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .nw-header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #24292f; color: white; }
-.nw-header__menu { display: none; background: transparent; color: inherit; border: 0; font-size: 1.2rem; cursor: pointer; }
+.nw-header__menu { background: transparent; color: inherit; border: 0; font-size: 1.2rem; cursor: pointer; }
 .nw-header__title { font-weight: 600; }
 .nw-header__user { margin-left: auto; font-size: 0.9rem; opacity: 0.85; }
 .nw-header__signout { padding: 4px 10px; }
@@ -31,16 +31,19 @@ body {
 .nw-nav__link { display: block; padding: 5px 16px 5px 32px; color: #424a53; font-size: 0.9rem; text-decoration: none; border-left: 3px solid transparent; }
 .nw-nav__link:hover { background: #f3f4f6; color: #1f2328; }
 .nw-nav__link.active { background: #ddf4ff; color: #0969da; font-weight: 600; border-left-color: #0969da; }
+/* On a wide screen the menu button collapses the menu and gives the form the whole width. */
+@media (min-width: 600px) {
+    .nw-nav--toggled { display: none; }
+}
 .nw-nav__loading, .nw-main__loading { padding: 8px 16px; color: #57606a; }
 .nw-main { flex: 1; min-width: 0; padding: 16px; }
 
 /* Below the framework's default compact threshold the menu slides over the form, as in the Avalonia phone heads. */
 @media (max-width: 599px) {
-    .nw-header__menu { display: block; }
     .nw-header__user { display: none; }
     .nw-header__signout { margin-left: auto; }
     .nw-nav { position: fixed; top: 44px; bottom: 0; left: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.2s; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15); }
-    .nw-nav--open { transform: none; }
+    .nw-nav--toggled { transform: none; }
     .nw-main { padding: 12px; }
 }
 
