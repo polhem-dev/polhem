@@ -135,6 +135,7 @@ Per-program BO instance, accessed as `<progId>.<action>` over the wire
 | `GetData` | Public | Authenticated | Loads one master row (and its details) by `RowId`. |
 | `Save` | Public | Authenticated | Persists a `DataSet` by dispatching INSERT / UPDATE / DELETE per row's `RowState`. |
 | `Delete` | Public | Authenticated | Deletes one master row directly by `RowId`. |
+| `FieldValueChange` | Public | Authenticated | Called when the user changes a field marked `FormField.ValueChangeCallback`; returns the values to write into other fields of the same row (`Values`) and the messages to show on its fields (`Errors` / `Warnings`). Requires `Create` or `Update` on the form's permission model. A relation field fills its mapping destinations from the related form, read under that form's lookup rules (`GetLookupFilter` and the `Read` record scope); a BO overrides the method for anything else. Values it returns never call back again. |
 
 ## Axis: Audit Log (`AuditLogBusinessObject`)
 

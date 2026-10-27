@@ -32,6 +32,7 @@ namespace Polhem.Api.Core.MessagePack
 
             list.Add(new DictionaryFormatter<System.String, Polhem.Definition.Settings.PermissionActions>());
             list.Add(new DictionaryFormatter<System.String, System.Int32>());
+            list.Add(new DictionaryFormatter<System.String, System.String>());
 
             list.Add(new ArrayFormatter<System.String>());
         }

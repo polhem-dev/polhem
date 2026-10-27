@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: dab1c51db10777754d26395f3069ae38ada5d2c8 -->
+<!-- source: en/api/api-method-reference.md blob: cd9ea536170629ad114badbbcb4fe839bb5bcf5d -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -123,6 +123,7 @@ per-program BO 實體，wire 上以 `<progId>.<action>` 派發（例如 `Employe
 | `GetData` | Public | Authenticated | 依 `RowId` 載入單筆主檔列（與其所有子表列）。 |
 | `Save` | Public | Authenticated | 將 `DataSet` 持久化，依每列 `RowState` dispatch INSERT / UPDATE / DELETE。 |
 | `Delete` | Public | Authenticated | 依 `RowId` 直接刪除單筆主檔列。 |
+| `FieldValueChange` | Public | Authenticated | 使用者變更標記 `FormField.ValueChangeCallback` 的欄位時呼叫；回傳要寫入同一列其他欄位的值（`Values`），以及要標在欄位上的訊息（`Errors`／`Warnings`）。需要表單權限模型的 `Create` 或 `Update` 權限。關聯欄位依對應，從被關聯表單取值，套用該表單開窗查詢的規則（`GetLookupFilter` 與 `Read` record scope）；其他需求由 BO 覆寫此方法。回傳的值不會再引發回呼。 |
 
 ## 軸：Audit Log（`AuditLogBusinessObject`）
 

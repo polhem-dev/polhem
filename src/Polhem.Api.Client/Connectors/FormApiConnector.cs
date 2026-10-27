@@ -13,7 +13,7 @@ namespace Polhem.Api.Client.Connectors
     /// <summary>
     /// Form-level API service connector.
     /// </summary>
-    public class FormApiConnector : ApiConnector, IFormApiConnector
+    public class FormApiConnector : ApiConnector, IFormApiConnector, IFieldValueChangeConnector
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FormApiConnector"/> class.
@@ -197,6 +197,29 @@ namespace Polhem.Api.Client.Connectors
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Reports a field's new value to the form's business object and returns what it asks to change in the row.
+        /// </summary>
+        /// <param name="tableName">The form table that holds the field.</param>
+        /// <param name="fieldName">The field whose value changed.</param>
+        /// <param name="value">The new value in the invariant text form a field binding uses; empty when cleared.</param>
+        /// <param name="row">A one-row table holding the edited row after the change, or <c>null</c>.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<FieldValueChangeResponse> FieldValueChangeAsync(string tableName, string fieldName,
+            string value, DataTable? row, CancellationToken cancellationToken = default)
+        {
+            var request = new FieldValueChangeRequest
+            {
+                TableName = tableName,
+                FieldName = fieldName,
+                Value = value,
+                Row = row,
+            };
+            return await ExecuteAsync<FieldValueChangeResponse>(FormActions.FieldValueChange, request,
+                    cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         // The contract returns the response interfaces, while the public methods keep returning the concrete
         // messages their existing callers read. C# has no return-type covariance for interface members, and
         // `Task<T>` is not covariant either, so each contract member forwards to its public counterpart.
@@ -220,5 +243,9 @@ namespace Polhem.Api.Client.Connectors
 
         async Task<IDeleteResponse> IFormApiConnector.DeleteAsync(Guid rowId, CancellationToken cancellationToken)
             => await DeleteAsync(rowId, cancellationToken).ConfigureAwait(false);
+
+        async Task<IFieldValueChangeResponse> IFieldValueChangeConnector.FieldValueChangeAsync(string tableName,
+            string fieldName, string value, DataTable? row, CancellationToken cancellationToken)
+            => await FieldValueChangeAsync(tableName, fieldName, value, row, cancellationToken).ConfigureAwait(false);
     }
 }

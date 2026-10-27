@@ -18,6 +18,7 @@
     <LanguageItem Key="Company.AccessDenied" Value="無權進入此公司。" />
     <LanguageItem Key="Company.NotEntered" Value="此工作階段尚未進入公司。" />
     <LanguageItem Key="Company.InfoUnavailable" Value="無法取得公司資訊，請重新進入公司。" />
+    <LanguageItem Key="FieldValueChange.RelationNotFound" Value="找不到可選取的「{0}」資料。" />
     <LanguageItem Key="Permission.Denied" Value="權限不足：無法對模型「{1}」執行「{0}」。" />
     <LanguageItem Key="Permission.MasterRowMissing" Value="儲存時必須包含明細所屬的「{0}」主檔資料列，否則無法判斷模型「{1}」的資料範圍。" />
     <LanguageItem Key="Permission.SavedRecordOutOfScope" Value="儲存後的記錄將超出模型「{1}」的「{0}」資料範圍。" />

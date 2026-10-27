@@ -95,6 +95,20 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
+        [DisplayName("ValueChangeCallback is omitted from XML at its false default, round-trips when set, and is copied by Clone")]
+        public void ValueChangeCallback_XmlAndClone()
+        {
+            var field = new FormField("part_rowid", "Part", FieldDbType.Guid);
+            Assert.DoesNotContain("ValueChangeCallback=", XmlCodec.Serialize(field));
+
+            field.ValueChangeCallback = true;
+            var restored = XmlCodec.Deserialize<FormField>(XmlCodec.Serialize(field));
+
+            Assert.True(restored!.ValueChangeCallback);
+            Assert.True(field.Clone().ValueChangeCallback);
+        }
+
+        [Fact]
         [DisplayName("CurrencyField XML round-trip keeps the CUKY reference field name")]
         public void CurrencyField_XmlRoundtrip_Preserved()
         {

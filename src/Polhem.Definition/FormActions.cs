@@ -41,5 +41,12 @@ namespace Polhem.Definition
         /// loading the full <c>DataSet</c>.
         /// </summary>
         public const string Delete = "Delete";
+
+        /// <summary>
+        /// Called by the UI when the value of a field marked
+        /// <see cref="Polhem.Definition.Forms.FormField.ValueChangeCallback"/> changes; returns the values of other
+        /// fields of the row and the validation messages the new value calls for.
+        /// </summary>
+        public const string FieldValueChange = "FieldValueChange";
     }
 }

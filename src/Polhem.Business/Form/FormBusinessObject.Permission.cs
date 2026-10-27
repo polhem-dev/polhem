@@ -38,6 +38,21 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>
+        /// Refuses the call unless the caller holds at least one of <paramref name="actions"/> on the form's permission
+        /// model; a form without a permission model admits every caller.
+        /// </summary>
+        private void AuthorizeAny(params PermissionActions[] actions)
+        {
+            var modelId = DefineAccess.GetFormSchema(ProgId).PermissionModelId;
+            if (string.IsNullOrEmpty(modelId)) { return; }
+
+            var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
+            if (actions.Any(action => authorization.Can(AccessToken, modelId, action))) { return; }
+            var required = actions.Aggregate(PermissionActions.None, (all, action) => all | action);
+            throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", required, modelId);
+        }
+
+        /// <summary>
         /// Resolves the layer-2 record-scope read filter for <paramref name="action"/> on this form's
         /// permission model. Returns <c>null</c> when the FormSchema declares no <c>PermissionModelId</c>
         /// (unscoped form) or the effective scope is unrestricted — in both cases no filter is applied.

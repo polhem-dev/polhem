@@ -16,3 +16,7 @@ Polhem.Definition.Forms.FormExpressionIssue.Message.get -> string!
 Polhem.Definition.Forms.FormExpressionIssue.PropertyName.get -> string!
 Polhem.Definition.Forms.FormExpressionIssue.RuleId.get -> string?
 Polhem.Definition.Forms.FormExpressionIssue.TableName.get -> string!
+Polhem.Definition.Forms.FormField.ValueChangeCallback.get -> bool
+Polhem.Definition.Forms.FormField.ValueChangeCallback.set -> void
+const Polhem.Definition.FormActions.FieldValueChange = "FieldValueChange" -> string!
+const Polhem.Definition.Language.PolhemMessages.FieldValueChangeRelationNotFound = "PolhemMessages.FieldValueChange.RelationNotFound" -> string!

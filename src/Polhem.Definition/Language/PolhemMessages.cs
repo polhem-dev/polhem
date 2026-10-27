@@ -91,5 +91,8 @@ namespace Polhem.Definition.Language
         public const string DeploymentAdminUserIdRequired = Namespace + ".DeploymentAdmin.UserIdRequired";
         /// <summary>No user has the id; argument 0 is the id.</summary>
         public const string DeploymentAdminUserNotFound = Namespace + ".DeploymentAdmin.UserNotFound";
+
+        /// <summary>A related value names no row the caller could pick; argument 0 is the related form's display name.</summary>
+        public const string FieldValueChangeRelationNotFound = Namespace + ".FieldValueChange.RelationNotFound";
     }
 }
