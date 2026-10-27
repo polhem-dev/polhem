@@ -18,6 +18,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - **Breaking:** `Polhem.Web.Blazor.Server` replaces `DynamicForm` with `FormLayoutPresenter`.
 - **Breaking:** `IExpressionEvaluator` gains `Validate`, which parses an expression against variable types without
   evaluating it; an evaluator implemented outside the framework has to implement it.
+- **Breaking:** `Polhem.Web.Blazor.Server`'s `FormPage` shows a failed load, save or delete as a notice over the form
+  instead of replacing the form with the error.
 - **Breaking:** `FormField.LookupProgId` and `FormField.LookupFieldMappings` are removed. A lookup opens
   `RelationProgId` and writes back `RelationFieldMappings`; definitions that still carry the two are read without them.
 - `FieldMapping.LookupOnly` marks a relation mapping that a lookup selection writes back but the query join does not
@@ -32,6 +34,8 @@ Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1
 - `Polhem.Web.Blazor.Server` renders detail tables: `GridControl` (in-cell or edit-form editing), `RowEditPanel`
   and `RowEditDialog`, shown by `FormLayoutPresenter` and `FormPage`, which also previews numbers with the
   company, currency and unit rounding context.
+- `Polhem.Web.Blazor.Server`'s `FormPage` reloads when its `ProgId` changes, and hides commands and degrades sensitive
+  fields by the capabilities on the new per-circuit `CircuitUserContext`.
 - `Polhem.Web.Blazor.Server`'s `FormPage` switches to a compact layout (one master column, detail rows edited in a
   form) on a narrow viewport, measured in the browser by the new `CompactViewportObserver`.
 - Live computation no longer stops silently: when an expression cannot be evaluated, the Avalonia `FormView` and the

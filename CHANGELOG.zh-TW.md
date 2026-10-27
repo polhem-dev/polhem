@@ -17,6 +17,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性：** `Polhem.Web.Blazor.Server` 以 `FormLayoutPresenter` 取代 `DynamicForm`。
 - **破壞性：** `IExpressionEvaluator` 新增 `Validate`，依變數型別解析運算式而不執行；在框架以外自行實作的 evaluator
   必須實作它。
+- **破壞性：** `Polhem.Web.Blazor.Server` 的 `FormPage` 載入記錄、儲存或刪除失敗時，改以提示顯示在表單上方，
+  不再以錯誤取代表單。
 - **破壞性：** 移除 `FormField.LookupProgId` 與 `FormField.LookupFieldMappings`。查詢視窗開啟 `RelationProgId`，
   並依 `RelationFieldMappings` 回寫；仍帶有這兩者的定義檔讀取時會略過它們。
 - `FieldMapping.LookupOnly` 標記「查詢選取時回寫、查詢 JOIN 不讀」的關聯對應，讓選取時可以一併帶回其他值，
@@ -27,6 +29,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.Web.Blazor.Server` 新增查詢流程：`ButtonEdit`、`LookupDialog`、`LookupPanel`。
 - `Polhem.Web.Blazor.Server` 透過新的 `FormLiveComputation` 即時重算計算欄位；其 `FormDataObject` 新增新資料列預設值、資料列事件與資料列編輯暫存。
 - `Polhem.Web.Blazor.Server` 呈現明細資料表：`GridControl`（儲存格內編輯或編輯表單）、`RowEditPanel`、`RowEditDialog`，由 `FormLayoutPresenter` 與 `FormPage` 顯示；`FormPage` 也會依公司、幣別與單位的 rounding context 預覽數值。
+- `Polhem.Web.Blazor.Server` 的 `FormPage` 在 `ProgId` 變更時重新載入，並依新的 per-circuit `CircuitUserContext`
+  上的能力隱藏指令、降級敏感欄位。
 - `Polhem.Web.Blazor.Server` 的 `FormPage` 在窄 viewport 上改用精簡版面（主檔單欄、明細以表單編輯），寬度由新的
   `CompactViewportObserver` 在瀏覽器量測。
 - 即時計算不再無聲停止：運算式無法評估時，Avalonia 的 `FormView` 與 Blazor 的 `FormPage` 會指出欄位與原因，原因以 `LiveComputationDegradation` 公開。
