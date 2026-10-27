@@ -59,6 +59,7 @@ namespace Polhem.Business.UnitTests
 
             // Form axis — FormBusinessObject (FormSchema-driven CRUD).
             new ApiSurfaceEntry("FormBusinessObject", "Delete",     ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
+            new ApiSurfaceEntry("FormBusinessObject", "FieldValueChange", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetData",    ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetList",    ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetLookup",  ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),

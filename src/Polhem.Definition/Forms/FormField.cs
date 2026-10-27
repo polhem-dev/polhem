@@ -279,6 +279,29 @@ namespace Polhem.Definition.Forms
         public string DisplayFields { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets whether a change of this field's value calls the form's business object back, so the server
+        /// can fill other fields of the row or validate the value while the row is being edited.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The UI calls <c>FieldValueChange</c> on the business object of the form that owns the field, with the
+        /// table, the field, the new value and the row. For a field with a <see cref="RelationProgId"/> the
+        /// framework fills the destinations of its <see cref="RelationFieldMappings"/> from the related form, so the
+        /// source fields no longer have to be in that form's <see cref="FormSchema.LookupFields"/>. A business
+        /// object overrides the method for anything else, such as a part number that brings back its stock and price.
+        /// </para>
+        /// <para>
+        /// Only a value the user changed calls back: values a callback writes into other fields never call back
+        /// again, even when those fields set this flag too.
+        /// </para>
+        /// </remarks>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Calls the business object back when the value changes, to fill other fields or validate it.")]
+        [DefaultValue(false)]
+        public bool ValueChangeCallback { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether this field is visible.
         /// </summary>
         [Category(PropertyCategories.Layout)]
@@ -460,6 +483,7 @@ namespace Polhem.Definition.Forms
                 UnitField = UnitField,
                 RelationProgId = RelationProgId,
                 DisplayFields = DisplayFields,
+                ValueChangeCallback = ValueChangeCallback,
                 Visible = Visible,
                 ReadOnly = ReadOnly,
                 Required = Required,

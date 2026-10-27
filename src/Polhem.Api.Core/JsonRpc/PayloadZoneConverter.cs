@@ -52,6 +52,12 @@ namespace Polhem.Api.Core.JsonRpc
                     request.DataSet = original.Copy();
                     return new PayloadSwap(() => request.DataSet = original);
                 }
+                case FieldValueChangeRequest request when request.Row != null:
+                {
+                    var original = request.Row;
+                    request.Row = original.Copy();
+                    return new PayloadSwap(() => request.Row = original);
+                }
                 case GetListRequest request when request.Filter != null && !string.IsNullOrWhiteSpace(timeZoneId):
                 {
                     var original = request.Filter;
@@ -93,6 +99,9 @@ namespace Polhem.Api.Core.JsonRpc
                     break;
                 case GetLookupResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
+                    break;
+                case FieldValueChangeResponse response:
+                    response.Values = DateTimeZoneConverter.UtcToUser(response.Values, timeZoneId);
                     break;
                 case AuditLogListResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);

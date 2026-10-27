@@ -82,7 +82,9 @@ namespace Polhem.Business.Form
         /// </para>
         /// <para>
         /// Override <see cref="GetLookupFilter"/> to constrain the candidate rows further (e.g.
-        /// active records only). When <see cref="GetLookupArgs.Paging"/> is <c>null</c> a
+        /// active records only). <see cref="ResolveRelationRow"/>, which another form's
+        /// <see cref="FieldValueChange"/> uses to read a picked row, applies the same filter and record scope; a
+        /// business object that overrides this method itself to narrow the candidates must override that one too. When <see cref="GetLookupArgs.Paging"/> is <c>null</c> a
         /// default page size of 100 is applied.
         /// </para>
         /// </remarks>

@@ -1,1 +1,12 @@
 #nullable enable
+Polhem.Api.Contracts.Form.IFieldValueChangeConnector
+Polhem.Api.Contracts.Form.IFieldValueChangeConnector.FieldValueChangeAsync(string! tableName, string! fieldName, string! value, System.Data.DataTable? row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IFieldValueChangeResponse!>!
+Polhem.Api.Contracts.Form.IFieldValueChangeRequest
+Polhem.Api.Contracts.Form.IFieldValueChangeRequest.FieldName.get -> string!
+Polhem.Api.Contracts.Form.IFieldValueChangeRequest.Row.get -> System.Data.DataTable?
+Polhem.Api.Contracts.Form.IFieldValueChangeRequest.TableName.get -> string!
+Polhem.Api.Contracts.Form.IFieldValueChangeRequest.Value.get -> string!
+Polhem.Api.Contracts.Form.IFieldValueChangeResponse
+Polhem.Api.Contracts.Form.IFieldValueChangeResponse.Errors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Polhem.Api.Contracts.Form.IFieldValueChangeResponse.Values.get -> System.Data.DataTable?
+Polhem.Api.Contracts.Form.IFieldValueChangeResponse.Warnings.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!

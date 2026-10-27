@@ -17,6 +17,19 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected), static x => x.RowsAffected, static (x, v) => x.RowsAffected = v)
                 .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.FieldValueChangeRequest>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.TableName), static x => x.TableName, static (x, v) => x.TableName = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.FieldName), static x => x.FieldName, static (x, v) => x.FieldName = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Value), static x => x.Value, static (x, v) => x.Value = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Row), static x => x.Row, static (x, v) => x.Row = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.FieldValueChangeResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Values), static x => x.Values, static (x, v) => x.Values = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Errors), static x => x.Errors, static (x, v) => x.Errors = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeResponse.Warnings), static x => x.Warnings, static (x, v) => x.Warnings = v)
+                .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.GetDataRequest>()
                 .Member(nameof(Polhem.Api.Core.Messages.Form.GetDataRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.GetDataRequest.RowId), static x => x.RowId, static (x, v) => x.RowId = v)

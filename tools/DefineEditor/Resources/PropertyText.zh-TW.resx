@@ -76,6 +76,7 @@
   <data name="PropDesc_FormField_RelationProgId" xml:space="preserve"><value>關聯程式的程式代碼。</value><comment>Program ID of the related program.</comment></data>
   <data name="PropDesc_FormField_RelationFieldMappings" xml:space="preserve"><value>從關聯來源對應到本地欄位的欄位對應集合。</value><comment>Field mapping collection from the relation source to local fields.</comment></data>
   <data name="PropDesc_FormField_DisplayFields" xml:space="preserve"><value>取代綁定值顯示的本地欄位，以逗號分隔（查詢編輯器）。</value><comment>Local fields displayed in place of the bound value, comma separated (lookup editors).</comment></data>
+  <data name="PropDesc_FormField_ValueChangeCallback" xml:space="preserve"><value>值異動時回呼商業物件，由後端帶回其他欄位或驗證此值。</value><comment>Calls the business object back when the value changes, to fill other fields or validate it.</comment></data>
   <data name="PropDesc_FormField_Visible" xml:space="preserve"><value>此欄位是否可見。</value><comment>Indicates whether this field is visible.</comment></data>
   <data name="PropDesc_FormField_ReadOnly" xml:space="preserve"><value>此欄位是否唯讀。</value><comment>Indicates whether this field is read-only.</comment></data>
   <data name="PropDesc_FormField_Required" xml:space="preserve"><value>此欄位是否必填。</value><comment>Indicates whether this field is required (mandatory input).</comment></data>
