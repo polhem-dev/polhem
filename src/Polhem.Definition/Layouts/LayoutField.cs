@@ -65,7 +65,12 @@ namespace Polhem.Definition.Layouts
         /// <returns>A new <see cref="LayoutField"/> sharing no mutable state with this one.</returns>
         public LayoutField Clone()
         {
-            var copy = new LayoutField { AllowEditModes = AllowEditModes };
+            var copy = new LayoutField
+            {
+                RowSpan = RowSpan,
+                ColumnSpan = ColumnSpan,
+                AllowEditModes = AllowEditModes,
+            };
             CopyBaseTo(copy);
             return copy;
         }

@@ -435,6 +435,27 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("RowSpan and ColumnSpan of a host-supplied layout survive the copy the view renders")]
+        public async Task Render_ResolvedLayoutKeepsRowSpanAndColumnSpan()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID", ColumnSpan = 2 });
+            section.Fields.Add(new LayoutField { FieldName = "hire_date", Caption = "Hire Date", RowSpan = 3 });
+            layout.Sections!.Add(section);
+            var view = new TestFormView { Layout = layout };
+
+            var method = typeof(FormView).GetMethod("ResolveLayoutAsync", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            var resolved = await (Task<FormLayout>)method.Invoke(view, [TestProgId, CancellationToken.None])!;
+            var host = RenderForm(view, resolved, new FormDataObject(BuildRenderSchema()));
+
+            var border = Assert.IsType<Border>(host.Children[0]);
+            var grid = Assert.IsType<Grid>(Assert.IsType<StackPanel>(border.Child).Children[^1]);
+            Assert.Equal(2, Grid.GetColumnSpan((Control)grid.Children[0]));
+            Assert.Equal(3, Grid.GetRowSpan((Control)grid.Children[1]));
+        }
+
+        [Fact]
         [DisplayName("FormLayout.Details render as bound GridControls after the master sections")]
         public void Render_DetailsRenderDetailGridControl()
         {
