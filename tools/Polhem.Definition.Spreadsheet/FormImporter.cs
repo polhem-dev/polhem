@@ -61,7 +61,8 @@ public static class FormImporter
         files.Add(PlanSettings(paths.GetDbCategorySettingsFilePath(), "DbCategorySettings",
             $"DbCategorySettings: register the tables under '{categoryId}'",
             doc => schema.Tables.Aggregate(false, (changed, table) =>
-                SettingsXmlEditor.AddTableItem(doc, categoryId, table.DbTableName, table.DisplayName) | changed)));
+                SettingsXmlEditor.AddTableItem(doc, categoryId, table.DbTableName, table.DisplayName) | changed),
+            DefaultDbCategorySettings));
 
         var menuCaption = FirstNonEmpty(content.Menu.EntryCaption, schema.DisplayName, schema.ProgId);
         files.Add(PlanSettings(paths.GetProgramSettingsFilePath(), "ProgramSettings",
@@ -233,14 +234,29 @@ public static class FormImporter
         }
     }
 
-    private static PlannedFile PlanSettings(string path, string rootName, string description, Func<System.Xml.Linq.XDocument, bool> edit)
+    private static PlannedFile PlanSettings(string path, string rootName, string description,
+        Func<System.Xml.Linq.XDocument, bool> edit, Func<System.Xml.Linq.XDocument>? seed = null)
     {
         bool exists = File.Exists(path);
-        var document = SettingsXmlEditor.LoadOrCreate(path, rootName);
+        var document = !exists && seed is not null ? seed() : SettingsXmlEditor.LoadOrCreate(path, rootName);
         if (!edit(document))
             return new PlannedFile(path, PlannedFileAction.Unchanged, description, null);
         return new PlannedFile(path, exists ? PlannedFileAction.Update : PlannedFileAction.Create, description,
             SettingsXmlEditor.Serialize(document));
+    }
+
+    /// <summary>
+    /// The framework's default DbCategorySettings, the starting point when the define folder has none yet.
+    /// </summary>
+    /// <remarks>
+    /// The host materialises the framework defaults only where a file is missing, so a settings file created
+    /// here from nothing would keep the framework tables out of it for good. The framework forms that are
+    /// materialised next to it would then name unregistered tables, and the build reports POLHEM2001 for them.
+    /// </remarks>
+    private static System.Xml.Linq.XDocument DefaultDbCategorySettings()
+    {
+        using var stream = Defaults.OpenEmbedded("DbCategorySettings.xml");
+        return SettingsXmlEditor.Load(stream);
     }
 
     /// <summary>

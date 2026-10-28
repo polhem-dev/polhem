@@ -35,6 +35,9 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   of overlapping it.
 - DefineEditor previews a form layout in the web browser as well, drawn by the Blazor Server components, with unsaved
   edits following along; the editor now needs the ASP.NET Core runtime.
+- Importing a workbook into a `Define` folder that has no `DbCategorySettings.xml` yet starts the file from the
+  framework's defaults, so the framework tables stay registered; the build reported POLHEM2001 for the default forms
+  when the import ran before the database was first initialized.
 
 ## [1.10.0] - 2026-10-27
 
