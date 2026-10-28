@@ -20,6 +20,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `Polhem.Web.Blazor.Server` 新增現成的外殼（`PolhemShellLayout`，以 `AddPolhemShell` 設定）：登入與公司、頂端列、伺服器的選單、
   窄螢幕上可收合的選單，以及英文／繁體中文切換，對應 `Polhem.UI.Avalonia.Shell`。選單裡還沒有表單時，根頁面與選單會說明這一點。
   套件也附帶一份選用的預設樣式表 `polhem.css`。
+- 框架預設的 `Department` 與 `Employee` 表單會在清單列出編號、名稱與關聯名稱，先前清單沒有任何欄位；在預設 Employee 表單選取部門
+  也不再失敗。`Define` 資料夾已有這兩個 schema 的應用程式會保留舊檔：請手動更新，或刪除後讓它重新寫入。
 
 ## [1.10.0] - 2026-10-27
 
