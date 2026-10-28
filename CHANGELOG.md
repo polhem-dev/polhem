@@ -29,6 +29,8 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   showed no columns before. Picking a department in the default Employee form no longer fails. An application whose
   `Define` folder already holds the two schemas keeps the old ones: update them by hand or delete them to have them
   written again.
+- A `LayoutField`'s `RowSpan` and `ColumnSpan` now reach the form on every front end; the copy of the layout the forms
+  render had reset both to 1.
 
 ## [1.10.0] - 2026-10-27
 
