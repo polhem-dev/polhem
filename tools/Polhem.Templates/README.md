@@ -8,16 +8,24 @@ technology of the application it creates (`polhem-<front end>`); the database is
 ```bash
 dotnet new install Polhem.Templates
 dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
+dotnet new polhem-blazor-server -n Acme.Erp --database SqlServer
 ```
 
-In VS Code with the C# Dev Kit, the template is listed as **Polhem App (Avalonia)** under **New .NET Project**.
+| Template | Name in VS Code | Creates |
+|----------|-----------------|---------|
+| [`polhem-avalonia`](#polhem-avalonia) | **Polhem App (Avalonia)** | A JSON-RPC server and an Avalonia desktop client, optionally browser, iOS and Android clients |
+| [`polhem-blazor-server`](#polhem-blazor-server) | **Polhem App (Blazor Server)** | One Blazor Server site that runs the backend in its own process |
+
+In VS Code with the C# Dev Kit, the templates are listed under **New .NET Project** by those names. The C# Dev Kit
+creates the application with the default options; to choose others, run `dotnet new` in a terminal and open the
+folder it creates.
 
 Install the templates from the package, as above, or from a `.nupkg` file (`dotnet new install <path>.nupkg`).
 Installing a template from its folder under `content/` is not supported: the files every template shares
 (`Define/`, `Excel/`, `.config/`, `.gitignore`) live once in `content/_shared/` and are added to each template only
 when the package is built, so a template installed from its folder lacks them.
 
-The template's name, description and options are also translated into Traditional Chinese. `dotnet new` shows them
+The templates' names, descriptions and options are also translated into Traditional Chinese. `dotnet new` shows them
 when its language is Traditional Chinese (`DOTNET_CLI_UI_LANGUAGE=zh-TW`), and the C# Dev Kit when the operating
 system's language is; every other language shows the English.
 
@@ -66,4 +74,23 @@ empty boxes. Sign in to the browser client with an account whose culture is Engl
 
 The SQLite connection uses a path relative to the application folder, and DbManager, which DefineEditor runs to
 upgrade the database after an import, refuses relative SQLite paths. With SQLite, run the **Polhem: Upgrade database**
-task after an import instead.
+task after an import instead. This applies to `polhem-blazor-server` as well.
+
+## `polhem-blazor-server`
+
+Creates an application with a Blazor Server front end: one ASP.NET Core site that runs the backend in its own process
+and serves the [Blazor Server shell](../../src/Polhem.Web.Blazor.Server/README.md#shell) (sign-in, the server's menu
+and the forms). There is no separate server to start, and no API endpoint until you add one.
+
+| Path | Content |
+|------|---------|
+| `src/<Name>.Web` | The site: the backend (`AddPolhemBackend`) with the `db create`, `db check`, `db upgrade` and `db seed-admin` commands of `Polhem.Hosting` (`dotnet run -- db ...`), the Polhem shell, and one page that shows every form |
+| `Define/`, `Excel/`, `.config/dotnet-tools.json` | As in `polhem-avalonia` |
+| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, and the F5 launch **Web** |
+
+Its options are `--database`, `--company`, `--db-password` and `--default-language`, as in `polhem-avalonia`; the
+default language is also the language of the sign-in screen until the viewer picks another.
+
+The pages call the backend in the same process, so their calls are trusted local calls: the forms check the signed-in
+user's permissions, but the system calls a remote client may not make are open to them. The generated `Program.cs` and
+`README.md` say what that means for a page you add.
