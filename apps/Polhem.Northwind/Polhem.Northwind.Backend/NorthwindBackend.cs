@@ -15,7 +15,7 @@ namespace Polhem.Northwind.Backend;
 
 /// <summary>
 /// One-line bootstrap for the Polhem.Northwind demo. Resolves the sibling <c>Define</c>
-/// directory, registers SQLite, loads SystemSettings and wires <c>AddPolhemFramework</c>.
+/// directory, registers SQLite and brings the backend up with <see cref="PolhemHostApplicationBuilderExtensions.AddPolhemBackend"/>.
 /// </summary>
 /// <remarks>
 /// Nothing on the session axis is overridden or substituted. The seeder writes
@@ -52,51 +52,42 @@ public static class NorthwindBackend
         // Define/DatabaseSettings.xml names its SQLite file under |DataDirectory|, so every host that runs
         // this backend opens the same database next to Define/, rather than one in its own working directory.
         AppDomain.CurrentDomain.SetData("DataDirectory", Path.GetDirectoryName(definePath));
-        var paths = new PathOptions
-        {
-            DefinePath = definePath,
-            // Turns the tenant customization layer on. A non-empty CustomizePath is one half of the
-            // gate (SessionInfo.CustomizeId is the other), and the demo company names
-            // NorthwindCredentials.CustomizeId, so definition lookups consult
-            // Customize/northwind-demo/ before the packaged Define/ tree. Clearing either half
-            // returns the demo to a pure packaged deployment with no other change.
-            CustomizePath = ResolveCustomizePath(definePath),
-        };
-
-        // Two categories of table exist because the framework reaches for them: the cross-company
-        // tables in common (st_user, st_session, st_cache_notify, ...) and the audit trail in log.
-        // Their TableSchema files under Define/ are the demo's own definitions, committed like the
-        // company ones, and DbCategorySettings registers them so the ordinary category loop builds
-        // them. The embedded defaults in Polhem.Definition are only the starting point those files were
-        // first imported from: once a file exists here it is authoritative, and a later change to
-        // the defaults is not meant to replace it.
-        //
-        // That is why this call keeps skip-if-exists. It fills in a table the demo does not define
-        // yet, such as one a newer framework starts reaching for, and leaves every existing file
-        // alone; a file it writes shows up untracked, to be reviewed and committed. The folders are
-        // taken wholesale rather than by name on purpose: see GetFrameworkCommonTables for why, and
-        // for what the demo pays in return.
-        Defaults.MaterializeTo(paths.DefinePath, new MaterializeOptions
-        {
-            Filter = rel => NorthwindSchemaSeeder.FrameworkTableSchemaPrefixes
-                .Any(prefix => rel.StartsWith(prefix, StringComparison.Ordinal))
-        });
-
         // SQLite providers — keep dialect registration explicit so the framework does
         // not force every host to pull every ADO.NET driver.
         DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
         DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 
-        var settings = SystemSettingsLoader.Load(paths);
-        SysInfo.Initialize(settings.CommonConfiguration);
-        builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+        var paths = builder.AddPolhemBackend(options =>
+        {
+            options.DefinePath = definePath;
+            // Turns the tenant customization layer on. A non-empty CustomizePath is one half of the
+            // gate (SessionInfo.CustomizeId is the other), and the demo company names
+            // NorthwindCredentials.CustomizeId, so definition lookups consult
+            // Customize/northwind-demo/ before the packaged Define/ tree. Clearing either half
+            // returns the demo to a pure packaged deployment with no other change.
+            options.CustomizePath = ResolveCustomizePath(definePath);
+            // Two categories of table exist because the framework reaches for them: the cross-company
+            // tables in common (st_user, st_session, st_cache_notify, ...) and the audit trail in log.
+            // Their TableSchema files under Define/ are the demo's own definitions, committed like the
+            // company ones, and DbCategorySettings registers them so the ordinary category loop builds
+            // them. The embedded defaults in Polhem.Definition are only the starting point those files were
+            // first imported from: once a file exists here it is authoritative, and a later change to
+            // the defaults is not meant to replace it.
+            //
+            // That is why materializing keeps skip-if-exists. It fills in a table the demo does not define
+            // yet, such as one a newer framework starts reaching for, and leaves every existing file
+            // alone; a file it writes shows up untracked, to be reviewed and committed. The folders are
+            // taken wholesale rather than by name on purpose: see GetFrameworkCommonTables for why, and
+            // for what the demo pays in return.
+            options.MaterializeOptions = new MaterializeOptions
+            {
+                Filter = rel => NorthwindSchemaSeeder.FrameworkTableSchemaPrefixes
+                    .Any(prefix => rel.StartsWith(prefix, StringComparison.Ordinal))
+            };
+            options.AutoCreateMasterKey = true;
+        });
 
-        builder.Services.AddPolhemFramework(
-            settings.BackendConfiguration,
-            paths,
-            autoCreateMasterKey: true);
-
-        // Nothing is registered past AddPolhemFramework. Sign-in, company entry and company lookup
+        // Nothing is registered past AddPolhemBackend. Sign-in, company entry and company lookup
         // all run the framework's own implementations: NorthwindSchemaSeeder writes the st_user,
         // st_company and st_user_company rows they read, and the client calls EnterCompany after
         // Login like any other deployment.

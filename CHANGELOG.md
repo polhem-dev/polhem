@@ -15,6 +15,8 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1.11.0.md)
 
+- `Polhem.Hosting` gains `AddPolhemBackend`, which brings the backend up from the `Define` folder in one call on an
+  `IHostApplicationBuilder`; the `polhem-avalonia` server uses it.
 - The `polhem-avalonia` template's name, description and options are translated into Traditional Chinese, shown by
   `dotnet new` and the C# Dev Kit in that language.
 

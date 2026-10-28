@@ -14,6 +14,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.11.0.md](docs/zh-TW/changelogs/1.11.0.md)
 
+- `Polhem.Hosting` 新增 `AddPolhemBackend`，在 `IHostApplicationBuilder` 上一次呼叫就從 `Define` 資料夾啟動後端；
+  `polhem-avalonia` 的伺服器改用它。
 - `polhem-avalonia` 範本的名稱、說明與選項翻譯成繁體中文，在 `dotnet new` 與 C# Dev Kit 使用該語言時顯示。
 
 ## [1.10.0] - 2026-10-27
