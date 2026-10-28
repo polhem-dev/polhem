@@ -14,25 +14,11 @@ using Polhem.Db.Providers.Oracle;
 using Microsoft.Data.Sqlite;
 using Polhem.Db.Providers.Sqlite;
 #endif
-using Polhem.Core;
 using Polhem.Db.Manager;
-using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Hosting;
 using Polhem.Hosting.Database;
 using Polhem.JsonRpc.AspNetCore;
-
-var definePath = FindDefinePath();
-#if (database == "Sqlite")
-
-// The SQLite paths in DatabaseSettings.xml are relative; resolve them against the folder above Define, whichever
-// way the server was started.
-Directory.SetCurrentDirectory(Path.GetDirectoryName(definePath)!);
-#endif
-
-// Adds the framework's default definitions that Define does not have yet: the settings files, the system tables and
-// the Department, Employee and AuditRule forms. Files already there are left as they are.
-Defaults.MaterializeTo(definePath);
 
 #if (database == "SqlServer")
 DbProviderRegistry.Register(DatabaseType.SQLServer, SqlClientFactory.Instance);
@@ -51,14 +37,20 @@ DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(Sqlit
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 #endif
 
-var paths = new PathOptions { DefinePath = definePath };
-var settings = SystemSettingsLoader.Load(paths);
-SysInfo.Initialize(settings.CommonConfiguration);
-
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
-// autoCreateMasterKey creates Define/Master.key on the first run (SystemSettings names it as the master key source).
-builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
+// Finds the Define folder above the build output, adds the framework's default definitions it does not have yet (the
+// settings files, the system tables and the Department, Employee and AuditRule forms), reads SystemSettings and
+// registers the framework. AutoCreateMasterKey creates Define/Master.key on the first run (SystemSettings names it as
+// the master key source).
+#if (database == "Sqlite")
+var paths = builder.AddPolhemBackend(options => options.AutoCreateMasterKey = true);
+
+// The SQLite paths in DatabaseSettings.xml are relative; resolve them against the folder above Define, whichever
+// way the server was started.
+Directory.SetCurrentDirectory(Path.GetDirectoryName(paths.DefinePath)!);
+#else
+builder.AddPolhemBackend(options => options.AutoCreateMasterKey = true);
+#endif
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
 #if (browser)
@@ -85,15 +77,3 @@ if (app.Environment.IsDevelopment()) app.UseCors(DevelopmentCorsPolicy);
 app.MapJsonRpc("/api");
 app.Run();
 return 0;
-
-// Walks up from the build output, so the server finds the same Define folder however it is started.
-static string FindDefinePath()
-{
-    for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
-    {
-        var candidate = Path.Combine(dir.FullName, "Define");
-        if (File.Exists(Path.Combine(candidate, "SystemSettings.xml"))) return candidate;
-    }
-    throw new InvalidOperationException(
-        $"No Define/SystemSettings.xml was found above '{AppContext.BaseDirectory}'.");
-}

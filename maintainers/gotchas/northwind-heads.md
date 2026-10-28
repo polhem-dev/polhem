@@ -158,6 +158,10 @@ needs a real browser.
   host would have seeded its own database and an order saved in one head would not show in another.
 - **Seed data reaches each host's output through the project reference**: the JSON files are `None` items with
   `CopyToOutputDirectory` in the Backend csproj, and the seeder reads them from `AppContext.BaseDirectory`.
+- **The shell is the package's, not the head's.** Sign-in, top bar, menu, language switch and its `/culture` endpoint
+  come from `Polhem.Web.Blazor.Server.Shell` (since 1.11.0); the head keeps its options in `Program.cs`, two pages and
+  a body-only `app.css`. A change to how the shell looks or behaves goes into the package, where the template that
+  will generate Blazor Server sites picks it up too.
 - **The sign-in belongs to the circuit.** A reload, a typed URL or a new tab is a new circuit and shows the sign-in
   again. The language is fixed per circuit too, so it is picked on the sign-in screen (a culture cookie and a reload);
   the account's own culture is not applied afterwards.

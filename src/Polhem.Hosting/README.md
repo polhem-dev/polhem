@@ -37,6 +37,7 @@ this package. A head that runs the backend in its own process references both: i
 
 | Class / Member | Purpose |
 |----------------|---------|
+| `PolhemHostApplicationBuilderExtensions.AddPolhemBackend` | Brings the backend up in a host built with an `IHostApplicationBuilder` (a web application, a Worker Service, a generic host): finds the `Define` folder above the build output unless `PolhemBackendOptions.DefinePath` names one, adds the framework's default definitions it does not have yet, reads `SystemSettings.xml`, initializes `SysInfo`, and calls `AddPolhemPayload` and `AddPolhemFramework`. Returns the `PathOptions` it registered |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, `IInProcessTransportFactory` (used by `PolhemApiClient.CreateLocal`), the hosted services, …) into the supplied `IServiceCollection` |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `PolhemApiClient.PayloadOptions` |
@@ -51,19 +52,12 @@ Register the database providers first (see the `Polhem.Db` README).
 ### ASP.NET Core host
 
 ```csharp
-using Polhem.Core;
-using Polhem.Definition;
 using Polhem.Hosting;
 using Polhem.JsonRpc.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var paths = new PathOptions { DefinePath = Path.Combine(AppContext.BaseDirectory, "Define") };
-var settings = SystemSettingsLoader.Load(paths);
-SysInfo.Initialize(settings.CommonConfiguration);
-
-builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
-builder.Services.AddPolhemPayload(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
+builder.AddPolhemBackend();
 builder.Services.AddJsonRpcServer();
 builder.Services.AddPolhemApiKeyGateCheck();
 
@@ -71,6 +65,11 @@ var app = builder.Build();
 app.MapJsonRpc("/api");
 app.Run();
 ```
+
+`AddPolhemBackend` takes its options in a callback (`PolhemBackendOptions`): `DefinePath`, `CustomizePath`,
+`MaterializeDefaults` and `MaterializeOptions`, and `AutoCreateMasterKey`. A host that builds no
+`IHostApplicationBuilder`, or that loads its settings another way, makes the same calls itself:
+`SystemSettingsLoader.Load`, `SysInfo.Initialize`, `AddPolhemPayload` and `AddPolhemFramework`.
 
 `AddJsonRpcServer` comes from `Polhem.JsonRpc.AspNetCore` and builds on the JSON-RPC options `AddPolhemFramework`
 registered; `MapJsonRpc` publishes them at `POST /api`.
@@ -130,6 +129,7 @@ commands and their options are described in the
 ## Directory Structure
 
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
+- `PolhemHostApplicationBuilderExtensions.cs`, `PolhemBackendOptions.cs` -- `AddPolhemBackend` and its options
 - `Audit/` -- `IAuditLogSink` and the internal audit writers
 - `CacheNotify/` -- the cache-notify poller
 - `Database/` -- the startup check that `DatabaseSettings` has the items the framework requires, and the database initialization behind the `db` commands

@@ -15,8 +15,14 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1.11.0.md)
 
+- `Polhem.Hosting` gains `AddPolhemBackend`, which brings the backend up from the `Define` folder in one call on an
+  `IHostApplicationBuilder`; the `polhem-avalonia` server uses it.
 - The `polhem-avalonia` template's name, description and options are translated into Traditional Chinese, shown by
   `dotnet new` and the C# Dev Kit in that language.
+- `Polhem.Web.Blazor.Server` gains a ready-made shell (`PolhemShellLayout`, configured with `AddPolhemShell`): sign-in
+  and company, top bar, the server's menu, a collapsible menu on a narrow screen and an English / Traditional Chinese
+  switch, the counterpart of `Polhem.UI.Avalonia.Shell`. The package also ships an optional default stylesheet,
+  `polhem.css`.
 
 ## [1.10.0] - 2026-10-27
 

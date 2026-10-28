@@ -1,0 +1,26 @@
+@if (_error is not null)
+{
+    <div class="polhem-shell-nav__error" role="alert">@_error</div>
+}
+else if (_rows is null)
+{
+    <div class="polhem-shell-nav__loading">@LoadingText</div>
+}
+else
+{
+    <ul class="polhem-shell-nav">
+        @foreach (var row in _rows)
+        {
+            if (row.ProgId is null)
+            {
+                <li class="polhem-shell-nav__header">@row.Caption</li>
+            }
+            else
+            {
+                <li>
+                    <NavLink class="polhem-shell-nav__link" href="@Options.GetFormUri(row.ProgId)" @onclick="OnNavigated">@row.Caption</NavLink>
+                </li>
+            }
+        }
+    </ul>
+}

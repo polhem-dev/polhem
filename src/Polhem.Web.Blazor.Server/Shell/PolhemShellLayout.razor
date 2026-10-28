@@ -1,0 +1,26 @@
+@inherits LayoutComponentBase
+
+@if (UserContext.Company is null)
+{
+    <div class="polhem-shell-signin-page">
+        <PolhemShellSignIn OnSignedIn="StateHasChanged" />
+    </div>
+}
+else
+{
+    <div class="polhem-shell">
+        <header class="polhem-shell__header">
+            <button type="button" class="polhem-shell__menu-button" aria-label="@PolhemShellText.Get(PolhemShellText.ToggleMenu)"
+                    @onclick="ToggleMenu">☰</button>
+            <span class="polhem-shell__title">@Options.AppTitle</span>
+            <span class="polhem-shell__user">@UserContext.User?.UserName · @UserContext.Company.CompanyName</span>
+            <button type="button" class="polhem-shell__signout" @onclick="SignOut">@PolhemShellText.Get(PolhemShellText.SignOut)</button>
+        </header>
+        <div class="polhem-shell__body">
+            <nav class="polhem-shell__nav @(_isMenuToggled ? "polhem-shell__nav--toggled" : null)">
+                <PolhemShellNavMenu OnNavigated="CloseMenu" />
+            </nav>
+            <main class="polhem-shell__main">@Body</main>
+        </div>
+    </div>
+}

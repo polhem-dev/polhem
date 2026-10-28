@@ -83,14 +83,14 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   `Bind` 綁定 `FormDataObject`；它自行套用 schema 欄位的中繼資料（例如 `MaxLength`、`ListItems`），其他來源寫入
   該欄位時會自動更新。新的編輯器繼承 `FieldEditorBase`。標記上帶有 `polhem-field-editor` class、各編輯器的
   修飾 class（例如 `polhem-field-editor--numeric`），不可輸入時再加上 `polhem-field-editor--readonly`；
-  套件本身不附 CSS，唯一的腳本是 `CompactViewportObserver` 的 module。
+  套件附帶的選用樣式表會為這些 class 設定樣式（見下方「樣式」），唯一的腳本是 `CompactViewportObserver` 的 module。
 - 查詢 -- 綁定到有 `RelationProgId` 欄位的 `ButtonEdit` 會顯示該欄位的顯示欄位，按鈕開啟 `LookupDialog`（包著
   `LookupPanel` 的強制回應視窗：搜尋、清單、OK / Cancel），把選中資料列的 id 與對應欄位透過
   `FormDataObject.ApplyLookupSelection` 寫回，按 Delete 則清除。對話框依序從參數、容器中註冊的
   `IFormDefinitionSource` 與 `IFormApiConnectorFactory`（以 scoped 註冊，每個 circuit 各一份）、circuit 的
   `PolhemApiClient` 取得目標 schema 與連接器；有 Polhem 後端的應用程式不需註冊任何東西。
 - `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。登入成功時也會記錄到 circuit 的
-  `CircuitUserContext`。
+  `CircuitUserContext`。`InitialUserId` 與 `InitialPassword` 在面板初始化時填入輸入框一次。
 - `CircuitUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`
   登出，讓 context 與 client 保持一致。直接透過 client 進入公司的話，context 沒有能力快照，頁面會把使用者視為不受限。
 - `PolhemAccessTokenProvider` -- 持有頁面的登入狀態（存取權杖），並以 cascading value 提供給子元件。實際的呼叫
@@ -103,6 +103,79 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 - `FormLiveComputation` -- 重算表單的計算欄位並評估新資料列的預設值運算式，規則與 Avalonia 端相同（`Polhem.UI.Core`
   的 `FormLiveComputationEngine`）。自訂頁面訂閱 `FieldValueChanged` 並呼叫 `Recompute`；時區要傳 circuit 自己的，
   不可用整個 process 共用的。
+
+## 外殼（Shell）
+
+`Polhem.Web.Blazor.Server.Shell` 是網站現成的前端，對應 Avalonia 的
+[`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.zh-TW.md)：先是登入並進入公司的登入畫面，接著是頂端列
+（標題、使用者與公司、登出）、伺服器的選單與路由到的頁面。網站只要提供標題與登入畫面的預設值，自己只留下自己的頁面。
+
+| 部分 | 作用 |
+|------|------|
+| `PolhemShellLayout` | 路由器的預設版面。circuit 的使用者進入公司之前顯示 `PolhemShellSignIn`，之後顯示頂端列、`PolhemShellNavMenu` 與頁面。選單按鈕在寬螢幕上收合選單；寬度小於 600 CSS 像素（表單頁預設的精簡門檻）時改為從側邊滑出蓋在頁面上，選了表單就關閉。 |
+| `PolhemShellSignIn` | 標題、提示、公司與 `PolhemLoginPanel`；登入後經由 `CircuitUserContext.EnterCompanyAsync` 進入公司。被拒絕時把錯誤顯示在畫面上，並讓 circuit 再次登出。提供設定的語言之間的切換。 |
+| `PolhemShellNavMenu` | 把伺服器的 `MenuSettings` 呈現為資料夾標題與連到 `{FormRoute}/{ProgId}` 的連結，標題依 circuit 的 UI culture 呈現。 |
+| `PolhemShellHome` | 開啟選單的第一個表單，與 Avalonia 外殼登入後的行為相同。放在根頁面上。 |
+| `AddPolhemShell` | 註冊 `PolhemShellOptions`。每個選項都寫在它的 XML 文件中。 |
+| `UsePolhemShellLocalization` | 以設定的語言設定 request localization，讓 circuit 以瀏覽者選的語言開始。 |
+| `MapPolhemShellCulture` | `GET /culture`，語言切換背後的端點。它把提供的 culture 存進 request-localization cookie 後轉址回原頁，且只轉到本站的路徑；其他位址一律回到根目錄，因此這個端點不會成為 open redirect（`PolhemShellCultureEndpointTests`）。 |
+
+```csharp
+using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Server.Shell;
+
+builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
+builder.Services.AddPolhemShell(shell =>
+{
+    shell.AppTitle = "My App";
+    shell.DefaultCompanyId = "ACME";
+});
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+var app = builder.Build();
+app.UsePolhemShellLocalization();
+app.UseStaticFiles();
+app.UseAntiforgery();
+app.MapPolhemShellCulture();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+```
+
+應用程式保留自己的 `App.razor`（在其中連結樣式表，見下方）、以 `DefaultLayout="typeof(PolhemShellLayout)"` 設定的路由器，
+以及兩個頁面：
+
+```razor
+@* Pages/Home.razor *@
+@page "/"
+<PolhemShellHome />
+
+@* Pages/FormHost.razor：路由是 "/{FormRoute}/{ProgId}"，預設為 "form"。 *@
+@page "/form/{ProgId}"
+<FormPage ProgId="@ProgId" />
+@code {
+    [Parameter] public string ProgId { get; set; } = string.Empty;
+}
+```
+
+登入屬於 circuit，所以重新整理或開新分頁會再次顯示登入畫面。circuit 的 culture 在連線時就固定了，因此語言要在登入畫面、
+任何人登入之前選擇：切換會經過 `/culture` 並重新載入頁面。之後不會再套用帳號本身的 culture。外殼自己的文字有英文與
+繁體中文；元件與定義依各自的語系資源呈現。
+
+外殼使用 host 選定的 provider，因此上方 Local 模式的警告同樣適用。
+
+## 樣式
+
+套件附帶一份選用的樣式表 `_content/Polhem.Web.Blazor.Server/polhem.css`，是元件與外殼的預設外觀。在 `App.razor`
+中連結它，放在網站自己的樣式表之前：
+
+```html
+<link rel="stylesheet" href="_content/Polhem.Web.Blazor.Server/polhem.css" />
+<link rel="stylesheet" href="app.css" />
+```
+
+它只設定 `polhem-*` class 的樣式；頁面的 body（字型、背景、邊界）仍由網站決定。要改外觀時，在網站的樣式表中於 `:root`
+重新定義它的自訂屬性（`--polhem-accent`、`--polhem-surface`、`--polhem-shell-header` 以及檔案開頭的其他屬性），或以相同 class 的
+選擇器覆寫任一規則。不連結它的網站自行為這些 class 設定樣式。樣式表中的選擇器對不上元件實際輸出的 class 時，
+`CssClassNameGateTests`（`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗。
 
 ## 相依限制
 
