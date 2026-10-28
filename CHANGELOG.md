@@ -23,8 +23,8 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   `dotnet new` and the C# Dev Kit in that language.
 - `Polhem.Web.Blazor.Server` gains a ready-made shell (`PolhemShellLayout`, configured with `AddPolhemShell`): sign-in
   and company, top bar, the server's menu, a collapsible menu on a narrow screen and an English / Traditional Chinese
-  switch, the counterpart of `Polhem.UI.Avalonia.Shell`. The package also ships an optional default stylesheet,
-  `polhem.css`.
+  switch, the counterpart of `Polhem.UI.Avalonia.Shell`. Until the menu holds a form, the root page and the menu say
+  so. The package also ships an optional default stylesheet, `polhem.css`.
 
 ## [1.10.0] - 2026-10-27
 

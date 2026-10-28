@@ -19,7 +19,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
   `polhem-avalonia` 的伺服器改用它。
 - 各範本的名稱、說明與選項翻譯成繁體中文，在 `dotnet new` 與 C# Dev Kit 使用該語言時顯示。
 - `Polhem.Web.Blazor.Server` 新增現成的外殼（`PolhemShellLayout`，以 `AddPolhemShell` 設定）：登入與公司、頂端列、伺服器的選單、
-  窄螢幕上可收合的選單，以及英文／繁體中文切換，對應 `Polhem.UI.Avalonia.Shell`。套件也附帶一份選用的預設樣式表 `polhem.css`。
+  窄螢幕上可收合的選單，以及英文／繁體中文切換，對應 `Polhem.UI.Avalonia.Shell`。選單裡還沒有表單時，根頁面與選單會說明這一點。
+  套件也附帶一份選用的預設樣式表 `polhem.css`。
 
 ## [1.10.0] - 2026-10-27
 

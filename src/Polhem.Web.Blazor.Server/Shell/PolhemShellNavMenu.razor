@@ -6,6 +6,10 @@ else if (_rows is null)
 {
     <div class="polhem-shell-nav__loading">@LoadingText</div>
 }
+else if (_rows.Count == 0)
+{
+    <div class="polhem-shell-nav__empty">@PolhemShellText.Get(PolhemShellText.MenuEmpty)</div>
+}
 else
 {
     <ul class="polhem-shell-nav">

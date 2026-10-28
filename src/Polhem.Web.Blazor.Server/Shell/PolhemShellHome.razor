@@ -1,1 +1,11 @@
-<p class="polhem-shell__loading">@LoadingText</p>
+@switch (_state)
+{
+    case HomeState.Empty:
+        <p class="polhem-shell__empty">@PolhemShellText.Get(PolhemShellText.MenuEmpty)</p>
+        break;
+    case HomeState.Failed:
+        break;
+    default:
+        <p class="polhem-shell__loading">@LoadingText</p>
+        break;
+}

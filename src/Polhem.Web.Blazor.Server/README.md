@@ -137,7 +137,7 @@ its title and the values the sign-in screen starts with, and keeps only its own 
 | `PolhemShellLayout` | The router's default layout. Shows `PolhemShellSignIn` until the circuit's user has entered a company, then the top bar, `PolhemShellNavMenu` and the page. The menu button collapses the menu on a wide screen and slides it over the page below 600 CSS pixels, the form page's default compact threshold; picking a form closes it. |
 | `PolhemShellSignIn` | Title, hint, company and a `PolhemLoginPanel`; signs in, then enters the company through `CircuitUserContext.EnterCompanyAsync`. A refusal is shown on the screen and signs the circuit out again. Offers a switch between the configured languages. |
 | `PolhemShellNavMenu` | The server's `MenuSettings` as folder headers and links to `{FormRoute}/{ProgId}`, captions in the circuit's UI culture. |
-| `PolhemShellHome` | Opens the menu's first form, as the Avalonia shell does after sign-in. Place it on the root page. |
+| `PolhemShellHome` | Opens the menu's first form, as the Avalonia shell does after sign-in, or says that the menu has no forms yet. Place it on the root page. |
 | `AddPolhemShell` | Registers `PolhemShellOptions`. Every option is described in its XML documentation. |
 | `UsePolhemShellLocalization` | Request localization over the configured languages, so a circuit starts in the language the viewer picked. |
 | `MapPolhemShellCulture` | `GET /culture`, the endpoint behind the language switch. It stores an offered culture in the request-localization cookie and redirects back, to a path on this site only; any other address returns to the root, so the endpoint is not an open redirect (`PolhemShellCultureEndpointTests`). |
