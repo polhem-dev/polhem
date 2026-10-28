@@ -44,29 +44,53 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\polhem-avalonia\.template.config\template.json"
+    <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\_shared\**;content\*\.template.config\template.json"
           Pack="true" PackagePath="content\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    A template is a folder of content/ with a .template.config/template.json. content/_shared is not one: it holds
+    the files every template carries unchanged, kept once and packed into each template's folder by
+    PackTemplateFiles. So a template installed from its content folder misses them; only the package is supported.
+  -->
+  <ItemGroup>
+    <_PolhemTemplateJson Include="content\*\.template.config\template.json" />
+    <_PolhemSharedFile Include="content\_shared\**" Exclude="content\_shared\**\bin\**;content\_shared\**\obj\**"
+                       RelativePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!--
     The generated application references the Polhem packages and tools of this package's own version. template.json
     carries a placeholder as the default of polhemVersion, and the packed copy carries the version, so the version
     has one source (Version.props, or the /p:Version of the release) and template.json never has to be edited for a
-    release. Installing the template from the content folder keeps the placeholder; pass polhem-version then.
+    release.
   -->
-  <Target Name="StampTemplateVersion" BeforeTargets="_GetPackageFiles">
+  <Target Name="_CollectPolhemTemplates">
+    <ItemGroup>
+      <_PolhemTemplate Include="@(_PolhemTemplateJson)">
+        <TemplateName>$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('%(FullPath)'))))))</TemplateName>
+      </_PolhemTemplate>
+    </ItemGroup>
+    <Error Condition="'@(_PolhemTemplate)' == ''" Text="No template under content/ has a .template.config/template.json." />
+  </Target>
+
+  <!-- Runs once for each template (target batching on TemplateName). -->
+  <Target Name="PackTemplateFiles" BeforeTargets="_GetPackageFiles" DependsOnTargets="_CollectPolhemTemplates"
+          Outputs="%(_PolhemTemplate.TemplateName)">
     <PropertyGroup>
-      <_PolhemTemplateJson>content\polhem-avalonia\.template.config\template.json</_PolhemTemplateJson>
-      <_PolhemStampedTemplateJson>$(IntermediateOutputPath)polhem-avalonia\template.json</_PolhemStampedTemplateJson>
-      <_PolhemTemplateText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\$(_PolhemTemplateJson)'))</_PolhemTemplateText>
+      <_PolhemTemplateName>@(_PolhemTemplate->'%(TemplateName)')</_PolhemTemplateName>
+      <_PolhemTemplateJsonPath>@(_PolhemTemplate->'%(FullPath)')</_PolhemTemplateJsonPath>
+      <_PolhemStampedTemplateJson>$(IntermediateOutputPath)$(_PolhemTemplateName)\template.json</_PolhemStampedTemplateJson>
+      <_PolhemTemplateText>$([System.IO.File]::ReadAllText('$(_PolhemTemplateJsonPath)'))</_PolhemTemplateText>
     </PropertyGroup>
     <Error Condition="!$(_PolhemTemplateText.Contains('&quot;0.0.0-unpacked&quot;'))"
-           Text="$(_PolhemTemplateJson) no longer holds the placeholder 0.0.0-unpacked that StampTemplateVersion replaces with the package version." />
+           Text="content\$(_PolhemTemplateName)\.template.config\template.json no longer holds the placeholder 0.0.0-unpacked that PackTemplateFiles replaces with the package version." />
     <WriteLinesToFile File="$(_PolhemStampedTemplateJson)"
                       Lines="$(_PolhemTemplateText.Replace('&quot;0.0.0-unpacked&quot;', '&quot;$(PackageVersion)&quot;'))"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup>
-      <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\polhem-avalonia\.template.config\template.json" />
+      <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\$(_PolhemTemplateName)\.template.config\template.json" />
+      <None Include="@(_PolhemSharedFile)" Pack="true" PackagePath="content\$(_PolhemTemplateName)\%(_PolhemSharedFile.RelativePath)" />
     </ItemGroup>
   </Target>
 

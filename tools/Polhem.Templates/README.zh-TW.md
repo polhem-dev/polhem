@@ -12,6 +12,10 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 
 在安裝了 C# Dev Kit 的 VS Code 中，範本會出現在「New .NET Project」的清單，名稱是 **Polhem App (Avalonia)**。
 
+範本請從套件安裝（如上），或從 `.nupkg` 檔安裝（`dotnet new install <路徑>.nupkg`）。不支援從 `content/` 下的範本資料夾直接安裝：
+各範本共用的檔案（`Define/`、`Excel/`、`.config/`、`.gitignore`）只在 `content/_shared/` 放一份，建置套件時才加進每個範本，
+所以從資料夾安裝的範本會缺這些檔案。
+
 範本的名稱、說明與選項也有繁體中文翻譯。`dotnet new` 的語言是繁體中文時（`DOTNET_CLI_UI_LANGUAGE=zh-TW`）會顯示中文，
 C# Dev Kit 則在作業系統語言是繁體中文時顯示；在這樣的環境下，清單上的名稱是 **Polhem 應用程式 (Avalonia)**。其他語言顯示英文。
 

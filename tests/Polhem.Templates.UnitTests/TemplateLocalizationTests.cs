@@ -9,17 +9,13 @@ public class TemplateLocalizationTests
 {
     private static readonly JsonDocumentOptions s_jsonOptions = new() { CommentHandling = JsonCommentHandling.Skip };
 
-    private static string ContentRoot => Path.Combine(TemplatePaths.RepositoryRoot, "tools", "Polhem.Templates", "content");
-
     private static string SourcesRoot => Path.Combine(TemplatePaths.RepositoryRoot, "tests", "Polhem.Templates.UnitTests", "TranslationSources");
 
     [Fact]
     [DisplayName("Every template has at least one translation of its strings")]
     public void Templates_HaveTranslations()
     {
-        var templates = Directory.GetDirectories(ContentRoot)
-            .Where(d => File.Exists(Path.Combine(d, ".template.config", "template.json")))
-            .ToList();
+        var templates = TemplatePaths.Templates.Select(TemplatePaths.TemplateDirectory).ToList();
 
         Assert.NotEmpty(templates);
         Assert.All(templates, t => Assert.NotEmpty(TranslationFiles(t)));
@@ -33,10 +29,9 @@ public class TemplateLocalizationTests
     public void Translations_MatchTheEnglishTheyWereMadeFrom()
     {
         var problems = new StringBuilder();
-        foreach (var template in Directory.GetDirectories(ContentRoot))
+        foreach (var template in TemplatePaths.Templates.Select(TemplatePaths.TemplateDirectory))
         {
             var templateJson = Path.Combine(template, ".template.config", "template.json");
-            if (!File.Exists(templateJson)) continue;
             using var english = JsonDocument.Parse(File.ReadAllText(templateJson), s_jsonOptions);
 
             foreach (var translationFile in TranslationFiles(template))
