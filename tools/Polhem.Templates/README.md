@@ -12,6 +12,10 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 
 In VS Code with the C# Dev Kit, the template is listed as **Polhem App (Avalonia)** under **New .NET Project**.
 
+The template's name, description and options are also translated into Traditional Chinese. `dotnet new` shows them
+when its language is Traditional Chinese (`DOTNET_CLI_UI_LANGUAGE=zh-TW`), and the C# Dev Kit when the operating
+system's language is; every other language shows the English.
+
 ## `polhem-avalonia`
 
 Creates an application with an Avalonia desktop front end, and optionally browser, iOS and Android front ends. The

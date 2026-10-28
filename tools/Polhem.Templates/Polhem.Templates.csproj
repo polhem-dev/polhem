@@ -25,6 +25,23 @@
     <PackageTags>polhem;dotnet-new;templates</PackageTags>
   </PropertyGroup>
 
+  <!--
+    Template strings are translated in each template's .template.config/localize/templatestrings.<language>.json.
+    Microsoft.TemplateEngine.Authoring.Tasks rewrites those files from template.json on every build, so the keys
+    follow template.json and only the translated values are kept by hand. The build-ci workflow fails when a pack
+    leaves them changed. zh-Hant also covers zh-TW and zh-HK, which fall back to it.
+  -->
+  <PropertyGroup>
+    <LocalizeTemplates>true</LocalizeTemplates>
+    <LocalizableTemplatesPath>content</LocalizableTemplatesPath>
+    <TemplateLanguages>zh-Hant</TemplateLanguages>
+    <ValidateTemplatesPath>content</ValidateTemplatesPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.403" PrivateAssets="all" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="content\**" Exclude="content\**\bin\**;content\**\obj\**;content\polhem-avalonia\.template.config\template.json"

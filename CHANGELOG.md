@@ -11,6 +11,13 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [Unreleased]
+
+Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1.11.0.md)
+
+- The `polhem-avalonia` template's name, description and options are translated into Traditional Chinese, shown by
+  `dotnet new` and the C# Dev Kit in that language.
+
 ## [1.10.0] - 2026-10-27
 
 Details and migration steps: [docs/en/changelogs/1.10.0.md](docs/en/changelogs/1.10.0.md)

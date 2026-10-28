@@ -338,6 +338,20 @@ jobs:
         dotnet pack tools/DbManager/Polhem.DbManager.csproj --configuration Release --output ./nupkgs
         dotnet pack tools/Polhem.Templates/Polhem.Templates.csproj --configuration Release --output ./nupkgs
 
+    # The pack above rewrites each template's localize/templatestrings.*.json from its template.json
+    # (Microsoft.TemplateEngine.Authoring.Tasks). A change here means a template string was added or removed without
+    # the translation files being committed, and the package would ship the English for it.
+    - name: Check template translation files are committed
+      if: steps.changes.outputs.build == 'true'
+      run: |
+        changes=$(git status --porcelain -- tools/Polhem.Templates/content)
+        if [ -n "$changes" ]; then
+          printf '%s\n' "$changes"
+          git diff -- tools/Polhem.Templates/content
+          echo "::error::Build tools/Polhem.Templates locally, translate the new strings, record their English in tests/Polhem.Templates.UnitTests/TranslationSources, and commit both."
+          exit 1
+        fi
+
     # Mobile AOT gate: `DynamicCodeSupport=false` is exactly what the .NET for iOS SDK sets for every
     # iOS / tvOS / MacCatalyst build, mapped to the RuntimeHostConfigurationOption of
     # `RuntimeFeature.IsDynamicCodeSupported`.
