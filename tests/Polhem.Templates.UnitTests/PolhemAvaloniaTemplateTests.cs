@@ -7,7 +7,8 @@ using Polhem.Definition.Settings;
 
 namespace Polhem.Templates.UnitTests;
 
-public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
+[Collection(TemplatePackageCollection.Name)]
+public class PolhemAvaloniaTemplateTests
 {
     private readonly TemplatePackageFixture _fx;
 

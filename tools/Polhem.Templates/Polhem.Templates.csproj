@@ -21,7 +21,7 @@
     <!-- NU5128: a template package has no lib/ folder, by design. -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <PackageOutputPath>../../nupkgs</PackageOutputPath>
-    <Description>Project templates for Polhem. `dotnet new polhem-avalonia` creates an application whose server references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
+    <Description>Project templates for Polhem. `dotnet new polhem-avalonia` creates a JSON-RPC server and Avalonia clients; `dotnet new polhem-blazor-server` creates one Blazor Server site that runs the backend in its own process. Each references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
     <PackageTags>polhem;dotnet-new;templates</PackageTags>
   </PropertyGroup>
 

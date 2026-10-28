@@ -1,0 +1,138 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Polhem: Initialize database",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "polhem-db-create",
+                "polhem-db-upgrade",
+                "polhem-db-seed-admin"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "polhem-db-create",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Web/PolhemApp.Web.csproj",
+                "--",
+                "db",
+                "create"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "hide": true
+        },
+        {
+            "label": "polhem-db-upgrade",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Web/PolhemApp.Web.csproj",
+                "--",
+                "db",
+                "upgrade"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "hide": true
+        },
+        {
+            "label": "polhem-db-seed-admin",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Web/PolhemApp.Web.csproj",
+                "--",
+                "db",
+                "seed-admin",
+                "--company",
+                "POLHEM_COMPANY_ID"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "hide": true
+        },
+        {
+            "label": "Polhem: Upgrade database",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/PolhemApp.Web/PolhemApp.Web.csproj",
+                "--",
+                "db",
+                "upgrade"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Polhem: Open DefineEditor",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "polhem-define",
+                "${workspaceFolder}/Define"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": [
+                "polhem-tool-restore"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "polhem-tool-restore",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "tool",
+                "restore"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "hide": true
+        }
+    ]
+}
