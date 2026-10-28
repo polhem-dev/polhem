@@ -5,15 +5,15 @@ using Polhem.Tests.Shared;
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
     /// <summary>
-    /// Asserts that the Blazor demo's stylesheet only targets class names that some component
-    /// actually renders.
+    /// Asserts that the package's stylesheet and the Blazor demo's stylesheet only target class names
+    /// that some component actually renders.
     /// </summary>
     /// <remarks>
-    /// The components ship no CSS of their own; the class names on their markup are the contract a
-    /// consuming application styles against, and the demo stylesheet is the one consumer in this
-    /// repository. A selector that no markup carries matches nothing and fails silently, which is
-    /// what a class renamed on one side only looks like. Class names written in C# code-behind count as
-    /// markup, because the field editors build their class attribute there.
+    /// The class names on the components' markup are the contract a stylesheet styles against: the
+    /// package's optional <c>polhem.css</c>, and the demo's own sheet, which does not link it. A selector
+    /// that no markup carries matches nothing and fails silently, which is what a class renamed on one
+    /// side only looks like. Class names written in C# code-behind count as markup, because the field
+    /// editors build their class attribute there.
     /// </remarks>
     public class CssClassNameGateTests
     {
@@ -27,9 +27,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [Fact]
         [DisplayName("Every polhem- selector in the Blazor demo stylesheet matches a class in the component markup")]
         public void DemoStylesheet_SelectorsMatchRenderedClasses()
+            => AssertSelectorsMatchRenderedClasses("samples", "Blazor.Server.Demo", "wwwroot", "css", "site.css");
+
+        [Fact]
+        [DisplayName("Every polhem- selector in the package stylesheet matches a class in the component markup")]
+        public void PackageStylesheet_SelectorsMatchRenderedClasses()
+            => AssertSelectorsMatchRenderedClasses("src", "Polhem.Web.Blazor.Server", "wwwroot", "polhem.css");
+
+        private static void AssertSelectorsMatchRenderedClasses(params string[] stylesheetPath)
         {
             var root = RepoRoot.Find();
-            var stylesheet = File.ReadAllText(Path.Combine(root, "samples", "Blazor.Server.Demo", "wwwroot", "css", "site.css"));
+            var stylesheet = File.ReadAllText(Path.Combine([root, .. stylesheetPath]));
             var selectors = s_selector.Matches(stylesheet).Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
 
             var rendered = new[]

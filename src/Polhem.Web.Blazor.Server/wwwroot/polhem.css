@@ -1,0 +1,157 @@
+/*
+ * The default look of the Polhem Blazor Server components and shell, served at
+ * _content/Polhem.Web.Blazor.Server/polhem.css. It is optional: a site that links it gets this look, a site that
+ * does not styles the polhem-* classes itself.
+ *
+ * To restyle, link a sheet of your own after this one. The colours are the custom properties below, so redefining
+ * them on :root changes every component at once; any rule can also be overridden by a selector of the same class.
+ * The sheet styles nothing outside its own classes, so the page's body (font, background, margin) stays the site's.
+ */
+:root {
+    --polhem-surface: #ffffff;
+    --polhem-border: #d0d7de;
+    --polhem-border-muted: #eaeef2;
+    --polhem-text: #1f2328;
+    --polhem-text-muted: #57606a;
+    --polhem-hover: #f3f4f6;
+    --polhem-accent: #0969da;
+    --polhem-accent-text: #ffffff;
+    --polhem-selected: #ddf4ff;
+    --polhem-required: #2563eb;
+    --polhem-danger: #cf222e;
+    --polhem-danger-surface: #ffebe9;
+    --polhem-warning: #9a6700;
+    --polhem-warning-surface: #fff8c5;
+    --polhem-warning-border: #d4a72c;
+    --polhem-dirty: #bf8700;
+    --polhem-shell-header: #24292f;
+    --polhem-shell-header-text: #ffffff;
+    --polhem-shell-nav-width: 200px;
+}
+
+/* Shell: the sign-in screen. */
+.polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
+.polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; background: var(--polhem-surface); border: 1px solid var(--polhem-border); border-radius: 6px; padding: 24px; }
+.polhem-shell-signin__title { margin: 0; font-size: 1.4rem; }
+.polhem-shell-signin__hint { margin: 0; color: var(--polhem-text-muted); font-size: 0.9rem; }
+.polhem-shell-signin__error { color: var(--polhem-danger); font-size: 0.9rem; }
+.polhem-shell-signin__languages { display: flex; gap: 8px; }
+.polhem-shell-signin__language { padding: 4px 10px; }
+
+/* Shell: the top bar, the menu and the page. */
+.polhem-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.polhem-shell__header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: var(--polhem-shell-header); color: var(--polhem-shell-header-text); }
+.polhem-shell__menu-button { background: transparent; color: inherit; border: 0; font-size: 1.2rem; cursor: pointer; }
+.polhem-shell__title { font-weight: 600; }
+.polhem-shell__user { margin-left: auto; font-size: 0.9rem; opacity: 0.85; }
+.polhem-shell__signout { padding: 4px 10px; }
+.polhem-shell__body { flex: 1; display: flex; min-height: 0; }
+.polhem-shell__nav { width: var(--polhem-shell-nav-width); flex-shrink: 0; background: var(--polhem-surface); border-right: 1px solid var(--polhem-border); padding: 12px 0; }
+.polhem-shell__main { flex: 1; min-width: 0; padding: 16px; }
+.polhem-shell__loading { padding: 8px 16px; color: var(--polhem-text-muted); }
+
+.polhem-shell-nav { list-style: none; margin: 0; padding: 0; }
+/* Two levels: a folder reads as a section heading (bold, a rule above it), its forms as indented items under it. */
+.polhem-shell-nav__header { margin-top: 8px; padding: 10px 16px 4px; border-top: 1px solid var(--polhem-border-muted); font-size: 0.85rem; font-weight: 700; color: var(--polhem-text); }
+.polhem-shell-nav > .polhem-shell-nav__header:first-child { margin-top: 0; border-top: 0; }
+.polhem-shell-nav__link { display: block; padding: 5px 16px 5px 32px; color: var(--polhem-text-muted); font-size: 0.9rem; text-decoration: none; border-left: 3px solid transparent; }
+.polhem-shell-nav__link:hover { background: var(--polhem-hover); color: var(--polhem-text); }
+.polhem-shell-nav__link.active { background: var(--polhem-selected); color: var(--polhem-accent); font-weight: 600; border-left-color: var(--polhem-accent); }
+.polhem-shell-nav__loading { padding: 8px 16px; color: var(--polhem-text-muted); }
+.polhem-shell-nav__error { padding: 8px 16px; color: var(--polhem-danger); font-size: 0.9rem; }
+
+/*
+ * The breakpoint is the form page's default compact threshold (600 CSS pixels), so the shell and the form switch
+ * together. A media query cannot read a custom property; a site that changes the threshold overrides these two rules.
+ */
+@media (min-width: 600px) {
+    /* On a wide screen the menu button collapses the menu and gives the page the whole width. */
+    .polhem-shell__nav--toggled { display: none; }
+}
+
+@media (max-width: 599px) {
+    /* On a narrow screen the menu slides over the page, as in the Avalonia phone heads. */
+    .polhem-shell__user { display: none; }
+    .polhem-shell__signout { margin-left: auto; }
+    .polhem-shell__nav { position: fixed; top: 44px; bottom: 0; left: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.2s; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15); }
+    .polhem-shell__nav--toggled { transform: none; }
+    .polhem-shell__main { padding: 12px; }
+}
+
+/* Sign-in panel. */
+.polhem-login-panel { display: flex; flex-direction: column; gap: 12px; }
+.polhem-login-panel__field { display: flex; flex-direction: column; gap: 4px; }
+.polhem-login-panel__input { padding: 6px 8px; border: 1px solid var(--polhem-border); border-radius: 4px; font: inherit; }
+.polhem-login-panel__submit { padding: 8px 14px; background: var(--polhem-accent); color: var(--polhem-accent-text); border: 0; border-radius: 4px; cursor: pointer; }
+.polhem-login-panel__error { color: var(--polhem-danger); font-size: 0.9rem; }
+
+/* Form page. */
+.polhem-form-page { background: var(--polhem-surface); border: 1px solid var(--polhem-border); border-radius: 6px; padding: 16px; }
+.polhem-form-page__toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.polhem-form-page__toolbar button { padding: 4px 12px; }
+.polhem-form-page__dirty { color: var(--polhem-dirty); font-size: 0.85rem; }
+.polhem-form-page__error { color: var(--polhem-danger); padding: 10px; background: var(--polhem-danger-surface); border-radius: 4px; }
+.polhem-form-page__loading { color: var(--polhem-text-muted); }
+.polhem-form-page__notice { color: var(--polhem-warning); padding: 8px 10px; margin: 8px 0; background: var(--polhem-warning-surface); border: 1px solid var(--polhem-warning-border); border-radius: 4px; }
+
+/* List. */
+.polhem-dynamic-grid { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.polhem-dynamic-grid th { text-align: left; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid var(--polhem-border); }
+.polhem-dynamic-grid td { padding: 4px 8px; border-bottom: 1px solid var(--polhem-border-muted); }
+.polhem-dynamic-grid__row { cursor: pointer; }
+.polhem-dynamic-grid__row--selected { background: var(--polhem-selected); }
+
+/* Record layout. */
+.polhem-form-layout__grid { display: grid; gap: 12px; }
+.polhem-form-layout__section { border: 0; margin: 0 0 12px; padding: 0; }
+.polhem-form-layout__section-caption { font-weight: 600; margin-bottom: 8px; }
+.polhem-form-layout__field { display: flex; flex-direction: column; gap: 4px; }
+.polhem-form-layout__label { font-size: 0.85rem; color: var(--polhem-text-muted); }
+.polhem-form-layout__label--required { color: var(--polhem-required); }
+.polhem-form-layout__detail { border: 0; margin: 12px 0 0; padding: 0; }
+.polhem-form-layout__detail-caption { font-weight: 600; margin-bottom: 6px; }
+
+/* Field editors. */
+.polhem-field-editor { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid var(--polhem-border); border-radius: 4px; font: inherit; }
+.polhem-field-editor--checkbox { width: auto; }
+.polhem-field-editor--numeric { text-align: right; }
+.polhem-field-editor--memo { min-height: 4.5em; resize: vertical; }
+/* Read-only reads as a record, not a grid of input boxes: the box collapses to a bottom line, as in the Avalonia head. */
+.polhem-field-editor--readonly { border-width: 0 0 1px; border-radius: 0; background: transparent; }
+
+.polhem-button-edit { position: relative; display: block; }
+.polhem-button-edit .polhem-field-editor { padding-right: 30px; }
+.polhem-button-edit__button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: inherit; opacity: 0.65; cursor: pointer; padding: 4px; line-height: 0; }
+
+/* Lookup. */
+.polhem-lookup-dialog__card { background: var(--polhem-surface); border-radius: 6px; padding: 16px; width: 520px; max-width: calc(100vw - 32px); box-sizing: border-box; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-lookup-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-lookup-dialog__error, .polhem-lookup-panel__error { color: var(--polhem-danger); margin-bottom: 12px; }
+.polhem-lookup-panel__search { display: flex; gap: 8px; margin-bottom: 12px; }
+.polhem-lookup-panel__search-input { flex: 1; padding: 6px 8px; border: 1px solid var(--polhem-border); border-radius: 4px; font: inherit; }
+.polhem-lookup-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.polhem-lookup-panel__buttons button, .polhem-lookup-panel__search-button { padding: 4px 14px; }
+
+/* Detail grid. */
+.polhem-grid__toolbar { display: flex; gap: 4px; margin-bottom: 4px; }
+.polhem-grid__button { padding: 4px 6px; line-height: 0; cursor: pointer; }
+.polhem-grid__table { width: 100%; border-collapse: collapse; }
+.polhem-grid__header { text-align: left; font-weight: 600; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid var(--polhem-border); }
+.polhem-grid__header--required { color: var(--polhem-required); }
+.polhem-grid__row { cursor: pointer; }
+.polhem-grid__row--selected { background: var(--polhem-selected); }
+.polhem-grid__cell { padding: 4px 8px; border-bottom: 1px solid var(--polhem-border-muted); }
+.polhem-grid__cell--editor { padding: 2px 4px; }
+
+/* Row edit dialog. */
+.polhem-row-edit-dialog__card { background: var(--polhem-surface); border-radius: 6px; padding: 16px; width: 560px; max-width: calc(100vw - 32px); box-sizing: border-box; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-row-edit-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-row-edit-panel__field { display: flex; flex-direction: column; gap: 4px; }
+.polhem-row-edit-panel__label { font-size: 0.85rem; color: var(--polhem-text-muted); }
+.polhem-row-edit-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.polhem-row-edit-panel__buttons button { padding: 4px 14px; }
+
+@media (max-width: 599px) {
+    .polhem-dynamic-grid { display: block; overflow-x: auto; }
+    .polhem-grid { overflow-x: auto; }
+}

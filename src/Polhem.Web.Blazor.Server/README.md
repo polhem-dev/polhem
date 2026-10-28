@@ -98,7 +98,8 @@ decides whether `FormPage` localizes its definitions; see below.
   the schema field's metadata (such as `MaxLength` and `ListItems`) itself and refreshes when another party writes
   its field. New editors derive from `FieldEditorBase`. Their markup carries the `polhem-field-editor` class, a
   per-editor modifier such as `polhem-field-editor--numeric`, and `polhem-field-editor--readonly` when they do not
-  accept input; the package ships no CSS of its own. Its only script is the module of `CompactViewportObserver`.
+  accept input; the package's optional stylesheet styles these classes (see Styling below). Its only script is the
+  module of `CompactViewportObserver`.
 - Lookup -- a `ButtonEdit` bound to a field with a `RelationProgId` shows the field's display fields, opens
   `LookupDialog` (a modal over `LookupPanel`: search, list, OK / Cancel) from its button, writes the chosen row's id
   and mapped fields through `FormDataObject.ApplyLookupSelection`, and clears them on Delete. The dialog takes the
@@ -106,7 +107,8 @@ decides whether `FormPage` localizes its definitions; see below.
   `IFormApiConnectorFactory` registered in the container (scoped, so each circuit has its own), else from the circuit's
   `PolhemApiClient`; an application with a Polhem backend registers nothing.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`. A successful sign-in is
-  also recorded on the circuit's `CircuitUserContext`.
+  also recorded on the circuit's `CircuitUserContext`. `InitialUserId` and `InitialPassword` fill the inputs once, when
+  the panel is initialized.
 - `CircuitUserContext` -- the signed-in user, entered company and capabilities of one circuit. The host enters the
   company with `EnterCompanyAsync` and signs out with `SignOut`, which keep the context and the client in step.
   Entering the company through the client directly leaves the context without capabilities, so the pages treat the
@@ -122,6 +124,82 @@ decides whether `FormPage` localizes its definitions; see below.
 - `FormLiveComputation` -- recomputes a form's computed fields and evaluates new-row default expressions, with the
   same rules as the Avalonia head (`FormLiveComputationEngine` in `Polhem.UI.Core`). A page of its own subscribes
   `FieldValueChanged` and calls `Recompute`; pass the circuit's time zone, never a process-wide one.
+
+## Shell
+
+`Polhem.Web.Blazor.Server.Shell` is a ready-made front end for a site, the counterpart of the Avalonia
+[`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.md): a sign-in screen that signs in and enters a
+company, then a top bar (title, user and company, Sign out), the server's menu and the routed page. A site supplies
+its title and the values the sign-in screen starts with, and keeps only its own pages.
+
+| Part | What it does |
+|------|--------------|
+| `PolhemShellLayout` | The router's default layout. Shows `PolhemShellSignIn` until the circuit's user has entered a company, then the top bar, `PolhemShellNavMenu` and the page. The menu button collapses the menu on a wide screen and slides it over the page below 600 CSS pixels, the form page's default compact threshold; picking a form closes it. |
+| `PolhemShellSignIn` | Title, hint, company and a `PolhemLoginPanel`; signs in, then enters the company through `CircuitUserContext.EnterCompanyAsync`. A refusal is shown on the screen and signs the circuit out again. Offers a switch between the configured languages. |
+| `PolhemShellNavMenu` | The server's `MenuSettings` as folder headers and links to `{FormRoute}/{ProgId}`, captions in the circuit's UI culture. |
+| `PolhemShellHome` | Opens the menu's first form, as the Avalonia shell does after sign-in. Place it on the root page. |
+| `AddPolhemShell` | Registers `PolhemShellOptions`. Every option is described in its XML documentation. |
+| `UsePolhemShellLocalization` | Request localization over the configured languages, so a circuit starts in the language the viewer picked. |
+| `MapPolhemShellCulture` | `GET /culture`, the endpoint behind the language switch. It stores an offered culture in the request-localization cookie and redirects back, to a path on this site only; any other address returns to the root, so the endpoint is not an open redirect (`PolhemShellCultureEndpointTests`). |
+
+```csharp
+using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Server.Shell;
+
+builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
+builder.Services.AddPolhemShell(shell =>
+{
+    shell.AppTitle = "My App";
+    shell.DefaultCompanyId = "ACME";
+});
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+var app = builder.Build();
+app.UsePolhemShellLocalization();
+app.UseStaticFiles();
+app.UseAntiforgery();
+app.MapPolhemShellCulture();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+```
+
+The application keeps its `App.razor` (which links the stylesheet, below), its router with
+`DefaultLayout="typeof(PolhemShellLayout)"`, and two pages:
+
+```razor
+@* Pages/Home.razor *@
+@page "/"
+<PolhemShellHome />
+
+@* Pages/FormHost.razor: the route is "/{FormRoute}/{ProgId}", "form" by default. *@
+@page "/form/{ProgId}"
+<FormPage ProgId="@ProgId" />
+@code {
+    [Parameter] public string ProgId { get; set; } = string.Empty;
+}
+```
+
+The sign-in belongs to the circuit, so a reload or a new tab shows the sign-in screen again. A circuit's culture is
+fixed when it connects, so the language is picked on the sign-in screen, before anyone is signed in: the switch goes
+through `/culture` and reloads the page. The account's own culture is not applied afterwards. The shell's own text
+exists in English and Traditional Chinese; the components and the definitions follow their own language resources.
+
+The shell runs on the provider the host chose, so the Local mode warning above applies to it unchanged.
+
+## Styling
+
+The package ships one optional stylesheet, `_content/Polhem.Web.Blazor.Server/polhem.css`, with the default look of
+the components and the shell. Link it in `App.razor`, before the site's own sheet:
+
+```html
+<link rel="stylesheet" href="_content/Polhem.Web.Blazor.Server/polhem.css" />
+<link rel="stylesheet" href="app.css" />
+```
+
+It styles only the `polhem-*` classes; the page's body (font, background, margin) stays the site's. To restyle,
+redefine its custom properties (`--polhem-accent`, `--polhem-surface`, `--polhem-shell-header` and the others at the top of
+the file) on `:root` in the site's sheet, or override any rule with a selector of the same class. A site that does not
+link it styles the classes itself. `CssClassNameGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when a
+selector in the sheet matches no class the components render.
 
 ## Dependency Constraints
 

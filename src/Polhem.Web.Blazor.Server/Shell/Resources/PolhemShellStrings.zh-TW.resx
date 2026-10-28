@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CompanyId" xml:space="preserve">
+    <value>公司代號</value>
+  </data>
+  <data name="CompanyEmpty" xml:space="preserve">
+    <value>請輸入公司代號。</value>
+  </data>
+  <data name="EnterCompanyFailed" xml:space="preserve">
+    <value>已登入，但進入公司失敗：{0}</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>語言</value>
+  </data>
+  <data name="LanguageHint" xml:space="preserve">
+    <value>語言套用於這個瀏覽器，請在登入前選擇。</value>
+  </data>
+  <data name="ToggleMenu" xml:space="preserve">
+    <value>顯示或隱藏選單</value>
+  </data>
+  <data name="SignOut" xml:space="preserve">
+    <value>登出</value>
+  </data>
+  <data name="MenuLoadFailed" xml:space="preserve">
+    <value>無法載入選單：{0}</value>
+  </data>
+</root>
