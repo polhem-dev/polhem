@@ -188,17 +188,17 @@ namespace Polhem.UI.Avalonia.Controls
             for (int i = 0; i < columnCount; i++)
                 grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
 
+            // Placed the way CSS grid auto-places items (sparse, row by row), which the Blazor presenter gets from the
+            // browser: the cursor only moves forward, and a field goes to the first position at or after it whose
+            // cells are all free. A field spanning several rows keeps its cells from the fields after it.
+            var occupied = new HashSet<(int Row, int Column)>();
             int row = 0, col = 0;
             foreach (var field in EnumerateFields(section))
             {
                 var (rowSpan, colSpan) = NormalizeSpans(field);
-
-                // CSS-grid-like wrap: if the field would overflow the row, advance first.
-                if (col + colSpan > columnCount)
-                {
-                    row++;
-                    col = 0;
-                }
+                colSpan = Math.Min(colSpan, columnCount);
+                (row, col) = FindFreePosition(occupied, row, col, rowSpan, colSpan, columnCount);
+                Occupy(occupied, row, col, rowSpan, colSpan);
 
                 while (grid.RowDefinitions.Count < row + rowSpan)
                     grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
@@ -211,11 +211,6 @@ namespace Polhem.UI.Avalonia.Controls
                 grid.Children.Add(cell);
 
                 col += colSpan;
-                if (col >= columnCount)
-                {
-                    row++;
-                    col = 0;
-                }
             }
 
             return grid;
@@ -302,6 +297,38 @@ namespace Polhem.UI.Avalonia.Controls
         {
             var n = columnCount ?? 1;
             return n < 1 ? 1 : n;
+        }
+
+        // The first position at or after (row, col), in row order, where a rowSpan × colSpan block fits within the
+        // columns and covers no occupied cell. colSpan must not exceed columnCount, so a free row always ends the search.
+        private static (int Row, int Column) FindFreePosition(HashSet<(int Row, int Column)> occupied,
+            int row, int col, int rowSpan, int colSpan, int columnCount)
+        {
+            while (col + colSpan > columnCount || !IsFree(occupied, row, col, rowSpan, colSpan))
+            {
+                col++;
+                if (col + colSpan > columnCount)
+                {
+                    row++;
+                    col = 0;
+                }
+            }
+            return (row, col);
+        }
+
+        private static void Occupy(HashSet<(int Row, int Column)> occupied, int row, int col, int rowSpan, int colSpan)
+        {
+            for (int r = row; r < row + rowSpan; r++)
+                for (int c = col; c < col + colSpan; c++)
+                    occupied.Add((r, c));
+        }
+
+        private static bool IsFree(HashSet<(int Row, int Column)> occupied, int row, int col, int rowSpan, int colSpan)
+        {
+            for (int r = row; r < row + rowSpan; r++)
+                for (int c = col; c < col + colSpan; c++)
+                    if (occupied.Contains((r, c))) return false;
+            return true;
         }
 
         private static (int rowSpan, int columnSpan) NormalizeSpans(LayoutField field)
