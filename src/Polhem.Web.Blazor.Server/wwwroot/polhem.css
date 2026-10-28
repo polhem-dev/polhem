@@ -49,6 +49,7 @@
 .polhem-shell__nav { width: var(--polhem-shell-nav-width); flex-shrink: 0; background: var(--polhem-surface); border-right: 1px solid var(--polhem-border); padding: 12px 0; }
 .polhem-shell__main { flex: 1; min-width: 0; padding: 16px; }
 .polhem-shell__loading { padding: 8px 16px; color: var(--polhem-text-muted); }
+.polhem-shell__empty { padding: 8px 16px; color: var(--polhem-text-muted); }
 
 .polhem-shell-nav { list-style: none; margin: 0; padding: 0; }
 /* Two levels: a folder reads as a section heading (bold, a rule above it), its forms as indented items under it. */
@@ -58,6 +59,7 @@
 .polhem-shell-nav__link:hover { background: var(--polhem-hover); color: var(--polhem-text); }
 .polhem-shell-nav__link.active { background: var(--polhem-selected); color: var(--polhem-accent); font-weight: 600; border-left-color: var(--polhem-accent); }
 .polhem-shell-nav__loading { padding: 8px 16px; color: var(--polhem-text-muted); }
+.polhem-shell-nav__empty { padding: 8px 16px; color: var(--polhem-text-muted); font-size: 0.9rem; }
 .polhem-shell-nav__error { padding: 8px 16px; color: var(--polhem-danger); font-size: 0.9rem; }
 
 /*

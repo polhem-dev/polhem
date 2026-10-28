@@ -21,6 +21,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         public const string ToggleMenu = nameof(ToggleMenu);
         public const string SignOut = nameof(SignOut);
         public const string MenuLoadFailed = nameof(MenuLoadFailed);
+        public const string MenuEmpty = nameof(MenuEmpty);
 
         private static readonly ResourceManager s_resources = new(
             "Polhem.Web.Blazor.Server.Shell.Resources.PolhemShellStrings", typeof(PolhemShellText).Assembly);
