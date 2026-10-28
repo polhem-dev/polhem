@@ -10,6 +10,12 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
+## [Unreleased]
+
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.11.0.md](docs/zh-TW/changelogs/1.11.0.md)
+
+- `polhem-avalonia` 範本的名稱、說明與選項翻譯成繁體中文，在 `dotnet new` 與 C# Dev Kit 使用該語言時顯示。
+
 ## [1.10.0] - 2026-10-27
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.10.0.md](docs/zh-TW/changelogs/1.10.0.md)

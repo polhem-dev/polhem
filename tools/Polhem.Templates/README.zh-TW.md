@@ -12,6 +12,9 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 
 在安裝了 C# Dev Kit 的 VS Code 中，範本會出現在「New .NET Project」的清單，名稱是 **Polhem App (Avalonia)**。
 
+範本的名稱、說明與選項也有繁體中文翻譯。`dotnet new` 的語言是繁體中文時（`DOTNET_CLI_UI_LANGUAGE=zh-TW`）會顯示中文，
+C# Dev Kit 則在作業系統語言是繁體中文時顯示；在這樣的環境下，清單上的名稱是 **Polhem 應用程式 (Avalonia)**。其他語言顯示英文。
+
 ## `polhem-avalonia`
 
 建立以 Avalonia 桌面程式為前端的應用程式，也可另加瀏覽器、iOS 與 Android 前端。Server 已引用 Polhem 套件與所選資料庫的驅動：
