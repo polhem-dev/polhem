@@ -86,6 +86,8 @@
   <data name="Section_ValidationResults" xml:space="preserve"><value>驗證結果</value></data>
   <data name="FormLayout_PaneLayout_PropertiesAndPreview" xml:space="preserve"><value>顯示屬性與預覽</value></data>
   <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>只顯示預覽</value></data>
+  <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>在瀏覽器預覽</value></data>
+  <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>在網頁瀏覽器開啟這份版面，由 Blazor Server 元件繪製；尚未存檔的修改與預覽選項都會同步。</value></data>
   <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>只顯示屬性</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>屬性設定…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>在對話框中編輯所選節點的屬性</value></data>
@@ -96,11 +98,6 @@
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>手機寬度</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>欄位名稱</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>預覽無法畫出這份版面：{0}</value></data>
-  <data name="Preview_OpenInBrowser" xml:space="preserve"><value>瀏覽器</value></data>
-  <data name="Preview_OpenInBrowserTip" xml:space="preserve"><value>在網頁瀏覽器開啟這份版面，由 Blazor Server 元件繪製；尚未存檔的修改也會同步。</value></data>
-  <data name="Preview_CopyLink" xml:space="preserve"><value>複製連結</value></data>
-  <data name="Preview_CopyLinkTip" xml:space="preserve"><value>複製瀏覽器預覽的網址，可貼到其他瀏覽器開啟。</value></data>
-  <data name="Status_PreviewLinkCopied" xml:space="preserve"><value>已複製瀏覽器預覽的連結。</value></data>
   <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>瀏覽器預覽無法啟動：{0}</value></data>
   <data name="BrowserPreview_NotPublished" xml:space="preserve"><value>這份版面還沒有預覽，請從 DefineEditor 開啟。</value></data>
   <data name="CreateTable_Title" xml:space="preserve"><value>CREATE TABLE</value></data>

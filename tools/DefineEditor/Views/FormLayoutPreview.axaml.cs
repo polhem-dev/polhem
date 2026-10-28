@@ -1,9 +1,6 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
@@ -163,54 +160,6 @@ public partial class FormLayoutPreview : UserControl
         var hub = BrowserPreviewHost.Shared.Hub;
         hub.Publish(hub.GetDocumentId(_document.DocumentKey), _document.CreateBrowserPreviewSnapshot());
     }
-
-    private async void OnOpenInBrowserClick(object? sender, RoutedEventArgs e)
-    {
-        if (_document is not { } document || await GetBrowserPreviewUrlAsync(document) is not { } url) return;
-        try
-        {
-            Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
-        }
-        catch (Win32Exception ex)
-        {
-            ShowBrowserPreviewFailure(document, ex);
-        }
-    }
-
-    // The clipboard belongs to the window, which the view model cannot reach, so copying stays in the view.
-    private async void OnCopyLinkClick(object? sender, RoutedEventArgs e)
-    {
-        if (_document is not { } document || await GetBrowserPreviewUrlAsync(document) is not { } url) return;
-        if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
-        await clipboard.SetTextAsync(url.AbsoluteUri);
-        document.StatusText = LocalizationService.Current["Status_PreviewLinkCopied"];
-    }
-
-    // Starts the preview server on first use; a server that cannot start is reported, and the editor goes on.
-    private static async Task<Uri?> GetBrowserPreviewUrlAsync(FormLayoutDocumentViewModel document)
-    {
-        var host = BrowserPreviewHost.Shared;
-        var documentId = host.Hub.GetDocumentId(document.DocumentKey);
-        try
-        {
-            var url = await host.GetDocumentUrlAsync(documentId);
-            host.Hub.Publish(documentId, document.CreateBrowserPreviewSnapshot());
-            return url;
-        }
-        catch (InvalidOperationException ex)
-        {
-            ShowBrowserPreviewFailure(document, ex);
-        }
-        catch (IOException ex)
-        {
-            ShowBrowserPreviewFailure(document, ex);
-        }
-        return null;
-    }
-
-    private static void ShowBrowserPreviewFailure(FormLayoutDocumentViewModel document, Exception ex)
-        => document.StatusText = string.Format(LocalizationService.Current.Culture,
-            LocalizationService.Current["Status_BrowserPreviewFailed"], ex.Message);
 
     private void ShowError(Exception ex)
     {

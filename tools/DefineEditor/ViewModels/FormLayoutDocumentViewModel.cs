@@ -1,8 +1,11 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -62,6 +65,39 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
             return new BrowserPreviewSnapshot(title, string.Empty, PreviewFormMode, IsPreviewCompact, ShowPreviewFieldNames, ex.Message);
         }
     }
+
+    /// <summary>
+    /// Opens this layout in the default web browser, starting the browser preview server on first use. A server
+    /// that cannot start, or a browser that cannot be launched, is reported in <see cref="DocumentViewModelBase.StatusText"/>.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenInBrowserAsync()
+    {
+        var host = BrowserPreviewHost.Shared;
+        var documentId = host.Hub.GetDocumentId(DocumentKey);
+        try
+        {
+            var url = await host.GetDocumentUrlAsync(documentId);
+            host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+            Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (InvalidOperationException ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+        catch (IOException ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+        catch (Win32Exception ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+    }
+
+    private void ReportBrowserPreviewFailure(Exception ex)
+        => StatusText = string.Format(LocalizationService.Current.Culture,
+            LocalizationService.Current["Status_BrowserPreviewFailed"], ex.Message);
 
     /// <summary>What the right-hand side shows: the property grid, the preview, or both.</summary>
     [ObservableProperty]

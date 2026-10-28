@@ -21,10 +21,6 @@
                               IsVisible="{Binding IsPreviewVisible}"/>
                     <CheckBox IsChecked="{Binding ShowPreviewFieldNames}" Content="{loc:Loc Preview_FieldNames}"
                               IsVisible="{Binding IsPreviewVisible}"/>
-                    <Button Content="{loc:Loc Preview_OpenInBrowser}" ToolTip.Tip="{loc:Loc Preview_OpenInBrowserTip}"
-                            Click="OnOpenInBrowserClick" VerticalAlignment="Center"/>
-                    <Button Content="{loc:Loc Preview_CopyLink}" ToolTip.Tip="{loc:Loc Preview_CopyLinkTip}"
-                            Click="OnCopyLinkClick" VerticalAlignment="Center"/>
                     <CheckBox IsChecked="{Binding IsPreviewVisible}" Content="{loc:Loc Preview_Show}"
                               IsVisible="{Binding IsPropertiesAndPreviewLayout}"/>
                 </WrapPanel>

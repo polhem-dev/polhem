@@ -39,6 +39,12 @@
                             AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}">
                         <PathIcon Data="{StaticResource IconPaneProperties}"/>
                     </Button>
+                    <!-- Not a layout of this window, so it stands apart from the three above. -->
+                    <Button Classes="tool" Margin="12,0,0,0" Command="{Binding OpenInBrowserCommand}"
+                            ToolTip.Tip="{loc:Loc FormLayout_OpenInBrowserTooltip}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_OpenInBrowser}">
+                        <PathIcon Data="{StaticResource IconBrowser}"/>
+                    </Button>
                 </StackPanel>
                 <Button Classes="tool" HorizontalAlignment="Left" Command="{Binding EditPropertiesCommand}"
                         IsVisible="{Binding !IsPropertyPaneVisible}"
