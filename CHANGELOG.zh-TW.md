@@ -25,6 +25,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
   也不再失敗。`Define` 資料夾已有這兩個 schema 的應用程式會保留舊檔：請手動更新，或刪除後讓它重新寫入。
 - `LayoutField` 的 `RowSpan` 與 `ColumnSpan` 會在每個前端的表單生效；表單渲染的版面複本先前把兩者都重設為 1。
 - 在 Avalonia 表單與 DefineEditor 的預覽中，跨多列欄位之後的欄位會排在它下方，不再與它重疊。
+- DefineEditor 也能在網頁瀏覽器預覽表單版面，由 Blazor Server 元件繪製，尚未存檔的修改會同步；編輯器因此需要 ASP.NET Core runtime。
 
 ## [1.10.0] - 2026-10-27
 

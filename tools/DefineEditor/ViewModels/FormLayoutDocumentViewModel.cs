@@ -1,6 +1,7 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
+using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,6 +42,26 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
+
+    /// <summary>
+    /// Captures the layout, unsaved edits included, and the preview settings for the browser preview.
+    /// </summary>
+    /// <remarks>
+    /// The layout goes out as the XML it would be saved as: the browser renders on another thread, so it must never
+    /// read <see cref="Root"/>, which the editor changes in place.
+    /// </remarks>
+    public BrowserPreviewSnapshot CreateBrowserPreviewSnapshot()
+    {
+        var title = string.IsNullOrEmpty(Root.Caption) ? Root.LayoutId : Root.Caption;
+        try
+        {
+            return new BrowserPreviewSnapshot(title, XmlCodec.Serialize(Root), PreviewFormMode, IsPreviewCompact, ShowPreviewFieldNames);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new BrowserPreviewSnapshot(title, string.Empty, PreviewFormMode, IsPreviewCompact, ShowPreviewFieldNames, ex.Message);
+        }
+    }
 
     /// <summary>What the right-hand side shows: the property grid, the preview, or both.</summary>
     [ObservableProperty]

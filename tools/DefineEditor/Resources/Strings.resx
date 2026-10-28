@@ -109,6 +109,13 @@
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>The preview could not render this layout: {0}</value></data>
+  <data name="Preview_OpenInBrowser" xml:space="preserve"><value>Browser</value></data>
+  <data name="Preview_OpenInBrowserTip" xml:space="preserve"><value>Open this layout in the web browser, drawn by the Blazor Server components. Unsaved edits follow along.</value></data>
+  <data name="Preview_CopyLink" xml:space="preserve"><value>Copy link</value></data>
+  <data name="Preview_CopyLinkTip" xml:space="preserve"><value>Copy the address of the browser preview, to open it in another browser.</value></data>
+  <data name="Status_PreviewLinkCopied" xml:space="preserve"><value>Browser preview link copied.</value></data>
+  <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>The browser preview could not start: {0}</value></data>
+  <data name="BrowserPreview_NotPublished" xml:space="preserve"><value>This layout has no preview yet. Open it from DefineEditor.</value></data>
   <data name="CreateTable_Title" xml:space="preserve"><value>CREATE TABLE</value></data>
   <data name="CreateTable_DatabaseTip" xml:space="preserve"><value>The database whose syntax is shown</value></data>
   <data name="CreateTable_Copy" xml:space="preserve"><value>Copy</value></data>

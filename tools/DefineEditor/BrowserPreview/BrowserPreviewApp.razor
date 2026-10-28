@@ -1,0 +1,21 @@
+@namespace Polhem.DefineEditor.BrowserPreview
+@* The document of the browser preview: the framework's stylesheet, as a Polhem Blazor Server app links it, and one route. *@
+<!DOCTYPE html>
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Server/polhem.css"]" />
+    <link rel="stylesheet" href="@Assets["browser-preview.css"]" />
+    <HeadOutlet />
+</head>
+<body>
+    <Router AppAssembly="typeof(BrowserPreviewApp).Assembly">
+        <Found Context="routeData"><RouteView RouteData="routeData" /></Found>
+    </Router>
+    <script src="@Assets["browser-preview.js"]"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+</html>

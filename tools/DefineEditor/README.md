@@ -32,7 +32,7 @@ Select a file in any view to load the matching editor on the right:
 | **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; a server's or item's context menu **pastes and parses a connection string** (SQL Server / PostgreSQL / MySQL / Oracle) in a dialog; an item's ServerId suggests the servers; static validation (`Services/DatabaseSettingsValidator.cs`) |
 | **FormSchema** (multiple) | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation mappings. Selecting a Relation group shows the field's Relation properties. On a stored field, the **…** button beside RelationProgId (or RelationFieldMappings) opens the relation dialog: pick the related form from the solution's ProgramSettings, filtered by ProgId or name as you type; tick the master fields to carry back, name each destination (`ref_<base>_<field>` by default) and mark the ones that are LookupOnly (written back on a lookup selection but not used by the query join), and choose whether the field calls back the server when it changes (ValueChangeCallback, ticked by default when a source is not in the related form's LookupFields, so the server fills it); destinations the table lacks are added after the foreign key, and **Sync TableSchema and FormLayout** then brings them into the derived files. A mapping can still be edited on its own in the tree, where its fields suggest the fields of both forms; and LangEnumName suggests the enums of the solution's Language files. A field's ListItems are edited in the property grid's collection dialog. Validation, and Save before it writes, parses every field and rule expression with the framework's evaluator and lists the ones that would fail at run time, such as `amount * 1.05` on a decimal field. Right-click a schema node to **Generate FormLayout**, **Export to Excel**, **Sync TableSchema and FormLayout** (adds the fields the form gained to its TableSchemas and FormLayout, each next to its neighbour on the form, after showing the files it changes) or **Upgrade This Form's Tables** (also in the **File** menu while the FormSchema is the active tab); **File → Import Form from Excel** turns a form workbook into its definition files after showing the files it changes (see [Modeling Forms in Excel](../../docs/en/guides/excel-form-modeling.md)) |
 | **TableSchema** (multiple) | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Two groups, Fields + Indexes; IndexField includes SortDirection; validates that the PrimaryKey is unique; a CREATE TABLE panel under the property grid shows the statement for SQL Server, PostgreSQL, MySQL, Oracle or SQLite, produced by the framework's own dialect builders |
-| **FormLayout** (multiple) | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections (→ LayoutField) + Details (LayoutGrid → LayoutColumn). The layout is produced and saved at design time — the runtime only reads it, and opening a form fails when the file is missing. A live preview under the property grid redraws the form as you edit, the way `FormView` renders it but without data; it can switch to View mode or phone width, and show each field's name in empty fields. The buttons above the editor choose what the right-hand side shows: the property grid and the preview, only the preview, or only the property grid; without the grid, **Properties…** (on the toolbar or a node's context menu) edits the selected node in a dialog |
+| **FormLayout** (multiple) | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections (→ LayoutField) + Details (LayoutGrid → LayoutColumn). The layout is produced and saved at design time — the runtime only reads it, and opening a form fails when the file is missing. A live preview under the property grid redraws the form as you edit, the way `FormView` renders it but without data; it can switch to View mode or phone width, and show each field's name in empty fields. **Browser** opens the same layout in the web browser, drawn by the Blazor Server components (`Polhem.Web.Blazor.Server`) the way an app built from the `polhem-blazor-server` template shows it; unsaved edits and the three preview options follow along, and **Copy link** copies its address for another browser. The page is served by the editor itself on 127.0.0.1, with a random token in the address, and needs no backend or data. The buttons above the editor choose what the right-hand side shows: the property grid and the preview, only the preview, or only the property grid; without the grid, **Properties…** (on the toolbar or a node's context menu) edits the selected node in a dialog |
 | **Language** (multiple) | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items (Key/Value) + Enums (→ Entry code/text) |
 
 The right-hand pane is a property grid (`PropertyGridControl`) built from the annotations on each definition type:
@@ -128,7 +128,7 @@ A failing check prints `[smoke] FAIL(<code>)` and the process exits with that co
 
 ## Publish (framework-dependent)
 
-By default it is packaged framework-dependent — without the .NET runtime, so the target machine needs .NET 10 installed first. Each RID is about 31 MB (including Avalonia's native dependencies for that platform).
+By default it is packaged framework-dependent — without the .NET runtime, so the target machine needs the .NET 10 runtime and the ASP.NET Core 10 runtime installed first (the browser preview runs in the editor's own process; without the ASP.NET Core runtime the editor does not start at all). A .NET 10 SDK includes both. Each RID is about 31 MB (including Avalonia's native dependencies for that platform).
 
 ```bash
 # macOS Apple Silicon
@@ -183,7 +183,7 @@ For macOS users, adding `--app-bundle` wraps the publish output of the osx-* RID
 ./publish.sh --app-bundle osx-arm64 # osx-arm64 only
 ```
 
-`--app-bundle` implies `--single-file`: the bundle carries the executable and the native libraries, so the managed assemblies have to be inside the executable.
+`--app-bundle` implies `--single-file`: the bundle carries the executable, the native libraries and the browser preview's web assets, so the managed assemblies have to be inside the executable.
 
 Output location `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`, with this internal structure:
 
@@ -194,6 +194,7 @@ Polhem.DefineEditor.app/
     ├── MacOS/
     │   ├── Polhem.DefineEditor ← main executable
     │   ├── lib*.dylib          ← Avalonia native libraries
+    │   ├── wwwroot/, *.staticwebassets.endpoints.json ← the browser preview's scripts, stylesheets and their manifest
     │   └── *.pdb, *.xml        ← symbols and XML docs, when the publish produced them
     └── Resources/
         └── AppIcon.icns        ← app icon (Assets/AppIcon.icns)

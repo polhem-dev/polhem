@@ -1,0 +1,17 @@
+/* The page around the form follows the polhem-blazor-server template (its app.css and the shell's main area), so
+   the form looks as it does in an app built from the template. */
+:root { color-scheme: light; }
+
+body {
+    margin: 0;
+    padding: 16px;
+    font-family: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Noto Sans TC", Roboto, sans-serif;
+    background: #f6f7f9;
+    color: #1f2328;
+}
+
+/* The width of a common phone in portrait, the same as the editor's own phone preview. */
+.browser-preview--compact { max-width: 390px; }
+
+.browser-preview__message { color: var(--polhem-text-muted); }
+.browser-preview__message--error { color: #c62828; }

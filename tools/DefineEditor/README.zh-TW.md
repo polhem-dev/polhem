@@ -31,7 +31,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 | **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；Server 或 Item 的右鍵選單可在對話框中**貼上並拆解連線字串**（SQL Server / PostgreSQL / MySQL / Oracle）；Item 的 ServerId 會列出可用的 Server；含靜態驗證（`Services/DatabaseSettingsValidator.cs`） |
 | **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation 對應。選取 Relation 群組時，右側只顯示該欄位的 Relation 屬性。實體欄位的 RelationProgId（或 RelationFieldMappings）旁有 **…** 按鈕，可開啟關聯設定對話框：從方案的 ProgramSettings 選擇關聯表單，輸入 ProgId 或名稱即可過濾；勾選要帶回的主檔欄位、指定各自的目的欄位（預設為 `ref_<base>_<欄位>`），標記哪些是 LookupOnly（只在查詢選取時回寫，查詢的 JOIN 不使用），並選擇欄位值異動時是否回呼後端（ValueChangeCallback；有來源不在被關聯表單的 LookupFields 時預設勾選，由後端帶回）；本表缺少的目的欄位會新增在外鍵之後，再執行**同步 TableSchema 與 FormLayout** 就會補進衍生檔。單筆對應仍可在樹狀節點中個別編輯，對應的欄位會列出兩張表單的欄位；LangEnumName 會列出方案內語系檔的列舉。欄位的 ListItems 在屬性方格的集合對話框中編輯。驗證（以及存檔前的檢查）會用框架的 evaluator 解析每個欄位與規則的運算式，列出執行時會失敗的那些，例如 decimal 欄位寫成 `amount * 1.05`。schema 節點右鍵可**產生 FormLayout**、**匯出成 Excel**、**同步 TableSchema 與 FormLayout**（先列出要變更的檔案，再把表單新增的欄位補進 TableSchema 與 FormLayout，放在表單上相鄰欄位的旁邊）或**升級此表單的資料表**（FormSchema 為作用中分頁時，**File** 選單也有這兩個指令）；**File → 從 Excel 匯入表單**會先列出要變更的檔案，再把表單活頁簿轉成定義檔（見 [用 Excel 建模表單](../../docs/zh-TW/guides/excel-form-modeling.md)） |
 | **TableSchema**（多份） | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Fields + Indexes 兩個 group；IndexField 含 SortDirection；驗證 PrimaryKey 唯一性；屬性方格下方的 CREATE TABLE 面板顯示 SQL Server、PostgreSQL、MySQL、Oracle 或 SQLite 的建表語法，由框架本身的方言產生器產出 |
-| **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗。屬性方格下方的即時預覽會隨編輯重畫表單，畫法與 `FormView` 相同但不帶資料；可切換為檢視模式或手機寬度，也可在空白欄位顯示欄位名稱。編輯器上方的按鈕決定右側顯示什麼：屬性方格與預覽、只有預覽，或只有屬性方格；不顯示屬性方格時，以**屬性設定…**（工具列或節點的右鍵選單）在對話框中編輯所選節點 |
+| **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗。屬性方格下方的即時預覽會隨編輯重畫表單，畫法與 `FormView` 相同但不帶資料；可切換為檢視模式或手機寬度，也可在空白欄位顯示欄位名稱。**瀏覽器**在網頁瀏覽器開啟同一份版面，由 Blazor Server 元件（`Polhem.Web.Blazor.Server`）繪製，與 `polhem-blazor-server` 範本建立的應用程式呈現方式相同；尚未存檔的修改與三個預覽選項都會同步，**複製連結**可複製網址到其他瀏覽器開啟。頁面由編輯器自己在 127.0.0.1 提供，網址帶隨機 token，不需要後端或資料。編輯器上方的按鈕決定右側顯示什麼：屬性方格與預覽、只有預覽，或只有屬性方格；不顯示屬性方格時，以**屬性設定…**（工具列或節點的右鍵選單）在對話框中編輯所選節點 |
 | **Language**（多份） | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items（Key/Value）+ Enums（→ Entry code/text） |
 
 右側是依各定義型別的標註建出的屬性方格（`PropertyGridControl`）：屬性依 `[Category]` 分組，下方說明列顯示所選屬性的
@@ -112,7 +112,7 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configurati
 
 ## Publish（framework-dependent）
 
-預設打包 framework-dependent — 不含 .NET runtime，目標機要先裝 .NET 10。每個 RID 約 31 MB（含 Avalonia 該平台原生依賴）。
+預設打包 framework-dependent — 不含 .NET runtime，目標機要先裝 .NET 10 runtime 與 ASP.NET Core 10 runtime（瀏覽器預覽在編輯器自己的行程內執行；沒有 ASP.NET Core runtime 時編輯器整個無法啟動）。安裝 .NET 10 SDK 即包含兩者。每個 RID 約 31 MB（含 Avalonia 該平台原生依賴）。
 
 ```bash
 # macOS Apple Silicon
@@ -167,7 +167,7 @@ osx-arm64 實測：12 MB 主執行檔 + 約 18 MB 三個 native dylib（HarfBuzz
 ./publish.sh --app-bundle osx-arm64 # 只 osx-arm64
 ```
 
-`--app-bundle` 隱含 `--single-file`：bundle 只帶主執行檔與原生函式庫，所以 managed 組件必須嵌在主執行檔內。
+`--app-bundle` 隱含 `--single-file`：bundle 只帶主執行檔、原生函式庫與瀏覽器預覽的網頁資產，所以 managed 組件必須嵌在主執行檔內。
 
 產出位置 `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`，內部結構：
 
@@ -178,6 +178,7 @@ Polhem.DefineEditor.app/
     ├── MacOS/
     │   ├── Polhem.DefineEditor ← 主執行檔
     │   ├── lib*.dylib          ← Avalonia 原生函式庫
+    │   ├── wwwroot/、*.staticwebassets.endpoints.json ← 瀏覽器預覽的腳本、樣式表與其清單
     │   └── *.pdb、*.xml        ← 符號檔與 XML 文件（publish 有產出時）
     └── Resources/
         └── AppIcon.icns        ← App 圖示（Assets/AppIcon.icns）

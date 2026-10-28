@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Publishes framework-dependent builds of Polhem.DefineEditor for 4 RIDs.
-# Target machine must have .NET 10 runtime installed; .NET 10 ASP.NET Core
-# bundle is NOT required. Output:
+# Target machine must have the .NET 10 runtime and the ASP.NET Core 10 runtime
+# installed: the editor hosts the Blazor Server browser preview in process, so
+# the app does not start without the ASP.NET Core runtime. Output:
 #   tools/DefineEditor/bin/Release/net10.0/<rid>/publish/
 #
 # Usage:
@@ -70,6 +71,15 @@ build_app_bundle() {
     # them so managed exception stack traces still resolve file/line info.
     mv "${publish_dir}"/*.pdb "${app_dir}/Contents/MacOS/" 2>/dev/null || true
     mv "${publish_dir}"/*.xml "${app_dir}/Contents/MacOS/" 2>/dev/null || true
+    # The browser preview's static web assets and their manifest are not part of
+    # the single-file executable; the server looks for both next to it, and fails
+    # to start without the manifest.
+    mv "${publish_dir}"/*.staticwebassets.endpoints.json "${app_dir}/Contents/MacOS/"
+    mv "${publish_dir}/wwwroot" "${app_dir}/Contents/MacOS/"
+    if ! ls "${app_dir}"/Contents/MacOS/wwwroot/_framework/blazor.web.js >/dev/null 2>&1; then
+        echo "error: the bundle has no wwwroot/_framework/blazor.web.js; the browser preview would not connect" >&2
+        exit 1
+    fi
 
     # App icon — committed as Assets/AppIcon.icns; rebuilt from
     # the Polhem brand mark by scripts/build-icon.swift (see its header). CFBundleIconFile in
@@ -101,7 +111,7 @@ build_app_bundle() {
 PLIST
 }
 
-echo "Mode: $([[ "${SELF_CONTAINED}" == "true" ]] && echo "self-contained (includes .NET runtime)" || echo "framework-dependent (target machine needs .NET 10)")$([[ "${SINGLE_FILE}" == "true" ]] && echo " + single-file" || echo "")$([[ "${APP_BUNDLE}" == "true" ]] && echo " + app-bundle (macOS)" || echo "")"
+echo "Mode: $([[ "${SELF_CONTAINED}" == "true" ]] && echo "self-contained (includes .NET runtime)" || echo "framework-dependent (target machine needs the .NET 10 and ASP.NET Core 10 runtimes)")$([[ "${SINGLE_FILE}" == "true" ]] && echo " + single-file" || echo "")$([[ "${APP_BUNDLE}" == "true" ]] && echo " + app-bundle (macOS)" || echo "")"
 echo
 
 for rid in "${RIDS[@]}"; do
