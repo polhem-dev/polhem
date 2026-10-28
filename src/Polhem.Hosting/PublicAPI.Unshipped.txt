@@ -1,15 +1,1 @@
 #nullable enable
-Polhem.Hosting.PolhemBackendOptions
-Polhem.Hosting.PolhemBackendOptions.AutoCreateMasterKey.get -> bool
-Polhem.Hosting.PolhemBackendOptions.AutoCreateMasterKey.set -> void
-Polhem.Hosting.PolhemBackendOptions.CustomizePath.get -> string!
-Polhem.Hosting.PolhemBackendOptions.CustomizePath.set -> void
-Polhem.Hosting.PolhemBackendOptions.DefinePath.get -> string?
-Polhem.Hosting.PolhemBackendOptions.DefinePath.set -> void
-Polhem.Hosting.PolhemBackendOptions.MaterializeDefaults.get -> bool
-Polhem.Hosting.PolhemBackendOptions.MaterializeDefaults.set -> void
-Polhem.Hosting.PolhemBackendOptions.MaterializeOptions.get -> Polhem.Definition.MaterializeOptions?
-Polhem.Hosting.PolhemBackendOptions.MaterializeOptions.set -> void
-Polhem.Hosting.PolhemBackendOptions.PolhemBackendOptions() -> void
-Polhem.Hosting.PolhemHostApplicationBuilderExtensions
-static Polhem.Hosting.PolhemHostApplicationBuilderExtensions.AddPolhemBackend(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, System.Action<Polhem.Hosting.PolhemBackendOptions!>? configure = null) -> Polhem.Definition.PathOptions!

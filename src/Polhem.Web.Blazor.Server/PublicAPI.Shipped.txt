@@ -44,6 +44,10 @@ Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.IsAuthenticated.ge
 Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.PolhemAccessTokenProvider() -> void
 Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.SetToken(System.Guid accessToken) -> void
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialPassword.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialPassword.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialUserId.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialUserId.set -> void
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Api.Core.Messages.System.LoginResponse!>
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.set -> void
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string?
@@ -337,6 +341,47 @@ Polhem.Web.Blazor.Server.Identity.CircuitUserContext.DefaultLanguage.get -> stri
 Polhem.Web.Blazor.Server.Identity.CircuitUserContext.EnterCompanyAsync(string! companyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.EnterCompanyResponse!>!
 Polhem.Web.Blazor.Server.Identity.CircuitUserContext.SignOut() -> void
 Polhem.Web.Blazor.Server.Identity.CircuitUserContext.User.get -> Polhem.Definition.Identity.UserInfo?
+Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions
+Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions
+Polhem.Web.Blazor.Server.Shell.PolhemShellHome
+Polhem.Web.Blazor.Server.Shell.PolhemShellHome.PolhemShellHome() -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.<Clone>$() -> Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage!
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Culture.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Culture.init -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Deconstruct(out string! Culture, out string! DisplayName) -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.DisplayName.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.DisplayName.init -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Equals(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? other) -> bool
+Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.PolhemShellLanguage(string! Culture, string! DisplayName) -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellLayout
+Polhem.Web.Blazor.Server.Shell.PolhemShellLayout.PolhemShellLayout() -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu
+Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu.OnNavigated.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu.OnNavigated.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu.PolhemShellNavMenu() -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.AppTitle.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.AppTitle.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCompanyId.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCompanyId.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCulture.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCulture.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultPassword.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultPassword.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultUserId.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultUserId.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.FormRoute.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.FormRoute.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.Languages.get -> System.Collections.Generic.IList<Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage!>!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.PolhemShellOptions() -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.SignInHint.get -> string!
+Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.SignInHint.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn
+Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn.OnSignedIn.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn.OnSignedIn.set -> void
+Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
 Polhem.Web.Blazor.Server._Imports
 Polhem.Web.Blazor.Server._Imports.Execute() -> void
 Polhem.Web.Blazor.Server._Imports._Imports() -> void
@@ -346,8 +391,16 @@ override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.RefreshFromSource() 
 override Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.OnParametersSet() -> void
 override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ApplyMetadata() -> void
 override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Equals(object? obj) -> bool
+override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.GetHashCode() -> int
+override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.ToString() -> string!
 static Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!
 static Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
+static Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.operator !=(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? right) -> bool
+static Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.operator ==(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? right) -> bool
+static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.DisplayFormat.get -> string!
 virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.InputType.get -> string!
 virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ModifierClass.get -> string!
