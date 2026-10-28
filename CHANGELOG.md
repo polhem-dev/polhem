@@ -23,6 +23,10 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   and company, top bar, the server's menu, a collapsible menu on a narrow screen and an English / Traditional Chinese
   switch, the counterpart of `Polhem.UI.Avalonia.Shell`. The package also ships an optional default stylesheet,
   `polhem.css`.
+- The framework's default `Department` and `Employee` forms list their number, name and related name; their lists
+  showed no columns before. Picking a department in the default Employee form no longer fails. An application whose
+  `Define` folder already holds the two schemas keeps the old ones: update them by hand or delete them to have them
+  written again.
 
 ## [1.10.0] - 2026-10-27
 

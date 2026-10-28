@@ -222,6 +222,40 @@ namespace Polhem.Definition.UnitTests
             Assert.Equal("Department", schema!.ProgId);
         }
 
+        [Theory]
+        [InlineData("Department")]
+        [InlineData("Employee")]
+        [InlineData("AuditRule")]
+        [DisplayName("Every shipped FormSchema lists sys_id and sys_name, and every ListFields entry is a master field")]
+        public void OpenEmbedded_FormSchema_ListFieldsShowIdentityColumns(string progId)
+        {
+            var schema = ReadEmbeddedFormSchema(progId);
+            var names = schema.ListFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            Assert.Contains(SysFields.Id, names);
+            Assert.Contains(SysFields.Name, names);
+            Assert.All(names, name => Assert.True(schema.MasterTable!.Fields!.Contains(name), name));
+        }
+
+        [Theory]
+        [InlineData("Department")]
+        [InlineData("Employee")]
+        [InlineData("AuditRule")]
+        [DisplayName("Every relation in a shipped FormSchema maps only fields its shipped source form exposes to lookups")]
+        public void OpenEmbedded_FormSchema_RelationSourcesAreLookupFields(string progId)
+        {
+            var schema = ReadEmbeddedFormSchema(progId);
+
+            foreach (var field in schema.MasterTable!.Fields!.Where(f => f.RelationProgId.Length > 0))
+            {
+                var exposed = ReadEmbeddedFormSchema(field.RelationProgId).GetLookupFields()
+                    .Select(f => f.FieldName)
+                    .ToList();
+                Assert.All(field.RelationFieldMappings!, mapping =>
+                    Assert.Contains(mapping.SourceField, exposed, StringComparer.OrdinalIgnoreCase));
+            }
+        }
+
         [Fact]
         [DisplayName("OpenEmbedded of CurrencySettings.xml deserializes with decimals by currency (JPY=0, USD=2, BHD=3)")]
         public void OpenEmbedded_CurrencySettings_DeserializesWithCurrencyDecimals()
@@ -479,6 +513,9 @@ namespace Polhem.Definition.UnitTests
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
+
+        private static FormSchema ReadEmbeddedFormSchema(string progId)
+            => XmlCodec.Deserialize<FormSchema>(ReadEmbedded($"FormSchema/{progId}.FormSchema.xml"))!;
 
         private static string CreateTempDir()
         {

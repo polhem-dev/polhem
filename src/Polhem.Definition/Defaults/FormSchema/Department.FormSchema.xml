@@ -3,7 +3,7 @@
   The captions here are the English base text. Translations live in Language/<culture>/, and the
   localizer uses this text when no language file on the fallback chain supplies an entry.
 -->
-<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Department" DisplayName="Department" CategoryId="company" ListFields="">
+<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Department" DisplayName="Department" CategoryId="company" ListFields="sys_id,sys_name,ref_manager_name" LookupFields="sys_id,sys_name,ref_manager_id,ref_manager_name">
   <Tables>
     <FormTable TableName="Department" DbTableName="st_department" DisplayName="Department">
       <Fields>
