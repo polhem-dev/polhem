@@ -4,6 +4,7 @@ using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Definition.Spreadsheet.UnitTests
@@ -69,6 +70,23 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
             var menuTexts = File.ReadAllText(PathOf("Language", "zh-TW", "Menu.Language.xml"));
             Assert.Contains("Key=\"Entry.quote.Caption\" Value=\"報價單\"", menuTexts, StringComparison.Ordinal);
             Assert.Contains("Key=\"Folder.sales.Caption\" Value=\"銷售\"", menuTexts, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Importing into a folder without DbCategorySettings keeps the framework tables registered")]
+        public void Import_NoCategorySettings_StartsFromFrameworkDefaults()
+        {
+            FormImporter.Apply(FormImporter.Plan(Quote(), Options()));
+
+            var categories = XmlCodec.DeserializeFromFile<DbCategorySettings>(PathOf("DbCategorySettings.xml"))!;
+            using var stream = Defaults.OpenEmbedded("DbCategorySettings.xml");
+            var defaults = XmlCodec.Deserialize<DbCategorySettings>(new StreamReader(stream).ReadToEnd())!;
+            foreach (var category in defaults.Categories!)
+            {
+                foreach (var table in category.Tables!)
+                    Assert.True(categories.Categories![category.Id].Tables!.Contains(table.TableName), table.TableName);
+            }
+            Assert.True(categories.Categories!["company"].Tables!.Contains("ft_quote"));
         }
 
         [Fact]
