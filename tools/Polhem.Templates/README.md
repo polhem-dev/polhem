@@ -12,6 +12,11 @@ dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 
 In VS Code with the C# Dev Kit, the template is listed as **Polhem App (Avalonia)** under **New .NET Project**.
 
+Install the templates from the package, as above, or from a `.nupkg` file (`dotnet new install <path>.nupkg`).
+Installing a template from its folder under `content/` is not supported: the files every template shares
+(`Define/`, `Excel/`, `.config/`, `.gitignore`) live once in `content/_shared/` and are added to each template only
+when the package is built, so a template installed from its folder lacks them.
+
 The template's name, description and options are also translated into Traditional Chinese. `dotnet new` shows them
 when its language is Traditional Chinese (`DOTNET_CLI_UI_LANGUAGE=zh-TW`), and the C# Dev Kit when the operating
 system's language is; every other language shows the English.

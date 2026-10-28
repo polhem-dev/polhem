@@ -37,6 +37,15 @@ public class PolhemAvaloniaTemplateTests : IClassFixture<TemplatePackageFixture>
             $"-p:RestoreAdditionalProjectFallbackFolders={TemplatePackageFixture.GlobalPackages}");
     }
 
+    [Fact]
+    [DisplayName("The generated application has every file of the shared template content")]
+    public void Generate_HasTheSharedFiles()
+    {
+        var output = Generate("SqlServer");
+
+        Assert.All(TemplateContentTests.SharedFiles(), file => Assert.True(File.Exists(Path.Combine(output, file)), file));
+    }
+
     [Theory]
     [InlineData("SqlServer", DatabaseType.SQLServer)]
     [InlineData("PostgreSql", DatabaseType.PostgreSQL)]

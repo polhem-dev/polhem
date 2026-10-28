@@ -17,6 +17,9 @@
 # A line suffix (`](path/Foo.cs:120)`) is the desktop app's clickable convention. It is removed
 # before the file is checked; the line number itself is not checked.
 #
+# A template under tools/Polhem.Templates/content/<template>/ also receives the files of
+# content/_shared/ when the package is built, so a link inside a template may resolve there instead.
+#
 # IMPORTANT: existence is checked against git's list of paths, not with `[[ -e ]]`. The macOS
 # file system is case-insensitive, so `-e` accepts a link with the wrong case, which is a 404 on
 # GitHub and on Linux CI. A side effect is that links to ignored files are reported too, which
@@ -57,7 +60,7 @@ git ls-files -z --cached --others --exclude-standard -- '*.md' \
       return r
     }
 
-    function check(raw,    t, path, dir, resolved) {
+    function check(raw,    t, path, dir, resolved, shared) {
       t = raw
       sub(/^[ \t]+/, "", t)
       if (substr(t, 1, 1) == "<") {
@@ -81,6 +84,12 @@ git ls-files -z --cached --others --exclude-standard -- '*.md' \
         dir = FILENAME
         if (!sub(/\/[^\/]*$/, "", dir)) dir = "."
         resolved = normalize(dir "/" path)
+      }
+
+      if (resolved != "" && !(resolved in exists) && resolved ~ /^tools\/Polhem\.Templates\/content\/[^\/]+\//) {
+        shared = resolved
+        sub(/^tools\/Polhem\.Templates\/content\/[^\/]+\//, "tools/Polhem.Templates/content/_shared/", shared)
+        if (shared in exists) return
       }
 
       # An empty result means the link climbs above the repo root, which cannot be verified here.
