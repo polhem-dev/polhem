@@ -36,4 +36,7 @@
   <data name="MenuLoadFailed" xml:space="preserve">
     <value>The menu could not be loaded: {0}</value>
   </data>
+  <data name="MenuEmpty" xml:space="preserve">
+    <value>There are no forms in the menu yet.</value>
+  </data>
 </root>

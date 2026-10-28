@@ -115,7 +115,7 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 | `PolhemShellLayout` | 路由器的預設版面。circuit 的使用者進入公司之前顯示 `PolhemShellSignIn`，之後顯示頂端列、`PolhemShellNavMenu` 與頁面。選單按鈕在寬螢幕上收合選單；寬度小於 600 CSS 像素（表單頁預設的精簡門檻）時改為從側邊滑出蓋在頁面上，選了表單就關閉。 |
 | `PolhemShellSignIn` | 標題、提示、公司與 `PolhemLoginPanel`；登入後經由 `CircuitUserContext.EnterCompanyAsync` 進入公司。被拒絕時把錯誤顯示在畫面上，並讓 circuit 再次登出。提供設定的語言之間的切換。 |
 | `PolhemShellNavMenu` | 把伺服器的 `MenuSettings` 呈現為資料夾標題與連到 `{FormRoute}/{ProgId}` 的連結，標題依 circuit 的 UI culture 呈現。 |
-| `PolhemShellHome` | 開啟選單的第一個表單，與 Avalonia 外殼登入後的行為相同。放在根頁面上。 |
+| `PolhemShellHome` | 開啟選單的第一個表單，與 Avalonia 外殼登入後的行為相同；選單中還沒有表單時則說明這一點。放在根頁面上。 |
 | `AddPolhemShell` | 註冊 `PolhemShellOptions`。每個選項都寫在它的 XML 文件中。 |
 | `UsePolhemShellLocalization` | 以設定的語言設定 request localization，讓 circuit 以瀏覽者選的語言開始。 |
 | `MapPolhemShellCulture` | `GET /culture`，語言切換背後的端點。它把提供的 culture 存進 request-localization cookie 後轉址回原頁，且只轉到本站的路徑；其他位址一律回到根目錄，因此這個端點不會成為 open redirect（`PolhemShellCultureEndpointTests`）。 |

@@ -12,11 +12,13 @@ namespace Polhem.Web.Blazor.Server.Shell
     /// </summary>
     /// <remarks>
     /// <see cref="PolhemShellLayout"/> renders the routed page only once a company is entered, so the menu it reads is
-    /// the signed-in user's. A menu with no form, or one that cannot be loaded, leaves the page showing nothing more;
-    /// the menu beside it shows why.
+    /// the signed-in user's. A menu with no form shows a note saying so, here and in the menu; a menu that cannot be
+    /// loaded leaves the page empty, because the menu beside it shows the error.
     /// </remarks>
     public sealed partial class PolhemShellHome : ComponentBase
     {
+        private HomeState _state;
+
         [Inject]
         private PolhemApiClient Client { get; set; } = default!;
 
@@ -38,8 +40,19 @@ namespace Polhem.Web.Blazor.Server.Shell
         protected override async Task OnInitializedAsync()
         {
             var (rows, _) = await ShellMenuRows.TryLoadAsync(Client, BlazorOptions).ConfigureAwait(true);
-            if (rows?.FirstOrDefault(r => r.ProgId is not null) is { ProgId: { } progId })
+            if (rows is null)
+                _state = HomeState.Failed;
+            else if (rows.FirstOrDefault(r => r.ProgId is not null) is { ProgId: { } progId })
                 Navigation.NavigateTo(Options.GetFormUri(progId), replace: true);
+            else
+                _state = HomeState.Empty;
+        }
+
+        private enum HomeState
+        {
+            Loading,
+            Empty,
+            Failed,
         }
     }
 }
