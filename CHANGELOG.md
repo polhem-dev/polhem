@@ -21,8 +21,8 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   `dotnet new` and the C# Dev Kit in that language.
 - `Polhem.Web.Blazor.Server` gains a ready-made shell (`PolhemShellLayout`, configured with `AddPolhemShell`): sign-in
   and company, top bar, the server's menu, a collapsible menu on a narrow screen and an English / Traditional Chinese
-  switch, the counterpart of `Polhem.UI.Avalonia.Shell`. The package also ships an optional default stylesheet,
-  `polhem.css`.
+  switch, the counterpart of `Polhem.UI.Avalonia.Shell`. Until the menu holds a form, the root page and the menu say
+  so. The package also ships an optional default stylesheet, `polhem.css`.
 - The framework's default `Department` and `Employee` forms list their number, name and related name; their lists
   showed no columns before. Picking a department in the default Employee form no longer fails. An application whose
   `Define` folder already holds the two schemas keeps the old ones: update them by hand or delete them to have them

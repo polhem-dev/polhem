@@ -36,4 +36,7 @@
   <data name="MenuLoadFailed" xml:space="preserve">
     <value>無法載入選單：{0}</value>
   </data>
+  <data name="MenuEmpty" xml:space="preserve">
+    <value>選單中還沒有表單。</value>
+  </data>
 </root>
