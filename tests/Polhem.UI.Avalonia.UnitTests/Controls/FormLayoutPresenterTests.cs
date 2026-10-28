@@ -198,6 +198,63 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("Fields after a field spanning rows and columns start below it instead of overlapping it")]
+        public void Render_FieldsAfterRowSpanStartBelowIt()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Name = "Main" };
+            section.Fields!.Add(new LayoutField { FieldName = "a" });
+            section.Fields.Add(new LayoutField { FieldName = "b" });
+            section.Fields.Add(new LayoutField { FieldName = "notes", RowSpan = 3, ColumnSpan = 2 });
+            section.Fields.Add(new LayoutField { FieldName = "c" });
+            section.Fields.Add(new LayoutField { FieldName = "d" });
+            layout.Sections!.Add(section);
+
+            var cells = FieldGrid(Render(layout)).Children.ToList();
+
+            Assert.Equal((1, 0, 3, 2), (Grid.GetRow(cells[2]), Grid.GetColumn(cells[2]),
+                Grid.GetRowSpan(cells[2]), Grid.GetColumnSpan(cells[2])));
+            Assert.Equal((4, 0), (Grid.GetRow(cells[3]), Grid.GetColumn(cells[3])));
+            Assert.Equal((4, 1), (Grid.GetRow(cells[4]), Grid.GetColumn(cells[4])));
+        }
+
+        [Fact]
+        [DisplayName("A field spanning rows in one column leaves the cells beside it to the next fields")]
+        public void Render_CellsBesideRowSpanAreFilled()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Name = "Main" };
+            section.Fields!.Add(new LayoutField { FieldName = "tall", RowSpan = 2 });
+            section.Fields.Add(new LayoutField { FieldName = "b" });
+            section.Fields.Add(new LayoutField { FieldName = "c" });
+            section.Fields.Add(new LayoutField { FieldName = "d" });
+            layout.Sections!.Add(section);
+
+            var cells = FieldGrid(Render(layout)).Children.ToList();
+
+            Assert.Equal((0, 0, 2), (Grid.GetRow(cells[0]), Grid.GetColumn(cells[0]), Grid.GetRowSpan(cells[0])));
+            Assert.Equal((0, 1), (Grid.GetRow(cells[1]), Grid.GetColumn(cells[1])));
+            Assert.Equal((1, 1), (Grid.GetRow(cells[2]), Grid.GetColumn(cells[2])));
+            Assert.Equal((2, 0), (Grid.GetRow(cells[3]), Grid.GetColumn(cells[3])));
+        }
+
+        [Fact]
+        [DisplayName("A ColumnSpan wider than the layout is clamped to its column count")]
+        public void Render_ColumnSpanWiderThanLayoutIsClamped()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Name = "Main" };
+            section.Fields!.Add(new LayoutField { FieldName = "wide", ColumnSpan = 5 });
+            section.Fields.Add(new LayoutField { FieldName = "b" });
+            layout.Sections!.Add(section);
+
+            var cells = FieldGrid(Render(layout)).Children.ToList();
+
+            Assert.Equal((0, 0, 2), (Grid.GetRow(cells[0]), Grid.GetColumn(cells[0]), Grid.GetColumnSpan(cells[0])));
+            Assert.Equal((1, 0), (Grid.GetRow(cells[1]), Grid.GetColumn(cells[1])));
+        }
+
+        [Fact]
         [DisplayName("A field with Visible false is not rendered")]
         public void Render_HiddenFieldIsSkipped()
         {

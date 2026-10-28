@@ -31,6 +31,8 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   written again.
 - A `LayoutField`'s `RowSpan` and `ColumnSpan` now reach the form on every front end; the copy of the layout the forms
   render had reset both to 1.
+- In Avalonia forms and the DefineEditor preview, the fields after a field spanning several rows start below it instead
+  of overlapping it.
 
 ## [1.10.0] - 2026-10-27
 
