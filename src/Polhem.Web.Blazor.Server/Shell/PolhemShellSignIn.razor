@@ -1,0 +1,29 @@
+@using Polhem.Web.Blazor.Server.Components
+<section class="polhem-shell-signin">
+    <h1 class="polhem-shell-signin__title">@Options.AppTitle</h1>
+    @if (!string.IsNullOrWhiteSpace(Options.SignInHint))
+    {
+        <p class="polhem-shell-signin__hint">@Options.SignInHint</p>
+    }
+    <div class="polhem-login-panel__field">
+        <label class="polhem-login-panel__label" for="@_companyInputId">@PolhemShellText.Get(PolhemShellText.CompanyId)</label>
+        <input id="@_companyInputId" class="polhem-login-panel__input" type="text" @bind="_companyId" />
+    </div>
+    <PolhemLoginPanel InitialUserId="@Options.DefaultUserId" InitialPassword="@Options.DefaultPassword"
+                      OnLoggedIn="OnLoggedInAsync" />
+    @if (_error is not null)
+    {
+        <div class="polhem-shell-signin__error" role="alert">@_error</div>
+    }
+    @if (Options.Languages.Count > 1)
+    {
+        <div class="polhem-shell-signin__languages" role="group" aria-label="@PolhemShellText.Get(PolhemShellText.Language)">
+            @foreach (var language in Options.Languages)
+            {
+                <button type="button" class="polhem-shell-signin__language" disabled="@IsCurrent(language)"
+                        @onclick="() => SwitchLanguage(language)">@language.DisplayName</button>
+            }
+        </div>
+        <p class="polhem-shell-signin__hint">@PolhemShellText.Get(PolhemShellText.LanguageHint)</p>
+    }
+</section>

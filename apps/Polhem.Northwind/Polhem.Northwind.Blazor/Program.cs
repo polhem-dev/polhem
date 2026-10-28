@@ -1,8 +1,7 @@
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
 using Polhem.Northwind.Backend;
 using Polhem.Northwind.Blazor.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Server.Shell;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +22,13 @@ else
     builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 }
 
+builder.Services.AddPolhemShell(shell =>
+{
+    shell.AppTitle = "Polhem.Northwind";
+    shell.SignInHint = "Use demo / demo.";
+    shell.DefaultCompanyId = NorthwindCredentials.CompanyId;
+});
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -31,32 +37,11 @@ var app = builder.Build();
 if (!isRemote)
     app.UseNorthwindBackend();
 
-// A circuit's culture is fixed when it connects, so the language comes from the request-localization cookie that
-// the sign-in screen's switch writes before it reloads the page.
-CultureInfo[] cultures = [new("en-US"), new("zh-TW")];
-app.UseRequestLocalization(new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new RequestCulture("en-US"),
-    SupportedCultures = cultures,
-    SupportedUICultures = cultures,
-});
-
+app.UsePolhemShellLocalization();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapGet("/culture", (string culture, string? redirectUri, HttpContext context) =>
-{
-    if (cultures.Any(c => c.Name == culture))
-    {
-        context.Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName,
-            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)));
-    }
-    // Only a path on this site: an absolute or protocol-relative address would make this an open redirect.
-    bool isLocal = redirectUri is { Length: > 0 } && redirectUri[0] == '/'
-        && !redirectUri.StartsWith("//", StringComparison.Ordinal) && !redirectUri.StartsWith("/\\", StringComparison.Ordinal);
-    return Results.LocalRedirect(isLocal ? redirectUri! : "/");
-});
-
+app.MapPolhemShellCulture();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

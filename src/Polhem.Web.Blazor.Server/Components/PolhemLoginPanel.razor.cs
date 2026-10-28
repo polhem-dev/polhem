@@ -66,6 +66,19 @@ namespace Polhem.Web.Blazor.Server.Components
         public string? SubmitLabel { get; set; }
 
         /// <summary>
+        /// Gets or sets the user id the panel starts with. Read once, when the panel is initialized.
+        /// </summary>
+        [Parameter]
+        public string? InitialUserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password the panel starts with, meant for demonstration accounts only. Read once, when the
+        /// panel is initialized; the panel clears it after a successful sign-in.
+        /// </summary>
+        [Parameter]
+        public string? InitialPassword { get; set; }
+
+        /// <summary>
         /// Gets or sets the callback invoked after a successful login. The
         /// host typically wires this to
         /// <c>response =&gt; auth.SetToken(response.AccessToken)</c> against
@@ -88,6 +101,13 @@ namespace Polhem.Web.Blazor.Server.Components
         private string DisplayedPasswordLabel => PasswordLabel ?? Text(PolhemUIText.Password);
 
         private string DisplayedSubmitLabel => SubmitLabel ?? Text(PolhemUIText.SignIn);
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            _userId = InitialUserId ?? string.Empty;
+            _password = InitialPassword ?? string.Empty;
+        }
 
         private async Task OnSubmitAsync()
         {
