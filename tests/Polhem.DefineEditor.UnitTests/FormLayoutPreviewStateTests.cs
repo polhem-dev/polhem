@@ -155,5 +155,34 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.True(_document.EditPropertiesCommand.CanExecute(null));
             Assert.Equal(2, changed);
         }
+
+        [Fact]
+        [DisplayName("The browser preview snapshot keeps the layout as it was, whatever is edited afterwards")]
+        public void CreateBrowserPreviewSnapshot_LaterEdit_DoesNotChangeTheSnapshot()
+        {
+            var snapshot = _document.CreateBrowserPreviewSnapshot();
+
+            _document.Root.Sections![0].Fields!.Add(new LayoutField { FieldName = "remark", Caption = "Remark" });
+
+            var layout = XmlCodec.Deserialize<FormLayout>(snapshot.LayoutXml)!;
+            Assert.Equal(2, layout.Sections![0].Fields!.Count);
+            Assert.Null(snapshot.Error);
+        }
+
+        [Fact]
+        [DisplayName("The browser preview snapshot carries the preview settings and the layout caption")]
+        public void CreateBrowserPreviewSnapshot_CarriesPreviewSettings()
+        {
+            _document.IsPreviewViewMode = true;
+            _document.IsPreviewCompact = true;
+            _document.ShowPreviewFieldNames = false;
+
+            var snapshot = _document.CreateBrowserPreviewSnapshot();
+
+            Assert.Equal("Employee", snapshot.Title);
+            Assert.Equal(SingleFormMode.View, snapshot.FormMode);
+            Assert.True(snapshot.IsCompact);
+            Assert.False(snapshot.ShowFieldNames);
+        }
     }
 }

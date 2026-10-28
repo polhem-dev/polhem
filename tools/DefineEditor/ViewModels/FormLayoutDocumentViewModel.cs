@@ -1,7 +1,11 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
+using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -41,6 +45,59 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
+
+    /// <summary>
+    /// Captures the layout, unsaved edits included, and the preview settings for the browser preview.
+    /// </summary>
+    /// <remarks>
+    /// The layout goes out as the XML it would be saved as: the browser renders on another thread, so it must never
+    /// read <see cref="Root"/>, which the editor changes in place.
+    /// </remarks>
+    public BrowserPreviewSnapshot CreateBrowserPreviewSnapshot()
+    {
+        var title = string.IsNullOrEmpty(Root.Caption) ? Root.LayoutId : Root.Caption;
+        try
+        {
+            return new BrowserPreviewSnapshot(title, XmlCodec.Serialize(Root), PreviewFormMode, IsPreviewCompact, ShowPreviewFieldNames);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new BrowserPreviewSnapshot(title, string.Empty, PreviewFormMode, IsPreviewCompact, ShowPreviewFieldNames, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Opens this layout in the default web browser, starting the browser preview server on first use. A server
+    /// that cannot start, or a browser that cannot be launched, is reported in <see cref="DocumentViewModelBase.StatusText"/>.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenInBrowserAsync()
+    {
+        var host = BrowserPreviewHost.Shared;
+        var documentId = host.Hub.GetDocumentId(DocumentKey);
+        try
+        {
+            var url = await host.GetDocumentUrlAsync(documentId);
+            host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+            Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (InvalidOperationException ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+        catch (IOException ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+        catch (Win32Exception ex)
+        {
+            ReportBrowserPreviewFailure(ex);
+        }
+    }
+
+    private void ReportBrowserPreviewFailure(Exception ex)
+        => StatusText = string.Format(LocalizationService.Current.Culture,
+            LocalizationService.Current["Status_BrowserPreviewFailed"], ex.Message);
 
     /// <summary>What the right-hand side shows: the property grid, the preview, or both.</summary>
     [ObservableProperty]

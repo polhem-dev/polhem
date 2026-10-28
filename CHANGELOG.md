@@ -33,6 +33,8 @@ Details and migration steps: [docs/en/changelogs/1.11.0.md](docs/en/changelogs/1
   render had reset both to 1.
 - In Avalonia forms and the DefineEditor preview, the fields after a field spanning several rows start below it instead
   of overlapping it.
+- DefineEditor previews a form layout in the web browser as well, drawn by the Blazor Server components, with unsaved
+  edits following along; the editor now needs the ASP.NET Core runtime.
 
 ## [1.10.0] - 2026-10-27
 

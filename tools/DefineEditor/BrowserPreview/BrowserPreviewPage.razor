@@ -1,0 +1,86 @@
+@page "/preview/{Token}/{DocumentId}"
+@namespace Polhem.DefineEditor.BrowserPreview
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using Polhem.Core.Serialization
+@using Polhem.Definition.Layouts
+@using Polhem.DefineEditor.Services
+@using Polhem.Web.Blazor.Server.Controls
+@implements IDisposable
+@inject BrowserPreviewHub Hub
+@inject IJSRuntime JS
+
+<PageTitle>@(_snapshot?.Title ?? "Polhem DefineEditor")</PageTitle>
+
+@if (_error is not null)
+{
+    <p class="browser-preview__message browser-preview__message--error">@_error</p>
+}
+else if (_layout is null)
+{
+    <p class="browser-preview__message">@LocalizationService.Current["BrowserPreview_NotPublished"]</p>
+}
+else
+{
+    <div class="@(_snapshot!.IsCompact ? "browser-preview browser-preview--compact" : "browser-preview")">
+        <FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode" IsCompact="_snapshot.IsCompact"
+                             IdPrefix="@IdPrefix" />
+    </div>
+}
+
+@code {
+    private const string IdPrefix = "preview";
+
+    private BrowserPreviewSnapshot? _snapshot;
+    private FormLayout? _layout;
+    private string? _error;
+
+    /// <summary>Gets or sets the URL token; the host checks it before the page is reached.</summary>
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the id of the document to show.</summary>
+    [Parameter]
+    public string DocumentId { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Hub.SnapshotPublished += OnSnapshotPublished;
+        Load();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_layout is not null)
+            await JS.InvokeVoidAsync("polhemBrowserPreview.showFieldNames", IdPrefix, _snapshot!.ShowFieldNames);
+    }
+
+    public void Dispose() => Hub.SnapshotPublished -= OnSnapshotPublished;
+
+    private void OnSnapshotPublished(string documentId)
+    {
+        if (string.Equals(documentId, DocumentId, StringComparison.Ordinal))
+            _ = InvokeAsync(() =>
+            {
+                Load();
+                StateHasChanged();
+            });
+    }
+
+    private void Load()
+    {
+        _snapshot = Hub.GetSnapshot(DocumentId);
+        _layout = null;
+        _error = _snapshot?.Error is { } error
+            ? string.Format(LocalizationService.Current.Culture, LocalizationService.Current["Preview_RenderFailed"], error)
+            : null;
+        if (_snapshot is null || _error is not null) return;
+        try
+        {
+            _layout = XmlCodec.Deserialize<FormLayout>(_snapshot.LayoutXml);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _error = string.Format(LocalizationService.Current.Culture, LocalizationService.Current["Preview_RenderFailed"], ex.Message);
+        }
+    }
+}

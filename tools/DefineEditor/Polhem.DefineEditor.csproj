@@ -1,4 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The Web SDK, because the editor hosts the Blazor Server browser preview of FormLayout (BrowserPreview/): it
+       brings the ASP.NET Core shared framework and the static web assets the page needs. It is still a desktop
+       application (WinExe). -->
 
   <!-- Package metadata shared with the src/ packages: icon, license, repository, SourceLink, symbols. -->
   <Import Project="..\..\Package.props" />
@@ -61,8 +65,35 @@
     <!-- The CREATE TABLE preview of the TableSchema editor uses the framework's own dialect builders. Polhem.Db brings
          no database driver; it depends on Polhem.Definition only. -->
     <ProjectReference Include="..\..\src\Polhem.Db\Polhem.Db.csproj" />
-    <!-- Brings the framework's Avalonia controls (ObjectTreeView). It also carries Polhem.Api.Client and Polhem.Expressions,
-         which the editor needs for remote define access and design-time expression checks. -->
+    <!-- Brings the framework's Avalonia controls (ObjectTreeView, the layout preview). It also carries Polhem.Expressions,
+         which the editor needs for design-time expression checks. -->
     <ProjectReference Include="..\..\src\Polhem.UI.Avalonia\Polhem.UI.Avalonia.csproj" />
+    <!-- The browser preview renders a layout with the Blazor Server head's own FormLayoutPresenter. The editor is a
+         composition root, so it may reference both heads; neither head references the other. -->
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
   </ItemGroup>
+
+  <!--
+    WARNING: the browser preview needs `_framework/blazor.web.js`, which Microsoft.AspNetCore.App.Internal.Assets adds in
+    its `_AddBlazorFrameworkStaticWebAssets` target. That target runs only when OutputType is Exe, and this application
+    is a WinExe, so without the switch below the page loads without Blazor and never becomes interactive.
+    The condition of a target is evaluated before its BeforeTargets run, so the switch cannot hook that target; it runs
+    first in ResolveStaticWebAssetsInputsDependsOn instead, and OutputType is put back right after the asset target.
+    BrowserPreviewAssetTests (tests/Polhem.DefineEditor.UnitTests) fails when the asset is missing, which is how a
+    change to these SDK target names shows up.
+  -->
+  <PropertyGroup>
+    <ResolveStaticWebAssetsInputsDependsOn>_PolhemBlazorFrameworkAssetsAsExe;$(ResolveStaticWebAssetsInputsDependsOn)</ResolveStaticWebAssetsInputsDependsOn>
+  </PropertyGroup>
+  <Target Name="_PolhemBlazorFrameworkAssetsAsExe">
+    <PropertyGroup>
+      <_PolhemOriginalOutputType>$(OutputType)</_PolhemOriginalOutputType>
+      <OutputType>Exe</OutputType>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_PolhemRestoreOutputType" AfterTargets="_AddBlazorFrameworkStaticWebAssets">
+    <PropertyGroup>
+      <OutputType>$(_PolhemOriginalOutputType)</OutputType>
+    </PropertyGroup>
+  </Target>
 </Project>

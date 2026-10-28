@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
@@ -82,6 +83,7 @@ public partial class FormLayoutPreview : UserControl
     private void Render()
     {
         _renderTimer.Stop();
+        PublishToBrowser();
         if (_document is not { IsPreviewVisible: true } document)
         {
             LayoutPresenter.Layout = null;
@@ -149,6 +151,14 @@ public partial class FormLayoutPreview : UserControl
             fieldName.Classes.Add("muted");
             columns[i].Header = new StackPanel { Children = { caption, fieldName } };
         }
+    }
+
+    // The browser follows the document whether or not this pane draws it, but only once a browser preview was opened.
+    private void PublishToBrowser()
+    {
+        if (_document is null || !BrowserPreviewHost.IsSharedCreated || !BrowserPreviewHost.Shared.IsRunning) return;
+        var hub = BrowserPreviewHost.Shared.Hub;
+        hub.Publish(hub.GetDocumentId(_document.DocumentKey), _document.CreateBrowserPreviewSnapshot());
     }
 
     private void ShowError(Exception ex)
