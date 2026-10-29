@@ -36,6 +36,9 @@
     <LanguageItem Key="CollectionKeyDuplicate" Value="有多個項目使用相同的鍵值「{0}」。" />
     <LanguageItem Key="CollectionKeyTaken" Value="已有其他項目使用鍵值「{0}」。" />
     <LanguageItem Key="LiveComputationStopped" Value="「{0}」已停止在編輯時即時計算，將於存檔時計算。原因：{1}" />
+    <LanguageItem Key="Close" Value="關閉" />
+    <LanguageItem Key="OpenRelatedRecord" Value="按兩下開啟這筆資料" />
+    <LanguageItem Key="RelatedRecordDenied" Value="您沒有檢視「{0}」的權限。" />
   </Items>
   <Enums />
 </LanguageResource>

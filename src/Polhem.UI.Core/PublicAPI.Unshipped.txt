@@ -1,1 +1,19 @@
 #nullable enable
+Polhem.UI.Core.Fields.RelationOpenRules
+Polhem.UI.Core.Fields.RelationTarget
+Polhem.UI.Core.Fields.RelationTarget.Deconstruct(out string! ProgId, out System.Guid RowId) -> void
+Polhem.UI.Core.Fields.RelationTarget.Equals(Polhem.UI.Core.Fields.RelationTarget other) -> bool
+Polhem.UI.Core.Fields.RelationTarget.ProgId.get -> string!
+Polhem.UI.Core.Fields.RelationTarget.ProgId.init -> void
+Polhem.UI.Core.Fields.RelationTarget.RelationTarget() -> void
+Polhem.UI.Core.Fields.RelationTarget.RelationTarget(string! ProgId, System.Guid RowId) -> void
+Polhem.UI.Core.Fields.RelationTarget.RowId.get -> System.Guid
+Polhem.UI.Core.Fields.RelationTarget.RowId.init -> void
+override Polhem.UI.Core.Fields.RelationTarget.GetHashCode() -> int
+static Polhem.UI.Core.Fields.RelationOpenRules.CanOpen(Polhem.Definition.Forms.FormSchema! relationSchema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+static Polhem.UI.Core.Fields.RelationOpenRules.IsAvailable(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Forms.FormField? field) -> bool
+static Polhem.UI.Core.Fields.RelationOpenRules.TryGetTarget(Polhem.Definition.Forms.FormField? field, object? value, out Polhem.UI.Core.Fields.RelationTarget target) -> bool
+static Polhem.UI.Core.Fields.RelationTarget.operator !=(Polhem.UI.Core.Fields.RelationTarget left, Polhem.UI.Core.Fields.RelationTarget right) -> bool
+static Polhem.UI.Core.Fields.RelationTarget.operator ==(Polhem.UI.Core.Fields.RelationTarget left, Polhem.UI.Core.Fields.RelationTarget right) -> bool
+~override Polhem.UI.Core.Fields.RelationTarget.Equals(object obj) -> bool
+~override Polhem.UI.Core.Fields.RelationTarget.ToString() -> string

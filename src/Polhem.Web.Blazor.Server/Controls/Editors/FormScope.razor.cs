@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Polhem.Definition.Layouts;
+using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Server.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.Controls.Editors
@@ -29,6 +30,13 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
         public SingleFormMode FormMode { get; set; } = SingleFormMode.Edit;
 
         /// <summary>
+        /// Gets or sets the handler a relation field inside asks to open its record through, on a read-only form.
+        /// Without one the fields do not offer it.
+        /// </summary>
+        [Parameter]
+        public EventCallback<RelationTarget> OpenRelation { get; set; }
+
+        /// <summary>
         /// Gets or sets the content the scope applies to.
         /// </summary>
         [Parameter]
@@ -38,8 +46,9 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
         protected override void OnParametersSet()
         {
             // A new context instance on a change is what makes the cascade notify the editors.
-            if (!ReferenceEquals(_context.DataObject, DataObject) || _context.FormMode != FormMode)
-                _context = new FormScopeContext(DataObject, FormMode);
+            if (!ReferenceEquals(_context.DataObject, DataObject) || _context.FormMode != FormMode
+                || !_context.OpenRelation.Equals(OpenRelation))
+                _context = new FormScopeContext(DataObject, FormMode, OpenRelation);
         }
     }
 }

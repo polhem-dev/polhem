@@ -120,6 +120,8 @@
 .polhem-field-editor--memo { min-height: 4.5em; resize: vertical; }
 /* Read-only reads as a record, not a grid of input boxes: the box collapses to a bottom line, as in the Avalonia head. */
 .polhem-field-editor--readonly { border-width: 0 0 1px; border-radius: 0; background: transparent; }
+/* A relation field on a read-only form opens its record on a double-click. */
+.polhem-field-editor--opens-record { cursor: pointer; }
 
 .polhem-button-edit { position: relative; display: block; }
 .polhem-button-edit .polhem-field-editor { padding-right: 30px; }
@@ -152,6 +154,15 @@
 .polhem-row-edit-panel__label { font-size: 0.85rem; color: var(--polhem-text-muted); }
 .polhem-row-edit-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .polhem-row-edit-panel__buttons button { padding: 4px 14px; }
+
+/* Related record dialog. */
+.polhem-related-record-dialog__card { background: var(--polhem-surface); border-radius: 6px; padding: 16px; width: 720px; max-width: calc(100vw - 32px); box-sizing: border-box; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-related-record-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-related-record-dialog__toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.polhem-related-record-dialog__toolbar button { padding: 4px 12px; }
+.polhem-related-record-dialog__error { color: var(--polhem-danger); padding: 10px; background: var(--polhem-danger-surface); border-radius: 4px; }
+.polhem-related-record-dialog__loading { color: var(--polhem-text-muted); }
+.polhem-related-record-dialog__notice { color: var(--polhem-warning); padding: 8px 10px; margin: 8px 0; background: var(--polhem-warning-surface); border: 1px solid var(--polhem-warning-border); border-radius: 4px; }
 
 @media (max-width: 599px) {
     .polhem-dynamic-grid { display: block; overflow-x: auto; }

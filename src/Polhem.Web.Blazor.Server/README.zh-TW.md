@@ -89,6 +89,10 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   `FormDataObject.ApplyLookupSelection` 寫回，按 Delete 則清除。對話框依序從參數、容器中註冊的
   `IFormDefinitionSource` 與 `IFormApiConnectorFactory`（以 scoped 註冊，每個 circuit 各一份）、circuit 的
   `PolhemApiClient` 取得目標 schema 與連接器；有 Polhem 後端的應用程式不需註冊任何東西。
+- 關聯資料 -- 唯讀表單上有值的 `ButtonEdit` 不顯示按鈕，改顯示手形游標與提示；雙擊時把它指向的資料傳給
+  `FormLayoutPresenter.OpenRelation`。`FormPage` 以 `RelatedRecordDialog` 處理：使用者對關聯表單的權限模型有 `Read`
+  權限時以唯讀顯示那筆資料，否則由頁面在提示中指出該表單；伺服器端由關聯表單的 `GetData` 再檢查一次。共用規則是
+  `Polhem.UI.Core` 的 `RelationOpenRules`。
 - `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。登入成功時也會記錄到 circuit 的
   `CircuitUserContext`。`InitialUserId` 與 `InitialPassword` 在面板初始化時填入輸入框一次。
 - `CircuitUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`

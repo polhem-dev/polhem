@@ -10,6 +10,12 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
+## [Unreleased]
+
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.12.0.md](docs/zh-TW/changelogs/1.12.0.md)
+
+- Blazor Server 的 `FormPage` 在唯讀記錄上，使用者雙擊關聯欄位且能讀取關聯表單時，以對話框開啟該欄位指向的資料。
+
 ## [1.11.0] - 2026-10-28
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.11.0.md](docs/zh-TW/changelogs/1.11.0.md)
