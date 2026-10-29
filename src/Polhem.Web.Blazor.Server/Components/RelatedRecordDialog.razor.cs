@@ -40,7 +40,7 @@ namespace Polhem.Web.Blazor.Server.Components
         private FormDataObject? _dataObject;
         private RoundingContext? _roundingContext;
         private string? _error;
-        // A message about a record this dialog refused to open from one of its own fields.
+        // Names the form a field of this dialog may not open for the user.
         private string? _notice;
         private bool _isPermitted;
         private RelationTarget? _relation;
