@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
 
@@ -21,6 +23,12 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// In lookup mode the text box is always read-only — the display value is not
     /// hand-editable; the lookup flow is the only write path. The icon button follows
     /// the form mode (disabled in View mode or on a read-only layout field).
+    /// <para>
+    /// Inside a <see cref="Polhem.UI.Avalonia.Views.FormView"/> in <see cref="SingleFormMode.View"/>, a relation field
+    /// with a value opens the record it points at instead: the editor shows a hint and a hand cursor, and a
+    /// double-tap asks the view to open the record, which decides whether the user may see it. The rules are
+    /// <see cref="RelationOpenRules"/>, which every UI head shares.
+    /// </para>
     /// </remarks>
     public sealed class ButtonEdit : TextEdit
     {
@@ -32,6 +40,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         private readonly PathIcon _icon;
         private readonly Button _button;
         private bool _allowLookupEdit;
+        // Whether the editor currently shows the open-record hint, so the tooltip is touched only on a change and a
+        // lookup failure's tooltip stays until then.
+        private bool _offersOpen;
 
         /// <summary>
         /// Initializes a new instance of <see cref="ButtonEdit"/> with the embedded
@@ -65,6 +76,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             };
             _button.Click += async (_, _) => await OnButtonClickAsync().ConfigureAwait(true);
             InnerRightContent = _button;
+            // The text box may handle the gesture itself (word selection), so the handler sees handled events too.
+            AddHandler(DoubleTappedEvent, OnDoubleTapped, RoutingStrategies.Bubble, handledEventsToo: true);
         }
 
         /// <summary>
@@ -105,6 +118,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // The lookup / action icon is visual noise in a read-only field; hide it so
             // the field reads as a clean underlined value like the other editors.
             _button.IsVisible = allowEdit;
+            UpdateOpenAffordance();
         }
 
         /// <inheritdoc />
@@ -132,6 +146,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 .Select(f => Binder.TargetRow is not null
                     ? dataObject.GetField(Binder.TargetRow, f)
                     : dataObject.GetField(f)));
+            UpdateOpenAffordance();
         }
 
         /// <inheritdoc />
@@ -179,6 +194,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // so they are created on first visual attach instead of in the constructor.
             _icon.Data ??= Geometry.Parse(SearchIconGeometry);
             _button.Cursor ??= new Cursor(StandardCursorType.Hand);
+            UpdateOpenAffordance();
         }
 
         private async Task OnButtonClickAsync()
@@ -214,6 +230,42 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 else
                     LookupFailed(this, ex);
             }
+        }
+
+        /// <summary>
+        /// Resolves the record a double-tap opens: a relation field with a value, in View mode, inside a form that
+        /// handles <see cref="RelationOpening.RequestedEvent"/>.
+        /// </summary>
+        internal bool TryGetOpenTarget(out RelationTarget target)
+        {
+            target = default;
+            return RelationOpening.GetIsEnabled(this)
+                && RelationOpenRules.IsAvailable(FormScope.GetFormMode(this), Binder.FormField)
+                && RelationOpenRules.TryGetTarget(Binder.FormField, Binder.GetValue(), out target);
+        }
+
+        private void OnDoubleTapped(object? sender, TappedEventArgs e)
+        {
+            if (!TryGetOpenTarget(out var target)) return;
+            e.Handled = true;
+            RaiseEvent(new RelationOpenRequestedEventArgs(target));
+        }
+
+        // The hint and the hand cursor say the field opens its record. The cursor needs platform services, which
+        // the unit tests do not have, so it is set only once the editor is in a visual tree.
+        private void UpdateOpenAffordance()
+        {
+            bool opens = TryGetOpenTarget(out _);
+            if (opens != _offersOpen)
+            {
+                _offersOpen = opens;
+                ToolTip.SetTip(this, opens ? UIText.Get(PolhemUIText.OpenRelatedRecord) : null);
+            }
+            // Clearing rather than setting null lets the theme's text cursor apply again.
+            if (!opens)
+                ClearValue(CursorProperty);
+            else if (TopLevel.GetTopLevel(this) is not null)
+                Cursor = new Cursor(StandardCursorType.Hand);
         }
 
         private IReadOnlyList<string> ResolveDisplayFieldNames()
