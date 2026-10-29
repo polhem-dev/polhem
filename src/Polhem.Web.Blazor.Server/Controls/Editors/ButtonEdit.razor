@@ -6,11 +6,12 @@
     <input @attributes="AdditionalAttributes"
            id="@Id"
            type="text"
-           class="@BuildCssClass(ModifierClass)"
+           class="@InputCssClass"
            readonly="@(HasLookup || !IsEditable)"
            maxlength="@MaxLengthAttribute"
-           title="@_failure"
+           title="@(_failure ?? OpenHint)"
            @onkeydown="OnKeyDown"
+           @ondblclick="OnDoubleClickAsync"
            @bind:get="Text"
            @bind:set="CommitText" />
     @if (IsEditable)

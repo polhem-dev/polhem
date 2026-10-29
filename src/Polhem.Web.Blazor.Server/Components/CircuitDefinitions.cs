@@ -5,6 +5,7 @@ using Polhem.Core.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.Components
@@ -48,6 +49,32 @@ namespace Polhem.Web.Blazor.Server.Components
             if (loader is null)
                 return await client.System.GetDefineAsync<FormSchema>(DefineType.FormSchema, [progId]).ConfigureAwait(true);
             return await loader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name).ConfigureAwait(true);
+        }
+
+        /// <summary>
+        /// Loads the layout a record of <paramref name="progId"/> renders from: assembled through
+        /// <paramref name="loader"/> when one is given, so the tenant's customization and the number formats apply,
+        /// exactly as stored otherwise. Either way the caller owns the returned instance and may degrade it in place.
+        /// </summary>
+        /// <param name="client">The circuit's client.</param>
+        /// <param name="loader">The loader, or <c>null</c>.</param>
+        /// <param name="progId">The program identifier.</param>
+        /// <param name="schema">The program's schema, as <see cref="LoadSchemaAsync"/> returned it.</param>
+        /// <exception cref="InvalidOperationException">No layout is stored under <paramref name="progId"/>.</exception>
+        internal static async Task<FormLayout> LoadFormLayoutAsync(
+            PolhemApiClient client, FormDefinitionLoader? loader, string progId, FormSchema schema)
+        {
+            if (loader is not null)
+                return await loader.GetRuntimeLayoutAsync(progId, schema).ConfigureAwait(true);
+
+            // A layout is authored at design time, so a missing one is a configuration error rather than a cue to
+            // derive one from the schema.
+            return await client.System
+                .GetDefineAsync<FormLayout>(DefineType.FormLayout, [progId])
+                .ConfigureAwait(true)
+                ?? throw new InvalidOperationException(
+                    $"No FormLayout definition found for '{progId}'. Author one at design time "
+                    + $"and save it as 'FormLayout/{progId}.FormLayout.xml' under the definition path.");
         }
 
         /// <summary>

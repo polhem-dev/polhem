@@ -103,6 +103,18 @@ namespace Polhem.Definition.Language
         /// </summary>
         public const string LiveComputationStopped = "LiveComputationStopped";
 
+        /// <summary>Key of the command that closes a dialog.</summary>
+        public const string Close = "Close";
+
+        /// <summary>Key of the hint a relation field on a read-only form shows: a double-click opens its record.</summary>
+        public const string OpenRelatedRecord = "OpenRelatedRecord";
+
+        /// <summary>
+        /// Key of the message shown when a relation field's record is not opened because the user may not read its
+        /// form; argument 0 is the form's display name.
+        /// </summary>
+        public const string RelatedRecordDenied = "RelatedRecordDenied";
+
         private PolhemUIText()
         {
         }
@@ -141,6 +153,9 @@ namespace Polhem.Definition.Language
             [CollectionKeyDuplicate] = "More than one item has the key \"{0}\".",
             [CollectionKeyTaken] = "Another item already has the key \"{0}\".",
             [LiveComputationStopped] = "{0} is no longer calculated as you edit; it will be calculated when you save. Reason: {1}",
+            [Close] = "Close",
+            [OpenRelatedRecord] = "Double-click to open this record",
+            [RelatedRecordDenied] = "You do not have permission to view {0}.",
         };
 
         /// <summary>

@@ -106,6 +106,11 @@ decides whether `FormPage` localizes its definitions; see below.
   target schema and connector from its parameters, else from an `IFormDefinitionSource` and an
   `IFormApiConnectorFactory` registered in the container (scoped, so each circuit has its own), else from the circuit's
   `PolhemApiClient`; an application with a Polhem backend registers nothing.
+- Related records -- on a read-only form a `ButtonEdit` with a value shows a hand cursor and a hint instead of its
+  button, and a double-click passes the record it points at to `FormLayoutPresenter.OpenRelation`. `FormPage` handles
+  it with `RelatedRecordDialog`, which shows that record read-only when the user holds `Read` on the related form's
+  permission model and otherwise lets the page name the form in a notice; the related form's `GetData` checks again on
+  the server. The shared rules are `RelationOpenRules` in `Polhem.UI.Core`.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`. A successful sign-in is
   also recorded on the circuit's `CircuitUserContext`. `InitialUserId` and `InitialPassword` fill the inputs once, when
   the panel is initialized.

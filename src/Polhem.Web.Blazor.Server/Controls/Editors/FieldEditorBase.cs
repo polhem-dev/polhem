@@ -139,6 +139,12 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
         protected bool IsEditable => AllowsEdit(FormMode);
 
         /// <summary>
+        /// Gets the handler the enclosing <see cref="FormScope"/> opens a relation field's record through, or
+        /// <c>default</c> when there is none.
+        /// </summary>
+        protected EventCallback<RelationTarget> OpenRelation => Scope?.OpenRelation ?? default;
+
+        /// <summary>
         /// Gets or sets additional fields whose value changes refresh the editor, for editors that show
         /// other fields than the one they bind.
         /// </summary>

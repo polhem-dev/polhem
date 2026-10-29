@@ -82,6 +82,14 @@ namespace Polhem.Web.Blazor.Server.Controls
         [Parameter]
         public string IdPrefix { get; set; } = "polhem-form";
 
+        /// <summary>
+        /// Gets or sets the handler a relation field asks to open its record through when <see cref="FormMode"/> is
+        /// <see cref="SingleFormMode.View"/>: a double-click on the field passes it the record the field points at.
+        /// Without one the fields do not offer it.
+        /// </summary>
+        [Parameter]
+        public EventCallback<RelationTarget> OpenRelation { get; set; }
+
         private IEnumerable<LayoutSection> EnumerateSections()
             => Layout?.Sections ?? Enumerable.Empty<LayoutSection>();
 

@@ -57,6 +57,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// sends nothing; the form stays open for the user to fill them in.
     /// </para>
     /// <para>
+    /// On a viewed record, double-clicking a relation field opens the record it points at in a
+    /// <see cref="RelatedRecordDialog"/>, read-only, when the user may read that form; otherwise the page names the
+    /// form in a notice. Closing the dialog leaves the viewed record as it was.
+    /// </para>
+    /// <para>
     /// On a viewport narrower than <see cref="CompactWidthThreshold"/> the form switches to its compact layout
     /// (see <see cref="FormLayoutPresenter.IsCompact"/>), detected by a <see cref="CompactViewportObserver"/>.
     /// Setting <see cref="IsCompact"/> fixes the layout instead, and the page then measures nothing.
@@ -82,6 +87,8 @@ namespace Polhem.Web.Blazor.Server.Components
         private SingleFormMode _recordMode = SingleFormMode.View;
         // The list row the toolbar acts on.
         private Guid? _selectedRowId;
+        // The related record open in a dialog over the viewed one.
+        private RelationTarget? _relation;
         private bool _isViewportCompact;
         private bool _hasLoaded;
         private string? _loadedProgId;
@@ -189,6 +196,7 @@ namespace Polhem.Web.Blazor.Server.Components
             _isShowingRecord = false;
             _recordMode = SingleFormMode.View;
             _selectedRowId = null;
+            _relation = null;
             _isInitializing = true;
 
             if (string.IsNullOrWhiteSpace(ProgId))
@@ -206,25 +214,10 @@ namespace Polhem.Web.Blazor.Server.Components
                 // circuit's language and tenant customization takes effect.
                 var schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, ProgId).ConfigureAwait(true)
                     ?? throw new InvalidOperationException($"No FormSchema definition found for '{ProgId}'.");
-                FormLayout formLayout;
-                if (loader is null)
-                {
-                    // A layout is authored at design time, so a missing one is a configuration
-                    // error rather than a cue to derive one from the schema.
-                    formLayout = await Client.System
-                        .GetDefineAsync<FormLayout>(DefineType.FormLayout, [ProgId])
-                        .ConfigureAwait(true)
-                        ?? throw new InvalidOperationException(
-                            $"No FormLayout definition found for '{ProgId}'. Author one at design time "
-                            + $"and save it as 'FormLayout/{ProgId}.FormLayout.xml' under the definition path.");
-                }
-                else
-                {
-                    formLayout = await loader
-                        .GetRuntimeLayoutAsync(ProgId, schema).ConfigureAwait(true);
-                }
-                // Both paths hand over a layout this page owns (the loader clones, the direct fetch
-                // deserializes), so the sensitive fields are degraded in place.
+                var formLayout = await CircuitDefinitions
+                    .LoadFormLayoutAsync(Client, loader, ProgId, schema).ConfigureAwait(true);
+                // The layout is this page's own (the loader clones, the direct fetch deserializes), so the
+                // sensitive fields are degraded in place.
                 var capabilities = UserContext?.Capabilities;
                 LayoutCapabilityApplier.Apply(formLayout, schema, capabilities);
                 var listLayout = schema.GetListLayout();
@@ -434,7 +427,25 @@ namespace Polhem.Web.Blazor.Server.Components
             _isShowingRecord = true;
         }
 
-        private void ShowList() => _isShowingRecord = false;
+        private void ShowList()
+        {
+            _isShowingRecord = false;
+            _relation = null;
+        }
+
+        private void OpenRelation(RelationTarget target)
+        {
+            _notice = null;
+            _relation = target;
+        }
+
+        private void CloseRelation() => _relation = null;
+
+        private void OnRelationRefused(string message)
+        {
+            _relation = null;
+            _notice = message;
+        }
 
         private async Task RunGuardedAsync(Func<Task> action)
         {

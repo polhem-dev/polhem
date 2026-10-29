@@ -1,1 +1,4 @@
 #nullable enable
+const Polhem.Definition.Language.PolhemUIText.Close = "Close" -> string!
+const Polhem.Definition.Language.PolhemUIText.OpenRelatedRecord = "OpenRelatedRecord" -> string!
+const Polhem.Definition.Language.PolhemUIText.RelatedRecordDenied = "RelatedRecordDenied" -> string!

@@ -21,6 +21,12 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
     /// <remarks>
     /// In lookup mode the input is always read-only: the display value is not hand-editable, and the lookup
     /// flow is the only write path. The button is shown only while the editor accepts input.
+    /// <para>
+    /// On a read-only form a relation field with a value opens the record it points at instead: the input shows a
+    /// hint and a hand cursor, and a double-click passes the record to the enclosing <see cref="FormScope"/>'s
+    /// <see cref="FormScope.OpenRelation"/>, which decides whether the user may see it. Without that handler the
+    /// field offers nothing. The rules are <see cref="RelationOpenRules"/>, which every UI head shares.
+    /// </para>
     /// </remarks>
     public sealed partial class ButtonEdit : TextEdit
     {
@@ -58,6 +64,27 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
         private IServiceProvider? Services { get; set; }
 
         private string SearchText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Search);
+
+        // The record a double-click opens, when the field offers one: a relation field with a value, on a read-only
+        // form whose scope has someone to open it.
+        private RelationTarget? OpenTarget
+            => OpenRelation.HasDelegate
+               && RelationOpenRules.IsAvailable(FormMode, FormField)
+               && RelationOpenRules.TryGetTarget(FormField, FieldValue, out var target)
+                ? target
+                : null;
+
+        private string? OpenHint
+            => OpenTarget is null ? null : PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.OpenRelatedRecord);
+
+        private string InputCssClass
+        {
+            get
+            {
+                var css = BuildCssClass(ModifierClass);
+                return OpenTarget is null ? css : css + " polhem-field-editor--opens-record";
+            }
+        }
 
         /// <inheritdoc />
         protected override void RefreshFromSource()
@@ -104,6 +131,12 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
             }
             _failure = null;
             _lookupOpen = true;
+        }
+
+        private async Task OnDoubleClickAsync()
+        {
+            if (OpenTarget is { } target)
+                await OpenRelation.InvokeAsync(target).ConfigureAwait(true);
         }
 
         private void OnKeyDown(KeyboardEventArgs e)

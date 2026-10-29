@@ -83,7 +83,16 @@
                                  FormMode="FormMode"
                                  RoundingContext="_roundingContext"
                                  IsCompact="EffectiveIsCompact"
-                                 DetailEditMode="DetailEditMode" />
+                                 DetailEditMode="DetailEditMode"
+                                 OpenRelation="OpenRelation" />
         }
+    }
+    @if (_relation is { } relation)
+    {
+        <RelatedRecordDialog Target="relation"
+                             DefinitionLoader="DefinitionLoader"
+                             IsCompact="EffectiveIsCompact"
+                             OnClosed="CloseRelation"
+                             OnRefused="OnRelationRefused" />
     }
 </div>

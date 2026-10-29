@@ -1,1 +1,20 @@
 #nullable enable
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.DefinitionLoader.set -> void
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.IsCompact.get -> bool
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.IsCompact.set -> void
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnClosed.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnClosed.set -> void
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnRefused.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnRefused.set -> void
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.RelatedRecordDialog() -> void
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.get -> Polhem.UI.Core.Fields.RelationTarget
+Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
+Polhem.Web.Blazor.Server.Controls.Editors.FormScope.OpenRelation.set -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.Server.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
+Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
+Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.set -> void
