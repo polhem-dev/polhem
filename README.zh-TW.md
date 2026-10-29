@@ -17,14 +17,14 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 ## 🎬 影片示範
 
-[![Polhem in 3 minutes](https://img.youtube.com/vi/OAlAgAuGdKE/hqdefault.jpg)](https://youtu.be/OAlAgAuGdKE)
+| Polhem + Avalonia | Polhem + Blazor Server |
+|---|---|
+| [![Polhem + Avalonia 3 分鐘精華版](https://img.youtube.com/vi/OAlAgAuGdKE/hqdefault.jpg)](https://youtu.be/OAlAgAuGdKE) | [![Polhem + Blazor Server 精華版](https://img.youtube.com/vi/ek5rZvSzMfI/hqdefault.jpg)](https://youtu.be/ek5rZvSzMfI) |
+| 用 `polhem-avalonia` 範本建立專案、在 Excel 描述表單、用 DefineEditor 匯入，同一套系統在桌面、網頁、iOS 與 Android 執行。修改活頁簿再匯入一次，系統就跟著改變。 | 用 `polhem-blazor-server` 範本建立單一 Blazor Server 專案，匯入同樣的活頁簿就能以網站執行。在 DefineEditor 調整版面，重新開啟表單就生效，從寬螢幕到手機都適用。 |
+| [精華版](https://youtu.be/OAlAgAuGdKE)（3 分鐘）· [完整版](https://youtu.be/5WjUTwoPyGw)（約 10 分鐘） | [精華版](https://youtu.be/ek5rZvSzMfI)（2.5 分鐘）· [完整版](https://youtu.be/HwQXMhrWtKM)（約 7 分鐘） |
+| 以 Polhem 1.9.0 錄製 | 以 Polhem 1.11.0 錄製 |
 
-從空專案到可執行的系統：用 `polhem-avalonia` 範本建立專案、在 Excel 描述表單、用 DefineEditor 匯入後執行。修改活頁簿再匯入一次，系統就跟著改變。
-
-- [3 分鐘精華版](https://youtu.be/OAlAgAuGdKE)
-- [完整版](https://youtu.be/5WjUTwoPyGw)（約 10 分鐘）
-
-以 Polhem 1.9.0 錄製；英文旁白，附英文與繁體中文字幕。
+英文旁白，附英文與繁體中文字幕。
 
 ## ✨ 特色
 
