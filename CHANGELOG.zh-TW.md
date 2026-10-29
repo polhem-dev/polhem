@@ -14,7 +14,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.12.0.md](docs/zh-TW/changelogs/1.12.0.md)
 
-- Blazor Server 的 `FormPage` 在唯讀記錄上，使用者雙擊關聯欄位且能讀取關聯表單時，以對話框開啟該欄位指向的資料。
+- Blazor Server 的 `FormPage` 與 Avalonia 的 `FormView` 在唯讀記錄上，使用者雙擊關聯欄位且能讀取關聯表單時，以對話框開啟該欄位指向的資料。
 
 ## [1.11.0] - 2026-10-28
 

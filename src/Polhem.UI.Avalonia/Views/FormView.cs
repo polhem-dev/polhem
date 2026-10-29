@@ -110,6 +110,9 @@ namespace Polhem.UI.Avalonia.Views
             // form owns the mode, so pin the scope to the initial View here (the property
             // change handler cannot cover this — the default value never raises a change).
             FormScope.SetFormMode(this, FormMode);
+            // The relation fields below may ask this view to open the record they point at.
+            RelationOpening.SetIsEnabled(this, true);
+            AddHandler(RelationOpening.RequestedEvent, OnRelationOpenRequested);
 
             _errorLabel = new MessageBar();
 
