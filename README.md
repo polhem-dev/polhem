@@ -17,14 +17,14 @@ All packages target **`net10.0`**.
 
 ## 🎬 Watch it in action
 
-[![Polhem in 3 minutes](https://img.youtube.com/vi/OAlAgAuGdKE/hqdefault.jpg)](https://youtu.be/OAlAgAuGdKE)
+| Polhem + Avalonia | Polhem + Blazor Server |
+|---|---|
+| [![Polhem + Avalonia in 3 minutes](https://img.youtube.com/vi/OAlAgAuGdKE/hqdefault.jpg)](https://youtu.be/OAlAgAuGdKE) | [![Polhem + Blazor Server in under 3 minutes](https://img.youtube.com/vi/ek5rZvSzMfI/hqdefault.jpg)](https://youtu.be/ek5rZvSzMfI) |
+| Create a project from the `polhem-avalonia` template, describe the forms in Excel, import them in DefineEditor, and run the same app on desktop, web, iOS and Android. Change the workbook, import it again, and the app follows. | Create a single Blazor Server project from the `polhem-blazor-server` template, import the same workbooks, and run it as a site. Change a layout in DefineEditor, open the form again, and it's there, from a wide screen to a phone. |
+| [Highlights](https://youtu.be/OAlAgAuGdKE) (3 minutes) · [Full walkthrough](https://youtu.be/5WjUTwoPyGw) (about 10 minutes) | [Highlights](https://youtu.be/ek5rZvSzMfI) (2.5 minutes) · [Full walkthrough](https://youtu.be/HwQXMhrWtKM) (about 7 minutes) |
+| Recorded with Polhem 1.9.0 | Recorded with Polhem 1.11.0 |
 
-From an empty project to a running app: create a project from the `polhem-avalonia` template, describe the forms in Excel, import them in DefineEditor, and run. Change the workbook, import it again, and the app follows.
-
-- [Polhem in 3 minutes](https://youtu.be/OAlAgAuGdKE) (highlights)
-- [Full walkthrough](https://youtu.be/5WjUTwoPyGw) (about 10 minutes)
-
-Recorded with Polhem 1.9.0; English narration with English and Traditional Chinese subtitles.
+English narration with English and Traditional Chinese subtitles.
 
 ## ✨ Features
 
