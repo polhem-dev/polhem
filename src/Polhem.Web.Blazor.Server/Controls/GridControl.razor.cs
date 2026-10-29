@@ -37,6 +37,11 @@ namespace Polhem.Web.Blazor.Server.Controls
     /// editors directly.
     /// </para>
     /// <para>
+    /// On a read-only form a relation column's cell with a value opens the record it points at: it shows a hint, and a
+    /// double-click passes the record to the enclosing <see cref="FormScope"/>'s <see cref="FormScope.OpenRelation"/>,
+    /// as a relation field's <see cref="ButtonEdit"/> does. Without that handler the cell offers nothing.
+    /// </para>
+    /// <para>
     /// The cell text is <see cref="GridCellFormatter"/>, which every grid of every head shares. A read-only
     /// column's header is parenthesised and a required one carries the
     /// <c>polhem-grid__header--required</c> class (<see cref="FieldCaptionRules"/>).
@@ -379,6 +384,20 @@ namespace Polhem.Web.Blazor.Server.Controls
             }
             return parameters;
         }
+
+        // The record a double-click on the cell opens, when it offers one: a relation column with a value, on a
+        // read-only form whose scope has someone to open it.
+        private RelationTarget? OpenTarget(DataRow row, LayoutColumn column)
+        {
+            if (Scope?.OpenRelation.HasDelegate != true || !row.Table.Columns.Contains(column.FieldName)) return null;
+            var field = ResolveFormField(column.FieldName);
+            return RelationOpenRules.IsAvailable(FormMode, field)
+                   && RelationOpenRules.TryGetTarget(field, row[column.FieldName], out var target)
+                ? target
+                : null;
+        }
+
+        private Task OpenRelationAsync(RelationTarget target) => Scope?.OpenRelation.InvokeAsync(target) ?? Task.CompletedTask;
 
         private string FormatCell(DataRow row, LayoutColumn column)
             => GridCellFormatter.FormatColumnText(row, column, ResolveFormField(column.FieldName),

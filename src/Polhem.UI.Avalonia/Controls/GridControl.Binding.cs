@@ -152,6 +152,12 @@ namespace Polhem.UI.Avalonia.Controls
             // a layout the mode alone cannot grant editing.
             AllowEdit = formMode != SingleFormMode.View
                 && (_layout?.AllowEditModes.Allows(formMode) ?? false);
+            // A lookup cell offers its record only in View mode and decides when it is built, so the cells are built
+            // again when the form enters or leaves View; an EditForm grid stays read-only across that change, so
+            // nothing else would rebuild them.
+            if (_lastFormMode is { } last && (last == SingleFormMode.View) != (formMode == SingleFormMode.View))
+                RefreshRows();
+            _lastFormMode = formMode;
             // The property handler skips unchanged values, but bind-time calls still
             // need the effective state re-evaluated against the (possibly new)
             // layout and data object.
