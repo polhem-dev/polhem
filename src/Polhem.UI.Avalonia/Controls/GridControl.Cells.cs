@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.Fields;
@@ -56,7 +57,7 @@ namespace Polhem.UI.Avalonia.Controls
             };
 
             var canEdit = !_grid.IsReadOnly && !column.ReadOnly && rowView is not null;
-            if (!canEdit) return text;
+            if (!canEdit) return OffersRelatedRecord(rowView, lookupField, out var target) ? BuildOpenRecordCell(text, target) : text;
 
             // Mirror the standalone ButtonEdit: an editable lookup cell shows a trailing
             // magnifier icon as the "opens a dialog" cue. The text fills the remaining
@@ -82,6 +83,37 @@ namespace Polhem.UI.Avalonia.Controls
                 // lingering editor in another cell.
                 _endActiveInlineEdit?.Invoke();
                 await OpenLookupCellAsync(rowView!.Row, lookupField).ConfigureAwait(true);
+            };
+            return host;
+        }
+
+        /// <summary>
+        /// Resolves the record a double-tap on a lookup cell opens: a value in the row, in View mode, inside a form that
+        /// handles <see cref="RelationOpening.RequestedEvent"/>, as a relation field's <see cref="ButtonEdit"/> decides.
+        /// </summary>
+        internal bool OffersRelatedRecord(DataRowView? rowView, FormField lookupField, out RelationTarget target)
+        {
+            target = default;
+            return rowView is not null
+                && rowView.Row.Table.Columns.Contains(lookupField.FieldName)
+                && RelationOpening.GetIsEnabled(this)
+                && RelationOpenRules.IsAvailable(GetValue(FormScope.FormModeProperty), lookupField)
+                && RelationOpenRules.TryGetTarget(lookupField, rowView.Row[lookupField.FieldName], out target);
+        }
+
+        // A read-only lookup cell that opens the record it points at: the hint and the hand cursor, and a double-tap that
+        // bubbles the request up to the view. The cursor needs platform services, so it is set on first visual attach.
+        private static Border BuildOpenRecordCell(TextBlock text, RelationTarget target)
+        {
+            // Transparent (not null) background: a null background excludes the empty area beside the text from
+            // hit-testing.
+            var host = new Border { Background = Brushes.Transparent, Child = text };
+            ToolTip.SetTip(host, UIText.Get(PolhemUIText.OpenRelatedRecord));
+            host.AttachedToVisualTree += (_, _) => host.Cursor ??= new Cursor(StandardCursorType.Hand);
+            host.DoubleTapped += (_, e) =>
+            {
+                e.Handled = true;
+                host.RaiseEvent(new RelationOpenRequestedEventArgs(target));
             };
             return host;
         }

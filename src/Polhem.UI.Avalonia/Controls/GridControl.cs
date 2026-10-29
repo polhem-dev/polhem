@@ -95,6 +95,8 @@ namespace Polhem.UI.Avalonia.Controls
         private readonly PathIcon _editIcon;
         private readonly PathIcon _deleteIcon;
         private LayoutGrid? _layout;
+        // The form mode last applied, so a change into or out of View rebuilds the cells.
+        private SingleFormMode? _lastFormMode;
         // A form detail grid rendered from its layout alone (a layout preview): it shows the toolbar the
         // layout and the form mode allow, with no data object behind it. Set by `BindLayout` only.
         private bool _isLayoutOnly;

@@ -15,8 +15,8 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1.12.0.md)
 
-- On a read-only record, Blazor Server's `FormPage` and Avalonia's `FormView` open the record a relation field points
-  at in a dialog when the user double-clicks the field and may read the related form.
+- On a read-only record, Blazor Server's `FormPage` and Avalonia's `FormView` open the record a relation field or a
+  detail grid's relation cell points at in a dialog when the user double-clicks it and may read the related form.
 
 ## [1.11.0] - 2026-10-28
 

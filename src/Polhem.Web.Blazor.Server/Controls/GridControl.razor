@@ -62,6 +62,15 @@
                                 <input type="checkbox" disabled checked="@IsChecked(current, column)" aria-label="@column.Caption" />
                             </td>
                         }
+                        else if (OpenTarget(current, column) is { } target)
+                        {
+                            @* The row's own double-click opens the edit form, which a read-only grid never does, so the
+                               cell keeps the event to itself. *@
+                            <td class="polhem-grid__cell polhem-grid__cell--opens-record"
+                                title="@Text(PolhemUIText.OpenRelatedRecord)"
+                                @ondblclick="() => OpenRelationAsync(target)"
+                                @ondblclick:stopPropagation="true">@FormatCell(current, column)</td>
+                        }
                         else
                         {
                             <td class="polhem-grid__cell">@FormatCell(current, column)</td>
