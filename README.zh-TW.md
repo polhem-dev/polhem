@@ -26,6 +26,17 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 英文旁白，附英文與繁體中文字幕。
 
+## 🚀 線上試用
+
+不必安裝，[Polhem.Northwind](https://github.com/polhem-dev/polhem/blob/main/apps/Polhem.Northwind/README.zh-TW.md) 示範就在線上：
+
+| 前端 | 網址 |
+|------|------|
+| Blazor Server | <https://polhem-northwind.onrender.com/> |
+| Avalonia（WebAssembly） | <https://polhem-northwind.onrender.com/web/> |
+
+帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
+
 ## ✨ 特色
 
 - **定義導向架構（Definition-Driven Architecture）**：以 `FormSchema` 作為系統唯一定義來源，自動推導 UI 配置（`FormLayout`）、資料表結構（`TableSchema`）與驗證規則，定義一處即全層同步。
