@@ -8,6 +8,16 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Demo": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5400",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Demo",
+        "Northwind__BrowserBundle": "../../../artifacts/northwind-browser/wwwroot"
+      }
     }
   }
 }

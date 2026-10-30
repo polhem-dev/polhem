@@ -87,6 +87,24 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 - **登入狀態存在瀏覽器分頁的連線裡。** 重新載入頁面或開新分頁都要重新登入。
 - 殼層（登入、由 `MenuSettings.xml` 產生的選單、所有表單共用的一個路由頁面）是這個 head 自己的程式碼；表單則是框架的 `FormPage`。
 
+### 兩個網頁前端放在同一個網站（Demo 環境）
+
+以 `Demo` 環境執行 Blazor head 時，它還會在 `/api` 提供 JSON-RPC 端點、在 `/web/` 提供發佈好的 Avalonia WASM bundle，
+全部在同一個行程、同一個來源。公開 demo 網站就是這個形態：WASM head 呼叫 `/api` 不需要 CORS 政策，兩個前端讀同一個
+`northwind.db`，在一邊存的資料另一邊看得到。
+
+```bash
+# 1. 先發佈 WASM head（需要 wasm-tools workload）
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
+
+# 2. 以 Demo 環境執行 Blazor head（http://localhost:5400）
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
+```
+
+Blazor 開 <http://localhost:5400/>，Avalonia 開 <http://localhost:5400/web/>；兩邊角落都有連結可以切到另一個。
+WASM head 在 `/web/` 底下提供時，會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 指定 bundle 資料夾（發佈輸出的
+`wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
+
 ### 行動前端（Avalonia iOS / Android）
 
 同一套 UI 也能以 Avalonia single-view head 在 iOS 與 Android 上執行，並連同上面執行中的 server。

@@ -1,5 +1,6 @@
 using Polhem.Northwind.Backend;
 using Polhem.Northwind.Blazor.Components;
+using Polhem.Northwind.Blazor.Demo;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Web.Blazor.Server.Shell;
 
@@ -11,6 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 // trusted (see PolhemBlazorProviderMode.Local); the form permissions are still checked against the signed-in user.
 var northwind = builder.Configuration.GetSection("Northwind");
 bool isRemote = string.Equals(northwind["Mode"], "Remote", StringComparison.OrdinalIgnoreCase);
+
+// The Demo environment is the public demo site: this host also serves the JSON-RPC endpoint and the Avalonia WASM
+// bundle, same-origin (see NorthwindDemo). The endpoint needs the backend in this process.
+bool isDemo = builder.Environment.IsEnvironment(NorthwindDemo.EnvironmentName);
+if (isDemo && isRemote)
+{
+    throw new InvalidOperationException(
+        "The Demo environment serves the JSON-RPC endpoint from this process and needs Northwind:Mode=Local.");
+}
+
 if (isRemote)
 {
     builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
@@ -20,6 +31,8 @@ else
 {
     builder.AddNorthwindBackend();
     builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
+    if (isDemo)
+        builder.AddNorthwindDemo();
 }
 
 builder.Services.AddPolhemShell(shell =>
@@ -36,6 +49,8 @@ var app = builder.Build();
 
 if (!isRemote)
     app.UseNorthwindBackend();
+if (isDemo)
+    app.UseNorthwindDemo();
 
 app.UsePolhemShellLocalization();
 app.UseStaticFiles();

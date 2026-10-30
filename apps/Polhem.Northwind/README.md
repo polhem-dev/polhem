@@ -92,6 +92,26 @@ Avalonia heads:
 - The shell (sign-in, the menu from `MenuSettings.xml`, one routed page for every form) is this head's own code;
   the forms are the framework's `FormPage`.
 
+### Both web clients in one site (the Demo environment)
+
+Run the Blazor head in the `Demo` environment and it also serves the JSON-RPC endpoint at `/api` and the published
+Avalonia WASM bundle at `/web/`, all from one process and one origin. This is the shape of the public demo site: the
+WASM head reaches `/api` without a CORS policy, and both front ends read the same `northwind.db`, so a record saved in
+one shows in the other.
+
+```bash
+# 1. Publish the WASM head once (needs the wasm-tools workload)
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
+
+# 2. Blazor head in the Demo environment (http://localhost:5400)
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
+```
+
+Open <http://localhost:5400/> for Blazor and <http://localhost:5400/web/> for Avalonia; a link in the corner of each
+switches to the other. The WASM head pre-fills the same-origin `/api` endpoint when it is served under `/web/`.
+`Northwind:BrowserBundle` names the bundle folder (the `wwwroot` of the publish output); the `Demo` launch profile
+points it at the command above, and the host refuses to start when the folder has no `index.html`.
+
 ### Mobile clients (Avalonia iOS / Android)
 
 The same UI also runs on iOS and Android as Avalonia single-view heads, against the same server
