@@ -21,6 +21,15 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 - **Opening a related record** — on a read-only order, double-click the customer or a line's product to open that record read-only in a dialog. `demo-ro` may not read products, so for it the product is refused with a message, and nothing is requested.
 - **One backend, two hosts** — the business object, the repository and the seed live in a class library that the JSON-RPC server and the Blazor Server head both run, on the same definitions and the same database.
 
+## Try it online
+
+| Front end | Link |
+|-----------|------|
+| Blazor Server | <https://polhem-northwind.onrender.com/> |
+| Avalonia (WebAssembly) | <https://polhem-northwind.onrender.com/web/> |
+
+Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
+
 ## Running the demo
 
 Requires the **.NET 10 SDK**. The database is SQLite, created and seeded on first run — no setup.

@@ -21,6 +21,15 @@
 - **開啟關聯資料** —— 在唯讀的訂單上雙擊客戶或明細的產品，會在對話框中以唯讀方式開啟那筆資料。`demo-ro` 不能讀取產品，所以開產品時會看到拒絕訊息，也不會送出任何請求。
 - **一個後端、兩個 host** —— 業務物件、Repository 與種子資料放在一個類別庫裡，JSON-RPC server 與 Blazor Server head 都執行它，使用同一份定義與同一個資料庫。
 
+## 線上試用
+
+| 前端 | 網址 |
+|------|------|
+| Blazor Server | <https://polhem-northwind.onrender.com/> |
+| Avalonia（WebAssembly） | <https://polhem-northwind.onrender.com/web/> |
+
+帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
+
 ## 執行 demo
 
 需要 **.NET 10 SDK**。資料庫為 SQLite，首次執行時自動建立並灌入種子 —— 免安裝。
