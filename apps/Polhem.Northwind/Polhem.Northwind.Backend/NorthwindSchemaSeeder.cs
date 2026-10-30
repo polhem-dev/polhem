@@ -34,11 +34,15 @@ public static class NorthwindSchemaSeeder
     private const string CommonDatabaseId = "common";
     private const string CompanyDatabaseId = "company";
 
+    // Key: when set, the table is topped up on every start instead of seeded once. A seed row whose key columns
+    // match no stored row is inserted, so a row added to the seed file in a later version reaches a northwind.db
+    // that an earlier version created. It also puts back a seeded row someone deleted from the demo database.
     private sealed record SeedTable(
         string Table,
         string File,
         Dictionary<string, string>? Forward = null,
-        Dictionary<string, string>? Deferred = null);
+        Dictionary<string, string>? Deferred = null,
+        string[]? Key = null);
 
     /// <summary>
     /// Resource-path prefixes of the framework-owned table definitions inside
@@ -120,12 +124,13 @@ public static class NorthwindSchemaSeeder
         // on and AccessEnabled off, so Order and Customer demonstrate a rule turning reads ON
         // against that default, and Category demonstrates one turning changes OFF.
         new("st_audit_rule", "AuditRule.json"),
-        // The Order form's permission model (Define/PermissionModels.xml): OrderClerk may do everything,
-        // OrderViewer may only read, and each demo account holds one of them. Enforcement is fail-closed, so an
-        // account without a role could not open orders at all. st_user_role names users by st_user.sys_id.
-        new("st_role", "Role.json"),
-        new("st_role_grant", "RoleGrant.json"),
-        new("st_user_role", "UserRole.json"),
+        // The Order and Product permission models (Define/PermissionModels.xml): OrderClerk may do everything,
+        // OrderViewer may only read orders, and each demo account holds one of them. Enforcement is fail-closed, so
+        // an account without a grant could not open the form at all, which is why these tables are topped up: a
+        // grant added in a later version must reach an existing database. st_user_role names users by st_user.sys_id.
+        new("st_role", "Role.json", Key: ["sys_id"]),
+        new("st_role_grant", "RoleGrant.json", Key: ["role_id", "model_id", "action"]),
+        new("st_user_role", "UserRole.json", Key: ["user_id", "role_id"]),
     };
 
     private sealed record DemoAccount(string UserId, string Password, string DisplayName, string Culture);
@@ -438,8 +443,11 @@ public static class NorthwindSchemaSeeder
     private static void InsertRows(
         DbAccess dbAccess, IDbConnectionManager connectionManager, SeedTable seed, string seedDir)
     {
-        var countSpec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {seed.Table}");
-        if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) return;
+        if (seed.Key is null)
+        {
+            var countSpec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {seed.Table}");
+            if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) return;
+        }
 
         using var connection = connectionManager.CreateConnection(CompanyDatabaseId);
         connection.Open();
@@ -447,6 +455,8 @@ public static class NorthwindSchemaSeeder
 
         foreach (var row in ReadRows(seedDir, seed.File))
         {
+            if (seed.Key is not null && RowExists(dbAccess, seed, row, transaction)) continue;
+
             var columns = new List<string> { "sys_rowid" };
             var values = new List<object> { Guid.NewGuid() };
 
@@ -468,6 +478,19 @@ public static class NorthwindSchemaSeeder
         }
 
         transaction.Commit();
+    }
+
+    // Whether a stored row matches the seed row on every key column, read inside the insert transaction so the
+    // rows this pass has already inserted count too.
+    private static bool RowExists(DbAccess dbAccess, SeedTable seed, Dictionary<string, JsonElement> row,
+        DbTransaction transaction)
+    {
+        var where = string.Join(" AND ", seed.Key!.Select((column, i) => $"{column} = {{{i}}}"));
+        var values = seed.Key!.Select(column => (object)(row.TryGetValue(column, out var value)
+            ? value.GetString() ?? string.Empty
+            : string.Empty)).ToArray();
+        var spec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {seed.Table} WHERE {where}", values);
+        return Convert.ToInt32(dbAccess.Execute(spec, transaction).Scalar, CultureInfo.InvariantCulture) > 0;
     }
 
     private static void ApplyDeferredRelations(DbAccess dbAccess, SeedTable seed, string seedDir)
