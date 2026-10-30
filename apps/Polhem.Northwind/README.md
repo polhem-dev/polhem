@@ -49,7 +49,7 @@ Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with o
 | `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
 | `demo-ro` | `demo` | `en-US` | the same data, but read-only (New, Save and Delete are hidden), and products and audit rules may not be opened |
 
-Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders and the master data and organization forms, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
+Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders, categories, suppliers, customers, shippers, departments and employees, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
 
 ### Web client (Avalonia WASM)
 

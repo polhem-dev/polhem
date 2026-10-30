@@ -49,7 +49,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
 | `demo-ro` | `demo` | `en-US` | 同一份資料，但全部唯讀（New、Save、Delete 都隱藏），也不能開啟產品與稽核規則 |
 
-每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單與主檔、組織表單，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
 
 ### 網頁前端（Avalonia WASM）
 

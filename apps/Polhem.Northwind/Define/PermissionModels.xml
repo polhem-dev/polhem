@@ -7,8 +7,8 @@
   - OrderClerk (demo, demo-tw) holds every action on every model.
   - OrderViewer (demo-ro) holds Read on Order and on the master data and organization forms
     (Category, Supplier, Customer, Shipper, Department, Employee), nothing on Product and nothing on
-    AuditRule. So the front ends hide every command demo-ro may not run, let it open an order's
-    customer read-only, and refuse to open an order line's product.
+    AuditRule. So the front ends hide New, Edit, Save and Delete for demo-ro, let it open an
+    order's customer read-only, and refuse to open an order line's product.
 
   AuditRule is the framework's own model (src/Polhem.Definition/Defaults/PermissionModels.xml), kept
   here because this file replaces the shipped one. Every action reads every row (Scope All): the
