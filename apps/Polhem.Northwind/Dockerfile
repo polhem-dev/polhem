@@ -41,4 +41,8 @@ USER $APP_UID
 ENV ASPNETCORE_ENVIRONMENT=Demo
 EXPOSE 8080
 # Hosting platforms such as Render name the port in PORT; without it the image's default 8080 applies.
-ENTRYPOINT ["sh", "-c", "ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet Polhem.Northwind.Blazor.dll"]
+# POLHEM_MASTER_KEY, when not supplied, is a fresh random 64-byte key for this container. Without it the backend
+# would fall back to the demo key published in NorthwindCredentials, from which anyone could derive the session
+# payload keys. Nothing outlives the container, since the database is seeded again with it, so a key that changes
+# on every start loses nothing.
+ENTRYPOINT ["sh", "-c", "export POLHEM_MASTER_KEY=\"${POLHEM_MASTER_KEY:-$(head -c 64 /dev/urandom | base64 -w0)}\"; ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet Polhem.Northwind.Blazor.dll"]
