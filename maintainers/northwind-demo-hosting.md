@@ -28,6 +28,12 @@ seeds `northwind.db` again. It is also why a master key that changes on every st
 protects go with the database. Attaching a disk would keep the sessions and lose their key, and visitors would have to
 sign in again after every restart.
 
+## Client addresses
+
+The rate limits read the client from `CF-Connecting-IP`, because Render's free web services sit behind Cloudflare. If
+Render stops using Cloudflare the header disappears, every visitor then shares the address of Render's proxy, and the
+site starts answering 429 under modest traffic. `NorthwindDemo.AddForwardedClientAddress` records what was measured.
+
 ## Deploying
 
 Run the **Deploy Northwind Demo** workflow
