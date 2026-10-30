@@ -35,6 +35,9 @@ body {
 
 .polhem-form-page__toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
 .polhem-form-page__toolbar button { padding: 4px 12px; }
+.polhem-form-page__pager { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.polhem-form-page__pager button { padding: 4px 12px; }
+.polhem-form-page__page-size { display: inline-flex; gap: 6px; align-items: center; margin-left: 8px; }
 .polhem-form-page__dirty { color: #bf8700; font-size: 0.85rem; }
 .polhem-form-page__error { color: #cf222e; padding: 10px; background: #ffebe9; border-radius: 4px; }
 .polhem-form-page__loading { color: #57606a; }

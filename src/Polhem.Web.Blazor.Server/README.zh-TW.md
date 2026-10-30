@@ -50,7 +50,7 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 
 ## 元件
 
-- `FormPage` -- 單一程式的清單與記錄，一次顯示其中之一，與 Avalonia 的 `ListView`、`FormView` 相同：清單有 View、New、Edit、
+- `FormPage` -- 單一程式的清單（逐頁顯示）與記錄，一次顯示其中之一，與 Avalonia 的 `ListView`、`FormView` 相同：清單有 View、New、Edit、
   Delete（點選選取資料列、雙擊以檢視開啟），檢視中的記錄有 Back，編輯中的記錄有 Save 與 Cancel；儲存成功後回到重新載入的清單。Delete 會先詢問，除非 `ConfirmDelete` 參數為 `false`。預設經由 `FormDefinitionLoader`
   載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
   載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。使用者編輯時透過 `FormLiveComputation`
