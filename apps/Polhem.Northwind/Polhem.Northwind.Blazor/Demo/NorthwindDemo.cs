@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -128,9 +130,10 @@ public static class NorthwindDemo
     /// <c>X-Forwarded-For</c> does not name the client reliably. Measured on Render on 2026-10-30, it arrives as
     /// client, Cloudflare edge, Render internal address: the last entry changes between requests, and a client can
     /// put anything first, because the proxies append to what it sent. Cloudflare writes <c>CF-Connecting-IP</c> itself
-    /// and refused the requests that supplied their own. The proxy's address is not known in advance, hence the
-    /// cleared lists. Reached without Cloudflare, a client could name any address and choose its rate-limit partition,
-    /// which is why this is the Demo environment's setting only. See <c>maintainers/northwind-demo-hosting.md</c>.
+    /// and refused the requests that supplied their own. The default known proxies stay in place: Render's proxy
+    /// connects from loopback, and a connection from anywhere else, such as a container published directly with
+    /// <c>docker run</c>, keeps its own address whatever header it sends. See
+    /// <c>maintainers/northwind-demo-hosting.md</c> for what this relies on.
     /// </remarks>
     private static void AddForwardedClientAddress(IServiceCollection services)
     {
@@ -139,8 +142,6 @@ public static class NorthwindDemo
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             options.ForwardedForHeaderName = "CF-Connecting-IP";
             options.ForwardLimit = 1;
-            options.KnownIPNetworks.Clear();
-            options.KnownProxies.Clear();
         });
     }
 
@@ -161,7 +162,7 @@ public static class NorthwindDemo
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
-                string client = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+                string client = GetRateLimitClient(context.Connection.RemoteIpAddress);
                 if (context.Request.Path.StartsWithSegments(ApiPath))
                 {
                     return RateLimitPartition.GetTokenBucketLimiter("api:" + client, _ => new TokenBucketRateLimiterOptions
@@ -184,6 +185,27 @@ public static class NorthwindDemo
                 return RateLimitPartition.GetNoLimiter(string.Empty);
             });
         });
+    }
+
+    /// <summary>
+    /// Names the client a rate limit counts: the address, or for IPv6 its /64 network.
+    /// </summary>
+    /// <remarks>
+    /// One IPv6 subscriber normally holds a whole /64, so counting single addresses would hand them a fresh limit per
+    /// request.
+    /// </remarks>
+    private static string GetRateLimitClient(IPAddress? address)
+    {
+        if (address is null)
+            return string.Empty;
+        if (address.IsIPv4MappedToIPv6)
+            return address.MapToIPv4().ToString();
+        if (address.AddressFamily != AddressFamily.InterNetworkV6)
+            return address.ToString();
+
+        byte[] network = address.GetAddressBytes();
+        Array.Clear(network, 8, 8);
+        return new IPAddress(network) + "/64";
     }
 
     /// <summary>

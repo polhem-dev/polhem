@@ -30,9 +30,18 @@ sign in again after every restart.
 
 ## Client addresses
 
-The rate limits read the client from `CF-Connecting-IP`, because Render's free web services sit behind Cloudflare. If
-Render stops using Cloudflare the header disappears, every visitor then shares the address of Render's proxy, and the
-site starts answering 429 under modest traffic. `NorthwindDemo.AddForwardedClientAddress` records what was measured.
+The rate limits read the client from `CF-Connecting-IP`, accepted only from a loopback connection, which is where
+Render's proxy connects from. `NorthwindDemo.AddForwardedClientAddress` records what was measured. This relies on two
+things about Render that nothing checks:
+
+- **Cloudflare stays in front.** Cloudflare is what overwrites the header and refuses a supplied one. Without it a client
+  could choose its own rate-limit partition, and nothing would show it; the header could also simply go missing, and
+  every visitor would then share one limit.
+- **The proxy connects from loopback.** If it stops doing so the header is ignored, every visitor shares the proxy's
+  address, and the site answers 429 under modest traffic.
+
+To recheck, send more than 60 `/api` requests from one machine: the rest should get 429, while a request from another
+network still gets through.
 
 ## Deploying
 
