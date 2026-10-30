@@ -221,7 +221,7 @@ With auditing enabled in `SystemSettings.xml`, **every successful, failed and lo
 
 **Which forms are audited is a per-form decision, not one switch for everything.** `SystemSettings.xml` sets the deployment-wide defaults — this demo records changes and does not record reads — and `st_audit_rule` overrides them one form at a time. The seeder writes three rows to make the mechanism visible: `Order` and `Customer` turn read logging **on** against the deployment default and mark their entries sensitive; `Category` turns change logging **off**, because reference data churn is noise in an audit trail. Every other form carries no row and simply inherits. The rules live in the company database and are edited through the **Audit Rules** form under Administration.
 
-> The demo's copy of `AuditRule.FormSchema.xml` drops the `PermissionModelId` that the framework ships, because Northwind has no permission infrastructure at all and enforcement is fail-closed — keeping it would make the form impossible to open. **A real deployment keeps it** and grants the model to an administrator role: anyone who can edit these rules can decide what is and is not recorded.
+> The demo's copy of `AuditRule.FormSchema.xml` drops the `PermissionModelId` that the framework ships, because no role in Northwind is granted that model (`Define/PermissionModels.xml` defines only `Order` and `Product`) and enforcement is fail-closed — keeping it would make the form impossible to open. **A real deployment keeps it** and grants the model to an administrator role: anyone who can edit these rules can decide what is and is not recorded.
 
 ## Northwind → polhem model mapping
 

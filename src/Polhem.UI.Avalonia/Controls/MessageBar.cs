@@ -10,9 +10,12 @@ namespace Polhem.UI.Avalonia.Controls
 {
     /// <summary>
     /// The message strip a view shows above its toolbar when an action is refused or fails: a tinted
-    /// danger-coloured box with an icon, the message wrapped to the view's width, and a button that
-    /// dismisses it.
+    /// box with an icon, the message wrapped to the view's width, and a button that dismisses it.
     /// </summary>
+    /// <remarks>
+    /// A failure is tinted with the danger colour; a message the user can act on, such as a missing
+    /// required field or a record they may not open, with the warning colour.
+    /// </remarks>
     internal sealed class MessageBar : Border
     {
         // Error glyph (24 grid, even-odd fill): a filled circle with the exclamation mark cut out.
@@ -24,6 +27,9 @@ namespace Polhem.UI.Avalonia.Controls
             "l5.3-5.3a1 1 0 0 0-1.4-1.4L12 10.6 6.7 5.3Z";
 
         private readonly TextBlock _text;
+        private readonly PathIcon _icon;
+        private bool? _isWarning;
+        private IDisposable[] _toneBindings = [];
 
         /// <summary>
         /// Initializes a new, hidden instance of <see cref="MessageBar"/>.
@@ -34,17 +40,15 @@ namespace Polhem.UI.Avalonia.Controls
             BorderThickness = new Thickness(1);
             CornerRadius = new CornerRadius(4);
             Padding = new Thickness(12, 8, 4, 8);
-            BindBrush(this, BackgroundProperty, "SemiColorDangerLight", new SolidColorBrush(Color.FromArgb(0x26, 0xF9, 0x39, 0x20)));
-            BindBrush(this, BorderBrushProperty, "SemiColorDanger", Brushes.IndianRed);
 
-            var icon = new PathIcon
+            var icon = _icon = new PathIcon
             {
                 Width = 18,
                 Height = 18,
                 Margin = new Thickness(0, 1, 10, 0),
                 VerticalAlignment = VerticalAlignment.Top,
             };
-            BindBrush(icon, TemplatedControl.ForegroundProperty, "SemiColorDanger", Brushes.IndianRed);
+            ApplyTone(isWarning: false);
 
             _text = new TextBlock
             {
@@ -91,12 +95,24 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>Gets the message shown, or an empty string when the bar is hidden.</summary>
         public string Text => _text.Text ?? string.Empty;
 
+        /// <summary>Gets whether the bar is tinted as a warning rather than as a failure.</summary>
+        public bool IsWarning => _isWarning == true;
+
         /// <summary>
-        /// Shows <paramref name="message"/>.
+        /// Shows <paramref name="message"/> as a failure.
         /// </summary>
         /// <param name="message">The message to show.</param>
-        public void Show(string message)
+        public void Show(string message) => Show(message, isWarning: false);
+
+        /// <summary>
+        /// Shows <paramref name="message"/> as a warning the user can act on.
+        /// </summary>
+        /// <param name="message">The message to show.</param>
+        public void ShowWarning(string message) => Show(message, isWarning: true);
+
+        private void Show(string message, bool isWarning)
         {
+            ApplyTone(isWarning);
             _text.Text = message;
             IsVisible = true;
         }
@@ -110,7 +126,29 @@ namespace Polhem.UI.Avalonia.Controls
             IsVisible = false;
         }
 
-        private static void BindBrush(Control control, AvaloniaProperty property, string key, IBrush fallback)
+        private void ApplyTone(bool isWarning)
+        {
+            if (_isWarning == isWarning)
+                return;
+            _isWarning = isWarning;
+            foreach (var binding in _toneBindings)
+                binding.Dispose();
+            _toneBindings = isWarning
+                ?
+                [
+                    BindBrush(this, BackgroundProperty, "SemiColorWarningLight", new SolidColorBrush(Color.FromArgb(0x26, 0xFC, 0x88, 0x00))),
+                    BindBrush(this, BorderBrushProperty, "SemiColorWarning", Brushes.DarkOrange),
+                    BindBrush(_icon, TemplatedControl.ForegroundProperty, "SemiColorWarning", Brushes.DarkOrange),
+                ]
+                :
+                [
+                    BindBrush(this, BackgroundProperty, "SemiColorDangerLight", new SolidColorBrush(Color.FromArgb(0x26, 0xF9, 0x39, 0x20))),
+                    BindBrush(this, BorderBrushProperty, "SemiColorDanger", Brushes.IndianRed),
+                    BindBrush(_icon, TemplatedControl.ForegroundProperty, "SemiColorDanger", Brushes.IndianRed),
+                ];
+        }
+
+        private static IDisposable BindBrush(Control control, AvaloniaProperty property, string key, IBrush fallback)
             => control.Bind(property, control.GetResourceObservable(key, value => value as IBrush ?? fallback));
     }
 }
