@@ -40,12 +40,35 @@ internal sealed partial class Program
             {
                 ConfigureOptions = options =>
                 {
+                    options.DefaultEndpoint = ResolveDefaultEndpoint(args, options.DefaultEndpoint);
                     options.PreferenceStorage = storage;
                     options.AllowLanguageSwitch = false;
                 },
             })
             .WithInterFont()
             .StartBrowserAppAsync("out");
+    }
+
+    /// <summary>
+    /// Pre-fills the endpoint of the host that served the page when that host is the demo site.
+    /// </summary>
+    /// <param name="args">The arguments <c>wwwroot/main.js</c> passes; the first is the page address.</param>
+    /// <param name="fallback">The endpoint of the development layout, <c>Polhem.Northwind.Server</c>.</param>
+    /// <remarks>
+    /// The demo site (<c>Polhem.Northwind.Blazor</c> in its Demo environment) serves this bundle under <c>/web/</c>
+    /// and the JSON-RPC endpoint at <c>/api</c> on the same origin. The development server serves the bundle at the
+    /// root and the API runs on another port, so every other address keeps <paramref name="fallback"/>.
+    /// IMPORTANT: the path is the demo host's <c>NorthwindDemo.BrowserPath</c>. Change both together.
+    /// A value the visitor saved on the connection screen still wins over either.
+    /// </remarks>
+    private static string ResolveDefaultEndpoint(string[] args, string fallback)
+    {
+        if (args.Length == 0 || !Uri.TryCreate(args[0], UriKind.Absolute, out var page)
+            || !page.AbsolutePath.StartsWith("/web/", StringComparison.Ordinal))
+        {
+            return fallback;
+        }
+        return new Uri(page, "/api").AbsoluteUri;
     }
 
     public static AppBuilder BuildAvaloniaApp()

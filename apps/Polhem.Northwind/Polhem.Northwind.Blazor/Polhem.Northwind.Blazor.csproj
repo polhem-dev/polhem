@@ -11,10 +11,20 @@
   </PropertyGroup>
 
   <!-- The Blazor Server head runs the Northwind backend in its own process by default; see Program.cs for the
-       Remote switch. -->
+       Remote switch and the Demo environment. -->
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Northwind.Backend\Polhem.Northwind.Backend.csproj" />
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
+  </ItemGroup>
+
+  <!-- Polhem.JsonRpc.AspNetCore serves the endpoint of the Demo environment (Demo/NorthwindDemo.cs).
+       PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
+  <Import Project="..\..\..\PolhemJsonRpc.props" />
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.AspNetCore/Polhem.JsonRpc.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>
