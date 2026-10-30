@@ -99,13 +99,13 @@ namespace Polhem.Repository.Form
             // `int.MaxValue`).
             var pageSize = Math.Clamp(paging.PageSize, 1, PagingOptions.MaxPageSize);
             var page = Math.Max(paging.Page, 1);
-            var skip = (page - 1) * pageSize;
+            var skip = PagingOffset.Compute(page, pageSize);
 
             // Paging requires a deterministic ORDER BY. SQL Server and Oracle reject
             // OFFSET/FETCH without ORDER BY; PG/SQLite/MySQL allow it but return rows
             // in undefined order. Falling back here is the Repository's job — the SQL
             // layer does not know about the `sys_no` convention.
-            var effectiveSort = sortFields ?? DefaultSortForPaging(_schema);
+            var effectiveSort = ResolvePagingSort(_schema, sortFields);
 
             int? totalCount = null;
             if (paging.IncludeTotalCount)
@@ -144,6 +144,33 @@ namespace Polhem.Repository.Form
                     HasMore = hasMore,
                 },
             };
+        }
+
+        /// <summary>
+        /// Returns the sort a paged query runs with: the default when the caller supplies none, otherwise the
+        /// caller's sort followed by a unique column it does not already name. Rows that tie on a non-unique
+        /// sort have no fixed order, so without that column they could repeat or go missing across pages.
+        /// </summary>
+        /// <param name="schema">The form schema the query reads.</param>
+        /// <param name="sortFields">The caller's sort, which is left unchanged.</param>
+        internal static SortFieldCollection ResolvePagingSort(FormSchema schema, SortFieldCollection? sortFields)
+        {
+            if (sortFields == null || sortFields.Count == 0) { return DefaultSortForPaging(schema); }
+
+            var fields = schema.MasterTable?.Fields;
+            var uniqueField = new[] { SysFields.No, SysFields.RowId }.FirstOrDefault(f => fields?.Contains(f) == true);
+            if (uniqueField == null || sortFields.Any(f => StringUtilities.IsEquals(f.FieldName, uniqueField)))
+            {
+                return sortFields;
+            }
+
+            var result = new SortFieldCollection();
+            foreach (var field in sortFields)
+            {
+                result.Add(new SortField(field.FieldName, field.Direction));
+            }
+            result.Add(new SortField(uniqueField, SortDirection.Asc));
+            return result;
         }
 
         /// <summary>

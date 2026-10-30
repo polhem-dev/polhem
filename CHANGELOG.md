@@ -15,6 +15,9 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1.12.0.md)
 
+- `GetLookup` orders candidates by the first lookup field instead of `sys_no`. A paged `GetList` adds a unique column to
+  a sort that lacks one, so rows no longer repeat or go missing across pages, and a page too large to compute returns
+  no rows instead of failing or returning the wrong rows.
 - On a read-only record, Blazor Server's `FormPage` and Avalonia's `FormView` open the record a relation field or a
   detail grid's relation cell points at in a dialog when the user double-clicks it and may read the related form.
 - Avalonia's `FormView` tints a message the user can act on (a missing required field, a validation message, a record
