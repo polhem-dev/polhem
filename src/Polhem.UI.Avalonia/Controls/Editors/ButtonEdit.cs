@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -43,6 +45,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         // Whether the editor currently shows the open-record hint, so the tooltip is touched only on a change and a
         // lookup failure's tooltip stays until then.
         private bool _offersOpen;
+        private ScrollContentPresenter? _textArea;
 
         /// <summary>
         /// Initializes a new instance of <see cref="ButtonEdit"/> with the embedded
@@ -186,6 +189,24 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         }
 
         /// <inheritdoc />
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+            // NOTE: The Semi theme styles the text box's inner `ScrollContentPresenter` with the I-beam cursor, and that
+            // style beats the value inherited from the editor. Only a local value on the presenter itself overrides it
+            // over the text. The presenter belongs to the scroll viewer's own template, which is applied later.
+            _textArea = null;
+            if (e.NameScope.Find<ScrollViewer>("PART_ScrollViewer") is { } scrollViewer)
+            {
+                scrollViewer.TemplateApplied += (_, applied) =>
+                {
+                    _textArea = applied.NameScope.Find<ScrollContentPresenter>("PART_ContentPresenter");
+                    UpdateOpenAffordance();
+                };
+            }
+        }
+
+        /// <inheritdoc />
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
@@ -263,9 +284,17 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             }
             // Clearing rather than setting null lets the theme's text cursor apply again.
             if (!opens)
+            {
                 ClearValue(CursorProperty);
+                _textArea?.ClearValue(CursorProperty);
+            }
             else if (TopLevel.GetTopLevel(this) is not null)
-                Cursor = new Cursor(StandardCursorType.Hand);
+            {
+                var hand = new Cursor(StandardCursorType.Hand);
+                Cursor = hand;
+                if (_textArea is not null)
+                    _textArea.Cursor = hand;
+            }
         }
 
         private IReadOnlyList<string> ResolveDisplayFieldNames()
