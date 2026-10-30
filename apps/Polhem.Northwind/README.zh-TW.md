@@ -17,7 +17,8 @@
 - **框架系統表（`st_`）與業務表（`ft_`）並存** —— `Employee` / `Department` 是應用沿用並擴充的框架表；`Customer` / `Product` / `Order` 是應用自定義的業務表。
 - **在地化標題與租戶客製層** —— 訂單表單的 zh-TW 標題來自語系資源，客製層再改掉其中兩個、其餘照樣繼承。兩者都是定義檔，都不是程式碼。
 - **欄位異動時詢問伺服器** —— 在訂單明細挑選商品時會呼叫訂單的業務物件（`ValueChangeCallback`），帶回商品目前的單價，這個欄位查詢視窗並不顯示；修改數量時，超過庫存會出現警告。
-- **前端會依循的權限** —— 訂單表單綁定一個權限模型；`demo-ro` 帳號只能讀取訂單，所以每個 head 都會隱藏 New、Save、Delete，並以唯讀開啟訂單，而後端照樣會拒絕這些呼叫。
+- **前端會依循的權限** —— 訂單與產品表單各綁定一個權限模型；`demo-ro` 帳號只能讀取訂單，所以每個 head 都會隱藏 New、Save、Delete，並以唯讀開啟訂單，而後端照樣會拒絕這些呼叫。
+- **開啟關聯資料** —— 在唯讀的訂單上雙擊客戶或明細的產品，會在對話框中以唯讀方式開啟那筆資料。`demo-ro` 不能讀取產品，所以開產品時會看到拒絕訊息，也不會送出任何請求。
 - **一個後端、兩個 host** —— 業務物件、Repository 與種子資料放在一個類別庫裡，JSON-RPC server 與 Blazor Server head 都執行它，使用同一份定義與同一個資料庫。
 
 ## 執行 demo
@@ -46,9 +47,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 |---|---|---|---|
 | `demo` | `demo` | `en-US` | 英文標題與格式 |
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
-| `demo-ro` | `demo` | `en-US` | 同一份資料，但訂單是唯讀：New、Save、Delete 都隱藏 |
+| `demo-ro` | `demo` | `en-US` | 同一份資料，但訂單是唯讀（New、Save、Delete 都隱藏），也不能開啟產品 |
 
-每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，`demo-ro` 擁有 `OrderViewer`（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對訂單與產品做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
 
 ### 網頁前端（Avalonia WASM）
 
@@ -211,7 +212,7 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 | Master-detail 整筆一次儲存 | **框架** | repository，由多表 `FormSchema` 驅動 |
 | 訂單的必填欄位與每列金額 | **定義** | `Order.FormSchema.xml`：`Rules`（`FormRule`）與一個 `ValueExpression` 欄位 |
 | 明細挑選商品後帶回的單價 | **定義 + 框架** | `ValueChangeCallback` + 一個 `LookupOnly` 對應；框架 `FieldValueChange` |
-| 誰可以新增、讀取、修改、刪除訂單 | **定義 + 框架** | `PermissionModels.xml`、`FormSchema.PermissionModelId`、角色資料表；框架負責強制與前端降級 |
+| 誰可以新增、讀取、修改、刪除訂單與產品 | **定義 + 框架** | `PermissionModels.xml`、`FormSchema.PermissionModelId`、角色資料表；框架負責強制與前端降級 |
 | progId 對業務物件與 Repository 的綁定 | **定義** | `ProgramSettings.xml`（型別註冊表） |
 | 導航選單（分組表單清單） | **定義** | `MenuSettings.xml` |
 | 在地化標題與顯示名稱 | **定義** | `Define/Language/{lang}/{progId}.Language.xml` |
@@ -379,7 +380,7 @@ apps/Polhem.Northwind/
 │   ├── DatabaseSettings.xml      common + company + log 三個資料庫
 │   ├── DbCategorySettings.xml    各分類有哪些表（驅動建表）
 │   ├── ProgramSettings.xml       型別註冊表（progId 對業務物件 + Repository）
-│   ├── PermissionModels.xml      訂單表單綁定的權限模型
+│   ├── PermissionModels.xml      訂單與產品表單綁定的權限模型
 │   ├── MenuSettings.xml          導航選單（資料夾、排序、標題）
 │   └── Language/{lang}/          在地化標題，每個 progId 一個檔
 ├── Customize/{customizeId}/      租戶客製層（結構與 Define/ 相同，只放要覆寫的檔）

@@ -48,8 +48,8 @@ public static class NorthwindCredentials
 
     /// <summary>
     /// The read-only demo user id. The account holds the <c>OrderViewer</c> role, which may read orders and
-    /// nothing else, so it shows a front end hiding the order commands the user lacks. The other accounts hold
-    /// <c>OrderClerk</c>.
+    /// nothing else, so it shows a front end hiding the order commands the user lacks and refusing to open an order
+    /// line's product, a form it may not read. The other accounts hold <c>OrderClerk</c>.
     /// </summary>
     public const string ReadOnlyUserId = "demo-ro";
 

@@ -17,7 +17,8 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 - **Framework system tables (`st_`) alongside business tables (`ft_`)** — `Employee` / `Department` are framework tables the app reuses and extends; `Customer` / `Product` / `Order` are business tables the app defines.
 - **Localized captions and a tenant customization layer** — the Order form's zh-TW captions come from a language resource, and a customization layer renames two of them for this tenant while inheriting the rest. Both are definition files; neither is code.
 - **A field change that asks the server** — picking a product on an order line calls the order's business object (`ValueChangeCallback`), which brings back the product's current unit price, a column the lookup window does not show; changing the quantity warns when it exceeds the stock.
-- **Permissions the front ends follow** — the Order form is bound to a permission model; the `demo-ro` account may only read orders, so every head hides New, Save and Delete and opens orders read-only, while the backend refuses the calls anyway.
+- **Permissions the front ends follow** — the Order and Product forms are bound to permission models; the `demo-ro` account may only read orders, so every head hides New, Save and Delete and opens orders read-only, while the backend refuses the calls anyway.
+- **Opening a related record** — on a read-only order, double-click the customer or a line's product to open that record read-only in a dialog. `demo-ro` may not read products, so for it the product is refused with a message, and nothing is requested.
 - **One backend, two hosts** — the business object, the repository and the seed live in a class library that the JSON-RPC server and the Blazor Server head both run, on the same definitions and the same database.
 
 ## Running the demo
@@ -46,9 +47,9 @@ Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with o
 |---|---|---|---|
 | `demo` | `demo` | `en-US` | English captions and formats |
 | `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
-| `demo-ro` | `demo` | `en-US` | the same data, but orders are read-only: New, Save and Delete are hidden |
+| `demo-ro` | `demo` | `en-US` | the same data, but orders are read-only (New, Save and Delete are hidden) and products may not be opened |
 
-Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role and `demo-ro` holds `OrderViewer` (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`).
+Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything with orders and products, and `demo-ro` holds `OrderViewer`, which may only read orders (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
 
 ### Web client (Avalonia WASM)
 
@@ -220,7 +221,7 @@ This is the whole argument in one table.
 | Master-detail save as one unit | **framework** | repository, driven by the multi-table `FormSchema` |
 | Order's required fields and per-line amount | **definition** | `Order.FormSchema.xml`: `Rules` (`FormRule`) and a `ValueExpression` field |
 | A picked product's unit price on the order line | **definition + framework** | `ValueChangeCallback` + a `LookupOnly` mapping; framework `FieldValueChange` |
-| Who may create, read, update and delete orders | **definition + framework** | `PermissionModels.xml`, `FormSchema.PermissionModelId`, the role tables; framework enforcement, front-end degradation |
+| Who may create, read, update and delete orders and products | **definition + framework** | `PermissionModels.xml`, `FormSchema.PermissionModelId`, the role tables; framework enforcement, front-end degradation |
 | progId to business-object and repository binding | **definition** | `ProgramSettings.xml` (the type registry) |
 | Navigation menu (grouped form list) | **definition** | `MenuSettings.xml` |
 | Localized captions and display names | **definition** | `Define/Language/{lang}/{progId}.Language.xml` |
@@ -396,7 +397,7 @@ apps/Polhem.Northwind/
 │   ├── DatabaseSettings.xml      the common + company + log databases
 │   ├── DbCategorySettings.xml    which tables exist, per category (drives schema build)
 │   ├── ProgramSettings.xml       the type registry (progId to business object + repository)
-│   ├── PermissionModels.xml      the permission model the Order form is bound to
+│   ├── PermissionModels.xml      the permission models the Order and Product forms are bound to
 │   ├── MenuSettings.xml          the navigation menu (folders, order, captions)
 │   └── Language/{lang}/          localized captions, one file per progId
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
