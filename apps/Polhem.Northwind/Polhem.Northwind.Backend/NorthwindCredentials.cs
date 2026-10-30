@@ -47,9 +47,10 @@ public static class NorthwindCredentials
     public const string ZhTwCulture = "zh-TW";
 
     /// <summary>
-    /// The read-only demo user id. The account holds the <c>OrderViewer</c> role, which may read orders and
-    /// nothing else, so it shows a front end hiding the order commands the user lacks and refusing to open an order
-    /// line's product, a form it may not read. The other accounts hold <c>OrderClerk</c>.
+    /// The read-only demo user id. The account holds the <c>OrderViewer</c> role, which may read Order, Category,
+    /// Supplier, Customer, Shipper, Department and Employee and nothing else, so it shows a front end hiding the New,
+    /// Edit, Save and Delete commands and refusing to open an order line's product, a form it may not read. The other
+    /// accounts hold <c>OrderClerk</c>, which may do everything.
     /// </summary>
     public const string ReadOnlyUserId = "demo-ro";
 

@@ -124,8 +124,9 @@ public static class NorthwindSchemaSeeder
         // on and AccessEnabled off, so Order and Customer demonstrate a rule turning reads ON
         // against that default, and Category demonstrates one turning changes OFF.
         new("st_audit_rule", "AuditRule.json"),
-        // The Order and Product permission models (Define/PermissionModels.xml): OrderClerk may do everything,
-        // OrderViewer may only read orders, and each demo account holds one of them. Enforcement is fail-closed, so
+        // The permission models (Define/PermissionModels.xml), one per form: OrderClerk may do everything, OrderViewer
+        // may only read Order, Category, Supplier, Customer, Shipper, Department and Employee, and each demo account
+        // holds one of them. Enforcement is fail-closed, so
         // an account without a grant could not open the form at all, which is why these tables are topped up: a
         // grant added in a later version must reach an existing database. st_user_role names users by st_user.sys_id.
         new("st_role", "Role.json", Key: ["sys_id"]),

@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The demo's permission model registry. Two models, Order and Product, which Order.FormSchema.xml and
-  Product.FormSchema.xml opt into with PermissionModelId. The seeder grants them through two roles:
-  OrderClerk holds every action on both, OrderViewer only Read on Order and nothing on Product, and the
-  demo-ro account holds OrderViewer. So the front ends hide the order commands demo-ro may not run, and
-  refuse to open an order line's product for it. Every action reads every row (Scope All): the demo
-  shows the action gate, not record scope.
+  The demo's permission model registry: one model per form, named after its ProgId, which each
+  FormSchema opts into with PermissionModelId. Enforcement is fail-closed, so every form the menu
+  offers is bound to a model and granted through one of two roles (SeedData/RoleGrant.json):
 
-  The framework's AuditRule model is left out on purpose: the demo's AuditRule form does not declare
-  it (see AuditRule.FormSchema.xml).
+  - OrderClerk (demo, demo-tw) holds every action on every model.
+  - OrderViewer (demo-ro) holds Read on Order and on the master data and organization forms
+    (Category, Supplier, Customer, Shipper, Department, Employee), nothing on Product and nothing on
+    AuditRule. So the front ends hide New, Edit, Save and Delete for demo-ro, let it open an
+    order's customer read-only, and refuse to open an order line's product.
+
+  AuditRule is the framework's own model (src/Polhem.Definition/Defaults/PermissionModels.xml), kept
+  here because this file replaces the shipped one. Every action reads every row (Scope All): the
+  demo shows the action gate, not record scope.
 -->
 <PermissionModels xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Models>
@@ -21,6 +25,62 @@
       </Rules>
     </PermissionModel>
     <PermissionModel ModelId="Product" DisplayName="Product">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Category" DisplayName="Category">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Supplier" DisplayName="Supplier">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Customer" DisplayName="Customer">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Shipper" DisplayName="Shipper">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Department" DisplayName="Department">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Employee" DisplayName="Employee">
+      <Rules>
+        <PermissionRule Action="Create" Scope="All" />
+        <PermissionRule Action="Read" Scope="All" />
+        <PermissionRule Action="Update" Scope="All" />
+        <PermissionRule Action="Delete" Scope="All" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="AuditRule" DisplayName="Audit Rule">
       <Rules>
         <PermissionRule Action="Create" Scope="All" />
         <PermissionRule Action="Read" Scope="All" />
