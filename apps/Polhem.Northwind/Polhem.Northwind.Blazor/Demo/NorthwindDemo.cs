@@ -218,6 +218,22 @@ public static class NorthwindDemo
 
         EnsureNoDeploymentAdministrator(app.Services.GetRequiredService<IDbAccessFactory>());
 
+        // TODO: temporary probe of the headers Render's proxies send, to choose which one names the client.
+        // Remove it together with the fix.
+        var probeLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Northwind.ClientAddressProbe");
+        app.Use((context, next) =>
+        {
+            if (context.Request.Path.StartsWithSegments(ApiPath))
+            {
+                var headers = context.Request.Headers;
+                probeLogger.LogInformation(
+                    "Probe remote={Remote} xff={Xff} cf={Cf} true={True} real={Real} proto={Proto}",
+                    context.Connection.RemoteIpAddress, headers["X-Forwarded-For"].ToString(),
+                    headers["CF-Connecting-IP"].ToString(), headers["True-Client-IP"].ToString(),
+                    headers["X-Real-IP"].ToString(), headers["X-Forwarded-Proto"].ToString());
+            }
+            return next(context);
+        });
         app.UseForwardedHeaders();
         app.UseRateLimiter();
 
