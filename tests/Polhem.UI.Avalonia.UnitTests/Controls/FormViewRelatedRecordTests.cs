@@ -111,7 +111,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("A user without Read on the related form sees a message naming it, and no related view is created")]
+        [DisplayName("A user without Read on the related form sees a warning naming it, and no related view is created")]
         public async Task OpenRelatedRecord_NotReadable_ShowsMessageWithoutOpening()
         {
             var view = new RelationFormView(BuildLeaveTypeSchema(permissionBound: true), PermissionActions.Create);
@@ -122,6 +122,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Empty(view.Shown);
             var label = GetPrivateField<MessageBar>(view, "_errorLabel");
             Assert.True(label.IsVisible);
+            Assert.True(label.IsWarning);
             Assert.Equal(string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.RelatedRecordDenied), "Leave type"),
                 label.Text);
         }
@@ -162,7 +163,9 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             await view.OpenRelatedRecordAsync(s_target);
 
             Assert.Empty(view.Shown);
-            Assert.Contains("LeaveType", GetPrivateField<MessageBar>(view, "_errorLabel").Text, StringComparison.Ordinal);
+            var label = GetPrivateField<MessageBar>(view, "_errorLabel");
+            Assert.Contains("LeaveType", label.Text, StringComparison.Ordinal);
+            Assert.False(label.IsWarning);
         }
 
         [Fact]

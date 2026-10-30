@@ -72,10 +72,11 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         // A message for the user rather than a failure: unlike `ReportError` it raises no
-        // `ErrorOccurred`, because nothing went wrong that a host needs to log.
+        // `ErrorOccurred`, because nothing went wrong that a host needs to log, and it is tinted as a
+        // warning rather than as an error.
         private void ShowMessage(string message)
         {
-            _errorLabel.Show(message);
+            _errorLabel.ShowWarning(message);
         }
 
         private void ClearError()
