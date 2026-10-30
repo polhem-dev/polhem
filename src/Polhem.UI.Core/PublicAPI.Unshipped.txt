@@ -17,3 +17,20 @@ static Polhem.UI.Core.Fields.RelationTarget.operator !=(Polhem.UI.Core.Fields.Re
 static Polhem.UI.Core.Fields.RelationTarget.operator ==(Polhem.UI.Core.Fields.RelationTarget left, Polhem.UI.Core.Fields.RelationTarget right) -> bool
 ~override Polhem.UI.Core.Fields.RelationTarget.Equals(object obj) -> bool
 ~override Polhem.UI.Core.Fields.RelationTarget.ToString() -> string
+const Polhem.UI.Core.Connectors.ListPagingState.DefaultPageSize = 50 -> int
+Polhem.UI.Core.Connectors.ListPagingState
+Polhem.UI.Core.Connectors.ListPagingState.ListPagingState() -> void
+Polhem.UI.Core.Connectors.ListPagingState.Apply(int page, Polhem.Definition.Paging.PagingInfo? paging) -> void
+Polhem.UI.Core.Connectors.ListPagingState.BeginRequest() -> int
+Polhem.UI.Core.Connectors.ListPagingState.CanGoNext.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.CanGoPrevious.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.CreateOptions(int page) -> Polhem.Definition.Paging.PagingOptions!
+Polhem.UI.Core.Connectors.ListPagingState.HasMore.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.InvalidateTotalCount() -> void
+Polhem.UI.Core.Connectors.ListPagingState.IsCurrent(int requestId) -> bool
+Polhem.UI.Core.Connectors.ListPagingState.Page.get -> int
+Polhem.UI.Core.Connectors.ListPagingState.PageSize.get -> int
+Polhem.UI.Core.Connectors.ListPagingState.SetPageSize(int pageSize) -> void
+Polhem.UI.Core.Connectors.ListPagingState.TotalCount.get -> int?
+Polhem.UI.Core.Connectors.ListPagingState.TotalPages.get -> int?
+Polhem.UI.Core.Connectors.ListPagingState.TryStepBackFromEmptyPage(int rowCount) -> bool

@@ -31,6 +31,16 @@ namespace Polhem.Definition.Language
         public const string Loading = "Loading";
         /// <summary>Key of the empty-list text.</summary>
         public const string NoData = "NoData";
+        /// <summary>Key of the previous-page command.</summary>
+        public const string PreviousPage = "PreviousPage";
+        /// <summary>Key of the next-page command.</summary>
+        public const string NextPage = "NextPage";
+        /// <summary>Key of the current-page text; <c>{0}</c> is the page.</summary>
+        public const string PageNumber = "PageNumber";
+        /// <summary>Key of the current-page text when the row count is known; <c>{0}</c> is the page, <c>{1}</c> the pages, <c>{2}</c> the rows.</summary>
+        public const string PageNumberOfTotal = "PageNumberOfTotal";
+        /// <summary>Key of the rows-per-page label.</summary>
+        public const string RowsPerPage = "RowsPerPage";
         /// <summary>Key of the view-record command.</summary>
         public const string View = "View";
         /// <summary>Key of the new-record command.</summary>
@@ -129,6 +139,11 @@ namespace Polhem.Definition.Language
         {
             [Loading] = "Loading…",
             [NoData] = "No data.",
+            [PreviousPage] = "Previous",
+            [NextPage] = "Next",
+            [PageNumber] = "Page {0}",
+            [PageNumberOfTotal] = "Page {0} of {1} ({2} rows)",
+            [RowsPerPage] = "Rows per page",
             [View] = "View",
             [New] = "New",
             [Add] = "Add",

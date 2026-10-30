@@ -119,6 +119,7 @@ namespace Polhem.UI.Avalonia.Views
         private void UpdateToolbarState()
         {
             var hasSelection = _selectedRowId != Guid.Empty;
+            _pager.IsEnabled = !_isBusy && !_isLoading;
             _newButton.IsEnabled = _initialized && !_isBusy;
             _viewButton.IsEnabled = _initialized && !_isBusy && hasSelection;
             _editButton.IsEnabled = _initialized && !_isBusy && hasSelection;

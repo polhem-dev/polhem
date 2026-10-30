@@ -14,6 +14,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.12.0.md](docs/zh-TW/changelogs/1.12.0.md)
 
+- Avalonia 的 `ListView` 改為逐頁顯示表單資料，提供分頁按鈕與每頁筆數選項，超過伺服器單頁上限的資料不再被無提示地略過。
 - `GetLookup` 改依第一個開窗欄位排序候選資料，不再依 `sys_no`。分頁的 `GetList` 會在缺少唯一欄位的排序後補上唯一欄位，跨頁不再重複或漏筆；
   頁碼大到無法計算時回傳空結果，不再失敗或回傳錯誤的資料。
 - Blazor Server 的 `FormPage` 與 Avalonia 的 `FormView` 在唯讀記錄上，使用者雙擊關聯欄位或明細格的關聯儲存格且能讀取關聯表單時，以對話框開啟它指向的資料。
