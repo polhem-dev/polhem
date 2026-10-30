@@ -14,6 +14,7 @@ build applications with Polhem is under [`docs/`](../docs/README.md). The reason
 | [public-api-baseline.md](public-api-baseline.md) | Maintaining the public API baseline (`PublicAPI.*.txt`) |
 | [testing-patterns.md](testing-patterns.md) | Copy-ready test templates |
 | [load-testing.md](load-testing.md) | How load tests are measured and read |
+| [northwind-demo-hosting.md](northwind-demo-hosting.md) | The public Northwind demo site on Render: service settings and deploying |
 | [future-work.md](future-work.md) | Ideas that are not scheduled yet |
 | [pagination-prior-art.md](pagination-prior-art.md) | External evidence on pagination |
 | [uom-decimals-prior-art.md](uom-decimals-prior-art.md) | External evidence on unit-of-measure decimals |

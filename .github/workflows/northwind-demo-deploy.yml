@@ -1,0 +1,34 @@
+name: Deploy Northwind Demo
+
+# Redeploys the public Northwind demo site (apps/Polhem.Northwind/Dockerfile) on Render, run by hand when the site
+# should catch up with main. The Render service has auto-deploy turned off: main changes many times a day, and each
+# build of the image spends the free workspace's limited build minutes.
+#
+# RENDER_NORTHWIND_DEPLOY_HOOK is the service's deploy hook URL (Render: Settings > Deploy Hook). The URL is the whole
+# credential, so it stays a secret. Render builds the branch the service is set to, at its latest commit.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Trigger the Render deploy hook
+      env:
+        DEPLOY_HOOK: ${{ secrets.RENDER_NORTHWIND_DEPLOY_HOOK }}
+      run: |
+        # The hook deploys the service's branch whatever branch this run started from, so only main may run it.
+        if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+          echo "::error::Run this workflow from main: Render deploys main regardless of the branch chosen here."
+          exit 1
+        fi
+        if [ -z "$DEPLOY_HOOK" ]; then
+          echo "::error::The RENDER_NORTHWIND_DEPLOY_HOOK secret is not set."
+          exit 1
+        fi
+        curl --fail --silent --show-error --max-time 60 --output /dev/null -X POST "$DEPLOY_HOOK"
+        echo "Render accepted the deploy. The build and the rollout show on the service's Events page."

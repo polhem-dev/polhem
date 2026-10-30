@@ -29,6 +29,9 @@ if (isRemote)
 }
 else
 {
+    // Before the backend is added: it falls back to the demo key published in source when none is set.
+    if (isDemo)
+        NorthwindDemo.EnsureMasterKey();
     builder.AddNorthwindBackend();
     builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
     if (isDemo)
