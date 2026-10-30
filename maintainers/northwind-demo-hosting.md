@@ -40,8 +40,9 @@ things about Render that nothing checks:
 - **The proxy connects from loopback.** If it stops doing so the header is ignored, every visitor shares the proxy's
   address, and the site answers 429 under modest traffic.
 
-To recheck, send more than 60 `/api` requests from one machine: the rest should get 429, while a request from another
-network still gets through.
+To recheck, send about 120 `/api` requests from one machine in parallel: the ones past the limit should get 429, while
+a request from another network still gets through. Send them in parallel because the limit refills as it goes:
+sequential requests to the hosted site are slow enough that 70 of them all passed.
 
 ## Deploying
 

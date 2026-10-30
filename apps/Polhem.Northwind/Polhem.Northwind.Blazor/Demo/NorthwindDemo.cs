@@ -128,8 +128,8 @@ public static class NorthwindDemo
     /// <remarks>
     /// Every connection comes from Render's local proxy, so the rate limits would otherwise count all visitors as one.
     /// <c>X-Forwarded-For</c> does not name the client reliably. Measured on Render on 2026-10-30, it arrives as
-    /// client, Cloudflare edge, Render internal address: the last entry changes between requests, and a client can
-    /// put anything first, because the proxies append to what it sent. Cloudflare writes <c>CF-Connecting-IP</c> itself
+    /// client, Cloudflare edge, Render internal address: the last entry is not the client, and a client can put
+    /// anything first, because the proxies append to what it sent. Cloudflare writes <c>CF-Connecting-IP</c> itself
     /// and refused the requests that supplied their own. The default known proxies stay in place: Render's proxy
     /// connects from loopback, and a connection from anywhere else, such as a container published directly with
     /// <c>docker run</c>, keeps its own address whatever header it sends. See
