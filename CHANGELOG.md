@@ -17,6 +17,8 @@ Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1
 
 - On a read-only record, Blazor Server's `FormPage` and Avalonia's `FormView` open the record a relation field or a
   detail grid's relation cell points at in a dialog when the user double-clicks it and may read the related form.
+- Avalonia's `FormView` tints a message the user can act on (a missing required field, a validation message, a record
+  they may not open) as a warning instead of an error; failures keep the error tint.
 
 ## [1.11.0] - 2026-10-28
 

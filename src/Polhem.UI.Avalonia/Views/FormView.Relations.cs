@@ -110,7 +110,10 @@ namespace Polhem.UI.Avalonia.Views
                     Title = title,
                     Content = view,
                     Width = 720,
-                    Height = 560,
+                    // A related record is usually a short master form, so the window takes the height
+                    // the record needs and scrolls only past the cap.
+                    SizeToContent = SizeToContent.Height,
+                    MaxHeight = 560,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     ShowInTaskbar = false,
                 };
