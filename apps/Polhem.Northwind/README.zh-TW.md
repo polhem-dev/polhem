@@ -105,6 +105,10 @@ Blazor 開 <http://localhost:5400/>，Avalonia 開 <http://localhost:5400/web/>�
 WASM head 在 `/web/` 底下提供時，會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 指定 bundle 資料夾（發佈輸出的
 `wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
 
+因為所有帳號的密碼都是公開的，Demo 環境也照公開網站的方式運作：任何帳號都不能是部署管理者（否則 host 拒絕啟動）、
+登入失敗不會鎖住帳號、錯誤回應只帶固定訊息而不帶例外內容、`/api` 與 Blazor 連線的建立依用戶端位址限速（位址取自
+代理伺服器附加的 `X-Forwarded-For` 項目），請求內容上限 1 MB。細節在 `Demo/NorthwindDemo.cs`。
+
 同一個網站也能以單一容器執行，在 repo 根目錄用 [`Dockerfile`](Dockerfile) 建置。資料庫放在容器裡、啟動時灌種子，
 所以每個新容器都從種子資料重新開始：
 
