@@ -239,7 +239,7 @@ namespace Polhem.Repository.AuditLog
 
             int pageSize = Math.Clamp(paging.PageSize, 1, PagingOptions.MaxPageSize);
             int page = Math.Max(paging.Page, 1);
-            int skip = (page - 1) * pageSize;
+            int skip = PagingOffset.Compute(page, pageSize);
 
             int? totalCount = null;
             if (paging.IncludeTotalCount)

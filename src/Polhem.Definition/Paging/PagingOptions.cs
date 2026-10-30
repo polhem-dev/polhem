@@ -35,7 +35,8 @@ namespace Polhem.Definition.Paging
         /// inherent to offset paging rather than particular to one engine, so switching database
         /// provider does not avoid it. A screen that lets a user reach arbitrary page numbers
         /// over a large result set is usually better served by narrowing the result with a
-        /// filter than by paging deeper.
+        /// filter than by paging deeper. A page whose offset is too large for the server to compute returns no
+        /// rows.
         /// </remarks>
         // Written even when 0/default: the initialiser is not the CLR default, so omitting the value would let the
         // reader substitute the initialiser. Enforced for every wire member by `WireDefaultOmissionTests`.

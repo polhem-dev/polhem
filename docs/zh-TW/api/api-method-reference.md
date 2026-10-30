@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: cd9ea536170629ad114badbbcb4fe839bb5bcf5d -->
+<!-- source: en/api/api-method-reference.md blob: f44ab2e618ef479ea28be4c5f6011ce30564c52e -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -118,7 +118,7 @@ per-program BO 實體，wire 上以 `<progId>.<action>` 派發（例如 `Employe
 | Method | Protection | Auth | 用途 |
 |--------|------------|------|------|
 | `GetList` | Public | Authenticated | Master table 列表查詢；支援 `Filter` / `Sort` / `Paging`。過濾與排序欄位必須是表單的表所宣告的欄位，受保護欄位一律拒絕。未帶 `Paging` 時回傳第一頁、筆數為 `PagingOptions.MaxPageSize`，結果的 `Paging.HasMore` 表示是否還有未回傳的列。套用呼叫者的 `Read` record scope。 |
-| `GetLookup` | Public | Authenticated | Lookup 開窗候選列查詢；投影由 server 依 `FormSchema.LookupFields` 解析（未宣告 fallback `sys_id` / `sys_name`，一律附 `sys_rowid`）。`SearchText` 比對字串型 lookup 欄位；未帶分頁時套預設分頁。刻意不受表單 `Read` 動作權限把關，但候選列限於呼叫者的 `Read` record scope（在表單權限模型上沒有 `Read` 授權的呼叫者看不到任何候選列）；BO 可覆寫 `LookupAppliesRecordScope` 退出此限制。 |
+| `GetLookup` | Public | Authenticated | Lookup 開窗候選列查詢；投影由 server 依 `FormSchema.LookupFields` 解析（未宣告 fallback `sys_id` / `sys_name`，一律附 `sys_rowid`）。`SearchText` 比對字串型 lookup 欄位；未帶分頁時套預設分頁。候選資料依第一個可排序的開窗欄位排列。刻意不受表單 `Read` 動作權限把關，但候選列限於呼叫者的 `Read` record scope（在表單權限模型上沒有 `Read` 授權的呼叫者看不到任何候選列）；BO 可覆寫 `LookupAppliesRecordScope` 退出此限制。 |
 | `GetNewData` | Public | Authenticated | 回傳空白 `DataSet` 骨架（含 FormSchema 預設值 + server 派發的 `sys_rowid`）。 |
 | `GetData` | Public | Authenticated | 依 `RowId` 載入單筆主檔列（與其所有子表列）。 |
 | `Save` | Public | Authenticated | 將 `DataSet` 持久化，依每列 `RowState` dispatch INSERT / UPDATE / DELETE。 |

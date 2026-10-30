@@ -70,15 +70,56 @@ namespace Polhem.Business.UnitTests.Form
             Assert.Null(repo.LastFilter);
         }
 
+        [Fact]
+        [DisplayName("GetLookup orders candidates by the first lookup field")]
+        public void GetLookup_DefaultFields_SortsByFirstLookupField()
+        {
+            var repo = new CapturingRepo();
+
+            new FormBusinessObject(Context(repo, string.Empty), Token(), ProgId).GetLookup(new GetLookupArgs());
+
+            var sort = Assert.Single(repo.LastSort!);
+            Assert.Equal("sys_id", sort.FieldName);
+            Assert.Equal(SortDirection.Asc, sort.Direction);
+        }
+
+        [Fact]
+        [DisplayName("GetLookup skips a Text lookup field when choosing the sort, because Oracle cannot order by it")]
+        public void GetLookup_TextFieldFirst_SortsByNextField()
+        {
+            var repo = new CapturingRepo();
+
+            new FormBusinessObject(Context(repo, string.Empty, "memo,sys_name"), Token(), ProgId).GetLookup(new GetLookupArgs());
+
+            Assert.Equal("sys_name", Assert.Single(repo.LastSort!).FieldName);
+        }
+
+        [Fact]
+        [DisplayName("GetLookup leaves the sort to the repository when no lookup field can be sorted")]
+        public void GetLookup_OnlyTextField_LeavesSortToRepository()
+        {
+            var repo = new CapturingRepo();
+
+            new FormBusinessObject(Context(repo, string.Empty, "memo"), Token(), ProgId).GetLookup(new GetLookupArgs());
+
+            Assert.Null(repo.LastSort);
+        }
+
         private Guid Token() => TestSessionFactory.CreateAccessToken(_fx);
 
-        private BusinessObjectContext Context(CapturingRepo repo, string permissionModelId)
+        private BusinessObjectContext Context(CapturingRepo repo, string permissionModelId, string lookupFields = "")
         {
-            var schema = new FormSchema(ProgId, "Lookup scope") { CategoryId = "company", PermissionModelId = permissionModelId };
+            var schema = new FormSchema(ProgId, "Lookup scope")
+            {
+                CategoryId = "company",
+                PermissionModelId = permissionModelId,
+                LookupFields = lookupFields,
+            };
             var table = schema.Tables!.Add(ProgId, "Lookup scope");
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
             table.Fields!.Add(new FormField("sys_id", "ID", FieldDbType.String) { MaxLength = 50 });
             table.Fields!.Add(new FormField("sys_name", "Name", FieldDbType.String) { MaxLength = 50 });
+            table.Fields!.Add(new FormField("memo", "Memo", FieldDbType.Text));
 
             return new BusinessObjectContext
             {
@@ -125,9 +166,12 @@ namespace Polhem.Business.UnitTests.Form
         {
             public FilterNode? LastFilter { get; private set; }
 
+            public SortFieldCollection? LastSort { get; private set; }
+
             public DataFormListResult GetList(string selectFields, FilterNode? filter, SortFieldCollection? sortFields, PagingOptions? paging = null)
             {
                 LastFilter = filter;
+                LastSort = sortFields;
                 return new DataFormListResult { Table = new DataTable() };
             }
 

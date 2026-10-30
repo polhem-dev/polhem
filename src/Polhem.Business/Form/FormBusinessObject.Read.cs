@@ -8,6 +8,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Sorting;
 
 namespace Polhem.Business.Form
 {
@@ -81,6 +82,9 @@ namespace Polhem.Business.Form
         /// opts out by overriding <see cref="LookupAppliesRecordScope"/>.
         /// </para>
         /// <para>
+        /// Candidates are ordered by the first lookup field that can be sorted; the caller cannot choose the order.
+        /// </para>
+        /// <para>
         /// Override <see cref="GetLookupFilter"/> to constrain the candidate rows further (e.g.
         /// active records only). <see cref="ResolveRelationRow"/>, which another form's
         /// <see cref="FieldValueChange"/> uses to read a picked row, applies the same filter and record scope; a
@@ -103,7 +107,7 @@ namespace Polhem.Business.Form
             var paging = args.Paging ?? new PagingOptions { PageSize = DefaultLookupPageSize };
 
             var repository = CreateDataFormRepository(ProgId);
-            var listResult = repository.GetList(selectFields, filter, null, paging);
+            var listResult = repository.GetList(selectFields, filter, BuildLookupSort(lookupFields), paging);
 
             return new GetLookupResult
             {
@@ -157,6 +161,20 @@ namespace Polhem.Business.Form
                 1 => conditions[0],
                 _ => FilterGroup.Any(conditions),
             };
+        }
+
+        /// <summary>
+        /// Orders lookup candidates by the first lookup field the databases can sort, so a user reads them by
+        /// what the picker shows rather than by creation order.
+        /// </summary>
+        /// <remarks>
+        /// Oracle cannot order by a <see cref="FieldDbType.Text"/> column, which it stores as a CLOB. With no
+        /// sortable field the result is <c>null</c>, and the repository applies its default paging sort.
+        /// </remarks>
+        private static SortFieldCollection? BuildLookupSort(IReadOnlyList<FormField> lookupFields)
+        {
+            var field = lookupFields.FirstOrDefault(f => f.DbType is not (FieldDbType.Text or FieldDbType.Binary));
+            return field == null ? null : [new SortField(field.FieldName, SortDirection.Asc)];
         }
 
         /// <summary>
