@@ -81,7 +81,7 @@ internal sealed partial class Program
     /// </remarks>
     private static bool IsDemoSite(string[] args)
         => args.Length > 0 && Uri.TryCreate(args[0], UriKind.Absolute, out var page)
-            && page.AbsolutePath.StartsWith("/web/", StringComparison.Ordinal);
+            && page.AbsolutePath.StartsWith("/web/", StringComparison.OrdinalIgnoreCase);
 
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<NorthwindApp>();

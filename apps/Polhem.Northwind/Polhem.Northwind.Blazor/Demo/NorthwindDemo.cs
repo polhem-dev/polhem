@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
@@ -39,8 +40,8 @@ public static class NorthwindDemo
 
     private const string BundleKey = "Northwind.BrowserBundle";
 
-    // JSON-RPC bodies are a form's data set at most; anything larger is not this site's traffic.
-    private const long MaxRequestBodySize = 1024 * 1024;
+    // JSON-RPC bodies are a form's data set at most, compressed; anything larger is not this site's traffic.
+    private const long MaxApiRequestBodySize = 1024 * 1024;
 
     /// <summary>
     /// Registers the JSON-RPC server and the published WASM bundle.
@@ -76,7 +77,11 @@ public static class NorthwindDemo
         // Registered through a factory so the container disposes the provider with the host.
         builder.Services.AddKeyedSingleton<IFileProvider>(BundleKey, (_, _) => new PhysicalFileProvider(bundle));
 
-        builder.Services.AddJsonRpcServer();
+        // The rate limit counts HTTP requests, and a batch would carry many calls in one. The Polhem clients send
+        // no batches, so the demo refuses them rather than letting a batch multiply the limit.
+        builder.Services.AddJsonRpcServer(
+            server => server.MaxBatchSize = 0,
+            http => http.MaxRequestBodySize = MaxApiRequestBodySize);
         builder.Services.AddPolhemApiKeyGateCheck();
 
         // Northwind's SystemSettings.xml turns debug mode on for the development hosts, and in debug mode an error
@@ -86,7 +91,6 @@ public static class NorthwindDemo
         SysInfo.IsDebugMode = false;
         builder.Services.Replace(ServiceDescriptor.Singleton<ILoginAttemptTracker, NoLockoutLoginAttemptTracker>());
 
-        builder.WebHost.ConfigureKestrel(kestrel => kestrel.Limits.MaxRequestBodySize = MaxRequestBodySize);
         AddForwardedClientAddress(builder.Services);
         AddRateLimits(builder.Services);
     }
@@ -113,13 +117,14 @@ public static class NorthwindDemo
     }
 
     /// <summary>
-    /// Limits each client address on the two paths that do work per request: the JSON-RPC endpoint and the
-    /// negotiation that opens a Blazor Server connection.
+    /// Limits each client address on the JSON-RPC endpoint and on opening a Blazor Server connection.
     /// </summary>
     /// <remarks>
     /// Static files stay unlimited: the WASM head alone requests a couple of hundred of them on its first load.
-    /// The JSON-RPC limit leaves room for the burst the WASM head sends while it signs in and opens a form, and
-    /// keeps a script from filling the database faster than a restart clears it.
+    /// The JSON-RPC limit leaves room for the burst the WASM head sends while it signs in and opens a form, and slows
+    /// a script that writes through <c>/api</c>. It does not cover what a Blazor connection does once it is open:
+    /// those calls run in process, over the connection's WebSocket, and only the connection count is limited.
+    /// Visitors behind one address, such as an office network, share both limits.
     /// </remarks>
     private static void AddRateLimits(IServiceCollection services)
     {
@@ -139,11 +144,11 @@ public static class NorthwindDemo
                         QueueLimit = 0,
                     });
                 }
-                if (context.Request.Path.StartsWithSegments("/_blazor/negotiate"))
+                if (IsBlazorConnectionStart(context))
                 {
                     return RateLimitPartition.GetFixedWindowLimiter("circuit:" + client, _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 20,
+                        PermitLimit = 40,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0,
                     });
@@ -151,6 +156,25 @@ public static class NorthwindDemo
                 return RateLimitPartition.GetNoLimiter(string.Empty);
             });
         });
+    }
+
+    /// <summary>
+    /// Whether the request opens a Blazor Server connection: the negotiation, or a WebSocket a client opens directly
+    /// by skipping it. A normal visitor makes one of each per connection; the requests of an open connection are
+    /// neither.
+    /// </summary>
+    /// <remarks>
+    /// The upgrade is read from the server's own features. <c>HttpContext.WebSockets.IsWebSocketRequest</c> would say
+    /// false here: the rate limiter runs before the WebSocket middleware that answers it.
+    /// </remarks>
+    private static bool IsBlazorConnectionStart(HttpContext context)
+    {
+        if (context.Request.Path.StartsWithSegments("/_blazor/negotiate"))
+            return true;
+        if (!context.Request.Path.StartsWithSegments("/_blazor"))
+            return false;
+        return context.Features.Get<IHttpUpgradeFeature>()?.IsUpgradableRequest == true
+            || context.Features.Get<IHttpExtendedConnectFeature>()?.IsExtendedConnect == true;
     }
 
     /// <summary>
