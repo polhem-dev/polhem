@@ -39,6 +39,7 @@
     <LanguageItem Key="Close" Value="關閉" />
     <LanguageItem Key="OpenRelatedRecord" Value="按兩下開啟這筆資料" />
     <LanguageItem Key="RelatedRecordDenied" Value="您沒有檢視「{0}」的權限。" />
+    <LanguageItem Key="DeleteRecordPrompt" Value="確定要刪除這筆資料嗎？" />
   </Items>
   <Enums />
 </LanguageResource>

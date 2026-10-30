@@ -19,6 +19,8 @@ Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1
   detail grid's relation cell points at in a dialog when the user double-clicks it and may read the related form.
 - Avalonia's `FormView` tints a message the user can act on (a missing required field, a validation message, a record
   they may not open) as a warning instead of an error; failures keep the error tint.
+- Avalonia's `ListView` and Blazor Server's `FormPage` ask for confirmation before deleting a record. Set
+  `ConfirmDelete` to `false` to turn it off.
 
 ## [1.11.0] - 2026-10-28
 

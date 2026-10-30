@@ -1,3 +1,7 @@
 #nullable enable
 virtual Polhem.UI.Avalonia.Views.FormView.CreateRelatedView(Polhem.Definition.Forms.FormSchema! schema) -> Polhem.UI.Avalonia.Views.FormView!
 virtual Polhem.UI.Avalonia.Views.FormView.ShowRelatedViewAsync(Polhem.UI.Avalonia.Views.FormView! view, string! title, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView.ConfirmDelete.get -> bool
+Polhem.UI.Avalonia.Views.ListView.ConfirmDelete.set -> void
+static readonly Polhem.UI.Avalonia.Views.ListView.ConfirmDeleteProperty -> Avalonia.StyledProperty<bool>!
+virtual Polhem.UI.Avalonia.Views.ListView.ConfirmDeleteAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!

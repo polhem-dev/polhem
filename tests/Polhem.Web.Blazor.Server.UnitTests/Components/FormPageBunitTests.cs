@@ -453,11 +453,84 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
 
             Click(cut, PolhemUIText.Delete);
+            Assert.Empty(form.Deleted);
+            cut.Find("button.polhem-confirm-dialog__confirm").Click();
 
             cut.WaitForAssertion(() => Assert.Equal(2, form.GetListCount));
             Assert.Equal([s_aliceRowId], form.Deleted);
             Assert.True(IsDisabled(cut, PolhemUIText.View));
             Assert.True(IsDisabled(cut, PolhemUIText.Delete));
+            Assert.Empty(cut.FindAll("div.polhem-confirm-dialog"));
+        }
+
+        [Fact]
+        [DisplayName("Cancel on the delete question keeps the record, the selection and the list")]
+        public void Delete_Cancelled_DeletesNothing()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            var cut = RenderPage();
+            WaitForList(cut);
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            Click(cut, PolhemUIText.Delete);
+            Assert.True(IsDisabled(cut, PolhemUIText.Delete));
+            cut.Find("button.polhem-confirm-dialog__cancel").Click();
+
+            Assert.Empty(form.Deleted);
+            Assert.Equal(1, form.GetListCount);
+            Assert.Empty(cut.FindAll("div.polhem-confirm-dialog"));
+            Assert.False(IsDisabled(cut, PolhemUIText.Delete));
+        }
+
+        [Fact]
+        [DisplayName("Escape on the delete question backs out")]
+        public void Delete_Escape_DeletesNothing()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            var cut = RenderPage();
+            WaitForList(cut);
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            Click(cut, PolhemUIText.Delete);
+            cut.Find("div.polhem-confirm-dialog").KeyDown("Escape");
+
+            Assert.Empty(form.Deleted);
+            Assert.Empty(cut.FindAll("div.polhem-confirm-dialog"));
+        }
+
+        [Fact]
+        [DisplayName("With ConfirmDelete off, Delete removes the row without asking")]
+        public void Delete_ConfirmDeleteOff_DeletesWithoutAsking()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            var cut = Render<FormPage>(p => p.Add(c => c.ProgId, TestProgId).Add(c => c.ConfirmDelete, false));
+            WaitForList(cut);
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            Click(cut, PolhemUIText.Delete);
+
+            cut.WaitForAssertion(() => Assert.Equal(2, form.GetListCount));
+            Assert.Equal([s_aliceRowId], form.Deleted);
+        }
+
+        [Fact]
+        [DisplayName("Moving to another program closes an open delete question")]
+        public void Delete_ProgIdChangesWhileAsking_ClosesTheQuestion()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            var cut = RenderPage();
+            WaitForList(cut);
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+            Click(cut, PolhemUIText.Delete);
+
+            cut.Render(p => p.Add(c => c.ProgId, "Other"));
+
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll("div.polhem-confirm-dialog")));
+            Assert.Empty(form.Deleted);
         }
 
         [Fact]

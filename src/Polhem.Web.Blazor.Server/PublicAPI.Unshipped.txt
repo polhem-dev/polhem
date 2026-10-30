@@ -18,3 +18,5 @@ Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.FormScopeContext(Polh
 Polhem.Web.Blazor.Server.Controls.Editors.FormScopeContext.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.get -> bool
+Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.set -> void

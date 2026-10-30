@@ -115,6 +115,9 @@ namespace Polhem.Definition.Language
         /// </summary>
         public const string RelatedRecordDenied = "RelatedRecordDenied";
 
+        /// <summary>Key of the question asked before a record is deleted.</summary>
+        public const string DeleteRecordPrompt = "DeleteRecordPrompt";
+
         private PolhemUIText()
         {
         }
@@ -156,6 +159,7 @@ namespace Polhem.Definition.Language
             [Close] = "Close",
             [OpenRelatedRecord] = "Double-click to open this record",
             [RelatedRecordDenied] = "You do not have permission to view {0}.",
+            [DeleteRecordPrompt] = "Delete this record?",
         };
 
         /// <summary>

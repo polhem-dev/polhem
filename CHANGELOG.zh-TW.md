@@ -16,6 +16,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 - Blazor Server 的 `FormPage` 與 Avalonia 的 `FormView` 在唯讀記錄上，使用者雙擊關聯欄位或明細格的關聯儲存格且能讀取關聯表單時，以對話框開啟它指向的資料。
 - Avalonia 的 `FormView` 對使用者可以處理的訊息（必填欄位未填、驗證訊息、無權開啟的資料）改用警告樣式，不再用錯誤樣式；真正的失敗仍用錯誤樣式。
+- Avalonia 的 `ListView` 與 Blazor Server 的 `FormPage` 在刪除記錄前會先確認。將 `ConfirmDelete` 設為 `false` 可關閉。
 
 ## [1.11.0] - 2026-10-28
 
