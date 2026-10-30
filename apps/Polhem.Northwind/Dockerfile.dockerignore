@@ -1,0 +1,28 @@
+# Applies to builds that use apps/Polhem.Northwind/Dockerfile with the repository root as the context.
+
+# Local build output and state.
+**/bin/
+**/obj/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+artifacts/
+local/
+.git/
+
+# Local-only configuration. PolhemJsonRpc.local.props switches the JSON-RPC packages to a source checkout that is
+# not in the context, and .runsettings holds connection strings.
+PolhemJsonRpc.local.props
+.runsettings
+
+# Not part of the demo's build.
+tests/
+samples/
+tools/
+docs/
+maintainers/
+wire-contracts/
+wire-fixtures/
+apps/Polhem.Northwind/Polhem.Northwind.Android/
+apps/Polhem.Northwind/Polhem.Northwind.iOS/
+apps/Polhem.Northwind/Polhem.Northwind.Desktop/

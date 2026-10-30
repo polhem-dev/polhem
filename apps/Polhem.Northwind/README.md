@@ -112,6 +112,14 @@ switches to the other. The WASM head pre-fills the same-origin `/api` endpoint w
 `Northwind:BrowserBundle` names the bundle folder (the `wwwroot` of the publish output); the `Demo` launch profile
 points it at the command above, and the host refuses to start when the folder has no `index.html`.
 
+The same site runs as one container, built from the repository root with [`Dockerfile`](Dockerfile). The database
+lives inside the container and is seeded at startup, so a new container starts from the seed data again:
+
+```bash
+docker build -f apps/Polhem.Northwind/Dockerfile -t polhem-northwind-demo .
+docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/ and /web/
+```
+
 ### Mobile clients (Avalonia iOS / Android)
 
 The same UI also runs on iOS and Android as Avalonia single-view heads, against the same server
