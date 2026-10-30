@@ -16,6 +16,7 @@ using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -49,7 +50,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// after Edit and in <see cref="SingleFormMode.Add"/> after New, so each field's
     /// <see cref="LayoutField.AllowEditModes"/> applies. A viewed record has Back; an edited one has Save and Cancel.
     /// A save that succeeds, Cancel and Back return to the list, which reloads after a save; Cancel discards the
-    /// edits. Delete removes the selected row from the list.
+    /// edits. Delete removes the selected row from the list, after asking the user unless <see cref="ConfirmDelete"/> is off.
     /// </para>
     /// <para>
     /// Save checks the fields marked <see cref="FormField.Required"/> first, through
@@ -89,6 +90,10 @@ namespace Polhem.Web.Blazor.Server.Components
         private Guid? _selectedRowId;
         // The related record open in a dialog over the viewed one.
         private RelationTarget? _relation;
+        // The row the delete question is open for. Captured so the answer acts on the row the user was asked about.
+        private Guid? _pendingDeleteRowId;
+        private ElementReference _cancelDeleteButton;
+        private bool _focusCancelDelete;
         private bool _isViewportCompact;
         private bool _hasLoaded;
         private string? _loadedProgId;
@@ -153,6 +158,15 @@ namespace Polhem.Web.Blazor.Server.Components
         [Parameter]
         public GridEditMode DetailEditMode { get; set; } = GridEditMode.InCell;
 
+        /// <summary>
+        /// Gets or sets whether Delete asks the user before deleting the selected record. Defaults to <c>true</c>.
+        /// </summary>
+        [Parameter]
+        public bool ConfirmDelete { get; set; } = true;
+
+        // The list's commands wait while a call runs or the delete question is open.
+        private bool IsListLocked => _isBusy || _pendingDeleteRowId is not null;
+
         private bool EffectiveIsCompact => IsCompact ?? _isViewportCompact;
 
         private void OnCompactChanged(bool compact) => _isViewportCompact = compact;
@@ -177,6 +191,15 @@ namespace Polhem.Web.Blazor.Server.Components
         }
 
         /// <inheritdoc/>
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!_focusCancelDelete) return;
+            _focusCancelDelete = false;
+            // The safe answer holds the focus, so a stray Enter or Space does not go ahead.
+            await _cancelDeleteButton.FocusAsync().ConfigureAwait(true);
+        }
+
+        /// <inheritdoc/>
         public void Dispose() => DetachForm();
 
         private async Task LoadFormAsync()
@@ -197,6 +220,8 @@ namespace Polhem.Web.Blazor.Server.Components
             _recordMode = SingleFormMode.View;
             _selectedRowId = null;
             _relation = null;
+            // An open question belongs to the previous program; answering it must not delete from the new one.
+            _pendingDeleteRowId = null;
             _isInitializing = true;
 
             if (string.IsNullOrWhiteSpace(ProgId))
@@ -412,7 +437,33 @@ namespace Polhem.Web.Blazor.Server.Components
 
         private async Task OnDeleteAsync()
         {
-            if (_selectedRowId is not { } rowId) return;
+            if (_selectedRowId is not { } rowId || IsListLocked) return;
+            if (ConfirmDelete)
+            {
+                _notice = null;
+                _pendingDeleteRowId = rowId;
+                _focusCancelDelete = true;
+                return;
+            }
+            await DeleteAsync(rowId).ConfigureAwait(true);
+        }
+
+        private async Task ConfirmDeleteAsync()
+        {
+            if (_pendingDeleteRowId is not { } rowId) return;
+            _pendingDeleteRowId = null;
+            await DeleteAsync(rowId).ConfigureAwait(true);
+        }
+
+        private void CancelDelete() => _pendingDeleteRowId = null;
+
+        private void OnConfirmDeleteKeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Escape") CancelDelete();
+        }
+
+        private async Task DeleteAsync(Guid rowId)
+        {
             await RunGuardedAsync(async () =>
             {
                 await Client.Form(ProgId).DeleteAsync(rowId).ConfigureAwait(true);
@@ -423,6 +474,7 @@ namespace Polhem.Web.Blazor.Server.Components
 
         private void ShowRecord(SingleFormMode mode)
         {
+            _pendingDeleteRowId = null;
             _recordMode = mode;
             _isShowingRecord = true;
         }

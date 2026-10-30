@@ -272,6 +272,64 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("Declining the delete question deletes nothing and keeps the list and the selection")]
+        public async Task Delete_Declined_DeletesNothing()
+        {
+            var rowId = Guid.NewGuid();
+            var getListCount = 0;
+            var deleteCount = 0;
+            var connector = new FakeFormApiConnector
+            {
+                GetListHandler = _ =>
+                {
+                    getListCount++;
+                    return new GetListResponse { Table = BuildListTable(rowId, "Beverages") };
+                },
+                DeleteHandler = _ =>
+                {
+                    deleteCount++;
+                    return new DeleteResponse();
+                },
+            };
+            var view = BuildInitializableView(connector);
+            view.ConfirmAnswer = false;
+            await view.InitializeAsync();
+
+            InvokePrivate(view, "OnRowSelected", rowId);
+            await InvokePrivateAsync(view, "OnDeleteClickedAsync");
+
+            Assert.Equal([rowId], view.ConfirmedRowIds);
+            Assert.Equal(0, deleteCount);
+            Assert.Equal(1, getListCount);
+        }
+
+        [Fact]
+        [DisplayName("With ConfirmDelete off, Delete deletes without asking")]
+        public async Task Delete_ConfirmDeleteOff_DeletesWithoutAsking()
+        {
+            var rowId = Guid.NewGuid();
+            Guid deletedRowId = Guid.Empty;
+            var connector = new FakeFormApiConnector
+            {
+                GetListHandler = _ => new GetListResponse { Table = BuildListTable(rowId, "Beverages") },
+                DeleteHandler = id =>
+                {
+                    deletedRowId = id;
+                    return new DeleteResponse();
+                },
+            };
+            var view = BuildInitializableView(connector);
+            view.ConfirmDelete = false;
+            await view.InitializeAsync();
+
+            InvokePrivate(view, "OnRowSelected", rowId);
+            await InvokePrivateAsync(view, "OnDeleteClickedAsync");
+
+            Assert.Empty(view.ConfirmedRowIds);
+            Assert.Equal(rowId, deletedRowId);
+        }
+
+        [Fact]
         [DisplayName("A failed list load raises ErrorOccurred")]
         public async Task ReloadAsync_OnFailure_RaisesErrorOccurred()
         {
@@ -382,6 +440,16 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
         private sealed class TestListView : ListView
         {
+            public bool ConfirmAnswer { get; set; } = true;
+
+            public List<Guid> ConfirmedRowIds { get; } = [];
+
+            protected override Task<bool> ConfirmDeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
+            {
+                ConfirmedRowIds.Add(rowId);
+                return Task.FromResult(ConfirmAnswer);
+            }
+
             protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
                 => Task.FromResult<FormSchema?>(null);
 

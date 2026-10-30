@@ -1,7 +1,10 @@
 using System.Data;
 using Avalonia.Controls;
+using Polhem.Definition;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Permissions;
 
@@ -70,13 +73,17 @@ namespace Polhem.UI.Avalonia.Views
         private async Task OnDeleteClickedAsync()
         {
             var connector = FormConnector;
-            if (connector is null || _selectedRowId == Guid.Empty || _isBusy) return;
+            var rowId = _selectedRowId;
+            if (connector is null || rowId == Guid.Empty || _isBusy) return;
 
+            // Busy while the question is open, so the toolbar cannot start something else behind an overlay.
             _isBusy = true;
+            UpdateToolbarState();
             ClearError();
             try
             {
-                await connector.DeleteAsync(_selectedRowId).ConfigureAwait(true);
+                if (ConfirmDelete && !await ConfirmDeleteAsync(rowId).ConfigureAwait(true)) return;
+                await connector.DeleteAsync(rowId).ConfigureAwait(true);
                 await ReloadAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -89,6 +96,25 @@ namespace Polhem.UI.Avalonia.Views
                 UpdateToolbarState();
             }
         }
+
+        /// <summary>
+        /// Asks the user whether to delete a record, when <see cref="ConfirmDelete"/> is on. A subclass can
+        /// override this to ask in its own words or its own dialog.
+        /// </summary>
+        /// <param name="rowId">The <see cref="SysFields.RowId"/> of the record about to be deleted.</param>
+        /// <param name="cancellationToken">
+        /// A token that closes an open question without deleting. A cancelled call throws
+        /// <see cref="OperationCanceledException"/>.
+        /// </param>
+        /// <returns><c>true</c> to delete the record; <c>false</c> to leave it.</returns>
+        protected virtual Task<bool> ConfirmDeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
+            => ConfirmDialog.ShowAsync(
+                this,
+                UIText.Get(PolhemUIText.Delete),
+                UIText.Get(PolhemUIText.DeleteRecordPrompt),
+                UIText.Get(PolhemUIText.Delete),
+                UIText.Get(PolhemUIText.Cancel),
+                cancellationToken);
 
         private void UpdateToolbarState()
         {

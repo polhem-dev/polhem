@@ -22,7 +22,8 @@ namespace Polhem.UI.Avalonia.Views
     /// record viewing/editing on separate surfaces: <see cref="ListView"/> loads the list
     /// and raises <see cref="ViewRequested"/> / <see cref="EditRequested"/> /
     /// <see cref="AddRequested"/>, leaving the host to swap in the record surface. Delete is
-    /// handled in place (the list stays the active surface). It carries no field form.
+    /// handled in place (the list stays the active surface), after asking the user unless
+    /// <see cref="ConfirmDelete"/> is off. It carries no field form.
     /// </summary>
     /// <remarks>
     /// Like <see cref="FormView"/>, the host typically supplies only <see cref="ProgId"/>;
@@ -44,6 +45,10 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>Identifies the <see cref="FormConnector"/> styled property.</summary>
         public static readonly StyledProperty<IFormApiConnector?> FormConnectorProperty =
             AvaloniaProperty.Register<ListView, IFormApiConnector?>(nameof(FormConnector));
+
+        /// <summary>Identifies the <see cref="ConfirmDelete"/> styled property.</summary>
+        public static readonly StyledProperty<bool> ConfirmDeleteProperty =
+            AvaloniaProperty.Register<ListView, bool>(nameof(ConfirmDelete), defaultValue: true);
 
         private readonly Button _viewButton;
         private readonly Button _newButton;
@@ -175,6 +180,19 @@ namespace Polhem.UI.Avalonia.Views
         {
             get => GetValue(FormConnectorProperty);
             set => SetValue(FormConnectorProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether Delete asks the user before deleting the selected record. Defaults to <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// A styled property, so an application whose lists are created by the shell can turn it off for all of
+        /// them with a style setter on <see cref="ListView"/>.
+        /// </remarks>
+        public bool ConfirmDelete
+        {
+            get => GetValue(ConfirmDeleteProperty);
+            set => SetValue(ConfirmDeleteProperty, value);
         }
 
         /// <summary>

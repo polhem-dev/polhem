@@ -24,19 +24,19 @@
             {
                 @if (Can(PermissionActions.Read))
                 {
-                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnViewAsync">@Text(PolhemUIText.View)</button>
+                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnViewAsync">@Text(PolhemUIText.View)</button>
                 }
                 @if (Can(PermissionActions.Create))
                 {
-                    <button type="button" disabled="@_isBusy" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
+                    <button type="button" disabled="@IsListLocked" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
                 }
                 @if (Can(PermissionActions.Update))
                 {
-                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnEditAsync">@Text(PolhemUIText.Edit)</button>
+                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnEditAsync">@Text(PolhemUIText.Edit)</button>
                 }
                 @if (Can(PermissionActions.Delete))
                 {
-                    <button type="button" disabled="@(_isBusy || _selectedRowId is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
+                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
                 }
             }
             else if (IsEditing)
@@ -86,6 +86,26 @@
                                  DetailEditMode="DetailEditMode"
                                  OpenRelation="OpenRelation" />
         }
+    }
+    @if (_pendingDeleteRowId is not null)
+    {
+        @* Inline positioning keeps the dialog modal without the host's stylesheet, as LookupDialog does. *@
+        <div class="polhem-confirm-dialog"
+             role="alertdialog"
+             aria-modal="true"
+             aria-label="@Text(PolhemUIText.Delete)"
+             style="position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center"
+             @onkeydown="OnConfirmDeleteKeyDown">
+            <div class="polhem-confirm-dialog__backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.4)" @onclick="CancelDelete"></div>
+            <div class="polhem-confirm-dialog__card" style="position:relative;max-width:100%;max-height:100%;overflow:auto">
+                <div class="polhem-confirm-dialog__title">@Text(PolhemUIText.Delete)</div>
+                <div class="polhem-confirm-dialog__message">@Text(PolhemUIText.DeleteRecordPrompt)</div>
+                <div class="polhem-confirm-dialog__buttons">
+                    <button type="button" class="polhem-confirm-dialog__cancel" @ref="_cancelDeleteButton" @onclick="CancelDelete">@Text(PolhemUIText.Cancel)</button>
+                    <button type="button" class="polhem-confirm-dialog__confirm" @onclick="ConfirmDeleteAsync">@Text(PolhemUIText.Delete)</button>
+                </div>
+            </div>
+        </div>
     }
     @if (_relation is { } relation)
     {

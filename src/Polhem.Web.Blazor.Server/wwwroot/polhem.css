@@ -164,6 +164,13 @@
 .polhem-related-record-dialog__loading { color: var(--polhem-text-muted); }
 .polhem-related-record-dialog__notice { color: var(--polhem-warning); padding: 8px 10px; margin: 8px 0; background: var(--polhem-warning-surface); border: 1px solid var(--polhem-warning-border); border-radius: 4px; }
 
+/* Confirmation dialog. */
+.polhem-confirm-dialog__card { background: var(--polhem-surface); border-radius: 6px; padding: 16px; width: 360px; max-width: calc(100vw - 32px); box-sizing: border-box; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.polhem-confirm-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
+.polhem-confirm-dialog__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.polhem-confirm-dialog__buttons button { padding: 4px 14px; }
+.polhem-confirm-dialog__confirm { color: var(--polhem-danger); }
+
 @media (max-width: 599px) {
     .polhem-dynamic-grid { display: block; overflow-x: auto; }
     .polhem-grid { overflow-x: auto; }

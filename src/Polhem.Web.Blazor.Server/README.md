@@ -56,7 +56,8 @@ decides whether `FormPage` localizes its definitions; see below.
 
 - `FormPage` -- the list and the record of one program, one at a time, as the Avalonia `ListView` and `FormView`:
   the list has View, New, Edit and Delete (a click selects a row, a double-click views it), a viewed record has Back
-  and an edited one Save and Cancel; a successful save returns to the reloaded list. It
+  and an edited one Save and Cancel; a successful save returns to the reloaded list. Delete asks first unless the
+  `ConfirmDelete` parameter is `false`. It
   loads its definitions through a `FormDefinitionLoader` by default, so captions follow the circuit's UI culture
   and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
   Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
