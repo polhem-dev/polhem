@@ -41,6 +41,15 @@ internal sealed partial class Program
                 ConfigureOptions = options =>
                 {
                     options.DefaultEndpoint = ResolveDefaultEndpoint(args, options.DefaultEndpoint);
+                    // demo-tw is left out of the hint: its captions render as empty boxes here (see above).
+                    options.SignInHint = "Use demo / demo, or demo-ro / demo for the read-only account.";
+                    if (IsDemoSite(args))
+                    {
+                        // The public site leaves the account to the visitor, so the read-only one is a real
+                        // choice rather than something nobody tries.
+                        options.DefaultUserId = string.Empty;
+                        options.DefaultPassword = string.Empty;
+                    }
                     options.PreferenceStorage = storage;
                     options.AllowLanguageSwitch = false;
                 },
@@ -58,18 +67,21 @@ internal sealed partial class Program
     /// The demo site (<c>Polhem.Northwind.Blazor</c> in its Demo environment) serves this bundle under <c>/web/</c>
     /// and the JSON-RPC endpoint at <c>/api</c> on the same origin. The development server serves the bundle at the
     /// root and the API runs on another port, so every other address keeps <paramref name="fallback"/>.
-    /// IMPORTANT: the path is the demo host's <c>NorthwindDemo.BrowserPath</c>. Change both together.
     /// A value the visitor saved on the connection screen still wins over either.
     /// </remarks>
     private static string ResolveDefaultEndpoint(string[] args, string fallback)
-    {
-        if (args.Length == 0 || !Uri.TryCreate(args[0], UriKind.Absolute, out var page)
-            || !page.AbsolutePath.StartsWith("/web/", StringComparison.Ordinal))
-        {
-            return fallback;
-        }
-        return new Uri(page, "/api").AbsoluteUri;
-    }
+        => IsDemoSite(args) ? new Uri(new Uri(args[0]), "/api").AbsoluteUri : fallback;
+
+    /// <summary>
+    /// Whether the page was served by the demo site, which serves this bundle under <c>/web/</c>.
+    /// </summary>
+    /// <param name="args">The arguments <c>wwwroot/main.js</c> passes; the first is the page address.</param>
+    /// <remarks>
+    /// IMPORTANT: the path is the demo host's <c>NorthwindDemo.BrowserPath</c>. Change both together.
+    /// </remarks>
+    private static bool IsDemoSite(string[] args)
+        => args.Length > 0 && Uri.TryCreate(args[0], UriKind.Absolute, out var page)
+            && page.AbsolutePath.StartsWith("/web/", StringComparison.OrdinalIgnoreCase);
 
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<NorthwindApp>();

@@ -112,6 +112,12 @@ switches to the other. The WASM head pre-fills the same-origin `/api` endpoint w
 `Northwind:BrowserBundle` names the bundle folder (the `wwwroot` of the publish output); the `Demo` launch profile
 points it at the command above, and the host refuses to start when the folder has no `index.html`.
 
+Because every account's password is public there, the Demo environment also behaves like a public site: no account
+may be a deployment administrator (the host refuses to start otherwise), failed sign-ins never lock an account,
+error responses carry the fixed messages rather than exception text, `/api` and the opening of a Blazor connection are
+rate-limited per client address (read from the `X-Forwarded-For` entry the hosting proxy appends), and `/api` refuses
+batches and bodies over 1 MB. `Demo/NorthwindDemo.cs` has the details.
+
 The same site runs as one container, built from the repository root with [`Dockerfile`](Dockerfile). The database
 lives inside the container and is seeded at startup, so a new container starts from the seed data again:
 

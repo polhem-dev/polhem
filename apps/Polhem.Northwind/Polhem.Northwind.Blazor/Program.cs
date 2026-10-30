@@ -38,7 +38,8 @@ else
 builder.Services.AddPolhemShell(shell =>
 {
     shell.AppTitle = "Polhem.Northwind";
-    shell.SignInHint = "Use demo / demo.";
+    // demo-tw is left out: this head signs every account in under the language the sign-in switch shows.
+    shell.SignInHint = "Use demo / demo, or demo-ro / demo for the read-only account.";
     shell.DefaultCompanyId = NorthwindCredentials.CompanyId;
 });
 
