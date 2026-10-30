@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -40,8 +41,32 @@ public static class NorthwindDemo
 
     private const string BundleKey = "Northwind.BrowserBundle";
 
+    private const string MasterKeyVariable = "POLHEM_MASTER_KEY";
+
+    // An AES-CBC-HMAC combined key: 32 bytes of AES key and 32 of HMAC key.
+    private const int MasterKeyLength = 64;
+
     // JSON-RPC bodies are a form's data set at most, compressed; anything larger is not this site's traffic.
     private const long MaxApiRequestBodySize = 1024 * 1024;
+
+    /// <summary>
+    /// Gives the process a random master key when none is configured.
+    /// </summary>
+    /// <remarks>
+    /// IMPORTANT: call it before <c>AddNorthwindBackend</c>, which otherwise sets the demo key published in
+    /// <c>NorthwindCredentials.DemoMasterKey</c>. With that key and an access token, anyone could derive a session's
+    /// payload key. The key only has to stay the same while sessions outlive a restart, and on the hosted site they do
+    /// not: the database is created again with every container (see <c>maintainers/northwind-demo-hosting.md</c>).
+    /// A key supplied in the environment is kept.
+    /// </remarks>
+    public static void EnsureMasterKey()
+    {
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(MasterKeyVariable)))
+        {
+            Environment.SetEnvironmentVariable(
+                MasterKeyVariable, Convert.ToBase64String(RandomNumberGenerator.GetBytes(MasterKeyLength)));
+        }
+    }
 
     /// <summary>
     /// Registers the JSON-RPC server and the published WASM bundle.

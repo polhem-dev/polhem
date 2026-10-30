@@ -14,15 +14,21 @@ permissions: {}
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
     - name: Trigger the Render deploy hook
       env:
         DEPLOY_HOOK: ${{ secrets.RENDER_NORTHWIND_DEPLOY_HOOK }}
       run: |
+        # The hook deploys the service's branch whatever branch this run started from, so only main may run it.
+        if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+          echo "::error::Run this workflow from main: Render deploys main regardless of the branch chosen here."
+          exit 1
+        fi
         if [ -z "$DEPLOY_HOOK" ]; then
           echo "::error::The RENDER_NORTHWIND_DEPLOY_HOOK secret is not set."
           exit 1
         fi
-        curl --fail --silent --show-error --output /dev/null -X POST "$DEPLOY_HOOK"
+        curl --fail --silent --show-error --max-time 60 --output /dev/null -X POST "$DEPLOY_HOOK"
         echo "Render accepted the deploy. The build and the rollout show on the service's Events page."

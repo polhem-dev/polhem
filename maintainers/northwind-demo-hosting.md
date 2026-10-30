@@ -21,10 +21,12 @@ recreated.
 | Instance type | Free | |
 | Health check path | `/` | |
 | Auto-Deploy | Off | `main` changes many times a day and each image build spends the free workspace's build minutes |
-| Environment variables | none | the image sets `ASPNETCORE_ENVIRONMENT`, reads `PORT` from Render, and creates a random `POLHEM_MASTER_KEY` when none is set |
+| Environment variables | none | the image sets `ASPNETCORE_ENVIRONMENT` and reads `PORT` from Render; the Demo environment creates a random `POLHEM_MASTER_KEY` at start when none is set |
 
 No disk is attached. Render's free file system is ephemeral, which is what resets the demo: every new container
-seeds `northwind.db` again.
+seeds `northwind.db` again. It is also why a master key that changes on every start costs nothing: the sessions it
+protects go with the database. Attaching a disk would keep the sessions and lose their key, and visitors would have to
+sign in again after every restart.
 
 ## Deploying
 
