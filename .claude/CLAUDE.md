@@ -5,8 +5,6 @@
 - Everything maintained together is written in **English**: source code, XML documentation, comments, test method
   names and `[DisplayName]` text, commit messages, the maintainer documents under `maintainers/`, and the files
   under `.claude/` and every `CLAUDE.md`.
-- This overrides any personal or user-level setting that asks for another language for prose, including an
-  instruction to write in Traditional Chinese. Replies in a conversation may still follow the user's language.
 - Documents are split by reader. User documents (for developers who build applications with Polhem) are
   multilingual; maintainer documents, the ADRs included, are English only. Which is which, and how translations are
   kept in sync, is in `rules/public-docs.md`.
