@@ -20,7 +20,7 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 
 | 元件 | 說明 |
 |---|---|
-| `ListView` | 表單的唯讀主檔清單；發出檢視 / 編輯 / 新增請求，由 host 開啟單筆畫面。Delete 會先以對話框詢問，瀏覽器與行動裝置上也適用；可將 `ConfirmDelete` 設為 `false`（以樣式 setter 也能套用到外殼建立的清單）或覆寫 `ConfirmDeleteAsync` 來改變。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 schema 與連接器。 |
+| `ListView` | 表單的唯讀主檔清單，以分頁按鈕逐頁顯示；發出檢視 / 編輯 / 新增請求，由 host 開啟單筆畫面。Delete 會先以對話框詢問，瀏覽器與行動裝置上也適用；可將 `ConfirmDelete` 設為 `false`（以樣式 setter 也能套用到外殼建立的清單）或覆寫 `ConfirmDeleteAsync` 來改變。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 schema 與連接器。 |
 | `FormView` | 頂層容器：列表（`GridControl`）+ 主檔／明細表單 + New / Save / Delete 工具列。透過 `FormLayoutPresenter` 渲染記錄，並綁上載入的資料；`DetailEditMode` 決定明細編輯模型。host 只設 `ProgId` 時，依[畫面如何解析服務](#畫面如何解析服務)所述解析 `Schema` / `Layout` / `FormConnector`。檢視中的記錄雙擊關聯欄位或明細格的關聯儲存格時，若使用者能讀取關聯表單，會在對話框中以唯讀方式開啟該欄位指向的資料（`CreateRelatedView` / `ShowRelatedViewAsync` 可替換畫面與對話框）。 |
 | `FormLayoutPresenter` | 只依 `FormLayout` 渲染表單本體：主檔 sections（每個 `LayoutField` 一個 field editor，依 `ColumnCount` 與跨欄跨列排列），其後是明細（`FormLayout.Details`）。不需要資料、schema 或後端；見[預覽版面](#預覽版面)。 |
 | `GridControl` | `ContentControl`，內含 `DataGrid`（經 `InnerGrid` 公開），由 `LayoutGrid` 驅動；實作 `IBindTableControl` / `IUIControl`。cell 顯示走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`（見 ADR-020）。 |

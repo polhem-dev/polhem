@@ -13,6 +13,7 @@ using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Views;
+using Polhem.UI.Core.Connectors;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {
@@ -74,6 +75,108 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.NotNull(method);
             return (T)method!.Invoke(view, args)!;
         }
+
+        [Fact]
+        [DisplayName("The first load asks for the first page and the row count")]
+        public async Task InitializeAsync_RequestsFirstPageWithCount()
+        {
+            var connector = PagedConnector(totalRows: 120);
+
+            await BuildInitializableView(connector).InitializeAsync();
+
+            var request = Assert.Single(connector.Requests);
+            Assert.Equal(1, request.Page);
+            Assert.Equal(ListPagingState.DefaultPageSize, request.PageSize);
+            Assert.True(request.IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("Moving to another page does not count the rows again")]
+        public async Task LoadPage_AfterFirstLoad_DoesNotCountAgain()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            Assert.Equal(2, connector.Requests[^1].Page);
+            Assert.False(connector.Requests[^1].IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("ReloadAsync stays on the page on screen and counts the rows again")]
+        public async Task ReloadAsync_OnLaterPage_KeepsPageAndCounts()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            await view.ReloadAsync();
+
+            Assert.Equal(2, connector.Requests[^1].Page);
+            Assert.True(connector.Requests[^1].IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("A page that came back empty loads the last page that still has rows")]
+        public async Task ReloadAsync_PageEmptied_StepsBack()
+        {
+            var connector = PagedConnector(totalRows: 51);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            connector.PagedHandler = PagedResponder(totalRows: 50);
+            await view.ReloadAsync();
+
+            Assert.Equal(1, connector.Requests[^1].Page);
+        }
+
+        [Fact]
+        [DisplayName("A failed page request leaves the view on the page on screen")]
+        public async Task LoadPage_Failure_StaysOnPage()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            connector.PagedHandler = _ => throw new InvalidOperationException("boom");
+
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            connector.PagedHandler = PagedResponder(totalRows: 120);
+            await view.ReloadAsync();
+            Assert.Equal(1, connector.Requests[^1].Page);
+        }
+
+        private static FakeFormApiConnector PagedConnector(int totalRows)
+            => new() { PagedHandler = PagedResponder(totalRows) };
+
+        private static Func<Polhem.Definition.Paging.PagingOptions, GetListResponse> PagedResponder(int totalRows)
+            => options =>
+            {
+                var skipped = (options.Page - 1) * options.PageSize;
+                var table = new DataTable(TestProgId);
+                table.Columns.Add(SysFields.RowId, typeof(Guid));
+                table.Columns.Add("sys_id", typeof(string));
+                table.Columns.Add("sys_name", typeof(string));
+                for (var i = skipped; i < Math.Min(skipped + options.PageSize, totalRows); i++)
+                {
+                    table.Rows.Add(Guid.NewGuid(), $"C{i}", $"Name {i}");
+                }
+                return new GetListResponse
+                {
+                    Table = table,
+                    Paging = new Polhem.Definition.Paging.PagingInfo
+                    {
+                        Page = options.Page,
+                        PageSize = options.PageSize,
+                        TotalCount = options.IncludeTotalCount ? totalRows : null,
+                        HasMore = skipped + table.Rows.Count < totalRows,
+                    },
+                };
+            };
 
         [Fact]
         [DisplayName("ListView is a subclass of UserControl")]
@@ -466,6 +569,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             public FakeFormApiConnector() : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), TestProgId) { }
 
             public Func<string, GetListResponse>? GetListHandler { get; set; }
+            public Func<Polhem.Definition.Paging.PagingOptions, GetListResponse>? PagedHandler { get; set; }
+            public List<Polhem.Definition.Paging.PagingOptions> Requests { get; } = [];
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }
 
             public override Task<GetListResponse> GetListAsync(
@@ -473,7 +578,12 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
                 Polhem.Definition.Filters.FilterNode? filter = null,
                 Polhem.Definition.Sorting.SortFieldCollection? sortFields = null,
                 Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
-                => Task.FromResult((GetListHandler ?? (_ => new GetListResponse()))(selectFields));
+            {
+                if (paging is not null) { Requests.Add(paging); }
+                return Task.FromResult(PagedHandler is not null && paging is not null
+                    ? PagedHandler(paging)
+                    : (GetListHandler ?? (_ => new GetListResponse()))(selectFields));
+            }
 
             public override Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
                 => Task.FromResult((DeleteHandler ?? (_ => new DeleteResponse()))(rowId));

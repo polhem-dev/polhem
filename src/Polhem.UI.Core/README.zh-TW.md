@@ -94,5 +94,5 @@
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`
-- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`、`ListSelectFields`
+- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`、`ListSelectFields`、`ListPagingState`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

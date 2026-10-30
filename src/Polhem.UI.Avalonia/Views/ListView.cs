@@ -11,6 +11,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Definitions;
 using Polhem.Definition.Language;
 
@@ -59,6 +60,9 @@ namespace Polhem.UI.Avalonia.Views
         private readonly TextBlock _emptyListLabel;
         private readonly GridControl _grid;
         private readonly ListBox _cardList;
+        private readonly ListPagerBar _pager;
+        private readonly ListPagingState _paging = new();
+        private bool _isLoading;
         private Guid _selectedRowId;
         private bool _isBusy;
         private bool _initialized;
@@ -144,15 +148,25 @@ namespace Polhem.UI.Avalonia.Views
             contentArea.Children.Add(_grid);
             contentArea.Children.Add(_cardList);
 
+            _pager = new ListPagerBar { IsVisible = false };
+            _pager.PageRequested += (_, page) => _ = LoadPageAsync(page, CancellationToken.None);
+            _pager.PageSizeRequested += (_, pageSize) =>
+            {
+                _paging.SetPageSize(pageSize);
+                _ = LoadPageAsync(_paging.Page, CancellationToken.None);
+            };
+
             var host = new DockPanel { LastChildFill = true };
             DockPanel.SetDock(_errorLabel, Dock.Top);
             DockPanel.SetDock(_loadingLabel, Dock.Top);
             DockPanel.SetDock(toolbar, Dock.Top);
             DockPanel.SetDock(_emptyListLabel, Dock.Top);
+            DockPanel.SetDock(_pager, Dock.Bottom);
             host.Children.Add(_errorLabel);
             host.Children.Add(_loadingLabel);
             host.Children.Add(toolbar);
             host.Children.Add(_emptyListLabel);
+            host.Children.Add(_pager);
             host.Children.Add(contentArea);
 
             Content = host;
@@ -244,24 +258,49 @@ namespace Polhem.UI.Avalonia.Views
             }
         }
 
-        /// <summary>Reloads the list from the backend, clearing any prior selection.</summary>
+        /// <summary>
+        /// Reloads the page on screen from the backend, clearing any prior selection. The row count is read again,
+        /// since the data may have changed.
+        /// </summary>
         /// <param name="cancellationToken">
         /// A token that cancels the load. A cancelled load throws <see cref="OperationCanceledException"/>
         /// to the caller instead of being reported on the view.
         /// </param>
-        public async Task ReloadAsync(CancellationToken cancellationToken = default)
+        public Task ReloadAsync(CancellationToken cancellationToken = default)
+        {
+            _paging.InvalidateTotalCount();
+            return LoadPageAsync(_paging.Page, cancellationToken);
+        }
+
+        private async Task LoadPageAsync(int page, CancellationToken cancellationToken)
         {
             var connector = FormConnector;
             if (connector is null) return;
 
+            var request = _paging.BeginRequest();
+            _isLoading = true;
+            UpdateToolbarState();
             try
             {
-                var response = await connector.GetListAsync(ComputeSelectFields(), cancellationToken: cancellationToken)
+                var response = await connector.GetListAsync(ComputeSelectFields(), paging: _paging.CreateOptions(page),
+                        cancellationToken: cancellationToken)
                     .ConfigureAwait(true);
+                if (!_paging.IsCurrent(request)) return;
+
+                var rowCount = response.Table?.Rows.Count ?? 0;
+                _paging.Apply(page, response.Paging);
+                if (_paging.TryStepBackFromEmptyPage(rowCount))
+                {
+                    await LoadPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
+                    return;
+                }
+
                 _grid.DataTable = response.Table;
                 _cardList.ItemsSource = response.Table?.DefaultView;
-                _hasData = response.Table is not null && response.Table.Rows.Count > 0;
+                _hasData = rowCount > 0;
                 _emptyListLabel.IsVisible = !_hasData;
+                _pager.Update(_paging);
+                _pager.IsVisible = _hasData && response.Paging is not null;
                 UpdateContentVisibility();
                 _selectedRowId = Guid.Empty;
             }
@@ -275,6 +314,8 @@ namespace Polhem.UI.Avalonia.Views
             }
             finally
             {
+                if (_paging.IsCurrent(request))
+                    _isLoading = false;
                 UpdateToolbarState();
             }
         }
