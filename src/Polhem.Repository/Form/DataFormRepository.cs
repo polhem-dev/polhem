@@ -158,9 +158,7 @@ namespace Polhem.Repository.Form
             if (sortFields == null || sortFields.Count == 0) { return DefaultSortForPaging(schema); }
 
             var fields = schema.MasterTable?.Fields;
-            var uniqueField = fields?.Contains(SysFields.No) == true ? SysFields.No
-                : fields?.Contains(SysFields.RowId) == true ? SysFields.RowId
-                : null;
+            var uniqueField = new[] { SysFields.No, SysFields.RowId }.FirstOrDefault(f => fields?.Contains(f) == true);
             if (uniqueField == null || sortFields.Any(f => StringUtilities.IsEquals(f.FieldName, uniqueField)))
             {
                 return sortFields;
