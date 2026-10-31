@@ -58,7 +58,7 @@ Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with o
 | `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
 | `demo-ro` | `demo` | `en-US` | the same data, but read-only (New, Save and Delete are hidden), and products and audit rules may not be opened |
 
-Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders, categories, suppliers, customers, shippers, departments and employees, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
+Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. The [Blazor Server head](#web-client-blazor-server) is the exception: its screens follow the sign-in screen's language switch. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders, categories, suppliers, customers, shippers, departments and employees, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
 
 ### Web client (Avalonia WASM)
 
@@ -94,9 +94,12 @@ Avalonia heads:
   access-token checks, which suits a site whose users are all trusted; the form permissions above still apply to the
   signed-in user. To call a running `Polhem.Northwind.Server` over JSON-RPC instead, start it and run the head with
   `--Northwind:Mode=Remote`; the endpoint and the API key are in `appsettings.json`.
-- **The language is chosen before sign-in.** A Blazor Server connection keeps the culture it started with, so the
-  sign-in screen's switch stores it in a cookie and reloads the page; `demo-tw` signs in under whichever language the
-  switch shows.
+- **The language is chosen before sign-in, not taken from the account.** A Blazor Server connection keeps the culture
+  it started with, and the sign-in lives in that connection, so applying the account's culture would mean reloading the
+  page and signing out. The sign-in screen's switch therefore stores the language in a cookie and reloads the page,
+  while nobody is signed in. Until someone uses it, the browser's language decides. Every account then sees the
+  language the switch shows: `demo-tw` signed in under English sees English screens, with only its Chinese user name
+  from the data, and `demo` signed in under 繁體中文 sees Traditional Chinese ones.
 - **The sign-in lives in the browser tab's connection.** Reloading the page or opening a new tab signs in again.
 - The shell (sign-in, the menu from `MenuSettings.xml`, one routed page for every form) is this head's own code;
   the forms are the framework's `FormPage`.
@@ -226,7 +229,7 @@ Signing in answers two questions, and the framework asks them separately. `Login
 - **Authentication** is the framework's own `st_user` check. The seeder writes the `demo` and `demo-tw` accounts on first start (and adds either one to an existing `northwind.db` that lacks it), with the password hashed through `PasswordHasher` at seed time (not a literal hash, which would silently stop matching the first time the hashing parameters change). Comparing an account and a password is the same operation in every deployment, so it belongs to the framework.
 - **Company entry** is the framework's own `EnterCompany`. The seeder writes the matching `st_company` and `st_user_company` rows, and the call then validates the company exists and is enabled, checks the user's access, and snapshots roles and the employee context onto the session.
 
-That `st_user` row also carries `time_zone` and `culture`, so the session takes its zone, and the client its language, from the **user** rather than from the server or a deployment default.
+That `st_user` row also carries `time_zone` and `culture`, so the session takes its zone, and the client its language, from the **user** rather than from the server or a deployment default. The Blazor Server head's screens are the one exception, [described with that head](#web-client-blazor-server).
 
 > **A single company is not a reason to skip the second step.** An earlier version of this demo took that shortcut — it stamped `SessionInfo.CompanyId` in an overridden `Login` instead of calling `EnterCompany` — and it cost more than it saved, in two ways that were both silent. Company-keyed lookups such as the per-form audit rules below resolve the company through `st_company`, so with no row there they returned "no rules" and every rule was ignored. And `EnterCompany` persists the company onto the `st_session` seed, which an application cannot do for itself; without it the company survived only in the cache, so a server restart handed the client back a session that authenticated but could not open a single company-scoped form.
 
@@ -286,11 +289,12 @@ The status names work the same way: the `status` field keeps English `ListItems`
 the `OrderStatus` enum (`LangEnumName`), which only the zh-TW file defines, so English falls back to
 the inline items. Sign in as `demo-tw` to see them: the session's culture comes from that account's `st_user` row.
 
-Which language a client shows is the signed-in **account's** culture: `Login` returns the
+Which language an Avalonia client shows is the signed-in **account's** culture: `Login` returns the
 `st_user.culture` value, and `ClientInfo.ApplyLoginResult` makes it the client's UI culture. The
 seeded `demo` account is `en-US` (`NorthwindCredentials.Culture`), so it opens in English; the
 seeded `demo-tw` account is `zh-TW` (`NorthwindCredentials.ZhTwCulture`). To see the zh-TW captions
-and the tenant's caption overrides below, sign out and sign in as `demo-tw`.
+and the tenant's caption overrides below, sign out and sign in as `demo-tw`. The Blazor Server head
+[does not apply the account's culture](#web-client-blazor-server); there, pick 繁體中文 on the sign-in screen.
 
 On top of that sits the customization layer. The demo company names a customization code
 (`NorthwindCredentials.CustomizeId`), the session picks it up at sign-in, and every definition
