@@ -106,7 +106,61 @@ namespace Polhem.UI.Core.UnitTests.Connectors
             Assert.Equal("sys_id", state.SortFieldName);
             Assert.Equal(SortDirection.Asc, state.SortDirection);
             Assert.Equal(1, state.Page);
+            Assert.Null(state.TotalCount);
+            Assert.True(state.CreateOptions(1).IncludeTotalCount);
+        }
+
+        [Theory]
+        [InlineData(2)]
+        [InlineData(1)]
+        [DisplayName("A next page beyond the known count drops the count")]
+        public void Apply_MoreRowsThanCount_DropsCount(int page)
+        {
+            var state = new ListPagingState();
+            state.Apply(1, new PagingInfo { TotalCount = 8 });
+
+            state.Apply(page, new PagingInfo { HasMore = true });
+
+            Assert.Null(state.TotalPages);
+            Assert.True(state.CreateOptions(page + 1).IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("A last page before the known count drops the count")]
+        public void Apply_FewerRowsThanCount_DropsCount()
+        {
+            var state = new ListPagingState();
+            state.Apply(1, new PagingInfo { TotalCount = 120, HasMore = true });
+
+            state.Apply(2, new PagingInfo { HasMore = false });
+
+            Assert.Null(state.TotalCount);
+        }
+
+        [Theory]
+        [InlineData(2, true)]
+        [InlineData(3, false)]
+        [DisplayName("HasMore that agrees with the known count keeps the count")]
+        public void Apply_AgreesWithCount_KeepsCount(int page, bool hasMore)
+        {
+            var state = new ListPagingState();
+            state.Apply(1, new PagingInfo { TotalCount = 120, HasMore = true });
+
+            state.Apply(page, new PagingInfo { HasMore = hasMore });
+
             Assert.Equal(120, state.TotalCount);
+        }
+
+        [Fact]
+        [DisplayName("A count in the response is taken as it is")]
+        public void Apply_ResponseWithCount_UsesIt()
+        {
+            var state = new ListPagingState();
+            state.Apply(1, new PagingInfo { TotalCount = 8 });
+
+            state.Apply(1, new PagingInfo { TotalCount = 128, HasMore = true });
+
+            Assert.Equal(128, state.TotalCount);
         }
 
         [Fact]

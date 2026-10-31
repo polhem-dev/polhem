@@ -59,8 +59,8 @@ namespace Polhem.UI.Core.Connectors
             => SortFieldName is null ? null : [new SortField(SortFieldName, SortDirection)];
 
         /// <summary>
-        /// Moves a field through ascending, descending and back to the server's default order, and returns to the
-        /// first page. Another field starts at ascending.
+        /// Moves a field through ascending, descending and back to the server's default order, returns to the first
+        /// page, and forgets the row count, so the request reads it again. Another field starts at ascending.
         /// </summary>
         /// <param name="fieldName">The field the user chose.</param>
         public void ToggleSort(string fieldName)
@@ -80,6 +80,7 @@ namespace Polhem.UI.Core.Connectors
                 SortDirection = SortDirection.Asc;
             }
             Page = 1;
+            TotalCount = null;
         }
 
         /// <summary>Starts a request and returns the id to pass to <see cref="IsCurrent"/> when it completes.</summary>
@@ -96,7 +97,15 @@ namespace Polhem.UI.Core.Connectors
         {
             Page = page;
             HasMore = paging?.HasMore ?? false;
-            TotalCount = paging?.TotalCount ?? TotalCount;
+            TotalCount = paging?.TotalCount ?? (ContradictsKnownCount(page, HasMore) ? null : TotalCount);
+        }
+
+        // The count is read once, so rows other users add or delete later can make it wrong. `HasMore` is always current,
+        // and a count it contradicts is dropped so that the next request reads it again.
+        private bool ContradictsKnownCount(int page, bool hasMore)
+        {
+            if (TotalCount is not { } total) { return false; }
+            return hasMore == ((long)page * PageSize >= total);
         }
 
         /// <summary>Changes the rows per page and returns to the first page.</summary>
