@@ -20,6 +20,7 @@ namespace Polhem.Repository.UnitTests
         private const string GroupColumn = "group_no";
 
         private static readonly bool[] s_totalCountModes = [false, true];
+        private static readonly int[] s_sortGroups = [2, 1, 3, 1, 2, 3, 1, 2];
 
         private readonly SharedDbFixture _fx;
 
@@ -131,6 +132,66 @@ namespace Polhem.Repository.UnitTests
         [DisplayName("Oracle: a page beyond the computable offset returns the columns and no rows")]
         public void GetList_Oracle_PageBeyondOffset_ReturnsNoRows() => RunBeyondOffset(DatabaseType.Oracle);
 
+        [DbTheory(DatabaseType.SQLServer)]
+        [InlineData(SortDirection.Asc)]
+        [InlineData(SortDirection.Desc)]
+        [DisplayName("SQL Server: pages read in a sort join into the fully sorted rows, in order")]
+        public void GetList_SqlServer_SortedPages_MatchSortedRows(SortDirection direction)
+            => RunSortedWalk(DatabaseType.SQLServer, direction);
+
+        [DbTheory(DatabaseType.SQLite)]
+        [InlineData(SortDirection.Asc)]
+        [InlineData(SortDirection.Desc)]
+        [DisplayName("SQLite: pages read in a sort join into the fully sorted rows, in order")]
+        public void GetList_Sqlite_SortedPages_MatchSortedRows(SortDirection direction)
+            => RunSortedWalk(DatabaseType.SQLite, direction);
+
+        [DbTheory(DatabaseType.PostgreSQL)]
+        [InlineData(SortDirection.Asc)]
+        [InlineData(SortDirection.Desc)]
+        [DisplayName("PostgreSQL: pages read in a sort join into the fully sorted rows, in order")]
+        public void GetList_PostgreSql_SortedPages_MatchSortedRows(SortDirection direction)
+            => RunSortedWalk(DatabaseType.PostgreSQL, direction);
+
+        [DbTheory(DatabaseType.MySQL)]
+        [InlineData(SortDirection.Asc)]
+        [InlineData(SortDirection.Desc)]
+        [DisplayName("MySQL: pages read in a sort join into the fully sorted rows, in order")]
+        public void GetList_MySql_SortedPages_MatchSortedRows(SortDirection direction)
+            => RunSortedWalk(DatabaseType.MySQL, direction);
+
+        [DbTheory(DatabaseType.Oracle)]
+        [InlineData(SortDirection.Asc)]
+        [InlineData(SortDirection.Desc)]
+        [DisplayName("Oracle: pages read in a sort join into the fully sorted rows, in order")]
+        public void GetList_Oracle_SortedPages_MatchSortedRows(SortDirection direction)
+            => RunSortedWalk(DatabaseType.Oracle, direction);
+
+        private void RunSortedWalk(DatabaseType databaseType, SortDirection direction)
+            => WithForm(databaseType, form =>
+            {
+                // Groups repeat and are inserted out of order, so only the sort and its `sys_no` tiebreak fix the rows.
+                var inserted = s_sortGroups.Select(group => (Group: group, RowId: Insert(form, group))).ToList();
+                var groupOrder = direction == SortDirection.Asc
+                    ? inserted.OrderBy(row => row.Group)
+                    : inserted.OrderByDescending(row => row.Group);
+                // `OrderBy` is stable, so rows that tie stay in insertion order, which is `sys_no` ascending.
+                var expected = groupOrder.Select(row => row.RowId).ToList();
+                SortFieldCollection sort = [new SortField(GroupColumn, direction)];
+                var seen = new List<string>();
+
+                for (var page = 1; ; page++)
+                {
+                    var result = form.Repository.GetList(
+                        string.Empty, null, sort, new PagingOptions { Page = page, PageSize = 3 });
+                    seen.AddRange(RowIds(result.Table!));
+                    if (!result.Paging!.HasMore) { break; }
+                    Assert.True(page < s_sortGroups.Length, "HasMore never turned false.");
+                }
+
+                Assert.Equal(expected, seen);
+            });
+
         private void RunWalk(DatabaseType databaseType)
             => WithForm(databaseType, form =>
             {
@@ -142,8 +203,7 @@ namespace Polhem.Repository.UnitTests
                 {
                     var result = form.Repository.GetList(
                         string.Empty, null, sort, new PagingOptions { Page = page, PageSize = 2 });
-                    seen.AddRange(result.Table!.Rows.Cast<DataRow>()
-                        .Select(row => row[SysFields.RowId].ToString()!.ToUpperInvariant()));
+                    seen.AddRange(RowIds(result.Table!));
                     Assert.Equal(page < 3, result.Paging!.HasMore);
                 }
 
@@ -170,6 +230,9 @@ namespace Polhem.Repository.UnitTests
                     Assert.False(result.Paging!.HasMore);
                 }
             });
+
+        private static IEnumerable<string> RowIds(DataTable table)
+            => table.Rows.Cast<DataRow>().Select(row => row[SysFields.RowId].ToString()!.ToUpperInvariant());
 
         private static FormSchema Schema(params string[] uniqueFields)
         {
@@ -204,13 +267,13 @@ namespace Polhem.Repository.UnitTests
             }
         }
 
-        private static string Insert(TransientForm form)
+        private static string Insert(TransientForm form, int group = 1)
         {
             var rowId = Guid.NewGuid();
             form.DbAccess.ExecuteNonQuery(
                 $"INSERT INTO {form.Quote(form.Schema.ProgId)} ({form.Quote(SysFields.RowId)}, {form.Quote(GroupColumn)}) " +
                 "VALUES ({0}, {1})",
-                rowId, 1);
+                rowId, group);
             return rowId.ToString().ToUpperInvariant();
         }
     }
