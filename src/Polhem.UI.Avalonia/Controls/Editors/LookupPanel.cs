@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -35,7 +36,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         private readonly GridControl _grid;
         private readonly Button _okButton;
         private readonly TextBlock _errorLabel;
+        private readonly TextBlock _truncationLabel;
         private IFormApiConnector? _connector;
+        private int _requestId;
 
         /// <summary>
         /// Raised when a row is committed (OK button or row double-click).
@@ -78,6 +81,13 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 TextWrapping = TextWrapping.Wrap,
             };
 
+            _truncationLabel = new TextBlock
+            {
+                IsVisible = false,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 12),
+            };
+
             var searchRow = new DockPanel { LastChildFill = true };
             DockPanel.SetDock(searchButton, Dock.Right);
             searchButton.Margin = new Thickness(8, 0, 0, 0);
@@ -103,9 +113,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             var host = new DockPanel { LastChildFill = true, Margin = new Thickness(16) };
             DockPanel.SetDock(searchRow, Dock.Top);
             DockPanel.SetDock(_errorLabel, Dock.Top);
+            DockPanel.SetDock(_truncationLabel, Dock.Top);
             DockPanel.SetDock(buttons, Dock.Bottom);
             host.Children.Add(searchRow);
             host.Children.Add(_errorLabel);
+            host.Children.Add(_truncationLabel);
             host.Children.Add(buttons);
             host.Children.Add(_grid);
             Content = host;
@@ -115,6 +127,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// Gets the inner grid for host-level tweaks and tests.
         /// </summary>
         public GridControl Grid => _grid;
+
+        /// <summary>
+        /// Gets the notice shown when the server has more candidates than the panel lists, or <c>null</c>.
+        /// </summary>
+        internal string? TruncationNotice => _truncationLabel.IsVisible ? _truncationLabel.Text : null;
 
         /// <summary>
         /// Gets the currently selected lookup row, or <c>null</c>.
@@ -160,12 +177,20 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             var connector = _connector;
             if (connector is null) return;
 
+            var request = ++_requestId;
             try
             {
                 ClearError();
                 var response = await connector.GetLookupAsync(SearchText, cancellationToken: cancellationToken)
                     .ConfigureAwait(true);
+                // A slower answer to an earlier search must not replace the newer one's rows.
+                if (request != _requestId) return;
+
                 _grid.DataTable = response.Table;
+                _truncationLabel.Text = response.Paging is { HasMore: true } paging
+                    ? string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.LookupResultsTruncated), paging.PageSize)
+                    : null;
+                _truncationLabel.IsVisible = _truncationLabel.Text is not null;
                 UpdateOkState();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

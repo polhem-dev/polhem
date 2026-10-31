@@ -5,6 +5,7 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Tests.Shared;
 using Polhem.UI.Avalonia.Controls.Editors;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
@@ -118,6 +119,75 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             Assert.Null(panel.Grid.DataTable);
         }
 
+        [Fact]
+        [DisplayName("A response with more candidates shows the notice with the rows shown")]
+        public async Task ReloadAsync_HasMore_ShowsNotice()
+        {
+            using var culture = new CultureScope("en-US");
+            var panel = new LookupPanel();
+            var connector = new StubConnector(BuildLookupTable())
+            {
+                Paging = new Polhem.Definition.Paging.PagingInfo { PageSize = 100, HasMore = true },
+            };
+            panel.Bind(BuildCustomerSchema(), connector);
+
+            await panel.ReloadAsync();
+
+            Assert.Equal("Showing the first 100 rows. Enter a keyword to narrow the results.", panel.TruncationNotice);
+        }
+
+        [Fact]
+        [DisplayName("A narrower search with no further candidates clears the notice")]
+        public async Task ReloadAsync_NoMore_ClearsNotice()
+        {
+            var panel = new LookupPanel();
+            var connector = new StubConnector(BuildLookupTable())
+            {
+                Paging = new Polhem.Definition.Paging.PagingInfo { PageSize = 100, HasMore = true },
+            };
+            panel.Bind(BuildCustomerSchema(), connector);
+            await panel.ReloadAsync();
+
+            connector.Paging = new Polhem.Definition.Paging.PagingInfo { PageSize = 100, HasMore = false };
+            await panel.ReloadAsync();
+
+            Assert.Null(panel.TruncationNotice);
+        }
+
+        [Fact]
+        [DisplayName("A slower answer to an earlier search does not replace the newer rows")]
+        public async Task ReloadAsync_EarlierAnswerArrivesLate_KeepsNewerRows()
+        {
+            var panel = new LookupPanel();
+            var older = BuildLookupTable();
+            var newer = BuildLookupTable();
+            var slow = new TaskCompletionSource<GetLookupResponse>();
+            var connector = new QueuedConnector(slow.Task, Task.FromResult(new GetLookupResponse { Table = newer }));
+            panel.Bind(BuildCustomerSchema(), connector);
+
+            var first = panel.ReloadAsync();
+            await panel.ReloadAsync();
+            slow.SetResult(new GetLookupResponse { Table = older });
+            await first;
+
+            Assert.Same(newer, panel.Grid.DataTable);
+        }
+
+        private sealed class QueuedConnector : FormApiConnector
+        {
+            private readonly Queue<Task<GetLookupResponse>> _responses;
+
+            public QueuedConnector(params Task<GetLookupResponse>[] responses) : base(Polhem.Api.Client.PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance), "Customer")
+            {
+                _responses = new Queue<Task<GetLookupResponse>>(responses);
+            }
+
+            public override Task<GetLookupResponse> GetLookupAsync(
+                string searchText = "",
+                Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
+                => _responses.Dequeue();
+        }
+
         private sealed class StubConnector : FormApiConnector
         {
             private readonly DataTable _table;
@@ -129,12 +199,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             public string? LastSearchText { get; private set; }
 
+            public Polhem.Definition.Paging.PagingInfo? Paging { get; set; }
+
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",
                 Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
             {
                 LastSearchText = searchText;
-                return Task.FromResult(new GetLookupResponse { Table = _table });
+                return Task.FromResult(new GetLookupResponse { Table = _table, Paging = Paging });
             }
         }
 
