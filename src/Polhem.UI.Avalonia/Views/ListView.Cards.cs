@@ -54,7 +54,18 @@ namespace Polhem.UI.Avalonia.Views
             }
 
             _hasData = _cardRows.Count > 0;
+            if (page == 1 && _hasData)
+                ScrollCardsToTop();
         }
+
+        /// <summary>
+        /// Returns the card list to its first card. The list keeps its scroll offset when its rows are replaced, so a
+        /// reload would otherwise land at the end of the new first page. The unit tests override this, because they
+        /// run off the UI thread.
+        /// </summary>
+        internal virtual void ScrollCardsToTop()
+            // The new rows are not laid out yet, so the scroll waits for the next dispatcher turn.
+            => Dispatcher.UIThread.Post(() => _cardList.ScrollIntoView(0));
 
         /// <summary>
         /// Gives the card list its rows, once the view first needs them. A wide list never does, and subscribing to the
