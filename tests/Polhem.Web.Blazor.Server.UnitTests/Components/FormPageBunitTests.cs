@@ -21,6 +21,8 @@ using Polhem.Web.Blazor.Server.Identity;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Paging;
+using Polhem.UI.Core.Connectors;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -116,7 +118,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _hasLayout = hasLayout;
                 _zhTw = zhTw;
                 Server = new FakeApiServer()
-                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields))
+                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields, request.Paging))
                     .On<GetDataRequest>($"{TestProgId}.{FormActions.GetData}", request => GetData(request.RowId))
                     .On<GetNewDataRequest>($"{TestProgId}.{FormActions.GetNewData}", _ => GetNewData())
                     .On<SaveRequest>($"{TestProgId}.{FormActions.Save}", request => Save(request.DataSet!))
@@ -138,6 +140,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             public int GetListCount { get; private set; }
             public List<string> ListSelectFields { get; } = [];
+            public List<PagingOptions> ListPaging { get; } = [];
+            public int? TotalRows { get; set; }
             public List<Guid> Loaded { get; } = [];
             public int NewCount { get; private set; }
             public List<DataSet> Saved { get; } = [];
@@ -148,16 +152,29 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             public string NewName { get; set; } = "New employee";
             public int LanguageFetchCount { get; private set; }
 
-            private GetListResponse GetList(string selectFields)
+            private GetListResponse GetList(string selectFields, PagingOptions? paging)
             {
                 GetListCount++;
                 ListSelectFields.Add(selectFields);
+                if (paging is not null) { ListPaging.Add(paging); }
                 var table = new DataTable(TestProgId);
                 table.Columns.Add(SysFields.RowId, typeof(Guid));
                 table.Columns.Add("emp_name", typeof(string));
                 table.Rows.Add(s_aliceRowId, "Alice");
                 table.Rows.Add(s_bobRowId, "Bob");
-                return new GetListResponse { Table = table };
+                return new GetListResponse
+                {
+                    Table = table,
+                    Paging = TotalRows is { } total && paging is not null
+                        ? new PagingInfo
+                        {
+                            Page = paging.Page,
+                            PageSize = paging.PageSize,
+                            TotalCount = paging.IncludeTotalCount ? total : null,
+                            HasMore = paging.Page * paging.PageSize < total,
+                        }
+                        : null,
+                };
             }
 
             private GetDataResponse GetData(Guid rowId)
@@ -264,6 +281,85 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             cut.FindAll("tr.polhem-dynamic-grid__row")[index].Click();
             Click(cut, commandKey);
             cut.WaitForAssertion(() => Assert.Single(cut.FindAll("div.polhem-form-layout")));
+        }
+
+        private AngleSharp.Dom.IElement PagerButton(IRenderedComponent<FormPage> cut, string textKey)
+        {
+            string text = PolhemUIText.Get(Services.GetRequiredService<IStringLocalizer<PolhemUIText>>(), textKey);
+            return cut.FindAll("div.polhem-form-page__pager button").Single(b => b.TextContent == text);
+        }
+
+        [Fact]
+        [DisplayName("The first load asks for the first page and the row count, and shows the position")]
+        public void Initialize_PagedList_ShowsPosition()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.TotalRows = 120;
+
+            var cut = RenderPage();
+
+            WaitForList(cut);
+            var request = Assert.Single(form.ListPaging);
+            Assert.Equal(1, request.Page);
+            Assert.Equal(ListPagingState.DefaultPageSize, request.PageSize);
+            Assert.True(request.IncludeTotalCount);
+            Assert.Equal("Page 1 of 3 (120 rows)", cut.Find("span.polhem-form-page__page-position").TextContent);
+            Assert.True(PagerButton(cut, PolhemUIText.PreviousPage).HasAttribute("disabled"));
+            Assert.False(PagerButton(cut, PolhemUIText.NextPage).HasAttribute("disabled"));
+        }
+
+        [Fact]
+        [DisplayName("Next asks for the next page without counting again and clears the selection")]
+        public void Pager_Next_LoadsNextPageAndClearsSelection()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.TotalRows = 120;
+            var cut = RenderPage();
+            WaitForList(cut);
+            cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
+
+            PagerButton(cut, PolhemUIText.NextPage).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(2, form.ListPaging.Count));
+            Assert.Equal(2, form.ListPaging[1].Page);
+            Assert.False(form.ListPaging[1].IncludeTotalCount);
+            cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Edit)));
+            Assert.Equal("Page 2 of 3 (120 rows)", cut.Find("span.polhem-form-page__page-position").TextContent);
+        }
+
+        [Fact]
+        [DisplayName("Changing the rows per page returns to the first page and counts again")]
+        public void Pager_PageSize_ReturnsToFirstPage()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.TotalRows = 120;
+            var cut = RenderPage();
+            WaitForList(cut);
+            PagerButton(cut, PolhemUIText.NextPage).Click();
+            cut.WaitForAssertion(() => Assert.Equal(2, form.ListPaging.Count));
+
+            cut.Find("label.polhem-form-page__page-size select").Change("100");
+
+            cut.WaitForAssertion(() => Assert.Equal(3, form.ListPaging.Count));
+            Assert.Equal(1, form.ListPaging[2].Page);
+            Assert.Equal(100, form.ListPaging[2].PageSize);
+            Assert.True(form.ListPaging[2].IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("A response without paging metadata shows no page buttons")]
+        public void Initialize_UnpagedResponse_HidesPager()
+        {
+            using var culture = new CultureScope("en-US");
+            RegisterBackend();
+
+            var cut = RenderPage();
+
+            WaitForList(cut);
+            Assert.Empty(cut.FindAll("div.polhem-form-page__pager"));
         }
 
         [Fact]

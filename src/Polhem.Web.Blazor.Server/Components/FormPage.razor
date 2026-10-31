@@ -75,6 +75,23 @@
                          SelectedRowId="_selectedRowId"
                          OnRowSelected="OnRowSelected"
                          OnRowActivated="OnRowActivatedAsync" />
+            @if (ShowsPager)
+            {
+                <div class="polhem-form-page__pager">
+                    <button type="button" disabled="@(IsListLocked || !_paging.CanGoPrevious)" @onclick="() => GoToPageAsync(_paging.Page - 1)">@Text(PolhemUIText.PreviousPage)</button>
+                    <button type="button" disabled="@(IsListLocked || !_paging.CanGoNext)" @onclick="() => GoToPageAsync(_paging.Page + 1)">@Text(PolhemUIText.NextPage)</button>
+                    <span class="polhem-form-page__page-position">@PagePosition</span>
+                    <label class="polhem-form-page__page-size">
+                        @Text(PolhemUIText.RowsPerPage)
+                        <select disabled="@IsListLocked" @onchange="OnPageSizeChangedAsync">
+                            @foreach (var pageSize in s_pageSizes)
+                            {
+                                <option value="@pageSize" selected="@(pageSize == _paging.PageSize)">@pageSize</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+            }
         }
         else
         {
