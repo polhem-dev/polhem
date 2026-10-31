@@ -227,6 +227,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal(2, connector.Requests[^1].Page);
             Assert.Equal(100, view.CardRows.Count);
             Assert.Equal("C50", view.CardRows[50]["sys_id"]);
+            Assert.Equal(1, view.ScrollsToTop);
         }
 
         [Fact]
@@ -303,6 +304,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             Assert.Equal(1, connector.Requests[^1].Page);
             Assert.Equal(ListPagingState.DefaultPageSize, view.CardRows.Count);
+            Assert.Equal(2, view.ScrollsToTop);
         }
 
         private static FakeFormApiConnector PagedConnector(int totalRows)
@@ -701,6 +703,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             public bool ConfirmAnswer { get; set; } = true;
 
             public List<Guid> ConfirmedRowIds { get; } = [];
+
+            public int ScrollsToTop { get; private set; }
+
+            internal override void ScrollCardsToTop() => ScrollsToTop++;
 
             internal override void AttachCardRows()
             {
