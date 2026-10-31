@@ -58,7 +58,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
 | `demo-ro` | `demo` | `en-US` | 同一份資料，但全部唯讀（New、Save、Delete 都隱藏），也不能開啟產品與稽核規則 |
 
-每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。[Blazor Server head](#網頁前端blazor-server) 是例外：它的畫面跟隨登入畫面的語言切換。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
 
 ### 網頁前端（Avalonia WASM）
 
@@ -91,8 +91,10 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
   所以在這裡儲存的訂單，桌面 head 也看得到。Local 呼叫會略過 API 金鑰與 access token 的檢查，適合使用者都受信任的網站；
   上述的表單權限仍會套用到登入的使用者。若要改經 JSON-RPC 呼叫執行中的 `Polhem.Northwind.Server`，先啟動它，再以
   `--Northwind:Mode=Remote` 執行這個 head；endpoint 與 API 金鑰在 `appsettings.json`。
-- **語言在登入前選擇。** Blazor Server 的連線會一直沿用開始時的文化，所以登入畫面的切換會把它存進 cookie 並重新載入頁面；
-  `demo-tw` 會以切換所顯示的語言登入。
+- **語言在登入前選擇，不取自帳號。** Blazor Server 的連線會一直沿用開始時的文化，而登入狀態就存在這條連線裡，
+  要套用帳號的文化就得重新載入頁面，也就登出了。因此登入畫面的切換會趁還沒有人登入時，把語言存進 cookie 並重新載入頁面；
+  還沒切換過時，由瀏覽器的語言決定。之後每個帳號看到的都是切換所顯示的語言：以英文登入的 `demo-tw` 看到英文畫面，
+  只有使用者名稱因為是資料而顯示中文；以繁體中文登入的 `demo` 則看到繁體中文畫面。
 - **登入狀態存在瀏覽器分頁的連線裡。** 重新載入頁面或開新分頁都要重新登入。
 - 殼層（登入、由 `MenuSettings.xml` 產生的選單、所有表單共用的一個路由頁面）是這個 head 自己的程式碼；表單則是框架的 `FormPage`。
 
@@ -213,7 +215,7 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 - **認證**走框架自己的 `st_user` 檢查。seeder 在首次啟動時把 `demo` 與 `demo-tw` 帳號寫進 `st_user`（既有的 `northwind.db` 缺哪個就補哪個），密碼以 `PasswordHasher` 現算雜湊存入（不是寫死的雜湊值，否則換一次雜湊參數就對不上）。比對帳號密碼在每個部署都一樣，所以那件事屬於框架。
 - **進公司**走框架自己的 `EnterCompany`。seeder 寫入對應的 `st_company` 與 `st_user_company` 兩列，該呼叫接著驗公司存在且啟用、查使用者的存取權，再把角色與員工脈絡快照到 session 上。
 
-`st_user` 那一列同時帶著 `time_zone` 與 `culture`，於是 session 的時區、以及 client 的語言，都取自**使用者**而不是伺服器或部署預設值。
+`st_user` 那一列同時帶著 `time_zone` 與 `culture`，於是 session 的時區、以及 client 的語言，都取自**使用者**而不是伺服器或部署預設值。Blazor Server head 的畫面是唯一的例外，[說明在該 head 的段落](#網頁前端blazor-server)。
 
 > **只有一家公司不是跳過第二步的理由。** 本示範早期版本走過那條捷徑 —— 在覆寫的 `Login` 裡直接蓋上 `SessionInfo.CompanyId`，不呼叫 `EnterCompany` —— 而它付出的比省下的多，且兩筆代價都是無聲的。其一，以公司為鍵的查找（例如下面的 per-form 稽核規則）是透過 `st_company` 解出公司的，那張表沒有列就一律回「沒有規則」，每一條規則因此都不生效。其二，`EnterCompany` 會把公司寫進 `st_session` 的種子，而**應用自己做不到這件事**；少了它，公司只活在快取裡，伺服器一重啟，客戶端拿回的就是一個認證得過、卻連一張公司分類表單都打不開的 session。
 
@@ -272,10 +274,11 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 `ListItems`，並以 `LangEnumName` 指名 `OrderStatus` 列舉；只有 zh-TW 語系檔定義了它，所以英文會退回內嵌的選項。
 以 `demo-tw` 登入就會看到：session 的文化取自該帳號的 `st_user` 資料列。
 
-client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 `st_user.culture` 的值，
+Avalonia client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 `st_user.culture` 的值，
 `ClientInfo.ApplyLoginResult` 再把它設為 client 的 UI 語系。種子寫入的 `demo` 帳號是 `en-US`
 （`NorthwindCredentials.Culture`），所以以英文開啟；種子寫入的 `demo-tw` 帳號是 `zh-TW`
 （`NorthwindCredentials.ZhTwCulture`）。要看 zh-TW 標題與下面租戶的標題覆寫，登出後改以 `demo-tw` 登入。
+Blazor Server head [不套用帳號的文化](#網頁前端blazor-server)，在那裡請於登入畫面選擇繁體中文。
 
 客製層疊在它上面。demo 公司指名了一個客製化代碼（`NorthwindCredentials.CustomizeId`），
 登入時被抄進 session，之後每次定義查詢都會**先**看 `Customize/{customizeId}/`、再看套裝的
