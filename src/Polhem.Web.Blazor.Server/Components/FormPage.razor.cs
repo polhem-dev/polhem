@@ -214,6 +214,8 @@ namespace Polhem.Web.Blazor.Server.Components
             _liveComputation = null;
             _roundingContext = null;
             _listRows = null;
+            _paging = new ListPagingState();
+            _isListPaged = false;
             _error = null;
             _notice = null;
             _isShowingRecord = false;
@@ -253,14 +255,17 @@ namespace Polhem.Web.Blazor.Server.Components
                 // which still rounds authoritatively on save.
                 var roundingContext = await CircuitDefinitions
                     .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
-                var listRows = (await Client.Form(ProgId).GetListAsync(ListSelectFields.For(schema)).ConfigureAwait(true)).Table;
+                var list = await Client.Form(ProgId)
+                    .GetListAsync(ListSelectFields.For(schema), paging: _paging.CreateOptions(1)).ConfigureAwait(true);
                 if (version != _loadVersion) return;
 
                 _schema = schema;
                 _formLayout = formLayout;
                 _listLayout = listLayout;
                 _roundingContext = roundingContext;
-                _listRows = listRows;
+                _listRows = list.Table;
+                _paging.Apply(1, list.Paging);
+                _isListPaged = list.Paging is not null;
                 _dataObject = new FormDataObject(schema, Client.Form(ProgId));
                 _liveComputation = new FormLiveComputation(
                     schema, roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
@@ -351,14 +356,6 @@ namespace Polhem.Web.Blazor.Server.Components
         // Fills a newly added detail row's default-value expressions and computes its computed fields.
         private void OnLiveRowAdded(object? sender, RowChangedEventArgs e)
             => _liveComputation?.InitializeNewRow(e.TableName, e.Row);
-
-        private async Task ReloadListAsync()
-        {
-            var connector = Client.Form(ProgId);
-            var response = await connector
-                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema)).ConfigureAwait(true);
-            _listRows = response.Table;
-        }
 
         private void OnRowSelected(Guid rowId) => _selectedRowId = rowId;
 
