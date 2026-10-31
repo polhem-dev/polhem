@@ -70,6 +70,7 @@ body {
 .polhem-lookup-dialog__card { background: white; border-radius: 6px; padding: 16px; width: 520px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
 .polhem-lookup-dialog__title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; }
 .polhem-lookup-dialog__error, .polhem-lookup-panel__error { color: #cf222e; margin-bottom: 12px; }
+.polhem-lookup-panel__notice { margin-bottom: 12px; }
 .polhem-lookup-panel__search { display: flex; gap: 8px; margin-bottom: 12px; }
 .polhem-lookup-panel__search-input { flex: 1; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 4px; font: inherit; }
 .polhem-lookup-panel__buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

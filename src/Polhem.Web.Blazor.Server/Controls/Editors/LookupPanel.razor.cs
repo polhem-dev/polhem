@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Polhem.Api.Contracts.Form;
 using Polhem.Definition.Forms;
@@ -67,6 +68,9 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
         /// </summary>
         public DataRow? SelectedRow => _selectedRowId is { } id ? FindRow(id) : null;
 
+        private string? _truncationNotice;
+        private int _requestId;
+
         // Nullable: a component created outside a renderer has no services, and still renders.
         [Inject]
         private IServiceProvider? Services { get; set; }
@@ -87,11 +91,18 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
             if (connector is null) return;
 
             _error = null;
+            var request = ++_requestId;
             try
             {
                 var response = await connector.GetLookupAsync(SearchText, cancellationToken: cancellationToken)
                     .ConfigureAwait(true);
+                // A slower answer to an earlier search must not replace the newer one's rows.
+                if (request != _requestId) return;
+
                 _rows = response.Table;
+                _truncationNotice = response.Paging is { HasMore: true } paging
+                    ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.LookupResultsTruncated), paging.PageSize)
+                    : null;
                 if (_selectedRowId is { } id && FindRow(id) is null)
                     _selectedRowId = null;
             }

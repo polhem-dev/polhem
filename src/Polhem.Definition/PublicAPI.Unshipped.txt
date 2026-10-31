@@ -8,3 +8,4 @@ const Polhem.Definition.Language.PolhemUIText.NextPage = "NextPage" -> string!
 const Polhem.Definition.Language.PolhemUIText.PageNumber = "PageNumber" -> string!
 const Polhem.Definition.Language.PolhemUIText.PageNumberOfTotal = "PageNumberOfTotal" -> string!
 const Polhem.Definition.Language.PolhemUIText.RowsPerPage = "RowsPerPage" -> string!
+const Polhem.Definition.Language.PolhemUIText.LookupResultsTruncated = "LookupResultsTruncated" -> string!

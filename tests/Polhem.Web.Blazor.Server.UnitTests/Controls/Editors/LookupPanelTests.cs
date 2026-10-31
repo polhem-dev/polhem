@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Data;
 using Bunit;
+using Polhem.Definition.Paging;
+using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.Controls.Editors;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
@@ -27,6 +29,32 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 
             Assert.Equal([string.Empty], connector.Searches);
             Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count);
+        }
+
+        [Fact]
+        [DisplayName("A response with more candidates shows the notice with the rows shown")]
+        public void Render_HasMore_ShowsNotice()
+        {
+            using var culture = new CultureScope("en-US");
+            var connector = new FakeLookupConnector { Paging = new PagingInfo { PageSize = 100, HasMore = true } };
+
+            var cut = RenderPanel(connector);
+
+            Assert.Equal("Showing the first 100 rows. Enter a keyword to narrow the results.",
+                cut.Find(".polhem-lookup-panel__notice").TextContent);
+        }
+
+        [Fact]
+        [DisplayName("A narrower search with no further candidates clears the notice")]
+        public void Search_NoMore_ClearsNotice()
+        {
+            var connector = new FakeLookupConnector { Paging = new PagingInfo { PageSize = 100, HasMore = true } };
+            var cut = RenderPanel(connector);
+
+            connector.Paging = new PagingInfo { PageSize = 100, HasMore = false };
+            cut.Find("form.polhem-lookup-panel__search").Submit();
+
+            Assert.Empty(cut.FindAll(".polhem-lookup-panel__notice"));
         }
 
         [Fact]

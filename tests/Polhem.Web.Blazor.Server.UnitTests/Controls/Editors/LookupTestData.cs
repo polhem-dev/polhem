@@ -99,6 +99,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 
         public Exception? Failure { get; set; }
 
+        public PagingInfo? Paging { get; set; }
+
         public Task<IGetLookupResponse> GetLookupAsync(string searchText = "", PagingOptions? paging = null,
             CancellationToken cancellationToken = default)
         {
@@ -110,7 +112,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
                 if (((string)row["sys_name"]).Contains(searchText, StringComparison.OrdinalIgnoreCase))
                     result.ImportRow(row);
             }
-            return Task.FromResult<IGetLookupResponse>(new FormListResult(result));
+            return Task.FromResult<IGetLookupResponse>(new FormListResult(result, Paging));
         }
 
         public Task<IGetListResponse> GetListAsync(string selectFields = "", FilterNode? filter = null,

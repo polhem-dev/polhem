@@ -14,6 +14,10 @@
     {
         <div class="polhem-lookup-panel__error" role="alert">@_error</div>
     }
+    @if (_truncationNotice is not null)
+    {
+        <div class="polhem-lookup-panel__notice" role="status">@_truncationNotice</div>
+    }
     <DynamicGrid Layout="_layout"
                  Rows="_rows"
                  FormTable="Schema?.MasterTable"
