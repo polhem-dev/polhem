@@ -25,6 +25,8 @@ namespace Polhem.UI.Avalonia.Views
             // Degrade the freshly generated list layout before binding: sensitive columns the user
             // cannot Read drop out. No-op when no company context is active.
             LayoutCapabilityApplier.ApplyGrid(listLayout, Schema, ResolveUserContext()?.Capabilities);
+            _grid.EnableServerSort();
+            _grid.SortRequested += (_, fieldName) => _ = OnSortRequestedAsync(fieldName);
             // Columns render immediately; rows arrive with the first ReloadAsync. The master table
             // lets drop-down columns show their (localized) list item text instead of stored codes.
             _grid.Bind(listLayout, rows: null, Schema.MasterTable);
@@ -33,6 +35,15 @@ namespace Polhem.UI.Avalonia.Views
                 .Where(c => c.Visible)
                 .ToArray();
             _cardList.ItemTemplate = BuildCardTemplate(columns, _grid.FormatColumnText);
+        }
+
+        private async Task OnSortRequestedAsync(string fieldName)
+        {
+            if (_isBusy || _isLoading) return;
+
+            _paging.ToggleSort(fieldName);
+            _grid.SetSortIndicator(_paging.SortFieldName, _paging.SortDirection);
+            await LoadPageAsync(_paging.Page, CancellationToken.None).ConfigureAwait(true);
         }
 
         private string ComputeSelectFields()

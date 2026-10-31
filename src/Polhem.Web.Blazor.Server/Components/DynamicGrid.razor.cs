@@ -7,6 +7,9 @@ using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.Core;
+using Polhem.Core.Data;
+using Polhem.Definition.Sorting;
 using Microsoft.AspNetCore.Components;
 
 namespace Polhem.Web.Blazor.Server.Components
@@ -70,6 +73,21 @@ namespace Polhem.Web.Blazor.Server.Components
         public Guid? SelectedRowId { get; set; }
 
         /// <summary>
+        /// Invoked when the user clicks a sortable column header; receives the field name. Without a handler the
+        /// headers are plain text. The grid does not sort: the host reads the rows in the new order.
+        /// </summary>
+        [Parameter]
+        public EventCallback<string> OnSortRequested { get; set; }
+
+        /// <summary>Gets or sets the field to mark as sorted, or <c>null</c> for none.</summary>
+        [Parameter]
+        public string? SortFieldName { get; set; }
+
+        /// <summary>Gets or sets the direction of <see cref="SortFieldName"/>.</summary>
+        [Parameter]
+        public SortDirection SortDirection { get; set; }
+
+        /// <summary>
         /// Gets or sets the placeholder text shown when there is no data. <c>null</c> — the
         /// default — shows the localized <see cref="PolhemUIText.NoData"/> text.
         /// </summary>
@@ -130,5 +148,21 @@ namespace Polhem.Web.Blazor.Server.Components
             => column.Width > 0
                 ? string.Create(CultureInfo.InvariantCulture, $"width:{column.Width}px")
                 : string.Empty;
+
+        // Oracle cannot order by a `Text` column, and a binary value has no meaningful order.
+        private bool IsSortable(LayoutColumn column)
+            => OnSortRequested.HasDelegate
+                && FormTable?.Fields is { } fields
+                && fields.Contains(column.FieldName)
+                && fields[column.FieldName].DbType is not (FieldDbType.Text or FieldDbType.Binary);
+
+        private bool IsSorted(LayoutColumn column)
+            => SortFieldName is not null && StringUtilities.IsEquals(SortFieldName, column.FieldName);
+
+        private string SortMark(LayoutColumn column)
+            => !IsSorted(column) ? string.Empty : SortDirection == SortDirection.Desc ? " \u25BC" : " \u25B2";
+
+        private string? AriaSort(LayoutColumn column)
+            => !IsSorted(column) ? null : SortDirection == SortDirection.Desc ? "descending" : "ascending";
     }
 }

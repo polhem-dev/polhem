@@ -1,4 +1,6 @@
+using Polhem.Core;
 using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
 
 namespace Polhem.UI.Core.Connectors
 {
@@ -6,8 +8,8 @@ namespace Polhem.UI.Core.Connectors
     /// The paging position of a form list on screen, shared by the UI heads so each one pages the same way.
     /// </summary>
     /// <remarks>
-    /// The position changes only when a response arrives through <see cref="Apply"/>, so a failed request leaves the
-    /// state on the page still showing. A head wraps each request in <see cref="BeginRequest"/> and
+    /// Moving to another page takes effect only when a response arrives through <see cref="Apply"/>, so a failed request
+    /// leaves the state on the page still showing. A head wraps each request in <see cref="BeginRequest"/> and
     /// <see cref="IsCurrent"/> so a slow response cannot overwrite a newer one.
     /// </remarks>
     public sealed class ListPagingState
@@ -29,6 +31,12 @@ namespace Polhem.UI.Core.Connectors
         /// <summary>Gets the matching row count, or <c>null</c> when it is not known.</summary>
         public int? TotalCount { get; private set; }
 
+        /// <summary>Gets the field the list is sorted by, or <c>null</c> for the server's default order.</summary>
+        public string? SortFieldName { get; private set; }
+
+        /// <summary>Gets the direction of <see cref="SortFieldName"/>.</summary>
+        public SortDirection SortDirection { get; private set; }
+
         /// <summary>Gets the number of pages, or <c>null</c> when the row count is not known.</summary>
         public int? TotalPages => TotalCount is { } total ? Math.Max(1, (total + PageSize - 1) / PageSize) : null;
 
@@ -45,6 +53,34 @@ namespace Polhem.UI.Core.Connectors
         /// <param name="page">The 1-based page to request.</param>
         public PagingOptions CreateOptions(int page)
             => new() { Page = page, PageSize = PageSize, IncludeTotalCount = TotalCount is null };
+
+        /// <summary>Creates the sort to request, or <c>null</c> for the server's default order.</summary>
+        public SortFieldCollection? CreateSort()
+            => SortFieldName is null ? null : [new SortField(SortFieldName, SortDirection)];
+
+        /// <summary>
+        /// Moves a field through ascending, descending and back to the server's default order, and returns to the
+        /// first page. Another field starts at ascending.
+        /// </summary>
+        /// <param name="fieldName">The field the user chose.</param>
+        public void ToggleSort(string fieldName)
+        {
+            if (!StringUtilities.IsEquals(SortFieldName, fieldName))
+            {
+                SortFieldName = fieldName;
+                SortDirection = SortDirection.Asc;
+            }
+            else if (SortDirection == SortDirection.Asc)
+            {
+                SortDirection = SortDirection.Desc;
+            }
+            else
+            {
+                SortFieldName = null;
+                SortDirection = SortDirection.Asc;
+            }
+            Page = 1;
+        }
 
         /// <summary>Starts a request and returns the id to pass to <see cref="IsCurrent"/> when it completes.</summary>
         public int BeginRequest() => ++_requestId;

@@ -20,3 +20,9 @@ Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.get -> Micros
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.set -> void
 Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.get -> bool
 Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SortDirection.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.get -> string?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.set -> void
