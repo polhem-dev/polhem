@@ -191,6 +191,120 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal("Memo", grid.InnerGrid.Columns[1].Header);
         }
 
+        private static async Task<TestListView> BuildCompactView(FakeFormApiConnector connector)
+        {
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            InvokePrivate(view, "ApplyCompact", true);
+            return view;
+        }
+
+        [Fact]
+        [DisplayName("Crossing to the compact width starts the cards from the first page")]
+        public async Task ApplyCompact_LoadsFirstPageIntoCards()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            InvokePrivate(view, "ApplyCompact", true);
+
+            Assert.Equal(1, connector.Requests[^1].Page);
+            Assert.Equal(ListPagingState.DefaultPageSize, view.CardRows.Count);
+            Assert.Equal("C0", view.CardRows[0]["sys_id"]);
+        }
+
+        [Fact]
+        [DisplayName("Scrolling near the end appends the next page after the cards already read")]
+        public async Task LoadMoreCards_AppendsNextPage()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = await BuildCompactView(connector);
+
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            Assert.Equal(2, connector.Requests[^1].Page);
+            Assert.Equal(100, view.CardRows.Count);
+            Assert.Equal("C50", view.CardRows[50]["sys_id"]);
+        }
+
+        [Fact]
+        [DisplayName("Loading more keeps the selected card")]
+        public async Task LoadMoreCards_KeepsSelection()
+        {
+            var view = await BuildCompactView(PagedConnector(totalRows: 120));
+            var rowId = (Guid)view.CardRows[0][SysFields.RowId];
+            InvokePrivate(view, "OnRowSelected", rowId);
+
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            Assert.Equal(rowId, typeof(ListView).GetField("_selectedRowId", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(view));
+        }
+
+        [Fact]
+        [DisplayName("A row pushed onto the next page by an insert appears once")]
+        public async Task LoadMoreCards_RepeatedRow_AppearsOnce()
+        {
+            var repeated = Guid.NewGuid();
+            var connector = new FakeFormApiConnector
+            {
+                PagedHandler = options => new GetListResponse
+                {
+                    Table = BuildListTable(repeated, "Same"),
+                    Paging = new Polhem.Definition.Paging.PagingInfo { HasMore = options.Page == 1 },
+                },
+            };
+            var view = await BuildCompactView(connector);
+
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            Assert.Single(view.CardRows);
+        }
+
+        [Fact]
+        [DisplayName("Loading more stops at the last page")]
+        public async Task LoadMoreCards_LastPage_DoesNotRequest()
+        {
+            var connector = PagedConnector(totalRows: 60);
+            var view = await BuildCompactView(connector);
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+            var requests = connector.Requests.Count;
+
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            Assert.Equal(requests, connector.Requests.Count);
+            Assert.Equal(60, view.CardRows.Count);
+        }
+
+        [Fact]
+        [DisplayName("Loading more stops at the card limit")]
+        public async Task LoadMoreCards_Limit_StopsRequesting()
+        {
+            var connector = PagedConnector(totalRows: ListView.MaxCardRows + 500);
+            var view = await BuildCompactView(connector);
+
+            for (var i = 0; i < 120; i++)
+                await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            Assert.Equal(ListView.MaxCardRows, view.CardRows.Count);
+            Assert.Equal(ListView.MaxCardRows / ListPagingState.DefaultPageSize, connector.Requests[^1].Page);
+        }
+
+        [Fact]
+        [DisplayName("A reload in compact width starts the cards over from the first page")]
+        public async Task ReloadAsync_Compact_StartsOver()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = await BuildCompactView(connector);
+            await InvokePrivateAsync(view, "LoadMoreCardsAsync");
+
+            await view.ReloadAsync();
+
+            Assert.Equal(1, connector.Requests[^1].Page);
+            Assert.Equal(ListPagingState.DefaultPageSize, view.CardRows.Count);
+        }
+
         private static FakeFormApiConnector PagedConnector(int totalRows)
             => new() { PagedHandler = PagedResponder(totalRows) };
 
@@ -587,6 +701,11 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             public bool ConfirmAnswer { get; set; } = true;
 
             public List<Guid> ConfirmedRowIds { get; } = [];
+
+            internal override void AttachCardRows()
+            {
+                // The list's subscription needs the UI thread, which a unit test does not run on.
+            }
 
             protected override Task<bool> ConfirmDeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
             {

@@ -10,6 +10,7 @@
     <LanguageItem Key="Loading" Value="載入中…" />
     <LanguageItem Key="NoData" Value="沒有資料。" />
     <LanguageItem Key="LookupResultsTruncated" Value="只顯示前 {0} 筆，請輸入關鍵字縮小範圍。" />
+    <LanguageItem Key="ListRowsLimited" Value="只顯示前 {0} 筆。" />
     <LanguageItem Key="PreviousPage" Value="上一頁" />
     <LanguageItem Key="NextPage" Value="下一頁" />
     <LanguageItem Key="PageNumber" Value="第 {0} 頁" />

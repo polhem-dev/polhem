@@ -1,13 +1,11 @@
-using System.Data;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core;
@@ -61,6 +59,8 @@ namespace Polhem.UI.Avalonia.Views
         private readonly GridControl _grid;
         private readonly ListBox _cardList;
         private readonly ListPagerBar _pager;
+        private readonly TextBlock _cardLimitLabel;
+        private bool _hasPagedResponse;
         private readonly ListPagingState _paging = new();
         private bool _isLoading;
         private Guid _selectedRowId;
@@ -135,6 +135,7 @@ namespace Polhem.UI.Avalonia.Views
             };
             _cardList.SelectionChanged += (_, _) => OnCardSelectionChanged();
             _cardList.DoubleTapped += (_, _) => OnGridDoubleTapped();
+            _cardList.ContainerPrepared += (_, e) => OnCardPrepared(e.Index);
 
             _emptyListLabel = new TextBlock { Text = UIText.Get(PolhemUIText.NoData), IsVisible = false };
 
@@ -156,17 +157,27 @@ namespace Polhem.UI.Avalonia.Views
                 _ = LoadPageAsync(_paging.Page, CancellationToken.None);
             };
 
+            _cardLimitLabel = new TextBlock
+            {
+                IsVisible = false,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 8, 0, 0),
+                Text = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.ListRowsLimited), MaxCardRows),
+            };
+
             var host = new DockPanel { LastChildFill = true };
             DockPanel.SetDock(_errorLabel, Dock.Top);
             DockPanel.SetDock(_loadingLabel, Dock.Top);
             DockPanel.SetDock(toolbar, Dock.Top);
             DockPanel.SetDock(_emptyListLabel, Dock.Top);
             DockPanel.SetDock(_pager, Dock.Bottom);
+            DockPanel.SetDock(_cardLimitLabel, Dock.Bottom);
             host.Children.Add(_errorLabel);
             host.Children.Add(_loadingLabel);
             host.Children.Add(toolbar);
             host.Children.Add(_emptyListLabel);
             host.Children.Add(_pager);
+            host.Children.Add(_cardLimitLabel);
             host.Children.Add(contentArea);
 
             Content = host;
@@ -269,7 +280,8 @@ namespace Polhem.UI.Avalonia.Views
         public Task ReloadAsync(CancellationToken cancellationToken = default)
         {
             _paging.InvalidateTotalCount();
-            return LoadPageAsync(_paging.Page, cancellationToken);
+            // The cards hold every page read so far, and a changed row shifts the later pages, so they start over.
+            return LoadPageAsync(_isCompact ? 1 : _paging.Page, cancellationToken);
         }
 
         private async Task LoadPageAsync(int page, CancellationToken cancellationToken)
@@ -290,20 +302,27 @@ namespace Polhem.UI.Avalonia.Views
 
                 var rowCount = response.Table?.Rows.Count ?? 0;
                 _paging.Apply(page, response.Paging);
-                if (_paging.TryStepBackFromEmptyPage(rowCount))
+                if (_isCompact)
                 {
-                    await LoadPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
-                    return;
+                    ShowCardPage(page, response.Table);
+                }
+                else
+                {
+                    if (_paging.TryStepBackFromEmptyPage(rowCount))
+                    {
+                        await LoadPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
+                        return;
+                    }
+
+                    _grid.DataTable = response.Table;
+                    _hasData = rowCount > 0;
+                    _selectedRowId = Guid.Empty;
                 }
 
-                _grid.DataTable = response.Table;
-                _cardList.ItemsSource = response.Table?.DefaultView;
-                _hasData = rowCount > 0;
                 _emptyListLabel.IsVisible = !_hasData;
                 _pager.Update(_paging);
-                _pager.IsVisible = _hasData && response.Paging is not null;
+                _hasPagedResponse = response.Paging is not null;
                 UpdateContentVisibility();
-                _selectedRowId = Guid.Empty;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -380,11 +399,7 @@ namespace Polhem.UI.Avalonia.Views
             if (change.Property == BoundsProperty)
             {
                 var compact = Bounds.Width > 0 && Bounds.Width < FormView.DefaultCompactWidthThreshold;
-                if (compact != _isCompact)
-                {
-                    _isCompact = compact;
-                    UpdateContentVisibility();
-                }
+                ApplyCompact(compact);
             }
         }
 
@@ -392,62 +407,8 @@ namespace Polhem.UI.Avalonia.Views
         {
             _grid.IsVisible = _hasData && !_isCompact;
             _cardList.IsVisible = _hasData && _isCompact;
-        }
-
-        // One card per row: each visible column rendered as a "caption  value" line, read straight
-        // off the DataRowView (no reflection binding, so it works under iOS AOT). The value text comes
-        // from `formatValue`, which the view points at the wide grid's own cell formatter, so a date
-        // column shows the same short date on a phone as on the desktop grid. A check-box column shows
-        // the same disabled check box the grid does, not text.
-        internal static FuncDataTemplate<DataRowView> BuildCardTemplate(
-            IReadOnlyList<LayoutColumn> columns, Func<DataRowView?, LayoutColumn, string> formatValue)
-            => new FuncDataTemplate<DataRowView>((row, _) =>
-            {
-                var stack = new StackPanel { Spacing = 3 };
-                foreach (var column in columns)
-                {
-                    var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-                    line.Children.Add(new TextBlock
-                    {
-                        Text = column.Caption,
-                        FontWeight = FontWeight.SemiBold,
-                        MinWidth = 92,
-                        Opacity = 0.7,
-                    });
-                    line.Children.Add(column.ControlType == ControlType.CheckEdit
-                        ? BuildCardCheckBox(row, column)
-                        : new TextBlock { Text = formatValue(row, column), TextWrapping = TextWrapping.Wrap });
-                    stack.Children.Add(line);
-                }
-
-                return new Border
-                {
-                    Padding = new Thickness(10),
-                    Margin = new Thickness(0, 0, 0, 6),
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = Brushes.Gray,
-                    CornerRadius = new CornerRadius(6),
-                    Child = stack,
-                };
-            });
-
-        private static CheckBox BuildCardCheckBox(DataRowView? row, LayoutColumn column)
-        {
-            var isChecked = row is not null
-                && row.Row.Table.Columns.Contains(column.FieldName)
-                && row.Row[column.FieldName] is true;
-            return new CheckBox
-            {
-                IsChecked = isChecked,
-                IsEnabled = false,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-        }
-
-        private void OnCardSelectionChanged()
-        {
-            if (_cardList.SelectedItem is DataRowView drv && FormDataGuard.TryGetRowId(drv.Row, out var rowId))
-                OnRowSelected(rowId);
+            _pager.IsVisible = _hasData && !_isCompact && _hasPagedResponse;
+            _cardLimitLabel.IsVisible = _isCompact && _cardRows.Count >= MaxCardRows;
         }
 
         private void OnInputsChanged()
