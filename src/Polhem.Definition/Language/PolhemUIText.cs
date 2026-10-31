@@ -33,6 +33,8 @@ namespace Polhem.Definition.Language
         public const string NoData = "NoData";
         /// <summary>Key of the notice that a lookup shows only some of its candidates; <c>{0}</c> is the rows shown.</summary>
         public const string LookupResultsTruncated = "LookupResultsTruncated";
+        /// <summary>Key of the notice that a scrolling list stopped reading rows; <c>{0}</c> is the rows shown.</summary>
+        public const string ListRowsLimited = "ListRowsLimited";
         /// <summary>Key of the previous-page command.</summary>
         public const string PreviousPage = "PreviousPage";
         /// <summary>Key of the next-page command.</summary>
@@ -142,6 +144,7 @@ namespace Polhem.Definition.Language
             [Loading] = "Loading…",
             [NoData] = "No data.",
             [LookupResultsTruncated] = "Showing the first {0} rows. Enter a keyword to narrow the results.",
+            [ListRowsLimited] = "Showing the first {0} rows.",
             [PreviousPage] = "Previous",
             [NextPage] = "Next",
             [PageNumber] = "Page {0}",

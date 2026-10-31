@@ -9,3 +9,4 @@ const Polhem.Definition.Language.PolhemUIText.PageNumber = "PageNumber" -> strin
 const Polhem.Definition.Language.PolhemUIText.PageNumberOfTotal = "PageNumberOfTotal" -> string!
 const Polhem.Definition.Language.PolhemUIText.RowsPerPage = "RowsPerPage" -> string!
 const Polhem.Definition.Language.PolhemUIText.LookupResultsTruncated = "LookupResultsTruncated" -> string!
+const Polhem.Definition.Language.PolhemUIText.ListRowsLimited = "ListRowsLimited" -> string!
