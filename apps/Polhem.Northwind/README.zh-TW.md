@@ -148,7 +148,7 @@ dotnet build apps/Polhem.Northwind/Polhem.Northwind.Android -t:Run -f net10.0-an
 在 **Android 模擬器**，主機要用 `10.0.2.2`（非 `localhost`），endpoint 填 `http://10.0.2.2:5100/api`；
 manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:5100/api`（ATS 於 dev 允許任意連線）。
 
-> 任一個 host 首次執行時，會在 `Define/` 旁（`apps/Polhem.Northwind/northwind.db`，已被 `.gitignore` 涵蓋）建立 `northwind.db` 並灌入 Northwind 子集；`Define/DatabaseSettings.xml` 以 `|DataDirectory|` 指定檔名，後端把它指向那裡。刪除該檔即可重新建表灌種子。舊版留在 `Polhem.Northwind.Server/` 的 `northwind.db` 不再被讀取，可以刪除。
+> 任一個 host 首次執行時，會在 `Define/` 旁（`apps/Polhem.Northwind/northwind.db`，已被 `.gitignore` 涵蓋）建立 `northwind.db` 並灌入 Northwind 子集，資料量足以讓清單分成好幾頁。資料取自 Microsoft 的 [sql-server-samples](https://github.com/microsoft/sql-server-samples)（MIT），訂單狀態、代碼與員工已配合本示範調整。既有資料庫會保留原有資料，要拿到新的種子資料請先刪除它；`Define/DatabaseSettings.xml` 以 `|DataDirectory|` 指定檔名，後端把它指向那裡。刪除該檔即可重新建表灌種子。舊版留在 `Polhem.Northwind.Server/` 的 `northwind.db` 不再被讀取，可以刪除。
 >
 > 桌面與行動前端用框架預設的 `FileEndpointStorage` 記住 endpoint 與 API 金鑰：本機應用程式資料目錄下、以該 head 的進入點組件命名的個人資料夾（例如 `Polhem.Northwind.Desktop`）。各平台的目錄位置見 `Polhem.UI.ApiBridge` 中 `FileEndpointStorage` 的說明。瀏覽器前端則改存在 `localStorage`。
 
