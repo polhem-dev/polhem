@@ -22,6 +22,7 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
 using Polhem.UI.Core.Connectors;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
@@ -118,7 +119,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _hasLayout = hasLayout;
                 _zhTw = zhTw;
                 Server = new FakeApiServer()
-                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields, request.Paging))
+                    .On<GetListRequest>($"{TestProgId}.{FormActions.GetList}", request => GetList(request.SelectFields, request.SortFields, request.Paging))
                     .On<GetDataRequest>($"{TestProgId}.{FormActions.GetData}", request => GetData(request.RowId))
                     .On<GetNewDataRequest>($"{TestProgId}.{FormActions.GetNewData}", _ => GetNewData())
                     .On<SaveRequest>($"{TestProgId}.{FormActions.Save}", request => Save(request.DataSet!))
@@ -142,6 +143,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             public List<string> ListSelectFields { get; } = [];
             public List<PagingOptions> ListPaging { get; } = [];
             public int? TotalRows { get; set; }
+            public SortFieldCollection? LastSort { get; private set; }
             public List<Guid> Loaded { get; } = [];
             public int NewCount { get; private set; }
             public List<DataSet> Saved { get; } = [];
@@ -152,8 +154,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             public string NewName { get; set; } = "New employee";
             public int LanguageFetchCount { get; private set; }
 
-            private GetListResponse GetList(string selectFields, PagingOptions? paging)
+            private GetListResponse GetList(string selectFields, SortFieldCollection? sortFields, PagingOptions? paging)
             {
+                LastSort = sortFields;
                 GetListCount++;
                 ListSelectFields.Add(selectFields);
                 if (paging is not null) { ListPaging.Add(paging); }
@@ -347,6 +350,26 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             Assert.Equal(1, form.ListPaging[2].Page);
             Assert.Equal(100, form.ListPaging[2].PageSize);
             Assert.True(form.ListPaging[2].IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("Clicking a header reads the first page in that order and marks the column")]
+        public void Sort_HeaderClick_ReadsInNewOrder()
+        {
+            using var culture = new CultureScope("en-US");
+            var form = RegisterBackend();
+            form.TotalRows = 120;
+            var cut = RenderPage();
+            WaitForList(cut);
+            PagerButton(cut, PolhemUIText.NextPage).Click();
+            cut.WaitForAssertion(() => Assert.Equal(2, form.ListPaging.Count));
+
+            cut.Find("button.polhem-dynamic-grid__sort").Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(3, form.ListPaging.Count));
+            Assert.Equal(1, form.ListPaging[2].Page);
+            Assert.Equal("emp_name", Assert.Single(form.LastSort!).FieldName);
+            cut.WaitForAssertion(() => Assert.Equal("ascending", cut.Find("th.polhem-dynamic-grid__header").GetAttribute("aria-sort")));
         }
 
         [Fact]

@@ -103,6 +103,7 @@
 .polhem-dynamic-grid { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 .polhem-dynamic-grid th { text-align: left; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid var(--polhem-border); }
 .polhem-dynamic-grid td { padding: 4px 8px; border-bottom: 1px solid var(--polhem-border-muted); }
+.polhem-dynamic-grid__sort { background: none; border: none; padding: 0; font: inherit; font-weight: inherit; color: inherit; cursor: pointer; }
 .polhem-dynamic-grid__row { cursor: pointer; }
 .polhem-dynamic-grid__row--selected { background: var(--polhem-selected); }
 

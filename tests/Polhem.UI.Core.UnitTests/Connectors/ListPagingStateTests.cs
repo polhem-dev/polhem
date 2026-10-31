@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
 using Polhem.UI.Core.Connectors;
 
 namespace Polhem.UI.Core.UnitTests.Connectors
@@ -71,6 +72,41 @@ namespace Polhem.UI.Core.UnitTests.Connectors
         public void SetPageSize_BelowOne_Throws()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new ListPagingState().SetPageSize(0));
+        }
+
+        [Fact]
+        [DisplayName("ToggleSort moves a field through ascending, descending and the default order")]
+        public void ToggleSort_SameField_CyclesThroughDirections()
+        {
+            var state = new ListPagingState();
+            Assert.Null(state.CreateSort());
+
+            state.ToggleSort("sys_name");
+            Assert.Equal(SortDirection.Asc, Assert.Single(state.CreateSort()!).Direction);
+
+            state.ToggleSort("SYS_NAME");
+            Assert.Equal(SortDirection.Desc, Assert.Single(state.CreateSort()!).Direction);
+
+            state.ToggleSort("sys_name");
+            Assert.Null(state.SortFieldName);
+            Assert.Null(state.CreateSort());
+        }
+
+        [Fact]
+        [DisplayName("ToggleSort starts another field at ascending and returns to the first page")]
+        public void ToggleSort_OtherField_StartsAscendingOnFirstPage()
+        {
+            var state = new ListPagingState();
+            state.ToggleSort("sys_name");
+            state.ToggleSort("sys_name");
+            state.Apply(3, new PagingInfo { TotalCount = 120 });
+
+            state.ToggleSort("sys_id");
+
+            Assert.Equal("sys_id", state.SortFieldName);
+            Assert.Equal(SortDirection.Asc, state.SortDirection);
+            Assert.Equal(1, state.Page);
+            Assert.Equal(120, state.TotalCount);
         }
 
         [Fact]

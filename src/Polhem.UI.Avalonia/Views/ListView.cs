@@ -282,7 +282,8 @@ namespace Polhem.UI.Avalonia.Views
             UpdateToolbarState();
             try
             {
-                var response = await connector.GetListAsync(ComputeSelectFields(), paging: _paging.CreateOptions(page),
+                var response = await connector.GetListAsync(ComputeSelectFields(), sortFields: _paging.CreateSort(),
+                        paging: _paging.CreateOptions(page),
                         cancellationToken: cancellationToken)
                     .ConfigureAwait(true);
                 if (!_paging.IsCurrent(request)) return;

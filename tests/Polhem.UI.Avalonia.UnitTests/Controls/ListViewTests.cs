@@ -150,6 +150,47 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal(1, connector.Requests[^1].Page);
         }
 
+        [Fact]
+        [DisplayName("A sort request reads the first page in the new order and a reload keeps it")]
+        public async Task SortRequest_ReadsFirstPageInNewOrder()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            await InvokePrivateAsync(view, "OnSortRequestedAsync", "sys_name");
+
+            Assert.Equal(1, connector.Requests[^1].Page);
+            Assert.Equal("sys_name", Assert.Single(connector.LastSort!).FieldName);
+
+            await view.ReloadAsync();
+            Assert.Equal("sys_name", Assert.Single(connector.LastSort!).FieldName);
+        }
+
+        [Fact]
+        [DisplayName("The list columns are sortable except a Text column, and the sorted header carries a mark")]
+        public void EnableServerSort_MarksSortableColumnsAndHeader()
+        {
+            var schema = new FormSchema(TestProgId, TestProgId);
+            var master = schema.Tables!.Add(TestProgId, TestProgId);
+            master.Fields!.Add("sys_name", "Name", FieldDbType.String);
+            master.Fields.Add("memo", "Memo", FieldDbType.Text);
+            var layout = new Polhem.Definition.Layouts.LayoutGrid { TableName = TestProgId };
+            layout.Columns!.Add("sys_name", "Name", ControlType.TextEdit);
+            layout.Columns.Add("memo", "Memo", ControlType.TextEdit);
+            var grid = new Polhem.UI.Avalonia.Controls.GridControl();
+
+            grid.EnableServerSort();
+            grid.Bind(layout, null, master);
+            grid.SetSortIndicator("sys_name", Polhem.Definition.Sorting.SortDirection.Desc);
+
+            Assert.True(grid.InnerGrid.Columns[0].CanUserSort);
+            Assert.False(grid.InnerGrid.Columns[1].CanUserSort);
+            Assert.Equal("Name \u25BC", grid.InnerGrid.Columns[0].Header);
+            Assert.Equal("Memo", grid.InnerGrid.Columns[1].Header);
+        }
+
         private static FakeFormApiConnector PagedConnector(int totalRows)
             => new() { PagedHandler = PagedResponder(totalRows) };
 
@@ -571,6 +612,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             public Func<string, GetListResponse>? GetListHandler { get; set; }
             public Func<Polhem.Definition.Paging.PagingOptions, GetListResponse>? PagedHandler { get; set; }
             public List<Polhem.Definition.Paging.PagingOptions> Requests { get; } = [];
+            public Polhem.Definition.Sorting.SortFieldCollection? LastSort { get; private set; }
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }
 
             public override Task<GetListResponse> GetListAsync(
@@ -580,6 +622,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
                 Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
             {
                 if (paging is not null) { Requests.Add(paging); }
+                LastSort = sortFields;
                 return Task.FromResult(PagedHandler is not null && paging is not null
                     ? PagedHandler(paging)
                     : (GetListHandler ?? (_ => new GetListResponse()))(selectFields));

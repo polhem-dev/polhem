@@ -34,3 +34,7 @@ Polhem.UI.Core.Connectors.ListPagingState.SetPageSize(int pageSize) -> void
 Polhem.UI.Core.Connectors.ListPagingState.TotalCount.get -> int?
 Polhem.UI.Core.Connectors.ListPagingState.TotalPages.get -> int?
 Polhem.UI.Core.Connectors.ListPagingState.TryStepBackFromEmptyPage(int rowCount) -> bool
+Polhem.UI.Core.Connectors.ListPagingState.CreateSort() -> Polhem.Definition.Sorting.SortFieldCollection?
+Polhem.UI.Core.Connectors.ListPagingState.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
+Polhem.UI.Core.Connectors.ListPagingState.SortFieldName.get -> string?
+Polhem.UI.Core.Connectors.ListPagingState.ToggleSort(string! fieldName) -> void

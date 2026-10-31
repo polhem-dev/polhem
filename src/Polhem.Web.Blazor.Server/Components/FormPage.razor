@@ -74,7 +74,10 @@
                          FormTable="_schema?.MasterTable"
                          SelectedRowId="_selectedRowId"
                          OnRowSelected="OnRowSelected"
-                         OnRowActivated="OnRowActivatedAsync" />
+                         OnRowActivated="OnRowActivatedAsync"
+                         SortFieldName="@_paging.SortFieldName"
+                         SortDirection="_paging.SortDirection"
+                         OnSortRequested="OnSortRequestedAsync" />
             @if (ShowsPager)
             {
                 <div class="polhem-form-page__pager">

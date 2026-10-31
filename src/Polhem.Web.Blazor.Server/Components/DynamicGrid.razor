@@ -12,8 +12,15 @@ else
             <tr>
                 @foreach (var column in VisibleColumns)
                 {
-                    <th class="polhem-dynamic-grid__header" style="@BuildColumnStyle(column)">
-                        @column.Caption
+                    <th class="polhem-dynamic-grid__header" style="@BuildColumnStyle(column)" aria-sort="@AriaSort(column)">
+                        @if (IsSortable(column))
+                        {
+                            <button type="button" class="polhem-dynamic-grid__sort" @onclick="() => OnSortRequested.InvokeAsync(column.FieldName)">@column.Caption@SortMark(column)</button>
+                        }
+                        else
+                        {
+                            @column.Caption
+                        }
                     </th>
                 }
             </tr>

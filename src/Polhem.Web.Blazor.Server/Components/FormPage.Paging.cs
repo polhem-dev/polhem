@@ -34,7 +34,8 @@ namespace Polhem.Web.Blazor.Server.Components
             var version = _loadVersion;
             var request = _paging.BeginRequest();
             var response = await Client.Form(ProgId)
-                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema), paging: _paging.CreateOptions(page))
+                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema),
+                    sortFields: _paging.CreateSort(), paging: _paging.CreateOptions(page))
                 .ConfigureAwait(true);
             if (version != _loadVersion || !_paging.IsCurrent(request)) return;
 
@@ -57,6 +58,14 @@ namespace Polhem.Web.Blazor.Server.Components
                 await LoadListPageAsync(page).ConfigureAwait(true);
                 _selectedRowId = null;
             }).ConfigureAwait(true);
+        }
+
+        private async Task OnSortRequestedAsync(string fieldName)
+        {
+            if (IsListLocked) return;
+
+            _paging.ToggleSort(fieldName);
+            await GoToPageAsync(_paging.Page).ConfigureAwait(true);
         }
 
         private async Task OnPageSizeChangedAsync(ChangeEventArgs e)
