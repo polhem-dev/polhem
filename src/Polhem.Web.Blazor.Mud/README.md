@@ -14,12 +14,14 @@ The layering is in [ADR-059](../../maintainers/adr/adr-059-blazor-shared-layer.m
 - `RowEditPanel` and `RowEditDialog`, the edit form of `EditForm` mode.
 - `FormLayoutPresenter` (`Polhem.Web.Blazor.Mud.Controls`), a record laid out from a `FormLayout`. The fields stay on a CSS grid, because `MudGrid` cannot do a `RowSpan` or a `ColumnCount` that does not divide twelve.
 - `FormPage` and `RelatedRecordDialog` (`Polhem.Web.Blazor.Mud.Components`), over the bases of `Polhem.Web.Blazor`; `ConfirmDialog` asks before a delete with the focus on Cancel.
+- `PolhemLoginPanel` (`Polhem.Web.Blazor.Mud.Components`), the sign-in form.
+- `PolhemShellLayout`, `PolhemShellNavMenu` and `PolhemShellSignIn` (`Polhem.Web.Blazor.Mud.Shell`), the shell over `MudLayout`. The layout places `PolhemMudProviders` itself. A host registers the options with its host package (`AddPolhemShell` on Blazor Server).
 - `PolhemMudProviders` and `PolhemMudTheme` (`Polhem.Web.Blazor.Mud.Theming`), MudBlazor's providers and the default theme.
 - `AddPolhemMud` (`Polhem.Web.Blazor.Mud.DependencyInjection`), which registers MudBlazor's services.
 
 ## Using it
 
-Call `AddPolhemMud`, place one `PolhemMudProviders` in the layout, and add to the host page:
+Call `AddPolhemMud`, place one `PolhemMudProviders` in the layout unless the shell's layout is in use, and add to the host page:
 
 ```html
 <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />

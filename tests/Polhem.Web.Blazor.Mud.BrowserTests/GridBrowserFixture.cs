@@ -10,7 +10,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
     /// <summary>
     /// Runs a Blazor Server site over <see cref="GridPage"/> and a form page, and a headless Chrome for the tests of one class.
     /// </summary>
-    public sealed class GridBrowserFixture : IAsyncLifetime
+    public class GridBrowserFixture : IAsyncLifetime
     {
         private WebApplication? _app;
         private IPlaywright? _playwright;
@@ -28,6 +28,10 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         /// <summary>Gets the browser.</summary>
         public IBrowser Browser { get; private set; } = default!;
 
+        /// <summary>Registers the backend of the site's pages.</summary>
+        /// <param name="services">The service collection.</param>
+        protected virtual void RegisterBackend(IServiceCollection services) => Backend.Register(services);
+
         /// <inheritdoc />
         public async Task InitializeAsync()
         {
@@ -41,7 +45,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             builder.WebHost.UseUrls("http://127.0.0.1:0");
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
             builder.Services.AddPolhemMud();
-            Backend.Register(builder.Services);
+            RegisterBackend(builder.Services);
             _app = builder.Build();
             _app.UseStaticFiles();
             _app.UseAntiforgery();

@@ -31,7 +31,7 @@
 .polhem-form-page__dirty { color: var(--mud-palette-warning); margin-left: 8px; font-size: 13px; }
 .polhem-form-page__notice { margin-bottom: 8px; }
 .polhem-form-page__page-position, .polhem-form-page__page-size-label { margin-left: 8px; font-size: 13px; }
-.polhem-form-page__page-size { flex: 0 0 90px; }
+.polhem-form-page__pager .mud-input-control { flex: 0 0 90px; width: 90px; }
 .polhem-form-layout { display: flex; flex-direction: column; gap: 8px; }
 .polhem-form-layout__section, .polhem-form-layout__detail { padding: 8px; }
 .polhem-form-layout__section-caption, .polhem-form-layout__detail-caption { margin-bottom: 8px; }
@@ -39,3 +39,15 @@
 .polhem-form-layout__label--required { color: var(--mud-palette-primary); }
 .polhem-related-record-dialog__toolbar { margin-bottom: 8px; }
 .polhem-related-record-dialog__notice { margin-bottom: 8px; }
+
+.polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
+.polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+.polhem-shell-signin__languages { display: flex; gap: 8px; }
+.polhem-login-panel { display: flex; flex-direction: column; gap: 12px; }
+.polhem-shell__title { font-weight: 600; }
+.polhem-shell__user { margin-right: 12px; font-size: 13px; opacity: 0.85; }
+/* Only the sides and the bottom: MudMainContent's top padding clears the app bar. */
+.polhem-shell__main { padding-left: 16px; padding-right: 16px; padding-bottom: 16px; }
+.polhem-shell__main > :first-child { margin-top: 16px; }
+.polhem-shell-nav__header { padding: 10px 16px 4px; font-size: 12px; font-weight: 600; color: var(--mud-palette-text-secondary); }
+.polhem-shell-nav__loading, .polhem-shell-nav__empty { padding: 8px 16px; font-size: 13px; color: var(--mud-palette-text-secondary); }
