@@ -1,0 +1,38 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits DropDownEditorBase
+
+@if (IsEditable)
+{
+    @* A stored value that matches no item shows as empty rather than as its raw code. *@
+    <MudSelect T="string"
+               UserAttributes="MudAttributes.From(AdditionalAttributes)"
+               InputId="@Id"
+               Class="polhem-field-editor--select"
+               Value="SelectedValue"
+               ValueChanged="CommitValue"
+               ToStringFunc="ItemText"
+               Variant="Variant.Outlined"
+               Margin="Margin.Dense"
+               Dense="true">
+        @foreach (var item in Items)
+        {
+            <MudSelectItem T="string" Value="item.Value">@item.Text</MudSelectItem>
+        }
+    </MudSelect>
+}
+else
+{
+    <MudTextField T="string"
+                  UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                  InputId="@Id"
+                  Class="polhem-field-editor--select"
+                  Value="@SelectedItem?.Text"
+                  ReadOnly="true"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+}
+
+@code {
+    private string? ItemText(string? value)
+        => Items.FirstOrDefault(i => string.Equals(i.Value, value, StringComparison.Ordinal))?.Text ?? string.Empty;
+}

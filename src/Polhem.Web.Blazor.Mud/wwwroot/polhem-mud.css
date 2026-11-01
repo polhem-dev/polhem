@@ -1,0 +1,12 @@
+/* High-density overrides for ERP screens, applied over MudBlazor's dense variants inside `.polhem-dense`.
+   These selectors use MudBlazor's internal class names, so check them when upgrading MudBlazor. */
+.polhem-dense .mud-input-control { margin: 0 !important; }
+.polhem-dense .mud-input-control-input-container { font-size: 13px; }
+.polhem-dense .mud-input.mud-input-outlined .mud-input-slot { padding: 4px 8px !important; height: auto; font-size: 13px; line-height: 20px; }
+.polhem-dense .mud-input-adornment svg, .polhem-dense .mud-input-adornment .mud-icon-root { font-size: 16px; width: 16px; height: 16px; }
+.polhem-dense .mud-input-adornment button { padding: 2px; }
+.polhem-dense .mud-select .mud-input-slot { min-height: 0; }
+.polhem-dense .mud-checkbox button, .polhem-dense .mud-checkbox .mud-button-root { padding: 2px; }
+
+.polhem-field-editor--numeric input { text-align: right; }
+.polhem-field-editor--datetime { display: flex; gap: 4px; }

@@ -1,0 +1,25 @@
+@namespace Polhem.Web.Blazor.Mud.Theming
+
+<MudThemeProvider Theme="_theme" IsDarkMode="IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code {
+    private MudTheme _theme = PolhemMudTheme.CreateDefault();
+
+    /// <summary>
+    /// Gets or sets the theme, or <c>null</c> for <see cref="PolhemMudTheme.CreateDefault"/>.
+    /// </summary>
+    [Parameter]
+    public MudTheme? Theme { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the dark palette applies.
+    /// </summary>
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet() => _theme = Theme ?? _theme;
+}

@@ -16,8 +16,15 @@ namespace Polhem.Web.Blazor.BehaviorTests
     /// What every UI package's field editors must do. A UI package derives from this class and supplies how to find and
     /// operate its controls.
     /// </summary>
-    public abstract class EditorBehaviorTests : BunitContext
+    public abstract class EditorBehaviorTests : BunitContext, IAsyncLifetime
     {
+        /// <inheritdoc />
+        Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+        // xUnit only calls the synchronous Dispose otherwise, and a UI framework's services can be async-only.
+        /// <inheritdoc />
+        async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync().ConfigureAwait(true);
+
         private const string FieldName = "value";
 
         /// <summary>Gets the editor component of <paramref name="controlType"/>.</summary>

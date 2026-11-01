@@ -17,8 +17,15 @@ namespace Polhem.Web.Blazor.BehaviorTests
     /// What every UI package's grid must do. A UI package derives from this class and supplies how to find and operate
     /// its grid.
     /// </summary>
-    public abstract class GridBehaviorTests : BunitContext
+    public abstract class GridBehaviorTests : BunitContext, IAsyncLifetime
     {
+        /// <inheritdoc />
+        Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+        // xUnit only calls the synchronous Dispose otherwise, and a UI framework's services can be async-only.
+        /// <inheritdoc />
+        async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync().ConfigureAwait(true);
+
         /// <summary>Gets the grid component, which derives from <see cref="GridControlBase"/>.</summary>
         protected abstract Type GridType { get; }
 
