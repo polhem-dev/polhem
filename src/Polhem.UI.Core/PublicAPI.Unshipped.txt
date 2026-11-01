@@ -38,3 +38,4 @@ Polhem.UI.Core.Connectors.ListPagingState.CreateSort() -> Polhem.Definition.Sort
 Polhem.UI.Core.Connectors.ListPagingState.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
 Polhem.UI.Core.Connectors.ListPagingState.SortFieldName.get -> string?
 Polhem.UI.Core.Connectors.ListPagingState.ToggleSort(string! fieldName) -> void
+Polhem.UI.Core.Connectors.ListPagingState.SetSort(string? fieldName, Polhem.Definition.Sorting.SortDirection direction) -> bool

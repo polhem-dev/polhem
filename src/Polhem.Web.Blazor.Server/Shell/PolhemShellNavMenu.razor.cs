@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Polhem.Api.Client;
 using Polhem.Definition.Language;
-using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.Shell

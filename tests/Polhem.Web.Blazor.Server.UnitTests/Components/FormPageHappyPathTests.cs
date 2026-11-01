@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
@@ -14,7 +15,7 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="FormPage.OnParametersSetAsync"/> with a valid ProgId and a working backend.
+    /// Covers <see cref="FormPageBase.OnParametersSetAsync"/> with a valid ProgId and a working backend.
     /// A <see cref="FakeApiServer"/> simulates the full
     /// initialization path, covering the schema fetch, layout creation, DataObject creation and ReloadList inside the try block.
     /// </summary>
@@ -46,9 +47,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         /// </summary>
         private static void Inject(FormPage page, FormSchema schema)
         {
-            typeof(FormPage).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
+            typeof(FormPageBase).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
                 .SetValue(page, Server(schema).CreateClient());
-            typeof(FormPage).GetProperty("Options", BindingFlags.NonPublic | BindingFlags.Instance)!
+            typeof(FormPageBase).GetProperty("Options", BindingFlags.NonPublic | BindingFlags.Instance)!
                 .SetValue(page, new PolhemBlazorOptions { UseDefinitionLoader = false }.UseLocalProvider());
         }
 
@@ -63,7 +64,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static async Task InvokeOnParametersSetAsync(FormPage page)
         {
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;
@@ -82,7 +83,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             await InvokeOnParametersSetAsync(page);
 
-            var error = typeof(FormPage).GetField(
+            var error = typeof(FormPageBase).GetField(
                 "_error", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page) as string;
             Assert.Null(error);
         }
@@ -99,7 +100,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             await InvokeOnParametersSetAsync(page);
 
-            var isInitializing = (bool)typeof(FormPage).GetField(
+            var isInitializing = (bool)typeof(FormPageBase).GetField(
                 "_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page)!;
             Assert.False(isInitializing);
         }
@@ -116,7 +117,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             await InvokeOnParametersSetAsync(page);
 
-            var dataObject = typeof(FormPage).GetField(
+            var dataObject = typeof(FormPageBase).GetField(
                 "_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page);
             Assert.NotNull(dataObject);
         }

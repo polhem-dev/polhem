@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Core.Data;
@@ -16,17 +17,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class FormPageRenderTests
     {
         private static readonly MethodInfo s_buildRenderTree =
-            typeof(FormPage)
+            typeof(FormPageBase)
                 .GetMethod("BuildRenderTree", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_errorField =
-            typeof(FormPage).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_isInitializingField =
-            typeof(FormPage).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_dataObjectField =
-            typeof(FormPage).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static void Render(FormPage page)
         {

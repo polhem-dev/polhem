@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
@@ -14,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     {
         private static MethodInfo GetRunGuardedAsync()
         {
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "RunGuardedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             return method!;
@@ -22,7 +23,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static FieldInfo GetNoticeField()
         {
-            var field = typeof(FormPage).GetField(
+            var field = typeof(FormPageBase).GetField(
                 "_notice", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(field);
             return field!;
@@ -30,7 +31,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static FieldInfo GetBusyField()
         {
-            var field = typeof(FormPage).GetField(
+            var field = typeof(FormPageBase).GetField(
                 "_isBusy", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(field);
             return field!;
@@ -109,10 +110,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnRowActivatedAsync_NullDataObject_ReturnsWithoutError()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnRowActivatedAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, new object[] { Guid.NewGuid() })!;
+            var task = (Task)method!.Invoke(page, new object[] { Guid.NewGuid(), CancellationToken.None })!;
             var exception = await Record.ExceptionAsync(() => task);
             Assert.Null(exception);
         }
@@ -122,10 +123,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnNewAsync_NullDataObject_ReturnsWithoutError()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnNewAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, null)!;
+            var task = (Task)method!.Invoke(page, new object[] { CancellationToken.None })!;
             var exception = await Record.ExceptionAsync(() => task);
             Assert.Null(exception);
         }
@@ -135,10 +136,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnSaveAsync_NullDataObject_ReturnsWithoutError()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnSaveAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, null)!;
+            var task = (Task)method!.Invoke(page, new object[] { CancellationToken.None })!;
             var exception = await Record.ExceptionAsync(() => task);
             Assert.Null(exception);
         }
@@ -148,10 +149,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnDeleteAsync_NullDataObject_ReturnsWithoutError()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnDeleteAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, null)!;
+            var task = (Task)method!.Invoke(page, new object[] { CancellationToken.None })!;
             var exception = await Record.ExceptionAsync(() => task);
             Assert.Null(exception);
         }

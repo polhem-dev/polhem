@@ -83,6 +83,24 @@ namespace Polhem.UI.Core.Connectors
             TotalCount = null;
         }
 
+        /// <summary>
+        /// Sets the sort a grid chose itself, for a grid with a click cycle of its own. A change returns to the first
+        /// page and forgets the row count, as <see cref="ToggleSort"/> does.
+        /// </summary>
+        /// <param name="fieldName">The field to sort by, or <c>null</c> for the server's default order.</param>
+        /// <param name="direction">The direction; ignored without a field.</param>
+        /// <returns>Whether the sort changed, and so whether the head should request the rows again.</returns>
+        public bool SetSort(string? fieldName, SortDirection direction)
+        {
+            var newDirection = fieldName is null ? SortDirection.Asc : direction;
+            if (StringUtilities.IsEquals(SortFieldName, fieldName) && SortDirection == newDirection) { return false; }
+            SortFieldName = fieldName;
+            SortDirection = newDirection;
+            Page = 1;
+            TotalCount = null;
+            return true;
+        }
+
         /// <summary>Starts a request and returns the id to pass to <see cref="IsCurrent"/> when it completes.</summary>
         public int BeginRequest() => ++_requestId;
 

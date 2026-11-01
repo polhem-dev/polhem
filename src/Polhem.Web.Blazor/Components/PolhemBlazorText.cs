@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Polhem.Definition.Language;
 
-namespace Polhem.Web.Blazor.Server.Components
+namespace Polhem.Web.Blazor.Components
 {
     /// <summary>
     /// Resolves the text the components of this package render, through the
@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// or a host that composes its own container — falls back to one over the framework's shipped
     /// translations, so the components never fail for want of a localizer.
     /// </remarks>
-    internal static class PolhemBlazorText
+    public static class PolhemBlazorText
     {
         private static readonly IStringLocalizer s_fallback =
             new LanguageResourceStringLocalizer<PolhemUIText>(
@@ -26,7 +26,8 @@ namespace Polhem.Web.Blazor.Server.Components
         /// The component's service provider; <c>null</c> when the component was created outside a
         /// renderer.
         /// </param>
-        internal static IStringLocalizer GetLocalizer(IServiceProvider? services)
+        /// <returns>The localizer.</returns>
+        public static IStringLocalizer GetLocalizer(IServiceProvider? services)
             => services?.GetService<IStringLocalizer<PolhemUIText>>() ?? s_fallback;
     }
 }

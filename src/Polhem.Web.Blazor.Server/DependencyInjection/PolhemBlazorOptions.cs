@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     /// own permissions should call <see cref="UseRemoteProvider"/> and reach the backend over HTTP,
     /// where each call is checked like any other API client's.
     /// </remarks>
-    public sealed class PolhemBlazorOptions
+    public sealed class PolhemBlazorOptions : Polhem.Web.Blazor.Components.IBlazorDefinitionOptions
     {
         /// <summary>
         /// Gets the resolved provider mode (<c>Local</c> by default for Blazor Server).

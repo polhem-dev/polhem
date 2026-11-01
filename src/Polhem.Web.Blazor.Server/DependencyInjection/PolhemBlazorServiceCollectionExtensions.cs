@@ -44,6 +44,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
             configure?.Invoke(options);
 
             services.AddSingleton(options);
+            services.AddSingleton<IBlazorDefinitionOptions>(options);
             // WARNING: scoped, not singleton. A client holds one signed-in identity, so one per circuit is what keeps
             // one user's token and transmission key out of another's requests. A singleton would make the last
             // sign-in everyone's.
