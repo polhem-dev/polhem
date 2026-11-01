@@ -146,3 +146,15 @@ Polhem.Web.Blazor.Mud.Components.FocusedButton.OnClick.get -> Microsoft.AspNetCo
 Polhem.Web.Blazor.Mud.Components.FocusedButton.OnClick.set -> void
 override Polhem.Web.Blazor.Mud.Components.FocusedButton.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Mud.Components.FocusedButton.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Mud.Components.PolhemLoginPanel
+Polhem.Web.Blazor.Mud.Components.PolhemLoginPanel.PolhemLoginPanel() -> void
+Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout
+Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout.PolhemShellLayout() -> void
+Polhem.Web.Blazor.Mud.Shell.PolhemShellNavMenu
+Polhem.Web.Blazor.Mud.Shell.PolhemShellNavMenu.PolhemShellNavMenu() -> void
+Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn
+Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
+~override Polhem.Web.Blazor.Mud.Components.PolhemLoginPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Shell.PolhemShellNavMenu.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

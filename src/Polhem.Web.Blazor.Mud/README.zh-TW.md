@@ -14,12 +14,14 @@
 - `RowEditPanel` 與 `RowEditDialog`，`EditForm` 模式的編輯表單。
 - `FormLayoutPresenter`（`Polhem.Web.Blazor.Mud.Controls`），依 `FormLayout` 排列紀錄。欄位維持 CSS Grid，因為 `MudGrid` 做不到 `RowSpan`，也處理不了除不盡 12 的 `ColumnCount`。
 - `FormPage` 與 `RelatedRecordDialog`（`Polhem.Web.Blazor.Mud.Components`），建立在 `Polhem.Web.Blazor` 的基底上；`ConfirmDialog` 在刪除前詢問，焦點預設在取消鈕。
+- `PolhemLoginPanel`（`Polhem.Web.Blazor.Mud.Components`），登入表單。
+- `PolhemShellLayout`、`PolhemShellNavMenu` 與 `PolhemShellSignIn`（`Polhem.Web.Blazor.Mud.Shell`），建立在 `MudLayout` 上的外殼。版面會自行放置 `PolhemMudProviders`。選項由宿主套件註冊（Blazor Server 用 `AddPolhemShell`）。
 - `PolhemMudProviders` 與 `PolhemMudTheme`（`Polhem.Web.Blazor.Mud.Theming`），MudBlazor 的 provider 與預設佈景。
 - `AddPolhemMud`（`Polhem.Web.Blazor.Mud.DependencyInjection`），註冊 MudBlazor 的服務。
 
 ## 使用方式
 
-呼叫 `AddPolhemMud`，在版面放一個 `PolhemMudProviders`，並在宿主頁面加入：
+呼叫 `AddPolhemMud`，在版面放一個 `PolhemMudProviders`（使用外殼的版面時不用放），並在宿主頁面加入：
 
 ```html
 <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />

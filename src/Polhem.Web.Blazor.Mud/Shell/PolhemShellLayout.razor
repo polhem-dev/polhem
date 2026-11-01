@@ -1,0 +1,55 @@
+@namespace Polhem.Web.Blazor.Mud.Shell
+@inherits ShellLayoutBase
+@using Polhem.Web.Blazor.Mud.Theming
+
+@* The layout places the providers, so a host only sets it as the router's default layout. *@
+<PolhemMudProviders />
+@if (UserContext.Company is null)
+{
+    <div class="polhem-shell-signin-page">
+        <PolhemShellSignIn OnSignedIn="StateHasChanged" />
+    </div>
+}
+else
+{
+    <CompactViewportObserver CompactChanged="OnCompactChanged" />
+    <MudLayout Class="polhem-shell">
+        <MudAppBar Dense="true" Elevation="1" Class="polhem-shell__header">
+            <MudIconButton Class="polhem-shell__menu-button" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                           aria-label="@PolhemShellText.Get(PolhemShellText.ToggleMenu)" OnClick="ToggleMenu" />
+            <span class="polhem-shell__title">@Options.AppTitle</span>
+            <MudSpacer />
+            @if (!_isNarrow)
+            {
+                <span class="polhem-shell__user">@UserContext.User?.UserName · @UserContext.Company.CompanyName</span>
+            }
+            <MudButton Class="polhem-shell__signout" Color="Color.Inherit" Size="Size.Small" OnClick="SignOut">@PolhemShellText.Get(PolhemShellText.SignOut)</MudButton>
+        </MudAppBar>
+        <MudDrawer Open="IsDrawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="@(_isNarrow ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
+                   ClipMode="DrawerClipMode.Always" Elevation="1" Width="@DrawerWidth" Class="polhem-shell__nav">
+            <PolhemShellNavMenu OnNavigated="CloseMenu" />
+        </MudDrawer>
+        <MudMainContent Class="polhem-shell__main">@Body</MudMainContent>
+    </MudLayout>
+}
+
+@code {
+    private const string DrawerWidth = "200px";
+
+    // Measured rather than left to MudDrawer's responsive variant, which keeps its own open state and its own breakpoint.
+    // This keeps the switch of ShellLayoutBase and the form page's compact threshold.
+    private bool _isNarrow;
+
+    private bool IsDrawerOpen => _isNarrow ? IsMenuToggled : !IsMenuToggled;
+
+    private void OnCompactChanged(bool compact)
+    {
+        _isNarrow = compact;
+        CloseMenu();
+    }
+
+    private void OnDrawerOpenChanged(bool open)
+    {
+        if (open != IsDrawerOpen) ToggleMenu();
+    }
+}

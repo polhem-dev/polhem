@@ -1,0 +1,36 @@
+@namespace Polhem.Web.Blazor.Mud.Shell
+@inherits ShellSignInBase
+@using Polhem.Web.Blazor.Mud.Components
+
+<MudPaper Outlined="true" Class="polhem-shell-signin">
+    <MudText Typo="Typo.h5" Class="polhem-shell-signin__title">@Options.AppTitle</MudText>
+    @if (!string.IsNullOrWhiteSpace(Options.SignInHint))
+    {
+        <MudText Typo="Typo.body2" Class="polhem-shell-signin__hint">@Options.SignInHint</MudText>
+    }
+    <MudTextField T="string"
+                  Class="polhem-login-panel__input"
+                  InputId="@CompanyInputId"
+                  Label="@PolhemShellText.Get(PolhemShellText.CompanyId)"
+                  @bind-Value="CompanyId"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+    <PolhemLoginPanel InitialUserId="@Options.DefaultUserId"
+                      InitialPassword="@Options.DefaultPassword"
+                      OnLoggedIn="response => OnLoggedInAsync(response)" />
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="polhem-shell-signin__error">@Error</MudAlert>
+    }
+    @if (OffersLanguages)
+    {
+        <div class="polhem-shell-signin__languages" role="group" aria-label="@PolhemShellText.Get(PolhemShellText.Language)">
+            @foreach (var language in Options.Languages)
+            {
+                <MudButton Class="polhem-shell-signin__language" Size="Size.Small" Variant="Variant.Outlined"
+                           Disabled="@IsCurrent(language)" OnClick="() => SwitchLanguage(language)">@language.DisplayName</MudButton>
+            }
+        </div>
+        <MudText Typo="Typo.caption" Class="polhem-shell-signin__hint">@PolhemShellText.Get(PolhemShellText.LanguageHint)</MudText>
+    }
+</MudPaper>
