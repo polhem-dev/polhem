@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: ac287a2e7d098cea03a4f1999abb9fe25f6a6f14 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: d234d2c5b049f519cc62447fe9c178fb789b8eda -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)

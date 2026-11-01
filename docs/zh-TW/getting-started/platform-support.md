@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: ff23b690d9bac7ff04f390f976e9848184623f67 -->
+<!-- source: en/getting-started/platform-support.md blob: 27c141288d4846da188f553d2646fb264db29ead -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)

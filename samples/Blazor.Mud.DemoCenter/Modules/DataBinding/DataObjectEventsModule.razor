@@ -1,0 +1,65 @@
+@implements IDisposable
+
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Master (Staff)" Note="Edit the fields below → FieldValueChanged.">
+            <LabeledRow Label="emp_name"><TextEdit FieldName="emp_name" /></LabeledRow>
+            <LabeledRow Label="dept"><DropDownEdit FieldName="dept" /></LabeledRow>
+            <LabeledRow Label="is_active"><CheckEdit FieldName="is_active" /></LabeledRow>
+        </DemoSection>
+        <DemoSection Title="Detail (Phones)" Note="Edit a cell → FieldValueChanged; the toolbar's add and delete → RowAdded and RowDeleted.">
+            <GridControl Layout="_phones" />
+        </DemoSection>
+        <DemoSection Title="Triggering DataSetReplaced" Note="InitializeNewMaster() resets the master and raises DataSetReplaced; the master fields above read again and clear.">
+            <div><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="_data.InitializeNewMaster">Reinitialize the master — InitializeNewMaster()</MudButton></div>
+        </DemoSection>
+        <DemoSection Title="Event log (newest first)">
+            <pre class="demo-live">@(_lines.Count == 0 ? "(No events yet)" : string.Join(Environment.NewLine, _lines))</pre>
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private readonly FormDataObject _data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
+    private readonly LayoutGrid _phones = SampleFormData.BuildPhonesLayout();
+    private readonly List<string> _lines = [];
+    private int _sequence;
+
+    // Subscribed after the seed writes in BuildMasterDetail, so the log starts empty.
+    protected override void OnInitialized()
+    {
+        _data.FieldValueChanged += OnFieldValueChanged;
+        _data.RowAdded += OnRowAdded;
+        _data.RowDeleted += OnRowDeleted;
+        _data.IsDirtyChanged += OnIsDirtyChanged;
+        _data.DataSetReplaced += OnDataSetReplaced;
+    }
+
+    private void OnFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
+        => Append($"FieldValueChanged   {e.TableName}.{e.FieldName} = {e.Value}");
+
+    private void OnRowAdded(object? sender, RowChangedEventArgs e) => Append($"RowAdded            {e.TableName}");
+
+    private void OnRowDeleted(object? sender, RowChangedEventArgs e) => Append($"RowDeleted          {e.TableName}");
+
+    private void OnIsDirtyChanged(object? sender, EventArgs e) => Append($"IsDirtyChanged      IsDirty = {_data.IsDirty}");
+
+    private void OnDataSetReplaced(object? sender, EventArgs e) => Append("DataSetReplaced     (DataSet replaced / contents reset)");
+
+    private void Append(string entry)
+    {
+        _lines.Insert(0, $"{++_sequence:D2}  {entry}");
+        if (_lines.Count > 15)
+            _lines.RemoveAt(_lines.Count - 1);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _data.FieldValueChanged -= OnFieldValueChanged;
+        _data.RowAdded -= OnRowAdded;
+        _data.RowDeleted -= OnRowDeleted;
+        _data.IsDirtyChanged -= OnIsDirtyChanged;
+        _data.DataSetReplaced -= OnDataSetReplaced;
+    }
+}

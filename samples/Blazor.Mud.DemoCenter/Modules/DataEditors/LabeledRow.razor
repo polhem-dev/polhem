@@ -1,0 +1,12 @@
+<div class="demo-row">
+    <MudText Typo="Typo.body2" Class="demo-note">@Label</MudText>
+    <div>@ChildContent</div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

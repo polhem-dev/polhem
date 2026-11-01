@@ -133,7 +133,7 @@ eyes):
 ## The alignment baseline for other UI heads
 
 `Polhem.UI.Avalonia` is the pilot of the UI architecture: derived controls and the View layer are settled here first,
-then ported to the other UI heads (`Polhem.Web.Blazor.Mud`, and WinForms / WPF in the future). The Demo Center is the
+then ported to the other UI heads (`Polhem.Web.Blazor.Mud`, shown case by case in [`Blazor.Mud.DemoCenter`](../Blazor.Mud.DemoCenter/README.md), and WinForms / WPF in the future). The Demo Center is the
 template to align with:
 
 - The **reference behavior and appearance** of each control and concept (binding, read-only, required, FormMode,

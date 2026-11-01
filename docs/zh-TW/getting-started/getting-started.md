@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 6a57e6a601e25cea545f8f12003989c14786cd86 -->
+<!-- source: en/getting-started/getting-started.md blob: d6305ed039e892c77573505eb80eafe48046bfaf -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)

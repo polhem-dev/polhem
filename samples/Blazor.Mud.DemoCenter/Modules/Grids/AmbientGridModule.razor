@@ -1,0 +1,10 @@
+<FormScope DataObject="_data">
+    <DemoSection Title="Ambient binding" Note="The data object comes from the FormScope, and the table from TableName.">
+        <GridControl TableName="Phones" Layout="_phones" />
+    </DemoSection>
+</FormScope>
+
+@code {
+    private readonly FormDataObject _data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
+    private readonly LayoutGrid _phones = SampleFormData.BuildPhonesLayout();
+}

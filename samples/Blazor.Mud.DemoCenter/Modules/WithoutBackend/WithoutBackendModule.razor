@@ -1,0 +1,135 @@
+@using Polhem.Definition
+@using Polhem.UI.Core
+
+@if (_record is null)
+{
+    <div class="demo-stack">
+        <div class="demo-toolbar">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_selected is null" OnClick="() => OpenAsync(_selected!.Value, SingleFormMode.View)">View</MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="NewAsync">New</MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_selected is null" OnClick="() => OpenAsync(_selected!.Value, SingleFormMode.Edit)">Edit</MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_selected is null" OnClick="DeleteAsync">Delete</MudButton>
+        </div>
+        <GridControl Layout="_listLayout" DataTable="_list" SelectedRowId="_selected" RowSelected="id => _selected = id"
+                     RowActivated="id => OpenAsync(id, SingleFormMode.View)" />
+    </div>
+}
+else
+{
+    <div class="demo-stack">
+        <div class="demo-toolbar">
+            @if (_mode == SingleFormMode.View)
+            {
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _record = null">Back</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="SaveAsync">Save</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _record = null">Cancel</MudButton>
+            }
+        </div>
+        <FormLayoutPresenter Layout="_layout" DataObject="_record" FormMode="_mode" IsCompact="IsCompact" IdPrefix="staff" />
+    </div>
+}
+
+@code {
+    private readonly FormSchema _schema = BuildSchema();
+    private readonly FormLayout _layout;
+    private readonly LayoutGrid _listLayout;
+    private readonly InMemoryFormApiConnector _connector;
+    private DataTable? _list;
+    private Guid? _selected;
+    private FormDataObject? _record;
+    private SingleFormMode _mode;
+
+    [CascadingParameter(Name = "IsCompact")]
+    public bool IsCompact { get; set; }
+
+    public WithoutBackendModule()
+    {
+        _layout = FormLayoutGenerator.Generate(_schema, _schema.ProgId);
+        _listLayout = _schema.GetListLayout();
+        _connector = new InMemoryFormApiConnector(_schema, SeedRows(_schema));
+    }
+
+    protected override Task OnInitializedAsync() => ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _list = (await _connector.GetListAsync()).Table;
+        _selected = null;
+    }
+
+    private async Task OpenAsync(Guid rowId, SingleFormMode mode)
+    {
+        var response = await _connector.GetDataAsync(rowId);
+        Show(response.DataSet!, mode);
+    }
+
+    private async Task NewAsync()
+    {
+        var response = await _connector.GetNewDataAsync();
+        Show(response.DataSet!, SingleFormMode.Add);
+    }
+
+    // NOTE: `FormDataObject` loads and saves only through the API client's connector, so the values are copied in
+    // and the data set is handed to this application's own connector.
+    private void Show(DataSet source, SingleFormMode mode)
+    {
+        var record = new FormDataObject(_schema);
+        record.InitializeNewMaster();
+        var row = source.Tables[_schema.ProgId]!.Rows[0];
+        foreach (DataColumn column in row.Table.Columns)
+            record.MasterRow![column.ColumnName] = row[column];
+        _record = record;
+        _mode = mode;
+    }
+
+    private async Task SaveAsync()
+    {
+        await _connector.SaveAsync(_record!.DataSet);
+        _record = null;
+        await ReloadAsync();
+    }
+
+    private async Task DeleteAsync()
+    {
+        await _connector.DeleteAsync(_selected!.Value);
+        await ReloadAsync();
+    }
+
+    private static FormSchema BuildSchema()
+    {
+        var schema = new FormSchema("Staff", "Staff") { ListFields = "emp_code,emp_name,dept,hire_date,is_active" };
+        var master = schema.Tables!.Add("Staff", "Staff").Fields!;
+        master.Add(new FormField(SysFields.RowId, "Row Id", FieldDbType.Guid) { Visible = false });
+        master.Add("emp_code", "Code", FieldDbType.String);
+        master.Add("emp_name", "Name", FieldDbType.String);
+        DataEditorParts.AddDepartment(master);
+        master.Add("hire_date", "Hire Date", FieldDbType.Date);
+        master.Add("is_active", "Active", FieldDbType.Boolean);
+        return schema;
+    }
+
+    private static DataTable SeedRows(FormSchema schema)
+    {
+        var rows = FormValueBinding.BuildEmptyDataSet(schema).Tables[schema.ProgId]!;
+        AddRow(rows, "EMP-001", "Alice Chen", "IT", new DateTime(2026, 6, 11, 0, 0, 0, DateTimeKind.Unspecified), true);
+        AddRow(rows, "EMP-002", "Bob Liu", "HR", new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Unspecified), true);
+        AddRow(rows, "EMP-003", "Carol Wang", "FIN", new DateTime(2024, 11, 20, 0, 0, 0, DateTimeKind.Unspecified), false);
+        rows.AcceptChanges();
+        return rows;
+    }
+
+    private static void AddRow(DataTable rows, string code, string name, string dept, DateTime hired, bool active)
+    {
+        var row = rows.NewRow();
+        row[SysFields.RowId] = Guid.NewGuid();
+        row["emp_code"] = code;
+        row["emp_name"] = name;
+        row["dept"] = dept;
+        row["hire_date"] = hired;
+        row["is_active"] = active;
+        rows.Rows.Add(row);
+    }
+}

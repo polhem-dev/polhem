@@ -1,0 +1,37 @@
+@page "/"
+@page "/case/{ModuleName}"
+@using Polhem.Web.Blazor.Components
+
+<PageTitle>@_module.Title — Demo Center</PageTitle>
+
+@* Wide screens get the dense controls; a phone-sized one keeps them large enough to touch. *@
+<CompactViewportObserver CompactChanged="compact => _isCompact = compact" />
+
+<MudText Typo="Typo.h5">@_module.Category — @_module.Title</MudText>
+<MudText Typo="Typo.body2" Class="mb-3 demo-note">@_module.Description</MudText>
+
+<MudTabs @key="_module" KeepPanelsAlive="true" Outlined="true" TabPanelsClass="pa-3">
+    <MudTabPanel Text="Demo">
+        <div class="@(_isCompact ? null : "polhem-dense")">
+            <CascadingValue Name="IsCompact" Value="_isCompact">
+                <DynamicComponent Type="_module.Component" />
+            </CascadingValue>
+        </div>
+    </MudTabPanel>
+    <MudTabPanel Text="Source">
+        <pre class="demo-source">@_module.GetSourceText()</pre>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private DemoModule _module = DemoModuleRegistry.Modules[0];
+    private bool _isCompact;
+
+    [Parameter]
+    public string? ModuleName { get; set; }
+
+    protected override void OnParametersSet()
+        => _module = DemoModuleRegistry.Modules.FirstOrDefault(
+                m => string.Equals(m.Component.Name, ModuleName, StringComparison.OrdinalIgnoreCase))
+            ?? DemoModuleRegistry.Modules[0];
+}

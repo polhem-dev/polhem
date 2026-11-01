@@ -1,0 +1,90 @@
+@using System.Globalization
+@using Polhem.Core
+
+<DemoSection Title="Multi-currency amounts (amount decimals follow the row currency)" Note="The amount column is bound to sys_currency; switching the document currency changes the decimals of the same amounts.">
+    <div><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="NextMode">Document currency: @s_modes[_mode]</MudButton></div>
+    <GridControl Layout="_layout" DataTable="_table" CurrencySettings="_currencies" />
+    <MudText Typo="Typo.body2">Original-currency total: @OriginalTotal</MudText>
+    <MudText Typo="Typo.body2">Home-currency total (TWD): @HomeTotal</MudText>
+</DemoSection>
+
+@code {
+    private static readonly string[] s_modes = ["Mixed (as seeded)", "All USD", "All JPY"];
+    private static readonly (string Product, decimal Amount, string Currency, decimal HomeAmount)[] s_lines =
+    [
+        ("Widget", 1234.567m, "USD", 39505m),
+        ("Gadget", 5000.4m, "JPY", 1050m),
+        ("Gizmo", 250.125m, "BHD", 21260m),
+    ];
+
+    private readonly CurrencySettings _currencies =
+    [
+        new CurrencyItem("USD", 0.01m, "$", "US Dollar"),
+        new CurrencyItem("JPY", 1m, "¥", "Japanese Yen"),
+        new CurrencyItem("BHD", 0.001m, "BD", "Bahraini Dinar"),
+        new CurrencyItem("TWD", 0.01m, "NT$", "New Taiwan Dollar"),
+    ];
+    private readonly LayoutGrid _layout = BuildLayout();
+    private readonly DataTable _table = BuildData().DataSet.Tables["OrderLine"]!;
+    private int _mode;
+
+    private IEnumerable<DataRow> Rows => _table.Rows.Cast<DataRow>();
+
+    private string OriginalTotal
+    {
+        get
+        {
+            // NOTE: `AmountColumnSummary`, which the Avalonia demo center uses for this rule, is in Polhem.UI.Avalonia.
+            var codes = Rows.Select(row => ValueUtilities.CStr(row["sys_currency"])).Distinct(StringComparer.Ordinal).ToList();
+            return codes.Count == 1
+                ? Format(Rows.Sum(row => ValueUtilities.CDecimal(row["amount"])), codes[0])
+                : "— mixed currencies, no total";
+        }
+    }
+
+    private string HomeTotal => Format(Rows.Sum(row => ValueUtilities.CDecimal(row["home_amount"])), "TWD");
+
+    private string Format(decimal total, string code)
+    {
+        var format = NumberFormatResolver.ResolveFormat(NumberKind.Amount, new RoundingContext { CurrencySettings = _currencies }, code);
+        return total.ToString(format, CultureInfo.InvariantCulture) + " " + code;
+    }
+
+    private void NextMode()
+    {
+        _mode = (_mode + 1) % s_modes.Length;
+        for (var i = 0; i < _table.Rows.Count; i++)
+            _table.Rows[i]["sys_currency"] = _mode switch { 1 => "USD", 2 => "JPY", _ => s_lines[i].Currency };
+    }
+
+    private static LayoutGrid BuildLayout()
+    {
+        var layout = new LayoutGrid("OrderLine", "Order lines");
+        layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
+        layout.Columns.Add(new LayoutColumn("amount", "Amount (original)", ControlType.NumericEdit) { NumberKind = NumberKind.Amount, CurrencyField = "sys_currency" });
+        layout.Columns.Add(new LayoutColumn("sys_currency", "Currency", ControlType.TextEdit));
+        layout.Columns.Add(new LayoutColumn("home_amount", "Amount (home)", ControlType.NumericEdit) { NumberKind = NumberKind.Amount, CurrencyField = "local_currency" });
+        layout.Columns.Add(new LayoutColumn("local_currency", "Home currency", ControlType.TextEdit));
+        return layout;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Order", "Order");
+        schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
+        var line = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        line.Add("product", "Product", FieldDbType.String);
+        line.Add(new FormField("amount", "Amount (original)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "sys_currency" });
+        line.Add("sys_currency", "Currency", FieldDbType.String);
+        line.Add(new FormField("home_amount", "Amount (home)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "local_currency" });
+        line.Add("local_currency", "Home currency", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("order_no", "SO-100");
+        var lines = data.DataSet.Tables["OrderLine"]!;
+        foreach (var (product, amount, currency, homeAmount) in s_lines)
+            lines.Rows.Add(product, amount, currency, homeAmount, "TWD");
+        return data;
+    }
+}
