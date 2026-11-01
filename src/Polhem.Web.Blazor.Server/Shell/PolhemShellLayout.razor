@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+@inherits ShellLayoutBase
 
 @if (UserContext.Company is null)
 {
@@ -17,7 +17,7 @@ else
             <button type="button" class="polhem-shell__signout" @onclick="SignOut">@PolhemShellText.Get(PolhemShellText.SignOut)</button>
         </header>
         <div class="polhem-shell__body">
-            <nav class="polhem-shell__nav @(_isMenuToggled ? "polhem-shell__nav--toggled" : null)">
+            <nav class="polhem-shell__nav @(IsMenuToggled ? "polhem-shell__nav--toggled" : null)">
                 <PolhemShellNavMenu OnNavigated="CloseMenu" />
             </nav>
             <main class="polhem-shell__main">@Body</main>

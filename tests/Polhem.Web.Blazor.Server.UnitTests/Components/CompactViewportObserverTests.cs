@@ -3,7 +3,7 @@ using System.Reflection;
 using Bunit;
 using Microsoft.JSInterop;
 using Polhem.Tests.Shared;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -122,11 +122,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("The module path CompactViewportObserver imports names the JavaScript file shipped next to it")]
         public void ModulePath_NamesShippedFile()
         {
-            const string prefix = "./_content/Polhem.Web.Blazor.Server/";
+            const string prefix = "./_content/Polhem.Web.Blazor/";
             Assert.StartsWith(prefix, CompactViewportModule.Path, StringComparison.Ordinal);
 
             var relative = CompactViewportModule.Path[prefix.Length..].Replace('/', Path.DirectorySeparatorChar);
-            var file = Path.Combine(RepoRoot.Find(), "src", "Polhem.Web.Blazor.Server", relative);
+            var file = Path.Combine(RepoRoot.Find(), "src", "Polhem.Web.Blazor", relative);
             Assert.True(File.Exists(file), $"{CompactViewportModule.Path} has no file at {file}.");
         }
     }

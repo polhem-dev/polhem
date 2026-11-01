@@ -3,9 +3,9 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
-using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Components;
 
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Shell
 {
     /// <summary>
     /// Turns the server's <see cref="MenuSettings"/> into the flat rows the shell's menu shows.
@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         /// <param name="client">The circuit's client.</param>
         /// <param name="options">The package options, which decide whether captions are localized.</param>
         /// <param name="cancellationToken">A token that cancels the fetches.</param>
-        public static async Task<IReadOnlyList<ShellMenuRow>> LoadAsync(PolhemApiClient client, PolhemBlazorOptions options,
+        public static async Task<IReadOnlyList<ShellMenuRow>> LoadAsync(PolhemApiClient client, IBlazorDefinitionOptions options,
             CancellationToken cancellationToken = default)
         {
             var access = new ClientDefineAccess(client.System);
@@ -48,7 +48,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         /// components show the message instead.
         /// </remarks>
         public static async Task<(IReadOnlyList<ShellMenuRow>? Rows, string? Error)> TryLoadAsync(PolhemApiClient client,
-            PolhemBlazorOptions options, CancellationToken cancellationToken = default)
+            IBlazorDefinitionOptions options, CancellationToken cancellationToken = default)
         {
             try
             {

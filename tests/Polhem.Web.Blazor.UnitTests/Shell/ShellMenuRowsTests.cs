@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using Polhem.Definition.Settings;
-using Polhem.Web.Blazor.Server.Shell;
+using Polhem.Web.Blazor.Shell;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Shell
+namespace Polhem.Web.Blazor.UnitTests.Shell
 {
     /// <summary>
     /// Covers how <see cref="ShellMenuRows"/> flattens a menu into headers and form rows.

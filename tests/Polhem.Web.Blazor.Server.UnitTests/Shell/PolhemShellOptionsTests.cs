@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Polhem.Web.Blazor.Server.Shell;
+using Polhem.Web.Blazor.Shell;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Shell
 {

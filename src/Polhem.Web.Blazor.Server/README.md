@@ -139,7 +139,8 @@ decides whether `FormPage` localizes its definitions; see below.
 `Polhem.Web.Blazor.Server.Shell` is a ready-made front end for a site, the counterpart of the Avalonia
 [`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.md): a sign-in screen that signs in and enters a
 company, then a top bar (title, user and company, Sign out), the server's menu and the routed page. A site supplies
-its title and the values the sign-in screen starts with, and keeps only its own pages.
+its title and the values the sign-in screen starts with, and keeps only its own pages. `PolhemShellHome` and
+`PolhemShellOptions` are in `Polhem.Web.Blazor.Shell`, in the shared layer.
 
 | Part | What it does |
 |------|--------------|

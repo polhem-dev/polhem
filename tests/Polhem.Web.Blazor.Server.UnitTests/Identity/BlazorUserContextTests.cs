@@ -121,16 +121,16 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             var panel = new PolhemLoginPanel();
             SetMember(panel, "Client", client);
             SetMember(panel, "Services", services);
-            typeof(PolhemLoginPanel).GetField("_userId", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, "demo");
+            typeof(Polhem.Web.Blazor.Components.LoginPanelBase).GetField("_userId", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, "demo");
 
             await (Task)typeof(PolhemLoginPanel)
                 .GetMethod("OnSubmitAsync", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .Invoke(panel, null)!;
+                .Invoke(panel, [CancellationToken.None])!;
 
             Assert.Equal("demo", context.User?.UserId);
         }
 
         private static void SetMember(PolhemLoginPanel panel, string name, object value)
-            => typeof(PolhemLoginPanel).GetProperty(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, value);
+            => typeof(Polhem.Web.Blazor.Components.LoginPanelBase).GetProperty(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, value);
     }
 }

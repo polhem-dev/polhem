@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -12,17 +13,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class PolhemLoginPanelInternalTests
     {
         private static FieldInfo GetBusyField() =>
-            typeof(PolhemLoginPanel).GetField("_isBusy", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetField("_isBusy", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static FieldInfo GetErrorField() =>
-            typeof(PolhemLoginPanel).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static async Task InvokeOnSubmitAsync(PolhemLoginPanel panel)
         {
             var method = typeof(PolhemLoginPanel).GetMethod(
                 "OnSubmitAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(panel, null)!;
+            var task = (Task)method!.Invoke(panel, [CancellationToken.None])!;
             await task;
         }
 

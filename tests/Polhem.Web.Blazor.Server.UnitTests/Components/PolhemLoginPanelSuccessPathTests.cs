@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Web.Blazor.Server.Components;
 using Microsoft.AspNetCore.Components;
 using Polhem.Tests.Shared;
+using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -21,13 +22,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class PolhemLoginPanelSuccessPathTests
     {
         private static readonly FieldInfo s_errorField =
-            typeof(PolhemLoginPanel).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_passwordField =
-            typeof(PolhemLoginPanel).GetField("_password", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetField("_password", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly PropertyInfo s_clientProp =
-            typeof(PolhemLoginPanel).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private sealed class SyncEventHandler : IHandleEvent
         {
@@ -39,7 +40,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var method = typeof(PolhemLoginPanel).GetMethod(
                 "OnSubmitAsync", BindingFlags.NonPublic | BindingFlags.Instance)!;
-            await (Task)method.Invoke(panel, null)!;
+            await (Task)method.Invoke(panel, [CancellationToken.None])!;
         }
 
         private static PolhemLoginPanel CreatePanel(LoginResponse response, PolhemApiClient? client = null)

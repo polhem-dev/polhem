@@ -1,20 +1,7 @@
 #nullable enable
 Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Server.Components.RelatedRecordDialog
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.DefinitionLoader.set -> void
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.IsCompact.get -> bool
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.IsCompact.set -> void
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnClosed.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnClosed.set -> void
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnRefused.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.OnRefused.set -> void
 Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.RelatedRecordDialog() -> void
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.get -> Polhem.UI.Core.Fields.RelationTarget
-Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.set -> void
-Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
-Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
 Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
@@ -214,7 +201,6 @@ Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.Web.Blazor.Server.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Server.Controls.GridControl.FormTable.set -> void
 Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
-Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCancelled.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.SearchText.get -> string!
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
@@ -258,3 +244,74 @@ Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polh
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.get -> bool
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Row.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactWidthThreshold.get -> double
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.get -> Polhem.Definition.Layouts.FormLayout?
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.SignInHint.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactViewportObserver() -> void
+*REMOVED*override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Equals(object? obj) -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.SignInHint.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.Layout.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactWidthThreshold.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.FormRoute.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.FormRoute.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.set -> void
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn.OnSignedIn.get -> Microsoft.AspNetCore.Components.EventCallback
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialUserId.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage
+*REMOVED*const Polhem.Web.Blazor.Server.Components.CompactViewportObserver.DefaultCompactWidthThreshold = 600 -> double
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCulture.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultPassword.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.PolhemShellOptions() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Culture.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCulture.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellHome.PolhemShellHome() -> void
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.operator !=(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? right) -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCompanyId.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultPassword.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.DisplayName.init -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.DisplayName.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Equals(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? other) -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.operator ==(Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage? right) -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialPassword.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.AppTitle.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.Languages.get -> System.Collections.Generic.IList<Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage!>!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.AppTitle.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.PolhemShellLanguage(string! Culture, string! DisplayName) -> void
+*REMOVED*override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.GetHashCode() -> int
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IdPrefix.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu.OnNavigated.get -> Microsoft.AspNetCore.Components.EventCallback
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultUserId.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellNavMenu.OnNavigated.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Culture.init -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.CompactChanged.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.Deconstruct(out string! Culture, out string! DisplayName) -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialUserId.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellHome
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Api.Core.Messages.System.LoginResponse!>
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultCompanyId.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.set -> void
+*REMOVED*override Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.ToString() -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellOptions.DefaultUserId.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact.get -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellSignIn.OnSignedIn.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage.<Clone>$() -> Polhem.Web.Blazor.Server.Shell.PolhemShellLanguage!
+*REMOVED*Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.InitialPassword.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.DisposeAsync() -> System.Threading.Tasks.ValueTask
+*REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact.set -> void
+static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

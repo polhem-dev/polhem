@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -17,7 +18,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .GetMethod("BuildRenderTree", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_errorField =
-            typeof(PolhemLoginPanel).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(LoginPanelBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static void Render(PolhemLoginPanel component)
         {

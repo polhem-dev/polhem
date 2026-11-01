@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Core.Messages.System;
+using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Server.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -19,14 +20,6 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var property = typeof(PolhemLoginPanel).GetProperty(
                 name, BindingFlags.Public | BindingFlags.Instance);
-            Assert.NotNull(property);
-            return property!;
-        }
-
-        private static PropertyInfo GetNonPublicProperty(string name)
-        {
-            var property = typeof(PolhemLoginPanel).GetProperty(
-                name, BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(property);
             return property!;
         }
@@ -62,7 +55,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("The Client property is injected with PolhemApiClient through [Inject]")]
         public void Client_IsInjected()
         {
-            var property = GetNonPublicProperty("Client");
+            var property = typeof(LoginPanelBase).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!;
             Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
             Assert.Equal(typeof(Polhem.Api.Client.PolhemApiClient), property.PropertyType);
         }

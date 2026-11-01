@@ -1,8 +1,9 @@
+@inherits RelatedRecordDialogBase
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
 @using Polhem.Web.Blazor.Server.Controls
 
-@if (_isPermitted || _error is not null)
+@if (IsPermitted || Error is not null)
 {
     @* Inline positioning keeps the dialog modal without the host's stylesheet, as LookupDialog does. A dialog opened
        from this one comes later in the document, so it stacks on top. *@
@@ -18,26 +19,26 @@
                 <div class="polhem-related-record-dialog__title">@Title</div>
             }
             <div class="polhem-related-record-dialog__toolbar">
-                <button type="button" @onclick="CloseAsync">@Text(PolhemUIText.Close)</button>
+                <button type="button" @onclick="() => OnClosed.InvokeAsync()">@Text(PolhemUIText.Close)</button>
             </div>
-            @if (_notice is not null)
+            @if (Notice is not null)
             {
-                <div class="polhem-related-record-dialog__notice" role="alert">@_notice</div>
+                <div class="polhem-related-record-dialog__notice" role="alert">@Notice</div>
             }
-            @if (_error is not null)
+            @if (Error is not null)
             {
-                <div class="polhem-related-record-dialog__error">@_error</div>
+                <div class="polhem-related-record-dialog__error">@Error</div>
             }
-            else if (_dataObject is null)
+            else if (DataObject is null)
             {
                 <div class="polhem-related-record-dialog__loading">@Text(PolhemUIText.Loading)</div>
             }
             else
             {
-                <FormLayoutPresenter Layout="_formLayout"
-                                     DataObject="_dataObject"
+                <FormLayoutPresenter Layout="FormLayout"
+                                     DataObject="DataObject"
                                      FormMode="SingleFormMode.View"
-                                     RoundingContext="_roundingContext"
+                                     RoundingContext="RoundingContext"
                                      IsCompact="IsCompact"
                                      IdPrefix="@IdPrefix"
                                      OpenRelation="OpenRelation" />
@@ -45,7 +46,7 @@
         </div>
     </div>
 }
-@if (_relation is { } relation)
+@if (Relation is { } relation)
 {
     <RelatedRecordDialog Target="relation"
                          DefinitionLoader="DefinitionLoader"
