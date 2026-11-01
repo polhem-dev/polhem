@@ -158,3 +158,12 @@ Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Mud.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Mud.Components.CardListEnd
+Polhem.Web.Blazor.Mud.Components.CardListEnd.CardListEnd() -> void
+Polhem.Web.Blazor.Mud.Components.CardListEnd.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Components.CardListEnd.ReachedEnd.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Components.CardListEnd.ReachedEnd.set -> void
+Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.get -> int
+Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.set -> void
+override Polhem.Web.Blazor.Mud.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Polhem.Web.Blazor.Mud.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

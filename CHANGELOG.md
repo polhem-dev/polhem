@@ -15,9 +15,8 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1.12.0.md)
 
-- **Breaking:** The Blazor controls move to a new package on MudBlazor, `Polhem.Web.Blazor.Mud`, and the HTML controls and `polhem.css` are removed. `Polhem.Web.Blazor.Server` is now only the host. See the migration steps.
 - **Breaking:** The Blazor head splits into `Polhem.Web.Blazor` and `Polhem.Web.Blazor.Server`. `FormDataObject`, `FieldEditorBase`, `FormScope` and related types change namespace, and `CircuitUserContext` becomes `BlazorUserContext`.
-- On a narrow screen, Avalonia's `ListView` reads the next page as the user scrolls through the cards, up to 5000 rows.
+- On a narrow screen, Avalonia's `ListView` and the MudBlazor `FormPage` read the next page as the user scrolls through the cards, up to 5000 rows.
 - Clicking a list column header in Avalonia's `ListView` or Blazor Server's `FormPage` sorts every row on the server, not only the page on screen.
 - A lookup with more candidates than it lists says so and asks for a keyword, in Avalonia and Blazor Server.
 - Avalonia's `ListView` and Blazor Server's `FormPage` show a form's rows a page at a time, with page buttons and a choice of rows per page, so rows beyond

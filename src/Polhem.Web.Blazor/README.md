@@ -22,22 +22,6 @@ An application does not use this package alone. It references one host package, 
 - `PolhemShellOptions`, `PolhemShellHome`, `ShellLayoutBase`, `ShellNavMenuBase`, `ShellSignInBase` and `IShellLanguageSwitcher` (`Polhem.Web.Blazor.Shell`), the shell's state; a host package supplies the language switch.
 - `BlazorUserContext` (`Polhem.Web.Blazor.Identity`), the signed-in user's context for one scope.
 
-## Data objects and the user context
-
-- `BlazorUserContext` -- the signed-in user, entered company and capabilities of one circuit. The host enters the
-  company with `EnterCompanyAsync` and signs out with `SignOut`, which keep the context and the client in step.
-  Entering the company through the client directly leaves the context without capabilities, so the pages treat the
-  user as unrestricted.
-- `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
-  `GetField` / `SetField` (for the master row or a given row) for two-way binding, raises `FieldValueChanged` and
-  `DataSetReplaced` when its values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
-  through the connector. A new row is seeded with the schema's defaults (a fresh `sys_rowid`, the link to the
-  master, non-null values by type) and raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer
-  the edits of one row, which raise `RowEditFieldChanged` until the commit publishes them.
-- `FormLiveComputation` -- recomputes a form's computed fields and evaluates new-row default expressions, with the
-  same rules as the Avalonia head (`FormLiveComputationEngine` in `Polhem.UI.Core`). A page of its own subscribes
-  `FieldValueChanged` and calls `Recompute`; pass the circuit's time zone, never a process-wide one.
-
 ## Dependency Constraints
 
 This package references no UI framework and no ASP.NET Core host, so it can load in WebAssembly. `POLHEM9001` enforces it.

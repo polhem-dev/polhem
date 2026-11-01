@@ -37,7 +37,7 @@ Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 | How to spin up a Polhem backend, register a custom BO, and expose the JSON-RPC API | [`QuickStart.Server`](QuickStart.Server/README.md) |
 | How to call Polhem from a third-party client with `Polhem.Api.Client` (Remote mode) | [`QuickStart.Console`](QuickStart.Console/README.md) |
 | How to call Polhem from JavaScript or TypeScript, in Node or a browser (against `QuickStart.Server`) | [polhem-connector-js examples](https://github.com/polhem-dev/polhem-connector-js/tree/main/examples) |
-| How to use the `Polhem.Web.Blazor.Mud` components on a Blazor Server host (Local, in-process dispatch) | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) |
+| How to use `Polhem.Web.Blazor.Server` components (Local, in-process dispatch) | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) |
 | How the same `FormSchema` renders inside a desktop / browser / mobile Avalonia app | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md) |
 | Theme-oriented control demo center (theme → case nav, Demo/Source tabs, theme/FormMode toolbar): data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) |
 
@@ -47,7 +47,7 @@ Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 |---------|------|--------------|--------|---------------|
 | [`QuickStart.Server`](QuickStart.Server/README.md) | API host | `5050` | `dotnet run` | Polhem.JsonRpc.AspNetCore + Polhem.Hosting + Polhem.Business + Polhem.Db |
 | [`QuickStart.Console`](QuickStart.Console/README.md) | API client | — | `dotnet run` | Polhem.Api.Client |
-| [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) | Full-stack Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Mud + Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
+| [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) | Full-stack Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) | Desktop Avalonia control demo center | — (no backend) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
 | [`Polhem.Samples.Shared`](Polhem.Samples.Shared/) | Shared backend wiring | — | (consumed by other demos) | Polhem.Business + Polhem.Db + Polhem.Hosting + Polhem.Api.Client |
 

@@ -81,6 +81,9 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
         public int? TotalRows { get; set; }
 
+        /// <summary>Gets or sets whether each page holds rows of its own, as a real list does, rather than Alice and Bob.</summary>
+        public bool DistinctRows { get; set; }
+
         public int SaveCount { get; private set; }
 
         public List<Guid> Deleted { get; } = [];
@@ -167,8 +170,17 @@ namespace Polhem.Web.Blazor.BehaviorTests
             var table = new DataTable(EmpProgId);
             table.Columns.Add(SysFields.RowId, typeof(Guid));
             table.Columns.Add("emp_name", typeof(string));
-            table.Rows.Add(AliceId, "Alice");
-            table.Rows.Add(BobId, "Bob");
+            if (DistinctRows && request.Paging is { } page && TotalRows is { } rows)
+            {
+                int first = (page.Page - 1) * page.PageSize;
+                foreach (var i in Enumerable.Range(first, Math.Max(0, Math.Min(page.PageSize, rows - first))))
+                    table.Rows.Add(new Guid(i, 0, 0, new byte[8]), string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Row {i}"));
+            }
+            else
+            {
+                table.Rows.Add(AliceId, "Alice");
+                table.Rows.Add(BobId, "Bob");
+            }
             return new GetListResponse
             {
                 Table = table,

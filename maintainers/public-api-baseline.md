@@ -13,7 +13,7 @@ Every package under `src/` has a pair of baseline files that record the public s
 |------|------|-----------|
 | A public type / member was added | `RS0016` | Add the line from the diagnostic message to `PublicAPI.Unshipped.txt` |
 | Something was removed or its signature changed | `RS0017` | Delete the old line from the baseline file (**this is exactly the diff review needs to see**) |
-| Nullable-oblivious signatures in Razor-generated code | `RS0041` | Turned off with `NoWarn` in the Blazor project files; see the comment there |
+| Nullable-oblivious signatures in Razor-generated code | `RS0041` | Turned off with `NoWarn` in `Polhem.Web.Blazor.Server.csproj`; see the comment there |
 | A new overload has more parameters than an existing overload "with optional parameters" | `RS0027` | **Cannot be solved by adding to the baseline file**; the design must change, see the next section |
 
 > **Why this mechanism exists**: before it, the only guard on "the public surface was removed or changed" was that

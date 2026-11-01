@@ -1,0 +1,58 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+@implements IAsyncDisposable
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using Microsoft.JSInterop
+
+<div @ref="_end" class="polhem-card-list__end"></div>
+
+@code {
+    private const string ModulePath = "./_content/Polhem.Web.Blazor.Mud/polhem-card-list.js";
+
+    private ElementReference _end;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<Callback>? _callback;
+    private int _watchedRowCount = -1;
+
+    /// <summary>Gets or sets how many rows the list holds, which starts a new watch when it changes.</summary>
+    [Parameter]
+    public int RowCount { get; set; }
+
+    /// <summary>Gets or sets the callback raised when the end of the list comes near the viewport.</summary>
+    [Parameter]
+    public EventCallback ReachedEnd { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (RowCount == _watchedRowCount) return;
+        _watchedRowCount = RowCount;
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
+        _callback ??= DotNetObjectReference.Create(new Callback(this));
+        await _module.InvokeVoidAsync("watch", _end, _callback).ConfigureAwait(true);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.InvokeVoidAsync("stop", _end).ConfigureAwait(true);
+                await _module.DisposeAsync().ConfigureAwait(true);
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is gone, and the observer with it.
+        }
+        _callback?.Dispose();
+    }
+
+    // The target of the module's callback. It keeps the JSInvokable method off the component's public surface.
+    private sealed class Callback(CardListEnd owner)
+    {
+        [JSInvokable]
+        public Task OnReachedEnd() => owner.InvokeAsync(() => owner.ReachedEnd.InvokeAsync());
+    }
+}

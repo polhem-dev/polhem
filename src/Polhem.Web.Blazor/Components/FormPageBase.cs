@@ -209,10 +209,6 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Gets a value indicating whether the form renders in its compact layout.</summary>
         protected bool EffectiveIsCompact => IsCompact ?? _isViewportCompact;
 
-        /// <summary>Records what the viewport reports.</summary>
-        /// <param name="compact">Whether the viewport is narrower than the threshold.</param>
-        protected void OnCompactChanged(bool compact) => _isViewportCompact = compact;
-
         /// <inheritdoc/>
         /// <remarks>
         /// The page loads when it first renders and again whenever <see cref="ProgId"/> or
@@ -263,6 +259,7 @@ namespace Polhem.Web.Blazor.Components
             _liveComputation = null;
             _roundingContext = null;
             _listRows = null;
+            _cardRows.Clear();
             _paging = new ListPagingState();
             _isListPaged = false;
             _error = null;
@@ -314,6 +311,7 @@ namespace Polhem.Web.Blazor.Components
                 _roundingContext = roundingContext;
                 _listRows = list.Table;
                 _paging.Apply(1, list.Paging);
+                if (EffectiveIsCompact) ShowCardPage(1, list.Table);
                 _isListPaged = list.Paging is not null;
                 _dataObject = new FormDataObject(schema, Client.Form(ProgId));
                 _liveComputation = new FormLiveComputation(
