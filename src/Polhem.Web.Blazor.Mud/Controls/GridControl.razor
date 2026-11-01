@@ -5,6 +5,7 @@
 @using System.Data
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Connectors
 @using Polhem.UI.Core.Fields
 @using Polhem.Web.Blazor.Mud.Controls.Editors
 
@@ -56,6 +57,14 @@
                         else
                         {
                             @FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)
+                        }
+                        @if (FilterKind(current) is var filterKind && filterKind != ColumnFilterKind.None)
+                        {
+                            <GridColumnFilter Column="current"
+                                              Field="ColumnField(current)!"
+                                              Kind="filterKind"
+                                              Filters="Filters!"
+                                              Applied="OnFilterChanged" />
                         }
                     </HeaderTemplate>
                     <CellTemplate>

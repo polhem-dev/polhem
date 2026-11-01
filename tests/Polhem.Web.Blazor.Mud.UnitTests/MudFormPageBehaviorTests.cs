@@ -15,6 +15,7 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
     public class MudFormPageBehaviorTests : FormPageBehaviorTests
     {
         private IRenderedComponent<MudDialogProvider> _dialogs = default!;
+        private IRenderedComponent<MudPopoverProvider> _popovers = default!;
 
         /// <summary>
         /// Initializes a new instance of <see cref="MudFormPageBehaviorTests"/>.
@@ -28,7 +29,7 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         /// <inheritdoc />
         protected override void OnServicesRegistered()
         {
-            Render<MudPopoverProvider>();
+            _popovers = Render<MudPopoverProvider>();
             _dialogs = Render<MudDialogProvider>();
         }
 
@@ -57,6 +58,14 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         {
             var end = cut.FindComponent<CardListEnd>();
             end.InvokeAsync(() => end.Instance.ReachedEnd.InvokeAsync());
+        }
+
+        /// <inheritdoc />
+        protected override void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text)
+        {
+            cut.Find(".polhem-grid-filter__button").Click();
+            _popovers.WaitForAssertion(() => _popovers.Find(".polhem-grid-filter__first input").Input(text));
+            _popovers.Find(".polhem-grid-filter__form").Submit();
         }
 
         /// <inheritdoc />
