@@ -17,6 +17,7 @@ namespace Polhem.Hosting.UnitTests
     /// cache container's convention dispatch, after which the cache reloads the new version from the DB.
     /// Skips when the dialect's <c>POLHEM_TEST_CONNSTR_*</c> env var is unset.
     /// </summary>
+    [Collection(CacheNotifyVersionsCollection.Name)]
     public class DbDefineCacheInvalidationTests : IClassFixture<SharedDbFixture>
     {
         private readonly SharedDbFixture _fx;
