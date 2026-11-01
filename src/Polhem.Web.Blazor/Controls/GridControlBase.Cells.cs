@@ -7,6 +7,7 @@ using Polhem.Definition.Sorting;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls.Editors;
+using Polhem.UI.Core.Connectors;
 
 namespace Polhem.Web.Blazor.Controls
 {
@@ -121,6 +122,19 @@ namespace Polhem.Web.Blazor.Controls
         protected bool IsSortable(LayoutColumn column)
             => OnSortRequested.HasDelegate
                 && ResolveFormField(column.FieldName) is { DbType: not (FieldDbType.Text or FieldDbType.Binary) };
+
+        /// <summary>Returns what a column's filter takes, or <see cref="ColumnFilterKind.None"/> when it offers none.</summary>
+        /// <param name="column">The column.</param>
+        /// <returns>The kind of filter.</returns>
+        protected ColumnFilterKind FilterKind(LayoutColumn column)
+            => Filters is null || !OnFilterChanged.HasDelegate
+                ? ColumnFilterKind.None
+                : ListFilterState.GetKind(column, ResolveFormField(column.FieldName));
+
+        /// <summary>Returns the schema field behind a column.</summary>
+        /// <param name="column">The column.</param>
+        /// <returns>The field, or <c>null</c>.</returns>
+        protected FormField? ColumnField(LayoutColumn column) => ResolveFormField(column.FieldName);
 
         /// <summary>Gets the mark a sorted column's caption ends with, or an empty string.</summary>
         /// <param name="column">The column.</param>

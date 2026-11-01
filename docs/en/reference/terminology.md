@@ -353,9 +353,9 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. When the host sets only `ProgId`, it resolves `Schema`, `Layout` and `FormConnector` through `DefinitionSource` and the services registered in `UIServices.Provider`; with none registered, the host sets them itself |
 | `FormDataObject` | 表單資料物件 | The view-model object bound by the Avalonia controls: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, and exposes the buffered row-edit protocol |
 
-### Web Frontend (`Polhem.Web.Blazor.Server`)
+### Web Frontend (`Polhem.Web.Blazor.*`)
 
-`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `FormLayoutPresenter`, the field editors, `DynamicGrid` and `FormDataObject`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
+The Blazor head is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor` (`FormDataObject` and the component bases), the UI package `Polhem.Web.Blazor.Mud` (`FormLayoutPresenter`, the field editors, `GridControl`) and the host `Polhem.Web.Blazor.Server`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
 
 | English | 中文 | Description |
 |---------|------|-------------|

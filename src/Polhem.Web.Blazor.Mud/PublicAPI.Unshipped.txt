@@ -168,3 +168,16 @@ Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.set -> void
 override Polhem.Web.Blazor.Mud.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Mud.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 override Polhem.Web.Blazor.Mud.Components.FormPage.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Applied.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Column.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Field.get -> Polhem.Definition.Forms.FormField!
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Field.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Filters.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.GridColumnFilter() -> void
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Kind.set -> void
+~override Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

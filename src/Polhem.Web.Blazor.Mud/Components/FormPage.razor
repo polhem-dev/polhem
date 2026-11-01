@@ -70,6 +70,15 @@
             <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-form-page__notice">@liveComputationNotice</MudAlert>
         }
 
+        @if (!IsShowingRecord && Filters.HasFilters)
+        {
+            @* Outside the grid: a filter can leave no rows, and the cards have no headers, and it must still come off. *@
+            <div class="polhem-form-page__filters" role="status">
+                <span>@Text(PolhemUIText.ListFiltered)</span>
+                <MudButton Class="polhem-form-page__clear-filters" Size="Size.Small" Disabled="@IsListLocked" OnClick="() => ClearFiltersAsync()">@Text(PolhemUIText.ClearFilters)</MudButton>
+            </div>
+        }
+
         @if (!IsShowingRecord && EffectiveIsCompact)
         {
             @if (CardRows.Count == 0)
@@ -115,7 +124,9 @@
         {
             @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
             {
-                <GridControl Layout="ListLayout"
+                <GridControl Filters="Filters"
+                             OnFilterChanged="change => OnFilterChangedAsync(change)"
+                             Layout="ListLayout"
                              DataTable="ListRows"
                              FormTable="Schema?.MasterTable"
                              AllowEdit="false"

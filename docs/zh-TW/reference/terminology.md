@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 12f51fb7462cf04c896b31041d1d991e1b92a02b -->
+<!-- source: en/reference/terminology.md blob: 73bb9f2823777e6c031a1641dba92100021b7039 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -352,9 +352,9 @@
 | `FormView` | 表單檢視 | Avalonia 單筆容器：master 區 + 明細 `GridControl` + toolbar（New / Save / Delete）；清單側為 `ListView`。host 只設 `ProgId` 時，透過 `DefinitionSource` 與 `UIServices.Provider` 中註冊的服務取得 `Schema`、`Layout` 與 `FormConnector`；未註冊時由 host 自行設定 |
 | `FormDataObject` | 表單資料物件 | Avalonia 控件綁定的 view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，並提供暫存列編輯協定 |
 
-### Web 前端（`Polhem.Web.Blazor.Server`）
+### Web 前端（`Polhem.Web.Blazor.*`）
 
-`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `FormLayoutPresenter`、欄位編輯器、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
+Blazor head 分成三種 Razor Class Library（RCL）：共用的 `Polhem.Web.Blazor`（`FormDataObject` 與元件基底）、UI 套件 `Polhem.Web.Blazor.Mud`（`FormLayoutPresenter`、欄位編輯器、`GridControl`）與宿主 `Polhem.Web.Blazor.Server`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|

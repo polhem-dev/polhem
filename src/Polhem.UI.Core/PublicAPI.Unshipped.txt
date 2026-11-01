@@ -44,3 +44,20 @@ Polhem.UI.Core.Connectors.CardListState<TRow>.CardListState(System.Collections.G
 Polhem.UI.Core.Connectors.CardListState<TRow>.IsAtLimit.get -> bool
 Polhem.UI.Core.Connectors.CardListState<TRow>.ShowPage(int page, System.Collections.Generic.IEnumerable<TRow>! rows) -> void
 const Polhem.UI.Core.Connectors.CardListState<TRow>.MaxRows = 5000 -> int
+Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Boolean = 5 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Choice = 6 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Date = 3 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.DateTime = 4 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.None = 0 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Number = 2 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Text = 1 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ListFilterState
+Polhem.UI.Core.Connectors.ListFilterState.Clear() -> void
+Polhem.UI.Core.Connectors.ListFilterState.CreateFilter() -> Polhem.Definition.Filters.FilterNode?
+Polhem.UI.Core.Connectors.ListFilterState.GetEntered(string! fieldName) -> (string! First, string! Second)
+Polhem.UI.Core.Connectors.ListFilterState.HasFilters.get -> bool
+Polhem.UI.Core.Connectors.ListFilterState.IsFiltered(string! fieldName) -> bool
+Polhem.UI.Core.Connectors.ListFilterState.ListFilterState() -> void
+Polhem.UI.Core.Connectors.ListFilterState.TrySet(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Connectors.ColumnFilterKind kind, string? first, string? second) -> bool
+static Polhem.UI.Core.Connectors.ListFilterState.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Connectors.ColumnFilterKind

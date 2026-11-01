@@ -894,5 +894,85 @@ namespace Polhem.Web.Blazor.BehaviorTests
             cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Record)));
             Assert.Empty(cut.FindAll(Card));
         }
+
+        /// <summary>Opens the filter of the first column, enters text and applies it.</summary>
+        /// <param name="cut">The rendered page.</param>
+        /// <param name="text">The text.</param>
+        protected abstract void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text);
+
+        private const string ClearFilters = ".polhem-form-page__clear-filters";
+
+        [Fact]
+        [DisplayName("A column filter reads the first page with the filter, and shows that the list is filtered")]
+        public void Filter_Apply_ReadsFirstPage()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { TotalRows = 120 });
+            var cut = RenderList();
+            Button(cut, Pager, PolhemUIText.NextPage)!.Click();
+            cut.WaitForAssertion(() => Assert.Equal(2, backend.ListPaging[^1].Page));
+            Assert.Empty(cut.FindAll(ClearFilters));
+
+            ApplyFirstColumnFilter(cut, "Ali");
+
+            cut.WaitForAssertion(() => Assert.NotNull(backend.LastFilter));
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(backend.LastFilter);
+            Assert.Equal("emp_name", condition.FieldName);
+            Assert.Equal(Polhem.Definition.Filters.ComparisonOperator.Contains, condition.Operator);
+            Assert.Equal("Ali", condition.Value?.ToString());
+            Assert.Equal(1, backend.ListPaging[^1].Page);
+            Assert.True(backend.ListPaging[^1].IncludeTotalCount);
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(ClearFilters)));
+        }
+
+        [Fact]
+        [DisplayName("A filter that leaves no rows can still be cleared")]
+        public void Filter_NoRows_CanBeCleared()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { NoRowsWhenFiltered = true });
+            var cut = RenderList();
+
+            ApplyFirstColumnFilter(cut, "nobody");
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(RowSelector)));
+
+            cut.Find(ClearFilters).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(RowSelector).Count));
+            Assert.Null(backend.LastFilter);
+            Assert.Empty(cut.FindAll(ClearFilters));
+        }
+
+        [Fact]
+        [DisplayName("A filter stays when the next page or a sort reads the list")]
+        public void Filter_KeptAcrossPaging()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { TotalRows = 120 });
+            var cut = RenderList();
+            ApplyFirstColumnFilter(cut, "Ali");
+            cut.WaitForAssertion(() => Assert.NotNull(backend.LastFilter));
+
+            cut.WaitForAssertion(() => Button(cut, Pager, PolhemUIText.NextPage)!.Click());
+
+            cut.WaitForAssertion(() => Assert.Equal(2, backend.ListPaging[^1].Page));
+            Assert.NotNull(backend.LastFilter);
+        }
+
+        [Fact]
+        [DisplayName("Moving to another program drops the filters")]
+        public void Filter_ProgIdChange_Drops()
+        {
+            using var culture = new CultureScope("en-US");
+            Register();
+            var cut = RenderList();
+            ApplyFirstColumnFilter(cut, "Ali");
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(ClearFilters)));
+
+            cut.FindComponent<FormPageBase>().Render(p => p.Add(c => c.ProgId, FormPageTestBackend.OtherProgId));
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(RowSelector)));
+            Assert.Empty(cut.FindAll(ClearFilters));
+        }
     }
 }

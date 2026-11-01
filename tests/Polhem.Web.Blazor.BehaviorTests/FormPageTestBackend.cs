@@ -79,6 +79,10 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
         public string? LastSortField { get; private set; }
 
+        public Polhem.Definition.Filters.FilterNode? LastFilter { get; private set; }
+
+        public bool NoRowsWhenFiltered { get; set; }
+
         public int? TotalRows { get; set; }
 
         /// <summary>Gets or sets whether each page holds rows of its own, as a real list does, rather than Alice and Bob.</summary>
@@ -164,13 +168,17 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private GetListResponse GetList(GetListRequest request)
         {
             GetListCount++;
+            LastFilter = request.Filter;
             ListSelectFields.Add(request.SelectFields);
             if (request.Paging is { } paging) ListPaging.Add(paging);
             LastSortField = request.SortFields is { Count: > 0 } sort ? sort[0].FieldName : null;
             var table = new DataTable(EmpProgId);
             table.Columns.Add(SysFields.RowId, typeof(Guid));
             table.Columns.Add("emp_name", typeof(string));
-            if (DistinctRows && request.Paging is { } page && TotalRows is { } rows)
+            if (NoRowsWhenFiltered && request.Filter is not null)
+            {
+            }
+            else if (DistinctRows && request.Paging is { } page && TotalRows is { } rows)
             {
                 int first = (page.Page - 1) * page.PageSize;
                 foreach (var i in Enumerable.Range(first, Math.Max(0, Math.Min(page.PageSize, rows - first))))

@@ -103,7 +103,8 @@ dotnet add package Polhem.Db
 | **Polhem.UI.ApiBridge.dll** | 把單一使用者的前端接上 Polhem 後端：用戶端連線狀態（`ClientInfo`）、endpoint 與 API 金鑰持久化（`IEndpointStorage` / `FileEndpointStorage`），以及以 `AddPolhemUIApiBridge()` 註冊、以 API 實作的 `Polhem.UI.Core` 服務。不適用多使用者 host。 |
 | **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
 | **Polhem.Web.Blazor.dll** | Blazor head 的共用層（`FormDataObject`、欄位編輯器基底、`BlazorUserContext`），不含 UI 框架與宿主。 |
-| **Polhem.Web.Blazor.Server.dll** | Blazor Server 宿主用的 Razor Class Library（RCL），提供 DI scope 連接器與 Blazor 元件（`FormLayoutPresenter`、欄位編輯器）。 |
+| **Polhem.Web.Blazor.Mud.dll** | Blazor head 的 MudBlazor UI 套件：表單頁、版面、Grid、欄位編輯器、對話框與外殼。 |
+| **Polhem.Web.Blazor.Server.dll** | Blazor head 的 Blazor Server 宿主：Local 或 Remote 模式的 circuit client，以及外殼的註冊與語系端點。 |
 
 ### Tooling（dotnet tool）
 

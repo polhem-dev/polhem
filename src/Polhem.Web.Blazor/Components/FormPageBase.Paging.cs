@@ -1,6 +1,7 @@
 using System.Globalization;
 using Polhem.Definition.Language;
 using Polhem.UI.Core.Connectors;
+using Polhem.Web.Blazor.Controls;
 
 namespace Polhem.Web.Blazor.Components
 {
@@ -13,6 +14,7 @@ namespace Polhem.Web.Blazor.Components
         protected static IReadOnlyList<int> PageSizes { get; } = [ListPagingState.DefaultPageSize, 100, 200];
 
         private ListPagingState _paging = new();
+        private ListFilterState _filters = new();
         private bool _isListPaged;
 
         /// <summary>Gets a value indicating whether the list shows its page buttons.</summary>
@@ -37,7 +39,7 @@ namespace Polhem.Web.Blazor.Components
             var version = _loadVersion;
             var request = _paging.BeginRequest();
             var response = await Client.Form(ProgId)
-                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema),
+                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema), filter: _filters.CreateFilter(),
                     sortFields: _paging.CreateSort(), paging: _paging.CreateOptions(page), cancellationToken: cancellationToken)
                 .ConfigureAwait(true);
             if (version != _loadVersion || !_paging.IsCurrent(request)) return;
@@ -84,6 +86,41 @@ namespace Polhem.Web.Blazor.Components
 
             _paging.ToggleSort(fieldName);
             await GoToPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
+        }
+
+        /// <summary>Gets the column filters of the list.</summary>
+        protected ListFilterState Filters => _filters;
+
+        /// <summary>Applies a column's filter and reads the first page.</summary>
+        /// <param name="change">The column and what the user entered, which <see cref="ListFilterState.TrySet"/> has accepted.</param>
+        /// <param name="cancellationToken">A token that cancels the operation.</param>
+        /// <returns>The operation.</returns>
+        protected async Task OnFilterChangedAsync(ColumnFilterChange change, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(change);
+            if (IsListLocked) return;
+            if (!_filters.TrySet(change.Field, change.Kind, change.First, change.Second)) return;
+            await ReadFilteredListAsync(cancellationToken).ConfigureAwait(true);
+        }
+
+        /// <summary>Removes every filter and reads the first page.</summary>
+        /// <param name="cancellationToken">A token that cancels the operation.</param>
+        /// <returns>The operation.</returns>
+        protected async Task ClearFiltersAsync(CancellationToken cancellationToken = default)
+        {
+            if (IsListLocked) return;
+            _filters.Clear();
+            await ReadFilteredListAsync(cancellationToken).ConfigureAwait(true);
+        }
+
+        private Task ReadFilteredListAsync(CancellationToken cancellationToken)
+        {
+            _paging.InvalidateTotalCount();
+            return RunGuardedAsync(async () =>
+            {
+                await LoadListPageAsync(1, cancellationToken).ConfigureAwait(true);
+                _selectedRowId = null;
+            });
         }
 
         /// <summary>Changes the rows per page and reads the first page.</summary>
