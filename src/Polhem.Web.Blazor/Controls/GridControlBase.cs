@@ -5,6 +5,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Sorting;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Components;
@@ -42,7 +43,7 @@ namespace Polhem.Web.Blazor.Controls
     /// column's header is parenthesised and a required one shows the required cue (<see cref="FieldCaptionRules"/>).
     /// </para>
     /// </remarks>
-    public abstract class GridControlBase : ComponentBase, IBindTableControl, IUIControl, IDisposable
+    public abstract partial class GridControlBase : ComponentBase, IBindTableControl, IUIControl, IDisposable
     {
         private FormDataObject? _subscribed;
         private SingleFormMode? _controlStateMode;
@@ -138,6 +139,34 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         [Parameter]
         public EventCallback<Guid> RowSelected { get; set; }
+
+        /// <summary>
+        /// Invoked when the user double-clicks a row; receives the row's <see cref="SysFields.RowId"/>.
+        /// </summary>
+        [Parameter]
+        public EventCallback<Guid> RowActivated { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="SysFields.RowId"/> of a row to show as selected, for a host that keeps the selection
+        /// across pages of rows; <c>null</c> leaves it to the grid.
+        /// </summary>
+        [Parameter]
+        public Guid? SelectedRowId { get; set; }
+
+        /// <summary>
+        /// Invoked when the user clicks a sortable column header; receives the field name. Without a handler the headers
+        /// are plain text. The grid does not sort: the host reads the rows in the new order.
+        /// </summary>
+        [Parameter]
+        public EventCallback<string> OnSortRequested { get; set; }
+
+        /// <summary>Gets or sets the field to mark as sorted, or <c>null</c> for none.</summary>
+        [Parameter]
+        public string? SortFieldName { get; set; }
+
+        /// <summary>Gets or sets the direction of <see cref="SortFieldName"/>.</summary>
+        [Parameter]
+        public SortDirection SortDirection { get; set; }
 
         /// <summary>
         /// Gets the selected row, or <c>null</c>.
@@ -339,12 +368,19 @@ namespace Polhem.Web.Blazor.Controls
                 await RowSelected.InvokeAsync(rowId).ConfigureAwait(true);
         }
 
-        /// <summary>Selects a row and opens it in the edit form when the grid edits that way.</summary>
+        /// <summary>
+        /// Selects a row, opens it in the edit form when the grid edits that way, and reports it through
+        /// <see cref="RowActivated"/>.
+        /// </summary>
         /// <param name="row">The row.</param>
-        protected void ActivateRow(DataRow row)
+        /// <param name="cancellationToken">A token that cancels the operation.</param>
+        /// <returns>The operation.</returns>
+        protected async Task ActivateRowAsync(DataRow row, CancellationToken cancellationToken = default)
         {
             _selectedRow = row;
             if (CanUseEditForm) OpenEditForm(row, isNew: false);
+            if (RowActivated.HasDelegate && FormDataGuard.TryGetRowId(row, out var rowId))
+                await RowActivated.InvokeAsync(rowId).ConfigureAwait(true);
         }
 
         /// <summary>Runs the toolbar's Add.</summary>
@@ -386,99 +422,5 @@ namespace Polhem.Web.Blazor.Controls
             }
             _editingRow = null;
         }
-
-        /// <summary>Determines whether a column's cells show their editor.</summary>
-        /// <param name="column">The column.</param>
-        /// <returns>Whether they do.</returns>
-        protected bool IsInCellEditor(LayoutColumn column) => InCellEdit && !column.ReadOnly;
-
-        /// <summary>Builds the parameters of a cell's editor.</summary>
-        /// <param name="column">The column.</param>
-        /// <param name="row">The row.</param>
-        /// <returns>The parameters by name.</returns>
-        protected Dictionary<string, object?> BuildEditorParameters(LayoutColumn column, DataRow row)
-        {
-            var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
-            {
-                [nameof(FieldEditorBase.FieldName)] = column.FieldName,
-                [nameof(FieldEditorBase.LayoutField)] = column,
-                [nameof(FieldEditorBase.Row)] = row,
-                [nameof(FieldEditorBase.DataObject)] = BoundDataObject,
-            };
-            if (column.ControlType == ControlType.NumericEdit)
-            {
-                parameters[nameof(NumericEditorBase.CurrencySettings)] = CurrencySettings;
-                parameters[nameof(NumericEditorBase.UnitSettings)] = UnitSettings;
-                parameters[nameof(NumericEditorBase.DefaultCurrencyCode)] = DefaultCurrencyCode;
-            }
-            return parameters;
-        }
-
-        /// <summary>Gets the record a double-click on the cell opens, when it offers one: a relation column with a value, on a read-only form whose scope has someone to open it.</summary>
-        /// <param name="row">The row.</param>
-        /// <param name="column">The column.</param>
-        /// <returns>The record, or <c>null</c>.</returns>
-        protected RelationTarget? OpenTarget(DataRow row, LayoutColumn column)
-        {
-            if (Scope?.OpenRelation.HasDelegate != true || !row.Table.Columns.Contains(column.FieldName)) return null;
-            var field = ResolveFormField(column.FieldName);
-            return RelationOpenRules.IsAvailable(FormMode, field)
-                   && RelationOpenRules.TryGetTarget(field, row[column.FieldName], out var target)
-                ? target
-                : null;
-        }
-
-        /// <summary>Asks the enclosing scope to open a record.</summary>
-        /// <param name="target">The record.</param>
-        /// <param name="cancellationToken">A token that cancels the operation.</param>
-        /// <returns>The operation.</returns>
-        protected Task OpenRelationAsync(RelationTarget target, CancellationToken cancellationToken = default) => Scope?.OpenRelation.InvokeAsync(target) ?? Task.CompletedTask;
-
-        /// <summary>Formats a cell for display.</summary>
-        /// <param name="row">The row.</param>
-        /// <param name="column">The column.</param>
-        /// <returns>The text.</returns>
-        protected string FormatCell(DataRow row, LayoutColumn column)
-            => GridCellFormatter.FormatColumnText(row, column, ResolveFormField(column.FieldName),
-                CurrencySettings, DefaultCurrencyCode, UnitSettings,
-                flag => Text(flag ? PolhemUIText.True : PolhemUIText.False));
-
-        /// <summary>Determines whether a check column is checked in a row.</summary>
-        /// <param name="row">The row.</param>
-        /// <param name="column">The column.</param>
-        /// <returns>Whether it is checked.</returns>
-        protected static bool IsChecked(DataRow row, LayoutColumn column)
-            => row.Table.Columns.Contains(column.FieldName)
-                && string.Equals(FormValueBinding.ToBindingString(row[column.FieldName]), bool.TrueString,
-                    StringComparison.OrdinalIgnoreCase);
-
-        // The schema field behind a column: through the data object for a bound grid, through the supplied
-        // table for a list-mode grid; null when neither knows the field.
-        private FormField? ResolveFormField(string fieldName)
-        {
-            if (BoundDataObject is { } dataObject)
-                return dataObject.GetFormField(EffectiveTableName, fieldName);
-            var fields = FormTable?.Fields;
-            return fields is not null && fields.Contains(fieldName) ? fields[fieldName] : null;
-        }
-
-        /// <summary>
-        /// Determines whether a column's header shows the required cue. In a bound grid the schema's Required counts as
-        /// well as the layout's, because the server enforces the schema's; a list grid shows no required cue from the
-        /// schema, since nothing is entered there.
-        /// </summary>
-        /// <param name="column">The column.</param>
-        /// <returns>Whether to show the cue.</returns>
-        protected bool ShowsRequiredCue(LayoutColumn column)
-        {
-            var required = column.Required
-                || (BoundDataObject is { } dataObject && dataObject.GetFormField(EffectiveTableName, column.FieldName)?.Required == true);
-            return FieldCaptionRules.ShowsRequiredCue(column.ReadOnly, required);
-        }
-
-        /// <summary>Determines whether <paramref name="row"/> is the selected one.</summary>
-        /// <param name="row">The row.</param>
-        /// <returns>Whether it is selected.</returns>
-        protected bool IsSelected(DataRow row) => ReferenceEquals(row, _selectedRow);
     }
 }

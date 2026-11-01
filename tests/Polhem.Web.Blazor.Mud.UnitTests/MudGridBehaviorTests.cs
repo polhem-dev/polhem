@@ -68,5 +68,29 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
 
         /// <inheritdoc />
         protected override string HeaderText(IRenderedComponent<ContainerFragment> cut, int column) => cut.FindAll("th.polhem-grid__header")[column].TextContent.Trim();
+
+        /// <inheritdoc />
+        protected override bool OffersSort(IRenderedComponent<ContainerFragment> cut, int column)
+            => cut.FindAll("th.polhem-grid__header")[column].QuerySelector("button.polhem-grid__sort") is not null;
+
+        /// <inheritdoc />
+        protected override void ClickSort(IRenderedComponent<ContainerFragment> cut, int column)
+            => cut.FindAll("th.polhem-grid__header")[column].QuerySelector("button.polhem-grid__sort")!.Click();
+
+        /// <inheritdoc />
+        protected override bool ShowsRequiredCue(IRenderedComponent<ContainerFragment> cut, int column)
+            => cut.FindAll("th.polhem-grid__header")[column].ClassList.Contains("polhem-grid__header--required");
+
+        /// <inheritdoc />
+        protected override bool TryDoubleClickRecordCell(IRenderedComponent<ContainerFragment> cut)
+        {
+            var cells = cut.FindAll(".polhem-grid__cell--opens-record");
+            if (cells.Count == 0) return false;
+            cells[0].DoubleClick();
+            return true;
+        }
+
+        /// <inheritdoc />
+        protected override void DoubleClickRow(IRenderedComponent<ContainerFragment> cut, int row) => cut.FindAll(RowSelector)[row].Click(new Microsoft.AspNetCore.Components.Web.MouseEventArgs { Detail = 2 });
     }
 }

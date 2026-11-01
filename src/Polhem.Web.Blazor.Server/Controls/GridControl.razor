@@ -39,7 +39,16 @@
             <tr>
                 @foreach (var column in VisibleColumns)
                 {
-                    <th class="@HeaderClass(column)" style="@ColumnStyle(column)">@FieldCaptionRules.FormatCaption(column.Caption, column.ReadOnly)</th>
+                    <th class="@HeaderClass(column)" style="@ColumnStyle(column)" aria-sort="@AriaSort(column)">
+                        @if (IsSortable(column))
+                        {
+                            <button type="button" class="polhem-grid__sort" @onclick="() => OnSortRequested.InvokeAsync(column.FieldName)">@FieldCaptionRules.FormatCaption(column.Caption, column.ReadOnly)@SortMark(column)</button>
+                        }
+                        else
+                        {
+                            @FieldCaptionRules.FormatCaption(column.Caption, column.ReadOnly)
+                        }
+                    </th>
                 }
             </tr>
         </thead>
@@ -47,7 +56,7 @@
             @foreach (var row in VisibleRows)
             {
                 var current = row;
-                <tr class="@RowClass(current)" @onclick="() => SelectRowAsync(current)" @ondblclick="() => ActivateRow(current)">
+                <tr class="@RowClass(current)" @onclick="() => SelectRowAsync(current)" @ondblclick="() => ActivateRowAsync(current)">
                     @foreach (var column in VisibleColumns)
                     {
                         @if (IsInCellEditor(column))

@@ -75,48 +75,6 @@ namespace Polhem.UI.Core.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("SetSort takes a grid's choice, returns to the first page and forgets the row count")]
-        public void SetSort_NewSort_AppliesOnFirstPage()
-        {
-            var state = new ListPagingState();
-            state.Apply(3, new PagingInfo { TotalCount = 120 });
-
-            Assert.True(state.SetSort("sys_name", SortDirection.Desc));
-
-            Assert.Equal("sys_name", state.SortFieldName);
-            Assert.Equal(SortDirection.Desc, state.SortDirection);
-            Assert.Equal(1, state.Page);
-            Assert.Null(state.TotalCount);
-        }
-
-        [Fact]
-        [DisplayName("SetSort with the sort already in force changes nothing, so a grid's echo reads no rows")]
-        public void SetSort_SameSort_ReturnsFalseAndKeepsPosition()
-        {
-            var state = new ListPagingState();
-            state.SetSort("sys_name", SortDirection.Desc);
-            state.Apply(3, new PagingInfo { TotalCount = 120 });
-
-            Assert.False(state.SetSort("SYS_NAME", SortDirection.Desc));
-
-            Assert.Equal(3, state.Page);
-            Assert.Equal(120, state.TotalCount);
-        }
-
-        [Fact]
-        [DisplayName("SetSort without a field returns to the server's default order")]
-        public void SetSort_NoField_ClearsTheSort()
-        {
-            var state = new ListPagingState();
-            state.SetSort("sys_name", SortDirection.Desc);
-
-            Assert.True(state.SetSort(null, SortDirection.Desc));
-
-            Assert.Null(state.CreateSort());
-            Assert.Equal(SortDirection.Asc, state.SortDirection);
-        }
-
-        [Fact]
         [DisplayName("ToggleSort moves a field through ascending, descending and the default order")]
         public void ToggleSort_SameField_CyclesThroughDirections()
         {

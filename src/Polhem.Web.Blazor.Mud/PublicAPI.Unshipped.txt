@@ -72,10 +72,6 @@ Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.set -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.RowEditDialog() -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.RowEditPanel() -> void
-Polhem.Web.Blazor.Mud.Controls.FieldColumn
-Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldColumn() -> void
-Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldName.get -> string!
-Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldName.set -> void
 Polhem.Web.Blazor.Mud.Controls.GridControl
 Polhem.Web.Blazor.Mud.Controls.GridControl.GridControl() -> void
 Polhem.Web.Blazor.Mud.Controls.GridEditorCell
@@ -97,9 +93,20 @@ Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsNumeric.set -> void
 Polhem.Web.Blazor.Mud.Controls.GridEditorCell.RefreshEditorState() -> void
 Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.get -> string!
 Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.set -> void
-override Polhem.Web.Blazor.Mud.Controls.FieldColumn.PropertyName.get -> string!
 override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.GridControl.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+override Polhem.Web.Blazor.Mud.Controls.GridControl.OnParametersSet() -> void
+override Polhem.Web.Blazor.Mud.Controls.GridControl.ShouldRender() -> bool
+Polhem.Web.Blazor.Mud.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.get -> Polhem.Web.Blazor.Mud.Controls.GridEditorScript!
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Mud.Controls.GridEditorCell!>! cell) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js) -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync() -> System.Threading.Tasks.Task!
+override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void

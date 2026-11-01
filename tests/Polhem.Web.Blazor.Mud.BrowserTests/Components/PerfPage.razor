@@ -1,0 +1,45 @@
+@page "/perf"
+@using System.Data
+@using Polhem.Core.Data
+@using Polhem.Definition.Forms
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Controls.Editors
+@using Polhem.Web.Blazor.DataObjects
+@using Polhem.Web.Blazor.Mud.Controls
+@using Polhem.Web.Blazor.Mud.Theming
+
+@* The 200 rows by 15 columns the plan's limits were measured on: a detail grid being edited. *@
+<PolhemMudProviders />
+<FormScope DataObject="_dataObject" FormMode="SingleFormMode.Edit">
+    <GridControl Layout="_layout" />
+</FormScope>
+
+@code {
+    private const int Rows = 200;
+    private const int Columns = 15;
+    private FormDataObject _dataObject = default!;
+    private LayoutGrid _layout = default!;
+
+    protected override void OnInitialized()
+    {
+        var schema = new FormSchema("Order", "Order");
+        schema.Tables!.Add("Order", "Order");
+        var fields = schema.Tables.Add("Line", "Line").Fields!;
+        _layout = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
+        foreach (var column in Enumerable.Range(0, Columns))
+        {
+            fields.Add($"f{column}", $"Field {column}", FieldDbType.String);
+            _layout.Columns!.Add(new LayoutColumn($"f{column}", $"Field {column}", ControlType.TextEdit));
+        }
+        _dataObject = new FormDataObject(schema);
+        _dataObject.InitializeNewMaster();
+        var lines = _dataObject.DataSet.Tables["Line"]!;
+        foreach (var row in Enumerable.Range(0, Rows))
+        {
+            var line = lines.NewRow();
+            foreach (var column in Enumerable.Range(0, Columns))
+                line[$"f{column}"] = $"r{row}c{column}";
+            lines.Rows.Add(line);
+        }
+    }
+}

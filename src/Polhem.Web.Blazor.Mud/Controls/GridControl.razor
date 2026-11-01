@@ -1,5 +1,7 @@
 @namespace Polhem.Web.Blazor.Mud.Controls
 @inherits GridControlBase
+@implements IAsyncDisposable
+@inject Microsoft.JSInterop.IJSRuntime JS
 @using System.Data
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
@@ -28,7 +30,8 @@
         </div>
     }
     <MudDataGrid T="DataRow"
-                 Items="VisibleRows.ToList()"
+                 Items="_rows"
+                 RowsPerPage="@Math.Max(1, _rows.Count)"
                  ReadOnly="true"
                  Dense="true"
                  Hover="true"
@@ -40,16 +43,26 @@
             @foreach (var column in VisibleColumns)
             {
                 var current = column;
-                <FieldColumn FieldName="@current.FieldName"
-                             Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
-                             Sortable="false"
-                             HeaderClass="@HeaderClass(current)"
-                             HeaderStyle="@ColumnStyle(current)"
-                             CellStyle="@ColumnStyle(current)">
+                <TemplateColumn T="DataRow"
+                                Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
+                                Sortable="false"
+                                HeaderClass="@HeaderClass(current)"
+                                HeaderStyle="@ColumnStyle(current)">
+                    <HeaderTemplate>
+                        @if (IsSortable(current))
+                        {
+                            <button type="button" class="polhem-grid__sort" @onclick="() => OnSortRequested.InvokeAsync(current.FieldName)">@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)@SortMark(current)</button>
+                        }
+                        else
+                        {
+                            @FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)
+                        }
+                    </HeaderTemplate>
                     <CellTemplate>
                         @if (IsInCellEditor(current))
                         {
                             <GridEditorCell Host="EditorHost"
+                                            Script="_script"
                                             EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
                                             EditorParameters="BuildEditorParameters(current, context.Item)"
                                             Text="@FormatCell(context.Item, current)"
@@ -72,7 +85,7 @@
                             @FormatCell(context.Item, current)
                         }
                     </CellTemplate>
-                </FieldColumn>
+                </TemplateColumn>
             }
         </Columns>
     </MudDataGrid>
@@ -91,16 +104,43 @@
     // The default width keeps an editor whole when its cell opens, so the row does not jump.
     private const int DefaultColumnWidth = 120;
 
-    private Task OnRowClick(DataGridRowClickEventArgs<DataRow> e)
+    private List<DataRow> _rows = [];
+    private GridEditorScript _script = default!;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
     {
-        // MudDataGrid has no double-click event; a click reports how many clicks it is.
-        if (e.MouseEventArgs.Detail >= 2)
-        {
-            ActivateRow(e.Item);
-            return Task.CompletedTask;
-        }
-        return SelectRowAsync(e.Item);
+        base.OnInitialized();
+        _script = new GridEditorScript(JS);
     }
+
+    // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
+    /// <inheritdoc />
+    protected override Task OnAfterRenderAsync(bool firstRender)
+        => VisibleColumns.Any(IsInCellEditor) ? _script.LoadAsync() : Task.CompletedTask;
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync() => _script.DisposeAsync();
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RefreshRowList();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRender()
+    {
+        RefreshRowList();
+        return true;
+    }
+
+    private void RefreshRowList() => _rows = VisibleRows.ToList();
+
+    // MudDataGrid has no double-click event; a click reports how many clicks it is.
+    private Task OnRowClick(DataGridRowClickEventArgs<DataRow> e)
+        => e.MouseEventArgs.Detail >= 2 ? ActivateRowAsync(e.Item) : SelectRowAsync(e.Item);
 
     private string RowClass(DataRow row, int index)
         => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
