@@ -1,0 +1,59 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+@implements IAsyncDisposable
+
+@* The host renders this while the question is open and removes it when either callback runs. The focus starts on Cancel,
+   so a stray Enter or Space does not go ahead. *@
+<MudDialog @ref="_dialog" Visible="true" VisibleChanged="OnVisibleChanged" Options="s_options" DefaultFocus="DefaultFocus.None" Class="polhem-confirm-dialog">
+    <TitleContent>@Title</TitleContent>
+    <DialogContent>
+        <div class="polhem-confirm-dialog__message">@Message</div>
+    </DialogContent>
+    <DialogActions>
+        <FocusedButton Class="polhem-confirm-dialog__cancel" OnClick="() => OnCancelled.InvokeAsync()">@CancelText</FocusedButton>
+        <MudButton Class="polhem-confirm-dialog__confirm" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" OnClick="() => OnConfirmed.InvokeAsync()">@ConfirmText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions s_options = new()
+    {
+        BackdropClick = true,
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.ExtraSmall,
+    };
+
+    private MudDialog? _dialog;
+
+    /// <summary>Gets or sets the title.</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Gets or sets the question.</summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>Gets or sets the caption of the safe answer.</summary>
+    [Parameter]
+    public string? CancelText { get; set; }
+
+    /// <summary>Gets or sets the caption of the answer that goes ahead.</summary>
+    [Parameter]
+    public string? ConfirmText { get; set; }
+
+    /// <summary>Invoked when the user goes ahead.</summary>
+    [Parameter]
+    public EventCallback OnConfirmed { get; set; }
+
+    /// <summary>Invoked when the user backs out, including through Escape or a click outside.</summary>
+    [Parameter]
+    public EventCallback OnCancelled { get; set; }
+
+    // WARNING: an inline MudDialog renders in the dialog provider and stays there when this component is removed.
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_dialog is not null) await _dialog.CloseAsync().ConfigureAwait(true);
+    }
+
+    private Task OnVisibleChanged(bool visible) => visible ? Task.CompletedTask : OnCancelled.InvokeAsync();
+}

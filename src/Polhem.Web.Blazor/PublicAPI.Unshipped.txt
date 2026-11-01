@@ -612,3 +612,7 @@ static Polhem.Web.Blazor.Shell.PolhemShellText.Get(string! key) -> string!
 static Polhem.Web.Blazor.Shell.ShellMenuRow.operator !=(Polhem.Web.Blazor.Shell.ShellMenuRow? left, Polhem.Web.Blazor.Shell.ShellMenuRow? right) -> bool
 static Polhem.Web.Blazor.Shell.ShellMenuRow.operator ==(Polhem.Web.Blazor.Shell.ShellMenuRow? left, Polhem.Web.Blazor.Shell.ShellMenuRow? right) -> bool
 static Polhem.Web.Blazor.Shell.ShellSignInBase.IsCurrent(Polhem.Web.Blazor.Shell.PolhemShellLanguage! language) -> bool
+Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.get -> double
+Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.set -> void

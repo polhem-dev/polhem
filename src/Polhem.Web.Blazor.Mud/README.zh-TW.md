@@ -12,6 +12,8 @@
 - 同一命名空間的 `ButtonEdit`、`LookupPanel` 與 `LookupDialog`，查詢編輯器與它的選取對話框。
 - `GridControl`（`Polhem.Web.Blazor.Mud.Controls`），依版面定義繪製的 `MudDataGrid`。`InCell` 模式下，格子平時顯示文字，取得焦點才開編輯器，一張 Grid 同時只開一個。在編輯器按 Esc 會放棄輸入的內容，格子回到文字。列表 Grid 接受 `OnSortRequested` 與 `SortFieldName`：它請宿主依新順序讀取資料，自己不排序。
 - `RowEditPanel` 與 `RowEditDialog`，`EditForm` 模式的編輯表單。
+- `FormLayoutPresenter`（`Polhem.Web.Blazor.Mud.Controls`），依 `FormLayout` 排列紀錄。欄位維持 CSS Grid，因為 `MudGrid` 做不到 `RowSpan`，也處理不了除不盡 12 的 `ColumnCount`。
+- `FormPage` 與 `RelatedRecordDialog`（`Polhem.Web.Blazor.Mud.Components`），建立在 `Polhem.Web.Blazor` 的基底上；`ConfirmDialog` 在刪除前詢問，焦點預設在取消鈕。
 - `PolhemMudProviders` 與 `PolhemMudTheme`（`Polhem.Web.Blazor.Mud.Theming`），MudBlazor 的 provider 與預設佈景。
 - `AddPolhemMud`（`Polhem.Web.Blazor.Mud.DependencyInjection`），註冊 MudBlazor 的服務。
 

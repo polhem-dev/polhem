@@ -1,7 +1,6 @@
 using Bunit;
 using Bunit.Rendering;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.BehaviorTests;
 using Polhem.Web.Blazor.Server.Controls.Editors;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Behavior

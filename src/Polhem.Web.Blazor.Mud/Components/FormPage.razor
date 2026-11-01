@@ -1,0 +1,141 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+@inherits FormPageBase
+@using Polhem.Definition.Language
+@using Polhem.Definition.Settings
+@using Polhem.Web.Blazor.Mud.Controls
+
+<div class="polhem-form-page">
+    @if (IsCompact is null)
+    {
+        <CompactViewportObserver CompactWidthThreshold="CompactWidthThreshold" CompactChanged="OnCompactChanged" />
+    }
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="polhem-form-page__error">@Error</MudAlert>
+    }
+    else if (IsInitializing || DataObject is null)
+    {
+        <div class="polhem-form-page__loading">@Text(PolhemUIText.Loading)</div>
+    }
+    else
+    {
+        @* A command the user lacks the permission for is hidden, as in the Avalonia views. *@
+        <div class="polhem-form-page__toolbar">
+            @if (!IsShowingRecord)
+            {
+                @if (Can(PermissionActions.Read))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(IsListLocked || SelectedRowId is null)" OnClick="() => OnViewAsync()">@Text(PolhemUIText.View)</MudButton>
+                }
+                @if (Can(PermissionActions.Create))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@IsListLocked" OnClick="() => OnNewAsync()">@Text(PolhemUIText.New)</MudButton>
+                }
+                @if (Can(PermissionActions.Update))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(IsListLocked || SelectedRowId is null)" OnClick="() => OnEditAsync()">@Text(PolhemUIText.Edit)</MudButton>
+                }
+                @if (Can(PermissionActions.Delete))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(IsListLocked || SelectedRowId is null)" OnClick="() => OnDeleteAsync()">@Text(PolhemUIText.Delete)</MudButton>
+                }
+            }
+            else if (IsEditing)
+            {
+                @if (Can(PermissionActions.Create | PermissionActions.Update))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsBusy" OnClick="() => OnSaveAsync()">@Text(PolhemUIText.Save)</MudButton>
+                }
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@IsBusy" OnClick="OnClose">@Text(PolhemUIText.Cancel)</MudButton>
+                @if (DataObject.IsDirty)
+                {
+                    <span class="polhem-form-page__dirty">@Text(PolhemUIText.Unsaved)</span>
+                }
+            }
+            else
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@IsBusy" OnClick="OnClose">@Text(PolhemUIText.Back)</MudButton>
+            }
+        </div>
+
+        @if (Notice is not null)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-form-page__notice">@Notice</MudAlert>
+        }
+
+        @if (LiveComputationNotice is { } liveComputationNotice)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-form-page__notice">@liveComputationNotice</MudAlert>
+        }
+
+        @if (!IsShowingRecord)
+        {
+            @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
+            {
+                <GridControl Layout="ListLayout"
+                             DataTable="ListRows"
+                             FormTable="Schema?.MasterTable"
+                             AllowEdit="false"
+                             SelectedRowId="SelectedRowId"
+                             RowSelected="OnRowSelected"
+                             RowActivated="rowId => OnRowActivatedAsync(rowId)"
+                             SortFieldName="@Paging.SortFieldName"
+                             SortDirection="Paging.SortDirection"
+                             OnSortRequested="fieldName => OnSortRequestedAsync(fieldName)" />
+            }
+            else
+            {
+                <div class="polhem-form-page__empty">@Text(PolhemUIText.NoData)</div>
+            }
+            @if (ShowsPager)
+            {
+                <div class="polhem-form-page__pager">
+                    <MudButton Size="Size.Small" Disabled="@(IsListLocked || !Paging.CanGoPrevious)" OnClick="() => GoToPageAsync(Paging.Page - 1)">@Text(PolhemUIText.PreviousPage)</MudButton>
+                    <MudButton Size="Size.Small" Disabled="@(IsListLocked || !Paging.CanGoNext)" OnClick="() => GoToPageAsync(Paging.Page + 1)">@Text(PolhemUIText.NextPage)</MudButton>
+                    <span class="polhem-form-page__page-position">@PagePosition</span>
+                    <span class="polhem-form-page__page-size-label">@Text(PolhemUIText.RowsPerPage)</span>
+                    <MudSelect T="int"
+                               Class="polhem-form-page__page-size"
+                               Value="Paging.PageSize"
+                               ValueChanged="pageSize => SetPageSizeAsync(pageSize)"
+                               Disabled="@IsListLocked"
+                               aria-label="@Text(PolhemUIText.RowsPerPage)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var pageSize in PageSizes)
+                        {
+                            <MudSelectItem T="int" Value="pageSize">@pageSize</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            }
+        }
+        else
+        {
+            <FormLayoutPresenter Layout="RecordLayout"
+                                 DataObject="DataObject"
+                                 FormMode="FormMode"
+                                 RoundingContext="RoundingContext"
+                                 IsCompact="EffectiveIsCompact"
+                                 DetailEditMode="DetailEditMode"
+                                 OpenRelation="OpenRelation" />
+        }
+    }
+    @if (PendingDeleteRowId is not null)
+    {
+        <ConfirmDialog Title="@Text(PolhemUIText.Delete)"
+                       Message="@Text(PolhemUIText.DeleteRecordPrompt)"
+                       CancelText="@Text(PolhemUIText.Cancel)"
+                       ConfirmText="@Text(PolhemUIText.Delete)"
+                       OnCancelled="CancelDelete"
+                       OnConfirmed="() => ConfirmDeleteAsync()" />
+    }
+    @if (Relation is { } relation)
+    {
+        <RelatedRecordDialog Target="relation"
+                             DefinitionLoader="DefinitionLoader"
+                             IsCompact="EffectiveIsCompact"
+                             OnClosed="CloseRelation"
+                             OnRefused="OnRelationRefused" />
+    }
+</div>

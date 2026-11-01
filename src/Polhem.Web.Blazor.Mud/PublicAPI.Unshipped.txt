@@ -110,3 +110,39 @@ Polhem.Web.Blazor.Mud.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInt
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.CancelText.get -> string?
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.CancelText.set -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmDialog() -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmText.get -> string?
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmText.set -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Message.get -> string?
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Message.set -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnCancelled.set -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnConfirmed.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnConfirmed.set -> void
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Title.get -> string?
+Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Title.set -> void
+Polhem.Web.Blazor.Mud.Components.FormPage
+Polhem.Web.Blazor.Mud.Components.FormPage.FormPage() -> void
+Polhem.Web.Blazor.Mud.Components.RelatedRecordDialog
+Polhem.Web.Blazor.Mud.Components.RelatedRecordDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Components.RelatedRecordDialog.RelatedRecordDialog() -> void
+Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter
+Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
+~override Polhem.Web.Blazor.Mud.Components.ConfirmDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Components.FormPage.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Components.RelatedRecordDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Mud.Components.FocusedButton
+Polhem.Web.Blazor.Mud.Components.FocusedButton.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Polhem.Web.Blazor.Mud.Components.FocusedButton.ChildContent.set -> void
+Polhem.Web.Blazor.Mud.Components.FocusedButton.Class.get -> string?
+Polhem.Web.Blazor.Mud.Components.FocusedButton.Class.set -> void
+Polhem.Web.Blazor.Mud.Components.FocusedButton.FocusedButton() -> void
+Polhem.Web.Blazor.Mud.Components.FocusedButton.OnClick.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Components.FocusedButton.OnClick.set -> void
+override Polhem.Web.Blazor.Mud.Components.FocusedButton.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Polhem.Web.Blazor.Mud.Components.FocusedButton.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

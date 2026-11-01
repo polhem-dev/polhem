@@ -1,19 +1,23 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Playwright;
+using Polhem.Web.Blazor.BehaviorTests;
 using Polhem.Web.Blazor.Mud.BrowserTests.Components;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Mud.BrowserTests
 {
     /// <summary>
-    /// Runs a Blazor Server site over <see cref="GridPage"/> and a headless Chrome for the tests of one class.
+    /// Runs a Blazor Server site over <see cref="GridPage"/> and a form page, and a headless Chrome for the tests of one class.
     /// </summary>
     public sealed class GridBrowserFixture : IAsyncLifetime
     {
         private WebApplication? _app;
         private IPlaywright? _playwright;
         private SlowTcpProxy? _proxy;
+
+        /// <summary>Gets the backend of the site's form page.</summary>
+        public FormPageTestBackend Backend { get; } = new();
 
         /// <summary>Gets the address of the site.</summary>
         public string Address { get; private set; } = string.Empty;
@@ -37,6 +41,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             builder.WebHost.UseUrls("http://127.0.0.1:0");
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
             builder.Services.AddPolhemMud();
+            Backend.Register(builder.Services);
             _app = builder.Build();
             _app.UseStaticFiles();
             _app.UseAntiforgery();

@@ -1,4 +1,3 @@
-using Polhem.Web.Blazor.BehaviorTests;
 using System.ComponentModel;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;

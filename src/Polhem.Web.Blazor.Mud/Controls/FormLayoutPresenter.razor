@@ -1,0 +1,59 @@
+@namespace Polhem.Web.Blazor.Mud.Controls
+@inherits FormLayoutPresenterBase
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Mud.Controls.Editors
+
+@* A CSS grid rather than MudGrid: MudGrid has twelve flex columns, so it cannot do a RowSpan or a ColumnCount that does
+   not divide twelve. *@
+@if (Layout is null)
+{
+    <div class="polhem-form-layout polhem-form-layout--empty"></div>
+}
+else
+{
+    <FormScope DataObject="DataObject" FormMode="FormMode" OpenRelation="OpenRelation">
+        <div class="@(IsCompact ? "polhem-form-layout polhem-form-layout--compact" : "polhem-form-layout")">
+            @foreach (var section in EnumerateSections())
+            {
+                <MudPaper Outlined="true" Class="polhem-form-layout__section">
+                    @if (section.ShowCaption && !string.IsNullOrEmpty(section.Caption))
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="polhem-form-layout__section-caption">@section.Caption</MudText>
+                    }
+                    <div class="polhem-form-layout__grid" style="@BuildGridStyle()">
+                        @foreach (var field in EnumerateFields(section))
+                        {
+                            <div class="polhem-form-layout__field" style="@BuildFieldStyle(field, EffectiveColumnCount)">
+                                <label class="@LabelClass(field)" for="@FieldInputId(field)">@field.Caption</label>
+                                <DynamicComponent Type="FieldEditorFactory.GetEditorType(field.ControlType)"
+                                                  Parameters="BuildEditorParameters(field)" />
+                            </div>
+                        }
+                    </div>
+                </MudPaper>
+            }
+            @foreach (var detail in EnumerateDetails())
+            {
+                <MudPaper Outlined="true" Class="polhem-form-layout__detail">
+                    @if (!string.IsNullOrEmpty(detail.Caption))
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="polhem-form-layout__detail-caption">@detail.Caption</MudText>
+                    }
+                    <GridControl Layout="detail"
+                                 EditMode="EffectiveDetailEditMode"
+                                 Compact="IsCompact"
+                                 CurrencySettings="RoundingContext?.CurrencySettings"
+                                 UnitSettings="RoundingContext?.UnitSettings"
+                                 DefaultCurrencyCode="@(RoundingContext?.Company?.DefaultCurrency ?? string.Empty)" />
+                </MudPaper>
+            }
+        </div>
+    </FormScope>
+}
+
+@code {
+    private string LabelClass(LayoutField field)
+        => ShowsRequiredCue(field)
+            ? "polhem-form-layout__label polhem-form-layout__label--required"
+            : "polhem-form-layout__label";
+}

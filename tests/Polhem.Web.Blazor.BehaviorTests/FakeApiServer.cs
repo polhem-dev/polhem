@@ -6,7 +6,7 @@ using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Payload;
 
-namespace Polhem.Web.Blazor.Server.UnitTests
+namespace Polhem.Web.Blazor.BehaviorTests
 {
     /// <summary>
     /// Answers the calls of a <see cref="PolhemApiClient"/> in place of a backend, one handler per method.
@@ -17,7 +17,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// payload options, so a handler sees the request as a server would and the client reads the answer as it would
     /// read a server's.
     /// </remarks>
-    internal sealed class FakeApiServer : IJsonRpcTransport
+    public sealed class FakeApiServer : IJsonRpcTransport
     {
         private readonly Dictionary<string, Func<PayloadEnvelope, string, object?>> _handlers = new(StringComparer.Ordinal);
 

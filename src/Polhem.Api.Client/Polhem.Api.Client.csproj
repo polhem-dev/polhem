@@ -26,6 +26,7 @@
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
     <InternalsVisibleTo Include="Polhem.Web.Blazor.UnitTests" />
     <InternalsVisibleTo Include="Polhem.Web.Blazor.Server.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.BehaviorTests" />
   </ItemGroup>
 
 </Project>
