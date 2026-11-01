@@ -253,3 +253,71 @@ static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadFormLayoutAsync(Polhem
 static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadRoundingContextAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, Polhem.Definition.Identity.CompanyInfo? company, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
 static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadSchemaAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 virtual Polhem.Web.Blazor.Components.FormPageBase.FocusDeleteCancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.GridControlBase
+Polhem.Web.Blazor.Controls.GridControlBase.Actions.get -> Polhem.Definition.Layouts.GridControlAllowActions
+Polhem.Web.Blazor.Controls.GridControlBase.ActivateRow(System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Controls.GridControlBase.AddRow() -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.get -> bool?
+Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.BoundDataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.GridControlBase.BuildEditorParameters(Polhem.Definition.Layouts.LayoutColumn! column, System.Data.DataRow! row) -> System.Collections.Generic.Dictionary<string!, object?>!
+Polhem.Web.Blazor.Controls.GridControlBase.Compact.get -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.Compact.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Web.Blazor.Controls.GridControlBase.CurrencySettings.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.GridControlBase.DataObject.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.DataTable.get -> System.Data.DataTable?
+Polhem.Web.Blazor.Controls.GridControlBase.DataTable.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.DefaultCurrencyCode.get -> string!
+Polhem.Web.Blazor.Controls.GridControlBase.DefaultCurrencyCode.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.DeleteSelectedRow() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.Dispose() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.EditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+Polhem.Web.Blazor.Controls.GridControlBase.EditMode.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.EditSelectedRow() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.EditingRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.GridControlBase.EditorHost.get -> Polhem.Web.Blazor.Controls.GridEditorHost!
+Polhem.Web.Blazor.Controls.GridControlBase.EndEdit() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.FormTable.get -> Polhem.Definition.Forms.FormTable?
+Polhem.Web.Blazor.Controls.GridControlBase.FormTable.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.FormatCell(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> string!
+Polhem.Web.Blazor.Controls.GridControlBase.GridControlBase() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.HasData.get -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.IsInCellEditor(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.IsSelected(System.Data.DataRow! row) -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Controls.GridControlBase.Layout.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.OnAddClicked() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.OnEditCancelled() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.OnEditCommitted() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.OpenRelationAsync(Polhem.UI.Core.Fields.RelationTarget target, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.GridControlBase.OpenTarget(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Fields.RelationTarget?
+Polhem.Web.Blazor.Controls.GridControlBase.RefreshRows() -> void
+Polhem.Web.Blazor.Controls.GridControlBase.RowSelected.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
+Polhem.Web.Blazor.Controls.GridControlBase.RowSelected.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.SelectRowAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.GridControlBase.SelectedRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.GridControlBase.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.Web.Blazor.Controls.GridControlBase.ShowToolbar.get -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.ShowsRequiredCue(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.TableName.get -> string!
+Polhem.Web.Blazor.Controls.GridControlBase.TableName.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Controls.GridControlBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Web.Blazor.Controls.GridControlBase.UnitSettings.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.VisibleColumns.get -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
+Polhem.Web.Blazor.Controls.GridControlBase.VisibleRows.get -> System.Collections.Generic.IEnumerable<System.Data.DataRow!>!
+Polhem.Web.Blazor.Controls.GridEditMode
+Polhem.Web.Blazor.Controls.GridEditMode.EditForm = 1 -> Polhem.Web.Blazor.Controls.GridEditMode
+Polhem.Web.Blazor.Controls.GridEditMode.InCell = 0 -> Polhem.Web.Blazor.Controls.GridEditMode
+Polhem.Web.Blazor.Controls.GridEditorHost
+Polhem.Web.Blazor.Controls.GridEditorHost.Activate(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
+Polhem.Web.Blazor.Controls.GridEditorHost.Active.get -> Polhem.Web.Blazor.Controls.IGridEditorSlot?
+Polhem.Web.Blazor.Controls.GridEditorHost.Close() -> void
+Polhem.Web.Blazor.Controls.GridEditorHost.GridEditorHost() -> void
+Polhem.Web.Blazor.Controls.GridEditorHost.Release(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
+Polhem.Web.Blazor.Controls.IGridEditorSlot
+Polhem.Web.Blazor.Controls.IGridEditorSlot.RefreshEditorState() -> void
+override Polhem.Web.Blazor.Controls.GridControlBase.OnParametersSet() -> void
+static Polhem.Web.Blazor.Controls.GridControlBase.IsChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool

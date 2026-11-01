@@ -1,4 +1,5 @@
 @namespace Polhem.Web.Blazor.Server.Controls
+@inherits GridControlBase
 @using System.Data
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
@@ -81,11 +82,11 @@
         </tbody>
     </table>
 </div>
-@if (_editingRow is not null && BoundDataObject is not null && Layout is not null)
+@if (EditingRow is not null && BoundDataObject is not null && Layout is not null)
 {
     <RowEditDialog DataObject="BoundDataObject"
                    Layout="Layout"
-                   Row="_editingRow"
+                   Row="EditingRow"
                    Compact="Compact"
                    EditCommitted="OnEditCommitted"
                    EditCancelled="OnEditCancelled" />
