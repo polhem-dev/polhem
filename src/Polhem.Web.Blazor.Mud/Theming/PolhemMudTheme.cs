@@ -14,6 +14,8 @@ namespace Polhem.Web.Blazor.Mud.Theming
         public static MudTheme CreateDefault() => new()
         {
             LayoutProperties = new LayoutProperties { DefaultBorderRadius = "4px" },
+            // Captions are the definitions' and the language resources' text, shown as written.
+            Typography = new Typography { Button = new ButtonTypography { TextTransform = "none" } },
         };
     }
 }

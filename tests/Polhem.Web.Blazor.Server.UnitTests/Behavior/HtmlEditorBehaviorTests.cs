@@ -15,6 +15,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Behavior
             ControlType.MemoEdit => ".polhem-field-editor--memo",
             ControlType.NumericEdit => ".polhem-field-editor--numeric",
             ControlType.DateEdit => ".polhem-field-editor--date",
+            ControlType.YearMonthEdit => ".polhem-field-editor--month",
             ControlType.TimeEdit => ".polhem-field-editor--time",
             ControlType.DateTimeEdit => ".polhem-field-editor--datetime",
             ControlType.DropDownEdit => ".polhem-field-editor--select",

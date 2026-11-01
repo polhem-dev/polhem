@@ -1,0 +1,203 @@
+using System.ComponentModel;
+using Bunit;
+using Bunit.Rendering;
+using Microsoft.AspNetCore.Components;
+using Polhem.Core.Data;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
+using Polhem.Web.Blazor.Controls;
+using Polhem.Web.Blazor.Controls.Editors;
+using Polhem.Web.Blazor.DataObjects;
+
+namespace Polhem.Web.Blazor.BehaviorTests
+{
+    /// <summary>
+    /// What every UI package's record layout and edit form must do. Their class names are common to all of them.
+    /// </summary>
+    public abstract class FormLayoutBehaviorTests : BunitContext, IAsyncLifetime
+    {
+        /// <inheritdoc />
+        Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+        /// <inheritdoc />
+        async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync().ConfigureAwait(true);
+
+        /// <summary>Gets the record layout component, which derives from <see cref="FormLayoutPresenterBase"/>.</summary>
+        protected abstract Type PresenterType { get; }
+
+        /// <summary>Gets the edit form component, which derives from <see cref="RowEditPanelBase"/>.</summary>
+        protected abstract Type RowEditPanelType { get; }
+
+        private static FormSchema BuildSchema()
+        {
+            var schema = new FormSchema("Emp", "Employee");
+            var fields = schema.Tables!.Add("Emp", "Employee").Fields!;
+            fields.Add("emp_name", "Name", FieldDbType.String);
+            fields.Add("emp_note", "Note", FieldDbType.String);
+            return schema;
+        }
+
+        private IRenderedComponent<ContainerFragment> RenderPresenter(FormLayout? layout, FormDataObject? dataObject = null, bool compact = false)
+        {
+            var type = PresenterType;
+            return Render(b =>
+            {
+                b.OpenComponent(0, type);
+                b.AddAttribute(1, nameof(FormLayoutPresenterBase.Layout), layout);
+                b.AddAttribute(2, nameof(FormLayoutPresenterBase.DataObject), dataObject);
+                b.AddAttribute(3, nameof(FormLayoutPresenterBase.IsCompact), compact);
+                b.CloseComponent();
+            });
+        }
+
+        [Fact]
+        [DisplayName("Without a layout the presenter renders its empty state")]
+        public void Presenter_NoLayout_RendersEmpty()
+        {
+            var cut = RenderPresenter(null);
+
+            Assert.Single(cut.FindAll(".polhem-form-layout--empty"));
+        }
+
+        [Fact]
+        [DisplayName("A section's caption follows its ShowCaption")]
+        public void Presenter_ShowCaption_DecidesCaption()
+        {
+            var layout = FormLayoutGenerator.Generate(BuildSchema(), "default");
+            layout.Sections![0].Caption = "Main";
+            layout.Sections[0].ShowCaption = true;
+            Assert.Single(RenderPresenter(layout).FindAll(".polhem-form-layout__section-caption"));
+
+            layout.Sections[0].ShowCaption = false;
+            Assert.Empty(RenderPresenter(layout).FindAll(".polhem-form-layout__section-caption"));
+        }
+
+        [Fact]
+        [DisplayName("Compact lays the fields out in one column and clamps wider spans")]
+        public void Presenter_Compact_RendersOneColumn()
+        {
+            var layout = FormLayoutGenerator.Generate(BuildSchema(), "default");
+            layout.ColumnCount = 3;
+            layout.Sections![0].Fields![0].ColumnSpan = 2;
+
+            var cut = RenderPresenter(layout, compact: true);
+
+            Assert.Single(cut.FindAll(".polhem-form-layout--compact"));
+            Assert.Contains("repeat(1,", cut.Find(".polhem-form-layout__grid").GetAttribute("style"), StringComparison.Ordinal);
+            Assert.Contains("grid-column:span 1", cut.FindAll(".polhem-form-layout__field")[0].GetAttribute("style"), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Outside compact the layout's column count and spans apply")]
+        public void Presenter_NotCompact_KeepsColumns()
+        {
+            var layout = FormLayoutGenerator.Generate(BuildSchema(), "default");
+            layout.ColumnCount = 3;
+            layout.Sections![0].Fields![0].ColumnSpan = 2;
+
+            var cut = RenderPresenter(layout);
+
+            Assert.Empty(cut.FindAll(".polhem-form-layout--compact"));
+            Assert.Contains("repeat(3,", cut.Find(".polhem-form-layout__grid").GetAttribute("style"), StringComparison.Ordinal);
+            Assert.Contains("grid-column:span 2", cut.FindAll(".polhem-form-layout__field")[0].GetAttribute("style"), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A detail grid follows the sections, and edits through the edit form when compact")]
+        public void Presenter_Details_RenderGrid()
+        {
+            var schema = OrderTestData.BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            var dataObject = OrderTestData.BuildOrder(schema);
+
+            var cut = RenderPresenter(layout, dataObject, compact: true);
+
+            Assert.Equal("Lines", cut.Find(".polhem-form-layout__detail-caption").TextContent.Trim());
+            Assert.Equal(2, cut.FindAll("tr.polhem-grid__row").Count);
+            Assert.Single(cut.FindAll(".polhem-grid__button--edit"));
+        }
+
+        private IRenderedComponent<ContainerFragment> RenderPanel(FormDataObject dataObject, Action? committed = null, Action? cancelled = null)
+        {
+            var schema = OrderTestData.BuildSchema();
+            var type = RowEditPanelType;
+            return Render(b =>
+            {
+                b.OpenComponent(0, type);
+                b.AddAttribute(1, nameof(RowEditPanelBase.DataObject), dataObject);
+                b.AddAttribute(2, nameof(RowEditPanelBase.Layout), OrderTestData.LinesLayout(schema));
+                b.AddAttribute(3, nameof(RowEditPanelBase.Row), OrderTestData.Line(dataObject, 0));
+                b.AddAttribute(4, nameof(RowEditPanelBase.EditCommitted), EventCallback.Factory.Create(this, () => committed?.Invoke()));
+                b.AddAttribute(5, nameof(RowEditPanelBase.EditCancelled), EventCallback.Factory.Create(this, () => cancelled?.Invoke()));
+                b.CloseComponent();
+            });
+        }
+
+        private static FormDataObject BuildAcceptedOrder()
+        {
+            var dataObject = OrderTestData.BuildOrder();
+            dataObject.DataSet.AcceptChanges();
+            return dataObject;
+        }
+
+        [Fact]
+        [DisplayName("Edits stay proposed until OK, which commits them and reports EditCommitted")]
+        public void Panel_Ok_Commits()
+        {
+            var dataObject = BuildAcceptedOrder();
+            var published = new List<string>();
+            dataObject.FieldValueChanged += (_, e) => published.Add(e.FieldName);
+            var committed = false;
+            var cut = RenderPanel(dataObject, committed: () => committed = true);
+
+            cut.Find("#polhem-row-edit-item").Change("Washer");
+            Assert.Empty(published);
+            cut.Find(".polhem-row-edit-panel__ok").Click();
+
+            Assert.True(committed);
+            Assert.Contains("item", published);
+            Assert.Equal("Washer", dataObject.GetField(OrderTestData.Line(dataObject, 0), "item"));
+        }
+
+        [Fact]
+        [DisplayName("Cancel restores the row and reports EditCancelled")]
+        public void Panel_Cancel_Restores()
+        {
+            var dataObject = BuildAcceptedOrder();
+            var cancelled = false;
+            var cut = RenderPanel(dataObject, cancelled: () => cancelled = true);
+
+            cut.Find("#polhem-row-edit-item").Change("Washer");
+            cut.Find(".polhem-row-edit-panel__cancel").Click();
+
+            Assert.True(cancelled);
+            Assert.Equal("Bolt", dataObject.GetField(OrderTestData.Line(dataObject, 0), "item"));
+        }
+
+        [Fact]
+        [DisplayName("A panel removed mid-session cancels the edit")]
+        public async Task Panel_Removed_Cancels()
+        {
+            var dataObject = BuildAcceptedOrder();
+            var cut = RenderPanel(dataObject);
+            cut.Find("#polhem-row-edit-item").Change("Washer");
+
+            await DisposeComponentsAsync();
+
+            Assert.Equal("Bolt", dataObject.GetField(OrderTestData.Line(dataObject, 0), "item"));
+            Assert.False(OrderTestData.Line(dataObject, 0).HasVersion(System.Data.DataRowVersion.Proposed));
+        }
+
+        [Fact]
+        [DisplayName("An editor in the session refreshes when something else writes the row, such as a recompute")]
+        public void Panel_OtherWrite_Refreshes()
+        {
+            var dataObject = BuildAcceptedOrder();
+            var cut = RenderPanel(dataObject);
+
+            cut.InvokeAsync(() => dataObject.SetField(OrderTestData.Line(dataObject, 0), "amount", "42"));
+
+            cut.WaitForAssertion(() => Assert.StartsWith("42", cut.Find("#polhem-row-edit-amount").GetAttribute("value"), StringComparison.Ordinal));
+        }
+    }
+}

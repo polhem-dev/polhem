@@ -47,6 +47,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Behavior
             => cut.FindAll(".polhem-row-edit-panel").Count > 0;
 
         /// <inheritdoc />
+        protected override void ConfirmEditForm(IRenderedComponent<ContainerFragment> cut)
+            => cut.Find(".polhem-row-edit-panel__ok").Click();
+
+        /// <inheritdoc />
+        protected override void EnterInEditForm(IRenderedComponent<ContainerFragment> cut, string fieldName, string text)
+            => cut.Find($"#polhem-row-edit-{fieldName}").Change(text);
+
+        /// <inheritdoc />
         protected override void CancelEditForm(IRenderedComponent<ContainerFragment> cut)
             => cut.Find(".polhem-row-edit-panel__cancel").Click();
 

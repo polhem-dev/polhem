@@ -279,5 +279,45 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.True(AcceptsTyping(cut));
             Assert.False(IsPickerOpen(cut));
         }
+
+        private IRenderedComponent<ContainerFragment> OpenPicker()
+        {
+            var cut = RenderEditor(LookupTestData.BuildEmployee());
+            ClickButton(cut);
+            cut.WaitForAssertion(() => Assert.True(IsPickerOpen(cut)));
+            return cut;
+        }
+
+        /// <summary>Reads what the picker's message area shows, which may be outside the editor's markup.</summary>
+        /// <param name="cut">The rendered editor.</param>
+        /// <param name="selector">The selector.</param>
+        /// <returns>The texts.</returns>
+        protected abstract IReadOnlyList<string> PickerText(IRenderedComponent<ContainerFragment> cut, string selector);
+
+        [Fact]
+        [DisplayName("A response with more candidates shows the notice, and a narrower search clears it")]
+        public void Picker_HasMore_ShowsNotice()
+        {
+            using var culture = new Polhem.Tests.Shared.CultureScope("en-US");
+            _source.Connector.Paging = new Polhem.Definition.Paging.PagingInfo { PageSize = 100, HasMore = true };
+            var cut = OpenPicker();
+            cut.WaitForAssertion(() => Assert.Contains("first 100 rows", Assert.Single(PickerText(cut, ".polhem-lookup-panel__notice")), StringComparison.Ordinal));
+
+            _source.Connector.Paging = new Polhem.Definition.Paging.PagingInfo { PageSize = 100, HasMore = false };
+            SearchPicker(cut, "sal");
+
+            cut.WaitForAssertion(() => Assert.Empty(PickerText(cut, ".polhem-lookup-panel__notice")));
+        }
+
+        [Fact]
+        [DisplayName("A failed load shows on the picker instead of breaking it")]
+        public void Picker_LoadFails_ShowsError()
+        {
+            _source.Connector.Failure = new InvalidOperationException("Lookup is down");
+
+            var cut = OpenPicker();
+
+            cut.WaitForAssertion(() => Assert.Contains("Lookup is down", Assert.Single(PickerText(cut, ".polhem-lookup-panel__error")), StringComparison.Ordinal));
+        }
     }
 }

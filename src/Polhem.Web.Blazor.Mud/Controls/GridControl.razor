@@ -80,6 +80,10 @@
                                  title="@Text(PolhemUIText.OpenRelatedRecord)"
                                  @ondblclick="() => OpenRelationAsync(target)">@FormatCell(context.Item, current)</div>
                         }
+                        else if (current.ControlType == ControlType.NumericEdit)
+                        {
+                            <div class="polhem-grid-cell__text--numeric">@FormatCell(context.Item, current)</div>
+                        }
                         else
                         {
                             @FormatCell(context.Item, current)
