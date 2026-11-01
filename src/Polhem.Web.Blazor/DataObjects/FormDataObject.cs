@@ -6,13 +6,13 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Holds the in-memory <see cref="System.Data.DataSet"/> for a single form view
     /// (one master row plus zero or more detail tables) and exposes a small string-based
     /// access surface for two-way binding by the field editors in
-    /// <see cref="Polhem.Web.Blazor.Server.Controls.Editors"/> and by <see cref="Polhem.Web.Blazor.Server.Components.DynamicGrid"/>.
+    /// <c>Editors</c> and by <c>DynamicGrid</c>.
     /// </summary>
     /// <remarks>
     /// <para>

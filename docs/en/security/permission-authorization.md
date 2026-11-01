@@ -184,7 +184,7 @@ On `EnterCompany`, the back end computes the per-model action mask for the sessi
 
 ## 9. How the client degrades
 
-`ClientInfo.Capabilities` (`Polhem.UI.ApiBridge`) caches the snapshot (nullable), and the views read it through `IUserContext.Capabilities`, which `AddPolhemUIApiBridge` registers over `ClientInfo`. `Polhem.UI.Core.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) evaluates it. The Avalonia views (`FormView`, `ListView`) and the Blazor `FormPage` apply it, the layout half through `LayoutCapabilityApplier`; a view with no `IUserContext` registered sees no snapshot and degrades nothing. A Blazor Server site serves several users from one process, so it keeps the snapshot per circuit on `CircuitUserContext` (`Polhem.Web.Blazor.Server`) instead of `ClientInfo`.
+`ClientInfo.Capabilities` (`Polhem.UI.ApiBridge`) caches the snapshot (nullable), and the views read it through `IUserContext.Capabilities`, which `AddPolhemUIApiBridge` registers over `ClientInfo`. `Polhem.UI.Core.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) evaluates it. The Avalonia views (`FormView`, `ListView`) and the Blazor `FormPage` apply it, the layout half through `LayoutCapabilityApplier`; a view with no `IUserContext` registered sees no snapshot and degrades nothing. A Blazor Server site serves several users from one process, so it keeps the snapshot per circuit on `BlazorUserContext` (`Polhem.Web.Blazor.Server`) instead of `ClientInfo`.
 
 - **`null` → capability inactive → nothing is degraded.** An app that never enters a company, or does not use permissions, renders exactly as before.
 - **Non-null → active.** A model absent from the map means *no permission* on it.
@@ -219,11 +219,11 @@ Capability is **inert until wired**, so existing apps are unaffected. To turn it
    ```
 4. On `LeaveCompany` or logout, clear it: `ClientInfo.ClearCompanyContext();` (which drops the cached definitions too).
 
-A Blazor Server host replaces steps 1, 3 and 4: `AddPolhemBlazor` registers the circuit's `CircuitUserContext` as its
+A Blazor Server host replaces steps 1, 3 and 4: `AddPolhemBlazor` registers the circuit's `BlazorUserContext` as its
 `IUserContext`, so the host enters the company through it and signs out through it:
 
 ```csharp
-@inject CircuitUserContext UserContext
+@inject BlazorUserContext UserContext
 
 await UserContext.EnterCompanyAsync(companyId);   // records the company and the capability snapshot for this circuit
 UserContext.SignOut();                            // signs the circuit's client out and clears the snapshot

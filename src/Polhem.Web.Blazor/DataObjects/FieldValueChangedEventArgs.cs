@@ -1,7 +1,7 @@
 using System.Data;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Event data for <see cref="FormDataObject.FieldValueChanged"/>. Raised for master and detail

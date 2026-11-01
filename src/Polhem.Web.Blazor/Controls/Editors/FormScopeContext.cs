@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.Controls.Editors
+namespace Polhem.Web.Blazor.Controls.Editors
 {
     /// <summary>
     /// The ambient binding scope a <see cref="FormScope"/> cascades to the field editors inside it.

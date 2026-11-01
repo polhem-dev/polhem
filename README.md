@@ -104,7 +104,8 @@ dotnet add package Polhem.Db
 | **Polhem.UI.Core.dll** | Shared front-end layer referenced by every front end, the Blazor head included: the UI service contracts (`UIServices` / `IUserContext` / `IFormDefinitionSource`), the form value rules (`FormValueBinding` / `FormDataGuard`) and the permission capability resolver. No transport; reaches the backend only through `Polhem.Api.Contracts`. |
 | **Polhem.UI.ApiBridge.dll** | Connects a single-user front end to a Polhem backend: client connection state (`ClientInfo`), endpoint and API key persistence (`IEndpointStorage` / `FileEndpointStorage`), and the API-backed `Polhem.UI.Core` services registered with `AddPolhemUIApiBridge()`. Not for multi-user hosts. |
 | **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
-| **Polhem.Web.Blazor.Server.dll** | Razor Class Library (RCL) for Blazor Server hosts; provides DI-scoped connectors and Blazor components (`FormLayoutPresenter`, the field editors, `FormDataObject`). |
+| **Polhem.Web.Blazor.dll** | The shared layer of the Blazor head (`FormDataObject`, the field editor bases, `BlazorUserContext`), with no UI framework or host. |
+| **Polhem.Web.Blazor.Server.dll** | Razor Class Library (RCL) for Blazor Server hosts; provides DI-scoped connectors and Blazor components (`FormLayoutPresenter`, the field editors). |
 
 ### Tooling (dotnet tool)
 

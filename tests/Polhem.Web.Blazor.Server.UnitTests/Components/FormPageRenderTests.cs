@@ -3,7 +3,7 @@ using System.Reflection;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components

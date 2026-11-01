@@ -3,44 +3,43 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 
-namespace Polhem.Web.Blazor.Server.Identity
+namespace Polhem.Web.Blazor.Identity
 {
     /// <summary>
     /// The signed-in user's context for one circuit: who signed in, the company they entered and their capabilities.
-    /// <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> reads it to hide the commands the user may not run,
+    /// <c>FormPage</c> reads it to hide the commands the user may not run,
     /// to degrade sensitive fields, and to preview numbers with the company's decimals.
     /// </summary>
     /// <remarks>
-    /// <see cref="PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor"/> registers it scoped, next to the circuit's
+    /// <c>AddPolhemBlazor</c> registers it scoped, next to the circuit's
     /// <see cref="PolhemApiClient"/>, and as the circuit's <see cref="IUserContext"/>. It is the multi-user counterpart
     /// of the desktop client's process-wide context: each circuit has its own, so one user's capabilities never reach
     /// another user's page.
     /// <para>
-    /// <see cref="Polhem.Web.Blazor.Server.Components.PolhemLoginPanel"/> applies the sign-in itself. A host enters the
+    /// <c>PolhemLoginPanel</c> applies the sign-in itself. A host enters the
     /// company through <see cref="EnterCompanyAsync"/> and signs out through <see cref="SignOut"/>, which keep the
     /// context and the client in step. A company entered by calling the client's <c>System.EnterCompanyAsync</c>
     /// directly leaves the context without capabilities, and the pages then treat the user as unrestricted. The
     /// capabilities only shape the UI; the backend still checks every call.
     /// </para>
     /// </remarks>
-    public sealed class CircuitUserContext : IUserContext
+    public sealed class BlazorUserContext : IUserContext
     {
         private readonly PolhemApiClient _client;
-        private readonly PolhemBlazorOptions _options;
+        private readonly string _defaultLanguage;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="CircuitUserContext"/> over a circuit's client.
+        /// Initializes a new instance of <see cref="BlazorUserContext"/> over a circuit's client.
         /// </summary>
         /// <param name="client">The circuit's client.</param>
-        /// <param name="options">The package options, which supply <see cref="DefaultLanguage"/>.</param>
-        public CircuitUserContext(PolhemApiClient client, PolhemBlazorOptions options)
+        /// <param name="defaultLanguage">The value of <see cref="DefaultLanguage"/>.</param>
+        public BlazorUserContext(PolhemApiClient client, string defaultLanguage)
         {
             ArgumentNullException.ThrowIfNull(client);
-            ArgumentNullException.ThrowIfNull(options);
+            ArgumentNullException.ThrowIfNull(defaultLanguage);
             _client = client;
-            _options = options;
+            _defaultLanguage = defaultLanguage;
         }
 
         /// <inheritdoc/>
@@ -53,7 +52,7 @@ namespace Polhem.Web.Blazor.Server.Identity
         public CompanyInfo? Company { get; private set; }
 
         /// <inheritdoc/>
-        public string DefaultLanguage => _options.DefaultLanguage;
+        public string DefaultLanguage => _defaultLanguage;
 
         /// <summary>
         /// Records the user a sign-in returned. A new sign-in drops the company and the capabilities of the previous

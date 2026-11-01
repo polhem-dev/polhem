@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.Controls.Editors
+namespace Polhem.Web.Blazor.Controls.Editors
 {
     /// <summary>
     /// Base component of the field editors: resolves the binding (explicit <c>Bind</c>, then the

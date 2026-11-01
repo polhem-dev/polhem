@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.Server.Shell
 {
@@ -10,7 +10,7 @@ namespace Polhem.Web.Blazor.Server.Shell
     /// <remarks>
     /// Set it as the router's default layout. It reads the <see cref="PolhemShellOptions"/> of
     /// <see cref="PolhemShellServiceCollectionExtensions.AddPolhemShell"/> and the circuit's
-    /// <see cref="CircuitUserContext"/>. The sign-in belongs to the circuit, so a reload or a new tab shows the
+    /// <see cref="BlazorUserContext"/>. The sign-in belongs to the circuit, so a reload or a new tab shows the
     /// sign-in screen again. Signing out returns to it as well.
     /// <para>
     /// The menu button collapses the menu on a wide screen and slides it over the page below 600 CSS pixels, the
@@ -26,7 +26,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         private bool _isMenuToggled;
 
         [Inject]
-        private CircuitUserContext UserContext { get; set; } = default!;
+        private BlazorUserContext UserContext { get; set; } = default!;
 
         [Inject]
         private NavigationManager Navigation { get; set; } = default!;

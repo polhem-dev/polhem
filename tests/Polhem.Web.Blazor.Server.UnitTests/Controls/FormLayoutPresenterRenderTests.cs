@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.Server.Controls;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 using Bunit;
 using Polhem.Definition.Layouts;
 

@@ -10,7 +10,7 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 using Polhem.Web.Blazor.Server.Shell;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Shell
@@ -123,7 +123,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
             Assert.Equal("Orders", link.TextContent);
             Assert.Equal("form/Order", link.GetAttribute("href"));
             Assert.Equal("the page", cut.Find("main.polhem-shell__main").TextContent);
-            Assert.Equal(Company, Services.GetRequiredService<CircuitUserContext>().Company?.CompanyId);
+            Assert.Equal(Company, Services.GetRequiredService<BlazorUserContext>().Company?.CompanyId);
             Assert.Contains($"{SysProgIds.System}.{SystemActions.EnterCompany}", server.Calls);
         }
 
@@ -138,7 +138,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
 
             cut.WaitForAssertion(() => Assert.Contains("Company access denied",
                 cut.Find("div.polhem-shell-signin__error").TextContent, StringComparison.Ordinal));
-            var context = Services.GetRequiredService<CircuitUserContext>();
+            var context = Services.GetRequiredService<BlazorUserContext>();
             Assert.Null(context.User);
             Assert.Null(context.Company);
             Assert.Empty(cut.FindAll("header.polhem-shell__header"));
@@ -156,7 +156,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
             cut.WaitForAssertion(() => Assert.Equal("Enter a company ID.",
                 cut.Find("div.polhem-shell-signin__error").TextContent));
             Assert.DoesNotContain($"{SysProgIds.System}.{SystemActions.EnterCompany}", server.Calls);
-            Assert.Null(Services.GetRequiredService<CircuitUserContext>().User);
+            Assert.Null(Services.GetRequiredService<BlazorUserContext>().User);
         }
 
         [Fact]
@@ -171,7 +171,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
             cut.Find("button.polhem-shell__signout").Click();
 
             cut.WaitForAssertion(() => cut.Find("section.polhem-shell-signin"));
-            Assert.Null(Services.GetRequiredService<CircuitUserContext>().User);
+            Assert.Null(Services.GetRequiredService<BlazorUserContext>().User);
         }
 
         [Fact]

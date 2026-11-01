@@ -4,7 +4,7 @@ using Polhem.Web.Blazor.Server.UnitTests.Controls.Editors;
 namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
 {
     /// <summary>
-    /// The lookup write-back of <see cref="Polhem.Web.Blazor.Server.DataObjects.FormDataObject"/>.
+    /// The lookup write-back of <see cref="Polhem.Web.Blazor.DataObjects.FormDataObject"/>.
     /// </summary>
     public class FormDataObjectLookupTests
     {

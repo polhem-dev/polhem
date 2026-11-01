@@ -1,7 +1,7 @@
 using System.Data;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Buffered row edit sessions of <see cref="FormDataObject"/>: the edit form of a detail row writes into a

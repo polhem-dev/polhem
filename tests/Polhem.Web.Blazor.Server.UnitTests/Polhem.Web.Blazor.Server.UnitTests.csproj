@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Polhem.Web.Blazor.Controls.Editors" />
   </ItemGroup>
 
 </Project>

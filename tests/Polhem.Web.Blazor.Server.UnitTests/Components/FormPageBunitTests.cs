@@ -17,7 +17,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
@@ -736,7 +736,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             using var culture = new CultureScope("en-US");
             var form = RegisterBackend(permissionBound: true);
             form.Capabilities[TestPermissionModelId] = PermissionActions.Read;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
 
             var cut = RenderPage();
 
@@ -754,7 +754,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             using var culture = new CultureScope("en-US");
             var form = RegisterBackend(permissionBound: true);
             form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Create | PermissionActions.Update;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
             var cut = RenderPage();
             WaitForList(cut);
 
@@ -788,7 +788,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             using var culture = new CultureScope("en-US");
             var form = RegisterBackend(permissionBound: true);
             form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
             var cut = RenderPage();
             WaitForList(cut);
 
@@ -806,7 +806,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var form = RegisterBackend(permissionBound: true);
             form.Capabilities[TestPermissionModelId] = PermissionActions.Read | PermissionActions.Update;
             form.Capabilities[SensitiveCategory.Amount.ToPermissionModelId()] = PermissionActions.Read | PermissionActions.Update;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
             var cut = RenderPage();
             WaitForList(cut);
 

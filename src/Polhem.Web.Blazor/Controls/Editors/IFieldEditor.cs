@@ -1,7 +1,7 @@
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.Controls.Editors
+namespace Polhem.Web.Blazor.Controls.Editors
 {
     /// <summary>
     /// Contract shared by the field editor components that pair each <see cref="ControlType"/> with an

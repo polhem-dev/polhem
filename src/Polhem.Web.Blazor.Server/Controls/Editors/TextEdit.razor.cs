@@ -4,7 +4,7 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
 {
     /// <summary>
     /// Field editor for <see cref="ControlType.TextEdit"/>: a text input two-way bound to a
-    /// <see cref="Polhem.Web.Blazor.Server.DataObjects.FormDataObject"/> field, applying
+    /// <see cref="Polhem.Web.Blazor.DataObjects.FormDataObject"/> field, applying
     /// <see cref="Polhem.Definition.Forms.FormField.MaxLength"/> and the form mode automatically.
     /// </summary>
     /// <remarks>

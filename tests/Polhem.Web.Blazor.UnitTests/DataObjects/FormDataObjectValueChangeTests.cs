@@ -7,9 +7,9 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core.Fields;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
+namespace Polhem.Web.Blazor.UnitTests.DataObjects
 {
     /// <summary>
     /// How the Blazor <see cref="FormDataObject"/> hands field changes to the server callback. The connector answers at

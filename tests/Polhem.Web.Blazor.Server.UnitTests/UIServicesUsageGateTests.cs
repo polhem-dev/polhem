@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -17,12 +17,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class UIServicesUsageGateTests
     {
-        private static MetadataReader OpenBlazorAssembly(out PEReader peReader)
-        {
-            var path = typeof(FormDataObject).Assembly.Location;
-            peReader = new PEReader(File.OpenRead(path));
-            return peReader.GetMetadataReader();
-        }
+        // The shared layer and this head, which is everything a Blazor application runs.
+        private static readonly string[] s_assemblyPaths =
+        [
+            typeof(FormDataObject).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Server.Components.FormPage).Assembly.Location,
+        ];
 
         private static string[] TypeReferences(MetadataReader reader)
             => reader.TypeReferences
@@ -34,10 +34,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("The Blazor head does not reference the process-wide UIServices entry point")]
         public void BlazorHead_DoesNotReferenceUIServices()
         {
-            var reader = OpenBlazorAssembly(out var peReader);
-            using (peReader)
+            foreach (var path in s_assemblyPaths)
             {
-                Assert.DoesNotContain("Polhem.UI.Core.UIServices", TypeReferences(reader));
+                using var peReader = new PEReader(File.OpenRead(path));
+                Assert.DoesNotContain("Polhem.UI.Core.UIServices", TypeReferences(peReader.GetMetadataReader()));
             }
         }
 
@@ -45,9 +45,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("The Blazor head does not reference the single-user Polhem.UI.ApiBridge assembly")]
         public void BlazorHead_DoesNotReferenceApiBridge()
         {
-            var reader = OpenBlazorAssembly(out var peReader);
-            using (peReader)
+            foreach (var path in s_assemblyPaths)
             {
+                using var peReader = new PEReader(File.OpenRead(path));
+                var reader = peReader.GetMetadataReader();
                 var assemblies = reader.AssemblyReferences
                     .Select(handle => reader.GetString(reader.GetAssemblyReference(handle).Name))
                     .ToArray();
@@ -59,11 +60,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("The scan sees the Polhem.UI.Core types the Blazor head does use, so it cannot pass vacuously")]
         public void Scan_SeesUICoreTypesInUse()
         {
-            var reader = OpenBlazorAssembly(out var peReader);
-            using (peReader)
-            {
-                Assert.Contains("Polhem.UI.Core.FormValueBinding", TypeReferences(reader));
-            }
+            using var peReader = new PEReader(File.OpenRead(s_assemblyPaths[0]));
+            Assert.Contains("Polhem.UI.Core.FormValueBinding", TypeReferences(peReader.GetMetadataReader()));
         }
     }
 }

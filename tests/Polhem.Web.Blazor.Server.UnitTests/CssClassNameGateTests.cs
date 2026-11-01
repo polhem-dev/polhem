@@ -43,6 +43,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
             var rendered = new[]
                 {
                     Path.Combine(root, "src", "Polhem.Web.Blazor.Server"),
+                    Path.Combine(root, "src", "Polhem.Web.Blazor"),
                     Path.Combine(root, "samples", "Blazor.Server.Demo"),
                 }
                 // Code-behind counts too: an editor composes its class attribute in C#

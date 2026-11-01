@@ -6,9 +6,9 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
+namespace Polhem.Web.Blazor.UnitTests.DataObjects
 {
     /// <summary>
     /// <see cref="FormDataObject"/>'s async methods must write their results on the context they were
