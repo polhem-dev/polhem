@@ -157,6 +157,10 @@ Skips when `RuntimeFeature.IsDynamicCodeSupported` is false, which is what the m
 admits. **Do not use for**: making an AOT gate failure of the framework's own wire types go away; that failure is the
 bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribute.cs`) is the source.
 
+### Needs a real browser: `[BrowserFact]`
+
+`tests/Polhem.Web.Blazor.Mud.BrowserTests` drives the installed Chrome through Playwright, for behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
+
 ### Repository root: `RepoRoot.Find()`
 
 A test that reads a file from the working tree (a doc gate, a csproj gate, `tests/Define`) finds the root through

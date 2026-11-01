@@ -1,0 +1,114 @@
+@namespace Polhem.Web.Blazor.Mud.Controls
+@inherits GridControlBase
+@using System.Data
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Fields
+@using Polhem.Web.Blazor.Mud.Controls.Editors
+
+<div class="polhem-grid">
+    @if (ShowToolbar)
+    {
+        <div class="polhem-grid__toolbar">
+            @if (Actions.HasFlag(GridControlAllowActions.Add))
+            {
+                <MudIconButton Class="polhem-grid__button polhem-grid__button--add" Icon="@Icons.Material.Filled.Add" Size="Size.Small"
+                               aria-label="@Text(PolhemUIText.Add)" Disabled="@(!HasData)" OnClick="OnAddClicked" />
+            }
+            @if (EditMode == GridEditMode.EditForm && Actions.HasFlag(GridControlAllowActions.Edit))
+            {
+                <MudIconButton Class="polhem-grid__button polhem-grid__button--edit" Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               aria-label="@Text(PolhemUIText.Edit)" Disabled="@(!HasData)" OnClick="EditSelectedRow" />
+            }
+            @if (Actions.HasFlag(GridControlAllowActions.Delete))
+            {
+                <MudIconButton Class="polhem-grid__button polhem-grid__button--delete" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               aria-label="@Text(PolhemUIText.Delete)" Disabled="@(!HasData)" OnClick="DeleteSelectedRow" />
+            }
+        </div>
+    }
+    <MudDataGrid T="DataRow"
+                 Items="VisibleRows.ToList()"
+                 ReadOnly="true"
+                 Dense="true"
+                 Hover="true"
+                 Filterable="false"
+                 SortMode="SortMode.None"
+                 RowClick="OnRowClick"
+                 RowClassFunc="RowClass">
+        <Columns>
+            @foreach (var column in VisibleColumns)
+            {
+                var current = column;
+                <FieldColumn FieldName="@current.FieldName"
+                             Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
+                             Sortable="false"
+                             HeaderClass="@HeaderClass(current)"
+                             HeaderStyle="@ColumnStyle(current)"
+                             CellStyle="@ColumnStyle(current)">
+                    <CellTemplate>
+                        @if (IsInCellEditor(current))
+                        {
+                            <GridEditorCell Host="EditorHost"
+                                            EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
+                                            EditorParameters="BuildEditorParameters(current, context.Item)"
+                                            Text="@FormatCell(context.Item, current)"
+                                            IsNumeric="@(current.ControlType == ControlType.NumericEdit)"
+                                            IsCheck="@(current.ControlType == ControlType.CheckEdit)"
+                                            IsChecked="@IsChecked(context.Item, current)" />
+                        }
+                        else if (current.ControlType == ControlType.CheckEdit)
+                        {
+                            <input type="checkbox" disabled checked="@IsChecked(context.Item, current)" aria-label="@current.Caption" />
+                        }
+                        else if (OpenTarget(context.Item, current) is { } target)
+                        {
+                            <div class="polhem-grid__cell--opens-record"
+                                 title="@Text(PolhemUIText.OpenRelatedRecord)"
+                                 @ondblclick="() => OpenRelationAsync(target)">@FormatCell(context.Item, current)</div>
+                        }
+                        else
+                        {
+                            @FormatCell(context.Item, current)
+                        }
+                    </CellTemplate>
+                </FieldColumn>
+            }
+        </Columns>
+    </MudDataGrid>
+</div>
+@if (EditingRow is not null && BoundDataObject is not null && Layout is not null)
+{
+    <RowEditDialog DataObject="BoundDataObject"
+                   Layout="Layout"
+                   Row="EditingRow"
+                   Compact="Compact"
+                   EditCommitted="OnEditCommitted"
+                   EditCancelled="OnEditCancelled" />
+}
+
+@code {
+    // The default width keeps an editor whole when its cell opens, so the row does not jump.
+    private const int DefaultColumnWidth = 120;
+
+    private Task OnRowClick(DataGridRowClickEventArgs<DataRow> e)
+    {
+        // MudDataGrid has no double-click event; a click reports how many clicks it is.
+        if (e.MouseEventArgs.Detail >= 2)
+        {
+            ActivateRow(e.Item);
+            return Task.CompletedTask;
+        }
+        return SelectRowAsync(e.Item);
+    }
+
+    private string RowClass(DataRow row, int index)
+        => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
+
+    private string HeaderClass(LayoutColumn column)
+        => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
+
+    private static string ColumnStyle(LayoutColumn column)
+        => string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"min-width:{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
+}

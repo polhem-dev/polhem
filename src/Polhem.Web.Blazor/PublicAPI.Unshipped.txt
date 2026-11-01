@@ -393,3 +393,27 @@ override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.RefreshFromSource()
 override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ShouldWriteBackText.get -> bool
 override Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.BuildEditorParameters(Polhem.Definition.Layouts.LayoutColumn! column) -> System.Collections.Generic.Dictionary<string!, object?>!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CommitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Compact.get -> bool
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Compact.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DataObject.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Dispose() -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCancelled.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCommitted.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EnumerateVisibleColumns() -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.FieldsStyle.get -> string!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Layout.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Row.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Row.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.RowEditPanelBase() -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.SessionRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Text(string! key) -> string!
+override Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.OnParametersSet() -> void
+static Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.InputId(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
