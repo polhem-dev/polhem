@@ -8,7 +8,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// <summary>
     /// Structural and behavioural checks for <see cref="PolhemAccessTokenProvider"/>.
     /// State mutations are exercised directly (no renderer attached); cascading
-    /// propagation is covered indirectly by <see cref="FormPage"/> declaring a
+    /// propagation is covered indirectly by <c>FormPage</c> declaring a
     /// matching <c>[CascadingParameter] public Guid AccessToken</c>.
     /// </summary>
     public class PolhemAccessTokenProviderTests

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Blazor Server component library for Polhem: FormSchema-driven UI that calls the backend in-process (Local mode) or over JSON-RPC (Remote mode).</Description>
+    <Description>The Blazor Server host of Polhem: the circuit client in Local or Remote mode, and the shell's culture endpoint and language switch. The controls come from a UI package such as Polhem.Web.Blazor.Mud.</Description>
     <PackageTags>polhem;blazor;blazor-server;rcl;ui</PackageTags>
     <!-- RS0041 (oblivious reference types in public API) fires only on the Razor-generated
          BuildRenderTree overrides in obj/**/*_razor.g.cs. That signature is emitted by the Razor
@@ -26,9 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Polhem.Web.Blazor.Controls.Editors" />
     <Using Include="Polhem.Web.Blazor.Components" />
-    <Using Include="Polhem.Web.Blazor.Controls" />
     <Using Include="Polhem.Web.Blazor.Shell" />
   </ItemGroup>
 

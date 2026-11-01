@@ -7,7 +7,7 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
     /// <summary>
-    /// Every public or protected asynchronous member of <c>Polhem.Web.Blazor.Server</c> ends with a
+    /// Every public or protected asynchronous member of the Blazor packages ends with a
     /// <see cref="CancellationToken"/> parameter.
     /// </summary>
     /// <remarks>
@@ -16,9 +16,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class BlazorAsyncSurfaceTests
     {
-        // The shared layer and this head are one async surface to a caller.
+        // The shared layer, the host and the UI package are one async surface to a caller.
         private static IEnumerable<MethodInfo> Methods()
-            => AsyncSurface.Methods(typeof(FormDataObject).Assembly).Concat(AsyncSurface.Methods(typeof(FormPage).Assembly));
+            => AsyncSurface.Methods(typeof(FormDataObject).Assembly)
+                .Concat(AsyncSurface.Methods(typeof(PolhemAccessTokenProvider).Assembly))
+                .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly));
 
         public static TheoryData<string> AsyncMembers()
         {

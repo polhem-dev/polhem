@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Client;
 using Polhem.Api.Core.Messages.System;
@@ -7,7 +6,6 @@ using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core;
-using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Web.Blazor.Identity;
 
@@ -111,26 +109,5 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             Assert.Same(context, first.ServiceProvider.GetRequiredService<IUserContext>());
             Assert.NotSame(context, second.ServiceProvider.GetRequiredService<BlazorUserContext>());
         }
-
-        [Fact]
-        [DisplayName("PolhemLoginPanel records a successful sign-in on the circuit's context")]
-        public async Task LoginPanel_SignIn_AppliesLoginResult()
-        {
-            var (context, client) = Create();
-            var services = new ServiceCollection().AddSingleton(context).BuildServiceProvider();
-            var panel = new PolhemLoginPanel();
-            SetMember(panel, "Client", client);
-            SetMember(panel, "Services", services);
-            typeof(Polhem.Web.Blazor.Components.LoginPanelBase).GetField("_userId", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, "demo");
-
-            await (Task)typeof(PolhemLoginPanel)
-                .GetMethod("OnSubmitAsync", BindingFlags.NonPublic | BindingFlags.Instance)!
-                .Invoke(panel, [CancellationToken.None])!;
-
-            Assert.Equal("demo", context.User?.UserId);
-        }
-
-        private static void SetMember(PolhemLoginPanel panel, string name, object value)
-            => typeof(Polhem.Web.Blazor.Components.LoginPanelBase).GetProperty(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(panel, value);
     }
 }

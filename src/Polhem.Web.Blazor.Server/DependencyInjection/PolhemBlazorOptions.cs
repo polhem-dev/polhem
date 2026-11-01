@@ -36,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
 
         /// <summary>
         /// Gets or sets the deployment's default language, the last hop of the language fall-back chain for the
-        /// components' own text and for the definitions a <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/>
+        /// components' own text and for the definitions a <see cref="FormPageBase"/>
         /// localizes.
         /// </summary>
         /// <remarks>
@@ -47,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         public string DefaultLanguage { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets whether a <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> that was not given a definition
+        /// Gets or sets whether a <see cref="FormPageBase"/> that was not given a definition
         /// loader of its own assembles its definitions through
         /// a <see cref="Polhem.Api.Client.Definitions.FormDefinitionLoader"/> over the circuit's client.
         /// </summary>

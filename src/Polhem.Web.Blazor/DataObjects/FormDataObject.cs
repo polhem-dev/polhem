@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.DataObjects
     /// Holds the in-memory <see cref="System.Data.DataSet"/> for a single form view
     /// (one master row plus zero or more detail tables) and exposes a small string-based
     /// access surface for two-way binding by the field editors in
-    /// <c>Editors</c> and by <c>DynamicGrid</c>.
+    /// <c>Editors</c>.
     /// </summary>
     /// <remarks>
     /// <para>

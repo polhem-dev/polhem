@@ -39,7 +39,8 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             var page = await OpenListAsync();
             await page.Locator(Row).First.ClickAsync();
             await Command(page, "Delete").ClickAsync();
-            await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToBeVisibleAsync();
+            // The focus reaches the dialog after a round trip, and a key pressed before that goes to the page behind it.
+            await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToBeFocusedAsync();
             return page;
         }
 
@@ -78,6 +79,24 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToHaveCountAsync(0);
             await Assertions.Expect(Command(page, "Delete")).ToBeEnabledAsync();
             Assert.Equal(deleted, _fixture.Backend.Deleted.Count);
+        }
+
+        [BrowserFact]
+        [DisplayName("Escape over a slow link backs out of the delete question")]
+        public async Task DeleteQuestion_EscapeOnSlowLink_BacksOut()
+        {
+            var page = await _fixture.Browser.NewPageAsync();
+            await page.GotoAsync(_fixture.SlowAddress + "/form");
+            await Assertions.Expect(page.Locator(Row)).ToHaveCountAsync(2);
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await page.Locator(Row).First.ClickAsync();
+            await Assertions.Expect(Command(page, "Delete")).ToBeEnabledAsync();
+            await Command(page, "Delete").ClickAsync();
+            await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToBeFocusedAsync();
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToHaveCountAsync(0);
         }
 
         [BrowserFact]

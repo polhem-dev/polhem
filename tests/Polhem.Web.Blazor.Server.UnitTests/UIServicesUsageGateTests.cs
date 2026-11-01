@@ -17,11 +17,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class UIServicesUsageGateTests
     {
-        // The shared layer and this head, which is everything a Blazor application runs.
+        // The shared layer, the host and the UI package, which is everything a Blazor application runs.
         private static readonly string[] s_assemblyPaths =
         [
             typeof(FormDataObject).Assembly.Location,
-            typeof(Polhem.Web.Blazor.Server.Components.FormPage).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly.Location,
         ];
 
         private static string[] TypeReferences(MetadataReader reader)
