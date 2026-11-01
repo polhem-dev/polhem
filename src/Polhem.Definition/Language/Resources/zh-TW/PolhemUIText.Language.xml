@@ -11,6 +11,14 @@
     <LanguageItem Key="NoData" Value="沒有資料。" />
     <LanguageItem Key="LookupResultsTruncated" Value="只顯示前 {0} 筆，請輸入關鍵字縮小範圍。" />
     <LanguageItem Key="ListRowsLimited" Value="只顯示前 {0} 筆。" />
+    <LanguageItem Key="FilterColumn" Value="篩選 {0}" />
+    <LanguageItem Key="FilterFrom" Value="從" />
+    <LanguageItem Key="FilterTo" Value="到" />
+    <LanguageItem Key="FilterApply" Value="套用" />
+    <LanguageItem Key="FilterClear" Value="清除" />
+    <LanguageItem Key="FilterInvalid" Value="請輸入有效的值。" />
+    <LanguageItem Key="ListFiltered" Value="清單已套用篩選。" />
+    <LanguageItem Key="ClearFilters" Value="清除篩選" />
     <LanguageItem Key="PreviousPage" Value="上一頁" />
     <LanguageItem Key="NextPage" Value="下一頁" />
     <LanguageItem Key="PageNumber" Value="第 {0} 頁" />

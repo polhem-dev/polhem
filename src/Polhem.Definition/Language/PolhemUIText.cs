@@ -35,6 +35,30 @@ namespace Polhem.Definition.Language
         public const string LookupResultsTruncated = "LookupResultsTruncated";
         /// <summary>Key of the notice that a scrolling list stopped reading rows; <c>{0}</c> is the rows shown.</summary>
         public const string ListRowsLimited = "ListRowsLimited";
+
+        /// <summary>The accessible name of a column's filter button, with the column's caption.</summary>
+        public const string FilterColumn = "FilterColumn";
+
+        /// <summary>The start of a filter range.</summary>
+        public const string FilterFrom = "FilterFrom";
+
+        /// <summary>The end of a filter range.</summary>
+        public const string FilterTo = "FilterTo";
+
+        /// <summary>The command that applies a filter.</summary>
+        public const string FilterApply = "FilterApply";
+
+        /// <summary>The command that removes a column's filter.</summary>
+        public const string FilterClear = "FilterClear";
+
+        /// <summary>The message for a filter value that cannot be read.</summary>
+        public const string FilterInvalid = "FilterInvalid";
+
+        /// <summary>The note that a list is filtered.</summary>
+        public const string ListFiltered = "ListFiltered";
+
+        /// <summary>The command that removes every filter of a list.</summary>
+        public const string ClearFilters = "ClearFilters";
         /// <summary>Key of the previous-page command.</summary>
         public const string PreviousPage = "PreviousPage";
         /// <summary>Key of the next-page command.</summary>
@@ -145,6 +169,14 @@ namespace Polhem.Definition.Language
             [NoData] = "No data.",
             [LookupResultsTruncated] = "Showing the first {0} rows. Enter a keyword to narrow the results.",
             [ListRowsLimited] = "Showing the first {0} rows.",
+            [FilterColumn] = "Filter {0}",
+            [FilterFrom] = "From",
+            [FilterTo] = "To",
+            [FilterApply] = "Apply",
+            [FilterClear] = "Clear",
+            [FilterInvalid] = "Enter a valid value.",
+            [ListFiltered] = "The list is filtered.",
+            [ClearFilters] = "Clear filters",
             [PreviousPage] = "Previous",
             [NextPage] = "Next",
             [PageNumber] = "Page {0}",

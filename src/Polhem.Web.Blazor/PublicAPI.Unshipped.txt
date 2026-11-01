@@ -627,3 +627,30 @@ Polhem.Web.Blazor.Components.FormPageBase.OnCompactChangedAsync(bool compact, Sy
 Polhem.Web.Blazor.Components.FormPageBase.SelectCard(System.Data.DataRow! row) -> void
 static Polhem.Web.Blazor.Components.FormPageBase.IsCardChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool
 virtual Polhem.Web.Blazor.Components.FormPageBase.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ClearFiltersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
+Polhem.Web.Blazor.Components.FormPageBase.OnFilterChangedAsync(Polhem.Web.Blazor.Controls.ColumnFilterChange! change, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.ColumnFilterChange
+Polhem.Web.Blazor.Controls.ColumnFilterChange.<Clone>$() -> Polhem.Web.Blazor.Controls.ColumnFilterChange!
+Polhem.Web.Blazor.Controls.ColumnFilterChange.ColumnFilterChange(Polhem.Definition.Forms.FormField! Field, Polhem.UI.Core.Connectors.ColumnFilterKind Kind, string! First, string! Second) -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Deconstruct(out Polhem.Definition.Forms.FormField! Field, out Polhem.UI.Core.Connectors.ColumnFilterKind Kind, out string! First, out string! Second) -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Equals(Polhem.Web.Blazor.Controls.ColumnFilterChange? other) -> bool
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Field.get -> Polhem.Definition.Forms.FormField!
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Field.init -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.First.get -> string!
+Polhem.Web.Blazor.Controls.ColumnFilterChange.First.init -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.init -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Second.get -> string!
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Second.init -> void
+Polhem.Web.Blazor.Controls.GridControlBase.ColumnField(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.Definition.Forms.FormField?
+Polhem.Web.Blazor.Controls.GridControlBase.FilterKind(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.Web.Blazor.Controls.GridControlBase.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState?
+Polhem.Web.Blazor.Controls.GridControlBase.Filters.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.OnFilterChanged.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
+Polhem.Web.Blazor.Controls.GridControlBase.OnFilterChanged.set -> void
+override Polhem.Web.Blazor.Controls.ColumnFilterChange.Equals(object? obj) -> bool
+override Polhem.Web.Blazor.Controls.ColumnFilterChange.GetHashCode() -> int
+override Polhem.Web.Blazor.Controls.ColumnFilterChange.ToString() -> string!
+static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator !=(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
+static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator ==(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
