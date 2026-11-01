@@ -1,12 +1,13 @@
-<form class="polhem-login-panel" @onsubmit="OnSubmitAsync" @onsubmit:preventDefault="true">
+@inherits LoginPanelBase
+<form class="polhem-login-panel" @onsubmit="() => OnSubmitAsync()" @onsubmit:preventDefault="true">
     <div class="polhem-login-panel__field">
         <label class="polhem-login-panel__label" for="@_userIdInputId">@DisplayedUserIdLabel</label>
         <input id="@_userIdInputId"
                class="polhem-login-panel__input"
                type="text"
                autocomplete="username"
-               disabled="@_isBusy"
-               @bind="_userId" />
+               disabled="@IsBusy"
+               @bind="UserId" />
     </div>
     <div class="polhem-login-panel__field">
         <label class="polhem-login-panel__label" for="@_passwordInputId">@DisplayedPasswordLabel</label>
@@ -14,16 +15,21 @@
                class="polhem-login-panel__input"
                type="password"
                autocomplete="current-password"
-               disabled="@_isBusy"
-               @bind="_password" />
+               disabled="@IsBusy"
+               @bind="Password" />
     </div>
     <button type="submit"
             class="polhem-login-panel__submit"
-            disabled="@_isBusy">
+            disabled="@IsBusy">
         @DisplayedSubmitLabel
     </button>
-    @if (!string.IsNullOrEmpty(_error))
+    @if (!string.IsNullOrEmpty(Error))
     {
-        <div class="polhem-login-panel__error" role="alert">@_error</div>
+        <div class="polhem-login-panel__error" role="alert">@Error</div>
     }
 </form>
+
+@code {
+    private readonly string _userIdInputId = $"polhem-login-user-{Guid.NewGuid():N}";
+    private readonly string _passwordInputId = $"polhem-login-pwd-{Guid.NewGuid():N}";
+}

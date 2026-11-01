@@ -8,7 +8,8 @@ namespace Polhem.Web.Blazor.Server.Shell
     public static class PolhemShellServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers the <see cref="PolhemShellOptions"/> the shell components and its request pipeline read.
+        /// Registers the <see cref="PolhemShellOptions"/> the shell components and its request pipeline read, and the
+        /// language switch that goes through <see cref="PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture"/>.
         /// </summary>
         /// <remarks>
         /// The shell runs on the services of
@@ -29,6 +30,7 @@ namespace Polhem.Web.Blazor.Server.Shell
             options.ResolveDefaultCulture();
 
             services.AddSingleton(options);
+            services.AddScoped<IShellLanguageSwitcher, ShellLanguageSwitcher>();
             return services;
         }
 

@@ -17,6 +17,9 @@ An application does not use this package alone. It references one host package, 
 - `RowEditPanelBase`, the edit form's session.
 - `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `BlazorDefinitions`, `PolhemBlazorText` and `IBlazorDefinitionOptions`, which a UI package loads definitions and text through.
 - `GridControlBase`, `GridEditMode` and `GridEditorHost` (`Polhem.Web.Blazor.Controls`), the state and commands of a grid, and keeping one editor open in it.
+- `FormLayoutPresenterBase` (`Polhem.Web.Blazor.Controls`), the rules of a record rendered from a `FormLayout`.
+- `RelatedRecordDialogBase`, `LoginPanelBase` and `CompactViewportObserver` (`Polhem.Web.Blazor.Components`).
+- `PolhemShellOptions`, `PolhemShellHome`, `ShellLayoutBase`, `ShellNavMenuBase`, `ShellSignInBase` and `IShellLanguageSwitcher` (`Polhem.Web.Blazor.Shell`), the shell's state; a host package supplies the language switch.
 - `BlazorUserContext` (`Polhem.Web.Blazor.Identity`), the signed-in user's context for one scope.
 
 ## Dependency Constraints

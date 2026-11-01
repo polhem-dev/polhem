@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// </summary>
     /// <remarks>
     /// On a viewport narrower than <see cref="CompactWidthThreshold"/> the form switches to its compact layout
-    /// (see <see cref="FormLayoutPresenter.IsCompact"/>), detected by a <see cref="CompactViewportObserver"/>.
+    /// (see <see cref="FormLayoutPresenterBase.IsCompact"/>), detected by a <see cref="CompactViewportObserver"/>.
     /// Setting <see cref="FormPageBase.IsCompact"/> fixes the layout instead, and the page then measures nothing.
     /// </remarks>
     public sealed partial class FormPage : FormPageBase

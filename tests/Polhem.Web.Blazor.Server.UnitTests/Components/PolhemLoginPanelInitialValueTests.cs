@@ -7,7 +7,7 @@ using Polhem.Web.Blazor.Server.DependencyInjection;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="PolhemLoginPanel.InitialUserId"/> and <see cref="PolhemLoginPanel.InitialPassword"/>.
+    /// Covers <see cref="Polhem.Web.Blazor.Components.LoginPanelBase.InitialUserId"/> and <see cref="Polhem.Web.Blazor.Components.LoginPanelBase.InitialPassword"/>.
     /// </summary>
     public sealed class PolhemLoginPanelInitialValueTests : BunitContext
     {

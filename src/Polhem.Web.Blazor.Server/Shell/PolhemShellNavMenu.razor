@@ -1,19 +1,20 @@
-@if (_error is not null)
+@inherits ShellNavMenuBase
+@if (Error is not null)
 {
-    <div class="polhem-shell-nav__error" role="alert">@_error</div>
+    <div class="polhem-shell-nav__error" role="alert">@Error</div>
 }
-else if (_rows is null)
+else if (Rows is null)
 {
     <div class="polhem-shell-nav__loading">@LoadingText</div>
 }
-else if (_rows.Count == 0)
+else if (Rows.Count == 0)
 {
     <div class="polhem-shell-nav__empty">@PolhemShellText.Get(PolhemShellText.MenuEmpty)</div>
 }
 else
 {
     <ul class="polhem-shell-nav">
-        @foreach (var row in _rows)
+        @foreach (var row in Rows)
         {
             if (row.ProgId is null)
             {

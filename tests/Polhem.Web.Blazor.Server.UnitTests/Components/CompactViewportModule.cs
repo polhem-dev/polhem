@@ -1,6 +1,6 @@
 using System.Reflection;
 using Bunit;
-using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {

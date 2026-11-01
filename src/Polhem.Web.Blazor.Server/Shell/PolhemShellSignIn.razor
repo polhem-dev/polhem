@@ -1,4 +1,5 @@
 @using Polhem.Web.Blazor.Server.Components
+@inherits ShellSignInBase
 <section class="polhem-shell-signin">
     <h1 class="polhem-shell-signin__title">@Options.AppTitle</h1>
     @if (!string.IsNullOrWhiteSpace(Options.SignInHint))
@@ -6,16 +7,16 @@
         <p class="polhem-shell-signin__hint">@Options.SignInHint</p>
     }
     <div class="polhem-login-panel__field">
-        <label class="polhem-login-panel__label" for="@_companyInputId">@PolhemShellText.Get(PolhemShellText.CompanyId)</label>
-        <input id="@_companyInputId" class="polhem-login-panel__input" type="text" @bind="_companyId" />
+        <label class="polhem-login-panel__label" for="@CompanyInputId">@PolhemShellText.Get(PolhemShellText.CompanyId)</label>
+        <input id="@CompanyInputId" class="polhem-login-panel__input" type="text" @bind="CompanyId" />
     </div>
     <PolhemLoginPanel InitialUserId="@Options.DefaultUserId" InitialPassword="@Options.DefaultPassword"
-                      OnLoggedIn="OnLoggedInAsync" />
-    @if (_error is not null)
+                      OnLoggedIn="response => OnLoggedInAsync(response)" />
+    @if (Error is not null)
     {
-        <div class="polhem-shell-signin__error" role="alert">@_error</div>
+        <div class="polhem-shell-signin__error" role="alert">@Error</div>
     }
-    @if (Options.Languages.Count > 1)
+    @if (OffersLanguages)
     {
         <div class="polhem-shell-signin__languages" role="group" aria-label="@PolhemShellText.Get(PolhemShellText.Language)">
             @foreach (var language in Options.Languages)

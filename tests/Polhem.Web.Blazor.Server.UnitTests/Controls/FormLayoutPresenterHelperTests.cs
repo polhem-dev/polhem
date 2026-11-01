@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Definition.Layouts;
+using Polhem.Web.Blazor.Controls;
 using Polhem.Web.Blazor.Server.Controls;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Controls
@@ -71,7 +72,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 
         private static string? InvokeBuildFieldStyle(LayoutField field, int columnCount)
         {
-            var method = typeof(FormLayoutPresenter).GetMethod("BuildFieldStyle",
+            var method = typeof(FormLayoutPresenterBase).GetMethod("BuildFieldStyle",
                 BindingFlags.NonPublic | BindingFlags.Static, null, s_fieldStyleParams, null);
             Assert.NotNull(method);
             return method!.Invoke(null, new object[] { field, columnCount }) as string;
@@ -131,7 +132,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls
             var section = new LayoutSection();
             section.Fields!.Add(new LayoutField { FieldName = "visible_field", Visible = true });
             section.Fields.Add(new LayoutField { FieldName = "hidden_field", Visible = false });
-            var method = typeof(FormLayoutPresenter).GetMethod("EnumerateFields",
+            var method = typeof(FormLayoutPresenterBase).GetMethod("EnumerateFields",
                 BindingFlags.NonPublic | BindingFlags.Static, null, s_layoutSectionParam, null);
             Assert.NotNull(method);
             var result = method!.Invoke(null, new object[] { section }) as IEnumerable<LayoutField>;

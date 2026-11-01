@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace Polhem.Web.Blazor.Server.Components
+namespace Polhem.Web.Blazor.Components
 {
     /// <summary>
     /// Reports whether the browser's viewport is narrower than <see cref="CompactWidthThreshold"/>, the
@@ -10,9 +10,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <see cref="FormPage"/> places one itself. A page that uses
-    /// <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/> directly places one next to it and passes
-    /// the reported value to <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact"/>.
+    /// A form page of a UI package places one itself. A page that uses a
+    /// <see cref="Polhem.Web.Blazor.Controls.FormLayoutPresenterBase"/> directly places one next to it and passes
+    /// the reported value to <see cref="Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.IsCompact"/>.
     /// </para>
     /// <para>
     /// The width is measured in the browser by a JavaScript module that ships in this package as a static web
@@ -30,7 +30,7 @@ namespace Polhem.Web.Blazor.Server.Components
         /// </summary>
         public const double DefaultCompactWidthThreshold = 600;
 
-        internal const string ModulePath = "./_content/Polhem.Web.Blazor.Server/Components/CompactViewportObserver.razor.js";
+        internal const string ModulePath = "./_content/Polhem.Web.Blazor/Components/CompactViewportObserver.razor.js";
 
         // The module is shared by every observer of the browser tab, so each one keys its listener by this id.
         private readonly string _watchId = Guid.NewGuid().ToString("N");

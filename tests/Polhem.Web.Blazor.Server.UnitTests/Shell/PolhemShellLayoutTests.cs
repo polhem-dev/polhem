@@ -12,6 +12,7 @@ using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Web.Blazor.Identity;
 using Polhem.Web.Blazor.Server.Shell;
+using Polhem.Web.Blazor.Shell;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Shell
 {

@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Components;
 using Polhem.Api.Client;
 using Polhem.Definition.Language;
-using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Web.Blazor.Components;
 
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Shell
 {
     /// <summary>
     /// Opens the first form of the menu, as the Avalonia shell does after sign-in. Place it on the application's root
     /// page.
     /// </summary>
     /// <remarks>
-    /// <see cref="PolhemShellLayout"/> renders the routed page only once a company is entered, so the menu it reads is
+    /// A <see cref="ShellLayoutBase"/> renders the routed page only once a company is entered, so the menu it reads is
     /// the signed-in user's. A menu with no form shows a note saying so, here and in the menu; a menu that cannot be
     /// loaded leaves the page empty, because the menu beside it shows the error.
     /// </remarks>
@@ -22,7 +22,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         private PolhemApiClient Client { get; set; } = default!;
 
         [Inject]
-        private PolhemBlazorOptions BlazorOptions { get; set; } = default!;
+        private IBlazorDefinitionOptions BlazorOptions { get; set; } = default!;
 
         [Inject]
         private PolhemShellOptions Options { get; set; } = default!;

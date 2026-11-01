@@ -114,7 +114,7 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 
 `Polhem.Web.Blazor.Server.Shell` 是網站現成的前端，對應 Avalonia 的
 [`Polhem.UI.Avalonia.Shell`](../Polhem.UI.Avalonia.Shell/README.zh-TW.md)：先是登入並進入公司的登入畫面，接著是頂端列
-（標題、使用者與公司、登出）、伺服器的選單與路由到的頁面。網站只要提供標題與登入畫面的預設值，自己只留下自己的頁面。
+（標題、使用者與公司、登出）、伺服器的選單與路由到的頁面。網站只要提供標題與登入畫面的預設值，自己只留下自己的頁面。`PolhemShellHome` 與 `PolhemShellOptions` 在共用層的 `Polhem.Web.Blazor.Shell`。
 
 | 部分 | 作用 |
 |------|------|

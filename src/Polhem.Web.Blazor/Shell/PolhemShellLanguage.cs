@@ -1,4 +1,4 @@
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Shell
 {
     /// <summary>
     /// A language the shell offers on its sign-in screen.
