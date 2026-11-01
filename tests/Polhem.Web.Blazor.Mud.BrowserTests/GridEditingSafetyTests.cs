@@ -154,6 +154,38 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Tabbing faster than the editors arrive still ends on the right cell")]
+        public async Task SlowLink_FastTabs_EndOnTheRightCell()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Locator(".polhem-grid-cell__editor input").WaitForAsync();
+            foreach (var _ in Enumerable.Range(0, 3))
+                await page.Keyboard.PressAsync("Tab");
+
+            await Assertions.Expect(page.Locator("tr.polhem-grid__row").Nth(1).Locator(".polhem-field-editor--numeric input")).ToBeFocusedAsync();
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor")).ToHaveCountAsync(1);
+            await WaitForDataAsync(page, Initial);
+        }
+
+        [BrowserFact]
+        [DisplayName("Text typed after fast tabs lands in the cell the tabs reached")]
+        public async Task SlowLink_FastTabsThenType_WritesTheCellReached()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Locator(".polhem-grid-cell__editor input").WaitForAsync();
+            await page.Keyboard.PressAsync("Tab");
+            await page.Keyboard.PressAsync("Tab");
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Keyboard.PressAsync("Tab");
+
+            await WaitForDataAsync(page, "Bolt|1;Washer|2");
+        }
+
+        [BrowserFact]
         [DisplayName("Entering View mode closes the open editor")]
         public async Task ViewMode_ClosesTheEditor()
         {
