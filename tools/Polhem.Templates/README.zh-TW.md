@@ -72,7 +72,7 @@ SQLite 連線使用相對於應用程式資料夾的路徑；DefineEditor 匯入
 ## `polhem-blazor-server`
 
 建立以 Blazor Server 為前端的應用程式：一個在自身行程內執行後端的 ASP.NET Core 網站，提供
-[Blazor Server 外殼](../../src/Polhem.Web.Blazor.Server/README.zh-TW.md)（登入、伺服器的選單與表單）。不需要另外啟動伺服器，
+建立在 [MudBlazor](../../src/Polhem.Web.Blazor.Mud/README.zh-TW.md) 上的 [Blazor Server 外殼](../../src/Polhem.Web.Blazor.Server/README.zh-TW.md)（登入、伺服器的選單與表單）。不需要另外啟動伺服器，
 在你自行加上之前也沒有 API 端點。
 
 | 路徑 | 內容 |

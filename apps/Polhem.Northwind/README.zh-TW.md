@@ -77,7 +77,7 @@ async 連線、overlay 對話框、publish 注意事項）見
 
 ### 網頁前端（Blazor Server）
 
-**`Polhem.Northwind.Blazor`** 以 `Polhem.Web.Blazor.Server` 呈現同一批表單：瀏覽器裡是 HTML，元件在伺服器上執行。
+**`Polhem.Northwind.Blazor`** 以 `Polhem.Web.Blazor.Server` 宿主上的 `Polhem.Web.Blazor.Mud` 呈現同一批表單：瀏覽器裡是 MudBlazor，元件在伺服器上執行。
 它在自己的行程裡執行 `Polhem.Northwind.Backend` 的後端，不需要另外啟動 server：
 
 ```bash
@@ -428,7 +428,7 @@ apps/Polhem.Northwind/
 ├── Customize/{customizeId}/      租戶客製層（結構與 Define/ 相同，只放要覆寫的檔）
 ├── Polhem.Northwind.Backend/        兩個 host 共用的後端：OrderBO、它的 Repository、seeder 與種子資料
 ├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia head 使用
-├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Server），在同一個行程執行後端
+├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Mud），在同一個行程執行後端
 ├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）

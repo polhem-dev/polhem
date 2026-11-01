@@ -77,7 +77,7 @@ Open <http://localhost:5200/> and connect / sign in the same way. See
 
 ### Web client (Blazor Server)
 
-**`Polhem.Northwind.Blazor`** renders the same forms with `Polhem.Web.Blazor.Server`: HTML in the browser, the
+**`Polhem.Northwind.Blazor`** renders the same forms with `Polhem.Web.Blazor.Mud` on the `Polhem.Web.Blazor.Server` host: MudBlazor in the browser, the
 components running on the server. It runs the backend in its own process, from `Polhem.Northwind.Backend`, so it needs
 no other server:
 
@@ -450,7 +450,7 @@ apps/Polhem.Northwind/
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
 ├── Polhem.Northwind.Backend/        the backend both hosts run: OrderBO, its repository, the seeder and seed data
 ├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia heads
-├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Server), running the backend in process
+├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Mud), running the backend in process
 ├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)
