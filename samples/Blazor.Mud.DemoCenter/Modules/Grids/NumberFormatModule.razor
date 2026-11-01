@@ -1,0 +1,79 @@
+@using Polhem.Definition.Identity
+
+<DemoSection Title="Number formatting (NumberKind → decimals)" Note="The same data, with each column resolving its own decimals. Switching the company overrides unit price (4→2) and discount (P2→P4); quantity and weight follow the row's unit. Display rounding is not written back.">
+    <div><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="ToggleCompany">@(_useOverrides ? "Company B (overridden decimals) — click to switch back to A" : "Company A (framework defaults) — click to switch to B")</MudButton></div>
+    <GridControl DataObject="_data" Layout="_layout" UnitSettings="_units" EditMode="GridEditMode.InCell" />
+</DemoSection>
+
+@code {
+    private static readonly (string Field, string Caption, NumberKind Kind, string UnitField)[] s_numericColumns =
+    [
+        ("quantity", "Quantity", NumberKind.Quantity, "quantity_uom"),
+        ("unit_price", "Unit price", NumberKind.UnitPrice, ""),
+        ("amount", "Amount", NumberKind.Amount, ""),
+        ("gross_weight", "Weight", NumberKind.Weight, "weight_uom"),
+        ("discount_pct", "Discount", NumberKind.Percent, ""),
+    ];
+
+    private readonly UnitSettings _units =
+    [
+        new UnitItem("PCS", 0, "count", "Pieces"),
+        new UnitItem("KG", 3, "weight", "Kilogram"),
+    ];
+    private readonly FormDataObject _data = BuildData();
+    private LayoutGrid _layout = BuildLayout(null);
+    private bool _useOverrides;
+
+    private void ToggleCompany()
+    {
+        _useOverrides = !_useOverrides;
+        _layout = BuildLayout(_useOverrides ? CompanyWithOverrides() : null);
+    }
+
+    private static LayoutGrid BuildLayout(CompanyInfo? company)
+    {
+        var layout = new LayoutGrid("OrderLine", "Order lines");
+        layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
+        foreach (var (field, caption, kind, unitField) in s_numericColumns)
+        {
+            layout.Columns.Add(new LayoutColumn(field, caption, ControlType.NumericEdit)
+            {
+                NumberKind = kind,
+                UnitField = unitField,
+                NumberFormat = NumberFormatResolver.ResolveFormat(kind, company),
+            });
+            if (!string.IsNullOrEmpty(unitField))
+                layout.Columns.Add(new LayoutColumn(unitField, "Unit", ControlType.TextEdit));
+        }
+        return layout;
+    }
+
+    private static CompanyInfo CompanyWithOverrides()
+    {
+        var company = new CompanyInfo { CompanyId = "B", CompanyName = "Company B", DefaultCurrency = "USD" };
+        company.NumberFormats.Add(new NumberFormatItem(NumberKind.UnitPrice, 2));
+        company.NumberFormats.Add(new NumberFormatItem(NumberKind.Percent, 4));
+        return company;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Order", "Order");
+        schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
+        var line = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        line.Add("product", "Product", FieldDbType.String);
+        foreach (var (field, caption, kind, unitField) in s_numericColumns)
+            line.Add(new FormField(field, caption, FieldDbType.Decimal) { NumberKind = kind, UnitField = unitField });
+        line.Add("quantity_uom", "Quantity unit", FieldDbType.String);
+        line.Add("weight_uom", "Weight unit", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("order_no", "SO-001");
+        // Percent is stored as a fraction. unit_price carries more precision than N4 shows.
+        var lines = data.DataSet.Tables["OrderLine"]!;
+        lines.Rows.Add("Widget", 3m, 12.3456789m, 37.04m, 1.256m, 0.055m, "PCS", "KG");
+        lines.Rows.Add("Gadget", 10m, 0.9999m, 10.00m, 0.5m, 0.1275m, "PCS", "KG");
+        return data;
+    }
+}

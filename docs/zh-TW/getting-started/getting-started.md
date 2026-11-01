@@ -1,11 +1,11 @@
-<!-- source: en/getting-started/getting-started.md blob: 6a57e6a601e25cea545f8f12003989c14786cd86 -->
+<!-- source: en/getting-started/getting-started.md blob: d6305ed039e892c77573505eb80eafe48046bfaf -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
 
 > 從一個空資料夾建出第一個 Polhem 後端：安裝套件、備妥 `DefinePath`、接好 DI 容器、發布 JSON-RPC 端點、加一個商業物件，再由用戶端呼叫。
 
-本文帶你建**自己的專案**。若你只想先看框架跑起來、還不想動手寫，repo 的 [`samples/`](../../../samples/README.zh-TW.md) 有可直接執行的範例 —— `QuickStart.Server` + `QuickStart.Console` 正是本頁對應的那組。
+本文帶你建**自己的專案**。若你只想先看框架跑起來、還不想動手寫，repo 的 [`samples/`](../../../samples/README.zh-TW.md) 有控制項 DemoCenter，[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 則是完整應用。
 
 若想跳過這些接線、直接從已接好的專案開始，請用範本：`dotnet new install Polhem.Templates`，再
 `dotnet new polhem-avalonia -n MyApp --database Sqlite`（見 [Polhem.Templates](../../../tools/Polhem.Templates/README.zh-TW.md)）。
@@ -325,4 +325,4 @@ public class EchoResponse
 | 加上認證與權限 | [權限與授權指南](../security/permission-authorization.md) |
 | 把定義變更推送到線上資料庫 | [資料庫 Schema 升級](../database/database-schema-upgrade.md) |
 
-上述內容的完整可執行版本在 [`samples/QuickStart.Server`](../../../samples/QuickStart.Server/README.zh-TW.md) 與 [`samples/QuickStart.Console`](../../../samples/QuickStart.Console/README.zh-TW.md)。若想看幾乎全以定義建成的完整應用，見 [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md)。
+若想看幾乎全以定義建成、可實際執行的完整應用，見 [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md)。

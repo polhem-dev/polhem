@@ -2,39 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/Define/">
-    <File Path="Define/SystemSettings.xml" />
-    <File Path="Define/DatabaseSettings.xml" />
-    <File Path="Define/DbCategorySettings.xml" />
-    <File Path="Define/ProgramSettings.xml" />
-    <File Path="Define/FormSchema/Team.FormSchema.xml" />
-    <File Path="Define/FormSchema/Staff.FormSchema.xml" />
-    <File Path="Define/FormSchema/Project.FormSchema.xml" />
-    <File Path="Define/FormLayout/Team.FormLayout.xml" />
-    <File Path="Define/FormLayout/Staff.FormLayout.xml" />
-    <File Path="Define/FormLayout/Project.FormLayout.xml" />
-    <File Path="Define/TableSchema/common/st_cache_notify.TableSchema.xml" />
-    <File Path="Define/TableSchema/common/st_company.TableSchema.xml" />
-    <File Path="Define/TableSchema/common/st_session.TableSchema.xml" />
-    <File Path="Define/TableSchema/common/st_user.TableSchema.xml" />
-    <File Path="Define/TableSchema/common/st_user_company.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/ft_team.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/ft_staff.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/ft_staff_phone.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/ft_project.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/ft_project_member.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/st_employee.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/st_role.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/st_role_grant.TableSchema.xml" />
-    <File Path="Define/TableSchema/company/st_user_role.TableSchema.xml" />
-  </Folder>
-  <Folder Name="/QuickStart/">
-    <Project Path="QuickStart.Server/QuickStart.Server.csproj" />
-    <Project Path="QuickStart.Console/QuickStart.Console.csproj" />
-  </Folder>
   <Folder Name="/Blazor/">
-    <Project Path="Polhem.Samples.Shared/Polhem.Samples.Shared.csproj" />
-    <Project Path="Blazor.Server.Demo/Blazor.Server.Demo.csproj" />
+    <Project Path="Blazor.Mud.DemoCenter/Blazor.Mud.DemoCenter.csproj" />
   </Folder>
   <Folder Name="/Avalonia/">
     <Project Path="Avalonia.DemoCenter/Avalonia.DemoCenter.csproj" />

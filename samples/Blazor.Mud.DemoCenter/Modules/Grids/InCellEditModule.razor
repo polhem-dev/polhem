@@ -1,0 +1,8 @@
+<DemoSection Title="In-cell editing" Note="Click a cell to edit; leaving it commits, Escape drops what was typed.">
+    <GridControl DataObject="_data" Layout="_phones" EditMode="GridEditMode.InCell" />
+</DemoSection>
+
+@code {
+    private readonly FormDataObject _data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
+    private readonly LayoutGrid _phones = SampleFormData.BuildPhonesLayout();
+}

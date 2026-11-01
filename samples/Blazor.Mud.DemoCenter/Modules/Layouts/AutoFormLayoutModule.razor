@@ -1,0 +1,16 @@
+<FormLayoutPresenter Layout="_layout" DataObject="_data" IsCompact="IsCompact" IdPrefix="auto" />
+
+@code {
+    private readonly FormLayout _layout;
+    private readonly FormDataObject _data;
+
+    [CascadingParameter(Name = "IsCompact")]
+    public bool IsCompact { get; set; }
+
+    public AutoFormLayoutModule()
+    {
+        var schema = SampleFormData.BuildMasterFormSchema();
+        _data = SampleFormData.BuildMasterForm(schema);
+        _layout = FormLayoutGenerator.Generate(schema, "default");
+    }
+}

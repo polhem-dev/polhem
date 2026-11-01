@@ -96,34 +96,6 @@
             }
         },
         {
-            "label": "build-quickstart-console",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/samples/QuickStart.Console/QuickStart.Console.csproj",
-                "--configuration",
-                "Debug",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
-            "label": "build-quickstart-server",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/samples/QuickStart.Server/QuickStart.Server.csproj",
-                "--configuration",
-                "Debug",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
             "label": "build-northwind-blazor",
             "type": "process",
             "command": "dotnet",
@@ -138,12 +110,12 @@
             "group": "build"
         },
         {
-            "label": "build-blazor-server-demo",
+            "label": "build-blazor-mud-democenter",
             "type": "process",
             "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/samples/Blazor.Server.Demo/Blazor.Server.Demo.csproj",
+                "${workspaceFolder}/samples/Blazor.Mud.DemoCenter/Blazor.Mud.DemoCenter.csproj",
                 "--configuration",
                 "Debug",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"

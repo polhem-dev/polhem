@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: ac287a2e7d098cea03a4f1999abb9fe25f6a6f14 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: d234d2c5b049f519cc62447fe9c178fb789b8eda -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -157,9 +157,9 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
 body 仍是 JSON-RPC 錯誤（`-32600`）。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，
 以 HTTP 200 回 `-32001`。
 
-Host 必須設好 CORS。Demo 後端在
-[`samples/QuickStart.Server/Program.cs`](../../../samples/QuickStart.Server/Program.cs)
-開了 `AllowAnyOrigin` 政策；production host 必須明確限制 origin。
+Host 必須設好 CORS。Northwind 伺服器在
+[`Program.cs`](../../../apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs)
+開了僅供開發用的政策；production host 必須明確限制 origin。
 
 ---
 

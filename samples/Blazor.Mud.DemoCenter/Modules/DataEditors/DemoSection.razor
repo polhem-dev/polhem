@@ -1,0 +1,19 @@
+<div class="demo-section">
+    <MudText Typo="Typo.subtitle1"><b>@Title</b></MudText>
+    @if (Note is not null)
+    {
+        <MudText Typo="Typo.caption" Class="demo-note">@Note</MudText>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Note { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

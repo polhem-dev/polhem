@@ -50,7 +50,7 @@ the head, not to the Polhem packages.
   circuit sends the same key. The Northwind Blazor Server head runs the Northwind backend in Local mode and switches
   to Remote by configuration; see
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md#web-client-blazor-server) and, for the components
-  on their own, [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.md).
+  on their own, [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.md).
 
 ---
 

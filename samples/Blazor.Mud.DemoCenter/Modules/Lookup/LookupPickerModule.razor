@@ -1,0 +1,67 @@
+@using Blazor.Mud.DemoCenter.Modules.Lookup
+
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Lookup picker" Note="ButtonClick opens a local picker, and the selected value is written back.">
+            <LabeledRow Label="@("code")"><ButtonEdit FieldName="code" ButtonClick="() => _isPicking = true" /></LabeledRow>
+            <LiveValues DataObject="_data" Fields="s_codeFields" />
+        </DemoSection>
+        <DemoSection Title="Read-only (icon hidden)" Note="With ReadOnly=true the icon is hidden and only the value is shown.">
+            <LabeledRow Label="@("code")"><ButtonEdit LayoutField="_readOnlyCode" /></LabeledRow>
+        </DemoSection>
+        <DemoSection Title="RelationProgId → LookupDialog" Note="The framework's own dialog: search, list, OK / Cancel. It reads the in-memory DemoLookupSource here and a backend in an application. Delete clears the field.">
+            <LabeledRow Label="team_rowid"><ButtonEdit FieldName="team_rowid" /></LabeledRow>
+            <LiveValues DataObject="_data" Fields="s_teamFields" />
+        </DemoSection>
+    </div>
+</FormScope>
+
+<MudDialog @bind-Visible="_isPicking">
+    <TitleContent>Choose a code</TitleContent>
+    <DialogContent>
+        <MudList T="string" SelectedValueChanged="Pick" SelectionMode="SelectionMode.SingleSelection">
+            @foreach (var item in s_codes)
+            {
+                <MudListItem T="string" Value="item" Text="@item" />
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _isPicking = false">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly string[] s_codes = ["EMP-001", "EMP-002", "EMP-003", "EMP-004"];
+    private static readonly string[] s_codeFields = ["code"];
+    private static readonly string[] s_teamFields = ["team_rowid", "ref_team_id", "ref_team_name"];
+
+    private readonly LayoutField _readOnlyCode = new() { FieldName = "code", ReadOnly = true };
+    private readonly FormDataObject _data = BuildData();
+    private bool _isPicking;
+
+    private void Pick(string? code)
+    {
+        if (code is not null)
+            _data.SetField("code", code);
+        _isPicking = false;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Demo", "Demo");
+        var fields = schema.Tables!.Add("Demo", "Demo").Fields!;
+        fields.Add("code", "Code", FieldDbType.String);
+        var team = fields.Add("team_rowid", "Team", FieldDbType.Guid);
+        team.RelationProgId = DemoLookupSource.ProgId;
+        team.RelationFieldMappings!.Add("sys_id", "ref_team_id");
+        team.RelationFieldMappings.Add("sys_name", "ref_team_name");
+        fields.Add("ref_team_id", "Team ID", FieldDbType.String).Visible = false;
+        fields.Add("ref_team_name", "Team Name", FieldDbType.String).Visible = false;
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("code", "EMP-001");
+        return data;
+    }
+}

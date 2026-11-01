@@ -119,16 +119,11 @@ dotnet add package Polhem.Db
 30 秒看到 Polhem 跑起來：
 
 ```bash
-# Terminal 1 — 啟動 JSON-RPC API host
-cd samples/QuickStart.Server
-dotnet run
-
-# Terminal 2 — 連線並呼叫 Echo BO
-cd samples/QuickStart.Console
-dotnet run
+# Northwind 的 Blazor Server head：後端在同一個 process、SQLite
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 ```
 
-Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo 清單與每個 demo 對應到哪些 library 功能，見 [`samples/README.zh-TW.md`](samples/README.zh-TW.md)。
+想不接後端直接瀏覽控制項，見 [`samples/README.zh-TW.md`](samples/README.zh-TW.md) 的 DemoCenter。
 
 想建自己的專案？[快速上手](docs/zh-TW/getting-started/getting-started.md)從一個空資料夾走完同一件事 —— 套件、`DefinePath`、DI 接線、第一個商業物件，再由用戶端呼叫。
 
@@ -150,12 +145,11 @@ Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo
 
 ## 💡 範例程式
 
-所有 demo 都集中在 repo 內 [`samples/`](samples/README.zh-TW.md) 目錄底下，最小、聚焦、跟著框架同步演進。以 `dotnet build samples/Polhem.Samples.slnx` 建置（獨立於主 `Polhem.slnx`，不影響主 CI / build 時間）。
+控制項 DemoCenter 集中在 repo 內 [`samples/`](samples/README.zh-TW.md) 目錄底下，每個 UI 框架一個，主題與案例相同，方便對照同一控制項在不同框架的行為。完整應用見 `apps/Polhem.Northwind`。以 `dotnet build samples/Polhem.Samples.slnx` 建置（獨立於主 `Polhem.slnx`，不影響主 CI / build 時間）。
 
 | 類別 | Demo | 重點 |
 |------|------|------|
-| QuickStart | [`QuickStart.Server`](samples/QuickStart.Server/README.zh-TW.md) + [`QuickStart.Console`](samples/QuickStart.Console/README.zh-TW.md) | 最小 JSON-RPC 端到端，含一個 anonymous 自訂 BO |
-| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD,走 `PolhemApiClient.CreateLocal` in-process 派遣 |
+| Blazor | [`Blazor.Mud.DemoCenter`](samples/Blazor.Mud.DemoCenter/README.zh-TW.md) | 同一套主題導向 demo center，使用 `Polhem.Web.Blazor.Mud`（MudBlazor，無後端） |
 | Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.zh-TW.md) | 主題導向控件 demo center（DevExpress 風格）：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 主題/FormMode 工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（Semi.Avalonia，無後端） |
 
 ## 從 Bee.NET 遷移

@@ -4,8 +4,7 @@
     The JSON-RPC packages (polhem-dev/polhem-jsonrpc): the version the framework and its hosts reference, and the
     switch that builds against a local checkout instead.
 
-    Imported by src/Directory.Build.props and by the HTTP hosts (samples/QuickStart.Server,
-    apps/Polhem.Northwind/Polhem.Northwind.Server, tools/Polhem.LoadTests), which reference
+    Imported by src/Directory.Build.props and by the HTTP hosts (apps/Polhem.Northwind/Polhem.Northwind.Server, tools/Polhem.LoadTests), which reference
     Polhem.JsonRpc.AspNetCore. Like Version.props it is not named Directory.Build.props, so it attaches only where it
     is imported.
 

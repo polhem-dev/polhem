@@ -1,0 +1,42 @@
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Normal (editable according to FormMode)" Note="Ambient binding, editable in the default Edit mode.">
+            <LabeledRow Label="name"><TextEdit FieldName="name" /></LabeledRow>
+            <LabeledRow Label="hire_date"><DateEdit FieldName="hire_date" /></LabeledRow>
+            <LabeledRow Label="dept"><DropDownEdit FieldName="dept" /></LabeledRow>
+            <LabeledRow Label="active"><CheckEdit FieldName="active" /></LabeledRow>
+        </DemoSection>
+        <DemoSection Title="Read-only (LayoutField.ReadOnly=true)" Note="Read-only whatever the form mode.">
+            <LabeledRow Label="name"><TextEdit LayoutField="_name" /></LabeledRow>
+            <LabeledRow Label="hire_date"><DateEdit LayoutField="_hireDate" /></LabeledRow>
+            <LabeledRow Label="dept"><DropDownEdit LayoutField="_dept" /></LabeledRow>
+            <LabeledRow Label="active"><CheckEdit LayoutField="_active" /></LabeledRow>
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private readonly LayoutField _name = new() { FieldName = "name", ReadOnly = true };
+    private readonly LayoutField _hireDate = new() { FieldName = "hire_date", ReadOnly = true };
+    private readonly LayoutField _dept = new() { FieldName = "dept", ReadOnly = true };
+    private readonly LayoutField _active = new() { FieldName = "active", ReadOnly = true };
+    private readonly FormDataObject _data = BuildData();
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Demo", "Demo");
+        var fields = schema.Tables!.Add("Demo", "Demo").Fields!;
+        fields.Add("name", "Name", FieldDbType.String);
+        fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+        DataEditorParts.AddDepartment(fields);
+        fields.Add("active", "Active", FieldDbType.Boolean);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("name", "Alice Chen");
+        data.SetField("hire_date", "2026-06-11");
+        data.SetField("dept", "IT");
+        data.SetField("active", bool.TrueString);
+        return data;
+    }
+}

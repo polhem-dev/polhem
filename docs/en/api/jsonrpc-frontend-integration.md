@@ -170,8 +170,8 @@ A rejected API key, or an `Authorization` header that is not a well-formed `Bear
 before dispatch with **HTTP 401** and a JSON-RPC error body (`-32600`). A missing, unknown or expired
 token on a method that needs one reaches the method's access check and answers `-32001` with HTTP 200.
 
-CORS must be configured on the host. The demo backend opens an `AllowAnyOrigin`
-policy in [`samples/QuickStart.Server/Program.cs`](../../../samples/QuickStart.Server/Program.cs);
+CORS must be configured on the host. The Northwind server opens a development-only policy
+in [`Program.cs`](../../../apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs);
 production hosts must restrict origins explicitly.
 
 ---

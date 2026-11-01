@@ -1,0 +1,61 @@
+<div class="demo-stack">
+    <DemoSection Title="GridControl ← MudDataGrid" Note="Native first, then the derived grid over the same rows: column states, editors and the toolbar come from the layout.">
+        <MudText Typo="Typo.subtitle2">Native control (MudDataGrid)</MudText>
+        <MudDataGrid T="DataRow" Items="Rows" Dense="true" Filterable="false" SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn T="DataRow" Title="Phone"><CellTemplate>@context.Item["phone"]</CellTemplate></TemplateColumn>
+                <TemplateColumn T="DataRow" Title="Type"><CellTemplate>@context.Item["type"]</CellTemplate></TemplateColumn>
+                <TemplateColumn T="DataRow" Title="Primary"><CellTemplate>@context.Item["is_primary"]</CellTemplate></TemplateColumn>
+                <TemplateColumn T="DataRow" Title="Valid From"><CellTemplate>@context.Item["valid_from"]</CellTemplate></TemplateColumn>
+                <TemplateColumn T="DataRow" Title="Bill Month"><CellTemplate>@context.Item["bill_month"]</CellTemplate></TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+        <MudText Typo="Typo.subtitle2">Derived control (GridControl, Layout binding)</MudText>
+        <GridControl DataObject="_data" Layout="_marked" />
+    </DemoSection>
+    <DemoSection Title="GridControl (EditMode=EditForm)" Note="The grid stays read-only; the toolbar's edit button or a double-click opens the row in a dialog.">
+        <GridControl DataObject="_data" Layout="_plain" EditMode="GridEditMode.EditForm" />
+    </DemoSection>
+</div>
+
+@code {
+    private readonly FormDataObject _data = BuildData();
+    private readonly LayoutGrid _marked = BuildLayout("Phone (read-only)", "Type (required)", marked: true);
+    private readonly LayoutGrid _plain = BuildLayout("Phone", "Type", marked: false);
+
+    private IEnumerable<DataRow> Rows => _data.DataSet.Tables["Phones"]!.Rows.Cast<DataRow>()
+        .Where(row => row.RowState != DataRowState.Deleted);
+
+    private static LayoutGrid BuildLayout(string phone, string type, bool marked)
+    {
+        var layout = new LayoutGrid("Phones", "Phones");
+        layout.Columns!.Add(new LayoutColumn("phone", phone, ControlType.TextEdit) { ReadOnly = marked });
+        layout.Columns.Add(new LayoutColumn("type", type, ControlType.DropDownEdit) { Required = marked });
+        layout.Columns.Add(new LayoutColumn("is_primary", "Primary", ControlType.CheckEdit));
+        layout.Columns.Add(new LayoutColumn("valid_from", "Valid From", ControlType.DateEdit));
+        layout.Columns.Add(new LayoutColumn("bill_month", "Bill Month", ControlType.YearMonthEdit));
+        return layout;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Gallery", "Gallery");
+        schema.Tables!.Add("Gallery", "Gallery").Fields!.Add("emp_name", "Name", FieldDbType.String);
+        var phones = schema.Tables.Add("Phones", "Phones").Fields!;
+        phones.Add("phone", "Phone", FieldDbType.String);
+        var type = phones.Add("type", "Type", FieldDbType.String);
+        type.ListItems!.Add("Office", "Office");
+        type.ListItems.Add("Mobile", "Mobile");
+        type.ListItems.Add("Home", "Home");
+        phones.Add("is_primary", "Primary", FieldDbType.Boolean);
+        phones.Add("valid_from", "Valid From", FieldDbType.Date);
+        phones.Add("bill_month", "Bill Month", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        var rows = data.DataSet.Tables["Phones"]!;
+        rows.Rows.Add("02-1234-5678", "Office", true, new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Unspecified), "2026-06");
+        rows.Rows.Add("0912-345-678", "Mobile", false, new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Unspecified), "2026-07");
+        return data;
+    }
+}

@@ -1,0 +1,18 @@
+<DemoSection Title="Column state shown in the header" Note="Number is read-only, so its caption is parenthesised; Type is required, so it shows the required cue; the others are plain.">
+    <GridControl DataObject="_data" Layout="_layout" />
+</DemoSection>
+
+@code {
+    private readonly FormDataObject _data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
+    private readonly LayoutGrid _layout = BuildLayout();
+
+    private static LayoutGrid BuildLayout()
+    {
+        var layout = new LayoutGrid("Phones", "Phones");
+        layout.Columns!.Add(new LayoutColumn("phone", "Number", ControlType.TextEdit) { ReadOnly = true });
+        layout.Columns.Add(new LayoutColumn("type", "Type", ControlType.DropDownEdit) { Required = true });
+        layout.Columns.Add(new LayoutColumn("is_primary", "Primary", ControlType.CheckEdit));
+        layout.Columns.Add(new LayoutColumn("valid_from", "Valid From", ControlType.DateEdit));
+        return layout;
+    }
+}

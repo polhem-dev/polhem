@@ -1,8 +1,8 @@
 # Backend bootstrap template
 
 `Program.cs` + `XxxBackend`. Replace `Xxx` with your project name. Based on
-`samples/Polhem.Samples.Shared/DemoBackend.cs` and `samples/QuickStart.Server/Program.cs` (same version as the
-framework); when this template and those files disagree, the samples win.
+`apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindBackend.cs` and `Polhem.Northwind.Server/Program.cs` (same
+version as the framework); when this template and those files disagree, those files win.
 
 ## Program.cs
 
@@ -128,16 +128,15 @@ public static class XxxBackend
 }
 ```
 
-`samples/Polhem.Samples.Shared/DemoSchemaSeeder.cs` shows the table creation and a seeded `st_user` row together.
+`apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindSchemaSeeder.cs` shows the table creation and a seeded `st_user` row together.
 
 ## Generating a dev master key
 
-A 64-byte AES-CBC-HMAC combined key (base64). You can borrow the dev value from
-`Polhem.Samples.Shared.DemoCredentials`, or generate one with `RandomNumberGenerator.GetBytes(64)` and base64-encode
+A 64-byte AES-CBC-HMAC combined key (base64). Generate one with `RandomNumberGenerator.GetBytes(64)` and base64-encode
 it. **Dev only**; production injects the key through the deployment mechanism.
 
 ## CORS (only when a WASM/browser head calls cross-origin)
 
 `app.UseCors(...)` must come **before** the controllers are mapped so the OPTIONS preflight is answered first instead
-of being blocked by access control. `samples/QuickStart.Server/Program.cs` shows the placement. Pure desktop / mobile
+of being blocked by access control. `apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs` shows the placement. Pure desktop / mobile
 heads do not need it.

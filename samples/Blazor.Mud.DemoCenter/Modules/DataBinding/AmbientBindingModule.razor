@@ -1,0 +1,30 @@
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Set once on the container, child controls bind automatically" Note="The FormScope around this case carries the data object; the editors below only set FieldName.">
+            <LabeledRow Label="name (TextEdit)"><TextEdit FieldName="name" /></LabeledRow>
+            <LabeledRow Label="dept (DropDownEdit)"><DropDownEdit FieldName="dept" /></LabeledRow>
+        </DemoSection>
+        <DemoSection Title="Live values">
+            <LiveValues DataObject="_data" Fields="s_fields" />
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private static readonly string[] s_fields = ["name", "dept"];
+    private readonly FormDataObject _data = BuildData();
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Demo", "Demo");
+        var fields = schema.Tables!.Add("Demo", "Demo").Fields!;
+        fields.Add("name", "Name", FieldDbType.String);
+        DataEditorParts.AddDepartment(fields);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("name", "Alice Chen");
+        data.SetField("dept", "IT");
+        return data;
+    }
+}

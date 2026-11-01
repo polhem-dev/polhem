@@ -26,9 +26,7 @@ namespace Polhem.Northwind.Backend;
 /// than it saves — the demo's README records what that shortcut cost when it was tried.
 /// </remarks>
 /// <remarks>
-/// This is the self-contained mirror of the <c>samples/Polhem.Samples.Shared</c> demo backend:
-/// the app depends only on the published <c>Polhem.*</c> packages so it can graduate to its own
-/// repository without dragging the samples shared project along.
+/// The app depends only on the published <c>Polhem.*</c> packages so it can graduate to its own repository.
 /// </remarks>
 public static class NorthwindBackend
 {

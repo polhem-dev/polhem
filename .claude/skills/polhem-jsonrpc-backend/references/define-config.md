@@ -2,7 +2,7 @@
 
 A handful of XML files plus the `TableSchema/` folder. They live under the host project's `Define/`, and `Program.cs`
 locates them by walking up. Below is minimal content you can paste (a single-file SQLite dev setup).
-`samples/Define/` is the working reference; when this file and it disagree, the sample wins.
+`apps/Polhem.Northwind/Define/` is the working reference; when this file and it disagree, that folder wins.
 
 ## SystemSettings.xml — root settings
 
@@ -105,8 +105,7 @@ out to get the framework default.
 </ProgramSettings>
 ```
 
-- At startup the framework adds any missing reserved progId and rewrites the file, comments included (see the comments
-  in `samples/Define/ProgramSettings.xml`). Declaring the reserved entries yourself avoids that rewrite.
+- At startup the framework adds any missing reserved progId and rewrites the file, comments included. Declaring the reserved entries yourself avoids that rewrite.
 - **ProgramSettings is not the menu and is not served to clients**: `GetDefine` serves only the types on its remote
   allow-list (`SystemBusinessObject.Define.cs`), and `ProgramSettings` is not one of them.
 

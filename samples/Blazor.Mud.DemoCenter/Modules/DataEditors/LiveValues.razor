@@ -1,0 +1,25 @@
+@implements IDisposable
+
+<pre class="demo-live">@string.Join(Environment.NewLine, Fields.Select(f => $"{f,-16} = {DataObject.GetField(f)}"))</pre>
+
+@code {
+    [Parameter, EditorRequired]
+    public FormDataObject DataObject { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string[] Fields { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        DataObject.FieldValueChanged += OnChanged;
+        DataObject.DataSetReplaced += OnChanged;
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        DataObject.FieldValueChanged -= OnChanged;
+        DataObject.DataSetReplaced -= OnChanged;
+    }
+}

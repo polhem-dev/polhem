@@ -1,0 +1,79 @@
+@implements IDisposable
+
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Derived controls" Note="Each control is bound to one field. For switching the form mode, see the FormMode States topic.">
+            <LabeledRow Label="TextEdit"><TextEdit FieldName="name" /></LabeledRow>
+            <LabeledRow Label="MemoEdit"><MemoEdit FieldName="notes" /></LabeledRow>
+            <LabeledRow Label="NumericEdit"><NumericEdit FieldName="amount" /></LabeledRow>
+            <LabeledRow Label="Computed (amount + 5%)"><NumericEdit FieldName="amount_with_tax" /></LabeledRow>
+            <LabeledRow Label="ButtonEdit"><ButtonEdit FieldName="code" /></LabeledRow>
+            <LabeledRow Label="DateEdit"><DateEdit FieldName="hire_date" /></LabeledRow>
+            <LabeledRow Label="YearMonthEdit"><YearMonthEdit FieldName="pay_month" /></LabeledRow>
+            <LabeledRow Label="TimeEdit"><TimeEdit FieldName="starts" /></LabeledRow>
+            <LabeledRow Label="DateTimeEdit"><DateTimeEdit FieldName="updated" /></LabeledRow>
+            <LabeledRow Label="DropDownEdit"><DropDownEdit FieldName="dept" /></LabeledRow>
+            <LabeledRow Label="CheckEdit"><CheckEdit FieldName="active" /></LabeledRow>
+        </DemoSection>
+        <DemoSection Title="FormDataObject live field values">
+            <LiveValues DataObject="_data" Fields="s_fields" />
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private static readonly string[] s_fields =
+        ["name", "notes", "amount", "amount_with_tax", "code", "hire_date", "pay_month", "starts", "updated", "dept", "active"];
+
+    private readonly FormDataObject _data;
+    private readonly FormLiveComputation _live;
+
+    public ControlGalleryModule()
+    {
+        var schema = new FormSchema("Gallery", "Gallery");
+        var fields = schema.Tables!.Add("Gallery", "Gallery").Fields!;
+        fields.Add("name", "Name", FieldDbType.String).MaxLength = 20;
+        fields.Add("notes", "Notes", FieldDbType.String);
+        fields.Add("amount", "Amount", FieldDbType.Decimal).NumberFormat = "N2";
+        fields.Add(new FormField("amount_with_tax", "Amount with tax", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "amount * 105 / 100",
+            ReadOnly = true,
+        });
+        fields.Add("code", "Code", FieldDbType.String);
+        fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+        fields.Add("pay_month", "Pay Month", FieldDbType.String).ControlType = ControlType.YearMonthEdit;
+        fields.Add("starts", "Starts", FieldDbType.Time);
+        fields.Add("updated", "Updated", FieldDbType.DateTime);
+        DataEditorParts.AddDepartment(fields);
+        fields.Add("active", "Active", FieldDbType.Boolean);
+
+        _data = new FormDataObject(schema);
+        _data.InitializeNewMaster();
+        _data.SetField("name", "Alice Chen");
+        _data.SetField("notes", "Memo");
+        _data.SetField("amount", "1234.5");
+        _data.SetField("code", "EMP-001");
+        _data.SetField("hire_date", "2026-06-11");
+        _data.SetField("pay_month", "2026-06");
+        _data.SetField("starts", "08:30");
+        _data.SetField("updated", "2026-10-25T14:30:00");
+        _data.SetField("dept", "IT");
+        _data.SetField("active", bool.TrueString);
+
+        // FormPage wires live computation itself; a page of its own subscribes the same way.
+        _live = new FormLiveComputation(schema);
+        _data.FieldValueChanged += OnFieldValueChanged;
+        _live.InitializeNewRow("Gallery", _data.MasterRow!);
+    }
+
+    private void OnFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
+    {
+        if (!_live.IsRecomputing)
+            _live.Recompute(e.TableName, e.FieldName, e.Row);
+    }
+
+    public void Dispose() => _data.FieldValueChanged -= OnFieldValueChanged;
+}

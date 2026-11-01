@@ -1,11 +1,11 @@
 ---
 name: polhem-app-scaffold
-description: Wiring conventions for building a "standalone Polhem backend app/demo" in polhem (or in a standalone repository after it graduates) — without Polhem.Samples.Shared, depending only on public Polhem.* packages or ProjectReference. Covers the easiest thing to get wrong, DB scoping (CategoryId is the common/company/log scope selector; business data must be company), the company context (sign-in against st_user, then EnterCompany, even for a single company), the seeder (DbCategorySettings-driven table creation + sys_id relation seeding), ProgramSettings as the server-side BO/Repository registry and MenuSettings as the menu, the rule that the Server must not depend on Polhem.Api.Client, and operational pitfalls that keep recurring. Use when the user wants to "start a Polhem app / backend", "build a demo that will graduate to its own repository", "wire up a Polhem backend host myself", "configure DatabaseSettings / DbCategorySettings / the company database", "how Polhem splits common vs company", and similar requests; trigger proactively even if they do not say scaffold.
+description: Wiring conventions for building a "standalone Polhem backend app/demo" in polhem (or in a standalone repository after it graduates), depending only on public Polhem.* packages or ProjectReference. Covers the easiest thing to get wrong, DB scoping (CategoryId is the common/company/log scope selector; business data must be company), the company context (sign-in against st_user, then EnterCompany, even for a single company), the seeder (DbCategorySettings-driven table creation + sys_id relation seeding), ProgramSettings as the server-side BO/Repository registry and MenuSettings as the menu, the rule that the Server must not depend on Polhem.Api.Client, and operational pitfalls that keep recurring. Use when the user wants to "start a Polhem app / backend", "build a demo that will graduate to its own repository", "wire up a Polhem backend host myself", "configure DatabaseSettings / DbCategorySettings / the company database", "how Polhem splits common vs company", and similar requests; trigger proactively even if they do not say scaffold.
 ---
 
 # Standalone Polhem backend wiring
 
-Building a standalone Polhem backend that does not rely on `Polhem.Samples.Shared` (typically a demo that will
+Building a standalone Polhem backend (typically a demo that will
 "graduate" into its own repository, or a production app) means wiring up a dozen or so things yourself that are easy
 to miss or get wrong. These are not arbitrary choices; **they are fixed conventions**. This skill pins them down and
 marks `apps/Polhem.Northwind/` as the complete implementation to compare against.
@@ -16,7 +16,7 @@ marks `apps/Polhem.Northwind/` as the complete implementation to compare against
 ## When to use
 
 - Starting a backend / demo that depends only on public `Polhem.*` packages (or ProjectReference) and
-  **does not reference `Polhem.Samples.Shared`** (e.g. a sample that will later move to its own repository)
+  (e.g. a demo that will later move to its own repository)
 - You need to write your own host bootstrap (`AddXxxBackend` / `UseXxxBackend`)
 - You need to set up multi-database scope (common / company), the company context, and the seeder correctly
 
@@ -24,8 +24,6 @@ marks `apps/Polhem.Northwind/` as the complete implementation to compare against
 
 - You only need "a JSON-RPC server + client round trip that runs", with no company scope / seeder →
   **`polhem-jsonrpc-backend`** (it is also the authoritative source for this file's bootstrap and auth templates)
-- A demo placed in `samples/` that can use `Polhem.Samples.Shared` → use **`polhem-sample-add`** (it picks the
-  backend, auth, slnx, and shared Define)
 - A pure MAUI / Avalonia front-end skeleton → **`maui-app-scaffold`** / `avalonia-*` (front-end heads, no backend
   wiring)
 - You just want to "add a form" to an app that is already wired → **`polhem-add-form`**
@@ -37,7 +35,6 @@ marks `apps/Polhem.Northwind/` as the complete implementation to compare against
 |-------|---------|
 | **`polhem-app-scaffold`** (this skill) | Adds DB scoping + company context + seeder on top of the items below |
 | `polhem-jsonrpc-backend` | **Authoritative templates for host bootstrap / empty controller / the login trio / client calls** |
-| `polhem-sample-add` | Front-end/backend pairing for `samples/` projects (may use Polhem.Samples.Shared) |
 | `polhem-add-form` | Adding a form to an already-wired app (FormSchema/FormLayout/TableSchema/registration/menu) |
 | `polhem-scaffold-from-formschema` | Generating layout/language/tableschema sidecars from one FormSchema |
 | `demo-smoke` | End-to-end smoke test once wired |
@@ -137,8 +134,7 @@ resolves to the framework's `SystemBusinessObject`. Compare against `NorthwindCr
 `NorthwindSchemaSeeder.cs`.
 
 Only when accounts live somewhere else: subclass `SystemBusinessObject`, override `AuthenticateUser`, and bind the
-subclass to `System` with `ProgramItem.BusinessObject` (the samples do this with
-`samples/Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs`). The company still comes from
+subclass to `System` with `ProgramItem.BusinessObject`. The company still comes from
 `EnterCompany` (Part 3); do not stamp it inside the login override.
 
 ## Part 5 — Seeder (create tables + seed data)
