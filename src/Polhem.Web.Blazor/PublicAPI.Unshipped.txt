@@ -321,3 +321,75 @@ Polhem.Web.Blazor.Controls.IGridEditorSlot
 Polhem.Web.Blazor.Controls.IGridEditorSlot.RefreshEditorState() -> void
 override Polhem.Web.Blazor.Controls.GridControlBase.OnParametersSet() -> void
 static Polhem.Web.Blazor.Controls.GridControlBase.IsChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ApplySelectionAsync(System.Data.DataRow! selected, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ButtonClick.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ButtonClick.set -> void
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ButtonEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.CloseLookup() -> void
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.HasLookup.get -> bool
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.IsLookupOpen.get -> bool
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.LookupButtonText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.LookupFailed.get -> Microsoft.AspNetCore.Components.EventCallback<System.Exception!>
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.LookupFailed.set -> void
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.LookupFailure.get -> string?
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.OnButtonClickAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.OnDoubleClickAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs! e) -> void
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.OpenHint.get -> string?
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.OpenTarget.get -> Polhem.UI.Core.Fields.RelationTarget?
+Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ReportFailureAsync(System.Exception! ex, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CancelText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CommitAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Connector.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.DefinitionLoader.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Error.get -> string?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.LoadingText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.LookupDialogBase() -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCancelled.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCommitted.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnFailed.get -> Microsoft.AspNetCore.Components.EventCallback<System.Exception!>
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnFailed.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ProgId.get -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ProgId.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ResolvedConnector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ResolvedSchema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Schema.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Title.get -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.ActivateAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.CommitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Connector.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Error.get -> string?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.LookupPanelBase() -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCancelled.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCommitted.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.ReloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Rows.get -> System.Data.DataTable?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Schema.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchText.set -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Select(System.Guid rowId) -> void
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SelectedRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SelectedRowId.get -> System.Guid?
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.TruncationNotice.get -> string?
+override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ApplyMetadata() -> void
+override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ShouldWriteBackText.get -> bool
+override Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+override Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!

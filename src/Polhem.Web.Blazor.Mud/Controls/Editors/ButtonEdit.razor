@@ -1,0 +1,32 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits ButtonEditorBase
+
+@* The double-click and the hint sit on a wrapper because MudTextField passes neither to its input reliably. *@
+<div class="@RootClass" title="@(LookupFailure ?? OpenHint)" @ondblclick="() => OnDoubleClickAsync()">
+    <MudTextField T="string"
+                  UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                  InputId="@Id"
+                  Class="polhem-field-editor--button"
+                  Value="Text"
+                  ValueChanged="CommitText"
+                  ReadOnly="@(HasLookup || !IsEditable)"
+                  MaxLength="MudAttributes.MaxLength(MaxLength)"
+                  OnKeyDown="OnKeyDown"
+                  Adornment="@(IsEditable ? Adornment.End : Adornment.None)"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentAriaLabel="@LookupButtonText"
+                  OnAdornmentClick="() => OnButtonClickAsync()"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+</div>
+@if (IsLookupOpen && FormField is { } lookupField)
+{
+    <LookupDialog ProgId="@lookupField.RelationProgId"
+                  OnCommitted="row => ApplySelectionAsync(row)"
+                  OnCancelled="CloseLookup"
+                  OnFailed="ex => ReportFailureAsync(ex)" />
+}
+
+@code {
+    private string RootClass => OpenTarget is null ? "polhem-button-edit" : "polhem-button-edit polhem-field-editor--opens-record";
+}

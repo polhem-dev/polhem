@@ -1,0 +1,88 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits LookupPanelBase
+@using System.Data
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core
+@using Polhem.UI.Core.Fields
+
+<div class="polhem-lookup-panel">
+    <form class="polhem-lookup-panel__search" @onsubmit="() => SearchAsync()" @onsubmit:preventDefault>
+        <MudTextField T="string"
+                      Class="polhem-lookup-panel__search-input"
+                      @bind-Value="SearchText"
+                      Placeholder="@Text(PolhemUIText.Search)"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+        <MudButton ButtonType="ButtonType.Submit" Class="polhem-lookup-panel__search-button" Size="Size.Small" Variant="Variant.Outlined">@Text(PolhemUIText.Search)</MudButton>
+    </form>
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="polhem-lookup-panel__error">@Error</MudAlert>
+    }
+    @if (TruncationNotice is not null)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="polhem-lookup-panel__notice">@TruncationNotice</MudAlert>
+    }
+    @if (Layout is not null && Rows is { Rows.Count: > 0 })
+    {
+        <MudSimpleTable Dense="true" Hover="true" Class="polhem-lookup-panel__table">
+            <thead>
+                <tr>
+                    @foreach (var column in VisibleColumns)
+                    {
+                        <th>@column.Caption</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (DataRow row in Rows.Rows)
+                {
+                    <tr class="@RowClass(row)" @onclick="() => OnRowClick(row)" @ondblclick="() => OnRowDoubleClickAsync(row)">
+                        @foreach (var column in VisibleColumns)
+                        {
+                            <td>@FormatCell(row, column)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    }
+    else
+    {
+        <div class="polhem-lookup-panel__empty">@Text(PolhemUIText.NoData)</div>
+    }
+    <div class="polhem-lookup-panel__buttons">
+        <MudButton Class="polhem-lookup-panel__ok" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(SelectedRow is null)" OnClick="() => CommitAsync()">@Text(PolhemUIText.Ok)</MudButton>
+        <MudButton Class="polhem-lookup-panel__cancel" Size="Size.Small" OnClick="() => CancelAsync()">@Text(PolhemUIText.Cancel)</MudButton>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<LayoutColumn> VisibleColumns => Layout?.Columns?.Where(c => c.Visible) ?? [];
+
+    private void OnRowClick(DataRow row)
+    {
+        if (FormDataGuard.TryGetRowId(row, out var rowId)) Select(rowId);
+    }
+
+    private async Task OnRowDoubleClickAsync(DataRow row)
+    {
+        if (FormDataGuard.TryGetRowId(row, out var rowId))
+            await ActivateAsync(rowId).ConfigureAwait(true);
+    }
+
+    private string RowClass(DataRow row)
+        => FormDataGuard.TryGetRowId(row, out var rowId) && rowId == SelectedRowId
+            ? "polhem-lookup-panel__row polhem-lookup-panel__row--selected"
+            : "polhem-lookup-panel__row";
+
+    private string FormatCell(DataRow row, LayoutColumn column)
+    {
+        var fields = Schema?.MasterTable?.Fields;
+        var field = fields is not null && fields.Contains(column.FieldName) ? fields[column.FieldName] : null;
+        return GridCellFormatter.FormatColumnText(row, column, field,
+            currencySettings: null, defaultCurrencyCode: string.Empty, unitSettings: null,
+            flag => Text(flag ? PolhemUIText.True : PolhemUIText.False));
+    }
+}

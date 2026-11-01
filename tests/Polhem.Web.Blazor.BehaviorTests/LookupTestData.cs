@@ -11,13 +11,13 @@ using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Definitions;
 using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
+namespace Polhem.Web.Blazor.BehaviorTests
 {
     /// <summary>
     /// A lookup target (<c>Dept</c>), a form that looks it up (<c>Employee.dept_rowid</c>), and a connector
     /// that serves the target's rows, shared by the lookup tests.
     /// </summary>
-    internal static class LookupTestData
+    public static class LookupTestData
     {
         public const string LookupField = "dept_rowid";
         public static readonly Guid EngineeringId = new("11111111-1111-1111-1111-111111111111");
@@ -66,7 +66,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
     /// <summary>
     /// Supplies the lookup target's schema and connector the way a host without a Polhem backend registers them.
     /// </summary>
-    internal sealed class FakeLookupSource : IFormDefinitionSource, IFormApiConnectorFactory
+    public sealed class FakeLookupSource : IFormDefinitionSource, IFormApiConnectorFactory
     {
         public FakeLookupConnector Connector { get; } = new();
 
@@ -89,7 +89,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
     /// Serves the lookup rows, filtered by name, and records each search. Every other operation is
     /// outside what a lookup calls.
     /// </summary>
-    internal sealed class FakeLookupConnector : IFormApiConnector
+    public sealed class FakeLookupConnector : IFormApiConnector
     {
         private readonly DataTable _rows = LookupTestData.BuildTargetRows();
 
