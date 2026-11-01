@@ -21,7 +21,7 @@ public sealed class TemplatePackageFixture : IDisposable
         "Polhem.Api.Contracts", "Polhem.Business", "Polhem.Api.Core", "Polhem.Api.Server",
         "Polhem.Repository.Abstractions", "Polhem.Repository", "Polhem.Hosting",
         "Polhem.Api.Client", "Polhem.UI.Core", "Polhem.UI.ApiBridge", "Polhem.UI.Avalonia", "Polhem.UI.Avalonia.Shell",
-        "Polhem.Web.Blazor.Server",
+        "Polhem.Web.Blazor", "Polhem.Web.Blazor.Server",
     ];
 
     private static readonly TimeSpan s_timeout = TimeSpan.FromMinutes(10);
