@@ -169,6 +169,7 @@ add the Polhem integration.
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
     <ProjectReference Include="..\Polhem.Samples.Shared\Polhem.Samples.Shared.csproj" />
   </ItemGroup>
 </Project>
