@@ -51,7 +51,7 @@ namespace Polhem.DefineEditor.UnitTests
             => new("Order", XmlCodec.Serialize(layout), SingleFormMode.Edit, IsCompact: false, ShowFieldNames: true);
 
         [Fact]
-        [DisplayName("A preview URL renders the published layout with the Blazor Server presenter")]
+        [DisplayName("A preview URL renders the published layout with the MudBlazor presenter")]
         public async Task GetDocumentUrlAsync_PublishedLayout_RendersItsFields()
         {
             var url = await PublishAsync("Order.FormLayout.xml", Snapshot(CreateLayout()));

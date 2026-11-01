@@ -1,6 +1,7 @@
 using Polhem.Api.Contracts.Form;
 using Polhem.Samples.Shared;
 using Polhem.UI.Core.Definitions;
+using Polhem.Web.Blazor.Mud.DependencyInjection;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Blazor.Server.Demo.Components;
 
@@ -25,6 +26,8 @@ internal static class Program
         builder.Services.AddScoped<DemoLookupSource>();
         builder.Services.AddScoped<IFormDefinitionSource>(sp => sp.GetRequiredService<DemoLookupSource>());
         builder.Services.AddScoped<IFormApiConnectorFactory>(sp => sp.GetRequiredService<DemoLookupSource>());
+
+        builder.Services.AddPolhemMud();
 
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();

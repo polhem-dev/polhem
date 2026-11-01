@@ -53,7 +53,8 @@ namespace Polhem.DefineEditor.UnitTests
             var paths = s_assetReference.Matches(html).Select(m => m.Groups["path"].Value).ToList();
 
             Assert.Contains(paths, p => p.StartsWith("_framework/blazor.web", StringComparison.Ordinal));
-            Assert.Contains(paths, p => p.StartsWith("_content/Polhem.Web.Blazor.Server/polhem", StringComparison.Ordinal));
+            Assert.Contains(paths, p => p.StartsWith("_content/MudBlazor/MudBlazor", StringComparison.Ordinal));
+            Assert.Contains(paths, p => p.StartsWith("_content/Polhem.Web.Blazor.Mud/polhem-mud", StringComparison.Ordinal));
             Assert.Contains(paths, p => p.StartsWith("browser-preview", StringComparison.Ordinal) && p.EndsWith(".js", StringComparison.Ordinal));
         }
 

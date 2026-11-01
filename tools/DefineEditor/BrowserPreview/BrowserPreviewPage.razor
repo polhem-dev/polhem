@@ -4,12 +4,14 @@
 @using Polhem.Core.Serialization
 @using Polhem.Definition.Layouts
 @using Polhem.DefineEditor.Services
-@using Polhem.Web.Blazor.Server.Controls
+@using Polhem.Web.Blazor.Mud.Controls
+@using Polhem.Web.Blazor.Mud.Theming
 @implements IDisposable
 @inject BrowserPreviewHub Hub
 @inject IJSRuntime JS
 
 <PageTitle>@(_snapshot?.Title ?? "Polhem DefineEditor")</PageTitle>
+<PolhemMudProviders />
 
 @if (_error is not null)
 {

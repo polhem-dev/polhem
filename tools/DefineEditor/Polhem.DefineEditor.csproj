@@ -68,9 +68,9 @@
     <!-- Brings the framework's Avalonia controls (ObjectTreeView, the layout preview). It also carries Polhem.Expressions,
          which the editor needs for design-time expression checks. -->
     <ProjectReference Include="..\..\src\Polhem.UI.Avalonia\Polhem.UI.Avalonia.csproj" />
-    <!-- The browser preview renders a layout with the Blazor Server head's own FormLayoutPresenter. The editor is a
-         composition root, so it may reference both heads; neither head references the other. -->
-    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
+    <!-- The browser preview renders a layout with the MudBlazor head's own FormLayoutPresenter, as an application shows
+         it. The editor is a composition root, so it may reference both heads; neither head references the other. -->
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
   </ItemGroup>
 
   <!--

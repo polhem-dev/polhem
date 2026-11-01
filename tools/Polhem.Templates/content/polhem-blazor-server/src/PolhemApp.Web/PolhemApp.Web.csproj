@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Polhem.Hosting" Version="POLHEM_PACKAGE_VERSION" />
     <PackageReference Include="Polhem.Web.Blazor.Server" Version="POLHEM_PACKAGE_VERSION" />
+    <PackageReference Include="Polhem.Web.Blazor.Mud" Version="POLHEM_PACKAGE_VERSION" />
 <!--#if (database == "SqlServer") -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <!-- Above the version the driver pulls in, which carries advisories GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7. -->

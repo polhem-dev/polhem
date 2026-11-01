@@ -60,6 +60,7 @@ public class PolhemBlazorServerTemplateTests
         var project = File.ReadAllText(Path.Combine(output, "src", "Acme.Erp.Web", "Acme.Erp.Web.csproj"));
         Assert.Contains($"Include=\"Polhem.Hosting\" Version=\"{_fx.PackageVersion}\"", project, StringComparison.Ordinal);
         Assert.Contains($"Include=\"Polhem.Web.Blazor.Server\" Version=\"{_fx.PackageVersion}\"", project, StringComparison.Ordinal);
+        Assert.Contains($"Include=\"Polhem.Web.Blazor.Mud\" Version=\"{_fx.PackageVersion}\"", project, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Northwind.Backend\Polhem.Northwind.Backend.csproj" />
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
   </ItemGroup>
 
   <!-- Polhem.JsonRpc.AspNetCore serves the endpoint of the Demo environment (Demo/NorthwindDemo.cs).
