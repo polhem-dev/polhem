@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.BehaviorTests;
 using System.ComponentModel;
 using System.Data;
 using Bunit;

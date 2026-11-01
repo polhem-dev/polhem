@@ -15,6 +15,7 @@ namespace Polhem.Web.Blazor.Mud.Controls.Editors
         /// <returns>The component type.</returns>
         public static Type GetEditorType(ControlType controlType) => controlType switch
         {
+            ControlType.ButtonEdit => typeof(ButtonEdit),
             ControlType.CheckEdit => typeof(CheckEdit),
             ControlType.DateEdit => typeof(DateEdit),
             ControlType.YearMonthEdit => typeof(YearMonthEdit),

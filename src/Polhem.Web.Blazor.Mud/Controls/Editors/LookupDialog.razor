@@ -1,0 +1,48 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits LookupDialogBase
+@implements IAsyncDisposable
+
+@* The host renders this while the lookup is open and removes it when either callback runs. *@
+<MudDialog @ref="_dialog" Visible="true" VisibleChanged="OnVisibleChanged" Options="s_options" Class="polhem-lookup-dialog">
+    <TitleContent>@Title</TitleContent>
+    <DialogContent>
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="polhem-lookup-dialog__error">@Error</MudAlert>
+            <MudButton Class="polhem-lookup-panel__cancel" Size="Size.Small" OnClick="() => CancelAsync()">@CancelText</MudButton>
+        }
+        else if (ResolvedSchema is null || ResolvedConnector is null)
+        {
+            <div class="polhem-lookup-dialog__loading">@LoadingText</div>
+        }
+        else
+        {
+            <LookupPanel Schema="ResolvedSchema"
+                         Connector="ResolvedConnector"
+                         OnCommitted="row => CommitAsync(row)"
+                         OnCancelled="() => CancelAsync()" />
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions s_options = new()
+    {
+        BackdropClick = true,
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+    };
+
+    private MudDialog? _dialog;
+
+    // WARNING: an inline MudDialog renders in the dialog provider and stays there when this component is removed, so
+    // every way the host closes the lookup depends on this.
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_dialog is not null) await _dialog.CloseAsync().ConfigureAwait(true);
+    }
+
+    private Task OnVisibleChanged(bool visible) => visible ? Task.CompletedTask : CancelAsync();
+}

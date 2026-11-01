@@ -1,5 +1,5 @@
+using Polhem.Web.Blazor.BehaviorTests;
 using System.ComponentModel;
-using Polhem.Web.Blazor.Server.UnitTests.Controls.Editors;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
 {

@@ -10,3 +10,9 @@
 
 .polhem-field-editor--numeric input { text-align: right; }
 .polhem-field-editor--datetime { display: flex; gap: 4px; }
+
+.polhem-field-editor--opens-record, .polhem-field-editor--opens-record input { cursor: pointer; }
+.polhem-lookup-panel__search { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.polhem-lookup-panel__row { cursor: pointer; }
+.polhem-lookup-panel__row--selected { background: var(--mud-palette-action-default-hover); }
+.polhem-lookup-panel__buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }

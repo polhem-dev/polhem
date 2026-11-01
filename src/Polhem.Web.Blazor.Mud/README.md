@@ -9,6 +9,7 @@ The layering is in [ADR-059](../../maintainers/adr/adr-059-blazor-shared-layer.m
 ## Contents
 
 - `FieldEditorFactory` and the field editors (`Polhem.Web.Blazor.Mud.Controls.Editors`), over the editor bases of `Polhem.Web.Blazor`.
+- `ButtonEdit`, `LookupPanel` and `LookupDialog` in the same namespace, the lookup editor and its picker.
 - `PolhemMudProviders` and `PolhemMudTheme` (`Polhem.Web.Blazor.Mud.Theming`), MudBlazor's providers and the default theme.
 - `AddPolhemMud` (`Polhem.Web.Blazor.Mud.DependencyInjection`), which registers MudBlazor's services.
 

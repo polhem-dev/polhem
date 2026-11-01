@@ -45,3 +45,13 @@ virtual Polhem.Web.Blazor.Mud.Controls.Editors.DateEdit.OpenTo.get -> MudBlazor.
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.TextEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.TimeEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Theming.PolhemMudProviders.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.ButtonEdit
+Polhem.Web.Blazor.Mud.Controls.Editors.ButtonEdit.ButtonEdit() -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog
+Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog.LookupDialog() -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.LookupPanel
+Polhem.Web.Blazor.Mud.Controls.Editors.LookupPanel.LookupPanel() -> void
+~override Polhem.Web.Blazor.Mud.Controls.Editors.ButtonEdit.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.Editors.LookupPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
