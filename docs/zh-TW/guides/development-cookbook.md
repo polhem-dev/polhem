@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: ebaa2eb69df66b3671ac69167e3a4be93a17af27 -->
+<!-- source: en/guides/development-cookbook.md blob: 295b88a5ec1808763ce2a48493cd533f4c6c3e07 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -764,7 +764,7 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 │   → 參考下方「Polhem.UI.* head」章節
 │
 ├── Blazor Server（ASP.NET Core server-rendered）
-│   → 使用 Polhem.Web.Blazor.Server 上的 Polhem.Web.Blazor.Mud，connector 以 circuit 為 scope
+│   → 使用 Polhem.Web.Blazor.Server，connector 以 circuit 為 scope
 │   → 參考下方「Blazor Server」章節
 │
 └── 沒有 .NET（JavaScript、TypeScript…）
@@ -772,7 +772,7 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
     → 參考 JSON-RPC 前端整合指引
 ```
 
-> 框架提供兩個 UI 套件：`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Mud`。
+> 框架提供兩個 UI 套件：`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server`。
 > 其他 .NET 前端——WinForms、WPF、你自己的 Blazor WebAssembly app——沒有對應的框架 UI 套件，
 > 直接使用 `Polhem.UI.ApiBridge`（`ClientInfo`）或 `Polhem.Api.Client`。沒有 .NET 的 client 依
 > [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)。
@@ -849,7 +849,7 @@ await ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
 
 `SetEndpointAsync` 依 `ClientInfo.SupportedConnectTypes` 驗證 endpoint、以新連線類型的 client 取代 `ClientInfo.ApiClient`（新 client 處於未登入狀態，沒有 access token 與時區）、初始化其系統 connector，並透過 `ClientInfo.EndpointStorage` 儲存 endpoint。它不會登入：要再呼叫一次 `LoginAsync` 與 `ApplyLoginResult`。
 
-### Blazor Server（Polhem.Web.Blazor.Server 上的 Polhem.Web.Blazor.Mud）
+### Blazor Server（Polhem.Web.Blazor.Server）
 
 Blazor Server 透過 ASP.NET Core DI 提供 API client。**每個 SignalR circuit 一個 DI scope** —— `AddPolhemBlazor` 把 `PolhemApiClient` 註冊為 scoped，所以每個 circuit 都在自己的 client 上登入 —— 避免 cross-user data leak。Blazor Server 跑在 server process 內，所以其他 head 的裁剪與平台問題不適用於它。
 
@@ -857,7 +857,6 @@ Blazor Server 透過 ASP.NET Core DI 提供 API client。**每個 SignalR circui
 
 ```csharp
 using Polhem.Hosting;                               // AddPolhemFramework
-using Polhem.Web.Blazor.Mud.DependencyInjection;    // AddPolhemMud
 using Polhem.Web.Blazor.Server.DependencyInjection; // AddPolhemBlazor
 
 var builder = WebApplication.CreateBuilder(args);
@@ -867,9 +866,6 @@ builder.Services.AddPolhemFramework(backendConfiguration, pathOptions);
 
 // Polhem.Web.Blazor.Server services: options, the per-circuit PolhemApiClient, the components' UI text
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
-
-// The MudBlazor services the components need
-builder.Services.AddPolhemMud();
 
 // Standard Blazor Server setup
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

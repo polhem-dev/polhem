@@ -790,7 +790,7 @@ What kind of frontend are you building?
 │   → See "Polhem.UI.* heads" below
 │
 ├── Blazor Server (ASP.NET Core server-rendered)
-│   → Use Polhem.Web.Blazor.Mud on Polhem.Web.Blazor.Server, with circuit-scoped connectors
+│   → Use Polhem.Web.Blazor.Server with circuit-scoped connectors
 │   → See "Blazor Server" below
 │
 └── No .NET (JavaScript, TypeScript, …)
@@ -798,7 +798,7 @@ What kind of frontend are you building?
     → See JSON-RPC Frontend Integration
 ```
 
-> The framework ships two UI packages: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Mud`.
+> The framework ships two UI packages: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server`.
 > Any other .NET frontend — WinForms, WPF, a Blazor WebAssembly app of your own — has no framework UI
 > package and uses `Polhem.UI.ApiBridge` (`ClientInfo`) or `Polhem.Api.Client` directly. A client without .NET
 > follows [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md).
@@ -875,7 +875,7 @@ await ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
 
 `SetEndpointAsync` validates the endpoint against `ClientInfo.SupportedConnectTypes`, replaces `ClientInfo.ApiClient` with a client of the new connection type (which starts signed out, with no access token or time zone), initializes its system connector and stores the endpoint through `ClientInfo.EndpointStorage`. It does not sign in: call `LoginAsync` and `ApplyLoginResult` again.
 
-### Blazor Server (Polhem.Web.Blazor.Mud on Polhem.Web.Blazor.Server)
+### Blazor Server (Polhem.Web.Blazor.Server)
 
 Blazor Server uses ASP.NET Core DI to hand out the API client. **Each SignalR circuit gets its own DI scope** — `AddPolhemBlazor` registers the `PolhemApiClient` as scoped, so each circuit signs in on a client of its own — preventing cross-user data leakage. Blazor Server runs in the server process, so the trimming and platform questions of the other heads do not apply to it.
 
@@ -883,7 +883,6 @@ Blazor Server uses ASP.NET Core DI to hand out the API client. **Each SignalR ci
 
 ```csharp
 using Polhem.Hosting;                               // AddPolhemFramework
-using Polhem.Web.Blazor.Mud.DependencyInjection;    // AddPolhemMud
 using Polhem.Web.Blazor.Server.DependencyInjection; // AddPolhemBlazor
 
 var builder = WebApplication.CreateBuilder(args);
@@ -893,9 +892,6 @@ builder.Services.AddPolhemFramework(backendConfiguration, pathOptions);
 
 // Polhem.Web.Blazor.Server services: options, the per-circuit PolhemApiClient, the components' UI text
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
-
-// The MudBlazor services the components need
-builder.Services.AddPolhemMud();
 
 // Standard Blazor Server setup
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

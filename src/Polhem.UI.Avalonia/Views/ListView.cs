@@ -127,6 +127,8 @@ namespace Polhem.UI.Avalonia.Views
             // Compact (phone) surface: one card per row with the columns stacked as caption/value
             // lines, so narrow viewports stay readable instead of horizontally scrolling a wide
             // grid. Bound to the same DataTable; only one of grid / card list is visible at a time.
+            _cardState = new CardListState<System.Data.DataRowView>(_cardRows,
+                row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty);
             _cardList = new ListBox
             {
                 IsVisible = false,
@@ -408,7 +410,7 @@ namespace Polhem.UI.Avalonia.Views
             _grid.IsVisible = _hasData && !_isCompact;
             _cardList.IsVisible = _hasData && _isCompact;
             _pager.IsVisible = _hasData && !_isCompact && _hasPagedResponse;
-            _cardLimitLabel.IsVisible = _isCompact && _cardRows.Count >= MaxCardRows;
+            _cardLimitLabel.IsVisible = _isCompact && _cardState.IsAtLimit;
         }
 
         private void OnInputsChanged()

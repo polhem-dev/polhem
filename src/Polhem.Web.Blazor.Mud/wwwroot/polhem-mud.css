@@ -51,3 +51,12 @@
 .polhem-shell__main > :first-child { margin-top: 16px; }
 .polhem-shell-nav__header { padding: 10px 16px 4px; font-size: 12px; font-weight: 600; color: var(--mud-palette-text-secondary); }
 .polhem-shell-nav__loading, .polhem-shell-nav__empty { padding: 8px 16px; font-size: 13px; color: var(--mud-palette-text-secondary); }
+
+.polhem-card-list { display: flex; flex-direction: column; gap: 8px; }
+.polhem-card { padding: 10px; border: 1px solid var(--mud-palette-lines-default); border-radius: 6px; cursor: pointer; }
+.polhem-card--selected { background: var(--mud-palette-action-default-hover); }
+.polhem-card__line { display: flex; gap: 6px; font-size: 13px; line-height: 20px; }
+.polhem-card__caption { flex: 0 0 92px; font-weight: 600; opacity: 0.7; }
+.polhem-card__value { min-width: 0; overflow-wrap: anywhere; }
+.polhem-card-list__end { height: 1px; }
+.polhem-card-list__limit { margin-top: 8px; font-size: 13px; color: var(--mud-palette-text-secondary); }

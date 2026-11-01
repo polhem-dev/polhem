@@ -16,7 +16,7 @@ namespace Polhem.Web.Blazor.Components
         private bool _isListPaged;
 
         /// <summary>Gets a value indicating whether the list shows its page buttons.</summary>
-        protected bool ShowsPager => !_isShowingRecord && _isListPaged && _listRows is { Rows.Count: > 0 };
+        protected bool ShowsPager => !_isShowingRecord && !EffectiveIsCompact && _isListPaged && _listRows is { Rows.Count: > 0 };
 
         /// <summary>Gets the localized text that says which page is on screen.</summary>
         protected string PagePosition => _paging.TotalPages is { } totalPages
@@ -28,7 +28,8 @@ namespace Polhem.Web.Blazor.Components
         private Task ReloadListAsync(CancellationToken cancellationToken)
         {
             _paging.InvalidateTotalCount();
-            return LoadListPageAsync(_paging.Page, cancellationToken);
+            // The cards hold every page read so far, and a changed row shifts the later pages, so they start over.
+            return LoadListPageAsync(EffectiveIsCompact ? 1 : _paging.Page, cancellationToken);
         }
 
         private async Task LoadListPageAsync(int page, CancellationToken cancellationToken)
@@ -43,6 +44,13 @@ namespace Polhem.Web.Blazor.Components
 
             var rowCount = response.Table?.Rows.Count ?? 0;
             _paging.Apply(page, response.Paging);
+            if (EffectiveIsCompact)
+            {
+                ShowCardPage(page, response.Table);
+                _isListPaged = response.Paging is not null;
+                return;
+            }
+
             if (_paging.TryStepBackFromEmptyPage(rowCount))
             {
                 await LoadListPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);

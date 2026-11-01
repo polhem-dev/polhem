@@ -120,7 +120,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 
 ## 作為其他 UI head 移植的對齊基準
 
-`Polhem.UI.Avalonia` 是 UI 架構試點：繼承式控件 + View 層先在此定稿，再移植其他 UI head（`Polhem.Web.Blazor.Mud`，
+`Polhem.UI.Avalonia` 是 UI 架構試點：繼承式控件 + View 層先在此定稿，再移植其他 UI head（`Polhem.Web.Blazor.Server`，
 以及未來的 WinForms / WPF）。本 Demo Center 即「對齊範本」——
 
 - 每個控件 / 概念的**標準行為與外觀契約**（綁定、唯讀、必填、FormMode、AllowEditModes、Layout、Grid）在此一處可見、可比對。

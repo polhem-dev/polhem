@@ -2,7 +2,7 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
-A Blazor Server host that demonstrates how to wire the `Polhem.Web.Blazor.Mud` components and the `Polhem.Web.Blazor.Server` host into ASP.NET Core and dispatch directly into the Polhem backend via an **in-process client** (`PolhemApiClient.CreateLocal`; same process, no HTTP round-trip).
+A Blazor Server host that demonstrates how to wire `Polhem.Web.Blazor.Server` components into ASP.NET Core and dispatch directly into the Polhem backend via an **in-process client** (`PolhemApiClient.CreateLocal`; same process, no HTTP round-trip).
 
 ## How to run
 
@@ -24,7 +24,7 @@ On first run:
 2. Click Sign in (sends `SystemApiConnector.LoginAsync`, handled by `DemoAuthenticatingSystemBusinessObject`); the page then calls `EnterCompanyAsync("DEMO")`, because the Staff form is company-scoped, and only shows the form once both calls succeed ([`Components/Pages/Home.razor`](Components/Pages/Home.razor))
 3. After a successful login, `<FormPage ProgId="Staff" />` renders:
    - Top toolbar: `New` / `Save` / `Delete`
-   - Middle: staff grid (`GridControl`, columns from `FormSchema.ListFields`)
+   - Middle: staff grid (`DynamicGrid`, columns from `FormSchema.ListFields`)
    - Bottom: edit form (`FormLayoutPresenter`) appears when a row is selected
 4. Click `New` → edit fields → `Save`; the new staff record appears in the grid
 
@@ -35,7 +35,7 @@ On first run:
 | Login form | `PolhemLoginPanel` |
 | Entering the company | `SystemApiConnector.EnterCompanyAsync` |
 | Signed-in state on the page | `PolhemAccessTokenProvider` |
-| Staff grid rendering | `GridControl` + `FormSchema.GetListLayout()` |
+| Staff grid rendering | `DynamicGrid` + `FormSchema.GetListLayout()` |
 | Staff edit form | `FormLayoutPresenter` + the stored `FormLayout` definition (`Define/FormLayout/Staff.FormLayout.xml`) |
 | Grid + form integration | `FormPage` |
 | CRUD through Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |

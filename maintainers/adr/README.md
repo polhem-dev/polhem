@@ -79,5 +79,4 @@ understanding why the design is the way it is.
 | [056](adr-056-form-workbooks.md) | Forms can be described in an Excel workbook and imported as definitions | ✅ Accepted |
 | [057](adr-057-database-initialization.md) | The framework initializes a new deployment's databases, and the host runs it as `db` commands | ✅ Accepted |
 | [059](adr-059-blazor-shared-layer.md) | The Blazor head splits into a shared layer, UI packages and host packages | ✅ Accepted |
-| [060](adr-060-mudblazor-first-ui-package.md) | MudBlazor is the first Blazor UI package, with no generic UI abstraction | ✅ Accepted |
 | [058](adr-058-field-value-change-callback.md) | A field change can call back its own form's BO, which returns the values for the rest of the row | ✅ Accepted |

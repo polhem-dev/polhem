@@ -56,7 +56,7 @@ Inside a namespace ending in `MudBlazor`, the name `MudBlazor.X` resolves to tha
 - Moved types change namespace, and `CircuitUserContext` is renamed `BlazorUserContext`, since a WebAssembly host has
   no circuit. Its constructor takes the default language instead of the host's options. These are breaking changes in a
   1.x minor version (ADR-052).
-- The hand-drawn controls stay in `Polhem.Web.Blazor.Server` until the applications move to a UI package (done; see [ADR-060](adr-060-mudblazor-first-ui-package.md)), so they keep
+- The hand-drawn controls stay in `Polhem.Web.Blazor.Server` until the applications move to a UI package, so they keep
   working during the migration.
 - WebAssembly downloads now include MessagePack and DynamicExpresso through the shared layer. The Avalonia browser head
   already does.

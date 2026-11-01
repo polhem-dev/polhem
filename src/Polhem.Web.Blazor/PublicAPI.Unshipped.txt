@@ -214,7 +214,6 @@ Polhem.Web.Blazor.Components.FormPageBase.ListRows.get -> System.Data.DataTable?
 Polhem.Web.Blazor.Components.FormPageBase.LiveComputationNotice.get -> string?
 Polhem.Web.Blazor.Components.FormPageBase.Notice.get -> string?
 Polhem.Web.Blazor.Components.FormPageBase.OnClose() -> void
-Polhem.Web.Blazor.Components.FormPageBase.OnCompactChanged(bool compact) -> void
 Polhem.Web.Blazor.Components.FormPageBase.OnRelationRefused(string! message) -> void
 Polhem.Web.Blazor.Components.FormPageBase.OnRowSelected(System.Guid rowId) -> void
 Polhem.Web.Blazor.Components.FormPageBase.OpenRelation(Polhem.UI.Core.Fields.RelationTarget target) -> void
@@ -616,3 +615,15 @@ Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.get -> double
 Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.set -> void
 Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
 Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.ActivateCardAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.CanLoadMoreCards.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.CardColumns.get -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
+Polhem.Web.Blazor.Components.FormPageBase.CardLimitNotice.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.CardRows.get -> System.Collections.Generic.IReadOnlyList<System.Data.DataRow!>!
+Polhem.Web.Blazor.Components.FormPageBase.FormatCardValue(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> string!
+Polhem.Web.Blazor.Components.FormPageBase.IsCardSelected(System.Data.DataRow! row) -> bool
+Polhem.Web.Blazor.Components.FormPageBase.LoadMoreCardsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnCompactChangedAsync(bool compact, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.SelectCard(System.Data.DataRow! row) -> void
+static Polhem.Web.Blazor.Components.FormPageBase.IsCardChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool
+virtual Polhem.Web.Blazor.Components.FormPageBase.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

@@ -2,7 +2,7 @@
 
 [English](README.md) | **繁體中文**
 
-Blazor Server 宿主，示範如何把 `Polhem.Web.Blazor.Mud` 元件與 `Polhem.Web.Blazor.Server` 宿主掛到 ASP.NET Core，並透過 **in-process client**（`PolhemApiClient.CreateLocal`）直連 Polhem 後端（同一個程序內、無 HTTP round-trip）。
+Blazor Server 宿主，示範如何把 `Polhem.Web.Blazor.Server` 元件庫掛到 ASP.NET Core，並透過 **in-process client**（`PolhemApiClient.CreateLocal`）直連 Polhem 後端（同一個程序內、無 HTTP round-trip）。
 
 ## 跑起來
 
@@ -24,7 +24,7 @@ dotnet run
 2. 按下 Sign in（送 `SystemApiConnector.LoginAsync`，由 `DemoAuthenticatingSystemBusinessObject` 接住）；接著頁面呼叫 `EnterCompanyAsync("DEMO")`，因為人員（Staff）表單屬於公司範圍，兩次呼叫都成功後才顯示表單（[`Components/Pages/Home.razor`](Components/Pages/Home.razor)）
 3. 登入成功後顯示 `<FormPage ProgId="Staff" />`：
    - 上方 toolbar：`New` / `Save` / `Delete`
-   - 中段：人員列表（`GridControl` 依 `FormSchema.ListFields` 動態渲染）
+   - 中段：人員列表（`DynamicGrid` 依 `FormSchema.ListFields` 動態渲染）
    - 下段：選中 row 後出現的編輯表單（`FormLayoutPresenter`）
 4. 點 `New` → 改欄位 → `Save`，新人員會出現在列表
 
@@ -35,7 +35,7 @@ dotnet run
 | Login 表單 | `PolhemLoginPanel` |
 | 進入公司 | `SystemApiConnector.EnterCompanyAsync` |
 | 頁面上的登入狀態 | `PolhemAccessTokenProvider` |
-| 人員列表渲染 | `GridControl` + `FormSchema.GetListLayout()` |
+| 人員列表渲染 | `DynamicGrid` + `FormSchema.GetListLayout()` |
 | 人員編輯表單 | `FormLayoutPresenter` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Staff.FormLayout.xml`） |
 | 列表 + 表單整合 | `FormPage` |
 | CRUD 走 Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |

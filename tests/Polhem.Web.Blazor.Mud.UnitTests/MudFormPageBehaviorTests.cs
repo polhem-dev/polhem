@@ -53,6 +53,13 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
             => _dialogs.FindAll(selector);
 
         /// <inheritdoc />
+        protected override void ReachCardListEnd(IRenderedComponent<ContainerFragment> cut)
+        {
+            var end = cut.FindComponent<CardListEnd>();
+            end.InvokeAsync(() => end.Instance.ReachedEnd.InvokeAsync());
+        }
+
+        /// <inheritdoc />
         protected override void ChoosePageSize(IRenderedComponent<ContainerFragment> cut, int pageSize)
         {
             var select = cut.FindComponent<MudSelect<int>>();
