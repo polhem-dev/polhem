@@ -19,6 +19,7 @@ namespace Polhem.Hosting.UnitTests
     /// container's convention-based dispatch. Tests skip when the dialect's
     /// <c>POLHEM_TEST_CONNSTR_*</c> env var is unset.
     /// </summary>
+    [Collection(CacheNotifyVersionsCollection.Name)]
     public class CacheNotifyPollerTests : IClassFixture<SharedDbFixture>
     {
         private const string CompanyGroup = nameof(CompanyInfo);
