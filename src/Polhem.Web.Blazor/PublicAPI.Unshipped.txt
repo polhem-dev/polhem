@@ -127,3 +127,63 @@ Polhem.Web.Blazor.Controls.Editors.FormScopeContext.OpenRelation.get -> Microsof
 Polhem.Web.Blazor._Imports
 Polhem.Web.Blazor._Imports.Execute() -> void
 Polhem.Web.Blazor._Imports._Imports() -> void
+Polhem.Web.Blazor.Controls.Editors.CheckEditorBase
+Polhem.Web.Blazor.Controls.Editors.CheckEditorBase.CheckEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.CheckEditorBase.CommitChecked(bool value) -> void
+Polhem.Web.Blazor.Controls.Editors.CheckEditorBase.IsChecked.get -> bool
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.CommitDate(System.DateTime? date) -> void
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.CommitInput(string? input) -> void
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.Date.get -> System.DateTime?
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DateEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.InputValue.get -> string!
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.ReadOnlyText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase
+Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.CommitValue(System.DateTime? value) -> void
+Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.DateTimeEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.ReadOnlyText.get -> string!
+Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.Value.get -> System.DateTime?
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.CommitValue(string? value) -> void
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.DropDownEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.Items.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Collections.ListItem!>!
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.SelectedItem.get -> Polhem.Definition.Collections.ListItem?
+Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.SelectedValue.get -> string!
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.BeginEditing() -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.CurrencySettings.set -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.DefaultCurrencyCode.get -> string!
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.DefaultCurrencyCode.set -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.DefaultUnitCode.get -> string!
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.DefaultUnitCode.set -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.EndEditing() -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.NumericEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.UnitSettings.set -> void
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.CommitText(string? text) -> void
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.MaxLength.get -> int
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.MaxLength.set -> void
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.Text.get -> string!
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.Text.set -> void
+Polhem.Web.Blazor.Controls.Editors.TextEditorBase.TextEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.TimeEditorBase
+Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.TimeEditorBase() -> void
+override Polhem.Web.Blazor.Controls.Editors.CheckEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.DateEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.GetWriteBackValue() -> string?
+override Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase.ShouldWriteBackText.get -> bool
+override Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.ApplyMetadata() -> void
+override Polhem.Web.Blazor.Controls.Editors.DropDownEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.GetWriteBackValue() -> string?
+override Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.TextEditorBase.ApplyMetadata() -> void
+override Polhem.Web.Blazor.Controls.Editors.TextEditorBase.RefreshFromSource() -> void
+override Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.GetWriteBackValue() -> string?
+override Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.RefreshFromSource() -> void
+virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DisplayFormat.get -> string!
+virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.ValueFormat.get -> string!
+virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.GetWriteBackValue() -> string?
+virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.ShouldWriteBackText.get -> bool

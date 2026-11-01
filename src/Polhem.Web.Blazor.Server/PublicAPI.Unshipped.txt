@@ -149,3 +149,29 @@ Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.set -> void
 *REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.ApplyMetadata() -> void
 *REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.Dispose(bool disposing) -> void
 *REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.FieldEditorBase.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.GetWriteBackValue() -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLength.get -> int
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.CurrencySettings.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultCurrencyCode.set -> void
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ValueFormat.get -> string!
+*REMOVED*override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ApplyMetadata() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.MaxLength.set -> void
+*REMOVED*override Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.RefreshFromSource() -> void
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.InputMode.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.set -> void
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.DisplayFormat.get -> string!
+*REMOVED*override Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.RefreshFromSource() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Text.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.CommitText(string? text) -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.InputValue.get -> string!
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.ShouldWriteBackText.get -> bool
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Placeholder.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+*REMOVED*virtual Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Pattern.get -> string?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.TextEdit.Text.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.ReadOnlyText.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultCurrencyCode.get -> string!
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.CommitInput(string? input) -> void

@@ -1,18 +1,18 @@
 @namespace Polhem.Web.Blazor.Server.Controls.Editors
-@inherits FieldEditorBase
+@inherits DropDownEditorBase
 
 @if (IsEditable)
 {
     <select @attributes="AdditionalAttributes"
             id="@Id"
             class="@BuildCssClass("polhem-field-editor--select")"
-            @bind:get="_value"
+            @bind:get="SelectedValue"
             @bind:set="CommitValue">
         @if (SelectedItem is null)
         {
             <option value=""></option>
         }
-        @foreach (var item in _items)
+        @foreach (var item in Items)
         {
             <option value="@item.Value">@item.Text</option>
         }

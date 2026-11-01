@@ -1,49 +1,33 @@
 using Polhem.Core;
-using Polhem.Definition.Layouts;
 
-namespace Polhem.Web.Blazor.Server.Controls.Editors
+namespace Polhem.Web.Blazor.Controls.Editors
 {
     /// <summary>
-    /// Field editor for <see cref="ControlType.TimeEdit"/>: a fixed-width time-of-day input that
-    /// normalises what the user types to <c>"HH:mm"</c> when the value is committed, so <c>"8:30"</c> is
-    /// stored as <c>"08:30"</c>.
+    /// Base component of a time-of-day editor: a text input that normalises what the user types to <c>"HH:mm"</c> when
+    /// the value is committed, so <c>"8:30"</c> is stored as <c>"08:30"</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A text input rather than <c>type="time"</c>: the value format is the same either way, but a native
-    /// time input renders per browser locale, and display format is meant to equal storage format in
-    /// every UI head (ADR-033).
+    /// Text rather than a native time input or a clock picker: display format is meant to equal storage format in every
+    /// UI head (ADR-033), and a native input renders per browser locale.
     /// </para>
     /// <para>
     /// Input that does not parse as a time keeps the last committed value rather than clearing the
-    /// field, matching <see cref="NumericEdit"/>, so a stray keystroke never destroys data. Clearing the
-    /// box is still an explicit way to unset the field.
+    /// field, so a stray keystroke never destroys data. Clearing the box is still an explicit way to unset the field.
     /// </para>
     /// </remarks>
-    public sealed class TimeEdit : TextEdit
+    public abstract class TimeEditorBase : TextEditorBase
     {
         // The committed value in storage form.
         private string _value = string.Empty;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="TimeEdit"/>.
+        /// Initializes a new instance of <see cref="TimeEditorBase"/>.
         /// </summary>
-        public TimeEdit()
+        protected TimeEditorBase()
         {
             MaxLength = ValueUtilities.TimeOnlyLength;
         }
-
-        /// <inheritdoc />
-        protected override string ModifierClass => "polhem-field-editor--time";
-
-        /// <inheritdoc />
-        protected override string? InputMode => "numeric";
-
-        /// <inheritdoc />
-        protected override string? Pattern => "[0-2][0-9]:[0-5][0-9]";
-
-        /// <inheritdoc />
-        protected override string? Placeholder => "HH:mm";
 
         /// <inheritdoc />
         protected override void RefreshFromSource()
