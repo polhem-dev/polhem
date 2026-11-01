@@ -23,11 +23,12 @@ namespace Polhem.Web.Blazor.Mud.Controls
         /// <summary>
         /// Loads the module if it is not loaded yet.
         /// </summary>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>The operation.</returns>
-        public async Task LoadAsync()
+        public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
             if (_module is not null) return;
-            _loading ??= _js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            _loading ??= _js.InvokeAsync<IJSObjectReference>("import", cancellationToken, ModulePath);
             _module = await _loading.Value.Preserve().ConfigureAwait(true);
         }
 
@@ -36,11 +37,13 @@ namespace Polhem.Web.Blazor.Mud.Controls
         /// </summary>
         /// <param name="editor">The element around the editor.</param>
         /// <param name="cell">The cell that script tells when the user presses Escape.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>The operation.</returns>
-        public async Task FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, DotNetObjectReference<GridEditorCell> cell)
+        public async Task FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, DotNetObjectReference<GridEditorCell> cell,
+            CancellationToken cancellationToken = default)
         {
-            await LoadAsync().ConfigureAwait(true);
-            if (_module is not null) await _module.InvokeVoidAsync("focusEditor", editor, cell).ConfigureAwait(true);
+            await LoadAsync(cancellationToken).ConfigureAwait(true);
+            if (_module is not null) await _module.InvokeVoidAsync("focusEditor", cancellationToken, editor, cell).ConfigureAwait(true);
         }
 
         /// <inheritdoc />

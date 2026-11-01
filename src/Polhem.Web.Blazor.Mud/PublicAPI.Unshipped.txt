@@ -105,9 +105,7 @@ Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.get -> Polhem.Web.Blazor.Mu
 Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.set -> void
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Mud.Controls.GridEditorCell!>! cell) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Mud.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js) -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void
 Polhem.Web.Blazor.Mud.Components.ConfirmDialog
@@ -158,3 +156,5 @@ Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellNavMenu.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Mud.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

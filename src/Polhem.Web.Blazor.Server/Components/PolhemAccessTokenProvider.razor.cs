@@ -10,7 +10,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// <remarks>
     /// Wrap a layout fragment with <c>&lt;PolhemAccessTokenProvider Context="auth"&gt;</c>
     /// and call <see cref="SetToken"/> when the user signs in
-    /// (e.g. from <see cref="PolhemLoginPanel"/>'s <c>OnLoggedIn</c> callback): the provider
+    /// (e.g. from <see cref="LoginPanelBase"/>'s <c>OnLoggedIn</c> callback): the provider
     /// re-renders and propagates the new value via the inner <c>CascadingValue&lt;Guid&gt;</c>.
     /// It holds UI state only. The identity the components call with is the circuit's
     /// <see cref="Polhem.Api.Client.PolhemApiClient"/>, which the sign-in itself updates, so a host that signs out
