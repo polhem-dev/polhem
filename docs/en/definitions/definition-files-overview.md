@@ -216,7 +216,7 @@ var paths = new PathOptions
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
 ```
 
-**An empty `CustomizePath` disables the overlay entirely** — every consumer resolves against the base layer, bit for bit as if the feature did not exist. That is the default. `samples/Polhem.Samples.Shared/DemoBackend.cs` shows the wiring.
+**An empty `CustomizePath` disables the overlay entirely** — every consumer resolves against the base layer, bit for bit as if the feature did not exist. That is the default. `apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindBackend.cs` shows the wiring of a non-empty one.
 
 ### Layout
 

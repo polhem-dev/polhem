@@ -23,18 +23,13 @@ write. That includes which class serves each progId.
 
 ## Authoritative references (the sources to copy from)
 
-`polhem/samples` (same version as the framework, **the best blueprint**):
-- `samples/QuickStart.Server/` — minimal server (Program.cs, `EchoBusinessObject`)
-- `samples/QuickStart.Console/` — minimal client (calls `Polhem.Api.Client` directly)
-- `samples/Polhem.Samples.Shared/` — `DemoBackend` (`AddPolhemBackend` / `UsePolhemBackend`),
-  `DemoAuthenticatingSystemBusinessObject`, `DemoCredentials`, `DemoSchemaSeeder`
-- `samples/Define/` — the settings tree those samples share, including the `ProgramSettings.xml` that binds
-  `System` and `Echo` to their classes
+`apps/Polhem.Northwind` (same version as the framework, **the best blueprint**):
+- `Polhem.Northwind.Server/` — the HTTP host (Program.cs)
+- `Polhem.Northwind.Backend/` — `NorthwindBackend`, `NorthwindCredentials`, `NorthwindSchemaSeeder`, business objects
+- `Define/` — the settings tree, including `ProgramSettings.xml`
 
-Full app (with seeder, company scope, sign-in against `st_user`): `apps/Polhem.Northwind/`.
-
-> Before you start, always open `QuickStart.Server` + `DemoBackend.cs` side by side. Interface members and element
-> names change between versions; the samples compile against the current ones.
+> Before you start, always open `Polhem.Northwind.Server/Program.cs` + `NorthwindBackend.cs` side by side. Interface
+> members and element names change between versions; the app compiles against the current ones.
 
 ## Not applicable (use another skill)
 
@@ -87,12 +82,12 @@ Web project (`Microsoft.NET.Sdk.Web`, `net10.0`). Add the packages (with central
 ```
 
 Check the SQLite native bundle that `Microsoft.Data.Sqlite` pulls in for known vulnerabilities, and pin a patched
-`SQLitePCLRaw.bundle_e_sqlite3` if needed; `samples/Polhem.Samples.Shared/Polhem.Samples.Shared.csproj` shows the
-current choice and why.
+`SQLitePCLRaw.bundle_e_sqlite3` if needed; `apps/Polhem.Northwind/Polhem.Northwind.Backend/Polhem.Northwind.Backend.csproj` shows the
+current choice.
 
 ### 2. `Program.cs` + backend bootstrap
 
-`Program.cs` is minimal; the real wiring is wrapped in an `XxxBackend` static class (copy `DemoBackend.cs`).
+`Program.cs` is minimal; the real wiring is wrapped in an `XxxBackend` static class (copy `NorthwindBackend.cs`).
 **Both initialization stages are required**:
 
 ```csharp
@@ -235,8 +230,7 @@ var r = await new XxxApiConnector(client).GetLevelsAsync();
 ## Verification
 
 1. `dotnet run --project <server>` (note the dev port).
-2. Call `System.Ping` + your first action. For a Public action a `curl` with a Plain body works
-   (`samples/QuickStart.Server/README.md` has one); a small console app (`Polhem.Api.Client`, see the probe at the
+2. Call `System.Ping` + your first action. For a Public action a `curl` with a Plain body works; a small console app (`Polhem.Api.Client`, see the probe at the
    end of `references/client.md`) also covers Encoded / Encrypted calls, whose envelope is impractical to build by
    hand.
 3. Then connect the real frontend / mobile head.

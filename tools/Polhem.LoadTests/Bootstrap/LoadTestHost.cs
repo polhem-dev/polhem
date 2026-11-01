@@ -28,12 +28,11 @@ namespace Polhem.LoadTests.Bootstrap
     /// one. Nothing here is Local-only.
     /// </para>
     /// <para>
-    /// NOTE: this is the fourth place in the repository that brings the framework up, alongside
-    /// <c>DemoBackend</c> (samples), <c>NorthwindBackend</c> (apps) and <c>SharedDatabaseState</c>
-    /// (tests). None of them could be reused: the first two register SQLite and nothing else, and
-    /// the third belongs to the xUnit test assets. A change to the startup sequence — the
-    /// <c>AddPolhemFramework</c> signature, the order of the static initializers — has to be applied
-    /// to all four.
+    /// NOTE: this is not the only place in the repository that brings the framework up: so do
+    /// <c>NorthwindBackend</c> (apps) and <c>SharedDatabaseState</c> (tests). Neither could be reused:
+    /// the first registers SQLite and nothing else, and the second belongs to the xUnit test assets. A
+    /// change to the startup sequence — the <c>AddPolhemFramework</c> signature, the order of the static
+    /// initializers — has to be applied to each of them.
     /// </para>
     /// </remarks>
     public sealed class LoadTestHost : IDisposable

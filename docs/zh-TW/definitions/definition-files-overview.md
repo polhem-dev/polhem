@@ -203,7 +203,7 @@ var paths = new PathOptions
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
 ```
 
-**`CustomizePath` 留空即整層關閉** —— 所有消費端一律走 base，行為與這個功能不存在時逐位元相同。這是預設值。接線示範見 `samples/Polhem.Samples.Shared/DemoBackend.cs`。
+**`CustomizePath` 留空即整層關閉** —— 所有消費端一律走 base，行為與這個功能不存在時逐位元相同。這是預設值。設定非空值的接線示範見 `apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindBackend.cs`。
 
 ### 檔案佈局
 

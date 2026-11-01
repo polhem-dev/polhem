@@ -1,7 +1,7 @@
 # Business Object + custom credential check
 
-Replace `Xxx` with your project name. Based on `samples/QuickStart.Server` and `samples/Polhem.Samples.Shared`; when
-this file and those samples disagree, the samples win.
+Replace `Xxx` with your project name. Based on `apps/Polhem.Northwind/Polhem.Northwind.Backend`; when this file and that
+project disagree, the project wins.
 
 ## args / result (plain POCOs)
 
@@ -38,8 +38,7 @@ Where these types live decides what a client can do with them:
 | `FormBusinessObject` (`Polhem.Business.Form`) | **ERP definition-driven form** — you want the framework's built-in `GetList`/`GetData`/`Save`/`Delete` for CRUD on a table | A full set of FormSchema-driven CRUD actions |
 
 Most "the app's own business endpoints" should use **`BusinessObject`**; `FormBusinessObject` is for standard data
-forms. (`QuickStart.Server`'s `EchoBusinessObject` derives from `FormBusinessObject`; that is a sample choice, not a
-requirement: the resolver accepts any `BusinessObject` subclass for an ordinary progId.)
+forms. (The resolver accepts any `BusinessObject` subclass for an ordinary progId.)
 
 ```csharp
 using Polhem.Business;                 // BusinessObject
@@ -147,8 +146,6 @@ Bind the reserved progId `System` to the subclass; no DI registration is involve
 ```xml
 <ProgramItem ProgId="System" DisplayName="System" BusinessObject="Xxx.Server.Auth.XxxAuthenticatingSystemBusinessObject, Xxx.Server" />
 ```
-
-`samples/Define/ProgramSettings.xml` does exactly this for `DemoAuthenticatingSystemBusinessObject`.
 
 ## System methods (built into the framework, available to the client directly)
 

@@ -4,7 +4,7 @@
 
 > Build your first Polhem backend from an empty folder: install the packages, materialise a `DefinePath`, wire the DI container, publish the JSON-RPC endpoint, add one business object, and call it from a client.
 
-This walkthrough builds **your own project**. If you would rather see the framework running before writing anything, the repository's [`samples/`](../../../samples/README.md) folder has ready-to-run demos — `QuickStart.Server` + `QuickStart.Console` are the two this page mirrors.
+This walkthrough builds **your own project**. If you would rather see the framework running before writing anything, the repository's [`samples/`](../../../samples/README.md) folder has control demo centers, and [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) is a complete application.
 
 To skip the wiring and start from a project that already has it, use the template:
 `dotnet new install Polhem.Templates`, then `dotnet new polhem-avalonia -n MyApp --database Sqlite` (see
@@ -332,4 +332,4 @@ That is the actual point of the framework, and it starts here → [Definition Fi
 | Add authentication and permissions | [Permission & Authorization](../security/permission-authorization.md) |
 | Push definition changes to a live database | [Database Schema Upgrade](../database/database-schema-upgrade.md) |
 
-A working end-to-end version of everything above lives in [`samples/QuickStart.Server`](../../../samples/QuickStart.Server/README.md) and [`samples/QuickStart.Console`](../../../samples/QuickStart.Console/README.md). For a full application built almost entirely from definitions, see [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md).
+For a full working application built almost entirely from definitions, see [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md).

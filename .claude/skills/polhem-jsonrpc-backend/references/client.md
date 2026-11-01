@@ -1,7 +1,6 @@
 # Client calls (Polhem.Api.Client)
 
-The frontend only needs a reference to `Polhem.Api.Client`. Based on `samples/QuickStart.Console`; when this file and
-that sample disagree, the sample wins. Every connector method is asynchronous and takes a `CancellationToken`.
+The frontend only needs a reference to `Polhem.Api.Client`. Every connector method is asynchronous and takes a `CancellationToken`.
 
 ## Build a dedicated connector (recommended)
 

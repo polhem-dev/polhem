@@ -14,7 +14,7 @@ namespace Polhem.Definition.UnitTests
     /// <remarks>
     /// Base text is what every path without a translation shows — DB column comments, the permission
     /// model name, a view with no definition loader — so it is English, and other languages live only
-    /// in <c>Language/{culture}/</c>. The copies under <c>tests/Define</c>, <c>samples/Define</c> and
+    /// in <c>Language/{culture}/</c>. The copies under <c>tests/Define</c> and
     /// the Northwind demo are what tests and demos actually load, so a copy that drifts from the
     /// shipped file tests and demonstrates something the framework does not ship.
     /// </remarks>
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests
     {
         private static readonly Regex s_cjk = new(@"[㐀-鿿豈-﫿]", RegexOptions.None, TimeSpan.FromSeconds(1));
 
-        private static readonly string[] s_copyRoots = ["tests/Define", "samples/Define", "apps/Polhem.Northwind/Define"];
+        private static readonly string[] s_copyRoots = ["tests/Define", "apps/Polhem.Northwind/Define"];
 
         /// <summary>
         /// Copies that differ from the shipped file on purpose: deployment settings and registries (the demo's
@@ -39,9 +39,6 @@ namespace Polhem.Definition.UnitTests
             "tests/Define/FormLayout/Employee.FormLayout.xml",
             "tests/Define/TableSchema/company/st_department.TableSchema.xml",
             "tests/Define/TableSchema/company/st_employee.TableSchema.xml",
-            "samples/Define/DatabaseSettings.xml",
-            "samples/Define/DbCategorySettings.xml",
-            "samples/Define/SystemSettings.xml",
             "apps/Polhem.Northwind/Define/DatabaseSettings.xml",
             "apps/Polhem.Northwind/Define/DbCategorySettings.xml",
             "apps/Polhem.Northwind/Define/SystemSettings.xml",

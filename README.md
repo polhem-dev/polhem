@@ -122,16 +122,11 @@ dotnet add package Polhem.Db
 Want to see Polhem running in 30 seconds?
 
 ```bash
-# Terminal 1 — start the JSON-RPC API host
-cd samples/QuickStart.Server
-dotnet run
-
-# Terminal 2 — connect and call the Echo BO
-cd samples/QuickStart.Console
-dotnet run
+# The server-side Blazor head of Northwind: backend in the same process, SQLite
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 ```
 
-The console will print `System.Ping` status and an echoed message returned from a custom BO. See [`samples/README.md`](https://github.com/polhem-dev/polhem/blob/main/samples/README.md) for the full demo list and what each one shows.
+To browse the controls without a backend, see the demo centers in [`samples/README.md`](https://github.com/polhem-dev/polhem/blob/main/samples/README.md).
 
 Ready to build your own? [Getting Started](https://github.com/polhem-dev/polhem/blob/main/docs/en/getting-started/getting-started.md) walks through the same thing from an empty folder — packages, `DefinePath`, DI wiring, your first business object, and calling it from a client.
 
@@ -153,12 +148,11 @@ More screens, the form catalog, and how to run it: [`apps/Polhem.Northwind/READM
 
 ## 💡 Sample Projects
 
-All demos live in-repo under [`samples/`](https://github.com/polhem-dev/polhem/blob/main/samples/README.md). They're minimal, focused, and evolve alongside the framework. Build them with `dotnet build samples/Polhem.Samples.slnx` (kept separate from the main `Polhem.slnx`, so the main CI/build stays unaffected).
+The control demo centers live in-repo under [`samples/`](https://github.com/polhem-dev/polhem/blob/main/samples/README.md). There is one per UI framework, with the same topics and cases, so the same control behavior can be compared across frameworks. A complete application is in `apps/Polhem.Northwind`. Build them with `dotnet build samples/Polhem.Samples.slnx` (kept separate from the main `Polhem.slnx`, so the main CI/build stays unaffected).
 
 | Category | Demo | Shows |
 |----------|------|-------|
-| QuickStart | [`QuickStart.Server`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Server/README.md) + [`QuickStart.Console`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Console/README.md) | Minimal JSON-RPC end-to-end with a custom anonymous BO |
-| Blazor Server | [`Blazor.Server.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Server.Demo/README.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD, dispatched in-process via `PolhemApiClient.CreateLocal` |
+| Blazor | [`Blazor.Mud.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Mud.DemoCenter/README.md) | The same topic-oriented demo center over `Polhem.Web.Blazor.Mud` (MudBlazor, no backend) |
 | Avalonia | [`Avalonia.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Avalonia.DemoCenter/README.md) | Theme-oriented control demo center (DevExpress-style): nav tree (theme → case) + Demo/Source tabs + theme/FormMode toolbar; covers data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity (Semi.Avalonia, no backend) |
 
 

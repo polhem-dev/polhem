@@ -21,7 +21,6 @@ The skills in this folder are Polhem's **engineering conventions** (committed wi
 | **polhem-scaffold-from-formschema** | Generate the FormLayout (always required), TableSchema and LanguageResource sidecars from a FormSchema |
 | **polhem-serialization** | Design guide for objects serialized three ways (XML for persistence, JSON/MessagePack on the wire) |
 | **polhem-framework-review** | Method for a full framework review (read-only review by aspect, graded refactoring plan) |
-| **polhem-sample-add** | Add a new sample project under `samples/` |
 | **polhem-load-test** | Run load tests with `tools/Polhem.LoadTests` and read the results (prerequisites, Local / Remote, when the numbers cannot be trusted) |
 
 > **`polhem-jsonrpc-backend` is the single authoritative source for the host bootstrap, the empty controller, custom

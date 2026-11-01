@@ -45,7 +45,7 @@
   `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
   送出同一個 key。Northwind 的 Blazor Server head 以 Local 模式執行 Northwind 後端，並可經設定切換為 Remote；見
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-server)，單獨看元件則見
-  [`samples/Blazor.Server.Demo`](../../../samples/Blazor.Server.Demo/README.zh-TW.md)。
+  [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.zh-TW.md)。
 
 ---
 
