@@ -16,3 +16,13 @@
 .polhem-lookup-panel__row { cursor: pointer; }
 .polhem-lookup-panel__row--selected { background: var(--mud-palette-action-default-hover); }
 .polhem-lookup-panel__buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+.polhem-grid__toolbar { display: flex; gap: 4px; }
+.polhem-grid__row--selected { background: var(--mud-palette-action-default-hover); }
+.polhem-grid__header--required { color: var(--mud-palette-primary); }
+.polhem-grid__cell--opens-record { cursor: pointer; }
+.polhem-grid-cell__text { min-height: 24px; padding: 2px 4px; outline: 1px solid transparent; }
+.polhem-grid-cell__text:hover, .polhem-grid-cell__text:focus { outline-color: var(--mud-palette-lines-default); }
+.polhem-grid-cell__text--numeric { text-align: right; }
+.polhem-dense .mud-table-cell { padding: 2px 4px; font-size: 13px; line-height: 20px; }
+.polhem-dense .mud-table-head .mud-table-cell { padding: 4px; font-weight: 600; }

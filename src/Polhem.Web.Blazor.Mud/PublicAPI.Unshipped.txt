@@ -55,3 +55,51 @@ Polhem.Web.Blazor.Mud.Controls.Editors.LookupPanel.LookupPanel() -> void
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.LookupPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.LookupDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Compact.get -> bool
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Compact.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCancelled.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCommitted.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Layout.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.RowEditDialog() -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.RowEditPanel() -> void
+Polhem.Web.Blazor.Mud.Controls.FieldColumn
+Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldColumn() -> void
+Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldName.get -> string!
+Polhem.Web.Blazor.Mud.Controls.FieldColumn.FieldName.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridControl
+Polhem.Web.Blazor.Mud.Controls.GridControl.GridControl() -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.CloseEditor() -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorParameters.get -> System.Collections.Generic.Dictionary<string!, object?>!
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorParameters.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorType.get -> System.Type!
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorType.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.GridEditorCell() -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Host.get -> Polhem.Web.Blazor.Controls.GridEditorHost!
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Host.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsCheck.get -> bool
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsCheck.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsChecked.get -> bool
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsChecked.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsNumeric.get -> bool
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsNumeric.set -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.RefreshEditorState() -> void
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.get -> string!
+Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.set -> void
+override Polhem.Web.Blazor.Mud.Controls.FieldColumn.PropertyName.get -> string!
+override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.GridControl.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

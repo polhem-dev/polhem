@@ -1,6 +1,5 @@
 #nullable enable
 Polhem.Web.Blazor.Server.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Server.Components.RelatedRecordDialog
 Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
@@ -247,3 +246,15 @@ Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polh
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.Schema.get -> Polhem.Definition.Forms.FormSchema?
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupDialog.OnFailed.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCancelled.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Dispose() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Layout.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Row.get -> System.Data.DataRow?
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCommitted.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.DataObject.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Compact.get -> bool
+*REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.RowEditPanel.Row.set -> void

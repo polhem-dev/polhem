@@ -10,6 +10,8 @@
 
 - `FieldEditorFactory` 與各欄位編輯器（`Polhem.Web.Blazor.Mud.Controls.Editors`），建立在 `Polhem.Web.Blazor` 的編輯器基底上。
 - 同一命名空間的 `ButtonEdit`、`LookupPanel` 與 `LookupDialog`，查詢編輯器與它的選取對話框。
+- `GridControl`（`Polhem.Web.Blazor.Mud.Controls`），依版面定義繪製的 `MudDataGrid`。`InCell` 模式下，格子平時顯示文字，取得焦點才開編輯器，一張 Grid 同時只開一個。在編輯器按 Esc 會放棄輸入的內容，格子回到文字。
+- `RowEditPanel` 與 `RowEditDialog`，`EditForm` 模式的編輯表單。
 - `PolhemMudProviders` 與 `PolhemMudTheme`（`Polhem.Web.Blazor.Mud.Theming`），MudBlazor 的 provider 與預設佈景。
 - `AddPolhemMud`（`Polhem.Web.Blazor.Mud.DependencyInjection`），註冊 MudBlazor 的服務。
 

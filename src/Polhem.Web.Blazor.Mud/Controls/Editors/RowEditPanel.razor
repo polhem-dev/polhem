@@ -1,0 +1,22 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits RowEditPanelBase
+
+@if (SessionRow is not null && DataObject is not null && Layout is not null)
+{
+    <div class="polhem-row-edit-panel">
+        <div class="polhem-row-edit-panel__fields" style="@FieldsStyle">
+            @foreach (var column in EnumerateVisibleColumns())
+            {
+                <div class="polhem-row-edit-panel__field">
+                    <label class="polhem-row-edit-panel__label" for="@InputId(column)">@column.Caption</label>
+                    <DynamicComponent Type="FieldEditorFactory.GetEditorType(column.ControlType)"
+                                      Parameters="BuildEditorParameters(column)" />
+                </div>
+            }
+        </div>
+        <div class="polhem-row-edit-panel__buttons">
+            <MudButton Class="polhem-row-edit-panel__ok" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CommitAsync()">@Text(Polhem.Definition.Language.PolhemUIText.Ok)</MudButton>
+            <MudButton Class="polhem-row-edit-panel__cancel" Size="Size.Small" OnClick="() => CancelAsync()">@Text(Polhem.Definition.Language.PolhemUIText.Cancel)</MudButton>
+        </div>
+    </div>
+}
