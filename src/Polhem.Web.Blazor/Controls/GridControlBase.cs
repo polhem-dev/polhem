@@ -11,6 +11,7 @@ using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.Connectors;
 
 namespace Polhem.Web.Blazor.Controls
 {
@@ -159,6 +160,17 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         [Parameter]
         public EventCallback<string> OnSortRequested { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list's column filters. With <see cref="OnFilterChanged"/>, each column that can be filtered
+        /// offers it. The grid does not filter its rows itself; the host reads them again.
+        /// </summary>
+        [Parameter]
+        public ListFilterState? Filters { get; set; }
+
+        /// <summary>Gets or sets the callback raised when the user applies or clears a column's filter.</summary>
+        [Parameter]
+        public EventCallback<ColumnFilterChange> OnFilterChanged { get; set; }
 
         /// <summary>Gets or sets the field to mark as sorted, or <c>null</c> for none.</summary>
         [Parameter]

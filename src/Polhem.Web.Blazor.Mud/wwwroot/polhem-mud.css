@@ -60,3 +60,9 @@
 .polhem-card__value { min-width: 0; overflow-wrap: anywhere; }
 .polhem-card-list__end { height: 1px; }
 .polhem-card-list__limit { margin-top: 8px; font-size: 13px; color: var(--mud-palette-text-secondary); }
+
+.polhem-form-page__filters { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.polhem-grid-filter { display: inline-block; margin-left: 2px; vertical-align: middle; }
+.polhem-grid-filter__form { display: flex; flex-direction: column; gap: 8px; width: 220px; padding: 12px; }
+.polhem-grid-filter__buttons { display: flex; justify-content: flex-end; gap: 8px; }
+.polhem-grid-filter__error { color: var(--mud-palette-error); font-size: 13px; }
