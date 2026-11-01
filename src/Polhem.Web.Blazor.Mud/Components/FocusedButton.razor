@@ -1,0 +1,27 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+
+@* An inline dialog's content renders in the dialog provider, after the component that placed it, so the focus can only be
+   set from inside the content. *@
+<MudButton @ref="_button" Class="@Class" Size="Size.Small" OnClick="OnClick">@ChildContent</MudButton>
+
+@code {
+    private MudButton? _button;
+
+    /// <summary>Gets or sets the button's class.</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>Gets or sets the callback of a click.</summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    /// <summary>Gets or sets the caption.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _button is not null) await _button.FocusAsync().ConfigureAwait(true);
+    }
+}

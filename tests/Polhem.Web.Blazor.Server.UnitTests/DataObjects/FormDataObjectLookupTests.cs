@@ -1,4 +1,3 @@
-using Polhem.Web.Blazor.BehaviorTests;
 using System.ComponentModel;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects

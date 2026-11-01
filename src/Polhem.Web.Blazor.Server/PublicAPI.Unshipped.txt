@@ -200,7 +200,6 @@ Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.GridControl.TableName.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.Web.Blazor.Server.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Server.Controls.GridControl.FormTable.set -> void
-Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCancelled.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.SearchText.get -> string!
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.LookupPanel.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
@@ -315,3 +314,6 @@ Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.get -> Polhem.Web.Bl
 *REMOVED*Polhem.Web.Blazor.Server.Components.CompactViewportObserver.DisposeAsync() -> System.Threading.Tasks.ValueTask
 *REMOVED*Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.IsCompact.set -> void
 static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.CompactWidthThreshold.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.DetailEditMode.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.CompactWidthThreshold.get -> double

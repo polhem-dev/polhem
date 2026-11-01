@@ -25,3 +25,17 @@
 .polhem-grid-cell__text--numeric { text-align: right; }
 .polhem-dense .mud-table-cell { padding: 2px 4px; font-size: 13px; line-height: 20px; }
 .polhem-dense .mud-table-head .mud-table-cell { padding: 4px; font-weight: 600; }
+
+.polhem-form-page__toolbar, .polhem-form-page__pager { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; }
+.polhem-form-page__pager { margin: 8px 0 0; }
+.polhem-form-page__dirty { color: var(--mud-palette-warning); margin-left: 8px; font-size: 13px; }
+.polhem-form-page__notice { margin-bottom: 8px; }
+.polhem-form-page__page-position, .polhem-form-page__page-size-label { margin-left: 8px; font-size: 13px; }
+.polhem-form-page__page-size { flex: 0 0 90px; }
+.polhem-form-layout { display: flex; flex-direction: column; gap: 8px; }
+.polhem-form-layout__section, .polhem-form-layout__detail { padding: 8px; }
+.polhem-form-layout__section-caption, .polhem-form-layout__detail-caption { margin-bottom: 8px; }
+.polhem-form-layout__label { display: block; margin-bottom: 2px; font-size: 13px; }
+.polhem-form-layout__label--required { color: var(--mud-palette-primary); }
+.polhem-related-record-dialog__toolbar { margin-bottom: 8px; }
+.polhem-related-record-dialog__notice { margin-bottom: 8px; }

@@ -1,0 +1,66 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+@inherits RelatedRecordDialogBase
+@implements IAsyncDisposable
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Mud.Controls
+
+@* Always rendered and switched by Visible: a MudDialog taken out of the markup would stay open in the dialog provider. A
+   dialog opened from this one reaches the provider later, so it stacks on top. *@
+<MudDialog @ref="_dialog" Visible="@(IsPermitted || Error is not null)" Options="s_options" Class="polhem-related-record-dialog">
+    <TitleContent>@Title</TitleContent>
+    <DialogContent>
+        <div class="polhem-related-record-dialog__toolbar">
+            <MudButton Class="polhem-related-record-dialog__close" Size="Size.Small" Variant="Variant.Outlined" OnClick="() => OnClosed.InvokeAsync()">@Text(PolhemUIText.Close)</MudButton>
+        </div>
+        @if (Notice is not null)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-related-record-dialog__notice">@Notice</MudAlert>
+        }
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="polhem-related-record-dialog__error">@Error</MudAlert>
+        }
+        else if (DataObject is null)
+        {
+            <div class="polhem-related-record-dialog__loading">@Text(PolhemUIText.Loading)</div>
+        }
+        else
+        {
+            <FormLayoutPresenter Layout="FormLayout"
+                                 DataObject="DataObject"
+                                 FormMode="SingleFormMode.View"
+                                 RoundingContext="RoundingContext"
+                                 IsCompact="IsCompact"
+                                 IdPrefix="@IdPrefix"
+                                 OpenRelation="OpenRelation" />
+        }
+    </DialogContent>
+</MudDialog>
+@if (Relation is { } relation)
+{
+    <RelatedRecordDialog Target="relation"
+                         DefinitionLoader="DefinitionLoader"
+                         IsCompact="IsCompact"
+                         OnClosed="CloseRelation"
+                         OnRefused="OnRelationRefused" />
+}
+
+@code {
+    private static readonly DialogOptions s_options = new()
+    {
+        BackdropClick = false,
+        CloseOnEscapeKey = false,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true,
+    };
+
+    private MudDialog? _dialog;
+
+    // WARNING: an inline MudDialog renders in the dialog provider and stays there when this component is removed.
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_dialog is not null) await _dialog.CloseAsync().ConfigureAwait(true);
+    }
+}

@@ -1,6 +1,5 @@
 using Bunit;
 using Bunit.Rendering;
-using Polhem.Web.Blazor.BehaviorTests;
 using Polhem.Web.Blazor.Server.Controls;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Behavior

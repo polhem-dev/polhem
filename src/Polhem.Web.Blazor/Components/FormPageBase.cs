@@ -13,6 +13,7 @@ using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.DataObjects;
+using Polhem.Web.Blazor.Controls;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -185,6 +186,21 @@ namespace Polhem.Web.Blazor.Components
         /// </summary>
         [Parameter]
         public bool ConfirmDelete { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the viewport width, in CSS pixels, below which the form renders in its compact layout
+        /// while <see cref="IsCompact"/> is <c>null</c>. Defaults to
+        /// <see cref="CompactViewportObserver.DefaultCompactWidthThreshold"/>.
+        /// </summary>
+        [Parameter]
+        public double CompactWidthThreshold { get; set; } = CompactViewportObserver.DefaultCompactWidthThreshold;
+
+        /// <summary>
+        /// Gets or sets the detail grids' editing model outside the compact layout, which always edits in
+        /// <see cref="GridEditMode.EditForm"/>. Defaults to <see cref="GridEditMode.InCell"/>.
+        /// </summary>
+        [Parameter]
+        public GridEditMode DetailEditMode { get; set; } = GridEditMode.InCell;
 
         // The list's commands wait while a call runs or the delete question is open.
         /// <summary>Gets a value indicating whether the list's commands wait, because a call runs or the delete question is open.</summary>

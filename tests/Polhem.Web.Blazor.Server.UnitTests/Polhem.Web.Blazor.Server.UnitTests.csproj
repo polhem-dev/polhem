@@ -35,6 +35,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Polhem.Web.Blazor.Controls.Editors" />
+    <Using Include="Polhem.Web.Blazor.BehaviorTests" />
   </ItemGroup>
 
 </Project>
