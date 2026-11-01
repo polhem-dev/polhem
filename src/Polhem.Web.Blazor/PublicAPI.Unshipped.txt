@@ -255,7 +255,6 @@ static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadSchemaAsync(Polhem.Api
 virtual Polhem.Web.Blazor.Components.FormPageBase.FocusDeleteCancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.GridControlBase
 Polhem.Web.Blazor.Controls.GridControlBase.Actions.get -> Polhem.Definition.Layouts.GridControlAllowActions
-Polhem.Web.Blazor.Controls.GridControlBase.ActivateRow(System.Data.DataRow! row) -> void
 Polhem.Web.Blazor.Controls.GridControlBase.AddRow() -> System.Data.DataRow?
 Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.get -> bool?
 Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.set -> void
@@ -417,3 +416,17 @@ Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.SessionRow.get -> System.Dat
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Text(string! key) -> string!
 override Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.OnParametersSet() -> void
 static Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.InputId(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
+Polhem.Web.Blazor.Controls.GridControlBase.ActivateRowAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.GridControlBase.AriaSort(Polhem.Definition.Layouts.LayoutColumn! column) -> string?
+Polhem.Web.Blazor.Controls.GridControlBase.IsSortable(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.OnSortRequested.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
+Polhem.Web.Blazor.Controls.GridControlBase.OnSortRequested.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.RowActivated.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
+Polhem.Web.Blazor.Controls.GridControlBase.RowActivated.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.SelectedRowId.get -> System.Guid?
+Polhem.Web.Blazor.Controls.GridControlBase.SelectedRowId.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
+Polhem.Web.Blazor.Controls.GridControlBase.SortDirection.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.SortFieldName.get -> string?
+Polhem.Web.Blazor.Controls.GridControlBase.SortFieldName.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.SortMark(Polhem.Definition.Layouts.LayoutColumn! column) -> string!

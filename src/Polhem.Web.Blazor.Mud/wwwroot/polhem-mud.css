@@ -13,10 +13,9 @@
 
 .polhem-field-editor--opens-record, .polhem-field-editor--opens-record input { cursor: pointer; }
 .polhem-lookup-panel__search { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.polhem-lookup-panel__row { cursor: pointer; }
-.polhem-lookup-panel__row--selected { background: var(--mud-palette-action-default-hover); }
 .polhem-lookup-panel__buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
 
+.polhem-grid__sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .polhem-grid__toolbar { display: flex; gap: 4px; }
 .polhem-grid__row--selected { background: var(--mud-palette-action-default-hover); }
 .polhem-grid__header--required { color: var(--mud-palette-primary); }

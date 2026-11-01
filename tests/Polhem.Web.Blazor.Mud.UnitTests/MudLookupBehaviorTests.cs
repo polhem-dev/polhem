@@ -14,7 +14,7 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
     public class MudLookupBehaviorTests : LookupBehaviorTests
     {
         private const string Input = ".polhem-field-editor--button input";
-        private const string Row = "tr.polhem-lookup-panel__row";
+        private const string Row = "tr.polhem-grid__row";
         private const string Button = ".polhem-field-editor--button .mud-input-adornment button";
 
         private readonly IRenderedComponent<MudDialogProvider> _dialogs;
@@ -61,7 +61,7 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         protected override void ClickPickerRow(IRenderedComponent<ContainerFragment> cut, int row) => _dialogs.FindAll(Row)[row].Click();
 
         /// <inheritdoc />
-        protected override void DoubleClickPickerRow(IRenderedComponent<ContainerFragment> cut, int row) => _dialogs.FindAll(Row)[row].DoubleClick();
+        protected override void DoubleClickPickerRow(IRenderedComponent<ContainerFragment> cut, int row) => _dialogs.FindAll(Row)[row].Click(new Microsoft.AspNetCore.Components.Web.MouseEventArgs { Detail = 2 });
 
         /// <inheritdoc />
         protected override bool CanConfirmPicker(IRenderedComponent<ContainerFragment> cut) => !_dialogs.Find(".polhem-lookup-panel__ok").HasAttribute("disabled");

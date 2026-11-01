@@ -2,7 +2,6 @@
 @implements IGridEditorSlot
 @implements IAsyncDisposable
 @using Microsoft.JSInterop
-@inject IJSRuntime JS
 
 @* A cell shows text until it takes the focus, because an editor in every cell costs too much on a circuit. *@
 @if (ReferenceEquals(Host.Active, this))
@@ -11,7 +10,7 @@
 }
 else
 {
-    <div @ref="_text" class="@TextClass" tabindex="0" @onfocus="OnFocus" @onkeydown="OnKeyDown">
+    <div class="@TextClass" tabindex="0" @onfocus="OnFocus">
         @if (IsCheck)
         {
             <input type="checkbox" disabled checked="@IsChecked" tabindex="-1" />
@@ -24,19 +23,18 @@ else
 }
 
 @code {
-    private const string ModulePath = "./_content/Polhem.Web.Blazor.Mud/polhem-grid-editor.js";
-
     private ElementReference _editor;
-    private ElementReference _text;
     private bool _focusEditor;
-    private bool _focusText;
     private bool _ignoreFocus;
-    private Microsoft.JSInterop.IJSObjectReference? _module;
     private Microsoft.JSInterop.DotNetObjectReference<GridEditorCell>? _self;
 
     /// <summary>Gets or sets the host that keeps one editor open in the grid.</summary>
     [Parameter, EditorRequired]
     public GridEditorHost Host { get; set; } = default!;
+
+    /// <summary>Gets or sets the grid's script module.</summary>
+    [Parameter, EditorRequired]
+    public GridEditorScript Script { get; set; } = default!;
 
     /// <summary>Gets or sets the editor component.</summary>
     [Parameter, EditorRequired]
@@ -67,12 +65,15 @@ else
     /// <inheritdoc />
     public void RefreshEditorState() => _ = InvokeAsync(StateHasChanged);
 
-    /// <summary>Closes the editor and returns the focus to the cell, called from script when the user presses Escape.</summary>
+    /// <summary>
+    /// Closes the editor, called from script when the user presses Escape. Script then gives the text the focus, which
+    /// must not open the editor again.
+    /// </summary>
     [Microsoft.JSInterop.JSInvokable]
     public void CloseEditor()
     {
         if (!ReferenceEquals(Host.Active, this)) return;
-        _focusText = true;
+        _ignoreFocus = true;
         Host.Close();
     }
 
@@ -86,12 +87,6 @@ else
         Open();
     }
 
-    // A key on a cell whose focus did not open it, as after Escape. Script holds the key until the editor arrives.
-    private void OnKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key.Length == 1 || e.Key is "Enter" or "F2") Open();
-    }
-
     private void Open()
     {
         // An event that left before the editor rendered. Focusing again would select what the user is typing.
@@ -103,38 +98,19 @@ else
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            // Loaded with the first cell so a key typed before the first editor arrives is already held.
-            _module = await JS.InvokeAsync<Microsoft.JSInterop.IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
-        }
         if (_focusEditor)
         {
             _focusEditor = false;
             _self ??= Microsoft.JSInterop.DotNetObjectReference.Create(this);
-            if (_module is not null) await _module.InvokeVoidAsync("focusEditor", _editor, _self).ConfigureAwait(true);
-        }
-        else if (_focusText)
-        {
-            _focusText = false;
-            _ignoreFocus = true;
-            await _text.FocusAsync().ConfigureAwait(true);
+            await Script.FocusEditorAsync(_editor, _self).ConfigureAwait(true);
         }
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         Host.Release(this);
         _self?.Dispose();
-        if (_module is null) return;
-        try
-        {
-            await _module.DisposeAsync().ConfigureAwait(true);
-        }
-        catch (Microsoft.JSInterop.JSDisconnectedException)
-        {
-            // The circuit is gone, and the module with it.
-        }
+        return ValueTask.CompletedTask;
     }
 }

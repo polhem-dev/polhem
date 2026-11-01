@@ -10,6 +10,8 @@ document.addEventListener('keydown', event => {
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
         held.push(event.key);
         event.preventDefault();
+        // The focus opens a cell, except the one Escape just returned it to. The second focus event opens that one.
+        active.dispatchEvent(new FocusEvent('focus'));
     } else if (event.key === 'Tab' && held.length > 0) {
         // Leaving now would strand the held text, so the move waits for the editor and happens after the replay.
         heldTab = { backwards: event.shiftKey };
@@ -35,6 +37,16 @@ function nextStop(from, backwards) {
     return stops[stops.indexOf(from) + (backwards ? -1 : 1)] ?? null;
 }
 
+// The render that brings the text back can arrive after the call that closed the editor returned.
+function focusTextWhenRendered(row, attempts) {
+    const text = row && row.querySelector(`.${TEXT_CELL}`);
+    if (text) {
+        text.focus();
+    } else if (attempts > 0) {
+        requestAnimationFrame(() => focusTextWhenRendered(row, attempts - 1));
+    }
+}
+
 export function focusEditor(editor, cell) {
     const input = editor && editor.querySelector('input:not([type=checkbox]), textarea, select, input');
     if (!input) return;
@@ -55,7 +67,8 @@ export function focusEditor(editor, cell) {
         // Back to the value on focus, so leaving fires no `change`, and whatever was typed is dropped.
         input.value = original;
         event.stopPropagation();
-        cell.invokeMethodAsync('CloseEditor');
+        const row = editor.closest('td');
+        cell.invokeMethodAsync('CloseEditor').then(() => focusTextWhenRendered(row, 20));
     }, true);
 
     if (pendingTab) {
