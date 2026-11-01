@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.Server.Shell
 {
@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.Server.Shell
     /// </summary>
     /// <remarks>
     /// Signing in is two calls: the panel signs in and records the user on the circuit's
-    /// <see cref="CircuitUserContext"/>, then this screen enters the company through that context, which records the
+    /// <see cref="BlazorUserContext"/>, then this screen enters the company through that context, which records the
     /// capabilities the pages degrade by. When entering the company fails, the circuit is signed out again and the
     /// error is shown. <see cref="PolhemShellLayout"/> places it; an application with a layout of its own can place it
     /// too.
@@ -33,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.Shell
         public EventCallback OnSignedIn { get; set; }
 
         [Inject]
-        private CircuitUserContext UserContext { get; set; } = default!;
+        private BlazorUserContext UserContext { get; set; } = default!;
 
         [Inject]
         private NavigationManager Navigation { get; set; } = default!;

@@ -5,7 +5,7 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {

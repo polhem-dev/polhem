@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Event data for <see cref="FormDataObject.RowAdded"/> and

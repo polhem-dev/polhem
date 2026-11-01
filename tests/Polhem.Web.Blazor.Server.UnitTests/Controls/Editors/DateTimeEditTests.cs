@@ -6,7 +6,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.Controls;
 using Polhem.Web.Blazor.Server.Controls.Editors;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 using Bunit;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors

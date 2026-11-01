@@ -24,6 +24,7 @@
          touching the process-wide SysInfo statics, and create clients over a fake transport
          (PolhemApiClient.CreateWithTransport). -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.UnitTests" />
     <InternalsVisibleTo Include="Polhem.Web.Blazor.Server.UnitTests" />
   </ItemGroup>
 

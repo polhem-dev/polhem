@@ -9,8 +9,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Server.Controls;
-using Polhem.Web.Blazor.Server.Controls.Editors;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 {

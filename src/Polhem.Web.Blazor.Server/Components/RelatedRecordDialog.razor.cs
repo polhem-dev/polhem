@@ -10,7 +10,7 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.Components

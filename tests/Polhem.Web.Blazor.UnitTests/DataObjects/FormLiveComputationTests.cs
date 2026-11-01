@@ -3,9 +3,9 @@ using System.Data;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
+namespace Polhem.Web.Blazor.UnitTests.DataObjects
 {
     /// <summary>
     /// The Blazor <see cref="FormLiveComputation"/>: its defaults over the shared engine.

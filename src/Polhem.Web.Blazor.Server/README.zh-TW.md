@@ -34,7 +34,7 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
 
 `AddPolhemBlazor` 註冊 `PolhemBlazorOptions`、每個 circuit 一個、供元件注入以呼叫後端的 `PolhemApiClient`（每個
 circuit 在自己的 client 上登入，所以一位使用者的身分不會進到另一位使用者的呼叫）、每個 circuit 一個
-`CircuitUserContext`（同時註冊為該 circuit 的 `IUserContext`），以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
+`BlazorUserContext`（同時註冊為該 circuit 的 `IUserContext`），以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
 `options.UseDefinitionLoader`（預設開啟）決定 `FormPage` 是否在地化定義，見下文。
 
 > **Remote 模式需要應用程式的 API key。** 伺服器預設的 `ApiAuthorizationValidator` 在 `X-Api-Key` 標頭缺少或不是
@@ -94,11 +94,13 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
   權限時以唯讀顯示那筆資料，否則由頁面在提示中指出該表單；伺服器端由關聯表單的 `GetData` 再檢查一次。共用規則是
   `Polhem.UI.Core` 的 `RelationOpenRules`。
 - `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。登入成功時也會記錄到 circuit 的
-  `CircuitUserContext`。`InitialUserId` 與 `InitialPassword` 在面板初始化時填入輸入框一次。
-- `CircuitUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`
+  `BlazorUserContext`。`InitialUserId` 與 `InitialPassword` 在面板初始化時填入輸入框一次。
+- `BlazorUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`
   登出，讓 context 與 client 保持一致。直接透過 client 進入公司的話，context 沒有能力快照，頁面會把使用者視為不受限。
 - `PolhemAccessTokenProvider` -- 持有頁面的登入狀態（存取權杖），並以 cascading value 提供給子元件。實際的呼叫
   使用 circuit 的 `PolhemApiClient`，登入時已在其上完成登入。
+> `FormDataObject`、`FormLiveComputation`、`FieldEditorBase`、`FormScope` 與 `BlazorUserContext` 位於共用的 [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.zh-TW.md) 套件，由本套件參考。
+
 - `FormDataObject` -- 由 `FormSchema` 衍生記憶體內 `DataSet`（主檔列 + 明細資料表），提供 `GetField` /
   `SetField`（主檔列或指定的資料列）雙向綁定，值變更時觸發 `FieldValueChanged` 與 `DataSetReplaced`，並透過連接器執行 `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`。
   新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）並觸發 `RowAdded`；
@@ -117,7 +119,7 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 | 部分 | 作用 |
 |------|------|
 | `PolhemShellLayout` | 路由器的預設版面。circuit 的使用者進入公司之前顯示 `PolhemShellSignIn`，之後顯示頂端列、`PolhemShellNavMenu` 與頁面。選單按鈕在寬螢幕上收合選單；寬度小於 600 CSS 像素（表單頁預設的精簡門檻）時改為從側邊滑出蓋在頁面上，選了表單就關閉。 |
-| `PolhemShellSignIn` | 標題、提示、公司與 `PolhemLoginPanel`；登入後經由 `CircuitUserContext.EnterCompanyAsync` 進入公司。被拒絕時把錯誤顯示在畫面上，並讓 circuit 再次登出。提供設定的語言之間的切換。 |
+| `PolhemShellSignIn` | 標題、提示、公司與 `PolhemLoginPanel`；登入後經由 `BlazorUserContext.EnterCompanyAsync` 進入公司。被拒絕時把錯誤顯示在畫面上，並讓 circuit 再次登出。提供設定的語言之間的切換。 |
 | `PolhemShellNavMenu` | 把伺服器的 `MenuSettings` 呈現為資料夾標題與連到 `{FormRoute}/{ProgId}` 的連結，標題依 circuit 的 UI culture 呈現。 |
 | `PolhemShellHome` | 開啟選單的第一個表單，與 Avalonia 外殼登入後的行為相同；選單中還沒有表單時則說明這一點。放在根頁面上。 |
 | `AddPolhemShell` | 註冊 `PolhemShellOptions`。每個選項都寫在它的 XML 文件中。 |

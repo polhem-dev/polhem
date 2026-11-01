@@ -3,7 +3,7 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// DataTable-event half of <see cref="FormDataObject"/>: bridges the table events of the current

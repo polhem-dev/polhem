@@ -15,6 +15,7 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1.12.0.md)
 
+- **Breaking:** The Blazor head splits into `Polhem.Web.Blazor` and `Polhem.Web.Blazor.Server`. `FormDataObject`, `FieldEditorBase`, `FormScope` and related types change namespace, and `CircuitUserContext` becomes `BlazorUserContext`.
 - On a narrow screen, Avalonia's `ListView` reads the next page as the user scrolls through the cards, up to 5000 rows.
 - Clicking a list column header in Avalonia's `ListView` or Blazor Server's `FormPage` sorts every row on the server, not only the page on screen.
 - A lookup with more candidates than it lists says so and asks for a keyword, in Avalonia and Blazor Server.

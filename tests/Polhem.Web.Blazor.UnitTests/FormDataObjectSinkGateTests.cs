@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Reflection;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests
+namespace Polhem.Web.Blazor.UnitTests
 {
     /// <summary>
     /// <see cref="FormDataObject"/> must not carry its own copy of the value conversion rules that moved down to <c>Polhem.Api.Client</c>.

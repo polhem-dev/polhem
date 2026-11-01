@@ -3,8 +3,7 @@ using System.Data;
 using Bunit;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Controls;
-using Polhem.Web.Blazor.Server.Controls.Editors;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Controls
 {

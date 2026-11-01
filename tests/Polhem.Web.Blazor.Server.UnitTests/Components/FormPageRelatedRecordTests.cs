@@ -17,7 +17,7 @@ using Polhem.Tests.Shared;
 using Polhem.UI.Core;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -238,7 +238,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             using var culture = new CultureScope("en-US");
             var backend = RegisterBackend(permissionBound: true);
             backend.Capabilities[LeaveTypeModelId] = PermissionActions.Create;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
             var cut = OpenLeave(PolhemUIText.View);
 
             cut.Find(RelationInput).DoubleClick();
@@ -257,7 +257,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             using var culture = new CultureScope("en-US");
             var backend = RegisterBackend(permissionBound: true);
             backend.Capabilities[LeaveTypeModelId] = PermissionActions.Read;
-            await Services.GetRequiredService<CircuitUserContext>().EnterCompanyAsync("ACME");
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
             var cut = OpenLeave(PolhemUIText.View);
 
             cut.Find(RelationInput).DoubleClick();

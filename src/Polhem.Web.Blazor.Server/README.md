@@ -35,7 +35,7 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider(
 
 `AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `PolhemApiClient` that components inject to reach
 the backend (each circuit signs in on its own client, so one user's identity never reaches another's calls), a
-per-circuit `CircuitUserContext` (also registered as the circuit's `IUserContext`), and the
+per-circuit `BlazorUserContext` (also registered as the circuit's `IUserContext`), and the
 localizer for the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
 decides whether `FormPage` localizes its definitions; see below.
 
@@ -114,14 +114,16 @@ decides whether `FormPage` localizes its definitions; see below.
   permission model and otherwise lets the page name the form in a notice; the related form's `GetData` checks again on
   the server. The shared rules are `RelationOpenRules` in `Polhem.UI.Core`.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`. A successful sign-in is
-  also recorded on the circuit's `CircuitUserContext`. `InitialUserId` and `InitialPassword` fill the inputs once, when
+  also recorded on the circuit's `BlazorUserContext`. `InitialUserId` and `InitialPassword` fill the inputs once, when
   the panel is initialized.
-- `CircuitUserContext` -- the signed-in user, entered company and capabilities of one circuit. The host enters the
+- `BlazorUserContext` -- the signed-in user, entered company and capabilities of one circuit. The host enters the
   company with `EnterCompanyAsync` and signs out with `SignOut`, which keep the context and the client in step.
   Entering the company through the client directly leaves the context without capabilities, so the pages treat the
   user as unrestricted.
 - `PolhemAccessTokenProvider` -- holds the page's signed-in state (the access token) and cascades it to descendant
   components. The calls themselves use the circuit's `PolhemApiClient`, which the sign-in has signed in.
+> `FormDataObject`, `FormLiveComputation`, `FieldEditorBase`, `FormScope` and `BlazorUserContext` live in the shared [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.md) package, which this one references.
+
 - `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
   `GetField` / `SetField` (for the master row or a given row) for two-way binding, raises `FieldValueChanged` and
   `DataSetReplaced` when its values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
@@ -142,7 +144,7 @@ its title and the values the sign-in screen starts with, and keeps only its own 
 | Part | What it does |
 |------|--------------|
 | `PolhemShellLayout` | The router's default layout. Shows `PolhemShellSignIn` until the circuit's user has entered a company, then the top bar, `PolhemShellNavMenu` and the page. The menu button collapses the menu on a wide screen and slides it over the page below 600 CSS pixels, the form page's default compact threshold; picking a form closes it. |
-| `PolhemShellSignIn` | Title, hint, company and a `PolhemLoginPanel`; signs in, then enters the company through `CircuitUserContext.EnterCompanyAsync`. A refusal is shown on the screen and signs the circuit out again. Offers a switch between the configured languages. |
+| `PolhemShellSignIn` | Title, hint, company and a `PolhemLoginPanel`; signs in, then enters the company through `BlazorUserContext.EnterCompanyAsync`. A refusal is shown on the screen and signs the circuit out again. Offers a switch between the configured languages. |
 | `PolhemShellNavMenu` | The server's `MenuSettings` as folder headers and links to `{FormRoute}/{ProgId}`, captions in the circuit's UI culture. |
 | `PolhemShellHome` | Opens the menu's first form, as the Avalonia shell does after sign-in, or says that the menu has no forms yet. Place it on the root page. |
 | `AddPolhemShell` | Registers `PolhemShellOptions`. Every option is described in its XML documentation. |

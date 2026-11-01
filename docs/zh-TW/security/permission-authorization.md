@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: a5002c41a380498ea918acd1e840818844993e8a -->
+<!-- source: en/security/permission-authorization.md blob: fc02d08d940e82e3ff9d0e8c415ab4648c4e965d -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -185,7 +185,7 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
 
 ## 9. 前端如何降級
 
-`ClientInfo.Capabilities`（`Polhem.UI.ApiBridge`）快取此快照（nullable），視圖透過 `AddPolhemUIApiBridge` 以 `ClientInfo` 為底註冊的 `IUserContext.Capabilities` 讀它，由 `Polhem.UI.Core.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）判定。Avalonia 的視圖（`FormView`、`ListView`）與 Blazor 的 `FormPage` 都會套用，版面那一半經由 `LayoutCapabilityApplier`；未註冊 `IUserContext` 的視圖看不到快照，什麼都不降級。Blazor Server 網站以一個行程服務多位使用者，所以快照存放在每個 circuit 的 `CircuitUserContext`（`Polhem.Web.Blazor.Server`），而不是 `ClientInfo`。
+`ClientInfo.Capabilities`（`Polhem.UI.ApiBridge`）快取此快照（nullable），視圖透過 `AddPolhemUIApiBridge` 以 `ClientInfo` 為底註冊的 `IUserContext.Capabilities` 讀它，由 `Polhem.UI.Core.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）判定。Avalonia 的視圖（`FormView`、`ListView`）與 Blazor 的 `FormPage` 都會套用，版面那一半經由 `LayoutCapabilityApplier`；未註冊 `IUserContext` 的視圖看不到快照，什麼都不降級。Blazor Server 網站以一個行程服務多位使用者，所以快照存放在每個 circuit 的 `BlazorUserContext`（`Polhem.Web.Blazor.Server`），而不是 `ClientInfo`。
 
 - **`null` → capability 未啟用 → 什麼都不降級。** 從未進公司、或不用權限的 app，呈現與過去完全相同。
 - **非 null → 已啟用。** map 中缺某 model 即代表對它*無權*。
@@ -220,11 +220,11 @@ capability **未接線前一律 inert**，既有 app 不受影響。要啟用：
    ```
 4. `LeaveCompany` 或登出時清除：`ClientInfo.ClearCompanyContext();`（同時丟棄定義快取）。
 
-Blazor Server host 取代第 1、3、4 步：`AddPolhemBlazor` 會把該 circuit 的 `CircuitUserContext` 註冊為它的 `IUserContext`，
+Blazor Server host 取代第 1、3、4 步：`AddPolhemBlazor` 會把該 circuit 的 `BlazorUserContext` 註冊為它的 `IUserContext`，
 host 透過它進入公司、透過它登出：
 
 ```csharp
-@inject CircuitUserContext UserContext
+@inject BlazorUserContext UserContext
 
 await UserContext.EnterCompanyAsync(companyId);   // 為這個 circuit 記錄公司與能力快照
 UserContext.SignOut();                            // 讓 circuit 的 client 登出並清除快照

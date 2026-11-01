@@ -4,7 +4,7 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Definition.Language;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.Server.Components
 {
@@ -29,9 +29,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// request-localization cookie — and reloads.
     /// </para>
     /// <para>
-    /// A successful sign-in is also recorded on the circuit's <see cref="CircuitUserContext"/>, before
+    /// A successful sign-in is also recorded on the circuit's <see cref="BlazorUserContext"/>, before
     /// <see cref="OnLoggedIn"/> runs, so the host only has to enter the company through
-    /// <see cref="CircuitUserContext.EnterCompanyAsync"/>.
+    /// <see cref="BlazorUserContext.EnterCompanyAsync"/>.
     /// </para>
     /// </remarks>
     public sealed partial class PolhemLoginPanel : ComponentBase
@@ -125,7 +125,7 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
 
                 _password = string.Empty;
-                Services?.GetService<CircuitUserContext>()?.ApplyLoginResult(response);
+                Services?.GetService<BlazorUserContext>()?.ApplyLoginResult(response);
 
                 if (OnLoggedIn.HasDelegate)
                 {

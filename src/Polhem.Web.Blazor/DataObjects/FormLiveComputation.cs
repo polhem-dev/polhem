@@ -5,14 +5,14 @@ using Polhem.Definition.Forms;
 using Polhem.Expressions;
 using Polhem.UI.Core;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Client-side live recomputation of a form's computed fields (<see cref="FormField.ValueExpression"/>)
     /// and new-row default expressions (<see cref="FormField.DefaultValueExpression"/>) for this head, the
     /// counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.DataObjects.FormLiveComputation</c>. The recompute rules are
     /// <see cref="FormLiveComputationEngine"/>, which both heads share; this type supplies this head's
-    /// defaults. <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> wires it to its data object.
+    /// defaults. <c>FormPage</c> wires it to its data object.
     /// </summary>
     /// <remarks>
     /// The default evaluator is one <see cref="DynamicExpressoEvaluator"/> shared by every circuit: its

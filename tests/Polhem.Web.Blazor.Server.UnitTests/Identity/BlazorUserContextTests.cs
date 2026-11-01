@@ -9,15 +9,15 @@ using Polhem.Definition.Settings;
 using Polhem.UI.Core;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Identity;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Identity
 {
     /// <summary>
-    /// <see cref="CircuitUserContext"/> records a circuit's sign-in, company and capabilities, and each circuit has its
+    /// <see cref="BlazorUserContext"/> records a circuit's sign-in, company and capabilities, and each circuit has its
     /// own. A <see cref="FakeApiServer"/> answers the client's calls.
     /// </summary>
-    public class CircuitUserContextTests
+    public class BlazorUserContextTests
     {
         private static readonly Guid s_token = new("bbbbbbbb-0000-0000-0000-000000000001");
 
@@ -36,10 +36,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
                 Capabilities = new Dictionary<string, PermissionActions>(StringComparer.Ordinal) { ["Orders"] = PermissionActions.Read },
             });
 
-        private static (CircuitUserContext Context, PolhemApiClient Client) Create()
+        private static (BlazorUserContext Context, PolhemApiClient Client) Create()
         {
             var client = CreateServer().CreateClient();
-            return (new CircuitUserContext(client, new PolhemBlazorOptions { DefaultLanguage = "en-US" }), client);
+            return (new BlazorUserContext(client, "en-US"), client);
         }
 
         [Fact]
@@ -88,8 +88,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("DefaultLanguage comes from the package options")]
-        public void DefaultLanguage_ComesFromOptions()
+        [DisplayName("DefaultLanguage comes from the constructor")]
+        public void DefaultLanguage_ComesFromConstructor()
         {
             var (context, _) = Create();
 
@@ -106,10 +106,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             using var first = provider.CreateScope();
             using var second = provider.CreateScope();
 
-            var context = first.ServiceProvider.GetRequiredService<CircuitUserContext>();
+            var context = first.ServiceProvider.GetRequiredService<BlazorUserContext>();
 
             Assert.Same(context, first.ServiceProvider.GetRequiredService<IUserContext>());
-            Assert.NotSame(context, second.ServiceProvider.GetRequiredService<CircuitUserContext>());
+            Assert.NotSame(context, second.ServiceProvider.GetRequiredService<BlazorUserContext>());
         }
 
         [Fact]

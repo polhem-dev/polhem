@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Polhem.Tests.Shared;
-using Polhem.Web.Blazor.Server.DataObjects;
+using System.Reflection;
+using Polhem.Web.Blazor.DataObjects;
+using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -14,10 +16,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class BlazorAsyncSurfaceTests
     {
+        // The shared layer and this head are one async surface to a caller.
+        private static IEnumerable<MethodInfo> Methods()
+            => AsyncSurface.Methods(typeof(FormDataObject).Assembly).Concat(AsyncSurface.Methods(typeof(FormPage).Assembly));
+
         public static TheoryData<string> AsyncMembers()
         {
             var data = new TheoryData<string>();
-            foreach (var method in AsyncSurface.Methods(typeof(FormDataObject).Assembly))
+            foreach (var method in Methods())
                 data.Add(AsyncSurface.Describe(method));
             return data;
         }
@@ -27,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("Every public async member of the Blazor package takes a trailing CancellationToken")]
         public void AsyncMember_TakesTrailingCancellationToken(string member)
         {
-            var method = AsyncSurface.Methods(typeof(FormDataObject).Assembly).Single(m => AsyncSurface.Describe(m) == member);
+            var method = Methods().Single(m => AsyncSurface.Describe(m) == member);
 
             Assert.True(AsyncSurface.EndsWithCancellationToken(method), $"{member} does not end with a CancellationToken parameter.");
         }
@@ -36,7 +42,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("The Blazor async surface scan finds members, so an empty filter cannot pass vacuously")]
         public void AsyncSurface_FindsMembers()
         {
-            Assert.Contains(AsyncSurface.Methods(typeof(FormDataObject).Assembly), m => m.DeclaringType == typeof(FormDataObject));
+            Assert.Contains(Methods(), m => m.DeclaringType == typeof(FormDataObject));
         }
     }
 }

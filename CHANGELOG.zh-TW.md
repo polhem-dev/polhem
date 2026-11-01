@@ -14,6 +14,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.12.0.md](docs/zh-TW/changelogs/1.12.0.md)
 
+- **破壞性變更：** Blazor head 拆成 `Polhem.Web.Blazor` 與 `Polhem.Web.Blazor.Server`。`FormDataObject`、`FieldEditorBase`、`FormScope` 等型別改變命名空間，`CircuitUserContext` 改名為 `BlazorUserContext`。
 - 在窄螢幕上，Avalonia 的 `ListView` 會在使用者捲動卡片時接續讀取下一頁，最多 5000 筆。
 - 點選 Avalonia `ListView` 或 Blazor Server `FormPage` 的清單欄位標題時，會由伺服器排序全部資料，而不只是畫面上這一頁。
 - Avalonia 與 Blazor Server 的開窗在候選資料超過顯示筆數時會提示，並請使用者輸入關鍵字。

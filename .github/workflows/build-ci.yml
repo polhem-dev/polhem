@@ -327,6 +327,7 @@ jobs:
         dotnet pack src/Polhem.UI.ApiBridge/Polhem.UI.ApiBridge.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.UI.Avalonia.Shell/Polhem.UI.Avalonia.Shell.csproj --configuration Release --output ./nupkgs --no-build
+        dotnet pack src/Polhem.Web.Blazor/Polhem.Web.Blazor.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj --configuration Release --output ./nupkgs --no-build
         # tools/Polhem.Cli is published too, but it is not in Polhem.slnx: the solution build reaches it only
         # through the ProjectReference of tests/Polhem.Cli.UnitTests, and a project outside the solution is built

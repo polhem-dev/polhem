@@ -13,7 +13,7 @@ using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
-using Polhem.Web.Blazor.Server.DataObjects;
+using Polhem.Web.Blazor.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;

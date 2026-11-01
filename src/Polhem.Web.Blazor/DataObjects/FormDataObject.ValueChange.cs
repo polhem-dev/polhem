@@ -3,7 +3,7 @@ using Polhem.Api.Contracts.Form;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.Web.Blazor.Server.DataObjects
+namespace Polhem.Web.Blazor.DataObjects
 {
     /// <summary>
     /// Server callback half of <see cref="FormDataObject"/>: hands every field change to the shared
