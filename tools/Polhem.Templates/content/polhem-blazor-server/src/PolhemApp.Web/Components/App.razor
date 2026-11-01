@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
-    <link rel="stylesheet" href="_content/Polhem.Web.Blazor.Server/polhem.css" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="_content/Polhem.Web.Blazor.Mud/polhem-mud.css" rel="stylesheet" />
     <link rel="stylesheet" href="app.css" />
     <title>PolhemApp</title>
     <HeadOutlet @rendermode="InteractiveServer" />
@@ -12,5 +13,6 @@
 <body>
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 </html>

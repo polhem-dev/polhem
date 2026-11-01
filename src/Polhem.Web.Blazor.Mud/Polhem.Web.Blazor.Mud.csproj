@@ -5,8 +5,6 @@
     <Nullable>enable</Nullable>
     <Description>The MudBlazor UI package of the Polhem Blazor head.</Description>
     <PackageTags>polhem;blazor;mudblazor;rcl;ui</PackageTags>
-    <!-- Joins nuget-publish.yml once the UI package is complete; no release happens before the cutover. -->
-    <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);RS0041</NoWarn>
   </PropertyGroup>
 

@@ -13,5 +13,5 @@ body {
 /* The width of a common phone in portrait, the same as the editor's own phone preview. */
 .browser-preview--compact { max-width: 390px; }
 
-.browser-preview__message { color: var(--polhem-text-muted); }
+.browser-preview__message { color: var(--mud-palette-text-secondary); }
 .browser-preview__message--error { color: #c62828; }

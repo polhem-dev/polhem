@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Polhem.Web.Blazor.Mud.DependencyInjection;
 
 namespace Polhem.DefineEditor.BrowserPreview;
 
@@ -158,6 +159,7 @@ public sealed class BrowserPreviewHost : IAsyncDisposable
         // NOTE: the default key ring is written to the user's profile. The keys that protect the circuit only have
         // to live as long as this process, so keep them in memory.
         builder.Services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+        builder.Services.AddPolhemMud();
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
         builder.Services.AddSingleton(Hub);
         return builder.Build();

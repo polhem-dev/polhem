@@ -1,6 +1,7 @@
 using Polhem.Northwind.Backend;
 using Polhem.Northwind.Blazor.Components;
 using Polhem.Northwind.Blazor.Demo;
+using Polhem.Web.Blazor.Mud.DependencyInjection;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Polhem.Web.Blazor.Server.Shell;
 
@@ -46,6 +47,7 @@ builder.Services.AddPolhemShell(shell =>
     shell.DefaultCompanyId = NorthwindCredentials.CompanyId;
 });
 
+builder.Services.AddPolhemMud();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 

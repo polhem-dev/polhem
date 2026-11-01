@@ -1,5 +1,5 @@
 @namespace Polhem.DefineEditor.BrowserPreview
-@* The document of the browser preview: the framework's stylesheet, as a Polhem Blazor Server app links it, and one route. *@
+@* The document of the browser preview: the framework's stylesheets, as a Polhem Blazor app links them, and one route. *@
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Server/polhem.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Mud/polhem-mud.css"]" />
     <link rel="stylesheet" href="@Assets["browser-preview.css"]" />
     <HeadOutlet />
 </head>
@@ -17,5 +18,6 @@
     </Router>
     <script src="@Assets["browser-preview.js"]"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
 </body>
 </html>

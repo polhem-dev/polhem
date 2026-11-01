@@ -3,7 +3,7 @@
 @using Polhem.Api.Client
 @inject PolhemApiClient Client
 
-<PolhemAccessTokenProvider Context="auth">
+<Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider Context="auth">
     @if (!auth.IsAuthenticated)
     {
         <section class="polhem-demo-section">
@@ -15,7 +15,7 @@
             <PolhemLoginPanel OnLoggedIn="response => OnLoggedInAsync(auth, response)" />
             @if (_enterCompanyError is not null)
             {
-                <div class="polhem-login-panel__error" role="alert">@_enterCompanyError</div>
+                <MudBlazor.MudAlert Severity="MudBlazor.Severity.Error" Dense="true">@_enterCompanyError</MudBlazor.MudAlert>
             }
         </section>
     }
@@ -29,7 +29,7 @@
             <FormPage ProgId="Staff" />
         </section>
     }
-</PolhemAccessTokenProvider>
+</Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider>
 
 @code {
     private string? _enterCompanyError;
@@ -38,7 +38,7 @@
     // in, and the Staff form is company-scoped, so the token is published to the page only once
     // both have succeeded. The demo has one company, so it is entered without asking. Both calls go
     // through the circuit's client, which the login has signed in.
-    private async Task OnLoggedInAsync(PolhemAccessTokenProvider auth, LoginResponse response)
+    private async Task OnLoggedInAsync(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider auth, LoginResponse response)
     {
         _enterCompanyError = null;
         try
@@ -57,7 +57,7 @@
     }
 
     // The client keeps the identity, so signing out clears it there as well as on the page.
-    private void SignOut(PolhemAccessTokenProvider auth)
+    private void SignOut(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider auth)
     {
         Client.SignOut();
         auth.Clear();
