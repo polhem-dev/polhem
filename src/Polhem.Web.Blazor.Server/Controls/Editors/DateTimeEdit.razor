@@ -1,5 +1,5 @@
 @namespace Polhem.Web.Blazor.Server.Controls.Editors
-@inherits TextEdit
+@inherits DateTimeEditorBase
 
 @if (IsEditable)
 {
@@ -9,7 +9,7 @@
            id="@Id"
            type="datetime-local"
            step="1"
-           class="@BuildCssClass(ModifierClass)"
+           class="@BuildCssClass("polhem-field-editor--datetime")"
            value="@Text"
            @onchange="e => CommitText(e.Value?.ToString())" />
 }
@@ -18,7 +18,7 @@ else
     <input @attributes="AdditionalAttributes"
            id="@Id"
            type="text"
-           class="@BuildCssClass(ModifierClass)"
+           class="@BuildCssClass("polhem-field-editor--datetime")"
            readonly
            value="@ReadOnlyText" />
 }

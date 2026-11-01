@@ -10,6 +10,7 @@
 
 - `FormDataObject` 與 `FormLiveComputation`（`Polhem.Web.Blazor.DataObjects`）。
 - `FieldEditorBase`、`IFieldEditor` 與 `FormScope`（`Polhem.Web.Blazor.Controls.Editors`），所有欄位編輯器的基底。
+- `TextEditorBase`、`NumericEditorBase`、`CheckEditorBase`、`DropDownEditorBase`、`DateEditorBase`、`TimeEditorBase` 與 `DateTimeEditorBase`，各類編輯器的取值與提交規則；markup 由 UI 套件提供。
 - `BlazorUserContext`（`Polhem.Web.Blazor.Identity`），單一 scope 內已登入使用者的內容。
 
 ## 相依限制

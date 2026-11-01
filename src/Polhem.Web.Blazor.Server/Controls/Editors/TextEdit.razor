@@ -1,5 +1,5 @@
 @namespace Polhem.Web.Blazor.Server.Controls.Editors
-@inherits FieldEditorBase
+@inherits TextEditorBase
 
 <input @attributes="AdditionalAttributes"
        id="@Id"
@@ -7,8 +7,5 @@
        class="@BuildCssClass(ModifierClass)"
        readonly="@(!IsEditable)"
        maxlength="@MaxLengthAttribute"
-       inputmode="@InputMode"
-       pattern="@Pattern"
-       placeholder="@Placeholder"
        @bind:get="Text"
        @bind:set="CommitText" />
