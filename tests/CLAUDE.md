@@ -221,6 +221,7 @@ protects a process-wide static that has not been moved to DI yet:
 | `ClientInfoStateCollection.Name` | `ClientInfo.*` |
 | `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Core` and `Polhem.Api.Server` each define their own; across assemblies it has to be this way) |
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
+| `CacheNotifyVersionsCollection.Name` | `CacheInfo.NotifyVersions`, for the classes whose poll sessions read a real `st_cache_notify` table (`Polhem.Hosting.UnitTests`) |
 
 Each definition is a `static` class declaring `public const string Name`, and every user writes
 `[Collection(XxxCollection.Name)]`. A mistyped constant does not compile; a mistyped string literal would silently
