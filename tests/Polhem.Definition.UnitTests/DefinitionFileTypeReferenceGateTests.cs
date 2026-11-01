@@ -11,9 +11,9 @@ namespace Polhem.Definition.UnitTests
     /// <remarks>
     /// These names are plain attribute values, such as <c>BusinessObject="Ns.Type, Assembly"</c> in
     /// <c>ProgramSettings.xml</c>. The compiler does not see them and the unit tests do not load the
-    /// sample or app definitions, so a wrong name only surfaces when that program is run and the
+    /// app definitions, so a wrong name only surfaces when that program is run and the
     /// entry is used. This test checks the source tree rather than loading the assemblies, because
-    /// the test project does not reference the samples and apps that declare some of the types.
+    /// the test project does not reference the apps that declare some of the types.
     /// </remarks>
     public class DefinitionFileTypeReferenceGateTests
     {

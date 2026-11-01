@@ -89,7 +89,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("Copies of shipped definitions in tests, samples and Northwind match the shipped file byte for byte")]
+        [DisplayName("Copies of shipped definitions in tests and Northwind match the shipped file byte for byte")]
         public void Copies_OfShippedDefinitions_MatchDefaults()
         {
             string root = FindRepositoryRoot();
