@@ -1,0 +1,66 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits DateTimeEditorBase
+
+@if (IsEditable)
+{
+    <div class="polhem-field-editor--datetime">
+        @* WARNING: these keys must stay distinct, because a duplicate key among siblings stops the circuit. *@
+        <MudDatePicker @key="@($"date-{_generation}")"
+                       @ref="_datePicker"
+                       Date="Value?.Date"
+                       DateChanged="OnDateChanged"
+                       Editable="true"
+                       DateFormat="yyyy-MM-dd"
+                       PickerVariant="PickerVariant.Inline"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense" />
+        <MudTimePicker @key="@($"time-{_generation}")"
+                       @ref="_timePicker"
+                       Time="Value?.TimeOfDay"
+                       TimeChanged="OnTimeChanged"
+                       Editable="true"
+                       AmPm="false"
+                       TimeFormat="HH:mm"
+                       PickerVariant="PickerVariant.Inline"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense" />
+    </div>
+}
+else
+{
+    <MudTextField T="string"
+                  UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                  Class="polhem-field-editor--datetime"
+                  Value="ReadOnlyText"
+                  ReadOnly="true"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+}
+
+@code {
+    private MudDatePicker? _datePicker;
+    private MudTimePicker? _timePicker;
+    private int _generation;
+
+    // MudBlazor's pickers report both a cleared box and text they cannot parse as null, so only their text tells them
+    // apart. A rejected entry recreates them to show the stored value again.
+    private void OnDateChanged(DateTime? date)
+    {
+        if (date is null && !string.IsNullOrWhiteSpace(_datePicker?.Text))
+        {
+            _generation++;
+            return;
+        }
+        CommitValue(date?.Date + (Value?.TimeOfDay ?? TimeSpan.Zero));
+    }
+
+    private void OnTimeChanged(TimeSpan? time)
+    {
+        if (time is null && !string.IsNullOrWhiteSpace(_timePicker?.Text))
+        {
+            _generation++;
+            return;
+        }
+        if (Value is { } value) CommitValue(value.Date + (time ?? TimeSpan.Zero));
+    }
+}

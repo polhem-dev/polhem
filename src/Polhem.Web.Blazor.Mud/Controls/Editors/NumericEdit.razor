@@ -1,0 +1,35 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits NumericEditorBase
+
+@* The focus event comes from the wrapper because MudTextField has no focus callback of its own. *@
+<div @onfocusin="BeginEditing">
+    <MudTextField @key="_generation"
+                  T="string"
+                  UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                  InputId="@Id"
+                  Class="polhem-field-editor--numeric"
+                  Value="Text"
+                  ValueChanged="Commit"
+                  OnBlur="_ => EndEditing()"
+                  ReadOnly="!IsEditable"
+                  InputMode="@(InputMode.@decimal)"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+</div>
+
+@code {
+    private int _generation;
+
+    // MudTextField keeps showing what was typed when its value does not change, so a rejected entry recreates it. The new
+    // input does not have the focus, so the display format returns too.
+    private void Commit(string? value)
+    {
+        var shown = Text;
+        CommitText(value);
+        if (string.Equals(Text, shown, StringComparison.Ordinal) && !string.Equals(Text, value, StringComparison.Ordinal))
+        {
+            EndEditing();
+            _generation++;
+        }
+    }
+}

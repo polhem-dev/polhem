@@ -5,10 +5,15 @@
     <Nullable>enable</Nullable>
     <Description>The MudBlazor UI package of the Polhem Blazor head.</Description>
     <PackageTags>polhem;blazor;mudblazor;rcl;ui</PackageTags>
-    <!-- Empty until its first components exist. It joins nuget-publish.yml then. -->
+    <!-- Joins nuget-publish.yml once the UI package is complete; no release happens before the cutover. -->
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);RS0041</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- An exact version: the density stylesheet depends on Mud's internal class names. Check it when upgrading. -->
+    <PackageReference Include="MudBlazor" Version="[9.12.0]" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />

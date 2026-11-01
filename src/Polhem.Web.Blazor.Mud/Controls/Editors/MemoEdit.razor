@@ -1,0 +1,14 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits TextEditorBase
+
+<MudTextField T="string"
+              UserAttributes="MudAttributes.From(AdditionalAttributes)"
+              InputId="@Id"
+              Class="polhem-field-editor--memo"
+              Lines="3"
+              Value="Text"
+              ValueChanged="CommitText"
+              ReadOnly="!IsEditable"
+              MaxLength="MudAttributes.MaxLength(MaxLength)"
+              Variant="Variant.Outlined"
+              Margin="Margin.Dense" />

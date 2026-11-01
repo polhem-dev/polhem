@@ -1,0 +1,61 @@
+@namespace Polhem.Web.Blazor.Mud.Controls.Editors
+@inherits DateEditorBase
+
+@if (IsEditable)
+{
+    <MudDatePicker @key="_generation"
+                   @ref="_picker"
+                   UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                   Class="@ModifierClass"
+                   Date="Date"
+                   DateChanged="OnDateChanged"
+                   Editable="true"
+                   DateFormat="@ValueFormat"
+                   OpenTo="OpenTo"
+                   FixDay="FixDay"
+                   PickerVariant="PickerVariant.Inline"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense" />
+}
+else
+{
+    <MudTextField T="string"
+                  UserAttributes="MudAttributes.From(AdditionalAttributes)"
+                  Class="@ModifierClass"
+                  Value="ReadOnlyText"
+                  ReadOnly="true"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+}
+
+@code {
+    private MudDatePicker? _picker;
+    private int _generation;
+
+    /// <summary>
+    /// Gets the modifier class that identifies the editor kind in the rendered markup.
+    /// </summary>
+    protected virtual string ModifierClass => "polhem-field-editor--date";
+
+    /// <summary>
+    /// Gets the view the picker opens on.
+    /// </summary>
+    protected virtual OpenTo OpenTo => OpenTo.Date;
+
+    /// <summary>
+    /// Gets the day of the month a pick lands on, or <c>null</c> for the day the user picks.
+    /// </summary>
+    protected virtual int? FixDay => null;
+
+    // MudDatePicker reports both a cleared box and text it cannot parse as null, so only its text tells them apart. A
+    // rejected entry recreates the picker to show the stored date again.
+    private void OnDateChanged(DateTime? date)
+    {
+        if (date is null && !string.IsNullOrWhiteSpace(_picker?.Text))
+        {
+            _generation++;
+            return;
+        }
+        CommitDate(date);
+    }
+}

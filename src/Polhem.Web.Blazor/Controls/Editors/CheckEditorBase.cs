@@ -17,12 +17,14 @@ namespace Polhem.Web.Blazor.Controls.Editors
         }
 
         /// <summary>
-        /// Writes the state the user chose back to the bound field.
+        /// Writes the state the user chose back to the bound field, unless the editor is read-only.
         /// </summary>
         /// <param name="value">The new state.</param>
         protected void CommitChecked(bool value)
         {
-            WriteBack(value.ToString());
+            // A UI framework's read-only check box may only block the click, and still report a change.
+            if (IsEditable)
+                WriteBack(value.ToString());
             RefreshFromSource();
         }
     }
