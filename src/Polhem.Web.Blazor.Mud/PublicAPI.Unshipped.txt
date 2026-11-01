@@ -167,3 +167,4 @@ Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.get -> int
 Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.set -> void
 override Polhem.Web.Blazor.Mud.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Mud.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+override Polhem.Web.Blazor.Mud.Components.FormPage.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

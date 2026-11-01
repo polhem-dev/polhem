@@ -74,6 +74,19 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Crossing to a wide screen while a page is being read still shows the grid")]
+        public async Task SlowLink_ResizeWhileReading_ShowsGrid()
+        {
+            var page = await OpenAsync(slow: true);
+            await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(50);
+
+            await ScrollToEndAsync(page);
+            await page.SetViewportSizeAsync(1000, 700);
+
+            await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(50);
+        }
+
+        [BrowserFact]
         [DisplayName("Crossing to a wide screen shows the grid from the first page, and back shows cards")]
         public async Task Resize_SwitchesSurface()
         {
@@ -88,6 +101,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
 
             await page.SetViewportSizeAsync(400, 700);
             await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(50);
+            Assert.Equal(0, await page.EvaluateAsync<double>("window.scrollY"));
         }
     }
 }

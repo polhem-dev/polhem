@@ -17,6 +17,7 @@ namespace Polhem.Web.Blazor.Components
     {
         private readonly List<DataRow> _cardRows = [];
         private CardListState<DataRow>? _cardState;
+        private bool _scrollCardsToTop;
 
         private CardListState<DataRow> CardState => _cardState ??= new CardListState<DataRow>(_cardRows,
             row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty);
@@ -37,9 +38,21 @@ namespace Polhem.Web.Blazor.Components
 
         private void ShowCardPage(int page, DataTable? table)
         {
-            if (page == 1) _selectedRowId = null;
+            if (page == 1)
+            {
+                _selectedRowId = null;
+                _scrollCardsToTop = true;
+            }
             CardState.ShowPage(page, table?.Rows.Cast<DataRow>() ?? []);
         }
+
+        /// <summary>
+        /// Returns the cards to their first card after page 1 replaced them. Left at the old position, the end of the
+        /// shorter list would be in view and read the next page at once. A UI package overrides this.
+        /// </summary>
+        /// <param name="cancellationToken">A token that cancels the operation.</param>
+        /// <returns>The operation.</returns>
+        protected virtual Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         /// <summary>Reads the next page of the cards, unless a call runs or there is nothing more to read.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
@@ -62,7 +75,16 @@ namespace Polhem.Web.Blazor.Components
             if (compact == _isViewportCompact) return;
             _isViewportCompact = compact;
             if (IsCompact is not null || _dataObject is null) return;
-            await RunGuardedAsync(() => LoadListPageAsync(1, cancellationToken)).ConfigureAwait(true);
+            // Not through the guard, which would skip this while a page is being read and leave the new surface without
+            // rows. The paging state drops the response of whichever read this overtakes.
+            try
+            {
+                await LoadListPageAsync(1, cancellationToken).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _notice = ex.Message;
+            }
         }
 
         /// <summary>Selects a card.</summary>

@@ -231,6 +231,11 @@ namespace Polhem.Web.Blazor.Components
         /// <inheritdoc/>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            if (_scrollCardsToTop)
+            {
+                _scrollCardsToTop = false;
+                await ScrollCardsToTopAsync().ConfigureAwait(true);
+            }
             if (!_focusCancelDelete) return;
             _focusCancelDelete = false;
             await FocusDeleteCancelAsync().ConfigureAwait(true);
