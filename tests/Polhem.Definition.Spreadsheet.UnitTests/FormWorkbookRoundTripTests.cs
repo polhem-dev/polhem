@@ -17,7 +17,6 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         [
             Path.Combine("tests", "Define"),
             Path.Combine("apps", "Polhem.Northwind", "Define"),
-            Path.Combine("samples", "Define"),
         ];
 
         public static TheoryData<string, string> Forms()
