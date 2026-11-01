@@ -11,7 +11,7 @@ screenshots, clean up. What each demo's "success screen" looks like is written i
 
 ## When to use
 
-- After changing Polhem.UI.Avalonia / Polhem.Web.Blazor.Server, to confirm the samples still run
+- After changing Polhem.UI.Avalonia / Polhem.Web.Blazor.Mud, to confirm the samples still run
 - A final sanity check after adding a new sample
 - Smoke-testing all samples at once before a release
 

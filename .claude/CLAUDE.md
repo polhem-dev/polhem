@@ -133,3 +133,4 @@ takes precedence in this repository.
 @rules/commit-verification.md
 @rules/apple-mobile-trim.md
 @rules/avalonia.md
+@rules/blazor.md
