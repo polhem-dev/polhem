@@ -28,6 +28,7 @@
   <ItemGroup>
     <Using Include="Polhem.Web.Blazor.Controls.Editors" />
     <Using Include="Polhem.Web.Blazor.Components" />
+    <Using Include="Polhem.Web.Blazor.Controls" />
   </ItemGroup>
 
 </Project>
