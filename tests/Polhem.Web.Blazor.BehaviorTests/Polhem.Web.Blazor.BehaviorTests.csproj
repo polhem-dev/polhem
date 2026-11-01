@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A library of abstract tests, which each UI package's test project derives from and runs. It references no UI
+       package, so a behavior can only be described through the shared layer. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bunit" Version="2.11.3" />
+    <!-- Pin AngleSharp above the transitive 1.4.0 that bunit 2.7.2 pulls in:
+         GHSA-pgww-w46g-26qg affects < 1.5.0 and fails the NuGetAudit gate. -->
+    <PackageReference Include="AngleSharp" Version="1.8.4" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />
+    <ProjectReference Include="..\Polhem.Tests.Shared\Polhem.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
