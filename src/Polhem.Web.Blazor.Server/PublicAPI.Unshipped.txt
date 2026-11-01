@@ -17,8 +17,6 @@ Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.get -> Polhem.UI.
 Polhem.Web.Blazor.Server.Components.RelatedRecordDialog.Target.set -> void
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
 Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter.OpenRelation.set -> void
-Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.get -> bool
-Polhem.Web.Blazor.Server.Components.FormPage.ConfirmDelete.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
 Polhem.Web.Blazor.Server.Components.DynamicGrid.OnSortRequested.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
@@ -175,3 +173,10 @@ Polhem.Web.Blazor.Server.Components.DynamicGrid.SortFieldName.set -> void
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultUnitCode.get -> string!
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.NumericEdit.DefaultCurrencyCode.get -> string!
 *REMOVED*Polhem.Web.Blazor.Server.Controls.Editors.DateEdit.CommitInput(string? input) -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.ProgId.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.Dispose() -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.get -> bool?
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.IsCompact.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.DefinitionLoader.set -> void
+*REMOVED*Polhem.Web.Blazor.Server.Components.FormPage.ProgId.get -> string!

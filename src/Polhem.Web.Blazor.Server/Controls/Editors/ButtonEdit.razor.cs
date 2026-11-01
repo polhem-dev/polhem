@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
-using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.Controls.Editors
 {

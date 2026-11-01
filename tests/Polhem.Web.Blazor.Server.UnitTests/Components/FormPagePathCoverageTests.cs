@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
@@ -5,7 +6,7 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers <see cref="FormPage.OnParametersSetAsync"/> with a valid ProgId.
+    /// Covers <see cref="FormPageBase.OnParametersSetAsync"/> with a valid ProgId.
     /// When Factory is not injected (null), a NullReferenceException is thrown inside the try block,
     /// the catch sets _error and the finally resets _isInitializing,
     /// so all three branches of try-catch-finally are covered without a Blazor renderer.
@@ -13,14 +14,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class FormPagePathCoverageTests
     {
         private static FieldInfo GetErrorField() =>
-            typeof(FormPage).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static FieldInfo GetIsInitializingField() =>
-            typeof(FormPage).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static async Task InvokeOnParametersSetAsync(FormPage page)
         {
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;

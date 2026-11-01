@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
@@ -23,13 +24,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _ => new GetListResponse { Table = new DataTable("Test") });
 
         private static readonly FieldInfo s_dataObjectField =
-            typeof(FormPage).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_dataObject", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_noticeField =
-            typeof(FormPage).GetField("_notice", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_notice", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static readonly FieldInfo s_listRowsField =
-            typeof(FormPage).GetField("_listRows", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_listRows", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static FormDataObject CreateDataObjectWithoutConnector()
         {
@@ -39,10 +40,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static async Task InvokeMethodAsync(FormPage page, string methodName, object[]? args = null)
         {
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 methodName, BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, args)!;
+            var task = (Task)method!.Invoke(page, [.. args ?? [], CancellationToken.None])!;
             await task;
         }
 
@@ -96,13 +97,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var page = new FormPage();
             typeof(FormPage).GetProperty("ProgId", BindingFlags.Public | BindingFlags.Instance)!
                 .SetValue(page, "TestProg");
-            typeof(FormPage).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
+            typeof(FormPageBase).GetProperty("Client", BindingFlags.NonPublic | BindingFlags.Instance)!
                 .SetValue(page, ListServer().CreateClient());
 
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "ReloadListAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            var task = (Task)method!.Invoke(page, null)!;
+            var task = (Task)method!.Invoke(page, new object[] { CancellationToken.None })!;
             await task;
 
             Assert.Equal("Test", Assert.IsType<DataTable>(s_listRowsField.GetValue(page)).TableName);

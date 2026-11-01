@@ -13,6 +13,7 @@ An application does not use this package alone. It references one host package, 
 - `FormDataObject` and `FormLiveComputation` (`Polhem.Web.Blazor.DataObjects`).
 - `FieldEditorBase`, `IFieldEditor` and `FormScope` (`Polhem.Web.Blazor.Controls.Editors`), the base of every field editor.
 - `TextEditorBase`, `NumericEditorBase`, `CheckEditorBase`, `DropDownEditorBase`, `DateEditorBase`, `TimeEditorBase` and `DateTimeEditorBase`, the value and commit rules of each editor kind. A UI package supplies the markup.
+- `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `BlazorDefinitions`, `PolhemBlazorText` and `IBlazorDefinitionOptions`, which a UI package loads definitions and text through.
 - `BlazorUserContext` (`Polhem.Web.Blazor.Identity`), the signed-in user's context for one scope.
 
 ## Dependency Constraints

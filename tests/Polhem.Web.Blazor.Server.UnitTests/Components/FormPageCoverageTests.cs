@@ -1,3 +1,4 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
@@ -5,23 +6,23 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers the early-return path of <see cref="FormPage.OnParametersSetAsync"/>.
+    /// Covers the early-return path of <see cref="FormPageBase.OnParametersSetAsync"/>.
     /// An empty ProgId returns before Factory is accessed, so no Blazor renderer is needed.
     /// </summary>
     public class FormPageCoverageTests
     {
         private static FieldInfo GetErrorField() =>
-            typeof(FormPage).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_error", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         private static FieldInfo GetIsInitializingField() =>
-            typeof(FormPage).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            typeof(FormPageBase).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         [Fact]
         [DisplayName("OnParametersSetAsync sets an error message when ProgId is an empty string")]
         public async Task OnParametersSetAsync_EmptyProgId_SetsErrorMessage()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;
@@ -35,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         public async Task OnParametersSetAsync_EmptyProgId_SetsIsInitializingFalse()
         {
             var page = new FormPage();
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;
@@ -50,7 +51,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 #pragma warning disable BL0005
             var page = new FormPage { ProgId = "   " };
 #pragma warning restore BL0005
-            var method = typeof(FormPage).GetMethod(
+            var method = typeof(FormPageBase).GetMethod(
                 "OnParametersSetAsync", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
             var task = (Task)method!.Invoke(page, null)!;

@@ -6,7 +6,6 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
-using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.Controls.Editors
 {

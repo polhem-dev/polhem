@@ -132,8 +132,8 @@ namespace Polhem.Web.Blazor.Server.Controls.Editors
                 return await source.GetFormSchemaAsync(ProgId).ConfigureAwait(true);
             var client = RequireClient();
             var options = Services?.GetService<PolhemBlazorOptions>() ?? new PolhemBlazorOptions();
-            var loader = CircuitDefinitions.CreateLoader(client, options, DefinitionLoader);
-            return await CircuitDefinitions.LoadSchemaAsync(client, loader, ProgId).ConfigureAwait(true)
+            var loader = BlazorDefinitions.CreateLoader(client, options, DefinitionLoader);
+            return await BlazorDefinitions.LoadSchemaAsync(client, loader, ProgId).ConfigureAwait(true)
                 ?? throw new InvalidOperationException($"FormSchema '{ProgId}' was not found for lookup.");
         }
 

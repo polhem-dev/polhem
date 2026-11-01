@@ -187,3 +187,69 @@ virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DisplayFormat.get -> s
 virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.ValueFormat.get -> string!
 virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.GetWriteBackValue() -> string?
 virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.ShouldWriteBackText.get -> bool
+Polhem.Web.Blazor.Components.BlazorDefinitions
+Polhem.Web.Blazor.Components.FormPageBase
+Polhem.Web.Blazor.Components.FormPageBase.Can(Polhem.Definition.Settings.PermissionActions action) -> bool
+Polhem.Web.Blazor.Components.FormPageBase.CancelDelete() -> void
+Polhem.Web.Blazor.Components.FormPageBase.CloseRelation() -> void
+Polhem.Web.Blazor.Components.FormPageBase.ConfirmDelete.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.ConfirmDelete.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Components.FormPageBase.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.Web.Blazor.Components.FormPageBase.DefinitionLoader.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.Dispose() -> void
+Polhem.Web.Blazor.Components.FormPageBase.EffectiveIsCompact.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.Error.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.Web.Blazor.Components.FormPageBase.FormPageBase() -> void
+Polhem.Web.Blazor.Components.FormPageBase.IsBusy.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.IsCompact.get -> bool?
+Polhem.Web.Blazor.Components.FormPageBase.IsCompact.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.IsEditing.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.IsInitializing.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.IsListLocked.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.IsShowingRecord.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.ListLayout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Components.FormPageBase.ListRows.get -> System.Data.DataTable?
+Polhem.Web.Blazor.Components.FormPageBase.LiveComputationNotice.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.Notice.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.OnClose() -> void
+Polhem.Web.Blazor.Components.FormPageBase.OnCompactChanged(bool compact) -> void
+Polhem.Web.Blazor.Components.FormPageBase.OnRelationRefused(string! message) -> void
+Polhem.Web.Blazor.Components.FormPageBase.OnRowSelected(System.Guid rowId) -> void
+Polhem.Web.Blazor.Components.FormPageBase.OpenRelation(Polhem.UI.Core.Fields.RelationTarget target) -> void
+Polhem.Web.Blazor.Components.FormPageBase.PagePosition.get -> string!
+Polhem.Web.Blazor.Components.FormPageBase.Paging.get -> Polhem.UI.Core.Connectors.ListPagingState!
+Polhem.Web.Blazor.Components.FormPageBase.PendingDeleteRowId.get -> System.Guid?
+Polhem.Web.Blazor.Components.FormPageBase.ProgId.get -> string!
+Polhem.Web.Blazor.Components.FormPageBase.ProgId.set -> void
+Polhem.Web.Blazor.Components.FormPageBase.RecordLayout.get -> Polhem.Definition.Layouts.FormLayout?
+Polhem.Web.Blazor.Components.FormPageBase.Relation.get -> Polhem.UI.Core.Fields.RelationTarget?
+Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+Polhem.Web.Blazor.Components.FormPageBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.Web.Blazor.Components.FormPageBase.SelectedRowId.get -> System.Guid?
+Polhem.Web.Blazor.Components.FormPageBase.ShowsPager.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Components.IBlazorDefinitionOptions
+Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.DefaultLanguage.get -> string!
+Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.UseDefinitionLoader.get -> bool
+Polhem.Web.Blazor.Components.PolhemBlazorText
+override Polhem.Web.Blazor.Components.FormPageBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+override Polhem.Web.Blazor.Components.FormPageBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+static Polhem.Web.Blazor.Components.BlazorDefinitions.CreateLoader(Polhem.Api.Client.PolhemApiClient! client, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, Polhem.Api.Client.Definitions.FormDefinitionLoader? componentLoader) -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+static Polhem.Web.Blazor.Components.FormPageBase.PageSizes.get -> System.Collections.Generic.IReadOnlyList<int>!
+static Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(System.IServiceProvider? services) -> Microsoft.Extensions.Localization.IStringLocalizer!
+Polhem.Web.Blazor.Components.FormPageBase.ConfirmDeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.GoToPageAsync(int page, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnDeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnEditAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnNewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnRowActivatedAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnSaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnSortRequestedAsync(string! fieldName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.OnViewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.SetPageSizeAsync(int pageSize, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadFormLayoutAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, Polhem.Definition.Forms.FormSchema! schema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadRoundingContextAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, Polhem.Definition.Identity.CompanyInfo? company, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
+static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadSchemaAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
+virtual Polhem.Web.Blazor.Components.FormPageBase.FocusDeleteCancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

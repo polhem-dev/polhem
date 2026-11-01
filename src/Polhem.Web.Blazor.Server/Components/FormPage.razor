@@ -1,3 +1,5 @@
+@using Polhem.Web.Blazor.Components
+@inherits FormPageBase
 @using Polhem.Web.Blazor.DataObjects
 @using Polhem.Definition.Language
 @using Polhem.Definition.Settings
@@ -8,11 +10,11 @@
     {
         <CompactViewportObserver CompactWidthThreshold="CompactWidthThreshold" CompactChanged="OnCompactChanged" />
     }
-    @if (_error is not null)
+    @if (Error is not null)
     {
-        <div class="polhem-form-page__error">@_error</div>
+        <div class="polhem-form-page__error">@Error</div>
     }
-    else if (_isInitializing || _dataObject is null)
+    else if (IsInitializing || DataObject is null)
     {
         <div class="polhem-form-page__loading">@Text(PolhemUIText.Loading)</div>
     }
@@ -20,46 +22,46 @@
     {
         @* A command the user lacks the permission for is hidden, as in the Avalonia views. *@
         <div class="polhem-form-page__toolbar">
-            @if (!_isShowingRecord)
+            @if (!IsShowingRecord)
             {
                 @if (Can(PermissionActions.Read))
                 {
-                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnViewAsync">@Text(PolhemUIText.View)</button>
+                    <button type="button" disabled="@(IsListLocked || SelectedRowId is null)" @onclick="() => OnViewAsync()">@Text(PolhemUIText.View)</button>
                 }
                 @if (Can(PermissionActions.Create))
                 {
-                    <button type="button" disabled="@IsListLocked" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
+                    <button type="button" disabled="@IsListLocked" @onclick="() => OnNewAsync()">@Text(PolhemUIText.New)</button>
                 }
                 @if (Can(PermissionActions.Update))
                 {
-                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnEditAsync">@Text(PolhemUIText.Edit)</button>
+                    <button type="button" disabled="@(IsListLocked || SelectedRowId is null)" @onclick="() => OnEditAsync()">@Text(PolhemUIText.Edit)</button>
                 }
                 @if (Can(PermissionActions.Delete))
                 {
-                    <button type="button" disabled="@(IsListLocked || _selectedRowId is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
+                    <button type="button" disabled="@(IsListLocked || SelectedRowId is null)" @onclick="() => OnDeleteAsync()">@Text(PolhemUIText.Delete)</button>
                 }
             }
             else if (IsEditing)
             {
                 @if (Can(PermissionActions.Create | PermissionActions.Update))
                 {
-                    <button type="button" disabled="@_isBusy" @onclick="OnSaveAsync">@Text(PolhemUIText.Save)</button>
+                    <button type="button" disabled="@IsBusy" @onclick="() => OnSaveAsync()">@Text(PolhemUIText.Save)</button>
                 }
-                <button type="button" disabled="@_isBusy" @onclick="OnClose">@Text(PolhemUIText.Cancel)</button>
-                @if (_dataObject.IsDirty)
+                <button type="button" disabled="@IsBusy" @onclick="OnClose">@Text(PolhemUIText.Cancel)</button>
+                @if (DataObject.IsDirty)
                 {
                     <span class="polhem-form-page__dirty">@Text(PolhemUIText.Unsaved)</span>
                 }
             }
             else
             {
-                <button type="button" disabled="@_isBusy" @onclick="OnClose">@Text(PolhemUIText.Back)</button>
+                <button type="button" disabled="@IsBusy" @onclick="OnClose">@Text(PolhemUIText.Back)</button>
             }
         </div>
 
-        @if (_notice is not null)
+        @if (Notice is not null)
         {
-            <div class="polhem-form-page__notice" role="alert">@_notice</div>
+            <div class="polhem-form-page__notice" role="alert">@Notice</div>
         }
 
         @if (LiveComputationNotice is { } liveComputationNotice)
@@ -67,29 +69,29 @@
             <div class="polhem-form-page__notice" role="status">@liveComputationNotice</div>
         }
 
-        @if (!_isShowingRecord)
+        @if (!IsShowingRecord)
         {
-            <DynamicGrid Layout="_listLayout"
-                         Rows="_listRows"
-                         FormTable="_schema?.MasterTable"
-                         SelectedRowId="_selectedRowId"
+            <DynamicGrid Layout="ListLayout"
+                         Rows="ListRows"
+                         FormTable="Schema?.MasterTable"
+                         SelectedRowId="SelectedRowId"
                          OnRowSelected="OnRowSelected"
-                         OnRowActivated="OnRowActivatedAsync"
-                         SortFieldName="@_paging.SortFieldName"
-                         SortDirection="_paging.SortDirection"
-                         OnSortRequested="OnSortRequestedAsync" />
+                         OnRowActivated="rowId => OnRowActivatedAsync(rowId)"
+                         SortFieldName="@Paging.SortFieldName"
+                         SortDirection="Paging.SortDirection"
+                         OnSortRequested="fieldName => OnSortRequestedAsync(fieldName)" />
             @if (ShowsPager)
             {
                 <div class="polhem-form-page__pager">
-                    <button type="button" disabled="@(IsListLocked || !_paging.CanGoPrevious)" @onclick="() => GoToPageAsync(_paging.Page - 1)">@Text(PolhemUIText.PreviousPage)</button>
-                    <button type="button" disabled="@(IsListLocked || !_paging.CanGoNext)" @onclick="() => GoToPageAsync(_paging.Page + 1)">@Text(PolhemUIText.NextPage)</button>
+                    <button type="button" disabled="@(IsListLocked || !Paging.CanGoPrevious)" @onclick="() => GoToPageAsync(Paging.Page - 1)">@Text(PolhemUIText.PreviousPage)</button>
+                    <button type="button" disabled="@(IsListLocked || !Paging.CanGoNext)" @onclick="() => GoToPageAsync(Paging.Page + 1)">@Text(PolhemUIText.NextPage)</button>
                     <span class="polhem-form-page__page-position">@PagePosition</span>
                     <label class="polhem-form-page__page-size">
                         @Text(PolhemUIText.RowsPerPage)
                         <select disabled="@IsListLocked" @onchange="OnPageSizeChangedAsync">
-                            @foreach (var pageSize in s_pageSizes)
+                            @foreach (var pageSize in PageSizes)
                             {
-                                <option value="@pageSize" selected="@(pageSize == _paging.PageSize)">@pageSize</option>
+                                <option value="@pageSize" selected="@(pageSize == Paging.PageSize)">@pageSize</option>
                             }
                         </select>
                     </label>
@@ -98,16 +100,16 @@
         }
         else
         {
-            <FormLayoutPresenter Layout="_formLayout"
-                                 DataObject="_dataObject"
+            <FormLayoutPresenter Layout="RecordLayout"
+                                 DataObject="DataObject"
                                  FormMode="FormMode"
-                                 RoundingContext="_roundingContext"
+                                 RoundingContext="RoundingContext"
                                  IsCompact="EffectiveIsCompact"
                                  DetailEditMode="DetailEditMode"
                                  OpenRelation="OpenRelation" />
         }
     }
-    @if (_pendingDeleteRowId is not null)
+    @if (PendingDeleteRowId is not null)
     {
         @* Inline positioning keeps the dialog modal without the host's stylesheet, as LookupDialog does. *@
         <div class="polhem-confirm-dialog"
@@ -122,12 +124,12 @@
                 <div class="polhem-confirm-dialog__message">@Text(PolhemUIText.DeleteRecordPrompt)</div>
                 <div class="polhem-confirm-dialog__buttons">
                     <button type="button" class="polhem-confirm-dialog__cancel" @ref="_cancelDeleteButton" @onclick="CancelDelete">@Text(PolhemUIText.Cancel)</button>
-                    <button type="button" class="polhem-confirm-dialog__confirm" @onclick="ConfirmDeleteAsync">@Text(PolhemUIText.Delete)</button>
+                    <button type="button" class="polhem-confirm-dialog__confirm" @onclick="() => ConfirmDeleteAsync()">@Text(PolhemUIText.Delete)</button>
                 </div>
             </div>
         </div>
     }
-    @if (_relation is { } relation)
+    @if (Relation is { } relation)
     {
         <RelatedRecordDialog Target="relation"
                              DefinitionLoader="DefinitionLoader"

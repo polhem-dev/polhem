@@ -1,7 +1,7 @@
+using Polhem.Web.Blazor.Components;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;
-using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
         private static PropertyInfo GetNonPublicProperty(string name)
         {
-            var property = typeof(FormPage).GetProperty(
+            var property = typeof(FormPageBase).GetProperty(
                 name, BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(property);
             return property!;
@@ -56,12 +56,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("The private Options property is marked with [Inject] and is of type PolhemBlazorOptions")]
+        [DisplayName("The private Options property is marked with [Inject] and is of type IBlazorDefinitionOptions")]
         public void Options_IsInjectedPolhemBlazorOptions()
         {
             var property = GetNonPublicProperty("Options");
             Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
-            Assert.Equal(typeof(PolhemBlazorOptions), property.PropertyType);
+            Assert.Equal(typeof(IBlazorDefinitionOptions), property.PropertyType);
         }
 
         [Fact]

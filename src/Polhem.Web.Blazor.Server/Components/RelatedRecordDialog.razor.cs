@@ -123,8 +123,8 @@ namespace Polhem.Web.Blazor.Server.Components
             var target = Target;
             try
             {
-                var loader = CircuitDefinitions.CreateLoader(Client, Options, DefinitionLoader);
-                var schema = await CircuitDefinitions.LoadSchemaAsync(Client, loader, target.ProgId).ConfigureAwait(true)
+                var loader = BlazorDefinitions.CreateLoader(Client, Options, DefinitionLoader);
+                var schema = await BlazorDefinitions.LoadSchemaAsync(Client, loader, target.ProgId).ConfigureAwait(true)
                     ?? throw new InvalidOperationException($"No FormSchema definition found for '{target.ProgId}'.");
                 if (version != _loadVersion) return;
 
@@ -138,10 +138,10 @@ namespace Polhem.Web.Blazor.Server.Components
                 _schema = schema;
                 _isPermitted = true;
 
-                var formLayout = await CircuitDefinitions
+                var formLayout = await BlazorDefinitions
                     .LoadFormLayoutAsync(Client, loader, target.ProgId, schema).ConfigureAwait(true);
                 LayoutCapabilityApplier.Apply(formLayout, schema, capabilities);
-                var roundingContext = await CircuitDefinitions
+                var roundingContext = await BlazorDefinitions
                     .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
                 var dataObject = new FormDataObject(schema, Client.Form(target.ProgId));
                 await dataObject.LoadAsync(target.RowId).ConfigureAwait(true);
