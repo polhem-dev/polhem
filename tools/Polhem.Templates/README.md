@@ -79,7 +79,7 @@ task after an import instead. This applies to `polhem-blazor-server` as well.
 ## `polhem-blazor-server`
 
 Creates an application with a Blazor Server front end: one ASP.NET Core site that runs the backend in its own process
-and serves the [Blazor Server shell](../../src/Polhem.Web.Blazor.Server/README.md#shell) on [MudBlazor](../../src/Polhem.Web.Blazor.Mud/README.md) (sign-in, the server's menu
+and serves the [Blazor Server shell](../../src/Polhem.Web.Blazor.Server/README.md#shell) (sign-in, the server's menu
 and the forms). There is no separate server to start, and no API endpoint until you add one.
 
 | Path | Content |

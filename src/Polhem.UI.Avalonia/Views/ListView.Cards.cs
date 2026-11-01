@@ -6,9 +6,9 @@ using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Connectors;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -18,40 +18,27 @@ namespace Polhem.UI.Avalonia.Views
     /// </summary>
     public partial class ListView
     {
-        // The rows stay in memory as the user scrolls, so a long scroll must not grow without limit.
-        internal const int MaxCardRows = 5000;
+        internal const int MaxCardRows = CardListState<DataRowView>.MaxRows;
 
         // How close to the last card, in cards, the next page starts loading.
         private const int CardLoadThreshold = 10;
 
         // A collection that raises change notifications, so appending a page keeps the scroll position.
         private readonly ObservableCollection<DataRowView> _cardRows = [];
-        private readonly HashSet<string> _cardRowIds = new(StringComparer.OrdinalIgnoreCase);
+        private readonly CardListState<DataRowView> _cardState;
 
         /// <summary>Gets the rows the card list holds.</summary>
         internal IReadOnlyList<DataRowView> CardRows => _cardRows;
 
-        // Page 1 replaces the cards; a later page extends them. A row another user's insert pushed onto the next page
-        // arrives twice, so the row id decides.
         private void ShowCardPage(int page, DataTable? table)
         {
             AttachCardRows();
             if (page == 1)
             {
-                _cardRows.Clear();
-                _cardRowIds.Clear();
                 _selectedRowId = Guid.Empty;
             }
 
-            if (table is not null)
-            {
-                foreach (DataRowView row in table.DefaultView)
-                {
-                    if (_cardRows.Count >= MaxCardRows) break;
-                    if (_cardRowIds.Add(Convert.ToString(row[SysFields.RowId], System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty))
-                        _cardRows.Add(row);
-                }
-            }
+            _cardState.ShowPage(page, table?.DefaultView.Cast<DataRowView>() ?? []);
 
             _hasData = _cardRows.Count > 0;
             if (page == 1 && _hasData)
@@ -86,7 +73,7 @@ namespace Polhem.UI.Avalonia.Views
 
         private Task LoadMoreCardsAsync()
         {
-            if (!_isCompact || _isLoading || _isBusy || !_paging.CanGoNext || _cardRows.Count >= MaxCardRows)
+            if (!_isCompact || _isLoading || _isBusy || !_cardState.CanLoadMore(_paging))
                 return Task.CompletedTask;
             return LoadPageAsync(_paging.Page + 1, CancellationToken.None);
         }

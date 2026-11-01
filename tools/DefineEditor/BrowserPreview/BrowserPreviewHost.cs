@@ -11,7 +11,7 @@ namespace Polhem.DefineEditor.BrowserPreview;
 
 /// <summary>
 /// The in-process web server behind the browser preview: Kestrel on the loopback address, serving one Blazor Server
-/// page that renders a FormLayout with the framework's <see cref="Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter"/>.
+/// page that renders a FormLayout with the framework's <see cref="Polhem.Web.Blazor.Server.Controls.FormLayoutPresenter"/>.
 /// </summary>
 /// <remarks>
 /// <para>

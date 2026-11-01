@@ -260,7 +260,7 @@ holding `byte[]` with a real Guid column; otherwise consumers get a DataTable th
 byte[]".
 
 **Remaining**: `FormDataGuard` (`RequireMasterRowId`, `TryGetRowId`) accepts a `Guid` or a parseable string but not a
-16-byte array, and the grids of each UI head (`GridControl.Cells`, `ListView`, the Blazor `GridControlBase`) read row ids
+16-byte array, and the grids of each UI head (`GridControl.Cells`, `ListView`, the Blazor `DynamicGrid`) read row ids
 through it. Data that went through `MarkFromSchema` is fine; other sources have not been checked.
 
 ## SQLite: date columns read back as `string`, so `is DateTime` is always false (fixed, with remaining caveats)

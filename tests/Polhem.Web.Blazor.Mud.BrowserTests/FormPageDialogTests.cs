@@ -161,7 +161,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         {
             var page = await OpenListAsync();
             await page.SetViewportSizeAsync(500, 800);
-            await page.Locator(Row).First.DblClickAsync();
+            await page.Locator(".polhem-card").First.DblClickAsync();
 
             await Assertions.Expect(page.Locator(".polhem-form-layout--compact")).ToHaveCountAsync(1);
         }

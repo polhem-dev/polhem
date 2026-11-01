@@ -28,7 +28,7 @@ the head, not to the Polhem packages.
 | Browser (WebAssembly) | `Polhem.UI.Avalonia` with `Avalonia.Browser` | Remote |
 | iOS | `Polhem.UI.Avalonia` with `Avalonia.iOS` | Remote |
 | Android | `Polhem.UI.Avalonia` with `Avalonia.Android` | Remote |
-| Blazor Server | `Polhem.Web.Blazor.Mud` on `Polhem.Web.Blazor.Server` | Local by default, or Remote |
+| Blazor Server | `Polhem.Web.Blazor.Server` | Local by default, or Remote |
 | A client with no .NET (JavaScript, TypeScript, …) | — | Remote, speaking JSON-RPC directly; see [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md) |
 
 - **Remote** means the head calls the JSON-RPC endpoint of a backend host over HTTP. **Local** means the head also

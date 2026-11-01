@@ -785,5 +785,114 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.Empty(backend.DeptLoaded);
         }
+
+        /// <summary>Tells the page the end of the card list came near the viewport, as the browser does.</summary>
+        /// <param name="cut">The rendered page.</param>
+        protected abstract void ReachCardListEnd(IRenderedComponent<ContainerFragment> cut);
+
+        private const string Card = ".polhem-card";
+
+        private IRenderedComponent<ContainerFragment> RenderCards(FormPageTestBackend? backend = null)
+        {
+            Register(backend ?? new FormPageTestBackend { TotalRows = 120, DistinctRows = true });
+            var cut = Render(builder =>
+            {
+                builder.OpenComponent(0, PageType);
+                builder.AddAttribute(1, "ProgId", FormPageTestBackend.EmpProgId);
+                builder.AddAttribute(2, "IsCompact", (bool?)true);
+                builder.CloseComponent();
+            });
+            cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(Card)));
+            return cut;
+        }
+
+        [Fact]
+        [DisplayName("A compact list shows cards with captions and values, and no page buttons")]
+        public void Cards_Compact_ReplaceTheGrid()
+        {
+            using var culture = new CultureScope("en-US");
+            var cut = RenderCards();
+
+            Assert.Equal(50, cut.FindAll(Card).Count);
+            Assert.Empty(cut.FindAll(RowSelector));
+            Assert.Empty(cut.FindAll(Pager));
+            Assert.Equal("Name", cut.Find(".polhem-card__caption").TextContent);
+            Assert.Equal("Row 0", cut.Find(".polhem-card__value").TextContent);
+        }
+
+        [Fact]
+        [DisplayName("Reaching the end reads the next page and keeps the selection, and the last page stops asking")]
+        public void Cards_ReachEnd_AppendsNextPage()
+        {
+            using var culture = new CultureScope("en-US");
+            var cut = RenderCards();
+            cut.FindAll(Card)[0].Click();
+
+            ReachCardListEnd(cut);
+            cut.WaitForAssertion(() => Assert.Equal(100, cut.FindAll(Card).Count));
+            Assert.False(Command(cut, PolhemUIText.View).HasAttribute("disabled"));
+
+            ReachCardListEnd(cut);
+            cut.WaitForAssertion(() => Assert.Equal(120, cut.FindAll(Card).Count));
+            Assert.Empty(cut.FindAll(".polhem-card-list__end"));
+        }
+
+        [Fact]
+        [DisplayName("The cards stop at their limit with a note")]
+        public void Cards_AtLimit_ShowNote()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = new FormPageTestBackend { TotalRows = 5100, DistinctRows = true };
+            var cut = RenderCards(backend);
+            Assert.Empty(cut.FindAll(".polhem-card-list__limit"));
+
+            // Waits on the backend, because searching the markup of thousands of cards after every page takes seconds.
+            foreach (var page in Enumerable.Range(2, 99))
+            {
+                ReachCardListEnd(cut);
+                Assert.Equal(page, backend.ListPaging[^1].Page);
+            }
+
+            Assert.Equal(5000, cut.FindAll(Card).Count);
+
+            Assert.Contains("5000", cut.Find(".polhem-card-list__limit").TextContent, StringComparison.Ordinal);
+            Assert.Empty(cut.FindAll(".polhem-card-list__end"));
+        }
+
+        [Fact]
+        [DisplayName("Saving starts the cards over from the first page")]
+        public void Cards_Save_StartOver()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = new FormPageTestBackend { TotalRows = 120, DistinctRows = true };
+            var cut = RenderCards(backend);
+            ReachCardListEnd(cut);
+            cut.WaitForAssertion(() => Assert.Equal(100, cut.FindAll(Card).Count));
+            cut.FindAll(Card)[0].Click();
+            Command(cut, PolhemUIText.Edit).Click();
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Record)));
+
+            Command(cut, PolhemUIText.Save).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(50, cut.FindAll(Card).Count));
+            Assert.Equal(1, backend.ListPaging[^1].Page);
+        }
+
+        [Fact]
+        [DisplayName("A card selects on a click and opens read-only on a double-click")]
+        public void Cards_ClickAndDoubleClick()
+        {
+            using var culture = new CultureScope("en-US");
+            var cut = RenderCards();
+            Assert.True(Command(cut, PolhemUIText.View).HasAttribute("disabled"));
+
+            cut.FindAll(Card)[0].Click();
+            cut.WaitForAssertion(() => Assert.False(Command(cut, PolhemUIText.View).HasAttribute("disabled")));
+            Assert.Single(cut.FindAll(".polhem-card--selected"));
+
+            DoubleClickRow(cut.FindAll(Card)[0]);
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Record)));
+            Assert.Empty(cut.FindAll(Card));
+        }
     }
 }

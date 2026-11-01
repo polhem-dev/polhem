@@ -1,5 +1,7 @@
 @namespace Polhem.Web.Blazor.Mud.Components
 @inherits FormPageBase
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using Microsoft.JSInterop
 @using Polhem.Definition.Language
 @using Polhem.Definition.Settings
 @using Polhem.Web.Blazor.Mud.Controls
@@ -7,7 +9,7 @@
 <div class="polhem-form-page">
     @if (IsCompact is null)
     {
-        <CompactViewportObserver CompactWidthThreshold="CompactWidthThreshold" CompactChanged="OnCompactChanged" />
+        <CompactViewportObserver CompactWidthThreshold="CompactWidthThreshold" CompactChanged="compact => OnCompactChangedAsync(compact)" />
     }
     @if (Error is not null)
     {
@@ -68,7 +70,48 @@
             <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-form-page__notice">@liveComputationNotice</MudAlert>
         }
 
-        @if (!IsShowingRecord)
+        @if (!IsShowingRecord && EffectiveIsCompact)
+        {
+            @if (CardRows.Count == 0)
+            {
+                <div class="polhem-form-page__empty">@Text(PolhemUIText.NoData)</div>
+            }
+            else
+            {
+                <div class="polhem-card-list">
+                    @foreach (var row in CardRows)
+                    {
+                        <div class="@(IsCardSelected(row) ? "polhem-card polhem-card--selected" : "polhem-card")"
+                             @key="row"
+                             @onclick="e => OnCardClick(row, e)">
+                            @foreach (var column in CardColumns)
+                            {
+                                <div class="polhem-card__line">
+                                    <span class="polhem-card__caption">@column.Caption</span>
+                                    @if (column.ControlType == Polhem.Definition.Layouts.ControlType.CheckEdit)
+                                    {
+                                        <input type="checkbox" disabled checked="@IsCardChecked(row, column)" aria-label="@column.Caption" />
+                                    }
+                                    else
+                                    {
+                                        <span class="polhem-card__value">@FormatCardValue(row, column)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    @if (CanLoadMoreCards)
+                    {
+                        <CardListEnd RowCount="CardRows.Count" ReachedEnd="() => LoadMoreCardsAsync()" />
+                    }
+                </div>
+                @if (CardLimitNotice is { } cardLimitNotice)
+                {
+                    <div class="polhem-card-list__limit" role="status">@cardLimitNotice</div>
+                }
+            }
+        }
+        else if (!IsShowingRecord)
         {
             @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
             {
@@ -139,3 +182,17 @@
                              OnRefused="OnRelationRefused" />
     }
 </div>
+
+@code {
+    /// <inheritdoc />
+    protected override async Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default)
+        => await JS.InvokeVoidAsync("scrollTo", cancellationToken, 0, 0).ConfigureAwait(true);
+
+    // `Detail` is the browser's click count, because a double-click also fires two clicks.
+    private Task OnCardClick(System.Data.DataRow row, MouseEventArgs e)
+    {
+        if (e.Detail >= 2) return ActivateCardAsync(row);
+        SelectCard(row);
+        return Task.CompletedTask;
+    }
+}
