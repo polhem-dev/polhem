@@ -8,6 +8,7 @@ using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Settings;
@@ -27,6 +28,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         public const string DeptProgId = "Dept";
         public const string DeptModelId = "DeptModel";
         public const string EmpModelId = "EmpModel";
+        public const string OtherProgId = "Other";
         public const string RelationField = "dept_rowid";
         public const string ParentField = "parent_rowid";
         public static readonly Guid AliceId = new("aaaaaaaa-0000-0000-0000-000000000001");
@@ -42,17 +44,23 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// </summary>
         /// <param name="permissionBound">Whether both forms check capabilities.</param>
         /// <param name="nameRequired">Whether <c>emp_name</c> is required.</param>
-        public FormPageTestBackend(bool permissionBound = false, bool nameRequired = false)
+        /// <param name="amountExpression">The expression of a computed field <c>amount</c>, or <c>null</c> for none.</param>
+        public FormPageTestBackend(bool permissionBound = false, bool nameRequired = false, string? amountExpression = null)
         {
-            _emp = BuildEmpSchema(permissionBound, nameRequired);
+            _emp = BuildEmpSchema(permissionBound, nameRequired, amountExpression);
             _dept = BuildDeptSchema(permissionBound);
             Server = new FakeApiServer()
                 .On<GetListRequest>($"{EmpProgId}.{FormActions.GetList}", GetList)
                 .On<GetDataRequest>($"{EmpProgId}.{FormActions.GetData}", GetEmp)
                 .On<GetNewDataRequest>($"{EmpProgId}.{FormActions.GetNewData}", _ => new GetNewDataResponse { DataSet = Record(Guid.NewGuid(), string.Empty, accept: false) })
+                .On<GetListRequest>($"{OtherProgId}.{FormActions.GetList}", _ => OtherList())
                 .On<SaveRequest>($"{EmpProgId}.{FormActions.Save}", Save)
                 .On<DeleteRequest>($"{EmpProgId}.{FormActions.Delete}", Delete)
-                .On<GetDataRequest>($"{DeptProgId}.{FormActions.GetData}", request => new GetDataResponse { DataSet = DeptRecord(request.RowId) })
+                .On<GetDataRequest>($"{DeptProgId}.{FormActions.GetData}", request =>
+                {
+                    DeptLoaded.Add(request.RowId);
+                    return new GetDataResponse { DataSet = DeptRecord(request.RowId) };
+                })
                 .On<GetDefineRequest>($"{SysProgIds.System}.{SystemActions.GetDefine}", GetDefine)
                 .On<GetFormLayoutRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeFormLayout}", _ => new GetFormLayoutResponse())
                 .On<GetLanguageRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeLanguage}", _ => new GetLanguageResponse())
@@ -79,6 +87,22 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
         public string? GetDataFailure { get; set; }
 
+        public string? SaveFailure { get; set; }
+
+        public bool MissingLayout { get; set; }
+
+        public bool EmptyRelation { get; set; }
+
+        public List<Guid> DeptLoaded { get; } = [];
+
+        public List<string> ListSelectFields { get; } = [];
+
+        public LanguageResource? Translation { get; set; }
+
+        public int LanguageFetchCount { get; private set; }
+
+        public bool UseDefinitionLoader { get; set; } = true;
+
         public bool MissingSchema { get; set; }
 
         public Dictionary<string, PermissionActions> Capabilities { get; } = new(StringComparer.Ordinal);
@@ -87,13 +111,13 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="services">The service collection.</param>
         public void Register(IServiceCollection services)
         {
-            services.AddSingleton<IBlazorDefinitionOptions>(new Options());
+            services.AddSingleton<IBlazorDefinitionOptions>(new Options(UseDefinitionLoader));
             services.AddScoped(_ => Server.CreateClient());
             services.AddScoped(sp => new BlazorUserContext(sp.GetRequiredService<Polhem.Api.Client.PolhemApiClient>(), string.Empty));
             services.AddScoped<IUserContext>(sp => sp.GetRequiredService<BlazorUserContext>());
         }
 
-        private static FormSchema BuildEmpSchema(bool permissionBound, bool nameRequired)
+        private static FormSchema BuildEmpSchema(bool permissionBound, bool nameRequired, string? amountExpression)
         {
             var schema = new FormSchema(EmpProgId, "Employee") { ListFields = "emp_name" };
             if (permissionBound) schema.PermissionModelId = EmpModelId;
@@ -104,6 +128,19 @@ namespace Polhem.Web.Blazor.BehaviorTests
             dept.RelationProgId = DeptProgId;
             dept.RelationFieldMappings!.Add("sys_name", "ref_dept_name");
             fields.Add("ref_dept_name", "Department name", FieldDbType.String);
+            if (permissionBound)
+                fields.Add(new FormField("salary", "Salary", FieldDbType.Decimal) { SensitiveCategory = SensitiveCategory.Amount });
+            if (amountExpression is not null)
+            {
+                fields.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice });
+                fields.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+                fields.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
+                {
+                    NumberKind = NumberKind.Amount,
+                    ValueExpression = amountExpression,
+                    ReadOnly = true,
+                });
+            }
             return schema;
         }
 
@@ -124,6 +161,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private GetListResponse GetList(GetListRequest request)
         {
             GetListCount++;
+            ListSelectFields.Add(request.SelectFields);
             if (request.Paging is { } paging) ListPaging.Add(paging);
             LastSortField = request.SortFields is { Count: > 0 } sort ? sort[0].FieldName : null;
             var table = new DataTable(EmpProgId);
@@ -154,6 +192,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
         private SaveResponse Save(SaveRequest request)
         {
+            if (SaveFailure is not null) throw new UserMessageException(SaveFailure);
             SaveCount++;
             return new SaveResponse { DataSet = request.DataSet };
         }
@@ -171,11 +210,29 @@ namespace Polhem.Web.Blazor.BehaviorTests
             object? stored = request.DefineType switch
             {
                 DefineType.FormSchema => MissingSchema ? null : schema,
-                DefineType.FormLayout => FormLayoutGenerator.Generate(schema, progId),
-                DefineType.Language or DefineType.CurrencySettings or DefineType.UnitSettings => null,
+                DefineType.FormLayout => MissingLayout ? null : FormLayoutGenerator.Generate(schema, progId),
+                DefineType.Language => Language(request.Keys),
+                DefineType.CurrencySettings or DefineType.UnitSettings => null,
                 _ => throw new NotSupportedException($"GetDefine for {request.DefineType} is not supported by the fake."),
             };
             return new GetDefineResponse { Xml = stored is null ? string.Empty : XmlCodec.Serialize(stored) };
+        }
+
+        private LanguageResource? Language(string[]? keys)
+        {
+            LanguageFetchCount++;
+            return Translation is { } translation && keys is [var lang, var ns] && lang == translation.Lang && ns == translation.Namespace
+                ? translation
+                : null;
+        }
+
+        private static GetListResponse OtherList()
+        {
+            var table = new DataTable(OtherProgId);
+            table.Columns.Add(SysFields.RowId, typeof(Guid));
+            table.Columns.Add("emp_name", typeof(string));
+            table.Rows.Add(Guid.NewGuid(), "Carol");
+            return new GetListResponse { Table = table };
         }
 
         private DataSet Record(Guid rowId, string name, bool accept = true)
@@ -185,8 +242,11 @@ namespace Polhem.Web.Blazor.BehaviorTests
             var row = table.NewRow();
             row[SysFields.RowId] = rowId;
             row["emp_name"] = name;
-            row[RelationField] = DeptId;
-            row["ref_dept_name"] = "Engineering";
+            if (!EmptyRelation)
+            {
+                row[RelationField] = DeptId;
+                row["ref_dept_name"] = "Engineering";
+            }
             table.Rows.Add(row);
             if (accept) dataSet.AcceptChanges();
             return dataSet;
@@ -209,11 +269,11 @@ namespace Polhem.Web.Blazor.BehaviorTests
             return dataSet;
         }
 
-        private sealed class Options : IBlazorDefinitionOptions
+        private sealed class Options(bool useDefinitionLoader) : IBlazorDefinitionOptions
         {
             public string DefaultLanguage => string.Empty;
 
-            public bool UseDefinitionLoader => true;
+            public bool UseDefinitionLoader => useDefinitionLoader;
         }
     }
 }

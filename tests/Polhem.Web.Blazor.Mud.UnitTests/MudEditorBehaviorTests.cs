@@ -28,6 +28,7 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
             ControlType.MemoEdit => ".polhem-field-editor--memo textarea",
             ControlType.NumericEdit => ".polhem-field-editor--numeric input",
             ControlType.DateEdit => ".polhem-field-editor--date input",
+            ControlType.YearMonthEdit => ".polhem-field-editor--month input",
             ControlType.TimeEdit => ".polhem-field-editor--time input",
             ControlType.DropDownEdit => ".polhem-field-editor--select input",
             ControlType.CheckEdit => ".polhem-field-editor--checkbox input",

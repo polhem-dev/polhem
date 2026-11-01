@@ -39,7 +39,9 @@ namespace Polhem.Web.Blazor.BehaviorTests
                         : throw new UserMessageException("Company access denied");
                 })
                 .On<GetDefineRequest>($"{SysProgIds.System}.{SystemActions.GetDefine}",
-                    _ => new GetDefineResponse { Xml = XmlCodec.Serialize(BuildMenu()) });
+                    _ => MenuFailure is not null
+                        ? throw new UserMessageException(MenuFailure)
+                        : new GetDefineResponse { Xml = XmlCodec.Serialize(Menu ?? BuildMenu()) });
         }
 
         public FakeApiServer Server { get; }
@@ -47,6 +49,10 @@ namespace Polhem.Web.Blazor.BehaviorTests
         public (string UserId, string Password)? LastLogin { get; private set; }
 
         public int EnterCompanyCount { get; private set; }
+
+        public MenuSettings? Menu { get; set; }
+
+        public string? MenuFailure { get; set; }
 
         public List<string> SwitchedTo { get; } = [];
 

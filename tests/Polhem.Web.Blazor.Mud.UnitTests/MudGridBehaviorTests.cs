@@ -64,6 +64,13 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         protected override bool IsEditFormOpen(IRenderedComponent<ContainerFragment> cut) => _dialogs.FindAll(".polhem-row-edit-panel").Count > 0;
 
         /// <inheritdoc />
+        protected override void ConfirmEditForm(IRenderedComponent<ContainerFragment> cut) => _dialogs.Find(".polhem-row-edit-panel__ok").Click();
+
+        /// <inheritdoc />
+        protected override void EnterInEditForm(IRenderedComponent<ContainerFragment> cut, string fieldName, string text)
+            => _dialogs.Find($"#polhem-row-edit-{fieldName}").Change(text);
+
+        /// <inheritdoc />
         protected override void CancelEditForm(IRenderedComponent<ContainerFragment> cut) => _dialogs.Find("button.polhem-row-edit-panel__cancel").Click();
 
         /// <inheritdoc />

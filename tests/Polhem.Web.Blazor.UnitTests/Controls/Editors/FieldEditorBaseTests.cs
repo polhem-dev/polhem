@@ -1,23 +1,25 @@
 using System.ComponentModel;
 using System.Reflection;
 using Bunit;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.Server.Controls.Editors;
+using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
+namespace Polhem.Web.Blazor.UnitTests.Controls.Editors
 {
     /// <summary>
     /// The binding behavior every field editor inherits from <see cref="FieldEditorBase"/>, exercised through
-    /// <see cref="TextEdit"/>: where the binding comes from, the form mode, and refreshing on changes the
+    /// a minimal <see cref="TextEditorBase"/>: where the binding comes from, the form mode, and refreshing on changes the
     /// editor did not make. These mirror the Avalonia head's <c>FieldEditorBinder</c> rules.
     /// </summary>
     public class FieldEditorBaseTests : BunitContext
     {
         private const string FieldName = "emp_name";
-        private const string InputSelector = "input.polhem-field-editor--text";
+        private const string InputSelector = "input";
 
         private static FormSchema BuildSchema(int maxLength = 0)
         {
@@ -45,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 
             var cut = Render<FormScope>(p => p
                 .Add(c => c.DataObject, dataObject)
-                .AddChildContent<TextEdit>(e => e.Add(c => c.FieldName, FieldName)));
+                .AddChildContent<ProbeEditor>(e => e.Add(c => c.FieldName, FieldName)));
 
             Assert.Equal("Ada", cut.Find(InputSelector).GetAttribute("value"));
         }
@@ -59,7 +61,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
 
             var cut = Render<FormScope>(p => p
                 .Add(c => c.DataObject, scopeObject)
-                .AddChildContent<TextEdit>(e => e
+                .AddChildContent<ProbeEditor>(e => e
                     .Add(c => c.FieldName, FieldName)
                     .Add(c => c.DataObject, ownObject)));
 
@@ -72,7 +74,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         {
             var parameterObject = BuildDataObject("Parameter");
             var explicitObject = BuildDataObject("Explicit");
-            var cut = Render<TextEdit>(p => p
+            var cut = Render<ProbeEditor>(p => p
                 .Add(c => c.FieldName, FieldName)
                 .Add(c => c.DataObject, parameterObject));
 
@@ -88,7 +90,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         public void Change_WritesBack()
         {
             var dataObject = BuildDataObject();
-            var cut = Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
 
             cut.Find(InputSelector).Change("Grace");
 
@@ -100,7 +102,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         public void SetField_External_RefreshesEditor()
         {
             var dataObject = BuildDataObject();
-            var cut = Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
 
             cut.InvokeAsync(() => dataObject.SetField(FieldName, "Linus"));
 
@@ -112,7 +114,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         public void InitializeNewMaster_RefreshesEditor()
         {
             var dataObject = BuildDataObject();
-            var cut = Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
 
             cut.InvokeAsync(dataObject.InitializeNewMaster);
 
@@ -133,18 +135,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
             var cut = Render<FormScope>(p => p
                 .Add(c => c.DataObject, dataObject)
                 .Add(c => c.FormMode, mode)
-                .AddChildContent<TextEdit>(e => e.Add(c => c.LayoutField, layoutField)));
+                .AddChildContent<ProbeEditor>(e => e.Add(c => c.LayoutField, layoutField)));
 
             var input = cut.Find(InputSelector);
             Assert.Equal(readOnly, input.HasAttribute("readonly"));
-            Assert.Equal(readOnly, input.ClassList.Contains("polhem-field-editor--readonly"));
         }
 
         [Fact]
         [DisplayName("A read-only layout field makes the editor read-only without any data object")]
         public void Render_ReadOnlyLayoutWithoutData_IsReadOnly()
         {
-            var cut = Render<TextEdit>(p => p.Add(c => c.LayoutField, new LayoutField { FieldName = FieldName, ReadOnly = true }));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.LayoutField, new LayoutField { FieldName = FieldName, ReadOnly = true }));
 
             Assert.True(cut.Find(InputSelector).HasAttribute("readonly"));
         }
@@ -154,7 +155,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         public void SetControlState_View_MakesEditorReadOnly()
         {
             var dataObject = BuildDataObject();
-            var cut = Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
             Assert.False(cut.Find(InputSelector).HasAttribute("readonly"));
 
             cut.InvokeAsync(() => cut.Instance.SetControlState(SingleFormMode.View));
@@ -168,7 +169,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         {
             var dataObject = BuildDataObject(schema: BuildSchema(maxLength: 20));
 
-            var cut = Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            var cut = Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
 
             Assert.Equal("20", cut.Find(InputSelector).GetAttribute("maxlength"));
         }
@@ -183,7 +184,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
             row["skill_name"] = "Chess";
             detail.Rows.Add(row);
 
-            var cut = Render<TextEdit>(p => p
+            var cut = Render<ProbeEditor>(p => p
                 .Add(c => c.FieldName, "skill_name")
                 .Add(c => c.Row, row)
                 .Add(c => c.DataObject, dataObject));
@@ -199,13 +200,27 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Controls.Editors
         public async Task Dispose_ReleasesSubscriptions()
         {
             var dataObject = BuildDataObject();
-            Render<TextEdit>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
+            Render<ProbeEditor>(p => p.Add(c => c.FieldName, FieldName).Add(c => c.DataObject, dataObject));
             Assert.NotNull(EventDelegate(dataObject, nameof(FormDataObject.FieldValueChanged)));
 
             await DisposeComponentsAsync();
 
             Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.FieldValueChanged)));
             Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.DataSetReplaced)));
+        }
+
+        // The part every text editor shares, with no UI framework.
+        private sealed class ProbeEditor : TextEditorBase
+        {
+            protected override void BuildRenderTree(RenderTreeBuilder builder)
+            {
+                builder.OpenElement(0, "input");
+                builder.AddAttribute(1, "value", Text);
+                builder.AddAttribute(2, "readonly", !IsEditable);
+                if (MaxLength > 0) builder.AddAttribute(3, "maxlength", MaxLength);
+                builder.AddAttribute(4, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => CommitText(e.Value?.ToString())));
+                builder.CloseElement();
+            }
         }
 
         private static Delegate? EventDelegate(FormDataObject dataObject, string eventName)

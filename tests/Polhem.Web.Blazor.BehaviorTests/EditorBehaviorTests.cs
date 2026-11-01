@@ -255,5 +255,29 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.False(IsChecked(cut));
         }
+
+        [Fact]
+        [DisplayName("A read-only date shows in the user's culture")]
+        public void Date_ReadOnly_ShowsCultureText()
+        {
+            using var culture = new CultureScope("de-DE");
+            var dataObject = BuildDataObject(FieldDbType.Date, "2026-10-25");
+
+            var cut = RenderEditor(ControlType.DateEdit, dataObject, SingleFormMode.View);
+
+            Assert.Equal(new DateTime(2026, 10, 25).ToString("d", System.Globalization.CultureInfo.CurrentCulture), cut.Find("input").GetAttribute("value"));
+        }
+
+        [Fact]
+        [DisplayName("A year-month editor writes the value as yyyy-MM")]
+        public void YearMonth_Commit_WritesYearMonth()
+        {
+            var dataObject = BuildDataObject(FieldDbType.String, null);
+            var cut = RenderEditor(ControlType.YearMonthEdit, dataObject);
+
+            Enter(cut, ControlType.YearMonthEdit, "2026-03");
+
+            Assert.Equal("2026-03", dataObject.GetField(FieldName));
+        }
     }
 }

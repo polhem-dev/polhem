@@ -24,6 +24,9 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         protected override Type LayoutType => typeof(PolhemShellLayout);
 
         /// <inheritdoc />
+        protected override Type NavMenuType => typeof(PolhemShellNavMenu);
+
+        /// <inheritdoc />
         protected override string LinkSelector => ".polhem-shell-nav__link a";
 
         /// <inheritdoc />

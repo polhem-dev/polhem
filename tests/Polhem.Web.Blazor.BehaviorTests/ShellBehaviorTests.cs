@@ -194,5 +194,65 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.Empty(cut.FindAll(".polhem-shell-signin__languages"));
         }
+
+        /// <summary>Gets the shell's menu component.</summary>
+        protected abstract Type NavMenuType { get; }
+
+        private IRenderedComponent<ContainerFragment> RenderMenu()
+        {
+            var type = NavMenuType;
+            return Render(b =>
+            {
+                b.OpenComponent(0, type);
+                b.CloseComponent();
+            });
+        }
+
+        [Fact]
+        [DisplayName("The home page opens the menu's first form under the configured route")]
+        public void Home_OpensFirstForm()
+        {
+            _backend.Register(Services, options => options.FormRoute = "forms");
+            var navigation = Services.GetRequiredService<NavigationManager>();
+
+            Render<PolhemShellHome>();
+
+            Assert.Equal("http://localhost/forms/Order", navigation.Uri);
+        }
+
+        [Fact]
+        [DisplayName("A menu that cannot be loaded leaves the home page empty and shows the error in the menu")]
+        public void Home_MenuFails_ShowsErrorInMenu()
+        {
+            _backend.MenuFailure = "Menu unavailable";
+            _backend.Register(Services);
+            var navigation = Services.GetRequiredService<NavigationManager>();
+
+            var home = Render<PolhemShellHome>();
+            var menu = RenderMenu();
+
+            Assert.Equal("http://localhost/", navigation.Uri);
+            Assert.Empty(home.FindAll(".polhem-shell__loading"));
+            Assert.Empty(home.FindAll(".polhem-shell__empty"));
+            menu.WaitForAssertion(() => Assert.Contains("Menu unavailable", menu.Find(".polhem-shell-nav__error").TextContent, StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A menu with no form shows the empty note on the home page and in the menu, without navigating")]
+        public void Home_EmptyMenu_ShowsNote()
+        {
+            var settings = new Polhem.Definition.Settings.MenuSettings();
+            settings.Items!.Add(new Polhem.Definition.Settings.MenuFolder("sales", "Sales"));
+            _backend.Menu = settings;
+            _backend.Register(Services);
+            var navigation = Services.GetRequiredService<NavigationManager>();
+
+            var home = Render<PolhemShellHome>();
+            var menu = RenderMenu();
+
+            Assert.Equal("http://localhost/", navigation.Uri);
+            Assert.False(string.IsNullOrWhiteSpace(home.Find(".polhem-shell__empty").TextContent));
+            Assert.Equal(home.Find(".polhem-shell__empty").TextContent, menu.Find(".polhem-shell-nav__empty").TextContent);
+        }
     }
 }

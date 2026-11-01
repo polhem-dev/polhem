@@ -5,12 +5,12 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.DataObjects;
 
-namespace Polhem.Web.Blazor.Server.UnitTests.Controls
+namespace Polhem.Web.Blazor.BehaviorTests
 {
     /// <summary>
     /// An order with lines, shared by the detail grid and edit form tests.
     /// </summary>
-    internal static class OrderTestData
+    public static class OrderTestData
     {
         public static FormSchema BuildSchema()
         {

@@ -421,5 +421,31 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.True(TryDoubleClickRecordCell(RenderGrid(dataObject, SingleFormMode.View, layout: layout, openRelation: opened.Add)));
             Assert.Equal(rowId, Assert.Single(opened).RowId);
         }
+
+        /// <summary>Clicks OK on the edit form.</summary>
+        /// <param name="cut">The rendered grid.</param>
+        protected abstract void ConfirmEditForm(IRenderedComponent<ContainerFragment> cut);
+
+        /// <summary>Enters text in the edit form's input of a field.</summary>
+        /// <param name="cut">The rendered grid.</param>
+        /// <param name="fieldName">The field.</param>
+        /// <param name="text">The text.</param>
+        protected abstract void EnterInEditForm(IRenderedComponent<ContainerFragment> cut, string fieldName, string text);
+
+        [Fact]
+        [DisplayName("Edit-form mode edits a double-clicked row in the form, and OK commits it")]
+        public void EditForm_DoubleClick_Commits()
+        {
+            var dataObject = BuildOrder();
+            var cut = RenderGrid(dataObject, editMode: GridEditMode.EditForm);
+
+            DoubleClickRow(cut, 0);
+            cut.WaitForAssertion(() => Assert.True(IsEditFormOpen(cut)));
+            EnterInEditForm(cut, "item", "Washer");
+            ConfirmEditForm(cut);
+
+            cut.WaitForAssertion(() => Assert.False(IsEditFormOpen(cut)));
+            Assert.Equal("Washer", dataObject.GetField(dataObject.DataSet.Tables["Line"]!.Rows[0], "item"));
+        }
     }
 }

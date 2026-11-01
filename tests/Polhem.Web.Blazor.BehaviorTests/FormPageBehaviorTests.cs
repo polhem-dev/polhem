@@ -1,11 +1,17 @@
 using System.ComponentModel;
+using System.Globalization;
 using AngleSharp.Dom;
 using Bunit;
 using Bunit.Rendering;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Api.Client.Definitions;
+using Polhem.Api.Client;
+using Polhem.Definition;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
+using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.BehaviorTests
@@ -20,6 +26,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private const string Pager = ".polhem-form-page__pager button";
         private const string Record = ".polhem-form-layout";
         private const string Notice = ".polhem-form-page__notice";
+        private const string NameInput = "#polhem-form-emp_name";
+        private const string OpensRecord = ".polhem-field-editor--opens-record";
 
         /// <inheritdoc />
         Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
@@ -61,7 +69,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="pageSize">The rows per page.</param>
         protected abstract void ChoosePageSize(IRenderedComponent<ContainerFragment> cut, int pageSize);
 
-        private static string Text(string key) => PolhemUIText.Get(Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(null), key);
+        private static string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(null), key);
 
         private FormPageTestBackend Register(FormPageTestBackend? backend = null)
         {
@@ -71,12 +79,12 @@ namespace Polhem.Web.Blazor.BehaviorTests
             return backend;
         }
 
-        private IRenderedComponent<ContainerFragment> RenderPage(bool confirmDelete = true)
+        private IRenderedComponent<ContainerFragment> RenderPage(bool confirmDelete = true, string progId = FormPageTestBackend.EmpProgId)
         {
             var cut = Render(builder =>
             {
                 builder.OpenComponent(0, PageType);
-                builder.AddAttribute(1, "ProgId", FormPageTestBackend.EmpProgId);
+                builder.AddAttribute(1, "ProgId", progId);
                 builder.AddAttribute(2, "IsCompact", (bool?)false);
                 builder.AddAttribute(3, "ConfirmDelete", confirmDelete);
                 builder.CloseComponent();
@@ -117,6 +125,20 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.True(Command(cut, PolhemUIText.Edit).HasAttribute("disabled"));
             Assert.True(Command(cut, PolhemUIText.Delete).HasAttribute("disabled"));
             Assert.False(Command(cut, PolhemUIText.New).HasAttribute("disabled"));
+        }
+
+        [Fact]
+        [DisplayName("Under zh-TW the toolbar shows the translated labels and its commands work")]
+        public void Load_ZhTw_TranslatesToolbar()
+        {
+            using var culture = new CultureScope("zh-TW");
+            Register();
+            var cut = RenderList();
+
+            cut.FindAll(Toolbar).Single(b => b.TextContent.Trim() == "新增").Click();
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Record)));
+            Assert.Contains(cut.FindAll(Toolbar), b => b.TextContent.Trim() == "儲存");
         }
 
         [Fact]
@@ -401,6 +423,367 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             cut.WaitForAssertion(() => Assert.Contains("Department", cut.Find(Notice).TextContent, StringComparison.Ordinal));
             Assert.Empty(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar"));
+        }
+
+        [Fact]
+        [DisplayName("The list asks for sys_rowid ahead of the form's ListFields, so a listed row can be opened")]
+        public void Load_AsksForRowId()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+
+            RenderList();
+
+            Assert.StartsWith(SysFields.RowId, backend.ListSelectFields[0], StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A paged list shows its position, and one without paging metadata shows no page buttons")]
+        public void Pager_FollowsPagingMetadata()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            backend.TotalRows = 120;
+            var cut = RenderList();
+            Assert.Contains("120", cut.Find(".polhem-form-page__page-position").TextContent, StringComparison.Ordinal);
+
+            backend.TotalRows = null;
+            Button(cut, Pager, PolhemUIText.NextPage)!.Click();
+
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(Pager)));
+        }
+
+        [Fact]
+        [DisplayName("Save keeps the saved row selected")]
+        public void Save_KeepsRowSelected()
+        {
+            using var culture = new CultureScope("en-US");
+            Register();
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.Edit);
+
+            Command(cut, PolhemUIText.Save).Click();
+
+            cut.WaitForAssertion(() => Assert.False(Command(cut, PolhemUIText.View).HasAttribute("disabled")));
+        }
+
+        [Fact]
+        [DisplayName("A save the server rejects keeps the record and the edited value on screen and names the reason")]
+        public void Save_Rejected_KeepsEdits()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            backend.SaveFailure = "An order needs a line.";
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.Edit);
+            cut.Find(NameInput).Change("Alice Edited");
+
+            Command(cut, PolhemUIText.Save).Click();
+
+            cut.WaitForAssertion(() => Assert.Contains("An order needs a line.", cut.Find(Notice).TextContent, StringComparison.Ordinal));
+            Assert.Equal("Alice Edited", cut.Find(NameInput).GetAttribute("value"));
+            Assert.False(Command(cut, PolhemUIText.Save).HasAttribute("disabled"));
+        }
+
+        [Fact]
+        [DisplayName("Once the required field is filled, Save sends the record and clears the notice")]
+        public void Save_AfterFillingRequired_Saves()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend(nameRequired: true));
+            var cut = RenderList();
+            Command(cut, PolhemUIText.New).Click();
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Record)));
+            Command(cut, PolhemUIText.Save).Click();
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Notice)));
+
+            cut.Find(NameInput).Change("Carol");
+            Command(cut, PolhemUIText.Save).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(1, backend.SaveCount));
+            Assert.Empty(cut.FindAll(Notice));
+        }
+
+        [Fact]
+        [DisplayName("Editing a source field recomputes the computed field on the open record")]
+        public void Edit_RecomputesComputedField()
+        {
+            using var culture = new CultureScope("en-US");
+            Register(new FormPageTestBackend(amountExpression: "price * qty"));
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.Edit);
+
+            cut.Find("#polhem-form-price").Change("10");
+            cut.Find("#polhem-form-qty").Change("3");
+
+            cut.WaitForAssertion(() => Assert.StartsWith("30", cut.Find("#polhem-form-amount").GetAttribute("value"), StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A computed field whose expression cannot run names the field in a notice")]
+        public void Edit_BadExpression_ShowsNotice()
+        {
+            using var culture = new CultureScope("en-US");
+            Register(new FormPageTestBackend(amountExpression: "price * 1.05"));
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.Edit);
+            Assert.Empty(cut.FindAll(Notice));
+
+            cut.Find("#polhem-form-price").Change("10");
+
+            cut.WaitForAssertion(() => Assert.Contains("Amount is no longer calculated", cut.Find(Notice).TextContent, StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A new ProgId loads that program's list, and the same ProgId does not reload")]
+        public void ProgId_Change_Reloads()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            var page = cut.FindComponent<FormPageBase>();
+
+            page.Render(p => p.Add(c => c.ProgId, FormPageTestBackend.EmpProgId));
+            Assert.Equal(1, backend.GetListCount);
+
+            page.Render(p => p.Add(c => c.ProgId, FormPageTestBackend.OtherProgId));
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(RowSelector)));
+            Assert.Contains("Carol", cut.Find(RowSelector).TextContent, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Moving to another program closes an open delete question")]
+        public void ProgId_Change_ClosesDeleteQuestion()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            cut.FindAll(RowSelector)[0].Click();
+            Command(cut, PolhemUIText.Delete).Click();
+            cut.WaitForAssertion(() => Assert.Single(FindInDialogs(cut, ".polhem-confirm-dialog__cancel")));
+
+            cut.FindComponent<FormPageBase>().Render(p => p.Add(c => c.ProgId, FormPageTestBackend.OtherProgId));
+
+            cut.WaitForAssertion(() => Assert.Empty(FindInDialogs(cut, ".polhem-confirm-dialog__cancel")));
+            Assert.Empty(backend.Deleted);
+        }
+
+        [Fact]
+        [DisplayName("A blank ProgId shows the error without calling the backend")]
+        public void Load_BlankProgId_ShowsError()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+
+            var cut = RenderPage(progId: string.Empty);
+
+            cut.WaitForAssertion(() => Assert.Contains("FormPage.ProgId must be set.", cut.Find(".polhem-form-page__error").TextContent, StringComparison.Ordinal));
+            Assert.Equal(0, backend.GetListCount);
+        }
+
+        [Fact]
+        [DisplayName("A missing FormLayout shows a configuration error instead of the form")]
+        public void Load_NoLayout_ShowsError()
+        {
+            using var culture = new CultureScope("en-US");
+            Register(new FormPageTestBackend { MissingLayout = true });
+
+            var cut = RenderPage();
+
+            cut.WaitForAssertion(() => Assert.Contains("No FormLayout definition found", cut.Find(".polhem-form-page__error").TextContent, StringComparison.Ordinal));
+            Assert.Empty(cut.FindAll(Toolbar));
+        }
+
+        [Fact]
+        [DisplayName("A user who may create and update but not delete sees View, New and Edit, and Save on the record")]
+        public async Task Capabilities_NoDelete_HidesDelete()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend(permissionBound: true));
+            backend.Capabilities[FormPageTestBackend.EmpModelId] = PermissionActions.Read | PermissionActions.Create | PermissionActions.Update;
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderList();
+
+            Assert.NotNull(Button(cut, Toolbar, PolhemUIText.New));
+            Assert.Null(Button(cut, Toolbar, PolhemUIText.Delete));
+            OpenRow(cut, PolhemUIText.Edit);
+            Assert.NotNull(Button(cut, Toolbar, PolhemUIText.Save));
+        }
+
+        [Fact]
+        [DisplayName("Without an entered company the page treats the user as unrestricted")]
+        public void Capabilities_NoCompany_ShowsEveryCommand()
+        {
+            using var culture = new CultureScope("en-US");
+            Register(new FormPageTestBackend(permissionBound: true));
+
+            var cut = RenderList();
+
+            Assert.NotNull(Button(cut, Toolbar, PolhemUIText.New));
+            Assert.NotNull(Button(cut, Toolbar, PolhemUIText.Delete));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        [DisplayName("A sensitive field shows only when the capability snapshot grants its category")]
+        public async Task Capabilities_SensitiveField_FollowsCategory(bool granted)
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend(permissionBound: true));
+            backend.Capabilities[FormPageTestBackend.EmpModelId] = PermissionActions.Read | PermissionActions.Update;
+            if (granted)
+                backend.Capabilities[SensitiveCategory.Amount.ToPermissionModelId()] = PermissionActions.Read | PermissionActions.Update;
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderList();
+
+            OpenRow(cut, PolhemUIText.View);
+
+            Assert.Equal(granted ? 1 : 0, cut.FindAll("#polhem-form-salary").Count);
+            Assert.Single(cut.FindAll(NameInput));
+        }
+
+        private static LanguageResource ZhTw()
+        {
+            var resource = new LanguageResource { Namespace = FormPageTestBackend.EmpProgId, Lang = "zh-TW" };
+            resource.Items.Add(string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.FieldCaptionKeyFormat, "emp_name"), "姓名");
+            return resource;
+        }
+
+        private static string NameLabel(IRenderedComponent<ContainerFragment> cut)
+            => cut.Find("label[for='polhem-form-emp_name']").TextContent.Trim();
+
+        [Fact]
+        [DisplayName("By default the page localizes its definitions, in the list and on the record")]
+        public void Localization_Default_ShowsTranslation()
+        {
+            using var culture = new CultureScope("zh-TW");
+            Register(new FormPageTestBackend { Translation = ZhTw() });
+            var cut = RenderList();
+            Assert.Contains("姓名", cut.Markup, StringComparison.Ordinal);
+
+            Command(cut, PolhemUIText.New).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal("姓名", NameLabel(cut)));
+        }
+
+        [Fact]
+        [DisplayName("With the definition loader off the page shows the stored captions and fetches no language resources")]
+        public void Localization_LoaderOff_ShowsStored()
+        {
+            using var culture = new CultureScope("zh-TW");
+            var backend = Register(new FormPageTestBackend { Translation = ZhTw(), UseDefinitionLoader = false });
+            var cut = RenderList();
+
+            Command(cut, PolhemUIText.New).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal("Name", NameLabel(cut)));
+            Assert.Equal(0, backend.LanguageFetchCount);
+        }
+
+        [Fact]
+        [DisplayName("A DefinitionLoader passed to the page is used instead of the default one")]
+        public void Localization_PageLoader_Wins()
+        {
+            using var culture = new CultureScope("zh-TW");
+            var backend = Register(new FormPageTestBackend { UseDefinitionLoader = false });
+            var translated = new FormPageTestBackend { Translation = ZhTw() };
+            var loader = new FormDefinitionLoader(new ClientDefineAccess(translated.Server.CreateClient().System));
+            var cut = Render(builder =>
+            {
+                builder.OpenComponent(0, PageType);
+                builder.AddAttribute(1, "ProgId", FormPageTestBackend.EmpProgId);
+                builder.AddAttribute(2, "IsCompact", (bool?)false);
+                builder.AddAttribute(3, "DefinitionLoader", loader);
+                builder.CloseComponent();
+            });
+            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(RowSelector).Count));
+
+            Command(cut, PolhemUIText.New).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal("姓名", NameLabel(cut)));
+            Assert.Equal(0, backend.LanguageFetchCount);
+        }
+
+        [Fact]
+        [DisplayName("On a viewed record a relation field with a value shows the open hint")]
+        public void Relation_Viewed_ShowsHint()
+        {
+            using var culture = new CultureScope("en-US");
+            Register();
+            var cut = RenderList();
+
+            OpenRow(cut, PolhemUIText.View);
+
+            Assert.NotEmpty(cut.FindAll(OpensRecord));
+        }
+
+        [Fact]
+        [DisplayName("Closing a related record leaves the viewed record on screen without reloading it")]
+        public void Relation_Close_KeepsRecord()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.View);
+            DoubleClickField(cut, FormPageTestBackend.RelationField);
+            cut.WaitForAssertion(() => Assert.Single(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")));
+            Assert.Equal([FormPageTestBackend.DeptId], backend.DeptLoaded);
+
+            FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")[0].Click();
+
+            cut.WaitForAssertion(() => Assert.Empty(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")));
+            Assert.Single(cut.FindAll(Record));
+            Assert.NotNull(Button(cut, Toolbar, PolhemUIText.Back));
+        }
+
+        [Fact]
+        [DisplayName("A user with Read on the related form's model opens its record")]
+        public async Task Relation_Permitted_Opens()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend(permissionBound: true));
+            backend.Capabilities[FormPageTestBackend.EmpModelId] = PermissionActions.Read;
+            backend.Capabilities[FormPageTestBackend.DeptModelId] = PermissionActions.Read;
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("ACME");
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.View);
+
+            DoubleClickField(cut, FormPageTestBackend.RelationField);
+
+            cut.WaitForAssertion(() => Assert.Equal([FormPageTestBackend.DeptId], backend.DeptLoaded));
+        }
+
+        [Fact]
+        [DisplayName("While the record is edited a relation field shows no hint and opens nothing")]
+        public void Relation_Editing_OffersNothing()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.Edit);
+            Assert.Empty(cut.FindAll(OpensRecord));
+
+            DoubleClickField(cut, FormPageTestBackend.RelationField);
+
+            Assert.Empty(backend.DeptLoaded);
+            Assert.Empty(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar"));
+        }
+
+        [Fact]
+        [DisplayName("An empty relation field on a viewed record shows no hint and opens nothing")]
+        public void Relation_Empty_OffersNothing()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { EmptyRelation = true });
+            var cut = RenderList();
+            OpenRow(cut, PolhemUIText.View);
+            Assert.Empty(cut.FindAll(OpensRecord));
+
+            DoubleClickField(cut, FormPageTestBackend.RelationField);
+
+            Assert.Empty(backend.DeptLoaded);
         }
     }
 }

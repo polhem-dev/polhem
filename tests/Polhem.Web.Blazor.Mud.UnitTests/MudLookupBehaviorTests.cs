@@ -73,6 +73,10 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         protected override void CancelPicker(IRenderedComponent<ContainerFragment> cut) => _dialogs.Find(".polhem-lookup-panel__cancel").Click();
 
         /// <inheritdoc />
+        protected override IReadOnlyList<string> PickerText(IRenderedComponent<ContainerFragment> cut, string selector)
+            => _dialogs.FindAll(selector).Select(e => e.TextContent).ToList();
+
+        /// <inheritdoc />
         protected override void SearchPicker(IRenderedComponent<ContainerFragment> cut, string text)
         {
             _dialogs.Find(".polhem-lookup-panel__search-input input").Change(text);
