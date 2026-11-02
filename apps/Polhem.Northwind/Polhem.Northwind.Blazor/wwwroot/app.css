@@ -1,8 +1,13 @@
 /* The link to the other front end on the demo site (see App.razor). */
-.demo-switch {
+.demo-switch-bar {
     position: fixed;
     right: 12px;
     bottom: 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.demo-switch {
     padding: 6px 12px;
     border-radius: 999px;
     background: #1b2a4e;

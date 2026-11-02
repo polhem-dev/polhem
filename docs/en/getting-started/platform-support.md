@@ -29,6 +29,7 @@ the head, not to the Polhem packages.
 | iOS | `Polhem.UI.Avalonia` with `Avalonia.iOS` | Remote |
 | Android | `Polhem.UI.Avalonia` with `Avalonia.Android` | Remote |
 | Blazor Server | `Polhem.Web.Blazor.Mud` on `Polhem.Web.Blazor.Server` | Local by default, or Remote |
+| Blazor WebAssembly | `Polhem.Web.Blazor.Mud` on `Polhem.Web.Blazor.Wasm` | Remote |
 | A client with no .NET (JavaScript, TypeScript, …) | — | Remote, speaking JSON-RPC directly; see [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md) |
 
 - **Remote** means the head calls the JSON-RPC endpoint of a backend host over HTTP. **Local** means the head also
@@ -51,6 +52,11 @@ the head, not to the Polhem packages.
   to Remote by configuration; see
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md#web-client-blazor-server) and, for the components
   on their own, [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.md).
+- **Blazor WebAssembly** runs its components in the browser and only calls a backend over HTTP. The project's SDK default,
+  `TrimMode=partial`, is the supported configuration below. The browser has no RSA, so calls are `Encoded` rather than
+  encrypted, and methods that require `ApiProtectionLevel.Encrypted` are refused. See
+  [`Polhem.Web.Blazor.Wasm`](../../../src/Polhem.Web.Blazor.Wasm/README.md) for the project settings and the other
+  differences from Blazor Server.
 
 ---
 

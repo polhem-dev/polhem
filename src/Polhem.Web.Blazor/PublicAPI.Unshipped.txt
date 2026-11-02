@@ -654,3 +654,5 @@ override Polhem.Web.Blazor.Controls.ColumnFilterChange.GetHashCode() -> int
 override Polhem.Web.Blazor.Controls.ColumnFilterChange.ToString() -> string!
 static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator !=(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
 static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator ==(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
+Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions
+static Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions.AddPolhemBlazorClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, System.Func<System.IServiceProvider!, Polhem.Api.Client.PolhemApiClient!>! clientFactory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

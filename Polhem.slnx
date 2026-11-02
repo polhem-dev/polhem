@@ -28,6 +28,7 @@
     <Project Path="src/Polhem.Web.Blazor/Polhem.Web.Blazor.csproj" />
     <Project Path="src/Polhem.Web.Blazor.Mud/Polhem.Web.Blazor.Mud.csproj" />
     <Project Path="src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj" />
+    <Project Path="src/Polhem.Web.Blazor.Wasm/Polhem.Web.Blazor.Wasm.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Polhem.Analyzers.UnitTests/Polhem.Analyzers.UnitTests.csproj" />
@@ -58,5 +59,6 @@
     <Project Path="tests/Polhem.Web.Blazor.Mud.BrowserTests/Polhem.Web.Blazor.Mud.BrowserTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Mud.UnitTests/Polhem.Web.Blazor.Mud.UnitTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Server.UnitTests/Polhem.Web.Blazor.Server.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Web.Blazor.Wasm.UnitTests/Polhem.Web.Blazor.Wasm.UnitTests.csproj" />
   </Folder>
 </Solution>

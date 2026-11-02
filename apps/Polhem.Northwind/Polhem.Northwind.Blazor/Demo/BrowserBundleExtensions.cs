@@ -5,7 +5,7 @@ using Microsoft.Extensions.FileProviders;
 namespace Polhem.Northwind.Blazor.Demo;
 
 /// <summary>
-/// Serves a published Avalonia WASM bundle as static files under a path prefix.
+/// Serves a published WASM bundle as static files under a path prefix.
 /// </summary>
 public static class BrowserBundleExtensions
 {
@@ -25,11 +25,16 @@ public static class BrowserBundleExtensions
     /// <param name="app">The application builder.</param>
     /// <param name="path">The path prefix, without a trailing slash.</param>
     /// <param name="files">The bundle's <c>wwwroot</c> folder.</param>
+    /// <param name="hasClientRoutes">
+    /// Whether the bundle's page routes on the client, so that a reload or a typed address such as
+    /// <c>/wasm/form/Order</c> has to receive <c>index.html</c>.
+    /// </param>
     /// <remarks>
     /// The bundle is tens of megabytes uncompressed and about a quarter of that as Brotli. Sending the precompressed
     /// copies costs no CPU, which matters on a small host where compressing on the fly would not.
     /// </remarks>
-    public static void UseBrowserBundle(this IApplicationBuilder app, PathString path, IFileProvider files)
+    public static void UseBrowserBundle(this IApplicationBuilder app, PathString path, IFileProvider files,
+        bool hasClientRoutes = false)
     {
         ArgumentNullException.ThrowIfNull(app);
         ArgumentNullException.ThrowIfNull(files);
@@ -49,6 +54,15 @@ public static class BrowserBundleExtensions
                 }
                 return next(context);
             });
+            if (hasClientRoutes)
+            {
+                branch.Use((context, next) =>
+                {
+                    if (IsClientRoute(context, path, files))
+                        context.Request.Path = path + "/index.html";
+                    return next(context);
+                });
+            }
             branch.UseDefaultFiles(new DefaultFilesOptions { RequestPath = path, FileProvider = files });
             branch.Use((context, next) =>
             {
@@ -70,6 +84,14 @@ public static class BrowserBundleExtensions
             });
         });
     }
+
+    // A file name has an extension and a client route does not, so a mistyped file stays a 404 rather than a page.
+    private static bool IsClientRoute(HttpContext context, PathString path, IFileProvider files)
+        => context.Request.Path.StartsWithSegments(path, out var relative)
+            && relative.HasValue
+            && relative.Value != "/"
+            && !Path.HasExtension(relative.Value)
+            && !files.GetFileInfo(relative.Value).Exists;
 
     private static void SelectPrecompressed(HttpContext context, PathString path, IFileProvider files)
     {

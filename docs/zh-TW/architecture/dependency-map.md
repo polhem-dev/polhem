@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 8389120feb4bb574280dd4c229d7a1b303c5b2bb -->
+<!-- source: en/architecture/dependency-map.md blob: d0ce373ab1810e833c9f8c8f5abb07e0c13d29e5 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -59,6 +59,7 @@ graph BT
     BlazorShared["Polhem.Web.Blazor"]
     BlazorMud["Polhem.Web.Blazor.Mud"]
     BlazorSrv["Polhem.Web.Blazor.Server"]
+    BlazorWasm["Polhem.Web.Blazor.Wasm"]
   end
 
   Definition --> Base
@@ -95,6 +96,7 @@ graph BT
   BlazorShared --> Expressions
   BlazorMud --> BlazorShared
   BlazorSrv --> BlazorShared
+  BlazorWasm --> BlazorShared
 ```
 
 ## 外部相依套件
@@ -158,4 +160,4 @@ graph BT
 - **`Polhem.UI.*` family 判別準則**：所有前端都引用 `Polhem.UI.Core`，所以是否引用它已不能決定 family。決定的是套件是否建立在單一使用者模型上：一個 process 服務一位已登入使用者，服務來自整個 process 共用的 `UIServices.Provider`（有後端時再加上 `Polhem.UI.ApiBridge`）。
   - 單一使用者 → 歸 `Polhem.UI.*`（目前：`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`、`Polhem.UI.Avalonia.Shell`；未來：`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理）
   - 一個 process 服務多位使用者、自有狀態管理 → 走獨立 family prefix（如 `Polhem.Web.Blazor.*`）。Blazor 端過去不引用 `Polhem.UI.Core`，是因為該套件持有整個 process 共用的 `ClientInfo`；這份狀態已移到 `Polhem.UI.ApiBridge`，所以 Blazor 端現在為了共用的值規則引用 `Polhem.UI.Core`，但不得使用 `UIServices`，也不得引用 `Polhem.UI.ApiBridge`。違反時 `UIServicesUsageGateTests`（`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗。
-- **Web 前端層**由三種 RCL（Razor Class Library）組成：共用的 `Polhem.Web.Blazor`、UI 套件（`Polhem.Web.Blazor.Mud`）與宿主套件（`Polhem.Web.Blazor.Server`）；應用程式各選一個 UI 套件和宿主套件，兩者互不參考（[adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)）。共用層相依 `Polhem.Api.Client`，為了與 native 各端共用的值規則相依 `Polhem.UI.Core`，並為了計算欄位的即時預覽相依 `Polhem.Expressions`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（每個 circuit 的 `PolhemApiClient` 經 HTTP 呼叫），或 `UseLocalProvider`（in-process 呼叫，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。
+- **Web 前端層**由三種 RCL（Razor Class Library）組成：共用的 `Polhem.Web.Blazor`、UI 套件（`Polhem.Web.Blazor.Mud`）與宿主套件（`Polhem.Web.Blazor.Server`、`Polhem.Web.Blazor.Wasm`）；應用程式各選一個 UI 套件和宿主套件，兩者互不參考（[adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)）。共用層相依 `Polhem.Api.Client`，為了與 native 各端共用的值規則相依 `Polhem.UI.Core`，並為了計算欄位的即時預覽相依 `Polhem.Expressions`，由宿主在 `AddPolhemBlazor` 選擇傳輸方式：`UseRemoteProvider`（每個 circuit 的 `PolhemApiClient` 經 HTTP 呼叫），或 `UseLocalProvider`（in-process 呼叫，僅限受信任的使用者，且須在同一個 service collection 上呼叫 `AddPolhemFramework`）。

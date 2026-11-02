@@ -15,7 +15,8 @@ namespace Polhem.Web.Blazor.Components
     /// </summary>
     public abstract partial class FormPageBase
     {
-        // Every card stays rendered and is held by the circuit, so a long scroll costs traffic and server memory.
+        // Every card stays rendered. On Blazor Server the circuit holds it, so a long scroll costs traffic and server
+        // memory; on WebAssembly it costs the browser's memory and render time. ADR-060 has the measurements.
         private const int MaxCardRows = 1000;
 
         private readonly List<DataRow> _cardRows = [];

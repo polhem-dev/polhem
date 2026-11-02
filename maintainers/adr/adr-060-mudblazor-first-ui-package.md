@@ -59,6 +59,9 @@ arrives and replays them in order, which writes the text before the click runs. 
   would also put an open editor at risk when its row scrolls away. The cards instead stop at 1000 rows, down from 5000,
   which measured 18.2 MB and 131 MB of managed memory; at 1000 they measured 0.84 MB and 30 MB. Revisit this if a list
   needs far more rows on one page.
+- On WebAssembly the circuit's cost goes away, and the same limit of 1000 cards still applies. Going from 400 cards to
+  1000 took 3.2 s on localhost, measured once on 2026-11-02, about a second per 200 cards. Raising it is a separate
+  decision, with no measurement yet of the browser at 5000.
 - MudBlazor renders the table header itself, so `aria-sort` is not set on it. The direction shows in the caption.
 - A key pressed before the focus reaches a dialog goes to the page behind, so on a slow link an early Escape has to be
   pressed again.

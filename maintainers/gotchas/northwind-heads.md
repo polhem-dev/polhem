@@ -172,6 +172,22 @@ needs a real browser.
   `sys_rowid` (no row could be opened against a real backend; the bUnit fake always returned the column), and opened a
   record for editing without `Update`. All were fixed in the framework.
 
+## Blazor WebAssembly head
+
+- **It is a JSON-RPC client of `Polhem.Northwind.Server`** on port 5600 in development (`.claude/launch.json` has
+  `northwind-blazor-wasm`, which needs `northwind-server`), and of the same origin's `/api` under the demo site's `/wasm/`.
+- **The page writes its `<base>` with `document.write`; do not change it to a declared tag.** With a declared
+  `<base href="/">` that a script then changed, the browser's preload scanner fetched `/_framework/blazor.webassembly.js`
+  against the declared address and logged a 404 on the demo site, although the page still worked.
+- **The demo site needs `hasClientRoutes` on this bundle.** A reload on `/wasm/form/Order` has to receive `index.html`.
+- **A stale `obj/` can fail a build with `NU5019` naming a file that moved**, here
+  `CompactViewportObserver.razor.js` in `Polhem.Web.Blazor.Server`. Delete that project's `bin/` and `obj/`.
+- **The seed is too small to test volume**: lists fit on one page. Insert rows into the local `northwind.db` to test
+  the paging, the phone cards' next page and their limit, then delete the file.
+- `BlazorWebAssemblyLoadAllGlobalizationData` is set because the default ICU data follows the browser's language. One
+  publish without it, on an English browser, still showed Traditional Chinese text and `1996/7/4` dates, so no failure was
+  reproduced; that publish was over an earlier output folder, which may have kept the larger ICU file.
+
 ## The back key (shared UI)
 
 `MainView` handles `TopLevel.BackRequested` level by level: record → back to the list (`FormWorkspace.TryGoBack()`),

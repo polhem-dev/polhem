@@ -1,6 +1,6 @@
 # Polhem.Web.Blazor.Mud
 
-> The MudBlazor UI package of the Polhem Blazor head. An application references it with a host package such as [`Polhem.Web.Blazor.Server`](../Polhem.Web.Blazor.Server/README.md).
+> The MudBlazor UI package of the Polhem Blazor head. An application references it with a host package such as [`Polhem.Web.Blazor.Server`](../Polhem.Web.Blazor.Server/README.md) or [`Polhem.Web.Blazor.Wasm`](../Polhem.Web.Blazor.Wasm/README.md).
 
 [繁體中文](README.zh-TW.md)
 

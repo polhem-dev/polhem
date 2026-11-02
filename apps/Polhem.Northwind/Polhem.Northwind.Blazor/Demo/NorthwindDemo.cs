@@ -41,7 +41,18 @@ public static class NorthwindDemo
     /// </remarks>
     public const string BrowserPath = "/web";
 
+    /// <summary>
+    /// Where the Blazor WebAssembly bundle is served.
+    /// </summary>
+    /// <remarks>
+    /// IMPORTANT: the <c>index.html</c> of the BlazorWasm head recognises this path to set its base address. Change
+    /// both together.
+    /// </remarks>
+    public const string BlazorWasmPath = "/wasm";
+
     private const string BundleKey = "Northwind.BrowserBundle";
+
+    private const string BlazorWasmBundleKey = "Northwind.BlazorWasmBundle";
 
     private const string MasterKeyVariable = "POLHEM_MASTER_KEY";
 
@@ -87,14 +98,8 @@ public static class NorthwindDemo
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        string bundle = Path.GetFullPath(
-            builder.Configuration["Northwind:BrowserBundle"] ?? "browser", builder.Environment.ContentRootPath);
-        if (!File.Exists(Path.Combine(bundle, "index.html")))
-        {
-            throw new InvalidOperationException(
-                $"The Avalonia WASM bundle was not found in '{bundle}'. Publish Polhem.Northwind.Browser and point " +
-                "Northwind:BrowserBundle at the wwwroot folder of the publish output.");
-        }
+        string bundle = ResolveBundle(builder, "BrowserBundle", "browser", "Polhem.Northwind.Browser");
+        string blazorWasmBundle = ResolveBundle(builder, "BlazorWasmBundle", "blazor-wasm", "Polhem.Northwind.BlazorWasm");
 
         // `dotnet run` serves the framework's and the packages' static files (`_framework/blazor.web.js`,
         // `_content/...`) from the build output only when static web assets are on, which the host does by itself
@@ -103,6 +108,7 @@ public static class NorthwindDemo
 
         // Registered through a factory so the container disposes the provider with the host.
         builder.Services.AddKeyedSingleton<IFileProvider>(BundleKey, (_, _) => new PhysicalFileProvider(bundle));
+        builder.Services.AddKeyedSingleton<IFileProvider>(BlazorWasmBundleKey, (_, _) => new PhysicalFileProvider(blazorWasmBundle));
 
         // The rate limit counts HTTP requests, and a batch would carry many calls in one. The Polhem clients send
         // no batches, so the demo refuses them rather than letting a batch multiply the limit.
@@ -227,8 +233,22 @@ public static class NorthwindDemo
             || context.Features.Get<IHttpExtendedConnectFeature>()?.IsExtendedConnect == true;
     }
 
+    private static string ResolveBundle(WebApplicationBuilder builder, string settingName, string defaultFolder,
+        string project)
+    {
+        string bundle = Path.GetFullPath(
+            builder.Configuration[$"Northwind:{settingName}"] ?? defaultFolder, builder.Environment.ContentRootPath);
+        if (!File.Exists(Path.Combine(bundle, "index.html")))
+        {
+            throw new InvalidOperationException(
+                $"The WASM bundle was not found in '{bundle}'. Publish {project} and point " +
+                $"Northwind:{settingName} at the wwwroot folder of the publish output.");
+        }
+        return bundle;
+    }
+
     /// <summary>
-    /// Serves the WASM bundle under <see cref="BrowserPath"/> and maps the JSON-RPC endpoint at
+    /// Serves the WASM bundles under <see cref="BrowserPath"/> and <see cref="BlazorWasmPath"/> and maps the JSON-RPC endpoint at
     /// <see cref="ApiPath"/>.
     /// </summary>
     /// <param name="app">The built web application, after the Northwind backend has been seeded.</param>
@@ -247,6 +267,8 @@ public static class NorthwindDemo
         app.UseRateLimiter();
 
         app.UseBrowserBundle(BrowserPath, app.Services.GetRequiredKeyedService<IFileProvider>(BundleKey));
+        app.UseBrowserBundle(BlazorWasmPath, app.Services.GetRequiredKeyedService<IFileProvider>(BlazorWasmBundleKey),
+            hasClientRoutes: true);
         app.MapJsonRpc(ApiPath);
     }
 

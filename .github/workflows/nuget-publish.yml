@@ -80,6 +80,7 @@ jobs:
           'src/Polhem.Web.Blazor/Polhem.Web.Blazor.csproj'
           'src/Polhem.Web.Blazor.Mud/Polhem.Web.Blazor.Mud.csproj'
           'src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj'
+          'src/Polhem.Web.Blazor.Wasm/Polhem.Web.Blazor.Wasm.csproj'
           # Framework CLI (dotnet tool) — lock-stepped to framework version.
           'tools/Polhem.Cli/Polhem.Cli.csproj'
           # Definition editor (dotnet tool `polhem-define`) — lock-stepped to framework version.

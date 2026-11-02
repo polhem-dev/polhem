@@ -66,4 +66,4 @@ bundle 需要它。
 
 發佈後的 `wwwroot/` 是一份靜態 bundle；可從任何靜態主機提供（或者，若採同源部署，由
 `Polhem.Northwind.Blazor` 的 Demo 環境提供，它也會預填同源的端點；見
-[demo 的 README](../README.zh-TW.md#兩個網頁前端放在同一個網站demo-環境)）。
+[demo 的 README](../README.zh-TW.md#所有網頁前端放在同一個網站demo-環境)）。

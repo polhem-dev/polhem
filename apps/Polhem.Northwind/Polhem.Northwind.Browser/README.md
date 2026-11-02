@@ -71,4 +71,4 @@ source-generated serializers, which a trim-safe bundle would need.
 
 The published `wwwroot/` is a static bundle; serve it from any static host (or, for a same-origin
 deployment, from `Polhem.Northwind.Blazor` in its Demo environment, which also pre-fills the same-origin endpoint;
-see [the demo README](../README.md#both-web-clients-in-one-site-the-demo-environment)).
+see [the demo README](../README.md#all-the-web-clients-in-one-site-the-demo-environment)).

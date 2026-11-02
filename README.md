@@ -107,6 +107,7 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.dll** | The shared layer of the Blazor head (`FormDataObject`, the field editor bases, `BlazorUserContext`), with no UI framework or host. |
 | **Polhem.Web.Blazor.Mud.dll** | The MudBlazor UI package of the Blazor head: the form page, record layout, grid, field editors, dialogs and shell. |
 | **Polhem.Web.Blazor.Server.dll** | The Blazor Server host of the Blazor head: the circuit client in Local or Remote mode, and the shell's registration and culture endpoint. |
+| **Polhem.Web.Blazor.Wasm.dll** | The Blazor WebAssembly host of the Blazor head: the remote client and the shell's language switch. |
 
 ### Tooling (dotnet tool)
 

@@ -5,7 +5,8 @@ namespace Polhem.Web.Blazor.Shell
     /// </summary>
     /// <remarks>
     /// Blazor Server fixes a circuit's culture when it connects, so its implementation reloads the page through an
-    /// endpoint. A host that registers none gets no language switch.
+    /// endpoint. WebAssembly stores the choice in the browser and reloads the page. A host that registers none gets no
+    /// language switch.
     /// </remarks>
     public interface IShellLanguageSwitcher
     {

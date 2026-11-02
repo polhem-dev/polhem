@@ -3,7 +3,7 @@
 The public Northwind demo site runs on Render's free tier as one Docker web service. It is
 `Polhem.Northwind.Blazor` in its Demo environment, built from
 [`apps/Polhem.Northwind/Dockerfile`](../apps/Polhem.Northwind/Dockerfile). What the Demo environment does is described
-in [the Northwind README](../apps/Polhem.Northwind/README.md#both-web-clients-in-one-site-the-demo-environment), and
+in [the Northwind README](../apps/Polhem.Northwind/README.md#all-the-web-clients-in-one-site-the-demo-environment), and
 the reasons are in the source it points to.
 
 The service's settings live in Render's dashboard, not in the repository. This page records them so the service can be

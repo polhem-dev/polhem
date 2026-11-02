@@ -105,6 +105,7 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.dll** | Blazor head 的共用層（`FormDataObject`、欄位編輯器基底、`BlazorUserContext`），不含 UI 框架與宿主。 |
 | **Polhem.Web.Blazor.Mud.dll** | Blazor head 的 MudBlazor UI 套件：表單頁、版面、Grid、欄位編輯器、對話框與外殼。 |
 | **Polhem.Web.Blazor.Server.dll** | Blazor head 的 Blazor Server 宿主：Local 或 Remote 模式的 circuit client，以及外殼的註冊與語系端點。 |
+| **Polhem.Web.Blazor.Wasm.dll** | Blazor head 的 Blazor WebAssembly 宿主：遠端 client 與外殼的語系切換。 |
 
 ### Tooling（dotnet tool）
 

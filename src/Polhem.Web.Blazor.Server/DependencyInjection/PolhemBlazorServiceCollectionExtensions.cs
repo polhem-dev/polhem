@@ -1,11 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Localization;
 using Polhem.Api.Client;
-using Polhem.Definition.Language;
 using Polhem.JsonRpc.Payload;
-using Polhem.UI.Core;
-using Polhem.Web.Blazor.Identity;
+using Polhem.Web.Blazor.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
@@ -17,9 +13,9 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// <summary>
         /// Registers Polhem Blazor Server services: the resolved
         /// <see cref="PolhemBlazorOptions"/>, a <see cref="PolhemApiClient"/> per circuit, created with the
-        /// configured provider, a <see cref="BlazorUserContext"/> per circuit, also as its
-        /// <see cref="IUserContext"/>, and the
-        /// <see cref="IStringLocalizer{T}"/> of <see cref="PolhemUIText"/> the components read their
+        /// configured provider, a <see cref="Polhem.Web.Blazor.Identity.BlazorUserContext"/> per circuit, also as its
+        /// <see cref="Polhem.UI.Core.IUserContext"/>, and the
+        /// <see cref="Microsoft.Extensions.Localization.IStringLocalizer{T}"/> of <see cref="Polhem.Definition.Language.PolhemUIText"/> the components read their
         /// own text from.
         /// </summary>
         /// <remarks>
@@ -44,31 +40,11 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
             configure?.Invoke(options);
 
             services.AddSingleton(options);
-            services.AddSingleton<IBlazorDefinitionOptions>(options);
-            // WARNING: scoped, not singleton. A client holds one signed-in identity, so one per circuit is what keeps
-            // one user's token and transmission key out of another's requests. A singleton would make the last
-            // sign-in everyone's.
-            services.AddScoped(sp => options.Mode == PolhemBlazorProviderMode.Local
+            services.AddPolhemBlazorClient(options, sp => options.Mode == PolhemBlazorProviderMode.Local
                 // In process the client speaks the payload options the backend registered, so a debug host that
                 // encodes its calls uses the same compressor and encryptor on both ends.
                 ? PolhemApiClient.CreateLocal(sp, sp.GetService<PayloadOptions>())
                 : PolhemApiClient.CreateRemote(options.Endpoint, options.ApiKey));
-            // Scoped for the same reason as the client. TryAdd for the interface, so a host can supply its own
-            // context; the pages read the interface.
-            services.AddScoped(sp => new BlazorUserContext(sp.GetRequiredService<PolhemApiClient>(), options.DefaultLanguage));
-            services.TryAddScoped<IUserContext>(sp => sp.GetRequiredService<BlazorUserContext>());
-            // The components' own text. TryAdd, so a host that registered its own localizer for
-            // PolhemUIText — before or instead of this call — keeps it. The default answers from the
-            // host's language resources when an in-process backend registered them, then from the
-            // translations shipped with the framework, in the circuit's CurrentUICulture.
-            services.TryAddSingleton<IStringLocalizer<PolhemUIText>>(sp =>
-            {
-                var hostService = sp.GetService<ILanguageService>();
-                var service = hostService is null
-                    ? new FrameworkLanguageService(null, () => options.DefaultLanguage)
-                    : new FrameworkLanguageService(hostService);
-                return new LanguageResourceStringLocalizer<PolhemUIText>(service);
-            });
             return services;
         }
     }
