@@ -48,7 +48,9 @@ arrives and replays them in order, which writes the text before the click runs. 
 
 ## Consequences
 
-- A second UI framework is one new package over the same bases, and derives from the same behavior tests.
+- A second UI framework is one new package over the same bases, and derives from the same behavior tests. The grid and
+  card list scripts, `polhem-blazor.css` and the browser test scenarios moved to the shared layer on 2026-11-02 so it
+  does not copy them (`tests/Polhem.Web.Blazor.BrowserTests`). Its test pages are still its own.
 - Upgrading MudBlazor can break the density stylesheet without any build error, which is why it is verified at run time.
 - The first load of a large grid sends more than the HTML grid did: 1.76 MB against 1.53 MB for 200 rows of 15 columns,
   measured once on 2026-11-01, while a circuit held less memory (30 to 36 MB against 53 to 59 MB).

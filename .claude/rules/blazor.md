@@ -11,6 +11,10 @@
 | `Polhem.Web.Blazor.<UI>` (`.Mud`) | Markup and theme for one framework | A host package |
 | `Polhem.Web.Blazor.<Host>` (`.Server`, `.Wasm`) | Wiring for one host | A UI package |
 
+What is not tied to a framework lives in `Polhem.Web.Blazor` too: the grid's and the card list's scripts,
+`polhem-blazor.css`, which a UI package's stylesheet imports, and the components over them. The framework-specific part
+stays in the UI package and is passed in (`GridEditorScript` takes the selector of an open popup).
+
 `POLHEM9001`, `BlazorSharedLayerDependencyGateTests`, `BlazorWasmHostDependencyGateTests` and
 `MudPackageDependencyGateTests` enforce the references.
 
@@ -30,5 +34,6 @@ tests use MudBlazor's internal class names, so **a clean build does not show tha
 ## Anything a round trip delays needs a browser test over a slow link
 
 bUnit runs no script and no focus. Focus, key handling and dialogs have failed only in a browser, and some only over a
-slow link. Use `SlowTcpProxy` in `tests/Polhem.Web.Blazor.Mud.BrowserTests`. A test that passes on localhost says little
+slow link. The scenarios are abstract classes in `tests/Polhem.Web.Blazor.BrowserTests`, which every UI package derives from over
+its own test pages; `SlowTcpProxy` is there as well. A test that passes on localhost says little
 about a key pressed before its editor or dialog arrived.

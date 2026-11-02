@@ -74,38 +74,12 @@ Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.RowEditPanel() -> void
 Polhem.Web.Blazor.Mud.Controls.GridControl
 Polhem.Web.Blazor.Mud.Controls.GridControl.GridControl() -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.CloseEditor() -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorParameters.get -> System.Collections.Generic.Dictionary<string!, object?>!
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorParameters.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorType.get -> System.Type!
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.EditorType.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.GridEditorCell() -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Host.get -> Polhem.Web.Blazor.Controls.GridEditorHost!
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Host.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsCheck.get -> bool
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsCheck.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsChecked.get -> bool
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsChecked.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsNumeric.get -> bool
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.IsNumeric.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.RefreshEditorState() -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.get -> string!
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Text.set -> void
-override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.GridControl.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-~override Polhem.Web.Blazor.Mud.Controls.GridEditorCell.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnParametersSet() -> void
 override Polhem.Web.Blazor.Mud.Controls.GridControl.ShouldRender() -> bool
 Polhem.Web.Blazor.Mud.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.get -> Polhem.Web.Blazor.Mud.Controls.GridEditorScript!
-Polhem.Web.Blazor.Mud.Controls.GridEditorCell.Script.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js) -> void
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void
 Polhem.Web.Blazor.Mud.Components.ConfirmDialog
@@ -156,17 +130,6 @@ Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellNavMenu.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Shell.PolhemShellSignIn.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Mud.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Mud.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Mud.Components.CardListEnd
-Polhem.Web.Blazor.Mud.Components.CardListEnd.CardListEnd() -> void
-Polhem.Web.Blazor.Mud.Components.CardListEnd.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Components.CardListEnd.ReachedEnd.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Mud.Components.CardListEnd.ReachedEnd.set -> void
-Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.get -> int
-Polhem.Web.Blazor.Mud.Components.CardListEnd.RowCount.set -> void
-override Polhem.Web.Blazor.Mud.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-~override Polhem.Web.Blazor.Mud.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 override Polhem.Web.Blazor.Mud.Components.FormPage.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Mud.Controls.GridColumnFilter
 Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>

@@ -2,27 +2,26 @@ using System.ComponentModel;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
-    /// Keeps the first load of a grid being edited from growing, on 200 rows by 15 columns. Measured on 2026-11-01 with the
-    /// same page and method: the MudBlazor grid sends 1.76 MB and holds 30 to 36 MB, the HTML grid 1.53 MB and 53 to 59 MB.
-    /// The maintainer accepted the extra traffic for the memory. Memory depends on the runtime too much to gate here, so it
-    /// is only reported.
+    /// Keeps the first load of a grid being edited from growing, on 200 rows by 15 columns. Memory depends on the runtime
+    /// too much to gate here, so it is only reported.
     /// </summary>
-    public class GridPerformanceTests : IClassFixture<GridBrowserFixture>
+    public abstract class GridPerformanceTests
     {
-        private const long FirstLoadLimitBytes = 1_900_000;
-
-        private readonly GridBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
         private readonly ITestOutputHelper _output;
+
+        /// <summary>Gets the limit of the first load, which depends on the UI framework.</summary>
+        protected abstract long FirstLoadLimitBytes { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="GridPerformanceTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
         /// <param name="output">Where the measurements go.</param>
-        public GridPerformanceTests(GridBrowserFixture fixture, ITestOutputHelper output)
+        protected GridPerformanceTests(BrowserSiteFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _output = output;

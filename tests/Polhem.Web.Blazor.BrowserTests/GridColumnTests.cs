@@ -2,22 +2,34 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// What resizing and moving a column does only in a real browser: native dragging, and what editing does afterwards.
     /// </summary>
-    public class GridColumnTests : IClassFixture<GridBrowserFixture>
+    public abstract class GridColumnTests
     {
         private const string Headers = ".polhem-grid thead th";
         private const string FirstRow = ".polhem-grid tbody tr";
-        private readonly GridBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
+
+        /// <summary>Gets the selector of what the user drags to move a column.</summary>
+        protected abstract string ColumnDragItem { get; }
+
+        /// <summary>Gets the selector of where a dragged column lands.</summary>
+        protected abstract string ColumnDropZone { get; }
+
+        /// <summary>Gets the selector of the handle that resizes a column.</summary>
+        protected abstract string ColumnResizer { get; }
+
+        /// <summary>Gets the selector of a column header once it can be dragged.</summary>
+        protected abstract string DraggableColumn { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="GridColumnTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public GridColumnTests(GridBrowserFixture fixture) => _fixture = fixture;
+        protected GridColumnTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
         private async Task<IPage> OpenAsync(string address)
         {
@@ -28,9 +40,9 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             return page;
         }
 
-        private static async Task SwapColumnsAsync(IPage page)
+        private async Task SwapColumnsAsync(IPage page)
         {
-            await page.Locator(".polhem-grid thead .mud-drop-item").First.DragToAsync(page.Locator(".polhem-grid thead .mud-drop-zone").Nth(1)).ConfigureAwait(false);
+            await page.Locator(ColumnDragItem).First.DragToAsync(page.Locator(ColumnDropZone).Nth(1)).ConfigureAwait(false);
             await Assertions.Expect(page.Locator(Headers).First).ToContainTextAsync("Qty").ConfigureAwait(false);
         }
 
@@ -38,9 +50,9 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             => (await page.Locator(Headers).First.BoundingBoxAsync().ConfigureAwait(false))!.Width;
 
         // The resizer tracks the mouse only after the server has answered, so a slow link needs the button held first.
-        private static async Task DragResizerAsync(IPage page, float distance, int holdMilliseconds)
+        private async Task DragResizerAsync(IPage page, float distance, int holdMilliseconds)
         {
-            var handle = (await page.Locator(".polhem-grid thead .mud-resizer").First.BoundingBoxAsync().ConfigureAwait(false))!;
+            var handle = (await page.Locator(ColumnResizer).First.BoundingBoxAsync().ConfigureAwait(false))!;
             await page.Mouse.MoveAsync(handle.X + (handle.Width / 2), handle.Y + (handle.Height / 2)).ConfigureAwait(false);
             await page.Mouse.DownAsync().ConfigureAwait(false);
             await page.WaitForTimeoutAsync(holdMilliseconds).ConfigureAwait(false);
@@ -117,7 +129,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         public async Task SlowLink_MoveAndResizeWork()
         {
             var page = await OpenAsync(_fixture.SlowAddress);
-            await Assertions.Expect(page.Locator(".polhem-grid thead .mud-drop-item-draggable").First).ToBeVisibleAsync();
+            await Assertions.Expect(page.Locator(DraggableColumn).First).ToBeVisibleAsync();
 
             await SwapColumnsAsync(page);
             await page.Locator(FirstRow).First.Locator("td").First.ClickAsync();

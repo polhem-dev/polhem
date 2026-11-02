@@ -1,23 +1,23 @@
 using System.ComponentModel;
 using Microsoft.Playwright;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// A cell opens its editor after a round trip, and a key typed in between must not be lost or land elsewhere. Only a
     /// real browser shows this: replaying a key from script, and whether leaving then fires <c>change</c>, are browser
     /// behavior that bUnit does not run.
     /// </summary>
-    public class GridEditingSafetyTests : IClassFixture<GridBrowserFixture>
+    public abstract class GridEditingSafetyTests
     {
         private const string Initial = "Bolt|1;Nut|2";
-        private readonly GridBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
 
         /// <summary>
         /// Initializes a new instance of <see cref="GridEditingSafetyTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public GridEditingSafetyTests(GridBrowserFixture fixture) => _fixture = fixture;
+        protected GridEditingSafetyTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
         private static ILocator Cell(IPage page, int row, int column)
             => page.Locator("tr.polhem-grid__row").Nth(row).Locator(".polhem-grid-cell__text, .polhem-grid-cell__editor").Nth(column);

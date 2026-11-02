@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// Forwards TCP connections to a server and delays the bytes in both directions, in order, as a slow network does.

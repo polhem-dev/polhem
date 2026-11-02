@@ -656,3 +656,40 @@ static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator !=(Polhem.Web.Blaz
 static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator ==(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
 Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions
 static Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions.AddPolhemBlazorClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, System.Func<System.IServiceProvider!, Polhem.Api.Client.PolhemApiClient!>! clientFactory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Polhem.Web.Blazor.Controls.GridEditorCell
+Polhem.Web.Blazor.Controls.GridEditorCell.CloseEditor() -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Controls.GridEditorCell.EditorParameters.get -> System.Collections.Generic.Dictionary<string!, object?>!
+Polhem.Web.Blazor.Controls.GridEditorCell.EditorParameters.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.EditorType.get -> System.Type!
+Polhem.Web.Blazor.Controls.GridEditorCell.EditorType.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.GridEditorCell() -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.Host.get -> Polhem.Web.Blazor.Controls.GridEditorHost!
+Polhem.Web.Blazor.Controls.GridEditorCell.Host.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.IsCheck.get -> bool
+Polhem.Web.Blazor.Controls.GridEditorCell.IsCheck.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.IsChecked.get -> bool
+Polhem.Web.Blazor.Controls.GridEditorCell.IsChecked.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.IsNumeric.get -> bool
+Polhem.Web.Blazor.Controls.GridEditorCell.IsNumeric.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.RefreshEditorState() -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.Text.get -> string!
+Polhem.Web.Blazor.Controls.GridEditorCell.Text.set -> void
+override Polhem.Web.Blazor.Controls.GridEditorCell.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Polhem.Web.Blazor.Controls.GridEditorCell.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.Script.get -> Polhem.Web.Blazor.Controls.GridEditorScript!
+Polhem.Web.Blazor.Controls.GridEditorCell.Script.set -> void
+Polhem.Web.Blazor.Controls.GridEditorScript
+Polhem.Web.Blazor.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js, string! openPopupSelector) -> void
+Polhem.Web.Blazor.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.CardListEnd
+Polhem.Web.Blazor.Components.CardListEnd.CardListEnd() -> void
+Polhem.Web.Blazor.Components.CardListEnd.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Components.CardListEnd.ReachedEnd.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Components.CardListEnd.ReachedEnd.set -> void
+Polhem.Web.Blazor.Components.CardListEnd.RowCount.get -> int
+Polhem.Web.Blazor.Components.CardListEnd.RowCount.set -> void
+override Polhem.Web.Blazor.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Polhem.Web.Blazor.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

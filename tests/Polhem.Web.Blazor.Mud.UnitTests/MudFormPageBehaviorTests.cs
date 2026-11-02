@@ -4,6 +4,7 @@ using Bunit.Rendering;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using Polhem.Web.Blazor.BehaviorTests;
+using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Mud.Components;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 

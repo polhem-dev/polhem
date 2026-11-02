@@ -107,11 +107,23 @@ function focusTextWhenRendered(row, attempts) {
     }
 }
 
-export function focusEditor(editor, cell) {
+// An input can sit in a web component's open shadow root, where a selector from outside does not reach it.
+function findInput(editor) {
+    if (!editor) return null;
+    const direct = editor.querySelector('input:not([type=checkbox]), textarea, select, input');
+    if (direct) return direct;
+    for (const element of editor.querySelectorAll('*')) {
+        const inner = element.shadowRoot && element.shadowRoot.querySelector('input, textarea');
+        if (inner) return inner;
+    }
+    return null;
+}
+
+export function focusEditor(editor, cell, openPopupSelector) {
     // The user clicked on while this editor was on its way, and the cell now focused has its own editor coming.
     if (isTextCell(document.activeElement) && isOpening()) return;
     openingSince = 0;
-    const input = editor && editor.querySelector('input:not([type=checkbox]), textarea, select, input');
+    const input = findInput(editor);
     if (!input) {
         const pendingClick = queue.find(item => item.click);
         queue = [];
@@ -132,7 +144,7 @@ export function focusEditor(editor, cell) {
     }
 
     editor.addEventListener('keydown', event => {
-        if (event.key !== 'Escape' || document.querySelector('.mud-popover-open')) return;
+        if (event.key !== 'Escape' || document.querySelector(openPopupSelector)) return;
         // Back to the value on focus, so leaving fires no `change`, and whatever was typed is dropped.
         input.value = original;
         event.stopPropagation();

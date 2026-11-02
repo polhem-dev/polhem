@@ -1,0 +1,37 @@
+/* The layout of the Blazor head, with no UI framework in it. A UI package imports this file from its own stylesheet, and adds what depends on the framework. */
+.polhem-field-editor--numeric input { text-align: right; }
+.polhem-field-editor--datetime { display: flex; gap: 4px; }
+.polhem-field-editor--opens-record, .polhem-field-editor--opens-record input { cursor: pointer; }
+.polhem-lookup-panel__search { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.polhem-lookup-panel__buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.polhem-grid__sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.polhem-grid__toolbar { display: flex; gap: 4px; }
+.polhem-grid__cell--opens-record { cursor: pointer; }
+.polhem-grid-cell__text { min-height: 24px; padding: 2px 4px; outline: 1px solid transparent; }
+.polhem-grid-cell__text--numeric { text-align: right; }
+.polhem-form-page__toolbar, .polhem-form-page__pager { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; }
+.polhem-form-page__pager { margin: 8px 0 0; }
+.polhem-form-page__notice { margin-bottom: 8px; }
+.polhem-form-page__page-position, .polhem-form-page__page-size-label { margin-left: 8px; font-size: 13px; }
+.polhem-form-layout { display: flex; flex-direction: column; gap: 8px; }
+.polhem-form-layout__section, .polhem-form-layout__detail { padding: 8px; }
+.polhem-form-layout__section-caption, .polhem-form-layout__detail-caption { margin-bottom: 8px; }
+.polhem-form-layout__label { display: block; margin-bottom: 2px; font-size: 13px; }
+.polhem-related-record-dialog__toolbar { margin-bottom: 8px; }
+.polhem-related-record-dialog__notice { margin-bottom: 8px; }
+.polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
+.polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+.polhem-shell-signin__languages { display: flex; gap: 8px; }
+.polhem-login-panel { display: flex; flex-direction: column; gap: 12px; }
+.polhem-shell__title { font-weight: 600; }
+.polhem-shell__user { margin-right: 12px; font-size: 13px; opacity: 0.85; }
+.polhem-shell__main > :first-child { margin-top: 16px; }
+.polhem-card-list { display: flex; flex-direction: column; gap: 8px; }
+.polhem-card__line { display: flex; gap: 6px; font-size: 13px; line-height: 20px; }
+.polhem-card__caption { flex: 0 0 92px; font-weight: 600; opacity: 0.7; }
+.polhem-card__value { min-width: 0; overflow-wrap: anywhere; }
+.polhem-card-list__end { height: 1px; }
+.polhem-form-page__filters { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.polhem-grid-filter { display: inline-block; margin-left: 2px; vertical-align: middle; }
+.polhem-grid-filter__form { display: flex; flex-direction: column; gap: 8px; width: 220px; padding: 12px; }
+.polhem-grid-filter__buttons { display: flex; justify-content: flex-end; gap: 8px; }
