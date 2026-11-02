@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Fluent.UnitTests
         protected override void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text)
         {
             cut.Find(".polhem-grid-filter__button").Click();
-            cut.WaitForAssertion(() => cut.Find(".polhem-grid-filter__first fluent-text-input").Change(text));
+            cut.WaitForAssertion(() => cut.Find(".polhem-grid-filter__first input").Change(text));
             cut.Find(".polhem-grid-filter__form").Submit();
         }
 

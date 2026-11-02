@@ -1,6 +1,4 @@
 @namespace Polhem.Web.Blazor.Fluent.Controls
-@inject Microsoft.JSInterop.IJSRuntime JS
-@using Microsoft.JSInterop
 @using System.Globalization
 @using Polhem.Definition.Forms
 @using Polhem.Definition.Language
@@ -14,12 +12,14 @@
                   Title="@string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption)"
                   StopPropagation="true"
                   OnClick="Toggle">▾</FluentButton>
-    @* WARNING: the popover opens only when `Opened` turns true on an element that is already there, so it stays in the markup
+    @* WARNING: the text boxes are native inputs. A Fluent input can overwrite what is typed just after it takes the focus,
+       which here would apply an empty filter while the panel closes as usual. Enter also submits only from a native input.
+       WARNING: the popover opens only when `Opened` turns true on an element that is already there, so it stays in the markup
        and only its content comes and goes. A click outside or Escape closes it and drops what was typed and not applied. *@
     <FluentPopover AnchorId="@_buttonId" Opened="_isOpen" OpenedChanged="OnOpenedChanged" Class="polhem-grid-filter__panel">
         @if (_isOpen)
         {
-            <form class="polhem-grid-filter__form" @onsubmit="() => ApplyAsync()" @onsubmit:preventDefault @onkeydown="OnKeyDownAsync">
+            <form class="polhem-grid-filter__form" @onsubmit="() => ApplyAsync()" @onsubmit:preventDefault @onkeydown="OnKeyDown">
                 @switch (Kind)
                 {
                     case ColumnFilterKind.Boolean:
@@ -35,11 +35,20 @@
                                       Width="100%" />
                         break;
                     case ColumnFilterKind.Text:
-                        <FluentTextInput @ref="_firstInput" Class="polhem-grid-filter__first" Label="@Column.Caption" @bind-Value="_first" Width="100%" />
+                        <label class="polhem-grid-filter__first">
+                            <span class="polhem-native-input__label">@Column.Caption</span>
+                            <input @ref="_firstInputReference" class="polhem-native-input" @bind="_first" />
+                        </label>
                         break;
                     default:
-                        <FluentTextInput @ref="_firstInput" Class="polhem-grid-filter__first" Label="@Text(PolhemUIText.FilterFrom)" Placeholder="@RangePlaceholder" @bind-Value="_first" Width="100%" />
-                        <FluentTextInput @ref="_secondInput" Class="polhem-grid-filter__second" Label="@Text(PolhemUIText.FilterTo)" Placeholder="@RangePlaceholder" @bind-Value="_second" Width="100%" />
+                        <label class="polhem-grid-filter__first">
+                            <span class="polhem-native-input__label">@Text(PolhemUIText.FilterFrom)</span>
+                            <input @ref="_firstInputReference" class="polhem-native-input" placeholder="@RangePlaceholder" @bind="_first" />
+                        </label>
+                        <label class="polhem-grid-filter__second">
+                            <span class="polhem-native-input__label">@Text(PolhemUIText.FilterTo)</span>
+                            <input class="polhem-native-input" placeholder="@RangePlaceholder" @bind="_second" />
+                        </label>
                         break;
                 }
                 @if (_isInvalid)
@@ -48,7 +57,7 @@
                 }
                 <div class="polhem-grid-filter__buttons">
                     <FluentButton Class="polhem-grid-filter__clear" OnClick="() => ClearAsync()">@Text(PolhemUIText.FilterClear)</FluentButton>
-                    <FluentButton Appearance="ButtonAppearance.Primary" Class="polhem-grid-filter__apply" OnClick="() => ApplyEnteredAsync()">@Text(PolhemUIText.FilterApply)</FluentButton>
+                    <button type="submit" class="polhem-native-button polhem-grid-filter__apply">@Text(PolhemUIText.FilterApply)</button>
                 </div>
             </form>
         }
@@ -62,8 +71,7 @@
     private string _first = string.Empty;
     private string _second = string.Empty;
     private readonly string _buttonId = $"polhem-filter-{Guid.NewGuid():N}";
-    private FluentTextInput? _firstInput;
-    private FluentTextInput? _secondInput;
+    private ElementReference _firstInputReference;
 
     /// <summary>Gets or sets the column.</summary>
     [Parameter, EditorRequired]
@@ -119,9 +127,9 @@
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!_focusFirst || _firstInput is null) return;
+        if (!_focusFirst || Kind is ColumnFilterKind.Boolean or ColumnFilterKind.Choice) return;
         _focusFirst = false;
-        await _firstInput.Element.FocusAsync().ConfigureAwait(true);
+        await _firstInputReference.FocusAsync().ConfigureAwait(true);
     }
 
     private void OnOpenedChanged(bool opened)
@@ -131,23 +139,10 @@
 
     private void Close() => _isOpen = false;
 
-    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    private void OnKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Escape") Close();
-        else if (e.Key == "Enter") await ApplyEnteredAsync().ConfigureAwait(true);
     }
-
-    // A form does not submit on Enter in a Fluent input, and the input reports its text only when it is left, so what
-    // was typed is read from the elements.
-    private async Task ApplyEnteredAsync()
-    {
-        if (_firstInput is not null) _first = await ReadAsync(_firstInput, _first).ConfigureAwait(true);
-        if (_secondInput is not null) _second = await ReadAsync(_secondInput, _second).ConfigureAwait(true);
-        await ApplyAsync().ConfigureAwait(true);
-    }
-
-    private async Task<string> ReadAsync(FluentTextInput input, string fallback)
-        => await JS.InvokeAsync<string?>("Reflect.get", input.Element, "value").ConfigureAwait(true) ?? fallback;
 
     private async Task ApplyAsync()
     {

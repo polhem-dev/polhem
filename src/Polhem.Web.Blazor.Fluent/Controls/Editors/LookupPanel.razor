@@ -1,14 +1,13 @@
 @namespace Polhem.Web.Blazor.Fluent.Controls.Editors
 @inherits LookupPanelBase
-@inject Microsoft.JSInterop.IJSRuntime JS
-@using Microsoft.JSInterop
 @using Polhem.Web.Blazor.Fluent.Controls
 @using Polhem.Definition.Language
 
+@* A native input: a Fluent one can overwrite what is typed just after it takes the focus, and Enter submits only from a native input. *@
 <div class="polhem-lookup-panel">
     <form class="polhem-lookup-panel__search" @onsubmit="() => SearchAsync()" @onsubmit:preventDefault>
-        <div class="polhem-lookup-panel__search-box" @onkeydown="OnSearchKeyAsync"><FluentTextInput @ref="_search" Class="polhem-lookup-panel__search-input" @bind-Value="SearchText" Placeholder="@Text(PolhemUIText.Search)" Width="100%" /></div>
-        <FluentButton Class="polhem-lookup-panel__search-button" OnClick="() => SearchAsync()">@Text(PolhemUIText.Search)</FluentButton>
+        <div class="polhem-lookup-panel__search-input"><input class="polhem-native-input" @bind="SearchText" placeholder="@Text(PolhemUIText.Search)" aria-label="@Text(PolhemUIText.Search)" /></div>
+        <button type="submit" class="polhem-native-button polhem-lookup-panel__search-button">@Text(PolhemUIText.Search)</button>
     </form>
     @if (Error is not null)
     {
@@ -37,17 +36,3 @@
         <FluentButton Class="polhem-lookup-panel__cancel" OnClick="() => CancelAsync()">@Text(PolhemUIText.Cancel)</FluentButton>
     </div>
 </div>
-
-@code {
-    private FluentTextInput? _search;
-
-    // A form does not submit on Enter in a Fluent input, and the input reports its text only when it is left. The
-    // component's own key and immediate hooks register after a round trip, so on a slow link an early Enter would search
-    // for nothing. The element always knows what was typed.
-    private async Task OnSearchKeyAsync(KeyboardEventArgs e)
-    {
-        if (e.Key != "Enter" || _search is null) return;
-        SearchText = await JS.InvokeAsync<string?>("Reflect.get", _search.Element, "value").ConfigureAwait(true) ?? SearchText;
-        await SearchAsync().ConfigureAwait(true);
-    }
-}

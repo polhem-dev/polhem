@@ -73,7 +73,7 @@ namespace Polhem.Web.Blazor.Fluent.UnitTests
         /// <inheritdoc />
         protected override void SearchPicker(IRenderedComponent<ContainerFragment> cut, string text)
         {
-            cut.Find(".polhem-lookup-panel__search-input fluent-text-input").Change(text);
+            cut.Find(".polhem-lookup-panel__search-input input").Change(text);
             cut.Find(".polhem-lookup-panel__search").Submit();
         }
     }

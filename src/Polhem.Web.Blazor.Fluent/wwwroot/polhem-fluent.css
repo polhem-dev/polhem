@@ -17,9 +17,10 @@
 .polhem-dialog { display: contents; }
 .polhem-related-record-dialog, .polhem-row-edit-dialog, .polhem-lookup-dialog { --dialog-width: min(900px, 90vw); }
 
-.polhem-login-panel__label { font-size: 13px; }
-.polhem-login-panel__input { padding: 5px 8px; font: inherit; border: 1px solid var(--colorNeutralStroke1); border-radius: 4px; }
-.polhem-login-panel__submit { padding: 6px 12px; font: inherit; color: var(--colorNeutralForegroundOnBrand); background: var(--colorBrandBackground); border: 0; border-radius: 4px; cursor: pointer; }
+.polhem-login-panel__label, .polhem-native-input__label { display: block; font-size: 13px; }
+.polhem-login-panel__input, .polhem-native-input { box-sizing: border-box; width: 100%; padding: 5px 8px; font: inherit; border: 1px solid var(--colorNeutralStroke1); border-radius: 4px; }
+.polhem-login-panel__submit, .polhem-native-button { padding: 6px 12px; font: inherit; color: var(--colorNeutralForegroundOnBrand); background: var(--colorBrandBackground); border: 0; border-radius: 4px; cursor: pointer; }
+.polhem-lookup-panel__search-input { flex: 1; }
 .polhem-shell-signin { border: 1px solid var(--colorNeutralStroke1); border-radius: 6px; }
 .polhem-shell-signin__title { font-size: 20px; font-weight: 600; }
 .polhem-shell-signin__hint { font-size: 13px; color: var(--colorNeutralForeground3); }
