@@ -26,6 +26,7 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 | Front end | Link |
 |-----------|------|
 | Blazor Server | <https://polhem-northwind.onrender.com/> |
+| Blazor WebAssembly | <https://polhem-northwind.onrender.com/wasm/> |
 | Avalonia (WebAssembly) | <https://polhem-northwind.onrender.com/web/> |
 
 Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
