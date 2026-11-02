@@ -24,12 +24,22 @@
     opacity: 0;
 }
 
-/* The link to the other front end on the demo site (see index.html). It sits above the Avalonia canvas. */
-.demo-switch {
+/* The links to the other front ends on the demo site (see index.html). They sit above the Avalonia canvas. */
+.demo-switch-bar {
     position: fixed;
     right: 12px;
     bottom: 12px;
+    left: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
     z-index: 10;
+    pointer-events: none;
+}
+
+.demo-switch {
+    pointer-events: auto;
     padding: 6px 12px;
     border-radius: 999px;
     background: #1b2a4e;
@@ -39,5 +49,5 @@
     opacity: 0.85;
 }
 
-.demo-switch[hidden] { display: none; }
+.demo-switch-bar[hidden] { display: none; }
 .demo-switch:hover { opacity: 1; }

@@ -18,9 +18,12 @@
 </head>
 <body>
     <div id="app"><p class="app-loading">Loading Polhem.Northwind…</p></div>
-    <!-- Shown only on the demo site, which serves the Blazor Server head at the root. -->
-    <a id="demo-switch" class="demo-switch" href="/" hidden>Try the Blazor Server version</a>
-    <script>document.getElementById("demo-switch").hidden = !window.polhemDemoSite;</script>
+    <!-- Shown only on the demo site, which serves the other front ends. -->
+    <nav id="demo-switch-bar" class="demo-switch-bar" hidden>
+        <a class="demo-switch" href="/">Try the Blazor Server version</a>
+        <a class="demo-switch" href="/web/">Try the Avalonia web version</a>
+    </nav>
+    <script>document.getElementById("demo-switch-bar").hidden = !window.polhemDemoSite;</script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

@@ -4,10 +4,20 @@
 }
 
 /* The link to the other front end on the demo site (see index.html). */
-.demo-switch {
+.demo-switch-bar {
     position: fixed;
     right: 12px;
     bottom: 12px;
+    left: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.demo-switch {
+    pointer-events: auto;
     padding: 6px 12px;
     border-radius: 999px;
     background: #1b2a4e;
@@ -20,4 +30,4 @@
 
 .demo-switch:hover { opacity: 1; }
 
-.demo-switch[hidden] { display: none; }
+.demo-switch-bar[hidden] { display: none; }

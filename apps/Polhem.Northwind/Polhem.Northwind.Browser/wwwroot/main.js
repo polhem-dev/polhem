@@ -6,7 +6,7 @@ if (!is_browser) throw new Error(`Expected to be running in a browser`);
 // The demo site serves this bundle under /web/ (NorthwindDemo.BrowserPath in Polhem.Northwind.Blazor); the
 // development server serves it at the root, where there is no other front end to link to.
 if (globalThis.location.pathname.startsWith('/web/')) {
-    document.getElementById('demo-switch').hidden = false;
+    document.getElementById('demo-switch-bar').hidden = false;
 }
 
 const dotnetRuntime = await dotnet
