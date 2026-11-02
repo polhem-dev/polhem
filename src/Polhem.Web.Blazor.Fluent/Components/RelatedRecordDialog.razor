@@ -1,0 +1,45 @@
+@namespace Polhem.Web.Blazor.Fluent.Components
+@inherits RelatedRecordDialogBase
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Fluent.Controls
+
+@if (IsPermitted || Error is not null)
+{
+    <PolhemDialog Class="polhem-related-record-dialog" Title="@Title">
+        <div class="polhem-related-record-dialog__toolbar">
+            <FluentButton Class="polhem-related-record-dialog__close" OnClick="() => OnClosed.InvokeAsync()">@Text(PolhemUIText.Close)</FluentButton>
+        </div>
+        @if (Notice is not null)
+        {
+            <FluentMessageBar Intent="MessageBarIntent.Warning" Class="polhem-related-record-dialog__notice">@Notice</FluentMessageBar>
+        }
+        @if (Error is not null)
+        {
+            <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-related-record-dialog__error">@Error</FluentMessageBar>
+        }
+        else if (DataObject is null)
+        {
+            <div class="polhem-related-record-dialog__loading">@Text(PolhemUIText.Loading)</div>
+        }
+        else
+        {
+            <FormLayoutPresenter Layout="FormLayout"
+                                 DataObject="DataObject"
+                                 FormMode="SingleFormMode.View"
+                                 RoundingContext="RoundingContext"
+                                 IsCompact="IsCompact"
+                                 IdPrefix="@IdPrefix"
+                                 OpenRelation="OpenRelation" />
+        }
+        @* Inside this dialog, so it opens above it in the top layer. *@
+        @if (Relation is { } relation)
+        {
+            <RelatedRecordDialog Target="relation"
+                                 DefinitionLoader="DefinitionLoader"
+                                 IsCompact="IsCompact"
+                                 OnClosed="CloseRelation"
+                                 OnRefused="OnRelationRefused" />
+        }
+    </PolhemDialog>
+}

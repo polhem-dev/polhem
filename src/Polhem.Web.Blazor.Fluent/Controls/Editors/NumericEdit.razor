@@ -1,0 +1,31 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits NumericEditorBase
+
+@* The focus events come from a wrapper, which sees them from the input inside the component's shadow root. *@
+<div @onfocusin="BeginEditing" @onfocusout="EndEditing">
+    <FluentTextInput @key="_generation"
+                     @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                     Class="polhem-field-editor--numeric"
+                     Value="@Text"
+                     ValueChanged="Commit"
+                     ReadOnly="!IsEditable"
+                     InputMode="TextInputMode.Decimal"
+                     Width="100%" />
+</div>
+
+@code {
+    private int _generation;
+
+    // The input keeps showing what was typed when its value does not change, so a rejected entry recreates it. The new
+    // input does not have the focus, so the display format returns too.
+    private void Commit(string? value)
+    {
+        var shown = Text;
+        CommitText(value);
+        if (string.Equals(Text, shown, StringComparison.Ordinal) && !string.Equals(Text, value, StringComparison.Ordinal))
+        {
+            EndEditing();
+            _generation++;
+        }
+    }
+}

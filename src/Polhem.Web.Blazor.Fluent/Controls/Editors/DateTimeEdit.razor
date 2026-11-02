@@ -1,0 +1,67 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits DateTimeEditorBase
+
+@if (IsEditable)
+{
+    <div class="polhem-field-editor--datetime" @onfocusin="() => _focused = true" @onfocusout="OnLeftAsync">
+        @* WARNING: these keys must stay distinct, because a duplicate key among siblings stops the circuit. *@
+        <FluentDatePicker @ref="_picker"
+                          @key="@($"date-{_generation}")"
+                          TValue="DateTime?"
+                          Value="Value?.Date"
+                          ValueChanged="OnDateChanged"
+                          Culture="FluentAttributes.CultureFor(DateFormat)"
+                          Width="100%" />
+        <FluentTextInput @key="@($"time-{_generation}")"
+                         Value="@Value?.ToString(TimeFormat, System.Globalization.CultureInfo.InvariantCulture)"
+                         ValueChanged="OnTimeChanged"
+                         Placeholder="@TimeFormat"
+                         Width="100%" />
+    </div>
+}
+else
+{
+    <FluentTextInput @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                     Class="polhem-field-editor--datetime"
+                     Value="@ReadOnlyText"
+                     ReadOnly="true"
+                     Width="100%" />
+}
+
+@code {
+    private const string DateFormat = "yyyy-MM-dd";
+    private const string TimeFormat = "HH:mm";
+    // Long enough for the focus to arrive where it was going, which may be the calendar of this same picker.
+    private const int LeaveDelayMilliseconds = 250;
+
+    private int _generation;
+    private bool _focused;
+    private FluentDatePicker<DateTime?>? _picker;
+
+    private void OnDateChanged(DateTime? date) => CommitValue(date?.Date + (Value?.TimeOfDay ?? TimeSpan.Zero));
+
+    private void OnTimeChanged(string? text)
+    {
+        if (Value is not { } value) return;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            CommitValue(value.Date);
+            return;
+        }
+        if (TimeSpan.TryParse(text, System.Globalization.CultureInfo.InvariantCulture, out var time))
+            CommitValue(value.Date + time);
+        else
+            _generation++;
+    }
+
+    private async Task OnLeftAsync()
+    {
+        _focused = false;
+        await Task.Delay(LeaveDelayMilliseconds).ConfigureAwait(true);
+        if (!_focused && _picker?.Opened != true)
+        {
+            _generation++;
+            StateHasChanged();
+        }
+    }
+}

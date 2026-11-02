@@ -1,0 +1,11 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits TextEditorBase
+
+@* Not Immediate: the value commits when the user finishes it, so a recalculation that depends on it runs once. *@
+<FluentTextInput @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                 Class="polhem-field-editor--text"
+                 Value="@Text"
+                 ValueChanged="CommitText"
+                 ReadOnly="!IsEditable"
+                 MaxLength="FluentAttributes.MaxLength(MaxLength)"
+                 Width="100%" />

@@ -189,13 +189,14 @@ graph BT
 
 ### Web front end
 
-The shared layer, one UI package, and one package per host. A UI package and a host package do not reference each other.
+The shared layer, one package per UI framework, and one package per host. A UI package and a host package do not reference each other.
 
 ```mermaid
 graph BT
   subgraph Web ["Web front end"]
     BlazorShared["Polhem.Web.Blazor"]
     BlazorMud["Polhem.Web.Blazor.Mud"]
+    BlazorFluent["Polhem.Web.Blazor.Fluent"]
     BlazorSrv["Polhem.Web.Blazor.Server"]
     BlazorWasm["Polhem.Web.Blazor.Wasm"]
   end
@@ -207,6 +208,7 @@ graph BT
   BlazorShared --> UICore
   BlazorShared --> Expressions
   BlazorMud --> BlazorShared
+  BlazorFluent --> BlazorShared
   BlazorSrv --> BlazorShared
   BlazorWasm --> BlazorShared
 
@@ -278,4 +280,4 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` globa
 - **`Polhem.UI.*` family criterion**: every front end references `Polhem.UI.Core`, so referencing it no longer decides the family. What decides it is whether the package builds on the single-user model, where one process serves one signed-in user and the services come from the process-wide `UIServices.Provider` (and, with a backend, from `Polhem.UI.ApiBridge`).
   - Single-user → `Polhem.UI.*` (current: `Polhem.UI.Core`, `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`, `Polhem.UI.Avalonia.Shell`; future: `Polhem.UI.WinForms`, `Polhem.UI.Wpf`, etc.)
   - Serves several users from one process, with its own state management → independent family prefix (e.g. `Polhem.Web.Blazor.*`). The Blazor head used to stay away from `Polhem.UI.Core` because that package held the process-wide `ClientInfo`; that state now lives in `Polhem.UI.ApiBridge`, so the Blazor head references `Polhem.UI.Core` for the shared value rules but must not use `UIServices` or reference `Polhem.UI.ApiBridge`. `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when it does.
-- The **Web frontend layer** is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor`, a UI package (`Polhem.Web.Blazor.Mud`) and a host package (`Polhem.Web.Blazor.Server`, `Polhem.Web.Blazor.Wasm`); an application chooses one UI package and one host package, and the two do not reference each other ([adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)). The shared layer depends on `Polhem.Api.Client`, on `Polhem.UI.Core` for the value rules it shares with the native heads, and on `Polhem.Expressions` for the live preview of computed fields; the Blazor Server host chooses the transport in `AddPolhemBlazor`, while the WebAssembly host is always remote: `UseRemoteProvider` (each circuit's `PolhemApiClient` calls over HTTP) or `UseLocalProvider` (in process, for trusted users only, which also needs `AddPolhemFramework` on the same service collection).
+- The **Web frontend layer** is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor`, a UI package (`Polhem.Web.Blazor.Mud`, `Polhem.Web.Blazor.Fluent`) and a host package (`Polhem.Web.Blazor.Server`, `Polhem.Web.Blazor.Wasm`); an application chooses one UI package and one host package, and the two do not reference each other ([adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)). The shared layer depends on `Polhem.Api.Client`, on `Polhem.UI.Core` for the value rules it shares with the native heads, and on `Polhem.Expressions` for the live preview of computed fields; the Blazor Server host chooses the transport in `AddPolhemBlazor`, while the WebAssembly host is always remote: `UseRemoteProvider` (each circuit's `PolhemApiClient` calls over HTTP) or `UseLocalProvider` (in process, for trusted users only, which also needs `AddPolhemFramework` on the same service collection).

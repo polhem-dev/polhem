@@ -1,0 +1,15 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits CheckEditorBase
+
+<FluentCheckbox @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                Class="polhem-field-editor--checkbox"
+                Value="IsChecked"
+                ValueChanged="OnChanged"
+                ReadOnly="!IsEditable" />
+
+@code {
+    private void OnChanged(bool value)
+    {
+        if (IsEditable) CommitChecked(value);
+    }
+}

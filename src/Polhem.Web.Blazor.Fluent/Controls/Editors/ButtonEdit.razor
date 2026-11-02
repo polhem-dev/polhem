@@ -1,0 +1,28 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits ButtonEditorBase
+
+@* The double-click, the keys and the hint sit on a wrapper, which sees them from inside the component's shadow root. *@
+<div class="@RootClass" title="@(LookupFailure ?? OpenHint)" @ondblclick="() => OnDoubleClickAsync()" @onkeydown="OnKeyDown">
+    <FluentTextInput @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                     Class="polhem-field-editor--button"
+                     Value="@Text"
+                     ValueChanged="CommitText"
+                     ReadOnly="@(HasLookup || !IsEditable)"
+                     MaxLength="FluentAttributes.MaxLength(MaxLength)"
+                     Width="100%" />
+    @if (IsEditable)
+    {
+        <FluentButton Class="polhem-button-edit__search" Title="@LookupButtonText" OnClick="() => OnButtonClickAsync()">…</FluentButton>
+    }
+</div>
+@if (IsLookupOpen && FormField is { } lookupField)
+{
+    <LookupDialog ProgId="@lookupField.RelationProgId"
+                  OnCommitted="row => ApplySelectionAsync(row)"
+                  OnCancelled="CloseLookup"
+                  OnFailed="ex => ReportFailureAsync(ex)" />
+}
+
+@code {
+    private string RootClass => OpenTarget is null ? "polhem-button-edit" : "polhem-button-edit polhem-field-editor--opens-record";
+}

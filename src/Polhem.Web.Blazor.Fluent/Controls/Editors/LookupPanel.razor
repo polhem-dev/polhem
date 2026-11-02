@@ -1,0 +1,38 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits LookupPanelBase
+@using Polhem.Web.Blazor.Fluent.Controls
+@using Polhem.Definition.Language
+
+@* A native input: a Fluent one can overwrite what is typed just after it takes the focus, and Enter submits only from a native input. *@
+<div class="polhem-lookup-panel">
+    <form class="polhem-lookup-panel__search" @onsubmit="() => SearchAsync()" @onsubmit:preventDefault>
+        <div class="polhem-lookup-panel__search-input"><input class="polhem-native-input" @bind="SearchText" placeholder="@Text(PolhemUIText.Search)" aria-label="@Text(PolhemUIText.Search)" /></div>
+        <button type="submit" class="polhem-native-button polhem-lookup-panel__search-button">@Text(PolhemUIText.Search)</button>
+    </form>
+    @if (Error is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-lookup-panel__error">@Error</FluentMessageBar>
+    }
+    @if (TruncationNotice is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Info" Class="polhem-lookup-panel__notice">@TruncationNotice</FluentMessageBar>
+    }
+    @if (Layout is not null && Rows is { Rows.Count: > 0 })
+    {
+        <GridControl Layout="Layout"
+                     DataTable="Rows"
+                     FormTable="Schema?.MasterTable"
+                     AllowEdit="false"
+                     SelectedRowId="SelectedRowId"
+                     RowSelected="Select"
+                     RowActivated="rowId => ActivateAsync(rowId)" />
+    }
+    else
+    {
+        <div class="polhem-lookup-panel__empty">@Text(PolhemUIText.NoData)</div>
+    }
+    <div class="polhem-lookup-panel__buttons">
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="polhem-lookup-panel__ok" Disabled="@(SelectedRow is null)" OnClick="() => CommitAsync()">@Text(PolhemUIText.Ok)</FluentButton>
+        <FluentButton Class="polhem-lookup-panel__cancel" OnClick="() => CancelAsync()">@Text(PolhemUIText.Cancel)</FluentButton>
+    </div>
+</div>

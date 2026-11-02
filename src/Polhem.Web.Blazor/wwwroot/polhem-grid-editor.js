@@ -110,7 +110,7 @@ function focusTextWhenRendered(row, attempts) {
 // An input can sit in a web component's open shadow root, where a selector from outside does not reach it.
 function findInput(editor) {
     if (!editor) return null;
-    const direct = editor.querySelector('input:not([type=checkbox]), textarea, select, input');
+    const direct = editor.querySelector('input:not([type=checkbox]), textarea, select, input, [role=combobox]');
     if (direct) return direct;
     for (const element of editor.querySelectorAll('*')) {
         const inner = element.shadowRoot && element.shadowRoot.querySelector('input, textarea');
@@ -119,12 +119,17 @@ function findInput(editor) {
     return null;
 }
 
-export function focusEditor(editor, cell, openPopupSelector) {
+export async function focusEditor(editor, cell, openPopupSelector, replayDelay) {
     // The user clicked on while this editor was on its way, and the cell now focused has its own editor coming.
     if (isTextCell(document.activeElement) && isOpening()) return;
-    openingSince = 0;
-    const input = findInput(editor);
+    let input = findInput(editor);
+    // A web component can add its input a moment after it renders.
+    for (let frame = 0; !input && frame < 10; frame++) {
+        await new Promise(requestAnimationFrame);
+        input = findInput(editor);
+    }
     if (!input) {
+        openingSince = 0;
         const pendingClick = queue.find(item => item.click);
         queue = [];
         pendingClick && followClick(pendingClick);
@@ -133,15 +138,6 @@ export function focusEditor(editor, cell, openPopupSelector) {
     const original = input.value;
     input.focus();
     input.select && input.select();
-    const leaveAt = queue.findIndex(item => item.tab || item.click);
-    const typed = (leaveAt < 0 ? queue : queue.slice(0, leaveAt)).map(item => item.text).join('');
-    const pendingLeave = leaveAt < 0 ? null : queue[leaveAt];
-    queue = leaveAt < 0 ? [] : queue.slice(leaveAt + 1);
-    if (typed.length > 0 && !input.readOnly) {
-        // WARNING: never set `value` here. A value set from script does not fire `change` when the input is left, so the
-        // text would show and then be lost. Inserted text counts as typing.
-        document.execCommand('insertText', false, typed);
-    }
 
     editor.addEventListener('keydown', event => {
         if (event.key !== 'Escape' || document.querySelector(openPopupSelector)) return;
@@ -152,13 +148,31 @@ export function focusEditor(editor, cell, openPopupSelector) {
         cell.invokeMethodAsync('CloseEditor').then(() => focusTextWhenRendered(row, 20));
     }, true);
 
-    if (pendingLeave) {
-        input.blur();
-        if (pendingLeave.click) {
-            followClick(pendingLeave);
-        } else {
-            const next = nextStop(editor, pendingLeave.backwards);
-            next && next.focus();
+    const replay = () => {
+        openingSince = 0;
+        const leaveAt = queue.findIndex(item => item.tab || item.click);
+        const typed = (leaveAt < 0 ? queue : queue.slice(0, leaveAt)).map(item => item.text).join('');
+        const pendingLeave = leaveAt < 0 ? null : queue[leaveAt];
+        queue = leaveAt < 0 ? [] : queue.slice(leaveAt + 1);
+        if (typed.length > 0 && !input.readOnly) {
+            // WARNING: never set `value` here. A value set from script does not fire `change` when the input is left, so the
+            // text would show and then be lost. Inserted text counts as typing.
+            document.execCommand('insertText', false, typed);
         }
+        if (pendingLeave) {
+            input.blur();
+            if (pendingLeave.click) {
+                followClick(pendingLeave);
+            } else {
+                const next = nextStop(editor, pendingLeave.backwards);
+                next && next.focus();
+            }
+        }
+    };
+    // Keys pressed during the delay stay in the queue, because `openingSince` is still set.
+    if (replayDelay > 0) {
+        setTimeout(replay, replayDelay);
+    } else {
+        replay();
     }
 }

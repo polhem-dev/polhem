@@ -1,0 +1,9 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits TextEditorBase
+
+<FluentTextArea @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                Class="polhem-field-editor--memo"
+                Value="@Text"
+                ValueChanged="CommitText"
+                ReadOnly="!IsEditable"
+                Width="100%" />

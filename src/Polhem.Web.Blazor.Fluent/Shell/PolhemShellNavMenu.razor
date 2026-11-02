@@ -1,0 +1,32 @@
+@namespace Polhem.Web.Blazor.Fluent.Shell
+@inherits ShellNavMenuBase
+@using Microsoft.AspNetCore.Components.Routing
+
+@if (Error is not null)
+{
+    <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-shell-nav__error">@Error</FluentMessageBar>
+}
+else if (Rows is null)
+{
+    <div class="polhem-shell-nav__loading">@LoadingText</div>
+}
+else if (Rows.Count == 0)
+{
+    <div class="polhem-shell-nav__empty">@PolhemShellText.Get(PolhemShellText.MenuEmpty)</div>
+}
+else
+{
+    <div class="polhem-shell-nav">
+        @foreach (var row in Rows)
+        {
+            if (row.ProgId is null)
+            {
+                <div class="polhem-shell-nav__header">@row.Caption</div>
+            }
+            else
+            {
+                <NavLink class="polhem-shell-nav__link" href="@Options.GetFormUri(row.ProgId)" @onclick="() => OnNavigated.InvokeAsync()">@row.Caption</NavLink>
+            }
+        }
+    </div>
+}

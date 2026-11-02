@@ -1,0 +1,12 @@
+@inject Microsoft.JSInterop.IJSRuntime JS
+<Microsoft.AspNetCore.Components.Routing.Router AppAssembly="typeof(TestApp).Assembly">
+    <Found Context="data"><RouteView RouteData="data" /></Found>
+</Microsoft.AspNetCore.Components.Routing.Router>
+
+@code {
+    // Prerendered markup looks ready before the circuit runs it, so a test waits for this mark.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JS.InvokeVoidAsync("eval", "document.body.dataset.interactive = '1'");
+    }
+}

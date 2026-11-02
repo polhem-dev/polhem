@@ -1,0 +1,42 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@using System.Data
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.DataObjects
+@using Polhem.Web.Blazor.Fluent.Components
+
+@* The host renders this while the row is being edited and removes it when either callback runs. Neither a click outside
+   nor Escape closes it, because an edit form holds typed input. *@
+<PolhemDialog Class="polhem-row-edit-dialog" Title="@Layout?.Caption">
+    <RowEditPanel DataObject="DataObject"
+                  Layout="Layout"
+                  Row="Row"
+                  Compact="Compact"
+                  EditCommitted="EditCommitted"
+                  EditCancelled="EditCancelled" />
+</PolhemDialog>
+
+@code {
+    /// <summary>Gets or sets the data object that owns the row.</summary>
+    [Parameter, EditorRequired]
+    public FormDataObject? DataObject { get; set; }
+
+    /// <summary>Gets or sets the grid layout whose columns drive the editors.</summary>
+    [Parameter, EditorRequired]
+    public LayoutGrid? Layout { get; set; }
+
+    /// <summary>Gets or sets the row to edit.</summary>
+    [Parameter, EditorRequired]
+    public DataRow? Row { get; set; }
+
+    /// <summary>Gets or sets whether the editors lay out in a single column.</summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
+    /// <summary>Invoked after OK commits the edit.</summary>
+    [Parameter]
+    public EventCallback EditCommitted { get; set; }
+
+    /// <summary>Invoked after Cancel rolls the edit back.</summary>
+    [Parameter]
+    public EventCallback EditCancelled { get; set; }
+}

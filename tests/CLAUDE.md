@@ -159,7 +159,7 @@ bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribut
 
 ### Needs a real browser: `[BrowserFact]`
 
-`tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` runs them over its test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
+`tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
 
 ### Repository root: `RepoRoot.Find()`
 

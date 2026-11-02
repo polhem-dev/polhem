@@ -1,0 +1,27 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits TimeEditorBase
+
+@* Text, not FluentTimePicker: display format equals storage format in every UI head (ADR-033). *@
+<FluentTextInput @key="_generation"
+                 @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                 Class="polhem-field-editor--time"
+                 Value="@Text"
+                 ValueChanged="Commit"
+                 ReadOnly="!IsEditable"
+                 MaxLength="FluentAttributes.MaxLength(MaxLength)"
+                 Placeholder="HH:mm"
+                 InputMode="TextInputMode.Numeric"
+                 Width="100%" />
+
+@code {
+    private int _generation;
+
+    // The input keeps showing what was typed when its value does not change, so a rejected entry recreates it.
+    private void Commit(string? value)
+    {
+        var shown = Text;
+        CommitText(value);
+        if (string.Equals(Text, shown, StringComparison.Ordinal) && !string.Equals(Text, value, StringComparison.Ordinal))
+            _generation++;
+    }
+}

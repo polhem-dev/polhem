@@ -1,0 +1,57 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits DateEditorBase
+
+@if (IsEditable)
+{
+    @* The picker has no callback for text it cannot parse, so leaving recreates it to show the stored date. *@
+    <div @onfocusin="() => _focused = true" @onfocusout="OnLeftAsync">
+        <FluentDatePicker @ref="_picker"
+                          @key="_generation"
+                          TValue="DateTime?"
+                          @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                          Class="@ModifierClass"
+                          Value="Date"
+                          ValueChanged="CommitDate"
+                          View="View"
+                          Culture="FluentAttributes.CultureFor(ValueFormat)"
+                          Width="100%" />
+    </div>
+}
+else
+{
+    <FluentTextInput @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                     Class="@ModifierClass"
+                     Value="@ReadOnlyText"
+                     ReadOnly="true"
+                     Width="100%" />
+}
+
+@code {
+    // Long enough for the focus to arrive where it was going, which may be the calendar of this same picker.
+    private const int LeaveDelayMilliseconds = 250;
+
+    private FluentDatePicker<DateTime?>? _picker;
+    private int _generation;
+    private bool _focused;
+
+    /// <summary>
+    /// Gets the modifier class that identifies the editor kind in the rendered markup.
+    /// </summary>
+    protected virtual string ModifierClass => "polhem-field-editor--date";
+
+    /// <summary>
+    /// Gets the view the picker opens on.
+    /// </summary>
+    protected virtual CalendarViews View => CalendarViews.Days;
+
+    private async Task OnLeftAsync()
+    {
+        _focused = false;
+        await Task.Delay(LeaveDelayMilliseconds).ConfigureAwait(true);
+        if (!_focused && _picker?.Opened != true)
+        {
+            _generation++;
+            StateHasChanged();
+        }
+    }
+}

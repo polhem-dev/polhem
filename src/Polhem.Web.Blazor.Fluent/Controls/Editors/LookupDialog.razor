@@ -1,0 +1,23 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits LookupDialogBase
+@using Polhem.Web.Blazor.Fluent.Components
+
+@* The host renders this while the lookup is open and removes it when either callback runs. *@
+<PolhemDialog Class="polhem-lookup-dialog" Title="@Title" Dismissable="true" Dismissed="() => CancelAsync()">
+    @if (Error is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-lookup-dialog__error">@Error</FluentMessageBar>
+        <FluentButton Class="polhem-lookup-panel__cancel" OnClick="() => CancelAsync()">@CancelText</FluentButton>
+    }
+    else if (ResolvedSchema is null || ResolvedConnector is null)
+    {
+        <div class="polhem-lookup-dialog__loading">@LoadingText</div>
+    }
+    else
+    {
+        <LookupPanel Schema="ResolvedSchema"
+                     Connector="ResolvedConnector"
+                     OnCommitted="row => CommitAsync(row)"
+                     OnCancelled="() => CancelAsync()" />
+    }
+</PolhemDialog>

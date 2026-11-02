@@ -1,0 +1,21 @@
+@namespace Polhem.Web.Blazor.Fluent.Components
+@inherits LoginPanelBase
+
+@* Native inputs: a password manager has to see them and their autocomplete, and a Fluent input keeps its own in a shadow
+   root. Enter also submits only from a native input. *@
+<form class="polhem-login-panel" @onsubmit="() => OnSubmitAsync()" @onsubmit:preventDefault="true">
+    <label class="polhem-login-panel__label" for="@_userIdInputId">@DisplayedUserIdLabel</label>
+    <input id="@_userIdInputId" class="polhem-login-panel__input" autocomplete="username" @bind="UserId" disabled="@IsBusy" />
+    <label class="polhem-login-panel__label" for="@_passwordInputId">@DisplayedPasswordLabel</label>
+    <input id="@_passwordInputId" class="polhem-login-panel__input" type="password" autocomplete="current-password" @bind="Password" disabled="@IsBusy" />
+    <button type="submit" class="polhem-login-panel__submit" disabled="@IsBusy">@DisplayedSubmitLabel</button>
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-login-panel__error">@Error</FluentMessageBar>
+    }
+</form>
+
+@code {
+    private readonly string _userIdInputId = $"polhem-login-user-{Guid.NewGuid():N}";
+    private readonly string _passwordInputId = $"polhem-login-pwd-{Guid.NewGuid():N}";
+}

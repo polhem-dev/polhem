@@ -1,0 +1,179 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls
+@inherits GridControlBase
+@implements IAsyncDisposable
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using System.Data
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Connectors
+@using Polhem.UI.Core.Fields
+@using Polhem.Web.Blazor.Fluent.Controls.Editors
+
+<div class="polhem-grid">
+    @if (ShowToolbar)
+    {
+        <div class="polhem-grid__toolbar">
+            @if (Actions.HasFlag(GridControlAllowActions.Add))
+            {
+                <FluentButton Class="polhem-grid__button polhem-grid__button--add" Title="@Text(PolhemUIText.Add)" Disabled="@(!HasData)" OnClick="OnAddClicked">+</FluentButton>
+            }
+            @if (EditMode == GridEditMode.EditForm && Actions.HasFlag(GridControlAllowActions.Edit))
+            {
+                <FluentButton Class="polhem-grid__button polhem-grid__button--edit" Title="@Text(PolhemUIText.Edit)" Disabled="@(!HasData)" OnClick="EditSelectedRow">✎</FluentButton>
+            }
+            @if (Actions.HasFlag(GridControlAllowActions.Delete))
+            {
+                <FluentButton Class="polhem-grid__button polhem-grid__button--delete" Title="@Text(PolhemUIText.Delete)" Disabled="@(!HasData)" OnClick="DeleteSelectedRow">✕</FluentButton>
+            }
+        </div>
+    }
+    <PolhemDataGrid TGridItem="DataRow"
+                    Items="_rows"
+                    ItemKey="@(row => row)"
+                    DisplayMode="DataGridDisplayMode.Table"
+                    RowSize="DataGridRowSize.Small"
+                    ShowHover="true"
+                    ResizableColumns="@(!Compact)"
+                    ReorderableColumns="@(!Compact)"
+                    OnRowClick="OnRowClick"
+                    OnRowDoubleClick="OnRowDoubleClick"
+                    RowClass="RowClass">
+        @foreach (var column in VisibleColumns)
+        {
+            var current = column;
+            <TemplateColumn TGridItem="DataRow"
+                            ColumnId="@current.FieldName"
+                            Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
+                            Sortable="false"
+                            DisableCellFocus="true"
+                            Width="@ColumnWidth(current)"
+                            MinWidth="@ColumnWidth(current)">
+                <HeaderCellItemTemplate>
+                    <div class="@HeaderClass(current)">
+                        @if (IsSortable(current))
+                        {
+                            <button type="button" class="polhem-grid__sort" @onclick="() => OnSortRequested.InvokeAsync(current.FieldName)">@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)@SortMark(current)</button>
+                        }
+                        else
+                        {
+                            @FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)
+                        }
+                        @if (FilterKind(current) is var filterKind && filterKind != ColumnFilterKind.None)
+                        {
+                            <GridColumnFilter Column="current"
+                                              Field="ColumnField(current)!"
+                                              Kind="filterKind"
+                                              Filters="Filters!"
+                                              Applied="OnFilterChanged" />
+                        }
+                    </div>
+                </HeaderCellItemTemplate>
+                <ChildContent>
+                    @if (IsInCellEditor(current))
+                    {
+                        <GridEditorCell Host="EditorHost"
+                                        Script="_script"
+                                        EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
+                                        EditorParameters="BuildEditorParameters(current, context)"
+                                        Text="@FormatCell(context, current)"
+                                        IsNumeric="@(current.ControlType == ControlType.NumericEdit)"
+                                        IsCheck="@(current.ControlType == ControlType.CheckEdit)"
+                                        IsChecked="@IsChecked(context, current)" />
+                    }
+                    else if (current.ControlType == ControlType.CheckEdit)
+                    {
+                        <input type="checkbox" disabled checked="@IsChecked(context, current)" aria-label="@current.Caption" />
+                    }
+                    else if (OpenTarget(context, current) is { } target)
+                    {
+                        <div class="polhem-grid__cell--opens-record"
+                             title="@Text(PolhemUIText.OpenRelatedRecord)"
+                             @ondblclick="() => OpenRelationAsync(target)">@FormatCell(context, current)</div>
+                    }
+                    else if (current.ControlType == ControlType.NumericEdit)
+                    {
+                        <div class="polhem-grid-cell__text--numeric">@FormatCell(context, current)</div>
+                    }
+                    else
+                    {
+                        @FormatCell(context, current)
+                    }
+                </ChildContent>
+            </TemplateColumn>
+        }
+    </PolhemDataGrid>
+</div>
+@if (EditingRow is not null && BoundDataObject is not null && Layout is not null)
+{
+    <RowEditDialog DataObject="BoundDataObject"
+                   Layout="Layout"
+                   Row="EditingRow"
+                   Compact="Compact"
+                   EditCommitted="OnEditCommitted"
+                   EditCancelled="OnEditCancelled" />
+}
+
+@code {
+    // The default width keeps an editor whole when its cell opens, so the row does not jump.
+    private const int DefaultColumnWidth = 120;
+    // What `fluent-listbox` and the calendar use while they are open.
+    private const string OpenPopupSelector = ":popover-open";
+    // A Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
+    private const int ReplayDelayMilliseconds = 50;
+
+    private IQueryable<DataRow> _rows = Enumerable.Empty<DataRow>().AsQueryable();
+    private List<DataRow> _lastRows = [];
+    private GridEditorScript _script = default!;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _script = new GridEditorScript(JS, OpenPopupSelector, ReplayDelayMilliseconds);
+    }
+
+    // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
+    /// <inheritdoc />
+    protected override Task OnAfterRenderAsync(bool firstRender)
+        => VisibleColumns.Any(IsInCellEditor) ? _script.LoadAsync() : Task.CompletedTask;
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync() => _script.DisposeAsync();
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RefreshRowList();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRender()
+    {
+        RefreshRowList();
+        return true;
+    }
+
+    // A new IQueryable makes the grid read its items again, so it is replaced only when the rows changed.
+    private void RefreshRowList()
+    {
+        var rows = VisibleRows.ToList();
+        if (rows.SequenceEqual(_lastRows)) return;
+        _lastRows = rows;
+        _rows = rows.AsQueryable();
+    }
+
+    private Task OnRowClick(FluentDataGridRow<DataRow> row) => row.Item is { } item ? SelectRowAsync(item) : Task.CompletedTask;
+
+    private Task OnRowDoubleClick(FluentDataGridRow<DataRow> row) => row.Item is { } item ? ActivateRowAsync(item) : Task.CompletedTask;
+
+    private string RowClass(DataRow row)
+        => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
+
+    private string HeaderClass(LayoutColumn column)
+        => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
+
+    private static string ColumnWidth(LayoutColumn column)
+        => string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
+}
