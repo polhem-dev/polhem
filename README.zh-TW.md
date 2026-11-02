@@ -33,6 +33,7 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 | 前端 | 網址 |
 |------|------|
 | Blazor Server | <https://polhem-northwind.onrender.com/> |
+| Blazor WebAssembly | <https://polhem-northwind.onrender.com/wasm/> |
 | Avalonia（WebAssembly） | <https://polhem-northwind.onrender.com/web/> |
 
 帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
