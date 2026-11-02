@@ -1,22 +1,29 @@
 using System.ComponentModel;
 using Microsoft.Playwright;
+using Polhem.Web.Blazor.BehaviorTests;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// What the shell does only in a real browser: submitting with Enter after typing, what a password manager sees, and
     /// the menu sliding over the page on a narrow screen.
     /// </summary>
-    public class ShellTests : IClassFixture<ShellBrowserFixture>
+    public abstract class ShellTests
     {
         private const string Drawer = ".polhem-shell__nav";
-        private readonly ShellBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
+        private readonly ShellTestBackend _shellBackend;
 
         /// <summary>
         /// Initializes a new instance of <see cref="ShellTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public ShellTests(ShellBrowserFixture fixture) => _fixture = fixture;
+        /// <param name="shellBackend">The backend of the site's shell.</param>
+        protected ShellTests(BrowserSiteFixture fixture, ShellTestBackend shellBackend)
+        {
+            _fixture = fixture;
+            _shellBackend = shellBackend;
+        }
 
         private async Task<IPage> OpenAsync(int width = 1000)
         {
@@ -42,7 +49,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
 
             await SignInAsync(page);
 
-            Assert.Equal(("typed-user", "secret"), _fixture.ShellBackend.LastLogin);
+            Assert.Equal(("typed-user", "secret"), _shellBackend.LastLogin);
         }
 
         [BrowserFact]

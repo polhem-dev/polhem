@@ -1,4 +1,4 @@
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// A test that drives the installed Chrome. It skips on a machine without Chrome, and in CI, where the runner image

@@ -120,6 +120,7 @@
 @code {
     // The default width keeps an editor whole when its cell opens, so the row does not jump.
     private const int DefaultColumnWidth = 120;
+    private const string OpenPopupSelector = ".mud-popover-open";
 
     private List<DataRow> _rows = [];
     private GridEditorScript _script = default!;
@@ -128,7 +129,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _script = new GridEditorScript(JS);
+        _script = new GridEditorScript(JS, OpenPopupSelector);
     }
 
     // Loaded before any cell opens, so a key typed before the first editor arrives is already held.

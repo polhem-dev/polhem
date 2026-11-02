@@ -2,22 +2,25 @@ using System.ComponentModel;
 using Microsoft.Playwright;
 using Polhem.Web.Blazor.BehaviorTests;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// What a dialog of the form page does only in a real browser: where the focus lands, what Escape does, which dialog
     /// is on top, and whether the viewport module loads from the shared package.
     /// </summary>
-    public class FormPageDialogTests : IClassFixture<GridBrowserFixture>
+    public abstract class FormPageDialogTests
     {
         private const string Row = "tr.polhem-grid__row";
-        private readonly GridBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
+
+        /// <summary>Gets the selector of an open dialog of the UI framework.</summary>
+        protected abstract string Dialog { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormPageDialogTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public FormPageDialogTests(GridBrowserFixture fixture) => _fixture = fixture;
+        protected FormPageDialogTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
         private async Task<IPage> OpenListAsync()
         {
@@ -130,7 +133,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         public async Task RelatedRecord_Stacked_ClosesTopFirst()
         {
             var page = await OpenRelatedRecordAsync();
-            var inputs = page.Locator(".mud-dialog input");
+            var inputs = page.Locator($"{Dialog} input");
             var parent = page.Locator($"[id$='-{FormPageTestBackend.ParentField}']");
 
             await parent.DblClickAsync();
@@ -151,7 +154,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
 
             await page.Locator(".polhem-related-record-dialog__close").ClickAsync();
 
-            await Assertions.Expect(page.Locator(".mud-dialog")).ToHaveCountAsync(0);
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
             await Assertions.Expect(Command(page, "Back")).ToBeEnabledAsync();
         }
 

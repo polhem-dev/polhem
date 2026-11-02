@@ -1,22 +1,22 @@
 using System.ComponentModel;
 using Microsoft.Playwright;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// What the phone card list does only in a real browser: reading the next page as it scrolls, and keeping the
     /// scroll position while it does.
     /// </summary>
-    public class CardListTests : IClassFixture<CardListFixture>
+    public abstract class CardListTests
     {
         private const string Card = ".polhem-card";
-        private readonly CardListFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
 
         /// <summary>
         /// Initializes a new instance of <see cref="CardListTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public CardListTests(CardListFixture fixture) => _fixture = fixture;
+        protected CardListTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
         private async Task<IPage> OpenAsync(bool slow = false, int width = 400)
         {

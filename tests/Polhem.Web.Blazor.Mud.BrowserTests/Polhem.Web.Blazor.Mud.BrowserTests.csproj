@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
-    <ProjectReference Include="..\Polhem.Web.Blazor.BehaviorTests\Polhem.Web.Blazor.BehaviorTests.csproj" />
+    <ProjectReference Include="..\Polhem.Web.Blazor.BrowserTests\Polhem.Web.Blazor.BrowserTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

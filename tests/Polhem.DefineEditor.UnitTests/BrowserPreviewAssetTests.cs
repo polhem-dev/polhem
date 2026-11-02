@@ -72,5 +72,16 @@ namespace Polhem.DefineEditor.UnitTests
                 Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path} returned {(int)response.StatusCode}.");
             }
         }
+
+        [Fact]
+        [DisplayName("The shared stylesheet the UI package's stylesheet imports is served")]
+        public async Task Page_ImportedSharedStylesheetIsServed()
+        {
+            var (url, _) = await GetPageAsync();
+
+            using var response = await _client.GetAsync(new Uri(url, "/_content/Polhem.Web.Blazor/polhem-blazor.css"));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
     }
 }

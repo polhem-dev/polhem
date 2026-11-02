@@ -2,21 +2,21 @@ using System.ComponentModel;
 using Microsoft.Playwright;
 using Polhem.Definition.Filters;
 
-namespace Polhem.Web.Blazor.Mud.BrowserTests
+namespace Polhem.Web.Blazor.BrowserTests
 {
     /// <summary>
     /// What a column filter does only in a real browser: the popover, the keyboard, and closing on a click outside.
     /// </summary>
-    public class GridFilterTests : IClassFixture<GridBrowserFixture>
+    public abstract class GridFilterTests
     {
         private const string Button = ".polhem-grid-filter__button";
-        private readonly GridBrowserFixture _fixture;
+        private readonly BrowserSiteFixture _fixture;
 
         /// <summary>
         /// Initializes a new instance of <see cref="GridFilterTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public GridFilterTests(GridBrowserFixture fixture) => _fixture = fixture;
+        protected GridFilterTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
         private async Task<IPage> OpenFilterAsync()
         {
@@ -25,7 +25,7 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached }).ConfigureAwait(false);
             await page.Locator(Button).First.ClickAsync().ConfigureAwait(false);
             await Assertions.Expect(page.Locator(".polhem-grid-filter__first input")).ToBeFocusedAsync().ConfigureAwait(false);
-            // MudBlazor keeps a popover off screen until its script has placed it, so focus alone does not show it.
+            // A popover can stay off screen until a script has placed it, so focus alone does not show it.
             await Assertions.Expect(page.Locator(".polhem-grid-filter__form")).ToBeInViewportAsync().ConfigureAwait(false);
             return page;
         }

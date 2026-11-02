@@ -1,3 +1,5 @@
+@import url("../Polhem.Web.Blazor/polhem-blazor.css");
+
 /* High-density overrides for ERP screens, applied over MudBlazor's dense variants inside `.polhem-dense`.
    These selectors use MudBlazor's internal class names, so check them when upgrading MudBlazor. */
 .polhem-dense .mud-input-control { margin: 0 !important; }
@@ -7,62 +9,19 @@
 .polhem-dense .mud-input-adornment button { padding: 2px; }
 .polhem-dense .mud-select .mud-input-slot { min-height: 0; }
 .polhem-dense .mud-checkbox button, .polhem-dense .mud-checkbox .mud-button-root { padding: 2px; }
-
-.polhem-field-editor--numeric input { text-align: right; }
-.polhem-field-editor--datetime { display: flex; gap: 4px; }
-
-.polhem-field-editor--opens-record, .polhem-field-editor--opens-record input { cursor: pointer; }
-.polhem-lookup-panel__search { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.polhem-lookup-panel__buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
-
-.polhem-grid__sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
-.polhem-grid__toolbar { display: flex; gap: 4px; }
 .polhem-grid__row--selected { background: var(--mud-palette-action-default-hover); }
 .polhem-grid__header--required { color: var(--mud-palette-primary); }
-.polhem-grid__cell--opens-record { cursor: pointer; }
-.polhem-grid-cell__text { min-height: 24px; padding: 2px 4px; outline: 1px solid transparent; }
 .polhem-grid-cell__text:hover, .polhem-grid-cell__text:focus { outline-color: var(--mud-palette-lines-default); }
-.polhem-grid-cell__text--numeric { text-align: right; }
 .polhem-dense .mud-table-cell { padding: 2px 4px; font-size: 13px; line-height: 20px; }
 .polhem-dense .mud-table-head .mud-table-cell { padding: 4px; font-weight: 600; }
-
-.polhem-form-page__toolbar, .polhem-form-page__pager { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; }
-.polhem-form-page__pager { margin: 8px 0 0; }
 .polhem-form-page__dirty { color: var(--mud-palette-warning); margin-left: 8px; font-size: 13px; }
-.polhem-form-page__notice { margin-bottom: 8px; }
-.polhem-form-page__page-position, .polhem-form-page__page-size-label { margin-left: 8px; font-size: 13px; }
 .polhem-form-page__pager .mud-input-control { flex: 0 0 90px; width: 90px; }
-.polhem-form-layout { display: flex; flex-direction: column; gap: 8px; }
-.polhem-form-layout__section, .polhem-form-layout__detail { padding: 8px; }
-.polhem-form-layout__section-caption, .polhem-form-layout__detail-caption { margin-bottom: 8px; }
-.polhem-form-layout__label { display: block; margin-bottom: 2px; font-size: 13px; }
 .polhem-form-layout__label--required { color: var(--mud-palette-primary); }
-.polhem-related-record-dialog__toolbar { margin-bottom: 8px; }
-.polhem-related-record-dialog__notice { margin-bottom: 8px; }
-
-.polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
-.polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px; }
-.polhem-shell-signin__languages { display: flex; gap: 8px; }
-.polhem-login-panel { display: flex; flex-direction: column; gap: 12px; }
-.polhem-shell__title { font-weight: 600; }
-.polhem-shell__user { margin-right: 12px; font-size: 13px; opacity: 0.85; }
 /* Only the sides and the bottom: MudMainContent's top padding clears the app bar. */
 .polhem-shell__main { padding-left: 16px; padding-right: 16px; padding-bottom: 16px; }
-.polhem-shell__main > :first-child { margin-top: 16px; }
 .polhem-shell-nav__header { padding: 10px 16px 4px; font-size: 12px; font-weight: 600; color: var(--mud-palette-text-secondary); }
 .polhem-shell-nav__loading, .polhem-shell-nav__empty { padding: 8px 16px; font-size: 13px; color: var(--mud-palette-text-secondary); }
-
-.polhem-card-list { display: flex; flex-direction: column; gap: 8px; }
 .polhem-card { padding: 10px; border: 1px solid var(--mud-palette-lines-default); border-radius: 6px; cursor: pointer; }
 .polhem-card--selected { background: var(--mud-palette-action-default-hover); }
-.polhem-card__line { display: flex; gap: 6px; font-size: 13px; line-height: 20px; }
-.polhem-card__caption { flex: 0 0 92px; font-weight: 600; opacity: 0.7; }
-.polhem-card__value { min-width: 0; overflow-wrap: anywhere; }
-.polhem-card-list__end { height: 1px; }
 .polhem-card-list__limit { margin-top: 8px; font-size: 13px; color: var(--mud-palette-text-secondary); }
-
-.polhem-form-page__filters { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 13px; }
-.polhem-grid-filter { display: inline-block; margin-left: 2px; vertical-align: middle; }
-.polhem-grid-filter__form { display: flex; flex-direction: column; gap: 8px; width: 220px; padding: 12px; }
-.polhem-grid-filter__buttons { display: flex; justify-content: flex-end; gap: 8px; }
 .polhem-grid-filter__error { color: var(--mud-palette-error); font-size: 13px; }

@@ -1,4 +1,4 @@
-@namespace Polhem.Web.Blazor.Mud.Components
+@namespace Polhem.Web.Blazor.Components
 @implements IAsyncDisposable
 @inject Microsoft.JSInterop.IJSRuntime JS
 @using Microsoft.JSInterop
@@ -6,7 +6,7 @@
 <div @ref="_end" class="polhem-card-list__end"></div>
 
 @code {
-    private const string ModulePath = "./_content/Polhem.Web.Blazor.Mud/polhem-card-list.js";
+    private const string ModulePath = "./_content/Polhem.Web.Blazor/polhem-card-list.js";
 
     private ElementReference _end;
     private IJSObjectReference? _module;
