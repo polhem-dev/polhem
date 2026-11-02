@@ -40,10 +40,10 @@ Polhem.UI.Core.Connectors.ListPagingState.SortFieldName.get -> string?
 Polhem.UI.Core.Connectors.ListPagingState.ToggleSort(string! fieldName) -> void
 Polhem.UI.Core.Connectors.CardListState<TRow>
 Polhem.UI.Core.Connectors.CardListState<TRow>.CanLoadMore(Polhem.UI.Core.Connectors.ListPagingState! paging) -> bool
-Polhem.UI.Core.Connectors.CardListState<TRow>.CardListState(System.Collections.Generic.IList<TRow>! rows, System.Func<TRow, string!>! getRowId) -> void
+Polhem.UI.Core.Connectors.CardListState<TRow>.CardListState(System.Collections.Generic.IList<TRow>! rows, System.Func<TRow, string!>! getRowId, int maxRows) -> void
 Polhem.UI.Core.Connectors.CardListState<TRow>.IsAtLimit.get -> bool
 Polhem.UI.Core.Connectors.CardListState<TRow>.ShowPage(int page, System.Collections.Generic.IEnumerable<TRow>! rows) -> void
-const Polhem.UI.Core.Connectors.CardListState<TRow>.MaxRows = 5000 -> int
+Polhem.UI.Core.Connectors.CardListState<TRow>.MaxRows.get -> int
 Polhem.UI.Core.Connectors.ColumnFilterKind
 Polhem.UI.Core.Connectors.ColumnFilterKind.Boolean = 5 -> Polhem.UI.Core.Connectors.ColumnFilterKind
 Polhem.UI.Core.Connectors.ColumnFilterKind.Choice = 6 -> Polhem.UI.Core.Connectors.ColumnFilterKind

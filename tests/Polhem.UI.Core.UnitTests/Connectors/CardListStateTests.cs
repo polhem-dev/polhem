@@ -8,7 +8,9 @@ namespace Polhem.UI.Core.UnitTests.Connectors
     {
         private readonly List<string> _rows = [];
 
-        private CardListState<string> CreateState() => new(_rows, row => row);
+        private const int MaxRows = 120;
+
+        private CardListState<string> CreateState() => new(_rows, row => row, MaxRows);
 
         [Fact]
         [DisplayName("A later page extends the cards, and page 1 replaces them")]
@@ -58,9 +60,9 @@ namespace Polhem.UI.Core.UnitTests.Connectors
             paging.Apply(1, new PagingInfo { Page = 1, PageSize = 50, HasMore = true });
             Assert.True(state.CanLoadMore(paging));
 
-            state.ShowPage(1, Enumerable.Range(0, CardListState<string>.MaxRows + 10).Select(i => i.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            state.ShowPage(1, Enumerable.Range(0, MaxRows + 10).Select(i => i.ToString(System.Globalization.CultureInfo.InvariantCulture)));
 
-            Assert.Equal(CardListState<string>.MaxRows, _rows.Count);
+            Assert.Equal(MaxRows, _rows.Count);
             Assert.True(state.IsAtLimit);
             Assert.False(state.CanLoadMore(paging));
         }

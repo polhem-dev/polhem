@@ -11,9 +11,6 @@ namespace Polhem.UI.Core.Connectors
     /// <typeparam name="TRow">The head's row type.</typeparam>
     public sealed class CardListState<TRow>
     {
-        /// <summary>The most rows the cards hold.</summary>
-        public const int MaxRows = 5000;
-
         private readonly HashSet<string> _rowIds = new(StringComparer.OrdinalIgnoreCase);
         private readonly IList<TRow> _rows;
         private readonly Func<TRow, string> _getRowId;
@@ -23,13 +20,19 @@ namespace Polhem.UI.Core.Connectors
         /// </summary>
         /// <param name="rows">The list to fill, which the head binds its surface to.</param>
         /// <param name="getRowId">Returns the id of a row.</param>
-        public CardListState(IList<TRow> rows, Func<TRow, string> getRowId)
+        /// <param name="maxRows">The most rows the cards hold, which depends on what a row costs the head.</param>
+        public CardListState(IList<TRow> rows, Func<TRow, string> getRowId, int maxRows)
         {
             ArgumentNullException.ThrowIfNull(rows);
             ArgumentNullException.ThrowIfNull(getRowId);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxRows);
+            MaxRows = maxRows;
             _rows = rows;
             _getRowId = getRowId;
         }
+
+        /// <summary>Gets the most rows the cards hold.</summary>
+        public int MaxRows { get; }
 
         /// <summary>Gets a value indicating whether the cards hold as many rows as they may.</summary>
         public bool IsAtLimit => _rows.Count >= MaxRows;

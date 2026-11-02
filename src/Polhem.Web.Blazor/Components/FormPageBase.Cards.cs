@@ -15,12 +15,15 @@ namespace Polhem.Web.Blazor.Components
     /// </summary>
     public abstract partial class FormPageBase
     {
+        // Every card stays rendered and is held by the circuit, so a long scroll costs traffic and server memory.
+        private const int MaxCardRows = 1000;
+
         private readonly List<DataRow> _cardRows = [];
         private CardListState<DataRow>? _cardState;
         private bool _scrollCardsToTop;
 
         private CardListState<DataRow> CardState => _cardState ??= new CardListState<DataRow>(_cardRows,
-            row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty);
+            row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty, MaxCardRows);
 
         /// <summary>Gets the rows the cards hold.</summary>
         protected IReadOnlyList<DataRow> CardRows => _cardRows;
@@ -33,7 +36,7 @@ namespace Polhem.Web.Blazor.Components
 
         /// <summary>Gets the note that the cards stopped at their limit, or <c>null</c>.</summary>
         protected string? CardLimitNotice => CardState.IsAtLimit
-            ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.ListRowsLimited), CardListState<DataRow>.MaxRows)
+            ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.ListRowsLimited), MaxCardRows)
             : null;
 
         private void ShowCardPage(int page, DataTable? table)

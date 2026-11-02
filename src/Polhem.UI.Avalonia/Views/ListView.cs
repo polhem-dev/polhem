@@ -128,7 +128,7 @@ namespace Polhem.UI.Avalonia.Views
             // lines, so narrow viewports stay readable instead of horizontally scrolling a wide
             // grid. Bound to the same DataTable; only one of grid / card list is visible at a time.
             _cardState = new CardListState<System.Data.DataRowView>(_cardRows,
-                row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty);
+                row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty, MaxCardRows);
             _cardList = new ListBox
             {
                 IsVisible = false,
