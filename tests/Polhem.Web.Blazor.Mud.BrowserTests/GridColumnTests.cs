@@ -87,9 +87,12 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
 
             await DragResizerAsync(page, 80, 300);
 
-            await Assertions.Expect(page.Locator(Headers).First).Not.ToHaveCSSAsync("width", $"{before}px");
+            // The width follows the moves as they reach the server, so an early reading is only part of the way there.
+            for (int attempt = 0; attempt < 50 && await WidthAsync(page) < before + 60; attempt++)
+                await page.WaitForTimeoutAsync(100);
+            Assert.True(await WidthAsync(page) >= before + 60, $"The width started at {before} and did not reach its target.");
+            await page.WaitForTimeoutAsync(300);
             float resized = await WidthAsync(page);
-            Assert.True(resized > before + 40, $"The width went from {before} to {resized}.");
             await page.Locator(FirstRow).First.Locator("td").First.ClickAsync();
             await page.Keyboard.TypeAsync("Washer");
             await page.Locator("#outside").ClickAsync();
