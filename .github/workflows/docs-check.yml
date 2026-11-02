@@ -43,3 +43,7 @@ jobs:
     # project with <c> where <see cref> would let the compiler guard it. Rules: .claude/rules/code-style.md.
     - name: Check XML doc type references
       run: ./check-xmldoc-refs.sh
+
+    # Fails when the diagrams of the dependency map differ from the project references in src/.
+    - name: Check the dependency map
+      run: ./check-dependency-map.sh
