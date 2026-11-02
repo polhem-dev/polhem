@@ -14,8 +14,11 @@
         <h2>Loading Polhem.Northwind…</h2>
     </div>
 </div>
-<!-- Shown by main.js only on the demo site, which serves the Blazor Server head at the root. -->
-<a id="demo-switch" class="demo-switch" href="../" hidden>Try the Blazor Server version</a>
+<!-- Shown by main.js only on the demo site, which serves the other front ends. -->
+<nav id="demo-switch-bar" class="demo-switch-bar" hidden>
+    <a class="demo-switch" href="../">Try the Blazor Server version</a>
+    <a class="demo-switch" href="../wasm/">Try the Blazor WASM version</a>
+</nav>
 <script type='module' src="./main.js"></script>
 </body>
 

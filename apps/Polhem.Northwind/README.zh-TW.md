@@ -128,7 +128,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-prof
 ```
 
 Blazor Server 開 <http://localhost:5400/>，Blazor WebAssembly 開 <http://localhost:5400/wasm/>，Avalonia 開
-<http://localhost:5400/web/>；Blazor Server 頁面有連結通往另外兩個，它們也各有連結回來。Avalonia head 在 `/web/` 底下提供時，
+<http://localhost:5400/web/>；每個頁面的角落都有連結通往另外兩個。Avalonia head 在 `/web/` 底下提供時，
 會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 與 `Northwind:BlazorWasmBundle` 指定 bundle 資料夾（各發佈輸出的
 `wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，任一資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
 

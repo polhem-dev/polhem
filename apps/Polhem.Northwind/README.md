@@ -137,7 +137,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-prof
 ```
 
 Open <http://localhost:5400/> for Blazor Server, <http://localhost:5400/wasm/> for Blazor WebAssembly and
-<http://localhost:5400/web/> for Avalonia; the Blazor Server page links to the other two, and each of them links back.
+<http://localhost:5400/web/> for Avalonia; a link in the corner of each page goes to each of the other two.
 The Avalonia head pre-fills the same-origin `/api` endpoint when it is served under `/web/`.
 `Northwind:BrowserBundle` and `Northwind:BlazorWasmBundle` name the bundle folders (the `wwwroot` of each publish
 output); the `Demo` launch profile points them at the commands above, and the host refuses to start when either folder
