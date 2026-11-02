@@ -58,7 +58,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
 | `demo-ro` | `demo` | `en-US` | 同一份資料，但全部唯讀（New、Save、Delete 都隱藏），也不能開啟產品與稽核規則 |
 
-每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。[Blazor Server head](#網頁前端blazor-server) 是例外：它的畫面跟隨登入畫面的語言切換。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。[Blazor Server](#網頁前端blazor-server) 與 [Blazor WebAssembly](#網頁前端blazor-webassembly) head 是例外：它們的畫面跟隨登入畫面的語言切換。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
 
 ### 網頁前端（Avalonia WASM）
 
@@ -98,23 +98,39 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 - **登入狀態存在瀏覽器分頁的連線裡。** 重新載入頁面或開新分頁都要重新登入。
 - 殼層（登入、由 `MenuSettings.xml` 產生的選單、所有表單共用的一個路由頁面）是這個 head 自己的程式碼；表單則是框架的 `FormPage`。
 
-### 兩個網頁前端放在同一個網站（Demo 環境）
+### 網頁前端（Blazor WebAssembly）
 
-以 `Demo` 環境執行 Blazor head 時，它還會在 `/api` 提供 JSON-RPC 端點、在 `/web/` 提供發佈好的 Avalonia WASM bundle，
-全部在同一個行程、同一個來源。公開 demo 網站就是這個形態：WASM head 呼叫 `/api` 不需要 CORS 政策，兩個前端讀同一個
-`northwind.db`，在一邊存的資料另一邊看得到。
+**`Polhem.Northwind.BlazorWasm`** 以 `Polhem.Web.Blazor.Wasm` 宿主上的同一個 `Polhem.Web.Blazor.Mud` 套件呈現同一批表單：
+元件在瀏覽器中執行，透過 JSON-RPC 呼叫 `Polhem.Northwind.Server`。需要先啟動上面的 server：
+
+```bash
+# Blazor WebAssembly head（http://localhost:5600）
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm
+```
+
+端點與 API key 在 `wwwroot/appsettings*.json`；端點留空代表頁面同一來源的 `/api`。server 的開發用 CORS 政策允許這個 port 呼叫它。
+登入行為與 Blazor Server head 相同：語言在登入畫面選擇，重新整理會登出。這個宿主的需求與不能呼叫的方法，見
+[`Polhem.Web.Blazor.Wasm`](../../src/Polhem.Web.Blazor.Wasm/README.zh-TW.md)。
+
+### 所有網頁前端放在同一個網站（Demo 環境）
+
+以 `Demo` 環境執行 Blazor head 時，它還會在 `/api` 提供 JSON-RPC 端點、在 `/wasm/` 提供發佈好的 Blazor WebAssembly bundle、
+在 `/web/` 提供發佈好的 Avalonia WASM bundle，全部在同一個行程、同一個來源。公開 demo 網站就是這個形態：WASM head 呼叫
+`/api` 不需要 CORS 政策，所有前端讀同一個 `northwind.db`，在一邊存的資料其他前端看得到。
 
 ```bash
 # 1. 先發佈 WASM head（需要 wasm-tools workload）
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm -c Release -o artifacts/northwind-blazor-wasm
 
 # 2. 以 Demo 環境執行 Blazor head（http://localhost:5400）
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
 ```
 
-Blazor 開 <http://localhost:5400/>，Avalonia 開 <http://localhost:5400/web/>；兩邊角落都有連結可以切到另一個。
-WASM head 在 `/web/` 底下提供時，會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 指定 bundle 資料夾（發佈輸出的
-`wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
+Blazor Server 開 <http://localhost:5400/>，Blazor WebAssembly 開 <http://localhost:5400/wasm/>，Avalonia 開
+<http://localhost:5400/web/>；Blazor Server 頁面有連結通往另外兩個，它們也各有連結回來。Avalonia head 在 `/web/` 底下提供時，
+會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 與 `Northwind:BlazorWasmBundle` 指定 bundle 資料夾（各發佈輸出的
+`wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，任一資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
 
 因為所有帳號的密碼都是公開的，Demo 環境也照公開網站的方式運作：任何帳號都不能是部署管理者（否則 host 拒絕啟動）、
 登入失敗不會鎖住帳號、錯誤回應只帶固定訊息而不帶例外內容、`/api` 與 Blazor 連線的建立依用戶端位址限速（位址取自
@@ -125,7 +141,7 @@ WASM head 在 `/web/` 底下提供時，會預填同源的 `/api` 端點。`Nort
 
 ```bash
 docker build -f apps/Polhem.Northwind/Dockerfile -t polhem-northwind-demo .
-docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/ 與 /web/
+docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/、/wasm/ 與 /web/
 ```
 
 ### 行動前端（Avalonia iOS / Android）
@@ -429,6 +445,7 @@ apps/Polhem.Northwind/
 ├── Polhem.Northwind.Backend/        兩個 host 共用的後端：OrderBO、它的 Repository、seeder 與種子資料
 ├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia head 使用
 ├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Mud），在同一個行程執行後端
+├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head（Polhem.Web.Blazor.Mud），是 server 的 JSON-RPC client
 ├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）

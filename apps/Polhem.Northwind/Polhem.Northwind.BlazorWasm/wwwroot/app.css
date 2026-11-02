@@ -1,0 +1,23 @@
+.app-loading {
+    margin: 2rem;
+    font-family: system-ui, sans-serif;
+}
+
+/* The link to the other front end on the demo site (see index.html). */
+.demo-switch {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #1b2a4e;
+    color: #fff;
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    text-decoration: none;
+    opacity: 0.85;
+}
+
+.demo-switch:hover { opacity: 1; }
+
+.demo-switch[hidden] { display: none; }

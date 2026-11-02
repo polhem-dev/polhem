@@ -58,7 +58,7 @@ Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with o
 | `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
 | `demo-ro` | `demo` | `en-US` | the same data, but read-only (New, Save and Delete are hidden), and products and audit rules may not be opened |
 
-Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. The [Blazor Server head](#web-client-blazor-server) is the exception: its screens follow the sign-in screen's language switch. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders, categories, suppliers, customers, shippers, departments and employees, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
+Every account enters the same company and sees the same data; the session takes its language from the account (`st_user.culture`), not from the operating system. The [Blazor Server](#web-client-blazor-server) and [Blazor WebAssembly](#web-client-blazor-webassembly) heads are the exception: their screens follow the sign-in screen's language switch. `demo` and `demo-tw` hold the `OrderClerk` role, which may do everything on every form, and `demo-ro` holds `OrderViewer`, which may read orders, categories, suppliers, customers, shippers, departments and employees, and nothing else (`Define/PermissionModels.xml`, seeded into `st_role`, `st_role_grant` and `st_user_role`). Those three tables are topped up on every start, so a grant added in a later version reaches an existing `northwind.db`.
 
 ### Web client (Avalonia WASM)
 
@@ -104,25 +104,44 @@ Avalonia heads:
 - The shell (sign-in, the menu from `MenuSettings.xml`, one routed page for every form) is this head's own code;
   the forms are the framework's `FormPage`.
 
-### Both web clients in one site (the Demo environment)
+### Web client (Blazor WebAssembly)
 
-Run the Blazor head in the `Demo` environment and it also serves the JSON-RPC endpoint at `/api` and the published
-Avalonia WASM bundle at `/web/`, all from one process and one origin. This is the shape of the public demo site: the
-WASM head reaches `/api` without a CORS policy, and both front ends read the same `northwind.db`, so a record saved in
-one shows in the other.
+**`Polhem.Northwind.BlazorWasm`** renders the same forms with the same `Polhem.Web.Blazor.Mud` package on the
+`Polhem.Web.Blazor.Wasm` host: the components run in the browser and call `Polhem.Northwind.Server` over JSON-RPC. It needs the
+running server above:
 
 ```bash
-# 1. Publish the WASM head once (needs the wasm-tools workload)
+# Blazor WebAssembly head (http://localhost:5600)
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm
+```
+
+The endpoint and the API key are in `wwwroot/appsettings*.json`; an empty endpoint means `/api` on the page's own origin.
+The server's development-only CORS policy lets this port call it. Signing in works as on the Blazor Server head: the
+language is picked on the sign-in screen, and a reload signs out. See
+[`Polhem.Web.Blazor.Wasm`](../../src/Polhem.Web.Blazor.Wasm/README.md) for what this host requires and what it cannot call.
+
+### All the web clients in one site (the Demo environment)
+
+Run the Blazor head in the `Demo` environment and it also serves the JSON-RPC endpoint at `/api`, the published
+Blazor WebAssembly bundle at `/wasm/` and the published Avalonia WASM bundle at `/web/`, all from one process and one
+origin. This is the shape of the public demo site: the WASM heads reach `/api` without a CORS policy, and every front
+end reads the same `northwind.db`, so a record saved in one shows in the others.
+
+```bash
+# 1. Publish the WASM heads once (needs the wasm-tools workload)
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm -c Release -o artifacts/northwind-blazor-wasm
 
 # 2. Blazor head in the Demo environment (http://localhost:5400)
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
 ```
 
-Open <http://localhost:5400/> for Blazor and <http://localhost:5400/web/> for Avalonia; a link in the corner of each
-switches to the other. The WASM head pre-fills the same-origin `/api` endpoint when it is served under `/web/`.
-`Northwind:BrowserBundle` names the bundle folder (the `wwwroot` of the publish output); the `Demo` launch profile
-points it at the command above, and the host refuses to start when the folder has no `index.html`.
+Open <http://localhost:5400/> for Blazor Server, <http://localhost:5400/wasm/> for Blazor WebAssembly and
+<http://localhost:5400/web/> for Avalonia; the Blazor Server page links to the other two, and each of them links back.
+The Avalonia head pre-fills the same-origin `/api` endpoint when it is served under `/web/`.
+`Northwind:BrowserBundle` and `Northwind:BlazorWasmBundle` name the bundle folders (the `wwwroot` of each publish
+output); the `Demo` launch profile points them at the commands above, and the host refuses to start when either folder
+has no `index.html`.
 
 Because every account's password is public there, the Demo environment also behaves like a public site: no account
 may be a deployment administrator (the host refuses to start otherwise), failed sign-ins never lock an account,
@@ -135,7 +154,7 @@ lives inside the container and is seeded at startup, so a new container starts f
 
 ```bash
 docker build -f apps/Polhem.Northwind/Dockerfile -t polhem-northwind-demo .
-docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/ and /web/
+docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/, /wasm/ and /web/
 ```
 
 ### Mobile clients (Avalonia iOS / Android)
@@ -451,6 +470,7 @@ apps/Polhem.Northwind/
 ├── Polhem.Northwind.Backend/        the backend both hosts run: OrderBO, its repository, the seeder and seed data
 ├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia heads
 ├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Mud), running the backend in process
+├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head (Polhem.Web.Blazor.Mud), a JSON-RPC client of the server
 ├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)

@@ -56,6 +56,19 @@
       "autoPort": false
     },
     {
+      "name": "northwind-blazor-wasm",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm/Polhem.Northwind.BlazorWasm.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5600,
+      "autoPort": false
+    },
+    {
       "name": "northwind-demo",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [

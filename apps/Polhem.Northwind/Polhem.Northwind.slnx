@@ -5,6 +5,7 @@
   </Folder>
   <Folder Name="/Web/">
     <Project Path="Polhem.Northwind.Blazor/Polhem.Northwind.Blazor.csproj" />
+    <Project Path="Polhem.Northwind.BlazorWasm/Polhem.Northwind.BlazorWasm.csproj" />
   </Folder>
   <Folder Name="/UI/">
     <Project Path="Polhem.Northwind.UI/Polhem.Northwind.UI.csproj" />

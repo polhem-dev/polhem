@@ -9,9 +9,10 @@
 |---------|-------|-------------------|
 | `Polhem.Web.Blazor` | State and rules, as abstract component bases | A UI framework, `Microsoft.AspNetCore.App` |
 | `Polhem.Web.Blazor.<UI>` (`.Mud`) | Markup and theme for one framework | A host package |
-| `Polhem.Web.Blazor.<Host>` (`.Server`) | Wiring for one host | A UI package |
+| `Polhem.Web.Blazor.<Host>` (`.Server`, `.Wasm`) | Wiring for one host | A UI package |
 
-`POLHEM9001`, `BlazorSharedLayerDependencyGateTests` and `MudPackageDependencyGateTests` enforce the references.
+`POLHEM9001`, `BlazorSharedLayerDependencyGateTests`, `BlazorWasmHostDependencyGateTests` and
+`MudPackageDependencyGateTests` enforce the references.
 
 **Put a rule in the shared base and only markup in the UI package.** A new behavior gets a test in
 `tests/Polhem.Web.Blazor.BehaviorTests`, which every UI package derives from, not a test against one package's markup.

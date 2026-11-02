@@ -33,7 +33,7 @@
   -->
 
   <PropertyGroup>
-    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts' Or '$(MSBuildProjectName)' == 'Polhem.UI.Core' Or '$(MSBuildProjectName)' == 'Polhem.UI.Avalonia' Or '$(MSBuildProjectName)' == 'Polhem.Api.Core' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor'">true</PolhemEnforceDependencyBoundary>
+    <PolhemEnforceDependencyBoundary Condition="'$(MSBuildProjectName)' == 'Polhem.Core' Or '$(MSBuildProjectName)' == 'Polhem.Definition' Or '$(MSBuildProjectName)' == 'Polhem.Api.Contracts' Or '$(MSBuildProjectName)' == 'Polhem.UI.Core' Or '$(MSBuildProjectName)' == 'Polhem.UI.Avalonia' Or '$(MSBuildProjectName)' == 'Polhem.Api.Core' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Wasm'">true</PolhemEnforceDependencyBoundary>
   </PropertyGroup>
 
   <!-- Polhem.Core: no consumer-facing dependency of any kind. The allowlist is deliberately empty. -->
@@ -111,6 +111,18 @@
     <PolhemAllowedDependency Include="Polhem.Core" />
   </ItemGroup>
 
+  <!-- The WebAssembly host (ADR-059): the shared layer's closure and nothing else, so it stays loadable in the browser. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Wasm'">
+    <PolhemAllowedDependency Include="Polhem.Web.Blazor" />
+    <PolhemAllowedDependency Include="Polhem.Api.Client" />
+    <PolhemAllowedDependency Include="Polhem.UI.Core" />
+    <PolhemAllowedDependency Include="Polhem.Expressions" />
+    <PolhemAllowedDependency Include="Polhem.Api.Core" />
+    <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
+    <PolhemAllowedDependency Include="Polhem.Definition" />
+    <PolhemAllowedDependency Include="Polhem.Core" />
+  </ItemGroup>
+
   <!-- POLHEM9002: the three version properties must agree. The definition is shared with tools/. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.targets" />
 
@@ -129,9 +141,9 @@
     <Error Condition="'@(_PolhemBoundaryViolation)' != ''"
            Code="POLHEM9001"
            Text="$(MSBuildProjectName) is locked to an explicit dependency allowlist (ADR-038, ADR-054). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by everything that references this assembly. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the allowlist of the closure test (tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, or tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs for the front-end layer, or tests/Polhem.Api.Client.UnitTests/ApiClientDependencyGateTests.cs for Polhem.Api.Core), and record why in the ADR." />
-    <Error Condition="'$(MSBuildProjectName)' == 'Polhem.Web.Blazor' And '@(FrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App'))' != ''"
+    <Error Condition="('$(MSBuildProjectName)' == 'Polhem.Web.Blazor' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Wasm') And '@(FrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App'))' != ''"
            Code="POLHEM9001"
-           Text="Polhem.Web.Blazor must not reference the Microsoft.AspNetCore.App framework (ADR-059): it would keep the shared layer out of WebAssembly. Code that needs ASP.NET Core belongs in a host package such as Polhem.Web.Blazor.Server." />
+           Text="$(MSBuildProjectName) must not reference the Microsoft.AspNetCore.App framework (ADR-059): it would keep the package out of WebAssembly. Code that needs ASP.NET Core belongs in a host package such as Polhem.Web.Blazor.Server." />
   </Target>
 
 </Project>

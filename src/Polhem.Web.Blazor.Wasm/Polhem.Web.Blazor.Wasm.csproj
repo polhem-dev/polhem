@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>The Blazor WebAssembly host of Polhem: the remote client and the shell's language switch. The controls come from a UI package such as Polhem.Web.Blazor.Mud.</Description>
+    <PackageTags>polhem;blazor;webassembly;wasm;ui</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Wasm.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />
+  </ItemGroup>
+
+</Project>

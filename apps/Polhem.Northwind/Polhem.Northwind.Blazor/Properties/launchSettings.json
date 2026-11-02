@@ -16,7 +16,8 @@
       "applicationUrl": "http://localhost:5400",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Demo",
-        "Northwind__BrowserBundle": "../../../artifacts/northwind-browser/wwwroot"
+        "Northwind__BrowserBundle": "../../../artifacts/northwind-browser/wwwroot",
+        "Northwind__BlazorWasmBundle": "../../../artifacts/northwind-blazor-wasm/wwwroot"
       }
     }
   }

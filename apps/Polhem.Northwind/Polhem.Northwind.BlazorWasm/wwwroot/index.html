@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- IMPORTANT: the demo site serves this bundle under this path (NorthwindDemo.BlazorWasmPath). Change both together.
+         The base is written rather than declared: the browser's preload scanner would fetch every address below
+         against a declared one before a script could change it. -->
+    <script>
+        window.polhemDemoSite = location.pathname === "/wasm" || location.pathname.startsWith("/wasm/");
+        document.write('<base href="' + (window.polhemDemoSite ? "/wasm/" : "/") + '" />');
+    </script>
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="_content/Polhem.Web.Blazor.Mud/polhem-mud.css" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="icon" href="data:," />
+    <title>Polhem.Northwind</title>
+</head>
+<body>
+    <div id="app"><p class="app-loading">Loading Polhem.Northwind…</p></div>
+    <!-- Shown only on the demo site, which serves the Blazor Server head at the root. -->
+    <a id="demo-switch" class="demo-switch" href="/" hidden>Try the Blazor Server version</a>
+    <script>document.getElementById("demo-switch").hidden = !window.polhemDemoSite;</script>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+</html>
