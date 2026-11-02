@@ -11,15 +11,18 @@
 <PolhemMudProviders />
 <button id="mode" @onclick="ToggleMode">mode</button>
 <input id="outside" />
+<button id="capture" @onclick="Capture">capture</button>
 <FormScope DataObject="_dataObject" FormMode="_mode">
     <GridControl Layout="_layout" />
 </FormScope>
 <pre id="data">@Snapshot()</pre>
+<pre id="captured">@_captured</pre>
 
 @code {
     private FormDataObject _dataObject = default!;
     private LayoutGrid _layout = default!;
     private SingleFormMode _mode = SingleFormMode.Edit;
+    private string _captured = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -48,6 +51,8 @@
     }
 
     private void ToggleMode() => _mode = _mode == SingleFormMode.View ? SingleFormMode.Edit : SingleFormMode.View;
+
+    private void Capture() => _captured = Snapshot();
 
     private string Snapshot() => string.Join(";", _dataObject.DataSet.Tables["Line"]!.Rows.Cast<DataRow>()
         .Select(r => FormattableString.Invariant($"{r["item"]}|{r["qty"]:0.###}")));
