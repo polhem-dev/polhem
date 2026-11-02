@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: d0ce373ab1810e833c9f8c8f5abb07e0c13d29e5 -->
+<!-- source: en/architecture/dependency-map.md blob: 7b487ac9d3c29e17b6d6861622fa3bece7a5fe4b -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -10,63 +10,79 @@
 
 **閱讀方式**：箭頭方向 A → B 表示「A 依賴 B」；圖表由下而上排列，最底層為無相依性的基礎套件。
 
-## 相依性圖表
+## 總覽
+
+每個方塊是一個區塊，名稱列出其中的專案，並省略 `Polhem.` 前綴。
+
+<!-- dependency-map:overview:start -->
+```mermaid
+graph BT
+  Foundation["<b>基礎</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
+  Backend["<b>資料與商業邏輯</b><br/>Db, Repository, Business,<br/>ObjectCaching"]
+  Wire["<b>通訊</b><br/>Api.Core, Api.Server,<br/>Api.Client"]
+  Composition["<b>組合根</b><br/>Hosting"]
+  FrontShared["<b>前端共通</b><br/>UI.Core, UI.ApiBridge"]
+  Avalonia["<b>Avalonia 前端</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
+  Web["<b>Web 前端</b><br/>Web.Blazor, .Mud,<br/>.Server, .Wasm"]
+
+  Backend --> Foundation
+  Wire --> Foundation
+  Composition --> Foundation
+  Composition --> Backend
+  Composition --> Wire
+  FrontShared --> Foundation
+  FrontShared --> Wire
+  Avalonia --> Foundation
+  Avalonia --> FrontShared
+  Web --> Foundation
+  Web --> FrontShared
+  Web --> Wire
+```
+<!-- dependency-map:overview:end -->
+
+- 前端與後端只在**基礎**和**通訊**相接。
+- 後端由 **Polhem.Hosting** 組裝。
+- 兩種前端都建立在**前端共通**之上。
+
+## 各區塊的專案
+
+每個區塊一張圖。實線方塊屬於該區塊，虛線方塊是它依賴的其他區塊專案。這些圖合起來就是 `src/` 中所有的專案參考。`./check-dependency-map.sh` 會在每次推送時，把這些圖和總覽與 csproj 比對。
+
+<!-- dependency-map:areas:start -->
+### 基礎
+
+前端與後端都建立在這一層上，`Polhem.Core` 是整張圖的最底層。
 
 ```mermaid
 graph BT
-  subgraph 基礎設施層
+  subgraph Foundation ["基礎"]
     Base["Polhem.Core"]
     Expressions["Polhem.Expressions"]
     Definition["Polhem.Definition"]
-    Caching["Polhem.ObjectCaching"]
-  end
-
-  subgraph 資料存取層
-    RepoAbs["Polhem.Repository.Abstractions"]
-    Db["Polhem.Db"]
-    Repo["Polhem.Repository"]
-  end
-
-  subgraph 商業邏輯層
-    Business["Polhem.Business"]
-  end
-
-  subgraph SharedContracts [共用契約層]
     Contracts["Polhem.Api.Contracts"]
-  end
-
-  subgraph API 層
-    Core["Polhem.Api.Core"]
-    Server["Polhem.Api.Server"]
-  end
-
-  subgraph CompositionRoot [組合根]
-    Hosting["Polhem.Hosting"]
-  end
-
-  subgraph 用戶端
-    Client["Polhem.Api.Client"]
-  end
-
-  subgraph 跨平台 UI 共通
-    UICore["Polhem.UI.Core"]
-    UIAvalonia["Polhem.UI.Avalonia"]
-    UIApiBridge["Polhem.UI.ApiBridge"]
-    UIShell["Polhem.UI.Avalonia.Shell"]
-  end
-
-  subgraph Web 前端層
-    BlazorShared["Polhem.Web.Blazor"]
-    BlazorMud["Polhem.Web.Blazor.Mud"]
-    BlazorSrv["Polhem.Web.Blazor.Server"]
-    BlazorWasm["Polhem.Web.Blazor.Wasm"]
   end
 
   Definition --> Base
   Expressions --> Base
-  Hosting --> Expressions
-  UIAvalonia --> Expressions
   Contracts --> Definition
+```
+
+### 資料與商業邏輯
+
+只在伺服器端。`Polhem.Business` 透過 `Polhem.Repository.Abstractions` 存取資料，不參考 `Polhem.Db`。
+
+```mermaid
+graph BT
+  subgraph Backend ["資料與商業邏輯"]
+    RepoAbs["Polhem.Repository.Abstractions"]
+    Db["Polhem.Db"]
+    Repo["Polhem.Repository"]
+    Business["Polhem.Business"]
+    Caching["Polhem.ObjectCaching"]
+  end
+  Definition["Polhem.Definition"]:::other
+  Contracts["Polhem.Api.Contracts"]:::other
+
   Db --> Definition
   RepoAbs --> Definition
   Caching --> Definition
@@ -75,29 +91,129 @@ graph BT
   Business --> RepoAbs
   Repo --> Db
   Repo --> RepoAbs
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### 通訊
+
+wire 層與它的兩端。`Polhem.Api.Client` 不參考 `Polhem.Api.Server`，兩者只共用 `Polhem.Api.Core`。
+
+```mermaid
+graph BT
+  subgraph Wire ["通訊"]
+    Core["Polhem.Api.Core"]
+    Server["Polhem.Api.Server"]
+    Client["Polhem.Api.Client"]
+  end
+  Definition["Polhem.Definition"]:::other
+  Contracts["Polhem.Api.Contracts"]:::other
+
   Core --> Contracts
   Core --> Definition
   Server --> Core
+  Client --> Core
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### 組合根
+
+`Polhem.Hosting` 負責組裝後端，所以直接參考伺服器端的各個專案。
+
+```mermaid
+graph BT
+  subgraph Composition ["組合根"]
+    Hosting["Polhem.Hosting"]
+  end
+  Server["Polhem.Api.Server"]:::other
+  Business["Polhem.Business"]:::other
+  Db["Polhem.Db"]:::other
+  Repo["Polhem.Repository"]:::other
+  Caching["Polhem.ObjectCaching"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
   Hosting --> Server
   Hosting --> Business
   Hosting --> Db
   Hosting --> Repo
   Hosting --> Caching
-  Client --> Core
+  Hosting --> Expressions
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### 前端共通
+
+`Polhem.UI.Core` 不帶傳輸，Avalonia 前端透過 `Polhem.UI.ApiBridge` 把它接上用戶端。
+
+```mermaid
+graph BT
+  subgraph FrontShared ["前端共通"]
+    UICore["Polhem.UI.Core"]
+    UIApiBridge["Polhem.UI.ApiBridge"]
+  end
+  Contracts["Polhem.Api.Contracts"]:::other
+  Client["Polhem.Api.Client"]:::other
+
   UICore --> Contracts
-  UIAvalonia --> UICore
-  UIAvalonia --> Definition
   UIApiBridge --> UICore
   UIApiBridge --> Client
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Avalonia 前端
+
+`Polhem.UI.Avalonia` 是控制項，不帶傳輸；`Polhem.UI.Avalonia.Shell` 再加上現成的應用程式外殼。
+
+```mermaid
+graph BT
+  subgraph Avalonia ["Avalonia 前端"]
+    UIAvalonia["Polhem.UI.Avalonia"]
+    UIShell["Polhem.UI.Avalonia.Shell"]
+  end
+  UICore["Polhem.UI.Core"]:::other
+  UIApiBridge["Polhem.UI.ApiBridge"]:::other
+  Definition["Polhem.Definition"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
+  UIAvalonia --> UICore
+  UIAvalonia --> Definition
+  UIAvalonia --> Expressions
   UIShell --> UIAvalonia
   UIShell --> UIApiBridge
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Web 前端
+
+共用層、UI 套件，以及每種宿主各一個套件。UI 套件與宿主套件彼此不參考。
+
+```mermaid
+graph BT
+  subgraph Web ["Web 前端"]
+    BlazorShared["Polhem.Web.Blazor"]
+    BlazorMud["Polhem.Web.Blazor.Mud"]
+    BlazorSrv["Polhem.Web.Blazor.Server"]
+    BlazorWasm["Polhem.Web.Blazor.Wasm"]
+  end
+  Client["Polhem.Api.Client"]:::other
+  UICore["Polhem.UI.Core"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
   BlazorShared --> Client
   BlazorShared --> UICore
   BlazorShared --> Expressions
   BlazorMud --> BlazorShared
   BlazorSrv --> BlazorShared
   BlazorWasm --> BlazorShared
+
+  classDef other stroke-dasharray: 5 4
 ```
+
+<!-- dependency-map:areas:end -->
 
 ## 外部相依套件
 

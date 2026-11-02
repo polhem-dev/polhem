@@ -8,65 +8,81 @@ at runtime — consumers get it as a build-time analyzer, and drawing it would a
 not exist in the assembly graph. (No project count here: it drifts, and the `src/` directory is the
 authority.)
 
-**How to read**: an arrow A → B means "A depends on B"; the diagram is laid out bottom-up, with the most foundational packages (no dependencies) at the bottom.
+**How to read**: an arrow A → B means "A depends on B"; the diagrams are laid out bottom-up, with the most foundational packages (no dependencies) at the bottom.
 
-## Dependency Diagram
+## Overview
+
+Each box is an area, and its name lists the projects with `Polhem.` left out.
+
+<!-- dependency-map:overview:start -->
+```mermaid
+graph BT
+  Foundation["<b>Foundation</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
+  Backend["<b>Data and business logic</b><br/>Db, Repository, Business,<br/>ObjectCaching"]
+  Wire["<b>Communication</b><br/>Api.Core, Api.Server,<br/>Api.Client"]
+  Composition["<b>Composition root</b><br/>Hosting"]
+  FrontShared["<b>Shared front end</b><br/>UI.Core, UI.ApiBridge"]
+  Avalonia["<b>Avalonia front end</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
+  Web["<b>Web front end</b><br/>Web.Blazor, .Mud,<br/>.Server, .Wasm"]
+
+  Backend --> Foundation
+  Wire --> Foundation
+  Composition --> Foundation
+  Composition --> Backend
+  Composition --> Wire
+  FrontShared --> Foundation
+  FrontShared --> Wire
+  Avalonia --> Foundation
+  Avalonia --> FrontShared
+  Web --> Foundation
+  Web --> FrontShared
+  Web --> Wire
+```
+<!-- dependency-map:overview:end -->
+
+- The front ends and the back end meet only in **Foundation** and **Communication**.
+- **Polhem.Hosting** assembles the back end.
+- Both front ends stand on **Shared front end**.
+
+## Projects by area
+
+One diagram per area. A solid box belongs to the area, and a dashed box is a project of another area that it depends on. Together these diagrams are every project reference in `src/`. `./check-dependency-map.sh` compares them, and the overview, with the csproj files on every push.
+
+<!-- dependency-map:areas:start -->
+### Foundation
+
+Both the front end and the back end stand on these. `Polhem.Core` is the bottom of the graph.
 
 ```mermaid
 graph BT
-  subgraph Infrastructure
+  subgraph Foundation ["Foundation"]
     Base["Polhem.Core"]
     Expressions["Polhem.Expressions"]
     Definition["Polhem.Definition"]
-    Caching["Polhem.ObjectCaching"]
-  end
-
-  subgraph DataAccess [Data Access]
-    RepoAbs["Polhem.Repository.Abstractions"]
-    Db["Polhem.Db"]
-    Repo["Polhem.Repository"]
-  end
-
-  subgraph BusinessLogic [Business Logic]
-    Business["Polhem.Business"]
-  end
-
-  subgraph SharedContracts [Shared Contracts]
     Contracts["Polhem.Api.Contracts"]
-  end
-
-  subgraph API
-    Core["Polhem.Api.Core"]
-    Server["Polhem.Api.Server"]
-  end
-
-  subgraph CompositionRoot [Composition Root]
-    Hosting["Polhem.Hosting"]
-  end
-
-  subgraph ClientLayer [Client]
-    Client["Polhem.Api.Client"]
-  end
-
-  subgraph CrossPlatformUI [Cross-platform UI Common]
-    UICore["Polhem.UI.Core"]
-    UIAvalonia["Polhem.UI.Avalonia"]
-    UIApiBridge["Polhem.UI.ApiBridge"]
-    UIShell["Polhem.UI.Avalonia.Shell"]
-  end
-
-  subgraph WebFrontend [Web Frontend]
-    BlazorShared["Polhem.Web.Blazor"]
-    BlazorMud["Polhem.Web.Blazor.Mud"]
-    BlazorSrv["Polhem.Web.Blazor.Server"]
-    BlazorWasm["Polhem.Web.Blazor.Wasm"]
   end
 
   Definition --> Base
   Expressions --> Base
-  Hosting --> Expressions
-  UIAvalonia --> Expressions
   Contracts --> Definition
+```
+
+### Data and business logic
+
+Server-side only. `Polhem.Business` reaches data through `Polhem.Repository.Abstractions`, never through `Polhem.Db`.
+
+```mermaid
+graph BT
+  subgraph Backend ["Data and business logic"]
+    RepoAbs["Polhem.Repository.Abstractions"]
+    Db["Polhem.Db"]
+    Repo["Polhem.Repository"]
+    Business["Polhem.Business"]
+    Caching["Polhem.ObjectCaching"]
+  end
+  Definition["Polhem.Definition"]:::other
+  Contracts["Polhem.Api.Contracts"]:::other
+
   Db --> Definition
   RepoAbs --> Definition
   Caching --> Definition
@@ -75,29 +91,129 @@ graph BT
   Business --> RepoAbs
   Repo --> Db
   Repo --> RepoAbs
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Communication
+
+The wire layer and its two ends. `Polhem.Api.Client` never reaches `Polhem.Api.Server`: they share only `Polhem.Api.Core`.
+
+```mermaid
+graph BT
+  subgraph Wire ["Communication"]
+    Core["Polhem.Api.Core"]
+    Server["Polhem.Api.Server"]
+    Client["Polhem.Api.Client"]
+  end
+  Definition["Polhem.Definition"]:::other
+  Contracts["Polhem.Api.Contracts"]:::other
+
   Core --> Contracts
   Core --> Definition
   Server --> Core
+  Client --> Core
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Composition root
+
+`Polhem.Hosting` puts the back end together, so it references the server-side projects directly.
+
+```mermaid
+graph BT
+  subgraph Composition ["Composition root"]
+    Hosting["Polhem.Hosting"]
+  end
+  Server["Polhem.Api.Server"]:::other
+  Business["Polhem.Business"]:::other
+  Db["Polhem.Db"]:::other
+  Repo["Polhem.Repository"]:::other
+  Caching["Polhem.ObjectCaching"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
   Hosting --> Server
   Hosting --> Business
   Hosting --> Db
   Hosting --> Repo
   Hosting --> Caching
-  Client --> Core
+  Hosting --> Expressions
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Shared front end
+
+`Polhem.UI.Core` carries no transport. `Polhem.UI.ApiBridge` joins it to the client for the Avalonia front end.
+
+```mermaid
+graph BT
+  subgraph FrontShared ["Shared front end"]
+    UICore["Polhem.UI.Core"]
+    UIApiBridge["Polhem.UI.ApiBridge"]
+  end
+  Contracts["Polhem.Api.Contracts"]:::other
+  Client["Polhem.Api.Client"]:::other
+
   UICore --> Contracts
-  UIAvalonia --> UICore
-  UIAvalonia --> Definition
   UIApiBridge --> UICore
   UIApiBridge --> Client
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Avalonia front end
+
+`Polhem.UI.Avalonia` holds the controls and has no transport. `Polhem.UI.Avalonia.Shell` adds the ready-made application around them.
+
+```mermaid
+graph BT
+  subgraph Avalonia ["Avalonia front end"]
+    UIAvalonia["Polhem.UI.Avalonia"]
+    UIShell["Polhem.UI.Avalonia.Shell"]
+  end
+  UICore["Polhem.UI.Core"]:::other
+  UIApiBridge["Polhem.UI.ApiBridge"]:::other
+  Definition["Polhem.Definition"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
+  UIAvalonia --> UICore
+  UIAvalonia --> Definition
+  UIAvalonia --> Expressions
   UIShell --> UIAvalonia
   UIShell --> UIApiBridge
+
+  classDef other stroke-dasharray: 5 4
+```
+
+### Web front end
+
+The shared layer, one UI package, and one package per host. A UI package and a host package do not reference each other.
+
+```mermaid
+graph BT
+  subgraph Web ["Web front end"]
+    BlazorShared["Polhem.Web.Blazor"]
+    BlazorMud["Polhem.Web.Blazor.Mud"]
+    BlazorSrv["Polhem.Web.Blazor.Server"]
+    BlazorWasm["Polhem.Web.Blazor.Wasm"]
+  end
+  Client["Polhem.Api.Client"]:::other
+  UICore["Polhem.UI.Core"]:::other
+  Expressions["Polhem.Expressions"]:::other
+
   BlazorShared --> Client
   BlazorShared --> UICore
   BlazorShared --> Expressions
   BlazorMud --> BlazorShared
   BlazorSrv --> BlazorShared
   BlazorWasm --> BlazorShared
+
+  classDef other stroke-dasharray: 5 4
 ```
+
+<!-- dependency-map:areas:end -->
 
 ## External Package Dependencies
 
