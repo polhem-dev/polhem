@@ -79,6 +79,80 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Text typed before the editor arrives is written when the user clicks outside the grid before it arrives")]
+        public async Task SlowLink_TypeThenClickOutside_WritesTheText()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Locator("#outside").ClickAsync();
+
+            await WaitForDataAsync(page, "Washer|1;Nut|2");
+            await Assertions.Expect(page.Locator("#outside")).ToBeFocusedAsync();
+        }
+
+        [BrowserFact]
+        [DisplayName("A button clicked before the editor arrives runs after the typed text is written")]
+        public async Task SlowLink_TypeThenClickButton_RunsAfterTheTextIsWritten()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Locator("#capture").ClickAsync();
+
+            await Assertions.Expect(page.Locator("#captured")).ToHaveTextAsync("Washer|1;Nut|2");
+        }
+
+        [BrowserFact]
+        [DisplayName("A second click on the same cell before the editor arrives stays in the cell")]
+        public async Task SlowLink_TypeThenClickSameCell_StaysInTheEditor()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await Cell(page, 0, 0).ClickAsync();
+
+            var input = page.Locator(".polhem-grid-cell__editor input");
+            await Assertions.Expect(input).ToHaveValueAsync("Washer");
+            await Assertions.Expect(input).ToBeFocusedAsync();
+            await WaitForDataAsync(page, Initial);
+        }
+
+        [BrowserFact]
+        [DisplayName("Keys typed after a click outside the grid go to where the click landed")]
+        public async Task SlowLink_TypeClickOutsideThenType_SplitsTheText()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Locator("#outside").ClickAsync();
+            await page.Keyboard.TypeAsync("note");
+
+            await WaitForDataAsync(page, "Washer|1;Nut|2");
+            await Assertions.Expect(page.Locator("#outside")).ToHaveValueAsync("note");
+        }
+
+        [BrowserFact]
+        [DisplayName("Escape after a click outside the grid drops the held keys")]
+        public async Task SlowLink_TypeClickOutsideThenEscape_DropsTheKeys()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Locator("#outside").ClickAsync();
+            await page.Keyboard.PressAsync("Escape");
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor input")).ToHaveValueAsync("Bolt");
+            await page.Locator("#outside").FocusAsync();
+
+            await WaitForDataAsync(page, Initial);
+        }
+
+        [BrowserFact]
         [DisplayName("Replayed text is committed when the user leaves the editor after it arrives")]
         public async Task ReplayedText_LeavingTheEditor_Commits()
         {

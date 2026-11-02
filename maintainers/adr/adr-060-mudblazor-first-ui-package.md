@@ -43,8 +43,8 @@ abstraction, and it is stated in the package README so an application chooses kn
 ### 5. Cells open their editors on focus, and keys wait for them
 
 A grid with an editor in every cell costs too much on a Blazor Server circuit, so a cell shows text until it takes the
-focus. Opening an editor takes a round trip, so `polhem-grid-editor.js` queues keys and Tabs until it arrives and replays
-them in order. `GridEditingSafetyTests` runs this in a real browser over a slow link, because bUnit runs no script.
+focus. Opening an editor takes a round trip, so `polhem-grid-editor.js` queues keys, Tabs and a click elsewhere until it
+arrives and replays them in order, which writes the text before the click runs. `GridEditingSafetyTests` runs this in a real browser over a slow link, because bUnit runs no script.
 
 ## Consequences
 
