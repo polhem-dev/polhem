@@ -1,0 +1,21 @@
+@page "/lookup"
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.BehaviorTests
+@using Polhem.Web.Blazor.Controls.Editors
+@using Polhem.Web.Blazor.DataObjects
+@using Polhem.Web.Blazor.Fluent.Controls.Editors
+@using Polhem.Web.Blazor.Fluent.Theming
+
+@* In a form scope, as a lookup on a form is: an inline dialog stays inside the scope. *@
+<PolhemFluentProviders />
+<input id="outside" />
+<FormScope DataObject="_data" FormMode="SingleFormMode.Edit">
+    <ButtonEdit Id="dept" FieldName="@LookupTestData.LookupField" />
+</FormScope>
+<pre id="data">@_data.GetField(LookupTestData.LookupField)</pre>
+
+@code {
+    private readonly FormDataObject _data = LookupTestData.BuildEmployee();
+
+    protected override void OnInitialized() => _data.FieldValueChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+}

@@ -1,0 +1,26 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits DropDownEditorBase
+@using Polhem.Definition.Collections
+
+@if (IsEditable)
+{
+    @* A stored value that matches no item shows as empty rather than as its raw code. *@
+    <FluentSelect TOption="ListItem"
+                  TValue="string"
+                  @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                  Class="polhem-field-editor--select"
+                  Items="Items"
+                  OptionText="@(i => i.Text)"
+                  OptionValue="@(i => i.Value)"
+                  Value="@SelectedValue"
+                  ValueChanged="CommitValue"
+                  Width="100%" />
+}
+else
+{
+    <FluentTextInput @attributes="FluentAttributes.From(Id, AdditionalAttributes)"
+                     Class="polhem-field-editor--select"
+                     Value="@SelectedItem?.Text"
+                     ReadOnly="true"
+                     Width="100%" />
+}

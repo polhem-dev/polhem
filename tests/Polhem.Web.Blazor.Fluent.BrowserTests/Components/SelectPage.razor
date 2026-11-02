@@ -1,0 +1,68 @@
+@page "/select"
+@using System.Data
+@using Polhem.Core.Data
+@using Polhem.Definition.Forms
+@using Polhem.Definition.Layouts
+@using Polhem.Definition.Collections
+@using Polhem.Web.Blazor.Controls
+@using Polhem.Web.Blazor.Controls.Editors
+@using Polhem.Web.Blazor.DataObjects
+@using Polhem.Web.Blazor.Fluent.Controls
+@using Polhem.Web.Blazor.Fluent.Controls.Editors
+@using Polhem.Web.Blazor.Fluent.Theming
+<PolhemFluentProviders />
+<input id="outside" />
+<button id="write" @onclick="Write">write</button>
+<FormScope DataObject="_data" FormMode="SingleFormMode.Edit">
+    <div id="form-select"><DropDownEdit Id="sel" DataObject="_data" FieldName="kind" /></div>
+    <div id="form-check"><CheckEdit DataObject="_data" FieldName="flag" /></div>
+    <GridControl Layout="_inCell" />
+    <GridControl Layout="_editForm" EditMode="GridEditMode.EditForm" />
+</FormScope>
+<pre id="data">@Snapshot()</pre>
+@code {
+    private FormDataObject _data = default!;
+    private LayoutGrid _inCell = default!;
+    private LayoutGrid _editForm = default!;
+    protected override void OnInitialized()
+    {
+        var schema = new FormSchema("Order", "Order");
+        var master = schema.Tables!.Add("Order", "Order").Fields!;
+        var kind = master.Add("kind", "Kind", FieldDbType.String);
+        kind.ListItems!.Add(new ListItem("A", "Alpha"));
+        kind.ListItems!.Add(new ListItem("B", "Beta"));
+        master.Add("flag", "Flag", FieldDbType.Boolean);
+        var line = schema.Tables.Add("Line", "Line").Fields!;
+        line.Add("item", "Item", FieldDbType.String);
+        var lineKind = line.Add("kind", "Kind", FieldDbType.String);
+        lineKind.ListItems!.Add(new ListItem("A", "Alpha"));
+        lineKind.ListItems!.Add(new ListItem("B", "Beta"));
+        line.Add("when", "When", FieldDbType.Date);
+        var form = schema.Tables.Add("Row", "Row").Fields!;
+        form.Add("item", "Item", FieldDbType.String);
+        form.Add("when", "When", FieldDbType.Date);
+        _data = new FormDataObject(schema);
+        _data.InitializeNewMaster();
+        _data.DataSet.Tables["Order"]!.Rows[0]["kind"] = "A";
+        var lines = _data.DataSet.Tables["Line"]!;
+        var r = lines.NewRow(); r["item"] = "Bolt"; r["kind"] = "A"; r["when"] = new DateTime(2026, 3, 4, 0, 0, 0, DateTimeKind.Unspecified); lines.Rows.Add(r);
+        var rows = _data.DataSet.Tables["Row"]!;
+        var f = rows.NewRow(); f["item"] = "Nut"; f["when"] = new DateTime(2026, 3, 4, 0, 0, 0, DateTimeKind.Unspecified); rows.Rows.Add(f);
+        _inCell = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
+        _inCell.Columns!.Add(new LayoutColumn("item", "Item", ControlType.TextEdit));
+        _inCell.Columns.Add(new LayoutColumn("kind", "Kind", ControlType.DropDownEdit));
+        _inCell.Columns.Add(new LayoutColumn("when", "When", ControlType.DateEdit));
+        _editForm = new LayoutGrid { TableName = "Row", Caption = "Row edit", AllowActions = GridControlAllowActions.All };
+        _editForm.Columns!.Add(new LayoutColumn("item", "Item", ControlType.TextEdit));
+        _editForm.Columns.Add(new LayoutColumn("when", "When", ControlType.DateEdit));
+        _data.FieldValueChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+    }
+    private void Write() => _data.SetField(_data.DataSet.Tables["Order"]!.Rows[0], "kind", "B");
+    private string Snapshot()
+    {
+        var o = _data.DataSet.Tables["Order"]!.Rows[0];
+        var l = _data.DataSet.Tables["Line"]!.Rows[0];
+        var f = _data.DataSet.Tables["Row"]!.Rows[0];
+        return FormattableString.Invariant($"kind={o["kind"]}|flag={o["flag"]}|line={l["item"]},{l["kind"]},{l["when"]:yyyy-MM-dd}|row={f["item"]},{f["when"]:yyyy-MM-dd}");
+    }
+}

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>The Fluent UI UI package of the Polhem Blazor head.</Description>
+    <PackageTags>polhem;blazor;fluentui;rcl;ui</PackageTags>
+    <NoWarn>$(NoWarn);RS0041</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- An exact version: this package works around behavior of the components that is not documented. Check it when upgrading. -->
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="[5.0.1]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />
+  </ItemGroup>
+
+</Project>

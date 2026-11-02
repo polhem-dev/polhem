@@ -1,0 +1,53 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls.Editors
+@inherits LookupPanelBase
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using Microsoft.JSInterop
+@using Polhem.Web.Blazor.Fluent.Controls
+@using Polhem.Definition.Language
+
+<div class="polhem-lookup-panel">
+    <form class="polhem-lookup-panel__search" @onsubmit="() => SearchAsync()" @onsubmit:preventDefault>
+        <div class="polhem-lookup-panel__search-box" @onkeydown="OnSearchKeyAsync"><FluentTextInput @ref="_search" Class="polhem-lookup-panel__search-input" @bind-Value="SearchText" Placeholder="@Text(PolhemUIText.Search)" Width="100%" /></div>
+        <FluentButton Class="polhem-lookup-panel__search-button" OnClick="() => SearchAsync()">@Text(PolhemUIText.Search)</FluentButton>
+    </form>
+    @if (Error is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-lookup-panel__error">@Error</FluentMessageBar>
+    }
+    @if (TruncationNotice is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Info" Class="polhem-lookup-panel__notice">@TruncationNotice</FluentMessageBar>
+    }
+    @if (Layout is not null && Rows is { Rows.Count: > 0 })
+    {
+        <GridControl Layout="Layout"
+                     DataTable="Rows"
+                     FormTable="Schema?.MasterTable"
+                     AllowEdit="false"
+                     SelectedRowId="SelectedRowId"
+                     RowSelected="Select"
+                     RowActivated="rowId => ActivateAsync(rowId)" />
+    }
+    else
+    {
+        <div class="polhem-lookup-panel__empty">@Text(PolhemUIText.NoData)</div>
+    }
+    <div class="polhem-lookup-panel__buttons">
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="polhem-lookup-panel__ok" Disabled="@(SelectedRow is null)" OnClick="() => CommitAsync()">@Text(PolhemUIText.Ok)</FluentButton>
+        <FluentButton Class="polhem-lookup-panel__cancel" OnClick="() => CancelAsync()">@Text(PolhemUIText.Cancel)</FluentButton>
+    </div>
+</div>
+
+@code {
+    private FluentTextInput? _search;
+
+    // A form does not submit on Enter in a Fluent input, and the input reports its text only when it is left. The
+    // component's own key and immediate hooks register after a round trip, so on a slow link an early Enter would search
+    // for nothing. The element always knows what was typed.
+    private async Task OnSearchKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _search is null) return;
+        SearchText = await JS.InvokeAsync<string?>("Reflect.get", _search.Element, "value").ConfigureAwait(true) ?? SearchText;
+        await SearchAsync().ConfigureAwait(true);
+    }
+}

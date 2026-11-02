@@ -16,11 +16,12 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class BlazorAsyncSurfaceTests
     {
-        // The shared layer, the host and the UI package are one async surface to a caller.
+        // The shared layer, the host and the UI packages are one async surface to a caller.
         private static IEnumerable<MethodInfo> Methods()
             => AsyncSurface.Methods(typeof(FormDataObject).Assembly)
                 .Concat(AsyncSurface.Methods(typeof(PolhemAccessTokenProvider).Assembly))
-                .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly));
+                .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly))
+                .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly));
 
         public static TheoryData<string> AsyncMembers()
         {

@@ -1,0 +1,59 @@
+@page "/"
+@using System.Data
+@using Polhem.Core.Data
+@using Polhem.Definition.Forms
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.Controls.Editors
+@using Polhem.Web.Blazor.DataObjects
+@using Polhem.Web.Blazor.Fluent.Controls
+@using Polhem.Web.Blazor.Fluent.Theming
+
+<PolhemFluentProviders />
+<button id="mode" @onclick="ToggleMode">mode</button>
+<input id="outside" />
+<button id="capture" @onclick="Capture">capture</button>
+<FormScope DataObject="_dataObject" FormMode="_mode">
+    <GridControl Layout="_layout" />
+</FormScope>
+<pre id="data">@Snapshot()</pre>
+<pre id="captured">@_captured</pre>
+
+@code {
+    private FormDataObject _dataObject = default!;
+    private LayoutGrid _layout = default!;
+    private SingleFormMode _mode = SingleFormMode.Edit;
+    private string _captured = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        var schema = new FormSchema("Order", "Order");
+        schema.Tables!.Add("Order", "Order");
+        var fields = schema.Tables.Add("Line", "Line").Fields!;
+        fields.Add("item", "Item", FieldDbType.String);
+        fields.Add("qty", "Qty", FieldDbType.Decimal);
+        _dataObject = new FormDataObject(schema);
+        _dataObject.InitializeNewMaster();
+        var lines = _dataObject.DataSet.Tables["Line"]!;
+        lines.Rows.Add(NewLine(lines, "Bolt", 1m));
+        lines.Rows.Add(NewLine(lines, "Nut", 2m));
+        _layout = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
+        _layout.Columns!.Add(new LayoutColumn("item", "Item", ControlType.TextEdit));
+        _layout.Columns.Add(new LayoutColumn("qty", "Qty", ControlType.NumericEdit));
+        _dataObject.FieldValueChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+    }
+
+    private static DataRow NewLine(DataTable lines, string item, decimal qty)
+    {
+        var row = lines.NewRow();
+        row["item"] = item;
+        row["qty"] = qty;
+        return row;
+    }
+
+    private void ToggleMode() => _mode = _mode == SingleFormMode.View ? SingleFormMode.Edit : SingleFormMode.View;
+
+    private void Capture() => _captured = Snapshot();
+
+    private string Snapshot() => string.Join(";", _dataObject.DataSet.Tables["Line"]!.Rows.Cast<DataRow>()
+        .Select(r => FormattableString.Invariant($"{r["item"]}|{r["qty"]:0.###}")));
+}

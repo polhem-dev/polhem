@@ -63,8 +63,10 @@ namespace Polhem.Web.Blazor.BrowserTests
             int start = _fixture.Backend.ListPaging.Count;
 
             // The next page starts before the end is reached, so a scroll can read more than one page.
+            var deadline = DateTime.UtcNow.AddSeconds(30);
             while (await page.Locator(Card).CountAsync() < 300)
             {
+                Assert.True(DateTime.UtcNow < deadline, "The list did not reach its last row.");
                 await ScrollToEndAsync(page);
                 await page.WaitForTimeoutAsync(100);
             }

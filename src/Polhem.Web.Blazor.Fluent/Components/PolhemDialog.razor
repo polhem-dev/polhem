@@ -1,0 +1,62 @@
+@namespace Polhem.Web.Blazor.Fluent.Components
+
+@* An inline FluentDialog stays where it is placed, so removing this component removes it.
+   WARNING: FluentDialog raises OnStateChange only for a dialog from IDialogService, because it compares the event's id with
+   an instance that is null here, so the wrapper listens for the toggle itself. An upgrade can change this.
+   Modal renders type="alert", which a click outside does not close, so a dialog that may be dismissed asks for "modal". *@
+<div class="polhem-dialog" @ondialogtoggle="OnToggleAsync">
+    <FluentDialog @ref="_dialog" Class="@Class" Modal="true" PreventDismissOnEscape="@(!Dismissable)" type="@(Dismissable ? "modal" : "alert")">
+        <FluentDialogBody>
+            <TitleTemplate>@Title</TitleTemplate>
+            <ChildContent>
+                @* WARNING: an inline dialog stays inside the form that opened it, and what it shows is not that form. A
+                   lookup's grid would read the form's data instead of its own rows. *@
+                <CascadingValue TValue="FormScopeContext" Value="null" IsFixed="true">@ChildContent</CascadingValue>
+            </ChildContent>
+            <ActionTemplate>@Actions</ActionTemplate>
+        </FluentDialogBody>
+    </FluentDialog>
+</div>
+
+@code {
+    private FluentDialog? _dialog;
+    private bool _dismissed;
+
+    /// <summary>Gets or sets the dialog's class.</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>Gets or sets the title.</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Gets or sets whether Escape and a click outside close the dialog.</summary>
+    [Parameter]
+    public bool Dismissable { get; set; }
+
+    /// <summary>Invoked when Escape or a click outside closed the dialog.</summary>
+    [Parameter]
+    public EventCallback Dismissed { get; set; }
+
+    /// <summary>Gets or sets the content.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets the action buttons.</summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _dialog is not null) await _dialog.ShowAsync().ConfigureAwait(true);
+    }
+
+    private async Task OnToggleAsync(DialogToggleEventArgs e)
+    {
+        // A popover inside the dialog raises the same event, so only this dialog's own id counts.
+        if (!string.Equals(e.Id, _dialog?.Id, StringComparison.Ordinal) || e.NewState != "closed" || _dismissed) return;
+        _dismissed = true;
+        await Dismissed.InvokeAsync().ConfigureAwait(true);
+    }
+}

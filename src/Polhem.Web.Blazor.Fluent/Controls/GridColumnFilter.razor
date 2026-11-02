@@ -1,0 +1,170 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using Microsoft.JSInterop
+@using System.Globalization
+@using Polhem.Definition.Forms
+@using Polhem.Definition.Language
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Connectors
+
+<span class="polhem-grid-filter">
+    <FluentButton Id="@_buttonId"
+                  Class="@(Filters.IsFiltered(Column.FieldName) ? "polhem-grid-filter__button polhem-grid-filter__button--active" : "polhem-grid-filter__button")"
+                  Appearance="@(Filters.IsFiltered(Column.FieldName) ? ButtonAppearance.Primary : ButtonAppearance.Transparent)"
+                  Title="@string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption)"
+                  StopPropagation="true"
+                  OnClick="Toggle">▾</FluentButton>
+    @* WARNING: the popover opens only when `Opened` turns true on an element that is already there, so it stays in the markup
+       and only its content comes and goes. A click outside or Escape closes it and drops what was typed and not applied. *@
+    <FluentPopover AnchorId="@_buttonId" Opened="_isOpen" OpenedChanged="OnOpenedChanged" Class="polhem-grid-filter__panel">
+        @if (_isOpen)
+        {
+            <form class="polhem-grid-filter__form" @onsubmit="() => ApplyAsync()" @onsubmit:preventDefault @onkeydown="OnKeyDownAsync">
+                @switch (Kind)
+                {
+                    case ColumnFilterKind.Boolean:
+                    case ColumnFilterKind.Choice:
+                        <FluentSelect TOption="KeyValuePair<string, string>"
+                                      TValue="string"
+                                      Class="polhem-grid-filter__first"
+                                      Label="@Column.Caption"
+                                      Items="Choices"
+                                      OptionText="@(c => c.Value)"
+                                      OptionValue="@(c => c.Key)"
+                                      @bind-Value="_first"
+                                      Width="100%" />
+                        break;
+                    case ColumnFilterKind.Text:
+                        <FluentTextInput @ref="_firstInput" Class="polhem-grid-filter__first" Label="@Column.Caption" @bind-Value="_first" Width="100%" />
+                        break;
+                    default:
+                        <FluentTextInput @ref="_firstInput" Class="polhem-grid-filter__first" Label="@Text(PolhemUIText.FilterFrom)" Placeholder="@RangePlaceholder" @bind-Value="_first" Width="100%" />
+                        <FluentTextInput @ref="_secondInput" Class="polhem-grid-filter__second" Label="@Text(PolhemUIText.FilterTo)" Placeholder="@RangePlaceholder" @bind-Value="_second" Width="100%" />
+                        break;
+                }
+                @if (_isInvalid)
+                {
+                    <div class="polhem-grid-filter__error" role="alert">@Text(PolhemUIText.FilterInvalid)</div>
+                }
+                <div class="polhem-grid-filter__buttons">
+                    <FluentButton Class="polhem-grid-filter__clear" OnClick="() => ClearAsync()">@Text(PolhemUIText.FilterClear)</FluentButton>
+                    <FluentButton Appearance="ButtonAppearance.Primary" Class="polhem-grid-filter__apply" OnClick="() => ApplyEnteredAsync()">@Text(PolhemUIText.FilterApply)</FluentButton>
+                </div>
+            </form>
+        }
+    </FluentPopover>
+</span>
+
+@code {
+    private bool _isOpen;
+    private bool _isInvalid;
+    private bool _focusFirst;
+    private string _first = string.Empty;
+    private string _second = string.Empty;
+    private readonly string _buttonId = $"polhem-filter-{Guid.NewGuid():N}";
+    private FluentTextInput? _firstInput;
+    private FluentTextInput? _secondInput;
+
+    /// <summary>Gets or sets the column.</summary>
+    [Parameter, EditorRequired]
+    public LayoutColumn Column { get; set; } = default!;
+
+    /// <summary>Gets or sets the schema field of the column.</summary>
+    [Parameter, EditorRequired]
+    public FormField Field { get; set; } = default!;
+
+    /// <summary>Gets or sets what the filter takes.</summary>
+    [Parameter, EditorRequired]
+    public ColumnFilterKind Kind { get; set; }
+
+    /// <summary>Gets or sets the list's filters, which hold what was entered before.</summary>
+    [Parameter, EditorRequired]
+    public ListFilterState Filters { get; set; } = default!;
+
+    /// <summary>Gets or sets the callback raised with a value the filters can read.</summary>
+    [Parameter]
+    public EventCallback<ColumnFilterChange> Applied { get; set; }
+
+    [Inject]
+    private IServiceProvider? Services { get; set; }
+
+    // Fluent's text input has no date type.
+    private string? RangePlaceholder => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime ? "yyyy-MM-dd" : null;
+
+    private IEnumerable<KeyValuePair<string, string>> Choices
+    {
+        get
+        {
+            yield return new(string.Empty, string.Empty);
+            if (Kind == ColumnFilterKind.Boolean)
+            {
+                yield return new(bool.TrueString, Text(PolhemUIText.True));
+                yield return new(bool.FalseString, Text(PolhemUIText.False));
+                yield break;
+            }
+            foreach (var item in Field.ListItems!) yield return new(item.Value, item.Text);
+        }
+    }
+
+    private string Text(string key) => PolhemUIText.Get(Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(Services), key);
+
+    private void Toggle()
+    {
+        _isOpen = !_isOpen;
+        _isInvalid = false;
+        _focusFirst = _isOpen;
+        (_first, _second) = Filters.GetEntered(Column.FieldName);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusFirst || _firstInput is null) return;
+        _focusFirst = false;
+        await _firstInput.Element.FocusAsync().ConfigureAwait(true);
+    }
+
+    private void OnOpenedChanged(bool opened)
+    {
+        if (!opened) Close();
+    }
+
+    private void Close() => _isOpen = false;
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") Close();
+        else if (e.Key == "Enter") await ApplyEnteredAsync().ConfigureAwait(true);
+    }
+
+    // A form does not submit on Enter in a Fluent input, and the input reports its text only when it is left, so what
+    // was typed is read from the elements.
+    private async Task ApplyEnteredAsync()
+    {
+        if (_firstInput is not null) _first = await ReadAsync(_firstInput, _first).ConfigureAwait(true);
+        if (_secondInput is not null) _second = await ReadAsync(_secondInput, _second).ConfigureAwait(true);
+        await ApplyAsync().ConfigureAwait(true);
+    }
+
+    private async Task<string> ReadAsync(FluentTextInput input, string fallback)
+        => await JS.InvokeAsync<string?>("Reflect.get", input.Element, "value").ConfigureAwait(true) ?? fallback;
+
+    private async Task ApplyAsync()
+    {
+        // A trial on a state of its own: the real one changes only through the host, which reads the list again.
+        if (!new ListFilterState().TrySet(Field, Kind, _first, _second))
+        {
+            _isInvalid = true;
+            return;
+        }
+        _isOpen = false;
+        await Applied.InvokeAsync(new ColumnFilterChange(Field, Kind, _first, _second)).ConfigureAwait(true);
+    }
+
+    private Task ClearAsync()
+    {
+        _first = string.Empty;
+        _second = string.Empty;
+        return ApplyAsync();
+    }
+}

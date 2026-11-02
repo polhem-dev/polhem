@@ -23,6 +23,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
             typeof(FormDataObject).Assembly.Location,
             typeof(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider).Assembly.Location,
             typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly.Location,
         ];
 
         private static string[] TypeReferences(MetadataReader reader)

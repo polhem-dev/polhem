@@ -17,7 +17,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
     {
         private const string Company = "input[id^='polhem-shell-company-']";
         private const string Password = "input[type=password]";
-        private const string Language = "button.polhem-shell-signin__language";
+        /// <summary>Gets the selector of a language button on the sign-in page.</summary>
+        protected virtual string Language => "button.polhem-shell-signin__language";
         private readonly ShellTestBackend _backend = new();
         private readonly CultureScope _culture = new("en-US");
 

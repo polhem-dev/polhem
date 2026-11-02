@@ -12,6 +12,7 @@ namespace Polhem.Web.Blazor.Controls
 
         private readonly IJSRuntime _js;
         private readonly string _openPopupSelector;
+        private readonly int _replayDelayMilliseconds;
         private ValueTask<IJSObjectReference>? _loading;
         private IJSObjectReference? _module;
 
@@ -23,10 +24,15 @@ namespace Polhem.Web.Blazor.Controls
         /// The CSS selector that matches a popup of the UI framework while it is open. Escape then closes the popup and
         /// leaves the editor open.
         /// </param>
-        public GridEditorScript(IJSRuntime js, string openPopupSelector)
+        /// <param name="replayDelayMilliseconds">
+        /// How long held keys wait after the input takes the focus. A web component can write its own value back just after
+        /// it takes the focus, which would undo text inserted before that. Zero replays them at once.
+        /// </param>
+        public GridEditorScript(IJSRuntime js, string openPopupSelector, int replayDelayMilliseconds = 0)
         {
             _js = js;
             _openPopupSelector = openPopupSelector;
+            _replayDelayMilliseconds = replayDelayMilliseconds;
         }
 
         /// <summary>
@@ -52,7 +58,7 @@ namespace Polhem.Web.Blazor.Controls
             CancellationToken cancellationToken = default)
         {
             await LoadAsync(cancellationToken).ConfigureAwait(true);
-            if (_module is not null) await _module.InvokeVoidAsync("focusEditor", cancellationToken, editor, cell, _openPopupSelector).ConfigureAwait(true);
+            if (_module is not null) await _module.InvokeVoidAsync("focusEditor", cancellationToken, editor, cell, _openPopupSelector, _replayDelayMilliseconds).ConfigureAwait(true);
         }
 
         /// <inheritdoc />

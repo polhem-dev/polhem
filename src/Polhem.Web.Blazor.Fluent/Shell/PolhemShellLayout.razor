@@ -1,0 +1,56 @@
+@namespace Polhem.Web.Blazor.Fluent.Shell
+@inherits ShellLayoutBase
+@using Polhem.Web.Blazor.Fluent.Theming
+
+@* Plain elements rather than FluentLayout: the shell needs only a header, a menu and a page, and its open state and its
+   breakpoint are those of ShellLayoutBase. The layout places the providers, so a host only sets it as the router's default. *@
+<PolhemFluentProviders />
+@if (UserContext.Company is null)
+{
+    <div class="polhem-shell-signin-page">
+        <PolhemShellSignIn OnSignedIn="StateHasChanged" />
+    </div>
+}
+else
+{
+    <CompactViewportObserver CompactChanged="OnCompactChanged" />
+    <div class="@ShellClass">
+        <header class="polhem-shell__header">
+            <button type="button" class="polhem-shell__menu-button" aria-label="@PolhemShellText.Get(PolhemShellText.ToggleMenu)" @onclick="ToggleMenu">☰</button>
+            <span class="polhem-shell__title">@Options.AppTitle</span>
+            <span class="polhem-shell__spacer"></span>
+            @if (!_isNarrow)
+            {
+                <span class="polhem-shell__user">@UserContext.User?.UserName · @UserContext.Company.CompanyName</span>
+            }
+            <button type="button" class="polhem-shell__signout" @onclick="SignOut">@PolhemShellText.Get(PolhemShellText.SignOut)</button>
+        </header>
+        @if (_isNarrow && IsDrawerOpen)
+        {
+            <div class="polhem-shell__overlay" @onclick="CloseMenu"></div>
+        }
+        <nav class="polhem-shell__nav"><PolhemShellNavMenu OnNavigated="CloseMenu" /></nav>
+        <main class="polhem-shell__main">@Body</main>
+    </div>
+}
+
+@code {
+    private bool _isNarrow;
+
+    private bool IsDrawerOpen => _isNarrow ? IsMenuToggled : !IsMenuToggled;
+
+    private string ShellClass
+    {
+        get
+        {
+            var layout = _isNarrow ? "polhem-shell polhem-shell--narrow" : "polhem-shell";
+            return IsDrawerOpen ? layout + " polhem-shell--menu-open" : layout;
+        }
+    }
+
+    private void OnCompactChanged(bool compact)
+    {
+        _isNarrow = compact;
+        CloseMenu();
+    }
+}

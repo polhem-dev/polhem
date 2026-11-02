@@ -681,7 +681,7 @@ Polhem.Web.Blazor.Controls.GridEditorCell.Script.get -> Polhem.Web.Blazor.Contro
 Polhem.Web.Blazor.Controls.GridEditorCell.Script.set -> void
 Polhem.Web.Blazor.Controls.GridEditorScript
 Polhem.Web.Blazor.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js, string! openPopupSelector) -> void
+Polhem.Web.Blazor.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js, string! openPopupSelector, int replayDelayMilliseconds = 0) -> void
 Polhem.Web.Blazor.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Components.CardListEnd

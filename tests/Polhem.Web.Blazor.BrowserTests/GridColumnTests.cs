@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace Polhem.Web.Blazor.BrowserTests
@@ -11,6 +10,7 @@ namespace Polhem.Web.Blazor.BrowserTests
     {
         private const string Headers = ".polhem-grid thead th";
         private const string FirstRow = ".polhem-grid tbody tr";
+        private const float LayoutWidth = 120;
         private readonly BrowserSiteFixture _fixture;
 
         /// <summary>Gets the selector of what the user drags to move a column.</summary>
@@ -39,6 +39,11 @@ namespace Polhem.Web.Blazor.BrowserTests
             await page.Locator(FirstRow).First.WaitForAsync().ConfigureAwait(false);
             return page;
         }
+
+        /// <summary>Waits until a column header can be dragged, past what its markup shows.</summary>
+        /// <param name="page">The page.</param>
+        /// <returns>The operation.</returns>
+        protected virtual Task WaitForColumnsReadyAsync(IPage page) => Task.CompletedTask;
 
         private async Task SwapColumnsAsync(IPage page)
         {
@@ -118,10 +123,17 @@ namespace Polhem.Web.Blazor.BrowserTests
         public async Task DragEdge_StopsAtLayoutWidth()
         {
             var page = await OpenAsync(_fixture.Address);
+            float before = await WidthAsync(page);
 
             await DragResizerAsync(page, -620, 300);
 
-            await Assertions.Expect(page.Locator(Headers).First).ToHaveCSSAsync("width", new Regex("^12[0-9]"));
+            // A table can give a column more than was asked for, so this holds the rule and not one framework's number.
+            for (int attempt = 0; attempt < 50 && await WidthAsync(page) >= before; attempt++)
+                await page.WaitForTimeoutAsync(100);
+            await page.WaitForTimeoutAsync(300);
+            float width = await WidthAsync(page);
+            Assert.True(width < before, $"The width started at {before} and did not narrow.");
+            Assert.True(width >= LayoutWidth, $"The column narrowed to {width}, under its layout width of {LayoutWidth}.");
         }
 
         [BrowserFact]
@@ -130,6 +142,7 @@ namespace Polhem.Web.Blazor.BrowserTests
         {
             var page = await OpenAsync(_fixture.SlowAddress);
             await Assertions.Expect(page.Locator(DraggableColumn).First).ToBeVisibleAsync();
+            await WaitForColumnsReadyAsync(page);
 
             await SwapColumnsAsync(page);
             await page.Locator(FirstRow).First.Locator("td").First.ClickAsync();

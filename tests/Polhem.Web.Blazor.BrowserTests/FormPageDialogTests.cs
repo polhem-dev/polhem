@@ -16,6 +16,13 @@ namespace Polhem.Web.Blazor.BrowserTests
         /// <summary>Gets the selector of an open dialog of the UI framework.</summary>
         protected abstract string Dialog { get; }
 
+        /// <summary>Gets the selector of a command button on the form page's toolbar.</summary>
+        protected virtual string CommandButton => ".polhem-form-page__toolbar button";
+
+        /// <summary>Gets the selector of a command button that can be clicked.</summary>
+        /// <remarks>Playwright's enabled check does not read the disabled attribute of a custom element.</remarks>
+        protected virtual string EnabledCommandButton => ".polhem-form-page__toolbar button:enabled";
+
         /// <summary>
         /// Initializes a new instance of <see cref="FormPageDialogTests"/>.
         /// </summary>
@@ -34,8 +41,8 @@ namespace Polhem.Web.Blazor.BrowserTests
             return page;
         }
 
-        private static ILocator Command(IPage page, string text)
-            => page.Locator(".polhem-form-page__toolbar button", new PageLocatorOptions { HasText = text });
+        private ILocator Command(IPage page, string text)
+            => page.Locator(CommandButton, new PageLocatorOptions { HasText = text });
 
         private async Task<IPage> OpenDeleteQuestionAsync()
         {
@@ -93,7 +100,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator(Row)).ToHaveCountAsync(2);
             await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
             await page.Locator(Row).First.ClickAsync();
-            await Assertions.Expect(Command(page, "Delete")).ToBeEnabledAsync();
+            await page.Locator(EnabledCommandButton, new PageLocatorOptions { HasText = "Delete" }).WaitForAsync();
             await Command(page, "Delete").ClickAsync();
             await Assertions.Expect(page.Locator(".polhem-confirm-dialog__cancel")).ToBeFocusedAsync();
 

@@ -265,7 +265,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             var cut = RenderEditor(ControlType.DateEdit, dataObject, SingleFormMode.View);
 
-            Assert.Equal(new DateTime(2026, 10, 25).ToString("d", System.Globalization.CultureInfo.CurrentCulture), cut.Find("input").GetAttribute("value"));
+            Assert.Equal(new DateTime(2026, 10, 25).ToString("d", System.Globalization.CultureInfo.CurrentCulture), ReadText(cut, ControlType.DateEdit));
         }
 
         [Fact]

@@ -22,8 +22,14 @@ namespace Polhem.Web.Blazor.BehaviorTests
     /// </summary>
     public abstract class FormPageBehaviorTests : BunitContext, IAsyncLifetime
     {
-        private const string Toolbar = ".polhem-form-page__toolbar button";
-        private const string Pager = ".polhem-form-page__pager button";
+        /// <summary>Gets the selector of a command button on the toolbar.</summary>
+        protected virtual string Toolbar => ".polhem-form-page__toolbar button";
+
+        /// <summary>Gets the selector of a button on a related record's toolbar.</summary>
+        protected virtual string RelatedRecordButton => ".polhem-related-record-dialog__toolbar button";
+
+        /// <summary>Gets the selector of a button of the pager.</summary>
+        protected virtual string Pager => ".polhem-form-page__pager button";
         private const string Record = ".polhem-form-layout";
         private const string Notice = ".polhem-form-page__notice";
         private const string NameInput = "#polhem-form-emp_name";
@@ -102,7 +108,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private static IElement? Button(IRenderedComponent<ContainerFragment> cut, string selector, string key)
             => cut.FindAll(selector).SingleOrDefault(b => b.TextContent.Trim() == Text(key));
 
-        private static IElement Command(IRenderedComponent<ContainerFragment> cut, string key)
+        private IElement Command(IRenderedComponent<ContainerFragment> cut, string key)
             => Button(cut, Toolbar, key) ?? throw new InvalidOperationException($"No {key} command.");
 
         private void OpenRow(IRenderedComponent<ContainerFragment> cut, string key)
@@ -404,7 +410,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
             DoubleClickField(cut, FormPageTestBackend.RelationField);
 
             cut.WaitForAssertion(() => Assert.Single(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar ~ .polhem-form-layout")));
-            FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")[0].Click();
+            FindInDialogs(cut, RelatedRecordButton)[0].Click();
             cut.WaitForAssertion(() => Assert.Empty(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar")));
         }
 
@@ -728,12 +734,12 @@ namespace Polhem.Web.Blazor.BehaviorTests
             var cut = RenderList();
             OpenRow(cut, PolhemUIText.View);
             DoubleClickField(cut, FormPageTestBackend.RelationField);
-            cut.WaitForAssertion(() => Assert.Single(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")));
+            cut.WaitForAssertion(() => Assert.Single(FindInDialogs(cut, RelatedRecordButton)));
             Assert.Equal([FormPageTestBackend.DeptId], backend.DeptLoaded);
 
-            FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")[0].Click();
+            FindInDialogs(cut, RelatedRecordButton)[0].Click();
 
-            cut.WaitForAssertion(() => Assert.Empty(FindInDialogs(cut, ".polhem-related-record-dialog__toolbar button")));
+            cut.WaitForAssertion(() => Assert.Empty(FindInDialogs(cut, RelatedRecordButton)));
             Assert.Single(cut.FindAll(Record));
             Assert.NotNull(Button(cut, Toolbar, PolhemUIText.Back));
         }

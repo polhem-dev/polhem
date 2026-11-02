@@ -1,0 +1,30 @@
+@namespace Polhem.Web.Blazor.Fluent.Shell
+@inherits ShellSignInBase
+@using Polhem.Web.Blazor.Fluent.Components
+
+<div class="polhem-shell-signin">
+    <div class="polhem-shell-signin__title">@Options.AppTitle</div>
+    @if (!string.IsNullOrWhiteSpace(Options.SignInHint))
+    {
+        <div class="polhem-shell-signin__hint">@Options.SignInHint</div>
+    }
+    <label class="polhem-login-panel__label" for="@CompanyInputId">@PolhemShellText.Get(PolhemShellText.CompanyId)</label>
+    <input id="@CompanyInputId" class="polhem-login-panel__input" @bind="CompanyId" />
+    <PolhemLoginPanel InitialUserId="@Options.DefaultUserId"
+                      InitialPassword="@Options.DefaultPassword"
+                      OnLoggedIn="response => OnLoggedInAsync(response)" />
+    @if (Error is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error" Class="polhem-shell-signin__error">@Error</FluentMessageBar>
+    }
+    @if (OffersLanguages)
+    {
+        <div class="polhem-shell-signin__languages" role="group" aria-label="@PolhemShellText.Get(PolhemShellText.Language)">
+            @foreach (var language in Options.Languages)
+            {
+                <FluentButton Class="polhem-shell-signin__language" Disabled="@IsCurrent(language)" OnClick="() => SwitchLanguage(language)">@language.DisplayName</FluentButton>
+            }
+        </div>
+        <div class="polhem-shell-signin__hint">@PolhemShellText.Get(PolhemShellText.LanguageHint)</div>
+    }
+</div>
