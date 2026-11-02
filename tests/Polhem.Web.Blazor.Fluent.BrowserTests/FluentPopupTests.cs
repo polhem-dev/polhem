@@ -70,8 +70,6 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             await page.Keyboard.TypeAsync("Sal");
             await page.Keyboard.PressAsync("Enter");
 
-            await page.WaitForTimeoutAsync(2500);
-            File.WriteAllText("/private/tmp/claude-501/-Users-jeff-Desktop-repos-polhem-dev-polhem--claude-worktrees-charming-tesla-bd2258/c91794cf-7969-45bd-8746-55a34767f688/scratchpad/searches.txt", string.Join(" | ", _fixture.Source.Connector.Searches) + " :: rows " + await page.Locator($"{Dialog} tr.polhem-grid__row").CountAsync() + " :: input '" + await page.Locator($"{Dialog} .polhem-lookup-panel__search-input input").First.InputValueAsync() + "'");
             await Assertions.Expect(page.Locator($"{Dialog} tr.polhem-grid__row")).ToHaveCountAsync(1);
             Assert.Equal("Sal", _fixture.Source.Connector.Searches[^1]);
             await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(1);
