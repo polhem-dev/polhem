@@ -842,20 +842,20 @@ namespace Polhem.Web.Blazor.BehaviorTests
         public void Cards_AtLimit_ShowNote()
         {
             using var culture = new CultureScope("en-US");
-            var backend = new FormPageTestBackend { TotalRows = 5100, DistinctRows = true };
+            var backend = new FormPageTestBackend { TotalRows = 1100, DistinctRows = true };
             var cut = RenderCards(backend);
             Assert.Empty(cut.FindAll(".polhem-card-list__limit"));
 
-            // Waits on the backend, because searching the markup of thousands of cards after every page takes seconds.
-            foreach (var page in Enumerable.Range(2, 99))
+            // Waits on the backend, because searching the markup of many cards after every page is slow.
+            foreach (var page in Enumerable.Range(2, 19))
             {
                 ReachCardListEnd(cut);
                 Assert.Equal(page, backend.ListPaging[^1].Page);
             }
 
-            Assert.Equal(5000, cut.FindAll(Card).Count);
+            Assert.Equal(1000, cut.FindAll(Card).Count);
 
-            Assert.Contains("5000", cut.Find(".polhem-card-list__limit").TextContent, StringComparison.Ordinal);
+            Assert.Contains("1000", cut.Find(".polhem-card-list__limit").TextContent, StringComparison.Ordinal);
             Assert.Empty(cut.FindAll(".polhem-card-list__end"));
         }
 

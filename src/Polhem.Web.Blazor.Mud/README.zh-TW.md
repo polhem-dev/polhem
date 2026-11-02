@@ -16,7 +16,7 @@
 - `FormPage` 與 `RelatedRecordDialog`（`Polhem.Web.Blazor.Mud.Components`），建立在 `Polhem.Web.Blazor` 的基底上；`ConfirmDialog` 在刪除前詢問，焦點預設在取消鈕。
 - `FormPage` 把 `ListFilterState` 傳給清單的 `GridControl`，每個欄位的篩選由 `GridColumnFilter` 提供。自行使用 `GridControl` 時，設定 `Filters` 與 `OnFilterChanged`，並自行重新讀取資料。
 - 在寬螢幕上，`GridControl` 的欄位可以用滑鼠調整寬度與順序，調整結果不會被記住。
-- 在窄 viewport 或設定 `IsCompact` 時，`FormPage` 以卡片顯示清單，捲動時讀取下一頁，最多 5000 筆。每張卡片都會保持渲染，所以捲得越長，circuit 的記憶體與傳輸量越高。
+- 在窄 viewport 或設定 `IsCompact` 時，`FormPage` 以卡片顯示清單，捲動時讀取下一頁，最多 1000 筆。每張卡片都會保持渲染，所以捲得越長，circuit 的記憶體與傳輸量越高。
 - `PolhemLoginPanel`（`Polhem.Web.Blazor.Mud.Components`），登入表單。
 - `PolhemShellLayout`、`PolhemShellNavMenu` 與 `PolhemShellSignIn`（`Polhem.Web.Blazor.Mud.Shell`），建立在 `MudLayout` 上的外殼。版面會自行放置 `PolhemMudProviders`。選項由宿主套件註冊（Blazor Server 用 `AddPolhemShell`）。
 - `PolhemMudProviders` 與 `PolhemMudTheme`（`Polhem.Web.Blazor.Mud.Theming`），MudBlazor 的 provider 與預設佈景。

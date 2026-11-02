@@ -18,7 +18,7 @@ namespace Polhem.UI.Avalonia.Views
     /// </summary>
     public partial class ListView
     {
-        internal const int MaxCardRows = CardListState<DataRowView>.MaxRows;
+        internal const int MaxCardRows = 5000;
 
         // How close to the last card, in cards, the next page starts loading.
         private const int CardLoadThreshold = 10;

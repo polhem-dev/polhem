@@ -53,6 +53,12 @@ arrives and replays them in order, which writes the text before the click runs. 
 - The first load of a large grid sends more than the HTML grid did: 1.76 MB against 1.53 MB for 200 rows of 15 columns,
   measured once on 2026-11-01, while a circuit held less memory (30 to 36 MB against 53 to 59 MB).
   `GridPerformanceTests` fails above 1.9 MB.
+- Grid rows are not virtualized, and neither are the phone cards. Measured on 2026-11-02 on 200 rows by 15 columns, the most a
+  list page holds: the first load sends 1.82 MB, and moving to the next editor about 6 KB. Over a link of 250 ms each way
+  that move takes about a second, nearly all of it waiting for the round trips, which virtualizing would not change. It
+  would also put an open editor at risk when its row scrolls away. The cards instead stop at 1000 rows, down from 5000,
+  which measured 18.2 MB and 131 MB of managed memory; at 1000 they measured 0.84 MB and 30 MB. Revisit this if a list
+  needs far more rows on one page.
 - MudBlazor renders the table header itself, so `aria-sort` is not set on it. The direction shows in the caption.
 - A key pressed before the focus reaches a dialog goes to the page behind, so on a slow link an early Escape has to be
   pressed again.

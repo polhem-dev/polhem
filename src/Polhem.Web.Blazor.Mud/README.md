@@ -16,7 +16,7 @@ The layering is in [ADR-059](../../maintainers/adr/adr-059-blazor-shared-layer.m
 - `FormPage` and `RelatedRecordDialog` (`Polhem.Web.Blazor.Mud.Components`), over the bases of `Polhem.Web.Blazor`; `ConfirmDialog` asks before a delete with the focus on Cancel.
 - `FormPage` passes a `ListFilterState` to its list `GridControl`, which offers each column's filter in `GridColumnFilter`. A `GridControl` of your own takes `Filters` and `OnFilterChanged`, and reads its rows again.
 - On a wide screen, `GridControl` lets a mouse resize and reorder its columns. The change is not remembered.
-- On a narrow viewport, or with `IsCompact`, `FormPage` shows the list as cards and reads the next page as the user scrolls, up to 5000 rows. Every card stays rendered, so a long scroll costs circuit memory and traffic.
+- On a narrow viewport, or with `IsCompact`, `FormPage` shows the list as cards and reads the next page as the user scrolls, up to 1000 rows. Every card stays rendered, so a long scroll costs circuit memory and traffic.
 - `PolhemLoginPanel` (`Polhem.Web.Blazor.Mud.Components`), the sign-in form.
 - `PolhemShellLayout`, `PolhemShellNavMenu` and `PolhemShellSignIn` (`Polhem.Web.Blazor.Mud.Shell`), the shell over `MudLayout`. The layout places `PolhemMudProviders` itself. A host registers the options with its host package (`AddPolhemShell` on Blazor Server).
 - `PolhemMudProviders` and `PolhemMudTheme` (`Polhem.Web.Blazor.Mud.Theming`), MudBlazor's providers and the default theme.
