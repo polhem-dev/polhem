@@ -37,6 +37,8 @@
                  Dense="true"
                  Hover="true"
                  Filterable="false"
+                 ColumnResizeMode="@(Compact ? ResizeMode.None : ResizeMode.Column)"
+                 DragDropColumnReordering="@(!Compact)"
                  SortMode="SortMode.None"
                  RowClick="OnRowClick"
                  RowClassFunc="RowClass">
@@ -47,6 +49,8 @@
                 <TemplateColumn T="DataRow"
                                 Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
                                 Sortable="false"
+                                Resizable="@(!Compact)"
+                                DragAndDropEnabled="@(!Compact)"
                                 HeaderClass="@HeaderClass(current)"
                                 HeaderStyle="@ColumnStyle(current)">
                     <HeaderTemplate>

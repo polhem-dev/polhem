@@ -1,6 +1,8 @@
+using System.ComponentModel;
 using Bunit;
 using Bunit.Rendering;
 using MudBlazor;
+using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.BehaviorTests;
 using Polhem.Web.Blazor.Mud.Controls;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
@@ -99,5 +101,20 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
 
         /// <inheritdoc />
         protected override void DoubleClickRow(IRenderedComponent<ContainerFragment> cut, int row) => cut.FindAll(RowSelector)[row].Click(new Microsoft.AspNetCore.Components.Web.MouseEventArgs { Detail = 2 });
+
+        [Theory]
+        [InlineData(false, 1)]
+        [InlineData(true, 0)]
+        [DisplayName("Only a grid that is not compact offers to resize and move its columns")]
+        public void Columns_OfferResizeAndMove_UnlessCompact(bool compact, int expected)
+        {
+            var layout = new LayoutGrid { TableName = "Line" };
+            layout.Columns!.Add(new LayoutColumn("item", "Item", ControlType.TextEdit));
+
+            var cut = Render<GridControl>(p => p.Add(g => g.Layout, layout).Add(g => g.Compact, compact));
+
+            Assert.Equal(expected, cut.FindAll("thead .mud-resizer").Count);
+            Assert.Equal(expected, cut.FindAll("thead [draggable=true]").Count);
+        }
     }
 }
