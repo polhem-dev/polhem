@@ -443,8 +443,8 @@ dependency edges recorded for Bee.NET no longer matched after legitimate moves, 
 would have reported a regression that was not one):
 
 - Dependencies: no cycles (topological sort of every `<ProjectReference>` in `src/`, leaving out the build-ordering
-  references to `Polhem.Analyzers`); the mermaid graph in `docs/en/architecture/dependency-map.md` matches the csproj files edge for
-  edge; BO has no Db reference; the backend has no `Polhem.Api.Client` reference; the Repository abstraction is not
+  references to `Polhem.Analyzers`); `./check-dependency-map.sh` passes (the mermaid graphs in `docs/en/architecture/dependency-map.md` match the csproj
+  files edge for edge); BO has no Db reference; the backend has no `Polhem.Api.Client` reference; the Repository abstraction is not
   bypassed; `Polhem.Api.Contracts` has no implementation types.
 - Code: `*Func` leftovers 0, `*Helper` types 0, Newtonsoft 0, `[Obsolete]` 0, `CurrentCultureIgnoreCase` 0,
   `new DateTime(` without Kind 0, `Regex` without timeout 0, public mutable fields 0, files over 500 lines only where

@@ -40,6 +40,7 @@ dotnet build <project>.csproj --configuration Release --no-restore
 ./test.sh tests/<Project>.UnitTests/<Project>.UnitTests.csproj
 ./check-public-docs.sh                       # no committed file points to local/ or names a plan
 ./check-md-links.sh                          # relative markdown links must resolve
+./check-dependency-map.sh                    # the dependency map must match the project references in src/
 ./check-docs-i18n.sh                         # translation headers, staleness, missing translations, switch lines (--stamp / --fix-switch)
 dotnet pack src/<Project>/<Project>.csproj --configuration Release --output ./nupkgs
 ```
