@@ -19,7 +19,9 @@ namespace Polhem.Web.Blazor.Server.Shell
         /// endpoint accepts only a culture of <see cref="PolhemShellOptions.Languages"/>, and redirects only to a path
         /// on this site; anything else returns to the application's root. Both are taken under the request's path base, so an
         /// application mounted with <c>Map("/sub", ...)</c> returns to its own pages. The cookie is read by the request localization
-        /// that <see cref="PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization"/> sets up.
+        /// that <see cref="PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization"/> sets up. The cookie is always
+        /// marked <c>Secure</c>, so a browser keeps it only over HTTPS or on <c>localhost</c>: on a plain HTTP address
+        /// the switch reloads the page in the culture it already had.
         /// </remarks>
         /// <param name="endpoints">The application's endpoint route builder.</param>
         /// <returns>The endpoint's convention builder.</returns>
@@ -42,7 +44,7 @@ namespace Polhem.Web.Blazor.Server.Shell
                             Expires = DateTimeOffset.UtcNow.AddYears(1),
                             IsEssential = true,
                             HttpOnly = true,
-                            Secure = context.Request.IsHttps,
+                            Secure = true,
                             SameSite = SameSiteMode.Lax,
                         });
                 }
