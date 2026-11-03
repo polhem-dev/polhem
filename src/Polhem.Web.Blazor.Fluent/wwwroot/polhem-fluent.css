@@ -39,6 +39,10 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
 .polhem-shell-signin__title { font-size: 20px; font-weight: 600; }
 .polhem-shell-signin__hint { font-size: 13px; color: var(--colorNeutralForeground3); }
 
+/* Fluent UI's stylesheet sets `overflow: hidden` on body for its own layout, which brings a scrolling area of its own.
+   The shell has none, so a page taller than the window could not be scrolled, and a phone never reached the cards that
+   load the next page. */
+body:has(.polhem-shell) { overflow: auto; }
 .polhem-shell { display: grid; grid-template: "header header" auto "nav main" 1fr / 200px 1fr; min-height: 100vh; }
 .polhem-shell:not(.polhem-shell--menu-open) { grid-template-columns: 0 1fr; }
 .polhem-shell__header { grid-area: header; display: flex; align-items: center; gap: 8px; padding: 6px 12px; color: var(--colorNeutralForegroundOnBrand); background: var(--colorBrandBackground); }

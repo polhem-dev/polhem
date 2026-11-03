@@ -63,6 +63,24 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("A page taller than the window scrolls with the mouse wheel")]
+        public async Task TallPage_ScrollsWithTheWheel()
+        {
+            var page = await OpenAsync();
+            await SignInAsync(page);
+            float before = (await page.Locator("#shell-page").BoundingBoxAsync())!.Y;
+
+            // NOTE: The wheel, not a locator: Playwright scrolls an element into view even where the user cannot scroll.
+            await page.Mouse.MoveAsync(600, 400);
+            await page.Mouse.WheelAsync(0, 800);
+
+            for (int attempt = 0; attempt < 20 && (await page.Locator("#shell-page").BoundingBoxAsync())!.Y >= before - 100; attempt++)
+                await page.WaitForTimeoutAsync(100);
+            float after = (await page.Locator("#shell-page").BoundingBoxAsync())!.Y;
+            Assert.True(after < before - 100, $"The page stayed at {after} after scrolling from {before}.");
+        }
+
+        [BrowserFact]
         [DisplayName("On a wide screen the menu shows, and the button hides it")]
         public async Task Wide_ButtonHidesMenu()
         {
