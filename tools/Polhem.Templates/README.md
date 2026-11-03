@@ -2,23 +2,28 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
-`dotnet new` templates for [Polhem](https://github.com/polhem-dev/polhem). Each template is named after the front-end
-technology of the application it creates (`polhem-<front end>`); the database is an option of the template.
+`dotnet new` templates for [Polhem](https://github.com/polhem-dev/polhem). Each template is named after the front end
+of the application it creates (`polhem-<front end>`, with `-fluent` for the Fluent UI version of a Blazor front end);
+the database is an option of the template.
 
 ```bash
 dotnet new install Polhem.Templates
 dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 dotnet new polhem-blazor-server -n Acme.Erp --database SqlServer
+dotnet new polhem-blazor-wasm-fluent -n Acme.Erp --database Sqlite
 ```
 
 | Template | Name in VS Code | Creates |
 |----------|-----------------|---------|
 | [`polhem-avalonia`](#polhem-avalonia) | **Polhem App (Avalonia)** | A JSON-RPC server and an Avalonia desktop client, optionally browser, iOS and Android clients |
-| [`polhem-blazor-server`](#polhem-blazor-server) | **Polhem App (Blazor Server)** | One Blazor Server site that runs the backend in its own process |
+| [`polhem-blazor-server`](#polhem-blazor-server) | **Polhem App (Blazor Server, MudBlazor)** | One Blazor Server site on MudBlazor that runs the backend in its own process |
+| [`polhem-blazor-server-fluent`](#polhem-blazor-server) | **Polhem App (Blazor Server, Fluent UI)** | The same site on Fluent UI |
+| [`polhem-blazor-wasm`](#polhem-blazor-wasm) | **Polhem App (Blazor WebAssembly, MudBlazor)** | A JSON-RPC server and a Blazor WebAssembly client on MudBlazor, served from one origin |
+| [`polhem-blazor-wasm-fluent`](#polhem-blazor-wasm) | **Polhem App (Blazor WebAssembly, Fluent UI)** | The same server and client on Fluent UI |
 
 In VS Code with the C# Dev Kit, the templates are listed under **New .NET Project** by those names. The C# Dev Kit
 creates the application with the default options; to choose others, run `dotnet new` in a terminal and open the
-folder it creates.
+folder it creates. That is why the UI library of a Blazor front end is a template of its own rather than an option.
 
 Install the templates from the package, as above, or from a `.nupkg` file (`dotnet new install <path>.nupkg`).
 Installing a template from its folder under `content/` is not supported: the files every template shares
@@ -74,7 +79,7 @@ empty boxes. Sign in to the browser client with an account whose culture is Engl
 
 The SQLite connection uses a path relative to the application folder, and DbManager, which DefineEditor runs to
 upgrade the database after an import, refuses relative SQLite paths. With SQLite, run the **Polhem: Upgrade database**
-task after an import instead. This applies to `polhem-blazor-server` as well.
+task after an import instead. This applies to every template.
 
 ## `polhem-blazor-server`
 
@@ -88,9 +93,34 @@ and the forms). There is no separate server to start, and no API endpoint until 
 | `Define/`, `Excel/`, `.config/dotnet-tools.json` | As in `polhem-avalonia` |
 | `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, and the F5 launch **Web** |
 
-Its options are `--database`, `--company`, `--db-password` and `--default-language`, as in `polhem-avalonia`; the
+`polhem-blazor-server-fluent` creates the same site on [Fluent UI](../../src/Polhem.Web.Blazor.Fluent/README.md). It
+behaves as the MudBlazor site does, with the differences that package's README lists.
+
+Their options are `--database`, `--company`, `--db-password` and `--default-language`, as in `polhem-avalonia`; the
 default language is also the language of the sign-in screen until the viewer picks another.
 
 The pages call the backend in the same process, so their calls are trusted local calls: the forms check the signed-in
 user's permissions, but the system calls a remote client may not make are open to them. The generated `Program.cs` and
 `README.md` say what that means for a page you add.
+
+## `polhem-blazor-wasm`
+
+Creates an application with a [Blazor WebAssembly](../../src/Polhem.Web.Blazor.Wasm/README.md) front end on
+MudBlazor: a JSON-RPC server that also serves the browser client, so the page and the API share one origin. There is
+no CORS to set up, F5 starts one process, and publishing the server publishes the client with it.
+`polhem-blazor-wasm-fluent` creates the same application on [Fluent UI](../../src/Polhem.Web.Blazor.Fluent/README.md).
+
+| Path | Content |
+|------|---------|
+| `src/<Name>.Server` | The server of `polhem-avalonia` (the JSON-RPC API and the `db` commands), which also serves the files of the client and returns `index.html` for a form's address |
+| `src/<Name>.Client` | The browser client: the Polhem shell (sign-in, the server's menu and the forms), calling the `/api` of the origin it was loaded from |
+| `Define/`, `Excel/`, `.config/dotnet-tools.json` | As in `polhem-avalonia` |
+| `.vscode/` | Tasks **Polhem: Initialize database**, **Polhem: Upgrade database** and **Polhem: Open DefineEditor**, and the F5 launch **Server** |
+
+Their options are those of `polhem-blazor-server`. The client and the server need no workload: the .NET SDK builds and
+publishes them.
+
+The client calls the API as any remote client does, so its calls are checked as remote calls. What differs from the
+other Polhem clients is in the [Polhem.Web.Blazor.Wasm README](../../src/Polhem.Web.Blazor.Wasm/README.md#what-differs-from-blazor-server);
+the generated `README.md` names the two that matter before deploying (the API key is public, and the site must be
+served over HTTPS).

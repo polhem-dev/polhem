@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: d6305ed039e892c77573505eb80eafe48046bfaf -->
+<!-- source: en/getting-started/getting-started.md blob: 76b3caca7e0ec7a9ad88045c47174abe96ecb662 -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -8,8 +8,8 @@
 本文帶你建**自己的專案**。若你只想先看框架跑起來、還不想動手寫，repo 的 [`samples/`](../../../samples/README.zh-TW.md) 有控制項 DemoCenter，[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 則是完整應用。
 
 若想跳過這些接線、直接從已接好的專案開始，請用範本：`dotnet new install Polhem.Templates`，再
-`dotnet new polhem-avalonia -n MyApp --database Sqlite`（見 [Polhem.Templates](../../../tools/Polhem.Templates/README.zh-TW.md)）。
-本頁說明的就是範本替你設定好的內容。
+`dotnet new polhem-avalonia -n MyApp --database Sqlite`，或改用其中一個 Blazor 範本（見 [Polhem.Templates](../../../tools/Polhem.Templates/README.zh-TW.md)）。
+本頁說明的就是 `polhem-avalonia` 與 `polhem-blazor-wasm` 的 JSON-RPC 伺服器替你設定好的內容。
 
 每個步驟都連向深入說明該主題的文件。本頁只給最小可跑的內容，不重複那些文件已寫的東西。
 

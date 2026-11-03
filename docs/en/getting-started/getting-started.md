@@ -6,9 +6,10 @@
 
 This walkthrough builds **your own project**. If you would rather see the framework running before writing anything, the repository's [`samples/`](../../../samples/README.md) folder has control demo centers, and [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) is a complete application.
 
-To skip the wiring and start from a project that already has it, use the template:
-`dotnet new install Polhem.Templates`, then `dotnet new polhem-avalonia -n MyApp --database Sqlite` (see
-[Polhem.Templates](../../../tools/Polhem.Templates/README.md)). This page shows what the template sets up.
+To skip the wiring and start from a project that already has it, use a template:
+`dotnet new install Polhem.Templates`, then `dotnet new polhem-avalonia -n MyApp --database Sqlite`, or one of the
+Blazor templates (see [Polhem.Templates](../../../tools/Polhem.Templates/README.md)). This page shows what the
+JSON-RPC server of `polhem-avalonia` and `polhem-blazor-wasm` sets up.
 
 Each step links to the document that covers it in depth. Everything shown here is the minimum that runs; nothing is repeated from those documents.
 
