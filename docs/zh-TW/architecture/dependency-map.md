@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: e0f7c2513952dda3737ec37f654b990705f7e70e -->
+<!-- source: en/architecture/dependency-map.md blob: 6fe4a9cb37be64ecbc9a77083ead9f9de01fcf47 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -18,12 +18,12 @@
 ```mermaid
 graph BT
   Foundation["<b>基礎</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
-  Backend["<b>資料與商業邏輯</b><br/>Db, Repository, Business,<br/>ObjectCaching"]
+  Backend["<b>資料與商業邏輯</b><br/>Db, Repository,<br/>Repository.Abstractions,<br/>Business, ObjectCaching"]
   Wire["<b>通訊</b><br/>Api.Core, Api.Server,<br/>Api.Client"]
   Composition["<b>組合根</b><br/>Hosting"]
   FrontShared["<b>前端共通</b><br/>UI.Core, UI.ApiBridge"]
   Avalonia["<b>Avalonia 前端</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
-  Web["<b>Web 前端</b><br/>Web.Blazor, .Mud,<br/>.Server, .Wasm"]
+  Web["<b>Web 前端</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
 
   Backend --> Foundation
   Wire --> Foundation
