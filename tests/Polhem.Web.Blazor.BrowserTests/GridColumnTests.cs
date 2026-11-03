@@ -31,7 +31,10 @@ namespace Polhem.Web.Blazor.BrowserTests
         /// <param name="fixture">The site and the browser.</param>
         protected GridColumnTests(BrowserSiteFixture fixture) => _fixture = fixture;
 
-        private async Task<IPage> OpenAsync(string address)
+        /// <summary>Opens the grid page and waits for its rows.</summary>
+        /// <param name="address">The site address.</param>
+        /// <returns>The page.</returns>
+        protected async Task<IPage> OpenAsync(string address)
         {
             var page = await _fixture.Browser.NewPageAsync().ConfigureAwait(false);
             await page.GotoAsync(address + "/").ConfigureAwait(false);
@@ -51,17 +54,29 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator(Headers).First).ToContainTextAsync("Qty").ConfigureAwait(false);
         }
 
-        private static async Task<float> WidthAsync(IPage page)
+        /// <summary>Measures the first column.</summary>
+        /// <param name="page">The page.</param>
+        /// <returns>The width.</returns>
+        protected static async Task<float> WidthAsync(IPage page)
             => (await page.Locator(Headers).First.BoundingBoxAsync().ConfigureAwait(false))!.Width;
 
-        // The resizer tracks the mouse only after the server has answered, so a slow link needs the button held first.
-        private async Task DragResizerAsync(IPage page, float distance, int holdMilliseconds)
+        /// <summary>
+        /// Drags the first column's resizer by <paramref name="distance"/>. The resizer tracks the mouse only after the
+        /// server has answered, so a slow link needs the button held first.
+        /// </summary>
+        /// <param name="page">The page.</param>
+        /// <param name="distance">How far to drag, negative to the left.</param>
+        /// <param name="holdMilliseconds">How long to hold the button before moving.</param>
+        /// <returns>The operation.</returns>
+        protected async Task DragResizerAsync(IPage page, float distance, int holdMilliseconds)
         {
             var handle = (await page.Locator(ColumnResizer).First.BoundingBoxAsync().ConfigureAwait(false))!;
-            await page.Mouse.MoveAsync(handle.X + (handle.Width / 2), handle.Y + (handle.Height / 2)).ConfigureAwait(false);
+            float x = handle.X + (handle.Width / 2);
+            float y = handle.Y + (handle.Height / 2);
+            await page.Mouse.MoveAsync(x, y).ConfigureAwait(false);
             await page.Mouse.DownAsync().ConfigureAwait(false);
             await page.WaitForTimeoutAsync(holdMilliseconds).ConfigureAwait(false);
-            await page.Mouse.MoveAsync(handle.X + distance, handle.Y, new MouseMoveOptions { Steps = 5 }).ConfigureAwait(false);
+            await page.Mouse.MoveAsync(x + distance, y, new MouseMoveOptions { Steps = 5 }).ConfigureAwait(false);
             await page.Mouse.UpAsync().ConfigureAwait(false);
         }
 
@@ -119,20 +134,63 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("A grid given another layout starts at that layout's widths, not at the last one's")]
+        public async Task OtherLayout_StartsAtItsOwnWidths()
+        {
+            var page = await OpenAsync(_fixture.Address);
+            float before = await WidthAsync(page);
+            await DragResizerAsync(page, 80, 300);
+            await WaitForWidthAsync(page, width => width >= before + 60);
+
+            await page.Locator("#other-layout").ClickAsync();
+
+            await WaitForWidthAsync(page, width => width < before + 20);
+            Assert.InRange(await WidthAsync(page), before - 20, before + 20);
+        }
+
+        [BrowserFact]
+        [DisplayName("A grid given an equal copy of its layout keeps the widths the user gave it")]
+        public async Task EqualLayout_KeepsTheWidths()
+        {
+            var page = await OpenAsync(_fixture.Address);
+            float before = await WidthAsync(page);
+            await DragResizerAsync(page, 80, 300);
+            await WaitForWidthAsync(page, width => width >= before + 60);
+            float resized = await WidthAsync(page);
+
+            await page.Locator("#equal-layout").ClickAsync();
+            await page.WaitForTimeoutAsync(500);
+
+            Assert.InRange(await WidthAsync(page), resized - 20, resized + 20);
+        }
+
+        /// <summary>Waits until the first column's width satisfies <paramref name="reached"/>, or about five seconds.</summary>
+        /// <param name="page">The page.</param>
+        /// <param name="reached">The condition.</param>
+        /// <returns>The operation.</returns>
+        protected static async Task WaitForWidthAsync(IPage page, Func<float, bool> reached)
+        {
+            for (int attempt = 0; attempt < 50 && !reached(await WidthAsync(page)); attempt++)
+                await page.WaitForTimeoutAsync(100);
+        }
+
+        [BrowserFact]
         [DisplayName("A column does not get narrower than its layout width")]
         public async Task DragEdge_StopsAtLayoutWidth()
         {
             var page = await OpenAsync(_fixture.Address);
             float before = await WidthAsync(page);
+            await DragResizerAsync(page, 80, 300);
+            await WaitForWidthAsync(page, width => width >= before + 60);
+            float widened = await WidthAsync(page);
 
             await DragResizerAsync(page, -620, 300);
 
             // A table can give a column more than was asked for, so this holds the rule and not one framework's number.
-            for (int attempt = 0; attempt < 50 && await WidthAsync(page) >= before; attempt++)
-                await page.WaitForTimeoutAsync(100);
+            await WaitForWidthAsync(page, width => width < widened);
             await page.WaitForTimeoutAsync(300);
             float width = await WidthAsync(page);
-            Assert.True(width < before, $"The width started at {before} and did not narrow.");
+            Assert.True(width < widened, $"The width was widened to {widened} and did not narrow.");
             Assert.True(width >= LayoutWidth, $"The column narrowed to {width}, under its layout width of {LayoutWidth}.");
         }
 

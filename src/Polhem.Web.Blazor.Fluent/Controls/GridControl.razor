@@ -9,7 +9,8 @@
 @using Polhem.UI.Core.Fields
 @using Polhem.Web.Blazor.Fluent.Controls.Editors
 
-<div class="polhem-grid">
+<div class="polhem-grid @_gridClass">
+    <style>@MinWidthRules()</style>
     @if (ShowToolbar)
     {
         <div class="polhem-grid__toolbar">
@@ -27,7 +28,10 @@
             }
         </div>
     }
-    <PolhemDataGrid TGridItem="DataRow"
+    @* The resize and reorder script changes the header cells in place, and a render that passes the same widths leaves
+       them alone, so without the key the next form started at the widths and the order the last one was left with. *@
+    <PolhemDataGrid @key="LayoutIdentity"
+                    TGridItem="DataRow"
                     Items="_rows"
                     ItemKey="@(row => row)"
                     DisplayMode="DataGridDisplayMode.Table"
@@ -46,8 +50,7 @@
                             Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
                             Sortable="false"
                             DisableCellFocus="true"
-                            Width="@ColumnWidth(current)"
-                            MinWidth="@ColumnWidth(current)">
+                            Width="@ColumnWidth(current)">
                 <HeaderCellItemTemplate>
                     <div class="@HeaderClass(current)">
                         @if (IsSortable(current))
@@ -124,6 +127,7 @@
     private IQueryable<DataRow> _rows = Enumerable.Empty<DataRow>().AsQueryable();
     private List<DataRow> _lastRows = [];
     private GridEditorScript _script = default!;
+    private readonly string _gridClass = $"polhem-grid--{Guid.NewGuid():N}";
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -176,4 +180,17 @@
     private static string ColumnWidth(LayoutColumn column)
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,
             $"{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
+
+    // NOTE: The resize script stops at a header's `min-width`. In table mode the grid writes neither `MinWidth` nor a
+    // column's `Style` on the header, so the rule is written here, scoped to this grid, by the key the header carries.
+    // Only identifier-like field names get one, so the selector needs no quotes: a prerendered page would encode them, and
+    // a style element does not decode what it holds.
+    private string MinWidthRules()
+        => string.Concat(VisibleColumns
+            .Where(column => IsIdentifier(column.FieldName))
+            .Select(column => $".{_gridClass} th[data-column-key={column.FieldName}]{{min-width:{ColumnWidth(column)}}}"));
+
+    private static bool IsIdentifier(string name)
+        => name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_')
+            && name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_');
 }

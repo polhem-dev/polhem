@@ -712,3 +712,4 @@ override Polhem.Web.Blazor.Shell.PolhemShellLink.GetHashCode() -> int
 override Polhem.Web.Blazor.Shell.PolhemShellLink.ToString() -> string!
 static Polhem.Web.Blazor.Shell.PolhemShellLink.operator !=(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool
 static Polhem.Web.Blazor.Shell.PolhemShellLink.operator ==(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool
+Polhem.Web.Blazor.Controls.GridControlBase.LayoutIdentity.get -> string!
