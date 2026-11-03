@@ -43,7 +43,7 @@ Fluent UI 5.0.1 needs these, each marked `WARNING:` where it is:
 
 | Where | Why |
 |---|---|
-| `PolhemDataGrid` | The grid calls a disposed script module when removed during `OnAfterRenderAsync`. This ends the circuit, and an error boundary cannot catch it because the component is gone. |
+| `PolhemDataGrid` | With resizable or reorderable columns, the grid calls a disposed script module when removed during `OnAfterRenderAsync`, which ends the circuit. An error boundary that stays on the page does catch it, measured on 2026-11-03, but then shows its error content for a grid that was only leaving. Upstream: [fluentui-blazor#5580](https://github.com/microsoft/fluentui-blazor/issues/5580). |
 | `PolhemDialog` | An inline dialog raises no `OnStateChange`, stays inside the surrounding `FormScope` (a provider's dialog leaves it), and `Modal` renders a type that a click outside does not close. |
 | `GridColumnFilter` | The popover opens only when `Opened` turns true on an element already rendered. |
 | `GridControl` | A Fluent input writes its value back just after it takes the focus, so held keys replay 50 ms later. This was measured and not traced to its source: 16 ms held and 0 ms did not. |
