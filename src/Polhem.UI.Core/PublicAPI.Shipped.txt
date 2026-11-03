@@ -1,4 +1,18 @@
 #nullable enable
+Polhem.UI.Core.Connectors.CardListState<TRow>
+Polhem.UI.Core.Connectors.CardListState<TRow>.CanLoadMore(Polhem.UI.Core.Connectors.ListPagingState! paging) -> bool
+Polhem.UI.Core.Connectors.CardListState<TRow>.CardListState(System.Collections.Generic.IList<TRow>! rows, System.Func<TRow, string!>! getRowId, int maxRows) -> void
+Polhem.UI.Core.Connectors.CardListState<TRow>.IsAtLimit.get -> bool
+Polhem.UI.Core.Connectors.CardListState<TRow>.MaxRows.get -> int
+Polhem.UI.Core.Connectors.CardListState<TRow>.ShowPage(int page, System.Collections.Generic.IEnumerable<TRow>! rows) -> void
+Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Boolean = 5 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Choice = 6 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Date = 3 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.DateTime = 4 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.None = 0 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Number = 2 -> Polhem.UI.Core.Connectors.ColumnFilterKind
+Polhem.UI.Core.Connectors.ColumnFilterKind.Text = 1 -> Polhem.UI.Core.Connectors.ColumnFilterKind
 Polhem.UI.Core.Connectors.FormDataResult
 Polhem.UI.Core.Connectors.FormDataResult.<Clone>$() -> Polhem.UI.Core.Connectors.FormDataResult!
 Polhem.UI.Core.Connectors.FormDataResult.AffectedRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, int>!
@@ -24,6 +38,34 @@ Polhem.UI.Core.Connectors.FormListResult.Paging.get -> Polhem.Definition.Paging.
 Polhem.UI.Core.Connectors.FormListResult.Paging.init -> void
 Polhem.UI.Core.Connectors.FormListResult.Table.get -> System.Data.DataTable?
 Polhem.UI.Core.Connectors.FormListResult.Table.init -> void
+Polhem.UI.Core.Connectors.ListFilterState
+Polhem.UI.Core.Connectors.ListFilterState.Clear() -> void
+Polhem.UI.Core.Connectors.ListFilterState.CreateFilter() -> Polhem.Definition.Filters.FilterNode?
+Polhem.UI.Core.Connectors.ListFilterState.GetEntered(string! fieldName) -> (string! First, string! Second)
+Polhem.UI.Core.Connectors.ListFilterState.HasFilters.get -> bool
+Polhem.UI.Core.Connectors.ListFilterState.IsFiltered(string! fieldName) -> bool
+Polhem.UI.Core.Connectors.ListFilterState.ListFilterState() -> void
+Polhem.UI.Core.Connectors.ListFilterState.TrySet(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Connectors.ColumnFilterKind kind, string? first, string? second) -> bool
+Polhem.UI.Core.Connectors.ListPagingState
+Polhem.UI.Core.Connectors.ListPagingState.Apply(int page, Polhem.Definition.Paging.PagingInfo? paging) -> void
+Polhem.UI.Core.Connectors.ListPagingState.BeginRequest() -> int
+Polhem.UI.Core.Connectors.ListPagingState.CanGoNext.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.CanGoPrevious.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.CreateOptions(int page) -> Polhem.Definition.Paging.PagingOptions!
+Polhem.UI.Core.Connectors.ListPagingState.CreateSort() -> Polhem.Definition.Sorting.SortFieldCollection?
+Polhem.UI.Core.Connectors.ListPagingState.HasMore.get -> bool
+Polhem.UI.Core.Connectors.ListPagingState.InvalidateTotalCount() -> void
+Polhem.UI.Core.Connectors.ListPagingState.IsCurrent(int requestId) -> bool
+Polhem.UI.Core.Connectors.ListPagingState.ListPagingState() -> void
+Polhem.UI.Core.Connectors.ListPagingState.Page.get -> int
+Polhem.UI.Core.Connectors.ListPagingState.PageSize.get -> int
+Polhem.UI.Core.Connectors.ListPagingState.SetPageSize(int pageSize) -> void
+Polhem.UI.Core.Connectors.ListPagingState.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
+Polhem.UI.Core.Connectors.ListPagingState.SortFieldName.get -> string?
+Polhem.UI.Core.Connectors.ListPagingState.ToggleSort(string! fieldName) -> void
+Polhem.UI.Core.Connectors.ListPagingState.TotalCount.get -> int?
+Polhem.UI.Core.Connectors.ListPagingState.TotalPages.get -> int?
+Polhem.UI.Core.Connectors.ListPagingState.TryStepBackFromEmptyPage(int rowCount) -> bool
 Polhem.UI.Core.Connectors.ListSelectFields
 Polhem.UI.Core.Definitions.IFormDefinitionSource
 Polhem.UI.Core.Definitions.IFormDefinitionSource.GetCurrencySettingsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Settings.CurrencySettings?>!
@@ -71,6 +113,16 @@ Polhem.UI.Core.Fields.GridCellFormatter
 Polhem.UI.Core.Fields.LookupDisplay
 Polhem.UI.Core.Fields.LookupFieldRules
 Polhem.UI.Core.Fields.NumericFieldFormat
+Polhem.UI.Core.Fields.RelationOpenRules
+Polhem.UI.Core.Fields.RelationTarget
+Polhem.UI.Core.Fields.RelationTarget.Deconstruct(out string! ProgId, out System.Guid RowId) -> void
+Polhem.UI.Core.Fields.RelationTarget.Equals(Polhem.UI.Core.Fields.RelationTarget other) -> bool
+Polhem.UI.Core.Fields.RelationTarget.ProgId.get -> string!
+Polhem.UI.Core.Fields.RelationTarget.ProgId.init -> void
+Polhem.UI.Core.Fields.RelationTarget.RelationTarget() -> void
+Polhem.UI.Core.Fields.RelationTarget.RelationTarget(string! ProgId, System.Guid RowId) -> void
+Polhem.UI.Core.Fields.RelationTarget.RowId.get -> System.Guid
+Polhem.UI.Core.Fields.RelationTarget.RowId.init -> void
 Polhem.UI.Core.FormDataGuard
 Polhem.UI.Core.FormLiveComputationEngine
 Polhem.UI.Core.FormLiveComputationEngine.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -114,6 +166,7 @@ Polhem.UI.Core.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Form
 Polhem.UI.Core.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
 Polhem.UI.Core.Permissions.LayoutCapabilityApplier
 Polhem.UI.Core.UIServices
+const Polhem.UI.Core.Connectors.ListPagingState.DefaultPageSize = 50 -> int
 const Polhem.UI.Core.Fields.LookupDisplay.Separator = " - " -> string!
 override Polhem.UI.Core.Connectors.FormDataResult.Equals(object? obj) -> bool
 override Polhem.UI.Core.Connectors.FormDataResult.GetHashCode() -> int
@@ -124,6 +177,7 @@ override Polhem.UI.Core.Connectors.FormDeleteResult.ToString() -> string!
 override Polhem.UI.Core.Connectors.FormListResult.Equals(object? obj) -> bool
 override Polhem.UI.Core.Connectors.FormListResult.GetHashCode() -> int
 override Polhem.UI.Core.Connectors.FormListResult.ToString() -> string!
+override Polhem.UI.Core.Fields.RelationTarget.GetHashCode() -> int
 override Polhem.UI.Core.Permissions.FieldCapability.GetHashCode() -> int
 static Polhem.UI.Core.Connectors.FormDataResult.operator !=(Polhem.UI.Core.Connectors.FormDataResult? left, Polhem.UI.Core.Connectors.FormDataResult? right) -> bool
 static Polhem.UI.Core.Connectors.FormDataResult.operator ==(Polhem.UI.Core.Connectors.FormDataResult? left, Polhem.UI.Core.Connectors.FormDataResult? right) -> bool
@@ -131,6 +185,7 @@ static Polhem.UI.Core.Connectors.FormDeleteResult.operator !=(Polhem.UI.Core.Con
 static Polhem.UI.Core.Connectors.FormDeleteResult.operator ==(Polhem.UI.Core.Connectors.FormDeleteResult? left, Polhem.UI.Core.Connectors.FormDeleteResult? right) -> bool
 static Polhem.UI.Core.Connectors.FormListResult.operator !=(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
 static Polhem.UI.Core.Connectors.FormListResult.operator ==(Polhem.UI.Core.Connectors.FormListResult? left, Polhem.UI.Core.Connectors.FormListResult? right) -> bool
+static Polhem.UI.Core.Connectors.ListFilterState.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Connectors.ColumnFilterKind
 static Polhem.UI.Core.Connectors.ListSelectFields.For(Polhem.Definition.Forms.FormSchema! schema) -> string!
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatBindingValue(string? bindingValue) -> string!
 static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatDisplay(System.DateTime value) -> string!
@@ -156,6 +211,11 @@ static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.
 static Polhem.UI.Core.Fields.NumericFieldFormat.ToWriteBackValue(string? text, string! lastRaw) -> string!
 static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseInput(string? text, out decimal value) -> bool
 static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseRaw(string? raw, out decimal value) -> bool
+static Polhem.UI.Core.Fields.RelationOpenRules.CanOpen(Polhem.Definition.Forms.FormSchema! relationSchema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+static Polhem.UI.Core.Fields.RelationOpenRules.IsAvailable(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Forms.FormField? field) -> bool
+static Polhem.UI.Core.Fields.RelationOpenRules.TryGetTarget(Polhem.Definition.Forms.FormField? field, object? value, out Polhem.UI.Core.Fields.RelationTarget target) -> bool
+static Polhem.UI.Core.Fields.RelationTarget.operator !=(Polhem.UI.Core.Fields.RelationTarget left, Polhem.UI.Core.Fields.RelationTarget right) -> bool
+static Polhem.UI.Core.Fields.RelationTarget.operator ==(Polhem.UI.Core.Fields.RelationTarget left, Polhem.UI.Core.Fields.RelationTarget right) -> bool
 static Polhem.UI.Core.FormDataGuard.RequireConnector<TConnector>(TConnector? connector, string! operation) -> TConnector!
 static Polhem.UI.Core.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
 static Polhem.UI.Core.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
@@ -173,5 +233,7 @@ static Polhem.UI.Core.UIServices.Provider.get -> System.IServiceProvider?
 static Polhem.UI.Core.UIServices.Provider.set -> void
 static readonly Polhem.UI.Core.Permissions.ElementCapabilityResolver.Default -> Polhem.UI.Core.Permissions.ElementCapabilityResolver!
 static readonly Polhem.UI.Core.Permissions.FieldCapability.Allowed -> Polhem.UI.Core.Permissions.FieldCapability
+~override Polhem.UI.Core.Fields.RelationTarget.Equals(object obj) -> bool
+~override Polhem.UI.Core.Fields.RelationTarget.ToString() -> string
 ~override Polhem.UI.Core.Permissions.FieldCapability.Equals(object obj) -> bool
 ~override Polhem.UI.Core.Permissions.FieldCapability.ToString() -> string
