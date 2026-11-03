@@ -16,6 +16,12 @@
     <ProjectReference Include="..\Polhem.Northwind.Backend\Polhem.Northwind.Backend.csproj" />
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Server\Polhem.Web.Blazor.Server.csproj" />
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
+    <!-- The Fluent UI head is a Razor class library that Program.cs mounts under its own path. -->
+    <ProjectReference Include="..\Polhem.Northwind.BlazorFluent\Polhem.Northwind.BlazorFluent.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\NorthwindDemoSite.cs" Link="Demo\NorthwindDemoSite.cs" />
   </ItemGroup>
 
   <!-- Polhem.JsonRpc.AspNetCore serves the endpoint of the Demo environment (Demo/NorthwindDemo.cs).

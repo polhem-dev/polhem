@@ -58,6 +58,15 @@ namespace Polhem.UI.Avalonia.Shell
         public string SignInHint { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets the links shown at the foot of the sign-in screen, such as to the other front ends of a demonstration
+        /// site. Empty shows none.
+        /// </summary>
+        public IList<ShellLink> SignInLinks { get; } = [];
+
+        /// <summary>Gets or sets the heading shown over <see cref="SignInLinks"/>. Empty shows none.</summary>
+        public string SignInLinksTitle { get; set; } = string.Empty;
+
+        /// <summary>
         /// Gets or sets the folder name the default preference storage uses under the per-user application data
         /// directory. Empty uses <see cref="AppTitle"/>.
         /// </summary>

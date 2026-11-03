@@ -22,6 +22,8 @@
 .polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
 .polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px; }
 .polhem-shell-signin__languages { display: flex; gap: 8px; }
+.polhem-shell-signin__links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.polhem-shell-signin__links-title { flex-basis: 100%; }
 .polhem-login-panel { display: flex; flex-direction: column; gap: 12px; }
 .polhem-shell__title { font-weight: 600; }
 .polhem-shell__user { margin-right: 12px; font-size: 13px; opacity: 0.85; }

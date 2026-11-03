@@ -47,4 +47,8 @@
     <InvariantTimezone>false</InvariantTimezone>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\NorthwindDemoSite.cs" Link="Demo\NorthwindDemoSite.cs" />
+  </ItemGroup>
+
 </Project>

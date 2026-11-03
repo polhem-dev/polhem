@@ -693,3 +693,22 @@ Polhem.Web.Blazor.Components.CardListEnd.RowCount.get -> int
 Polhem.Web.Blazor.Components.CardListEnd.RowCount.set -> void
 override Polhem.Web.Blazor.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 ~override Polhem.Web.Blazor.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Polhem.Web.Blazor.Shell.PolhemShellLink
+Polhem.Web.Blazor.Shell.PolhemShellLink.<Clone>$() -> Polhem.Web.Blazor.Shell.PolhemShellLink!
+Polhem.Web.Blazor.Shell.PolhemShellLink.Deconstruct(out string! Text, out string! Href) -> void
+Polhem.Web.Blazor.Shell.PolhemShellLink.Equals(Polhem.Web.Blazor.Shell.PolhemShellLink? other) -> bool
+Polhem.Web.Blazor.Shell.PolhemShellLink.Href.get -> string!
+Polhem.Web.Blazor.Shell.PolhemShellLink.Href.init -> void
+Polhem.Web.Blazor.Shell.PolhemShellLink.PolhemShellLink(string! Text, string! Href) -> void
+Polhem.Web.Blazor.Shell.PolhemShellLink.Text.get -> string!
+Polhem.Web.Blazor.Shell.PolhemShellLink.Text.init -> void
+Polhem.Web.Blazor.Shell.PolhemShellOptions.SignInLinks.get -> System.Collections.Generic.IList<Polhem.Web.Blazor.Shell.PolhemShellLink!>!
+Polhem.Web.Blazor.Shell.PolhemShellOptions.SignInLinksTitle.get -> string!
+Polhem.Web.Blazor.Shell.PolhemShellOptions.SignInLinksTitle.set -> void
+Polhem.Web.Blazor.Shell.PolhemShellSignInLinks
+Polhem.Web.Blazor.Shell.PolhemShellSignInLinks.PolhemShellSignInLinks() -> void
+override Polhem.Web.Blazor.Shell.PolhemShellLink.Equals(object? obj) -> bool
+override Polhem.Web.Blazor.Shell.PolhemShellLink.GetHashCode() -> int
+override Polhem.Web.Blazor.Shell.PolhemShellLink.ToString() -> string!
+static Polhem.Web.Blazor.Shell.PolhemShellLink.operator !=(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool
+static Polhem.Web.Blazor.Shell.PolhemShellLink.operator ==(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool

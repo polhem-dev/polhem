@@ -25,11 +25,13 @@
 
 | 前端 | 網址 |
 |------|------|
-| Blazor Server | <https://polhem-northwind.onrender.com/> |
-| Blazor WebAssembly | <https://polhem-northwind.onrender.com/wasm/> |
+| Blazor Server，MudBlazor | <https://polhem-northwind.onrender.com/> |
+| Blazor WebAssembly，MudBlazor | <https://polhem-northwind.onrender.com/wasm/> |
+| Blazor Server，Fluent UI | <https://polhem-northwind.onrender.com/fluent/> |
+| Blazor WebAssembly，Fluent UI | <https://polhem-northwind.onrender.com/fluent-wasm/> |
 | Avalonia（WebAssembly） | <https://polhem-northwind.onrender.com/web/> |
 
-帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
+帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。每個前端的登入畫面都有連結通往其他前端。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
 
 ## 執行 demo
 
@@ -101,12 +103,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 
 ### 網頁前端（Blazor Server，Fluent UI）
 
-**`Polhem.Northwind.BlazorFluent`** 以 [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.zh-TW.md) 在 `Polhem.Web.Blazor.Server` 宿主上呈現相同的表單，後端在同一個行程內。它不在 demo 網站上。
-
-```bash
-# Fluent UI 版的 Blazor Server head（http://localhost:5700）
-dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent
-```
+**`Polhem.Northwind.BlazorFluent`** 以 [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.zh-TW.md) 呈現相同的表單。
+它是 Razor 類別庫，不是獨立的網站：上面的 Blazor Server head 把它掛在 `/fluent/`，作為同一個行程裡的第二個 Blazor app，
+兩者共用後端、登入設定與語言 cookie。執行那個 head 後開 <http://localhost:5300/fluent/>。
 
 ### 網頁前端（Blazor WebAssembly）
 
@@ -116,6 +115,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent
 ```bash
 # Blazor WebAssembly head（http://localhost:5600）
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm
+
+# Fluent UI 版的同一個 head（http://localhost:5700）
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm
 ```
 
 端點與 API key 在 `wwwroot/appsettings*.json`；端點留空代表頁面同一來源的 `/api`。server 的開發用 CORS 政策允許這個 port 呼叫它。
@@ -124,26 +126,27 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm
 
 ### 所有網頁前端放在同一個網站（Demo 環境）
 
-以 `Demo` 環境執行 Blazor head 時，它還會在 `/api` 提供 JSON-RPC 端點、在 `/wasm/` 提供發佈好的 Blazor WebAssembly bundle、
-在 `/web/` 提供發佈好的 Avalonia WASM bundle，全部在同一個行程、同一個來源。公開 demo 網站就是這個形態：WASM head 呼叫
+以 `Demo` 環境執行 Blazor head 時，它還會在 `/api` 提供 JSON-RPC 端點，並提供三個發佈好的 WASM bundle，全部在同一個行程、
+同一個來源。各前端放在哪個路徑，見 [`Shared/NorthwindDemoSite.cs`](Shared/NorthwindDemoSite.cs)，這個檔案連結進網站上的每個 head。公開 demo 網站就是這個形態：WASM head 呼叫
 `/api` 不需要 CORS 政策，所有前端讀同一個 `northwind.db`，在一邊存的資料其他前端看得到。
 
 ```bash
 # 1. 先發佈 WASM head（需要 wasm-tools workload）
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm -c Release -o artifacts/northwind-blazor-wasm
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm -c Release -o artifacts/northwind-fluent-wasm
 
 # 2. 以 Demo 環境執行 Blazor head（http://localhost:5400）
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
 ```
 
-Blazor Server 開 <http://localhost:5400/>，Blazor WebAssembly 開 <http://localhost:5400/wasm/>，Avalonia 開
-<http://localhost:5400/web/>；每個頁面的角落都有連結通往另外兩個。Avalonia head 在 `/web/` 底下提供時，
-會預填同源的 `/api` 端點。`Northwind:BrowserBundle` 與 `Northwind:BlazorWasmBundle` 指定 bundle 資料夾（各發佈輸出的
+開 <http://localhost:5400/>；每個前端的登入畫面都有連結通往另外四個，而且只在這個網站上出現。Avalonia head 會在新分頁開啟，
+因為它的殼層一律透過瀏覽器的 launcher 開連結；它在 `/web/` 底下提供時，會預填同源的 `/api` 端點。
+`Northwind:BrowserBundle`、`Northwind:BlazorWasmBundle` 與 `Northwind:FluentWasmBundle` 指定 bundle 資料夾（各發佈輸出的
 `wwwroot`）；`Demo` launch profile 已指向上面指令的輸出，任一資料夾裡沒有 `index.html` 時 host 會拒絕啟動。
 
 因為所有帳號的密碼都是公開的，Demo 環境也照公開網站的方式運作：任何帳號都不能是部署管理者（否則 host 拒絕啟動）、
-登入失敗不會鎖住帳號、錯誤回應只帶固定訊息而不帶例外內容、`/api` 與 Blazor 連線的建立依用戶端位址限速（位址取自
+登入失敗不會鎖住帳號、錯誤回應只帶固定訊息而不帶例外內容、`/api` 與 Blazor 連線的建立（兩個 Blazor Server head 都算）依用戶端位址限速（位址取自
 主機前方 Cloudflare 節點的 `CF-Connecting-IP` 標頭），`/api` 不接受批次請求與超過 1 MB 的內容。細節在 `Demo/NorthwindDemo.cs`。
 
 同一個網站也能以單一容器執行，在 repo 根目錄用 [`Dockerfile`](Dockerfile) 建置。資料庫放在容器裡、啟動時灌種子，
@@ -151,7 +154,7 @@ Blazor Server 開 <http://localhost:5400/>，Blazor WebAssembly 開 <http://loca
 
 ```bash
 docker build -f apps/Polhem.Northwind/Dockerfile -t polhem-northwind-demo .
-docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/、/wasm/ 與 /web/
+docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/ 與上面其他路徑
 ```
 
 ### 行動前端（Avalonia iOS / Android）

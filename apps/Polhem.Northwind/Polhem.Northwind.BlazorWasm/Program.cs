@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Polhem.Northwind.BlazorWasm;
+using Polhem.Northwind.Demo;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
+using Polhem.Web.Blazor.Shell;
 using Polhem.Web.Blazor.Wasm.DependencyInjection;
 using Polhem.Web.Blazor.Wasm.Shell;
 
@@ -29,6 +31,13 @@ builder.Services.AddPolhemShell(shell =>
     shell.SignInHint = "Use demo / demo, or demo-ro / demo for the read-only account.";
     // This head references no backend, so it does not share NorthwindCredentials.CompanyId. Change both together.
     shell.DefaultCompanyId = "NORTHWIND";
+    if (NorthwindDemoSite.IsUnder(new Uri(builder.HostEnvironment.BaseAddress).AbsolutePath, NorthwindDemoSite.BlazorWasmPath))
+    {
+        // Served by the demo site, next to the other front ends; the sign-in screen leaves out the link to itself.
+        shell.SignInLinksTitle = NorthwindDemoSite.LinksTitle;
+        foreach (var (text, href) in NorthwindDemoSite.FrontEnds)
+            shell.SignInLinks.Add(new PolhemShellLink(text, href));
+    }
 });
 builder.Services.AddPolhemMud();
 

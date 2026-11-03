@@ -21,6 +21,16 @@ namespace Polhem.Web.Blazor.Shell
         /// </summary>
         public string SignInHint { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets the links shown at the foot of the sign-in screen, such as to the other front ends of a demonstration
+        /// site. Empty shows none, and a link to the application's own base address is not shown, so the front ends of
+        /// one site can share one list.
+        /// </summary>
+        public IList<PolhemShellLink> SignInLinks { get; } = [];
+
+        /// <summary>Gets or sets the heading shown over <see cref="SignInLinks"/>. Empty shows none.</summary>
+        public string SignInLinksTitle { get; set; } = string.Empty;
+
         /// <summary>Gets or sets the company id the sign-in screen starts with.</summary>
         public string DefaultCompanyId { get; set; } = string.Empty;
 

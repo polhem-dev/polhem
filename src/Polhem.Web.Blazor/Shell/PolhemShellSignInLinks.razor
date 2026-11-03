@@ -1,0 +1,13 @@
+@if (Links.Count > 0)
+{
+    <nav class="polhem-shell-signin__links" aria-label="@AriaLabel">
+        @if (!string.IsNullOrWhiteSpace(Options.SignInLinksTitle))
+        {
+            <div class="polhem-shell-signin__links-title">@Options.SignInLinksTitle</div>
+        }
+        @foreach (var link in Links)
+        {
+            <a class="polhem-shell-signin__link" href="@link.Href">@link.Text</a>
+        }
+    </nav>
+}

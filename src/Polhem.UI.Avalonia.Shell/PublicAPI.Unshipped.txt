@@ -1,1 +1,18 @@
 #nullable enable
+Polhem.UI.Avalonia.Shell.ShellLink
+Polhem.UI.Avalonia.Shell.ShellLink.<Clone>$() -> Polhem.UI.Avalonia.Shell.ShellLink!
+Polhem.UI.Avalonia.Shell.ShellLink.Address.get -> System.Uri!
+Polhem.UI.Avalonia.Shell.ShellLink.Address.init -> void
+Polhem.UI.Avalonia.Shell.ShellLink.Deconstruct(out string! Text, out System.Uri! Address) -> void
+Polhem.UI.Avalonia.Shell.ShellLink.Equals(Polhem.UI.Avalonia.Shell.ShellLink? other) -> bool
+Polhem.UI.Avalonia.Shell.ShellLink.ShellLink(string! Text, System.Uri! Address) -> void
+Polhem.UI.Avalonia.Shell.ShellLink.Text.get -> string!
+Polhem.UI.Avalonia.Shell.ShellLink.Text.init -> void
+Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinks.get -> System.Collections.Generic.IList<Polhem.UI.Avalonia.Shell.ShellLink!>!
+Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinksTitle.get -> string!
+Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinksTitle.set -> void
+override Polhem.UI.Avalonia.Shell.ShellLink.Equals(object? obj) -> bool
+override Polhem.UI.Avalonia.Shell.ShellLink.GetHashCode() -> int
+override Polhem.UI.Avalonia.Shell.ShellLink.ToString() -> string!
+static Polhem.UI.Avalonia.Shell.ShellLink.operator !=(Polhem.UI.Avalonia.Shell.ShellLink? left, Polhem.UI.Avalonia.Shell.ShellLink? right) -> bool
+static Polhem.UI.Avalonia.Shell.ShellLink.operator ==(Polhem.UI.Avalonia.Shell.ShellLink? left, Polhem.UI.Avalonia.Shell.ShellLink? right) -> bool

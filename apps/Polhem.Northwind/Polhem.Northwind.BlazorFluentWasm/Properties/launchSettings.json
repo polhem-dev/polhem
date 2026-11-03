@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Polhem.Northwind.BlazorFluent": {
+    "Polhem.Northwind.BlazorFluentWasm": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

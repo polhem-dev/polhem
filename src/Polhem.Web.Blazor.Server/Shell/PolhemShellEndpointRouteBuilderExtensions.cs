@@ -17,7 +17,8 @@ namespace Polhem.Web.Blazor.Server.Shell
         /// <remarks>
         /// A circuit's culture is fixed when it connects, so the switch reloads the page through this endpoint. The
         /// endpoint accepts only a culture of <see cref="PolhemShellOptions.Languages"/>, and redirects only to a path
-        /// on this site; anything else returns to the site's root. The cookie is read by the request localization
+        /// on this site; anything else returns to the application's root. Both are taken under the request's path base, so an
+        /// application mounted with <c>Map("/sub", ...)</c> returns to its own pages. The cookie is read by the request localization
         /// that <see cref="PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization"/> sets up.
         /// </remarks>
         /// <param name="endpoints">The application's endpoint route builder.</param>
@@ -45,7 +46,10 @@ namespace Polhem.Web.Blazor.Server.Shell
                             SameSite = SameSiteMode.Lax,
                         });
                 }
-                return Results.LocalRedirect(PolhemShellCulture.IsLocalPath(redirectUri) ? redirectUri! : "/");
+                // The return path is relative to the app's base, and an app mounted under a path base must come back
+                // to its own pages, not to the site's root. The path base is the server's, never the request's input.
+                string path = PolhemShellCulture.IsLocalPath(redirectUri) ? redirectUri! : "/";
+                return Results.LocalRedirect(context.Request.PathBase.Add(path).Value!);
             });
         }
     }

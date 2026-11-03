@@ -70,6 +70,8 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             _onLoggedIn = onLoggedIn;
 
             SignInHint = options.SignInHint;
+            SignInLinks = [.. options.SignInLinks];
+            SignInLinksTitle = options.SignInLinksTitle;
             UserId = options.DefaultUserId;
             Password = options.DefaultPassword;
             var remembered = preferences.Load(ShellPreferenceKeys.CompanyId);
@@ -81,6 +83,18 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Gets whether <see cref="SignInHint"/> has text.</summary>
         public bool HasSignInHint => SignInHint.Length > 0;
+
+        /// <summary>Gets the links shown at the foot of the screen; empty shows none.</summary>
+        public IReadOnlyList<ShellLink> SignInLinks { get; }
+
+        /// <summary>Gets whether <see cref="SignInLinks"/> has any link.</summary>
+        public bool HasSignInLinks => SignInLinks.Count > 0;
+
+        /// <summary>Gets the heading over the links; empty shows none.</summary>
+        public string SignInLinksTitle { get; }
+
+        /// <summary>Gets whether <see cref="SignInLinksTitle"/> has text.</summary>
+        public bool HasSignInLinksTitle => SignInLinksTitle.Length > 0;
 
         /// <summary>Gets the inverse of <see cref="IsBusy"/>, bound to the inputs' <c>IsEnabled</c>.</summary>
         public bool IsNotBusy => !IsBusy;

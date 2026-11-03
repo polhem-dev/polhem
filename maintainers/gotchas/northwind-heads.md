@@ -188,6 +188,21 @@ needs a real browser.
   publish without it, on an English browser, still showed Traditional Chinese text and `1996/7/4` dates, so no failure was
   reproduced; that publish was over an earlier output folder, which may have kept the larger ICU file.
 
+## The Fluent UI heads
+
+- **`Polhem.Northwind.BlazorFluent` is a Razor class library that the Blazor Server head mounts with `app.Map`.** A
+  second `Microsoft.NET.Sdk.Web` project referenced by the first fails the build with `MSB4018` ("An item with the
+  same key", for `blazor.web.js`), because both publish the framework's static assets. Both heads' `Routes.razor` name
+  `typeof(Routes).Assembly`: `typeof(Program)` is ambiguous (`CS0436`) once both projects have a top-level `Program`.
+- **The mounted head writes its `<base>` from the request's path base**, and its branch needs its own `UseRouting`,
+  `UseAntiforgery` and `UseEndpoints`, so its circuit hub sits at `/fluent/_blazor`. The demo's connection rate limit
+  strips that prefix before it looks for `/_blazor`.
+- **The two heads share one `PolhemShellOptions` and the culture cookie (path `/`).** The sign-in link list leaves out
+  the link to the page's own base address, which is what lets one list serve both.
+- **A reload on a WASM head's deep link logs 404s for its stylesheets and scripts** (`/wasm/form/_content/...`), on the
+  MudBlazor head as well. The preload scanner resolves them against the page's address before the written `<base>`
+  exists; the page then loads them again against the base and works. Seen on 2026-11-03, not fixed.
+
 ## The back key (shared UI)
 
 `MainView` handles `TopLevel.BackRequested` level by level: record → back to the list (`FormWorkspace.TryGoBack()`),
