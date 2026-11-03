@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Text.Json;
 
 namespace Polhem.Templates.UnitTests;
@@ -92,27 +91,11 @@ public class PolhemBlazorServerTemplateTests
         _fx.Run(_fx.Root, "new", "polhem-blazor-server-fluent", "--name", "Acme.Erp", "--output", derived,
             "--database", "SqlServer", "--no-restore", "--debug:custom-hive", _fx.Hive);
 
-        var chosenFiles = GeneratedFiles(chosen);
-        var derivedFiles = GeneratedFiles(derived);
+        var chosenFiles = GeneratedOutput.Files(chosen, Path.Combine("src", "Acme.Erp.Web"));
+        var derivedFiles = GeneratedOutput.Files(derived, Path.Combine("src", "Acme.Erp.Web"));
         Assert.NotEmpty(chosenFiles);
         Assert.Equal(chosenFiles.Keys.Order(StringComparer.Ordinal), derivedFiles.Keys.Order(StringComparer.Ordinal));
         Assert.All(chosenFiles, file => Assert.Equal(file.Value, derivedFiles[file.Key]));
-    }
-
-    // The relative path and content of each generated file, with the site's port, which each run of the template
-    // picks anew, replaced by a placeholder.
-    private static Dictionary<string, string> GeneratedFiles(string output)
-    {
-        using var settings = JsonDocument.Parse(File.ReadAllText(
-            Path.Combine(output, "src", "Acme.Erp.Web", "Properties", "launchSettings.json")));
-        var url = settings.RootElement.GetProperty("profiles").EnumerateObject().First().Value
-            .GetProperty("applicationUrl").GetString()!;
-        var port = new Uri(url.Split(';')[0]).Port.ToString(CultureInfo.InvariantCulture);
-        return Directory.GetFiles(output, "*", SearchOption.AllDirectories)
-            .ToDictionary(
-                f => Path.GetRelativePath(output, f),
-                f => File.ReadAllText(f).Replace(port, "<port>", StringComparison.Ordinal),
-                StringComparer.Ordinal);
     }
 
     [Fact]
