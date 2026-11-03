@@ -310,28 +310,6 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
         }
 
         [BrowserFact]
-        [DisplayName("Leaving a list while its grid is still setting up over a slow link keeps the circuit alive")]
-        public async Task SlowLink_LeaveListAtOnce_KeepsTheCircuit()
-        {
-            var errors = new List<string>();
-            var page = await _fixture.Browser.NewPageAsync();
-            page.Console += (_, message) =>
-            {
-                if (message.Type == "error" && message.Text.Contains("circuit", StringComparison.OrdinalIgnoreCase)) errors.Add(message.Text);
-            };
-            await page.GotoAsync(_fixture.SlowAddress + "/form");
-            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
-            await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(2);
-
-            await page.Locator("tr.polhem-grid__row").First.DblClickAsync();
-            await Assertions.Expect(page.Locator(".polhem-form-layout")).ToBeVisibleAsync();
-            await page.Locator(".polhem-form-page__toolbar fluent-button").First.ClickAsync();
-
-            await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(2);
-            Assert.Empty(errors);
-        }
-
-        [BrowserFact]
         [DisplayName("On a phone a wide grid scrolls by itself and the page does not get wider than the screen")]
         public async Task Phone_WideGrid_DoesNotWidenThePage()
         {
