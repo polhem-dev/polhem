@@ -60,7 +60,7 @@ public class TemplateLocalizationTests
             + Environment.NewLine + problems);
     }
 
-    private static IEnumerable<string> TranslationFiles(string template)
+    private static string[] TranslationFiles(string template)
     {
         var localize = Path.Combine(template, ".template.config", "localize");
         return Directory.Exists(localize) ? Directory.GetFiles(localize, "templatestrings.*.json") : [];
