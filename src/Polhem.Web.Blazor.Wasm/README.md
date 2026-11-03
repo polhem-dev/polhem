@@ -9,7 +9,7 @@
 - **Layer**: Web Frontend, host package
 - **Hosting model**: Blazor WebAssembly. The components run in the browser and call a Polhem API server over HTTP.
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md).
-- An application references it with a UI package such as [`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.md).
+- An application references it with a UI package: [`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.md) or [`Polhem.Web.Blazor.Fluent`](../Polhem.Web.Blazor.Fluent/README.md).
 
 ## Target Framework
 

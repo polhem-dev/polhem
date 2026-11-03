@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: 9f0b1b1f7f5db3c0d87641cda0df7e98e3ec07ee -->
+<!-- source: en/architecture/architecture-overview.md blob: 9dc30b4cd6839763d700253c3a3fb067ebe38a06 -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -353,7 +353,7 @@ flowchart LR
 ```
 ┌──────────────────────────────────────────────────────┐
 │  View                                                │
-│  Avalonia（桌面 / 瀏覽器 / 行動）/ Blazor Server / 自行撰寫的 host │  MVVM: View
+│  Avalonia（桌面 / 瀏覽器 / 行動）/ Blazor（Server / WebAssembly）/ 自行撰寫的 host │  MVVM: View
 ├──────────────────────────────────────────────────────┤
 │  ViewModel                                          │  MVVM: ViewModel
 │  （由 FormSchema 推導 binding 結構）                 │

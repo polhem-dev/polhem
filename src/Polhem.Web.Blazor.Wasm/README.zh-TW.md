@@ -9,7 +9,7 @@
 - **層級**：Web 前端，宿主套件
 - **Hosting 模式**：Blazor WebAssembly。元件在瀏覽器中執行，透過 HTTP 呼叫 Polhem API 伺服器。
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。
-- 應用程式將它與 UI 套件（例如 [`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.zh-TW.md)）一起參考。
+- 應用程式將它與一個 UI 套件一起參考：[`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.zh-TW.md) 或 [`Polhem.Web.Blazor.Fluent`](../Polhem.Web.Blazor.Fluent/README.zh-TW.md)。
 
 ## 目標框架
 
