@@ -5,13 +5,13 @@ window.polhemBrowserPreview = {
     showFieldNames: function (prefix, show) {
         document.querySelectorAll('[data-polhem-field-name]').forEach(function (e) {
             e.removeAttribute('placeholder');
-            e.removeAttribute('data-polhem-field-name');
+            delete e.dataset.polhemFieldName;
         });
         if (!show) return;
         document.querySelectorAll('[id^="' + prefix + '-"]').forEach(function (e) {
             if (e.getAttribute('placeholder')) return;
             e.setAttribute('placeholder', e.id.substring(prefix.length + 1));
-            e.setAttribute('data-polhem-field-name', '');
+            e.dataset.polhemFieldName = '';
         });
     }
 };

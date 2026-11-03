@@ -74,6 +74,17 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
         }
 
         [Fact]
+        [DisplayName("The culture cookie is marked Secure even when the request came over plain HTTP")]
+        public async Task Culture_PlainHttpRequest_MarksCookieSecure()
+        {
+            using var response = await Http.GetAsync("/culture?culture=en-US&redirectUri=%2F");
+
+            string? cookie = CultureCookie(response);
+            Assert.NotNull(cookie);
+            Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         [DisplayName("A culture that is not offered stores nothing")]
         public async Task Culture_UnofferedCulture_SetsNoCookie()
         {
