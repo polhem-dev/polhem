@@ -4,8 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+@*#if (ui == "fluent") *@
+    <link href="_content/Microsoft.FluentUI.AspNetCore.Components/css/default-fuib.css" rel="stylesheet" />
+    <link href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" rel="stylesheet" />
+    <link href="_content/Polhem.Web.Blazor.Fluent/polhem-fluent.css" rel="stylesheet" />
+@*#else *@
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="_content/Polhem.Web.Blazor.Mud/polhem-mud.css" rel="stylesheet" />
+@*#endif *@
     <link rel="stylesheet" href="app.css" />
     <title>PolhemApp</title>
     <HeadOutlet @rendermode="InteractiveServer" />
@@ -13,6 +19,8 @@
 <body>
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+@*#if (ui != "fluent") *@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+@*#endif *@
 </body>
 </html>

@@ -35,6 +35,54 @@ public class PolhemBlazorServerTemplateTests
     }
 
     [Fact]
+    [DisplayName("polhem-blazor-server with the Fluent UI library generates an application that builds")]
+    public void Generate_Fluent_Builds()
+    {
+        var output = Generate("Sqlite", "--ui", "fluent");
+
+        _fx.Run(output, "build", "Acme.Erp.slnx",
+            $"-p:RestoreAdditionalProjectFallbackFolders={TemplatePackageFixture.GlobalPackages}");
+    }
+
+    // The UI library is chosen by conditional blocks in several files; a block left out of one of them would leave the
+    // other library's package, namespace or stylesheet behind.
+    [Theory]
+    [InlineData("mud", "Mud", "Fluent")]
+    [InlineData("fluent", "Fluent", "Mud")]
+    [DisplayName("The generated site references only the chosen UI library")]
+    public void Generate_EachUi_ReferencesOnlyItsLibrary(string ui, string library, string otherLibrary)
+    {
+        var output = Generate("SqlServer", "--ui", ui);
+
+        var site = Path.Combine(output, "src", "Acme.Erp.Web");
+        Assert.Contains($"Include=\"Polhem.Web.Blazor.{library}\"", File.ReadAllText(Path.Combine(site, "Acme.Erp.Web.csproj")),
+            StringComparison.Ordinal);
+        Assert.All(Directory.GetFiles(site, "*", SearchOption.AllDirectories),
+            file => Assert.DoesNotContain(otherLibrary, File.ReadAllText(file), StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("mud", "_content/Polhem.Web.Blazor.Mud/polhem-mud.css")]
+    [InlineData("fluent", "_content/Polhem.Web.Blazor.Fluent/polhem-fluent.css")]
+    [DisplayName("The generated site starts on a new SQLite database and serves its page and the UI library's stylesheet")]
+    public async Task Generate_EachUi_StartsAndServesThePage(string ui, string stylesheet)
+    {
+        var output = Generate("Sqlite", "--ui", ui);
+        var project = Path.Combine("src", "Acme.Erp.Web", "Acme.Erp.Web.csproj");
+        _fx.Run(output, "build", project,
+            $"-p:RestoreAdditionalProjectFallbackFolders={TemplatePackageFixture.GlobalPackages}");
+        _fx.Run(output, "run", "--project", project, "--no-build", "--", "db", "create");
+        _fx.Run(output, "run", "--project", project, "--no-build", "--", "db", "upgrade");
+
+        using var site = await RunningSite.StartAsync(_fx, output, project);
+
+        var page = await site.Client.GetStringAsync(new Uri("/", UriKind.Relative));
+        Assert.Contains(stylesheet, page, StringComparison.Ordinal);
+        using var response = await site.Client.GetAsync(new Uri("/" + stylesheet, UriKind.Relative));
+        Assert.True(response.IsSuccessStatusCode, $"GET /{stylesheet} returned {(int)response.StatusCode}:\n{site.Output}");
+    }
+
+    [Fact]
     [DisplayName("polhem-blazor-server generates one site project, the definitions and the workbook folder")]
     public void Generate_HasOneSiteProject()
     {

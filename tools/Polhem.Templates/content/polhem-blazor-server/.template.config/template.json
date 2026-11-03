@@ -85,6 +85,23 @@
       ],
       "replaces": "POLHEM_DEFAULT_LANGUAGE"
     },
+    "ui": {
+      "type": "parameter",
+      "datatype": "choice",
+      "description": "The UI library the site's components are built on.",
+      "displayName": "UI library",
+      "defaultValue": "mud",
+      "choices": [
+        {
+          "choice": "mud",
+          "displayName": "MudBlazor"
+        },
+        {
+          "choice": "fluent",
+          "displayName": "Fluent UI"
+        }
+      ]
+    },
     "polhemVersion": {
       "type": "parameter",
       "datatype": "text",
