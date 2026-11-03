@@ -21,7 +21,7 @@ public sealed class TemplatePackageFixture : IDisposable
         "Polhem.Api.Contracts", "Polhem.Business", "Polhem.Api.Core", "Polhem.Api.Server",
         "Polhem.Repository.Abstractions", "Polhem.Repository", "Polhem.Hosting",
         "Polhem.Api.Client", "Polhem.UI.Core", "Polhem.UI.ApiBridge", "Polhem.UI.Avalonia", "Polhem.UI.Avalonia.Shell",
-        "Polhem.Web.Blazor", "Polhem.Web.Blazor.Mud", "Polhem.Web.Blazor.Server",
+        "Polhem.Web.Blazor", "Polhem.Web.Blazor.Mud", "Polhem.Web.Blazor.Fluent", "Polhem.Web.Blazor.Server",
     ];
 
     private static readonly TimeSpan s_timeout = TimeSpan.FromMinutes(10);
@@ -80,6 +80,24 @@ public sealed class TemplatePackageFixture : IDisposable
     /// <summary>Runs <c>dotnet</c> and fails the test with its output when it does not succeed.</summary>
     public string Run(string workingDirectory, params string[] args)
     {
+        var startInfo = StartInfo(workingDirectory, args);
+
+        using var process = Process.Start(startInfo)!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var error = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(s_timeout))
+        {
+            process.Kill(entireProcessTree: true);
+            Assert.Fail($"dotnet {string.Join(' ', args)} did not finish within {s_timeout}.");
+        }
+        var text = output.Result + error.Result;
+        Assert.True(process.ExitCode == 0, $"dotnet {string.Join(' ', args)} exited with {process.ExitCode}:\n{text}");
+        return text;
+    }
+
+    /// <summary>The start info of a <c>dotnet</c> command, in the environment a generated application builds in.</summary>
+    public ProcessStartInfo StartInfo(string workingDirectory, params string[] args)
+    {
         var startInfo = new ProcessStartInfo("dotnet")
         {
             WorkingDirectory = workingDirectory,
@@ -97,18 +115,7 @@ public sealed class TemplatePackageFixture : IDisposable
         startInfo.Environment["NUGET_PACKAGES"] = Packages;
         startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         startInfo.Environment["DOTNET_NOLOGO"] = "1";
-
-        using var process = Process.Start(startInfo)!;
-        var output = process.StandardOutput.ReadToEndAsync();
-        var error = process.StandardError.ReadToEndAsync();
-        if (!process.WaitForExit(s_timeout))
-        {
-            process.Kill(entireProcessTree: true);
-            Assert.Fail($"dotnet {string.Join(' ', args)} did not finish within {s_timeout}.");
-        }
-        var text = output.Result + error.Result;
-        Assert.True(process.ExitCode == 0, $"dotnet {string.Join(' ', args)} exited with {process.ExitCode}:\n{text}");
-        return text;
+        return startInfo;
     }
 
     /// <summary>The user's global package folder, which generated applications fall back to for third-party packages.</summary>

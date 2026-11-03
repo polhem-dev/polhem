@@ -35,6 +35,15 @@ from a terminal: `dotnet run --project src/PolhemApp.Web -- db create | check | 
 The sign-in belongs to the browser tab: a reload or a new tab shows the sign-in screen again. The language is picked
 on the sign-in screen, before signing in.
 
+<!--#if (ui == "fluent") -->
+## Fluent UI
+
+The site is built on [Polhem.Web.Blazor.Fluent](https://github.com/polhem-dev/polhem/blob/main/src/Polhem.Web.Blazor.Fluent/README.md),
+the Fluent UI package of the Polhem Blazor head. It behaves as the MudBlazor package does, with the differences its
+README lists. The one that matters most for a page of your own: a dialog renders where it is placed, so it does not
+see the `FormScope` around it.
+
+<!--#endif -->
 ## Pages of your own
 
 The site's pages call the backend in the same process, so their calls are trusted local calls. The forms still check
