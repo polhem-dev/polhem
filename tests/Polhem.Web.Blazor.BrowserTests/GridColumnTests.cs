@@ -54,11 +54,20 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator(Headers).First).ToContainTextAsync("Qty").ConfigureAwait(false);
         }
 
-        /// <summary>Measures the first column.</summary>
+        /// <summary>Measures the first column, waiting while the grid is being replaced.</summary>
         /// <param name="page">The page.</param>
         /// <returns>The width.</returns>
         protected static async Task<float> WidthAsync(IPage page)
-            => (await page.Locator(Headers).First.BoundingBoxAsync().ConfigureAwait(false))!.Width;
+        {
+            // A grid handed another layout is built again, and for a moment it has no header to measure.
+            for (int attempt = 0; attempt < 50; attempt++)
+            {
+                if (await page.Locator(Headers).First.BoundingBoxAsync().ConfigureAwait(false) is { } box)
+                    return box.Width;
+                await page.WaitForTimeoutAsync(100).ConfigureAwait(false);
+            }
+            throw new InvalidOperationException("The first column header did not come back.");
+        }
 
         /// <summary>
         /// Drags the first column's resizer by <paramref name="distance"/>. The resizer tracks the mouse only after the
