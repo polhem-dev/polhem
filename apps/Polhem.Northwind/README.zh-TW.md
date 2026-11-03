@@ -99,6 +99,15 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 - **登入狀態存在瀏覽器分頁的連線裡。** 重新載入頁面或開新分頁都要重新登入。
 - 殼層（登入、由 `MenuSettings.xml` 產生的選單、所有表單共用的一個路由頁面）是這個 head 自己的程式碼；表單則是框架的 `FormPage`。
 
+### 網頁前端（Blazor Server，Fluent UI）
+
+**`Polhem.Northwind.BlazorFluent`** 以 [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.zh-TW.md) 在 `Polhem.Web.Blazor.Server` 宿主上呈現相同的表單，後端在同一個行程內。它不在 demo 網站上。
+
+```bash
+# Fluent UI 版的 Blazor Server head（http://localhost:5700）
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent
+```
+
 ### 網頁前端（Blazor WebAssembly）
 
 **`Polhem.Northwind.BlazorWasm`** 以 `Polhem.Web.Blazor.Wasm` 宿主上的同一個 `Polhem.Web.Blazor.Mud` 套件呈現同一批表單：

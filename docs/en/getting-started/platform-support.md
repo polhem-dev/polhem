@@ -29,6 +29,7 @@ the head, not to the Polhem packages.
 | iOS | `Polhem.UI.Avalonia` with `Avalonia.iOS` | Remote |
 | Android | `Polhem.UI.Avalonia` with `Avalonia.Android` | Remote |
 | Blazor Server | `Polhem.Web.Blazor.Mud` on `Polhem.Web.Blazor.Server` | Local by default, or Remote |
+| Blazor Server | `Polhem.Web.Blazor.Fluent` on `Polhem.Web.Blazor.Server` | Local by default, or Remote |
 | Blazor WebAssembly | `Polhem.Web.Blazor.Mud` on `Polhem.Web.Blazor.Wasm` | Remote |
 | A client with no .NET (JavaScript, TypeScript, …) | — | Remote, speaking JSON-RPC directly; see [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md) |
 

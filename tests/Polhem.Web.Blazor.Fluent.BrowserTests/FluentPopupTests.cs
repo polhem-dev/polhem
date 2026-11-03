@@ -330,5 +330,36 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(2);
             Assert.Empty(errors);
         }
+
+        [BrowserFact]
+        [DisplayName("On a phone a wide grid scrolls by itself and the page does not get wider than the screen")]
+        public async Task Phone_WideGrid_DoesNotWidenThePage()
+        {
+            var page = await _fixture.Browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 300, Height = 700 } });
+            await page.GotoAsync(_fixture.Address + "/select");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await page.Locator("tr.polhem-grid__row").First.WaitForAsync();
+
+            // The page's data line is for the other tests, and it does not wrap.
+            await page.Locator("#data").EvaluateAsync("e => e.style.display = 'none'");
+
+            var overflow = await page.EvaluateAsync<int>("document.documentElement.scrollWidth - document.documentElement.clientWidth");
+
+            Assert.Equal(0, overflow);
+        }
+
+        [BrowserFact]
+        [DisplayName("On a phone every command of the form page stays on the screen")]
+        public async Task Phone_Toolbar_StaysOnTheScreen()
+        {
+            var page = await _fixture.Browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 300, Height = 700 } });
+            await page.GotoAsync(_fixture.Address + "/form");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await page.Locator(".polhem-form-page__toolbar fluent-button").First.WaitForAsync();
+
+            var rightmost = await page.EvaluateAsync<double>("Math.max(...[...document.querySelectorAll('.polhem-form-page__toolbar fluent-button')].map(b => b.getBoundingClientRect().right))");
+
+            Assert.True(rightmost <= 300, $"A command ends at {rightmost}, past the screen.");
+        }
     }
 }

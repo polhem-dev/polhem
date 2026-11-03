@@ -79,6 +79,7 @@ jobs:
           'src/Polhem.Hosting/Polhem.Hosting.csproj'
           'src/Polhem.Web.Blazor/Polhem.Web.Blazor.csproj'
           'src/Polhem.Web.Blazor.Mud/Polhem.Web.Blazor.Mud.csproj'
+          'src/Polhem.Web.Blazor.Fluent/Polhem.Web.Blazor.Fluent.csproj'
           'src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj'
           'src/Polhem.Web.Blazor.Wasm/Polhem.Web.Blazor.Wasm.csproj'
           # Framework CLI (dotnet tool) — lock-stepped to framework version.

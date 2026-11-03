@@ -2,7 +2,16 @@
 
 /* The rules that depend on Fluent UI. Web components keep their inside in a shadow root, so these use design tokens and
    what is outside it, not internal class names. */
-.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(--colorNeutralBackground1Selected); }
+/* A brand tint, because the neutral selected color is the grid's hover color. */
+tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(--colorBrandBackground2); }
+/* A Fluent button is at least 96px wide by default, and body clips what overflows, so a phone lost the last command. */
+.polhem-form-page__toolbar, .polhem-form-page__pager { flex-wrap: wrap; }
+.polhem-form-page__toolbar fluent-button, .polhem-form-page__pager fluent-button { min-width: 64px; }
+/* Columns keep their layout width, so a narrow screen scrolls the grid and not the whole page. */
+.polhem-grid { overflow-x: auto; }
+.polhem-grid__toolbar { position: sticky; left: 0; }
+/* An editor is taller than the text it replaces, and the row must not jump when the cell opens. */
+.polhem-grid-cell__editor { margin-block: -6px; }
 .polhem-grid__header { display: inline-flex; align-items: center; gap: 2px; }
 .polhem-grid__header--required { color: var(--colorBrandForeground1); }
 .polhem-grid-cell__text:hover, .polhem-grid-cell__text:focus { outline-color: var(--colorNeutralStroke1); }
