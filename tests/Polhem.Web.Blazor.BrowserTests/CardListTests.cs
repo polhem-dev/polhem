@@ -103,6 +103,8 @@ namespace Polhem.Web.Blazor.BrowserTests
 
             await page.SetViewportSizeAsync(400, 700);
             await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(50);
+            // The page scrolls to the top after the cards render, which over Blazor Server is a message of its own.
+            await page.WaitForFunctionAsync("() => window.scrollY === 0", null, new PageWaitForFunctionOptions { Timeout = 5000 });
             Assert.Equal(0, await page.EvaluateAsync<double>("window.scrollY"));
         }
     }
