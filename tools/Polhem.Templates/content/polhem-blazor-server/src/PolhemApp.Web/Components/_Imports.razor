@@ -3,6 +3,11 @@
 @using Microsoft.AspNetCore.Components.Web
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using PolhemApp.Web.Components
+@*#if (ui == "fluent") *@
+@using Polhem.Web.Blazor.Fluent.Components
+@using Polhem.Web.Blazor.Fluent.Shell
+@*#else *@
 @using Polhem.Web.Blazor.Mud.Components
 @using Polhem.Web.Blazor.Mud.Shell
+@*#endif *@
 @using Polhem.Web.Blazor.Shell

@@ -19,7 +19,11 @@ using Polhem.Definition.Database;
 using Polhem.Hosting;
 using Polhem.Hosting.Database;
 using Polhem.Web.Blazor.Server.DependencyInjection;
+#if (ui == "fluent")
+using Polhem.Web.Blazor.Fluent.DependencyInjection;
+#else
 using Polhem.Web.Blazor.Mud.DependencyInjection;
+#endif
 using Polhem.Web.Blazor.Server.Shell;
 using PolhemApp.Web.Components;
 
@@ -68,7 +72,11 @@ builder.Services.AddPolhemShell(shell =>
     // The language of the sign-in screen until the viewer picks another one.
     shell.DefaultCulture = "POLHEM_DEFAULT_LANGUAGE";
 });
+#if (ui == "fluent")
+builder.Services.AddPolhemFluent();
+#else
 builder.Services.AddPolhemMud();
+#endif
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
