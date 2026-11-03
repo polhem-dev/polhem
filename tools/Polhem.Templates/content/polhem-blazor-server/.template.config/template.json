@@ -7,8 +7,8 @@
     "Web"
   ],
   "identity": "Polhem.App.BlazorServer",
-  "name": "Polhem App (Blazor Server)",
-  "description": "A Polhem application with a Blazor Server front end: one ASP.NET Core site that runs the backend in its own process, references the Polhem packages and one database driver, and serves the sign-in, the menu and the forms, with a definition folder and VS Code tasks that initialize the database and open DefineEditor.",
+  "name": "Polhem App (Blazor Server, MudBlazor)",
+  "description": "A Polhem application with a Blazor Server front end on MudBlazor: one ASP.NET Core site that runs the backend in its own process, references the Polhem packages and one database driver, and serves the sign-in, the menu and the forms, with a definition folder and VS Code tasks that initialize the database and open DefineEditor.",
   "shortName": "polhem-blazor-server",
   "sourceName": "PolhemApp",
   "preferNameDirectory": true,

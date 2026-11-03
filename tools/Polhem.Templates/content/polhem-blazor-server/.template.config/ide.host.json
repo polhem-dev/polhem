@@ -1,6 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/ide.host",
-  "order": 0,
+  "order": 1,
   "symbolInfo": [
     { "id": "database", "isVisible": true },
     { "id": "company", "isVisible": true },

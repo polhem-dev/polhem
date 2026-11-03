@@ -21,7 +21,7 @@
     <!-- NU5128: a template package has no lib/ folder, by design. -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <PackageOutputPath>../../nupkgs</PackageOutputPath>
-    <Description>Project templates for Polhem. `dotnet new polhem-avalonia` creates a JSON-RPC server and Avalonia clients; `dotnet new polhem-blazor-server` creates one Blazor Server site that runs the backend in its own process. Each references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
+    <Description>Project templates for Polhem. `dotnet new polhem-avalonia` creates a JSON-RPC server and Avalonia clients; `dotnet new polhem-blazor-server` and `dotnet new polhem-blazor-server-fluent` create one Blazor Server site, on MudBlazor or on Fluent UI, that runs the backend in its own process. Each references the Polhem packages and the driver of the chosen database, with a definition folder, the DefineEditor and DbManager tools, and VS Code tasks that initialize the database and open DefineEditor.</Description>
     <PackageTags>polhem;dotnet-new;templates</PackageTags>
   </PropertyGroup>
 
@@ -52,6 +52,10 @@
     A template is a folder of content/ with a .template.config/template.json. content/_shared is not one: it holds
     the files every template carries unchanged, kept once and packed into each template's folder by
     PackTemplateFiles. So a template installed from its content folder misses them; only the package is supported.
+
+    A derived template is a folder with only a .template.config, whose template.json takes its content from another
+    template's folder ("sources": [{ "source": "../<template>/" }]) and differs from it only in names and the defaults
+    of its choices. It gets no shared files of its own: they come with the content of the template it points to.
   -->
   <ItemGroup>
     <_PolhemTemplateJson Include="content\*\.template.config\template.json" />
@@ -88,9 +92,13 @@
     <WriteLinesToFile File="$(_PolhemStampedTemplateJson)"
                       Lines="$(_PolhemTemplateText.Replace('&quot;0.0.0-unpacked&quot;', '&quot;$(PackageVersion)&quot;'))"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <PropertyGroup>
+      <_PolhemTemplateIsDerived>$(_PolhemTemplateText.Contains('&quot;source&quot;: &quot;../'))</_PolhemTemplateIsDerived>
+    </PropertyGroup>
     <ItemGroup>
       <None Include="$(_PolhemStampedTemplateJson)" Pack="true" PackagePath="content\$(_PolhemTemplateName)\.template.config\template.json" />
-      <None Include="@(_PolhemSharedFile)" Pack="true" PackagePath="content\$(_PolhemTemplateName)\%(_PolhemSharedFile.RelativePath)" />
+      <None Include="@(_PolhemSharedFile)" Condition="!$(_PolhemTemplateIsDerived)" Pack="true"
+            PackagePath="content\$(_PolhemTemplateName)\%(_PolhemSharedFile.RelativePath)" />
     </ItemGroup>
   </Target>
 

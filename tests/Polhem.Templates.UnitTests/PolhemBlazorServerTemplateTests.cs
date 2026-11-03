@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Polhem.Templates.UnitTests;
@@ -80,6 +81,38 @@ public class PolhemBlazorServerTemplateTests
         Assert.Contains(stylesheet, page, StringComparison.Ordinal);
         using var response = await site.Client.GetAsync(new Uri("/" + stylesheet, UriKind.Relative));
         Assert.True(response.IsSuccessStatusCode, $"GET /{stylesheet} returned {(int)response.StatusCode}:\n{site.Output}");
+    }
+
+    [Fact]
+    [DisplayName("polhem-blazor-server-fluent generates what polhem-blazor-server generates with the Fluent UI library")]
+    public void GenerateFluentTemplate_EqualsTheFluentChoice()
+    {
+        var chosen = Generate("SqlServer", "--ui", "fluent");
+        var derived = Path.Combine(_fx.Root, $"blazor-fluent-{Guid.NewGuid():N}");
+        _fx.Run(_fx.Root, "new", "polhem-blazor-server-fluent", "--name", "Acme.Erp", "--output", derived,
+            "--database", "SqlServer", "--no-restore", "--debug:custom-hive", _fx.Hive);
+
+        var chosenFiles = GeneratedFiles(chosen);
+        var derivedFiles = GeneratedFiles(derived);
+        Assert.NotEmpty(chosenFiles);
+        Assert.Equal(chosenFiles.Keys.Order(StringComparer.Ordinal), derivedFiles.Keys.Order(StringComparer.Ordinal));
+        Assert.All(chosenFiles, file => Assert.Equal(file.Value, derivedFiles[file.Key]));
+    }
+
+    // The relative path and content of each generated file, with the site's port, which each run of the template
+    // picks anew, replaced by a placeholder.
+    private static Dictionary<string, string> GeneratedFiles(string output)
+    {
+        using var settings = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(output, "src", "Acme.Erp.Web", "Properties", "launchSettings.json")));
+        var url = settings.RootElement.GetProperty("profiles").EnumerateObject().First().Value
+            .GetProperty("applicationUrl").GetString()!;
+        var port = new Uri(url.Split(';')[0]).Port.ToString(CultureInfo.InvariantCulture);
+        return Directory.GetFiles(output, "*", SearchOption.AllDirectories)
+            .ToDictionary(
+                f => Path.GetRelativePath(output, f),
+                f => File.ReadAllText(f).Replace(port, "<port>", StringComparison.Ordinal),
+                StringComparer.Ordinal);
     }
 
     [Fact]
