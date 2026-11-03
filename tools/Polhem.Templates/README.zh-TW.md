@@ -2,29 +2,33 @@
 
 [English](README.md) | **繁體中文**
 
-[Polhem](https://github.com/polhem-dev/polhem) 的 `dotnet new` 範本。範本以所建立應用程式的前端技術命名
-（`polhem-<前端>`）；資料庫是範本的選項。
+[Polhem](https://github.com/polhem-dev/polhem) 的 `dotnet new` 範本。範本以所建立應用程式的前端命名
+（`polhem-<前端>`，Blazor 前端的 Fluent UI 版另加 `-fluent`）；資料庫是範本的選項。
 
 ```bash
 dotnet new install Polhem.Templates
 dotnet new polhem-avalonia -n Acme.Erp --database SqlServer
 dotnet new polhem-blazor-server -n Acme.Erp --database SqlServer
+dotnet new polhem-blazor-wasm-fluent -n Acme.Erp --database Sqlite
 ```
 
 | 範本 | VS Code 中的名稱 | 建立的內容 |
 |------|------------------|-----------|
 | [`polhem-avalonia`](#polhem-avalonia) | **Polhem App (Avalonia)** | JSON-RPC 伺服器與 Avalonia 桌面用戶端，可另加瀏覽器、iOS 與 Android 用戶端 |
-| [`polhem-blazor-server`](#polhem-blazor-server) | **Polhem App (Blazor Server)** | 一個在自身行程內執行後端的 Blazor Server 網站 |
+| [`polhem-blazor-server`](#polhem-blazor-server) | **Polhem App (Blazor Server, MudBlazor)** | 一個以 MudBlazor 呈現、在自身行程內執行後端的 Blazor Server 網站 |
+| [`polhem-blazor-server-fluent`](#polhem-blazor-server) | **Polhem App (Blazor Server, Fluent UI)** | 同一個網站，改以 Fluent UI 呈現 |
+| [`polhem-blazor-wasm`](#polhem-blazor-wasm) | **Polhem App (Blazor WebAssembly, MudBlazor)** | JSON-RPC 伺服器與以 MudBlazor 呈現的 Blazor WebAssembly 用戶端，由同一個來源提供 |
+| [`polhem-blazor-wasm-fluent`](#polhem-blazor-wasm) | **Polhem App (Blazor WebAssembly, Fluent UI)** | 同一組伺服器與用戶端，改以 Fluent UI 呈現 |
 
 在安裝了 C# Dev Kit 的 VS Code 中，範本以上列名稱出現在「New .NET Project」的清單。C# Dev Kit 以預設選項建立應用程式；
-要選用其他選項，請在終端機執行 `dotnet new`，再開啟它建立的資料夾。
+要選用其他選項，請在終端機執行 `dotnet new`，再開啟它建立的資料夾。這也是 Blazor 前端的 UI 函式庫做成獨立範本、而不是選項的原因。
 
 範本請從套件安裝（如上），或從 `.nupkg` 檔安裝（`dotnet new install <路徑>.nupkg`）。不支援從 `content/` 下的範本資料夾直接安裝：
 各範本共用的檔案（`Define/`、`Excel/`、`.config/`、`.gitignore`）只在 `content/_shared/` 放一份，建置套件時才加進每個範本，
 所以從資料夾安裝的範本會缺這些檔案。
 
 範本的名稱、說明與選項也有繁體中文翻譯。`dotnet new` 的語言是繁體中文時（`DOTNET_CLI_UI_LANGUAGE=zh-TW`）會顯示中文，
-C# Dev Kit 則在作業系統語言是繁體中文時顯示；在這樣的環境下，清單上的名稱是 **Polhem 應用程式 (Avalonia)** 與 **Polhem 應用程式 (Blazor Server)**。其他語言顯示英文。
+C# Dev Kit 則在作業系統語言是繁體中文時顯示；在這樣的環境下，清單上的名稱是 **Polhem 應用程式 (Avalonia)**、**Polhem 應用程式 (Blazor Server, MudBlazor)** 等，括號內與英文名稱相同。其他語言顯示英文。
 
 ## `polhem-avalonia`
 
@@ -67,7 +71,7 @@ C# Dev Kit 則在作業系統語言是繁體中文時顯示；在這樣的環境
 ### 已知限制：SQLite 與 DefineEditor
 
 SQLite 連線使用相對於應用程式資料夾的路徑；DefineEditor 匯入後用來升級資料庫的 DbManager 不接受相對路徑的 SQLite。
-使用 SQLite 時，匯入後改執行 **Polhem: Upgrade database** 工作。`polhem-blazor-server` 也一樣。
+使用 SQLite 時，匯入後改執行 **Polhem: Upgrade database** 工作。所有範本都一樣。
 
 ## `polhem-blazor-server`
 
@@ -81,8 +85,30 @@ SQLite 連線使用相對於應用程式資料夾的路徑；DefineEditor 匯入
 | `Define/`、`Excel/`、`.config/dotnet-tools.json` | 與 `polhem-avalonia` 相同 |
 | `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以及 F5 啟動設定 **Web** |
 
-選項有 `--database`、`--company`、`--db-password` 與 `--default-language`，與 `polhem-avalonia` 相同；預設語言同時也是登入畫面
+`polhem-blazor-server-fluent` 建立同一個網站，改以 [Fluent UI](../../src/Polhem.Web.Blazor.Fluent/README.zh-TW.md) 呈現。
+行為與 MudBlazor 版相同，差異列在該套件的 README。
+
+兩者的選項都是 `--database`、`--company`、`--db-password` 與 `--default-language`，與 `polhem-avalonia` 相同；預設語言同時也是登入畫面
 在使用者選擇其他語言前所用的語言。
 
 頁面在同一個行程內呼叫後端，因此這些呼叫是受信任的本機呼叫：表單仍會檢查登入者的權限，但遠端用戶端不得進行的系統呼叫對它們是開放的。
 產生出來的 `Program.cs` 與 `README.md` 說明了這對你自己新增的頁面代表什麼。
+
+## `polhem-blazor-wasm`
+
+建立以 [Blazor WebAssembly](../../src/Polhem.Web.Blazor.Wasm/README.zh-TW.md) 為前端、以 MudBlazor 呈現的應用程式：
+一個同時提供瀏覽器用戶端的 JSON-RPC 伺服器，網頁與 API 來自同一個來源。不需要設定 CORS，按 F5 只啟動一個程序，
+發佈伺服器時用戶端也一併發佈。`polhem-blazor-wasm-fluent` 建立同一組應用程式，改以 [Fluent UI](../../src/Polhem.Web.Blazor.Fluent/README.zh-TW.md) 呈現。
+
+| 路徑 | 內容 |
+|------|------|
+| `src/<名稱>.Server` | 即 `polhem-avalonia` 的 Server（JSON-RPC API 與 `db` 指令），另外提供用戶端的檔案，並對表單網址回傳 `index.html` |
+| `src/<名稱>.Client` | 瀏覽器用戶端：Polhem 外殼（登入、伺服器的選單與表單），呼叫載入它的那個來源的 `/api` |
+| `Define/`、`Excel/`、`.config/dotnet-tools.json` | 與 `polhem-avalonia` 相同 |
+| `.vscode/` | 工作 **Polhem: Initialize database**、**Polhem: Upgrade database**、**Polhem: Open DefineEditor**，以及 F5 啟動設定 **Server** |
+
+選項與 `polhem-blazor-server` 相同。用戶端與伺服器都不需要 workload，.NET SDK 就能建置與發佈。
+
+用戶端跟任何遠端用戶端一樣呼叫 API，因此它的呼叫以遠端呼叫的規則檢查。它與其他 Polhem 用戶端的差異見
+[Polhem.Web.Blazor.Wasm 的 README](../../src/Polhem.Web.Blazor.Wasm/README.zh-TW.md#與-blazor-server-的差異)；
+產生出來的 `README.md` 點出部署前要注意的兩項（API key 是公開的，網站必須以 HTTPS 提供）。

@@ -18,6 +18,7 @@ Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1
 - **Breaking:** The Blazor controls move to a new package on MudBlazor, `Polhem.Web.Blazor.Mud`, and the HTML controls and `polhem.css` are removed. `Polhem.Web.Blazor.Server` is now only the host. See the migration steps.
 - **Breaking:** The Blazor head splits into `Polhem.Web.Blazor` and `Polhem.Web.Blazor.Server`. `FormDataObject`, `FieldEditorBase`, `FormScope` and related types change namespace, and `CircuitUserContext` becomes `BlazorUserContext`.
 - A second UI package, `Polhem.Web.Blazor.Fluent`, renders the same pages with Fluent UI Blazor.
+- `Polhem.Templates` has a template for every front end: Blazor Server and Blazor WebAssembly, each on MudBlazor or on Fluent UI, beside Avalonia.
 - The Blazor and Avalonia shells can show links on the sign-in screen (`SignInLinks`), and the Blazor Server language switch keeps an application mounted under a path base on its own pages.
 - A new host package, `Polhem.Web.Blazor.Wasm`, runs the Blazor head in the browser with `Polhem.Web.Blazor.Mud`. `Polhem.Web.Blazor` gains `AddPolhemBlazorClient`, the registrations the host packages share.
 - On a narrow screen, Avalonia's `ListView` and the MudBlazor `FormPage` read the next page as the user scrolls through the cards, up to 5000 rows on Avalonia and 1000 on Blazor.

@@ -17,6 +17,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** Blazor 控制項移到建立在 MudBlazor 上的新套件 `Polhem.Web.Blazor.Mud`，並移除 HTML 控件與 `polhem.css`。`Polhem.Web.Blazor.Server` 現在只是宿主。遷移步驟見發行說明。
 - **破壞性變更：** Blazor head 拆成 `Polhem.Web.Blazor` 與 `Polhem.Web.Blazor.Server`。`FormDataObject`、`FieldEditorBase`、`FormScope` 等型別改變命名空間，`CircuitUserContext` 改名為 `BlazorUserContext`。
 - 第二個 UI 套件 `Polhem.Web.Blazor.Fluent`，以 Fluent UI Blazor 呈現相同的頁面。
+- `Polhem.Templates` 為每種前端都提供範本：Blazor Server 與 Blazor WebAssembly 各有 MudBlazor 與 Fluent UI 版，另有 Avalonia。
 - Blazor 與 Avalonia 殼層可在登入畫面顯示連結（`SignInLinks`），Blazor Server 的語言切換會讓掛在 path base 底下的應用程式留在自己的頁面。
 - 新增宿主套件 `Polhem.Web.Blazor.Wasm`，讓 Blazor head 搭配 `Polhem.Web.Blazor.Mud` 在瀏覽器中執行。`Polhem.Web.Blazor` 新增 `AddPolhemBlazorClient`，收納宿主套件共用的註冊。
 - 在窄螢幕上，Avalonia 的 `ListView` 與 MudBlazor 的 `FormPage` 會在使用者捲動卡片時接續讀取下一頁，Avalonia 最多 5000 筆，Blazor 最多 1000 筆。
