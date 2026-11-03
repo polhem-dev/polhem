@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: 6cdd39e8bd3ea8b6d010f59fb2664b30862736f8 -->
+<!-- source: en/getting-started/platform-support.md blob: fb83cb95c420abca96bee1251e067b13ef65ddcc -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -30,6 +30,7 @@
 | Blazor Server | `Polhem.Web.Blazor.Server` 上的 `Polhem.Web.Blazor.Mud` | 預設 Local，或 Remote |
 | Blazor Server | `Polhem.Web.Blazor.Server` 上的 `Polhem.Web.Blazor.Fluent` | 預設 Local，或 Remote |
 | Blazor WebAssembly | `Polhem.Web.Blazor.Wasm` 上的 `Polhem.Web.Blazor.Mud` | Remote |
+| Blazor WebAssembly | `Polhem.Web.Blazor.Wasm` 上的 `Polhem.Web.Blazor.Fluent` | Remote |
 | 沒有 .NET 的用戶端（JavaScript、TypeScript…） | — | Remote，直接使用 JSON-RPC；見 [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md) |
 
 - **Remote** 表示 head 透過 HTTP 呼叫後端主機的 JSON-RPC 端點。**Local** 表示 head 也自行建立後端的服務
@@ -48,6 +49,9 @@
   送出同一個 key。Northwind 的 Blazor Server head 以 Local 模式執行 Northwind 後端，並可經設定切換為 Remote；見
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-server)，單獨看元件則見
   [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.zh-TW.md)。
+- **一個網站可以提供多個 Blazor head。** Northwind demo 網站把 Fluent UI 的 Blazor Server head 當成第二個 Blazor app，以
+  `app.Map("/fluent", ...)` 掛在 MudBlazor head 的行程裡，旁邊還有三個 WebAssembly bundle；見
+  [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-serverfluent-ui)。
 - **Blazor WebAssembly** 的元件在瀏覽器中執行，只透過 HTTP 呼叫後端。這類專案的 SDK 預設 `TrimMode=partial`，正是下文支援的設定。
   瀏覽器沒有 RSA，所以呼叫是 `Encoded` 而非加密，要求 `ApiProtectionLevel.Encrypted` 的方法會被拒絕。專案設定與其他和 Blazor Server
   的差異見 [`Polhem.Web.Blazor.Wasm`](../../../src/Polhem.Web.Blazor.Wasm/README.zh-TW.md)。

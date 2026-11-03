@@ -352,7 +352,7 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 ```
 +------------------------------------------------------+
 |  View                                                |
-|  Avalonia (desktop / browser / mobile) / Blazor Server / your own host |  MVVM: View
+|  Avalonia (desktop / browser / mobile) / Blazor (Server / WebAssembly) / your own host |  MVVM: View
 +------------------------------------------------------+
 |  ViewModel                                           |  MVVM: ViewModel
 |  (binding structure derived from FormSchema)         |

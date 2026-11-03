@@ -59,3 +59,5 @@ Fluent UI 5.0.1 needs these, each marked `WARNING:` where it is:
 - Buttons in the grid toolbar and the filter use text symbols, to avoid the separate icons package.
 - The fixed timings above are the weak points: they hold on what was measured, and nothing tells when they stop being needed.
 - Northwind's Fluent head runs on Blazor Server. WebAssembly was only exercised on a spike with text and numeric cells.
+  (Update, 2026-11-03: `Polhem.Northwind.BlazorFluentWasm` now runs the package on Blazor WebAssembly, and the demo
+  site serves it at `/fluent-wasm/`.)

@@ -16,7 +16,7 @@
 - `FormPageBase`（`Polhem.Web.Blazor.Components`），表單頁的狀態與命令；`BlazorDefinitions`、`PolhemBlazorText` 與 `IBlazorDefinitionOptions`，UI 套件透過它們載入定義與文字。
 - `FormLayoutPresenterBase`（`Polhem.Web.Blazor.Controls`），依 `FormLayout` 呈現紀錄的規則。
 - `RelatedRecordDialogBase`、`LoginPanelBase` 與 `CompactViewportObserver`（`Polhem.Web.Blazor.Components`）。
-- `PolhemShellOptions`、`PolhemShellHome`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `IShellLanguageSwitcher`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。
+- `PolhemShellOptions`、`PolhemShellHome`、`PolhemShellSignInLinks`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `IShellLanguageSwitcher`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。
 - `GridControlBase`、`GridEditMode` 與 `GridEditorHost`（`Polhem.Web.Blazor.Controls`），Grid 的狀態與命令，以及讓 Grid 只開一個編輯器。
 - `BlazorUserContext`（`Polhem.Web.Blazor.Identity`），單一 scope 內已登入使用者的內容。
 

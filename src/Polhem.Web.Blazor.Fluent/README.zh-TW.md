@@ -32,4 +32,4 @@
 - 欄位要等表格的腳本載入後才能拖曳，也就是頁面載入後稍等一下。
 - 工具列和篩選按鈕使用文字符號，不用圖示。
 
-Northwind 的 Fluent 前端只在 Blazor Server 上實際跑過。本套件在 WebAssembly 上只驗證過文字與數字欄。
+Northwind 在兩種宿主上都使用本套件：Blazor Server 是 `Polhem.Northwind.BlazorFluent`，Blazor WebAssembly 是 `Polhem.Northwind.BlazorFluentWasm`。

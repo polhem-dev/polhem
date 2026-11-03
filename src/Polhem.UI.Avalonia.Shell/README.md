@@ -24,7 +24,7 @@
 | Step | Screen |
 |------|--------|
 | Connect | Endpoint and API key, pinged before moving on. Both are remembered. |
-| Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. |
+| Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. `ShellOptions.SignInLinks` are listed at the foot and open through the platform's launcher. |
 | Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. On iOS and Android one form fills the screen instead: the next entry replaces it, and the menu slides over the form and closes once an entry is picked. **Sign out** returns to sign-in; signing in again fetches every definition anew, so a definition changed while the application runs shows without restarting it. |
 
 The interface language before sign-in is `ShellOptions.DefaultLanguage` when the application sets one, and otherwise

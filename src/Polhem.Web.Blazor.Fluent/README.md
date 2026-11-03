@@ -32,4 +32,4 @@ The package pins an exact Fluent UI version, so do not reference a different one
 - A column can be moved only after the grid's script has loaded, a moment after the page.
 - Toolbar and filter buttons use text symbols rather than icons.
 
-Northwind's Fluent head has been run on Blazor Server only. The package has been exercised on WebAssembly only with text and numeric cells.
+Northwind runs the package on both hosts: `Polhem.Northwind.BlazorFluent` on Blazor Server and `Polhem.Northwind.BlazorFluentWasm` on Blazor WebAssembly.
