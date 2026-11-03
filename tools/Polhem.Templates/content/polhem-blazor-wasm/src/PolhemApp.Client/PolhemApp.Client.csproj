@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- A trimmed WebAssembly publish turns System.Text.Json reflection off, and the JSON-RPC envelope needs it. -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- By default the ICU shard is chosen from the browser's language, and the sign-in screen can switch away from it. -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <!-- The framework converts every instant through TimeZoneInfo, so the time zone data must ship. Both are the SDK
+         defaults; they are pinned because the failure only shows at run time, in the browser. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantTimezone>false</InvariantTimezone>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
+    <PackageReference Include="Polhem.Web.Blazor.Wasm" Version="POLHEM_PACKAGE_VERSION" />
+<!--#if (ui == "fluent") -->
+    <PackageReference Include="Polhem.Web.Blazor.Fluent" Version="POLHEM_PACKAGE_VERSION" />
+<!--#else -->
+    <PackageReference Include="Polhem.Web.Blazor.Mud" Version="POLHEM_PACKAGE_VERSION" />
+<!--#endif -->
+  </ItemGroup>
+
+</Project>

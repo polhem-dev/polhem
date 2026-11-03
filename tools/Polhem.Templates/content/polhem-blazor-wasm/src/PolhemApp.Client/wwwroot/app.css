@@ -1,0 +1,6 @@
+/* The components and the shell take their look from the stylesheets of the UI library, linked before this sheet.
+   Add the styles of your own pages here. */
+.app-loading {
+    margin: 2rem;
+    font-family: system-ui, sans-serif;
+}
