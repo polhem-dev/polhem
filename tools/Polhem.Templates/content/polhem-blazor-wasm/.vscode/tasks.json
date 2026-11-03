@@ -2,6 +2,21 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "polhem-build-server",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/PolhemApp.Server/PolhemApp.Server.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "hide": true
+        },
+        {
             "label": "Polhem: Initialize database",
             "dependsOrder": "sequence",
             "dependsOn": [

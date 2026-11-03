@@ -2,10 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // The C# Dev Kit's "dotnet" launch type debugs a server that references a WebAssembly client in its
+            // WebAssembly mode, which waited for a browser and did not start the server when tried. This configuration
+            // builds and runs the server itself, and opens the page once the server listens.
             "name": "Server",
-            "type": "dotnet",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/PolhemApp.Server/PolhemApp.Server.csproj"
+            "preLaunchTask": "polhem-build-server",
+            "program": "${workspaceFolder}/src/PolhemApp.Server/bin/Debug/net10.0/PolhemApp.Server.dll",
+            "cwd": "${workspaceFolder}/src/PolhemApp.Server",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5180"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
         }
     ]
 }

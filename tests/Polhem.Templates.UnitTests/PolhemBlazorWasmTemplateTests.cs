@@ -8,6 +8,8 @@ namespace Polhem.Templates.UnitTests;
 [Collection(TemplatePackageCollection.Name)]
 public class PolhemBlazorWasmTemplateTests
 {
+    private static readonly JsonDocumentOptions s_jsonc = new() { CommentHandling = JsonCommentHandling.Skip };
+
     private readonly TemplatePackageFixture _fx;
 
     public PolhemBlazorWasmTemplateTests(TemplatePackageFixture fx) => _fx = fx;
@@ -118,16 +120,34 @@ public class PolhemBlazorWasmTemplateTests
         Assert.Contains("src/Acme.Erp.Server/Acme.Erp.Server.csproj", tasks, StringComparison.Ordinal);
     }
 
+    // The C# Dev Kit's "dotnet" launch type debugs a server that references a WebAssembly client in its WebAssembly
+    // mode, which waited for a browser and did not start the server when tried in VS Code. The configuration runs the
+    // built server with the debugger instead.
     [Fact]
-    [DisplayName("The F5 launch configuration starts the server, which serves the browser client")]
-    public void Generate_Launch_StartsTheServer()
+    [DisplayName("The F5 launch configuration builds and runs the server, which serves the browser client")]
+    public void Generate_Launch_BuildsAndRunsTheServer()
     {
         var output = Generate("SqlServer");
 
-        using var launch = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, ".vscode", "launch.json")));
+        using var launch = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, ".vscode", "launch.json")), s_jsonc);
         var configuration = Assert.Single(launch.RootElement.GetProperty("configurations").EnumerateArray());
-        Assert.Equal("${workspaceFolder}/src/Acme.Erp.Server/Acme.Erp.Server.csproj",
-            configuration.GetProperty("projectPath").GetString());
+        Assert.Equal("coreclr", configuration.GetProperty("type").GetString());
+        Assert.Equal("${workspaceFolder}/src/Acme.Erp.Server/bin/Debug/net10.0/Acme.Erp.Server.dll",
+            configuration.GetProperty("program").GetString());
+        var buildTask = configuration.GetProperty("preLaunchTask").GetString();
+
+        using var tasks = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, ".vscode", "tasks.json")), s_jsonc);
+        var task = Assert.Single(tasks.RootElement.GetProperty("tasks").EnumerateArray(),
+            t => t.GetProperty("label").GetString() == buildTask);
+        Assert.Equal(["build", "${workspaceFolder}/src/Acme.Erp.Server/Acme.Erp.Server.csproj"],
+            task.GetProperty("args").EnumerateArray().Select(a => a.GetString()));
+
+        // The server listens where its launch profile says, so `dotnet run` and F5 open the same address.
+        using var settings = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(output, "src", "Acme.Erp.Server", "Properties", "launchSettings.json")));
+        var profileUrl = settings.RootElement.GetProperty("profiles").EnumerateObject().Single().Value
+            .GetProperty("applicationUrl").GetString();
+        Assert.Equal(profileUrl, configuration.GetProperty("env").GetProperty("ASPNETCORE_URLS").GetString());
     }
 
     [Fact]
