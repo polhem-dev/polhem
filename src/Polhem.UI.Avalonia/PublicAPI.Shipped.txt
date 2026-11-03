@@ -289,6 +289,8 @@ Polhem.UI.Avalonia.Views.FormView.Schema.set -> void
 Polhem.UI.Avalonia.Views.FormView.ViewAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.UI.Avalonia.Views.ListView
 Polhem.UI.Avalonia.Views.ListView.AddRequested -> System.EventHandler?
+Polhem.UI.Avalonia.Views.ListView.ConfirmDelete.get -> bool
+Polhem.UI.Avalonia.Views.ListView.ConfirmDelete.set -> void
 Polhem.UI.Avalonia.Views.ListView.DefinitionSource.get -> Polhem.UI.Core.Definitions.IFormDefinitionSource?
 Polhem.UI.Avalonia.Views.ListView.DefinitionSource.set -> void
 Polhem.UI.Avalonia.Views.ListView.EditRequested -> System.EventHandler<System.Guid>?
@@ -371,6 +373,7 @@ static readonly Polhem.UI.Avalonia.Views.FormView.FormModeProperty -> Avalonia.S
 static readonly Polhem.UI.Avalonia.Views.FormView.LayoutProperty -> Avalonia.StyledProperty<Polhem.Definition.Layouts.FormLayout?>!
 static readonly Polhem.UI.Avalonia.Views.FormView.ProgIdProperty -> Avalonia.StyledProperty<string!>!
 static readonly Polhem.UI.Avalonia.Views.FormView.SchemaProperty -> Avalonia.StyledProperty<Polhem.Definition.Forms.FormSchema?>!
+static readonly Polhem.UI.Avalonia.Views.ListView.ConfirmDeleteProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Views.ListView.FormConnectorProperty -> Avalonia.StyledProperty<Polhem.Api.Contracts.Form.IFormApiConnector?>!
 static readonly Polhem.UI.Avalonia.Views.ListView.ProgIdProperty -> Avalonia.StyledProperty<string!>!
 static readonly Polhem.UI.Avalonia.Views.ListView.SchemaProperty -> Avalonia.StyledProperty<Polhem.Definition.Forms.FormSchema?>!
@@ -381,6 +384,7 @@ virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.GetWriteBackValue() -> stri
 virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.RefreshFromSource() -> void
 virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
 virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.ShouldWriteBackText.get -> bool
+virtual Polhem.UI.Avalonia.Views.FormView.CreateRelatedView(Polhem.Definition.Forms.FormSchema! schema) -> Polhem.UI.Avalonia.Views.FormView!
 virtual Polhem.UI.Avalonia.Views.FormView.GetViewportWidth() -> double
 virtual Polhem.UI.Avalonia.Views.FormView.OnFormModeChanged(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveFormConnector(string! progId) -> Polhem.Api.Contracts.Form.IFormApiConnector?
@@ -388,6 +392,8 @@ virtual Polhem.UI.Avalonia.Views.FormView.ResolveLayoutAsync(string! progId, Sys
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveUserContext() -> Polhem.UI.Core.IUserContext?
+virtual Polhem.UI.Avalonia.Views.FormView.ShowRelatedViewAsync(Polhem.UI.Avalonia.Views.FormView! view, string! title, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Polhem.UI.Avalonia.Views.ListView.ConfirmDeleteAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveFormConnector(string! progId) -> Polhem.Api.Contracts.Form.IFormApiConnector?
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveUserContext() -> Polhem.UI.Core.IUserContext?

@@ -1,1 +1,17 @@
 #nullable enable
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.ApiKey.get -> string!
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.ApiKey.set -> void
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.DefaultLanguage.get -> string!
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.DefaultLanguage.set -> void
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.Endpoint.get -> string!
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.Endpoint.set -> void
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.PolhemBlazorOptions() -> void
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.get -> bool
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.set -> void
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorServiceCollectionExtensions
+Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions
+static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture(this System.IServiceProvider! services) -> void
