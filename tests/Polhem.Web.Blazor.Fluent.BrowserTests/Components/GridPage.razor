@@ -12,6 +12,8 @@
 <button id="mode" @onclick="ToggleMode">mode</button>
 <input id="outside" />
 <button id="capture" @onclick="Capture">capture</button>
+<button id="other-layout" @onclick="UseOtherLayout">other layout</button>
+<button id="equal-layout" @onclick="UseEqualLayout">equal layout</button>
 <FormScope DataObject="_dataObject" FormMode="_mode">
     <GridControl Layout="_layout" />
 </FormScope>
@@ -36,11 +38,27 @@
         var lines = _dataObject.DataSet.Tables["Line"]!;
         lines.Rows.Add(NewLine(lines, "Bolt", 1m));
         lines.Rows.Add(NewLine(lines, "Nut", 2m));
-        _layout = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
-        _layout.Columns!.Add(new LayoutColumn("item", "Item", ControlType.TextEdit));
-        _layout.Columns.Add(new LayoutColumn("qty", "Qty", ControlType.NumericEdit));
+        _layout = NewLayout("item", "qty");
         _dataObject.FieldValueChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
     }
+
+    private static LayoutGrid NewLayout(params string[] fields)
+    {
+        var layout = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
+        foreach (var field in fields)
+        {
+            layout.Columns!.Add(field == "qty"
+                ? new LayoutColumn("qty", "Qty", ControlType.NumericEdit)
+                : new LayoutColumn("item", "Item", ControlType.TextEdit));
+        }
+        return layout;
+    }
+
+    // A form page hands its grid another layout when the route opens another form.
+    private void UseOtherLayout() => _layout = NewLayout("qty", "item");
+
+    // A lookup builds an equal copy of its layout on every render.
+    private void UseEqualLayout() => _layout = NewLayout("item", "qty");
 
     private static DataRow NewLine(DataTable lines, string item, decimal qty)
     {

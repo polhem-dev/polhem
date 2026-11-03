@@ -225,6 +225,19 @@ namespace Polhem.Web.Blazor.Controls
         private bool EffectiveAllowEdit
             => AllowEdit ?? (FormMode != SingleFormMode.View && (Layout?.AllowEditModes.Allows(FormMode) ?? false));
 
+        /// <summary>
+        /// Gets what identifies <see cref="Layout"/>: its table and the field names of its columns.
+        /// </summary>
+        /// <remarks>
+        /// A UI package keys the grid it renders by this, so the widths and the order a user gave the columns stay with
+        /// one layout. A form page keeps its grid when the route opens another form, and a lookup builds an equal copy of
+        /// its layout on every render, so neither the grid instance nor the layout instance tells the two apart.
+        /// </remarks>
+        protected string LayoutIdentity
+            => Layout is null
+                ? string.Empty
+                : $"{Layout.TableName}|{string.Join(",", Layout.Columns?.Select(c => c.FieldName) ?? [])}";
+
         /// <summary>Gets the toolbar actions the layout allows.</summary>
         protected GridControlAllowActions Actions => Layout?.AllowActions ?? GridControlAllowActions.None;
 

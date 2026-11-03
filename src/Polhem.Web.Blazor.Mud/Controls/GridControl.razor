@@ -30,7 +30,10 @@
             }
         </div>
     }
-    <MudDataGrid T="DataRow"
+    @* The grid keeps the widths and the order the user gave its columns, so without the key the next form started at
+       what the last one was left with. *@
+    <MudDataGrid @key="LayoutIdentity"
+                 T="DataRow"
                  Items="_rows"
                  RowsPerPage="@Math.Max(1, _rows.Count)"
                  ReadOnly="true"

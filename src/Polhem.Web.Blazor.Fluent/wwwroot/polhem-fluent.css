@@ -9,6 +9,11 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
 .polhem-form-page__toolbar fluent-button, .polhem-form-page__pager fluent-button { min-width: 64px; }
 /* Columns keep their layout width, so a narrow screen scrolls the grid and not the whole page. */
 .polhem-grid { overflow-x: auto; }
+/* The grid's fixed-layout table fills its container and spreads the space its columns leave over across them, so a
+   column dragged narrower came out wider. An empty cell at the end of every row takes that space instead, and each
+   column keeps exactly its width; once the columns are wider than the container the cell is empty and the grid
+   scrolls. */
+.polhem-grid table.fluent-data-grid tr::after { content: ""; display: table-cell; border-bottom: 1px solid var(--colorNeutralStroke2); }
 .polhem-grid__toolbar { position: sticky; left: 0; }
 /* An editor is taller than the text it replaces, and the row must not jump when the cell opens. */
 .polhem-grid-cell__editor { margin-block: -6px; }
