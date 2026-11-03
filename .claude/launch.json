@@ -95,6 +95,19 @@
       ],
       "port": 5055,
       "autoPort": false
+    },
+    {
+      "name": "northwind-blazor-fluent",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent/Polhem.Northwind.BlazorFluent.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5700,
+      "autoPort": false
     }
   ]
 }

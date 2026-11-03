@@ -51,7 +51,7 @@ arrives and replays them in order, which writes the text before the click runs. 
 - A second UI framework is one new package over the same bases, and derives from the same behavior tests. The grid and
   card list scripts, `polhem-blazor.css` and the browser test scenarios moved to the shared layer on 2026-11-02 so it
   does not copy them (`tests/Polhem.Web.Blazor.BrowserTests`). Its test pages are still its own.
-  `Polhem.Web.Blazor.Fluent` is that second package. It reaches the same behavior tests, but it is more than new
+  `Polhem.Web.Blazor.Fluent` is that second package ([ADR-061](adr-061-fluent-ui-second-ui-package.md)). It reaches the same behavior tests, but it is more than new
   markup: an inline dialog keeps the form scope that a provider's dialog loses, a web component keeps its input in a
   shadow root, and the grid has to be guarded against being removed while it sets up.
 - Upgrading MudBlazor can break the density stylesheet without any build error, which is why it is verified at run time.

@@ -105,6 +105,15 @@ Avalonia heads:
 - The shell (sign-in, the menu from `MenuSettings.xml`, one routed page for every form) is this head's own code;
   the forms are the framework's `FormPage`.
 
+### Web client (Blazor Server, Fluent UI)
+
+**`Polhem.Northwind.BlazorFluent`** renders the same forms with [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.md) on the `Polhem.Web.Blazor.Server` host, with the backend in its own process. It is not part of the demo site.
+
+```bash
+# Blazor Server head on Fluent UI (http://localhost:5700)
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent
+```
+
 ### Web client (Blazor WebAssembly)
 
 **`Polhem.Northwind.BlazorWasm`** renders the same forms with the same `Polhem.Web.Blazor.Mud` package on the

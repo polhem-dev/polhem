@@ -107,6 +107,7 @@ dotnet add package Polhem.Db
 | **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
 | **Polhem.Web.Blazor.dll** | The shared layer of the Blazor head (`FormDataObject`, the field editor bases, `BlazorUserContext`), with no UI framework or host. |
 | **Polhem.Web.Blazor.Mud.dll** | The MudBlazor UI package of the Blazor head: the form page, record layout, grid, field editors, dialogs and shell. |
+| **Polhem.Web.Blazor.Fluent.dll** | The Fluent UI package of the Blazor head, with the same pages and behavior as the MudBlazor one. |
 | **Polhem.Web.Blazor.Server.dll** | The Blazor Server host of the Blazor head: the circuit client in Local or Remote mode, and the shell's registration and culture endpoint. |
 | **Polhem.Web.Blazor.Wasm.dll** | The Blazor WebAssembly host of the Blazor head: the remote client and the shell's language switch. |
 

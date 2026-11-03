@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: eae67ac8a0f7d769e9d68b74fa9345f0abb63876 -->
+<!-- source: en/getting-started/platform-support.md blob: 6cdd39e8bd3ea8b6d010f59fb2664b30862736f8 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -28,6 +28,7 @@
 | iOS | `Polhem.UI.Avalonia` 搭配 `Avalonia.iOS` | Remote |
 | Android | `Polhem.UI.Avalonia` 搭配 `Avalonia.Android` | Remote |
 | Blazor Server | `Polhem.Web.Blazor.Server` 上的 `Polhem.Web.Blazor.Mud` | 預設 Local，或 Remote |
+| Blazor Server | `Polhem.Web.Blazor.Server` 上的 `Polhem.Web.Blazor.Fluent` | 預設 Local，或 Remote |
 | Blazor WebAssembly | `Polhem.Web.Blazor.Wasm` 上的 `Polhem.Web.Blazor.Mud` | Remote |
 | 沒有 .NET 的用戶端（JavaScript、TypeScript…） | — | Remote，直接使用 JSON-RPC；見 [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md) |
 
