@@ -10,6 +10,8 @@
 # - Every project is declared inside exactly one area's subgraph.
 # - The edges of the overview diagram, between the `dependency-map:overview` comments, are exactly the area pairs that
 #   those references cross, so the overview is derived from the same facts.
+# - The projects each overview box lists are exactly the projects of that area. A box names them without `Polhem.`, and
+#   a name starting with a dot extends the last full name before it (`Web.Blazor, .Mud` is `Web.Blazor.Mud`).
 #
 # Left out: `Polhem.Analyzers`, which only orders the build and never reaches a consumer, and references that leave
 # src/, such as the `Polhem.JsonRpc.*` packages. The external package table in the document is not checked.
@@ -45,7 +47,8 @@ report() {
 }
 
 for doc in docs/*/architecture/dependency-map.md; do
-    awk -v edges="$work/edges" -v members="$work/members" -v overview="$work/overview" -v errors="$work/errors" '
+    awk -v edges="$work/edges" -v members="$work/members" -v overview="$work/overview" -v listed="$work/listed" \
+        -v errors="$work/errors" '
         function fail(message) { print "line " FNR ": " message > errors }
         /<!-- dependency-map:areas:start -->/ { section = "areas"; next }
         /<!-- dependency-map:areas:end -->/ { section = ""; next }
@@ -54,6 +57,21 @@ for doc in docs/*/architecture/dependency-map.md; do
         section == "" { next }
         /^```mermaid/ { delete label; area = ""; next }
         section == "overview" && match($0, /^ *[A-Za-z]+ --> [A-Za-z]+ *$/) { print $1, $3 > overview; next }
+        section == "overview" && match($0, /^ *[A-Za-z]+\["<b>/) {
+            id = $0; sub(/^ */, "", id); sub(/\[.*/, "", id)
+            text = $0; sub(/^[^"]*"/, "", text); sub(/".*/, "", text)
+            sub(/^.*<\/b>/, "", text); gsub(/<br\/>/, " ", text)
+            n = split(text, parts, ",")
+            base = ""
+            for (i = 1; i <= n; i++) {
+                part = parts[i]; gsub(/^ +| +$/, "", part)
+                if (part == "") continue
+                if (substr(part, 1, 1) == ".") name = base part
+                else { name = part; base = part }
+                print "Polhem." name, id > listed
+            }
+            next
+        }
         section != "areas" { next }
         /^ *subgraph / { area = $2; next }
         /^ *end *$/ { area = ""; next }
@@ -73,10 +91,11 @@ for doc in docs/*/architecture/dependency-map.md; do
         }
     ' "$doc" </dev/null
 
-    touch "$work/edges" "$work/members" "$work/overview" "$work/errors"
+    touch "$work/edges" "$work/members" "$work/overview" "$work/listed" "$work/errors"
     sort -o "$work/edges" "$work/edges"
     sort -o "$work/members" "$work/members"
     sort -u -o "$work/overview" "$work/overview"
+    sort -o "$work/listed" "$work/listed"
 
     if [ -s "$work/errors" ]; then report "$doc" "the diagrams cannot be read" "$work/errors"; fi
 
@@ -101,7 +120,12 @@ for doc in docs/*/architecture/dependency-map.md; do
     comm -13 "$work/crossings" "$work/overview" > "$work/diff"
     if [ -s "$work/diff" ]; then report "$doc" "area pairs in the overview that no reference crosses" "$work/diff"; fi
 
-    rm -f "$work/edges" "$work/members" "$work/overview" "$work/errors"
+    comm -23 "$work/members" "$work/listed" > "$work/diff"
+    if [ -s "$work/diff" ]; then report "$doc" "projects of an area that its overview box does not list" "$work/diff"; fi
+    comm -13 "$work/members" "$work/listed" > "$work/diff"
+    if [ -s "$work/diff" ]; then report "$doc" "projects an overview box lists that are not in its area" "$work/diff"; fi
+
+    rm -f "$work/edges" "$work/members" "$work/overview" "$work/listed" "$work/errors"
 done
 
 if [ "$failed" -ne 0 ]; then

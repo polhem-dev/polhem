@@ -18,12 +18,12 @@ Each box is an area, and its name lists the projects with `Polhem.` left out.
 ```mermaid
 graph BT
   Foundation["<b>Foundation</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
-  Backend["<b>Data and business logic</b><br/>Db, Repository, Business,<br/>ObjectCaching"]
+  Backend["<b>Data and business logic</b><br/>Db, Repository,<br/>Repository.Abstractions,<br/>Business, ObjectCaching"]
   Wire["<b>Communication</b><br/>Api.Core, Api.Server,<br/>Api.Client"]
   Composition["<b>Composition root</b><br/>Hosting"]
   FrontShared["<b>Shared front end</b><br/>UI.Core, UI.ApiBridge"]
   Avalonia["<b>Avalonia front end</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
-  Web["<b>Web front end</b><br/>Web.Blazor, .Mud,<br/>.Server, .Wasm"]
+  Web["<b>Web front end</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
 
   Backend --> Foundation
   Wire --> Foundation
