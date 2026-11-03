@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json.Nodes;
 
 namespace Polhem.Templates.UnitTests;
 
@@ -35,7 +36,7 @@ public class TemplateContentTests
     [DisplayName("The database blocks of every template's host project are the same")]
     public void HostProjects_HaveTheSameDatabaseBlocks()
     {
-        var hosts = TemplatePaths.Templates.Select(HostProject).ToList();
+        var hosts = TemplatePaths.ContentTemplates.Select(HostProject).ToList();
 
         Assert.True(hosts.Count > 1);
         foreach (var file in new[] { "Program.cs", "*.csproj" })
@@ -45,6 +46,40 @@ public class TemplateContentTests
             Assert.All(blocks.Skip(1), b => Assert.Equal(blocks[0], b));
         }
     }
+
+    // A derived template lists the content of another under names of its own, for the C# Dev Kit, which shows no
+    // template options. Its options must stay those of the template it takes the content from, or the content's
+    // conditions would meet a symbol it does not have; only the defaults of choices may differ.
+    [Fact]
+    [DisplayName("Each derived template has only its configuration and the options of the template it takes its content from")]
+    public void DerivedTemplates_KeepTheOptionsOfTheirSource()
+    {
+        var derived = TemplatePaths.Templates.Where(t => TemplatePaths.DerivedFrom(t) is not null).ToList();
+
+        Assert.NotEmpty(derived);
+        foreach (var template in derived)
+        {
+            var source = TemplatePaths.DerivedFrom(template)!;
+            Assert.Contains(source, TemplatePaths.ContentTemplates);
+            Assert.Equal([".template.config"], Directory.GetFileSystemEntries(TemplatePaths.TemplateDirectory(template))
+                .Select(Path.GetFileName));
+            Assert.Equal(SymbolsWithoutDefaults(source), SymbolsWithoutDefaults(template));
+            Assert.Equal(File.ReadAllText(HostFile(source, "dotnetcli.host.json")), File.ReadAllText(HostFile(template, "dotnetcli.host.json")));
+        }
+    }
+
+    private static string SymbolsWithoutDefaults(string template)
+    {
+        var symbols = JsonNode.Parse(File.ReadAllText(TemplatePaths.TemplateJson(template)))!["symbols"]!.AsObject();
+        foreach (var symbol in symbols)
+        {
+            if (symbol.Value!["datatype"]?.GetValue<string>() == "choice") symbol.Value.AsObject().Remove("defaultValue");
+        }
+        return symbols.ToJsonString();
+    }
+
+    private static string HostFile(string template, string name) =>
+        Path.Combine(TemplatePaths.TemplateDirectory(template), ".template.config", name);
 
     // The project that registers the database driver: the one whose Program.cs calls DbProviderRegistry.Register.
     private static string HostProject(string template) =>

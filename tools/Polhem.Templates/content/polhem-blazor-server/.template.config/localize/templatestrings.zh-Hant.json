@@ -1,7 +1,7 @@
 {
   "author": "Polhem contributors",
-  "name": "Polhem 應用程式 (Blazor Server)",
-  "description": "以 Blazor Server 為前端的 Polhem 應用程式：一個在自身行程內執行後端的 ASP.NET Core 網站，參考 Polhem 套件與一種資料庫驅動程式，提供登入、選單與表單，並附定義檔資料夾，以及初始化資料庫與開啟 DefineEditor 的 VS Code 工作。",
+  "name": "Polhem 應用程式 (Blazor Server, MudBlazor)",
+  "description": "以 Blazor Server 為前端、採用 MudBlazor 的 Polhem 應用程式：一個在自身行程內執行後端的 ASP.NET Core 網站，參考 Polhem 套件與一種資料庫驅動程式，提供登入、選單與表單，並附定義檔資料夾，以及初始化資料庫與開啟 DefineEditor 的 VS Code 工作。",
   "symbols/database/description": "應用程式使用的資料庫引擎。",
   "symbols/database/displayName": "資料庫",
   "symbols/database/choices/SqlServer/displayName": "SQL Server",

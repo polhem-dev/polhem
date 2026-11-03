@@ -20,6 +20,25 @@ internal static class TemplatePaths
             .Order(StringComparer.Ordinal)
             .ToList();
 
+    /// <summary>
+    /// The templates whose folder holds their own content. The others are derived: their template.json takes the
+    /// content of another template's folder (Polhem.Templates.csproj describes them).
+    /// </summary>
+    public static IReadOnlyList<string> ContentTemplates =>
+        Templates.Where(t => DerivedFrom(t) is null).ToList();
+
+    /// <summary>The template whose content a derived template takes, or <see langword="null"/> for a content template.</summary>
+    public static string? DerivedFrom(string template)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(TemplateJson(template)));
+        if (!document.RootElement.TryGetProperty("sources", out var sources)) return null;
+        // A content template may list sources too (for modifiers), without a `source` of its own.
+        var source = sources.EnumerateArray()
+            .Select(s => s.TryGetProperty("source", out var path) ? path.GetString() : null)
+            .SingleOrDefault(path => path is not null && path.StartsWith("../", StringComparison.Ordinal));
+        return source?.Trim('.', '/');
+    }
+
     public static string TemplateDirectory(string template) => Path.Combine(ContentRoot, template);
 
     public static string TemplateJson(string template) =>
