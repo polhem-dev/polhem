@@ -39,12 +39,43 @@ namespace Polhem.Web.Blazor.BrowserTests
 
             await page.GotoAsync(_fixture.Address + "/perf");
             await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(200);
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // The rows are prerendered, so they show before the circuit sends anything. What is measured is the circuit's
+            // traffic, which Playwright's network idle does not count; waiting for it timed out in CI on 2026-11-01 and
+            // 2026-11-03 with no request open on the server.
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            Assert.True(await WaitForQuietAsync(page, () => Interlocked.Read(ref received)),
+                $"The circuit was still sending after {s_quietDeadline.TotalSeconds} seconds.");
             var nodes = await page.EvaluateAsync<int>("document.querySelectorAll('*').length");
             var after = GC.GetTotalMemory(forceFullCollection: true);
             _output.WriteLine($"circuit traffic {received:N0} bytes, {nodes:N0} elements, managed memory +{(after - before) / 1_000_000.0:N1} MB");
 
             Assert.InRange(Interlocked.Read(ref received), 1, FirstLoadLimitBytes);
+        }
+
+        private static readonly TimeSpan s_quietPeriod = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan s_quietDeadline = TimeSpan.FromSeconds(20);
+
+        // True once the count has not grown for a whole quiet period, false if that does not happen before the deadline.
+        private static async Task<bool> WaitForQuietAsync(IPage page, Func<long> count)
+        {
+            var deadline = DateTime.UtcNow + s_quietDeadline;
+            var last = count();
+            var quietSince = DateTime.UtcNow;
+            while (DateTime.UtcNow < deadline)
+            {
+                await page.WaitForTimeoutAsync(100);
+                var now = count();
+                if (now != last)
+                {
+                    last = now;
+                    quietSince = DateTime.UtcNow;
+                }
+                else if (DateTime.UtcNow - quietSince >= s_quietPeriod)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
