@@ -97,12 +97,12 @@
       "autoPort": false
     },
     {
-      "name": "northwind-blazor-fluent",
+      "name": "northwind-blazor-fluent-wasm",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [
         "run",
         "--project",
-        "apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent/Polhem.Northwind.BlazorFluent.csproj",
+        "apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm/Polhem.Northwind.BlazorFluentWasm.csproj",
         "--configuration",
         "Debug"
       ],

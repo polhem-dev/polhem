@@ -17,7 +17,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Demo",
         "Northwind__BrowserBundle": "../../../artifacts/northwind-browser/wwwroot",
-        "Northwind__BlazorWasmBundle": "../../../artifacts/northwind-blazor-wasm/wwwroot"
+        "Northwind__BlazorWasmBundle": "../../../artifacts/northwind-blazor-wasm/wwwroot",
+        "Northwind__FluentWasmBundle": "../../../artifacts/northwind-fluent-wasm/wwwroot"
       }
     }
   }

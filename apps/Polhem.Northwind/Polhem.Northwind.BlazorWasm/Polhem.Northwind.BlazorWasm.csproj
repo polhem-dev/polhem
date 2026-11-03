@@ -30,4 +30,8 @@
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\NorthwindDemoSite.cs" Link="Demo\NorthwindDemoSite.cs" />
+  </ItemGroup>
+
 </Project>

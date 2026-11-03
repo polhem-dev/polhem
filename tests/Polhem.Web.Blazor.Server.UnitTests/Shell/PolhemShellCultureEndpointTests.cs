@@ -29,6 +29,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
             builder.WebHost.UseUrls("http://127.0.0.1:0");
             builder.Services.AddPolhemShell(shell => shell.DefaultCulture = "zh-TW");
             _app = builder.Build();
+            _app.Map("/mounted", mounted =>
+            {
+                mounted.UseRouting();
+                mounted.UseEndpoints(endpoints => endpoints.MapPolhemShellCulture());
+            });
             _app.UsePolhemShellLocalization();
             _app.MapPolhemShellCulture();
             _app.MapGet("/whoami", () => CultureInfo.CurrentUICulture.Name);
@@ -90,6 +95,26 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Shell
 
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
             Assert.Equal("/", response.Headers.Location?.OriginalString);
+        }
+
+        [Fact]
+        [DisplayName("An app mounted under a path base returns to its own page")]
+        public async Task Culture_UnderPathBase_RedirectsWithinPathBase()
+        {
+            using var response = await Http.GetAsync("/mounted/culture?culture=en-US&redirectUri=%2Fform%2FOrder");
+
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/mounted/form/Order", response.Headers.Location?.OriginalString);
+        }
+
+        [Fact]
+        [DisplayName("An app mounted under a path base returns a foreign address to its own root")]
+        public async Task Culture_UnderPathBase_ForeignRedirectReturnsToMountedRoot()
+        {
+            using var response = await Http.GetAsync("/mounted/culture?culture=en-US&redirectUri=%2F%2Fevil.example%2F");
+
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/mounted/", response.Headers.Location?.OriginalString);
         }
 
         [Fact]

@@ -196,6 +196,49 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.Empty(cut.FindAll(".polhem-shell-signin__languages"));
         }
 
+        [Fact]
+        [DisplayName("The sign-in screen shows the configured links under their heading")]
+        public void SignInLinks_Shown()
+        {
+            var cut = RenderLayout(options =>
+            {
+                options.SignInLinksTitle = "Other front ends";
+                options.SignInLinks.Add(new PolhemShellLink("Fluent UI", "/fluent/"));
+                options.SignInLinks.Add(new PolhemShellLink("WebAssembly", "/wasm/"));
+            });
+
+            var nav = cut.Find("nav.polhem-shell-signin__links");
+            Assert.Equal("Other front ends", nav.GetAttribute("aria-label"));
+            Assert.Equal("Other front ends", cut.Find(".polhem-shell-signin__links-title").TextContent.Trim());
+            var links = cut.FindAll("a.polhem-shell-signin__link");
+            Assert.Equal(["Fluent UI", "WebAssembly"], links.Select(a => a.TextContent.Trim()));
+            Assert.Equal(["/fluent/", "/wasm/"], links.Select(a => a.GetAttribute("href")));
+        }
+
+        [Fact]
+        [DisplayName("A link to the application's own base address is left out")]
+        public void SignInLinks_Self_LeftOut()
+        {
+            var cut = RenderLayout(options =>
+            {
+                options.SignInLinks.Add(new PolhemShellLink("This one", "/"));
+                options.SignInLinks.Add(new PolhemShellLink("Also this one", "http://LOCALHOST/"));
+                options.SignInLinks.Add(new PolhemShellLink("Fluent UI", "/fluent/"));
+            });
+
+            var links = cut.FindAll("a.polhem-shell-signin__link");
+            Assert.Equal(["Fluent UI"], links.Select(a => a.TextContent.Trim()));
+        }
+
+        [Fact]
+        [DisplayName("No links leaves the sign-in screen without the link list")]
+        public void SignInLinks_None_Hidden()
+        {
+            var cut = RenderLayout(options => options.SignInLinksTitle = "Other front ends");
+
+            Assert.Empty(cut.FindAll(".polhem-shell-signin__links"));
+        }
+
         /// <summary>Gets the shell's menu component.</summary>
         protected abstract Type NavMenuType { get; }
 

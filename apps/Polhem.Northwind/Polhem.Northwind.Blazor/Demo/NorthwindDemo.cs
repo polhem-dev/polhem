@@ -12,17 +12,19 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Security;
 using Polhem.Hosting;
 using Polhem.JsonRpc.AspNetCore;
+using Polhem.Northwind.Demo;
 
 namespace Polhem.Northwind.Blazor.Demo;
 
 /// <summary>
-/// The public demo site: this Blazor Server host, the JSON-RPC endpoint and the published Avalonia WASM bundle in
-/// one process, so both front ends share one origin, one set of definitions and one database.
+/// The public demo site: the two Blazor Server heads of this host, the JSON-RPC endpoint and the published WASM
+/// bundles in one process, so every front end shares one origin, one set of definitions and one database.
 /// </summary>
 /// <remarks>
 /// It is switched on by running the host in the <see cref="EnvironmentName"/> environment
-/// (<c>ASPNETCORE_ENVIRONMENT=Demo</c>), so the development host keeps serving the Blazor site alone. Serving the
-/// bundle same-origin is what lets the WASM head reach <see cref="ApiPath"/> without a CORS policy.
+/// (<c>ASPNETCORE_ENVIRONMENT=Demo</c>), so the development host keeps serving the Blazor Server heads alone. Serving
+/// the bundles same-origin is what lets the WASM heads reach <see cref="ApiPath"/> without a CORS policy. Where each
+/// front end is served is <see cref="NorthwindDemoSite"/>.
 /// </remarks>
 public static class NorthwindDemo
 {
@@ -32,27 +34,11 @@ public static class NorthwindDemo
     /// <summary>The JSON-RPC endpoint, the same path <c>Polhem.Northwind.Server</c> maps.</summary>
     public const string ApiPath = "/api";
 
-    /// <summary>
-    /// Where the Avalonia WASM bundle is served.
-    /// </summary>
-    /// <remarks>
-    /// IMPORTANT: the Browser head's <c>Program.IsDemoSite</c> recognises this path to pre-fill the same-origin
-    /// endpoint and leave the account empty. Change both together.
-    /// </remarks>
-    public const string BrowserPath = "/web";
-
-    /// <summary>
-    /// Where the Blazor WebAssembly bundle is served.
-    /// </summary>
-    /// <remarks>
-    /// IMPORTANT: the <c>index.html</c> of the BlazorWasm head recognises this path to set its base address. Change
-    /// both together.
-    /// </remarks>
-    public const string BlazorWasmPath = "/wasm";
-
     private const string BundleKey = "Northwind.BrowserBundle";
 
     private const string BlazorWasmBundleKey = "Northwind.BlazorWasmBundle";
+
+    private const string FluentWasmBundleKey = "Northwind.FluentWasmBundle";
 
     private const string MasterKeyVariable = "POLHEM_MASTER_KEY";
 
@@ -82,17 +68,17 @@ public static class NorthwindDemo
     }
 
     /// <summary>
-    /// Registers the JSON-RPC server and the published WASM bundle.
+    /// Registers the JSON-RPC server and the published WASM bundles.
     /// </summary>
     /// <param name="builder">
     /// The web application builder, on which the Northwind backend is already registered: some registrations here
     /// replace what the backend set up.
     /// </param>
     /// <remarks>
-    /// The bundle directory is <c>Northwind:BrowserBundle</c>, resolved against the content root, and defaults to
-    /// <c>browser</c> under it. It is the <c>wwwroot</c> folder that <c>dotnet publish</c> writes for
-    /// <c>Polhem.Northwind.Browser</c>. A missing bundle stops the host here rather than turning every
-    /// <see cref="BrowserPath"/> request into a 404.
+    /// The bundle directories are <c>Northwind:BrowserBundle</c>, <c>Northwind:BlazorWasmBundle</c> and
+    /// <c>Northwind:FluentWasmBundle</c>, resolved against the content root, and default to <c>browser</c>,
+    /// <c>blazor-wasm</c> and <c>fluent-wasm</c> under it. Each is the <c>wwwroot</c> folder that <c>dotnet publish</c>
+    /// writes for its head. A missing bundle stops the host here rather than turning every request for it into a 404.
     /// </remarks>
     public static void AddNorthwindDemo(this WebApplicationBuilder builder)
     {
@@ -100,6 +86,8 @@ public static class NorthwindDemo
 
         string bundle = ResolveBundle(builder, "BrowserBundle", "browser", "Polhem.Northwind.Browser");
         string blazorWasmBundle = ResolveBundle(builder, "BlazorWasmBundle", "blazor-wasm", "Polhem.Northwind.BlazorWasm");
+        string fluentWasmBundle = ResolveBundle(builder, "FluentWasmBundle", "fluent-wasm",
+            "Polhem.Northwind.BlazorFluentWasm");
 
         // `dotnet run` serves the framework's and the packages' static files (`_framework/blazor.web.js`,
         // `_content/...`) from the build output only when static web assets are on, which the host does by itself
@@ -109,6 +97,7 @@ public static class NorthwindDemo
         // Registered through a factory so the container disposes the provider with the host.
         builder.Services.AddKeyedSingleton<IFileProvider>(BundleKey, (_, _) => new PhysicalFileProvider(bundle));
         builder.Services.AddKeyedSingleton<IFileProvider>(BlazorWasmBundleKey, (_, _) => new PhysicalFileProvider(blazorWasmBundle));
+        builder.Services.AddKeyedSingleton<IFileProvider>(FluentWasmBundleKey, (_, _) => new PhysicalFileProvider(fluentWasmBundle));
 
         // The rate limit counts HTTP requests, and a batch would carry many calls in one. The Polhem clients send
         // no batches, so the demo refuses them rather than letting a batch multiply the limit.
@@ -225,9 +214,13 @@ public static class NorthwindDemo
     /// </remarks>
     private static bool IsBlazorConnectionStart(HttpContext context)
     {
-        if (context.Request.Path.StartsWithSegments("/_blazor/negotiate"))
+        // The Fluent UI head is mounted under its own path, and so is its hub.
+        var path = context.Request.Path;
+        if (path.StartsWithSegments(NorthwindDemoSite.FluentServerPath, out var remaining))
+            path = remaining;
+        if (path.StartsWithSegments("/_blazor/negotiate"))
             return true;
-        if (!context.Request.Path.StartsWithSegments("/_blazor"))
+        if (!path.StartsWithSegments("/_blazor"))
             return false;
         return context.Features.Get<IHttpUpgradeFeature>()?.IsUpgradableRequest == true
             || context.Features.Get<IHttpExtendedConnectFeature>()?.IsExtendedConnect == true;
@@ -248,7 +241,9 @@ public static class NorthwindDemo
     }
 
     /// <summary>
-    /// Serves the WASM bundles under <see cref="BrowserPath"/> and <see cref="BlazorWasmPath"/> and maps the JSON-RPC endpoint at
+    /// Serves the WASM bundles under <see cref="NorthwindDemoSite.BrowserPath"/>,
+    /// <see cref="NorthwindDemoSite.BlazorWasmPath"/> and <see cref="NorthwindDemoSite.FluentWasmPath"/> and maps the
+    /// JSON-RPC endpoint at
     /// <see cref="ApiPath"/>.
     /// </summary>
     /// <param name="app">The built web application, after the Northwind backend has been seeded.</param>
@@ -266,9 +261,11 @@ public static class NorthwindDemo
         app.UseForwardedHeaders();
         app.UseRateLimiter();
 
-        app.UseBrowserBundle(BrowserPath, app.Services.GetRequiredKeyedService<IFileProvider>(BundleKey));
-        app.UseBrowserBundle(BlazorWasmPath, app.Services.GetRequiredKeyedService<IFileProvider>(BlazorWasmBundleKey),
-            hasClientRoutes: true);
+        app.UseBrowserBundle(NorthwindDemoSite.BrowserPath, app.Services.GetRequiredKeyedService<IFileProvider>(BundleKey));
+        app.UseBrowserBundle(NorthwindDemoSite.BlazorWasmPath,
+            app.Services.GetRequiredKeyedService<IFileProvider>(BlazorWasmBundleKey), hasClientRoutes: true);
+        app.UseBrowserBundle(NorthwindDemoSite.FluentWasmPath,
+            app.Services.GetRequiredKeyedService<IFileProvider>(FluentWasmBundleKey), hasClientRoutes: true);
         app.MapJsonRpc(ApiPath);
     }
 

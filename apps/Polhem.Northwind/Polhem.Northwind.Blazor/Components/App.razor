@@ -1,4 +1,3 @@
-@inject IHostEnvironment Environment
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
@@ -7,20 +6,11 @@
     <base href="/" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="_content/Polhem.Web.Blazor.Mud/polhem-mud.css" rel="stylesheet" />
-    <link rel="stylesheet" href="app.css" />
     <title>Polhem.Northwind</title>
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 <body>
     <Routes @rendermode="InteractiveServer" />
-    @if (Environment.IsEnvironment(Polhem.Northwind.Blazor.Demo.NorthwindDemo.EnvironmentName))
-    {
-        @* The demo site also serves the Blazor WebAssembly and Avalonia WASM heads, whose pages link back here. *@
-        <nav class="demo-switch-bar">
-            <a class="demo-switch" href="wasm/">Try the Blazor WASM version</a>
-            <a class="demo-switch" href="web/">Try the Avalonia web version</a>
-        </nav>
-    }
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

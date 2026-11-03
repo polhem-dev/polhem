@@ -1,8 +1,10 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Browser;
+using Polhem.Northwind.Demo;
 using Polhem.Northwind.UI;
 using Polhem.UI.ApiBridge;
+using Polhem.UI.Avalonia.Shell;
 using Polhem.UI.Avalonia.Shell.Browser;
 
 internal sealed partial class Program
@@ -49,6 +51,7 @@ internal sealed partial class Program
                         // choice rather than something nobody tries.
                         options.DefaultUserId = string.Empty;
                         options.DefaultPassword = string.Empty;
+                        AddDemoSiteLinks(options, new Uri(args[0]));
                     }
                     options.PreferenceStorage = storage;
                     options.AllowLanguageSwitch = false;
@@ -64,24 +67,42 @@ internal sealed partial class Program
     /// <param name="args">The arguments <c>wwwroot/main.js</c> passes; the first is the page address.</param>
     /// <param name="fallback">The endpoint of the development layout, <c>Polhem.Northwind.Server</c>.</param>
     /// <remarks>
-    /// The demo site (<c>Polhem.Northwind.Blazor</c> in its Demo environment) serves this bundle under <c>/web/</c>
-    /// and the JSON-RPC endpoint at <c>/api</c> on the same origin. The development server serves the bundle at the
-    /// root and the API runs on another port, so every other address keeps <paramref name="fallback"/>.
+    /// The demo site (<c>Polhem.Northwind.Blazor</c> in its Demo environment) serves this bundle under
+    /// <see cref="NorthwindDemoSite.BrowserPath"/> and the JSON-RPC endpoint at <c>/api</c> on the same origin. The
+    /// development server serves the bundle at the root and the API runs on another port, so every other address keeps
+    /// <paramref name="fallback"/>.
     /// A value the visitor saved on the connection screen still wins over either.
     /// </remarks>
     private static string ResolveDefaultEndpoint(string[] args, string fallback)
         => IsDemoSite(args) ? new Uri(new Uri(args[0]), "/api").AbsoluteUri : fallback;
 
     /// <summary>
-    /// Whether the page was served by the demo site, which serves this bundle under <c>/web/</c>.
+    /// Whether the page was served by the demo site, which serves this bundle under
+    /// <see cref="NorthwindDemoSite.BrowserPath"/>.
     /// </summary>
     /// <param name="args">The arguments <c>wwwroot/main.js</c> passes; the first is the page address.</param>
-    /// <remarks>
-    /// IMPORTANT: the path is the demo host's <c>NorthwindDemo.BrowserPath</c>. Change both together.
-    /// </remarks>
     private static bool IsDemoSite(string[] args)
         => args.Length > 0 && Uri.TryCreate(args[0], UriKind.Absolute, out var page)
-            && page.AbsolutePath.StartsWith("/web/", StringComparison.OrdinalIgnoreCase);
+            && NorthwindDemoSite.IsUnder(page.AbsolutePath, NorthwindDemoSite.BrowserPath);
+
+    /// <summary>
+    /// Links the sign-in screen to the demo site's other front ends.
+    /// </summary>
+    /// <param name="options">The shell's options.</param>
+    /// <param name="page">The page address, which the links are resolved against.</param>
+    /// <remarks>
+    /// The shell opens a link through the browser launcher, which opens a new tab.
+    /// </remarks>
+    private static void AddDemoSiteLinks(ShellOptions options, Uri page)
+    {
+        options.SignInLinksTitle = NorthwindDemoSite.LinksTitle;
+        foreach (var (text, href) in NorthwindDemoSite.FrontEnds)
+        {
+            var address = new Uri(page, href);
+            if (!NorthwindDemoSite.IsUnder(address.AbsolutePath.TrimEnd('/'), NorthwindDemoSite.BrowserPath))
+                options.SignInLinks.Add(new ShellLink(text, address));
+        }
+    }
 
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<NorthwindApp>();

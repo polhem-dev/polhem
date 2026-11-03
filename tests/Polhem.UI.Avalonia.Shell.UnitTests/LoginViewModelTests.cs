@@ -95,6 +95,31 @@ public class LoginViewModelTests
         Assert.Equal(string.Empty, preferences.Load(ShellPreferenceKeys.CompanyId));
     }
 
+    [Fact]
+    [DisplayName("The sign-in links and their heading come from the options")]
+    public void SignInLinks_FromOptions()
+    {
+        var options = new ShellOptions { SignInLinksTitle = "Other front ends" };
+        options.SignInLinks.Add(new ShellLink("Blazor", new Uri("https://example.test/")));
+
+        var vm = new LoginViewModel(options, new MemoryPreferences(), NeverCalled, () => { });
+
+        Assert.True(vm.HasSignInLinks);
+        Assert.True(vm.HasSignInLinksTitle);
+        Assert.Equal("Other front ends", vm.SignInLinksTitle);
+        Assert.Equal([new ShellLink("Blazor", new Uri("https://example.test/"))], vm.SignInLinks);
+    }
+
+    [Fact]
+    [DisplayName("No sign-in links hides the link list")]
+    public void SignInLinks_None_Hidden()
+    {
+        var vm = new LoginViewModel(s_options, new MemoryPreferences(), NeverCalled, () => { });
+
+        Assert.False(vm.HasSignInLinks);
+        Assert.False(vm.HasSignInLinksTitle);
+    }
+
     private static Task<SignInResult> NeverCalled(string userId, string password, string companyId)
         => throw new InvalidOperationException("The sign-in should not be called.");
 

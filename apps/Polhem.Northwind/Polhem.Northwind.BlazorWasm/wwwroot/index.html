@@ -3,12 +3,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- IMPORTANT: the demo site serves this bundle under this path (NorthwindDemo.BlazorWasmPath). Change both together.
+    <!-- IMPORTANT: the demo site serves this bundle under this path (NorthwindDemoSite.BlazorWasmPath). Change both together.
          The base is written rather than declared: the browser's preload scanner would fetch every address below
          against a declared one before a script could change it. -->
     <script>
-        window.polhemDemoSite = location.pathname === "/wasm" || location.pathname.startsWith("/wasm/");
-        document.write('<base href="' + (window.polhemDemoSite ? "/wasm/" : "/") + '" />');
+        var demoSite = location.pathname === "/wasm" || location.pathname.startsWith("/wasm/");
+        document.write('<base href="' + (demoSite ? "/wasm/" : "/") + '" />');
     </script>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="_content/Polhem.Web.Blazor.Mud/polhem-mud.css" rel="stylesheet" />
@@ -18,12 +18,6 @@
 </head>
 <body>
     <div id="app"><p class="app-loading">Loading Polhem.Northwind…</p></div>
-    <!-- Shown only on the demo site, which serves the other front ends. -->
-    <nav id="demo-switch-bar" class="demo-switch-bar" hidden>
-        <a class="demo-switch" href="/">Try the Blazor Server version</a>
-        <a class="demo-switch" href="/web/">Try the Avalonia web version</a>
-    </nav>
-    <script>document.getElementById("demo-switch-bar").hidden = !window.polhemDemoSite;</script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

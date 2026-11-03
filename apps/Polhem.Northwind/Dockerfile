@@ -1,5 +1,6 @@
-# The public Northwind demo site: Polhem.Northwind.Blazor in its Demo environment, which also serves the JSON-RPC
-# endpoint at /api, the Blazor WebAssembly head at /wasm/ and the Avalonia WASM head at /web/ (see Polhem.Northwind.Blazor/Demo/NorthwindDemo.cs).
+# The public Northwind demo site: Polhem.Northwind.Blazor in its Demo environment, which serves both Blazor Server
+# heads, the JSON-RPC endpoint at /api and the three WASM heads (see Polhem.Northwind.Blazor/Demo/NorthwindDemo.cs
+# and Shared/NorthwindDemoSite.cs for the paths).
 #
 # Build from the repository root, which the projects reference through ProjectReference:
 #
@@ -20,6 +21,7 @@ WORKDIR /src
 COPY . .
 RUN dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o /out/browser
 RUN dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm -c Release -o /out/blazor-wasm
+RUN dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm -c Release -o /out/fluent-wasm
 # Publishing for the image's architecture keeps only its native libraries (SQLite's among them); a portable publish
 # carries one copy per platform.
 ARG TARGETARCH
@@ -32,6 +34,7 @@ WORKDIR /app
 COPY --from=build /out/app/ ./
 COPY --from=build /out/browser/wwwroot/ ./browser/
 COPY --from=build /out/blazor-wasm/wwwroot/ ./blazor-wasm/
+COPY --from=build /out/fluent-wasm/wwwroot/ ./fluent-wasm/
 # NorthwindBackend finds Define/ by walking up from the application folder and opens northwind.db next to it, so
 # both sit in /app. The app user writes the database there, and the backend may write a framework TableSchema the
 # demo does not define yet into Define/, so the user owns both.

@@ -25,11 +25,13 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 
 | Front end | Link |
 |-----------|------|
-| Blazor Server | <https://polhem-northwind.onrender.com/> |
-| Blazor WebAssembly | <https://polhem-northwind.onrender.com/wasm/> |
+| Blazor Server, MudBlazor | <https://polhem-northwind.onrender.com/> |
+| Blazor WebAssembly, MudBlazor | <https://polhem-northwind.onrender.com/wasm/> |
+| Blazor Server, Fluent UI | <https://polhem-northwind.onrender.com/fluent/> |
+| Blazor WebAssembly, Fluent UI | <https://polhem-northwind.onrender.com/fluent-wasm/> |
 | Avalonia (WebAssembly) | <https://polhem-northwind.onrender.com/web/> |
 
-Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
+Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. Each sign-in screen links to the other front ends. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
 
 ## Running the demo
 
@@ -107,12 +109,10 @@ Avalonia heads:
 
 ### Web client (Blazor Server, Fluent UI)
 
-**`Polhem.Northwind.BlazorFluent`** renders the same forms with [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.md) on the `Polhem.Web.Blazor.Server` host, with the backend in its own process. It is not part of the demo site.
-
-```bash
-# Blazor Server head on Fluent UI (http://localhost:5700)
-dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluent
-```
+**`Polhem.Northwind.BlazorFluent`** renders the same forms with [`Polhem.Web.Blazor.Fluent`](../../src/Polhem.Web.Blazor.Fluent/README.md).
+It is a Razor class library rather than a site of its own: the Blazor Server head above mounts it under `/fluent/`,
+as a second Blazor app in its process, so both share the backend, the sign-in options and the language cookie. Run
+that head and open <http://localhost:5300/fluent/>.
 
 ### Web client (Blazor WebAssembly)
 
@@ -123,6 +123,9 @@ running server above:
 ```bash
 # Blazor WebAssembly head (http://localhost:5600)
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm
+
+# The same head on Fluent UI (http://localhost:5700)
+dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm
 ```
 
 The endpoint and the API key are in `wwwroot/appsettings*.json`; an empty endpoint means `/api` on the page's own origin.
@@ -132,30 +135,31 @@ language is picked on the sign-in screen, and a reload signs out. See
 
 ### All the web clients in one site (the Demo environment)
 
-Run the Blazor head in the `Demo` environment and it also serves the JSON-RPC endpoint at `/api`, the published
-Blazor WebAssembly bundle at `/wasm/` and the published Avalonia WASM bundle at `/web/`, all from one process and one
-origin. This is the shape of the public demo site: the WASM heads reach `/api` without a CORS policy, and every front
+Run the Blazor head in the `Demo` environment and it also serves the JSON-RPC endpoint at `/api` and the three
+published WASM bundles, all from one process and one origin. Where each front end is served is
+[`Shared/NorthwindDemoSite.cs`](Shared/NorthwindDemoSite.cs), a file linked into every head of the site. This is the shape of the public demo site: the WASM heads reach `/api` without a CORS policy, and every front
 end reads the same `northwind.db`, so a record saved in one shows in the others.
 
 ```bash
 # 1. Publish the WASM heads once (needs the wasm-tools workload)
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.Browser -c Release -o artifacts/northwind-browser
 dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorWasm -c Release -o artifacts/northwind-blazor-wasm
+dotnet publish apps/Polhem.Northwind/Polhem.Northwind.BlazorFluentWasm -c Release -o artifacts/northwind-fluent-wasm
 
 # 2. Blazor head in the Demo environment (http://localhost:5400)
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor --launch-profile Demo
 ```
 
-Open <http://localhost:5400/> for Blazor Server, <http://localhost:5400/wasm/> for Blazor WebAssembly and
-<http://localhost:5400/web/> for Avalonia; a link in the corner of each page goes to each of the other two.
-The Avalonia head pre-fills the same-origin `/api` endpoint when it is served under `/web/`.
-`Northwind:BrowserBundle` and `Northwind:BlazorWasmBundle` name the bundle folders (the `wwwroot` of each publish
-output); the `Demo` launch profile points them at the commands above, and the host refuses to start when either folder
-has no `index.html`.
+Open <http://localhost:5400/>; the sign-in screen of each front end links to the other four, and only on this site.
+The Avalonia head opens them in a new tab, as its shell opens every link through the browser's launcher, and it
+pre-fills the same-origin `/api` endpoint when it is served under `/web/`. `Northwind:BrowserBundle`,
+`Northwind:BlazorWasmBundle` and `Northwind:FluentWasmBundle` name the bundle folders (the `wwwroot` of each publish
+output); the `Demo` launch profile points them at the commands above, and the host refuses to start when a folder has
+no `index.html`.
 
 Because every account's password is public there, the Demo environment also behaves like a public site: no account
 may be a deployment administrator (the host refuses to start otherwise), failed sign-ins never lock an account,
-error responses carry the fixed messages rather than exception text, `/api` and the opening of a Blazor connection are
+error responses carry the fixed messages rather than exception text, `/api` and the opening of a Blazor connection (on either Blazor Server head) are
 rate-limited per client address (read from the `CF-Connecting-IP` header of the Cloudflare edge in front of the host), and `/api` refuses
 batches and bodies over 1 MB. `Demo/NorthwindDemo.cs` has the details.
 
@@ -164,7 +168,7 @@ lives inside the container and is seeded at startup, so a new container starts f
 
 ```bash
 docker build -f apps/Polhem.Northwind/Dockerfile -t polhem-northwind-demo .
-docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/, /wasm/ and /web/
+docker run --rm -p 8080:8080 polhem-northwind-demo    # http://localhost:8080/ and the other paths above
 ```
 
 ### Mobile clients (Avalonia iOS / Android)
