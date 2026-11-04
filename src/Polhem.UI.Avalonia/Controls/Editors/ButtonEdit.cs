@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
@@ -77,6 +78,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 MinWidth = 0,
                 MinHeight = 0,
             };
+            // The button's only content is the glyph, so without a name assistive technology reads the icon's type name.
+            AutomationProperties.SetName(_button, UIText.Get(PolhemUIText.Search));
             _button.Click += async (_, _) => await OnButtonClickAsync().ConfigureAwait(true);
             InnerRightContent = _button;
             // The text box may handle the gesture itself (word selection), so the handler sees handled events too.
