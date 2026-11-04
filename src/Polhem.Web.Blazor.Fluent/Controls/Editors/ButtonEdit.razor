@@ -9,11 +9,20 @@
                      ValueChanged="CommitText"
                      ReadOnly="@(HasLookup || !IsEditable)"
                      MaxLength="FluentAttributes.MaxLength(MaxLength)"
-                     Width="100%" />
-    @if (IsEditable)
-    {
-        <FluentButton Class="polhem-button-edit__search" Title="@LookupButtonText" OnClick="() => OnButtonClickAsync()">…</FluentButton>
-    }
+                     Width="100%">
+        <EndTemplate>
+            @if (IsEditable)
+            {
+                <FluentButton Class="polhem-button-edit__search"
+                              Appearance="ButtonAppearance.Transparent"
+                              Size="ButtonSize.Small"
+                              IconOnly="true"
+                              IconStart="PolhemIcons.Search"
+                              Title="@LookupButtonText"
+                              OnClick="() => OnButtonClickAsync()" />
+            }
+        </EndTemplate>
+    </FluentTextInput>
 </div>
 @if (IsLookupOpen && FormField is { } lookupField)
 {

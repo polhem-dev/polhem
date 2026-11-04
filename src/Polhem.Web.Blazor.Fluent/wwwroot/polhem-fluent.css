@@ -27,7 +27,6 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
 .polhem-card { padding: 10px; border: 1px solid var(--colorNeutralStroke1); border-radius: 6px; cursor: pointer; }
 .polhem-card--selected { background: var(--colorNeutralBackground1Selected); }
 .polhem-card-list__limit { margin-top: 8px; font-size: 13px; color: var(--colorNeutralForeground3); }
-.polhem-button-edit { display: flex; gap: 4px; }
 .polhem-dialog { display: contents; }
 .polhem-related-record-dialog, .polhem-row-edit-dialog, .polhem-lookup-dialog { --dialog-width: min(900px, 90vw); }
 
