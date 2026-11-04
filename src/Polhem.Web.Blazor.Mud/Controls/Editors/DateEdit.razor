@@ -9,8 +9,9 @@
                    Class="@ModifierClass"
                    Date="Date"
                    DateChanged="OnDateChanged"
+                   TextChanged="OnTextChanged"
                    Editable="true"
-                   DateFormat="@ValueFormat"
+                   DateFormat="@DisplayPattern"
                    OpenTo="OpenTo"
                    FixDay="FixDay"
                    PickerVariant="PickerVariant.Inline"
@@ -47,15 +48,23 @@ else
     /// </summary>
     protected virtual int? FixDay => null;
 
-    // MudDatePicker reports both a cleared box and text it cannot parse as null, so only its text tells them apart. A
-    // rejected entry recreates the picker to show the stored date again.
+    // MudDatePicker reports both a cleared box and text it cannot parse as null, so only its text tells them apart; the
+    // text is handled in OnTextChanged.
     private void OnDateChanged(DateTime? date)
     {
-        if (date is null && !string.IsNullOrWhiteSpace(_picker?.Text))
-        {
-            _generation++;
-            return;
-        }
+        if (date is null && !string.IsNullOrWhiteSpace(_picker?.Text)) return;
         CommitDate(date);
+    }
+
+    // The picker parses only the culture pattern it shows. Other text goes through the shared input rules, which also take
+    // the stored ISO form, and the picker is recreated to show the stored date in the culture pattern again, or the
+    // previous date when the text is not a date. A field that was empty raises no date change for such text at all.
+    private void OnTextChanged(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)
+            || DateTime.TryParseExact(text, DisplayPattern, System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.None, out _))
+            return;
+        CommitInput(text);
+        _generation++;
     }
 }
