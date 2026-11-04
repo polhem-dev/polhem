@@ -147,6 +147,22 @@ preview (`.claude/launch.json` needs `autoPort:false`); **synthetic pointer even
 not reach Avalonia's input layer** (intercepted by `div.avalonia-native-host` over the canvas), so verifying UI clicks
 needs a real browser.
 
+**Input methods: Boshiamy cannot type Chinese without `ime-input-bridge.js`**
+([#310](https://github.com/polhem-dev/polhem/issues/310)). Symptom: in any text field of a browser head, Boshiamy
+(OpenVanilla on macOS) leaves its radicals in the field and the chosen character never arrives; Bopomofo works.
+Desktop, iOS and Android are not affected. Root cause, in `Avalonia.Browser` itself (verified by decompiling
+`BrowserInputHandler.OnKeyDown`): any `keydown` whose `key` is one character is inserted as text, without checking
+`keyCode` 229 (a key the input method is handling). Inserting the radical rewrites the hidden
+`input.avalonia-input-element`, which interrupts the browser's composition; the chosen character then arrives as an
+`insertText` input with no `compositionend`, and Avalonia does not listen to `input` events. The fix is not in the
+controls (they are `TextBox` underneath) but in each head's `wwwroot/ime-input-bridge.js`, imported by `main.js`: it
+stops `keyCode` 229 key downs in the capture phase and forwards a stray `insertText` as a synthetic `compositionend`.
+It is in `apps/Polhem.Northwind/Polhem.Northwind.Browser` and in the `PolhemApp.Browser` client of the
+`polhem-avalonia` template, so a new browser head needs it too. `Avalonia.Browser` 12.1.3 still has the bug (its
+`avalonia.js` is byte-identical to 12.1.0 and `OnKeyDown` is unchanged). **When upgrading `Avalonia.Browser`, check
+whether upstream now skips `keyCode` 229 and handles `insertText`; if it does, delete the script and its import from
+both heads.** Checking needs a real browser and a real input method: the preview pane cannot drive one.
+
 ## Blazor Server head
 
 - **It runs the backend in process by default** (`UseLocalProvider`), so `dotnet run` on it needs no other server.
