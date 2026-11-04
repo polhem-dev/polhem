@@ -27,7 +27,7 @@ The order and the descriptions are in [`DemoModuleRegistry`](Modules/DemoModuleR
 | | `TableControlComparisonModule` | Compares with `MudDataGrid` |
 | Data Binding | `AmbientBindingModule`, `ExplicitBindingModule`, `DataObjectEventsModule` | — |
 | | `TwoWaySyncModule` | Also writes the field from code |
-| Read-only & Required | `ReadOnlyFieldModule` | Read-only uses MudBlazor's own look |
+| Read-only & Required | `ReadOnlyFieldModule` | — |
 | | `RequiredReadOnlyMarkModule` | A read-only header is parenthesised and a required one shows the cue, instead of colored text |
 | FormMode States | `InteractiveFormModeModule`, `FormModeStatesModule`, `GridFormModeModule` | — |
 | Lookup | `LookupPickerModule` | Also runs the real `LookupDialog` over an in-memory source |

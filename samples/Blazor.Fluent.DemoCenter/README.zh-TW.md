@@ -27,7 +27,7 @@ dotnet run --project samples/Blazor.Fluent.DemoCenter/Blazor.Fluent.DemoCenter.c
 | | `TableControlComparisonModule` | 對照 `FluentDataGrid` |
 | Data Binding | `AmbientBindingModule`、`ExplicitBindingModule`、`DataObjectEventsModule` | — |
 | | `TwoWaySyncModule` | 另外示範從程式碼寫入欄位 |
-| Read-only & Required | `ReadOnlyFieldModule` | 唯讀採用 Fluent UI 本身的外觀；唯讀的日期與下拉選單顯示為唯讀文字框 |
+| Read-only & Required | `ReadOnlyFieldModule` | 唯讀的日期與下拉選單顯示為唯讀文字框 |
 | | `RequiredReadOnlyMarkModule` | 唯讀欄頭加括號、必填欄頭顯示提示，不用文字顏色區分 |
 | FormMode States | `InteractiveFormModeModule`、`FormModeStatesModule`、`GridFormModeModule` | — |
 | Lookup | `LookupPickerModule` | 另外以記憶體資料來源執行真正的 `LookupDialog` |

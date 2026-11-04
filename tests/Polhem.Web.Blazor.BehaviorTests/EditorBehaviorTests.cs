@@ -68,6 +68,15 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="value">The new state.</param>
         protected abstract void SetChecked(IRenderedComponent<ContainerFragment> cut, bool value);
 
+        /// <summary>
+        /// Determines whether the editor has the read-only look: only an underline, as the Avalonia controls draw a
+        /// read-only field.
+        /// </summary>
+        /// <param name="cut">The rendered editor.</param>
+        /// <param name="controlType">The control type.</param>
+        /// <returns>Whether every input of the editor has the read-only look.</returns>
+        protected abstract bool HasReadOnlyLook(IRenderedComponent<ContainerFragment> cut, ControlType controlType);
+
         private static FormDataObject BuildDataObject(FieldDbType dbType, string? value, Action<FormField>? configure = null)
         {
             var schema = new FormSchema("Probe", "Probe");
@@ -255,6 +264,27 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.False(IsChecked(cut));
         }
+
+        [Theory]
+        [InlineData(ControlType.TextEdit, FieldDbType.String)]
+        [InlineData(ControlType.MemoEdit, FieldDbType.String)]
+        [InlineData(ControlType.NumericEdit, FieldDbType.Decimal)]
+        [InlineData(ControlType.ButtonEdit, FieldDbType.String)]
+        [InlineData(ControlType.DateEdit, FieldDbType.Date)]
+        [InlineData(ControlType.TimeEdit, FieldDbType.String)]
+        [InlineData(ControlType.DateTimeEdit, FieldDbType.DateTime)]
+        [InlineData(ControlType.DropDownEdit, FieldDbType.String)]
+        [DisplayName("A read-only editor has the read-only look and an editable one does not")]
+        public void ReadOnlyLook_FollowsTheFormMode(ControlType controlType, FieldDbType dbType)
+        {
+            var editable = RenderEditor(controlType, BuildDataObject(dbType, null, ConfigureListItems));
+            var readOnly = RenderEditor(controlType, BuildDataObject(dbType, null, ConfigureListItems), SingleFormMode.View);
+
+            Assert.False(HasReadOnlyLook(editable, controlType));
+            Assert.True(HasReadOnlyLook(readOnly, controlType));
+        }
+
+        private static void ConfigureListItems(FormField field) => field.ListItems!.Add("a", "A");
 
         [Fact]
         [DisplayName("A read-only date shows in the user's culture")]

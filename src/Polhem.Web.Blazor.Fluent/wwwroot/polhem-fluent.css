@@ -10,6 +10,9 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
 /* The shared rule aligns the `input` of a numeric editor, which the text input keeps in its shadow root; the input is
    exposed as the `control` part. */
 .polhem-field-editor--numeric fluent-text-input::part(control) { text-align: right; }
+/* A read-only input keeps only its bottom line, as in the Avalonia controls, so a record viewed read-only does not look
+   editable. The text area has no underline appearance, so the frame is set on the `root` part of both. */
+fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) { border-color: transparent; border-bottom-color: var(--colorNeutralStroke1); border-radius: 0; background: transparent; }
 /* Columns keep their layout width, so a narrow screen scrolls the grid and not the whole page. */
 .polhem-grid { overflow-x: auto; }
 /* The grid's fixed-layout table fills its container and spreads the space its columns leave over across them, so a
@@ -17,6 +20,9 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
    column keeps exactly its width; once the columns are wider than the container the cell is empty and the grid
    scrolls. */
 .polhem-grid table.fluent-data-grid tr::after { content: ""; display: table-cell; border-bottom: 1px solid var(--colorNeutralStroke2); }
+/* A column the layout gives no width has none on its header until it is dragged. While one is left, those columns share
+   the space instead, so short values are not cut off beside an empty grid, and the empty cell takes nothing. */
+.polhem-grid:has(th[cell-type="columnheader"]:not([style*="width"])) table.fluent-data-grid tr::after { width: 0; padding: 0; }
 .polhem-grid__toolbar { position: sticky; left: 0; }
 /* An editor is taller than the text it replaces, and the row must not jump when the cell opens. */
 .polhem-grid-cell__editor { margin-block: -6px; }

@@ -74,6 +74,14 @@ namespace Polhem.Web.Blazor.Fluent.UnitTests
             cut.Find(Selector(controlType)).Change(text);
         }
 
+        // The Fluent stylesheet draws the read-only look on a text input or a text area that carries `readonly`.
+        /// <inheritdoc />
+        protected override bool HasReadOnlyLook(IRenderedComponent<ContainerFragment> cut, ControlType controlType)
+        {
+            var inputs = cut.FindAll("fluent-text-input, fluent-textarea");
+            return inputs.Count > 0 && inputs.All(input => input.HasAttribute("readonly"));
+        }
+
         /// <inheritdoc />
         protected override bool AcceptsInput(IRenderedComponent<ContainerFragment> cut, ControlType controlType)
         {

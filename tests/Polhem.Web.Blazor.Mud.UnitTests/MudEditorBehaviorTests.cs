@@ -70,6 +70,14 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
             cut.Find(Selector(controlType)).Change(text);
         }
 
+        // MudBlazor draws the read-only look with its text variant, which keeps only the underline.
+        /// <inheritdoc />
+        protected override bool HasReadOnlyLook(IRenderedComponent<ContainerFragment> cut, ControlType controlType)
+        {
+            var inputs = cut.FindAll(".mud-input");
+            return inputs.Count > 0 && inputs.All(input => input.ClassList.Contains("mud-input-text"));
+        }
+
         /// <inheritdoc />
         protected override bool AcceptsInput(IRenderedComponent<ContainerFragment> cut, ControlType controlType)
         {

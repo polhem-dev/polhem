@@ -27,7 +27,7 @@ dotnet run --project samples/Blazor.Mud.DemoCenter/Blazor.Mud.DemoCenter.csproj
 | | `TableControlComparisonModule` | 對照 `MudDataGrid` |
 | Data Binding | `AmbientBindingModule`、`ExplicitBindingModule`、`DataObjectEventsModule` | — |
 | | `TwoWaySyncModule` | 另外示範從程式碼寫入欄位 |
-| Read-only & Required | `ReadOnlyFieldModule` | 唯讀採用 MudBlazor 本身的外觀 |
+| Read-only & Required | `ReadOnlyFieldModule` | — |
 | | `RequiredReadOnlyMarkModule` | 唯讀欄頭加括號、必填欄頭顯示提示，不用文字顏色區分 |
 | FormMode States | `InteractiveFormModeModule`、`FormModeStatesModule`、`GridFormModeModule` | — |
 | Lookup | `LookupPickerModule` | 另外以記憶體資料來源執行真正的 `LookupDialog` |

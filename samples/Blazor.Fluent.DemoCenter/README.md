@@ -27,7 +27,7 @@ The order and the descriptions are in [`DemoModuleRegistry`](Modules/DemoModuleR
 | | `TableControlComparisonModule` | Compares with `FluentDataGrid` |
 | Data Binding | `AmbientBindingModule`, `ExplicitBindingModule`, `DataObjectEventsModule` | — |
 | | `TwoWaySyncModule` | Also writes the field from code |
-| Read-only & Required | `ReadOnlyFieldModule` | Read-only uses Fluent UI's own look; a read-only date or drop-down shows as a read-only text input |
+| Read-only & Required | `ReadOnlyFieldModule` | A read-only date or drop-down shows as a read-only text input |
 | | `RequiredReadOnlyMarkModule` | A read-only header is parenthesised and a required one shows the cue, instead of colored text |
 | FormMode States | `InteractiveFormModeModule`, `FormModeStatesModule`, `GridFormModeModule` | — |
 | Lookup | `LookupPickerModule` | Also runs the real `LookupDialog` over an in-memory source |
