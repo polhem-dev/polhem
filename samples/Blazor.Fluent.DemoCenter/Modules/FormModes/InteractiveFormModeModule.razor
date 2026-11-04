@@ -1,0 +1,25 @@
+<div class="demo-stack">
+    <div style="max-width:200px">
+        <FluentSelect TOption="SingleFormMode" TValue="SingleFormMode" Items="Enum.GetValues<SingleFormMode>()" @bind-Value="_mode" Label="FormMode" Width="100%" />
+    </div>
+    <FormScope DataObject="_data" FormMode="_mode">
+        <div class="demo-stack">
+            <DemoSection Title="Master controls">
+                <LabeledRow Label="emp_name (TextEdit)"><TextEdit FieldName="emp_name" /></LabeledRow>
+                <LabeledRow Label="dept (DropDownEdit)"><DropDownEdit FieldName="dept" /></LabeledRow>
+                <LabeledRow Label="hire_date (DateEdit)"><DateEdit FieldName="hire_date" /></LabeledRow>
+                <LabeledRow Label="is_active (CheckEdit)"><CheckEdit FieldName="is_active" /></LabeledRow>
+                <LabeledRow Label="emp_code (ButtonEdit)"><ButtonEdit FieldName="emp_code" /></LabeledRow>
+            </DemoSection>
+            <DemoSection Title="Phones detail (GridControl)">
+                <GridControl Layout="_phones" />
+            </DemoSection>
+        </div>
+    </FormScope>
+</div>
+
+@code {
+    private readonly FormDataObject _data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
+    private readonly LayoutGrid _phones = SampleFormData.BuildPhonesLayout();
+    private SingleFormMode _mode = SingleFormMode.Edit;
+}

@@ -1,0 +1,19 @@
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="Two controls bound to the same field, name" Note="Type in either box and leave it (or press Enter); the other one updates. So does a write from code.">
+            <LabeledRow Label="Editor A"><TextEdit FieldName="name" /></LabeledRow>
+            <LabeledRow Label="Editor B"><TextEdit FieldName="name" /></LabeledRow>
+            <div><FluentButton Size="ButtonSize.Small" OnClick="WriteFromCode">Write the name from code</FluentButton></div>
+        </DemoSection>
+        <DemoSection Title="Live values">
+            <LiveValues DataObject="_data" Fields="s_fields" />
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private static readonly string[] s_fields = ["name"];
+    private readonly FormDataObject _data = DataEditorParts.SingleField("name", "Name", FieldDbType.String, "Alice Chen");
+
+    private void WriteFromCode() => _data.SetField("name", "Written at " + DateTime.Now.ToLongTimeString());
+}

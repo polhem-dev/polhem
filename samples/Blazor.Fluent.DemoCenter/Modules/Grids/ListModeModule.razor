@@ -1,0 +1,8 @@
+<DemoSection Title="Staff list (list mode)" Note="A list-mode grid is not editable and has no toolbar. Loading rows from a backend is FormPage's job; see apps/Polhem.Northwind.">
+    <GridControl Layout="_layout" DataTable="_table" />
+</DemoSection>
+
+@code {
+    private readonly LayoutGrid _layout = SampleFormData.BuildStaffListLayout();
+    private readonly DataTable _table = SampleFormData.BuildStaffListTable();
+}

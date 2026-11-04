@@ -1,0 +1,75 @@
+@using System.Globalization
+@using Polhem.Core
+
+<DemoSection Title="Multi-unit quantities (quantity decimals follow the row unit)" Note="The qty column is bound to qty_uom; switching the unit changes the decimals of the same quantities.">
+    <div><FluentButton Size="ButtonSize.Small" OnClick="NextMode">Unit of measure: @s_modes[_mode]</FluentButton></div>
+    <GridControl Layout="_layout" DataTable="_table" UnitSettings="_units" />
+    <FluentText Size="TextSize.Size300">Quantity total: @QuantityTotal</FluentText>
+</DemoSection>
+
+@code {
+    private static readonly string[] s_modes = ["Mixed (as seeded)", "All KG", "All PCS"];
+    private static readonly (string Product, decimal Qty, string Unit)[] s_lines =
+    [
+        ("Bolt", 12.345m, "PCS"),
+        ("Steel", 12.345m, "KG"),
+        ("Cable", 12.345m, "M"),
+    ];
+
+    private readonly UnitSettings _units =
+    [
+        new UnitItem("PCS", 0, "count", "Pieces"),
+        new UnitItem("KG", 3, "weight", "Kilogram"),
+        new UnitItem("M", 2, "length", "Metre"),
+    ];
+    private readonly LayoutGrid _layout = BuildLayout();
+    private readonly DataTable _table = BuildData().DataSet.Tables["OrderLine"]!;
+    private int _mode;
+
+    private string QuantityTotal
+    {
+        get
+        {
+            // NOTE: `AmountColumnSummary`, which the Avalonia demo center uses for this rule, is in Polhem.UI.Avalonia.
+            var rows = _table.Rows.Cast<DataRow>().ToList();
+            var codes = rows.Select(row => ValueUtilities.CStr(row["qty_uom"])).Distinct(StringComparer.Ordinal).ToList();
+            if (codes.Count != 1) return "— mixed units, no total";
+            var format = NumberFormatResolver.ResolveFormat(NumberKind.Quantity, new RoundingContext { UnitSettings = _units }, codes[0]);
+            return rows.Sum(row => ValueUtilities.CDecimal(row["qty"])).ToString(format, CultureInfo.InvariantCulture) + " " + codes[0];
+        }
+    }
+
+    private void NextMode()
+    {
+        _mode = (_mode + 1) % s_modes.Length;
+        for (var i = 0; i < _table.Rows.Count; i++)
+            _table.Rows[i]["qty_uom"] = _mode switch { 1 => "KG", 2 => "PCS", _ => s_lines[i].Unit };
+    }
+
+    private static LayoutGrid BuildLayout()
+    {
+        var layout = new LayoutGrid("OrderLine", "Order lines");
+        layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
+        layout.Columns.Add(new LayoutColumn("qty", "Quantity", ControlType.NumericEdit) { NumberKind = NumberKind.Quantity, UnitField = "qty_uom" });
+        layout.Columns.Add(new LayoutColumn("qty_uom", "Unit", ControlType.TextEdit));
+        return layout;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Order", "Order");
+        schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
+        var line = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        line.Add("product", "Product", FieldDbType.String);
+        line.Add(new FormField("qty", "Quantity", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity, UnitField = "qty_uom" });
+        line.Add("qty_uom", "Unit", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("order_no", "SO-200");
+        var lines = data.DataSet.Tables["OrderLine"]!;
+        foreach (var (product, qty, unit) in s_lines)
+            lines.Rows.Add(product, qty, unit);
+        return data;
+    }
+}

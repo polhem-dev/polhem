@@ -4,7 +4,7 @@
 
 `Polhem.Web.Blazor.Mud` 控制項的展示專案，依**主題**編排：左側是導覽樹（主題 → 案例），右側是 `Demo` / `Source` 分頁，上方是淺色／深色切換。與 [`Avalonia.DemoCenter`](../Avalonia.DemoCenter/README.zh-TW.md) 一樣**預設深色**。
 
-每個 DemoCenter 對應一個 UI 框架。兩邊的主題、案例標題、模組檔名和範例資料都相同，方便逐案對照同一個控制項的行為。案例直接使用 `Polhem.Web.Blazor.Mud` 與 MudBlazor，不和其他 UI 框架的 DemoCenter 共用程式碼。
+每個 DemoCenter 對應一個 UI 框架。各 DemoCenter 的主題、案例標題、模組檔名和範例資料都相同，方便逐案對照同一個控制項的行為。案例直接使用 `Polhem.Web.Blazor.Mud` 與 MudBlazor，不和其他 UI 框架的 DemoCenter 共用程式碼。
 
 DemoCenter 只涵蓋**控制項層**：沒有後端、不用登入，資料全在記憶體。端到端應用見 [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.zh-TW.md)。
 

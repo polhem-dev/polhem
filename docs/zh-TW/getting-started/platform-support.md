@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: fb83cb95c420abca96bee1251e067b13ef65ddcc -->
+<!-- source: en/getting-started/platform-support.md blob: fdcc9d053a44e03f655c5b6e2d26642548e5de04 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -48,7 +48,8 @@
   `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
   送出同一個 key。Northwind 的 Blazor Server head 以 Local 模式執行 Northwind 後端，並可經設定切換為 Remote；見
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-server)，單獨看元件則見
-  [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.zh-TW.md)。
+  [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.zh-TW.md) 與
+  [`samples/Blazor.Fluent.DemoCenter`](../../../samples/Blazor.Fluent.DemoCenter/README.zh-TW.md)。
 - **一個網站可以提供多個 Blazor head。** Northwind demo 網站把 Fluent UI 的 Blazor Server head 當成第二個 Blazor app，以
   `app.Map("/fluent", ...)` 掛在 MudBlazor head 的行程裡，旁邊還有三個 WebAssembly bundle；見
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-serverfluent-ui)。

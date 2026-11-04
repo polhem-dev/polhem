@@ -97,6 +97,19 @@
       "autoPort": false
     },
     {
+      "name": "blazor-fluent-democenter",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "samples/Blazor.Fluent.DemoCenter/Blazor.Fluent.DemoCenter.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5056,
+      "autoPort": false
+    },
+    {
       "name": "northwind-blazor-fluent-wasm",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [

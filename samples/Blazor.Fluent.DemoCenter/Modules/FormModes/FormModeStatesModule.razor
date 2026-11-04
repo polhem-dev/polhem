@@ -1,0 +1,53 @@
+<div class="demo-stack">
+    <DemoSection Title="AllowEditModes settings">
+        <FluentText Size="TextSize.Size200">name — All (editable in Add and Edit)</FluentText>
+        <FluentText Size="TextSize.Size200">code — Add (editable only in Add, like a key field)</FluentText>
+        <FluentText Size="TextSize.Size200">dept — Edit (editable only in Edit)</FluentText>
+        <FluentText Size="TextSize.Size200">audit — None (never editable, like an audit field)</FluentText>
+    </DemoSection>
+    <div class="demo-columns">
+        @foreach (var mode in s_modes)
+        {
+            <DemoSection Title="@mode.ToString()">
+                <FormScope DataObject="_data[mode]" FormMode="mode">
+                    <FluentText Size="TextSize.Size200">name</FluentText>
+                    <TextEdit LayoutField="_name" />
+                    <FluentText Size="TextSize.Size200">code</FluentText>
+                    <TextEdit LayoutField="_code" />
+                    <FluentText Size="TextSize.Size200">dept</FluentText>
+                    <DropDownEdit LayoutField="_dept" />
+                    <FluentText Size="TextSize.Size200">audit</FluentText>
+                    <TextEdit LayoutField="_audit" />
+                </FormScope>
+            </DemoSection>
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly SingleFormMode[] s_modes = [SingleFormMode.View, SingleFormMode.Add, SingleFormMode.Edit];
+
+    private readonly LayoutField _name = new() { FieldName = "name", AllowEditModes = FormEditModes.All };
+    private readonly LayoutField _code = new() { FieldName = "code", AllowEditModes = FormEditModes.Add };
+    private readonly LayoutField _dept = new() { FieldName = "dept", AllowEditModes = FormEditModes.Edit };
+    private readonly LayoutField _audit = new() { FieldName = "audit", AllowEditModes = FormEditModes.None };
+    private readonly Dictionary<SingleFormMode, FormDataObject> _data = s_modes.ToDictionary(mode => mode, _ => BuildData());
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Demo", "Demo");
+        var fields = schema.Tables!.Add("Demo", "Demo").Fields!;
+        fields.Add("name", "Name", FieldDbType.String);
+        fields.Add("code", "Code", FieldDbType.String);
+        DataEditorParts.AddDepartment(fields);
+        fields.Add("audit", "Audit", FieldDbType.String);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("name", "Alice Chen");
+        data.SetField("code", "EMP-001");
+        data.SetField("dept", "IT");
+        data.SetField("audit", "system");
+        return data;
+    }
+}

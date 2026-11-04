@@ -1,0 +1,37 @@
+@page "/"
+@page "/case/{ModuleName}"
+@using Polhem.Web.Blazor.Components
+
+<PageTitle>@_module.Title — Demo Center</PageTitle>
+
+@* A phone-sized viewport lays the forms out in one column. *@
+<CompactViewportObserver CompactChanged="compact => _isCompact = compact" />
+
+<FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold">@_module.Category — @_module.Title</FluentText>
+<FluentText As="TextTag.Paragraph" Size="TextSize.Size300" Class="demo-note">@_module.Description</FluentText>
+
+<FluentTabs @key="_module" Class="demo-tabs">
+    <FluentTab Header="Demo">
+        <div class="demo-tab-panel">
+            <CascadingValue Name="IsCompact" Value="_isCompact">
+                <DynamicComponent Type="_module.Component" />
+            </CascadingValue>
+        </div>
+    </FluentTab>
+    <FluentTab Header="Source">
+        <pre class="demo-source demo-tab-panel">@_module.GetSourceText()</pre>
+    </FluentTab>
+</FluentTabs>
+
+@code {
+    private DemoModule _module = DemoModuleRegistry.Modules[0];
+    private bool _isCompact;
+
+    [Parameter]
+    public string? ModuleName { get; set; }
+
+    protected override void OnParametersSet()
+        => _module = DemoModuleRegistry.Modules.FirstOrDefault(
+                m => string.Equals(m.Component.Name, ModuleName, StringComparison.OrdinalIgnoreCase))
+            ?? DemoModuleRegistry.Modules[0];
+}

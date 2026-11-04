@@ -4,7 +4,7 @@
 
 A showcase of the `Polhem.Web.Blazor.Mud` controls, organized by **topic**: a navigation tree on the left (topic → case), `Demo` / `Source` tabs on the right, and a Light / Dark switch at the top. **Dark by default**, as in [`Avalonia.DemoCenter`](../Avalonia.DemoCenter/README.md).
 
-Each demo center covers one UI framework. Both use the same topics, case titles, module file names and sample data, so a control's behavior can be compared case by case. The cases use `Polhem.Web.Blazor.Mud` and MudBlazor directly; nothing is shared with another UI framework's demo center.
+Each demo center covers one UI framework. They all use the same topics, case titles, module file names and sample data, so a control's behavior can be compared case by case. The cases use `Polhem.Web.Blazor.Mud` and MudBlazor directly; nothing is shared with another UI framework's demo center.
 
 The demo center covers **the control layer only**: no backend, no sign-in, all data in memory. For an end-to-end application see [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md).
 

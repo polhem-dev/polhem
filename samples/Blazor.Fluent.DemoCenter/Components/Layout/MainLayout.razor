@@ -1,0 +1,59 @@
+@inherits LayoutComponentBase
+@using Polhem.Web.Blazor.Fluent.Theming
+@using Polhem.Web.Blazor.Components
+@inject IThemeService ThemeService
+
+<PolhemFluentProviders />
+@* On a phone the menu covers the page, so it starts closed and closes again after a case is chosen. *@
+<CompactViewportObserver CompactChanged="OnCompactChanged" />
+
+<div class="@(_navOpen ? "demo-shell demo-shell--nav-open" : "demo-shell")">
+    <header class="demo-header">
+        <FluentButton Appearance="ButtonAppearance.Transparent" aria-label="Toggle navigation" OnClick="() => _navOpen = !_navOpen">☰</FluentButton>
+        <FluentText Size="TextSize.Size500" Weight="TextWeight.Semibold" Class="demo-title">Polhem.Web.Blazor.Fluent Demo Center</FluentText>
+        <span class="demo-spacer"></span>
+        <FluentSwitch Value="_isDark" ValueChanged="SetDarkAsync" Label="Dark" aria-label="Dark theme" />
+    </header>
+    <nav class="demo-nav">
+        <FluentNav OnItemClick="CloseIfCompact">
+            @foreach (var topic in DemoModuleRegistry.Modules.GroupBy(m => m.Category))
+            {
+                <FluentNavCategory Title="@topic.Key" Expanded="true">
+                    @foreach (var module in topic)
+                    {
+                        <FluentNavItem Href="@module.Href" Match="NavLinkMatch.All">@module.Title</FluentNavItem>
+                    }
+                </FluentNavCategory>
+            }
+        </FluentNav>
+    </nav>
+    <main class="demo-main">@Body</main>
+</div>
+
+@code {
+    private bool _isDark = true;
+    private bool _navOpen = true;
+    private bool _isCompact;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await ThemeService.SetThemeAsync(ThemeMode.Dark);
+    }
+
+    private async Task SetDarkAsync(bool isDark)
+    {
+        _isDark = isDark;
+        await ThemeService.SetThemeAsync(isDark ? ThemeMode.Dark : ThemeMode.Light);
+    }
+
+    private void OnCompactChanged(bool compact)
+    {
+        _isCompact = compact;
+        _navOpen = !compact;
+    }
+
+    private void CloseIfCompact()
+    {
+        if (_isCompact) _navOpen = false;
+    }
+}

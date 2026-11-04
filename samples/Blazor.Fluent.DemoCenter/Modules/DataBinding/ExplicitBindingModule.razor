@@ -1,0 +1,20 @@
+<div class="demo-stack">
+    <DemoSection Title="editor.Bind(dataObject, layoutField)" Note="There is no FormScope here; the editor is bound from code once it exists.">
+        <LabeledRow Label="name"><TextEdit @ref="_editor" /></LabeledRow>
+    </DemoSection>
+    <DemoSection Title="Live values">
+        <LiveValues DataObject="_data" Fields="s_fields" />
+    </DemoSection>
+</div>
+
+@code {
+    private static readonly string[] s_fields = ["name"];
+    private readonly FormDataObject _data = DataEditorParts.SingleField("name", "Name", FieldDbType.String, "Alice Chen");
+    private TextEdit? _editor;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            _editor!.Bind(_data, new LayoutField { FieldName = "name" });
+    }
+}
