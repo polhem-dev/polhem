@@ -1,5 +1,4 @@
 using System.Data;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Polhem.Definition.Layouts;
@@ -84,11 +83,7 @@ namespace Polhem.UI.Avalonia.Controls
                 // matches the underlying DataRowView — so the displayed value diverges
                 // from the row, and a lookup pick returns a different row than shown.
                 templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
-                    (row, _) => new TextBlock
-                    {
-                        Text = FormatColumnText(row, column),
-                        Margin = new Thickness(8, 4),
-                    },
+                    (row, _) => BuildTextCell(row, column),
                     supportsRecycling: false);
                 // Recycling is off: each edit session gets a fresh editor whose change
                 // handlers close over the row being edited.

@@ -1,11 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.DemoCenter.Modules.DataEditors;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Core.Permissions;
 
@@ -51,7 +53,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
         public override Control BuildView()
         {
             var schema = BuildSchema();
-            var detailData = BuildData(schema);
+            var data = BuildData(schema);
 
             // ---- Right: master fields + a real detail grid ----
             var newBtn = MakeCommand("New", PermissionActions.Create);
@@ -61,9 +63,9 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             var commands = new[] { newBtn, saveBtn, deleteBtn, viewBtn };
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { newBtn, saveBtn, deleteBtn, viewBtn } };
 
-            var idField = MakeField("sys_id", "Order No.");
-            var vendorField = MakeField("vendor", "Vendor");
-            var handlerField = MakeField("handler_id", "Handler ID number");   // SensitiveCategory=PersonalData
+            var idField = MakeField(data, "sys_id", "Order No.");
+            var vendorField = MakeField(data, "vendor", "Vendor");
+            var handlerField = MakeField(data, "handler_id", "Handler ID number");   // SensitiveCategory=PersonalData
             var masterFields = new[] { idField, vendorField, handlerField };
 
             var masterBody = new StackPanel { Spacing = 10, Children = { toolbar, idField.Row, vendorField.Row, handlerField.Row } };
@@ -80,7 +82,11 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             };
 
             // ---- Left: simulated grant toggles ----
-            var active = new CheckBox { Content = "Enable capability (otherwise the snapshot is null → everything allowed)", IsChecked = true };
+            var active = new CheckBox
+            {
+                Content = new TextBlock { Text = "Enable capability (otherwise the snapshot is null → everything allowed)", TextWrapping = TextWrapping.Wrap },
+                IsChecked = true,
+            };
 
             // Everything granted by default → the full form shows on open; uncheck a grant to
             // watch that command / field degrade live.
@@ -128,7 +134,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
 
                 // Detail grid: rebuild from a fresh layout with capability applied to its columns
                 // (table = detail). This mirrors LayoutCapabilityApplier, which is internal to the lib.
-                detailHost.Child = BuildDetailGrid(schema, detailData, snapshot);
+                detailHost.Child = BuildDetailGrid(schema, data, snapshot);
             }
 
             active.IsCheckedChanged += (_, _) => Refresh();
@@ -138,9 +144,11 @@ namespace Avalonia.DemoCenter.Modules.Permissions
 
             // Two bounded columns (grants | form) so the detail DataGrid gets a real width and lays
             // out all its columns, instead of being starved inside an unbounded horizontal stack.
+            // Both share the width: an Auto grants column took the width of its longest title and left
+            // the form a sliver at the window's default size.
             var root = new Grid { Margin = new Thickness(4), ColumnSpacing = 24 };
-            root.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-            root.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            root.ColumnDefinitions.Add(new ColumnDefinition(2, GridUnitType.Star));
+            root.ColumnDefinitions.Add(new ColumnDefinition(3, GridUnitType.Star));
             var grantsSection = DataEditorParts.Section("Simulated grants (capability snapshot)", null, grantsPanel);
             Grid.SetColumn(grantsSection, 0);
             Grid.SetColumn(formBody, 1);
@@ -209,9 +217,11 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             return button;
         }
 
-        private static FieldRow MakeField(string fieldName, string caption)
+        // The editor is bound to the master row, so it shows the stored value and writes edits back.
+        private static FieldRow MakeField(FormDataObject data, string fieldName, string caption)
         {
-            var editor = new TextBox { MinWidth = 200 };
+            var editor = new TextEdit { MinWidth = 200 };
+            editor.Bind(data, fieldName);
             var row = new StackPanel
             {
                 Spacing = 2,
@@ -228,7 +238,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
 
         private static Border GrantSection(string title, params Control[] toggles)
         {
-            var stack = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            var stack = new WrapPanel { ItemSpacing = 12 };
             foreach (var t in toggles) stack.Children.Add(t);
             return DataEditorParts.Section(title, null, stack);
         }
@@ -242,11 +252,11 @@ namespace Avalonia.DemoCenter.Modules.Permissions
         }
 
         // Holds a field's caption+editor row together so capability can toggle both.
-        private sealed class FieldRow(string fieldName, Control row, TextBox editor)
+        private sealed class FieldRow(string fieldName, Control row, TextEdit editor)
         {
             public string FieldName { get; } = fieldName;
             public Control Row { get; } = row;
-            public TextBox Editor { get; } = editor;
+            public TextEdit Editor { get; } = editor;
         }
     }
 }
