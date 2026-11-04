@@ -17,7 +17,7 @@ framework users. Design decisions go in `maintainers/adr/`; public descriptions 
 | [avalonia-controls.md](avalonia-controls.md) | Proven Avalonia control pitfalls (DataGrid, read-only appearance, events, parallelism, phone overlays) |
 | [mobile-trim-aot.md](mobile-trim-aot.md) | Mobile trim / AOT: the reasoning behind the decision tree, the fidelity of the reflection-only reproduction, build and verification command recipes, **interpreting iOS build warnings (never 0 warnings)** |
 | [test-ci-release.md](test-ci-release.md) | Test fixture gaps, the verification blind spot of the CI path filter, **a 0 from Sonar may mean "not looked at" rather than "clean" (`tools/**/*.cs` is outside the analysis scope)**, how to reproduce Sonar rules locally, pitfalls in the publishing and health check processes |
-| [northwind-heads.md](northwind-heads.md) | The toolchains of the four Northwind heads (including the Xcode version binding of iOS), the sync process for the standalone repository and that repository's CI |
+| [northwind-heads.md](northwind-heads.md) | The toolchains of the four Northwind heads (including the Xcode version binding of iOS), the input method bridge of the browser heads, the sync process for the standalone repository and that repository's CI |
 | [definition-and-customization.md](definition-and-customization.md) | The two ways of counting the customization scope (the same omission hit three times in a row), the granularity of the override layer, the two derivations of the `FormSchema` hub diagram |
 
 ## Neighbours that are not in this directory
