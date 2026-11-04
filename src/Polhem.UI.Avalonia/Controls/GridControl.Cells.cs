@@ -316,6 +316,23 @@ namespace Polhem.UI.Avalonia.Controls
         // Builds the in-cell editor for the column's ControlType. The writes go
         // straight to the DataRow (the ADR-020 binding limitation applies to editing
         // templates too); invalid partial input keeps the last valid value.
+        /// <summary>
+        /// Builds the display cell of a column that edits through the grid's own edit pipeline: the formatted text,
+        /// vertically centered like the other cell kinds, and right-aligned for a numeric column.
+        /// </summary>
+        /// <param name="rowView">The row the cell shows.</param>
+        /// <param name="column">The column the cell belongs to.</param>
+        /// <returns>The display cell.</returns>
+        internal TextBlock BuildTextCell(DataRowView? rowView, LayoutColumn column) => new()
+        {
+            Text = FormatColumnText(rowView, column),
+            Margin = new Thickness(8, 4),
+            VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+            TextAlignment = IsNumeric(column) ? TextAlignment.Right : TextAlignment.Left,
+        };
+
+        private static bool IsNumeric(LayoutColumn column) => column.ControlType == ControlType.NumericEdit;
+
         private Control BuildCellEditor(DataRowView? rowView, LayoutColumn column)
         {
             if (rowView is null) return new TextBlock();
@@ -378,7 +395,10 @@ namespace Polhem.UI.Avalonia.Controls
                 return combo;
             }
 
-            return BuildTextCellEditor(rowView, dataColumn, current);
+            var textEditor = BuildTextCellEditor(rowView, dataColumn, current);
+            if (IsNumeric(column))
+                textEditor.TextAlignment = TextAlignment.Right;
+            return textEditor;
         }
 
         private static TextBox BuildTextCellEditor(DataRowView rowView, DataColumn dataColumn, string current)
