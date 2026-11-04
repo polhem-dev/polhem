@@ -27,8 +27,9 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator(".polhem-grid__toolbar")).ToHaveCSSAsync("display", "flex");
         }
 
-        // A web component keeps its input in a shadow root, where the shared rule does not reach, so the input that has the
-        // focus is followed into it.
+        // A web component keeps its input in a shadow root, where the shared rule does not reach, so the input is looked
+        // for there too. It is found inside the editor rather than as the focused element: the editor takes the focus only
+        // after it rendered, and a web component can add its input a frame later still.
         [BrowserFact]
         [DisplayName("A numeric editor shows its value right-aligned")]
         public async Task NumericEditor_IsRightAligned()
@@ -43,15 +44,23 @@ namespace Polhem.Web.Blazor.BrowserTests
 
             await qty.FocusAsync();
             await Assertions.Expect(page.Locator(".polhem-field-editor--numeric")).ToBeVisibleAsync();
-            var alignment = await page.EvaluateAsync<string>("""
+            var found = await page.WaitForFunctionAsync("""
                 () => {
-                    let element = document.activeElement;
-                    while (element && element.shadowRoot && element.shadowRoot.activeElement) element = element.shadowRoot.activeElement;
-                    return element && element.tagName === 'INPUT' ? getComputedStyle(element).textAlign : 'no input';
+                    const editor = document.querySelector('.polhem-field-editor--numeric');
+                    const find = root => {
+                        for (const element of root.querySelectorAll('*')) {
+                            if (element.tagName === 'INPUT') return element;
+                            const inner = element.shadowRoot && find(element.shadowRoot);
+                            if (inner) return inner;
+                        }
+                        return null;
+                    };
+                    const input = editor && find(editor);
+                    return input ? getComputedStyle(input).textAlign : null;
                 }
                 """);
 
-            Assert.Equal("right", alignment);
+            Assert.Equal("right", await found.JsonValueAsync<string>());
         }
     }
 }
