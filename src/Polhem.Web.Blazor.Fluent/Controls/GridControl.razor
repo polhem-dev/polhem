@@ -16,15 +16,15 @@
         <div class="polhem-grid__toolbar">
             @if (Actions.HasFlag(GridControlAllowActions.Add))
             {
-                <FluentButton Class="polhem-grid__button polhem-grid__button--add" Title="@Text(PolhemUIText.Add)" Disabled="@(!HasData)" OnClick="OnAddClicked">+</FluentButton>
+                <FluentButton Class="polhem-grid__button polhem-grid__button--add" Appearance="ButtonAppearance.Transparent" Size="ButtonSize.Small" IconOnly="true" IconStart="PolhemIcons.Add" Title="@Text(PolhemUIText.Add)" Disabled="@(!HasData)" OnClick="OnAddClicked" />
             }
             @if (EditMode == GridEditMode.EditForm && Actions.HasFlag(GridControlAllowActions.Edit))
             {
-                <FluentButton Class="polhem-grid__button polhem-grid__button--edit" Title="@Text(PolhemUIText.Edit)" Disabled="@(!HasData)" OnClick="EditSelectedRow">✎</FluentButton>
+                <FluentButton Class="polhem-grid__button polhem-grid__button--edit" Appearance="ButtonAppearance.Transparent" Size="ButtonSize.Small" IconOnly="true" IconStart="PolhemIcons.Edit" Title="@Text(PolhemUIText.Edit)" Disabled="@(!HasData)" OnClick="EditSelectedRow" />
             }
             @if (Actions.HasFlag(GridControlAllowActions.Delete))
             {
-                <FluentButton Class="polhem-grid__button polhem-grid__button--delete" Title="@Text(PolhemUIText.Delete)" Disabled="@(!HasData)" OnClick="DeleteSelectedRow">✕</FluentButton>
+                <FluentButton Class="polhem-grid__button polhem-grid__button--delete" Appearance="ButtonAppearance.Transparent" Size="ButtonSize.Small" IconOnly="true" IconStart="PolhemIcons.Delete" Title="@Text(PolhemUIText.Delete)" Disabled="@(!HasData)" OnClick="DeleteSelectedRow" />
             }
         </div>
     }
