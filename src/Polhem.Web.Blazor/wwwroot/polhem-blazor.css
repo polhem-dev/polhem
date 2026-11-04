@@ -19,10 +19,10 @@
 .polhem-form-layout__label { display: block; margin-bottom: 2px; font-size: 13px; }
 .polhem-related-record-dialog__toolbar { margin-bottom: 8px; }
 .polhem-related-record-dialog__notice { margin-bottom: 8px; }
-/* Fluent UI's stylesheet sets `overflow: hidden` on body for its own layout, which brings a scrolling area of its own.
-   The shell has none, so a page taller than the window could not be scrolled, and a phone never reached the cards that
-   load the next page. The rule is here, not in the Fluent package, because Fluent UI's script adds that stylesheet to
-   every Blazor app of a host that references the package: a MudBlazor site in the same process locked up as well. */
+/* The shell has no scrolling area of its own: its page scrolls with the window, whatever a framework's reset says about
+   body. Without this a page taller than the window could not be scrolled, and a phone never reached the cards that
+   load the next page. A reset can reach a page of another UI package too: Fluent UI's script adds its own, which hides
+   body's overflow, to every Blazor app of a host that references the package. */
 body:has(.polhem-shell) { overflow: auto; }
 .polhem-shell-signin-page { display: flex; justify-content: center; padding: 48px 16px; }
 .polhem-shell-signin { width: 100%; max-width: 360px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px; }
