@@ -8,8 +8,9 @@ One control demo center per UI framework. Each runs without a backend or sign-in
 |---------|------------|--------|
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) | `Polhem.UI.Avalonia` | `dotnet run --project samples/Avalonia.DemoCenter` |
 | [`Blazor.Mud.DemoCenter`](Blazor.Mud.DemoCenter/README.md) | `Polhem.Web.Blazor.Mud` | `dotnet run --project samples/Blazor.Mud.DemoCenter` → <http://localhost:5055> |
+| [`Blazor.Fluent.DemoCenter`](Blazor.Fluent.DemoCenter/README.md) | `Polhem.Web.Blazor.Fluent` | `dotnet run --project samples/Blazor.Fluent.DemoCenter` → <http://localhost:5056> |
 
-Which cases differ, and which have no counterpart, is in the [Blazor demo center's README](Blazor.Mud.DemoCenter/README.md#topics-and-cases).
+Which cases differ, and which have no counterpart, is in the README of each Blazor demo center: [MudBlazor](Blazor.Mud.DemoCenter/README.md#topics-and-cases), [Fluent UI](Blazor.Fluent.DemoCenter/README.md#topics-and-cases).
 
 For a complete application with a backend, sign-in and a database, see [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md). To build a backend from an empty folder, see [Getting Started](../docs/en/getting-started/getting-started.md).
 

@@ -1,0 +1,30 @@
+body { margin: 0; background: var(--colorNeutralBackground2); color: var(--colorNeutralForeground1); font-family: var(--fontFamilyBase); }
+.demo-shell { display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: 0 minmax(0, 1fr); height: 100vh; }
+.demo-shell--nav-open { grid-template-columns: 300px minmax(0, 1fr); }
+.demo-header {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 4px 12px;
+    background: var(--colorNeutralBackground1); border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+.demo-nav { grid-row: 2; grid-column: 1; overflow: auto; background: var(--colorNeutralBackground1); border-right: 1px solid var(--colorNeutralStroke2); }
+.demo-shell:not(.demo-shell--nav-open) .demo-nav { display: none; }
+.demo-main { grid-row: 2; grid-column: 2; overflow: auto; padding: 16px; }
+.demo-spacer { flex: 1; }
+.demo-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.demo-note { opacity: 0.75; }
+.demo-tabs { margin-top: 12px; }
+.demo-tab-panel { padding: 12px 0; }
+.demo-stack { display: flex; flex-direction: column; gap: 16px; }
+.demo-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.demo-button-group { display: inline-flex; gap: 4px; }
+.demo-section {
+    display: flex; flex-direction: column; gap: 8px; padding: 12px;
+    background: var(--colorNeutralBackground1); border: 1px solid var(--colorNeutralStroke1); border-radius: 4px;
+}
+.demo-row { display: grid; grid-template-columns: 160px minmax(0, 420px); align-items: center; gap: 12px; }
+.demo-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.demo-live, .demo-source { font-family: Menlo, Consolas, monospace; font-size: 12px; white-space: pre; overflow-x: auto; margin: 0; }
+@media (max-width: 599.98px) {
+    .demo-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .demo-shell--nav-open { grid-template-columns: minmax(0, 1fr) 0; }
+    .demo-shell--nav-open .demo-main { display: none; }
+}

@@ -1,0 +1,139 @@
+@using Polhem.UI.Core.Permissions
+
+<div class="demo-columns" style="grid-template-columns:minmax(260px,1fr) minmax(0,2fr)">
+    <DemoSection Title="Simulated grants (capability snapshot)">
+        <FluentCheckbox @bind-Value="_active" @bind-Value:after="Refresh" Label="Enable capability (otherwise the snapshot is null → everything allowed)" />
+        @foreach (var model in _grants)
+        {
+            <FluentText Size="TextSize.Size300" Weight="TextWeight.Semibold">@model.Title</FluentText>
+            <div class="demo-toolbar">
+                @foreach (var grant in model.Grants)
+                {
+                    <FluentCheckbox @bind-Value="grant.IsOn" @bind-Value:after="Refresh" Label="@grant.Action.ToString()" />
+                }
+            </div>
+        }
+    </DemoSection>
+    <div class="demo-stack">
+        <DemoSection Title="Master PO001 (PermissionModelId = PurchaseOrder)">
+            <div class="demo-toolbar">
+                @foreach (var (text, action) in s_commands)
+                {
+                    @if (ElementCapabilityResolver.Default.Can(_schema, action, _snapshot))
+                    {
+                        <FluentButton Size="ButtonSize.Small">@text</FluentButton>
+                    }
+                }
+            </div>
+            <FormScope DataObject="_data">
+                @foreach (var (field, caption) in s_masterFields)
+                {
+                    var capability = ElementCapabilityResolver.Default.ResolveField(_schema, field, MasterTable, _snapshot);
+                    @if (capability.Visible)
+                    {
+                        <LabeledRow Label="@caption">
+                            <TextEdit LayoutField="@(new LayoutField { FieldName = field, ReadOnly = capability.ReadOnly })" />
+                        </LabeledRow>
+                    }
+                }
+            </FormScope>
+        </DemoSection>
+        <DemoSection Title="Detail PO001_Item (GridControl, Unit price column = Cost)">
+            <GridControl DataObject="_data" Layout="_detail" />
+        </DemoSection>
+    </div>
+</div>
+
+@code {
+    private const string FormModel = "PurchaseOrder";
+    private const string CostModel = "Cost";
+    private const string PiiModel = "PersonalData";
+    private const string MasterTable = "PO001";
+    private const string DetailTable = "PO001_Item";
+
+    private static readonly (string Text, PermissionActions Action)[] s_commands =
+    [
+        ("New", PermissionActions.Create),
+        ("Save", PermissionActions.Create | PermissionActions.Update),
+        ("Delete", PermissionActions.Delete),
+        ("View", PermissionActions.Read),
+    ];
+    private static readonly (string Field, string Caption)[] s_masterFields =
+    [
+        ("sys_id", "Order No."),
+        ("vendor", "Vendor"),
+        ("handler_id", "Handler ID number"),
+    ];
+
+    private readonly FormSchema _schema = BuildSchema();
+    private readonly FormDataObject _data;
+    private readonly ModelGrants[] _grants =
+    [
+        new(FormModel, "Purchase Order model (PurchaseOrder) — drives the toolbar commands",
+            PermissionActions.Create, PermissionActions.Read, PermissionActions.Update, PermissionActions.Delete),
+        new(PiiModel, "Personal data category (PersonalData) — drives the master ID number field",
+            PermissionActions.Read, PermissionActions.Update),
+        new(CostModel, "Cost category (Cost) — drives the detail Unit price column",
+            PermissionActions.Read, PermissionActions.Update),
+    ];
+    private bool _active = true;
+    private IReadOnlyDictionary<string, PermissionActions>? _snapshot;
+    private LayoutGrid _detail = default!;
+
+    public PermissionCapabilityModule()
+    {
+        _data = new FormDataObject(_schema);
+        _data.InitializeNewMaster();
+        _data.SetField("sys_id", "PO-2026-001");
+        _data.SetField("vendor", "Acer Inc.");
+        _data.SetField("handler_id", "A123456789");
+        var items = _data.DataSet.Tables[DetailTable]!;
+        items.Rows.Add("Screw M4", 100, 3.5m);
+        items.Rows.Add("Washer 8mm", 50, 1.2m);
+        Refresh();
+    }
+
+    // A null snapshot means the capability is inactive, which allows everything. In an application the snapshot
+    // comes from the server, and the backend stays authoritative.
+    private void Refresh()
+    {
+        _snapshot = _active ? _grants.ToDictionary(model => model.ModelId, model => model.Mask, StringComparer.Ordinal) : null;
+
+        // A fresh layout each time, because the applier only narrows: re-granting must show the column again.
+        var layout = new LayoutGrid(DetailTable, "Items");
+        layout.Columns!.Add(new LayoutColumn("item_name", "Item", ControlType.TextEdit));
+        layout.Columns.Add(new LayoutColumn("qty", "Quantity", ControlType.TextEdit));
+        layout.Columns.Add(new LayoutColumn("unit_cost", "Unit price", ControlType.TextEdit));
+        LayoutCapabilityApplier.ApplyGrid(layout, _schema, _snapshot);
+        _detail = layout;
+    }
+
+    private static FormSchema BuildSchema()
+    {
+        var schema = new FormSchema(MasterTable, "Purchase Order") { PermissionModelId = FormModel };
+        var master = schema.Tables!.Add(MasterTable, "Purchase Order").Fields!;
+        master.Add("sys_id", "Order No.", FieldDbType.String);
+        master.Add("vendor", "Vendor", FieldDbType.String);
+        master.Add("handler_id", "Handler ID number", FieldDbType.String).SensitiveCategory = SensitiveCategory.PersonalData;
+        var detail = schema.Tables.Add(DetailTable, "Items").Fields!;
+        detail.Add("item_name", "Item", FieldDbType.String);
+        detail.Add("qty", "Quantity", FieldDbType.Integer);
+        detail.Add("unit_cost", "Unit price", FieldDbType.Decimal).SensitiveCategory = SensitiveCategory.Cost;
+        return schema;
+    }
+
+    private sealed class Grant(PermissionActions action)
+    {
+        public PermissionActions Action { get; } = action;
+        public bool IsOn { get; set; } = true;
+    }
+
+    private sealed class ModelGrants(string modelId, string title, params PermissionActions[] actions)
+    {
+        public string ModelId { get; } = modelId;
+        public string Title { get; } = title;
+        public Grant[] Grants { get; } = actions.Select(action => new Grant(action)).ToArray();
+        public PermissionActions Mask => Grants.Where(grant => grant.IsOn)
+            .Aggregate(PermissionActions.None, (mask, grant) => mask | grant.Action);
+    }
+}

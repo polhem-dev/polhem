@@ -1,0 +1,12 @@
+<div class="demo-row">
+    <FluentText Size="TextSize.Size300" Class="demo-note">@Label</FluentText>
+    <div>@ChildContent</div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

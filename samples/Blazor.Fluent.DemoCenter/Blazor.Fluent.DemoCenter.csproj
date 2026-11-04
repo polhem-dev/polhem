@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Blazor.Fluent.DemoCenter</RootNamespace>
+    <AssemblyName>Blazor.Fluent.DemoCenter</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Fluent\Polhem.Web.Blazor.Fluent.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Polhem.Definition.Collections" />
+  </ItemGroup>
+
+  <!-- Embed each case's own .razor so the Source tab reads the real, current source. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Modules\**\*.razor" />
+  </ItemGroup>
+
+</Project>

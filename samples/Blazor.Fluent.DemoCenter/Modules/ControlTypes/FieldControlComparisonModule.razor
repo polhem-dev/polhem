@@ -1,0 +1,107 @@
+@* The left column is Fluent UI alone; the right column is the Polhem editor that wraps it. *@
+<FormScope DataObject="_data">
+    <div class="demo-stack">
+        <DemoSection Title="TextEdit ← FluentTextInput">
+            <div class="demo-columns">
+                <FluentTextInput Value="@("Alice Chen")" Label="Native" Width="100%" />
+                <FluentTextInput Value="@("Alice Chen")" Label="Native, read-only" ReadOnly="true" Width="100%" />
+                <TextEdit FieldName="emp_name" />
+                <TextEdit LayoutField="ReadOnly(_empName)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="MemoEdit ← FluentTextArea">
+            <div class="demo-columns">
+                <FluentTextArea Value="@("Multi-line memo content.")" Label="Native" Width="100%" />
+                <FluentTextArea Value="@("Multi-line memo content.")" Label="Native, read-only" ReadOnly="true" Width="100%" />
+                <MemoEdit FieldName="notes" />
+                <MemoEdit LayoutField="ReadOnly(_notes)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="ButtonEdit ← FluentTextInput (EndTemplate button)">
+            <div class="demo-columns">
+                <FluentTextInput Value="@("EMP-001")" Label="Native" Width="100%">
+                    <EndTemplate><FluentButton Appearance="ButtonAppearance.Transparent" Size="ButtonSize.Small" Title="Search">…</FluentButton></EndTemplate>
+                </FluentTextInput>
+                <FluentTextInput Value="@("EMP-001")" Label="Native, read-only" ReadOnly="true" Width="100%" />
+                <ButtonEdit FieldName="emp_code" />
+                <ButtonEdit LayoutField="ReadOnly(_empCode)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="DateEdit ← FluentDatePicker">
+            <div class="demo-columns">
+                <FluentDatePicker TValue="DateTime?" Value="s_date" Label="Native" Width="100%" />
+                <FluentDatePicker TValue="DateTime?" Value="s_date" Label="Native, read-only" ReadOnly="true" Width="100%" />
+                <DateEdit FieldName="hire_date" />
+                <DateEdit LayoutField="ReadOnly(_hireDate)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="YearMonthEdit ← FluentDatePicker (month view)">
+            <div class="demo-columns">
+                <FluentDatePicker TValue="DateTime?" Value="s_date" Label="Native" View="CalendarViews.Months" Width="100%" />
+                <FluentDatePicker TValue="DateTime?" Value="s_date" Label="Native, read-only" View="CalendarViews.Months" ReadOnly="true" Width="100%" />
+                <YearMonthEdit FieldName="pay_month" />
+                <YearMonthEdit LayoutField="ReadOnly(_payMonth)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="DropDownEdit ← FluentSelect">
+            <div class="demo-columns">
+                <FluentSelect TOption="string" TValue="string" Items="s_departments" Value="@("Information Technology")" Label="Native" Width="100%" />
+                <FluentSelect TOption="string" TValue="string" Items="s_departments" Value="@("Information Technology")" Label="Native, read-only" ReadOnly="true" Width="100%" />
+                <DropDownEdit FieldName="dept_id" />
+                <DropDownEdit LayoutField="ReadOnly(_dept)" />
+            </div>
+        </DemoSection>
+        <DemoSection Title="CheckEdit ← FluentCheckbox">
+            <div class="demo-columns">
+                <FluentCheckbox Value="true" Label="Native" />
+                <FluentCheckbox Value="true" Label="Native, read-only" ReadOnly="true" />
+                <CheckEdit FieldName="is_active" />
+                <CheckEdit LayoutField="ReadOnly(_active)" />
+            </div>
+        </DemoSection>
+    </div>
+</FormScope>
+
+@code {
+    private static readonly string[] s_departments = ["Human Resources", "Information Technology", "Finance"];
+    private static readonly DateTime? s_date = new DateTime(2026, 6, 11, 0, 0, 0, DateTimeKind.Unspecified);
+
+    private readonly LayoutField _empName = new() { FieldName = "emp_name" };
+    private readonly LayoutField _notes = new() { FieldName = "notes" };
+    private readonly LayoutField _empCode = new() { FieldName = "emp_code" };
+    private readonly LayoutField _hireDate = new() { FieldName = "hire_date" };
+    private readonly LayoutField _payMonth = new() { FieldName = "pay_month" };
+    private readonly LayoutField _dept = new() { FieldName = "dept_id" };
+    private readonly LayoutField _active = new() { FieldName = "is_active" };
+    private readonly FormDataObject _data = BuildData();
+
+    private static LayoutField ReadOnly(LayoutField field)
+    {
+        field.ReadOnly = true;
+        return field;
+    }
+
+    private static FormDataObject BuildData()
+    {
+        var schema = new FormSchema("Gallery", "Gallery");
+        var fields = schema.Tables!.Add("Gallery", "Gallery").Fields!;
+        fields.Add("emp_name", "Name", FieldDbType.String).MaxLength = 20;
+        fields.Add("notes", "Notes", FieldDbType.String);
+        fields.Add("emp_code", "Code", FieldDbType.String);
+        fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+        fields.Add("pay_month", "Pay Month", FieldDbType.String).ControlType = ControlType.YearMonthEdit;
+        DataEditorParts.AddDepartment(fields, "dept_id");
+        fields.Add("is_active", "Active", FieldDbType.Boolean);
+
+        var data = new FormDataObject(schema);
+        data.InitializeNewMaster();
+        data.SetField("emp_name", "Alice Chen");
+        data.SetField("notes", "Multi-line memo content.");
+        data.SetField("emp_code", "EMP-001");
+        data.SetField("hire_date", "2026-06-11");
+        data.SetField("pay_month", "2026-06");
+        data.SetField("dept_id", "IT");
+        data.SetField("is_active", bool.TrueString);
+        return data;
+    }
+}

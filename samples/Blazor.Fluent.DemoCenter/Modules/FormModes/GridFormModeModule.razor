@@ -1,0 +1,23 @@
+<div class="demo-stack">
+    @foreach (var (mode, title) in s_sections)
+    {
+        <DemoSection Title="@title">
+            <FormScope DataObject="_data[mode]" FormMode="mode">
+                <GridControl Layout="_phones" />
+            </FormScope>
+        </DemoSection>
+    }
+</div>
+
+@code {
+    private static readonly (SingleFormMode Mode, string Title)[] s_sections =
+    [
+        (SingleFormMode.View, "View (read-only, toolbar hidden)"),
+        (SingleFormMode.Add, "Add (editable, toolbar shown)"),
+        (SingleFormMode.Edit, "Edit (editable, toolbar shown)"),
+    ];
+
+    private readonly LayoutGrid _phones = SampleFormData.BuildPhonesLayout();
+    private readonly Dictionary<SingleFormMode, FormDataObject> _data = s_sections.ToDictionary(
+        section => section.Mode, _ => SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema()));
+}

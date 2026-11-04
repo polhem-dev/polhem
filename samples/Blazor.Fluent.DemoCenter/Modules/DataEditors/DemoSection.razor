@@ -1,0 +1,19 @@
+<div class="demo-section">
+    <FluentText Size="TextSize.Size400" Weight="TextWeight.Semibold">@Title</FluentText>
+    @if (Note is not null)
+    {
+        <FluentText Size="TextSize.Size200" Class="demo-note">@Note</FluentText>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Note { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

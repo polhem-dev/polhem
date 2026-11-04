@@ -3,6 +3,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Blazor/">
+    <Project Path="Blazor.Fluent.DemoCenter/Blazor.Fluent.DemoCenter.csproj" />
     <Project Path="Blazor.Mud.DemoCenter/Blazor.Mud.DemoCenter.csproj" />
   </Folder>
   <Folder Name="/Avalonia/">

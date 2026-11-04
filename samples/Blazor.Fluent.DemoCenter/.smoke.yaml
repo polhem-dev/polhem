@@ -1,0 +1,36 @@
+# Smoke flow consumed by the `demo-smoke` skill.
+# See .claude/skills/demo-smoke/SKILL.md for the schema.
+#
+# The demo center is fully in-memory (no backend), so the only prerequisite is its own web server.
+
+name: Blazor.Fluent.DemoCenter
+display_name: Polhem.Web.Blazor.Fluent Demo Center
+
+prerequisites:
+  - id: web
+    cwd: samples/Blazor.Fluent.DemoCenter
+    cmd: dotnet run --configuration Debug --no-build --no-launch-profile --urls http://localhost:5056
+    ready_when: "Now listening on"
+    timeout_seconds: 30
+
+launch:
+  app_name: Polhem.Web.Blazor.Fluent Demo Center
+  launch_cmd: open http://localhost:5056
+
+flow:
+  - step: take initial screenshot
+    action: screenshot
+    expect_text:
+      - "Demo Center"
+      - "Dark"
+      - "Control Types"
+      - "Data Binding"
+      - "Grid"
+      - "Master-Detail"
+
+  - step: shell screenshot
+    action: screenshot
+    save_as: blazor-mud-democenter-shell.png
+
+teardown:
+  kill_app: true

@@ -1,0 +1,95 @@
+@implements IDisposable
+
+<div class="demo-stack">
+    <div class="demo-toolbar">
+        <div class="demo-button-group">
+            @foreach (var mode in s_detailModes)
+            {
+                <FluentButton Size="ButtonSize.Small" Disabled="@(mode == _detailMode)" OnClick="() => _detailMode = mode">@mode</FluentButton>
+            }
+        </div>
+        <div class="demo-button-group">
+            @foreach (var mode in s_formModes)
+            {
+                <FluentButton Size="ButtonSize.Small" Disabled="@(mode == _formMode)" OnClick="() => _formMode = mode">@mode</FluentButton>
+            }
+        </div>
+    </div>
+    <FormLayoutPresenter Layout="_layout" DataObject="_data" FormMode="_formMode" DetailEditMode="_detailMode"
+                         IsCompact="IsCompact" IdPrefix="order" />
+</div>
+
+@code {
+    private static readonly GridEditMode[] s_detailModes = [GridEditMode.InCell, GridEditMode.EditForm];
+    private static readonly SingleFormMode[] s_formModes = [SingleFormMode.View, SingleFormMode.Add, SingleFormMode.Edit];
+
+    private readonly FormLayout _layout;
+    private readonly FormDataObject _data;
+    private readonly FormLiveComputation _live;
+    private GridEditMode _detailMode = GridEditMode.InCell;
+    private SingleFormMode _formMode = SingleFormMode.Edit;
+
+    [CascadingParameter(Name = "IsCompact")]
+    public bool IsCompact { get; set; }
+
+    public MasterDetailModule()
+    {
+        var schema = BuildSchema();
+        _layout = FormLayoutGenerator.Generate(schema, "default");
+        _data = new FormDataObject(schema);
+        _live = new FormLiveComputation(schema);
+        // The wiring FormPage does: recompute on edits, also inside the edit form's session, and initialize added rows.
+        _data.FieldValueChanged += Recompute;
+        _data.RowEditFieldChanged += Recompute;
+        _data.RowAdded += OnRowAdded;
+        _data.InitializeNewMaster();
+        _data.SetField("order_no", "SO-0001");
+        var lines = _data.DataSet.Tables["OrderLine"]!;
+        foreach (var (item, qty, price) in new[] { ("Bolt", 10m, 0.25m), ("Nut", 20m, 0.1m) })
+        {
+            var line = lines.NewRow();
+            line["item"] = item;
+            line["qty"] = qty;
+            line["price"] = price;
+            lines.Rows.Add(line);
+        }
+    }
+
+    private void Recompute(object? sender, FieldValueChangedEventArgs e)
+    {
+        if (!_live.IsRecomputing)
+            _live.Recompute(e.TableName, e.FieldName, e.Row);
+    }
+
+    private void OnRowAdded(object? sender, RowChangedEventArgs e) => _live.InitializeNewRow(e.TableName, e.Row);
+
+    public void Dispose()
+    {
+        _data.FieldValueChanged -= Recompute;
+        _data.RowEditFieldChanged -= Recompute;
+        _data.RowAdded -= OnRowAdded;
+    }
+
+    private static FormSchema BuildSchema()
+    {
+        var schema = new FormSchema("Order", "Order");
+        var master = schema.Tables!.Add("Order", "Order").Fields!;
+        master.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        master.Add("order_no", "Order No", FieldDbType.String);
+        master.Add("order_date", "Order Date", FieldDbType.Date);
+        var lines = schema.Tables.Add("OrderLine", "Lines").Fields!;
+        lines.Add(new FormField("sys_rowid", "Row", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("sys_master_rowid", "Order", FieldDbType.Guid) { Visible = false });
+        lines.Add(new FormField("item", "Item", FieldDbType.String) { Required = true });
+        lines.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+        lines.Add(new FormField("price", "Price", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice, NumberFormat = "N2" });
+        lines.Add(new FormField("amount", "Amount", FieldDbType.Decimal)
+        {
+            NumberKind = NumberKind.Amount,
+            NumberFormat = "N2",
+            ValueExpression = "qty * price",
+            ReadOnly = true,
+        });
+        return schema;
+    }
+}

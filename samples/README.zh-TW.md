@@ -8,8 +8,9 @@
 |------|---------|------|
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) | `Polhem.UI.Avalonia` | `dotnet run --project samples/Avalonia.DemoCenter` |
 | [`Blazor.Mud.DemoCenter`](Blazor.Mud.DemoCenter/README.zh-TW.md) | `Polhem.Web.Blazor.Mud` | `dotnet run --project samples/Blazor.Mud.DemoCenter` → <http://localhost:5055> |
+| [`Blazor.Fluent.DemoCenter`](Blazor.Fluent.DemoCenter/README.zh-TW.md) | `Polhem.Web.Blazor.Fluent` | `dotnet run --project samples/Blazor.Fluent.DemoCenter` → <http://localhost:5056> |
 
-哪些案例有差異、哪些沒有對應，見 [Blazor DemoCenter 的 README](Blazor.Mud.DemoCenter/README.zh-TW.md#主題與案例)。
+哪些案例有差異、哪些沒有對應，見各 Blazor DemoCenter 的 README：[MudBlazor](Blazor.Mud.DemoCenter/README.zh-TW.md#主題與案例)、[Fluent UI](Blazor.Fluent.DemoCenter/README.zh-TW.md#主題與案例)。
 
 含後端、登入和資料庫的完整應用見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)。從空資料夾建立後端見 [Getting Started](../docs/zh-TW/getting-started/getting-started.md)。
 
