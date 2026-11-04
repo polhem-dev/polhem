@@ -11,6 +11,17 @@ namespace Polhem.Web.Blazor.BrowserTests
     public abstract class GridEditingSafetyTests
     {
         private const string Initial = "Bolt|1;Nut|2";
+        private const string EditorModule = "polhem-grid-editor.js";
+
+        // Holds the editor back after it rendered, the moment a busy server stretches: the text is gone, so the focus is
+        // on the body, and script has not focused the editor yet.
+        private const string LateFocus = """
+
+            export async function focusEditor(...args) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return focusEditorNow(...args);
+            }
+            """;
         private readonly BrowserSiteFixture _fixture;
 
         /// <summary>
@@ -25,9 +36,19 @@ namespace Polhem.Web.Blazor.BrowserTests
         private static Task WaitForDataAsync(IPage page, string expected)
             => Assertions.Expect(page.Locator("#data")).ToHaveTextAsync(expected);
 
-        private async Task<IPage> OpenAsync(bool slow = false)
+        private async Task<IPage> OpenAsync(bool slow = false, bool lateFocus = false)
         {
             var page = await _fixture.Browser.NewPageAsync().ConfigureAwait(false);
+            if (lateFocus)
+            {
+                await page.RouteAsync(url => url.Contains(EditorModule, StringComparison.Ordinal), async route =>
+                {
+                    var response = await route.FetchAsync().ConfigureAwait(false);
+                    string script = (await response.TextAsync().ConfigureAwait(false))
+                        .Replace("export async function focusEditor(", "async function focusEditorNow(", StringComparison.Ordinal);
+                    await route.FulfillAsync(new RouteFulfillOptions { Response = response, Body = script + LateFocus }).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+            }
             await page.GotoAsync(slow ? _fixture.SlowAddress : _fixture.Address).ConfigureAwait(false);
             await Assertions.Expect(Cell(page, 0, 0)).ToHaveTextAsync("Bolt").ConfigureAwait(false);
             // The module holding keys loads with the first cell, after the circuit connects.
@@ -116,6 +137,39 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Cell(page, 0, 0).ClickAsync();
 
             var input = page.Locator(".polhem-grid-cell__editor input");
+            await Assertions.Expect(input).ToHaveValueAsync("Washer");
+            await Assertions.Expect(input).ToBeFocusedAsync();
+            await WaitForDataAsync(page, Initial);
+        }
+
+        [BrowserFact]
+        [DisplayName("A click outside the grid after the editor rendered and before it took the focus still writes the text")]
+        public async Task LateFocus_TypeThenClickOutside_WritesTheText()
+        {
+            var page = await OpenAsync(lateFocus: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            await page.Locator(".polhem-grid-cell__editor").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Locator("#outside").ClickAsync();
+
+            await WaitForDataAsync(page, "Washer|1;Nut|2");
+            await Assertions.Expect(page.Locator("#outside")).ToBeFocusedAsync();
+        }
+
+        [BrowserFact]
+        [DisplayName("A click on the same cell after the editor rendered and before it took the focus stays in the cell")]
+        public async Task LateFocus_TypeThenClickSameCell_StaysInTheEditor()
+        {
+            var page = await OpenAsync(lateFocus: true);
+
+            await Cell(page, 0, 0).ClickAsync();
+            var editor = page.Locator(".polhem-grid-cell__editor");
+            await editor.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await page.Keyboard.TypeAsync("Washer");
+            await editor.ClickAsync();
+
+            var input = editor.Locator("input");
             await Assertions.Expect(input).ToHaveValueAsync("Washer");
             await Assertions.Expect(input).ToBeFocusedAsync();
             await WaitForDataAsync(page, Initial);
