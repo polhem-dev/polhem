@@ -13,7 +13,7 @@ tr.polhem-grid__row--selected, td.polhem-grid__row--selected { background: var(-
 /* A read-only input keeps only its bottom line, as in the Avalonia controls, so a record viewed read-only does not look
    editable. The text area has no underline appearance, so the frame is set on the `root` part of both. */
 fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) { border-color: transparent; border-bottom-color: var(--colorNeutralStroke1); border-radius: 0; background: transparent; }
-/* Columns keep their layout width, so a narrow screen scrolls the grid and not the whole page. A horizontal `auto` turns
+/* Columns keep at least their layout width, so a narrow screen scrolls the grid and not the whole page. A horizontal `auto` turns
    the vertical overflow to `auto` as well, and the grid's height comes out fractional, so the half pixel its rounded
    scroll height adds showed a scrollbar over rows that fit. The grid's height follows its rows and its popups open in the
    top layer, so there is nothing to scroll vertically. */
