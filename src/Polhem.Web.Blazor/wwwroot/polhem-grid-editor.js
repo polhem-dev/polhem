@@ -9,6 +9,9 @@ let queue = [];
 let openingSince = 0;
 // The cell Escape returned the focus to: it rests until a key opens it.
 let restingCell = null;
+// What holds the cell being opened. The render that brings the editor removes the text, so until script focuses the
+// editor the focus is on the body, and only this still tells a click on that cell from a click elsewhere.
+let openingSlot = null;
 
 function isOpening() {
     if (openingSince === 0) return false;
@@ -28,6 +31,7 @@ document.addEventListener('focusin', event => {
         restingCell = null;
     } else {
         openingSince = Date.now();
+        openingSlot = event.target.parentElement;
     }
 }, true);
 
@@ -41,6 +45,7 @@ document.addEventListener('keydown', event => {
         if (isResting) {
             // The focus opens a cell, except the one Escape just returned it to. The second focus event opens that one.
             openingSince = Date.now();
+            openingSlot = active.parentElement;
             active.dispatchEvent(new FocusEvent('focus'));
         }
     } else if (event.key === 'Tab' && isOpening()) {
@@ -59,7 +64,7 @@ document.addEventListener('mousedown', event => {
     if (queue.length === 0) return;
     event.preventDefault();
     event.stopPropagation();
-    if (event.button !== 0 || document.activeElement.contains(event.target)) return;
+    if (event.button !== 0 || isOnOpeningCell(event.target)) return;
     queue = queue.filter(item => !item.click);
     queue.push({ click: true, target: event.target, clickTarget: null });
 }, true);
@@ -74,6 +79,15 @@ document.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
 }, true);
+
+// WARNING: the focused element alone is not enough. Between the render and the call that focuses the editor the focus is
+// on the body, which contains everything, so a click elsewhere was stopped and never replayed: the editor kept the text
+// and the value was not written. `LateFocus_TypeThenClickOutside_WritesTheText` holds that moment open.
+function isOnOpeningCell(target) {
+    const active = document.activeElement;
+    if (active && active !== document.body && active.contains(target)) return true;
+    return !!openingSlot && openingSlot.isConnected && openingSlot.contains(target);
+}
 
 function followClick(pending) {
     const target = pending.target.closest(FOCUSABLE);
