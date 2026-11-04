@@ -12,46 +12,65 @@ authority.)
 
 ## Overview
 
-Each box is an area, and its name lists the projects with `Polhem.` left out.
+Each inner box is an area, and its name lists the projects with `Polhem.` left out. The areas are grouped into
+three sides: **Shared**, which both sides reference, the **Server side**, and the **Client side**.
 
 <!-- dependency-map:overview:start -->
 ```mermaid
 graph BT
-  Foundation["<b>Foundation</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
-  Backend["<b>Data and business logic</b><br/>Db, Repository,<br/>Repository.Abstractions,<br/>Business, ObjectCaching"]
-  Wire["<b>Communication</b><br/>Api.Core, Api.Server,<br/>Api.Client"]
-  Composition["<b>Composition root</b><br/>Hosting"]
-  FrontShared["<b>Shared front end</b><br/>UI.Core, UI.ApiBridge"]
-  Avalonia["<b>Avalonia front end</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
-  Web["<b>Web front end</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
+  subgraph SharedSide ["Shared"]
+    Foundation["<b>Foundation</b><br/>Core, Definition,<br/>Api.Contracts, Expressions"]
+    Wire["<b>Wire</b><br/>Api.Core"]
+  end
+  subgraph ServerSide ["Server side"]
+    Backend["<b>Data and business logic</b><br/>Db, Repository,<br/>Repository.Abstractions,<br/>Business, ObjectCaching"]
+    ApiServer["<b>API server</b><br/>Api.Server"]
+    Composition["<b>Composition root</b><br/>Hosting"]
+  end
+  subgraph ClientSide ["Client side"]
+    ApiClient["<b>API client</b><br/>Api.Client"]
+    FrontShared["<b>Shared front end</b><br/>UI.Core, UI.ApiBridge"]
+    Avalonia["<b>Avalonia front end</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
+    Web["<b>Web front end</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
+  end
 
-  Backend --> Foundation
   Wire --> Foundation
+  Backend --> Foundation
+  ApiServer --> Wire
   Composition --> Foundation
   Composition --> Backend
-  Composition --> Wire
+  Composition --> ApiServer
+  ApiClient --> Wire
   FrontShared --> Foundation
-  FrontShared --> Wire
+  FrontShared --> ApiClient
   Avalonia --> Foundation
   Avalonia --> FrontShared
   Web --> Foundation
   Web --> FrontShared
-  Web --> Wire
+  Web --> ApiClient
 ```
 <!-- dependency-map:overview:end -->
 
-- The front ends and the back end meet only in **Foundation** and **Communication**.
-- **Polhem.Hosting** assembles the back end.
+- The server side and the client side meet only in **Shared**: no project of one side references a project of the
+  other. A reference that did would appear here as an edge between the two sides, because `./check-dependency-map.sh`
+  keeps the overview's edges equal to the references in the csproj files.
+- **Polhem.Hosting** assembles the server side.
 - Both front ends stand on **Shared front end**.
+
+**Which side a project is on is decided by its role, not by the process it runs in.** The server side serves the API;
+the client side calls it or presents its data. `Polhem.Web.Blazor.Server` runs on a web server, yet it is on the client
+side: it renders the UI and reaches the backend as an API client, even when the backend runs in the same process. A project that both sides reference is shared. The `src/` folder stays flat: the package prefixes
+(`Polhem.UI.*`, `Polhem.Web.*`, `Polhem.Api.Server`) already name the family, and a folder could not show a shared
+project such as `Polhem.Expressions`.
 
 ## Projects by area
 
-One diagram per area. A solid box belongs to the area, and a dashed box is a project of another area that it depends on. Together these diagrams are every project reference in `src/`. `./check-dependency-map.sh` compares them, and the overview, with the csproj files on every push.
+One diagram per area, listed by side: shared, server side, client side. A solid box belongs to the area, and a dashed box is a project of another area that it depends on. Together these diagrams are every project reference in `src/`. `./check-dependency-map.sh` compares them, and the overview, with the csproj files on every push.
 
 <!-- dependency-map:areas:start -->
 ### Foundation
 
-Both the front end and the back end stand on these. `Polhem.Core` is the bottom of the graph.
+Shared: both sides stand on these. `Polhem.Core` is the bottom of the graph.
 
 ```mermaid
 graph BT
@@ -67,9 +86,28 @@ graph BT
   Contracts --> Definition
 ```
 
+### Wire
+
+Shared. The messages, codecs, compression, encryption and error contract that both ends of a call use. It holds none
+of the server side.
+
+```mermaid
+graph BT
+  subgraph Wire ["Wire"]
+    Core["Polhem.Api.Core"]
+  end
+  Definition["Polhem.Definition"]:::other
+  Contracts["Polhem.Api.Contracts"]:::other
+
+  Core --> Contracts
+  Core --> Definition
+
+  classDef other stroke-dasharray: 5 4
+```
+
 ### Data and business logic
 
-Server-side only. `Polhem.Business` reaches data through `Polhem.Repository.Abstractions`, never through `Polhem.Db`.
+Server side. `Polhem.Business` reaches data through `Polhem.Repository.Abstractions`, never through `Polhem.Db`.
 
 ```mermaid
 graph BT
@@ -95,31 +133,25 @@ graph BT
   classDef other stroke-dasharray: 5 4
 ```
 
-### Communication
+### API server
 
-The wire layer and its two ends. `Polhem.Api.Client` never reaches `Polhem.Api.Server`: they share only `Polhem.Api.Core`.
+Server side. The dispatcher, the access and payload filters, and the exception mapping.
 
 ```mermaid
 graph BT
-  subgraph Wire ["Communication"]
-    Core["Polhem.Api.Core"]
+  subgraph ApiServer ["API server"]
     Server["Polhem.Api.Server"]
-    Client["Polhem.Api.Client"]
   end
-  Definition["Polhem.Definition"]:::other
-  Contracts["Polhem.Api.Contracts"]:::other
+  Core["Polhem.Api.Core"]:::other
 
-  Core --> Contracts
-  Core --> Definition
   Server --> Core
-  Client --> Core
 
   classDef other stroke-dasharray: 5 4
 ```
 
 ### Composition root
 
-`Polhem.Hosting` puts the back end together, so it references the server-side projects directly.
+Server side. `Polhem.Hosting` puts the server side together, so it references its projects directly.
 
 ```mermaid
 graph BT
@@ -143,9 +175,25 @@ graph BT
   classDef other stroke-dasharray: 5 4
 ```
 
+### API client
+
+Client side. It never reaches `Polhem.Api.Server`: the two ends share only `Polhem.Api.Core`.
+
+```mermaid
+graph BT
+  subgraph ApiClient ["API client"]
+    Client["Polhem.Api.Client"]
+  end
+  Core["Polhem.Api.Core"]:::other
+
+  Client --> Core
+
+  classDef other stroke-dasharray: 5 4
+```
+
 ### Shared front end
 
-`Polhem.UI.Core` carries no transport. `Polhem.UI.ApiBridge` joins it to the client for the Avalonia front end.
+Client side. `Polhem.UI.Core` carries no transport. `Polhem.UI.ApiBridge` joins it to the client for the Avalonia front end.
 
 ```mermaid
 graph BT
@@ -165,7 +213,7 @@ graph BT
 
 ### Avalonia front end
 
-`Polhem.UI.Avalonia` holds the controls and has no transport. `Polhem.UI.Avalonia.Shell` adds the ready-made application around them.
+Client side. `Polhem.UI.Avalonia` holds the controls and has no transport. `Polhem.UI.Avalonia.Shell` adds the ready-made application around them.
 
 ```mermaid
 graph BT
@@ -189,7 +237,7 @@ graph BT
 
 ### Web front end
 
-The shared layer, one package per UI framework, and one package per host. A UI package and a host package do not reference each other.
+Client side. The shared layer, one package per UI framework, and one package per host. A UI package and a host package do not reference each other.
 
 ```mermaid
 graph BT
@@ -268,8 +316,8 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` globa
 - **Polhem.Core** is the lowest-level foundation package with no internal dependencies.
 - **Polhem.Expressions** holds `DynamicExpressoEvaluator`, the DynamicExpresso-backed implementation of the expression engine. The *abstraction* — `IExpressionEvaluator`, `ExpressionPolicy`, `ExpressionEvaluationException` — lives in `Polhem.Core.Expressions`, so `Polhem.Definition` (the `FormExpressionCalculator`) and `Polhem.Business` (the rule processor) consume the engine without taking a dependency on DynamicExpresso; only the composition roots that pick an implementation (`Polhem.Hosting` for DI registration, `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` for client-side live preview) reference this package; the live preview engine they share, `FormLiveComputationEngine` in `Polhem.UI.Core`, takes the evaluator from them. That split keeps the definition layer free of third-party packages while a field computed on the client still matches what the server writes on save. See [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) and [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md).
 - **Polhem.Definition** is the most depended-on project. Its direct dependents are Contracts, Db, RepoAbs, Caching, Business, Api.Core and UI.Avalonia.
-- **Polhem.Api.Contracts** is a shared contract/abstraction layer, not an application-level API project. Despite the "API" name, both `Polhem.Business` and `Polhem.Api.Core` depend on it (`Business → Contracts`, `Core → Contracts`), so it sits *below* them — the diagram groups it under **Shared Contracts** rather than the API application layer.
-- **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Server`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It is shown in its own **Composition Root** group rather than under API: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
+- **Polhem.Api.Contracts** is a shared contract/abstraction layer, not an application-level API project. Despite the "API" name, both `Polhem.Business` and `Polhem.Api.Core` depend on it (`Business → Contracts`, `Core → Contracts`), so it sits *below* them — the diagram puts it in **Foundation** rather than with the API projects.
+- **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Server`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It has its own **Composition root** area rather than sharing one with `Polhem.Api.Server`: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
 - **The JSON-RPC protocol** comes from the `Polhem.JsonRpc.*` packages, which know nothing about Polhem: `Polhem.Api.Server` builds on `Polhem.JsonRpc.Server`, `Polhem.Api.Client` on `Polhem.JsonRpc.Client` (through `Polhem.JsonRpc.Payload.Client`, whose `PayloadConnector` seals each call), and an ASP.NET Core host adds `Polhem.JsonRpc.AspNetCore` for the `POST /api` endpoint. The dependency only goes that way. See [ADR-049](../../../maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
 - **Polhem.Api.Core** is the wire layer both ends share: the request and response messages, the payload codecs, compression and encryption, and the error contract, so the client (`Polhem.Api.Client`) and the server serialize and encrypt the same way. It holds none of the server side, and `POLHEM9001` keeps it that way. **Polhem.Api.Server** holds the server side: the dispatcher setup, the access and payload filters, API key and authorization checks, and the exception mapping. An in-process client reaches the dispatcher through `IInProcessTransportFactory`, which `AddPolhemFramework` registers, so `Polhem.Api.Client` carries no server package. `Polhem.Api.Server` reads internals of `Polhem.Api.Core` and depends on it at the exact same version. See [adr-055](../../../maintainers/adr/adr-055-api-core-split-from-server.md).
 - **Front end and back end share three foundation assemblies**: `Polhem.Core`, `Polhem.Definition` and `Polhem.Api.Contracts`. They hold nothing that belongs to one side only, and a front end reaches the backend only through the contracts in `Polhem.Api.Contracts` (for forms, `IFormApiConnector` and `IFormApiConnectorFactory`); the transport (`Polhem.Api.Core`, `Polhem.Api.Client`) is not part of a front end's dependency closure. See [adr-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
