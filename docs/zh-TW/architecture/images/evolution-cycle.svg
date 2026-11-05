@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 352" width="960" height="352" role="img" aria-labelledby="title desc">
+  <title id="title">NoCode、LowCode、AnyCode 演進循環</title>
+  <desc id="desc">開發由 NoCode（定義化實現）進到 LowCode（事件與條件擴充），再到 AnyCode（進階邏輯），每一步自由度都更高。接著透過架構回饋，把 AnyCode 中發現的通用模式沉澱回 FormSchema 或 BO 基類，循環回到 NoCode。</desc>
+  <defs>
+    <style>
+      .card { fill: #ffffff; stroke: #d0d7de; }
+      .step { font: 600 10px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.06em; }
+      .name { font: 600 16px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+      .title { font: 600 13px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+      .sub { font: 400 12px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #57606a; }
+      .axis { font: 600 11px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.06em; fill: #57606a; }
+      .axis-line { stroke: #8c959f; stroke-width: 1.5; fill: none; }
+      .axis-head { fill: #8c959f; }
+      .flow { stroke: #6b7280; stroke-width: 1.5; fill: none; }
+      .flow-head { fill: #6b7280; }
+      .feedback { stroke: #6e4fd1; stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+      .feedback-head { fill: #6e4fd1; }
+      .feedback-box { fill: #faf8ff; stroke: #6e4fd1; stroke-dasharray: 5 4; }
+      .feedback-title { font: 600 13px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #6e4fd1; }
+      .divider { stroke: #d0d7de; }
+
+      .nocode .band { fill: #e9f6f2; } .nocode .accent { fill: #13896f; } .nocode .step { fill: #13896f; }
+      .lowcode .band { fill: #eef4ff; } .lowcode .accent { fill: #3b6fd8; } .lowcode .step { fill: #3b6fd8; }
+      .anycode .band { fill: #f3efff; } .anycode .accent { fill: #6e4fd1; } .anycode .step { fill: #6e4fd1; }
+    </style>
+    <marker id="flow-head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="flow-head" d="M0,0 L8,4 L0,8 z"/>
+    </marker>
+    <marker id="feedback-head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="feedback-head" d="M0,0 L8,4 L0,8 z"/>
+    </marker>
+    <marker id="axis-head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="axis-head" d="M0,0 L8,4 L0,8 z"/>
+    </marker>
+  </defs>
+
+  <rect class="card" x="0.5" y="0.5" width="959" height="351" rx="14"/>
+
+  <!-- Flexibility axis -->
+  <text class="axis" x="40" y="42">自由度</text>
+  <line class="axis-line" x1="96" y1="38" x2="918" y2="38" marker-end="url(#axis-head)"/>
+
+  <!-- NoCode -->
+  <g class="nocode">
+    <rect class="band" x="40" y="64" width="256" height="136" rx="10"/>
+    <rect class="accent" x="40" y="64" width="256" height="5" rx="2"/>
+    <text class="step" x="60" y="92">1 · 中</text>
+    <text class="name" x="60" y="115">NoCode</text>
+    <text class="title" x="60" y="136">定義化實現</text>
+    <line class="divider" x1="60" y1="150" x2="276" y2="150"/>
+    <text class="sub" x="60" y="170">FormSchema 於設計階段產生</text>
+    <text class="sub" x="60" y="186">FormLayout + TableSchema</text>
+  </g>
+
+  <!-- LowCode -->
+  <g class="lowcode">
+    <rect class="band" x="352" y="64" width="256" height="136" rx="10"/>
+    <rect class="accent" x="352" y="64" width="256" height="5" rx="2"/>
+    <text class="step" x="372" y="92">2 · 高</text>
+    <text class="name" x="372" y="115">LowCode</text>
+    <text class="title" x="372" y="136">事件 / 條件擴充</text>
+    <line class="divider" x1="372" y1="150" x2="588" y2="150"/>
+    <text class="sub" x="372" y="170">以事件、條件、規則</text>
+    <text class="sub" x="372" y="186">擴充 BO</text>
+  </g>
+
+  <!-- AnyCode -->
+  <g class="anycode">
+    <rect class="band" x="664" y="64" width="256" height="136" rx="10"/>
+    <rect class="accent" x="664" y="64" width="256" height="5" rx="2"/>
+    <text class="step" x="684" y="92">3 · 完全</text>
+    <text class="name" x="684" y="115">AnyCode</text>
+    <text class="title" x="684" y="136">進階邏輯</text>
+    <line class="divider" x1="684" y1="150" x2="900" y2="150"/>
+    <text class="sub" x="684" y="170">自訂 UI、BO 方法、</text>
+    <text class="sub" x="684" y="186">AnyCode Repository</text>
+  </g>
+
+  <!-- Forward steps -->
+  <line class="flow" x1="300" y1="132" x2="348" y2="132" marker-end="url(#flow-head)"/>
+  <line class="flow" x1="612" y1="132" x2="660" y2="132" marker-end="url(#flow-head)"/>
+
+  <!-- Architecture feedback: back to the definition layer -->
+  <path class="feedback" d="M792,204 V286 H624"/>
+  <path class="feedback" d="M336,286 H168 V208" marker-end="url(#feedback-head)"/>
+  <rect class="feedback-box" x="336" y="252" width="288" height="68" rx="9"/>
+  <text class="feedback-title" x="480" y="276" text-anchor="middle">架構回饋</text>
+  <text class="sub" x="480" y="296" text-anchor="middle">通用模式沉澱回</text>
+  <text class="sub" x="480" y="311" text-anchor="middle">FormSchema 或 BO 基類</text>
+</svg>
