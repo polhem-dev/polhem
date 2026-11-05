@@ -2,7 +2,10 @@
 # Publishes framework-dependent builds of Polhem.DefineEditor for 4 RIDs.
 # Target machine must have the .NET 10 runtime and the ASP.NET Core 10 runtime
 # installed: the editor hosts the Blazor Server browser preview in process, so
-# the app does not start without the ASP.NET Core runtime. Output:
+# the app does not start without the ASP.NET Core runtime. The web preview
+# inside the editor also uses the system's web engine: the WebView2 Runtime on
+# Windows, WebKitGTK 4.1 on Linux, built in on macOS; without it only that
+# preview is unavailable. Output:
 #   tools/DefineEditor/bin/Release/net10.0/<rid>/publish/
 #
 # Usage:

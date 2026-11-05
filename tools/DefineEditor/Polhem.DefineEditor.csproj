@@ -54,6 +54,9 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- The web preview inside the FormLayout editor. Released with Avalonia itself; it brings no browser engine and uses
+         the system's (WebView2, WKWebView, WPE WebKit or WebKitGTK). -->
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
   </ItemGroup>
 
   <ItemGroup>

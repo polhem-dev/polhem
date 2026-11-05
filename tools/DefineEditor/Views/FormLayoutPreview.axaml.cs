@@ -72,6 +72,7 @@ public partial class FormLayoutPreview : UserControl
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(FormLayoutDocumentViewModel.IsPreviewVisible)
+            or nameof(FormLayoutDocumentViewModel.PreviewEngine)
             or nameof(FormLayoutDocumentViewModel.PreviewFormMode)
             or nameof(FormLayoutDocumentViewModel.IsPreviewCompact)
             or nameof(FormLayoutDocumentViewModel.ShowPreviewFieldNames))
@@ -87,6 +88,15 @@ public partial class FormLayoutPreview : UserControl
         if (_document is not { IsPreviewVisible: true } document)
         {
             LayoutPresenter.Layout = null;
+            return;
+        }
+
+        if (document.IsWebPreview)
+        {
+            // The web page renders from the snapshot published above; the Avalonia controls stay empty meanwhile.
+            LayoutPresenter.Layout = null;
+            ErrorText.IsVisible = false;
+            WebPane.EnsureLoaded(document);
             return;
         }
 

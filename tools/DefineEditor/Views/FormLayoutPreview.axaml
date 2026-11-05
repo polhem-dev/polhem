@@ -3,6 +3,7 @@
              xmlns:vm="using:Polhem.DefineEditor.ViewModels"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
              xmlns:controls="using:Polhem.UI.Avalonia.Controls"
+             xmlns:views="using:Polhem.DefineEditor.Views"
              x:Class="Polhem.DefineEditor.Views.FormLayoutPreview"
              x:DataType="vm:FormLayoutDocumentViewModel"
              x:CompileBindings="True">
@@ -15,6 +16,9 @@
                 <TextBlock DockPanel.Dock="Left" Classes="h2" Text="{loc:Loc Preview_Title}" VerticalAlignment="Center"
                            Margin="0,0,16,0"/>
                 <WrapPanel HorizontalAlignment="Right" ItemSpacing="16" LineSpacing="4">
+                    <CheckBox IsChecked="{Binding IsWebPreview}" Content="{loc:Loc Preview_Web}"
+                              ToolTip.Tip="{loc:Loc Preview_WebTooltip}"
+                              IsVisible="{Binding IsPreviewVisible}"/>
                     <CheckBox IsChecked="{Binding IsPreviewViewMode}" Content="{loc:Loc Preview_ViewMode}"
                               IsVisible="{Binding IsPreviewVisible}"/>
                     <CheckBox IsChecked="{Binding IsPreviewCompact}" Content="{loc:Loc Preview_PhoneWidth}"
@@ -30,9 +34,13 @@
         <DockPanel IsVisible="{Binding IsPreviewVisible}">
             <TextBlock x:Name="ErrorText" DockPanel.Dock="Top" IsVisible="False" TextWrapping="Wrap" Margin="12,8,12,0"
                        Foreground="{DynamicResource SemiColorDanger}"/>
-            <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled">
-                <controls:FormLayoutPresenter x:Name="LayoutPresenter" Margin="12"/>
-            </ScrollViewer>
+            <Panel>
+                <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled"
+                              IsVisible="{Binding !IsWebPreview}">
+                    <controls:FormLayoutPresenter x:Name="LayoutPresenter" Margin="12"/>
+                </ScrollViewer>
+                <views:WebPreviewPane x:Name="WebPane" IsVisible="{Binding IsWebPreview}"/>
+            </Panel>
         </DockPanel>
     </DockPanel>
 </UserControl>

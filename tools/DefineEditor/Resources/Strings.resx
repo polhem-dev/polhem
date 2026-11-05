@@ -101,6 +101,8 @@
   <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>Show preview only</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>Open in browser</value></data>
   <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>Open this layout in the web browser, drawn by the Blazor Server components. Unsaved edits and the preview options follow along.</value></data>
+  <data name="FormLayout_PreviewFocus" xml:space="preserve"><value>Focus on the web preview</value></data>
+  <data name="FormLayout_PreviewFocusTooltip" xml:space="preserve"><value>Show only the tree beside the web preview, for adjusting the layout: hides the side bar and the property grid (Properties… edits a node in a dialog). Press again to put everything back.</value></data>
   <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>Show properties only</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>
@@ -111,6 +113,10 @@
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>The preview could not render this layout: {0}</value></data>
+  <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
+  <data name="Preview_WebTooltip" xml:space="preserve"><value>Draw the preview with the Blazor components in a web view inside the editor, as a web application shows the form. Unsaved edits and the preview options follow along.</value></data>
+  <data name="Preview_WebUnavailable" xml:space="preserve"><value>The web preview cannot run on this computer: {0}</value></data>
+  <data name="Preview_WebLoadFailed" xml:space="preserve"><value>The web preview could not load the page.</value></data>
   <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>The browser preview could not start: {0}</value></data>
   <data name="BrowserPreview_NotPublished" xml:space="preserve"><value>This layout has no preview yet. Open it from DefineEditor.</value></data>
   <data name="CreateTable_Title" xml:space="preserve"><value>CREATE TABLE</value></data>

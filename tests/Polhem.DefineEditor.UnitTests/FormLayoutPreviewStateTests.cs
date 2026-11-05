@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Globalization;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
+using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.ViewModels;
 
 namespace Polhem.DefineEditor.UnitTests
@@ -84,6 +86,91 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(SingleFormMode.Edit, _document.PreviewFormMode);
             Assert.False(_document.IsPreviewCompact);
             Assert.True(_document.ShowPreviewFieldNames);
+            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
+            Assert.False(_document.IsWebPreview);
+        }
+
+        [Fact]
+        [DisplayName("Turning on the web preview switches PreviewEngine to Web and notifies both properties")]
+        public void IsWebPreview_SwitchesPreviewEngine()
+        {
+            var notified = new List<string?>();
+            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
+
+            _document.IsWebPreview = true;
+
+            Assert.Equal(FormLayoutPreviewEngine.Web, _document.PreviewEngine);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.PreviewEngine), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsWebPreview), notified);
+
+            _document.IsWebPreview = false;
+
+            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
+        }
+
+        [Fact]
+        [DisplayName("Focusing on the web preview shows only the web preview on the side and reports the focus")]
+        public void TogglePreviewFocus_On_ShowsOnlyTheWebPreview()
+        {
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.TogglePreviewFocusCommand.Execute(null);
+
+            Assert.True(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PreviewOnly, _document.PaneLayout);
+            Assert.True(_document.IsWebPreview);
+            Assert.Equal([true], raised);
+        }
+
+        [Fact]
+        [DisplayName("Pressing the preview focus again puts back the side layout and the preview it replaced")]
+        public void TogglePreviewFocus_Twice_RestoresTheEarlierArrangement()
+        {
+            _document.PaneLayout = FormLayoutPaneLayout.PropertiesOnly;
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.TogglePreviewFocusCommand.Execute(null);
+            _document.TogglePreviewFocusCommand.Execute(null);
+
+            Assert.False(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PropertiesOnly, _document.PaneLayout);
+            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
+            Assert.Equal([true, false], raised);
+        }
+
+        [Fact]
+        [DisplayName("Choosing another side layout by hand ends the preview focus and keeps that choice")]
+        public void SetPaneLayout_WhileFocused_EndsTheFocus()
+        {
+            _document.TogglePreviewFocusCommand.Execute(null);
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.SetPaneLayoutCommand.Execute(FormLayoutPaneLayout.PropertiesAndPreview);
+
+            Assert.False(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PropertiesAndPreview, _document.PaneLayout);
+            Assert.Equal([false], raised);
+        }
+
+        [Fact]
+        [DisplayName("Publishing to the preview server starts it, stores the unsaved layout and returns the URL that shows it")]
+        public async Task PublishBrowserPreviewAsync_StartsTheServerAndPublishesTheLayout()
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            _document.Root.Sections![0].Fields!.Add(new LayoutField { FieldName = "remark", Caption = "Remark" });
+
+            var url = await _document.PublishBrowserPreviewAsync(host);
+
+            Assert.True(host.IsRunning);
+            var snapshot = host.Hub.GetSnapshot(host.Hub.GetDocumentId(_document.DocumentKey));
+            Assert.NotNull(snapshot);
+            Assert.Equal(3, XmlCodec.Deserialize<FormLayout>(snapshot.LayoutXml)!.Sections![0].Fields!.Count);
+            using var client = new HttpClient();
+            var html = await client.GetStringAsync(url);
+            Assert.Contains("id=\"preview-remark\"", html, StringComparison.Ordinal);
         }
 
         [Fact]

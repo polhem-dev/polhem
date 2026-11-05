@@ -11,6 +11,12 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [Unreleased]
+
+Details: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
+
+- DefineEditor can show the FormLayout preview's Blazor page inside the editor, in a web view drawn by the system's web engine, beside the browser preview.
+
 ## [1.12.0] - 2026-11-03
 
 Details and migration steps: [docs/en/changelogs/1.12.0.md](docs/en/changelogs/1.12.0.md)

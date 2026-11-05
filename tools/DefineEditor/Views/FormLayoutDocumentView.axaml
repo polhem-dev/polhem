@@ -39,8 +39,16 @@
                             AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}">
                         <PathIcon Data="{StaticResource IconPaneProperties}"/>
                     </Button>
-                    <!-- Not a layout of this window, so it stands apart from the three above. -->
-                    <Button Classes="tool" Margin="12,0,0,0" Command="{Binding OpenInBrowserCommand}"
+                    <!-- Sets a layout and the web preview together, and hides the window's side bar, so it stands apart
+                         from the three above. -->
+                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPreviewFocused}" Margin="12,0,0,0"
+                            Command="{Binding TogglePreviewFocusCommand}"
+                            ToolTip.Tip="{loc:Loc FormLayout_PreviewFocusTooltip}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_PreviewFocus}">
+                        <PathIcon Data="{StaticResource IconPreviewFocus}"/>
+                    </Button>
+                    <!-- Opens another window, the default browser, rather than arranging this one. -->
+                    <Button Classes="tool" Margin="4,0,0,0" Command="{Binding OpenInBrowserCommand}"
                             ToolTip.Tip="{loc:Loc FormLayout_OpenInBrowserTooltip}"
                             AutomationProperties.Name="{loc:Loc FormLayout_OpenInBrowser}">
                         <PathIcon Data="{StaticResource IconBrowser}"/>

@@ -43,6 +43,18 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     [ObservableProperty]
     private bool _showPreviewFieldNames = true;
 
+    /// <summary>What draws the preview. It starts as the editor's own Avalonia rendering, which needs no web server.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsWebPreview))]
+    private FormLayoutPreviewEngine _previewEngine;
+
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Web"/>; the switch in the preview's header.</summary>
+    public bool IsWebPreview
+    {
+        get => PreviewEngine == FormLayoutPreviewEngine.Web;
+        set => PreviewEngine = value ? FormLayoutPreviewEngine.Web : FormLayoutPreviewEngine.Avalonia;
+    }
+
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
 
@@ -67,18 +79,34 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
+    /// Starts <paramref name="host"/> if it is not running, publishes this layout to it and returns the layout's
+    /// preview URL, which the default browser and the web preview inside the editor both open.
+    /// </summary>
+    /// <remarks>
+    /// The snapshot goes out once here because the editor publishes on later edits only while the server runs.
+    /// Starting fails with <see cref="InvalidOperationException"/> or <see cref="IOException"/>, as
+    /// <see cref="BrowserPreviewHost.StartAsync"/> describes.
+    /// </remarks>
+    /// <param name="host">The server to publish to; the editor passes <see cref="BrowserPreviewHost.Shared"/>.</param>
+    public async Task<Uri> PublishBrowserPreviewAsync(BrowserPreviewHost host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        var documentId = host.Hub.GetDocumentId(DocumentKey);
+        var url = await host.GetDocumentUrlAsync(documentId);
+        host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+        return url;
+    }
+
+    /// <summary>
     /// Opens this layout in the default web browser, starting the browser preview server on first use. A server
     /// that cannot start, or a browser that cannot be launched, is reported in <see cref="DocumentViewModelBase.StatusText"/>.
     /// </summary>
     [RelayCommand]
     private async Task OpenInBrowserAsync()
     {
-        var host = BrowserPreviewHost.Shared;
-        var documentId = host.Hub.GetDocumentId(DocumentKey);
         try
         {
-            var url = await host.GetDocumentUrlAsync(documentId);
-            host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+            var url = await PublishBrowserPreviewAsync(BrowserPreviewHost.Shared);
             Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
         }
         catch (InvalidOperationException ex)
@@ -155,6 +183,60 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     {
         if (value == FormLayoutPaneLayout.PreviewOnly)
             IsPreviewVisible = true;
+        LeavePreviewFocusIfChanged();
+    }
+
+    partial void OnPreviewEngineChanged(FormLayoutPreviewEngine value) => LeavePreviewFocusIfChanged();
+
+    /// <summary>
+    /// Whether the window is arranged for adjusting a layout against its web preview: the tree beside the web preview
+    /// only, with the property grid in a dialog and the window's side bar hidden.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isPreviewFocused;
+
+    /// <summary>
+    /// Raised with <c>true</c> when <see cref="IsPreviewFocused"/> turns on and <c>false</c> when it turns off, so the
+    /// window hides its side bar and brings it back.
+    /// </summary>
+    public event EventHandler<bool>? PreviewFocusChanged;
+
+    private (FormLayoutPaneLayout Layout, FormLayoutPreviewEngine Engine)? _beforePreviewFocus;
+
+    /// <summary>
+    /// Arranges the window for adjusting the layout against its web preview, or puts back what was there before.
+    /// </summary>
+    [RelayCommand]
+    private void TogglePreviewFocus()
+    {
+        if (_beforePreviewFocus is { } before)
+        {
+            _beforePreviewFocus = null;
+            IsPreviewFocused = false;
+            PaneLayout = before.Layout;
+            PreviewEngine = before.Engine;
+            PreviewFocusChanged?.Invoke(this, false);
+            return;
+        }
+
+        var saved = (PaneLayout, PreviewEngine);
+        PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+        PreviewEngine = FormLayoutPreviewEngine.Web;
+        _beforePreviewFocus = saved;
+        IsPreviewFocused = true;
+        PreviewFocusChanged?.Invoke(this, true);
+    }
+
+    // Choosing another side layout or preview by hand ends the focus without undoing that choice; the side bar comes
+    // back, since what hid it is over.
+    private void LeavePreviewFocusIfChanged()
+    {
+        if (_beforePreviewFocus is null
+            || (PaneLayout == FormLayoutPaneLayout.PreviewOnly && PreviewEngine == FormLayoutPreviewEngine.Web))
+            return;
+        _beforePreviewFocus = null;
+        IsPreviewFocused = false;
+        PreviewFocusChanged?.Invoke(this, false);
     }
 
     /// <summary>
