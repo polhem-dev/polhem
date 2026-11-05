@@ -98,6 +98,10 @@
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>手機寬度</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>欄位名稱</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>預覽無法畫出這份版面：{0}</value></data>
+  <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
+  <data name="Preview_WebTooltip" xml:space="preserve"><value>在編輯器內以網頁檢視繪製預覽，使用 Blazor 元件，與網頁應用程式顯示表單的方式相同；尚未存檔的修改與預覽選項都會同步。</value></data>
+  <data name="Preview_WebUnavailable" xml:space="preserve"><value>這台電腦無法執行 Web 預覽：{0}</value></data>
+  <data name="Preview_WebLoadFailed" xml:space="preserve"><value>Web 預覽無法載入頁面。</value></data>
   <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>瀏覽器預覽無法啟動：{0}</value></data>
   <data name="BrowserPreview_NotPublished" xml:space="preserve"><value>這份版面還沒有預覽，請從 DefineEditor 開啟。</value></data>
   <data name="CreateTable_Title" xml:space="preserve"><value>CREATE TABLE</value></data>

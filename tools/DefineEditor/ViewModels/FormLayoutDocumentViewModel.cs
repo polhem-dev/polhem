@@ -43,6 +43,18 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     [ObservableProperty]
     private bool _showPreviewFieldNames = true;
 
+    /// <summary>What draws the preview. It starts as the editor's own Avalonia rendering, which needs no web server.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsWebPreview))]
+    private FormLayoutPreviewEngine _previewEngine;
+
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Web"/>; the switch in the preview's header.</summary>
+    public bool IsWebPreview
+    {
+        get => PreviewEngine == FormLayoutPreviewEngine.Web;
+        set => PreviewEngine = value ? FormLayoutPreviewEngine.Web : FormLayoutPreviewEngine.Avalonia;
+    }
+
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
 
@@ -67,18 +79,34 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
+    /// Starts <paramref name="host"/> if it is not running, publishes this layout to it and returns the layout's
+    /// preview URL, which the default browser and the web preview inside the editor both open.
+    /// </summary>
+    /// <remarks>
+    /// The snapshot goes out once here because the editor publishes on later edits only while the server runs.
+    /// Starting fails with <see cref="InvalidOperationException"/> or <see cref="IOException"/>, as
+    /// <see cref="BrowserPreviewHost.StartAsync"/> describes.
+    /// </remarks>
+    /// <param name="host">The server to publish to; the editor passes <see cref="BrowserPreviewHost.Shared"/>.</param>
+    public async Task<Uri> PublishBrowserPreviewAsync(BrowserPreviewHost host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        var documentId = host.Hub.GetDocumentId(DocumentKey);
+        var url = await host.GetDocumentUrlAsync(documentId);
+        host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+        return url;
+    }
+
+    /// <summary>
     /// Opens this layout in the default web browser, starting the browser preview server on first use. A server
     /// that cannot start, or a browser that cannot be launched, is reported in <see cref="DocumentViewModelBase.StatusText"/>.
     /// </summary>
     [RelayCommand]
     private async Task OpenInBrowserAsync()
     {
-        var host = BrowserPreviewHost.Shared;
-        var documentId = host.Hub.GetDocumentId(DocumentKey);
         try
         {
-            var url = await host.GetDocumentUrlAsync(documentId);
-            host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+            var url = await PublishBrowserPreviewAsync(BrowserPreviewHost.Shared);
             Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
         }
         catch (InvalidOperationException ex)
