@@ -16,7 +16,7 @@
                   AdornmentIcon="@Icons.Material.Filled.Search"
                   AdornmentAriaLabel="@LookupButtonText"
                   OnAdornmentClick="() => OnButtonClickAsync()"
-                  Variant="Variant.Outlined"
+                  Variant="@(IsEditable ? Variant.Outlined : Variant.Text)"
                   Margin="Margin.Dense" />
 </div>
 @if (IsLookupOpen && FormField is { } lookupField)

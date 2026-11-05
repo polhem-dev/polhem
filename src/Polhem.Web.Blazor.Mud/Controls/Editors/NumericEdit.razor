@@ -13,7 +13,7 @@
                   OnBlur="_ => EndEditing()"
                   ReadOnly="!IsEditable"
                   InputMode="@(InputMode.@decimal)"
-                  Variant="Variant.Outlined"
+                  Variant="@(IsEditable ? Variant.Outlined : Variant.Text)"
                   Margin="Margin.Dense" />
 </div>
 

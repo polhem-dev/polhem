@@ -10,5 +10,5 @@
               ValueChanged="CommitText"
               ReadOnly="!IsEditable"
               MaxLength="MudAttributes.MaxLength(MaxLength)"
-              Variant="Variant.Outlined"
+              Variant="@(IsEditable ? Variant.Outlined : Variant.Text)"
               Margin="Margin.Dense" />

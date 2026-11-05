@@ -13,7 +13,7 @@
               MaxLength="MaxLength"
               Placeholder="HH:mm"
               InputMode="InputMode.numeric"
-              Variant="Variant.Outlined"
+              Variant="@(IsEditable ? Variant.Outlined : Variant.Text)"
               Margin="Margin.Dense" />
 
 @code {

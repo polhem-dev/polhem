@@ -50,7 +50,7 @@
                             Title="@FieldCaptionRules.FormatCaption(current.Caption, current.ReadOnly)"
                             Sortable="false"
                             DisableCellFocus="true"
-                            Width="@ColumnWidth(current)">
+                            Width="@LayoutWidth(current)">
                 <HeaderCellItemTemplate>
                     <div class="@HeaderClass(current)">
                         @if (IsSortable(current))
@@ -181,14 +181,22 @@
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,
             $"{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
 
+    // A column the layout gives no width has none on its header, so it shares the space the others leave (see the filler
+    // cell in polhem-fluent.css) instead of keeping the default width with the rest of the grid empty. A drag gives it one.
+    private static string? LayoutWidth(LayoutColumn column) => column.Width > 0 ? ColumnWidth(column) : null;
+
     // NOTE: The resize script stops at a header's `min-width`. In table mode the grid writes neither `MinWidth` nor a
     // column's `Style` on the header, so the rule is written here, scoped to this grid, by the key the header carries.
     // Only identifier-like field names get one, so the selector needs no quotes: a prerendered page would encode them, and
     // a style element does not decode what it holds.
+    // The table's own minimum is the sum of the columns' widths: a fixed-layout table ignores a cell's `min-width`, so
+    // without it the columns that share the space would shrink on a narrow screen instead of the grid scrolling.
     private string MinWidthRules()
         => string.Concat(VisibleColumns
             .Where(column => IsIdentifier(column.FieldName))
-            .Select(column => $".{_gridClass} th[data-column-key={column.FieldName}]{{min-width:{ColumnWidth(column)}}}"));
+            .Select(column => $".{_gridClass} th[data-column-key={column.FieldName}]{{min-width:{ColumnWidth(column)}}}"))
+            + string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $".{_gridClass} table{{min-width:{VisibleColumns.Sum(column => column.Width > 0 ? column.Width : DefaultColumnWidth)}px}}");
 
     private static bool IsIdentifier(string name)
         => name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_')

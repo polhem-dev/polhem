@@ -5,6 +5,9 @@
 .polhem-dense .mud-input-control { margin: 0 !important; }
 .polhem-dense .mud-input-control-input-container { font-size: 13px; }
 .polhem-dense .mud-input.mud-input-outlined .mud-input-slot { padding: 4px 8px !important; height: auto; font-size: 13px; line-height: 20px; }
+/* A read-only editor is the text variant, which keeps only the underline; it takes the outlined editor's size, so a field
+   does not change size when the form mode makes it read-only. */
+.polhem-dense .mud-input.mud-input-text .mud-input-slot { padding: 4px 8px !important; height: auto; font-size: 13px; line-height: 20px; }
 .polhem-dense .mud-input-adornment svg, .polhem-dense .mud-input-adornment .mud-icon-root { font-size: 16px; width: 16px; height: 16px; }
 .polhem-dense .mud-input-adornment button { padding: 2px; }
 .polhem-dense .mud-select .mud-input-slot { min-height: 0; }
