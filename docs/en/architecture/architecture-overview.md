@@ -304,17 +304,7 @@ Polhem integrates with the frontend using the MVVM pattern, with FormSchema dire
 
 ### Data Flow
 
-```
-User interaction
-    |^ (two-way binding)
-ViewModel (binding structure derived from FormSchema)
-    |^
-DataSet (Model)
-    |
-BO.Save(DataSet)
-    |
-Repository -> Database
-```
+![MVVM data flow: user interaction binds two ways to the ViewModel (derived from FormSchema), which binds two ways to the DataSet (Model); saving goes from BO.Save(DataSet) to the Repository and the database](images/mvvm-data-flow.svg)
 
 When FormSchema changes, the ViewModel binding structure updates automatically; the View requires no manual adjustments.
 
@@ -349,47 +339,7 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 
 ## 11. Overall Architecture Diagram
 
-```
-+------------------------------------------------------+
-|  View                                                |
-|  Avalonia (desktop / browser / mobile) / Blazor (Server / WebAssembly) / your own host |  MVVM: View
-+------------------------------------------------------+
-|  ViewModel                                           |  MVVM: ViewModel
-|  (binding structure derived from FormSchema)         |
-+------------------------------------------------------+
-|  API Layer  (Polhem.JsonRpc / JSON-RPC 2.0)           |  N-Tier: Presentation
-+------------------------------------------------------+
-|                                                      |
-|  Business Object (BO)                                |  Clean Arch: Use Case
-|  +- CRUD methods (FormSchema validation + Repository)|
-|  +- Report methods (AnyCode Repository)              |
-|  +- Batch methods (AnyCode Repository)               |
-|                                                      |
-|  +----------------------------------+                |
-|  |  FormSchema (definition hub)     |                |  Clean Arch: Domain Core
-|  |  Field behavior / Form relations |                |
-|  |  / Validation rules              |                |
-|  +------+-----------------+---------+                |
-|         |                 |                          |
-|   FormLayout         TableSchema                     |
-|   (UI layout)        (table structure)               |
-|                                                      |
-+------------------------------------------------------+
-|  DataSet (DTO)                                       |  N-Tier: Data Transfer
-|  Master Table + Detail Tables                        |
-+------------------------------------------------------+
-|  Repository                                          |  Clean Arch: Interface Adapter
-|  +- FormSchema-driven (CRUD SQL auto-generated)      |
-|  +- AnyCode (reports/batch, BO-implemented)          |
-+------------------------------------------------------+
-|  Polhem.Db (data access infrastructure)                 |  N-Tier: Data Layer
-|  +- IDialectFactory routes per DatabaseType          |
-|  +- DbDialectRegistry: SQLServer / PostgreSQL / SQLite / ...  |
-|  +- DbProviderRegistry: ADO.NET DbProviderFactory     |
-+------------------------------------------------------+
-|  Database (MSSQL / PostgreSQL / SQLite / MySQL ...) |
-+------------------------------------------------------+
-```
+![Polhem layered architecture: View, ViewModel, API Layer, Business Object with the FormSchema definition hub, Repository, Polhem.Db and the database, each labelled with its MVVM, N-Tier or Clean Architecture role, with the DataSet DTO carried between the layers](images/architecture-layers.svg)
 
 > Which heads `Polhem.UI.Avalonia` runs on, and what each one needs, is in
 > [Platform Support](../getting-started/platform-support.md).
