@@ -15,32 +15,32 @@
                            Margin="0,0,16,0"/>
                 <!-- Icon toggles with tooltips, so the options fit beside the title in a narrow pane. -->
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="2">
-                    <ToggleButton Classes="preview-option" IsChecked="{Binding IsWebPreview}"
+                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsWebPreview}"
                                   IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_WebTooltip}"
                                   AutomationProperties.Name="{loc:Loc Preview_Web}">
                         <PathIcon Data="{StaticResource IconPreviewWeb}"/>
                     </ToggleButton>
-                    <ToggleButton Classes="preview-option" IsChecked="{Binding IsPreviewViewMode}"
+                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewViewMode}"
                                   IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_ViewMode}"
                                   AutomationProperties.Name="{loc:Loc Preview_ViewMode}">
                         <PathIcon Data="{StaticResource IconPreviewViewMode}"/>
                     </ToggleButton>
-                    <ToggleButton Classes="preview-option" IsChecked="{Binding IsPreviewCompact}"
+                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewCompact}"
                                   IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_PhoneWidth}"
                                   AutomationProperties.Name="{loc:Loc Preview_PhoneWidth}">
                         <PathIcon Data="{StaticResource IconPreviewPhone}"/>
                     </ToggleButton>
-                    <ToggleButton Classes="preview-option" IsChecked="{Binding ShowPreviewFieldNames}"
+                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding ShowPreviewFieldNames}"
                                   IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_FieldNames}"
                                   AutomationProperties.Name="{loc:Loc Preview_FieldNames}">
                         <PathIcon Data="{StaticResource IconPreviewFieldNames}"/>
                     </ToggleButton>
                     <!-- Collapses the preview itself, so it stands apart from the options. -->
-                    <ToggleButton Classes="preview-option" IsChecked="{Binding IsPreviewVisible}" Margin="10,0,0,0"
+                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewVisible}" Margin="10,0,0,0"
                                   IsVisible="{Binding IsPropertiesAndPreviewLayout}"
                                   ToolTip.Tip="{loc:Loc Preview_ShowTooltip}"
                                   AutomationProperties.Name="{loc:Loc Preview_Show}">

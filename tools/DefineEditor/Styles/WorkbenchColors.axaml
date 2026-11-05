@@ -9,6 +9,9 @@
             <SolidColorBrush x:Key="ActivityBarBackground">#333333</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+            <!-- The icon toggles on document toolbars, drawn like the activity bar on the editor's own background -->
+            <SolidColorBrush x:Key="ToolbarIconForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconInactiveForeground">#80FFFFFF</SolidColorBrush>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -17,6 +20,8 @@
             <SolidColorBrush x:Key="ActivityBarBackground">#2C2C2C</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconForeground">#1F1F1F</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconInactiveForeground">#801F1F1F</SolidColorBrush>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

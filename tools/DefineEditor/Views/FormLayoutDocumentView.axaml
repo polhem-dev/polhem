@@ -21,19 +21,19 @@
         <Border DockPanel.Dock="Top" Padding="8,6">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
-                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPropertiesAndPreviewLayout}"
+                    <Button Classes="toolbar-icon" Classes.selected="{Binding IsPropertiesAndPreviewLayout}"
                             Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PropertiesAndPreview}"
                             ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PropertiesAndPreview}"
                             AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesAndPreview}">
                         <PathIcon Data="{StaticResource IconPaneBoth}"/>
                     </Button>
-                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPreviewOnlyLayout}"
+                    <Button Classes="toolbar-icon" Classes.selected="{Binding IsPreviewOnlyLayout}"
                             Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PreviewOnly}"
                             ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PreviewOnly}"
                             AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PreviewOnly}">
                         <PathIcon Data="{StaticResource IconPanePreview}"/>
                     </Button>
-                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPropertiesOnlyLayout}"
+                    <Button Classes="toolbar-icon" Classes.selected="{Binding IsPropertiesOnlyLayout}"
                             Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PropertiesOnly}"
                             ToolTip.Tip="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}"
                             AutomationProperties.Name="{loc:Loc FormLayout_PaneLayout_PropertiesOnly}">
@@ -41,14 +41,14 @@
                     </Button>
                     <!-- Sets a layout and the web preview together, and hides the window's side bar, so it stands apart
                          from the three above. -->
-                    <Button Classes="tool pane-layout" Classes.selected="{Binding IsPreviewFocused}" Margin="12,0,0,0"
+                    <Button Classes="toolbar-icon" Classes.selected="{Binding IsPreviewFocused}" Margin="12,0,0,0"
                             Command="{Binding TogglePreviewFocusCommand}"
                             ToolTip.Tip="{loc:Loc FormLayout_PreviewFocusTooltip}"
                             AutomationProperties.Name="{loc:Loc FormLayout_PreviewFocus}">
                         <PathIcon Data="{StaticResource IconPreviewFocus}"/>
                     </Button>
                     <!-- Opens another window, the default browser, rather than arranging this one. -->
-                    <Button Classes="tool" Margin="4,0,0,0" Command="{Binding OpenInBrowserCommand}"
+                    <Button Classes="toolbar-icon" Margin="4,0,0,0" Command="{Binding OpenInBrowserCommand}"
                             ToolTip.Tip="{loc:Loc FormLayout_OpenInBrowserTooltip}"
                             AutomationProperties.Name="{loc:Loc FormLayout_OpenInBrowser}">
                         <PathIcon Data="{StaticResource IconBrowser}"/>
