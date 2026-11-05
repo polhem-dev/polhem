@@ -79,11 +79,25 @@ public static class FormSync
         var listed = schema.ListFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         var added = master.Fields
             .Where(f => f.Type == FieldType.DbField && f.Visible && !existing.Fields.Contains(f.FieldName))
-            .Select(f => f.FieldName)
+            .Select(ListedNameOf)
+            .OfType<string>()
             .Where(name => !listed.Contains(name, StringComparer.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         if (added.Count > 0) schema.ListFields = string.Join(",", listed.Concat(added));
         return added;
+    }
+
+    /// <summary>
+    /// The field the list shows for a new stored field: the field itself, or for a foreign key the last of its display
+    /// fields (the related name when it maps one), since a list cannot show the row id it holds. A foreign key without
+    /// display fields is not listed.
+    /// </summary>
+    private static string? ListedNameOf(FormField field)
+    {
+        if (string.IsNullOrEmpty(field.RelationProgId)) return field.FieldName;
+        var display = field.GetDisplayFields();
+        return display.Count > 0 ? display[^1] : null;
     }
 
     /// <summary>
