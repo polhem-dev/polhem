@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: 4037572ce27308f12ce2639e5d9ce7118d437ff3 -->
+<!-- source: en/architecture/architecture-overview.md blob: dcf7fbc7f405f7d2509f689db8c4392ed955c970 -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -325,14 +325,7 @@ Polhem 提供三種開發深度，同一條演進軸線，非互斥的技術堆�
 
 ### 演進循環
 
-```mermaid
-flowchart LR
-    A[NoCode：定義化實現]
-    --> B[LowCode：事件/條件擴充]
-    --> C[AnyCode：進階邏輯]
-    --> D[架構回饋：模式沉澱回定義層]
-    --> A
-```
+![演進循環：由 NoCode（定義化實現）到 LowCode（事件 / 條件擴充）再到 AnyCode（進階邏輯），自由度逐步提高；架構回饋把通用模式沉澱回 FormSchema 或 BO 基類](images/evolution-cycle.svg)
 
 每一次 AnyCode 客製所發現的通用模式，可沉澱回 FormSchema 或 BO 基類，使下一次開發更自動化。
 

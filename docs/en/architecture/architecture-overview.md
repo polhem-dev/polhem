@@ -324,14 +324,7 @@ Polhem provides three levels of development depth along a single evolution axis 
 
 ### Evolution Cycle
 
-```mermaid
-flowchart LR
-    A[NoCode: Definition-driven implementation]
-    --> B[LowCode: Event/condition extensions]
-    --> C[AnyCode: Advanced logic]
-    --> D[Architecture feedback: Patterns distilled back to definition layer]
-    --> A
-```
+![Evolution cycle: NoCode (definition-driven implementation) to LowCode (event and condition extensions) to AnyCode (advanced logic) with increasing flexibility, and architecture feedback that distills common patterns back into FormSchema or the BO base classes](images/evolution-cycle.svg)
 
 Common patterns discovered during each AnyCode customization can be distilled back into FormSchema or BO base classes, making the next development cycle more automated.
 
