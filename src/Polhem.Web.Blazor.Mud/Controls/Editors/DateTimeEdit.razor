@@ -9,8 +9,9 @@
                        @ref="_datePicker"
                        Date="Value?.Date"
                        DateChanged="OnDateChanged"
+                       TextChanged="OnDateTextChanged"
                        Editable="true"
-                       DateFormat="yyyy-MM-dd"
+                       DateFormat="@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern"
                        PickerVariant="PickerVariant.Inline"
                        Variant="Variant.Outlined"
                        Margin="Margin.Dense" />
@@ -43,15 +44,26 @@ else
     private int _generation;
 
     // MudBlazor's pickers report both a cleared box and text they cannot parse as null, so only their text tells them
-    // apart. A rejected entry recreates them to show the stored value again.
+    // apart. A rejected entry recreates them to show the stored value again; the date picker's text is handled in
+    // OnDateTextChanged.
     private void OnDateChanged(DateTime? date)
     {
-        if (date is null && !string.IsNullOrWhiteSpace(_datePicker?.Text))
-        {
-            _generation++;
-            return;
-        }
+        if (date is null && !string.IsNullOrWhiteSpace(_datePicker?.Text)) return;
         CommitValue(date?.Date + (Value?.TimeOfDay ?? TimeSpan.Zero));
+    }
+
+    // The date picker parses only the culture pattern it shows. Other text goes through the shared input rules, which also
+    // take the ISO form, and the pickers are recreated to show the stored value in the culture pattern again. A field
+    // that was empty raises no date change for such text at all.
+    private void OnDateTextChanged(string? text)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        if (string.IsNullOrWhiteSpace(text)
+            || DateTime.TryParseExact(text, culture.DateTimeFormat.ShortDatePattern, culture, System.Globalization.DateTimeStyles.None, out _))
+            return;
+        if (Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseInput(text, out var typed))
+            CommitValue(typed.Date + (Value?.TimeOfDay ?? TimeSpan.Zero));
+        _generation++;
     }
 
     private void OnTimeChanged(TimeSpan? time)

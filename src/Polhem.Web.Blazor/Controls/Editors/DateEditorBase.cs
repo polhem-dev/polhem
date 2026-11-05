@@ -16,10 +16,18 @@ namespace Polhem.Web.Blazor.Controls.Editors
         protected virtual string ValueFormat => "yyyy-MM-dd";
 
         /// <summary>
-        /// Gets the standard format the read-only state renders the date with in the user's culture.
-        /// Defaults to the short date, <c>d</c>.
+        /// Gets the standard format the date is shown with in the user's culture, in the read-only state and in the
+        /// editable one. Defaults to the short date, <c>d</c>.
         /// </summary>
         protected virtual string DisplayFormat => "d";
+
+        /// <summary>
+        /// Gets the custom pattern <see cref="DisplayFormat"/> stands for in the user's culture, for a picker that takes a
+        /// pattern rather than a standard format. A custom <see cref="DisplayFormat"/> is returned as it is.
+        /// </summary>
+        protected string DisplayPattern => DisplayFormat.Length == 1
+            ? CultureInfo.CurrentCulture.DateTimeFormat.GetAllDateTimePatterns(DisplayFormat[0])[0]
+            : DisplayFormat;
 
         /// <summary>
         /// Gets the stored date, or <c>null</c> when the field is empty or does not hold a date.

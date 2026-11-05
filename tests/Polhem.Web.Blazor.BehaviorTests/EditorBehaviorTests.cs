@@ -299,6 +299,33 @@ namespace Polhem.Web.Blazor.BehaviorTests
         }
 
         [Fact]
+        [DisplayName("An editable date shows in the user's culture, like a read-only one")]
+        public void Date_Editable_ShowsCultureText()
+        {
+            using var culture = new CultureScope("de-DE");
+            var dataObject = BuildDataObject(FieldDbType.Date, "2026-10-25");
+
+            var cut = RenderEditor(ControlType.DateEdit, dataObject);
+
+            Assert.Equal(new DateTime(2026, 10, 25).ToString("d", System.Globalization.CultureInfo.CurrentCulture), ReadText(cut, ControlType.DateEdit));
+        }
+
+        [Theory]
+        [InlineData("26.10.2026")]
+        [InlineData("2026-10-26")]
+        [DisplayName("A date editor takes the user's culture form and the ISO form")]
+        public void Date_CultureOrIsoInput_WritesIsoDate(string typed)
+        {
+            using var culture = new CultureScope("de-DE");
+            var dataObject = BuildDataObject(FieldDbType.Date, "2026-10-25");
+            var cut = RenderEditor(ControlType.DateEdit, dataObject);
+
+            Enter(cut, ControlType.DateEdit, typed);
+
+            Assert.StartsWith("2026-10-26", dataObject.GetField(FieldName), StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A year-month editor writes the value as yyyy-MM")]
         public void YearMonth_Commit_WritesYearMonth()
         {

@@ -10,7 +10,7 @@
                           TValue="DateTime?"
                           Value="Value?.Date"
                           ValueChanged="OnDateChanged"
-                          Culture="FluentAttributes.CultureFor(DateFormat)"
+                          Culture="System.Globalization.CultureInfo.CurrentCulture"
                           Width="100%" />
         <FluentTextInput @key="@($"time-{_generation}")"
                          Value="@Value?.ToString(TimeFormat, System.Globalization.CultureInfo.InvariantCulture)"
@@ -29,7 +29,6 @@ else
 }
 
 @code {
-    private const string DateFormat = "yyyy-MM-dd";
     private const string TimeFormat = "HH:mm";
     // Long enough for the focus to arrive where it was going, which may be the calendar of this same picker.
     private const int LeaveDelayMilliseconds = 250;

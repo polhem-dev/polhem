@@ -44,7 +44,7 @@ namespace Avalonia.DemoCenter.Modules.DataEditors
         public static Border Section(string title, string? note, params Control[] children)
         {
             var stack = new StackPanel { Spacing = 8 };
-            stack.Children.Add(new TextBlock { Text = title, FontSize = 15, FontWeight = FontWeight.Bold });
+            stack.Children.Add(new TextBlock { Text = title, FontSize = 15, FontWeight = FontWeight.Bold, TextWrapping = TextWrapping.Wrap });
             if (note is not null)
                 stack.Children.Add(new TextBlock { Text = note, FontSize = 12, Opacity = 0.7, TextWrapping = TextWrapping.Wrap });
             foreach (var child in children)
