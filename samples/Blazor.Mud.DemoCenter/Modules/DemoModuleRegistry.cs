@@ -72,7 +72,7 @@ public static class DemoModuleRegistry
             typeof(MultiColumnLayoutModule)),
 
         new("Grid", "In-cell editing",
-            "GridControl InCell mode: a cell opens its editor when it takes the focus; Escape drops what was typed. Built-in add and delete toolbar.",
+            "GridControl InCell mode: a cell opens its editor when it takes the focus; Enter or leaving the cell commits, Escape drops what was typed. Built-in add and delete toolbar.",
             typeof(InCellEditModule)),
         new("Grid", "EditForm dialog",
             "The grid is read-only; a dialog edits the whole row and buffers the edits until OK.",

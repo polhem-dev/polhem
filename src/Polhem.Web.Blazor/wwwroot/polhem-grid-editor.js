@@ -52,6 +52,10 @@ document.addEventListener('keydown', event => {
         // Leaving now would strand what is queued and race the editor for the focus, so the move waits for the editor.
         queue.push({ tab: true, backwards: event.shiftKey });
         event.preventDefault();
+    } else if (event.key === 'Enter' && isOpening()) {
+        // Enter commits the editor, which is not there yet, so it waits with the keys typed before it.
+        queue.push({ enter: true });
+        event.preventDefault();
     } else if (event.key === 'Escape') {
         queue = [];
     }
@@ -153,18 +157,39 @@ export async function focusEditor(editor, cell, openPopupSelector, replayDelay) 
     input.focus();
     input.select && input.select();
 
-    editor.addEventListener('keydown', event => {
-        if (event.key !== 'Escape' || document.querySelector(openPopupSelector)) return;
-        // Back to the value on focus, so leaving fires no `change`, and whatever was typed is dropped.
-        input.value = original;
-        event.stopPropagation();
+    const close = () => {
         const row = editor.closest('td');
         cell.invokeMethodAsync('CloseEditor').then(() => focusTextWhenRendered(row, 20));
+    };
+    // Leaving the input fires `change`, which writes the value, and that event reaches the server before the call that
+    // closes the editor.
+    const commitAndClose = () => {
+        input.blur();
+        close();
+    };
+    // Enter commits a typed value only. A multi-line input keeps it for a new line, and a drop-down (a button, or an input
+    // it keeps read-only) keeps it for opening its list.
+    const commitsOnEnter = input.tagName === 'INPUT' && input.type !== 'checkbox' && !input.readOnly;
+
+    editor.addEventListener('keydown', event => {
+        if (document.querySelector(openPopupSelector)) return;
+        if (event.key === 'Escape') {
+            // Back to the value on focus, so leaving fires no `change`, and whatever was typed is dropped.
+            input.value = original;
+            event.stopPropagation();
+            close();
+        } else if (event.key === 'Enter' && commitsOnEnter && !isOpening()
+            && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            // While keys are still being replayed the Enter waits in the queue behind them, and the replay commits.
+            event.preventDefault();
+            event.stopPropagation();
+            commitAndClose();
+        }
     }, true);
 
     const replay = () => {
         openingSince = 0;
-        const leaveAt = queue.findIndex(item => item.tab || item.click);
+        const leaveAt = queue.findIndex(item => item.tab || item.click || item.enter);
         const typed = (leaveAt < 0 ? queue : queue.slice(0, leaveAt)).map(item => item.text).join('');
         const pendingLeave = leaveAt < 0 ? null : queue[leaveAt];
         queue = leaveAt < 0 ? [] : queue.slice(leaveAt + 1);
@@ -173,7 +198,9 @@ export async function focusEditor(editor, cell, openPopupSelector, replayDelay) 
             // text would show and then be lost. Inserted text counts as typing.
             document.execCommand('insertText', false, typed);
         }
-        if (pendingLeave) {
+        if (pendingLeave && pendingLeave.enter && commitsOnEnter) {
+            commitAndClose();
+        } else if (pendingLeave && !pendingLeave.enter) {
             input.blur();
             if (pendingLeave.click) {
                 followClick(pendingLeave);

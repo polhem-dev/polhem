@@ -1,6 +1,8 @@
 using System.Globalization;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
@@ -38,6 +40,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 control.GetObservable(ReadOnlyTextProperty), scope, ReadOnlyFieldVisual.HostKind.DatePicker));
 
         private readonly FieldEditorBinder _binder;
+        // The caption this editor last applied as its accessible name, so a later caption may replace it.
+        private string? _captionName;
 
         FieldEditorBinder IFieldEditorBinderHost.Binder => _binder;
 
@@ -58,6 +62,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // spans the whole field rather than the picker's content width.
             HorizontalAlignment = HorizontalAlignment.Stretch;
             _binder = new FieldEditorBinder(this, RefreshFromSource, ApplyMetadata);
+            TemplateApplied += OnTemplateApplied;
             SelectedDateChanged += OnSelectedDateChangedCore;
         }
 
@@ -188,6 +193,29 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         {
             // The read-only view state is applied by SetControlState, which the binder
             // runs immediately after this on bind and on every form-mode change.
+            ApplyAccessibleName();
+        }
+
+        // The picker is a button whose content is a grid of date parts, so without a name assistive technology reads the
+        // grid's type name. The field's caption names it, unless the application set a name of its own.
+        private void ApplyAccessibleName()
+        {
+            var caption = _binder.LayoutField?.Caption is { Length: > 0 } layoutCaption
+                ? layoutCaption
+                : _binder.FormField?.Caption;
+            var current = AutomationProperties.GetName(this);
+            if (string.IsNullOrEmpty(caption)
+                || !(string.IsNullOrEmpty(current) || string.Equals(current, _captionName, StringComparison.Ordinal)))
+                return;
+            _captionName = caption;
+            AutomationProperties.SetName(this, caption);
+        }
+
+        // The read-only template has no flyout button; the editable one gets the editor's name.
+        private void OnTemplateApplied(object? sender, TemplateAppliedEventArgs e)
+        {
+            if (e.NameScope.Find<Button>("PART_FlyoutButton") is { } button)
+                button[!AutomationProperties.NameProperty] = this[!AutomationProperties.NameProperty];
         }
 
         // NOTE: Internal (not private) so GridControl's in-cell date editors share the
