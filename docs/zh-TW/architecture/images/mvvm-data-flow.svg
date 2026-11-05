@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" width="720" height="560" role="img" aria-labelledby="title desc">
+  <title id="title">MVVM 資料流</title>
+  <desc id="desc">使用者操作與 ViewModel 雙向綁定，ViewModel 的 binding 結構由 FormSchema 推導。ViewModel 與 Model（DataSet）雙向綁定。存檔時 DataSet 交給 BO.Save，再經 Repository 寫入資料庫。</desc>
+  <defs>
+    <style>
+      .card { fill: #ffffff; stroke: #d0d7de; }
+      .name { font: 600 14px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+      .sub { font: 400 12px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #57606a; }
+      .edge { font: 400 12px system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #57606a; }
+      .flow { stroke: #6b7280; stroke-width: 1.5; fill: none; }
+      .flow-head { fill: #6b7280; }
+      .derive { stroke: #6e4fd1; stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+      .derive-head { fill: #6e4fd1; }
+      .chip { fill: #faf8ff; stroke: #6e4fd1; stroke-dasharray: 5 4; }
+      .mvvm .band { fill: #eef4ff; } .mvvm .accent { fill: #3b6fd8; }
+      .ntier .band { fill: #e9f6f2; } .ntier .accent { fill: #13896f; }
+      .clean .band { fill: #f3efff; } .clean .accent { fill: #6e4fd1; }
+      .store .band { fill: #f3f4f6; } .store .accent { fill: #6b7280; }
+      .cyl { fill: #ffffff; stroke: #6b7280; stroke-width: 1.5; }
+    </style>
+    <marker id="flow-head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="flow-head" d="M0,0 L8,4 L0,8 z"/>
+    </marker>
+    <marker id="derive-head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="derive-head" d="M0,0 L8,4 L0,8 z"/>
+    </marker>
+  </defs>
+
+  <rect class="card" x="0.5" y="0.5" width="719" height="559" rx="14"/>
+  <g transform="translate(-68,0)">
+
+  <g class="mvvm">
+    <rect class="band" x="160" y="24" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="24" width="5" height="52" rx="2"/>
+    <text class="name" x="180" y="46">使用者操作</text>
+    <text class="sub" x="180" y="64">在 View 中，依 FormLayout 呈現</text>
+  </g>
+  <line class="flow" x1="340" y1="78" x2="340" y2="114" marker-start="url(#flow-head)" marker-end="url(#flow-head)"/>
+  <text class="edge" x="352" y="100">雙向綁定</text>
+  <g class="mvvm">
+    <rect class="band" x="160" y="116" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="116" width="5" height="52" rx="2"/>
+    <text class="name" x="180" y="138">ViewModel</text>
+    <text class="sub" x="180" y="156">由 FormSchema 推導 binding 結構</text>
+  </g>
+  <line class="flow" x1="340" y1="170" x2="340" y2="206" marker-start="url(#flow-head)" marker-end="url(#flow-head)"/>
+  <text class="edge" x="352" y="192">雙向綁定</text>
+  <g class="ntier">
+    <rect class="band" x="160" y="208" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="208" width="5" height="52" rx="2"/>
+    <text class="name" x="180" y="230">DataSet</text>
+    <text class="sub" x="180" y="248">Model：主檔表 + 明細表</text>
+  </g>
+  <line class="flow" x1="340" y1="262" x2="340" y2="298" marker-end="url(#flow-head)"/>
+  <text class="edge" x="352" y="284">存檔</text>
+  <g class="clean">
+    <rect class="band" x="160" y="300" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="300" width="5" height="52" rx="2"/>
+    <text class="name" x="180" y="322">BO.Save(DataSet)</text>
+    <text class="sub" x="180" y="340">Business Object</text>
+  </g>
+  <line class="flow" x1="340" y1="354" x2="340" y2="390" marker-end="url(#flow-head)"/>
+  <g class="clean">
+    <rect class="band" x="160" y="392" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="392" width="5" height="52" rx="2"/>
+    <text class="name" x="180" y="414">Repository</text>
+    <text class="sub" x="180" y="432">依 FormSchema 產生 SQL</text>
+  </g>
+  <line class="flow" x1="340" y1="446" x2="340" y2="482" marker-end="url(#flow-head)"/>
+  <g class="store">
+    <rect class="band" x="160" y="484" width="360" height="52" rx="10"/>
+    <rect class="accent" x="160" y="484" width="5" height="52" rx="2"/>
+    <path class="cyl" d="M178,500 a10,4 0 0 0 20,0 a10,4 0 0 0 -20,0 v18 a10,4 0 0 0 20,0 v-18"/>
+    <text class="name" x="212" y="506">Database</text>
+    <text class="sub" x="212" y="524">SQL Server · PostgreSQL · SQLite · …</text>
+  </g>
+
+  <!-- FormSchema drives the binding structure -->
+  <rect class="chip" x="568" y="116" width="128" height="52" rx="9"/>
+  <text class="name" x="632" y="138" text-anchor="middle">FormSchema</text>
+  <text class="sub" x="632" y="156" text-anchor="middle">定義</text>
+  <line class="derive" x1="566" y1="142" x2="524" y2="142" marker-end="url(#derive-head)"/>
+  <text class="edge" x="632" y="104" text-anchor="middle">推導 binding 結構</text>
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: 9dc30b4cd6839763d700253c3a3fb067ebe38a06 -->
+<!-- source: en/architecture/architecture-overview.md blob: 4037572ce27308f12ce2639e5d9ce7118d437ff3 -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -305,17 +305,7 @@ Polhem 以 MVVM 模式整合前端，FormSchema 直接驅動 ViewModel 的 bindi
 
 ### 資料流
 
-```
-使用者操作
-    ↓↑（雙向綁定）
-ViewModel（FormSchema 推導 binding 結構）
-    ↓↑
-DataSet（Model）
-    ↓
-BO.Save(DataSet)
-    ↓
-Repository → Database
-```
+![MVVM 資料流：使用者操作與 ViewModel（由 FormSchema 推導）雙向綁定，ViewModel 與 DataSet（Model）雙向綁定；存檔由 BO.Save(DataSet) 經 Repository 寫入資料庫](images/mvvm-data-flow.svg)
 
 FormSchema 改變時，ViewModel 的 binding 結構自動更新，View 無需手動調整。
 
@@ -350,46 +340,7 @@ flowchart LR
 
 ## 11. 整體架構圖
 
-```
-┌──────────────────────────────────────────────────────┐
-│  View                                                │
-│  Avalonia（桌面 / 瀏覽器 / 行動）/ Blazor（Server / WebAssembly）/ 自行撰寫的 host │  MVVM: View
-├──────────────────────────────────────────────────────┤
-│  ViewModel                                          │  MVVM: ViewModel
-│  （由 FormSchema 推導 binding 結構）                 │
-├──────────────────────────────────────────────────────┤
-│  API Layer  (Polhem.JsonRpc / JSON-RPC 2.0)           │  N-Tier: Presentation
-├──────────────────────────────────────────────────────┤
-│                                                      │
-│  Business Object (BO)                               │  Clean Arch: Use Case
-│  ├─ CRUD 方法（依 FormSchema 驗證 + Repository）    │
-│  ├─ 報表方法（AnyCode Repository）                  │
-│  └─ 批次方法（AnyCode Repository）                  │
-│                                                      │
-│  ┌──────────────────────────────────┐               │
-│  │  FormSchema（定義中樞）           │               │  Clean Arch: Domain Core
-│  │  欄位行為 / 表單關係 / 驗證規則  │               │
-│  └──────┬───────────────┬───────────┘               │
-│         ↓               ↓                           │
-│   FormLayout         TableSchema                    │
-│   （介面配置）       （資料表結構）                  │
-│                                                      │
-├──────────────────────────────────────────────────────┤
-│  DataSet（DTO）                                     │  N-Tier: Data Transfer
-│  Master Table + Detail Tables                       │
-├──────────────────────────────────────────────────────┤
-│  Repository                                         │  Clean Arch: Interface Adapter
-│  ├─ FormSchema-driven（CRUD SQL 自動產生）           │
-│  └─ AnyCode（報表/批次，BO 自行實作）               │
-├──────────────────────────────────────────────────────┤
-│  Polhem.Db（資料存取基礎設施）                          │  N-Tier: Data Layer
-│  ├─ IDialectFactory 依 DatabaseType 路由             │
-│  ├─ DbDialectRegistry：SQLServer / PostgreSQL / SQLite / … │
-│  └─ DbProviderRegistry：ADO.NET DbProviderFactory     │
-├──────────────────────────────────────────────────────┤
-│  Database（MSSQL / PostgreSQL / SQLite / MySQL …）  │
-└──────────────────────────────────────────────────────┘
-```
+![Polhem 分層架構：View、ViewModel、API Layer、含 FormSchema 定義中樞的 Business Object、Repository、Polhem.Db 與資料庫，每一層標出對應的 MVVM、N-Tier 或 Clean Architecture 角色，DTO 是在各層之間傳遞的 DataSet](images/architecture-layers.svg)
 
 > `Polhem.UI.Avalonia` 能跑在哪些端、各端需要什麼，見[平台支援](../getting-started/platform-support.md)。
 >
