@@ -101,6 +101,8 @@
   <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>Show preview only</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>Open in browser</value></data>
   <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>Open this layout in the web browser, drawn by the Blazor Server components. Unsaved edits and the preview options follow along.</value></data>
+  <data name="FormLayout_PreviewFocus" xml:space="preserve"><value>Focus on the web preview</value></data>
+  <data name="FormLayout_PreviewFocusTooltip" xml:space="preserve"><value>Show only the tree beside the web preview, for adjusting the layout: hides the side bar and the property grid (Properties… edits a node in a dialog). Press again to put everything back.</value></data>
   <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>Show properties only</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>

@@ -183,6 +183,60 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     {
         if (value == FormLayoutPaneLayout.PreviewOnly)
             IsPreviewVisible = true;
+        LeavePreviewFocusIfChanged();
+    }
+
+    partial void OnPreviewEngineChanged(FormLayoutPreviewEngine value) => LeavePreviewFocusIfChanged();
+
+    /// <summary>
+    /// Whether the window is arranged for adjusting a layout against its web preview: the tree beside the web preview
+    /// only, with the property grid in a dialog and the window's side bar hidden.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isPreviewFocused;
+
+    /// <summary>
+    /// Raised with <c>true</c> when <see cref="IsPreviewFocused"/> turns on and <c>false</c> when it turns off, so the
+    /// window hides its side bar and brings it back.
+    /// </summary>
+    public event EventHandler<bool>? PreviewFocusChanged;
+
+    private (FormLayoutPaneLayout Layout, FormLayoutPreviewEngine Engine)? _beforePreviewFocus;
+
+    /// <summary>
+    /// Arranges the window for adjusting the layout against its web preview, or puts back what was there before.
+    /// </summary>
+    [RelayCommand]
+    private void TogglePreviewFocus()
+    {
+        if (_beforePreviewFocus is { } before)
+        {
+            _beforePreviewFocus = null;
+            IsPreviewFocused = false;
+            PaneLayout = before.Layout;
+            PreviewEngine = before.Engine;
+            PreviewFocusChanged?.Invoke(this, false);
+            return;
+        }
+
+        var saved = (PaneLayout, PreviewEngine);
+        PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+        PreviewEngine = FormLayoutPreviewEngine.Web;
+        _beforePreviewFocus = saved;
+        IsPreviewFocused = true;
+        PreviewFocusChanged?.Invoke(this, true);
+    }
+
+    // Choosing another side layout or preview by hand ends the focus without undoing that choice; the side bar comes
+    // back, since what hid it is over.
+    private void LeavePreviewFocusIfChanged()
+    {
+        if (_beforePreviewFocus is null
+            || (PaneLayout == FormLayoutPaneLayout.PreviewOnly && PreviewEngine == FormLayoutPreviewEngine.Web))
+            return;
+        _beforePreviewFocus = null;
+        IsPreviewFocused = false;
+        PreviewFocusChanged?.Invoke(this, false);
     }
 
     /// <summary>

@@ -88,6 +88,8 @@
   <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>只顯示預覽</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>在瀏覽器預覽</value></data>
   <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>在網頁瀏覽器開啟這份版面，由 Blazor Server 元件繪製；尚未存檔的修改與預覽選項都會同步。</value></data>
+  <data name="FormLayout_PreviewFocus" xml:space="preserve"><value>專注 Web 預覽</value></data>
+  <data name="FormLayout_PreviewFocusTooltip" xml:space="preserve"><value>只顯示樹狀結構與 Web 預覽，方便調整版面：隱藏側欄與屬性方格（以「屬性設定…」在對話框中編輯節點）。再按一次即恢復原狀。</value></data>
   <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>只顯示屬性</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>屬性設定…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>在對話框中編輯所選節點的屬性</value></data>

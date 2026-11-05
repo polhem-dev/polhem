@@ -109,6 +109,53 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Focusing on the web preview shows only the web preview on the side and reports the focus")]
+        public void TogglePreviewFocus_On_ShowsOnlyTheWebPreview()
+        {
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.TogglePreviewFocusCommand.Execute(null);
+
+            Assert.True(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PreviewOnly, _document.PaneLayout);
+            Assert.True(_document.IsWebPreview);
+            Assert.Equal([true], raised);
+        }
+
+        [Fact]
+        [DisplayName("Pressing the preview focus again puts back the side layout and the preview it replaced")]
+        public void TogglePreviewFocus_Twice_RestoresTheEarlierArrangement()
+        {
+            _document.PaneLayout = FormLayoutPaneLayout.PropertiesOnly;
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.TogglePreviewFocusCommand.Execute(null);
+            _document.TogglePreviewFocusCommand.Execute(null);
+
+            Assert.False(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PropertiesOnly, _document.PaneLayout);
+            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
+            Assert.Equal([true, false], raised);
+        }
+
+        [Fact]
+        [DisplayName("Choosing another side layout by hand ends the preview focus and keeps that choice")]
+        public void SetPaneLayout_WhileFocused_EndsTheFocus()
+        {
+            _document.TogglePreviewFocusCommand.Execute(null);
+            var raised = new List<bool>();
+            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+
+            _document.SetPaneLayoutCommand.Execute(FormLayoutPaneLayout.PropertiesAndPreview);
+
+            Assert.False(_document.IsPreviewFocused);
+            Assert.Equal(FormLayoutPaneLayout.PropertiesAndPreview, _document.PaneLayout);
+            Assert.Equal([false], raised);
+        }
+
+        [Fact]
         [DisplayName("Publishing to the preview server starts it, stores the unsaved layout and returns the URL that shows it")]
         public async Task PublishBrowserPreviewAsync_StartsTheServerAndPublishesTheLayout()
         {

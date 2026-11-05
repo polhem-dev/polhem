@@ -254,6 +254,7 @@ public partial class MainWindowViewModel : ViewModelBase
             doc.PropertyChanged -= OnDocumentPropertyChanged;
             doc.DefineFileGenerated -= OnDefineFileGenerated;
             if (doc is FormSchemaDocumentViewModel form) form.ActionRequested -= OnFormSchemaActionRequested;
+            if (doc is FormLayoutDocumentViewModel layout) layout.PreviewFocusChanged -= OnPreviewFocusChanged;
         }
         _dirtySubscriptions.Clear();
         foreach (var doc in OpenDocuments)
@@ -261,9 +262,33 @@ public partial class MainWindowViewModel : ViewModelBase
             doc.PropertyChanged += OnDocumentPropertyChanged;
             doc.DefineFileGenerated += OnDefineFileGenerated;
             if (doc is FormSchemaDocumentViewModel form) form.ActionRequested += OnFormSchemaActionRequested;
+            if (doc is FormLayoutDocumentViewModel layout) layout.PreviewFocusChanged += OnPreviewFocusChanged;
             _dirtySubscriptions.Add(doc);
         }
         OnPropertyChanged(nameof(HasDirtyDocuments));
+
+        // A layout closed while its preview focus is on never turns the focus off, so give the side bar back here.
+        if (_sidebarBeforePreviewFocus is not null)
+            OnPreviewFocusChanged(this, false);
+    }
+
+    // Whether the side bar was showing when a layout's preview focus hid it, so leaving the focus puts it back as it was.
+    private bool? _sidebarBeforePreviewFocus;
+
+    private void OnPreviewFocusChanged(object? sender, bool focused)
+    {
+        if (focused)
+        {
+            _sidebarBeforePreviewFocus ??= IsSidebarVisible;
+            IsSidebarVisible = false;
+        }
+        // Another layout may still be focused; the side bar comes back only when none is.
+        else if (_sidebarBeforePreviewFocus is { } wasVisible
+                 && !OpenDocuments.OfType<FormLayoutDocumentViewModel>().Any(d => d.IsPreviewFocused))
+        {
+            _sidebarBeforePreviewFocus = null;
+            IsSidebarVisible = wasVisible;
+        }
     }
 
     /// <summary>
