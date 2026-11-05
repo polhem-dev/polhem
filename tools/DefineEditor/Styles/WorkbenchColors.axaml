@@ -9,6 +9,13 @@
             <SolidColorBrush x:Key="ActivityBarBackground">#333333</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+            <!-- Icon buttons and toggles on document toolbars: icon.foreground, toolbar.hoverBackground and
+                 inputOption.activeBackground / activeBorder / activeForeground -->
+            <SolidColorBrush x:Key="ToolbarIconForeground">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconHoverBackground">#505A5D5E</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveBackground">#822489DB</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveBorder">#2488DB</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveForeground">#FFFFFF</SolidColorBrush>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -17,6 +24,11 @@
             <SolidColorBrush x:Key="ActivityBarBackground">#2C2C2C</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarForeground">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ActivityBarInactiveForeground">#66FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconForeground">#424242</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconHoverBackground">#50B8B8B8</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveBackground">#BED6ED</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveBorder">#005FB8</SolidColorBrush>
+            <SolidColorBrush x:Key="ToolbarIconActiveForeground">#005FB8</SolidColorBrush>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>
