@@ -48,10 +48,10 @@
           <TextBlock x:Name="ScenarioDescText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
         <TabControl x:Name="ScenarioHost" Margin="12,8,12,12">
-          <TabItem Header="Demo">
+          <TabItem Header="Demo" AutomationProperties.Name="Demo">
             <ContentControl x:Name="DemoHost" />
           </TabItem>
-          <TabItem Header="Source">
+          <TabItem Header="Source" AutomationProperties.Name="Source">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
               <SelectableTextBlock x:Name="SourceText"
                                    FontFamily="Menlo,Consolas,monospace" FontSize="12"
