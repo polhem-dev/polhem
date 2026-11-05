@@ -85,6 +85,52 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Enter writes the typed text, closes the editor and leaves the focus on the cell")]
+        public async Task Enter_WritesClosesAndKeepsTheFocus()
+        {
+            var page = await OpenAsync();
+
+            await Cell(page, 0, 0).FocusAsync();
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor input")).ToBeFocusedAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Keyboard.PressAsync("Enter");
+
+            await WaitForDataAsync(page, "Washer|1;Nut|2");
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor")).ToHaveCountAsync(0);
+            await Assertions.Expect(Cell(page, 0, 0)).ToBeFocusedAsync();
+        }
+
+        [BrowserFact]
+        [DisplayName("Enter pressed before the editor arrives writes the text typed before it and closes the editor")]
+        public async Task SlowLink_TypeThenEnterBeforeEditor_WritesAndCloses()
+        {
+            var page = await OpenAsync(slow: true);
+
+            await Cell(page, 0, 0).FocusAsync();
+            await page.Keyboard.TypeAsync("Washer");
+            await page.Keyboard.PressAsync("Enter");
+
+            await WaitForDataAsync(page, "Washer|1;Nut|2");
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor")).ToHaveCountAsync(0);
+            await Assertions.Expect(Cell(page, 0, 0)).ToBeFocusedAsync();
+        }
+
+        [BrowserFact]
+        [DisplayName("Enter on a numeric cell writes the number and closes the editor")]
+        public async Task Enter_NumericCell_WritesAndCloses()
+        {
+            var page = await OpenAsync();
+
+            await Cell(page, 1, 1).FocusAsync();
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor input")).ToBeFocusedAsync();
+            await page.Keyboard.TypeAsync("7");
+            await page.Keyboard.PressAsync("Enter");
+
+            await WaitForDataAsync(page, "Bolt|1;Nut|7");
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor")).ToHaveCountAsync(0);
+        }
+
+        [BrowserFact]
         [DisplayName("A click on another cell before the editor arrives does not move the text there")]
         public async Task SlowLink_TypeThenClickOtherCell_KeepsTextInItsCell()
         {
