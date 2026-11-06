@@ -39,7 +39,7 @@ namespace Polhem.Definition.Layouts
             string[] fieldNames = StringUtilities.Split(schema.ListFields, ",");
             foreach (var name in fieldNames.Where(master.Fields.Contains))
             {
-                grid.Columns!.Add(LayoutColumnFactory.ToColumn(master.Fields[name]));
+                grid.Columns!.Add(LayoutColumnFactory.ToColumn(master.Fields[name], editableGrid: false));
             }
 
             // 2. System fields required for list grid binding (whitelist), hidden in layout
@@ -47,7 +47,7 @@ namespace Polhem.Definition.Layouts
                 master.Fields.Contains(s) &&
                 !grid.Columns!.Any(c => StringUtilities.IsEquals(c.FieldName, s))))
             {
-                var col = LayoutColumnFactory.ToColumn(master.Fields[sysName]);
+                var col = LayoutColumnFactory.ToColumn(master.Fields[sysName], editableGrid: false);
                 col.Visible = false;
                 grid.Columns!.Add(col);
             }
