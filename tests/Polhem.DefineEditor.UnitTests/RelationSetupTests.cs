@@ -118,6 +118,22 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Switching a row whose source is a relation field to lookup-only keeps it a RelationField")]
+        public void LookupOnly_RelationFieldSource_KeepsRelationField()
+        {
+            CustomerMaster.Fields!.Add(new FormField("ref_zone_name", "Zone Name", FieldDbType.String, FieldType.RelationField));
+            var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
+            var zoneName = Row(rows, "ref_zone_name");
+            var zone = Row(rows, "zone_rowid");
+
+            zoneName.LookupOnly = true;
+            zone.LookupOnly = true;
+
+            Assert.Equal(FieldType.RelationField, zoneName.NewFieldType);
+            Assert.Equal(FieldType.DbField, zone.NewFieldType);
+        }
+
+        [Fact]
         [DisplayName("An empty destination, the foreign key itself and two rows on one destination are errors")]
         public void Evaluate_Errors_RefuseApplying()
         {

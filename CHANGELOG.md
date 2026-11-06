@@ -19,6 +19,8 @@ Details: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
 - A relation field three relations away, such as an employee's supervisor read through the employee's department, is read back after a save and in lists instead of failing with "Field mapping … is null".
 - Syncing a form lists a new foreign key by its related name instead of the row id, which a list cannot show.
 - A generated FormLayout makes relation fields read-only, in the master section and in detail grids.
+- A number field without a format shows a value read from the database as it shows the same value typed, without the trailing zeros of the column's scale (`0`, not `0.0000`), in every UI head.
+- In DefineEditor's relation dialog, a lookup-only row whose source is a relation field of the related form stays a relation field instead of becoming a stored field.
 
 ## [1.12.0] - 2026-11-03
 

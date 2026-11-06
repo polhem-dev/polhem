@@ -40,9 +40,21 @@ namespace Polhem.UI.Core.Fields
                 DateTime dt => dt.TimeOfDay == TimeSpan.Zero
                     ? dt.ToString("d", culture)
                     : dt.ToString("G", culture),
+                decimal d => WithoutTrailingZeros(d).ToString(culture),
                 IFormattable f => f.ToString(null, culture),
                 _ => raw.ToString() ?? string.Empty,
             };
         }
+
+        /// <summary>
+        /// Returns <paramref name="value"/> with the trailing zeros of its scale removed, so an unformatted value
+        /// shows the same whether it came from the database, which reads a decimal with the column's scale
+        /// (<c>0.0000</c>), or was typed or defaulted (<c>0</c>).
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>The same number with the smallest scale that keeps it exact.</returns>
+        internal static decimal WithoutTrailingZeros(decimal value)
+            // Dividing by one written with the largest scale makes the result's scale the smallest exact one.
+            => value / 1.0000000000000000000000000000m;
     }
 }

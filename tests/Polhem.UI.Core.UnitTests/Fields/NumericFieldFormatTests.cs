@@ -52,6 +52,21 @@ namespace Polhem.UI.Core.UnitTests.Fields
             Assert.Equal("1.23456", NumericFieldFormat.ToWriteBackValue("1,23456", "0"));
         }
 
+        [Theory]
+        [DisplayName("Without a number format, a value read with the column's scale shows like the same value typed")]
+        [InlineData("0.0000", "0")]
+        [InlineData("18.5000", "18.5")]
+        [InlineData("1234.5670", "1234.567")]
+        [InlineData("-3.1000", "-3.1")]
+        [InlineData("100", "100")]
+        public void FormatForDisplay_NoFormat_DropsTrailingZeros(string raw, string expected)
+        {
+            using var _ = new CultureScope("en-US");
+
+            Assert.Equal(expected, NumericFieldFormat.FormatForDisplay(raw, string.Empty));
+            Assert.Equal(expected, NumericFieldFormat.FormatForEditing(raw));
+        }
+
         [Fact]
         [DisplayName("FormatForDisplay applies the number format and FormatForEditing keeps full precision")]
         public void FormatForDisplay_AndForEditing_DifferInPrecision()

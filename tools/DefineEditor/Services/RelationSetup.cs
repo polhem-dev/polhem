@@ -287,6 +287,7 @@ public static class RelationSetup
                 SourceCaption = r.SourceCaption,
                 SourceDbType = r.SourceDbType,
                 SourceMaxLength = r.SourceMaxLength,
+                IsSourceRelationField = r.IsSourceRelationField,
                 IsSourceMissing = r.IsSourceMissing,
             };
             copiedRow.LookupOnly = r.LookupOnly;
@@ -313,6 +314,7 @@ public static class RelationSetup
             SourceCaption = source.Caption,
             SourceDbType = source.DbType,
             SourceMaxLength = source.MaxLength,
+            IsSourceRelationField = source.Type == FieldType.RelationField,
         };
     }
 

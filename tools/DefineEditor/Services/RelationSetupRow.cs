@@ -33,6 +33,12 @@ public sealed partial class RelationSetupRow : ObservableObject
     /// <summary>Gets the source field's data type, or <c>null</c> when the related form no longer has the field.</summary>
     public FieldDbType? SourceDbType { get; init; }
 
+    /// <summary>
+    /// Gets whether the source is a relation field of the related form, which its own relation fills rather than a
+    /// column of its table.
+    /// </summary>
+    public bool IsSourceRelationField { get; init; }
+
     /// <summary>Gets the source field's maximum length.</summary>
     public int SourceMaxLength { get; init; }
 
@@ -81,11 +87,13 @@ public sealed partial class RelationSetupRow : ObservableObject
     /// <summary>Gets whether <see cref="Status"/> refuses applying.</summary>
     public bool IsError => RelationSetup.IsError(Status);
 
-    // A lookup-only mapping usually copies into a stored field of the same name, while a regular one fills a relation
-    // field; the defaults follow the switch until the user types a destination of their own.
+    // A regular mapping fills a relation field. A lookup-only one copies into a field of the same name, which is stored
+    // when the source is a column, and is a relation field when the source is one: the form fills it through its own
+    // relation, as an order fills its department name from its own department key (docs/en/definitions/
+    // formschema-data-access.md §3.4). The destination follows the switch until the user types one of their own.
     partial void OnLookupOnlyChanged(bool value)
     {
-        NewFieldType = value ? FieldType.DbField : FieldType.RelationField;
+        NewFieldType = value && !IsSourceRelationField ? FieldType.DbField : FieldType.RelationField;
         var previous = value ? JoinDestination : LookupDestination;
         if (string.Equals(DestinationField, previous, StringComparison.OrdinalIgnoreCase))
             DestinationField = value ? LookupDestination : JoinDestination;
