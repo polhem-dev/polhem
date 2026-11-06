@@ -175,6 +175,7 @@ Polhem.Web.Blazor.Controls.Editors.DateEditorBase.CommitDate(System.DateTime? da
 Polhem.Web.Blazor.Controls.Editors.DateEditorBase.CommitInput(string? input) -> void
 Polhem.Web.Blazor.Controls.Editors.DateEditorBase.Date.get -> System.DateTime?
 Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DateEditorBase() -> void
+Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DisplayPattern.get -> string!
 Polhem.Web.Blazor.Controls.Editors.DateEditorBase.InputValue.get -> string!
 Polhem.Web.Blazor.Controls.Editors.DateEditorBase.ReadOnlyText.get -> string!
 Polhem.Web.Blazor.Controls.Editors.DateTimeEditorBase

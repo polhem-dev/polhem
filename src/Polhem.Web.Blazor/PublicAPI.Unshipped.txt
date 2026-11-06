@@ -1,2 +1,1 @@
 #nullable enable
-Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DisplayPattern.get -> string!

@@ -11,11 +11,20 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
-## [Unreleased]
+## [1.12.1] - 2026-11-06
 
-Details: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
+Details: [docs/en/changelogs/1.12.1.md](docs/en/changelogs/1.12.1.md)
 
 - DefineEditor can show the FormLayout preview's Blazor page inside the editor, in a web view drawn by the system's web engine, beside the browser preview.
+- DefineEditor's FormLayout editor shows its layout and preview options as icon toggles.
+- In the Blazor packages, Enter in a grid cell's editor writes the value and closes the editor, as in the Avalonia grid.
+- A click made while a Blazor grid cell opens its editor no longer loses what was typed.
+- In the Blazor packages, an editable date shows in the user's culture, as it does read-only.
+- A read-only Blazor editor keeps only its underline, lined up with an editable neighbour in MudBlazor.
+- MudBlazor pages scroll in a host that also references Fluent UI.
+- The Fluent UI package draws the lookup and grid commands as icon buttons, right-aligns the numeric editor, shows no vertical scrollbar over grid rows that fit, and lets columns without a width share the grid's width.
+- Avalonia grids center text cells and right-align numeric columns, and Avalonia's lookup button and date pickers have accessible names.
+- The Avalonia browser head of the `polhem-avalonia` template accepts input methods such as Boshiamy; an existing project copies `ime-input-bridge.js` and `main.js` from a new one.
 - A relation field three relations away, such as an employee's supervisor read through the employee's department, is read back after a save and in lists instead of failing with "Field mapping … is null".
 - Syncing a form lists a new foreign key by its related name instead of the row id, which a list cannot show.
 - A generated FormLayout makes relation fields read-only, in the master section and in detail grids.
