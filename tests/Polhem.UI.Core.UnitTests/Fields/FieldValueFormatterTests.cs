@@ -24,6 +24,21 @@ namespace Polhem.UI.Core.UnitTests.Fields
         }
 
         [Fact]
+        [DisplayName("An unformatted decimal renders without the trailing zeros of its scale, in the user's culture")]
+        public void Format_DecimalWithoutFormat_DropsTrailingZeros()
+        {
+            using (new CultureScope("de-DE"))
+            {
+                Assert.Equal("18,5", FieldValueFormatter.Format(18.5000m, string.Empty, string.Empty));
+            }
+            using (new CultureScope("en-US"))
+            {
+                Assert.Equal("0", FieldValueFormatter.Format(0.0000m, string.Empty, string.Empty));
+                Assert.Equal("1.50", FieldValueFormatter.Format(1.5000m, string.Empty, "0.00"));
+            }
+        }
+
+        [Fact]
         [DisplayName("A date renders with the user's culture short date pattern")]
         public void Format_Date_UsesCultureShortDate()
         {

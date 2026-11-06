@@ -103,7 +103,9 @@ namespace Polhem.UI.Core.Fields
         /// <param name="raw">The bound value, in the invariant culture.</param>
         /// <returns>The editing string; a value that does not parse is returned as is.</returns>
         public static string FormatForEditing(string raw)
-            => TryParseRaw(raw, out var value) ? value.ToString(CultureInfo.CurrentCulture) : raw;
+            => TryParseRaw(raw, out var value)
+                ? FieldValueFormatter.WithoutTrailingZeros(value).ToString(CultureInfo.CurrentCulture)
+                : raw;
 
         /// <summary>
         /// Parses a bound value, the invariant form the wire carries.
