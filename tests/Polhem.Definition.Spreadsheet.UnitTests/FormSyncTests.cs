@@ -102,6 +102,42 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("A foreign key added to the master table lists its related name instead of the row id it holds")]
+        public void Plan_NewForeignKey_ListsItsDisplayName()
+        {
+            EditSchema(s =>
+            {
+                s.ListFields = "sys_id,quote_date";
+                var fields = s.Tables!["Quote"].Fields!;
+                var owner = new FormField("owner_rowid", "Owner", FieldDbType.Guid) { RelationProgId = "Customer" };
+                owner.RelationFieldMappings!.Add("sys_id", "ref_owner_id");
+                owner.RelationFieldMappings!.Add("sys_name", "ref_owner_name");
+                fields.Add(owner);
+                fields.Add(new FormField("ref_owner_id", "Owner Code", FieldDbType.String, FieldType.RelationField));
+                fields.Add(new FormField("ref_owner_name", "Owner Name", FieldDbType.String, FieldType.RelationField));
+            });
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            Assert.Equal("sys_id,quote_date,ref_owner_name", XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+        }
+
+        [Fact]
+        [DisplayName("A foreign key added without a display field is left out of the ListFields")]
+        public void Plan_NewForeignKeyWithoutDisplayField_IsNotListed()
+        {
+            EditSchema(s =>
+            {
+                s.ListFields = "sys_id,quote_date";
+                s.Tables!["Quote"].Fields!.Add(new FormField("owner_rowid", "Owner", FieldDbType.Guid) { RelationProgId = "Customer" });
+            });
+
+            FormImporter.Apply(FormSync.Plan(_define, "Quote"));
+
+            Assert.Equal("sys_id,quote_date", XmlCodec.DeserializeFromFile<FormSchema>(SchemaPath)!.ListFields);
+        }
+
+        [Fact]
         [DisplayName("A field the ListFields already names is not added again, and a synced form is not touched twice")]
         public void Plan_ListedField_IsNotAddedAgain()
         {

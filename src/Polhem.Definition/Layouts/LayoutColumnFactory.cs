@@ -1,5 +1,6 @@
 using Polhem.Core;
 using Polhem.Core.Data;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.Layouts
@@ -24,9 +25,16 @@ namespace Polhem.Definition.Layouts
             NumberKind = field.NumberKind,
             CurrencyField = field.CurrencyField,
             UnitField = field.UnitField,
-            ReadOnly = field.ReadOnly,
+            ReadOnly = IsReadOnly(field),
             Required = field.Required,
         };
+
+        /// <summary>
+        /// Whether the layout field or column built from <paramref name="field"/> is read-only: when the form field
+        /// says so, and always for a <see cref="FieldType.RelationField"/>, whose value a lookup or the query join
+        /// fills and which no table stores.
+        /// </summary>
+        private static bool IsReadOnly(FormField field) => field.ReadOnly || field.Type == FieldType.RelationField;
 
         /// <summary>
         /// Builds a <see cref="LayoutColumn"/> for a grid from the given form field.
@@ -43,7 +51,7 @@ namespace Polhem.Definition.Layouts
             NumberKind = field.NumberKind,
             CurrencyField = field.CurrencyField,
             UnitField = field.UnitField,
-            ReadOnly = field.ReadOnly,
+            ReadOnly = IsReadOnly(field),
             Required = field.Required,
         };
 

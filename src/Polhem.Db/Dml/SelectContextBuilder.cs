@@ -118,7 +118,11 @@ namespace Polhem.Db.Dml
                     var reference = srcTable.RelationFieldReferences[srcField.FieldName];
                     string srcKey = key + "." + reference.ForeignKeyField.RelationProgId;
                     var srcMappings = GetSingleRelationFieldMappings(reference.ForeignKeyField, reference.FieldName);
-                    AddTableJoin(context, srcKey, reference.ForeignKeyField, srcMappings, join.RightTable, join.RightAlias, mapping.DestinationField);
+                    // The column is selected under the name of the outermost form's field. A chain deeper than two
+                    // relations recurses again, and the inner mapping's destination is a field of the related form,
+                    // not one the caller selects.
+                    string outerFieldName = StringUtilities.IsEmpty(queryFieldName) ? mapping.DestinationField : queryFieldName;
+                    AddTableJoin(context, srcKey, reference.ForeignKeyField, srcMappings, join.RightTable, join.RightAlias, outerFieldName);
                 }
                 else
                 {

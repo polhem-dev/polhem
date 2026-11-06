@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 
@@ -86,6 +87,34 @@ namespace Polhem.Definition.UnitTests.Layouts
             var grid = layout.Details![0];
             Assert.Equal("EmployeeSkill", grid.TableName);
             Assert.Equal("員工技能", grid.Caption);
+        }
+
+        [Fact]
+        [DisplayName("FormLayoutGenerator.Generate makes a relation field read-only and leaves a stored field editable")]
+        public void Generate_RelationField_IsReadOnly()
+        {
+            var schema = BuildSchema();
+            schema.MasterTable!.Fields!.Add(new FormField("ref_dept_name", "部門名稱", FieldDbType.String, FieldType.RelationField));
+
+            var fields = FormLayoutGenerator.Generate(schema, "default").Sections![0].Fields!;
+
+            Assert.True(fields.Single(f => f.FieldName == "ref_dept_name").ReadOnly);
+            Assert.False(fields.Single(f => f.FieldName == "sys_name").ReadOnly);
+        }
+
+        [Fact]
+        [DisplayName("FormLayoutGenerator.Generate makes a relation column of a detail grid read-only")]
+        public void Generate_DetailRelationColumn_IsReadOnly()
+        {
+            var schema = BuildSchema();
+            var detail = schema.Tables!.Add("EmployeeSkill", "員工技能");
+            detail.Fields!.Add("skill_name", "技能", FieldDbType.String);
+            detail.Fields!.Add(new FormField("ref_skill_group", "技能群組", FieldDbType.String, FieldType.RelationField));
+
+            var columns = FormLayoutGenerator.Generate(schema, "default").Details![0].Columns!;
+
+            Assert.True(columns.Single(c => c.FieldName == "ref_skill_group").ReadOnly);
+            Assert.False(columns.Single(c => c.FieldName == "skill_name").ReadOnly);
         }
 
         [Fact]

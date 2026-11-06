@@ -16,6 +16,9 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 Details: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
 
 - DefineEditor can show the FormLayout preview's Blazor page inside the editor, in a web view drawn by the system's web engine, beside the browser preview.
+- A relation field three relations away, such as an employee's supervisor read through the employee's department, is read back after a save and in lists instead of failing with "Field mapping … is null".
+- Syncing a form lists a new foreign key by its related name instead of the row id, which a list cannot show.
+- A generated FormLayout makes relation fields read-only, in the master section and in detail grids.
 
 ## [1.12.0] - 2026-11-03
 
