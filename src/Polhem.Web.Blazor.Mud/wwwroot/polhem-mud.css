@@ -4,6 +4,10 @@
    These selectors use MudBlazor's internal class names, so check them when upgrading MudBlazor. */
 .polhem-dense .mud-input-control { margin: 0 !important; }
 .polhem-dense .mud-input-control-input-container { font-size: 13px; }
+/* A read-only editor is the text variant, which keeps only the underline. Every editor uses the dense margin, where
+   MudBlazor pads the outlined input 10.5px and the text one 3px above and 7px below, so the underline sat above an
+   editable neighbour's bottom edge. It takes the outlined padding instead, which lines the two up. */
+[class*="polhem-field-editor--"] .mud-input.mud-input-text.mud-input-margin-dense .mud-input-slot { padding: 10.5px 14px; }
 .polhem-dense .mud-input.mud-input-outlined .mud-input-slot { padding: 4px 8px !important; height: auto; font-size: 13px; line-height: 20px; }
 /* A read-only editor is the text variant, which keeps only the underline; it takes the outlined editor's size, so a field
    does not change size when the form mode makes it read-only. */

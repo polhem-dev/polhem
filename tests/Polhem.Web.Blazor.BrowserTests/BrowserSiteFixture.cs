@@ -20,7 +20,7 @@ namespace Polhem.Web.Blazor.BrowserTests
         private SlowTcpProxy? _proxy;
 
         /// <summary>Gets the backend of the site's form page.</summary>
-        public FormPageTestBackend Backend { get; } = new();
+        public FormPageTestBackend Backend { get; } = new(amountExpression: "price * qty");
 
         /// <summary>Gets the address of the site.</summary>
         public string Address { get; private set; } = string.Empty;

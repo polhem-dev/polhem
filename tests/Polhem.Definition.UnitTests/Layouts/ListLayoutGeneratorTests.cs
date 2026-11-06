@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 
@@ -24,6 +25,22 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Equal("Demo", grid.TableName);
             Assert.Equal("示範", grid.Caption);
             Assert.Equal(GridControlAllowActions.All, grid.AllowActions);
+        }
+
+        [Fact]
+        [DisplayName("GetListLayout leaves a relation column as the form field says, so its header is not marked read-only")]
+        public void GetListLayout_RelationColumn_KeepsFormFieldReadOnly()
+        {
+            var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id,ref_owner_name,total" };
+            var table = schema.Tables!.Add("Demo", "示範");
+            table.Fields!.Add("sys_id", "編號", FieldDbType.String);
+            table.Fields!.Add(new FormField("ref_owner_name", "負責人", FieldDbType.String, FieldType.RelationField));
+            table.Fields!.Add(new FormField("total", "合計", FieldDbType.Currency) { ReadOnly = true });
+
+            var columns = schema.GetListLayout().Columns!;
+
+            Assert.False(columns.Single(c => c.FieldName == "ref_owner_name").ReadOnly);
+            Assert.True(columns.Single(c => c.FieldName == "total").ReadOnly);
         }
 
         [Fact]

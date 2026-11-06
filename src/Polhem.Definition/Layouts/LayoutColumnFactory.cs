@@ -39,7 +39,12 @@ namespace Polhem.Definition.Layouts
         /// <summary>
         /// Builds a <see cref="LayoutColumn"/> for a grid from the given form field.
         /// </summary>
-        public static LayoutColumn ToColumn(FormField field) => new()
+        /// <param name="field">The form field.</param>
+        /// <param name="editableGrid">
+        /// Whether the grid edits its rows. A relation column of an editable grid is read-only; a list edits nothing,
+        /// so its columns keep the form field's own flag, and its headers mark only what the form marks read-only.
+        /// </param>
+        public static LayoutColumn ToColumn(FormField field, bool editableGrid = true) => new()
         {
             FieldName = field.FieldName,
             Caption = field.Caption,
@@ -51,7 +56,7 @@ namespace Polhem.Definition.Layouts
             NumberKind = field.NumberKind,
             CurrencyField = field.CurrencyField,
             UnitField = field.UnitField,
-            ReadOnly = IsReadOnly(field),
+            ReadOnly = editableGrid ? IsReadOnly(field) : field.ReadOnly,
             Required = field.Required,
         };
 
