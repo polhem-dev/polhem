@@ -10,11 +10,20 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
-## [Unreleased]
+## [1.12.1] - 2026-11-06
 
-詳細內容：[docs/zh-TW/changelogs/1.13.0.md](docs/zh-TW/changelogs/1.13.0.md)
+詳細內容：[docs/zh-TW/changelogs/1.12.1.md](docs/zh-TW/changelogs/1.12.1.md)
 
 - DefineEditor 可在編輯器內以作業系統網頁引擎繪製的網頁檢視，顯示 FormLayout 預覽的 Blazor 頁面，與瀏覽器預覽並存。
+- DefineEditor 的 FormLayout 編輯器以圖示切換鈕顯示版面與預覽選項。
+- Blazor 套件中，在表格儲存格編輯器按 Enter 會寫入值並關閉編輯器，與 Avalonia 表格一致。
+- Blazor 表格儲存格開啟編輯器時的點擊，不再讓輸入的內容遺失。
+- Blazor 套件中，可編輯的日期與唯讀時一樣依使用者文化顯示。
+- Blazor 的唯讀編輯器只保留底線；MudBlazor 中底線與相鄰的可編輯編輯器對齊。
+- 同時引用 Fluent UI 的宿主中，MudBlazor 頁面可以捲動。
+- Fluent UI 套件以圖示按鈕繪製挑選與表格命令、數字編輯器靠右對齊、資料列放得下時不再出現垂直捲軸，並讓未指定寬度的欄位分配表格寬度。
+- Avalonia 表格的文字儲存格垂直置中、數字欄靠右對齊，挑選按鈕與日期選擇器有無障礙名稱。
+- `polhem-avalonia` 範本的 Avalonia 瀏覽器前端可以使用嘸蝦米等輸入法；既有專案請從新專案複製 `ime-input-bridge.js` 與 `main.js`。
 - 相隔三層的關聯欄位（例如經由員工所屬部門讀出的主管）在存檔後重新讀取與清單中都能讀回，不再出現「Field mapping … is null」錯誤。
 - 同步表單時，新的外鍵以其關聯名稱列入清單欄位，而不是清單無法顯示的資料列識別碼。
 - 產生的 FormLayout 會把關聯欄位設為唯讀，主檔區段與明細表格皆同。
