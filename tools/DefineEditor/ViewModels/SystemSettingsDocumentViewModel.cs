@@ -24,7 +24,7 @@ public sealed partial class SystemSettingsDocumentViewModel : ObjectTreeDocument
 
     public override string TabIcon => "DefSystemSettings";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private SystemSettingsDocumentViewModel(string filePath, SystemSettings root)
         : base(filePath, "SystemSettings", keyText: string.Empty, new ObjectTreeOptions

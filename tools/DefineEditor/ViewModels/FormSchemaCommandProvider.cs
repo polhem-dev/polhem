@@ -6,17 +6,20 @@ namespace Polhem.DefineEditor.ViewModels;
 /// <summary>The context-menu commands of the FormSchema tree.</summary>
 public sealed class FormSchemaCommandProvider(FormSchemaDocumentViewModel document) : TreeCommandProviderBase(document)
 {
-    protected override IEnumerable<TreeNodeCommand> GetAddCommands(ObjectTreeNode node)
-    {
-        if (node.Value is FormSchema)
-            return
+    protected override IEnumerable<TreeNodeCommand> GetActionCommands(ObjectTreeNode node) =>
+        node.Value is FormSchema
+            ?
             [
                 Create("FormSchema_GenerateFormLayout", "DefFormLayout", document.GenerateFormLayoutCommand),
                 Create("FormSchema_ExportWorkbook", "IconTable", document.ExportWorkbookCommand),
                 Create("FormSchema_SyncDefinitions", "IconSync", document.SyncDefinitionsCommand),
                 Create("FormSchema_UpgradeTables", "IconDatabase", document.UpgradeTablesCommand),
                 Create("FormSchema_PreviewUpgradeTables", "IconDatabase", document.PreviewUpgradeTablesCommand),
-            ];
+            ]
+            : [];
+
+    protected override IEnumerable<TreeNodeCommand> GetAddCommands(ObjectTreeNode node)
+    {
         if (node is { IsFolder: true, Value: FormTableCollection })
             return [Create("FormSchema_AddTable", "IconTable", document.AddTableCommand)];
         if (node.Value is FormTable)

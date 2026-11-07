@@ -24,7 +24,7 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     public override string TabIcon => "DefFormLayout";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     /// <summary>Whether the live preview under the property grid is expanded.</summary>
     [ObservableProperty]
@@ -184,6 +184,8 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         if (value == FormLayoutPaneLayout.PreviewOnly)
             IsPreviewVisible = true;
         LeavePreviewFocusIfChanged();
+        // The tree offers Edit Properties only while the property grid is hidden.
+        RefreshToolbar();
     }
 
     partial void OnPreviewEngineChanged(FormLayoutPreviewEngine value) => LeavePreviewFocusIfChanged();

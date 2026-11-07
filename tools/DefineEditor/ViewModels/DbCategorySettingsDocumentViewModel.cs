@@ -19,7 +19,7 @@ public sealed partial class DbCategorySettingsDocumentViewModel : ObjectTreeDocu
 
     public override string TabIcon => "DefDbCategorySettings";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private DbCategorySettingsDocumentViewModel(string filePath, DbCategorySettings root)
         : base(filePath, "DbCategorySettings", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
@@ -50,7 +50,7 @@ public sealed partial class DbCategorySettingsDocumentViewModel : ObjectTreeDocu
     [RelayCommand(CanExecute = nameof(CanAddCategory))]
     private void AddCategory()
     {
-        if (SelectedTreeNode is not { Value: DbCategorySettings root } rootNode)
+        if (FindAncestor<DbCategorySettings>(SelectedTreeNode) is not { Value: DbCategorySettings root } rootNode)
             return;
         var id = UniqueKey(root.Categories!.Select(c => c.Id), "new_category");
         var category = new DbCategory { Id = id, DisplayName = "New category" };
@@ -59,7 +59,7 @@ public sealed partial class DbCategorySettingsDocumentViewModel : ObjectTreeDocu
         StatusText = L("Status_AddedNamed", "DbCategory", id);
     }
 
-    private bool CanAddCategory() => SelectedTreeNode?.Value is DbCategorySettings;
+    private bool CanAddCategory() => FindAncestor<DbCategorySettings>(SelectedTreeNode) is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddTable))]
     private void AddTable()

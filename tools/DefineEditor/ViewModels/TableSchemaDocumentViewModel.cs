@@ -21,7 +21,7 @@ public sealed partial class TableSchemaDocumentViewModel : ObjectTreeDocumentVie
 
     public override string TabIcon => "DefTableSchema";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private TableSchemaDocumentViewModel(string filePath, TableSchema root)
         // The root and the Fields and Indexes folders start expanded.

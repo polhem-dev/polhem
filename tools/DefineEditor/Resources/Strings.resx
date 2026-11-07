@@ -87,6 +87,7 @@
 
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>Close tab</value></data>
+  <data name="TreeCommandBar_MoreActions" xml:space="preserve"><value>More actions</value></data>
 
   <data name="DocumentWelcome_Tip" xml:space="preserve"><value>(Pick a file from the solution tree to open it as a tab. Clicking an already-open file switches to that tab.)</value></data>
 

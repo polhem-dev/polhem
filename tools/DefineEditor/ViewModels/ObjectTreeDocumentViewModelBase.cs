@@ -38,6 +38,45 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     private ObjectTreeNode? _selectedTreeNode;
 
+    /// <summary>The toolbar's Add buttons for the selected node.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<TreeToolbarItem> _toolbarAddItems = [];
+
+    /// <summary>The toolbar's Delete button, disabled when the selected node cannot be deleted.</summary>
+    [ObservableProperty]
+    private TreeToolbarItem? _toolbarDeleteItem;
+
+    /// <summary>The selected node's other commands, which the toolbar keeps in its overflow menu.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasToolbarActions))]
+    private IReadOnlyList<TreeToolbarItem> _toolbarActionItems = [];
+
+    /// <summary>Whether the toolbar shows its overflow menu.</summary>
+    public bool HasToolbarActions => ToolbarActionItems.Count > 0;
+
+    partial void OnSelectedTreeNodeChanged(ObjectTreeNode? value) => RefreshToolbar();
+
+    /// <summary>
+    /// Reads the toolbar's commands again, after the selection, the document or anything else a command's enabled
+    /// state depends on has changed.
+    /// </summary>
+    protected void RefreshToolbar()
+    {
+        // The subclass assigns CommandProvider in its constructor, after this class's has run.
+        if (CommandProvider is not { } provider || SelectedTreeNode is not { } node)
+        {
+            ToolbarAddItems = [];
+            ToolbarDeleteItem = null;
+            ToolbarActionItems = [];
+            return;
+        }
+
+        var commands = provider.GetToolbarCommands(node);
+        ToolbarAddItems = commands.Add.Select(c => new TreeToolbarItem(c)).ToList();
+        ToolbarDeleteItem = new TreeToolbarItem(commands.Delete);
+        ToolbarActionItems = commands.Actions.Select(c => new TreeToolbarItem(c)).ToList();
+    }
+
     // IsDirty / StatusText / culture-change refresh are inherited from
     // DocumentViewModelBase.
 
@@ -89,6 +128,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         {
             foreach (var root in Roots)
                 RefreshNodeLabels(root);
+            RefreshToolbar();
         });
         DragDropHandler = new SiblingReorderDragDropHandler(this);
     }
@@ -179,7 +219,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     public ObjectTreeNode RootNode => Roots[0];
 
     /// <summary>The commands of the tree's context menu.</summary>
-    public abstract ITreeNodeCommandProvider CommandProvider { get; }
+    public abstract TreeCommandProviderBase CommandProvider { get; }
 
     /// <summary>
     /// What the tree lets the user drag and where: by default, reordering a node within the define
@@ -259,6 +299,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     public void MarkChanged()
     {
         IsDirty = true;
+        RefreshToolbar();
         DocumentChanged?.Invoke(this, EventArgs.Empty);
     }
 

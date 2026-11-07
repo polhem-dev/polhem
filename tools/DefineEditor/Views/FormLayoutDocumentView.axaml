@@ -20,6 +20,7 @@
              press it (AXPress) without opening a menu first. -->
         <Border DockPanel.Dock="Top" Padding="8,6">
             <DockPanel>
+                <views:TreeCommandBar DockPanel.Dock="Left"/>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
                     <Button Classes="toolbar-icon" Classes.selected="{Binding IsPropertiesAndPreviewLayout}"
                             Command="{Binding SetPaneLayoutCommand}" CommandParameter="{x:Static vm:FormLayoutPaneLayout.PropertiesAndPreview}"
