@@ -111,6 +111,12 @@ enum's or a boolean's own, or the ones the property grid offers for that attribu
 of the table concerned, and so on. Those are looked up in the document as it was last read, so an element typed since
 gets them once the text has been read again.
 
+**File → Export XML Schemas...** writes the schema of each kind of definition file (`FormSchema.xsd`, `TableSchema.xsd`,
+`SystemSettings.xsd` and the others) into a folder you choose, so other XML editors can check and complete the files
+too. Next to them it writes `xml.fileAssociations.json`, the `xml.fileAssociations` setting of VS Code's XML extension
+(Red Hat) that ties each file name, such as `**/*.FormSchema.xml`, to its schema; copy it into your VS Code settings.
+The schemas are exported from the definition types, so export them again after upgrading Polhem.
+
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only; on Windows and Linux, Ctrl+B shows or hides the side bar.

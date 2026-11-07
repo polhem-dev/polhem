@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_user" DisplayName="User">
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" TableName="st_user" DisplayName="User">
 	<Fields>
 		<DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
 		<DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
