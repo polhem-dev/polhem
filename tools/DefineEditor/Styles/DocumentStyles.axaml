@@ -233,6 +233,15 @@
     <Style Selector="Border.surface">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground0}"/>
     </Style>
+    <!-- The Go to File box: raised over the documents with a border and a soft shadow. -->
+    <Style Selector="Border.quick-open">
+        <Setter Property="Background" Value="{DynamicResource SemiColorBackground2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="BoxShadow" Value="0 4 16 0 #40000000"/>
+    </Style>
+
     <Style Selector="Border.surface-sunken">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground1}"/>
     </Style>

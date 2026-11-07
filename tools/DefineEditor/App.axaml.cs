@@ -34,6 +34,8 @@ public partial class App : Application
     // out when no document is open or when the active one doesn't support
     // saving (e.g. UnsupportedDocumentViewModel).
     public IRelayCommand SaveActiveCommand { get; }
+
+    public IRelayCommand GoToFileCommand { get; }
     public IRelayCommand SaveAllCommand { get; }
     public IRelayCommand ValidateActiveCommand { get; }
     public IRelayCommand CloseActiveTabCommand { get; }
@@ -84,6 +86,7 @@ public partial class App : Application
         WelcomeCommand = new RelayCommand(() => GetMainViewModel()?.ShowWelcome());
         ToggleSidebarCommand = new RelayCommand(() => GetMainViewModel()?.ToggleSidebarCommand.Execute(null));
         SaveActiveCommand = new RelayCommand(ExecuteActiveSave, CanExecuteActiveSave);
+        GoToFileCommand = new RelayCommand(() => GetMainViewModel()?.ShowQuickOpenCommand.Execute(null));
         SaveAllCommand = new RelayCommand(ExecuteSaveAll, CanExecuteSaveAll);
         ValidateActiveCommand = new RelayCommand(ExecuteActiveValidate, CanExecuteActiveValidate);
         CloseActiveTabCommand = new RelayCommand(ExecuteCloseActiveTab, CanExecuteCloseActiveTab);
@@ -261,6 +264,9 @@ public partial class App : Application
         openRecent.Menu = _recentMenu;
         fileMenu.Menu.Add(openRecent);
         RebuildRecentMenu();
+        fileMenu.Menu.Add(new NativeMenuItemSeparator());
+        // VS Code's shortcut for "Go to File..." is Cmd+P; reused.
+        fileMenu.Menu.Add(LocItem("MenuItem_GoToFile", GoToFileCommand, new KeyGesture(Key.P, KeyModifiers.Meta)));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
