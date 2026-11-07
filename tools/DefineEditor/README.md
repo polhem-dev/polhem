@@ -51,8 +51,8 @@ time in that order, each followed by an upgrade of its own tables. A form that r
 each workbook is planned only once the ones before it are written. The batch stops at the first workbook that has an
 error or whose upgrade fails; the ones imported before it stay, and **Back** lists the workbooks still to import.
 
-Each editor has a toolbar above its tree with the commands of the selected node, the same ones its context menu
-lists: the Add buttons, with those of the enclosing nodes as well so a sibling can be added without selecting the parent
+Each editor has a toolbar above its tree with the commands of the selected node as icon buttons, each named in its
+tooltip, the same commands its context menu lists: the Add buttons, with those of the enclosing nodes as well so a sibling can be added without selecting the parent
 first, then Move Up, Move Down, Duplicate and Delete, then the node's other commands (generating a layout, exporting,
 upgrading the tables) behind a **⋯** button. A command that cannot run on the selected node stays on the toolbar,
 greyed out. Duplicate inserts a copy after the node; a keyed object gets a free key ending in `_copy`.

@@ -6,9 +6,9 @@
              x:DataType="vm:ObjectTreeDocumentViewModelBase"
              x:CompileBindings="True">
 
-    <!-- The commands of the selected tree node, the same ones its context menu lists: Add buttons with their text,
-         since they are what a newcomer looks for, then Move Up, Move Down, Duplicate and Delete, then the other
-         commands in an overflow menu. -->
+    <!-- The commands of the selected tree node, the same ones its context menu lists, as icon buttons named by their
+         tooltips: the Add commands, then Move Up, Move Down, Duplicate and Delete, then the other commands in an
+         overflow menu. -->
     <StackPanel Orientation="Horizontal" Spacing="2">
         <ItemsControl ItemsSource="{Binding ToolbarAddItems}">
             <ItemsControl.ItemsPanel>
@@ -18,13 +18,9 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:TreeToolbarItem">
-                    <Button Classes="toolbar-icon toolbar-labeled" Command="{Binding Command}"
-                            IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="{Binding Label}" AutomationProperties.Name="{Binding Label}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
-                            <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
+                            ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
+                        <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
                     </Button>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

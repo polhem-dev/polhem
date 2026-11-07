@@ -150,11 +150,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ToolbarIconActiveBorder}"/>
         <Setter Property="Foreground" Value="{DynamicResource ToolbarIconActiveForeground}"/>
     </Style>
-    <!-- A toolbar button that carries its text after the icon (the tree's Add commands), and a command that cannot
-         run now: kept in place so it shows the command exists, but faded. -->
-    <Style Selector="Button.toolbar-labeled">
-        <Setter Property="Padding" Value="6,4,8,4"/>
-    </Style>
+    <!-- A toolbar command that cannot run now: kept in place so it shows the command exists, but faded. -->
     <Style Selector="Button.toolbar-icon:disabled">
         <Setter Property="Opacity" Value="0.4"/>
     </Style>
