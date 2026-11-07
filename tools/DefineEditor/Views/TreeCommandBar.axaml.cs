@@ -45,9 +45,10 @@ public partial class TreeCommandBar : UserControl
             return;
         }
 
-        // A text box keeps Undo and Redo for its own typing; elsewhere in the editor they undo document edits.
+        // A text box keeps Undo and Redo for its own typing, and so does the XML view; elsewhere in the editor they undo
+        // document edits.
         if (e.Source is TextBox || (e.Source as Visual)?.FindAncestorOfType<TextBox>() is not null
-            || DataContext is not ObjectTreeDocumentViewModelBase document)
+            || DataContext is not ObjectTreeDocumentViewModelBase document || document.IsXmlView)
         {
             return;
         }

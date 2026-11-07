@@ -91,9 +91,16 @@ Three ways to find things:
   contains the text and expands what is above it; Enter and Shift+Enter go to the next and previous match, and Esc
   goes back to the tree.
 
-**Design / XML** at the top of each editor switches between the tree and the document's XML: the text a save writes,
-unsaved edits included, highlighted and with line numbers. The caret starts on the element of the node that was
-selected, ⌘F / Ctrl+F finds text in it, and an undo shows up in it straight away. The XML is read-only for now.
+**Design / XML** at the top of each editor switches between the tree and the document's XML, highlighted and with line
+numbers. A document with no unsaved edit shows its file as it is, comments included; otherwise the XML is what a save
+from the tree would write. The caret starts on the element of the node that was selected, and ⌘F / Ctrl+F finds text.
+
+The XML can be edited. Half a second after typing stops it is read into the document, and the tree, the property grid
+and Undo follow it. XML that cannot be read keeps the document as it was: the problems are underlined and listed below
+the text (an element or attribute the definition does not have counts as one, since the file would otherwise lose it
+silently), and the document cannot be saved until they are fixed or discarded by switching back to Design. A document
+edited only as XML since the XML was shown is saved exactly as typed, so comments and layout stay; an edit in the tree
+makes the next save write the file from the definition again, without comments.
 
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 

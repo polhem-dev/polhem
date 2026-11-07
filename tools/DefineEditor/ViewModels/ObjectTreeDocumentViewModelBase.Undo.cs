@@ -94,9 +94,6 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     {
         if (index < 0 || index >= _history.Count) return;
 
-        var selectedPath = PathOf(SelectedTreeNode);
-        var selectedLabel = SelectedTreeNode?.Label;
-        var expanded = Roots.SelectMany(r => ExpandedPaths(r, string.Empty)).ToHashSet(StringComparer.Ordinal);
         var root = XmlCodec.Deserialize(_history[index], RootObject.GetType())
             ?? throw new InvalidOperationException($"{RootObject.GetType().Name} could not be restored.");
 
@@ -104,12 +101,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase
         _isRestoring = true;
         try
         {
-            ReplaceRoot(root);
-            Roots.Clear();
-            Roots.Add(Builder.Build(root));
-            ApplyExpanded(Roots[0], string.Empty, expanded);
-            OnPropertyChanged(nameof(RootNode));
-            SelectedTreeNode = FindByLabel(selectedLabel, selectedPath) ?? NodeAt(selectedPath);
+            RebuildTree(root);
             IsDirty = !IsAtSavedState;
             RefreshToolbar();
             EditorRefreshRequested?.Invoke(this, EventArgs.Empty);
@@ -120,6 +112,34 @@ public abstract partial class ObjectTreeDocumentViewModelBase
             _isRestoring = false;
         }
         NotifyHistory();
+    }
+
+    /// <summary>
+    /// Replaces the define object with <paramref name="root"/>, of the same type, and records it as an edit: the tree
+    /// is built again for it, keeping the selection and the expanded nodes where it can, and Undo brings back the
+    /// object it replaced.
+    /// </summary>
+    protected void ReplaceDocumentRoot(object root)
+    {
+        RebuildTree(root);
+        MarkChanged();
+        EditorRefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Swaps the define object and builds its tree, keeping the selected node and the expanded ones where the new tree
+    // still has them.
+    private void RebuildTree(object root)
+    {
+        var selectedPath = PathOf(SelectedTreeNode);
+        var selectedLabel = SelectedTreeNode?.Label;
+        var expanded = Roots.SelectMany(r => ExpandedPaths(r, string.Empty)).ToHashSet(StringComparer.Ordinal);
+
+        ReplaceRoot(root);
+        Roots.Clear();
+        Roots.Add(Builder.Build(root));
+        ApplyExpanded(Roots[0], string.Empty, expanded);
+        OnPropertyChanged(nameof(RootNode));
+        SelectedTreeNode = FindByLabel(selectedLabel, selectedPath) ?? NodeAt(selectedPath);
     }
 
     private void NotifyHistory()
