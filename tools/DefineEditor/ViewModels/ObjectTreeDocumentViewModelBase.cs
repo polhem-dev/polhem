@@ -13,7 +13,7 @@ namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
 /// Common shell for tree editors of a single define file. Holds Title / FilePath /
-/// Roots / Issues / IsDirty / StatusText, the Save command (XmlCodec round-trip),
+/// Roots / Issues / IsDirty / StatusText, the Save command (XmlCodec, keeping the file's comments),
 /// the Validate command (delegates to <see cref="PerformValidation"/>), and a
 /// generic Delete command driven by <see cref="GetDeleteAction"/>. The tree is built
 /// by the framework's <see cref="ObjectTreeBuilder"/> from the <c>[TreeNode]</c>
@@ -109,7 +109,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// </summary>
     public virtual Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider => null;
 
-    /// <summary>Underlying mutable object handed to <see cref="XmlCodec.SerializeToFile"/>.</summary>
+    /// <summary>The define object the document edits, which a save writes as XML.</summary>
     protected abstract object RootObject { get; }
 
     // Forwarders for the base type's uniform file-level command surface — see
@@ -163,15 +163,8 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
 
             foreach (var root in Roots)
                 RefreshNodeLabels(root);
-            if (SaveText is { } text)
-            {
-                FileUtilities.FileWriteText(FilePath, text);
-                if (RootObject is IObjectSerializeFile serializeFile) serializeFile.SetObjectFilePath(FilePath);
-            }
-            else
-            {
-                XmlCodec.SerializeToFile(RootObject, FilePath);
-            }
+            FileUtilities.FileWriteText(FilePath, SaveText ?? GeneratedXml());
+            if (RootObject is IObjectSerializeFile serializeFile) serializeFile.SetObjectFilePath(FilePath);
             MarkSaved();
             IsDirty = false;
             StatusText = L("Status_Saved", Path.GetFileName(FilePath));
