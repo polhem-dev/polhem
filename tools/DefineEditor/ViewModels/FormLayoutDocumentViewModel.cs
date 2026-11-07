@@ -203,8 +203,8 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
                 var names = schema?.Tables?.Where(t => !ReferenceEquals(t, schema.MasterTable))
                     .Select(t => t.TableName).Where(n => !string.IsNullOrEmpty(n)).ToArray();
                 return names is { Length: > 0 } ? names : null;
-            case LayoutColumn when property.Name == nameof(LayoutColumn.FieldName):
-                return FindAncestor<LayoutGrid>(SelectedTreeNode)?.Value is LayoutGrid grid
+            case LayoutColumn column when property.Name == nameof(LayoutColumn.FieldName):
+                return AncestorOf<LayoutGrid>(column) is { } grid
                     ? FieldNames(Solution.LoadFormSchema(Root.ProgId)?.Tables?.GetOrDefault(grid.TableName))
                     : null;
             default:

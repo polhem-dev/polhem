@@ -9,6 +9,7 @@ namespace Polhem.DefineEditor.Services;
 /// The names of the open elements from the root down. For an attribute name or value it ends with the element the
 /// attribute belongs to; otherwise it ends with the element the caret is inside.
 /// </param>
+/// <param name="Steps">The same elements as <paramref name="Path"/>, with where each stands among its siblings.</param>
 /// <param name="Prefix">What has been typed of the token before the caret.</param>
 /// <param name="AttributeName">The attribute whose value the caret is in, for <see cref="XmlCaretContextKind.AttributeValue"/>.</param>
 /// <param name="PresentAttributes">The attributes the start tag already has, for an attribute name or value.</param>
@@ -19,6 +20,7 @@ namespace Polhem.DefineEditor.Services;
 public sealed record XmlCaretContext(
     XmlCaretContextKind Kind,
     IReadOnlyList<string> Path,
+    IReadOnlyList<XmlElementStep> Steps,
     string Prefix,
     string? AttributeName,
     IReadOnlyList<string> PresentAttributes,

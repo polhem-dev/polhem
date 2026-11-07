@@ -9,7 +9,7 @@ using Polhem.DefineEditor.Services;
 namespace Polhem.DefineEditor.Views;
 
 // Completion in the XML view, as in a XAML editor: `<` offers the elements the definition allows there, a space in a
-// start tag its attributes, the quotes of an enum or boolean attribute its values, Ctrl+Space whatever fits the caret,
+// start tag its attributes, the quotes of an attribute its values, Ctrl+Space (or Cmd+I on macOS) whatever fits the caret,
 // and `>` closing a start tag puts its end tag after the caret. What is offered comes from XmlCompletion.
 public sealed partial class XmlDocumentPane
 {
@@ -36,7 +36,10 @@ public sealed partial class XmlDocumentPane
 
     private void OnCompletionKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Space && e.KeyModifiers == KeyModifiers.Control)
+        // macOS takes Ctrl+Space for switching input sources unless the person has changed it, so Cmd+I opens the list
+        // there too, as it does in VS Code.
+        if ((e.Key == Key.Space && e.KeyModifiers == KeyModifiers.Control)
+            || (e.Key == Key.I && e.KeyModifiers == KeyModifiers.Meta && OperatingSystem.IsMacOS()))
         {
             ShowCompletion(automatic: false);
             e.Handled = true;
@@ -51,7 +54,13 @@ public sealed partial class XmlDocumentPane
         _completionWindow?.Close();
 
         var offset = _editor.CaretOffset;
-        var suggestions = XmlCompletion.At(_editor.Text, offset, _document.XmlRootType, DescribeAttribute, L("XmlCompletion_DefaultValue"));
+        var document = _document;
+        var sources = new XmlCompletionSources(
+            DescribeAttribute,
+            L("XmlCompletion_DefaultValue"),
+            document.XmlValueSuggestions,
+            document.XmlAttributeHelp);
+        var suggestions = XmlCompletion.At(_editor.Text, offset, document.XmlRootType, sources);
         if (suggestions.Items.Count == 0 || (automatic && suggestions.ReplaceFrom != offset)) return;
 
         var window = new CompletionWindow(_editor.TextArea)

@@ -1,9 +1,15 @@
+using System.Text.RegularExpressions;
+
 namespace Polhem.DefineEditor.Services;
 
 /// <summary>Reads an XML text up to the caret for <see cref="XmlCaretContext.At"/>.</summary>
 internal sealed class XmlCaretScanner(string text, int caret)
 {
-    private readonly List<string> _open = [];
+    private readonly List<XmlElementStep> _open = [];
+
+    // How many child elements, and how many of each name, each open element has had so far; the first entry counts
+    // the top level.
+    private readonly List<ChildCount> _counts = [new()];
     private int _index;
 
     public XmlCaretContext Scan()
@@ -48,11 +54,18 @@ internal sealed class XmlCaretScanner(string text, int caret)
             var result = ScanStartTag(out justClosed);
             if (result is not null) return result;
         }
-        return new XmlCaretContext(XmlCaretContextKind.Content, [.. _open], string.Empty, null, [], justClosed);
+        return Context(XmlCaretContextKind.Content, _open, string.Empty, null, [], justClosed);
     }
 
-    private XmlCaretContext Content() =>
-        new(XmlCaretContextKind.Content, [.. _open], string.Empty, null, [], null);
+    private XmlCaretContext Content() => Context(XmlCaretContextKind.Content, _open, string.Empty, null, [], null);
+
+    private static XmlCaretContext Context(
+        XmlCaretContextKind kind, IEnumerable<XmlElementStep> steps, string prefix, string? attribute,
+        IReadOnlyList<string> present, string? justClosed)
+    {
+        List<XmlElementStep> list = [.. steps];
+        return new XmlCaretContext(kind, list.Select(s => s.Name).ToList(), list, prefix, attribute, present, justClosed);
+    }
 
     private bool Starts(string value) => string.CompareOrdinal(text, _index, value, 0, value.Length) == 0;
 
@@ -72,15 +85,18 @@ internal sealed class XmlCaretScanner(string text, int caret)
         var nameStart = _index + 2;
         var nameEnd = NameEnd(nameStart);
         if (nameEnd >= caret)
-            return new XmlCaretContext(XmlCaretContextKind.EndTagName, [.. _open],
-                text[nameStart..caret], null, [], null);
+            return Context(XmlCaretContextKind.EndTagName, _open, text[nameStart..caret], null, [], null);
 
         var name = text[nameStart..nameEnd];
         var close = text.IndexOf('>', nameEnd);
         if (close < 0 || close >= caret) return Content();
 
-        var last = _open.FindLastIndex(n => n == name);
-        if (last >= 0) _open.RemoveRange(last, _open.Count - last);
+        var last = _open.FindLastIndex(s => s.Name == name);
+        if (last >= 0)
+        {
+            _open.RemoveRange(last, _open.Count - last);
+            _counts.RemoveRange(last + 1, _counts.Count - last - 1);
+        }
         _index = close + 1;
         return null;
     }
@@ -91,8 +107,7 @@ internal sealed class XmlCaretScanner(string text, int caret)
         var nameStart = _index + 1;
         var nameEnd = NameEnd(nameStart);
         if (nameEnd >= caret)
-            return new XmlCaretContext(XmlCaretContextKind.ElementName, [.. _open],
-                text[nameStart..caret], null, [], null);
+            return Context(XmlCaretContextKind.ElementName, _open, text[nameStart..caret], null, [], null);
 
         if (nameEnd == nameStart)
         {
@@ -102,18 +117,20 @@ internal sealed class XmlCaretScanner(string text, int caret)
         }
 
         var name = text[nameStart..nameEnd];
+        var step = _counts[^1].Add(name);
         var attributes = new List<string>();
         var i = nameEnd;
         while (true)
         {
             while (i < caret && char.IsWhiteSpace(text[i])) i++;
             if (i >= caret)
-                return Attribute(XmlCaretContextKind.AttributeName, name, string.Empty, null, attributes,
+                return Attribute(XmlCaretContextKind.AttributeName, step, string.Empty, null, attributes,
                     whitespaceBefore: i > nameEnd && char.IsWhiteSpace(text[i - 1]));
 
             if (text[i] == '>')
             {
-                _open.Add(name);
+                _open.Add(step);
+                _counts.Add(new ChildCount());
                 _index = i + 1;
                 if (_index == caret) justClosed = name;
                 return null;
@@ -133,7 +150,7 @@ internal sealed class XmlCaretScanner(string text, int caret)
                 return null;
             }
             if (attributeEnd >= caret)
-                return Attribute(XmlCaretContextKind.AttributeName, name, text[i..caret], null, attributes, true);
+                return Attribute(XmlCaretContextKind.AttributeName, step, text[i..caret], null, attributes, true);
 
             var attribute = text[i..attributeEnd];
             attributes.Add(attribute);
@@ -147,16 +164,31 @@ internal sealed class XmlCaretScanner(string text, int caret)
             var quote = text[i];
             var valueEnd = text.IndexOf(quote, i + 1);
             if (valueEnd < 0 || valueEnd >= caret)
-                return Attribute(XmlCaretContextKind.AttributeValue, name, text[(i + 1)..caret], attribute, attributes, true);
+                return Attribute(XmlCaretContextKind.AttributeValue, step, text[(i + 1)..caret], attribute, attributes, true);
             i = valueEnd + 1;
         }
     }
 
     private XmlCaretContext Attribute(
-        XmlCaretContextKind kind, string element, string prefix, string? attribute, List<string> present, bool whitespaceBefore) =>
-        kind == XmlCaretContextKind.AttributeName && !whitespaceBefore
-            ? Content()
-            : new XmlCaretContext(kind, [.. _open, element], prefix, attribute, present, null);
+        XmlCaretContextKind kind, XmlElementStep element, string prefix, string? attribute, List<string> present, bool whitespaceBefore)
+    {
+        if (kind == XmlCaretContextKind.AttributeName && !whitespaceBefore) return Content();
+        present.AddRange(AttributesAfterCaret());
+        return Context(kind, [.. _open, element], prefix, attribute, present, null);
+    }
+
+    // The attributes the tag goes on with after the caret, which a suggestion must not repeat: the names followed by
+    // `="` up to the tag's end, after the rest of the name the caret may be in.
+    private IEnumerable<string> AttributesAfterCaret()
+    {
+        var end = text.IndexOfAny(['<', '>'], caret);
+        var rest = text[caret..(end < 0 ? text.Length : end)];
+        var nameTail = rest.TakeWhile(IsNameChar).Count();
+        return s_attributeAfter.Matches(rest[nameTail..]).Select(m => m.Groups[1].Value);
+    }
+
+    private static readonly Regex s_attributeAfter = new(
+        @"(?<=[\s""'])([A-Za-z_][\w:.\-]*)\s*=\s*[""']", RegexOptions.None, TimeSpan.FromSeconds(1));
 
     private int NameEnd(int start)
     {
@@ -166,4 +198,20 @@ internal sealed class XmlCaretScanner(string text, int caret)
     }
 
     private static bool IsNameChar(char c) => char.IsLetterOrDigit(c) || c is ':' or '_' or '-' or '.';
+
+    // The child elements an open element has had so far.
+    private sealed class ChildCount
+    {
+        private readonly Dictionary<string, int> _byName = new(StringComparer.Ordinal);
+        private int _count;
+
+        // Counts a child element and returns where it stands among its siblings.
+        public XmlElementStep Add(string name)
+        {
+            var step = new XmlElementStep(name, _count, _byName.GetValueOrDefault(name));
+            _count++;
+            _byName[name] = step.NameIndex + 1;
+            return step;
+        }
+    }
 }

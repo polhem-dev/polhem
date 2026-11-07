@@ -103,10 +103,13 @@ edited only as XML since the XML was shown is saved exactly as typed, so comment
 makes the next save write the file from the definition again, without comments.
 
 Typing in the XML is helped the way a XAML editor helps: `<` lists the elements the definition allows at that point and
-the end tag of the enclosing one, a space inside a start tag lists the attributes it does not have yet (with their type
-and default in the tooltip), the quotes of an enum or boolean attribute list its values, ⌃Space lists whatever fits
-the caret, and `>` closing a start tag puts its end tag after the caret. What is listed comes from the same mapping the
-file is read with.
+the end tag of the enclosing one, a space inside a start tag lists the attributes it does not have yet (with their type,
+default and description in the tooltip), the quotes of an attribute list its values, ⌃Space (also ⌘I on macOS, where
+⌃Space usually switches the input source) lists whatever fits the caret, and `>` closing a start tag puts its end tag
+after the caret. The elements and attributes come from the same mapping the file is read with. The values are an
+enum's or a boolean's own, or the ones the property grid offers for that attribute: the solution's ProgIds, the fields
+of the table concerned, and so on. Those are looked up in the document as it was last read, so an element typed since
+gets them once the text has been read again.
 
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
