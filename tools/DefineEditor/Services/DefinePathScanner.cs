@@ -22,6 +22,25 @@ public static class DefinePathScanner
         new("PermissionModels.xml", DefineType.PermissionModels, "PermissionModels", "DefPermissionModels"),
     };
 
+    // The file names of each define type's files under DefinePath; the scan and FilePatterns read the same ones.
+    private const string FormSchemaFiles = "*.FormSchema.xml";
+    private const string TableSchemaFiles = "*.TableSchema.xml";
+    private const string FormLayoutFiles = "*.FormLayout.xml";
+    private const string LanguageFiles = "*.Language.xml";
+
+    /// <summary>
+    /// The file name, or file name pattern, of each define type the editor opens: the convention by which it finds
+    /// them under a DefinePath.
+    /// </summary>
+    public static IReadOnlyList<(DefineType Type, string FileName)> FilePatterns { get; } =
+    [
+        .. s_singletons.Select(s => (s.Type, s.FileName)),
+        (DefineType.FormSchema, FormSchemaFiles),
+        (DefineType.TableSchema, TableSchemaFiles),
+        (DefineType.FormLayout, FormLayoutFiles),
+        (DefineType.Language, LanguageFiles),
+    ];
+
     private const string IconRoot = "DefRoot";
     private const string IconSingletonGroup = "DefSystemGroup";
     private const string IconCategory = "DefCategory";
@@ -49,10 +68,10 @@ public static class DefinePathScanner
         };
 
         AddSingletonGroup(root, definePath);
-        AddFlatGroup(root, definePath, "FormSchema", "*.FormSchema.xml", ".FormSchema.xml", DefineType.FormSchema, IconFormSchema);
-        AddTwoLevelGroup(root, definePath, "TableSchema", "*.TableSchema.xml", ".TableSchema.xml", DefineType.TableSchema, IconTableSchema);
-        AddFlatGroup(root, definePath, "FormLayout", "*.FormLayout.xml", ".FormLayout.xml", DefineType.FormLayout, IconFormLayout);
-        AddTwoLevelGroup(root, definePath, "Language", "*.Language.xml", ".Language.xml", DefineType.Language, IconLanguage);
+        AddFlatGroup(root, definePath, "FormSchema", FormSchemaFiles, ".FormSchema.xml", DefineType.FormSchema, IconFormSchema);
+        AddTwoLevelGroup(root, definePath, "TableSchema", TableSchemaFiles, ".TableSchema.xml", DefineType.TableSchema, IconTableSchema);
+        AddFlatGroup(root, definePath, "FormLayout", FormLayoutFiles, ".FormLayout.xml", DefineType.FormLayout, IconFormLayout);
+        AddTwoLevelGroup(root, definePath, "Language", LanguageFiles, ".Language.xml", DefineType.Language, IconLanguage);
 
         return root;
     }

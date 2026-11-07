@@ -493,4 +493,8 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="XmlCompletion_Required" xml:space="preserve"><value>required</value></data>
   <data name="XmlCompletion_Default" xml:space="preserve"><value>default {0}</value></data>
   <data name="XmlCompletion_DefaultValue" xml:space="preserve"><value>default</value></data>
+  <data name="MenuItem_ExportXmlSchemas" xml:space="preserve"><value>Export XML Schemas...</value></data>
+  <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>Choose a folder for the XML schemas</value></data>
+  <data name="Status_XmlSchemasExported" xml:space="preserve"><value>Exported {0} XML schemas to {1}. {2} ties the definition files to them in VS Code.</value></data>
+  <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>XML schemas not exported: {0}</value></data>
 </root>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_cache_notify" DisplayName="Cache Notification">
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" TableName="st_cache_notify" DisplayName="Cache Notification">
 	<Fields>
 		<DbField FieldName="cache_key" Caption="Cache Key" DbType="String" Length="200" />
 		<DbField FieldName="cache_version" Caption="Cache Version" DbType="Long" />

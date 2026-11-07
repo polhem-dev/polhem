@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_define" DisplayName="Definition Store">
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" TableName="st_define" DisplayName="Definition Store">
 	<Fields>
 		<DbField FieldName="define_type" Caption="Define Type" DbType="String" Length="50" />
 		<DbField FieldName="customize_id" Caption="Customize Id" DbType="String" Length="50" />

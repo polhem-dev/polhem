@@ -480,4 +480,8 @@
   <data name="XmlCompletion_Required" xml:space="preserve"><value>必填</value></data>
   <data name="XmlCompletion_Default" xml:space="preserve"><value>預設 {0}</value></data>
   <data name="XmlCompletion_DefaultValue" xml:space="preserve"><value>預設值</value></data>
+  <data name="MenuItem_ExportXmlSchemas" xml:space="preserve"><value>匯出 XML 結構描述...</value></data>
+  <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>選擇 XML 結構描述的存放資料夾</value></data>
+  <data name="Status_XmlSchemasExported" xml:space="preserve"><value>已將 {0} 個 XML 結構描述匯出到 {1}。{2} 可讓 VS Code 把定義檔對應到這些結構描述。</value></data>
+  <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>未匯出 XML 結構描述：{0}</value></data>
 </root>

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.DefineEditor.Services;
 
@@ -71,10 +72,31 @@ public sealed class DefineXmlSchema
             .ToList();
     }
 
-    private static DefineXmlSchema Build(Type rootType)
+    /// <summary>
+    /// The XML schema (XSD) of the definition files whose root object is a <paramref name="rootType"/>, as text, for
+    /// an editor outside DefineEditor to validate and complete them with.
+    /// </summary>
+    public static string ExportXsd(Type rootType)
+    {
+        var schemas = Export(rootType);
+        if (schemas.Count != 1)
+            throw new InvalidOperationException($"{rootType.Name} maps to {schemas.Count} schemas; one was expected.");
+
+        using var writer = new Utf8StringWriter();
+        schemas[0].Write(writer);
+        return writer.ToString();
+    }
+
+    private static XmlSchemas Export(Type rootType)
     {
         var schemas = new XmlSchemas();
         new XmlSchemaExporter(schemas).ExportTypeMapping(new XmlReflectionImporter().ImportTypeMapping(rootType));
+        return schemas;
+    }
+
+    private static DefineXmlSchema Build(Type rootType)
+    {
+        var schemas = Export(rootType);
 
         var set = new XmlSchemaSet { XmlResolver = null };
         foreach (XmlSchema schema in schemas)

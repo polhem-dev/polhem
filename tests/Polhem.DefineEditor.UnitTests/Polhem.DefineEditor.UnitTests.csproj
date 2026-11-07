@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <ProjectReference Include="..\..\tools\DefineEditor\Polhem.DefineEditor.csproj" />
   </ItemGroup>

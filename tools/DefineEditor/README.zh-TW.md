@@ -92,6 +92,11 @@ XML 可以直接編輯。停止輸入半秒後會讀入文件，樹、屬性面�
 列出適用的項目；`>` 關閉開始標籤時會在游標後補上結束標籤。元素與屬性來自讀取檔案時所用的同一份映射；值則是列舉或布林本身的值，
 或屬性面板為該屬性提供的值，例如方案中的 ProgId、相關資料表的欄位等。後者依最後一次讀入的文件查詢，因此剛輸入的元素要等文字讀回後才有。
 
+**File → Export XML Schemas...（匯出 XML 結構描述）** 會把每種定義檔的結構描述（`FormSchema.xsd`、`TableSchema.xsd`、
+`SystemSettings.xsd` 等）寫到你選的資料夾，讓其他 XML 編輯器也能檢查與提示這些檔案。同一處還會寫出 `xml.fileAssociations.json`，
+也就是 VS Code XML 擴充套件（Red Hat）的 `xml.fileAssociations` 設定，把 `**/*.FormSchema.xml` 這類檔名對應到結構描述；
+複製到 VS Code 設定即可。結構描述由定義型別匯出，升級 Polhem 後請重新匯出。
+
 每個編輯器也有驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾、最近開啟、加入缺少的框架預設檔、從 Excel 匯入表單、從 Excel 批次匯入表單、測試資料庫連線、升級資料庫、預覽資料庫升級，以及作用中 FormSchema 的同步 TableSchema 與 FormLayout、升級此表單的資料表、預覽此表單的資料表升級；**View** 選單可顯示或隱藏側欄（⌘B），也切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
 
 > File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單，指令相同，但沒有開啟資料夾與最近開啟；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有；在 Windows 與 Linux 上，Ctrl+B 可顯示或隱藏側欄。

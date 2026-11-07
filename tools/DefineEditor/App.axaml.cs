@@ -49,6 +49,9 @@ public partial class App : Application
     // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
     public IRelayCommand ImportFormWorkbooksCommand { get; }
 
+    // Always enabled: the schemas come from the definition types, not from the open solution.
+    public IRelayCommand ExportXmlSchemasCommand { get; }
+
     // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
     public IRelayCommand CheckDatabaseConnectionsCommand { get; }
     public IRelayCommand UpgradeDatabaseCommand { get; }
@@ -93,6 +96,7 @@ public partial class App : Application
         AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbookCommand = new AsyncRelayCommand(ExecuteImportFormWorkbookAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbooksCommand = new RelayCommand(() => GetMainViewModel()?.OpenImportBatch(), CanExecuteAddFrameworkDefaults);
+        ExportXmlSchemasCommand = new AsyncRelayCommand(ExecuteExportXmlSchemasAsync);
         CheckDatabaseConnectionsCommand = new AsyncRelayCommand(
             () => GetMainViewModel()?.CheckDatabaseConnectionsAsync() ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
         UpgradeDatabaseCommand = new AsyncRelayCommand(
@@ -201,7 +205,8 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
+                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, ExportXmlSchemasCommand,
+                    CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
                     PreviewDatabaseUpgradeCommand, SyncActiveFormCommand, UpgradeActiveFormTablesCommand,
                     PreviewActiveFormUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
                 // The in-window menu has no View menu, so the shortcut carries Toggle Side Bar there.
@@ -271,6 +276,7 @@ public partial class App : Application
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbooks", ImportFormWorkbooksCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_ExportXmlSchemas", ExportXmlSchemasCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_CheckDatabaseConnections", CheckDatabaseConnectionsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_UpgradeDatabase", UpgradeDatabaseCommand, gesture: null));
@@ -514,6 +520,14 @@ public partial class App : Application
     private static Task ExecuteImportFormWorkbookAsync() =>
         (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow main
             ? main.PromptImportFormWorkbookAsync()
+            : Task.CompletedTask;
+
+    /// <summary>
+    /// Forwards "Export XML Schemas..." to <see cref="MainWindow"/>, whose storage provider runs the folder picker.
+    /// </summary>
+    private static Task ExecuteExportXmlSchemasAsync() =>
+        (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow main
+            ? main.PromptExportXmlSchemasAsync()
             : Task.CompletedTask;
 
     private static bool CanExecuteSaveAll() =>
