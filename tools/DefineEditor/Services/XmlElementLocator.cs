@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace Polhem.DefineEditor.Services;
 
@@ -12,7 +10,8 @@ namespace Polhem.DefineEditor.Services;
 /// </summary>
 /// <remarks>
 /// The object is found by reference in the definition's object graph, and the path to it is replayed on the XML: a
-/// property becomes the element of its name (<see cref="XmlElementAttribute"/> or <see cref="XmlArrayAttribute"/>
+/// property becomes the element of its name (<see cref="System.Xml.Serialization.XmlElementAttribute"/> or
+/// <see cref="System.Xml.Serialization.XmlArrayAttribute"/>
 /// when it renames it), a collection item becomes the child element at its index. Where a step finds no element
 /// (an empty collection that is not written, say), the deepest element reached is returned instead.
 /// </remarks>
@@ -70,12 +69,12 @@ public static class XmlElementLocator
     {
         if (depth > MaxDepth || !visited.Add(current)) return false;
 
-        foreach (var property in SerializedProperties(current.GetType()))
+        foreach (var property in XmlMemberRules.ElementProperties(current.GetType()))
         {
-            if (property.GetValue(current) is not { } value || IsLeaf(value.GetType())) continue;
+            if (property.GetValue(current) is not { } value || XmlMemberRules.IsLeaf(value.GetType())) continue;
 
-            var flattened = property.IsDefined(typeof(XmlElementAttribute));
-            var name = ElementName(property);
+            var flattened = XmlMemberRules.IsFlattened(property);
+            var name = XmlMemberRules.ElementName(property);
             if (value is IEnumerable items)
             {
                 if (ReferenceEquals(value, target))
@@ -87,7 +86,7 @@ public static class XmlElementLocator
                 var index = 0;
                 foreach (var item in items)
                 {
-                    if (item is not null && !IsLeaf(item.GetType()))
+                    if (item is not null && !XmlMemberRules.IsLeaf(item.GetType()))
                     {
                         path.Add(new Step(name, flattened, index));
                         if (ReferenceEquals(item, target) || Search(item, target, path, visited, depth + 1))
@@ -105,35 +104,6 @@ public static class XmlElementLocator
             path.RemoveAt(path.Count - 1);
         }
         return false;
-    }
-
-    // The properties XmlSerializer writes as elements: public, readable, not ignored, not attributes or text, and
-    // settable unless they are collections (which it fills through their getter).
-    private static IEnumerable<PropertyInfo> SerializedProperties(Type type) =>
-        type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead
-                        && p.GetIndexParameters().Length == 0
-                        && !p.IsDefined(typeof(XmlIgnoreAttribute))
-                        && !p.IsDefined(typeof(XmlAttributeAttribute))
-                        && !p.IsDefined(typeof(XmlTextAttribute))
-                        && (p.CanWrite || typeof(IEnumerable).IsAssignableFrom(p.PropertyType)));
-
-    private static string ElementName(PropertyInfo property)
-    {
-        var element = property.GetCustomAttribute<XmlElementAttribute>()?.ElementName;
-        var array = property.GetCustomAttribute<XmlArrayAttribute>()?.ElementName;
-        return !string.IsNullOrEmpty(element) ? element
-            : !string.IsNullOrEmpty(array) ? array
-            : property.Name;
-    }
-
-    private static bool IsLeaf(Type type)
-    {
-        var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        return underlying.IsPrimitive || underlying.IsEnum
-            || underlying == typeof(string) || underlying == typeof(decimal) || underlying == typeof(byte[])
-            || underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset) || underlying == typeof(TimeSpan)
-            || underlying == typeof(DateOnly) || underlying == typeof(TimeOnly) || underlying == typeof(Guid);
     }
 
     // One step down the XML: the element of a property, or the item at Index of a collection. A flattened collection

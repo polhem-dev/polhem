@@ -282,9 +282,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
                 return Solution.AvailableProgIds.Count > 0 ? Solution.AvailableProgIds : null;
             case FormField when property.Name == nameof(FormField.LangEnumName):
                 return LangEnumNames() is { Count: > 0 } enumNames ? enumNames : null;
-            case FieldMapping:
-                var groupNode = SelectedTreeNode?.Parent;
-                if (groupNode is null || OwningField(groupNode) is not { } field) return null;
+            case FieldMapping mapping:
+                if (AncestorOf<FormField>(mapping) is not { } field) return null;
                 if (property.Name == nameof(FieldMapping.DestinationField))
                 {
                     return field.Table?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray();

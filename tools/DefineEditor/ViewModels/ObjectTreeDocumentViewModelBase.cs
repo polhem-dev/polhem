@@ -274,6 +274,16 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     }
 
     /// <summary>
+    /// The nearest object above <paramref name="component"/> in the tree that is a <typeparamref name="TValue"/>, or
+    /// <c>null</c>. It goes by the tree rather than by the selection, so the XML view, which selects nothing, can ask it.
+    /// </summary>
+    protected TValue? AncestorOf<TValue>(object component) where TValue : class
+    {
+        var node = Roots.SelectMany(Enumerate).FirstOrDefault(n => ReferenceEquals(n.Value, component));
+        return FindAncestor<TValue>(node?.Parent)?.Value as TValue;
+    }
+
+    /// <summary>
     /// Builds a node for <paramref name="value"/>, which the caller has just added to the define
     /// object, attaches it under <paramref name="parent"/>, selects it and marks the document dirty.
     /// </summary>

@@ -34,7 +34,7 @@ namespace Polhem.DefineEditor.UnitTests
         private static XmlSuggestions SuggestionsAt(string marked, Type? rootType = null)
         {
             var (text, offset) = Marked(marked);
-            return XmlCompletion.At(text, offset, rootType ?? typeof(FormSchema), a => a.TypeName, "default");
+            return XmlCompletion.At(text, offset, rootType ?? typeof(FormSchema), new XmlCompletionSources(a => a.TypeName, "default"));
         }
 
         private static string[] Labels(XmlSuggestions suggestions) => suggestions.Items.Select(i => i.Label).ToArray();
@@ -187,6 +187,41 @@ namespace Polhem.DefineEditor.UnitTests
         public void At_EmptyDocument_SuggestsRoot()
         {
             Assert.Equal(["FormSchema"], Labels(SuggestionsAt("<?xml version=\"1.0\"?>\n<|")));
+        }
+
+        [Fact]
+        [DisplayName("Value sources are asked with the caret element's place among its siblings")]
+        public void At_ValueSource_GetsElementSteps()
+        {
+            IReadOnlyList<XmlElementStep>? asked = null;
+            var sources = new XmlCompletionSources(a => a.TypeName, "default", (steps, _) =>
+            {
+                asked = steps;
+                return ["x"];
+            });
+            var (text, offset) = Marked("""
+                <FormSchema><Tables><FormTable><Fields>
+                  <FormField FieldName="a" /><!-- <FormField> -->
+                  <FormField FieldName="b"><ListItems /></FormField>
+                  <FormField Caption="|
+                """);
+
+            Assert.Equal(["x"], Labels(XmlCompletion.At(text, offset, typeof(FormSchema), sources)));
+            Assert.Equal(new XmlElementStep("FormField", 2, 2), asked![^1]);
+            Assert.Equal(new XmlElementStep("FormTable", 0, 0), asked[2]);
+        }
+
+        [Fact]
+        [DisplayName("Attributes the tag has after the caret are not suggested again")]
+        public void At_AttributeName_SkipsAttributesAfterCaret()
+        {
+            var labels = Labels(SuggestionsAt(
+                """<FormSchema><Tables><FormTable><Fields><FormField FieldName="a" | Caption="x y" DbType="String" />"""));
+
+            Assert.DoesNotContain("Caption", labels);
+            Assert.DoesNotContain("DbType", labels);
+            Assert.DoesNotContain("FieldName", labels);
+            Assert.Contains("Visible", labels);
         }
     }
 }

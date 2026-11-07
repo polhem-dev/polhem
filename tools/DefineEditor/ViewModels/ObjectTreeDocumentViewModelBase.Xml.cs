@@ -1,8 +1,11 @@
+using System.ComponentModel;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Polhem.Core.Serialization;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.Views;
+using Polhem.UI.Avalonia.Controls;
 
 namespace Polhem.DefineEditor.ViewModels;
 
@@ -81,6 +84,44 @@ public abstract partial class ObjectTreeDocumentViewModelBase
 
     /// <summary>The type of the define object, whose XML mapping the XML view's completion follows.</summary>
     public Type XmlRootType => RootObject.GetType();
+
+    /// <summary>
+    /// The values the property grid would offer for the attribute <paramref name="attribute"/> of the element at
+    /// <paramref name="steps"/>, such as the solution's ProgIds or the fields of a table; <c>null</c> when it offers
+    /// none, or when the element is not in the document yet.
+    /// </summary>
+    /// <remarks>
+    /// The element is looked up in the define object, which follows the XML as it was last read, so an element typed
+    /// since is not found until the text is read again.
+    /// </remarks>
+    public IReadOnlyList<string>? XmlValueSuggestions(IReadOnlyList<XmlElementStep> steps, string attribute)
+    {
+        if (ValueSuggestionProvider is not { } provider
+            || DefineXmlObjectMap.ObjectAt(RootObject, steps) is not { } owner
+            || XmlMemberRules.AttributeProperty(owner.GetType(), attribute) is not { } property
+            || TypeDescriptor.GetProperties(owner)[property.Name] is not { } descriptor)
+        {
+            return null;
+        }
+        return provider(descriptor, owner) is { Count: > 0 } values ? values : null;
+    }
+
+    /// <summary>
+    /// What the property grid says about the attribute <paramref name="attribute"/> of the element at
+    /// <paramref name="steps"/>: its description, in the editor's language; <c>null</c> when it has none.
+    /// </summary>
+    /// <remarks>The element's type is read from the definition types, so an element not read back yet has help too.</remarks>
+    public string? XmlAttributeHelp(IReadOnlyList<XmlElementStep> steps, string attribute)
+    {
+        if (DefineXmlObjectMap.TypeAt(XmlRootType, steps) is not { } type
+            || XmlMemberRules.AttributeProperty(type, attribute) is not { } property
+            || property.GetCustomAttribute<DescriptionAttribute>()?.Description is not { Length: > 0 } description)
+        {
+            return null;
+        }
+        return PropertyLabels.Translate(new PropertyGridText(
+            PropertyGridTextKind.Description, type, property.Name, description)) ?? description;
+    }
 
     /// <summary>Notes text typed in the XML view; <see cref="FlushXmlEdit"/> reads it into the document.</summary>
     public void OnXmlTextEdited(string text)
