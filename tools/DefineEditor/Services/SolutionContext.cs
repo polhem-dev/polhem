@@ -93,6 +93,16 @@ public sealed record SolutionContext(IReadOnlyList<string> AvailableProgIds)
             : DefineFileReader.TryRead<ProgramSettings>(Path.Combine(DefinePath, "ProgramSettings.xml"));
 
     /// <summary>
+    /// The ids of the solution's permission models, read from <c>PermissionModels.xml</c> under
+    /// <see cref="DefinePath"/> each time; empty when the path is unknown or the file is missing or cannot be read.
+    /// </summary>
+    public IReadOnlyList<string> PermissionModelIds() =>
+        string.IsNullOrEmpty(DefinePath)
+            ? []
+            : DefineFileReader.TryRead<PermissionModels>(Path.Combine(DefinePath, "PermissionModels.xml"))?.Models?
+                .Select(m => m.ModelId).Where(id => !string.IsNullOrEmpty(id)).ToArray() ?? [];
+
+    /// <summary>
     /// Walks the solution tree and collects all FormSchema ProgIds present.
     /// </summary>
     public static SolutionContext FromTree(DefineNode? root)

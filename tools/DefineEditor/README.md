@@ -41,6 +41,14 @@ that differs from its default is in bold and its context menu resets it, a passw
 in a dialog. Categories and descriptions follow the UI language; property names stay as written, since they are the
 attribute names of the define files.
 
+A property that names something the solution already has offers it in a drop-down: a FormSchema's `CategoryId`
+(the database categories), `PermissionModelId` (the models in `PermissionModels.xml`) and `CurrencyField`, a field's
+`RelationProgId`, `LangEnumName`, `CurrencyField` and `UnitField`, a layout's `ProgId`, a layout field's or column's
+`FieldName` and a layout grid's `TableName` (read from the layout's FormSchema), an index field's `FieldName`, and a
+menu entry's `ProgId` (the programs in `ProgramSettings.xml`). The drop-down only suggests: a typed value is kept, and
+validation reports one that names nothing. A FormSchema's `ListFields` and `LookupFields` open a field picker from the
+**…** button, where the master table's fields are ticked and put in order.
+
 Importing a workbook asks how to treat a TableSchema or a FormLayout the form already has (merge, keep or overwrite the
 TableSchema; keep or regenerate the layout), lists the files it will change, and ends with a dialog that offers to
 upgrade the database for the form's tables.

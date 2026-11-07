@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
@@ -56,6 +57,16 @@ public sealed partial class TableSchemaDocumentViewModel : ObjectTreeDocumentVie
     partial void OnCreateTableDatabaseChanged(DatabaseType value) => RefreshCreateTableScript();
 
     private void RefreshCreateTableScript() => CreateTableScript = CreateTableScriptBuilder.Build(Root, CreateTableDatabase);
+
+    public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
+
+    /// <summary>The values the grid offers: the table's own fields for an index field's FieldName.</summary>
+    /// <remarks>The grid still takes a typed value; validation reports one that names no field.</remarks>
+    public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component) =>
+        component is IndexField && property.Name == nameof(IndexField.FieldName)
+            && Root.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray() is { Length: > 0 } names
+            ? names
+            : null;
 
     public static TableSchemaDocumentViewModel Load(string filePath)
     {

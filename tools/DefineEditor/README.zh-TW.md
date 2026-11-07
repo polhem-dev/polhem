@@ -38,6 +38,12 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 `[Description]`，值與預設值不同時以粗體顯示、可用右鍵選單重設，密碼會遮蔽，集合在對話框中編輯。分組與說明會跟著介面語言切換；
 屬性名稱維持原文，因為它們就是定義檔的屬性名。
 
+指向方案中既有項目的屬性會提供下拉選項：FormSchema 的 `CategoryId`（資料庫類別）、`PermissionModelId`（`PermissionModels.xml`
+裡的模型）與 `CurrencyField`；欄位的 `RelationProgId`、`LangEnumName`、`CurrencyField`、`UnitField`；版面的 `ProgId`、
+版面欄位與欄的 `FieldName`、版面表格的 `TableName`（取自該版面的 FormSchema）；索引欄位的 `FieldName`；選單項目的 `ProgId`
+（`ProgramSettings.xml` 裡的程式）。下拉只是建議，手動輸入的值會保留，指向不存在項目的值由驗證回報。
+FormSchema 的 `ListFields` 與 `LookupFields` 可從 **…** 按鈕開啟欄位挑選器，勾選主表欄位並調整順序。
+
 從活頁簿匯入時，若表單已有 TableSchema 或 FormLayout，會先詢問如何處理（TableSchema 合併、保留或覆寫；版面保留或重新產生），
 再列出會變更的檔案，最後的對話框可接著替這張表單的資料表升級資料庫。
 

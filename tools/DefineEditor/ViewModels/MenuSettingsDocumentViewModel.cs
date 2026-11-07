@@ -1,8 +1,10 @@
 using System.Collections;
+using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Polhem.DefineEditor.ViewModels;
@@ -24,7 +26,7 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
 
     public override TreeCommandProviderBase CommandProvider { get; }
 
-    private MenuSettingsDocumentViewModel(string filePath, MenuSettings root)
+    private MenuSettingsDocumentViewModel(string filePath, MenuSettings root, SolutionContext solution)
         : base(filePath, "MenuSettings", keyText: string.Empty, new ObjectTreeOptions
         {
             ExpandDepth = 1,
@@ -33,11 +35,31 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
         })
     {
         Root = root;
+        Solution = solution;
         CommandProvider = new MenuSettingsCommandProvider(this);
         InitializeTree(root);
     }
 
-    public static MenuSettingsDocumentViewModel Load(string filePath)
+    /// <summary>The solution the menu belongs to, which supplies the programs an entry can open.</summary>
+    public SolutionContext Solution { get; }
+
+    public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
+
+    /// <summary>
+    /// The values the grid offers: for an entry's ProgId, the programs registered in ProgramSettings, or the
+    /// solution's form ids when ProgramSettings cannot be read.
+    /// </summary>
+    /// <remarks>The grid still takes a typed value; validation reports one that names no program.</remarks>
+    public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component)
+    {
+        if (component is not MenuEntry || property.Name != nameof(MenuEntry.ProgId)) return null;
+        var registered = Solution.ReadProgramSettings()?.Items?
+            .Select(p => p.ProgId).Where(id => !string.IsNullOrEmpty(id)).ToArray();
+        IReadOnlyList<string> ids = registered is { Length: > 0 } ? registered : Solution.AvailableProgIds;
+        return ids.Count > 0 ? ids : null;
+    }
+
+    public static MenuSettingsDocumentViewModel Load(string filePath, SolutionContext? solution = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         if (!File.Exists(filePath))
@@ -46,7 +68,7 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
             ?? throw new InvalidOperationException($"MenuSettings deserialized to null: {filePath}");
         // Deliberately not EnsureValid here: an editor must be able to open a broken definition in
         // order to fix it. The same problems are reported through the validation pane instead.
-        return new MenuSettingsDocumentViewModel(filePath, root);
+        return new MenuSettingsDocumentViewModel(filePath, root, solution ?? SolutionContext.Empty);
     }
 
     public override string IconKeyFor(ObjectTreeNode node) => node.Value switch
