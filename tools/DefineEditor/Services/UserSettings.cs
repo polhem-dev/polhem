@@ -46,6 +46,13 @@ public sealed class UserSettings
     /// </summary>
     public string FormLayoutPreviewEngine { get; set; } = nameof(ViewModels.FormLayoutPreviewEngine.Avalonia);
 
+    /// <summary>
+    /// The view each kind of define document was left in, by the document's type name; see
+    /// <see cref="ViewModeMemory"/>. Kept as strings so an unknown value is skipped instead of failing the whole
+    /// settings file.
+    /// </summary>
+    public Dictionary<string, string> DocumentViewModes { get; set; } = new(StringComparer.Ordinal);
+
     public const int MaxRecentSolutions = 8;
 
     /// <summary>

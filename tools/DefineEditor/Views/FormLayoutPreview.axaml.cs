@@ -32,6 +32,7 @@ public partial class FormLayoutPreview : UserControl
     public FormLayoutPreview()
     {
         InitializeComponent();
+        InitializeSelection();
         _renderTimer = new DispatcherTimer { Interval = RenderDelay };
         _renderTimer.Tick += (_, _) =>
         {
@@ -79,6 +80,10 @@ public partial class FormLayoutPreview : UserControl
         {
             Render();
         }
+        else if (e.PropertyName == nameof(FormLayoutDocumentViewModel.SelectedTreeNode))
+        {
+            ShowSelectionOutline();
+        }
     }
 
     private void Render()
@@ -88,12 +93,14 @@ public partial class FormLayoutPreview : UserControl
         // Only the preview view draws; in the others the editor does not rebuild a form nobody sees.
         if (_document is not { IsPreviewView: true } document)
         {
+            ClearRenderedParts();
             LayoutPresenter.Layout = null;
             return;
         }
 
         if (document.IsWebPreview)
         {
+            ClearRenderedParts();
             // The web page renders from the snapshot published above; the Avalonia controls stay empty meanwhile.
             LayoutPresenter.Layout = null;
             ErrorText.IsVisible = false;
@@ -118,6 +125,8 @@ public partial class FormLayoutPreview : UserControl
             LayoutPresenter.Refresh();
             if (document.ShowPreviewFieldNames)
                 ShowFieldNames();
+            MapRenderedParts(document.Root);
+            ShowSelectionOutlineLater();
             ErrorText.IsVisible = false;
         }
         catch (InvalidOperationException ex)
@@ -177,6 +186,7 @@ public partial class FormLayoutPreview : UserControl
 
     private void ShowError(Exception ex)
     {
+        ClearRenderedParts();
         LayoutPresenter.Layout = null;
         ErrorText.Text = string.Format(LocalizationService.Current.Culture, LocalizationService.Current["Preview_RenderFailed"], ex.Message);
         ErrorText.IsVisible = true;

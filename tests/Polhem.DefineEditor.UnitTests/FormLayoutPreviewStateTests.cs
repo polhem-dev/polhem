@@ -226,6 +226,32 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Selecting a field by its layout object selects its node and expands the nodes above it")]
+        public void SelectNodeFor_Field_SelectsAndExpands()
+        {
+            var field = ((LayoutSection)MainSection.Value).Fields![1];
+            SectionsFolder.IsExpanded = false;
+            MainSection.IsExpanded = false;
+
+            Assert.True(_document.SelectNodeFor(field));
+
+            Assert.Same(field, _document.SelectedTreeNode!.Value);
+            Assert.True(SectionsFolder.IsExpanded);
+            Assert.True(MainSection.IsExpanded);
+        }
+
+        [Fact]
+        [DisplayName("Selecting an object the layout does not hold leaves the selection as it was")]
+        public void SelectNodeFor_UnknownObject_KeepsTheSelection()
+        {
+            _document.SelectedTreeNode = MainSection;
+
+            Assert.False(_document.SelectNodeFor(new LayoutField { FieldName = "other" }));
+
+            Assert.Same(MainSection, _document.SelectedTreeNode);
+        }
+
+        [Fact]
         [DisplayName("Show Design from the preview goes back to the tree beside the property grid")]
         public async Task ShowDesign_FromPreview_ShowsTheDesign()
         {
