@@ -14,7 +14,7 @@ namespace Polhem.DefineEditor.ViewModels;
 //
 // The text belongs to the person typing it: reading it back never rewrites it, so their layout and comments stay. A
 // document that was only edited as XML since the XML was shown is saved as typed (SaveText). An edit in the tree
-// generates the XML again from the object, as every save from the tree does.
+// generates the XML again from the object, with the file's comments carried over, as every save from the tree does.
 public abstract partial class ObjectTreeDocumentViewModelBase
 {
     // Text typed in the XML view and not read back yet.
@@ -210,7 +210,20 @@ public abstract partial class ObjectTreeDocumentViewModelBase
         }
 
         _isXmlTextTheSource = false;
-        XmlText = XmlCodec.Serialize(RootObject);
+        XmlText = GeneratedXml();
+    }
+
+    /// <summary>
+    /// The define object as XML, with the comments of the file on disk put back where they were
+    /// (<see cref="XmlCommentCarrier"/>): what a save from the tree writes.
+    /// </summary>
+    private string GeneratedXml()
+    {
+        var file = ReadFile() ?? string.Empty;
+        var xml = XmlCommentCarrier.Carry(file, XmlCodec.Serialize(RootObject));
+        // The serializer ends without a line break; a file that had one keeps it, so a save does not show up as a
+        // change on the last line.
+        return file.EndsWith('\n') && !xml.EndsWith('\n') ? xml + (file.EndsWith("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n") : xml;
     }
 
     // An edit in the tree, an undo or a redo: the XML now comes from the object.

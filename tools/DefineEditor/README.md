@@ -100,7 +100,12 @@ and Undo follow it. XML that cannot be read keeps the document as it was: the pr
 the text (an element or attribute the definition does not have counts as one, since the file would otherwise lose it
 silently), and the document cannot be saved until they are fixed or discarded by switching back to Design. A document
 edited only as XML since the XML was shown is saved exactly as typed, so comments and layout stay; an edit in the tree
-makes the next save write the file from the definition again, without comments.
+makes the next save write the file from the definition again.
+
+A save from the tree keeps the file's comments: each stays before the element it stood before (a field is recognised
+by its name, so the comment moves with it), or at the end of the element it ended; a comment whose element was deleted
+moves to the end of the element that held it. The rest of the file is written as the serializer writes it, attributes
+in declaration order.
 
 Typing in the XML is helped the way a XAML editor helps: `<` lists the elements the definition allows at that point and
 the end tag of the enclosing one, a space inside a start tag lists the attributes it does not have yet (with their type,
