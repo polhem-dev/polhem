@@ -156,6 +156,23 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Contains("id=\"preview-remark\"", html, StringComparison.Ordinal);
         }
 
+        [Theory]
+        [InlineData("", false)]
+        [InlineData("?canvas=light", false)]
+        [InlineData("?canvas=dark", true)]
+        [DisplayName("The preview page draws a dark canvas only when the editor asks for one")]
+        public async Task PreviewPage_CanvasQuery_SetsTheCanvas(string query, bool dark)
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            var url = await _document.PublishBrowserPreviewAsync(host);
+
+            using var client = new HttpClient();
+            var html = await client.GetStringAsync(new Uri(url.AbsoluteUri + query));
+
+            Assert.Contains("browser-preview-canvas", html, StringComparison.Ordinal);
+            Assert.Equal(dark, html.Contains("browser-preview-canvas--dark", StringComparison.Ordinal));
+        }
+
         [Fact]
         [DisplayName("Turning on View mode switches PreviewFormMode and notifies it")]
         public void IsPreviewViewMode_SwitchesPreviewFormMode()

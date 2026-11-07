@@ -244,6 +244,24 @@
         <Setter Property="BoxShadow" Value="0 4 16 0 #40000000"/>
     </Style>
 
+    <!-- The FormLayout preview: the editor's canvas, and the sheet the form is drawn on, which a phone frame rounds. -->
+    <Style Selector="Border.preview-canvas">
+        <Setter Property="Background" Value="{DynamicResource PreviewCanvasBackground}"/>
+    </Style>
+    <Style Selector="Border.preview-sheet">
+        <Setter Property="Background" Value="{DynamicResource SemiColorBackground0}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="16"/>
+    </Style>
+    <Style Selector="Border.preview-sheet.phone">
+        <Setter Property="CornerRadius" Value="24"/>
+        <Setter Property="Padding" Value="12,20"/>
+        <Setter Property="BoxShadow" Value="0 4 16 0 #33000000"/>
+    </Style>
+
     <Style Selector="Border.surface-sunken">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground1}"/>
     </Style>

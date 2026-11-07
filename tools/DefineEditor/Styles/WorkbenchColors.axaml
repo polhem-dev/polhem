@@ -16,6 +16,8 @@
             <SolidColorBrush x:Key="ToolbarIconActiveBackground">#822489DB</SolidColorBrush>
             <SolidColorBrush x:Key="ToolbarIconActiveBorder">#2488DB</SolidColorBrush>
             <SolidColorBrush x:Key="ToolbarIconActiveForeground">#FFFFFF</SolidColorBrush>
+            <!-- The canvas around the FormLayout preview; wwwroot/browser-preview.css paints the web preview's the same. -->
+            <SolidColorBrush x:Key="PreviewCanvasBackground">#1C1D21</SolidColorBrush>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -29,6 +31,7 @@
             <SolidColorBrush x:Key="ToolbarIconActiveBackground">#BED6ED</SolidColorBrush>
             <SolidColorBrush x:Key="ToolbarIconActiveBorder">#005FB8</SolidColorBrush>
             <SolidColorBrush x:Key="ToolbarIconActiveForeground">#005FB8</SolidColorBrush>
+            <SolidColorBrush x:Key="PreviewCanvasBackground">#E4E7EB</SolidColorBrush>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

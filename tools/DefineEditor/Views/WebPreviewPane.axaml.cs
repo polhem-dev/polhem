@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Platform;
+using Avalonia.Styling;
 using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
@@ -18,11 +19,18 @@ namespace Polhem.DefineEditor.Views;
 public partial class WebPreviewPane : UserControl
 {
     private NativeWebView? _webView;
+    private Uri? _pageUrl;
     private bool _loading;
 
     public WebPreviewPane()
     {
         InitializeComponent();
+        // The page cannot see the editor's theme, so it is loaded again with the canvas of the new one.
+        ActualThemeVariantChanged += (_, _) =>
+        {
+            if (_webView is not null && _pageUrl is not null)
+                _webView.Source = WithCanvas(_pageUrl);
+        };
     }
 
     /// <summary>
@@ -41,10 +49,10 @@ public partial class WebPreviewPane : UserControl
         _loading = true;
         try
         {
-            var url = await document.PublishBrowserPreviewAsync(BrowserPreviewHost.Shared);
+            _pageUrl = await document.PublishBrowserPreviewAsync(BrowserPreviewHost.Shared);
             _webView = CreateWebView();
             WebViewHost.Children.Add(_webView);
-            _webView.Source = url;
+            _webView.Source = WithCanvas(_pageUrl);
         }
         catch (InvalidOperationException ex)
         {
@@ -59,6 +67,12 @@ public partial class WebPreviewPane : UserControl
             _loading = false;
         }
     }
+
+    // The canvas around the form follows the editor's theme; the form itself keeps the application's light theme.
+    private Uri WithCanvas(Uri pageUrl) => new UriBuilder(pageUrl)
+    {
+        Query = ActualThemeVariant == ThemeVariant.Dark ? "canvas=dark" : "canvas=light",
+    }.Uri;
 
     private NativeWebView CreateWebView()
     {
