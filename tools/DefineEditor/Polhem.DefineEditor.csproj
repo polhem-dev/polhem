@@ -57,6 +57,8 @@
     <!-- The web preview inside the FormLayout editor. Released with Avalonia itself; it brings no browser engine and uses
          the system's (WebView2, WKWebView, WPE WebKit or WebKitGTK). -->
     <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
+    <!-- The XML view of a document: highlighting and find. -->
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
   </ItemGroup>
 
   <ItemGroup>

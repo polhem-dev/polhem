@@ -35,7 +35,9 @@ public partial class TreeCommandBar : UserControl
 
     private void OnViewKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.F && e.KeyModifiers == CommandModifier)
+        // The XML view has a find of its own.
+        if (e.Key == Key.F && e.KeyModifiers == CommandModifier
+            && DataContext is not ObjectTreeDocumentViewModelBase { IsXmlView: true })
         {
             FindBox.Focus();
             FindBox.SelectAll();

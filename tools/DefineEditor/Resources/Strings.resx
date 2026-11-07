@@ -474,4 +474,8 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Action_RemoveRelation" xml:space="preserve"><value>Remove</value></data>
   <data name="Status_RelationApplied" xml:space="preserve"><value>Relation of {0} updated (unsaved)</value></data>
   <data name="Status_RelationAppliedWithFields" xml:space="preserve"><value>Relation of {0} updated, fields added: {1}. Run Sync TableSchema and FormLayout to add them to the derived files (unsaved)</value></data>
+  <data name="XmlView_Design" xml:space="preserve"><value>Design</value></data>
+  <data name="XmlView_DesignTooltip" xml:space="preserve"><value>Edit the definition in the tree and the property grid</value></data>
+  <data name="XmlView_Xml" xml:space="preserve"><value>XML</value></data>
+  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>Show the XML that saving writes, unsaved edits included (read-only)</value></data>
 </root>
