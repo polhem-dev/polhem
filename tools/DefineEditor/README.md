@@ -91,6 +91,10 @@ Three ways to find things:
   contains the text and expands what is above it; Enter and Shift+Enter go to the next and previous match, and Esc
   goes back to the tree.
 
+**Design / XML** at the top of each editor switches between the tree and the document's XML: the text a save writes,
+unsaved edits included, highlighted and with line numbers. The caret starts on the element of the node that was
+selected, ⌘F / Ctrl+F finds text in it, and an undo shows up in it straight away. The XML is read-only for now.
+
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only; on Windows and Linux, Ctrl+B shows or hides the side bar.

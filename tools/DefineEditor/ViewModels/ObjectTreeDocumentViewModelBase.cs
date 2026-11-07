@@ -137,6 +137,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
             OnPropertyChanged(nameof(TreeFindWatermark));
         });
         DragDropHandler = new SiblingReorderDragDropHandler(this);
+        DocumentChanged += (_, _) => OnDocumentChangedForXml();
     }
 
     [RelayCommand]

@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- AvaloniaEdit's control themes, without its Fluent or Simple theme file. Those files only map the keys below to
+         resources of their own Avalonia theme, which Semi does not define: with the Fluent file included, the XML view
+         threw KeyNotFoundException (`ControlContentThemeFontSize`, `ContentControlThemeFontFamily`) the first time it
+         was shown. So the keys the control themes look up are defined here instead, with Semi's colours. -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://AvaloniaEdit/Themes/Base.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <x:Double x:Key="SearchPanelFontSize">13</x:Double>
+    <FontFamily x:Key="SearchPanelFontFamily">$Default</FontFamily>
+    <Thickness x:Key="CompletionToolTipBorderThickness">1</Thickness>
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SearchPanelBackgroundBrush" Color="#F9F9F9"/>
+            <SolidColorBrush x:Key="SearchPanelBorderBrush" Color="#331C1F23"/>
+            <SolidColorBrush x:Key="TextAreaSelectionBrush" Color="#400077FA"/>
+            <SolidColorBrush x:Key="CompletionToolTipBackground" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="CompletionToolTipForeground" Color="#1C1F23"/>
+            <SolidColorBrush x:Key="CompletionToolTipBorderBrush" Color="#331C1F23"/>
+            <SolidColorBrush x:Key="OverloadViewerBackground" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="OverloadViewerForeground" Color="#1C1F23"/>
+            <SolidColorBrush x:Key="OverloadViewerBorderBrush" Color="#331C1F23"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="SearchPanelBackgroundBrush" Color="#35363C"/>
+            <SolidColorBrush x:Key="SearchPanelBorderBrush" Color="#33F9F9F9"/>
+            <SolidColorBrush x:Key="TextAreaSelectionBrush" Color="#6054A9FF"/>
+            <SolidColorBrush x:Key="CompletionToolTipBackground" Color="#43444A"/>
+            <SolidColorBrush x:Key="CompletionToolTipForeground" Color="#F9F9F9"/>
+            <SolidColorBrush x:Key="CompletionToolTipBorderBrush" Color="#33F9F9F9"/>
+            <SolidColorBrush x:Key="OverloadViewerBackground" Color="#43444A"/>
+            <SolidColorBrush x:Key="OverloadViewerForeground" Color="#F9F9F9"/>
+            <SolidColorBrush x:Key="OverloadViewerBorderBrush" Color="#33F9F9F9"/>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

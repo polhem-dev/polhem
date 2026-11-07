@@ -13,6 +13,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Styles/WorkbenchColors.axaml"/>
+                <ResourceInclude Source="/Styles/AvaloniaEditResources.axaml"/>
             </ResourceDictionary.MergedDictionaries>
             <conv:IconKeyToGeometryConverter x:Key="IconKeyToGeometry"/>
         </ResourceDictionary>

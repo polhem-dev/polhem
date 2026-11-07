@@ -461,4 +461,8 @@
   <data name="Action_RemoveRelation" xml:space="preserve"><value>移除</value></data>
   <data name="Status_RelationApplied" xml:space="preserve"><value>已更新 {0} 的關聯（尚未存檔）</value></data>
   <data name="Status_RelationAppliedWithFields" xml:space="preserve"><value>已更新 {0} 的關聯，新增欄位：{1}。執行「同步 TableSchema 與 FormLayout」即可加到衍生檔（尚未存檔）</value></data>
+  <data name="XmlView_Design" xml:space="preserve"><value>設計</value></data>
+  <data name="XmlView_DesignTooltip" xml:space="preserve"><value>以樹狀與屬性面板編輯定義</value></data>
+  <data name="XmlView_Xml" xml:space="preserve"><value>XML</value></data>
+  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>顯示存檔會寫出的 XML，含尚未儲存的修改（唯讀）</value></data>
 </root>
