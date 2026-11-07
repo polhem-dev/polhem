@@ -18,7 +18,7 @@ public sealed partial class ProgramSettingsDocumentViewModel : ObjectTreeDocumen
 
     public override string TabIcon => "DefProgramSettings";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private ProgramSettingsDocumentViewModel(string filePath, ProgramSettings root)
         : base(filePath, "ProgramSettings", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
@@ -48,7 +48,7 @@ public sealed partial class ProgramSettingsDocumentViewModel : ObjectTreeDocumen
     [RelayCommand(CanExecute = nameof(CanAddProgram))]
     private void AddProgram()
     {
-        if (SelectedTreeNode is not { Value: ProgramSettings root } rootNode)
+        if (FindAncestor<ProgramSettings>(SelectedTreeNode) is not { Value: ProgramSettings root } rootNode)
             return;
         var id = UniqueKey(root.Items!.Select(p => p.ProgId), "NewProgram");
         var program = new ProgramItem { ProgId = id, DisplayName = "New program" };
@@ -57,7 +57,7 @@ public sealed partial class ProgramSettingsDocumentViewModel : ObjectTreeDocumen
         StatusText = L("Status_AddedNamed", "ProgramItem", id);
     }
 
-    private bool CanAddProgram() => SelectedTreeNode?.Value is ProgramSettings;
+    private bool CanAddProgram() => FindAncestor<ProgramSettings>(SelectedTreeNode) is not null;
 
     protected override Action? GetDeleteAction(ObjectTreeNode node) => node.Value switch
     {

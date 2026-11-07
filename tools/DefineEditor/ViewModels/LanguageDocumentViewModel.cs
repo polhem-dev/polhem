@@ -18,7 +18,7 @@ public sealed partial class LanguageDocumentViewModel : ObjectTreeDocumentViewMo
 
     public override string TabIcon => "DefLanguage";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private LanguageDocumentViewModel(string filePath, LanguageResource root)
         // The root and the Items and Enums folders start expanded.

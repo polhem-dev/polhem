@@ -20,7 +20,7 @@ public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocume
 
     public override string TabIcon => "DefPermissionModels";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private PermissionModelsDocumentViewModel(string filePath, PermissionModels root)
         : base(filePath, "PermissionModels", keyText: string.Empty, new ObjectTreeOptions { ExpandDepth = 1 })
@@ -51,7 +51,7 @@ public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocume
     [RelayCommand(CanExecute = nameof(CanAddModel))]
     private void AddModel()
     {
-        if (SelectedTreeNode is not { Value: PermissionModels root } rootNode)
+        if (FindAncestor<PermissionModels>(SelectedTreeNode) is not { Value: PermissionModels root } rootNode)
             return;
         var modelId = UniqueKey(root.Models!.Select(m => m.ModelId), "NewModel");
         var model = new PermissionModel(modelId, "New model");
@@ -60,7 +60,7 @@ public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocume
         StatusText = L("Status_AddedNamed", "PermissionModel", modelId);
     }
 
-    private bool CanAddModel() => SelectedTreeNode?.Value is PermissionModels;
+    private bool CanAddModel() => FindAncestor<PermissionModels>(SelectedTreeNode) is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddRule))]
     private void AddRule()

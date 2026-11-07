@@ -21,7 +21,7 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
 
     public override string TabIcon => "DefMenuSettings";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     private MenuSettingsDocumentViewModel(string filePath, MenuSettings root)
         : base(filePath, "MenuSettings", keyText: string.Empty, new ObjectTreeOptions
@@ -71,7 +71,7 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
 
     private void AddMenuNode(bool isFolder)
     {
-        var ownerNode = SelectedTreeNode;
+        var ownerNode = OwnerNode(SelectedTreeNode);
         if (OwnedItems(ownerNode) is not { } owner || ownerNode is null) { return; }
 
         // Ids are unique across the whole tree, not merely among siblings, so the candidate is
@@ -85,8 +85,20 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
         StatusText = L("Status_AddedNamed", isFolder ? "MenuFolder" : "MenuEntry", id);
     }
 
-    /// <summary>Whether the selected node can hold menu nodes: the root or a folder.</summary>
-    public bool CanAddNode() => OwnedItems(SelectedTreeNode) is not null;
+    /// <summary>
+    /// Whether a menu node can be added from the selection: into the selected root or folder, or next to a selected
+    /// entry.
+    /// </summary>
+    public bool CanAddNode() => OwnerNode(SelectedTreeNode) is not null;
+
+    // The node that takes a new menu node: the selection itself when it can hold nodes, otherwise its nearest
+    // ancestor that can.
+    private static ObjectTreeNode? OwnerNode(ObjectTreeNode? node)
+    {
+        for (var current = node; current != null; current = current.Parent)
+            if (OwnedItems(current) is not null) return current;
+        return null;
+    }
 
     protected override Action? GetDeleteAction(ObjectTreeNode node)
     {

@@ -51,7 +51,12 @@ time in that order, each followed by an upgrade of its own tables. A form that r
 each workbook is planned only once the ones before it are written. The batch stops at the first workbook that has an
 error or whose upgrade fails; the ones imported before it stay, and **Back** lists the workbooks still to import.
 
-Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+Each editor has a toolbar above its tree with the commands of the selected node, the same ones its context menu
+lists: the Add buttons, with those of the enclosing nodes as well so a sibling can be added without selecting the parent
+first, then Delete, then the node's other commands (generating a layout, exporting, upgrading the tables) behind a
+**⋯** button. A command that cannot run on the selected node stays on the toolbar, greyed out.
+
+Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only; on Windows and Linux, Ctrl+B shows or hides the side bar.
 

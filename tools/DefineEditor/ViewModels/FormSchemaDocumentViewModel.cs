@@ -42,7 +42,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     /// <summary>Backing object handed to <see cref="XmlCodec.SerializeToFile"/> by base's Save.</summary>
     protected override object RootObject => Schema;
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     /// <summary>
     /// The object the property grid shows: a Relation group shows the field that owns it,

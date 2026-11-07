@@ -24,7 +24,7 @@ public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocume
 
     public override string TabIcon => "DefDatabaseSettings";
 
-    public override ITreeNodeCommandProvider CommandProvider { get; }
+    public override TreeCommandProviderBase CommandProvider { get; }
 
     /// <summary>A DatabaseItem's ServerId suggests the ids of the servers in this file.</summary>
     public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
