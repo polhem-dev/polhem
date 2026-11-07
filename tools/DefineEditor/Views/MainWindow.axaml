@@ -42,7 +42,24 @@
                  the row is the height of the button and sits at their level. -->
             <Grid Height="28" Margin="0,3,0,0" VerticalAlignment="Top">
                 <TextBlock Text="{loc:Loc Window_Title}" Classes="muted"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsVisible="{Binding !IsSolutionOpened}"/>
+                <!-- Looks like a search field, as in VS Code's title bar, so Go to File can be found without knowing
+                     its key. -->
+                <Button Classes="titlebar-search" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        chrome:WindowDecorationProperties.ElementRole="User"
+                        IsVisible="{Binding IsSolutionOpened}"
+                        Command="{Binding ShowQuickOpenCommand}"
+                        ToolTip.Tip="{loc:Loc MenuItem_GoToFile}"
+                        AutomationProperties.Name="{loc:Loc MenuItem_GoToFile}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <PathIcon Grid.Column="0" Data="{StaticResource IconSearch}"/>
+                        <TextBlock Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                   Text="{loc:Loc TitleBar_SearchFiles}"/>
+                        <TextBlock Grid.Column="2" Classes="muted" VerticalAlignment="Center"
+                                   Text="{Binding GoToFileShortcut}"/>
+                    </Grid>
+                </Button>
                 <Button Classes="titlebar-button" Margin="84,0,0,0"
                         HorizontalAlignment="Left" VerticalAlignment="Center"
                         chrome:WindowDecorationProperties.ElementRole="User"
@@ -162,10 +179,18 @@
                     <TextBlock Text="{loc:Loc Sidebar_ExplorerTitle}" IsVisible="{Binding IsExplorerView}"/>
                     <TextBlock Text="{loc:Loc Sidebar_ProgramsTitle}" IsVisible="{Binding IsProgramsView}"/>
                     <TextBlock Text="{loc:Loc Sidebar_TableSchemasTitle}" IsVisible="{Binding IsTableSchemasView}"/>
+                    <!-- Go to File where the title bar cannot carry it (Windows and Linux); MainWindow shows it there. -->
+                    <Button x:Name="SidebarGoToFileButton" Classes="toolbar-icon" IsVisible="False"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,-6,0,-6"
+                            Command="{Binding ShowQuickOpenCommand}"
+                            ToolTip.Tip="{Binding GoToFileToolTip}"
+                            AutomationProperties.Name="{loc:Loc MenuItem_GoToFile}">
+                        <PathIcon Data="{StaticResource IconSearch}"/>
+                    </Button>
                 </Panel>
 
                 <!-- Filters the view shown; the views share the text. Escape clears it. -->
-                <TextBox DockPanel.Dock="Top" x:Name="SidebarFilterBox" Classes="clearButton"
+                <TextBox DockPanel.Dock="Top" x:Name="SidebarFilterBox" Classes="clearButton search-box"
                          Margin="10,0,10,6" IsVisible="{Binding IsSolutionOpened}"
                          Text="{Binding SidebarFilter, Mode=TwoWay}"
                          Watermark="{loc:Loc Sidebar_FilterWatermark}"
@@ -173,6 +198,9 @@
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Escape" Command="{Binding ClearSidebarFilterCommand}"/>
                     </TextBox.KeyBindings>
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Classes="search-box-icon" Data="{StaticResource IconSearch}"/>
+                    </TextBox.InnerLeftContent>
                 </TextBox>
 
                 <Panel>
@@ -300,11 +328,15 @@
                         IsVisible="{Binding IsQuickOpenVisible}"
                         HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Width="560">
                     <DockPanel>
-                        <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6"
+                        <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6" Classes="search-box"
                                  Text="{Binding QuickOpenText, Mode=TwoWay}"
                                  Watermark="{loc:Loc QuickOpen_Watermark}"
                                  AutomationProperties.Name="{loc:Loc QuickOpen_Watermark}"
-                                 KeyDown="OnQuickOpenKeyDown"/>
+                                 KeyDown="OnQuickOpenKeyDown">
+                            <TextBox.InnerLeftContent>
+                                <PathIcon Classes="search-box-icon" Data="{StaticResource IconSearch}"/>
+                            </TextBox.InnerLeftContent>
+                        </TextBox>
                         <ListBox x:Name="QuickOpenList" ItemsSource="{Binding QuickOpenItems}"
                                  SelectedItem="{Binding SelectedQuickOpenItem, Mode=TwoWay}"
                                  MaxHeight="380" Background="Transparent" Margin="0,0,0,6"

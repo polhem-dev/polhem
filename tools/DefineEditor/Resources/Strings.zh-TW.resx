@@ -81,6 +81,7 @@
   <data name="Sidebar_FilterWatermark" xml:space="preserve"><value>篩選</value></data>
   <data name="Sidebar_FilterNoMatches" xml:space="preserve"><value>沒有符合的檔案。</value></data>
   <data name="MenuItem_GoToFile" xml:space="preserve"><value>前往檔案…</value></data>
+  <data name="TitleBar_SearchFiles" xml:space="preserve"><value>搜尋檔案…</value></data>
   <data name="QuickOpen_Watermark" xml:space="preserve"><value>依名稱、鍵值或路徑前往檔案</value></data>
   <data name="TreeFind_Watermark" xml:space="preserve"><value>在樹中尋找</value></data>
   <data name="TreeFind_NoMatches" xml:space="preserve"><value>沒有符合項目</value></data>

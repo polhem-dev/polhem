@@ -83,7 +83,8 @@ Three ways to find things:
 
 - **Filter** at the top of the sidebar keeps the nodes whose name or key contains the text, with the groups above them;
   the three views share it, and Esc clears it.
-- **Go to File** (⌘P / Ctrl+P, also in the **File** menu) lists the solution's files by name, key or path, best match
+- **Go to File** (⌘P / Ctrl+P, the **Search files…** field in the title bar on macOS, the magnifier at the top of
+  the sidebar on Windows and Linux, and the **File** menu) lists the solution's files by name, key or path, best match
   first; the letters may be apart (`ordfs` finds `Order.FormSchema.xml`). The arrow keys move through the list and
   Enter opens the file.
 - **Find in tree** (⌘F / Ctrl+F, the box at the right of an editor's toolbar) selects the first node whose label
