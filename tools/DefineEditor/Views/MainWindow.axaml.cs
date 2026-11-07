@@ -39,6 +39,10 @@ public partial class MainWindow : Window
         // Off macOS the title bar is the system's, so Go to File gets a button in the sidebar instead.
         SidebarGoToFileButton.IsVisible = !OperatingSystem.IsMacOS();
 
+        // Go to File sits just under the title bar's Search files field on macOS, and under the window's own menu
+        // elsewhere.
+        QuickOpenPanel.Margin = OperatingSystem.IsMacOS() ? new Thickness(0, 32, 0, 0) : new Thickness(0, 30, 0, 0);
+
         if (OperatingSystem.IsMacOS())
         {
             ExtendClientAreaToDecorationsHint = true;
