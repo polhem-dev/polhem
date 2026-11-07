@@ -490,4 +490,7 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="XmlIssue_UnknownAttribute" xml:space="preserve"><value>Unknown attribute {0}; the definition has no such property here.</value></data>
   <data name="XmlIssue_Empty" xml:space="preserve"><value>There is no definition in the XML.</value></data>
   <data name="XmlIssue_Position" xml:space="preserve"><value>Line {0}, column {1}</value></data>
+  <data name="XmlCompletion_Required" xml:space="preserve"><value>required</value></data>
+  <data name="XmlCompletion_Default" xml:space="preserve"><value>default {0}</value></data>
+  <data name="XmlCompletion_DefaultValue" xml:space="preserve"><value>default</value></data>
 </root>

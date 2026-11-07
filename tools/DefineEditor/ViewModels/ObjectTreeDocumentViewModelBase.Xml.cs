@@ -79,6 +79,9 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     public XmlTextPosition? LocateSelectedNodeInXml() =>
         SelectedTreeNode is { } node ? XmlElementLocator.Find(XmlText, RootObject, node.Value) : null;
 
+    /// <summary>The type of the define object, whose XML mapping the XML view's completion follows.</summary>
+    public Type XmlRootType => RootObject.GetType();
+
     /// <summary>Notes text typed in the XML view; <see cref="FlushXmlEdit"/> reads it into the document.</summary>
     public void OnXmlTextEdited(string text)
     {
