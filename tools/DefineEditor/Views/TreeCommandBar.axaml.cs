@@ -14,6 +14,7 @@ namespace Polhem.DefineEditor.Views;
 public partial class TreeCommandBar : UserControl
 {
     private UserControl? _view;
+    private ObjectTreeDocumentViewModelBase? _document;
 
     public TreeCommandBar()
     {
@@ -104,14 +105,29 @@ public partial class TreeCommandBar : UserControl
             if (focus) container.Focus(NavigationMethod.Tab);
         }, DispatcherPriority.Loaded);
 
-    // The menu items are built in code, as `ObjectTreeView` builds its context menu, so the overflow menu looks the
-    // same as the context menu it repeats.
-    private void OnMoreFlyoutOpening(object? sender, EventArgs e)
+    protected override void OnDataContextChanged(EventArgs e)
     {
-        if (sender is not MenuFlyout flyout || DataContext is not ObjectTreeDocumentViewModelBase document)
-            return;
+        base.OnDataContextChanged(e);
+        if (_document is not null) _document.PropertyChanged -= OnDocumentPropertyChanged;
+        _document = DataContext as ObjectTreeDocumentViewModelBase;
+        if (_document is not null) _document.PropertyChanged += OnDocumentPropertyChanged;
+        FillMoreFlyout();
+    }
 
-        flyout.ItemsSource = document.ToolbarActionItems
+    private void OnDocumentPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ObjectTreeDocumentViewModelBase.ToolbarActionItems)) FillMoreFlyout();
+    }
+
+    // The menu items are built in code, as `ObjectTreeView` builds its context menu, so the overflow menu looks the
+    // same as the context menu it repeats. They are put in whenever the commands change, not when the menu opens:
+    // Avalonia's MenuFlyout raises Opening after it has created its popup, and items given to it then left the popup
+    // open and empty.
+    private void FillMoreFlyout()
+    {
+        if (MoreButton.Flyout is not MenuFlyout flyout) return;
+
+        flyout.ItemsSource = (_document?.ToolbarActionItems ?? [])
             .Select(item => new MenuItem
             {
                 Header = item.Label,
