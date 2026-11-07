@@ -59,15 +59,19 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A section offers Add field, then Delete in a group of its own")]
-        public void GetCommands_Section_OffersAddFieldAndDelete()
+        [DisplayName("A lone section offers Add field, then Duplicate and Delete in a group of their own")]
+        public void GetCommands_Section_OffersAddFieldDuplicateAndDelete()
         {
             var commands = CommandsFor(SectionsFolder.Children[0]);
 
             Assert.Equal(
-                [LocalizationService.Current["FormLayout_AddField"], LocalizationService.Current["Action_Delete"]],
+                [
+                    LocalizationService.Current["FormLayout_AddField"], LocalizationService.Current["Action_Duplicate"],
+                    LocalizationService.Current["Action_Delete"],
+                ],
                 commands.Select(c => c.Label));
             Assert.True(commands[1].BeginsGroup);
+            Assert.False(commands[2].BeginsGroup);
         }
 
         [Fact]

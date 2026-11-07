@@ -51,10 +51,20 @@ time in that order, each followed by an upgrade of its own tables. A form that r
 each workbook is planned only once the ones before it are written. The batch stops at the first workbook that has an
 error or whose upgrade fails; the ones imported before it stay, and **Back** lists the workbooks still to import.
 
-Each editor has a toolbar above its tree with the commands of the selected node, the same ones its context menu
-lists: the Add buttons, with those of the enclosing nodes as well so a sibling can be added without selecting the parent
-first, then Delete, then the node's other commands (generating a layout, exporting, upgrading the tables) behind a
-**⋯** button. A command that cannot run on the selected node stays on the toolbar, greyed out.
+Each editor has a toolbar above its tree with the commands of the selected node as icon buttons, each named in its
+tooltip, the same commands its context menu lists: the Add buttons, with those of the enclosing nodes as well so a sibling can be added without selecting the parent
+first, then Move Up, Move Down, Duplicate and Delete, then the node's other commands (generating a layout, exporting,
+upgrading the tables) behind a **⋯** button. A command that cannot run on the selected node stays on the toolbar,
+greyed out. Duplicate inserts a copy after the node; a keyed object gets a free key ending in `_copy`.
+
+While the tree has the focus, keys run the same commands:
+
+| Key (macOS / Windows and Linux) | Command |
+|---------------------------------|---------|
+| ⌫ / Delete | Delete the selected node |
+| ⌘D / Ctrl+D | Duplicate it |
+| ⌥↑ ⌥↓ / Alt+Up Alt+Down | Move it among its siblings |
+| Enter or F2 | Go to the first value in the property grid; Esc there comes back to the tree |
 
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 

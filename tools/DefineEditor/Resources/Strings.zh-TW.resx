@@ -69,6 +69,9 @@
   <data name="Action_DontSave" xml:space="preserve"><value>不儲存</value></data>
   <data name="Action_SaveAnyway" xml:space="preserve"><value>仍要存檔</value></data>
   <data name="Action_Delete" xml:space="preserve"><value>刪除</value></data>
+  <data name="Action_MoveUp" xml:space="preserve"><value>上移</value></data>
+  <data name="Action_MoveDown" xml:space="preserve"><value>下移</value></data>
+  <data name="Action_Duplicate" xml:space="preserve"><value>複製</value></data>
   <data name="Action_OK" xml:space="preserve"><value>確定</value></data>
   <data name="Action_Add" xml:space="preserve"><value>加入</value></data>
 
@@ -193,6 +196,7 @@
   <!-- Status bar messages -->
   <data name="Status_AddedNamed" xml:space="preserve"><value>已新增 {0}：{1}（尚未存檔）</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>已刪除節點（尚未存檔）</value></data>
+  <data name="Status_Duplicated" xml:space="preserve"><value>已複製為 {0}（尚未存檔）</value></data>
   <data name="Status_DeleteCancelled" xml:space="preserve"><value>已取消刪除。</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>已儲存：{0}</value></data>
   <data name="Status_SavedAll" xml:space="preserve"><value>已儲存 {0}/{1} 個檔案。</value></data>

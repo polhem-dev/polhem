@@ -82,6 +82,9 @@
   <data name="Action_DontSave" xml:space="preserve"><value>Don't Save</value></data>
   <data name="Action_SaveAnyway" xml:space="preserve"><value>Save anyway</value></data>
   <data name="Action_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Action_MoveUp" xml:space="preserve"><value>Move Up</value></data>
+  <data name="Action_MoveDown" xml:space="preserve"><value>Move Down</value></data>
+  <data name="Action_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
   <data name="Action_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Action_Add" xml:space="preserve"><value>Add</value></data>
 
@@ -206,6 +209,7 @@
   <!-- Status bar messages -->
   <data name="Status_AddedNamed" xml:space="preserve"><value>Added {0}: {1} (unsaved)</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>Node deleted (unsaved)</value></data>
+  <data name="Status_Duplicated" xml:space="preserve"><value>Duplicated as {0} (unsaved)</value></data>
   <data name="Status_DeleteCancelled" xml:space="preserve"><value>Deletion cancelled.</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>Saved: {0}</value></data>
   <data name="Status_SavedAll" xml:space="preserve"><value>Saved {0} of {1} file(s).</value></data>

@@ -1,3 +1,4 @@
+using System.Collections;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Settings;
 using Polhem.Definition.ObjectTree;
@@ -98,6 +99,27 @@ public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentVi
         for (var current = node; current != null; current = current.Parent)
             if (OwnedItems(current) is not null) return current;
         return null;
+    }
+
+    // Menu ids are unique across the whole tree, so a copied folder renames its own id and those of everything in it.
+    protected override void PrepareDuplicate(object copy, IList list)
+    {
+        if (copy is not MenuNodeBase node) { base.PrepareDuplicate(copy, list); return; }
+
+        var taken = new HashSet<string>(Root.EnumerateNodes().Select(n => n.Id), StringComparer.OrdinalIgnoreCase);
+        foreach (var target in Enumerate(node))
+        {
+            target.Id = UniqueKey(taken, target.Id + "_copy");
+            taken.Add(target.Id);
+        }
+    }
+
+    private static IEnumerable<MenuNodeBase> Enumerate(MenuNodeBase node)
+    {
+        yield return node;
+        if (node is not MenuFolder { Items: { } items }) yield break;
+        foreach (var child in items.SelectMany(Enumerate))
+            yield return child;
     }
 
     protected override Action? GetDeleteAction(ObjectTreeNode node)
