@@ -156,6 +156,62 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Contains("id=\"preview-remark\"", html, StringComparison.Ordinal);
         }
 
+        [Fact]
+        [DisplayName("A click on a page showing the layout selects the clicked field's node")]
+        public async Task BrowserSelectionRequested_Field_SelectsItsNode()
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            await _document.PublishBrowserPreviewAsync(host);
+            var documentId = host.Hub.GetDocumentId(_document.DocumentKey);
+
+            host.Hub.RequestSelection(documentId, new PreviewTarget(PreviewTargetKind.Field, 0, 1));
+
+            Assert.Same(((LayoutSection)MainSection.Value).Fields![1], _document.SelectedTreeNode!.Value);
+        }
+
+        [Fact]
+        [DisplayName("A click on a page showing another document leaves this one's selection alone")]
+        public async Task BrowserSelectionRequested_OtherDocument_KeepsTheSelection()
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            await _document.PublishBrowserPreviewAsync(host);
+            _document.SelectedTreeNode = SectionsFolder;
+
+            host.Hub.RequestSelection(host.Hub.GetDocumentId("other"), new PreviewTarget(PreviewTargetKind.Field, 0, 1));
+
+            Assert.Same(SectionsFolder, _document.SelectedTreeNode);
+        }
+
+        [Fact]
+        [DisplayName("The node selected in the tree is published for the pages to outline, and none for a folder")]
+        public async Task SelectedTreeNode_PublishesTheSelectionToThePages()
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            await _document.PublishBrowserPreviewAsync(host);
+            var documentId = host.Hub.GetDocumentId(_document.DocumentKey);
+
+            _document.SelectedTreeNode = MainSection;
+            Assert.Equal(new PreviewTarget(PreviewTargetKind.Section, 0), host.Hub.GetSelection(documentId));
+
+            _document.SelectedTreeNode = SectionsFolder;
+            Assert.Null(host.Hub.GetSelection(documentId));
+        }
+
+        [Fact]
+        [DisplayName("A closed layout no longer follows the pages")]
+        public async Task Dispose_StopsFollowingThePages()
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            await _document.PublishBrowserPreviewAsync(host);
+            var documentId = host.Hub.GetDocumentId(_document.DocumentKey);
+            _document.SelectedTreeNode = SectionsFolder;
+
+            _document.Dispose();
+            host.Hub.RequestSelection(documentId, new PreviewTarget(PreviewTargetKind.Section, 0));
+
+            Assert.Same(SectionsFolder, _document.SelectedTreeNode);
+        }
+
         [Theory]
         [InlineData("", false)]
         [InlineData("?canvas=light", false)]

@@ -13,5 +13,58 @@ window.polhemBrowserPreview = {
             e.setAttribute('placeholder', e.id.substring(prefix.length + 1));
             e.dataset.polhemFieldName = '';
         });
+    },
+
+    // The editor and the page share no object, only the layout's order: a part is named by its position among the
+    // sections or the details, and a field or a column by its position in it (PreviewTarget). The classes are the
+    // ones the MudBlazor form presenter and grid draw.
+    followClicks: function (dotnet) {
+        this.dotnet = dotnet;
+        if (this.following) return;
+        this.following = true;
+        var self = this;
+        document.addEventListener('pointerdown', function (e) {
+            var target = self.targetOf(e.target);
+            if (target && self.dotnet) self.dotnet.invokeMethodAsync('SelectFromPreview', target.kind, target.index, target.item);
+        }, true);
+    },
+
+    targetOf: function (element) {
+        if (!(element instanceof Element)) return null;
+        var detail = element.closest('.polhem-form-layout__detail');
+        var header = element.closest('th.polhem-grid__header');
+        if (detail && header) {
+            return { kind: 'Column', index: this.indexIn('.polhem-form-layout__detail', detail),
+                item: Array.prototype.indexOf.call(detail.querySelectorAll('th.polhem-grid__header'), header) };
+        }
+        if (detail) return { kind: 'Grid', index: this.indexIn('.polhem-form-layout__detail', detail), item: -1 };
+        var section = element.closest('.polhem-form-layout__section');
+        if (!section) return null;
+        var field = element.closest('.polhem-form-layout__field');
+        var index = this.indexIn('.polhem-form-layout__section', section);
+        if (field) {
+            return { kind: 'Field', index: index,
+                item: Array.prototype.indexOf.call(section.querySelectorAll('.polhem-form-layout__field'), field) };
+        }
+        return { kind: 'Section', index: index, item: -1 };
+    },
+
+    indexIn: function (selector, element) {
+        return Array.prototype.indexOf.call(document.querySelectorAll(selector), element);
+    },
+
+    outline: function (kind, index, item) {
+        document.querySelectorAll('.browser-preview__selected').forEach(function (e) {
+            e.classList.remove('browser-preview__selected');
+        });
+        var element = null;
+        if (kind === 'Section' || kind === 'Field') {
+            var section = document.querySelectorAll('.polhem-form-layout__section')[index];
+            element = kind === 'Section' || !section ? section : section.querySelectorAll('.polhem-form-layout__field')[item];
+        } else if (kind === 'Grid' || kind === 'Column') {
+            var detail = document.querySelectorAll('.polhem-form-layout__detail')[index];
+            element = kind === 'Grid' || !detail ? detail : detail.querySelectorAll('th.polhem-grid__header')[item];
+        }
+        if (element) element.classList.add('browser-preview__selected');
     }
 };

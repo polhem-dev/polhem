@@ -35,6 +35,7 @@
     private const string IdPrefix = "preview";
 
     private BrowserPreviewSnapshot? _snapshot;
+    private DotNetObjectReference<BrowserPreviewPage>? _selfReference;
     private FormLayout? _layout;
     private string? _error;
 
@@ -58,16 +59,56 @@
     protected override void OnInitialized()
     {
         Hub.SnapshotPublished += OnSnapshotPublished;
+        Hub.SelectionPublished += OnSelectionPublished;
         Load();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_layout is not null)
-            await JS.InvokeVoidAsync("polhemBrowserPreview.showFieldNames", IdPrefix, _snapshot!.ShowFieldNames);
+        if (_layout is null) return;
+        await JS.InvokeVoidAsync("polhemBrowserPreview.showFieldNames", IdPrefix, _snapshot!.ShowFieldNames);
+        if (_selfReference is null)
+        {
+            _selfReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("polhemBrowserPreview.followClicks", _selfReference);
+        }
+        // A render may draw the form again, so the outline goes back on what is selected now.
+        await OutlineSelectionAsync();
     }
 
-    public void Dispose() => Hub.SnapshotPublished -= OnSnapshotPublished;
+    public void Dispose()
+    {
+        Hub.SnapshotPublished -= OnSnapshotPublished;
+        Hub.SelectionPublished -= OnSelectionPublished;
+        _selfReference?.Dispose();
+    }
+
+    /// <summary>
+    /// Called by the page's script with the part of the form that was clicked, which the editor then selects.
+    /// </summary>
+    /// <param name="kind">A <see cref="PreviewTargetKind"/> name.</param>
+    /// <param name="index">The position of the section or the detail grid.</param>
+    /// <param name="item">The position of the field or the column in it, or -1.</param>
+    [JSInvokable]
+    public void SelectFromPreview(string kind, int index, int item)
+    {
+        if (Enum.TryParse<PreviewTargetKind>(kind, out var targetKind) && Enum.IsDefined(targetKind))
+            Hub.RequestSelection(DocumentId, new PreviewTarget(targetKind, index, item));
+    }
+
+    private void OnSelectionPublished(string documentId)
+    {
+        if (string.Equals(documentId, DocumentId, StringComparison.Ordinal))
+            _ = InvokeAsync(OutlineSelectionAsync);
+    }
+
+    private async Task OutlineSelectionAsync()
+    {
+        if (_layout is null) return;
+        var target = Hub.GetSelection(DocumentId);
+        await JS.InvokeVoidAsync("polhemBrowserPreview.outline",
+            target?.Kind.ToString(), target?.Index ?? -1, target?.Item ?? -1);
+    }
 
     private void OnSnapshotPublished(string documentId)
     {

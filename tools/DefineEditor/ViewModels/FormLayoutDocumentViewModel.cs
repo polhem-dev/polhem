@@ -98,7 +98,56 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         var documentId = host.Hub.GetDocumentId(DocumentKey);
         var url = await host.GetDocumentUrlAsync(documentId);
         host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
+        FollowBrowserSelection(host.Hub);
         return url;
+    }
+
+    // The pages that show this layout and its tree select together: a click on a page selects the node, and the
+    // node selected here is outlined on the pages.
+    private void FollowBrowserSelection(BrowserPreviewHub hub)
+    {
+        if (!ReferenceEquals(_followedHub, hub))
+        {
+            UnfollowBrowserSelection();
+            hub.SelectionRequested += OnBrowserSelectionRequested;
+            _followedHub = hub;
+        }
+        PublishBrowserSelection();
+    }
+
+    private void UnfollowBrowserSelection()
+    {
+        if (_followedHub is null) return;
+        _followedHub.SelectionRequested -= OnBrowserSelectionRequested;
+        _followedHub = null;
+    }
+
+    private void PublishBrowserSelection()
+    {
+        if (_followedHub is not { } hub) return;
+        hub.PublishSelection(hub.GetDocumentId(DocumentKey), PreviewTarget.Locate(Root, SelectedTreeNode?.Value));
+    }
+
+    // A page raises this on its own circuit; the tree is changed on the thread this document was made on.
+    private void OnBrowserSelectionRequested(string documentId, PreviewTarget target)
+    {
+        if (_followedHub is not { } hub || documentId != hub.GetDocumentId(DocumentKey)) return;
+        if (_creatorContext is null)
+            SelectBrowserTarget(target);
+        else
+            _creatorContext.Post(_ => SelectBrowserTarget(target), null);
+    }
+
+    private void SelectBrowserTarget(PreviewTarget target)
+    {
+        if (target.Resolve(Root) is { } layoutObject)
+            SelectNodeFor(layoutObject);
+    }
+
+    public override void Dispose()
+    {
+        UnfollowBrowserSelection();
+        base.Dispose();
     }
 
     /// <summary>
@@ -134,6 +183,9 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     /// <summary>A layout has a preview: the form it draws, by <see cref="PreviewEngine"/>.</summary>
     public override bool SupportsPreview => true;
 
+    private readonly SynchronizationContext? _creatorContext = SynchronizationContext.Current;
+    private BrowserPreviewHub? _followedHub;
+
     private FormLayoutDocumentViewModel(string filePath, FormLayout root, SolutionContext solution,
         FormLayoutPreviewEngine previewEngine)
         // The root and the two folders start expanded.
@@ -142,12 +194,17 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         Root = root;
         Solution = solution;
         _previewEngine = previewEngine;
+        // An edit can move the selected part, and with it its position on the pages.
+        DocumentChanged += (_, _) => PublishBrowserSelection();
         CommandProvider = new FormLayoutCommandProvider(this);
         InitializeTree(root);
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SelectedTreeNode))
+            {
                 EditPropertiesCommand.NotifyCanExecuteChanged();
+                PublishBrowserSelection();
+            }
             // The tree offers Edit Properties only beside the preview, where the property grid is not.
             else if (e.PropertyName == nameof(ViewMode))
                 RefreshToolbar();
