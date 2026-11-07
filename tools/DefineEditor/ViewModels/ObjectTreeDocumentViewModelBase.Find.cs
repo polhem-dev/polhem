@@ -68,6 +68,23 @@ public abstract partial class ObjectTreeDocumentViewModelBase
             : matches.FirstOrDefault(m => nodes.IndexOf(m) > position) ?? matches[0];
     }
 
+    /// <summary>
+    /// Selects the node that holds <paramref name="value"/>, expanding its ancestors so it shows; a preview selects
+    /// what was clicked in it this way.
+    /// </summary>
+    /// <param name="value">The define object to select, compared by reference.</param>
+    /// <returns><c>true</c> when a node holds it; otherwise the selection stays as it was.</returns>
+    public bool SelectNodeFor(object value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        var target = Roots.SelectMany(Enumerate).FirstOrDefault(n => !n.IsFolder && ReferenceEquals(n.Value, value));
+        if (target is null) return false;
+        for (var ancestor = target.Parent; ancestor != null; ancestor = ancestor.Parent)
+            ancestor.IsExpanded = true;
+        SelectedTreeNode = target;
+        return true;
+    }
+
     private static IEnumerable<ObjectTreeNode> Enumerate(ObjectTreeNode node) =>
         new[] { node }.Concat(node.Children.SelectMany(Enumerate));
 }

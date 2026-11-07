@@ -16,7 +16,7 @@ public static class DocumentViewModelFactory
         if (node is null || node.Kind != DefineNodeKind.DefineFile || node.FilePath is null)
             return null;
 
-        return node.DefineType switch
+        var document = node.DefineType switch
         {
             DefineType.FormSchema => LoadOrFallback(node, () => FormSchemaDocumentViewModel.Load(node.FilePath!, solution)),
             DefineType.PermissionModels => LoadOrFallback(node, () => PermissionModelsDocumentViewModel.Load(node.FilePath!)),
@@ -30,6 +30,9 @@ public static class DocumentViewModelFactory
             DefineType.Language => LoadOrFallback(node, () => LanguageDocumentViewModel.Load(node.FilePath!)),
             _ => Unsupported(node, "An editor for this define type is not implemented yet."),
         };
+        if (document is ObjectTreeDocumentViewModelBase tree)
+            ViewModeMemory.Restore(tree, UserSettings.Load().DocumentViewModes);
+        return document;
     }
 
     // The engine a FormLayout's preview was drawn by last, so each new layout opens the way the previous one was left.

@@ -48,6 +48,14 @@ public sealed class DocumentBody : Grid
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        // The next document of this kind opens in the view chosen here.
+        if (e.PropertyName == nameof(ObjectTreeDocumentViewModelBase.ViewMode) && _document is not null)
+        {
+            var settings = UserSettings.Load();
+            ViewModeMemory.Remember(_document, settings.DocumentViewModes);
+            settings.Save();
+        }
+
         if (e.PropertyName is nameof(ObjectTreeDocumentViewModelBase.ViewMode)
             or nameof(ObjectTreeDocumentViewModelBase.IsDesignEnabled))
         {
