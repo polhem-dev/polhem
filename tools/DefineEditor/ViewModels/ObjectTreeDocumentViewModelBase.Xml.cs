@@ -2,24 +2,67 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Polhem.Core.Serialization;
 using Polhem.DefineEditor.Services;
+using Polhem.DefineEditor.Views;
 
 namespace Polhem.DefineEditor.ViewModels;
 
-// The XML view: the define object as XmlSerializer writes it, the same text a save would put in the file, unsaved edits
-// included. It is read-only for now; the tree and the property grid stay the only way to change the object.
+// The XML view: the define object as XML, which can be edited as text. The text is read back into the object after a
+// pause in typing (DefineXmlParser); a text that cannot be read leaves the object as it was and lists what is wrong.
+//
+// The text belongs to the person typing it: reading it back never rewrites it, so their layout and comments stay. A
+// document that was only edited as XML since the XML was shown is saved as typed (SaveText). An edit in the tree
+// generates the XML again from the object, as every save from the tree does.
 public abstract partial class ObjectTreeDocumentViewModelBase
 {
+    // Text typed in the XML view and not read back yet.
+    private string? _pendingXmlText;
+
+    // Whether XmlText is what a save writes: it was typed, or read from the file, and no edit in the tree came since.
+    private bool _isXmlTextTheSource;
+
+    // Set while a typed text is being applied, so the change it causes does not generate the XML again.
+    private bool _isApplyingXml;
+
     /// <summary>Whether the document shows its XML instead of the tree and the property grid.</summary>
     [ObservableProperty]
     private bool _isXmlView;
 
-    /// <summary>The define object as XML, read when the XML view opens and after every change while it is open.</summary>
+    /// <summary>
+    /// The XML the view shows: the file as it is on disk while the document has no unsaved edit, otherwise the define
+    /// object as a save from the tree would write it, or the text typed since.
+    /// </summary>
     [ObservableProperty]
     private string _xmlText = string.Empty;
 
-    /// <summary>Shows the tree and the property grid.</summary>
+    /// <summary>What is wrong with the XML typed last; empty when it was read into the document.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasXmlIssues))]
+    private IReadOnlyList<XmlParseIssue> _xmlIssues = [];
+
+    /// <summary>Whether the XML typed last could not be read into the document.</summary>
+    public bool HasXmlIssues => XmlIssues.Count > 0;
+
+    /// <summary>Describes <paramref name="issue"/> for the XML view's problem list, without its position.</summary>
+    public static string DescribeXmlIssue(XmlParseIssue issue) => issue.Kind switch
+    {
+        XmlParseIssueKind.UnknownElement => L("XmlIssue_UnknownElement", issue.Detail),
+        XmlParseIssueKind.UnknownAttribute => L("XmlIssue_UnknownAttribute", issue.Detail),
+        XmlParseIssueKind.Empty => L("XmlIssue_Empty"),
+        _ => issue.Detail,
+    };
+
+    /// <summary>The position of <paramref name="issue"/>, as the XML view's problem list shows it.</summary>
+    public static string DescribeXmlIssuePosition(XmlParseIssue issue) =>
+        L("XmlIssue_Position", issue.Line, issue.Column);
+
+    /// <summary>Shows the tree and the property grid, after asking what to do with XML that cannot be read.</summary>
     [RelayCommand]
-    private void ShowDesign() => IsXmlView = false;
+    private async Task ShowDesign()
+    {
+        if (!IsXmlView) return;
+        if (!await ResolveXmlIssuesAsync()) return;
+        IsXmlView = false;
+    }
 
     /// <summary>Shows the XML.</summary>
     [RelayCommand]
@@ -27,7 +70,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase
 
     partial void OnIsXmlViewChanged(bool value)
     {
-        if (value) RefreshXmlText();
+        if (value && !_isXmlTextTheSource) RefreshXmlText();
     }
 
     /// <summary>
@@ -36,11 +79,121 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     public XmlTextPosition? LocateSelectedNodeInXml() =>
         SelectedTreeNode is { } node ? XmlElementLocator.Find(XmlText, RootObject, node.Value) : null;
 
-    private void RefreshXmlText() => XmlText = XmlCodec.Serialize(RootObject);
+    /// <summary>Notes text typed in the XML view; <see cref="FlushXmlEdit"/> reads it into the document.</summary>
+    public void OnXmlTextEdited(string text)
+    {
+        _pendingXmlText = text;
+        XmlText = text;
+        IsDirty = true;
+    }
 
-    // Undo and Redo keep working while the XML is shown, so the text follows every change of the object.
+    /// <summary>
+    /// Reads the text typed in the XML view since the last call into the document. A text that cannot be read leaves
+    /// the document as it was and fills <see cref="XmlIssues"/>.
+    /// </summary>
+    public void FlushXmlEdit()
+    {
+        if (_pendingXmlText is not { } text) return;
+        _pendingXmlText = null;
+        ApplyXmlText(text);
+    }
+
+    private void ApplyXmlText(string text)
+    {
+        var result = DefineXmlParser.Parse(text, RootObject.GetType());
+        XmlIssues = result.Issues;
+        if (!result.Succeeded)
+        {
+            StatusText = L("XmlView_StatusInvalid", result.Issues.Count);
+            return;
+        }
+
+        _isXmlTextTheSource = true;
+        if (XmlCodec.Serialize(result.Value!) != XmlCodec.Serialize(RootObject))
+        {
+            _isApplyingXml = true;
+            try
+            {
+                ReplaceDocumentRoot(result.Value!);
+            }
+            finally
+            {
+                _isApplyingXml = false;
+            }
+        }
+
+        // A change of layout or comments alone leaves the object as it was, but the file a save writes changes.
+        IsDirty = !IsAtSavedState || !MatchesFile(text);
+        StatusText = L("XmlView_StatusApplied");
+    }
+
+    // Asks what to do with XML that cannot be read: back to it to fix it (false), or throw it away (true).
+    private async Task<bool> ResolveXmlIssuesAsync()
+    {
+        FlushXmlEdit();
+        if (!HasXmlIssues) return true;
+
+        var owner = GetOwnerWindow();
+        if (owner is not null)
+        {
+            var discard = await ConfirmationDialog.ShowAsync(
+                owner,
+                L("XmlView_DiscardTitle"),
+                L("XmlView_DiscardMessage", XmlIssues.Count),
+                confirmLabel: L("XmlView_Discard"),
+                cancelLabel: L("XmlView_KeepEditing"));
+            if (!discard) return false;
+        }
+
+        // The typed text marked the document unsaved; without it, only the object's own edits count.
+        IsDirty = !IsAtSavedState;
+        RefreshXmlText();
+        StatusText = L("XmlView_StatusDiscarded");
+        return true;
+    }
+
+    // The XML again from the document: the file as it is when nothing is unsaved, which keeps its comments, otherwise
+    // the object as a save from the tree writes it.
+    private void RefreshXmlText()
+    {
+        _pendingXmlText = null;
+        XmlIssues = [];
+        if (!IsDirty && ReadFile() is { } file)
+        {
+            _isXmlTextTheSource = true;
+            XmlText = file;
+            return;
+        }
+
+        _isXmlTextTheSource = false;
+        XmlText = XmlCodec.Serialize(RootObject);
+    }
+
+    // An edit in the tree, an undo or a redo: the XML now comes from the object.
     private void OnDocumentChangedForXml()
     {
+        if (_isApplyingXml) return;
+        _isXmlTextTheSource = false;
         if (IsXmlView) RefreshXmlText();
+    }
+
+    /// <summary>
+    /// The text a save writes when the document was only edited as XML since the XML was shown; <c>null</c> when a
+    /// save writes the object.
+    /// </summary>
+    private string? SaveText => _isXmlTextTheSource && !HasXmlIssues ? XmlText : null;
+
+    private bool MatchesFile(string text) => ReadFile() is { } file && file == text;
+
+    private string? ReadFile()
+    {
+        try
+        {
+            return File.Exists(FilePath) ? File.ReadAllText(FilePath) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 }

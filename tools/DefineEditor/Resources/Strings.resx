@@ -477,5 +477,17 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="XmlView_Design" xml:space="preserve"><value>Design</value></data>
   <data name="XmlView_DesignTooltip" xml:space="preserve"><value>Edit the definition in the tree and the property grid</value></data>
   <data name="XmlView_Xml" xml:space="preserve"><value>XML</value></data>
-  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>Show the XML that saving writes, unsaved edits included (read-only)</value></data>
+  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>Show the XML that saving writes, unsaved edits included, and edit it</value></data>
+  <data name="XmlView_StatusInvalid" xml:space="preserve"><value>The XML has {0} problem(s); the document keeps its last valid state.</value></data>
+  <data name="XmlView_StatusApplied" xml:space="preserve"><value>XML applied to the document.</value></data>
+  <data name="XmlView_StatusDiscarded" xml:space="preserve"><value>XML edits that could not be read were discarded.</value></data>
+  <data name="XmlView_SaveBlocked" xml:space="preserve"><value>Not saved: the XML has {0} problem(s). Fix them, or switch to Design to discard the XML edits.</value></data>
+  <data name="XmlView_DiscardTitle" xml:space="preserve"><value>The XML has problems</value></data>
+  <data name="XmlView_DiscardMessage" xml:space="preserve"><value>The XML has {0} problem(s) and cannot be read into the document. Discard the XML edits, or keep editing to fix them?</value></data>
+  <data name="XmlView_Discard" xml:space="preserve"><value>Discard XML edits</value></data>
+  <data name="XmlView_KeepEditing" xml:space="preserve"><value>Keep editing</value></data>
+  <data name="XmlIssue_UnknownElement" xml:space="preserve"><value>Unknown element &lt;{0}&gt;; the definition has no such element here.</value></data>
+  <data name="XmlIssue_UnknownAttribute" xml:space="preserve"><value>Unknown attribute {0}; the definition has no such property here.</value></data>
+  <data name="XmlIssue_Empty" xml:space="preserve"><value>There is no definition in the XML.</value></data>
+  <data name="XmlIssue_Position" xml:space="preserve"><value>Line {0}, column {1}</value></data>
 </root>

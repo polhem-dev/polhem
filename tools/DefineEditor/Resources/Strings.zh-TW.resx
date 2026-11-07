@@ -464,5 +464,17 @@
   <data name="XmlView_Design" xml:space="preserve"><value>設計</value></data>
   <data name="XmlView_DesignTooltip" xml:space="preserve"><value>以樹狀與屬性面板編輯定義</value></data>
   <data name="XmlView_Xml" xml:space="preserve"><value>XML</value></data>
-  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>顯示存檔會寫出的 XML，含尚未儲存的修改（唯讀）</value></data>
+  <data name="XmlView_XmlTooltip" xml:space="preserve"><value>顯示並編輯存檔會寫出的 XML，含尚未儲存的修改</value></data>
+  <data name="XmlView_StatusInvalid" xml:space="preserve"><value>XML 有 {0} 個問題；文件維持在最後一次有效的狀態。</value></data>
+  <data name="XmlView_StatusApplied" xml:space="preserve"><value>已將 XML 套用到文件。</value></data>
+  <data name="XmlView_StatusDiscarded" xml:space="preserve"><value>已捨棄無法讀取的 XML 修改。</value></data>
+  <data name="XmlView_SaveBlocked" xml:space="preserve"><value>未儲存：XML 有 {0} 個問題。請先修正，或切換到「設計」以捨棄 XML 修改。</value></data>
+  <data name="XmlView_DiscardTitle" xml:space="preserve"><value>XML 有問題</value></data>
+  <data name="XmlView_DiscardMessage" xml:space="preserve"><value>XML 有 {0} 個問題，無法讀入文件。要捨棄 XML 修改，還是繼續編輯並修正？</value></data>
+  <data name="XmlView_Discard" xml:space="preserve"><value>捨棄 XML 修改</value></data>
+  <data name="XmlView_KeepEditing" xml:space="preserve"><value>繼續編輯</value></data>
+  <data name="XmlIssue_UnknownElement" xml:space="preserve"><value>未知的元素 &lt;{0}&gt;：此處的定義沒有這個元素。</value></data>
+  <data name="XmlIssue_UnknownAttribute" xml:space="preserve"><value>未知的屬性 {0}：此處的定義沒有這個屬性。</value></data>
+  <data name="XmlIssue_Empty" xml:space="preserve"><value>XML 中沒有定義內容。</value></data>
+  <data name="XmlIssue_Position" xml:space="preserve"><value>第 {0} 行，第 {1} 欄</value></data>
 </root>

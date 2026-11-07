@@ -2,34 +2,49 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Rendering;
+using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 
 namespace Polhem.DefineEditor.Views;
 
 /// <summary>
-/// The XML of a define document, read-only, with highlighting, line numbers and find (Cmd/Ctrl+F). Opening it puts
-/// the caret on the element of the node the tree had selected.
+/// The XML of a define document, with highlighting, line numbers and find (Cmd/Ctrl+F). Opening it puts the caret on
+/// the element of the node the tree had selected. What is typed is read into the document after a pause in typing;
+/// XML that cannot be read is underlined and listed below the text, and the document keeps its last valid state.
 /// </summary>
 public sealed class XmlDocumentPane : UserControl
 {
+    // Long enough not to read the XML at every key, short enough that the tree is current when the person looks up.
+    private static readonly TimeSpan s_applyDelay = TimeSpan.FromMilliseconds(500);
+
     private readonly TextEditor _editor;
+    private readonly IssueUnderline _underline = new();
+    private readonly StackPanel _issueList;
+    private readonly Border _issuePanel;
+    private readonly DispatcherTimer _applyTimer;
     private ObjectTreeDocumentViewModelBase? _document;
+
+    // Set while the pane itself puts text in the editor, which is not an edit to read back.
+    private bool _isShowingText;
 
     public XmlDocumentPane()
     {
         _editor = new TextEditor
         {
-            IsReadOnly = true,
             ShowLineNumbers = true,
             FontFamily = new FontFamily("ui-monospace, Menlo, Consolas, monospace"),
             FontSize = 13,
             Padding = new Thickness(6, 4),
             Background = Brushes.Transparent,
+            WordWrap = false,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             SyntaxHighlighting = XmlHighlighting.Definition,
@@ -41,21 +56,41 @@ public sealed class XmlDocumentPane : UserControl
             _editor.GetResourceObservable("SemiColorText0", value => value as IBrush ?? Brushes.Black));
         _editor.Bind(TextEditor.LineNumbersForegroundProperty,
             _editor.GetResourceObservable("SemiColorText2", value => value as IBrush ?? Brushes.Gray));
-        Content = _editor;
+        _editor.TextArea.TextView.BackgroundRenderers.Add(_underline);
+        _editor.TextChanged += OnEditorTextChanged;
+
+        _applyTimer = new DispatcherTimer { Interval = s_applyDelay };
+        _applyTimer.Tick += (_, _) => FlushEdit();
+
+        // Rebuilt for every reading of the XML. A ListBox given a new list of equal records left the rows of the old one
+        // drawn over the new ones.
+        _issueList = new StackPanel { Spacing = 2 };
+        _issuePanel = new Border
+        {
+            Classes = { "surface-sunken" },
+            Padding = new Thickness(8, 4),
+            IsVisible = false,
+            Child = new ScrollViewer { MaxHeight = 120, Content = _issueList },
+        };
+        DockPanel.SetDock(_issuePanel, Dock.Bottom);
+        Content = new DockPanel { Children = { _issuePanel, _editor } };
 
         ActualThemeVariantChanged += (_, _) => ApplyTheme();
         AttachedToVisualTree += (_, _) => ApplyTheme();
+        DetachedFromVisualTree += (_, _) => FlushEdit();
     }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
+        FlushEdit();
         if (_document is not null) _document.PropertyChanged -= OnDocumentPropertyChanged;
         _document = DataContext as ObjectTreeDocumentViewModelBase;
         if (_document is null) return;
 
         _document.PropertyChanged += OnDocumentPropertyChanged;
         ShowText(_document.XmlText);
+        ShowIssues(_document.XmlIssues);
         if (_document.IsXmlView) RevealSelectedNode();
     }
 
@@ -67,18 +102,86 @@ public sealed class XmlDocumentPane : UserControl
             case nameof(ObjectTreeDocumentViewModelBase.XmlText):
                 ShowText(_document.XmlText);
                 break;
+            case nameof(ObjectTreeDocumentViewModelBase.XmlIssues):
+                ShowIssues(_document.XmlIssues);
+                break;
             case nameof(ObjectTreeDocumentViewModelBase.IsXmlView) when _document.IsXmlView:
                 RevealSelectedNode();
                 break;
         }
     }
 
-    // A change of the object (Undo while the XML is shown) keeps the caret where it was, as far as the new text allows.
+    private void OnEditorTextChanged(object? sender, EventArgs e)
+    {
+        if (_isShowingText || _document is null) return;
+        _document.OnXmlTextEdited(_editor.Text);
+        _applyTimer.Stop();
+        _applyTimer.Start();
+    }
+
+    private void FlushEdit()
+    {
+        _applyTimer.Stop();
+        _document?.FlushXmlEdit();
+    }
+
+    private void ShowIssues(IReadOnlyList<XmlParseIssue> issues)
+    {
+        _underline.Issues = issues;
+        _issueList.Children.Clear();
+        foreach (var issue in issues)
+            _issueList.Children.Add(IssueRow(issue));
+        _issuePanel.IsVisible = issues.Count > 0;
+        _editor.TextArea.TextView.InvalidateLayer(_underline.Layer);
+    }
+
+    // A problem as a row that puts the caret where it is.
+    private Button IssueRow(XmlParseIssue issue)
+    {
+        var row = new Button
+        {
+            Classes = { "toolbar-icon" },
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 10,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = ObjectTreeDocumentViewModelBase.DescribeXmlIssuePosition(issue),
+                        Classes = { "muted" },
+                        MinWidth = 120,
+                    },
+                    new TextBlock
+                    {
+                        Text = ObjectTreeDocumentViewModelBase.DescribeXmlIssue(issue),
+                        TextWrapping = TextWrapping.Wrap,
+                    },
+                },
+            },
+        };
+        row.Click += (_, _) => GoTo(issue.Line, issue.Column, 0);
+        return row;
+    }
+
+    // Text that did not come from typing (the XML generated again, or discarded edits) keeps the caret where it was,
+    // as far as the new text allows.
     private void ShowText(string text)
     {
         if (_editor.Text == text) return;
         var caret = _editor.CaretOffset;
-        _editor.Text = text;
+        _isShowingText = true;
+        try
+        {
+            _editor.Text = text;
+        }
+        finally
+        {
+            _isShowingText = false;
+        }
         _editor.CaretOffset = Math.Min(caret, _editor.Document.TextLength);
     }
 
@@ -86,22 +189,29 @@ public sealed class XmlDocumentPane : UserControl
     private void RevealSelectedNode() =>
         Dispatcher.UIThread.Post(() =>
         {
-            if (_document?.LocateSelectedNodeInXml() is not { } position) return;
-            var document = _editor.Document;
-            if (position.Line > document.LineCount) return;
-
-            var line = document.GetLineByNumber(position.Line);
-            var start = Math.Min(line.Offset + position.Column - 1, line.EndOffset);
-            var length = Math.Min(position.Length, line.EndOffset - start);
-            _editor.CaretOffset = start;
-            _editor.Select(start, length);
-            _editor.ScrollTo(position.Line, position.Column);
-            _editor.TextArea.Focus();
+            if (_document?.LocateSelectedNodeInXml() is { } position)
+                GoTo(position.Line, position.Column, position.Length);
         }, DispatcherPriority.Loaded);
+
+    // Selects length characters from a 1-based line and column, scrolls to them and focuses the text.
+    private void GoTo(int lineNumber, int column, int length)
+    {
+        var document = _editor.Document;
+        if (lineNumber < 1 || lineNumber > document.LineCount) return;
+
+        var line = document.GetLineByNumber(lineNumber);
+        var start = Math.Clamp(line.Offset + column - 1, line.Offset, line.EndOffset);
+        _editor.CaretOffset = start;
+        _editor.Select(start, Math.Min(length, line.EndOffset - start));
+        _editor.ScrollTo(lineNumber, column);
+        _editor.TextArea.Focus();
+    }
 
     private void ApplyTheme()
     {
-        XmlHighlighting.Apply(ActualThemeVariant == ThemeVariant.Dark);
+        var dark = ActualThemeVariant == ThemeVariant.Dark;
+        XmlHighlighting.Apply(dark);
+        _underline.Pen = new Pen(new SolidColorBrush(Color.Parse(dark ? "#FC725A" : "#F93920")), 1.2);
         _editor.TextArea.TextView.Redraw();
     }
 
@@ -137,6 +247,51 @@ public sealed class XmlDocumentPane : UserControl
                 if (!s_colors.TryGetValue(color.Name, out var pair)) continue;
                 color.Foreground = new SimpleHighlightingBrush(Color.Parse(dark ? pair.Dark : pair.Light));
             }
+        }
+    }
+
+    /// <summary>A wavy underline under each problem of the XML, from its position to the end of the name there.</summary>
+    private sealed class IssueUnderline : IBackgroundRenderer
+    {
+        public IReadOnlyList<XmlParseIssue> Issues { get; set; } = [];
+
+        public IPen Pen { get; set; } = new Pen(Brushes.Red, 1.2);
+
+        public KnownLayer Layer => KnownLayer.Selection;
+
+        public void Draw(TextView textView, DrawingContext drawingContext)
+        {
+            if (Issues.Count == 0 || textView.Document is not { } document || !textView.VisualLinesValid) return;
+
+            foreach (var issue in Issues)
+            {
+                if (issue.Line < 1 || issue.Line > document.LineCount) continue;
+                var line = document.GetLineByNumber(issue.Line);
+                var start = Math.Clamp(line.Offset + issue.Column - 1, line.Offset, line.EndOffset);
+                var end = start;
+                while (end < line.EndOffset && IsNameChar(document.GetCharAt(end))) end++;
+                if (end == start) end = Math.Min(start + 1, line.EndOffset);
+                if (end == start) continue;
+
+                var segment = new TextSegment { StartOffset = start, EndOffset = end };
+                foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
+                    drawingContext.DrawGeometry(null, Pen, Wave(rect.BottomLeft, rect.Right));
+            }
+        }
+
+        private static bool IsNameChar(char c) => char.IsLetterOrDigit(c) || c is ':' or '_' or '-' or '.';
+
+        private static StreamGeometry Wave(Point from, double right)
+        {
+            const double step = 2.5;
+            var geometry = new StreamGeometry();
+            using var context = geometry.Open();
+            context.BeginFigure(new Point(from.X, from.Y - 1), isFilled: false);
+            var up = true;
+            for (var x = from.X + step; x <= right + step; x += step, up = !up)
+                context.LineTo(new Point(Math.Min(x, right), from.Y - (up ? 2.5 : 0)));
+            context.EndFigure(isClosed: false);
+            return geometry;
         }
     }
 }

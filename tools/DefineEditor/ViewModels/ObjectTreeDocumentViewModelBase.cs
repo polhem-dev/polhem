@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Polhem.Core;
 using Polhem.Core.Serialization;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Models;
@@ -143,6 +144,13 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     [RelayCommand]
     private async System.Threading.Tasks.Task Save()
     {
+        FlushXmlEdit();
+        if (HasXmlIssues)
+        {
+            StatusText = L("XmlView_SaveBlocked", XmlIssues.Count);
+            return;
+        }
+
         try
         {
             var issues = PerformValidation();
@@ -155,7 +163,15 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
 
             foreach (var root in Roots)
                 RefreshNodeLabels(root);
-            XmlCodec.SerializeToFile(RootObject, FilePath);
+            if (SaveText is { } text)
+            {
+                FileUtilities.FileWriteText(FilePath, text);
+                if (RootObject is IObjectSerializeFile serializeFile) serializeFile.SetObjectFilePath(FilePath);
+            }
+            else
+            {
+                XmlCodec.SerializeToFile(RootObject, FilePath);
+            }
             MarkSaved();
             IsDirty = false;
             StatusText = L("Status_Saved", Path.GetFileName(FilePath));
@@ -169,6 +185,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     [RelayCommand]
     private void Validate()
     {
+        FlushXmlEdit();
         Issues.Clear();
         var found = PerformValidation();
         foreach (var issue in found)
