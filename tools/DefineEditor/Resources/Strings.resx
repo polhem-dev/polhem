@@ -110,23 +110,18 @@
   <data name="ConfirmDialog_DefaultTitle" xml:space="preserve"><value>Confirm</value></data>
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>Validation results</value></data>
-  <data name="FormLayout_PaneLayout_PropertiesAndPreview" xml:space="preserve"><value>Show properties and preview</value></data>
-  <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>Show preview only</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>Open in browser</value></data>
   <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>Open this layout in the web browser, drawn by the Blazor Server components. Unsaved edits and the preview options follow along.</value></data>
-  <data name="FormLayout_PreviewFocus" xml:space="preserve"><value>Focus on the web preview</value></data>
-  <data name="FormLayout_PreviewFocusTooltip" xml:space="preserve"><value>Show only the tree beside the web preview, for adjusting the layout: hides the side bar and the property grid (Properties… edits a node in a dialog). Press again to put everything back.</value></data>
-  <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>Show properties only</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>Properties — {0}</value></data>
-  <data name="Preview_Title" xml:space="preserve"><value>Preview</value></data>
-  <data name="Preview_Show" xml:space="preserve"><value>Show</value></data>
-  <data name="Preview_ShowTooltip" xml:space="preserve"><value>Show the preview under the property grid</value></data>
   <data name="Preview_ViewMode" xml:space="preserve"><value>View mode</value></data>
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>The preview could not render this layout: {0}</value></data>
+  <data name="Preview_Avalonia" xml:space="preserve"><value>Avalonia</value></data>
+  <data name="Preview_AvaloniaTooltip" xml:space="preserve"><value>Draw the preview with the Avalonia controls, as a desktop or mobile application shows the form</value></data>
+  <data name="Preview_Engine" xml:space="preserve"><value>Preview engine</value></data>
   <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
   <data name="Preview_WebTooltip" xml:space="preserve"><value>Draw the preview with the Blazor components in a web view inside the editor, as a web application shows the form. Unsaved edits and the preview options follow along.</value></data>
   <data name="Preview_WebUnavailable" xml:space="preserve"><value>The web preview cannot run on this computer: {0}</value></data>
@@ -497,6 +492,8 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>Choose a folder for the XML schemas</value></data>
   <data name="Status_XmlSchemasExported" xml:space="preserve"><value>Exported {0} XML schemas to {1}. {2} ties the definition files to them in VS Code.</value></data>
   <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>XML schemas not exported: {0}</value></data>
+  <data name="XmlView_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="XmlView_PreviewTooltip" xml:space="preserve"><value>Show the tree beside a preview of the form (Properties… edits a node in a dialog)</value></data>
   <data name="XmlView_Split" xml:space="preserve"><value>Split</value></data>
   <data name="XmlView_SplitTooltip" xml:space="preserve"><value>Show the tree above the XML, each following the other</value></data>
   <data name="XmlView_DesignLocked" xml:space="preserve"><value>Fix the XML or switch to Design to edit in the tree</value></data>

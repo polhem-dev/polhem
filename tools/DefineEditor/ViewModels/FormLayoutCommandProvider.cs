@@ -19,7 +19,7 @@ public sealed class FormLayoutCommandProvider(FormLayoutDocumentViewModel docume
     };
 
     protected override IEnumerable<TreeNodeCommand> GetTrailingCommands(ObjectTreeNode node) =>
-        document.IsPropertyPaneVisible || node.IsFolder
+        !document.IsPreviewView || node.IsFolder
             ? []
             : [Create("FormLayout_EditProperties", "IconSettings", document.EditPropertiesCommand, beginsGroup: true)];
 }

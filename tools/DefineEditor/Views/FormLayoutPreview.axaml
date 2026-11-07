@@ -11,46 +11,51 @@
     <DockPanel>
         <Border DockPanel.Dock="Top" Classes="surface-sunken" Padding="12,6">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Left" Classes="h2" Text="{loc:Loc Preview_Title}" VerticalAlignment="Center"
-                           Margin="0,0,16,0"/>
-                <!-- Icon toggles with tooltips, so the options fit beside the title in a narrow pane. -->
+                <!-- What draws the preview: two engines side by side, as a segmented switch, so which one is showing is
+                     always visible. Each is a button of its own, so the macOS accessibility API can press it. -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2"
+                            AutomationProperties.Name="{loc:Loc Preview_Engine}">
+                    <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsAvaloniaPreview}"
+                            Command="{Binding SetPreviewEngineCommand}" CommandParameter="{x:Static vm:FormLayoutPreviewEngine.Avalonia}"
+                            ToolTip.Tip="{loc:Loc Preview_AvaloniaTooltip}"
+                            AutomationProperties.Name="{loc:Loc Preview_Avalonia}">
+                        <TextBlock Text="{loc:Loc Preview_Avalonia}" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsWebPreview}"
+                            Command="{Binding SetPreviewEngineCommand}" CommandParameter="{x:Static vm:FormLayoutPreviewEngine.Web}"
+                            ToolTip.Tip="{loc:Loc Preview_WebTooltip}"
+                            AutomationProperties.Name="{loc:Loc Preview_Web}">
+                        <TextBlock Text="{loc:Loc Preview_Web}" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+                <!-- The options both engines follow, as icon toggles with tooltips; then the browser, which opens another
+                     window rather than changing this one. -->
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="2">
-                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsWebPreview}"
-                                  IsVisible="{Binding IsPreviewVisible}"
-                                  ToolTip.Tip="{loc:Loc Preview_WebTooltip}"
-                                  AutomationProperties.Name="{loc:Loc Preview_Web}">
-                        <PathIcon Data="{StaticResource IconPreviewWeb}"/>
-                    </ToggleButton>
                     <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewViewMode}"
-                                  IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_ViewMode}"
                                   AutomationProperties.Name="{loc:Loc Preview_ViewMode}">
                         <PathIcon Data="{StaticResource IconPreviewViewMode}"/>
                     </ToggleButton>
                     <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewCompact}"
-                                  IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_PhoneWidth}"
                                   AutomationProperties.Name="{loc:Loc Preview_PhoneWidth}">
                         <PathIcon Data="{StaticResource IconPreviewPhone}"/>
                     </ToggleButton>
                     <ToggleButton Classes="toolbar-icon" IsChecked="{Binding ShowPreviewFieldNames}"
-                                  IsVisible="{Binding IsPreviewVisible}"
                                   ToolTip.Tip="{loc:Loc Preview_FieldNames}"
                                   AutomationProperties.Name="{loc:Loc Preview_FieldNames}">
                         <PathIcon Data="{StaticResource IconPreviewFieldNames}"/>
                     </ToggleButton>
-                    <!-- Collapses the preview itself, so it stands apart from the options. -->
-                    <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewVisible}" Margin="10,0,0,0"
-                                  IsVisible="{Binding IsPropertiesAndPreviewLayout}"
-                                  ToolTip.Tip="{loc:Loc Preview_ShowTooltip}"
-                                  AutomationProperties.Name="{loc:Loc Preview_Show}">
-                        <PathIcon Data="{StaticResource IconPreviewShow}"/>
-                    </ToggleButton>
+                    <Button Classes="toolbar-icon" Margin="10,0,0,0" Command="{Binding OpenInBrowserCommand}"
+                            ToolTip.Tip="{loc:Loc FormLayout_OpenInBrowserTooltip}"
+                            AutomationProperties.Name="{loc:Loc FormLayout_OpenInBrowser}">
+                        <PathIcon Data="{StaticResource IconBrowser}"/>
+                    </Button>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <DockPanel IsVisible="{Binding IsPreviewVisible}">
+        <DockPanel>
             <TextBlock x:Name="ErrorText" DockPanel.Dock="Top" IsVisible="False" TextWrapping="Wrap" Margin="12,8,12,0"
                        Foreground="{DynamicResource SemiColorDanger}"/>
             <Panel>

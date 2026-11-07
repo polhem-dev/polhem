@@ -119,7 +119,7 @@ public sealed partial class XmlDocumentPane : UserControl
                 ShowIssues(_document.XmlIssues);
                 break;
             // The XML alone takes the focus; beside the tree it leaves the focus where it is, on the tree most likely.
-            case nameof(ObjectTreeDocumentViewModelBase.IsXmlView) when _document.IsXmlView:
+            case nameof(ObjectTreeDocumentViewModelBase.ViewMode) when _document.IsXmlView:
                 RevealSelectedNode(focus: !_document.IsSplitView);
                 break;
             // Beside the tree, the XML follows the node selected there, without taking the focus from the tree. While

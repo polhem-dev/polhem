@@ -1,15 +1,17 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 
 namespace Polhem.DefineEditor.Views;
 
 public partial class FormLayoutDocumentView : UserControl
 {
-    // The rows' heights while both are shown; a collapsed preview keeps only its header row, and the layouts that show
-    // one pane give it the whole side.
-    private GridLength _editorHeight = new(1, GridUnitType.Star);
-    private GridLength _expandedPreviewHeight = new(1, GridUnitType.Star);
+    // The preview gets most of the width, since the form it draws is wider than a property grid. Each view keeps the
+    // widths the splitter was dragged to, so going back to it restores them.
+    private (GridLength Tree, GridLength Side) _designWidths = (new(1, GridUnitType.Star), new(1.2, GridUnitType.Star));
+    private (GridLength Tree, GridLength Side) _previewWidths = (new(1, GridUnitType.Star), new(2.5, GridUnitType.Star));
+    private bool _showsPreview;
     private FormLayoutDocumentViewModel? _document;
 
     public FormLayoutDocumentView() => InitializeComponent();
@@ -22,36 +24,34 @@ public partial class FormLayoutDocumentView : UserControl
         _document = DataContext as FormLayoutDocumentViewModel;
         if (_document is not null)
             _document.PropertyChanged += OnDocumentPropertyChanged;
-        ApplyRows();
+        ApplyColumns();
     }
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(FormLayoutDocumentViewModel.IsPreviewVisible)
-            or nameof(FormLayoutDocumentViewModel.PaneLayout))
-            ApplyRows();
+        if (e.PropertyName == nameof(FormLayoutDocumentViewModel.ViewMode))
+        {
+            ApplyColumns();
+        }
+        // The next layout opened starts with the engine chosen here.
+        else if (e.PropertyName == nameof(FormLayoutDocumentViewModel.PreviewEngine) && _document is not null)
+        {
+            var settings = UserSettings.Load();
+            settings.FormLayoutPreviewEngine = _document.PreviewEngine.ToString();
+            settings.Save();
+        }
     }
 
-    private void ApplyRows()
+    private void ApplyColumns()
     {
-        var editorRow = RightPane.RowDefinitions[0];
-        var previewRow = RightPane.RowDefinitions[2];
-        // Keep the heights the user dragged the splitter to, so showing both again restores them. Only the layout
-        // that shows both with the preview expanded leaves star heights that came from the splitter.
-        if (editorRow.Height.IsStar && previewRow.Height.IsStar && editorRow.Height.Value > 0 && previewRow.Height.Value > 0)
-        {
-            _editorHeight = editorRow.Height;
-            _expandedPreviewHeight = previewRow.Height;
-        }
+        var tree = DesignGrid.ColumnDefinitions[0];
+        var side = DesignGrid.ColumnDefinitions[2];
+        if (_showsPreview)
+            _previewWidths = (tree.Width, side.Width);
+        else
+            _designWidths = (tree.Width, side.Width);
 
-        var layout = _document?.PaneLayout ?? FormLayoutPaneLayout.PropertiesAndPreview;
-        var previewExpanded = _document?.IsPreviewVisible ?? true;
-        editorRow.Height = layout == FormLayoutPaneLayout.PreviewOnly ? new GridLength(0) : _editorHeight;
-        previewRow.Height = layout switch
-        {
-            FormLayoutPaneLayout.PropertiesOnly => new GridLength(0),
-            FormLayoutPaneLayout.PreviewOnly => new GridLength(1, GridUnitType.Star),
-            _ => previewExpanded ? _expandedPreviewHeight : GridLength.Auto,
-        };
+        _showsPreview = _document?.IsPreviewView == true;
+        (tree.Width, side.Width) = _showsPreview ? _previewWidths : _designWidths;
     }
 }

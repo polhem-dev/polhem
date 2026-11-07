@@ -10,7 +10,7 @@ namespace Polhem.DefineEditor.Views;
 /// <summary>
 /// The body of a define document: its design (the tree and the property grid, the first child) and its
 /// <see cref="XmlDocumentPane"/>, shown one at a time or one above the other with a splitter between them, as the document's
-/// <see cref="ObjectTreeDocumentViewModelBase.IsXmlView"/> and <see cref="ObjectTreeDocumentViewModelBase.IsSplitView"/> say.
+/// <see cref="ObjectTreeDocumentViewModelBase.ViewMode"/> says.
 /// </summary>
 public sealed class DocumentBody : Grid
 {
@@ -48,8 +48,7 @@ public sealed class DocumentBody : Grid
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ObjectTreeDocumentViewModelBase.IsXmlView)
-            or nameof(ObjectTreeDocumentViewModelBase.IsSplitView)
+        if (e.PropertyName is nameof(ObjectTreeDocumentViewModelBase.ViewMode)
             or nameof(ObjectTreeDocumentViewModelBase.IsDesignEnabled))
         {
             Layout();

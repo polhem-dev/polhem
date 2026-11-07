@@ -26,24 +26,34 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     // Set while a typed text is being applied, so the change it causes does not generate the XML again.
     private bool _isApplyingXml;
 
-    /// <summary>Whether the document shows its XML, alone or beside the tree (<see cref="IsSplitView"/>).</summary>
+    /// <summary>What the body of the document shows; the view switch at the left of its toolbar sets it.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDesignVisible), nameof(IsDesignOnly), nameof(IsXmlOnly))]
-    private bool _isXmlView;
+    [NotifyPropertyChangedFor(nameof(IsXmlView), nameof(IsSplitView), nameof(IsPreviewView), nameof(IsDesignVisible),
+        nameof(IsDesignOnly), nameof(IsXmlOnly), nameof(IsDesignEnabled))]
+    private DocumentViewMode _viewMode;
+
+    /// <summary>
+    /// Whether the document can show <see cref="DocumentViewMode.Preview"/>: a preview of what its define object draws.
+    /// </summary>
+    public virtual bool SupportsPreview => false;
+
+    /// <summary>Whether the document shows its XML, alone or beside the tree (<see cref="IsSplitView"/>).</summary>
+    public bool IsXmlView => ViewMode is DocumentViewMode.Xml or DocumentViewMode.Split;
 
     /// <summary>Whether the document shows the tree and the property grid beside its XML, each following the other.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDesignVisible), nameof(IsXmlOnly), nameof(IsDesignEnabled))]
-    private bool _isSplitView;
+    public bool IsSplitView => ViewMode == DocumentViewMode.Split;
 
-    /// <summary>Whether the tree and the property grid are shown, alone or beside the XML.</summary>
-    public bool IsDesignVisible => !IsXmlView || IsSplitView;
+    /// <summary>Whether the document shows the tree beside its preview.</summary>
+    public bool IsPreviewView => ViewMode == DocumentViewMode.Preview;
+
+    /// <summary>Whether the tree is shown: beside the property grid, beside the preview, or above the XML.</summary>
+    public bool IsDesignVisible => ViewMode != DocumentViewMode.Xml;
 
     /// <summary>Whether the document shows only the tree and the property grid.</summary>
-    public bool IsDesignOnly => !IsXmlView;
+    public bool IsDesignOnly => ViewMode == DocumentViewMode.Design;
 
     /// <summary>Whether the document shows only its XML.</summary>
-    public bool IsXmlOnly => IsXmlView && !IsSplitView;
+    public bool IsXmlOnly => ViewMode == DocumentViewMode.Xml;
 
     /// <summary>
     /// Whether the tree and the property grid take edits. Beside XML that cannot be read they do not: an edit there
@@ -81,33 +91,35 @@ public abstract partial class ObjectTreeDocumentViewModelBase
 
     /// <summary>Shows the tree and the property grid, after asking what to do with XML that cannot be read.</summary>
     [RelayCommand]
-    private async Task ShowDesign()
-    {
-        if (!IsXmlView) return;
-        if (!await ResolveXmlIssuesAsync()) return;
-        IsSplitView = false;
-        IsXmlView = false;
-    }
+    private Task ShowDesign() => LeaveXmlForAsync(DocumentViewMode.Design);
+
+    /// <summary>
+    /// Shows the tree beside the preview, after asking what to do with XML that cannot be read. Only a document that
+    /// <see cref="SupportsPreview"/> has it.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(SupportsPreview))]
+    private Task ShowPreview() => LeaveXmlForAsync(DocumentViewMode.Preview);
 
     /// <summary>Shows the XML alone.</summary>
     [RelayCommand]
-    private void ShowXml()
-    {
-        IsSplitView = false;
-        IsXmlView = true;
-    }
+    private void ShowXml() => ViewMode = DocumentViewMode.Xml;
 
     /// <summary>Shows the tree and the property grid beside the XML.</summary>
     [RelayCommand]
-    private void ShowSplit()
+    private void ShowSplit() => ViewMode = DocumentViewMode.Split;
+
+    // The views without the XML are reached only once the XML typed last was read, or thrown away.
+    private async Task LeaveXmlForAsync(DocumentViewMode mode)
     {
-        IsSplitView = true;
-        IsXmlView = true;
+        if (ViewMode == mode) return;
+        if (IsXmlView && !await ResolveXmlIssuesAsync()) return;
+        ViewMode = mode;
     }
 
-    partial void OnIsXmlViewChanged(bool value)
+    partial void OnViewModeChanged(DocumentViewMode oldValue, DocumentViewMode newValue)
     {
-        if (value && !_isXmlTextTheSource) RefreshXmlText();
+        var wasXml = oldValue is DocumentViewMode.Xml or DocumentViewMode.Split;
+        if (IsXmlView && !wasXml && !_isXmlTextTheSource) RefreshXmlText();
     }
 
     /// <summary>

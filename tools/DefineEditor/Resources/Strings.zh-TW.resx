@@ -97,23 +97,18 @@
   <data name="ConfirmDialog_DefaultTitle" xml:space="preserve"><value>確認</value></data>
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>驗證結果</value></data>
-  <data name="FormLayout_PaneLayout_PropertiesAndPreview" xml:space="preserve"><value>顯示屬性與預覽</value></data>
-  <data name="FormLayout_PaneLayout_PreviewOnly" xml:space="preserve"><value>只顯示預覽</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>在瀏覽器預覽</value></data>
   <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>在網頁瀏覽器開啟這份版面，由 Blazor Server 元件繪製；尚未存檔的修改與預覽選項都會同步。</value></data>
-  <data name="FormLayout_PreviewFocus" xml:space="preserve"><value>專注 Web 預覽</value></data>
-  <data name="FormLayout_PreviewFocusTooltip" xml:space="preserve"><value>只顯示樹狀結構與 Web 預覽，方便調整版面：隱藏側欄與屬性方格（以「屬性設定…」在對話框中編輯節點）。再按一次即恢復原狀。</value></data>
-  <data name="FormLayout_PaneLayout_PropertiesOnly" xml:space="preserve"><value>只顯示屬性</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>屬性設定…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>在對話框中編輯所選節點的屬性</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>屬性設定 — {0}</value></data>
-  <data name="Preview_Title" xml:space="preserve"><value>預覽</value></data>
-  <data name="Preview_Show" xml:space="preserve"><value>顯示</value></data>
-  <data name="Preview_ShowTooltip" xml:space="preserve"><value>在屬性方格下方顯示預覽</value></data>
   <data name="Preview_ViewMode" xml:space="preserve"><value>檢視模式</value></data>
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>手機寬度</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>欄位名稱</value></data>
   <data name="Preview_RenderFailed" xml:space="preserve"><value>預覽無法畫出這份版面：{0}</value></data>
+  <data name="Preview_Avalonia" xml:space="preserve"><value>Avalonia</value></data>
+  <data name="Preview_AvaloniaTooltip" xml:space="preserve"><value>以 Avalonia 控制項繪製預覽，與桌面或行動應用程式顯示表單的方式相同</value></data>
+  <data name="Preview_Engine" xml:space="preserve"><value>預覽引擎</value></data>
   <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
   <data name="Preview_WebTooltip" xml:space="preserve"><value>在編輯器內以網頁檢視繪製預覽，使用 Blazor 元件，與網頁應用程式顯示表單的方式相同；尚未存檔的修改與預覽選項都會同步。</value></data>
   <data name="Preview_WebUnavailable" xml:space="preserve"><value>這台電腦無法執行 Web 預覽：{0}</value></data>
@@ -484,6 +479,8 @@
   <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>選擇 XML 結構描述的存放資料夾</value></data>
   <data name="Status_XmlSchemasExported" xml:space="preserve"><value>已將 {0} 個 XML 結構描述匯出到 {1}。{2} 可讓 VS Code 把定義檔對應到這些結構描述。</value></data>
   <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>未匯出 XML 結構描述：{0}</value></data>
+  <data name="XmlView_Preview" xml:space="preserve"><value>預覽</value></data>
+  <data name="XmlView_PreviewTooltip" xml:space="preserve"><value>樹狀結構旁顯示表單預覽（以「屬性設定…」在對話框中編輯節點）</value></data>
   <data name="XmlView_Split" xml:space="preserve"><value>分割</value></data>
   <data name="XmlView_SplitTooltip" xml:space="preserve"><value>上下並排顯示樹與 XML，兩邊互相同步</value></data>
   <data name="XmlView_DesignLocked" xml:space="preserve"><value>請先修正 XML，或切換到「設計」，才能在樹上編輯</value></data>

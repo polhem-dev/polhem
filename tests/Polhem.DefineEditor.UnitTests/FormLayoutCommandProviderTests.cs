@@ -87,10 +87,10 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Same(folder.Children[1], _document.SelectedTreeNode);
         }
             [Fact]
-        [DisplayName("A node offers Properties last, in a group of its own, when the side shows only the preview")]
-        public void GetCommands_PreviewOnly_OffersPropertiesLast()
+        [DisplayName("A node offers Properties last, in a group of its own, beside the preview")]
+        public void GetCommands_Preview_OffersPropertiesLast()
         {
-            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+            _document.ViewMode = DocumentViewMode.Preview;
 
             var commands = CommandsFor(SectionsFolder.Children[0]);
 
@@ -101,10 +101,10 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("The root offers Properties when the side shows only the preview")]
-        public void GetCommands_PreviewOnly_RootOffersProperties()
+        [DisplayName("The root offers Properties beside the preview")]
+        public void GetCommands_Preview_RootOffersProperties()
         {
-            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+            _document.ViewMode = DocumentViewMode.Preview;
 
             var command = Assert.Single(CommandsFor(_document.RootNode));
 
@@ -112,12 +112,12 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Theory]
-        [InlineData(FormLayoutPaneLayout.PropertiesAndPreview)]
-        [InlineData(FormLayoutPaneLayout.PropertiesOnly)]
+        [InlineData(DocumentViewMode.Design)]
+        [InlineData(DocumentViewMode.Split)]
         [DisplayName("No node offers Properties while the side shows the property grid")]
-        public void GetCommands_PropertyGridShown_OffersNoProperties(FormLayoutPaneLayout layout)
+        public void GetCommands_PropertyGridShown_OffersNoProperties(DocumentViewMode mode)
         {
-            _document.PaneLayout = layout;
+            _document.ViewMode = mode;
 
             var labels = CommandsFor(SectionsFolder.Children[0]).Select(c => c.Label);
 
@@ -125,10 +125,10 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A folder offers no Properties when the side shows only the preview")]
-        public void GetCommands_PreviewOnly_FolderOffersNoProperties()
+        [DisplayName("A folder offers no Properties beside the preview")]
+        public void GetCommands_Preview_FolderOffersNoProperties()
         {
-            _document.PaneLayout = FormLayoutPaneLayout.PreviewOnly;
+            _document.ViewMode = DocumentViewMode.Preview;
 
             var command = Assert.Single(CommandsFor(SectionsFolder));
 
