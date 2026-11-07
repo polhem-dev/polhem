@@ -158,7 +158,7 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("An edit in the tree after an XML edit makes Save write the object again")]
+        [DisplayName("An edit in the tree after an XML edit makes Save write the object again, keeping the file's comments")]
         public async Task Save_AfterTreeEdit_WritesSerializedObject()
         {
             _document.ShowXmlCommand.Execute(null);
@@ -169,7 +169,10 @@ namespace Polhem.DefineEditor.UnitTests
             _document.OnPropertyEdited();
             await _document.SaveCommand.ExecuteAsync(null);
 
-            Assert.Equal(XmlCodec.Serialize(_document.Schema), File.ReadAllText(_path));
+            var saved = File.ReadAllText(_path);
+            Assert.Contains("DisplayName=\"Sales Order\"", saved, StringComparison.Ordinal);
+            Assert.Contains(Comment, saved, StringComparison.Ordinal);
+            Assert.Equal(XmlCodec.Serialize(_document.Schema), saved.Replace(Comment + "\n", string.Empty, StringComparison.Ordinal));
         }
 
         [Fact]
