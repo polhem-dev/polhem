@@ -80,14 +80,14 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("The preview starts expanded in Edit mode at full width, with field names shown")]
+        [DisplayName("The preview starts in Edit mode at full width, drawn by Avalonia, with field names shown")]
         public void PreviewSettings_Defaults()
         {
-            Assert.True(_document.IsPreviewVisible);
             Assert.Equal(SingleFormMode.Edit, _document.PreviewFormMode);
             Assert.False(_document.IsPreviewCompact);
             Assert.True(_document.ShowPreviewFieldNames);
             Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
+            Assert.True(_document.IsAvaloniaPreview);
             Assert.False(_document.IsWebPreview);
         }
 
@@ -109,51 +109,33 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
         }
 
-        [Fact]
-        [DisplayName("Focusing on the web preview shows only the web preview on the side and reports the focus")]
-        public void TogglePreviewFocus_On_ShowsOnlyTheWebPreview()
+        [Theory]
+        [InlineData(FormLayoutPreviewEngine.Web, true)]
+        [InlineData(FormLayoutPreviewEngine.Avalonia, false)]
+        [DisplayName("Choosing an engine in the preview's switch sets PreviewEngine and notifies which segment is selected")]
+        public void SetPreviewEngine_SelectsTheSegment(FormLayoutPreviewEngine engine, bool web)
         {
-            var raised = new List<bool>();
-            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+            // Start from the other engine, so the command really changes it.
+            _document.PreviewEngine = web ? FormLayoutPreviewEngine.Avalonia : FormLayoutPreviewEngine.Web;
+            var notified = new List<string?>();
+            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
 
-            _document.TogglePreviewFocusCommand.Execute(null);
+            _document.SetPreviewEngineCommand.Execute(engine);
 
-            Assert.True(_document.IsPreviewFocused);
-            Assert.Equal(FormLayoutPaneLayout.PreviewOnly, _document.PaneLayout);
-            Assert.True(_document.IsWebPreview);
-            Assert.Equal([true], raised);
+            Assert.Equal(engine, _document.PreviewEngine);
+            Assert.Equal(web, _document.IsWebPreview);
+            Assert.Equal(!web, _document.IsAvaloniaPreview);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsWebPreview), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsAvaloniaPreview), notified);
         }
 
         [Fact]
-        [DisplayName("Pressing the preview focus again puts back the side layout and the preview it replaced")]
-        public void TogglePreviewFocus_Twice_RestoresTheEarlierArrangement()
+        [DisplayName("A layout opened with an engine, the one chosen last, starts its preview with that engine")]
+        public void Load_WithPreviewEngine_StartsWithIt()
         {
-            _document.PaneLayout = FormLayoutPaneLayout.PropertiesOnly;
-            var raised = new List<bool>();
-            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
+            var document = FormLayoutDocumentViewModel.Load(_document.FilePath, previewEngine: FormLayoutPreviewEngine.Web);
 
-            _document.TogglePreviewFocusCommand.Execute(null);
-            _document.TogglePreviewFocusCommand.Execute(null);
-
-            Assert.False(_document.IsPreviewFocused);
-            Assert.Equal(FormLayoutPaneLayout.PropertiesOnly, _document.PaneLayout);
-            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
-            Assert.Equal([true, false], raised);
-        }
-
-        [Fact]
-        [DisplayName("Choosing another side layout by hand ends the preview focus and keeps that choice")]
-        public void SetPaneLayout_WhileFocused_EndsTheFocus()
-        {
-            _document.TogglePreviewFocusCommand.Execute(null);
-            var raised = new List<bool>();
-            _document.PreviewFocusChanged += (_, focused) => raised.Add(focused);
-
-            _document.SetPaneLayoutCommand.Execute(FormLayoutPaneLayout.PropertiesAndPreview);
-
-            Assert.False(_document.IsPreviewFocused);
-            Assert.Equal(FormLayoutPaneLayout.PropertiesAndPreview, _document.PaneLayout);
-            Assert.Equal([false], raised);
+            Assert.Equal(FormLayoutPreviewEngine.Web, document.PreviewEngine);
         }
 
         [Fact]
@@ -187,46 +169,55 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Contains(nameof(FormLayoutDocumentViewModel.PreviewFormMode), notified);
         }
             [Fact]
-        [DisplayName("The side starts with the property grid above the preview")]
-        public void PaneLayout_DefaultsToPropertiesAndPreview()
+        [DisplayName("A layout has a preview view, and it starts in Design")]
+        public void ViewMode_DefaultsToDesign_AndSupportsPreview()
         {
-            Assert.Equal(FormLayoutPaneLayout.PropertiesAndPreview, _document.PaneLayout);
-            Assert.True(_document.IsPropertyPaneVisible);
-            Assert.True(_document.IsPreviewPaneVisible);
-        }
-
-        [Theory]
-        [InlineData(FormLayoutPaneLayout.PreviewOnly, false, true)]
-        [InlineData(FormLayoutPaneLayout.PropertiesOnly, true, false)]
-        [InlineData(FormLayoutPaneLayout.PropertiesAndPreview, true, true)]
-        [DisplayName("Choosing a side layout shows the panes it names and notifies their visibility")]
-        public void SetPaneLayout_ShowsTheNamedPanes(FormLayoutPaneLayout layout, bool properties, bool preview)
-        {
-            // Start from another layout, so the command really changes it.
-            _document.PaneLayout = layout == FormLayoutPaneLayout.PropertiesOnly
-                ? FormLayoutPaneLayout.PreviewOnly
-                : FormLayoutPaneLayout.PropertiesOnly;
-            var notified = new List<string?>();
-            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
-
-            _document.SetPaneLayoutCommand.Execute(layout);
-
-            Assert.Equal(layout, _document.PaneLayout);
-            Assert.Equal(properties, _document.IsPropertyPaneVisible);
-            Assert.Equal(preview, _document.IsPreviewPaneVisible);
-            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsPropertyPaneVisible), notified);
-            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsPreviewPaneVisible), notified);
+            Assert.True(_document.SupportsPreview);
+            Assert.True(_document.ShowPreviewCommand.CanExecute(null));
+            Assert.Equal(DocumentViewMode.Design, _document.ViewMode);
+            Assert.False(_document.IsPreviewView);
         }
 
         [Fact]
-        [DisplayName("Showing only the preview expands a collapsed preview")]
-        public void SetPaneLayout_PreviewOnly_ExpandsThePreview()
+        [DisplayName("Show Preview shows the tree beside the preview and notifies the views that follow it")]
+        public async Task ShowPreview_ShowsTheTreeBesideThePreview()
         {
-            _document.IsPreviewVisible = false;
+            var notified = new List<string?>();
+            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
 
-            _document.SetPaneLayoutCommand.Execute(FormLayoutPaneLayout.PreviewOnly);
+            await _document.ShowPreviewCommand.ExecuteAsync(null);
 
-            Assert.True(_document.IsPreviewVisible);
+            Assert.Equal(DocumentViewMode.Preview, _document.ViewMode);
+            Assert.True(_document.IsPreviewView);
+            Assert.True(_document.IsDesignVisible);
+            Assert.False(_document.IsDesignOnly);
+            Assert.False(_document.IsXmlView);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsPreviewView), notified);
+        }
+
+        [Fact]
+        [DisplayName("Switching from XML that cannot be read to the preview discards the XML edits when no window can ask")]
+        public async Task ShowPreview_FromXmlWithIssues_DiscardsXmlEdits()
+        {
+            _document.ShowXmlCommand.Execute(null);
+            _document.OnXmlTextEdited(_document.XmlText.Replace("</FormLayout>", string.Empty, StringComparison.Ordinal));
+
+            await _document.ShowPreviewCommand.ExecuteAsync(null);
+
+            Assert.Equal(DocumentViewMode.Preview, _document.ViewMode);
+            Assert.Empty(_document.XmlIssues);
+        }
+
+        [Fact]
+        [DisplayName("Show Design from the preview goes back to the tree beside the property grid")]
+        public async Task ShowDesign_FromPreview_ShowsTheDesign()
+        {
+            await _document.ShowPreviewCommand.ExecuteAsync(null);
+
+            await _document.ShowDesignCommand.ExecuteAsync(null);
+
+            Assert.Equal(DocumentViewMode.Design, _document.ViewMode);
+            Assert.True(_document.IsDesignOnly);
         }
 
         [Fact]

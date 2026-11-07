@@ -40,6 +40,12 @@ public sealed class UserSettings
     /// </summary>
     public string CreateTableDatabase { get; set; } = nameof(Polhem.Definition.Database.DatabaseType.SQLServer);
 
+    /// <summary>
+    /// What drew the FormLayout preview last, as a <see cref="ViewModels.FormLayoutPreviewEngine"/> name. Kept as a
+    /// string so an unknown value falls back to the default engine instead of failing the whole settings file.
+    /// </summary>
+    public string FormLayoutPreviewEngine { get; set; } = nameof(ViewModels.FormLayoutPreviewEngine.Avalonia);
+
     public const int MaxRecentSolutions = 8;
 
     /// <summary>

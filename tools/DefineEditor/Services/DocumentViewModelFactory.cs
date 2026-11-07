@@ -26,11 +26,17 @@ public static class DocumentViewModelFactory
             DefineType.SystemSettings => LoadOrFallback(node, () => SystemSettingsDocumentViewModel.Load(node.FilePath!)),
             DefineType.DatabaseSettings => LoadOrFallback(node, () => DatabaseSettingsDocumentViewModel.Load(node.FilePath!)),
             DefineType.TableSchema => LoadOrFallback(node, () => TableSchemaDocumentViewModel.Load(node.FilePath!)),
-            DefineType.FormLayout => LoadOrFallback(node, () => FormLayoutDocumentViewModel.Load(node.FilePath!, solution)),
+            DefineType.FormLayout => LoadOrFallback(node, () => FormLayoutDocumentViewModel.Load(node.FilePath!, solution, LastPreviewEngine())),
             DefineType.Language => LoadOrFallback(node, () => LanguageDocumentViewModel.Load(node.FilePath!)),
             _ => Unsupported(node, "An editor for this define type is not implemented yet."),
         };
     }
+
+    // The engine a FormLayout's preview was drawn by last, so each new layout opens the way the previous one was left.
+    private static FormLayoutPreviewEngine LastPreviewEngine() =>
+        Enum.TryParse<FormLayoutPreviewEngine>(UserSettings.Load().FormLayoutPreviewEngine, out var engine) && Enum.IsDefined(engine)
+            ? engine
+            : FormLayoutPreviewEngine.Avalonia;
 
     private static DocumentViewModelBase LoadOrFallback(DefineNode node, Func<DocumentViewModelBase> loader)
     {

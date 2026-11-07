@@ -29,10 +29,6 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     public override TreeCommandProviderBase CommandProvider { get; }
 
-    /// <summary>Whether the live preview under the property grid is expanded.</summary>
-    [ObservableProperty]
-    private bool _isPreviewVisible = true;
-
     /// <summary>Whether the preview shows the form in View mode instead of Edit mode.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PreviewFormMode))]
@@ -46,12 +42,17 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     [ObservableProperty]
     private bool _showPreviewFieldNames = true;
 
-    /// <summary>What draws the preview. It starts as the editor's own Avalonia rendering, which needs no web server.</summary>
+    /// <summary>
+    /// What draws the preview. A new document takes the engine <see cref="Load"/> was given, the one chosen last.
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWebPreview))]
+    [NotifyPropertyChangedFor(nameof(IsWebPreview), nameof(IsAvaloniaPreview))]
     private FormLayoutPreviewEngine _previewEngine;
 
-    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Web"/>; the switch in the preview's header.</summary>
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Avalonia"/>.</summary>
+    public bool IsAvaloniaPreview => PreviewEngine == FormLayoutPreviewEngine.Avalonia;
+
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Web"/>.</summary>
     public bool IsWebPreview
     {
         get => PreviewEngine == FormLayoutPreviewEngine.Web;
@@ -130,56 +131,45 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         => StatusText = string.Format(LocalizationService.Current.Culture,
             LocalizationService.Current["Status_BrowserPreviewFailed"], ex.Message);
 
-    /// <summary>What the right-hand side shows: the property grid, the preview, or both.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPropertyPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsPreviewPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsPropertiesAndPreviewLayout))]
-    [NotifyPropertyChangedFor(nameof(IsPreviewOnlyLayout))]
-    [NotifyPropertyChangedFor(nameof(IsPropertiesOnlyLayout))]
-    private FormLayoutPaneLayout _paneLayout;
+    /// <summary>A layout has a preview: the form it draws, by <see cref="PreviewEngine"/>.</summary>
+    public override bool SupportsPreview => true;
 
-    /// <summary>Whether the property grid is on the right-hand side.</summary>
-    public bool IsPropertyPaneVisible => PaneLayout != FormLayoutPaneLayout.PreviewOnly;
-
-    /// <summary>Whether the preview is on the right-hand side.</summary>
-    public bool IsPreviewPaneVisible => PaneLayout != FormLayoutPaneLayout.PropertiesOnly;
-
-    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PropertiesAndPreview"/>.</summary>
-    public bool IsPropertiesAndPreviewLayout => PaneLayout == FormLayoutPaneLayout.PropertiesAndPreview;
-
-    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PreviewOnly"/>.</summary>
-    public bool IsPreviewOnlyLayout => PaneLayout == FormLayoutPaneLayout.PreviewOnly;
-
-    /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PropertiesOnly"/>.</summary>
-    public bool IsPropertiesOnlyLayout => PaneLayout == FormLayoutPaneLayout.PropertiesOnly;
-
-    private FormLayoutDocumentViewModel(string filePath, FormLayout root, SolutionContext solution)
+    private FormLayoutDocumentViewModel(string filePath, FormLayout root, SolutionContext solution,
+        FormLayoutPreviewEngine previewEngine)
         // The root and the two folders start expanded.
         : base(filePath, "FormLayout", keyText: root.LayoutId, new ObjectTreeOptions { ExpandDepth = 2 })
     {
         Root = root;
         Solution = solution;
+        _previewEngine = previewEngine;
         CommandProvider = new FormLayoutCommandProvider(this);
         InitializeTree(root);
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SelectedTreeNode))
                 EditPropertiesCommand.NotifyCanExecuteChanged();
+            // The tree offers Edit Properties only beside the preview, where the property grid is not.
+            else if (e.PropertyName == nameof(ViewMode))
+                RefreshToolbar();
         };
     }
 
     /// <summary>The solution the layout belongs to, which supplies its form's fields and tables.</summary>
     public SolutionContext Solution { get; }
 
-    public static FormLayoutDocumentViewModel Load(string filePath, SolutionContext? solution = null)
+    /// <summary>Opens the FormLayout at <paramref name="filePath"/>.</summary>
+    /// <param name="filePath">The layout file.</param>
+    /// <param name="solution">The solution the layout belongs to; none when omitted.</param>
+    /// <param name="previewEngine">What draws the preview at first; the editor passes the engine chosen last.</param>
+    public static FormLayoutDocumentViewModel Load(string filePath, SolutionContext? solution = null,
+        FormLayoutPreviewEngine previewEngine = FormLayoutPreviewEngine.Avalonia)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         if (!File.Exists(filePath))
             throw new FileNotFoundException("FormLayout file not found.", filePath);
         var root = XmlCodec.DeserializeFromFile<FormLayout>(filePath)
             ?? throw new InvalidOperationException($"FormLayout deserialized to null: {filePath}");
-        return new FormLayoutDocumentViewModel(filePath, root, solution ?? SolutionContext.Empty);
+        return new FormLayoutDocumentViewModel(filePath, root, solution ?? SolutionContext.Empty, previewEngine);
     }
 
     public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
@@ -218,73 +208,10 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
             : null;
 
     [RelayCommand]
-    private void SetPaneLayout(FormLayoutPaneLayout layout) => PaneLayout = layout;
-
-    // The preview is the only thing on the side, so a collapsed preview would leave it empty.
-    partial void OnPaneLayoutChanged(FormLayoutPaneLayout value)
-    {
-        if (value == FormLayoutPaneLayout.PreviewOnly)
-            IsPreviewVisible = true;
-        LeavePreviewFocusIfChanged();
-        // The tree offers Edit Properties only while the property grid is hidden.
-        RefreshToolbar();
-    }
-
-    partial void OnPreviewEngineChanged(FormLayoutPreviewEngine value) => LeavePreviewFocusIfChanged();
+    private void SetPreviewEngine(FormLayoutPreviewEngine engine) => PreviewEngine = engine;
 
     /// <summary>
-    /// Whether the window is arranged for adjusting a layout against its web preview: the tree beside the web preview
-    /// only, with the property grid in a dialog and the window's side bar hidden.
-    /// </summary>
-    [ObservableProperty]
-    private bool _isPreviewFocused;
-
-    /// <summary>
-    /// Raised with <c>true</c> when <see cref="IsPreviewFocused"/> turns on and <c>false</c> when it turns off, so the
-    /// window hides its side bar and brings it back.
-    /// </summary>
-    public event EventHandler<bool>? PreviewFocusChanged;
-
-    private (FormLayoutPaneLayout Layout, FormLayoutPreviewEngine Engine)? _beforePreviewFocus;
-
-    /// <summary>
-    /// Arranges the window for adjusting the layout against its web preview, or puts back what was there before.
-    /// </summary>
-    [RelayCommand]
-    private void TogglePreviewFocus()
-    {
-        if (_beforePreviewFocus is { } before)
-        {
-            _beforePreviewFocus = null;
-            IsPreviewFocused = false;
-            PaneLayout = before.Layout;
-            PreviewEngine = before.Engine;
-            PreviewFocusChanged?.Invoke(this, false);
-            return;
-        }
-
-        var saved = (PaneLayout, PreviewEngine);
-        PaneLayout = FormLayoutPaneLayout.PreviewOnly;
-        PreviewEngine = FormLayoutPreviewEngine.Web;
-        _beforePreviewFocus = saved;
-        IsPreviewFocused = true;
-        PreviewFocusChanged?.Invoke(this, true);
-    }
-
-    // Choosing another side layout or preview by hand ends the focus without undoing that choice; the side bar comes
-    // back, since what hid it is over.
-    private void LeavePreviewFocusIfChanged()
-    {
-        if (_beforePreviewFocus is null
-            || (PaneLayout == FormLayoutPaneLayout.PreviewOnly && PreviewEngine == FormLayoutPreviewEngine.Web))
-            return;
-        _beforePreviewFocus = null;
-        IsPreviewFocused = false;
-        PreviewFocusChanged?.Invoke(this, false);
-    }
-
-    /// <summary>
-    /// Opens the selected node's properties in a dialog, for the layouts that leave the property grid off the side.
+    /// Opens the selected node's properties in a dialog, beside the preview, where the property grid is not.
     /// </summary>
     /// <remarks>
     /// The dialog shows the same <see cref="ObjectTreeDocumentViewModelBase.SelectedEditorContext"/> in the same

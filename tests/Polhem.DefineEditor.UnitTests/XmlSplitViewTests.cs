@@ -57,6 +57,14 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("A document without a preview offers no Preview view")]
+        public void ShowPreview_DocumentWithoutPreview_CannotExecute()
+        {
+            Assert.False(_document.SupportsPreview);
+            Assert.False(_document.ShowPreviewCommand.CanExecute(null));
+        }
+
+        [Fact]
         [DisplayName("In the split view an edit in the tree shows in the XML at once")]
         public void TreeEdit_InSplit_RefreshesXml()
         {

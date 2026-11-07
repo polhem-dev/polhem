@@ -6,7 +6,7 @@
              x:DataType="vm:ObjectTreeDocumentViewModelBase"
              x:CompileBindings="True">
 
-    <!-- Design, XML, or both side by side, as a XAML designer offers its markup. Each is a button of its own, so the macOS accessibility
+    <!-- Design, a preview (for the documents that have one), XML, or both side by side, as a XAML designer offers its markup. Each is a button of its own, so the macOS accessibility
          API can press it (AXPress). -->
     <StackPanel Orientation="Horizontal" Spacing="2">
         <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsDesignOnly}"
@@ -16,6 +16,15 @@
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <PathIcon Data="{StaticResource IconPaneProperties}"/>
                 <TextBlock Text="{loc:Loc XmlView_Design}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsPreviewView}"
+                Command="{Binding ShowPreviewCommand}" IsVisible="{Binding SupportsPreview}"
+                ToolTip.Tip="{loc:Loc XmlView_PreviewTooltip}"
+                AutomationProperties.Name="{loc:Loc XmlView_Preview}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{StaticResource IconPanePreview}"/>
+                <TextBlock Text="{loc:Loc XmlView_Preview}" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
         <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsXmlOnly}"

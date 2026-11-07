@@ -71,7 +71,7 @@ public partial class FormLayoutPreview : UserControl
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(FormLayoutDocumentViewModel.IsPreviewVisible)
+        if (e.PropertyName is nameof(FormLayoutDocumentViewModel.ViewMode)
             or nameof(FormLayoutDocumentViewModel.PreviewEngine)
             or nameof(FormLayoutDocumentViewModel.PreviewFormMode)
             or nameof(FormLayoutDocumentViewModel.IsPreviewCompact)
@@ -85,7 +85,8 @@ public partial class FormLayoutPreview : UserControl
     {
         _renderTimer.Stop();
         PublishToBrowser();
-        if (_document is not { IsPreviewVisible: true } document)
+        // Only the preview view draws; in the others the editor does not rebuild a form nobody sees.
+        if (_document is not { IsPreviewView: true } document)
         {
             LayoutPresenter.Layout = null;
             return;
