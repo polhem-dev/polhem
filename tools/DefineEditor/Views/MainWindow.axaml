@@ -31,6 +31,7 @@
         </TreeDataTemplate>
     </Window.Resources>
 
+    <Panel>
     <DockPanel>
         <!-- The macOS title bar, drawn by the window once MainWindow extends the client area into the decorations.
              The traffic lights stay native at its left end, so the sidebar toggle starts after them, as in the
@@ -322,39 +323,6 @@
                     </TabControl.ContentTemplate>
                 </TabControl>
 
-                <!-- Go to File (Cmd/Ctrl+P), over the top of the document area as in VS Code. The keys are handled in
-                     MainWindow.OnQuickOpenKeyDown; moving the focus out closes it. -->
-                <Border x:Name="QuickOpenPanel" Classes="quick-open" ZIndex="10"
-                        IsVisible="{Binding IsQuickOpenVisible}"
-                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Width="560">
-                    <DockPanel>
-                        <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6" Classes="search-box"
-                                 Text="{Binding QuickOpenText, Mode=TwoWay}"
-                                 Watermark="{loc:Loc QuickOpen_Watermark}"
-                                 AutomationProperties.Name="{loc:Loc QuickOpen_Watermark}"
-                                 KeyDown="OnQuickOpenKeyDown">
-                            <TextBox.InnerLeftContent>
-                                <PathIcon Classes="search-box-icon" Data="{StaticResource IconSearch}"/>
-                            </TextBox.InnerLeftContent>
-                        </TextBox>
-                        <ListBox x:Name="QuickOpenList" ItemsSource="{Binding QuickOpenItems}"
-                                 SelectedItem="{Binding SelectedQuickOpenItem, Mode=TwoWay}"
-                                 MaxHeight="380" Background="Transparent" Margin="0,0,0,6"
-                                 Tapped="OnQuickOpenItemTapped">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:QuickOpenItem">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <PathIcon Classes="tree-icon"
-                                                  Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Detail}" Classes="muted" VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </DockPanel>
-                </Border>
 
                 <!-- Welcome screen, shown when a solution is open but no tab is (without a solution, the welcome on the left covers it) -->
                 <Border Padding="40" IsVisible="{Binding ShowDocumentWelcome}">
@@ -368,5 +336,41 @@
             </Grid>
         </Grid>
     </DockPanel>
+
+        <!-- Go to File (Cmd/Ctrl+P), over the whole window and centred on it like the title bar's Search files field,
+             so it drops from that field as in VS Code. MainWindow sets its top margin to sit under the title bar. The
+             keys are handled in MainWindow.OnQuickOpenKeyDown; moving the focus out closes it. -->
+        <Border x:Name="QuickOpenPanel" Classes="quick-open" ZIndex="10"
+                IsVisible="{Binding IsQuickOpenVisible}"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Width="560">
+            <DockPanel>
+                <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6" Classes="search-box"
+                         Text="{Binding QuickOpenText, Mode=TwoWay}"
+                         Watermark="{loc:Loc QuickOpen_Watermark}"
+                         AutomationProperties.Name="{loc:Loc QuickOpen_Watermark}"
+                         KeyDown="OnQuickOpenKeyDown">
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Classes="search-box-icon" Data="{StaticResource IconSearch}"/>
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+                <ListBox x:Name="QuickOpenList" ItemsSource="{Binding QuickOpenItems}"
+                         SelectedItem="{Binding SelectedQuickOpenItem, Mode=TwoWay}"
+                         MaxHeight="380" Background="Transparent" Margin="0,0,0,6"
+                         Tapped="OnQuickOpenItemTapped">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:QuickOpenItem">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Classes="tree-icon"
+                                          Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Detail}" Classes="muted" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+    </Panel>
 
 </Window>
