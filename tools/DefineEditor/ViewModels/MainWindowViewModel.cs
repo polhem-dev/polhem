@@ -173,6 +173,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsExplorerView));
         OnPropertyChanged(nameof(IsProgramsView));
         OnPropertyChanged(nameof(IsTableSchemasView));
+        OnPropertyChanged(nameof(HasNoFilterMatches));
         NotifyActivityBar();
 
         var settings = UserSettings.Load();
@@ -190,10 +191,18 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     partial void OnProgramNodesChanged(ObservableCollection<DefineNode> value)
-        => OnPropertyChanged(nameof(HasNoProgramNodes));
+    {
+        OnPropertyChanged(nameof(HasNoProgramNodes));
+        OnPropertyChanged(nameof(VisibleProgramNodes));
+        OnPropertyChanged(nameof(HasNoFilterMatches));
+    }
 
     partial void OnTableSchemaNodesChanged(ObservableCollection<DefineNode> value)
-        => OnPropertyChanged(nameof(HasNoTableSchemaNodes));
+    {
+        OnPropertyChanged(nameof(HasNoTableSchemaNodes));
+        OnPropertyChanged(nameof(VisibleTableSchemaNodes));
+        OnPropertyChanged(nameof(HasNoFilterMatches));
+    }
 
     /// <summary>
     /// Rebuilds every sidebar view from <paramref name="definePath"/>, or clears them when it is empty.

@@ -8,48 +8,58 @@
 
     <!-- The commands of the selected tree node, the same ones its context menu lists, as icon buttons named by their
          tooltips: the Add commands, then Move Up, Move Down, Duplicate and Delete, then the other commands in an
-         overflow menu. -->
-    <StackPanel Orientation="Horizontal" Spacing="2">
-        <ItemsControl ItemsSource="{Binding ToolbarAddItems}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="2"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:TreeToolbarItem">
-                    <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
-                        <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+         overflow menu. At the right, Find in tree (Cmd/Ctrl+F); its keys are in TreeCommandBar.OnFindKeyDown. -->
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding TreeFindStatus}"/>
+            <TextBox x:Name="FindBox" Width="170" Classes="clearButton"
+                     Text="{Binding TreeFindText, Mode=TwoWay}"
+                     Watermark="{loc:Loc TreeFind_Watermark}"
+                     AutomationProperties.Name="{loc:Loc TreeFind_Watermark}"
+                     KeyDown="OnFindKeyDown" TextChanged="OnFindTextChanged"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+            <ItemsControl ItemsSource="{Binding ToolbarAddItems}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="2"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TreeToolbarItem">
+                        <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
+                                ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
+                            <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-        <ItemsControl ItemsSource="{Binding ToolbarEditItems}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="2"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:TreeToolbarItem">
-                    <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
-                        <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+            <ItemsControl ItemsSource="{Binding ToolbarEditItems}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="2"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TreeToolbarItem">
+                        <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
+                                ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
+                            <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-        <Button x:Name="MoreButton" Classes="toolbar-icon" IsVisible="{Binding HasToolbarActions}"
-                ToolTip.Tip="{loc:Loc TreeCommandBar_MoreActions}"
-                AutomationProperties.Name="{loc:Loc TreeCommandBar_MoreActions}">
-            <PathIcon Data="{StaticResource IconMore}"/>
-            <Button.Flyout>
-                <!-- Filled from ToolbarActionItems each time it opens (OnMoreFlyoutOpening). -->
-                <MenuFlyout Placement="BottomEdgeAlignedLeft" Opening="OnMoreFlyoutOpening"/>
-            </Button.Flyout>
-        </Button>
-    </StackPanel>
+            <Button x:Name="MoreButton" Classes="toolbar-icon" IsVisible="{Binding HasToolbarActions}"
+                    ToolTip.Tip="{loc:Loc TreeCommandBar_MoreActions}"
+                    AutomationProperties.Name="{loc:Loc TreeCommandBar_MoreActions}">
+                <PathIcon Data="{StaticResource IconMore}"/>
+                <Button.Flyout>
+                    <!-- Filled from ToolbarActionItems each time it opens (OnMoreFlyoutOpening). -->
+                    <MenuFlyout Placement="BottomEdgeAlignedLeft" Opening="OnMoreFlyoutOpening"/>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
+    </DockPanel>
 </UserControl>

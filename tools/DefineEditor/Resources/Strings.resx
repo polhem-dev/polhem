@@ -91,6 +91,13 @@
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>Close tab</value></data>
   <data name="TreeCommandBar_MoreActions" xml:space="preserve"><value>More actions</value></data>
+  <data name="Sidebar_FilterWatermark" xml:space="preserve"><value>Filter</value></data>
+  <data name="Sidebar_FilterNoMatches" xml:space="preserve"><value>No matching files.</value></data>
+  <data name="MenuItem_GoToFile" xml:space="preserve"><value>Go to File…</value></data>
+  <data name="QuickOpen_Watermark" xml:space="preserve"><value>Go to file by name, key or path</value></data>
+  <data name="TreeFind_Watermark" xml:space="preserve"><value>Find in tree</value></data>
+  <data name="TreeFind_NoMatches" xml:space="preserve"><value>No matches</value></data>
+  <data name="TreeFind_Position" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="FieldPicker_Hint" xml:space="preserve"><value>Tick the fields to list and order them with the arrows. A name that matches no field stays ticked until you untick it.</value></data>
 
   <data name="DocumentWelcome_Tip" xml:space="preserve"><value>(Pick a file from the solution tree to open it as a tab. Clicking an already-open file switches to that tab.)</value></data>

@@ -60,6 +60,9 @@
              macOS only, and its items run the same commands as the macOS File menu. -->
         <Menu x:Name="InWindowMenu" DockPanel.Dock="Top" IsVisible="False">
             <MenuItem Header="{loc:Loc Menu_File}">
+                <MenuItem Header="{loc:Loc MenuItem_GoToFile}" Command="{Binding ShowQuickOpenCommand}"
+                          InputGesture="Ctrl+P" HotKey="Ctrl+P"/>
+                <Separator/>
                 <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
                 <MenuItem x:Name="ImportFormWorkbookMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbook}"/>
                 <MenuItem x:Name="ImportFormWorkbooksMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbooks}"/>
@@ -161,15 +164,28 @@
                     <TextBlock Text="{loc:Loc Sidebar_TableSchemasTitle}" IsVisible="{Binding IsTableSchemasView}"/>
                 </Panel>
 
+                <!-- Filters the view shown; the views share the text. Escape clears it. -->
+                <TextBox DockPanel.Dock="Top" x:Name="SidebarFilterBox" Classes="clearButton"
+                         Margin="10,0,10,6" IsVisible="{Binding IsSolutionOpened}"
+                         Text="{Binding SidebarFilter, Mode=TwoWay}"
+                         Watermark="{loc:Loc Sidebar_FilterWatermark}"
+                         AutomationProperties.Name="{loc:Loc Sidebar_FilterWatermark}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Escape" Command="{Binding ClearSidebarFilterCommand}"/>
+                    </TextBox.KeyBindings>
+                </TextBox>
+
                 <Panel>
                     <Panel IsVisible="{Binding IsSolutionOpened}">
+                        <TextBlock Classes="muted sidebar-empty" Text="{loc:Loc Sidebar_FilterNoMatches}"
+                                   IsVisible="{Binding HasNoFilterMatches}"/>
                         <TreeView x:Name="ExplorerTree" IsVisible="{Binding IsExplorerView}"
-                                  ItemsSource="{Binding Nodes}"
+                                  ItemsSource="{Binding VisibleNodes}"
                                   SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
                                   Padding="6,4"/>
                         <TreeView x:Name="ProgramsTree" IsVisible="{Binding IsProgramsView}"
-                                  ItemsSource="{Binding ProgramNodes}"
+                                  ItemsSource="{Binding VisibleProgramNodes}"
                                   SelectedItem="{Binding SelectedProgramNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
                                   Padding="6,4"/>
@@ -182,7 +198,7 @@
                             </TextBlock.IsVisible>
                         </TextBlock>
                         <TreeView x:Name="TableSchemasTree" IsVisible="{Binding IsTableSchemasView}"
-                                  ItemsSource="{Binding TableSchemaNodes}"
+                                  ItemsSource="{Binding VisibleTableSchemaNodes}"
                                   SelectedItem="{Binding SelectedTableSchemaNode, Mode=TwoWay}"
                                   ItemTemplate="{StaticResource DefineNodeTemplate}"
                                   Padding="6,4"/>
@@ -277,6 +293,36 @@
                         </DataTemplate>
                     </TabControl.ContentTemplate>
                 </TabControl>
+
+                <!-- Go to File (Cmd/Ctrl+P), over the top of the document area as in VS Code. The keys are handled in
+                     MainWindow.OnQuickOpenKeyDown; moving the focus out closes it. -->
+                <Border x:Name="QuickOpenPanel" Classes="quick-open" ZIndex="10"
+                        IsVisible="{Binding IsQuickOpenVisible}"
+                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Width="560">
+                    <DockPanel>
+                        <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6"
+                                 Text="{Binding QuickOpenText, Mode=TwoWay}"
+                                 Watermark="{loc:Loc QuickOpen_Watermark}"
+                                 AutomationProperties.Name="{loc:Loc QuickOpen_Watermark}"
+                                 KeyDown="OnQuickOpenKeyDown"/>
+                        <ListBox x:Name="QuickOpenList" ItemsSource="{Binding QuickOpenItems}"
+                                 SelectedItem="{Binding SelectedQuickOpenItem, Mode=TwoWay}"
+                                 MaxHeight="380" Background="Transparent" Margin="0,0,0,6"
+                                 Tapped="OnQuickOpenItemTapped">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:QuickOpenItem">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Classes="tree-icon"
+                                                  Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Detail}" Classes="muted" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
 
                 <!-- Welcome screen, shown when a solution is open but no tab is (without a solution, the welcome on the left covers it) -->
                 <Border Padding="40" IsVisible="{Binding ShowDocumentWelcome}">

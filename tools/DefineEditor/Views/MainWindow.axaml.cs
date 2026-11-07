@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
@@ -21,6 +23,13 @@ public partial class MainWindow : Window
         ExplorerTree.KeepSelectionSingle();
         ProgramsTree.KeepSelectionSingle();
         TableSchemasTree.KeepSelectionSingle();
+
+        // Go to File closes as soon as the focus moves anywhere else, like a menu.
+        QuickOpenPanel.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsKeyboardFocusWithinProperty && e.NewValue is false && _viewModel is { IsQuickOpenVisible: true })
+                _viewModel.HideQuickOpenCommand.Execute(null);
+        };
 
         if (OperatingSystem.IsMacOS())
         {
@@ -44,6 +53,39 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(MainWindowViewModel.IsSidebarVisible) && _viewModel is not null)
             ApplySidebarVisibility(_viewModel.IsSidebarVisible);
+        if (e.PropertyName == nameof(MainWindowViewModel.IsQuickOpenVisible) && _viewModel?.IsQuickOpenVisible == true)
+            Dispatcher.UIThread.Post(() => QuickOpenBox.Focus(), DispatcherPriority.Loaded);
+    }
+
+    private void OnQuickOpenKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_viewModel is null) return;
+        switch (e.Key)
+        {
+            case Key.Down:
+                _viewModel.MoveQuickOpenSelection(1);
+                break;
+            case Key.Up:
+                _viewModel.MoveQuickOpenSelection(-1);
+                break;
+            case Key.Enter:
+                _viewModel.OpenQuickOpenItemCommand.Execute(null);
+                break;
+            case Key.Escape:
+                _viewModel.HideQuickOpenCommand.Execute(null);
+                break;
+            default:
+                return;
+        }
+        if (_viewModel.SelectedQuickOpenItem is { } selected)
+            QuickOpenList.ScrollIntoView(selected);
+        e.Handled = true;
+    }
+
+    private void OnQuickOpenItemTapped(object? sender, TappedEventArgs e)
+    {
+        if ((e.Source as Control)?.DataContext is QuickOpenItem item)
+            _viewModel?.OpenQuickOpenItemCommand.Execute(item);
     }
 
     /// <summary>

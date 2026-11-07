@@ -74,6 +74,17 @@ While the tree has the focus, keys run the same commands:
 | ⌥↑ ⌥↓ / Alt+Up Alt+Down | Move it among its siblings |
 | Enter or F2 | Go to the first value in the property grid; Esc there comes back to the tree |
 
+Three ways to find things:
+
+- **Filter** at the top of the sidebar keeps the nodes whose name or key contains the text, with the groups above them;
+  the three views share it, and Esc clears it.
+- **Go to File** (⌘P / Ctrl+P, also in the **File** menu) lists the solution's files by name, key or path, best match
+  first; the letters may be apart (`ordfs` finds `Order.FormSchema.xml`). The arrow keys move through the list and
+  Enter opens the file.
+- **Find in tree** (⌘F / Ctrl+F, the box at the right of an editor's toolbar) selects the first node whose label
+  contains the text and expands what is above it; Enter and Shift+Enter go to the next and previous match, and Esc
+  goes back to the tree.
+
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only; on Windows and Linux, Ctrl+B shows or hides the side bar.
