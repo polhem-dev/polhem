@@ -48,7 +48,7 @@ public static class DefineXmlParser
         }
         catch (XmlException ex)
         {
-            issues.Add(new XmlParseIssue(XmlParseIssueKind.Syntax, ex.LineNumber, ex.LinePosition, ex.Message));
+            issues.Add(new XmlParseIssue(XmlParseIssueKind.Syntax, ex.LineNumber, ex.LinePosition, OneLine(ex.Message)));
         }
 
         if (value is null && issues.Count == 0)
@@ -80,8 +80,13 @@ public static class DefineXmlParser
         var (line, column) = inner is XmlException xml && xml.LineNumber > 0
             ? (xml.LineNumber, xml.LinePosition)
             : Position(ex.Message);
-        return new XmlParseIssue(XmlParseIssueKind.Syntax, line, column, (inner ?? ex).Message);
+        return new XmlParseIssue(XmlParseIssueKind.Syntax, line, column, OneLine((inner ?? ex).Message));
     }
+
+    // The reader's message quotes the offending character, which is a line break when a tag was left open at the end
+    // of a line; shown as is, it splits the problem list's row.
+    private static string OneLine(string message) =>
+        message.Replace("\r", " ", StringComparison.Ordinal).Replace("\n", " ", StringComparison.Ordinal);
 
     private static (int Line, int Column) Position(string message)
     {
@@ -91,13 +96,4 @@ public static class DefineXmlParser
                int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture))
             : (1, 1);
     }
-}
-
-/// <summary>What <see cref="DefineXmlParser.Parse"/> read: the define object, or the problems that kept it from reading one.</summary>
-/// <param name="Value">The define object; <c>null</c> when <paramref name="Issues"/> is not empty.</param>
-/// <param name="Issues">The problems found, in the order they were met.</param>
-public sealed record DefineXmlParseResult(object? Value, IReadOnlyList<XmlParseIssue> Issues)
-{
-    /// <summary>Whether the XML was read without a problem.</summary>
-    public bool Succeeded => Value is not null && Issues.Count == 0;
 }

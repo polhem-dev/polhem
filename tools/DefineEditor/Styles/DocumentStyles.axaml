@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:models="using:Polhem.DefineEditor.Models">
+        xmlns:models="using:Polhem.DefineEditor.Models"
+        xmlns:cc="using:AvaloniaEdit.CodeCompletion">
 
     <Styles.Resources>
         <!-- =================================================================
@@ -477,6 +478,18 @@
     <Style Selector="Button.icon PathIcon">
         <Setter Property="Width" Value="18"/>
         <Setter Property="Height" Value="18"/>
+    </Style>
+
+    <!-- The XML view's completion list. AvaloniaEdit builds it on the theme's ListBox, which Semi draws without a
+         background, so the list floated over the text with nothing behind it. -->
+    <Style Selector="cc|CompletionListBox">
+        <Setter Property="Background" Value="{DynamicResource SemiColorBackground2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="MinWidth" Value="200"/>
+        <Setter Property="MaxHeight" Value="280"/>
+        <Setter Property="FontSize" Value="13"/>
     </Style>
 
 </Styles>

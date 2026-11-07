@@ -477,4 +477,7 @@
   <data name="XmlIssue_UnknownAttribute" xml:space="preserve"><value>未知的屬性 {0}：此處的定義沒有這個屬性。</value></data>
   <data name="XmlIssue_Empty" xml:space="preserve"><value>XML 中沒有定義內容。</value></data>
   <data name="XmlIssue_Position" xml:space="preserve"><value>第 {0} 行，第 {1} 欄</value></data>
+  <data name="XmlCompletion_Required" xml:space="preserve"><value>必填</value></data>
+  <data name="XmlCompletion_Default" xml:space="preserve"><value>預設 {0}</value></data>
+  <data name="XmlCompletion_DefaultValue" xml:space="preserve"><value>預設值</value></data>
 </root>

@@ -102,6 +102,12 @@ silently), and the document cannot be saved until they are fixed or discarded by
 edited only as XML since the XML was shown is saved exactly as typed, so comments and layout stay; an edit in the tree
 makes the next save write the file from the definition again, without comments.
 
+Typing in the XML is helped the way a XAML editor helps: `<` lists the elements the definition allows at that point and
+the end tag of the enclosing one, a space inside a start tag lists the attributes it does not have yet (with their type
+and default in the tooltip), the quotes of an enum or boolean attribute list its values, ⌃Space lists whatever fits
+the caret, and `>` closing a start tag puts its end tag after the caret. What is listed comes from the same mapping the
+file is read with.
+
 Each editor also has a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder, Open Recent, Add Missing Framework Defaults, Import Form from Excel, Import Forms from Excel (Batch), Test Database Connections, Upgrade Database, Preview Database Upgrade and the active FormSchema's Sync TableSchema and FormLayout, Upgrade This Form's Tables and Preview Upgrade of This Form's Tables; the **View** menu shows or hides the side bar (⌘B), switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
 
 > The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with the same commands except Open Folder and Open Recent; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only; on Windows and Linux, Ctrl+B shows or hides the side bar.

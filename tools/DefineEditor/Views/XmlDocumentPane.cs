@@ -20,7 +20,7 @@ namespace Polhem.DefineEditor.Views;
 /// the element of the node the tree had selected. What is typed is read into the document after a pause in typing;
 /// XML that cannot be read is underlined and listed below the text, and the document keeps its last valid state.
 /// </summary>
-public sealed class XmlDocumentPane : UserControl
+public sealed partial class XmlDocumentPane : UserControl
 {
     // Long enough not to read the XML at every key, short enough that the tree is current when the person looks up.
     private static readonly TimeSpan s_applyDelay = TimeSpan.FromMilliseconds(500);
@@ -58,9 +58,15 @@ public sealed class XmlDocumentPane : UserControl
             _editor.GetResourceObservable("SemiColorText2", value => value as IBrush ?? Brushes.Gray));
         _editor.TextArea.TextView.BackgroundRenderers.Add(_underline);
         _editor.TextChanged += OnEditorTextChanged;
+        InstallCompletion();
 
         _applyTimer = new DispatcherTimer { Interval = s_applyDelay };
-        _applyTimer.Tick += (_, _) => FlushEdit();
+        // A half-typed attribute (`Kind=""` while its values are still being offered) is not read back until the
+        // completion list closes, so it is not flagged as a problem mid-way.
+        _applyTimer.Tick += (_, _) =>
+        {
+            if (_completionWindow is null) FlushEdit();
+        };
 
         // Rebuilt for every reading of the XML. A ListBox given a new list of equal records left the rows of the old one
         // drawn over the new ones.
@@ -115,6 +121,11 @@ public sealed class XmlDocumentPane : UserControl
     {
         if (_isShowingText || _document is null) return;
         _document.OnXmlTextEdited(_editor.Text);
+        RestartApplyTimer();
+    }
+
+    private void RestartApplyTimer()
+    {
         _applyTimer.Stop();
         _applyTimer.Start();
     }
