@@ -25,6 +25,9 @@ internal static class Smoke
         var formSchemaResult = RunFormSchemaSmoke(fixturePath);
         if (formSchemaResult != 0) return formSchemaResult;
 
+        var undoResult = RunUndoSmoke(fixturePath);
+        if (undoResult != 0) return undoResult;
+
         var layoutGenResult = RunFormLayoutGenerationSmoke();
         if (layoutGenResult != 0) return layoutGenResult;
 
@@ -100,6 +103,47 @@ internal static class Smoke
         }
         finally { TryDelete(tempDir); }
     }
+
+    /// <summary>
+    /// Covers undo against a file: an edit is saved, undone and saved again, and the file read back holds the value
+    /// from before the edit.
+    /// </summary>
+    private static int RunUndoSmoke(string fixturePath)
+    {
+        var tempDir = MakeTempDir("undo");
+        var target = Path.Combine(tempDir, Path.GetFileName(fixturePath));
+        File.Copy(fixturePath, target);
+        try
+        {
+            var vm = FormSchemaDocumentViewModel.Load(target, SolutionContext.Empty);
+            var fieldNode = Enumerate(vm.RootNode).First(n => n.Value is FormField);
+            var field = (FormField)fieldNode.Value;
+            var fieldName = field.FieldName;
+            var original = field.Caption;
+
+            vm.SelectedTreeNode = fieldNode;
+            field.Caption = $"SMOKE_{Guid.NewGuid():N}".Substring(0, 16);
+            vm.OnPropertyEdited();
+            vm.SaveCommand.Execute(null);
+            if (!vm.CanUndo) return Fail(160, "Undo not available after an edit");
+
+            vm.UndoCommand.Execute(null);
+            if (!vm.IsDirty) return Fail(161, "Undo past the saved step left the document clean");
+            vm.SaveCommand.Execute(null);
+
+            var reloaded = FormSchemaDocumentViewModel.Load(target, SolutionContext.Empty);
+            var readBack = reloaded.Schema.Tables!.SelectMany(t => t.Fields!).First(f => f.FieldName == fieldName);
+            if (readBack.Caption != original) return Fail(162, "Undone caption was not the one saved");
+
+            Console.WriteLine("[smoke:undo] OK");
+            return 0;
+        }
+        finally { TryDelete(tempDir); }
+    }
+
+    private static IEnumerable<Polhem.Definition.ObjectTree.ObjectTreeNode> Enumerate(
+        Polhem.Definition.ObjectTree.ObjectTreeNode node) =>
+        new[] { node }.Concat(node.Children.SelectMany(Enumerate));
 
     /// <summary>
     /// Covers "generate FormLayout from FormSchema" — the design-time step that produces the layout

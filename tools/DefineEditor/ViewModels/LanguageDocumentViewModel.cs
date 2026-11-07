@@ -13,8 +13,10 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class LanguageDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public LanguageResource Root { get; }
+    public LanguageResource Root { get; private set; }
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (LanguageResource)root;
 
     public override string TabIcon => "DefLanguage";
 

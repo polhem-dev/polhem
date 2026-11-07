@@ -19,4 +19,10 @@ public static class TreeShortcuts
 
     /// <summary>Move the selected node down among its siblings.</summary>
     public static string MoveDown => s_isMacOS ? "⌥↓" : "Alt+Down";
+
+    /// <summary>Undo the last edit of the document.</summary>
+    public static string Undo => s_isMacOS ? "⌘Z" : "Ctrl+Z";
+
+    /// <summary>Redo the edit Undo took back.</summary>
+    public static string Redo => s_isMacOS ? "⇧⌘Z" : "Ctrl+Y";
 }

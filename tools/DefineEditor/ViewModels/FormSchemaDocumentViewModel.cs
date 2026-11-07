@@ -35,12 +35,14 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
     public override string TabIcon => "DefFormSchema";
 
-    public FormSchema Schema { get; }
+    public FormSchema Schema { get; private set; }
 
     public SolutionContext Solution { get; }
 
     /// <summary>Backing object handed to <see cref="XmlCodec.SerializeToFile"/> by base's Save.</summary>
     protected override object RootObject => Schema;
+
+    protected override void ReplaceRoot(object root) => Schema = (FormSchema)root;
 
     public override TreeCommandProviderBase CommandProvider { get; }
 

@@ -18,9 +18,11 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class DatabaseSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public DatabaseSettings Root { get; }
+    public DatabaseSettings Root { get; private set; }
 
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (DatabaseSettings)root;
 
     public override string TabIcon => "DefDatabaseSettings";
 
