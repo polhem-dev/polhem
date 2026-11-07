@@ -1,10 +1,12 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
@@ -24,12 +26,15 @@ public partial class MainWindow : Window
         ProgramsTree.KeepSelectionSingle();
         TableSchemasTree.KeepSelectionSingle();
 
-        // Go to File closes as soon as the focus moves anywhere else, like a menu.
-        QuickOpenPanel.PropertyChanged += (_, e) =>
+        // Go to File closes when the focus moves to anything else in the window, like a menu. It stays open while the
+        // window itself is inactive, since the focus inside it has not moved anywhere.
+        AddHandler(GotFocusEvent, (_, e) =>
         {
-            if (e.Property == IsKeyboardFocusWithinProperty && e.NewValue is false && _viewModel is { IsQuickOpenVisible: true })
+            if (_viewModel is { IsQuickOpenVisible: true } && !IsInQuickOpen(e.Source as Visual))
+            {
                 _viewModel.HideQuickOpenCommand.Execute(null);
-        };
+            }
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
 
         if (OperatingSystem.IsMacOS())
         {
@@ -80,6 +85,13 @@ public partial class MainWindow : Window
         if (_viewModel.SelectedQuickOpenItem is { } selected)
             QuickOpenList.ScrollIntoView(selected);
         e.Handled = true;
+    }
+
+    private bool IsInQuickOpen(Visual? visual)
+    {
+        for (var current = visual; current != null; current = current.GetVisualParent())
+            if (ReferenceEquals(current, QuickOpenPanel)) return true;
+        return false;
     }
 
     private void OnQuickOpenItemTapped(object? sender, TappedEventArgs e)

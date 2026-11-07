@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -34,9 +35,33 @@ public partial class TreeCommandBar : UserControl
 
     private void OnViewKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.F || e.KeyModifiers != CommandModifier) return;
-        FindBox.Focus();
-        FindBox.SelectAll();
+        if (e.Key == Key.F && e.KeyModifiers == CommandModifier)
+        {
+            FindBox.Focus();
+            FindBox.SelectAll();
+            e.Handled = true;
+            return;
+        }
+
+        // A text box keeps Undo and Redo for its own typing; elsewhere in the editor they undo document edits.
+        if (e.Source is TextBox || (e.Source as Visual)?.FindAncestorOfType<TextBox>() is not null
+            || DataContext is not ObjectTreeDocumentViewModelBase document)
+        {
+            return;
+        }
+        var command = (e.Key, e.KeyModifiers) switch
+        {
+            (Key.Z, var m) when m == CommandModifier => document.UndoCommand,
+            (Key.Z, var m) when m == (CommandModifier | KeyModifiers.Shift) => document.RedoCommand,
+            (Key.Y, KeyModifiers.Control) when !OperatingSystem.IsMacOS() => document.RedoCommand,
+            _ => null,
+        };
+        if (command is null) return;
+        if (command.CanExecute(null))
+        {
+            command.Execute(null);
+            RevealSelectedNode(focus: true);
+        }
         e.Handled = true;
     }
 

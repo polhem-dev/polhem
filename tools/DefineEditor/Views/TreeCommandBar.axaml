@@ -11,6 +11,14 @@
          overflow menu. At the right, Find in tree (Cmd/Ctrl+F); its keys are in TreeCommandBar.OnFindKeyDown. -->
     <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+            <Button Classes="toolbar-icon" Command="{Binding UndoCommand}"
+                    ToolTip.Tip="{Binding UndoToolTip}" AutomationProperties.Name="{loc:Loc Action_Undo}">
+                <PathIcon Data="{StaticResource IconUndo}"/>
+            </Button>
+            <Button Classes="toolbar-icon" Command="{Binding RedoCommand}"
+                    ToolTip.Tip="{Binding RedoToolTip}" AutomationProperties.Name="{loc:Loc Action_Redo}">
+                <PathIcon Data="{StaticResource IconRedo}"/>
+            </Button>
             <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding TreeFindStatus}"/>
             <TextBox x:Name="FindBox" Width="170" Classes="clearButton"
                      Text="{Binding TreeFindText, Mode=TwoWay}"

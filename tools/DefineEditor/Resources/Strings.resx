@@ -216,9 +216,12 @@
 
   <!-- Status bar messages -->
   <data name="Status_AddedNamed" xml:space="preserve"><value>Added {0}: {1} (unsaved)</value></data>
-  <data name="Status_Deleted" xml:space="preserve"><value>Node deleted (unsaved)</value></data>
   <data name="Status_Duplicated" xml:space="preserve"><value>Duplicated as {0} (unsaved)</value></data>
-  <data name="Status_DeleteCancelled" xml:space="preserve"><value>Deletion cancelled.</value></data>
+  <data name="Status_Undone" xml:space="preserve"><value>Undone (unsaved)</value></data>
+  <data name="Status_Redone" xml:space="preserve"><value>Redone (unsaved)</value></data>
+  <data name="Status_DeletedUndoable" xml:space="preserve"><value>Deleted {0} ({1} to undo)</value></data>
+  <data name="Action_Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Action_Redo" xml:space="preserve"><value>Redo</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>Saved: {0}</value></data>
   <data name="Status_SavedAll" xml:space="preserve"><value>Saved {0} of {1} file(s).</value></data>
   <data name="Status_SaveFailed" xml:space="preserve"><value>Save failed: {0}</value></data>
@@ -235,9 +238,6 @@
   <data name="Status_SingletonHint" xml:space="preserve"><value>(Property edits commit to memory on focus loss; Save (⌘S) refreshes the tree headers and writes back to XML.)</value></data>
 
   <!-- Confirmation dialogs -->
-  <data name="Confirm_DeleteTitle" xml:space="preserve"><value>Confirm deletion</value></data>
-  <data name="Confirm_DeleteMessage" xml:space="preserve"><value>Delete "{0}"?
-Removed from memory; press Save (⌘S) to persist.</value></data>
   <data name="Confirm_AddFrameworkDefaultsTitle" xml:space="preserve"><value>Add framework defaults</value></data>
   <data name="Confirm_AddFrameworkDefaultsMessage" xml:space="preserve"><value>These framework default files are missing from {0} and will be written there:
 

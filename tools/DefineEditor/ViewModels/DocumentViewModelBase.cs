@@ -161,25 +161,6 @@ public abstract partial class DocumentViewModelBase : ViewModelBase, IDisposable
     // them too.
 
     /// <summary>
-    /// Prompts the user to confirm deletion of a tree node and returns the
-    /// answer. <paramref name="label"/> is the node's display text and goes
-    /// into the message body. In headless / smoke contexts the dialog is
-    /// skipped and the call resolves to <c>true</c>.
-    /// </summary>
-    protected static async Task<bool> ConfirmDeleteAsync(string label)
-    {
-        var owner = GetOwnerWindow();
-        if (owner is null) return true;
-        var displayLabel = string.IsNullOrEmpty(label) ? "—" : label;
-        return await ConfirmationDialog.ShowAsync(
-            owner,
-            L("Confirm_DeleteTitle"),
-            L("Confirm_DeleteMessage", displayLabel),
-            confirmLabel: L("Action_Delete"),
-            cancelLabel: L("Action_Cancel"));
-    }
-
-    /// <summary>
     /// Subscribes <paramref name="handler"/> to <see cref="LocalizationService.CultureChanged"/>
     /// and queues a matching unsubscribe to run on <see cref="Dispose"/>.
     /// Use this in place of touching the event directly — the service is a

@@ -14,9 +14,11 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class PermissionModelsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public PermissionModels Root { get; }
+    public PermissionModels Root { get; private set; }
 
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (PermissionModels)root;
 
     public override string TabIcon => "DefPermissionModels";
 

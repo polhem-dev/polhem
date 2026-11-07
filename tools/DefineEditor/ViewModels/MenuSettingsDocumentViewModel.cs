@@ -18,9 +18,11 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class MenuSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public MenuSettings Root { get; }
+    public MenuSettings Root { get; private set; }
 
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (MenuSettings)root;
 
     public override string TabIcon => "DefMenuSettings";
 

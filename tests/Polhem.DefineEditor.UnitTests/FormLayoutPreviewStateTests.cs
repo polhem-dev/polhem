@@ -59,6 +59,7 @@ namespace Polhem.DefineEditor.UnitTests
         public void OnPropertyEdited_RaisesDocumentChanged()
         {
             _document.SelectedTreeNode = MainSection;
+            ((LayoutSection)MainSection.Value).Caption = "Edited";
 
             _document.OnPropertyEdited();
 

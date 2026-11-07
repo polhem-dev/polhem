@@ -132,6 +132,8 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
             foreach (var root in Roots)
                 RefreshNodeLabels(root);
             RefreshToolbar();
+            OnPropertyChanged(nameof(UndoToolTip));
+            OnPropertyChanged(nameof(RedoToolTip));
         });
         DragDropHandler = new SiblingReorderDragDropHandler(this);
     }
@@ -152,6 +154,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
             foreach (var root in Roots)
                 RefreshNodeLabels(root);
             XmlCodec.SerializeToFile(RootObject, FilePath);
+            MarkSaved();
             IsDirty = false;
             StatusText = L("Status_Saved", Path.GetFileName(FilePath));
         }
@@ -186,24 +189,19 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
         Array.Empty<ValidationIssue>();
 
     [RelayCommand(CanExecute = nameof(CanDelete))]
-    private async System.Threading.Tasks.Task Delete()
+    private void Delete()
     {
         var node = SelectedTreeNode;
         if (node is null) return;
         if (GetDeleteAction(node) is not { } action) return;
 
-        if (!await ConfirmDeleteAsync(node.Label))
-        {
-            StatusText = L("Status_DeleteCancelled");
-            return;
-        }
-
+        // No confirmation: Undo brings the node back, and the status line says so.
         action();
         var parent = node.Parent;
         parent?.Children.Remove(node);
         SelectedTreeNode = parent;
         MarkChanged();
-        StatusText = L("Status_Deleted");
+        StatusText = L("Status_DeletedUndoable", node.Label, TreeShortcuts.Undo);
     }
 
     private bool CanDelete() => SelectedTreeNode is not null && GetDeleteAction(SelectedTreeNode) is not null;
@@ -241,6 +239,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     {
         Roots.Add(Builder.Build(root));
         SelectedTreeNode = Roots[0];
+        StartHistory(root);
     }
 
     /// <summary>The first folder directly under the root whose collection is a <typeparamref name="TCollection"/>.</summary>
@@ -301,7 +300,8 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// <summary>Marks the document dirty and raises <see cref="DocumentChanged"/>, after an edit of the define object.</summary>
     public void MarkChanged()
     {
-        IsDirty = true;
+        RecordHistory();
+        IsDirty = !IsAtSavedState;
         RefreshToolbar();
         DocumentChanged?.Invoke(this, EventArgs.Empty);
     }

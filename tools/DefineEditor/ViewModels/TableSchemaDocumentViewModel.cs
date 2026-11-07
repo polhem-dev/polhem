@@ -17,8 +17,10 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class TableSchemaDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public TableSchema Root { get; }
+    public TableSchema Root { get; private set; }
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (TableSchema)root;
 
     public override string TabIcon => "DefTableSchema";
 

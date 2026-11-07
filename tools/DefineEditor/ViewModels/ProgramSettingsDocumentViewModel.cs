@@ -12,9 +12,11 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class ProgramSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public ProgramSettings Root { get; }
+    public ProgramSettings Root { get; private set; }
 
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (ProgramSettings)root;
 
     public override string TabIcon => "DefProgramSettings";
 

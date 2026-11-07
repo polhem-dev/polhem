@@ -74,6 +74,11 @@ While the tree has the focus, keys run the same commands:
 | ⌥↑ ⌥↓ / Alt+Up Alt+Down | Move it among its siblings |
 | Enter or F2 | Go to the first value in the property grid; Esc there comes back to the tree |
 
+**Undo** (⌘Z / Ctrl+Z) and **Redo** (⇧⌘Z / Ctrl+Y), also the arrows at the right of the toolbar, take back and
+reapply the document's edits: property values, added, deleted, duplicated and moved nodes, up to the last 100. Inside a
+text box the keys undo its own typing instead. Delete does not ask first, since Undo brings the node back. A document
+whose edits are all undone back to the saved file shows no unsaved marker.
+
 Three ways to find things:
 
 - **Filter** at the top of the sidebar keeps the nodes whose name or key contains the text, with the groups above them;

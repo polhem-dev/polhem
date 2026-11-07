@@ -18,9 +18,11 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 public sealed partial class SystemSettingsDocumentViewModel : ObjectTreeDocumentViewModelBase
 {
-    public SystemSettings Root { get; }
+    public SystemSettings Root { get; private set; }
 
     protected override object RootObject => Root;
+
+    protected override void ReplaceRoot(object root) => Root = (SystemSettings)root;
 
     public override string TabIcon => "DefSystemSettings";
 
