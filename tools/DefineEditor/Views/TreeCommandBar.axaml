@@ -20,11 +20,15 @@
                 <PathIcon Data="{StaticResource IconRedo}"/>
             </Button>
             <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding TreeFindStatus}"/>
-            <TextBox x:Name="FindBox" Width="170" Classes="clearButton"
+            <TextBox x:Name="FindBox" Width="190" Classes="clearButton search-box"
                      Text="{Binding TreeFindText, Mode=TwoWay}"
-                     Watermark="{loc:Loc TreeFind_Watermark}"
+                     Watermark="{Binding TreeFindWatermark}"
                      AutomationProperties.Name="{loc:Loc TreeFind_Watermark}"
-                     KeyDown="OnFindKeyDown" TextChanged="OnFindTextChanged"/>
+                     KeyDown="OnFindKeyDown" TextChanged="OnFindTextChanged">
+                <TextBox.InnerLeftContent>
+                    <PathIcon Classes="search-box-icon" Data="{StaticResource IconSearch}"/>
+                </TextBox.InnerLeftContent>
+            </TextBox>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="2">
             <ItemsControl ItemsSource="{Binding ToolbarAddItems}">

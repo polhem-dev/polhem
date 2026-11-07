@@ -47,6 +47,12 @@ public partial class MainWindowViewModel
     [RelayCommand]
     private void ClearSidebarFilter() => SidebarFilter = string.Empty;
 
+    /// <summary>The key of Go to File as the title bar's search field shows it.</summary>
+    public string GoToFileShortcut => OperatingSystem.IsMacOS() ? "⌘P" : "Ctrl+P";
+
+    /// <summary>The tooltip of the sidebar's Go to File button, with its key.</summary>
+    public string GoToFileToolTip => $"{L("MenuItem_GoToFile")} ({GoToFileShortcut})";
+
     /// <summary>Whether the Go to File box is open.</summary>
     [ObservableProperty]
     private bool _isQuickOpenVisible;

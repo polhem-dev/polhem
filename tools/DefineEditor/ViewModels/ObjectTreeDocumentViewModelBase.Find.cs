@@ -8,6 +8,9 @@ namespace Polhem.DefineEditor.ViewModels;
 // not filtered, so the matches stay among the nodes around them.
 public abstract partial class ObjectTreeDocumentViewModelBase
 {
+    /// <summary>The placeholder of the Find in tree box, with its key, so the box says what it is and how to reach it.</summary>
+    public string TreeFindWatermark => $"{L("TreeFind_Watermark")} ({(OperatingSystem.IsMacOS() ? "⌘F" : "Ctrl+F")})";
+
     /// <summary>The text Find in tree looks for in the node labels, ignoring case.</summary>
     [ObservableProperty]
     private string _treeFindText = string.Empty;

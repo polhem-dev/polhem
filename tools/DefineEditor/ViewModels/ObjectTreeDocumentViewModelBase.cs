@@ -134,6 +134,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
             RefreshToolbar();
             OnPropertyChanged(nameof(UndoToolTip));
             OnPropertyChanged(nameof(RedoToolTip));
+            OnPropertyChanged(nameof(TreeFindWatermark));
         });
         DragDropHandler = new SiblingReorderDragDropHandler(this);
     }

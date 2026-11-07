@@ -36,6 +36,9 @@ public partial class MainWindow : Window
             }
         }, RoutingStrategies.Bubble, handledEventsToo: true);
 
+        // Off macOS the title bar is the system's, so Go to File gets a button in the sidebar instead.
+        SidebarGoToFileButton.IsVisible = !OperatingSystem.IsMacOS();
+
         if (OperatingSystem.IsMacOS())
         {
             ExtendClientAreaToDecorationsHint = true;

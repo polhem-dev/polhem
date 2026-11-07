@@ -94,6 +94,7 @@
   <data name="Sidebar_FilterWatermark" xml:space="preserve"><value>Filter</value></data>
   <data name="Sidebar_FilterNoMatches" xml:space="preserve"><value>No matching files.</value></data>
   <data name="MenuItem_GoToFile" xml:space="preserve"><value>Go to File…</value></data>
+  <data name="TitleBar_SearchFiles" xml:space="preserve"><value>Search files…</value></data>
   <data name="QuickOpen_Watermark" xml:space="preserve"><value>Go to file by name, key or path</value></data>
   <data name="TreeFind_Watermark" xml:space="preserve"><value>Find in tree</value></data>
   <data name="TreeFind_NoMatches" xml:space="preserve"><value>No matches</value></data>
