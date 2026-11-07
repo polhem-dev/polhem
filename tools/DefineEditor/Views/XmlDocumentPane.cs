@@ -84,6 +84,11 @@ public sealed partial class XmlDocumentPane : UserControl
         ActualThemeVariantChanged += (_, _) => ApplyTheme();
         AttachedToVisualTree += (_, _) => ApplyTheme();
         DetachedFromVisualTree += (_, _) => FlushEdit();
+        // Leaving the text for the tree beside it reads what was typed first, so the tree edits the current object.
+        _editor.TextArea.LostFocus += (_, _) =>
+        {
+            if (_completionWindow is null) FlushEdit();
+        };
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -97,7 +102,7 @@ public sealed partial class XmlDocumentPane : UserControl
         _document.PropertyChanged += OnDocumentPropertyChanged;
         ShowText(_document.XmlText);
         ShowIssues(_document.XmlIssues);
-        if (_document.IsXmlView) RevealSelectedNode();
+        if (_document.IsXmlView) RevealSelectedNode(focus: !_document.IsSplitView);
     }
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -107,12 +112,21 @@ public sealed partial class XmlDocumentPane : UserControl
         {
             case nameof(ObjectTreeDocumentViewModelBase.XmlText):
                 ShowText(_document.XmlText);
+                // An edit in the tree beside the XML wrote the text again; show where the selected node now is.
+                if (_document.IsSplitView && !_editor.TextArea.IsKeyboardFocusWithin) RevealSelectedNode(focus: false);
                 break;
             case nameof(ObjectTreeDocumentViewModelBase.XmlIssues):
                 ShowIssues(_document.XmlIssues);
                 break;
+            // The XML alone takes the focus; beside the tree it leaves the focus where it is, on the tree most likely.
             case nameof(ObjectTreeDocumentViewModelBase.IsXmlView) when _document.IsXmlView:
-                RevealSelectedNode();
+                RevealSelectedNode(focus: !_document.IsSplitView);
+                break;
+            // Beside the tree, the XML follows the node selected there, without taking the focus from the tree. While
+            // the text has the focus the selection follows the text instead, so the caret is left where it is.
+            case nameof(ObjectTreeDocumentViewModelBase.SelectedTreeNode)
+                when _document.IsSplitView && !_editor.TextArea.IsKeyboardFocusWithin:
+                RevealSelectedNode(focus: false);
                 break;
         }
     }
@@ -196,16 +210,16 @@ public sealed partial class XmlDocumentPane : UserControl
         _editor.CaretOffset = Math.Min(caret, _editor.Document.TextLength);
     }
 
-    // The pane has just become visible, so its size is only known after the next layout pass.
-    private void RevealSelectedNode() =>
+    // The pane may have just become visible, so its size is only known after the next layout pass.
+    private void RevealSelectedNode(bool focus) =>
         Dispatcher.UIThread.Post(() =>
         {
             if (_document?.LocateSelectedNodeInXml() is { } position)
-                GoTo(position.Line, position.Column, position.Length);
+                GoTo(position.Line, position.Column, position.Length, focus);
         }, DispatcherPriority.Loaded);
 
-    // Selects length characters from a 1-based line and column, scrolls to them and focuses the text.
-    private void GoTo(int lineNumber, int column, int length)
+    // Selects length characters from a 1-based line and column, scrolls to them and, when asked, focuses the text.
+    private void GoTo(int lineNumber, int column, int length, bool focus = true)
     {
         var document = _editor.Document;
         if (lineNumber < 1 || lineNumber > document.LineCount) return;
@@ -215,7 +229,7 @@ public sealed partial class XmlDocumentPane : UserControl
         _editor.CaretOffset = start;
         _editor.Select(start, Math.Min(length, line.EndOffset - start));
         _editor.ScrollTo(lineNumber, column);
-        _editor.TextArea.Focus();
+        if (focus) _editor.TextArea.Focus();
     }
 
     private void ApplyTheme()

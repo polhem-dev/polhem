@@ -484,4 +484,7 @@
   <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>選擇 XML 結構描述的存放資料夾</value></data>
   <data name="Status_XmlSchemasExported" xml:space="preserve"><value>已將 {0} 個 XML 結構描述匯出到 {1}。{2} 可讓 VS Code 把定義檔對應到這些結構描述。</value></data>
   <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>未匯出 XML 結構描述：{0}</value></data>
+  <data name="XmlView_Split" xml:space="preserve"><value>分割</value></data>
+  <data name="XmlView_SplitTooltip" xml:space="preserve"><value>上下並排顯示樹與 XML，兩邊互相同步</value></data>
+  <data name="XmlView_DesignLocked" xml:space="preserve"><value>請先修正 XML，或切換到「設計」，才能在樹上編輯</value></data>
 </root>

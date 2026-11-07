@@ -497,4 +497,7 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="Dialog_PickSchemaFolder" xml:space="preserve"><value>Choose a folder for the XML schemas</value></data>
   <data name="Status_XmlSchemasExported" xml:space="preserve"><value>Exported {0} XML schemas to {1}. {2} ties the definition files to them in VS Code.</value></data>
   <data name="Status_XmlSchemasExportFailed" xml:space="preserve"><value>XML schemas not exported: {0}</value></data>
+  <data name="XmlView_Split" xml:space="preserve"><value>Split</value></data>
+  <data name="XmlView_SplitTooltip" xml:space="preserve"><value>Show the tree above the XML, each following the other</value></data>
+  <data name="XmlView_DesignLocked" xml:space="preserve"><value>Fix the XML or switch to Design to edit in the tree</value></data>
 </root>
