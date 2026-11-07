@@ -52,8 +52,8 @@
             </DockPanel>
         </Border>
 
-        <Panel>
-            <Grid IsVisible="{Binding !IsXmlView}" ColumnDefinitions="*,4,1.2*">
+        <views:DocumentBody>
+            <Grid ColumnDefinitions="*,4,1.2*">
                 <DockPanel Grid.Column="0">
                     <Border DockPanel.Dock="Top" Padding="6,4,6,0">
                         <views:TreeCommandBar/>
@@ -65,7 +65,7 @@
                 <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
                 <views:EditorPane Grid.Column="2" Context="{Binding SelectedEditorContext}"/>
             </Grid>
-            <views:XmlDocumentPane IsVisible="{Binding IsXmlView}"/>
-        </Panel>
+            <views:XmlDocumentPane/>
+        </views:DocumentBody>
     </DockPanel>
 </UserControl>

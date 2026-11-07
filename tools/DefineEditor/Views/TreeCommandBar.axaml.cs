@@ -36,9 +36,12 @@ public partial class TreeCommandBar : UserControl
 
     private void OnViewKeyDown(object? sender, KeyEventArgs e)
     {
-        // The XML view has a find of its own.
-        if (e.Key == Key.F && e.KeyModifiers == CommandModifier
-            && DataContext is not ObjectTreeDocumentViewModelBase { IsXmlView: true })
+        // The XML has a find and an undo of its own: keys pressed in it, or while the tree is not shown, are its.
+        var inXml = (e.Source as Visual)?.FindAncestorOfType<XmlDocumentPane>(includeSelf: true) is not null;
+        if (inXml || DataContext is ObjectTreeDocumentViewModelBase { IsDesignVisible: false })
+            return;
+
+        if (e.Key == Key.F && e.KeyModifiers == CommandModifier)
         {
             FindBox.Focus();
             FindBox.SelectAll();
@@ -46,10 +49,9 @@ public partial class TreeCommandBar : UserControl
             return;
         }
 
-        // A text box keeps Undo and Redo for its own typing, and so does the XML view; elsewhere in the editor they undo
-        // document edits.
+        // A text box keeps Undo and Redo for its own typing; elsewhere in the editor they undo document edits.
         if (e.Source is TextBox || (e.Source as Visual)?.FindAncestorOfType<TextBox>() is not null
-            || DataContext is not ObjectTreeDocumentViewModelBase document || document.IsXmlView)
+            || DataContext is not ObjectTreeDocumentViewModelBase document)
         {
             return;
         }

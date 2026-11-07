@@ -91,9 +91,12 @@ Three ways to find things:
   contains the text and expands what is above it; Enter and Shift+Enter go to the next and previous match, and Esc
   goes back to the tree.
 
-**Design / XML** at the top of each editor switches between the tree and the document's XML, highlighted and with line
-numbers. A document with no unsaved edit shows its file as it is, comments included; otherwise the XML is what a save
-from the tree would write. The caret starts on the element of the node that was selected, and ⌘F / Ctrl+F finds text.
+**Design / XML / Split** at the top of each editor switches between the tree, the document's XML (highlighted and with
+line numbers), and both, the tree above the XML. In Split the two follow each other: an edit in the tree shows in the
+XML at once, typing in the XML reaches the tree after a pause, and selecting a node scrolls the XML to its element; while
+the XML cannot be read, the tree takes no edits, so they cannot overwrite the text being fixed. A document with no
+unsaved edit shows its file as it is, comments included; otherwise the XML is what a save from the tree would write.
+The caret starts on the element of the node that was selected, and ⌘F / Ctrl+F finds text.
 
 The XML can be edited. Half a second after typing stops it is read into the document, and the tree, the property grid
 and Undo follow it. XML that cannot be read keeps the document as it was: the problems are underlined and listed below

@@ -6,10 +6,10 @@
              x:DataType="vm:ObjectTreeDocumentViewModelBase"
              x:CompileBindings="True">
 
-    <!-- Design or XML, as a XAML designer offers its markup. Each is a button of its own, so the macOS accessibility
+    <!-- Design, XML, or both side by side, as a XAML designer offers its markup. Each is a button of its own, so the macOS accessibility
          API can press it (AXPress). -->
     <StackPanel Orientation="Horizontal" Spacing="2">
-        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding !IsXmlView}"
+        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsDesignOnly}"
                 Command="{Binding ShowDesignCommand}"
                 ToolTip.Tip="{loc:Loc XmlView_DesignTooltip}"
                 AutomationProperties.Name="{loc:Loc XmlView_Design}">
@@ -18,13 +18,22 @@
                 <TextBlock Text="{loc:Loc XmlView_Design}" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
-        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsXmlView}"
+        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsXmlOnly}"
                 Command="{Binding ShowXmlCommand}"
                 ToolTip.Tip="{loc:Loc XmlView_XmlTooltip}"
                 AutomationProperties.Name="{loc:Loc XmlView_Xml}">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <PathIcon Data="{StaticResource IconXml}"/>
                 <TextBlock Text="{loc:Loc XmlView_Xml}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+        <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsSplitView}"
+                Command="{Binding ShowSplitCommand}"
+                ToolTip.Tip="{loc:Loc XmlView_SplitTooltip}"
+                AutomationProperties.Name="{loc:Loc XmlView_Split}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{StaticResource IconPaneBoth}"/>
+                <TextBlock Text="{loc:Loc XmlView_Split}" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
     </StackPanel>

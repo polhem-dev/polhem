@@ -26,9 +26,30 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     // Set while a typed text is being applied, so the change it causes does not generate the XML again.
     private bool _isApplyingXml;
 
-    /// <summary>Whether the document shows its XML instead of the tree and the property grid.</summary>
+    /// <summary>Whether the document shows its XML, alone or beside the tree (<see cref="IsSplitView"/>).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDesignVisible), nameof(IsDesignOnly), nameof(IsXmlOnly))]
     private bool _isXmlView;
+
+    /// <summary>Whether the document shows the tree and the property grid beside its XML, each following the other.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDesignVisible), nameof(IsXmlOnly), nameof(IsDesignEnabled))]
+    private bool _isSplitView;
+
+    /// <summary>Whether the tree and the property grid are shown, alone or beside the XML.</summary>
+    public bool IsDesignVisible => !IsXmlView || IsSplitView;
+
+    /// <summary>Whether the document shows only the tree and the property grid.</summary>
+    public bool IsDesignOnly => !IsXmlView;
+
+    /// <summary>Whether the document shows only its XML.</summary>
+    public bool IsXmlOnly => IsXmlView && !IsSplitView;
+
+    /// <summary>
+    /// Whether the tree and the property grid take edits. Beside XML that cannot be read they do not: an edit there
+    /// writes the XML again from the object, which would throw away the text being fixed.
+    /// </summary>
+    public bool IsDesignEnabled => !(IsSplitView && HasXmlIssues);
 
     /// <summary>
     /// The XML the view shows: the file as it is on disk while the document has no unsaved edit, otherwise the define
@@ -39,7 +60,7 @@ public abstract partial class ObjectTreeDocumentViewModelBase
 
     /// <summary>What is wrong with the XML typed last; empty when it was read into the document.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasXmlIssues))]
+    [NotifyPropertyChangedFor(nameof(HasXmlIssues), nameof(IsDesignEnabled))]
     private IReadOnlyList<XmlParseIssue> _xmlIssues = [];
 
     /// <summary>Whether the XML typed last could not be read into the document.</summary>
@@ -64,12 +85,25 @@ public abstract partial class ObjectTreeDocumentViewModelBase
     {
         if (!IsXmlView) return;
         if (!await ResolveXmlIssuesAsync()) return;
+        IsSplitView = false;
         IsXmlView = false;
     }
 
-    /// <summary>Shows the XML.</summary>
+    /// <summary>Shows the XML alone.</summary>
     [RelayCommand]
-    private void ShowXml() => IsXmlView = true;
+    private void ShowXml()
+    {
+        IsSplitView = false;
+        IsXmlView = true;
+    }
+
+    /// <summary>Shows the tree and the property grid beside the XML.</summary>
+    [RelayCommand]
+    private void ShowSplit()
+    {
+        IsSplitView = true;
+        IsXmlView = true;
+    }
 
     partial void OnIsXmlViewChanged(bool value)
     {
