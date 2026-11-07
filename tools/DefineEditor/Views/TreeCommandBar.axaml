@@ -68,8 +68,8 @@
                     AutomationProperties.Name="{loc:Loc TreeCommandBar_MoreActions}">
                 <PathIcon Data="{StaticResource IconMore}"/>
                 <Button.Flyout>
-                    <!-- Filled from ToolbarActionItems each time it opens (OnMoreFlyoutOpening). -->
-                    <MenuFlyout Placement="BottomEdgeAlignedLeft" Opening="OnMoreFlyoutOpening"/>
+                    <!-- Filled from ToolbarActionItems whenever they change (FillMoreFlyout). -->
+                    <MenuFlyout Placement="BottomEdgeAlignedLeft"/>
                 </Button.Flyout>
             </Button>
         </StackPanel>
