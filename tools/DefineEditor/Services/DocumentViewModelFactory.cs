@@ -22,11 +22,11 @@ public static class DocumentViewModelFactory
             DefineType.PermissionModels => LoadOrFallback(node, () => PermissionModelsDocumentViewModel.Load(node.FilePath!)),
             DefineType.DbCategorySettings => LoadOrFallback(node, () => DbCategorySettingsDocumentViewModel.Load(node.FilePath!)),
             DefineType.ProgramSettings => LoadOrFallback(node, () => ProgramSettingsDocumentViewModel.Load(node.FilePath!)),
-            DefineType.MenuSettings => LoadOrFallback(node, () => MenuSettingsDocumentViewModel.Load(node.FilePath!)),
+            DefineType.MenuSettings => LoadOrFallback(node, () => MenuSettingsDocumentViewModel.Load(node.FilePath!, solution)),
             DefineType.SystemSettings => LoadOrFallback(node, () => SystemSettingsDocumentViewModel.Load(node.FilePath!)),
             DefineType.DatabaseSettings => LoadOrFallback(node, () => DatabaseSettingsDocumentViewModel.Load(node.FilePath!)),
             DefineType.TableSchema => LoadOrFallback(node, () => TableSchemaDocumentViewModel.Load(node.FilePath!)),
-            DefineType.FormLayout => LoadOrFallback(node, () => FormLayoutDocumentViewModel.Load(node.FilePath!)),
+            DefineType.FormLayout => LoadOrFallback(node, () => FormLayoutDocumentViewModel.Load(node.FilePath!, solution)),
             DefineType.Language => LoadOrFallback(node, () => LanguageDocumentViewModel.Load(node.FilePath!)),
             _ => Unsupported(node, "An editor for this define type is not implemented yet."),
         };

@@ -69,7 +69,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     public override Func<CollectionEditContext, Task<bool>?>? CollectionEditorProvider => EditMappingsInTree;
 
     /// <inheritdoc/>
-    public override Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider => ProvideRelationEditor;
+    public override Func<PropertyDescriptor, object, Func<Task<bool>>?>? ValueEditorProvider => ProvideValueEditor;
 
     private FormSchemaDocumentViewModel(string filePath, FormSchema schema, SolutionContext solution)
         // The root, its folders and the tables start expanded; fields start collapsed.
@@ -257,15 +257,25 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
-    /// The values the grid offers: the solution's form ids for a field's RelationProgId, the
-    /// language enums for its LangEnumName; for a
-    /// mapping, the fields of its own table as the destination and the fields of the related form's master table as
-    /// the source.
+    /// The values the grid offers: the database categories for the form's CategoryId, the solution's permission models
+    /// for its PermissionModelId and the master table's fields for its CurrencyField; the solution's form ids for a
+    /// field's RelationProgId, the language enums for its LangEnumName and its own table's fields for its
+    /// CurrencyField and UnitField; for a mapping, the fields of its own table as the destination and the fields of
+    /// the related form's master table as the source.
     /// </summary>
+    /// <remarks>The grid still takes a typed value; validation reports one that names nothing.</remarks>
     public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component)
     {
         switch (component)
         {
+            case FormSchema when property.Name == nameof(FormSchema.CategoryId):
+                return s_categoryIds;
+            case FormSchema when property.Name == nameof(FormSchema.PermissionModelId):
+                return Solution.PermissionModelIds() is { Count: > 0 } modelIds ? modelIds : null;
+            case FormSchema when property.Name == nameof(FormSchema.CurrencyField):
+                return FieldNames(Schema.MasterTable);
+            case FormField own when property.Name is nameof(FormField.CurrencyField) or nameof(FormField.UnitField):
+                return FieldNames(own.Table);
             case FormField when property.Name == nameof(FormField.RelationProgId):
                 return Solution.AvailableProgIds.Count > 0 ? Solution.AvailableProgIds : null;
             case FormField when property.Name == nameof(FormField.LangEnumName):
@@ -287,6 +297,14 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         }
     }
 
+    // Business forms belong in the company category, so it comes first.
+    private static readonly string[] s_categoryIds = [DbCategoryIds.Company, DbCategoryIds.Common, DbCategoryIds.Log];
+
+    private static IReadOnlyList<string>? FieldNames(FormTable? table) =>
+        table?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray() is { Length: > 0 } names
+            ? names
+            : null;
+
     /// <summary>
     /// Opens a field's relation mappings where they are edited: a stored field's in <see cref="RelationDialog"/>; any
     /// other field's by selecting its Relation group node, adding the group when the field has none yet. Every other
@@ -307,6 +325,39 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         SelectedTreeNode = group;
         // Nothing in the collection changed; the grid must not report an edit.
         return Task.FromResult(false);
+    }
+
+    /// <summary>
+    /// The dialog beside a property: the relation dialog for a stored field's RelationProgId, the field picker for the
+    /// form's ListFields and LookupFields; no editor for any other property.
+    /// </summary>
+    public Func<Task<bool>>? ProvideValueEditor(PropertyDescriptor property, object component) =>
+        ProvideRelationEditor(property, component) ?? ProvideFieldPicker(property, component);
+
+    /// <summary>
+    /// The field picker for the form's ListFields and LookupFields, which name master-table fields as a
+    /// comma-separated list; <c>null</c> for any other property or when the master table has no fields.
+    /// </summary>
+    public Func<Task<bool>>? ProvideFieldPicker(PropertyDescriptor property, object component)
+    {
+        if (component is not FormSchema schema
+            || property.Name is not (nameof(FormSchema.ListFields) or nameof(FormSchema.LookupFields))
+            || schema.MasterTable?.Fields is not { Count: > 0 } fields)
+        {
+            return null;
+        }
+        return () => PickFieldsAsync(property, schema, fields);
+    }
+
+    private static async Task<bool> PickFieldsAsync(PropertyDescriptor property, FormSchema schema, FormFieldCollection fields)
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null) return false; // smoke / headless
+        var current = property.GetValue(schema) as string ?? string.Empty;
+        var picker = new FieldPickerViewModel(property.Name, fields.Select(f => (f.FieldName, f.Caption)), current);
+        if (!await FieldPickerDialog.ShowAsync(owner, picker) || picker.Result == current) return false;
+        property.SetValue(schema, picker.Result);
+        return true;
     }
 
     /// <summary>

@@ -91,6 +91,7 @@
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>Close tab</value></data>
   <data name="TreeCommandBar_MoreActions" xml:space="preserve"><value>More actions</value></data>
+  <data name="FieldPicker_Hint" xml:space="preserve"><value>Tick the fields to list and order them with the arrows. A name that matches no field stays ticked until you untick it.</value></data>
 
   <data name="DocumentWelcome_Tip" xml:space="preserve"><value>(Pick a file from the solution tree to open it as a tab. Clicking an already-open file switches to that tab.)</value></data>
 

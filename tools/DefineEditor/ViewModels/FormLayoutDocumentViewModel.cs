@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Polhem.Core.Serialization;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.BrowserPreview;
@@ -151,11 +152,12 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     /// <summary>Whether <see cref="PaneLayout"/> is <see cref="FormLayoutPaneLayout.PropertiesOnly"/>.</summary>
     public bool IsPropertiesOnlyLayout => PaneLayout == FormLayoutPaneLayout.PropertiesOnly;
 
-    private FormLayoutDocumentViewModel(string filePath, FormLayout root)
+    private FormLayoutDocumentViewModel(string filePath, FormLayout root, SolutionContext solution)
         // The root and the two folders start expanded.
         : base(filePath, "FormLayout", keyText: root.LayoutId, new ObjectTreeOptions { ExpandDepth = 2 })
     {
         Root = root;
+        Solution = solution;
         CommandProvider = new FormLayoutCommandProvider(this);
         InitializeTree(root);
         PropertyChanged += (_, e) =>
@@ -165,15 +167,53 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
         };
     }
 
-    public static FormLayoutDocumentViewModel Load(string filePath)
+    /// <summary>The solution the layout belongs to, which supplies its form's fields and tables.</summary>
+    public SolutionContext Solution { get; }
+
+    public static FormLayoutDocumentViewModel Load(string filePath, SolutionContext? solution = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         if (!File.Exists(filePath))
             throw new FileNotFoundException("FormLayout file not found.", filePath);
         var root = XmlCodec.DeserializeFromFile<FormLayout>(filePath)
             ?? throw new InvalidOperationException($"FormLayout deserialized to null: {filePath}");
-        return new FormLayoutDocumentViewModel(filePath, root);
+        return new FormLayoutDocumentViewModel(filePath, root, solution ?? SolutionContext.Empty);
     }
+
+    public override Func<PropertyDescriptor, object, IReadOnlyList<string>?>? ValueSuggestionProvider => Suggest;
+
+    /// <summary>
+    /// The values the grid offers, read from the layout's FormSchema: the solution's form ids for the layout's ProgId,
+    /// the master table's fields for a section field, the detail tables for a grid's TableName, and the grid table's
+    /// fields for a column.
+    /// </summary>
+    /// <remarks>The grid still takes a typed value; nothing is offered when the form's FormSchema cannot be read.</remarks>
+    public IReadOnlyList<string>? Suggest(PropertyDescriptor property, object component)
+    {
+        switch (component)
+        {
+            case FormLayout when property.Name == nameof(FormLayout.ProgId):
+                return Solution.AvailableProgIds.Count > 0 ? Solution.AvailableProgIds : null;
+            case LayoutField when property.Name == nameof(LayoutField.FieldName):
+                return FieldNames(Solution.LoadFormSchema(Root.ProgId)?.MasterTable);
+            case LayoutGrid when property.Name == nameof(LayoutGrid.TableName):
+                var schema = Solution.LoadFormSchema(Root.ProgId);
+                var names = schema?.Tables?.Where(t => !ReferenceEquals(t, schema.MasterTable))
+                    .Select(t => t.TableName).Where(n => !string.IsNullOrEmpty(n)).ToArray();
+                return names is { Length: > 0 } ? names : null;
+            case LayoutColumn when property.Name == nameof(LayoutColumn.FieldName):
+                return FindAncestor<LayoutGrid>(SelectedTreeNode)?.Value is LayoutGrid grid
+                    ? FieldNames(Solution.LoadFormSchema(Root.ProgId)?.Tables?.GetOrDefault(grid.TableName))
+                    : null;
+            default:
+                return null;
+        }
+    }
+
+    private static IReadOnlyList<string>? FieldNames(FormTable? table) =>
+        table?.Fields?.Select(f => f.FieldName).Where(n => !string.IsNullOrEmpty(n)).ToArray() is { Length: > 0 } names
+            ? names
+            : null;
 
     [RelayCommand]
     private void SetPaneLayout(FormLayoutPaneLayout layout) => PaneLayout = layout;

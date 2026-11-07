@@ -78,6 +78,7 @@
   <data name="Tab_DirtyTooltip" xml:space="preserve"><value>尚未存檔</value></data>
   <data name="Tab_CloseTooltip" xml:space="preserve"><value>關閉分頁</value></data>
   <data name="TreeCommandBar_MoreActions" xml:space="preserve"><value>更多動作</value></data>
+  <data name="FieldPicker_Hint" xml:space="preserve"><value>勾選要列出的欄位，再用箭頭調整順序。對不到欄位的名稱會保持勾選，取消勾選才會移除。</value></data>
 
   <data name="DocumentWelcome_Tip" xml:space="preserve"><value>（於左側方案樹選取定義檔開啟分頁；點已開過的檔會切換到既有分頁）</value></data>
 
