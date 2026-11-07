@@ -38,3 +38,13 @@ body {
 
 .browser-preview__message { color: var(--mud-palette-text-secondary); }
 .browser-preview__message--error { color: #c62828; }
+
+/* The part of the form selected in the editor's tree. A column header is outlined inside itself, because the grid
+   clips what lies outside its cells. */
+.browser-preview__selected {
+    outline: 2px solid #0064fa;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+th.browser-preview__selected { outline-offset: -2px; }
