@@ -7,7 +7,8 @@
              x:CompileBindings="True">
 
     <!-- The commands of the selected tree node, the same ones its context menu lists: Add buttons with their text,
-         since they are what a newcomer looks for, then Delete, then the other commands in an overflow menu. -->
+         since they are what a newcomer looks for, then Move Up, Move Down, Duplicate and Delete, then the other
+         commands in an overflow menu. -->
     <StackPanel Orientation="Horizontal" Spacing="2">
         <ItemsControl ItemsSource="{Binding ToolbarAddItems}">
             <ItemsControl.ItemsPanel>
@@ -29,13 +30,21 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <Button Classes="toolbar-icon" IsVisible="{Binding ToolbarDeleteItem, Converter={x:Static ObjectConverters.IsNotNull}}"
-                Command="{Binding ToolbarDeleteItem.Command, FallbackValue={x:Null}}"
-                IsEnabled="{Binding ToolbarDeleteItem.IsEnabled, FallbackValue=False}"
-                ToolTip.Tip="{Binding ToolbarDeleteItem.Label, FallbackValue={x:Null}}"
-                AutomationProperties.Name="{Binding ToolbarDeleteItem.Label, FallbackValue={x:Null}}">
-            <PathIcon Data="{StaticResource IconDelete}"/>
-        </Button>
+        <ItemsControl ItemsSource="{Binding ToolbarEditItems}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="2"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TreeToolbarItem">
+                    <Button Classes="toolbar-icon" Command="{Binding Command}" IsEnabled="{Binding IsEnabled}"
+                            ToolTip.Tip="{Binding ToolTip}" AutomationProperties.Name="{Binding Label}">
+                        <PathIcon Data="{Binding IconKey, Converter={StaticResource IconKeyToGeometry}}"/>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <Button x:Name="MoreButton" Classes="toolbar-icon" IsVisible="{Binding HasToolbarActions}"
                 ToolTip.Tip="{loc:Loc TreeCommandBar_MoreActions}"

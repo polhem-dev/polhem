@@ -42,9 +42,11 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     [ObservableProperty]
     private IReadOnlyList<TreeToolbarItem> _toolbarAddItems = [];
 
-    /// <summary>The toolbar's Delete button, disabled when the selected node cannot be deleted.</summary>
+    /// <summary>
+    /// The toolbar's buttons that move, duplicate and delete the selected node, each disabled when it cannot run.
+    /// </summary>
     [ObservableProperty]
-    private TreeToolbarItem? _toolbarDeleteItem;
+    private IReadOnlyList<TreeToolbarItem> _toolbarEditItems = [];
 
     /// <summary>The selected node's other commands, which the toolbar keeps in its overflow menu.</summary>
     [ObservableProperty]
@@ -62,18 +64,19 @@ public abstract partial class ObjectTreeDocumentViewModelBase : DocumentViewMode
     /// </summary>
     protected void RefreshToolbar()
     {
+        NotifyArrangeCommands();
         // The subclass assigns CommandProvider in its constructor, after this class's has run.
         if (CommandProvider is not { } provider || SelectedTreeNode is not { } node)
         {
             ToolbarAddItems = [];
-            ToolbarDeleteItem = null;
+            ToolbarEditItems = [];
             ToolbarActionItems = [];
             return;
         }
 
         var commands = provider.GetToolbarCommands(node);
         ToolbarAddItems = commands.Add.Select(c => new TreeToolbarItem(c)).ToList();
-        ToolbarDeleteItem = new TreeToolbarItem(commands.Delete);
+        ToolbarEditItems = commands.Edit.Select(c => new TreeToolbarItem(c.Command, c.Shortcut)).ToList();
         ToolbarActionItems = commands.Actions.Select(c => new TreeToolbarItem(c)).ToList();
     }
 

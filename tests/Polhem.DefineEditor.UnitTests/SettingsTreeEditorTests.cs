@@ -76,7 +76,10 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.True(payroll.IsExpanded);
             var commands = CommandsFor(document, payroll);
             Assert.Equal(
-                [LocalizationService.Current["Menu_AddFolder"], LocalizationService.Current["Menu_AddEntry"], LocalizationService.Current["Action_Delete"]],
+                [
+                    LocalizationService.Current["Menu_AddFolder"], LocalizationService.Current["Menu_AddEntry"],
+                    LocalizationService.Current["Action_Duplicate"], LocalizationService.Current["Action_Delete"],
+                ],
                 commands.Select(c => c.Label));
 
             commands[1].Execute();

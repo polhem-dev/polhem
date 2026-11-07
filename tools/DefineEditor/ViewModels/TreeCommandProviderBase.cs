@@ -12,15 +12,17 @@ namespace Polhem.DefineEditor.ViewModels;
 public abstract class TreeCommandProviderBase(ObjectTreeDocumentViewModelBase document) : ITreeNodeCommandProvider
 {
     /// <summary>
-    /// The context menu: the node's Add commands, its actions, Delete when the node can be deleted, then the trailing
-    /// commands.
+    /// The context menu: the node's Add commands, its actions, then in a group of their own Move Up, Move Down,
+    /// Duplicate and Delete as far as they can run on the node, then the trailing commands.
     /// </summary>
     public IReadOnlyList<TreeNodeCommand> GetCommands(ObjectTreeNode node)
     {
         var commands = new List<TreeNodeCommand>(GetAddCommands(node));
         commands.AddRange(GetActionCommands(node));
-        if (document.DeleteCommand.CanExecute(null))
-            commands.Add(CreateDelete(beginsGroup: true));
+        var edit = GetEditCommands().Select(c => c.Command).Where(c => c.IsEnabled).ToList();
+        if (edit.Count > 0)
+            edit[0] = WithGroup(edit[0]);
+        commands.AddRange(edit);
         commands.AddRange(GetTrailingCommands(node));
         return commands;
     }
@@ -49,7 +51,7 @@ public abstract class TreeCommandProviderBase(ObjectTreeDocumentViewModelBase do
 
         var actions = new List<TreeNodeCommand>(GetActionCommands(node));
         actions.AddRange(GetTrailingCommands(node).Select(WithoutGroup));
-        return new TreeToolbarCommands(add, CreateDelete(beginsGroup: false), actions);
+        return new TreeToolbarCommands(add, GetEditCommands(), actions);
     }
 
     /// <summary>The commands that add a child to <paramref name="node"/>, in menu order.</summary>
@@ -73,8 +75,16 @@ public abstract class TreeCommandProviderBase(ObjectTreeDocumentViewModelBase do
             BeginsGroup = beginsGroup,
         };
 
-    private TreeNodeCommand CreateDelete(bool beginsGroup) =>
-        Create("Action_Delete", "IconDelete", document.DeleteCommand, beginsGroup);
+    private List<TreeEditCommand> GetEditCommands() =>
+    [
+        new(Create("Action_MoveUp", "IconArrowUp", document.MoveUpCommand), TreeShortcuts.MoveUp),
+        new(Create("Action_MoveDown", "IconArrowDown", document.MoveDownCommand), TreeShortcuts.MoveDown),
+        new(Create("Action_Duplicate", "IconCopy", document.DuplicateCommand), TreeShortcuts.Duplicate),
+        new(Create("Action_Delete", "IconDelete", document.DeleteCommand), TreeShortcuts.Delete),
+    ];
+
+    private static TreeNodeCommand WithGroup(TreeNodeCommand command) =>
+        new(command.Label, command.Execute) { IconKey = command.IconKey, IsEnabled = command.IsEnabled, BeginsGroup = true };
 
     // The overflow menu lists the actions and the trailing commands as one group.
     private static TreeNodeCommand WithoutGroup(TreeNodeCommand command) =>

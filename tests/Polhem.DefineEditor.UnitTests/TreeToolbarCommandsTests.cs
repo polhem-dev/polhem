@@ -31,6 +31,9 @@ namespace Polhem.DefineEditor.UnitTests
 
         private static string Text(string key) => LocalizationService.Current[key];
 
+        private static TreeNodeCommand Edit(TreeToolbarCommands commands, string labelKey) =>
+            commands.Edit.Single(c => c.Command.Label == Text(labelKey)).Command;
+
         private string Save<T>(T value, string fileName)
         {
             var path = Path.Combine(_directory, fileName);
@@ -62,7 +65,7 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.Equal([Text("FormSchema_AddField"), Text("FormSchema_AddTable")], commands.Add.Select(c => c.Label));
             Assert.All(commands.Add, c => Assert.True(c.IsEnabled));
-            Assert.True(commands.Delete.IsEnabled);
+            Assert.True(Edit(commands, "Action_Delete").IsEnabled);
             Assert.Empty(commands.Actions);
         }
 
@@ -76,7 +79,7 @@ namespace Polhem.DefineEditor.UnitTests
             var commands = document.CommandProvider.GetToolbarCommands(document.RootNode);
 
             Assert.Empty(commands.Add);
-            Assert.False(commands.Delete.IsEnabled);
+            Assert.False(Edit(commands, "Action_Delete").IsEnabled);
             Assert.Equal(
                 [
                     Text("FormSchema_GenerateFormLayout"), Text("FormSchema_ExportWorkbook"), Text("FormSchema_SyncDefinitions"),
@@ -111,11 +114,11 @@ namespace Polhem.DefineEditor.UnitTests
 
             document.SelectedTreeNode = tablesFolder;
             Assert.Equal([Text("FormSchema_AddTable")], document.ToolbarAddItems.Select(i => i.Label));
-            Assert.False(document.ToolbarDeleteItem!.IsEnabled);
+            Assert.False(document.ToolbarEditItems.Single(i => i.Label == Text("Action_Delete")).IsEnabled);
 
             document.SelectedTreeNode = tablesFolder.Children[0];
             Assert.Equal([Text("FormSchema_AddField"), Text("FormSchema_AddTable")], document.ToolbarAddItems.Select(i => i.Label));
-            Assert.True(document.ToolbarDeleteItem!.IsEnabled);
+            Assert.True(document.ToolbarEditItems.Single(i => i.Label == Text("Action_Delete")).IsEnabled);
             Assert.False(document.HasToolbarActions);
         }
 
@@ -187,7 +190,7 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.DoesNotContain(commands.Add, c => c.Label == Text("DatabaseSettings_PasteConnectionString"));
             Assert.Equal([Text("DatabaseSettings_PasteConnectionString")], commands.Actions.Select(c => c.Label));
             Assert.Equal(
-                [Text("DatabaseSettings_PasteConnectionString"), Text("Action_Delete")],
+                [Text("DatabaseSettings_PasteConnectionString"), Text("Action_Duplicate"), Text("Action_Delete")],
                 document.CommandProvider.GetCommands(server).Select(c => c.Label));
         }
     }
