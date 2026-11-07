@@ -13,21 +13,23 @@
 <PageTitle>@(_snapshot?.Title ?? "Polhem DefineEditor")</PageTitle>
 <PolhemMudProviders />
 
-@if (_error is not null)
-{
-    <p class="browser-preview__message browser-preview__message--error">@_error</p>
-}
-else if (_layout is null)
-{
-    <p class="browser-preview__message">@LocalizationService.Current["BrowserPreview_NotPublished"]</p>
-}
-else
-{
-    <div class="@(_snapshot!.IsCompact ? "browser-preview browser-preview--compact" : "browser-preview")">
-        <FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode" IsCompact="_snapshot.IsCompact"
-                             IdPrefix="@IdPrefix" />
-    </div>
-}
+<div class="@(IsDarkCanvas ? "browser-preview-canvas browser-preview-canvas--dark" : "browser-preview-canvas")">
+    @if (_error is not null)
+    {
+        <p class="browser-preview__message browser-preview__message--error">@_error</p>
+    }
+    else if (_layout is null)
+    {
+        <p class="browser-preview__message">@LocalizationService.Current["BrowserPreview_NotPublished"]</p>
+    }
+    else
+    {
+        <div class="@(_snapshot!.IsCompact ? "browser-preview browser-preview--compact" : "browser-preview")">
+            <FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode" IsCompact="_snapshot.IsCompact"
+                                 IdPrefix="@IdPrefix" />
+        </div>
+    }
+</div>
 
 @code {
     private const string IdPrefix = "preview";
@@ -39,6 +41,15 @@ else
     /// <summary>Gets or sets the URL token; the host checks it before the page is reached.</summary>
     [Parameter]
     public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the canvas around the form: <c>dark</c> when the editor that shows the page uses its dark theme. A
+    /// browser opened from the editor passes nothing and gets the light canvas.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "canvas")]
+    public string? Canvas { get; set; }
+
+    private bool IsDarkCanvas => string.Equals(Canvas, "dark", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Gets or sets the id of the document to show.</summary>
     [Parameter]

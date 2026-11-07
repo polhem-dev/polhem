@@ -59,10 +59,15 @@
             <TextBlock x:Name="ErrorText" DockPanel.Dock="Top" IsVisible="False" TextWrapping="Wrap" Margin="12,8,12,0"
                        Foreground="{DynamicResource SemiColorDanger}"/>
             <Panel>
-                <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled"
-                              IsVisible="{Binding !IsWebPreview}">
-                    <controls:FormLayoutPresenter x:Name="LayoutPresenter" Margin="12"/>
-                </ScrollViewer>
+                <!-- The canvas belongs to the editor and the sheet on it to the application, so the form stands apart from
+                     the editor's own controls. -->
+                <Border Classes="preview-canvas" IsVisible="{Binding !IsWebPreview}">
+                    <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled">
+                        <Border x:Name="PreviewSheet" Classes="preview-sheet">
+                            <controls:FormLayoutPresenter x:Name="LayoutPresenter"/>
+                        </Border>
+                    </ScrollViewer>
+                </Border>
                 <views:WebPreviewPane x:Name="WebPane" IsVisible="{Binding IsWebPreview}"/>
             </Panel>
         </DockPanel>

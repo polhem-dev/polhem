@@ -103,7 +103,10 @@ public partial class FormLayoutPreview : UserControl
 
         var compact = document.IsPreviewCompact;
         LayoutPresenter.Width = compact ? CompactWidth : double.NaN;
-        LayoutPresenter.HorizontalAlignment = compact ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+        // The phone sits in the middle of the canvas in a frame of its own; a desktop form fills it, as an application's
+        // content area does.
+        PreviewSheet.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+        PreviewSheet.Classes.Set("phone", compact);
         // A pane narrower than the phone scrolls sideways instead of squeezing the phone form.
         PreviewScroller.HorizontalScrollBarVisibility = compact ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
         try
