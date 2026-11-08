@@ -32,6 +32,8 @@ follows the operating system (English or Traditional Chinese; anything else fall
 `Language=en` or `Language=zh-TW` argument on the command line sets it for one run without changing the remembered
 choice, which is what scripted runs such as smoke tests use. After sign-in the account's culture decides, as
 `ClientInfo.ApplyLoginResult` makes it the process culture; signing out returns to the language the switch shows.
+The Semi theme's own text, such as a date picker's year / month / day placeholders, follows the same language; for a
+language Semi does not ship it falls back to English.
 
 The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; light unless `ShellOptions.DefaultThemeVariant` says otherwise, with a light/dark switch on the forms screen) and registers the API
 bridge as `UIServices.Provider`. It adds no font: the head chooses one.

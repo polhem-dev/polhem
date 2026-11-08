@@ -30,6 +30,7 @@
 登入前的介面語言：應用程式設了 `ShellOptions.DefaultLanguage` 就用它，否則跟隨作業系統（英文或繁體中文；其他語言退回英文），可在連線與登入畫面切換，選擇會被記住。
 命令列加上 `Language=en` 或 `Language=zh-TW` 可指定單次執行的語言，不會改動記住的選擇；smoke test 這類自動化執行就是用它。
 登入後改由帳號的 culture 決定：`ClientInfo.ApplyLoginResult` 會把它設為整個 process 的 culture；登出後回到語言選單上顯示的語言。
+Semi 主題自帶的文字（例如日期選擇器的年／月／日提示）也跟著同一個語言；Semi 沒有的語言退回英文。
 
 殼會以 DefineEditor 的配色套用 Semi 主題（`Polhem.UI.Avalonia` 的 `VisualStudioTheme`；預設淺色，可用 `ShellOptions.DefaultThemeVariant` 改為深色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，
 由各端自行選擇。

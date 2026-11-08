@@ -89,6 +89,9 @@ namespace Polhem.UI.Avalonia.Shell
                 ShellLanguage.ResolveInitial(
                     ShellLanguage.FindArgument(Environment.GetCommandLineArgs()), remembered, options.DefaultLanguage,
                     CultureInfo.CurrentUICulture));
+            SemiLocale.Apply(this, ShellLocalizer.Current.Culture);
+            // The application lives as long as the process, so this subscription needs no removal.
+            ShellLocalizer.Current.CultureChanged += (_, _) => SemiLocale.Apply(this, ShellLocalizer.Current.Culture);
 
             var viewModel = new ShellViewModel(options, preferences);
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
