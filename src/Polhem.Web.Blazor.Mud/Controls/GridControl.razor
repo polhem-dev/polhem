@@ -121,8 +121,6 @@
 }
 
 @code {
-    // The default width keeps an editor whole when its cell opens, so the row does not jump.
-    private const int DefaultColumnWidth = 120;
     private const string OpenPopupSelector = ".mud-popover-open";
 
     private List<DataRow> _rows = [];
@@ -171,5 +169,5 @@
 
     private static string ColumnStyle(LayoutColumn column)
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,
-            $"min-width:{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
+            $"min-width:{GridColumnRules.GetMinWidth(column)}px");
 }
