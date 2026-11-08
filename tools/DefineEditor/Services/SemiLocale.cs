@@ -11,7 +11,7 @@ namespace Polhem.DefineEditor.Services;
 /// <remarks>
 /// Semi matches a culture exactly and otherwise keeps Simplified Chinese, so the editor's neutral <c>en</c> would
 /// leave its placeholders in Chinese. <c>Polhem.UI.Avalonia.Shell</c> carries the same lookup in its own
-/// <c>SemiLocale</c>; the editor does not reference the shell, so a change to the lookup belongs in both.
+/// copy of this class under the same name; the editor does not reference the shell, so a change to the lookup belongs in both.
 /// </remarks>
 public static class SemiLocale
 {

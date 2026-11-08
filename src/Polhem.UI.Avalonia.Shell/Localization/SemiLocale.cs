@@ -11,7 +11,7 @@ namespace Polhem.UI.Avalonia.Shell.Localization
     /// <remarks>
     /// Semi matches a culture exactly and otherwise keeps Simplified Chinese, so a neutral language such as <c>en</c>,
     /// or a system culture such as <c>en-TW</c>, would leave its placeholders in Chinese. DefineEditor carries the same
-    /// lookup in its <c>SemiLocale</c>, because it does not reference the shell.
+    /// lookup in a copy of this class under the same name, because it does not reference the shell.
     /// </remarks>
     internal static class SemiLocale
     {
