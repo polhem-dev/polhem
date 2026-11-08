@@ -123,6 +123,10 @@ public partial class App : Application
         var settings = UserSettings.Load();
         LocalizationService.Current.Culture = CultureInfo.GetCultureInfo(settings.Language);
 
+        // Semi's own text (the preview's date picker placeholders among it) follows the editor's language too.
+        SemiLocale.Apply(this, LocalizationService.Current.Culture);
+        LocalizationService.Current.CultureChanged += (_, culture) => SemiLocale.Apply(this, culture);
+
         // The framework controls (the property grid's reset command, collection summary and dialog buttons) read their
         // text through UIText, which by default follows the operating system's UI culture. Follow the editor's
         // language instead; the text is read when a control is built, so EditorPane refreshes its grid on a switch.
