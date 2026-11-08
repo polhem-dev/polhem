@@ -5,6 +5,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Sorting;
 using Polhem.Core.Data;
 using Polhem.Core;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -102,6 +103,9 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 templateColumn.Width = new DataGridLength(1, DataGridLengthUnitType.Star);
             }
+            // A star column still fills a wide grid; on a narrow one (a phone-sized form) the minimum makes the grid
+            // scroll sideways instead of cutting every header short, the same as the web heads.
+            templateColumn.MinWidth = GridColumnRules.GetMinWidth(column);
 
             return templateColumn;
         }

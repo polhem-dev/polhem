@@ -117,8 +117,6 @@
 }
 
 @code {
-    // The default width keeps an editor whole when its cell opens, so the row does not jump.
-    private const int DefaultColumnWidth = 120;
     // What `fluent-listbox` and the calendar use while they are open.
     private const string OpenPopupSelector = ":popover-open";
     // A Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
@@ -179,7 +177,7 @@
 
     private static string ColumnWidth(LayoutColumn column)
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,
-            $"{(column.Width > 0 ? column.Width : DefaultColumnWidth)}px");
+            $"{GridColumnRules.GetMinWidth(column)}px");
 
     // A column the layout gives no width has none on its header, so it shares the space the others leave (see the filler
     // cell in polhem-fluent.css) instead of keeping the default width with the rest of the grid empty. A drag gives it one.
@@ -196,7 +194,7 @@
             .Where(column => IsIdentifier(column.FieldName))
             .Select(column => $".{_gridClass} th[data-column-key={column.FieldName}]{{min-width:{ColumnWidth(column)}}}"))
             + string.Create(System.Globalization.CultureInfo.InvariantCulture,
-                $".{_gridClass} table{{min-width:{VisibleColumns.Sum(column => column.Width > 0 ? column.Width : DefaultColumnWidth)}px}}");
+                $".{_gridClass} table{{min-width:{VisibleColumns.Sum(GridColumnRules.GetMinWidth)}px}}");
 
     private static bool IsIdentifier(string name)
         => name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_')
