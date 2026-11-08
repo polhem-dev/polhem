@@ -13,6 +13,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
@@ -130,6 +131,18 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             Assert.Equal(120d, grid.InnerGrid.Columns[1].Width.Value);
             Assert.Equal(DataGridLengthUnitType.Pixel, grid.InnerGrid.Columns[1].Width.UnitType);
             Assert.Equal(DataGridLengthUnitType.Star, grid.InnerGrid.Columns[0].Width.UnitType);
+        }
+
+        [Fact]
+        [DisplayName("A star column keeps the shared minimum width, so a narrow grid scrolls instead of cutting headers")]
+        public void Bind_ColumnWithoutWidth_KeepsSharedMinimumWidth()
+        {
+            var grid = new GridControl();
+
+            grid.Bind(BuildEmployeeListLayout(), BuildEmployeeRows());
+
+            Assert.Equal(GridColumnRules.DefaultMinWidth, grid.InnerGrid.Columns[0].MinWidth);
+            Assert.Equal(120d, grid.InnerGrid.Columns[1].MinWidth);
         }
 
         [Fact]

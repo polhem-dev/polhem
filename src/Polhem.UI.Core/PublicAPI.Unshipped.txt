@@ -1,1 +1,4 @@
 #nullable enable
+const Polhem.UI.Core.Fields.GridColumnRules.DefaultMinWidth = 120 -> int
+Polhem.UI.Core.Fields.GridColumnRules
+static Polhem.UI.Core.Fields.GridColumnRules.GetMinWidth(Polhem.Definition.Layouts.LayoutColumn! column) -> int
