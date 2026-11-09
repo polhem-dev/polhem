@@ -13,13 +13,15 @@ namespace Polhem.DefineEditor.Views;
 /// </summary>
 /// <remarks>
 /// The page follows the document through the browser preview server, as any browser showing it does, so this pane only
-/// opens it. It creates the web view the first time it is shown, and only when <see cref="WebViewEngineAvailability"/>
-/// finds the engine; otherwise it explains why and offers the browser instead.
+/// opens it, and opens it again when the document switches to the other Blazor package. It creates the web view the
+/// first time it is shown, and only when <see cref="WebViewEngineAvailability"/> finds the engine; otherwise it explains
+/// why and offers the browser instead.
 /// </remarks>
 public partial class WebPreviewPane : UserControl
 {
     private NativeWebView? _webView;
     private Uri? _pageUrl;
+    private BrowserPreviewUi _pageUi;
     private bool _loading;
 
     public WebPreviewPane()
@@ -34,11 +36,11 @@ public partial class WebPreviewPane : UserControl
     }
 
     /// <summary>
-    /// Opens the document's preview page, unless it is open or opening already.
+    /// Opens the document's preview page in the package it asks for, unless that page is open or opening already.
     /// </summary>
     public async void EnsureLoaded(FormLayoutDocumentViewModel document)
     {
-        if (_webView is not null || _loading) return;
+        if (_loading || (_webView is not null && _pageUi == document.PreviewWebUi)) return;
 
         if (WebViewEngineAvailability.GetUnavailableReason() is { } reason)
         {
@@ -49,9 +51,14 @@ public partial class WebPreviewPane : UserControl
         _loading = true;
         try
         {
+            var ui = document.PreviewWebUi;
             _pageUrl = await document.PublishBrowserPreviewAsync(BrowserPreviewHost.Shared);
-            _webView = CreateWebView();
-            WebViewHost.Children.Add(_webView);
+            _pageUi = ui;
+            if (_webView is null)
+            {
+                _webView = CreateWebView();
+                WebViewHost.Children.Add(_webView);
+            }
             _webView.Source = WithCanvas(_pageUrl);
         }
         catch (InvalidOperationException ex)
@@ -66,13 +73,19 @@ public partial class WebPreviewPane : UserControl
         {
             _loading = false;
         }
+        // The document may have switched packages while its page was being published.
+        if (_webView is not null && document.IsWebPreview && _pageUi != document.PreviewWebUi)
+            EnsureLoaded(document);
     }
 
     // The canvas around the form follows the editor's theme; the form itself keeps the application's light theme.
-    private Uri WithCanvas(Uri pageUrl) => new UriBuilder(pageUrl)
+    // The URL already carries the package in its query, so the canvas is added to it.
+    private Uri WithCanvas(Uri pageUrl)
     {
-        Query = ActualThemeVariant == ThemeVariant.Dark ? "canvas=dark" : "canvas=light",
-    }.Uri;
+        var canvas = ActualThemeVariant == ThemeVariant.Dark ? "canvas=dark" : "canvas=light";
+        var query = pageUrl.Query.TrimStart('?');
+        return new UriBuilder(pageUrl) { Query = query.Length == 0 ? canvas : query + "&" + canvas }.Uri;
+    }
 
     private NativeWebView CreateWebView()
     {

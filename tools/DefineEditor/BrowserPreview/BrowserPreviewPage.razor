@@ -4,14 +4,19 @@
 @using Polhem.Core.Serialization
 @using Polhem.Definition.Layouts
 @using Polhem.DefineEditor.Services
-@using Polhem.Web.Blazor.Mud.Controls
-@using Polhem.Web.Blazor.Mud.Theming
 @implements IDisposable
 @inject BrowserPreviewHub Hub
 @inject IJSRuntime JS
 
 <PageTitle>@(_snapshot?.Title ?? "Polhem DefineEditor")</PageTitle>
-<PolhemMudProviders />
+@if (IsFluent)
+{
+    <Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders />
+}
+else
+{
+    <Polhem.Web.Blazor.Mud.Theming.PolhemMudProviders />
+}
 
 <div class="@(IsDarkCanvas ? "browser-preview-canvas browser-preview-canvas--dark" : "browser-preview-canvas")">
     @if (_error is not null)
@@ -25,8 +30,16 @@
     else
     {
         <div class="@(_snapshot!.IsCompact ? "browser-preview browser-preview--compact" : "browser-preview")">
-            <FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode" IsCompact="_snapshot.IsCompact"
-                                 IdPrefix="@IdPrefix" />
+            @if (IsFluent)
+            {
+                <Polhem.Web.Blazor.Fluent.Controls.FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode"
+                                                                       IsCompact="_snapshot.IsCompact" IdPrefix="@IdPrefix" />
+            }
+            else
+            {
+                <Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter Layout="_layout" FormMode="_snapshot.FormMode"
+                                                                    IsCompact="_snapshot.IsCompact" IdPrefix="@IdPrefix" />
+            }
         </div>
     }
 </div>
@@ -51,6 +64,15 @@
     public string? Canvas { get; set; }
 
     private bool IsDarkCanvas => string.Equals(Canvas, "dark", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets or sets the package that draws the form, a <see cref="BrowserPreviewUi"/> by
+    /// <see cref="BrowserPreviewHost.ParseUi"/>; the document links that package's stylesheets from the same query.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = BrowserPreviewHost.UiQueryName)]
+    public string? Ui { get; set; }
+
+    private bool IsFluent => BrowserPreviewHost.ParseUi(Ui) == BrowserPreviewUi.Fluent;
 
     /// <summary>Gets or sets the id of the document to show.</summary>
     [Parameter]

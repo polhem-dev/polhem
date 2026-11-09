@@ -35,10 +35,10 @@ namespace Polhem.DefineEditor.UnitTests
             await _host.DisposeAsync();
         }
 
-        private async Task<(Uri Url, string Html)> GetPageAsync()
+        private async Task<(Uri Url, string Html)> GetPageAsync(BrowserPreviewUi ui = BrowserPreviewUi.Mud)
         {
             var documentId = _hub.GetDocumentId("Order.FormLayout.xml");
-            var url = await _host.GetDocumentUrlAsync(documentId);
+            var url = await _host.GetDocumentUrlAsync(documentId, ui);
             _hub.Publish(documentId, new BrowserPreviewSnapshot("Order", XmlCodec.Serialize(BrowserPreviewHostTests.CreateLayout()),
                 SingleFormMode.Edit, IsCompact: false, ShowFieldNames: true));
             return (url, await _client.GetStringAsync(url));
@@ -59,10 +59,48 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Every script and stylesheet the page references is served")]
-        public async Task Page_EveryReferencedAssetIsServed()
+        [DisplayName("The Fluent UI page loads the Fluent UI stylesheets and none of MudBlazor's")]
+        public async Task FluentPage_ReferencesItsOwnAssetsOnly()
         {
-            var (url, html) = await GetPageAsync();
+            var (_, html) = await GetPageAsync(BrowserPreviewUi.Fluent);
+
+            var paths = s_assetReference.Matches(html).Select(m => m.Groups["path"].Value).ToList();
+
+            Assert.Contains(paths, p => p.StartsWith("_framework/blazor.web", StringComparison.Ordinal));
+            Assert.Contains(paths, p => p.StartsWith("_content/Microsoft.FluentUI.AspNetCore.Components/", StringComparison.Ordinal));
+            Assert.Contains(paths, p => p.StartsWith("_content/Polhem.Web.Blazor.Fluent/polhem-fluent", StringComparison.Ordinal));
+            Assert.DoesNotContain(paths, p => p.Contains("MudBlazor", StringComparison.Ordinal) || p.Contains(".Mud/", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("The MudBlazor page loads none of the Fluent UI stylesheets")]
+        public async Task MudPage_ReferencesNoFluentAssets()
+        {
+            var (_, html) = await GetPageAsync(BrowserPreviewUi.Mud);
+
+            var paths = s_assetReference.Matches(html).Select(m => m.Groups["path"].Value).ToList();
+
+            Assert.DoesNotContain(paths, p => p.Contains("FluentUI", StringComparison.Ordinal) || p.Contains(".Fluent/", StringComparison.Ordinal));
+        }
+
+        [Theory]
+        [InlineData(BrowserPreviewUi.Mud, true)]
+        [InlineData(BrowserPreviewUi.Fluent, false)]
+        [DisplayName("Only the MudBlazor page turns off the stylesheet the Fluent UI script adds to every page")]
+        public async Task Page_FluentDefaultStyleSwitch(BrowserPreviewUi ui, bool switchedOff)
+        {
+            var (_, html) = await GetPageAsync(ui);
+
+            Assert.Equal(switchedOff, html.Contains("<body no-fuib-style", StringComparison.Ordinal));
+        }
+
+        [Theory]
+        [InlineData(BrowserPreviewUi.Mud)]
+        [InlineData(BrowserPreviewUi.Fluent)]
+        [DisplayName("Every script and stylesheet the page references is served")]
+        public async Task Page_EveryReferencedAssetIsServed(BrowserPreviewUi ui)
+        {
+            var (url, html) = await GetPageAsync(ui);
             var paths = s_assetReference.Matches(html).Select(m => m.Groups["path"].Value).ToList();
             Assert.NotEmpty(paths);
 

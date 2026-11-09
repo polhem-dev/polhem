@@ -5,13 +5,15 @@ using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Polhem.Web.Blazor.Fluent.DependencyInjection;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 
 namespace Polhem.DefineEditor.BrowserPreview;
 
 /// <summary>
 /// The in-process web server behind the browser preview: Kestrel on the loopback address, serving one Blazor Server
-/// page that renders a FormLayout with the framework's <see cref="Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter"/>.
+/// page that renders a FormLayout with the framework's <see cref="Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter"/>
+/// or <see cref="Polhem.Web.Blazor.Fluent.Controls.FormLayoutPresenter"/>, as the page URL's <c>ui</c> query asks.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,6 +30,9 @@ namespace Polhem.DefineEditor.BrowserPreview;
 public sealed class BrowserPreviewHost : IAsyncDisposable
 {
     internal const string PreviewPathPrefix = "/preview/";
+
+    /// <summary>The name of the page URL's query that picks a <see cref="BrowserPreviewUi"/>.</summary>
+    public const string UiQueryName = "ui";
 
     private static readonly Lazy<BrowserPreviewHost> s_shared =
         new(() => new BrowserPreviewHost(new BrowserPreviewHub(), static () => Services.LocalizationService.Current.Culture));
@@ -73,11 +78,25 @@ public sealed class BrowserPreviewHost : IAsyncDisposable
     /// Returns the preview URL of a document, starting the server if it is not running.
     /// </summary>
     /// <param name="documentId">The id from <see cref="BrowserPreviewHub.GetDocumentId"/>.</param>
-    public async Task<Uri> GetDocumentUrlAsync(string documentId)
+    /// <param name="ui">The package the page draws the layout with.</param>
+    public async Task<Uri> GetDocumentUrlAsync(string documentId, BrowserPreviewUi ui = BrowserPreviewUi.Mud)
     {
         var baseAddress = await StartAsync().ConfigureAwait(false);
-        return new Uri(baseAddress, string.Create(CultureInfo.InvariantCulture, $"{PreviewPathPrefix}{_token}/{documentId}"));
+        return new Uri(baseAddress,
+            string.Create(CultureInfo.InvariantCulture, $"{PreviewPathPrefix}{_token}/{documentId}?{UiQueryName}={UiQueryValue(ui)}"));
     }
+
+    /// <summary>
+    /// Returns the package a page URL's <c>ui</c> query names: <see cref="BrowserPreviewUi.Mud"/> for anything other
+    /// than the Fluent value, so a URL without the query draws as it did before the Fluent package was offered.
+    /// </summary>
+    /// <param name="value">The query's value, or <c>null</c> when the URL has none.</param>
+    public static BrowserPreviewUi ParseUi(string? value)
+        => string.Equals(value, UiQueryValue(BrowserPreviewUi.Fluent), StringComparison.OrdinalIgnoreCase)
+            ? BrowserPreviewUi.Fluent
+            : BrowserPreviewUi.Mud;
+
+    private static string UiQueryValue(BrowserPreviewUi ui) => ui == BrowserPreviewUi.Fluent ? "fluent" : "mud";
 
     /// <summary>
     /// Starts the server if it is not running and returns its base address.
@@ -160,6 +179,7 @@ public sealed class BrowserPreviewHost : IAsyncDisposable
         // to live as long as this process, so keep them in memory.
         builder.Services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
         builder.Services.AddPolhemMud();
+        builder.Services.AddPolhemFluent();
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
         builder.Services.AddSingleton(Hub);
         return builder.Build();

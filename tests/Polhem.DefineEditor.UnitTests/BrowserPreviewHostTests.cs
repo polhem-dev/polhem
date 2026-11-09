@@ -39,10 +39,11 @@ namespace Polhem.DefineEditor.UnitTests
             return layout;
         }
 
-        private async Task<Uri> PublishAsync(string documentKey, BrowserPreviewSnapshot snapshot)
+        private async Task<Uri> PublishAsync(string documentKey, BrowserPreviewSnapshot snapshot,
+            BrowserPreviewUi ui = BrowserPreviewUi.Mud)
         {
             var documentId = _hub.GetDocumentId(documentKey);
-            var url = await _host.GetDocumentUrlAsync(documentId);
+            var url = await _host.GetDocumentUrlAsync(documentId, ui);
             _hub.Publish(documentId, snapshot);
             return url;
         }
@@ -61,6 +62,45 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.Contains("polhem-form-layout", html, StringComparison.Ordinal);
             Assert.Contains("id=\"preview-sys_id\"", html, StringComparison.Ordinal);
             Assert.Contains("grid-column:span 2", html, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A preview URL for Fluent UI renders the published layout with the Fluent UI presenter")]
+        public async Task GetDocumentUrlAsync_Fluent_RendersWithTheFluentPresenter()
+        {
+            var url = await PublishAsync("Order.FormLayout.xml", Snapshot(CreateLayout()), BrowserPreviewUi.Fluent);
+
+            var html = await _client.GetStringAsync(url);
+
+            Assert.Contains("polhem-form-layout", html, StringComparison.Ordinal);
+            Assert.Contains("id=\"preview-sys_id\"", html, StringComparison.Ordinal);
+            Assert.Contains("<fluent-", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("mud-", html, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A preview URL without the ui query renders with the MudBlazor presenter, as before Fluent UI was offered")]
+        public async Task Get_WithoutUiQuery_RendersWithTheMudPresenter()
+        {
+            var url = await PublishAsync("Order.FormLayout.xml", Snapshot(CreateLayout()));
+
+            var html = await _client.GetStringAsync(new UriBuilder(url) { Query = string.Empty }.Uri);
+
+            Assert.Contains("id=\"preview-sys_id\"", html, StringComparison.Ordinal);
+            Assert.Contains("mud-", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("<fluent-", html, StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [InlineData(null, BrowserPreviewUi.Mud)]
+        [InlineData("mud", BrowserPreviewUi.Mud)]
+        [InlineData("fluent", BrowserPreviewUi.Fluent)]
+        [InlineData("Fluent", BrowserPreviewUi.Fluent)]
+        [InlineData("wasm", BrowserPreviewUi.Mud)]
+        [DisplayName("The ui query names Fluent UI by its value, and anything else draws with MudBlazor")]
+        public void ParseUi_ReturnsThePackage(string? value, BrowserPreviewUi expected)
+        {
+            Assert.Equal(expected, BrowserPreviewHost.ParseUi(value));
         }
 
         [Fact]

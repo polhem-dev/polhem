@@ -111,7 +111,7 @@
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>Validation results</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>Open in browser</value></data>
-  <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>Open this layout in the web browser, drawn by the Blazor Server components. Unsaved edits and the preview options follow along.</value></data>
+  <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>Open this preview in the web browser, drawn by the same components. Unsaved edits and the preview options follow along.</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>Properties — {0}</value></data>
@@ -122,8 +122,10 @@
   <data name="Preview_Avalonia" xml:space="preserve"><value>Avalonia</value></data>
   <data name="Preview_AvaloniaTooltip" xml:space="preserve"><value>Draw the preview with the Avalonia controls, as a desktop or mobile application shows the form</value></data>
   <data name="Preview_Engine" xml:space="preserve"><value>Preview engine</value></data>
-  <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
-  <data name="Preview_WebTooltip" xml:space="preserve"><value>Draw the preview with the Blazor components in a web view inside the editor, as a web application shows the form. Unsaved edits and the preview options follow along.</value></data>
+  <data name="Preview_Mud" xml:space="preserve"><value>MudBlazor</value></data>
+  <data name="Preview_MudTooltip" xml:space="preserve"><value>Draw the preview with the MudBlazor components in a web view inside the editor, as a web application built on Polhem.Web.Blazor.Mud shows the form. Unsaved edits and the preview options follow along.</value></data>
+  <data name="Preview_Fluent" xml:space="preserve"><value>Fluent UI</value></data>
+  <data name="Preview_FluentTooltip" xml:space="preserve"><value>Draw the preview with the Fluent UI components in a web view inside the editor, as a web application built on Polhem.Web.Blazor.Fluent shows the form. Unsaved edits and the preview options follow along.</value></data>
   <data name="Preview_WebUnavailable" xml:space="preserve"><value>The web preview cannot run on this computer: {0}</value></data>
   <data name="Preview_WebLoadFailed" xml:space="preserve"><value>The web preview could not load the page.</value></data>
   <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>The browser preview could not start: {0}</value></data>
