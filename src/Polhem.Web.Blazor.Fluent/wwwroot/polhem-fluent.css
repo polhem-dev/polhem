@@ -34,6 +34,12 @@ fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) {
 .polhem-grid-cell__text:hover, .polhem-grid-cell__text:focus { outline-color: var(--colorNeutralStroke1); }
 .polhem-form-page__dirty { color: var(--colorStatusWarningForeground1); margin-left: 8px; font-size: 13px; }
 .polhem-form-layout__label--required { color: var(--colorBrandForeground1); }
+/* Each section and detail sits on a surface of its own, as the outlined paper of the MudBlazor package draws it. */
+.polhem-form-layout__section, .polhem-form-layout__detail {
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground1);
+}
 .polhem-grid-filter__button { min-width: 0; }
 .polhem-grid-filter__error { color: var(--colorStatusDangerForeground1); font-size: 13px; }
 .polhem-card { padding: 10px; border: 1px solid var(--colorNeutralStroke1); border-radius: 6px; cursor: pointer; }
