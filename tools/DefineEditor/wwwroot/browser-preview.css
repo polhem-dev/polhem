@@ -1,7 +1,7 @@
 /* The sheet the form sits on follows the polhem-blazor-server template (its app.css and the shell's main area), so
    the form looks as it does in an app built from the template. The canvas around it belongs to the editor, and is
    dark when the editor that shows the page is; its colors are the editor's PreviewCanvasBackground
-   (Styles/WorkbenchColors.axaml). */
+   (Styles/WorkbenchColors.axaml). The form then takes the UI package's dark theme, so the sheet darkens with it. */
 :root { color-scheme: light; }
 
 body {
@@ -26,7 +26,11 @@ html > body {
     background: #e4e7eb;
 }
 
-.browser-preview-canvas--dark { background: #1c1d21; }
+.browser-preview-canvas--dark {
+    color-scheme: dark;
+    color: #e6e7ea;
+    background: #1c1d21;
+}
 
 .browser-preview {
     padding: 12px;
@@ -47,6 +51,14 @@ html > body {
 /* A color of its own: the page draws with either UI package, and neither one's variables exist under the other. */
 .browser-preview__message { color: #57606a; }
 .browser-preview__message--error { color: #c62828; }
+
+.browser-preview-canvas--dark .browser-preview {
+    border-color: #3d3f45;
+    background: #26272c;
+}
+
+.browser-preview-canvas--dark .browser-preview__message { color: #a0a4ab; }
+.browser-preview-canvas--dark .browser-preview__message--error { color: #ef9a9a; }
 
 /* The part of the form selected in the editor's tree. A column header is outlined inside itself, because the grid
    clips what lies outside its cells. */

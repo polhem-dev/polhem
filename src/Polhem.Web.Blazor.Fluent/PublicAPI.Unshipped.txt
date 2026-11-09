@@ -5,3 +5,6 @@ Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.DefaultCurrencyCode.get 
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.DefaultCurrencyCode.set -> void
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.UnitSettings.set -> void
+Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.IsDarkMode.get -> bool?
+Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.IsDarkMode.set -> void
+override Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
