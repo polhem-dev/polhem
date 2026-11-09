@@ -3,6 +3,7 @@
   <Fields>
     <DbField FieldName="sys_no" Caption="流水號" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="唯一識別" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
     <DbField FieldName="sys_id" Caption="專案代碼" DbType="String" Length="20" />
     <DbField FieldName="sys_name" Caption="專案名稱" DbType="String" Length="50" />
     <DbField FieldName="owner_dept_rowid" Caption="負責部門" DbType="Guid" />
@@ -23,6 +24,7 @@
     </DbTableIndex>
     <DbTableIndex Name="uk_{0}" Unique="true">
       <IndexFields>
+        <IndexField FieldName="sys_company_id" />
         <IndexField FieldName="sys_id" />
       </IndexFields>
     </DbTableIndex>

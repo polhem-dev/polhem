@@ -211,6 +211,97 @@ namespace Polhem.Definition.UnitTests.Database
             Assert.Single(schema.Indexes!, idx => idx.IndexFields!.Contains(SysFields.MasterRowId));
         }
 
+        [Fact]
+        [DisplayName("Generate adds sys_company_id after sys_rowid to a table of a company form schema")]
+        public void Generate_CompanyFormSchema_AddsCompanyIdAfterRowId()
+        {
+            var formTable = AddToSchema(BuildFormTable(), DbCategoryIds.Company);
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            var names = schema.Fields!.Select(f => f.FieldName).ToList();
+            Assert.Equal(names.IndexOf(SysFields.RowId) + 1, names.IndexOf(SysFields.CompanyId));
+            var field = schema.Fields![SysFields.CompanyId];
+            Assert.Equal(FieldDbType.String, field.DbType);
+            Assert.Equal(Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength, field.Length);
+            Assert.False(field.AllowNull);
+        }
+
+        [Fact]
+        [DisplayName("Generate leads the uk_{0} index with sys_company_id on a table of a company form schema")]
+        public void Generate_CompanyFormSchema_LeadsUniqueIndexWithCompanyId()
+        {
+            var formTable = AddToSchema(BuildFormTable(), DbCategoryIds.Company);
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            var uk = schema.Indexes!["uk_{0}"];
+            Assert.True(uk.Unique);
+            Assert.Equal(s_companyUniqueKey, uk.IndexFields!.Select(f => f.FieldName));
+        }
+
+        [Fact]
+        [DisplayName("Generate adds sys_company_id to a detail table of a company form schema too")]
+        public void Generate_CompanyFormSchemaDetailTable_AddsCompanyId()
+        {
+            var schema = new FormSchema("Order", "Order") { CategoryId = DbCategoryIds.Company };
+            schema.Tables!.Add(BuildFormTable("ft_order"));
+            var detail = new FormTable("OrderDetail", "Order Detail");
+            detail.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            detail.Fields!.Add(SysFields.MasterRowId, "Master Row Id", FieldDbType.Guid);
+            schema.Tables!.Add(detail);
+
+            var generated = TableSchemaGenerator.Generate(detail);
+
+            Assert.True(generated.Fields!.Contains(SysFields.CompanyId));
+        }
+
+        [Theory]
+        [InlineData(DbCategoryIds.Common)]
+        [InlineData(DbCategoryIds.Log)]
+        [DisplayName("Generate adds no sys_company_id and keeps uk_{0} on sys_id alone outside the company category")]
+        public void Generate_NonCompanyFormSchema_AddsNoCompanyId(string categoryId)
+        {
+            var formTable = AddToSchema(BuildFormTable(), categoryId);
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            Assert.False(schema.Fields!.Contains(SysFields.CompanyId));
+            Assert.Equal(s_idOnlyUniqueKey, schema.Indexes!["uk_{0}"].IndexFields!.Select(f => f.FieldName));
+        }
+
+        [Fact]
+        [DisplayName("Generate adds no sys_company_id to a form table that no form schema owns")]
+        public void Generate_UnownedFormTable_AddsNoCompanyId()
+        {
+            var schema = TableSchemaGenerator.Generate(BuildFormTable());
+
+            Assert.False(schema.Fields!.Contains(SysFields.CompanyId));
+        }
+
+        [Fact]
+        [DisplayName("Generate keeps a single sys_company_id when the company form table declares it itself")]
+        public void Generate_CompanyIdDeclaredByForm_IsNotDuplicated()
+        {
+            var formTable = BuildFormTable();
+            formTable.Fields!.Add(SysFields.CompanyId, "Company", FieldDbType.String);
+            AddToSchema(formTable, DbCategoryIds.Company);
+
+            var schema = TableSchemaGenerator.Generate(formTable);
+
+            Assert.Single(schema.Fields!, f => f.FieldName == SysFields.CompanyId);
+        }
+
+        private static readonly string[] s_companyUniqueKey = [SysFields.CompanyId, SysFields.Id];
+        private static readonly string[] s_idOnlyUniqueKey = [SysFields.Id];
+
+        private static FormTable AddToSchema(FormTable formTable, string categoryId)
+        {
+            var schema = new FormSchema("Employee", "Employee") { CategoryId = categoryId };
+            schema.Tables!.Add(formTable);
+            return formTable;
+        }
+
         private static FormTable BuildFormTable(string dbTableName = "st_employee")
         {
             var formTable = new FormTable("Employee", "員工") { DbTableName = dbTableName };

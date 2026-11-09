@@ -19,6 +19,17 @@ namespace Polhem.Definition
         /// A foreign key in the detail table that references the corresponding row in the master table via <see cref="RowId"/>.
         /// </summary>
         public const string MasterRowId = "sys_master_rowid";
+        /// <summary>
+        /// Business id of the company a row belongs to (<see cref="Polhem.Definition.Identity.CompanyInfo.CompanyId"/>).
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Polhem.Definition.Database.TableSchemaGenerator"/> adds this column to every table of a
+        /// form schema whose <see cref="Polhem.Definition.Forms.FormSchema.CategoryId"/> is
+        /// <see cref="Polhem.Definition.Database.DbCategoryIds.Company"/>, and leads the <c>uk_{0}</c> index with
+        /// it. It is what separates companies that share one company database. A form save does not write
+        /// this column: the form repository leaves it out of the statements it generates.
+        /// </remarks>
+        public const string CompanyId = "sys_company_id";
 
         // ---- Basic data fields ----
         /// <summary>

@@ -42,6 +42,7 @@ namespace Polhem.Hosting.UnitTests
         [InlineData("admin", "short", "ACME", "USD", "")]
         [InlineData("a_user_id_longer_than_twenty", "Long-Enough-1", "ACME", "USD", "")]
         [InlineData("admin", "Long-Enough-1", "", "USD", "")]
+        [InlineData("admin", "Long-Enough-1", "company_c11", "USD", "")]
         [InlineData("admin", "Long-Enough-1", "ACME", "XXX", "")]
         [InlineData("admin", "Long-Enough-1", "ACME", "USD", "common")]
         [InlineData("admin", "Long-Enough-1", "ACME", "", "")]

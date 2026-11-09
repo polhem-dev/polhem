@@ -23,7 +23,8 @@ namespace Polhem.Hosting.Database
         public string Password { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the company id.
+        /// Gets or sets the company id, at most <see cref="Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength"/>
+        /// characters.
         /// </summary>
         public string CompanyId { get; set; } = string.Empty;
 

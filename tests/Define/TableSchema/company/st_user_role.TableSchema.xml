@@ -3,6 +3,7 @@
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
     <DbField FieldName="user_id" Caption="User Id" DbType="String" Length="20" />
     <DbField FieldName="role_id" Caption="Role Id" DbType="String" Length="20" />
     <DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
@@ -20,6 +21,7 @@
     </DbTableIndex>
     <DbTableIndex Name="uk_{0}" Unique="true">
       <IndexFields>
+        <IndexField FieldName="sys_company_id" />
         <IndexField FieldName="user_id" />
         <IndexField FieldName="role_id" />
       </IndexFields>

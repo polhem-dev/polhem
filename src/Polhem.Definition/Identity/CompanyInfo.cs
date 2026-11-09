@@ -10,8 +10,9 @@ namespace Polhem.Definition.Identity
     /// Returned by <c>EnterCompany</c> and resolved by company-aware repositories
     /// via the cached <see cref="ICompanyInfoService"/>. <c>CompanyDatabaseId</c> references
     /// a logical <see cref="DatabaseSettings"/> entry. Multiple companies may point at the
-    /// same id, and then share that database's tables: the framework adds no column that separates
-    /// one company's rows from another's, so keeping them apart is up to the application. The log database is shared across all companies under a fixed
+    /// same id, and then share that database's tables. The company tables carry
+    /// <see cref="SysFields.CompanyId"/>, but neither the form repository nor hand-written queries filter
+    /// on it, so keeping the companies apart is up to the application. The log database is shared across all companies under a fixed
     /// <c>"log"</c> databaseId (see <see cref="DbScope.Log"/>), so there is no per-company
     /// log database id property.
     /// <para>
@@ -36,6 +37,12 @@ namespace Polhem.Definition.Identity
         }
 
         #endregion
+
+        /// <summary>
+        /// The longest company id the framework accepts when it creates a company: the width of
+        /// <see cref="SysFields.CompanyId"/>, which carries a copy of the id on every company row.
+        /// </summary>
+        public const int CompanyIdMaxLength = 10;
 
         /// <summary>
         /// Gets the company id (unique key).

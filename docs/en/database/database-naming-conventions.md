@@ -38,7 +38,7 @@ A unified naming style avoids cross-database case and semantic inconsistencies a
 |------|--------|---------|-------|
 | **Primary key index** | `pk_table` | `pk_employee` | `sys_no`, the database primary key (sequential number) |
 | **Unique row identifier index** | `rx_table` | `rx_employee` | `sys_rowid`, the system-wide unique key (globally unique) |
-| **Unique data index** | `uk_table` | `uk_employee` | `sys_id`, business identifier or document number uniqueness |
+| **Unique data index** | `uk_table` | `uk_employee` | `sys_id`, business identifier or document number uniqueness; on a company table it is led by `sys_company_id`, so a number is unique within one company |
 | **Foreign key index** | `fk_table_column` | `fk_employee_dept` | Relational integrity (column references another table's `sys_rowid`) |
 | **Generic index** | `ix_table_column` | `ix_users_email` | Query acceleration (composite or partial indexes allowed) |
 | **Default value constraint** | `df_table_column` | `df_users_created_at` | Column default value definition |
@@ -54,6 +54,7 @@ In a `TableSchema` file the table part of an index name is written as `{0}` (for
 | `sys_no` | System sequential number, auto-incremented | Primary key |
 | `sys_rowid` | Unique identifier (GUID); immutable after insert | Globally unique identifier |
 | `sys_master_rowid` | Logical foreign key from a detail row to its master record | Relations maintained by the application layer |
+| `sys_company_id` | Business id of the company the row belongs to | Added by `TableSchemaGenerator` to every table of a `company` form schema |
 | `sys_id` | Record number / document number | Used by the business layer |
 | `sys_name` | Record name / display name | Used by the business layer |
 | `sys_valid_date` | Effective date (inclusive) | Range start |

@@ -60,7 +60,7 @@ namespace Polhem.Hosting.UnitTests
             {
                 UserId = $"admin_{suffix}",
                 Password = Password,
-                CompanyId = $"co_{suffix}",
+                CompanyId = $"co{suffix}",
                 CompanyName = "Initial Company",
                 DefaultCurrency = "TWD",
             };
