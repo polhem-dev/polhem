@@ -1,1 +1,7 @@
 #nullable enable
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CurrencySettings.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.get -> string!
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.set -> void
