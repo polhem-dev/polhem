@@ -13,6 +13,9 @@
                       Layout="Layout"
                       Row="Row"
                       Compact="Compact"
+                      CurrencySettings="CurrencySettings"
+                      DefaultCurrencyCode="@DefaultCurrencyCode"
+                      UnitSettings="UnitSettings"
                       EditCommitted="EditCommitted"
                       EditCancelled="EditCancelled" />
     </DialogContent>
@@ -44,6 +47,18 @@
     /// <summary>Gets or sets whether the editors lay out in a single column.</summary>
     [Parameter]
     public bool Compact { get; set; }
+
+    /// <summary>Gets or sets the currency master for the decimals of amount columns, or <c>null</c>.</summary>
+    [Parameter]
+    public Polhem.Definition.Settings.CurrencySettings? CurrencySettings { get; set; }
+
+    /// <summary>Gets or sets the currency code for amounts whose row carries no currency-key field.</summary>
+    [Parameter]
+    public string DefaultCurrencyCode { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the unit-of-measure master for the decimals of quantity and weight columns, or <c>null</c>.</summary>
+    [Parameter]
+    public Polhem.Definition.Settings.UnitSettings? UnitSettings { get; set; }
 
     /// <summary>Invoked after OK commits the edit.</summary>
     [Parameter]
