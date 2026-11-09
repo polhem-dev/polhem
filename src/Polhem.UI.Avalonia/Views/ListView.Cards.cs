@@ -115,15 +115,17 @@ namespace Polhem.UI.Avalonia.Views
                     stack.Children.Add(line);
                 }
 
-                return new Border
+                var card = new Border
                 {
                     Padding = new Thickness(10),
                     Margin = new Thickness(0, 0, 0, 6),
                     BorderThickness = new Thickness(1),
-                    BorderBrush = Brushes.Gray,
                     CornerRadius = new CornerRadius(6),
                     Child = stack,
                 };
+                card.Bind(Border.BorderBrushProperty,
+                    card.GetResourceObservable("SemiColorBorder", value => value as IBrush ?? Brushes.LightGray));
+                return card;
             });
 
         private static CheckBox BuildCardCheckBox(DataRowView? row, LayoutColumn column)

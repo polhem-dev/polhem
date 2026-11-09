@@ -167,18 +167,12 @@ namespace Polhem.UI.Avalonia.Controls
             var stack = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
             if (section.ShowCaption && !string.IsNullOrEmpty(section.Caption))
             {
-                stack.Children.Add(new TextBlock { Text = section.Caption, FontWeight = FontWeight.Bold });
+                stack.Children.Add(BuildSectionCaption(section.Caption));
             }
 
             stack.Children.Add(BuildFieldGrid(section, layout));
 
-            return new Border
-            {
-                Padding = new Thickness(8),
-                BorderThickness = new Thickness(1),
-                BorderBrush = Brushes.Gray,
-                Child = stack,
-            };
+            return BuildSectionFrame(stack);
         }
 
         private Grid BuildFieldGrid(LayoutSection section, FormLayout layout)
@@ -257,7 +251,7 @@ namespace Polhem.UI.Avalonia.Controls
             var stack = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
             if (!string.IsNullOrEmpty(layout.Caption))
             {
-                stack.Children.Add(new TextBlock { Text = layout.Caption, FontWeight = FontWeight.Bold });
+                stack.Children.Add(BuildSectionCaption(layout.Caption));
             }
 
             // The grid carries its own icon toolbar and edit-form flow; the presenter only supplies the
@@ -281,14 +275,29 @@ namespace Polhem.UI.Avalonia.Controls
             _detailGrids[layout.TableName] = grid;
             stack.Children.Add(grid);
 
-            return new Border
-            {
-                Padding = new Thickness(8),
-                BorderThickness = new Thickness(1),
-                BorderBrush = Brushes.Gray,
-                Child = stack,
-            };
+            return BuildSectionFrame(stack);
         }
+
+        // Matches the outlined paper the Blazor presenters draw: a faint rounded outline on the theme's surface,
+        // so the frame stays quieter than the read-only underline of the editors inside it.
+        private static Border BuildSectionFrame(Control child)
+        {
+            var frame = new Border
+            {
+                Padding = new Thickness(12),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Child = child,
+            };
+            frame.Bind(Border.BorderBrushProperty,
+                frame.GetResourceObservable("SemiColorBorder", value => value as IBrush ?? Brushes.LightGray));
+            frame.Bind(Border.BackgroundProperty,
+                frame.GetResourceObservable("SemiColorBackground0", value => value as IBrush ?? Brushes.Transparent));
+            return frame;
+        }
+
+        private static TextBlock BuildSectionCaption(string caption)
+            => new() { Text = caption, FontWeight = FontWeight.Medium, Margin = new Thickness(0, 0, 0, 4) };
 
         private static IEnumerable<LayoutField> EnumerateFields(LayoutSection section)
             => section.Fields?.Where(f => f.Visible) ?? Enumerable.Empty<LayoutField>();
