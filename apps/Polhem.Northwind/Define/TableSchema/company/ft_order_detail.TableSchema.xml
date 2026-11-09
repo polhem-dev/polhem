@@ -3,6 +3,7 @@
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
     <DbField FieldName="sys_master_rowid" Caption="Master Row ID" DbType="Guid" />
     <DbField FieldName="product_rowid" Caption="Product Row ID" DbType="Guid" />
     <DbField FieldName="quantity" Caption="Quantity" DbType="Integer" />

@@ -348,6 +348,10 @@ namespace Polhem.Repository.Form
 
                 var tableSchema = formTable.GenerateDbTable();
                 RemoveProtectedFields(tableSchema);
+                // The owning company is not the caller's to choose, and the form's DataTable has no such
+                // column for the INSERT and UPDATE parameters to read. Left out, a new row takes the
+                // column's default and an update never moves a row to another company.
+                tableSchema.Fields!.Remove(SysFields.CompanyId);
                 var spec = new Polhem.Db.Dml.TableSchemaCommandBuilder(dbType, tableSchema).BuildUpdateSpec(dataTable);
                 specs.Add(spec);
                 specTableNames.Add(formTable.TableName);

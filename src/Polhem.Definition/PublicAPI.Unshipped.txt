@@ -1,1 +1,3 @@
 #nullable enable
+const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
+const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!

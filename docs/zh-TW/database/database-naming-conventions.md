@@ -1,4 +1,4 @@
-<!-- source: en/database/database-naming-conventions.md blob: 335cca290bfb2d5ac9253d7fa768dfa9ebb8a27a -->
+<!-- source: en/database/database-naming-conventions.md blob: 46e7012a1799524bf989109c46e4d04ad03bfbbb -->
 # 資料庫命名規範  
 
 [English](../../en/database/database-naming-conventions.md) · [← 文件索引](../README.md)
@@ -39,7 +39,7 @@
 |------|-----------|------|------|
 | **主鍵索引** | `pk_表名` | `pk_employee` | `sys_no`，資料庫主鍵（流水號） |
 | **唯一識別索引** | `rx_表名` | `rx_employee` | `sys_rowid`，系統同步唯一鍵（全域唯一） |
-| **唯一資料索引** | `uk_表名` | `uk_employee` | `sys_id`，業務編號或單號唯一性 |
+| **唯一資料索引** | `uk_表名` | `uk_employee` | `sys_id`，業務編號或單號唯一性；company 表以 `sys_company_id` 為首欄，編號只在同一家公司內唯一 |
 | **外鍵索引** | `fk_表名_欄名` | `fk_employee_dept` | 關聯一致性（欄位對應他表 `sys_rowid`） |
 | **一般索引** | `ix_表名_欄位名` | `ix_users_email` | 查詢加速用（可複合或部分索引） |
 | **預設值約束** | `df_表名_欄位名` | `df_users_created_at` | 欄位預設值定義 |
@@ -55,6 +55,7 @@
 | `sys_no` | 系統流水號，自動遞增 | 主鍵 |
 | `sys_rowid` | 唯一識別碼（GUID），寫入後不可變 | 全域唯一識別 |
 | `sys_master_rowid` | 明細關聯主檔之邏輯外鍵 | 由應用層控管關聯 |
+| `sys_company_id` | 資料列所屬公司的公司代號 | `TableSchemaGenerator` 會加到 `company` 表單定義的每一張表 |
 | `sys_id` | 資料編號／單據號碼 | 業務層使用 |
 | `sys_name` | 資料名稱／顯示名稱 | 業務層使用 |
 | `sys_valid_date` | 生效日期（含當日） | 區間起始 |
