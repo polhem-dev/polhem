@@ -27,7 +27,7 @@ public partial class WebPreviewPane : UserControl
     public WebPreviewPane()
     {
         InitializeComponent();
-        // The page cannot see the editor's theme, so it is loaded again with the canvas of the new one.
+        // The page cannot see the editor's theme, so it is loaded again with the new one.
         ActualThemeVariantChanged += (_, _) =>
         {
             if (_webView is not null && _pageUrl is not null)
@@ -78,7 +78,7 @@ public partial class WebPreviewPane : UserControl
             EnsureLoaded(document);
     }
 
-    // The canvas around the form follows the editor's theme; the form itself keeps the application's light theme.
+    // The form and the canvas around it follow the editor's theme, as the page cannot see it otherwise.
     // The URL already carries the package in its query, so the canvas is added to it.
     private Uri WithCanvas(Uri pageUrl)
     {

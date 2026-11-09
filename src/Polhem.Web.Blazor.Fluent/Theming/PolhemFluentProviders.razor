@@ -1,3 +1,28 @@
 @namespace Polhem.Web.Blazor.Fluent.Theming
+@inject IThemeService ThemeService
 
 <FluentProviders />
+
+@code {
+    private bool? _appliedDarkMode;
+
+    /// <summary>
+    /// Gets or sets whether the dark theme applies, or <c>null</c> to leave the choice to the Fluent UI package, which
+    /// follows the operating system's appearance unless a theme mode was set before.
+    /// </summary>
+    /// <remarks>
+    /// The package keeps the mode it is given in the browser's local storage, so a page of the same site that leaves
+    /// this <c>null</c> afterwards keeps the last mode set rather than following the operating system again.
+    /// </remarks>
+    [Parameter]
+    public bool? IsDarkMode { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsDarkMode is not { } isDark || isDark == _appliedDarkMode) return;
+        // The theme is applied by the package's script, so it can only be set once the page is interactive.
+        _appliedDarkMode = isDark;
+        await ThemeService.SetThemeAsync(isDark ? ThemeMode.Dark : ThemeMode.Light);
+    }
+}

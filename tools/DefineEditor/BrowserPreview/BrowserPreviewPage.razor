@@ -11,14 +11,14 @@
 <PageTitle>@(_snapshot?.Title ?? "Polhem DefineEditor")</PageTitle>
 @if (IsFluent)
 {
-    <Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders />
+    <Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders IsDarkMode="IsDark" />
 }
 else
 {
-    <Polhem.Web.Blazor.Mud.Theming.PolhemMudProviders />
+    <Polhem.Web.Blazor.Mud.Theming.PolhemMudProviders IsDarkMode="IsDark" />
 }
 
-<div class="@(IsDarkCanvas ? "browser-preview-canvas browser-preview-canvas--dark" : "browser-preview-canvas")">
+<div class="@(IsDark ? "browser-preview-canvas browser-preview-canvas--dark" : "browser-preview-canvas")">
     @if (_error is not null)
     {
         <p class="browser-preview__message browser-preview__message--error">@_error</p>
@@ -57,13 +57,13 @@ else
     public string Token { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the canvas around the form: <c>dark</c> when the editor that shows the page uses its dark theme. A
-    /// browser opened from the editor passes nothing and gets the light canvas.
+    /// Gets or sets the theme of the form and the canvas around it: <c>dark</c> when the editor that shows the page uses
+    /// its dark theme. A browser opened from the editor passes nothing and gets the light theme.
     /// </summary>
     [SupplyParameterFromQuery(Name = "canvas")]
     public string? Canvas { get; set; }
 
-    private bool IsDarkCanvas => string.Equals(Canvas, "dark", StringComparison.OrdinalIgnoreCase);
+    private bool IsDark => string.Equals(Canvas, "dark", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the package that draws the form, a <see cref="BrowserPreviewUi"/> by
