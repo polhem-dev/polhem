@@ -41,7 +41,8 @@ namespace Polhem.UI.Core.Fields
         /// Formats the value of <paramref name="column"/> on <paramref name="row"/>: a drop-down column shows
         /// its list item's text, an instant column always shows its time of day, a Boolean outside a
         /// check-box column reads as <paramref name="booleanText"/>, and a number uses the column's delivered
-        /// format, or the currency or unit decimals of the row's reference value when the master is given.
+        /// format, then <paramref name="formField"/>'s, or the currency or unit decimals of the row's reference
+        /// value when the master is given; this is <see cref="NumericFieldFormat.ResolveFormat"/>, as for an editor.
         /// </summary>
         /// <param name="row">The row to read; <c>null</c> gives an empty string.</param>
         /// <param name="column">The layout column being rendered.</param>
@@ -74,9 +75,11 @@ namespace Polhem.UI.Core.Fields
             }
 
             // A unit-bound column falls back to its delivered format when the row has no unit, so no
-            // default unit code is passed here.
+            // default unit code is passed here. The schema field supplies the company-baked format a layout
+            // column does not carry, the same fallback every numeric editor uses, so a cell and its editor
+            // show a value alike.
             string numberFormat = NumericFieldFormat.ResolveFormat(
-                column, formField: null, row, currencySettings, defaultCurrencyCode, unitSettings, string.Empty);
+                column, formField, row, currencySettings, defaultCurrencyCode, unitSettings, string.Empty);
             return FieldValueFormatter.Format(raw, column.DisplayFormat, numberFormat);
         }
 

@@ -3,8 +3,10 @@ using Bunit;
 using Bunit.Rendering;
 using Microsoft.AspNetCore.Components;
 using Polhem.Core.Data;
+using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.Controls;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.Web.Blazor.DataObjects;
@@ -186,6 +188,44 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.Equal("Bolt", dataObject.GetField(OrderTestData.Line(dataObject, 0), "item"));
             Assert.False(OrderTestData.Line(dataObject, 0).HasVersion(System.Data.DataRowVersion.Proposed));
+        }
+
+        [Theory]
+        [InlineData(true, "N3")]
+        [InlineData(false, "")]
+        [DisplayName("An amount in the edit form takes its decimals from the currency master the grid passes")]
+        public void Panel_Amount_UsesCurrencySettings(bool withCurrencies, string expectedFormat)
+        {
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add(SysFields.RowId, "Row", FieldDbType.Guid);
+            var lines = schema.Tables.Add("OrderLine", "Lines").Fields!;
+            lines.Add(new FormField(SysFields.RowId, "Row", FieldDbType.Guid) { Visible = false });
+            lines.Add(new FormField(SysFields.MasterRowId, "Order", FieldDbType.Guid) { Visible = false });
+            lines.Add(new FormField("total", "Total", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+            var line = dataObject.DataSet.Tables["OrderLine"]!.NewRow();
+            line["total"] = 252m;
+            dataObject.DataSet.Tables["OrderLine"]!.Rows.Add(line);
+            dataObject.DataSet.AcceptChanges();
+            var currencies = withCurrencies
+                ? new CurrencySettings { new CurrencyItem("BHD", 0.001m) }
+                : null;
+
+            var type = RowEditPanelType;
+            var cut = Render(b =>
+            {
+                b.OpenComponent(0, type);
+                b.AddAttribute(1, nameof(RowEditPanelBase.DataObject), dataObject);
+                b.AddAttribute(2, nameof(RowEditPanelBase.Layout), FormLayoutGenerator.Generate(schema, "default").Details!.Single());
+                b.AddAttribute(3, nameof(RowEditPanelBase.Row), line);
+                b.AddAttribute(4, nameof(RowEditPanelBase.CurrencySettings), currencies);
+                b.AddAttribute(5, nameof(RowEditPanelBase.DefaultCurrencyCode), "BHD");
+                b.CloseComponent();
+            });
+
+            var expected = expectedFormat.Length == 0 ? "252" : 252m.ToString(expectedFormat, System.Globalization.CultureInfo.CurrentCulture);
+            Assert.Equal(expected, cut.Find("#polhem-row-edit-total").GetAttribute("value"));
         }
 
         [Fact]

@@ -3,6 +3,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.DataObjects;
 
@@ -57,6 +58,26 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// </summary>
         [Parameter]
         public bool Compact { get; set; }
+
+        /// <summary>
+        /// Gets or sets the currency master for the decimals of amount columns, or <c>null</c> to keep the delivered
+        /// formats. The grid that opens the panel passes its own, so a value reads the same in both.
+        /// </summary>
+        [Parameter]
+        public CurrencySettings? CurrencySettings { get; set; }
+
+        /// <summary>
+        /// Gets or sets the currency code for amounts whose row carries no currency-key field.
+        /// </summary>
+        [Parameter]
+        public string DefaultCurrencyCode { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the unit-of-measure master for the decimals of quantity and weight columns, or <c>null</c>
+        /// to keep the delivered formats.
+        /// </summary>
+        [Parameter]
+        public UnitSettings? UnitSettings { get; set; }
 
         /// <summary>
         /// Invoked after OK commits the edit session.
@@ -148,7 +169,8 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <param name="column">The column.</param>
         /// <returns>The parameters by name.</returns>
         protected Dictionary<string, object?> BuildEditorParameters(LayoutColumn column)
-            => new(StringComparer.Ordinal)
+        {
+            var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
             {
                 [nameof(FieldEditorBase.FieldName)] = column.FieldName,
                 [nameof(FieldEditorBase.LayoutField)] = column,
@@ -156,5 +178,13 @@ namespace Polhem.Web.Blazor.Controls.Editors
                 [nameof(FieldEditorBase.DataObject)] = DataObject,
                 [nameof(FieldEditorBase.Id)] = InputId(column),
             };
+            if (column.ControlType == ControlType.NumericEdit)
+            {
+                parameters[nameof(NumericEditorBase.CurrencySettings)] = CurrencySettings;
+                parameters[nameof(NumericEditorBase.UnitSettings)] = UnitSettings;
+                parameters[nameof(NumericEditorBase.DefaultCurrencyCode)] = DefaultCurrencyCode;
+            }
+            return parameters;
+        }
     }
 }

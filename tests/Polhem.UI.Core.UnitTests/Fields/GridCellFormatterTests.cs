@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Core.Data;
+using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
@@ -59,6 +60,28 @@ namespace Polhem.UI.Core.UnitTests.Fields
             var column = new LayoutColumn("amount", "Amount", ControlType.NumericEdit) { NumberFormat = "N2" };
 
             Assert.Equal("1,234.50", GridCellFormatter.FormatCell(BuildRow(), column, null, null, string.Empty, null, s_booleanText));
+        }
+
+        [Fact]
+        [DisplayName("A number whose column has no format uses the schema field's company-baked format, as its editor does")]
+        public void FormatCell_ColumnWithoutFormat_UsesFormFieldFormat()
+        {
+            using var _ = new CultureScope("en-US");
+            var column = new LayoutColumn("amount", "Amount", ControlType.NumericEdit);
+            var field = new FormField("amount", "Amount", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice, NumberFormat = "N4" };
+
+            Assert.Equal("1,234.5000", GridCellFormatter.FormatCell(BuildRow(), column, field, null, string.Empty, null, s_booleanText));
+        }
+
+        [Fact]
+        [DisplayName("A column's own format wins over the schema field's")]
+        public void FormatCell_ColumnFormat_WinsOverFormFieldFormat()
+        {
+            using var _ = new CultureScope("en-US");
+            var column = new LayoutColumn("amount", "Amount", ControlType.NumericEdit) { NumberFormat = "N2" };
+            var field = new FormField("amount", "Amount", FieldDbType.Decimal) { NumberKind = NumberKind.UnitPrice, NumberFormat = "N4" };
+
+            Assert.Equal("1,234.50", GridCellFormatter.FormatCell(BuildRow(), column, field, null, string.Empty, null, s_booleanText));
         }
 
         [Fact]
