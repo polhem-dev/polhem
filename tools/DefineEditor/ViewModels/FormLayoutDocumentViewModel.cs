@@ -46,18 +46,28 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     /// What draws the preview. A new document takes the engine <see cref="Load"/> was given, the one chosen last.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWebPreview), nameof(IsAvaloniaPreview))]
+    [NotifyPropertyChangedFor(nameof(IsAvaloniaPreview), nameof(IsMudPreview), nameof(IsFluentPreview), nameof(IsWebPreview),
+        nameof(PreviewWebUi))]
+    [NotifyCanExecuteChangedFor(nameof(OpenInBrowserCommand))]
     private FormLayoutPreviewEngine _previewEngine;
 
     /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Avalonia"/>.</summary>
     public bool IsAvaloniaPreview => PreviewEngine == FormLayoutPreviewEngine.Avalonia;
 
-    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Web"/>.</summary>
-    public bool IsWebPreview
-    {
-        get => PreviewEngine == FormLayoutPreviewEngine.Web;
-        set => PreviewEngine = value ? FormLayoutPreviewEngine.Web : FormLayoutPreviewEngine.Avalonia;
-    }
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Mud"/>.</summary>
+    public bool IsMudPreview => PreviewEngine == FormLayoutPreviewEngine.Mud;
+
+    /// <summary>Whether the preview is drawn by <see cref="FormLayoutPreviewEngine.Fluent"/>.</summary>
+    public bool IsFluentPreview => PreviewEngine == FormLayoutPreviewEngine.Fluent;
+
+    /// <summary>Whether the preview is the browser preview page in a web view, drawn by either Blazor package.</summary>
+    public bool IsWebPreview => IsMudPreview || IsFluentPreview;
+
+    /// <summary>
+    /// The package the browser preview page draws with: the one the web preview shows, or MudBlazor while the Avalonia
+    /// preview is showing.
+    /// </summary>
+    public BrowserPreviewUi PreviewWebUi => IsFluentPreview ? BrowserPreviewUi.Fluent : BrowserPreviewUi.Mud;
 
     /// <summary>The form mode the preview renders in.</summary>
     public SingleFormMode PreviewFormMode => IsPreviewViewMode ? SingleFormMode.View : SingleFormMode.Edit;
@@ -84,7 +94,8 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
 
     /// <summary>
     /// Starts <paramref name="host"/> if it is not running, publishes this layout to it and returns the layout's
-    /// preview URL, which the default browser and the web preview inside the editor both open.
+    /// preview URL in <see cref="PreviewWebUi"/>, which the default browser and the web preview inside the editor both
+    /// open.
     /// </summary>
     /// <remarks>
     /// The snapshot goes out once here because the editor publishes on later edits only while the server runs.
@@ -96,7 +107,7 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     {
         ArgumentNullException.ThrowIfNull(host);
         var documentId = host.Hub.GetDocumentId(DocumentKey);
-        var url = await host.GetDocumentUrlAsync(documentId);
+        var url = await host.GetDocumentUrlAsync(documentId, PreviewWebUi);
         host.Hub.Publish(documentId, CreateBrowserPreviewSnapshot());
         FollowBrowserSelection(host.Hub);
         return url;
@@ -151,10 +162,15 @@ public sealed partial class FormLayoutDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
-    /// Opens this layout in the default web browser, starting the browser preview server on first use. A server
-    /// that cannot start, or a browser that cannot be launched, is reported in <see cref="DocumentViewModelBase.StatusText"/>.
+    /// Opens this layout in the default web browser, drawn by the package the web preview shows, starting the browser
+    /// preview server on first use. A server that cannot start, or a browser that cannot be launched, is reported in
+    /// <see cref="DocumentViewModelBase.StatusText"/>.
     /// </summary>
-    [RelayCommand]
+    /// <remarks>
+    /// It runs only while <see cref="IsWebPreview"/>: the Avalonia preview has no page of its own, so from there the
+    /// command could not say which package it opens.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(IsWebPreview))]
     private async Task OpenInBrowserAsync()
     {
         try

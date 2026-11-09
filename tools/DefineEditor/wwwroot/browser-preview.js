@@ -17,7 +17,8 @@ window.polhemBrowserPreview = {
 
     // The editor and the page share no object, only the layout's order: a part is named by its position among the
     // sections or the details, and a field or a column by its position in it (PreviewTarget). The classes are the
-    // ones the MudBlazor form presenter and grid draw.
+    // ones both form presenters and grids draw. A column's header class sits on the header cell in the MudBlazor grid
+    // and on an element inside it in the Fluent UI grid, so a column is found and outlined by the cell that holds it.
     followClicks: function (dotnet) {
         this.dotnet = dotnet;
         if (this.following) return;
@@ -32,11 +33,9 @@ window.polhemBrowserPreview = {
     targetOf: function (element) {
         if (!(element instanceof Element)) return null;
         var detail = element.closest('.polhem-form-layout__detail');
-        var header = element.closest('th.polhem-grid__header');
-        if (detail && header) {
-            return { kind: 'Column', index: this.indexIn('.polhem-form-layout__detail', detail),
-                item: Array.prototype.indexOf.call(detail.querySelectorAll('th.polhem-grid__header'), header) };
-        }
+        var cell = detail ? element.closest(this.headerCellSelector) : null;
+        var item = cell ? this.headerCells(detail).indexOf(cell) : -1;
+        if (item >= 0) return { kind: 'Column', index: this.indexIn('.polhem-form-layout__detail', detail), item: item };
         if (detail) return { kind: 'Grid', index: this.indexIn('.polhem-form-layout__detail', detail), item: -1 };
         var section = element.closest('.polhem-form-layout__section');
         if (!section) return null;
@@ -47,6 +46,16 @@ window.polhemBrowserPreview = {
                 item: Array.prototype.indexOf.call(section.querySelectorAll('.polhem-form-layout__field'), field) };
         }
         return { kind: 'Section', index: index, item: -1 };
+    },
+
+    headerCellSelector: 'th, [role="columnheader"]',
+
+    // The header cells of a detail grid's columns, in order: the cells that carry the header class or hold it.
+    headerCells: function (detail) {
+        var self = this;
+        return Array.prototype.map.call(detail.querySelectorAll('.polhem-grid__header'), function (header) {
+            return header.closest(self.headerCellSelector) || header;
+        });
     },
 
     indexIn: function (selector, element) {
@@ -63,7 +72,7 @@ window.polhemBrowserPreview = {
             element = kind === 'Section' || !section ? section : section.querySelectorAll('.polhem-form-layout__field')[item];
         } else if (kind === 'Grid' || kind === 'Column') {
             var detail = document.querySelectorAll('.polhem-form-layout__detail')[index];
-            element = kind === 'Grid' || !detail ? detail : detail.querySelectorAll('th.polhem-grid__header')[item];
+            element = kind === 'Grid' || !detail ? detail : this.headerCells(detail)[item];
         }
         if (element) element.classList.add('browser-preview__selected');
     }

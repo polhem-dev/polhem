@@ -11,6 +11,14 @@ body {
     background: #e4e7eb;
 }
 
+/* WARNING: the Fluent UI package adds its default-fuib.css as an adopted stylesheet, which comes after every linked one,
+   and it sets the body to the viewport's height with scrolling turned off, which suits an app shell that scrolls inside
+   itself but not this page. Only a more specific selector wins over it. */
+html > body {
+    height: auto;
+    overflow: auto;
+}
+
 .browser-preview-canvas {
     box-sizing: border-box;
     min-height: 100vh;
@@ -36,7 +44,8 @@ body {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.browser-preview__message { color: var(--mud-palette-text-secondary); }
+/* A color of its own: the page draws with either UI package, and neither one's variables exist under the other. */
+.browser-preview__message { color: #57606a; }
 .browser-preview__message--error { color: #c62828; }
 
 /* The part of the form selected in the editor's tree. A column header is outlined inside itself, because the grid

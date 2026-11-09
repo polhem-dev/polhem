@@ -11,7 +11,7 @@
     <DockPanel>
         <Border DockPanel.Dock="Top" Classes="surface-sunken" Padding="12,6">
             <DockPanel>
-                <!-- What draws the preview: two engines side by side, as a segmented switch, so which one is showing is
+                <!-- What draws the preview: the engines side by side, as a segmented switch, so which one is showing is
                      always visible. Each is a button of its own, so the macOS accessibility API can press it. -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2"
                             AutomationProperties.Name="{loc:Loc Preview_Engine}">
@@ -21,15 +21,22 @@
                             AutomationProperties.Name="{loc:Loc Preview_Avalonia}">
                         <TextBlock Text="{loc:Loc Preview_Avalonia}" VerticalAlignment="Center"/>
                     </Button>
-                    <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsWebPreview}"
-                            Command="{Binding SetPreviewEngineCommand}" CommandParameter="{x:Static vm:FormLayoutPreviewEngine.Web}"
-                            ToolTip.Tip="{loc:Loc Preview_WebTooltip}"
-                            AutomationProperties.Name="{loc:Loc Preview_Web}">
-                        <TextBlock Text="{loc:Loc Preview_Web}" VerticalAlignment="Center"/>
+                    <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsMudPreview}"
+                            Command="{Binding SetPreviewEngineCommand}" CommandParameter="{x:Static vm:FormLayoutPreviewEngine.Mud}"
+                            ToolTip.Tip="{loc:Loc Preview_MudTooltip}"
+                            AutomationProperties.Name="{loc:Loc Preview_Mud}">
+                        <TextBlock Text="{loc:Loc Preview_Mud}" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Classes="toolbar-icon view-switch" Classes.selected="{Binding IsFluentPreview}"
+                            Command="{Binding SetPreviewEngineCommand}" CommandParameter="{x:Static vm:FormLayoutPreviewEngine.Fluent}"
+                            ToolTip.Tip="{loc:Loc Preview_FluentTooltip}"
+                            AutomationProperties.Name="{loc:Loc Preview_Fluent}">
+                        <TextBlock Text="{loc:Loc Preview_Fluent}" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
-                <!-- The options both engines follow, as icon toggles with tooltips; then the browser, which opens another
-                     window rather than changing this one. -->
+                <!-- The options every engine follows, as icon toggles with tooltips; then, for a web preview only, the
+                     browser, which opens the same page in another window. The Avalonia preview has no page, so from
+                     there the button could not say which package it opens. -->
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="2">
                     <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewViewMode}"
                                   ToolTip.Tip="{loc:Loc Preview_ViewMode}"
@@ -47,6 +54,7 @@
                         <PathIcon Data="{StaticResource IconPreviewFieldNames}"/>
                     </ToggleButton>
                     <Button Classes="toolbar-icon" Margin="10,0,0,0" Command="{Binding OpenInBrowserCommand}"
+                            IsVisible="{Binding IsWebPreview}"
                             ToolTip.Tip="{loc:Loc FormLayout_OpenInBrowserTooltip}"
                             AutomationProperties.Name="{loc:Loc FormLayout_OpenInBrowser}">
                         <PathIcon Data="{StaticResource IconBrowser}"/>

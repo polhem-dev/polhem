@@ -98,7 +98,7 @@
 
   <data name="Section_ValidationResults" xml:space="preserve"><value>驗證結果</value></data>
   <data name="FormLayout_OpenInBrowser" xml:space="preserve"><value>在瀏覽器預覽</value></data>
-  <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>在網頁瀏覽器開啟這份版面，由 Blazor Server 元件繪製；尚未存檔的修改與預覽選項都會同步。</value></data>
+  <data name="FormLayout_OpenInBrowserTooltip" xml:space="preserve"><value>在網頁瀏覽器開啟這個預覽，由相同的元件繪製；尚未存檔的修改與預覽選項都會同步。</value></data>
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>屬性設定…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>在對話框中編輯所選節點的屬性</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>屬性設定 — {0}</value></data>
@@ -109,8 +109,10 @@
   <data name="Preview_Avalonia" xml:space="preserve"><value>Avalonia</value></data>
   <data name="Preview_AvaloniaTooltip" xml:space="preserve"><value>以 Avalonia 控制項繪製預覽，與桌面或行動應用程式顯示表單的方式相同</value></data>
   <data name="Preview_Engine" xml:space="preserve"><value>預覽引擎</value></data>
-  <data name="Preview_Web" xml:space="preserve"><value>Web</value></data>
-  <data name="Preview_WebTooltip" xml:space="preserve"><value>在編輯器內以網頁檢視繪製預覽，使用 Blazor 元件，與網頁應用程式顯示表單的方式相同；尚未存檔的修改與預覽選項都會同步。</value></data>
+  <data name="Preview_Mud" xml:space="preserve"><value>MudBlazor</value></data>
+  <data name="Preview_MudTooltip" xml:space="preserve"><value>在編輯器內以網頁檢視繪製預覽，使用 MudBlazor 元件，與採用 Polhem.Web.Blazor.Mud 的網頁應用程式顯示表單的方式相同；尚未存檔的修改與預覽選項都會同步。</value></data>
+  <data name="Preview_Fluent" xml:space="preserve"><value>Fluent UI</value></data>
+  <data name="Preview_FluentTooltip" xml:space="preserve"><value>在編輯器內以網頁檢視繪製預覽，使用 Fluent UI 元件，與採用 Polhem.Web.Blazor.Fluent 的網頁應用程式顯示表單的方式相同；尚未存檔的修改與預覽選項都會同步。</value></data>
   <data name="Preview_WebUnavailable" xml:space="preserve"><value>這台電腦無法執行 Web 預覽：{0}</value></data>
   <data name="Preview_WebLoadFailed" xml:space="preserve"><value>Web 預覽無法載入頁面。</value></data>
   <data name="Status_BrowserPreviewFailed" xml:space="preserve"><value>瀏覽器預覽無法啟動：{0}</value></data>

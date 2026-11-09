@@ -91,51 +91,67 @@ namespace Polhem.DefineEditor.UnitTests
             Assert.False(_document.IsWebPreview);
         }
 
-        [Fact]
-        [DisplayName("Turning on the web preview switches PreviewEngine to Web and notifies both properties")]
-        public void IsWebPreview_SwitchesPreviewEngine()
-        {
-            var notified = new List<string?>();
-            _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
-
-            _document.IsWebPreview = true;
-
-            Assert.Equal(FormLayoutPreviewEngine.Web, _document.PreviewEngine);
-            Assert.Contains(nameof(FormLayoutDocumentViewModel.PreviewEngine), notified);
-            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsWebPreview), notified);
-
-            _document.IsWebPreview = false;
-
-            Assert.Equal(FormLayoutPreviewEngine.Avalonia, _document.PreviewEngine);
-        }
-
         [Theory]
-        [InlineData(FormLayoutPreviewEngine.Web, true)]
-        [InlineData(FormLayoutPreviewEngine.Avalonia, false)]
+        [InlineData(FormLayoutPreviewEngine.Avalonia, FormLayoutPreviewEngine.Mud)]
+        [InlineData(FormLayoutPreviewEngine.Mud, FormLayoutPreviewEngine.Avalonia)]
+        [InlineData(FormLayoutPreviewEngine.Fluent, FormLayoutPreviewEngine.Mud)]
         [DisplayName("Choosing an engine in the preview's switch sets PreviewEngine and notifies which segment is selected")]
-        public void SetPreviewEngine_SelectsTheSegment(FormLayoutPreviewEngine engine, bool web)
+        public void SetPreviewEngine_SelectsTheSegment(FormLayoutPreviewEngine engine, FormLayoutPreviewEngine from)
         {
-            // Start from the other engine, so the command really changes it.
-            _document.PreviewEngine = web ? FormLayoutPreviewEngine.Avalonia : FormLayoutPreviewEngine.Web;
+            // Start from another engine, so the command really changes it.
+            _document.PreviewEngine = from;
             var notified = new List<string?>();
             _document.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
 
             _document.SetPreviewEngineCommand.Execute(engine);
 
             Assert.Equal(engine, _document.PreviewEngine);
-            Assert.Equal(web, _document.IsWebPreview);
-            Assert.Equal(!web, _document.IsAvaloniaPreview);
-            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsWebPreview), notified);
+            Assert.Equal(engine == FormLayoutPreviewEngine.Avalonia, _document.IsAvaloniaPreview);
+            Assert.Equal(engine == FormLayoutPreviewEngine.Mud, _document.IsMudPreview);
+            Assert.Equal(engine == FormLayoutPreviewEngine.Fluent, _document.IsFluentPreview);
             Assert.Contains(nameof(FormLayoutDocumentViewModel.IsAvaloniaPreview), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsMudPreview), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsFluentPreview), notified);
+            Assert.Contains(nameof(FormLayoutDocumentViewModel.IsWebPreview), notified);
+        }
+
+        [Theory]
+        [InlineData(FormLayoutPreviewEngine.Avalonia, false, BrowserPreviewUi.Mud)]
+        [InlineData(FormLayoutPreviewEngine.Mud, true, BrowserPreviewUi.Mud)]
+        [InlineData(FormLayoutPreviewEngine.Fluent, true, BrowserPreviewUi.Fluent)]
+        [DisplayName("Both Blazor engines are web previews, and each names the package its page draws with")]
+        public void PreviewEngine_WebPreviewAndItsPackage(FormLayoutPreviewEngine engine, bool web, BrowserPreviewUi ui)
+        {
+            _document.PreviewEngine = engine;
+
+            Assert.Equal(web, _document.IsWebPreview);
+            Assert.Equal(ui, _document.PreviewWebUi);
+        }
+
+        [Theory]
+        [InlineData(FormLayoutPreviewEngine.Avalonia, false)]
+        [InlineData(FormLayoutPreviewEngine.Mud, true)]
+        [InlineData(FormLayoutPreviewEngine.Fluent, true)]
+        [DisplayName("Open in browser runs only beside a web preview, and tells the button when that changes")]
+        public void OpenInBrowserCommand_RunsOnlyForAWebPreview(FormLayoutPreviewEngine engine, bool canOpen)
+        {
+            _document.PreviewEngine = engine == FormLayoutPreviewEngine.Avalonia ? FormLayoutPreviewEngine.Mud : FormLayoutPreviewEngine.Avalonia;
+            var changed = 0;
+            _document.OpenInBrowserCommand.CanExecuteChanged += (_, _) => changed++;
+
+            _document.PreviewEngine = engine;
+
+            Assert.Equal(canOpen, _document.OpenInBrowserCommand.CanExecute(null));
+            Assert.True(changed > 0);
         }
 
         [Fact]
         [DisplayName("A layout opened with an engine, the one chosen last, starts its preview with that engine")]
         public void Load_WithPreviewEngine_StartsWithIt()
         {
-            var document = FormLayoutDocumentViewModel.Load(_document.FilePath, previewEngine: FormLayoutPreviewEngine.Web);
+            var document = FormLayoutDocumentViewModel.Load(_document.FilePath, previewEngine: FormLayoutPreviewEngine.Fluent);
 
-            Assert.Equal(FormLayoutPreviewEngine.Web, document.PreviewEngine);
+            Assert.Equal(FormLayoutPreviewEngine.Fluent, document.PreviewEngine);
         }
 
         [Fact]
@@ -154,6 +170,20 @@ namespace Polhem.DefineEditor.UnitTests
             using var client = new HttpClient();
             var html = await client.GetStringAsync(url);
             Assert.Contains("id=\"preview-remark\"", html, StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [InlineData(FormLayoutPreviewEngine.Mud, "ui=mud")]
+        [InlineData(FormLayoutPreviewEngine.Fluent, "ui=fluent")]
+        [DisplayName("The preview URL names the package of the web preview showing, so a browser opens the same page")]
+        public async Task PublishBrowserPreviewAsync_UrlNamesThePackage(FormLayoutPreviewEngine engine, string query)
+        {
+            await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
+            _document.PreviewEngine = engine;
+
+            var url = await _document.PublishBrowserPreviewAsync(host);
+
+            Assert.Equal("?" + query, url.Query);
         }
 
         [Fact]
@@ -214,16 +244,17 @@ namespace Polhem.DefineEditor.UnitTests
 
         [Theory]
         [InlineData("", false)]
-        [InlineData("?canvas=light", false)]
-        [InlineData("?canvas=dark", true)]
+        [InlineData("canvas=light", false)]
+        [InlineData("canvas=dark", true)]
         [DisplayName("The preview page draws a dark canvas only when the editor asks for one")]
-        public async Task PreviewPage_CanvasQuery_SetsTheCanvas(string query, bool dark)
+        public async Task PreviewPage_CanvasQuery_SetsTheCanvas(string canvas, bool dark)
         {
             await using var host = new BrowserPreviewHost(new BrowserPreviewHub(), static () => CultureInfo.GetCultureInfo("en"));
             var url = await _document.PublishBrowserPreviewAsync(host);
 
             using var client = new HttpClient();
-            var html = await client.GetStringAsync(new Uri(url.AbsoluteUri + query));
+            // The URL already names the package in its query, so the canvas joins it.
+            var html = await client.GetStringAsync(canvas.Length == 0 ? url : new Uri(url.AbsoluteUri + "&" + canvas));
 
             Assert.Contains("browser-preview-canvas", html, StringComparison.Ordinal);
             Assert.Equal(dark, html.Contains("browser-preview-canvas--dark", StringComparison.Ordinal));

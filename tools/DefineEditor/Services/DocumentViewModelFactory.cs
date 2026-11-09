@@ -36,10 +36,27 @@ public static class DocumentViewModelFactory
     }
 
     // The engine a FormLayout's preview was drawn by last, so each new layout opens the way the previous one was left.
-    private static FormLayoutPreviewEngine LastPreviewEngine() =>
-        Enum.TryParse<FormLayoutPreviewEngine>(UserSettings.Load().FormLayoutPreviewEngine, out var engine) && Enum.IsDefined(engine)
+    private static FormLayoutPreviewEngine LastPreviewEngine() => ParsePreviewEngine(UserSettings.Load().FormLayoutPreviewEngine);
+
+    /// <summary>
+    /// Reads a stored <see cref="FormLayoutPreviewEngine"/> name, falling back to
+    /// <see cref="FormLayoutPreviewEngine.Avalonia"/> for anything unknown.
+    /// </summary>
+    /// <remarks>
+    /// <c>Web</c>, written before the web preview offered a second package, reads as
+    /// <see cref="FormLayoutPreviewEngine.Mud"/>, the package it drew with then.
+    /// </remarks>
+    /// <param name="name">The name stored in the user's settings.</param>
+    public static FormLayoutPreviewEngine ParsePreviewEngine(string? name)
+    {
+        if (string.Equals(name, LegacyWebEngineName, StringComparison.Ordinal))
+            return FormLayoutPreviewEngine.Mud;
+        return Enum.TryParse<FormLayoutPreviewEngine>(name, out var engine) && Enum.IsDefined(engine)
             ? engine
             : FormLayoutPreviewEngine.Avalonia;
+    }
+
+    private const string LegacyWebEngineName = "Web";
 
     private static DocumentViewModelBase LoadOrFallback(DefineNode node, Func<DocumentViewModelBase> loader)
     {

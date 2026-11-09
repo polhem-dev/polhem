@@ -1,5 +1,7 @@
 @namespace Polhem.DefineEditor.BrowserPreview
-@* The document of the browser preview: the framework's stylesheets, as a Polhem Blazor app links them, and one route. *@
+@* The document of the browser preview: the stylesheets and scripts of the package the URL's ui query names, as a Polhem
+   Blazor app built on that package links them, and one route. Only one package's stylesheets are linked: both reset the
+   page globally, and together each would restyle the other's components. *@
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
@@ -7,17 +9,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
-    <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Mud/polhem-mud.css"]" />
+    @if (Ui == BrowserPreviewUi.Fluent)
+    {
+        <link rel="stylesheet" href="@Assets["_content/Microsoft.FluentUI.AspNetCore.Components/css/default-fuib.css"]" />
+        <link rel="stylesheet" href="@Assets["_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css"]" />
+        <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Fluent/polhem-fluent.css"]" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
+        <link rel="stylesheet" href="@Assets["_content/Polhem.Web.Blazor.Mud/polhem-mud.css"]" />
+    }
     <link rel="stylesheet" href="@Assets["browser-preview.css"]" />
     <HeadOutlet />
 </head>
-<body>
+@* WARNING: the Fluent UI package's JavaScript initializer runs on every page of the app, the MudBlazor one too, and adds
+   its default-fuib.css to the document, which locks the body's height and scrolling and sets its font. The attribute
+   below is the package's own switch to leave that sheet out of the MudBlazor page. *@
+<body no-fuib-style="@(Ui == BrowserPreviewUi.Mud)">
     <Router AppAssembly="typeof(BrowserPreviewApp).Assembly">
         <Found Context="routeData"><RouteView RouteData="routeData" /></Found>
     </Router>
     <script src="@Assets["browser-preview.js"]"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
-    <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+    @* The Fluent package needs no script here: its module is a JavaScript initializer, which blazor.web.js loads. *@
+    @if (Ui == BrowserPreviewUi.Mud)
+    {
+        <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+    }
 </body>
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private BrowserPreviewUi Ui => BrowserPreviewHost.ParseUi(HttpContext?.Request.Query[BrowserPreviewHost.UiQueryName]);
+}
