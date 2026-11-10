@@ -60,6 +60,20 @@ application's own data through its own implementation of `IFormApiConnector`.
   every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
   user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
 
+### The Form Data Object
+
+- `DataObjects/FormDataObject` -- the data object the form views and field editors of every head bind to. It
+  derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes `GetField` / `SetField`
+  (for the master row or a given row) for two-way binding, raises `FieldValueChanged` and `DataSetReplaced` when its
+  values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync` through an `IFormApiConnector`. A new
+  row is seeded with the schema's defaults (a fresh `sys_rowid`, the link to the master, non-null values by type) and
+  raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer the edits of one row, which raise
+  `RowEditFieldChanged` until the commit publishes them.
+- The head that constructs it passes the signed-in user's time zone (`timeZoneProvider`), which a new row's dates
+  default to; without one they default to UTC. Nothing in this package but `UIServices` itself reads `UIServices`,
+  so the object is safe in a host that serves many users from one process; `UICoreServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) fails when that changes.
+
 ### Field Editor Rules Shared by Every Head
 
 `Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` both use, so the
@@ -96,13 +110,15 @@ two heads behave the same:
 - **Resolution order in the views** -- a control uses its own property first, then its overridable `Resolve*` hook,
   then `UIServices.Provider`; with none of them it runs on what the host set.
 - **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor head references this
-  package for the value rules only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when
-  it references `UIServices` or `Polhem.UI.ApiBridge`.
+  package for the value rules and `FormDataObject` only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)
+  fails when it references `UIServices` or `Polhem.UI.ApiBridge`, and `UICoreServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) fails when anything in this package but `UIServices` itself calls `UIServices`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
 - project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
+- `DataObjects/` -- `FormDataObject`, `FieldValueChangedEventArgs`, `RowChangedEventArgs`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules`

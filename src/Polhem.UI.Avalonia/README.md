@@ -2,7 +2,7 @@
 
 [繁體中文](README.zh-TW.md)
 
-Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads. Renders FormSchema-driven forms with a set of native-control subclasses deeply bound to the definition layer, all backed by the `FormDataObject` view-model.
+Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads. Renders FormSchema-driven forms with a set of native-control subclasses deeply bound to the definition layer, all backed by the `FormDataObject` of [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), which every head shares.
 
 ## Architecture Position
 
@@ -30,7 +30,7 @@ Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.D
 | `GridEditMode` | UI-layer editing model for grids: `InCell` (cell editing, ADR-021 hybrid strategy) or `EditForm` (read-only grid + popup row editing). |
 | `RowEditPanel` / `RowEditDialog` | EditForm-mode editing surface built from the field editors; commits or cancels through the buffered row-edit protocol. |
 | `ObjectTreeView` | `TreeView` subclass that shows an `ObjectTreeNode` tree built by `ObjectTreeBuilder` (`Polhem.Definition.ObjectTree`) from the `[TreeNode]` annotations: set `RootNode`, optionally `IconSelector`; `IsExpanded` binds both ways; `CommandProvider` fills the context menu with the selected node's commands. |
-| `FormDataObject` | The view-model: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, exposes the async CRUD round-trips and the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`). |
+| `FormDataObject` | Not in this package: the data object the views and editors bind to is in `Polhem.UI.Core.DataObjects`. `FormView` constructs it with the signed-in user's time zone from the `IUserContext` in `UIServices.Provider`; code that constructs one itself passes the time zone the same way, or a new row's dates default to UTC. |
 
 ## Usage
 

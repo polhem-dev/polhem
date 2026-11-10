@@ -1,13 +1,18 @@
-using Polhem.UI.Core;
 using Polhem.Api.Contracts.Form;
 using Polhem.Definition;
 
-namespace Polhem.UI.Avalonia.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
     /// Asynchronous CRUD half of <see cref="FormDataObject"/> (load / save / delete / new against the
-    /// backend connector). Split out for file size only; behaviour is unchanged.
+    /// backend connector).
     /// </summary>
+    /// <remarks>
+    /// NOTE: the async methods resume on the caller's context (<c>ConfigureAwait(true)</c>). Their
+    /// continuations replace <see cref="DataSet"/> and flip <see cref="IsLoading"/> / <see cref="IsDirty"/>,
+    /// raising events that bound controls consume. Avalonia controls are thread-affine, and Blazor renders and
+    /// handles events for a circuit on that circuit's dispatcher, so called from the UI, the writes stay there.
+    /// </remarks>
     public sealed partial class FormDataObject
     {
         /// <summary>
@@ -27,11 +32,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             IsLoading = true;
             try
             {
-                // NOTE: No ConfigureAwait(false) here or in the other CRUD methods —
-                // the continuation mutates the DataSet and raises change events that
-                // Avalonia controls consume, and those are thread-affine, so it must
-                // resume on the captured UI context.
-                var response = await connector.GetDataAsync(rowId, cancellationToken);
+                var response = await connector.GetDataAsync(rowId, cancellationToken).ConfigureAwait(true);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         $"No master row found for {SysFields.RowId} = {rowId}.");
@@ -61,7 +62,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             IsLoading = true;
             try
             {
-                var response = await connector.SaveAsync(DataSet, cancellationToken);
+                var response = await connector.SaveAsync(DataSet, cancellationToken).ConfigureAwait(true);
                 if (response.DataSet is not null)
                     ReplaceDataSet(response.DataSet);
                 IsDirty = false;
@@ -90,7 +91,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             IsLoading = true;
             try
             {
-                await connector.DeleteAsync(rowId, cancellationToken);
+                await connector.DeleteAsync(rowId, cancellationToken).ConfigureAwait(true);
                 ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(_schema));
                 IsDirty = false;
             }
@@ -117,7 +118,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             IsLoading = true;
             try
             {
-                var response = await connector.GetNewDataAsync(cancellationToken);
+                var response = await connector.GetNewDataAsync(cancellationToken).ConfigureAwait(true);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         "GetNewData returned a null DataSet; cannot initialize a new master row.");

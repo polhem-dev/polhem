@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace Polhem.UI.Avalonia.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
     /// Event data for <see cref="FormDataObject.RowAdded"/> and

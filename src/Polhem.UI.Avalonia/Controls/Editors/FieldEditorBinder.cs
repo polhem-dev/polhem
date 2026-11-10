@@ -2,7 +2,7 @@ using System.Data;
 using Avalonia.Controls;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Fields;
 
 namespace Polhem.UI.Avalonia.Controls.Editors

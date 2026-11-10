@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head。以一組深度綁定定義層的原生控件子類渲染 FormSchema 驅動表單，資料中樞為 `FormDataObject` view-model。
+Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head。以一組深度綁定定義層的原生控件子類渲染 FormSchema 驅動表單，資料中樞為各 head 共用、位於 [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md) 的 `FormDataObject`。
 
 ## 架構定位
 
@@ -29,7 +29,7 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 | `GridEditMode` | grid 的 UI 層編輯模型：`InCell`（逐格編輯，ADR-021 混合策略）或 `EditForm`（唯讀 grid + 彈窗整列編輯）。 |
 | `RowEditPanel` / `RowEditDialog` | EditForm 模式的編輯面，由 field editors 組成；經暫存列編輯協定確認或取消。 |
 | `ObjectTreeView` | `TreeView` 子類，顯示 `ObjectTreeBuilder`（`Polhem.Definition.ObjectTree`）依 `[TreeNode]` 標註建出的 `ObjectTreeNode` 樹：設定 `RootNode`，可選 `IconSelector`；`IsExpanded` 雙向繫結；`CommandProvider` 以選取節點的命令填入右鍵選單。 |
-| `FormDataObject` | view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，提供非同步 CRUD 與暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`）。 |
+| `FormDataObject` | 不在本套件：檢視與編輯器綁定的資料物件位於 `Polhem.UI.Core.DataObjects`。`FormView` 以 `UIServices.Provider` 中 `IUserContext` 的登入使用者時區建構它；自行建構時也照樣傳入時區，否則新資料列的日期預設值為 UTC。 |
 
 ## 使用方式
 

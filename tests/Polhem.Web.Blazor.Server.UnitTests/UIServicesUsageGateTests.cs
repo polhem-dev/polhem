@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Polhem.Web.Blazor.DataObjects;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -18,9 +17,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     public class UIServicesUsageGateTests
     {
         // The shared layer, the host and the UI package, which is everything a Blazor application runs.
+        // `FormDataObject` lives in `Polhem.UI.Core`, which this scan cannot see into; UICoreServiceLocatorGateTests
+        // in Polhem.UI.Core.UnitTests covers it.
         private static readonly string[] s_assemblyPaths =
         [
-            typeof(FormDataObject).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Components.FormPageBase).Assembly.Location,
             typeof(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider).Assembly.Location,
             typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly.Location,
             typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly.Location,
@@ -63,7 +64,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         public void Scan_SeesUICoreTypesInUse()
         {
             using var peReader = new PEReader(File.OpenRead(s_assemblyPaths[0]));
-            Assert.Contains("Polhem.UI.Core.FormValueBinding", TypeReferences(peReader.GetMetadataReader()));
+            Assert.Contains("Polhem.UI.Core.DataObjects.FormDataObject", TypeReferences(peReader.GetMetadataReader()));
         }
     }
 }

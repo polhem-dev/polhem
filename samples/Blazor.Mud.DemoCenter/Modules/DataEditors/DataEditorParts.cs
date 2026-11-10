@@ -1,6 +1,6 @@
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Blazor.Mud.DemoCenter.Modules.DataEditors;
 

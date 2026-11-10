@@ -8,7 +8,8 @@
 
 ## 內容
 
-- `FormDataObject` 與 `FormLiveComputation`（`Polhem.Web.Blazor.DataObjects`）。
+- `FormLiveComputation`（`Polhem.Web.Blazor.DataObjects`）。元件綁定的是各 head 共用、位於
+  [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md) 的 `FormDataObject`。
 - `FieldEditorBase`、`IFieldEditor` 與 `FormScope`（`Polhem.Web.Blazor.Controls.Editors`），所有欄位編輯器的基底。
 - `TextEditorBase`、`NumericEditorBase`、`CheckEditorBase`、`DropDownEditorBase`、`DateEditorBase`、`TimeEditorBase` 與 `DateTimeEditorBase`，各類編輯器的取值與提交規則；markup 由 UI 套件提供。
 - `ButtonEditorBase`、`LookupPanelBase` 與 `LookupDialogBase`（`Polhem.Web.Blazor.Controls.Editors`），查詢流程。
@@ -24,11 +25,9 @@
 
 - `BlazorUserContext` -- 單一 circuit 的登入使用者、進入的公司與能力。host 以 `EnterCompanyAsync` 進入公司、以 `SignOut`
   登出，讓 context 與 client 保持一致。直接透過 client 進入公司的話，context 沒有能力快照，頁面會把使用者視為不受限。
-- `FormDataObject` -- 由 `FormSchema` 衍生記憶體內 `DataSet`（主檔列 + 明細資料表），提供 `GetField` /
-  `SetField`（主檔列或指定的資料列）雙向綁定，值變更時觸發 `FieldValueChanged` 與 `DataSetReplaced`，並透過連接器執行 `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`。
-  新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）並觸發 `RowAdded`；
-  `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發 `RowEditFieldChanged`，
-  提交時才發布。
+- `FormDataObject`（`Polhem.UI.Core.DataObjects`）-- 頁面以 circuit 的 client 所建立的連接器，以及 circuit 自己的時區
+  （`Client.Session.Credentials.UserTimeZoneId`）建構它，新資料列的日期預設值依此決定。自訂頁面也照做；不可傳整個
+  process 共用的時區。
 - `FormLiveComputation` -- 重算表單的計算欄位並評估新資料列的預設值運算式，規則與 Avalonia 端相同（`Polhem.UI.Core`
   的 `FormLiveComputationEngine`）。自訂頁面訂閱 `FieldValueChanged` 並呼叫 `Recompute`；時區要傳 circuit 自己的，
   不可用整個 process 共用的。

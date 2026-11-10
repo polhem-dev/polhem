@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
 {
     /// <summary>
-    /// The lookup write-back of <see cref="Polhem.Web.Blazor.DataObjects.FormDataObject"/>.
+    /// The lookup write-back of <see cref="Polhem.UI.Core.DataObjects.FormDataObject"/>.
     /// </summary>
     public class FormDataObjectLookupTests
     {

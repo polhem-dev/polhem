@@ -5,9 +5,9 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.UI.Avalonia.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
     /// Verifies that <see cref="FormDataObject"/> derives the correct <see cref="DataSet"/>

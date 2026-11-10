@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.UI.Avalonia.Controls.Editors;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Avalonia.DemoCenter.Modules.DataEditors
 {

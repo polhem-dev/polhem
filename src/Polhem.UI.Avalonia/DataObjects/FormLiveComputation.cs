@@ -13,7 +13,7 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// recompute rules are <see cref="FormLiveComputationEngine"/>, which every head shares; this type supplies
     /// this head's defaults: a <see cref="DynamicExpressoEvaluator"/> shared by every form in the process, and
     /// the signed-in user's time zone from <see cref="UIServices"/>. The wiring that subscribes
-    /// <see cref="FormDataObject.FieldValueChanged"/> and refreshes detail grids lives in
+    /// <see cref="Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChanged"/> and refreshes detail grids lives in
     /// <see cref="Polhem.UI.Avalonia.Views.FormView"/>.
     /// </summary>
     public sealed class FormLiveComputation

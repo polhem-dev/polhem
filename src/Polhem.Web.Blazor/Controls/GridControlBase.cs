@@ -10,7 +10,7 @@ using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Connectors;
 
 namespace Polhem.Web.Blazor.Controls

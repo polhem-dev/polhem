@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Polhem.Tests.Shared;
 using System.Reflection;
-using Polhem.Web.Blazor.DataObjects;
 using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
@@ -16,9 +15,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     /// </remarks>
     public class BlazorAsyncSurfaceTests
     {
-        // The shared layer, the host and the UI packages are one async surface to a caller.
+        // The shared layer, the host and the UI packages are one async surface to a caller. `FormDataObject` is in
+        // `Polhem.UI.Core`, whose surface UIAsyncSurfaceTests in Polhem.UI.Avalonia.UnitTests scans.
         private static IEnumerable<MethodInfo> Methods()
-            => AsyncSurface.Methods(typeof(FormDataObject).Assembly)
+            => AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Components.FormPageBase).Assembly)
                 .Concat(AsyncSurface.Methods(typeof(PolhemAccessTokenProvider).Assembly))
                 .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly))
                 .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly));
@@ -45,7 +45,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("The Blazor async surface scan finds members, so an empty filter cannot pass vacuously")]
         public void AsyncSurface_FindsMembers()
         {
-            Assert.Contains(Methods(), m => m.DeclaringType == typeof(FormDataObject));
+            Assert.Contains(Methods(), m => m.DeclaringType?.Assembly == typeof(Polhem.Web.Blazor.Components.FormPageBase).Assembly);
         }
     }
 }

@@ -2,9 +2,9 @@ using System.ComponentModel;
 using System.Data;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.Web.Blazor.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
     /// The change events and row-scoped access of <see cref="FormDataObject"/>, which the field editors rely on.

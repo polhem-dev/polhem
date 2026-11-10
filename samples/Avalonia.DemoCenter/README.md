@@ -112,7 +112,7 @@ Phones sample data).
 | Derived controls keep the Semi styles | [src/Polhem.UI.Avalonia/Controls/Editors/](../../src/Polhem.UI.Avalonia/Controls/Editors/) (`StyleKeyOverride` on each control) |
 | Ambient binding (set once on the container) | [FormScope.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FormScope.cs) |
 | FormMode / AllowEditModes drive read-only | `AllowsEdit` / `OnFormModeChanged` in [FieldEditorBinder.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FieldEditorBinder.cs) |
-| Field values refresh live | The `FieldValueChanged` event of [FormDataObject.cs](../../src/Polhem.UI.Avalonia/DataObjects/FormDataObject.cs) |
+| Field values refresh live | The `FieldValueChanged` event of [FormDataObject.cs](../../src/Polhem.UI.Core/DataObjects/FormDataObject.cs) |
 
 ## Theme / FormMode self-test matrix
 

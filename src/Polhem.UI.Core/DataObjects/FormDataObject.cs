@@ -1,16 +1,15 @@
 using System.Data;
-using Polhem.UI.Core;
 using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.UI.Avalonia.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
     /// Holds the in-memory <see cref="System.Data.DataSet"/> for a single form view
     /// (one master row plus zero or more detail tables) and exposes a small string-based
-    /// access surface for two-way binding by the Avalonia form views and editors.
+    /// access surface for two-way binding by the form views and field editors of every head.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -21,28 +20,24 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// the local <see cref="DataSet"/> with the server response.
     /// </para>
     /// <para>
-    /// The value rules this type used to carry privately — DataSet seeding, string/column
-    /// coercion, display formatting, the CRUD preconditions — live once in <c>Polhem.UI.Core</c>
-    /// (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which every front end references,
-    /// <c>Polhem.Web.Blazor.Server</c> included. They are head-agnostic: the same <see cref="FormSchema"/>
-    /// and the same server responses drive every head.
+    /// The Avalonia and Blazor heads each used to carry a copy of this type. The copies drifted twice:
+    /// once when one side wrote <see cref="DBNull"/> into a non-nullable column long after the other had
+    /// fixed it, and again in comments that described column casing the framework no longer used. One
+    /// shared implementation is what keeps the heads aligned.
     /// </para>
     /// <para>
-    /// NOTE: this used to be a verbatim copy of the Blazor head's version, marked "deliberately
-    /// parallel" with a note that nothing enforced the parallel. The two copies did diverge, with one
-    /// side writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
-    /// One shared implementation is what keeps them aligned.
+    /// IMPORTANT: this type never reads the process-wide <see cref="UIServices"/>. The Blazor Server head
+    /// serves many users from one process, so a value read from there would belong to whoever registered it.
+    /// Anything per user, such as the time zone, is passed in by the head that constructs the object.
+    /// <c>UICoreServiceLocatorGateTests</c> enforces it for the whole assembly.
     /// </para>
     /// </remarks>
-    public partial class FormDataObject
+    public sealed partial class FormDataObject
     {
         private readonly FormSchema _schema;
         private readonly IFormApiConnector? _connector;
-        // Rows under an explicit BeginRowEdit session. ADO.NET does NOT suppress
-        // ColumnChanged during BeginEdit (pinned by test) — the bridge consults this
-        // set to raise RowEditFieldChanged instead of FieldValueChanged until
-        // CommitRowEdit re-publishes the session's changes.
-        private readonly HashSet<DataRow> _rowsInEdit = [];
+        private readonly Func<string>? _timeZoneProvider;
+        private bool _isDirty;
 
         /// <summary>
         /// Initializes a new instance of <see cref="FormDataObject"/> and derives the
@@ -54,7 +49,12 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <see cref="NewAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>).
         /// Optional when only the in-memory <see cref="DataSet"/> surface is needed.
         /// </param>
-        public FormDataObject(FormSchema schema, IFormApiConnector? connector = null)
+        /// <param name="timeZoneProvider">
+        /// Returns the signed-in user's IANA time zone id, which dates new rows default to; <c>null</c>, or a
+        /// blank result, means UTC. Called each time a row is added, so a sign-in after construction takes effect.
+        /// </param>
+        public FormDataObject(FormSchema schema, IFormApiConnector? connector = null,
+            Func<string>? timeZoneProvider = null)
         {
             ArgumentNullException.ThrowIfNull(schema);
             if (string.IsNullOrWhiteSpace(schema.ProgId))
@@ -62,6 +62,7 @@ namespace Polhem.UI.Avalonia.DataObjects
 
             _schema = schema;
             _connector = connector;
+            _timeZoneProvider = timeZoneProvider;
             InitializeValueChange();
             DataSet = null!;
             ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(schema), notify: false);
@@ -105,8 +106,6 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// </summary>
         public bool IsLoading { get; private set; }
 
-        private bool _isDirty;
-
         /// <summary>
         /// Gets a value indicating whether the data has been modified since the last
         /// load/save. Changing this raises <see cref="IsDirtyChanged"/> only on an actual
@@ -125,30 +124,22 @@ namespace Polhem.UI.Avalonia.DataObjects
 
         /// <summary>
         /// Raised after any field value changes in any table of the
-        /// <see cref="DataSet"/> — master and detail alike, regardless of the write
+        /// <see cref="DataSet"/>, master and detail alike, regardless of the write
         /// path (<see cref="SetField(string, string?)"/>, grid cell editors, lookup write-backs,
         /// direct <see cref="DataRow"/> writes). Bridged from the ADO.NET
         /// <see cref="DataTable.ColumnChanged"/> event so no writer has to remember
         /// to raise it.
         /// </summary>
+        /// <remarks>
+        /// Raised on the thread that wrote the value. A subscriber that updates the UI from another thread
+        /// marshals to the UI thread itself.
+        /// </remarks>
         public event EventHandler<FieldValueChangedEventArgs>? FieldValueChanged;
 
         /// <summary>
-        /// Raised after a field value changes in a row under a buffered edit session
-        /// (<see cref="BeginRowEdit"/>), in place of <see cref="FieldValueChanged"/>.
-        /// </summary>
-        /// <remarks>
-        /// The value is only proposed: <see cref="CancelRowEdit"/> rolls it back without further events,
-        /// and <see cref="CommitRowEdit"/> re-publishes every field the session changed through
-        /// <see cref="FieldValueChanged"/>. This event therefore does not mark the object dirty. It lets the
-        /// surface editing the row preview the session, for example by recomputing computed fields and
-        /// refreshing their editors.
-        /// </remarks>
-        public event EventHandler<FieldValueChangedEventArgs>? RowEditFieldChanged;
-
-        /// <summary>
         /// Raised after a row is added to any table of the <see cref="DataSet"/> (e.g. a
-        /// detail grid's add action). Bridged from <see cref="DataTable.RowChanged"/>.
+        /// detail grid's add action), once it has been seeded with its defaults. Bridged from
+        /// <see cref="DataTable.RowChanged"/>.
         /// </summary>
         public event EventHandler<RowChangedEventArgs>? RowAdded;
 
@@ -168,7 +159,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// Raised after the underlying <see cref="DataSet"/> is replaced or reset
         /// (<see cref="LoadAsync"/>, <see cref="SaveAsync"/>, <see cref="DeleteAsync"/>,
         /// <see cref="NewAsync"/>, <see cref="InitializeNewMaster"/>). Bound editors
-        /// re-pull their values instead of requiring a full visual rebuild.
+        /// re-read their values instead of requiring a full visual rebuild.
         /// </summary>
         public event EventHandler? DataSetReplaced;
 
@@ -192,7 +183,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// renders it as a binding string. While the row is in an edit session
         /// (<see cref="BeginRowEdit"/>), the proposed value is returned.
         /// </summary>
-        /// <param name="row">The row to read from.</param>
+        /// <param name="row">The row to read from; it must belong to <see cref="DataSet"/>.</param>
         /// <param name="fieldName">The field (column) name.</param>
         public string GetField(DataRow row, string fieldName)
         {
@@ -210,15 +201,12 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// (or <see cref="DBNull"/> when the column allows nulls).
         /// </summary>
         /// <remarks>
-        /// Idempotent against initial-render echoes — Avalonia (and to a lesser extent
-        /// MAUI) controls fire <c>TextChanged</c> once with the value we just set via
-        /// the control's object initializer, before the user has touched anything.
-        /// Re-writing that echo would dirty the row and, on NOT-NULL columns whose
-        /// <see cref="DataColumn.DefaultValue"/> is still <see cref="DBNull"/> (typical
-        /// for tables that round-trip through the wire and never went through
-        /// <c>AddColumn</c>), raise <c>NoNullAllowedException</c>
-        /// during <c>EndEdit</c>. Comparing against the existing value first short-
-        /// circuits both hazards.
+        /// A value equal to the stored one is not written, so re-committing an unchanged input neither
+        /// dirties the object nor raises <see cref="FieldValueChanged"/>. Native controls echo the value
+        /// they were just given (Avalonia raises <c>TextChanged</c> once for the initial value, before
+        /// the user has touched anything). Re-writing that echo would dirty the row and, on a NOT NULL
+        /// column whose <see cref="DataColumn.DefaultValue"/> is still <see cref="DBNull"/> (typical for
+        /// tables deserialized from the wire), raise <c>NoNullAllowedException</c> during <c>EndEdit</c>.
         /// </remarks>
         /// <param name="fieldName">The field (column) name.</param>
         /// <param name="value">The string value supplied by the bound input.</param>
@@ -234,9 +222,9 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <summary>
         /// Writes <paramref name="value"/> to <paramref name="row"/> (master or
         /// detail) after coercing it to the column's declared CLR type, with the
-        /// same empty-input and echo-guard semantics as the master overload.
+        /// same empty-input and unchanged-value rules as the master overload.
         /// </summary>
-        /// <param name="row">The row to write to.</param>
+        /// <param name="row">The row to write to; it must belong to <see cref="DataSet"/>.</param>
         /// <param name="fieldName">The field (column) name.</param>
         /// <param name="value">The string value supplied by the bound input.</param>
         public void SetField(DataRow row, string fieldName, string? value)
@@ -251,89 +239,9 @@ namespace Polhem.UI.Avalonia.DataObjects
             var newValue = FormValueBinding.ToColumnValue(value, column);
             if (Equals(newValue, row[fieldName])) return;
 
-            // The write itself raises FieldValueChanged and marks dirty through the
-            // DataTable event bridge; the compare-first guard above keeps no-op
-            // writes (initial-render echoes) from producing event noise.
+            // The write itself raises FieldValueChanged and marks dirty through the DataTable
+            // event bridge; the compare-first guard above keeps no-op writes from producing event noise.
             row[fieldName] = newValue;
-        }
-
-        /// <summary>
-        /// Starts a buffered edit session on <paramref name="row"/>: subsequent
-        /// writes go to the row's proposed version and ADO.NET suspends change
-        /// events until the session ends.
-        /// </summary>
-        /// <param name="row">The row to edit.</param>
-        public void BeginRowEdit(DataRow row)
-        {
-            ArgumentNullException.ThrowIfNull(row);
-            EnsureOwnedRow(row);
-            _rowsInEdit.Add(row);
-            row.BeginEdit();
-        }
-
-        /// <summary>
-        /// Commits a buffered edit session: captures which fields the session
-        /// actually changed (proposed vs current — taken before <c>EndEdit</c>
-        /// merges them), ends the edit, then re-publishes the per-field
-        /// <see cref="FieldValueChanged"/> events ADO.NET suppressed during the
-        /// session. Dirty tracking flows through the event bridge.
-        /// </summary>
-        /// <param name="row">The row whose edit session to commit.</param>
-        public void CommitRowEdit(DataRow row)
-        {
-            ArgumentNullException.ThrowIfNull(row);
-            EnsureOwnedRow(row);
-            _rowsInEdit.Remove(row);
-
-            if (!row.HasVersion(DataRowVersion.Proposed))
-            {
-                row.EndEdit();
-                return;
-            }
-
-            var changedFields = new List<string>();
-            foreach (DataColumn column in row.Table.Columns)
-            {
-                if (!Equals(row[column, DataRowVersion.Proposed], row[column, DataRowVersion.Current]))
-                    changedFields.Add(column.ColumnName);
-            }
-
-            if (changedFields.Count == 0)
-            {
-                // BeginEdit creates the proposed version eagerly, so EndEdit would
-                // raise RowChanged (and dirty the object) even though nothing
-                // changed; cancelling is equivalent and stays silent.
-                row.CancelEdit();
-                return;
-            }
-
-            row.EndEdit();
-
-            foreach (var fieldName in changedFields)
-            {
-                // The session already announced these values as they were typed, callbacks included.
-                FieldValueChanged?.Invoke(this, new FieldValueChangedEventArgs(
-                    row.Table.TableName, fieldName, GetField(row, fieldName), row, FieldValueOrigin.RowEditCommit));
-            }
-        }
-
-        /// <summary>
-        /// Cancels a buffered edit session, restoring every field to its pre-session
-        /// value. No events are raised — nothing changed.
-        /// </summary>
-        /// <param name="row">The row whose edit session to cancel.</param>
-        public void CancelRowEdit(DataRow row)
-        {
-            ArgumentNullException.ThrowIfNull(row);
-            EnsureOwnedRow(row);
-            _rowsInEdit.Remove(row);
-            row.CancelEdit();
-        }
-
-        private void EnsureOwnedRow(DataRow row)
-        {
-            if (!ReferenceEquals(row.Table.DataSet, DataSet))
-                throw new ArgumentException("Row does not belong to this data object's DataSet.", nameof(row));
         }
 
         /// <summary>
@@ -349,7 +257,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             MasterTable.Rows.Add(MasterTable.NewRow());
             IsDirty = false;
             // The dataset instance is unchanged (no resubscription needed), but the
-            // visible content was reset — notify so bound editors re-pull.
+            // visible content was reset, so notify bound editors to re-read.
             DataSetReplaced?.Invoke(this, EventArgs.Empty);
         }
 
@@ -385,12 +293,12 @@ namespace Polhem.UI.Avalonia.DataObjects
             return table.Fields.Contains(fieldName) ? table.Fields[fieldName] : null;
         }
 
-
         /// <summary>
         /// Applies a lookup selection to the bound row: writes the selected row's
         /// <c>sys_rowid</c> into <paramref name="field"/> and copies each mapped source
         /// field of <see cref="FormField.RelationFieldMappings"/> to its local destination field,
-        /// <see cref="FieldMapping.LookupOnly"/> entries included.
+        /// <see cref="FieldMapping.LookupOnly"/> entries included. The rules are
+        /// <see cref="LookupFieldRules.ApplySelection"/>.
         /// </summary>
         /// <remarks>
         /// A value copied into a relation field (<c>ref_*</c>) is display-only between saves: a
@@ -402,7 +310,7 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <param name="targetRow">The detail row to write to; <c>null</c> targets the master row.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when <paramref name="selectedRow"/> lacks <c>sys_rowid</c> or a mapped
-        /// source field — the mapping must stay within the target form's lookup field set.
+        /// source field; the mapping must stay within the target form's lookup field set.
         /// </exception>
         public void ApplyLookupSelection(FormField field, DataRow selectedRow, DataRow? targetRow = null)
         {

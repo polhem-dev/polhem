@@ -3,7 +3,7 @@ using Polhem.Api.Contracts.Form;
 using Polhem.Definition.Forms;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.Web.Blazor.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
     /// Server callback half of <see cref="FormDataObject"/>: hands every field change to the shared
@@ -29,6 +29,9 @@ namespace Polhem.Web.Blazor.DataObjects
         /// completed.
         /// </summary>
         public event EventHandler<FieldValueChangeFailedEventArgs>? FieldValueChangeFailed;
+
+        /// <summary>Gets the callback started last, for tests that wait for it.</summary>
+        internal Task LastFieldValueChange { get; private set; } = Task.CompletedTask;
 
         private void InitializeValueChange()
         {
@@ -61,16 +64,15 @@ namespace Polhem.Web.Blazor.DataObjects
 
         private void NotifyValueChange(string tableName, string fieldName, DataRow row, FieldValueOrigin origin)
         {
-            // The coordinator reports its own failures through `Failed`, so nothing awaits the task here.
             if (_valueChange is not null)
-                _ = _valueChange.OnFieldValueChangedAsync(tableName, fieldName, row, origin);
+                LastFieldValueChange = _valueChange.OnFieldValueChangedAsync(tableName, fieldName, row, origin);
         }
 
         private void NotifyLookupSelected(FormField field, DataRow? targetRow)
         {
             var row = targetRow ?? MasterRow;
             if (_valueChange is not null && row is not null)
-                _ = _valueChange.OnLookupSelectedAsync(row.Table.TableName, field.FieldName, row);
+                LastFieldValueChange = _valueChange.OnLookupSelectedAsync(row.Table.TableName, field.FieldName, row);
         }
     }
 }

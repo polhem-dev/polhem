@@ -43,7 +43,7 @@ The order and the descriptions are in [`DemoModuleRegistry`](Modules/DemoModuleR
 ### Not available
 
 - **Property Grid** (`PropertyGridModule`): `Polhem.Web.Blazor.Mud` has no `PropertyGridControl`.
-- **`FormPage` over your own data**: `FormPage` and the load and save methods of `FormDataObject` go through `PolhemApiClient`, so they need a Polhem backend. The Avalonia `ListView` and `FormView` take an `IFormApiConnector`. `WithoutBackendModule` shows what the public controls can do instead; `FormPage` itself runs in `apps/Polhem.Northwind`.
+- **`FormPage` over your own data**: `FormPage` loads and saves through `PolhemApiClient`, so it needs a Polhem backend. `FormDataObject` and the Avalonia `ListView` and `FormView` take an `IFormApiConnector`. `WithoutBackendModule` shows what the public controls can do instead; `FormPage` itself runs in `apps/Polhem.Northwind`.
 
 ## Adding a case
 

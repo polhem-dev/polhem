@@ -12,6 +12,7 @@ using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core.DataObjects;
 using Polhem.Web.Blazor.DataObjects;
 using Polhem.Web.Blazor.Controls;
 using Microsoft.AspNetCore.Components;
@@ -341,7 +342,8 @@ namespace Polhem.Web.Blazor.Components
                     _scrollCardsToTop = true;
                 }
                 _isListPaged = list.Paging is not null;
-                _dataObject = new FormDataObject(schema, Client.Form(ProgId));
+                _dataObject = new FormDataObject(
+                    schema, Client.Form(ProgId), () => Client.Session.Credentials.UserTimeZoneId);
                 _liveComputation = new FormLiveComputation(
                     schema, roundingContext, timeZoneProvider: () => Client.Session.Credentials.UserTimeZoneId);
                 // Subscribed once per load because the data object keeps these events across DataSet

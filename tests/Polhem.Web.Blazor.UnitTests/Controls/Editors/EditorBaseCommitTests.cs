@@ -4,7 +4,7 @@ using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.Controls.Editors;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.UnitTests.Controls.Editors
 {

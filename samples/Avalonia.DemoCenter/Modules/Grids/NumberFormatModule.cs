@@ -6,7 +6,7 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Avalonia.DemoCenter.Modules.DataEditors;
 
 namespace Avalonia.DemoCenter.Modules.Grids
