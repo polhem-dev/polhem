@@ -227,5 +227,29 @@ namespace Polhem.Core.UnitTests.Serialization
             // Read without the column's type, the text was taken for a date and came back as "07/28/2026 00:00:00".
             Assert.Equal("2026-07-28", restored.Columns["note"]!.DefaultValue);
         }
+
+        [Fact]
+        [DisplayName("An object as a default value is ignored, and the column's members after it are still read")]
+        public void DefaultValue_Object_IsIgnoredAndLaterMembersRead()
+        {
+            const string json = """
+                {
+                  "tableName": "T",
+                  "columns": [
+                    { "name": "code", "defaultValue": { "name": "nested", "maxLength": 1 }, "type": "String",
+                      "maxLength": 20, "caption": "Code" }
+                  ],
+                  "primaryKeys": [],
+                  "rows": []
+                }
+                """;
+
+            var column = JsonSerializer.Deserialize<DataTable>(json, s_options)!.Columns["code"]!;
+
+            Assert.Equal(DBNull.Value, column.DefaultValue);
+            Assert.Equal(typeof(string), column.DataType);
+            Assert.Equal(20, column.MaxLength);
+            Assert.Equal("Code", column.Caption);
+        }
 }
 }
