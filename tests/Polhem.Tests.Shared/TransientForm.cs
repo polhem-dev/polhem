@@ -47,13 +47,27 @@ namespace Polhem.Tests.Shared
             DatabaseId = TestDbConventions.GetDatabaseId(databaseType, CategoryId);
             DefineAccess = new FormSchemaOverlayDefineAccess(fx.GetRequiredService<IDefineAccess>(), schema);
             DbAccess = fx.NewDbAccess(DatabaseId);
-            Repository = new DataFormRepository(
-                TestRepositoryContext.Create(
-                    fx.GetRequiredService<IDbConnectionManager>(),
-                    defineAccess: DefineAccess,
-                    dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>()),
-                schema.ProgId, schema, DatabaseId);
+            Repository = CreateRepository(CompanyId);
         }
+
+        /// <summary>
+        /// Creates a form repository over the same tables bound to another company, the way a second
+        /// company sharing the database reaches them.
+        /// </summary>
+        /// <param name="companyId">The company the repository is bound to.</param>
+        public DataFormRepository CreateRepository(string companyId)
+            => new(
+                TestRepositoryContext.Create(
+                    _fx.GetRequiredService<IDbConnectionManager>(),
+                    defineAccess: DefineAccess,
+                    dbAccessFactory: _fx.GetRequiredService<IDbAccessFactory>()),
+                Schema.ProgId, Schema, DatabaseId, companyId);
+
+        /// <summary>
+        /// The company the repository is bound to; rows written straight to the tables carry it in
+        /// <see cref="Polhem.Definition.SysFields.CompanyId"/> for the repository to see them.
+        /// </summary>
+        public const string CompanyId = SharedDatabaseState.SeedCompanyId;
 
         /// <summary>
         /// Gets the provider the tables live on.

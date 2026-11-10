@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Dml
@@ -43,6 +44,11 @@ namespace Polhem.Db.Dml
                 var joinKeyword = join.JoinType.ToString().ToUpperInvariant() + " JOIN";
                 sb.AppendLine();
                 sb.Append(CultureInfo.InvariantCulture, $"{joinKeyword} {QuoteIdentifier(join.RightTable)} {join.RightAlias} ON {join.LeftAlias}.{QuoteIdentifier(join.LeftField)} = {join.RightAlias}.{QuoteIdentifier(join.RightField)}");
+                if (join.MatchCompany)
+                {
+                    string companyColumn = QuoteIdentifier(SysFields.CompanyId);
+                    sb.Append(CultureInfo.InvariantCulture, $" AND {join.RightAlias}.{companyColumn} = A.{companyColumn}");
+                }
             }
             return sb.ToString();
         }

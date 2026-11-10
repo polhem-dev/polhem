@@ -41,7 +41,8 @@ namespace Polhem.Business.UnitTests.Form
                     dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>()),
                 SysProgIds.AuditRule,
                 defineAccess.GetFormSchema(SysProgIds.AuditRule),
-                databaseId);
+                databaseId,
+                CompanyId);
         }
 
         private sealed class CapturingAuditLogWriter : IAuditLogWriter

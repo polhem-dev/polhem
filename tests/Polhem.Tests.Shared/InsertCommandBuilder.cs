@@ -2,7 +2,9 @@ using System.Data;
 using System.Text;
 using Polhem.Core.Data;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Database;
 
 namespace Polhem.Tests.Shared
@@ -23,11 +25,19 @@ namespace Polhem.Tests.Shared
         /// </summary>
         /// <param name="formSchema">The form schema definition.</param>
         /// <param name="databaseType">The database type.</param>
-        public InsertCommandBuilder(FormSchema formSchema, DatabaseType databaseType)
+        /// <param name="companyId">
+        /// The company a row of a company form is stamped with, as the form repository stamps a row it
+        /// saves; defaults to the shared seed company.
+        /// </param>
+        public InsertCommandBuilder(FormSchema formSchema, DatabaseType databaseType,
+            string companyId = SharedDatabaseState.SeedCompanyId)
         {
             _formSchema = formSchema ?? throw new ArgumentNullException(nameof(formSchema));
             _databaseType = databaseType;
+            _companyId = CompanyInfo.NormalizeId(companyId);
         }
+
+        private readonly string _companyId;
 
         /// <summary>
         /// Builds an INSERT <see cref="DbCommandSpec"/> for the specified table from a <see cref="DataRow"/>.
@@ -60,6 +70,12 @@ namespace Polhem.Tests.Shared
 
                 columns.Add(_databaseType.QuoteIdentifier(field.FieldName));
                 values.Add(value);
+            }
+
+            if (columns.Count > 0 && string.Equals(_formSchema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal))
+            {
+                columns.Add(_databaseType.QuoteIdentifier(SysFields.CompanyId));
+                values.Add(_companyId);
             }
 
             if (columns.Count == 0)

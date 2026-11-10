@@ -57,6 +57,15 @@ namespace Polhem.Db.Dml
             return new DbCommandSpec(DbCommandKind.NonQuery, sql, whereResult.Parameters);
         }
 
+        private FilterCondition QuotedCopy(FilterCondition cond) => new()
+        {
+            FieldName = _databaseType.QuoteIdentifier(cond.FieldName),
+            Operator = cond.Operator,
+            Value = cond.Value,
+            SecondValue = cond.SecondValue,
+            IgnoreIfNull = cond.IgnoreIfNull,
+        };
+
         /// <summary>
         /// Walks the filter tree, validates that each referenced field belongs to the target table
         /// and is not a RelationField, and returns a copy with field names replaced by quoted identifiers.
@@ -69,6 +78,9 @@ namespace Polhem.Db.Dml
                 if (string.IsNullOrEmpty(cond.FieldName))
                     throw new InvalidOperationException("Filter condition has empty FieldName.");
 
+                if (SelectFieldGuard.IsCompanyColumn(formTable, cond.FieldName))
+                    return QuotedCopy(cond);
+
                 if (!formTable.Fields!.Contains(cond.FieldName))
                     throw new NotSupportedException(
                         $"DELETE filter references unknown field '{cond.FieldName}' on table '{formTable.TableName}'. "
@@ -80,15 +92,7 @@ namespace Polhem.Db.Dml
                         $"DELETE filter cannot reference {field.Type} field '{cond.FieldName}'. "
                         + "Only physical columns of the target table are supported.");
 
-                string quoted = _databaseType.QuoteIdentifier(cond.FieldName);
-                return new FilterCondition
-                {
-                    FieldName = quoted,
-                    Operator = cond.Operator,
-                    Value = cond.Value,
-                    SecondValue = cond.SecondValue,
-                    IgnoreIfNull = cond.IgnoreIfNull,
-                };
+                return QuotedCopy(cond);
             }
 
             if (node.Kind == FilterNodeKind.Group)
