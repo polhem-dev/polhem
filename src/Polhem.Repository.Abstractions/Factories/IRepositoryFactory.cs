@@ -45,19 +45,6 @@ namespace Polhem.Repository.Abstractions.Factories
         T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository;
 
         /// <summary>
-        /// Creates a framework repository by its interface.
-        /// </summary>
-        /// <typeparam name="T">The repository interface (for example <see cref="Polhem.Repository.Abstractions.System.ISessionRepository"/>).</typeparam>
-        /// <param name="accessToken">
-        /// The access token, for the repositories that route to a company database.
-        /// <see cref="Guid.Empty"/> is the correct value outside a request — background services and
-        /// cache providers have no session — and is accepted by every repository that does not need
-        /// one.
-        /// </param>
-        /// <exception cref="NotSupportedException">Thrown when no implementation is registered for <typeparamref name="T"/>.</exception>
-        T Create<T>(Guid accessToken = default) where T : class;
-
-        /// <summary>
         /// Creates the repository registered for the supplied progId, as
         /// <see cref="CreateFormRepository{T}(Guid, string)"/> does, for a request that has taken its snapshot of the
         /// session's company scope.
@@ -71,5 +58,18 @@ namespace Polhem.Repository.Abstractions.Factories
         /// </param>
         T CreateFormRepository<T>(Guid accessToken, string progId, Polhem.Definition.Identity.SessionCompanyScope companyScope)
             where T : class, IDataFormRepository;
+
+        /// <summary>
+        /// Creates a framework repository by its interface.
+        /// </summary>
+        /// <typeparam name="T">The repository interface (for example <see cref="Polhem.Repository.Abstractions.System.ISessionRepository"/>).</typeparam>
+        /// <param name="accessToken">
+        /// The access token, for the repositories that route to a company database.
+        /// <see cref="Guid.Empty"/> is the correct value outside a request — background services and
+        /// cache providers have no session — and is accepted by every repository that does not need
+        /// one.
+        /// </param>
+        /// <exception cref="NotSupportedException">Thrown when no implementation is registered for <typeparamref name="T"/>.</exception>
+        T Create<T>(Guid accessToken = default) where T : class;
     }
 }

@@ -46,7 +46,7 @@ namespace Polhem.Business.Permission
             var session = companyScope;
             var scopes = ResolveScopes(session, modelId, action);
             if (scopes == null) { return null; }                                  // unrestricted (All)
-            if (scopes.Count == 0 || session == null) { return DenyAll(formSchema); }
+            if (scopes.Count == 0) { return DenyAll(formSchema); }
 
             var master = formSchema?.MasterTable;
             var ownerFields = FieldNames(master?.GetOwnerFields());

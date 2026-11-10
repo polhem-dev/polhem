@@ -41,21 +41,6 @@ namespace Polhem.Business
         }
 
         /// <summary>
-        /// Creates a system-level business object and returns it as <see cref="ISystemBusinessObject"/>.
-        /// </summary>
-        /// <param name="factory">The factory.</param>
-        /// <param name="accessToken">The access token.</param>
-        /// <param name="isLocalCall">Indicates whether the call originates from a local source.</param>
-        public static ISystemBusinessObject CreateSystemBO(
-            this IBusinessObjectFactory factory,
-            Guid accessToken,
-            bool isLocalCall)
-        {
-            ArgumentNullException.ThrowIfNull(factory);
-            return (ISystemBusinessObject)factory.CreateBusinessObject(accessToken, SysProgIds.System, isLocalCall);
-        }
-
-        /// <summary>
         /// Creates a form business object that shares the calling request's snapshot of the session's company scope.
         /// </summary>
         /// <param name="factory">The business object factory.</param>
@@ -76,6 +61,21 @@ namespace Polhem.Business
         {
             ArgumentNullException.ThrowIfNull(factory);
             return (IFormBusinessObject)factory.CreateBusinessObject(accessToken, progId, isLocalCall, companyScope);
+        }
+
+        /// <summary>
+        /// Creates a system-level business object and returns it as <see cref="ISystemBusinessObject"/>.
+        /// </summary>
+        /// <param name="factory">The factory.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="isLocalCall">Indicates whether the call originates from a local source.</param>
+        public static ISystemBusinessObject CreateSystemBO(
+            this IBusinessObjectFactory factory,
+            Guid accessToken,
+            bool isLocalCall)
+        {
+            ArgumentNullException.ThrowIfNull(factory);
+            return (ISystemBusinessObject)factory.CreateBusinessObject(accessToken, SysProgIds.System, isLocalCall);
         }
 
         /// <summary>
