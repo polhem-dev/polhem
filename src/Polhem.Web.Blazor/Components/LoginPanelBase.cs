@@ -30,8 +30,6 @@ namespace Polhem.Web.Blazor.Components
     /// </remarks>
     public abstract class LoginPanelBase : ComponentBase
     {
-        private string _userId = string.Empty;
-        private string _password = string.Empty;
         private bool _isBusy;
         private string? _error;
 
@@ -83,18 +81,10 @@ namespace Polhem.Web.Blazor.Components
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets or sets the user id in the input.</summary>
-        protected string UserId
-        {
-            get => _userId;
-            set => _userId = value;
-        }
+        protected string UserId { get; set; } = string.Empty;
 
         /// <summary>Gets or sets the password in the input.</summary>
-        protected string Password
-        {
-            get => _password;
-            set => _password = value;
-        }
+        protected string Password { get; set; } = string.Empty;
 
         /// <summary>Gets whether a sign-in is running.</summary>
         protected bool IsBusy => _isBusy;
@@ -116,8 +106,8 @@ namespace Polhem.Web.Blazor.Components
         /// <inheritdoc/>
         protected override void OnInitialized()
         {
-            _userId = InitialUserId ?? string.Empty;
-            _password = InitialPassword ?? string.Empty;
+            UserId = InitialUserId ?? string.Empty;
+            Password = InitialPassword ?? string.Empty;
         }
 
         /// <summary>Signs in with the values in the inputs.</summary>
@@ -130,7 +120,7 @@ namespace Polhem.Web.Blazor.Components
             _error = null;
             try
             {
-                var response = await Client.System.LoginAsync(_userId, _password, cancellationToken).ConfigureAwait(true);
+                var response = await Client.System.LoginAsync(UserId, Password, cancellationToken).ConfigureAwait(true);
 
                 if (response.AccessToken == Guid.Empty)
                 {
@@ -138,7 +128,7 @@ namespace Polhem.Web.Blazor.Components
                     return;
                 }
 
-                _password = string.Empty;
+                Password = string.Empty;
                 Services?.GetService<BlazorUserContext>()?.ApplyLoginResult(response);
 
                 if (OnLoggedIn.HasDelegate)

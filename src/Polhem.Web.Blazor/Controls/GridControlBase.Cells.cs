@@ -140,13 +140,19 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="column">The column.</param>
         /// <returns>The mark.</returns>
         protected string SortMark(LayoutColumn column)
-            => !IsSorted(column) ? string.Empty : SortDirection == SortDirection.Desc ? " \u25BC" : " \u25B2";
+        {
+            if (!IsSorted(column)) return string.Empty;
+            return SortDirection == SortDirection.Desc ? " \u25BC" : " \u25B2";
+        }
 
         /// <summary>Gets the <c>aria-sort</c> value of a column's header, or <c>null</c> when it is not sorted.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The value.</returns>
         protected string? AriaSort(LayoutColumn column)
-            => !IsSorted(column) ? null : SortDirection == SortDirection.Desc ? "descending" : "ascending";
+        {
+            if (!IsSorted(column)) return null;
+            return SortDirection == SortDirection.Desc ? "descending" : "ascending";
+        }
 
         private bool IsSorted(LayoutColumn column)
             => SortFieldName is not null && string.Equals(SortFieldName, column.FieldName, StringComparison.OrdinalIgnoreCase);
