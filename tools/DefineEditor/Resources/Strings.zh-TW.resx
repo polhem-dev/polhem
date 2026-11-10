@@ -486,8 +486,9 @@
   <data name="XmlView_Split" xml:space="preserve"><value>分割</value></data>
   <data name="XmlView_SplitTooltip" xml:space="preserve"><value>上下並排顯示樹與 XML，兩邊互相同步</value></data>
   <data name="XmlView_DesignLocked" xml:space="preserve"><value>請先修正 XML，或切換到「設計」，才能在樹上編輯</value></data>
-  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>以右側的欄位與函式撰寫運算式，按兩下即可插入。輸入時會即時檢查。</value></data>
+  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>以右側的欄位、函式與型別撰寫運算式，按兩下即可插入。輸入名稱或句點時會出現建議，Ctrl+Space（macOS 為 Cmd+I）列出游標處可用的項目。輸入時會即時檢查。</value></data>
   <data name="ExpressionEditor_Message" xml:space="preserve"><value>條件不成立時顯示的訊息</value></data>
   <data name="ExpressionEditor_Fields" xml:space="preserve"><value>欄位</value></data>
   <data name="ExpressionEditor_Functions" xml:space="preserve"><value>函式</value></data>
+  <data name="ExpressionEditor_Types" xml:space="preserve"><value>型別</value></data>
 </root>
