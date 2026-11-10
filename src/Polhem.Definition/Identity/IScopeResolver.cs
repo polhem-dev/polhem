@@ -21,6 +21,10 @@ namespace Polhem.Definition.Identity
     /// <c>Own</c> (a user always sees records they own). A required column or identity that is
     /// missing fails closed (matches no rows).
     /// </para>
+    /// <para>
+    /// IMPORTANT: inside a request, call the overload that takes a <see cref="SessionCompanyScope"/> with the
+    /// request's one snapshot, for the reason given on <see cref="ICompanyAuthorizationService"/> (ADR-063).
+    /// </para>
     /// </remarks>
     public interface IScopeResolver
     {
@@ -35,5 +39,15 @@ namespace Polhem.Definition.Identity
         /// <param name="action">The single action being authorized (<c>Read</c> / <c>Update</c> / <c>Delete</c>).</param>
         /// <param name="formSchema">The form schema (supplies the owner/department columns via <see cref="ScopeRole"/>).</param>
         FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema);
+
+        /// <summary>
+        /// Builds the record-scope filter for (model, action) from <paramref name="companyScope"/>, with the same
+        /// result rules as <see cref="ResolveFilter(Guid, string, PermissionActions, FormSchema)"/>.
+        /// </summary>
+        /// <param name="companyScope">The request's snapshot of the session's company scope.</param>
+        /// <param name="modelId">The permission model id.</param>
+        /// <param name="action">The single action being authorized (<c>Read</c> / <c>Update</c> / <c>Delete</c>).</param>
+        /// <param name="formSchema">The form schema (supplies the owner/department columns via <see cref="ScopeRole"/>).</param>
+        FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema);
     }
 }

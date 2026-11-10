@@ -104,6 +104,8 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
         /// </summary>
         private sealed class DelayingBusinessObjectFactory : IBusinessObjectFactory
         {
+            public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall, SessionCompanyScope companyScope) => CreateBusinessObject(accessToken, progId, isLocalCall);
+
             private readonly IBusinessObjectFactory _inner;
             private readonly TimeSpan _delay;
 

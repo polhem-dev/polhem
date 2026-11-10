@@ -45,5 +45,15 @@ namespace Polhem.Repository
 
         /// <summary>Escape hatch for services not in the typed core members. Use sparingly.</summary>
         IServiceProvider Services { get; }
+
+        /// <summary>
+        /// Gets the request's snapshot of the session's company scope, or <c>null</c> when the context carries none.
+        /// </summary>
+        /// <remarks>
+        /// A company-bound repository built with a snapshot takes both its database and its company from it, so
+        /// they agree with each other and with the authorization of the same request. Without one it reads the
+        /// session once and uses that read for both (ADR-063).
+        /// </remarks>
+        Polhem.Definition.Identity.SessionCompanyScope? CompanyScope => null;
     }
 }

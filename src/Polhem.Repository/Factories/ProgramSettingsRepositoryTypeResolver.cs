@@ -66,10 +66,18 @@ namespace Polhem.Repository.Factories
         /// from <see cref="DataFormRepository"/>.
         /// </exception>
         public Type Resolve(Guid accessToken, string progId)
+            => Resolve(GetCustomizeId(accessToken), progId);
+
+        /// <inheritdoc/>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the registry names a type that will not load, or one that does not derive
+        /// from <see cref="DataFormRepository"/>.
+        /// </exception>
+        public Type Resolve(string customizeId, string progId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
 
-            var item = FindProgramItem(accessToken, progId);
+            var item = FindProgramItem(customizeId ?? string.Empty, progId);
             if (item == null || StringUtilities.IsEmpty(item.Repository))
                 return typeof(DataFormRepository);
 
@@ -110,9 +118,9 @@ namespace Polhem.Repository.Factories
         /// empty <see cref="ProgramItem.Repository"/> is a legal "use the default" and would never
         /// be reported as an error.
         /// </remarks>
-        /// <param name="accessToken">The current request's access token.</param>
+        /// <param name="customizeId">The session's customization code; empty for none.</param>
         /// <param name="progId">The program identifier.</param>
-        private ProgramItem? FindProgramItem(Guid accessToken, string progId)
+        private ProgramItem? FindProgramItem(string customizeId, string progId)
         {
             ProgramSettings? baseSettings;
             try
@@ -127,7 +135,6 @@ namespace Polhem.Repository.Factories
                 baseSettings = null;
             }
 
-            string customizeId = GetCustomizeId(accessToken);
             ProgramSettings? custSettings = null;
             if (StringUtilities.IsNotEmpty(customizeId) && _customizeReader is not null)
                 custSettings = _customizeReader.GetCustomizeProgramSettings(customizeId);

@@ -351,6 +351,8 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class FakeAuth : ICompanyAuthorizationService
         {
+            public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action) => Can(Guid.Empty, modelId, action);
+
             private readonly PermissionActions _allowed;
             public FakeAuth(PermissionActions allowed) { _allowed = allowed; }
             public bool Can(Guid accessToken, string modelId, PermissionActions action) => _allowed.HasFlag(action);
@@ -367,12 +369,16 @@ namespace Polhem.Business.UnitTests.Form
         /// </remarks>
         private sealed class StubScopeResolver : IScopeResolver
         {
+            public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, global::Polhem.Definition.Forms.FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
             public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, Polhem.Definition.Forms.FormSchema formSchema)
                 => action == PermissionActions.Create ? null : new FilterGroup();
         }
 
         private sealed class FakeFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _repo;
             public FakeFactory(IDataFormRepository repo) { _repo = repo; }
             public T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository => (T)_repo;

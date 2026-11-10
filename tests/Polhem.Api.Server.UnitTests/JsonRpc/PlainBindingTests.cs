@@ -156,6 +156,8 @@ namespace Polhem.Api.Server.UnitTests.JsonRpc
 
         private sealed class SingleObjectFactory(object businessObject) : IBusinessObjectFactory
         {
+            public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall, global::Polhem.Definition.Identity.SessionCompanyScope companyScope) => CreateBusinessObject(accessToken, progId, isLocalCall);
+
             public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall) => businessObject;
         }
 

@@ -1,1 +1,2 @@
 #nullable enable
+Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool

@@ -6,7 +6,7 @@ namespace Polhem.Business.Form
     /// <remarks>
     /// This is the decoupling layer for <b>BO-to-BO calls</b>, matching
     /// <see cref="Polhem.Business.System.ISystemBusinessObject"/>: a caller resolves a form BO by
-    /// <c>progId</c> through <see cref="Polhem.Definition.IBusinessObjectFactory"/> (see <see cref="BusinessObjectFactoryExtensions.CreateFormBO"/>), casts to this
+    /// <c>progId</c> through <see cref="Polhem.Definition.IBusinessObjectFactory"/> (see <see cref="BusinessObjectFactoryExtensions.CreateFormBO(Polhem.Definition.IBusinessObjectFactory, Guid, string, bool, Polhem.Definition.Identity.SessionCompanyScope)"/>), casts to this
     /// interface, and invokes a method without binding to a concrete class — so host-side BO
     /// customisation cannot break callers.
     /// <para>

@@ -4,6 +4,7 @@ using Polhem.Db.CacheNotify;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions;
 using Polhem.Repository.Abstractions.AuditLog;
@@ -120,6 +121,22 @@ namespace Polhem.Repository.Factories
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
 
             var repository = CreateFormRepositoryCore(accessToken, progId);
+            return AsRepository<T>(repository, progId);
+        }
+
+        /// <inheritdoc/>
+        public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope)
+            where T : class, IDataFormRepository
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(progId);
+            ArgumentNullException.ThrowIfNull(companyScope);
+
+            var repository = CreateFormRepositoryCore(accessToken, progId, companyScope);
+            return AsRepository<T>(repository, progId);
+        }
+
+        private static T AsRepository<T>(IDataFormRepository repository, string progId) where T : class, IDataFormRepository
+        {
             return repository as T
                 ?? throw new InvalidOperationException(
                     $"The repository for progId '{progId}' is '{repository.GetType().FullName}', " +
@@ -140,10 +157,31 @@ namespace Polhem.Repository.Factories
         /// Thrown when the resolver returns a type that does not derive from <see cref="DataFormRepository"/>.
         /// </exception>
         protected virtual IDataFormRepository CreateFormRepositoryCore(Guid accessToken, string progId)
+            => BuildFormRepository(_ctx, _typeResolver.Resolve(accessToken, progId), accessToken, progId);
+
+        /// <summary>
+        /// Builds the repository bound to a progId for a request that has taken its snapshot of the session's
+        /// company scope.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: a host that overrides <see cref="CreateFormRepositoryCore(Guid, string)"/> overrides this one
+        /// too. The framework's business objects create their repositories through this overload, so an override of
+        /// the other one alone no longer takes part in their requests.
+        /// </remarks>
+        /// <param name="accessToken">The current request's access token.</param>
+        /// <param name="progId">The program identifier.</param>
+        /// <param name="companyScope">The request's snapshot; see <see cref="IRepositoryContext.CompanyScope"/>.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the resolver returns a type that does not derive from <see cref="DataFormRepository"/>.
+        /// </exception>
+        protected virtual IDataFormRepository CreateFormRepositoryCore(Guid accessToken, string progId, SessionCompanyScope companyScope)
+            => BuildFormRepository(
+                _ctx.WithCompanyScope(companyScope), _typeResolver.Resolve(companyScope.CustomizeId, progId), accessToken, progId);
+
+        private IDataFormRepository BuildFormRepository(RepositoryContext ctx, Type type, Guid accessToken, string progId)
         {
-            var type = _typeResolver.Resolve(accessToken, progId);
             if (type == typeof(DataFormRepository))
-                return new DataFormRepository(_ctx, accessToken, progId);
+                return new DataFormRepository(ctx, accessToken, progId);
 
             // The default resolver already refuses such a type with a message naming the registry
             // entry. This check is for every other resolver, which is the only place the contract
@@ -155,7 +193,7 @@ namespace Polhem.Repository.Factories
                     $"which does not derive from {typeof(DataFormRepository).FullName}.");
             }
 
-            return (IDataFormRepository)ActivatorUtilities.CreateInstance(_services, type, _ctx, accessToken, progId);
+            return (IDataFormRepository)ActivatorUtilities.CreateInstance(_services, type, ctx, accessToken, progId);
         }
 
         /// <inheritdoc/>

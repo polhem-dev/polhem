@@ -165,13 +165,14 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
 
-            var sessionInfo = SessionInfoService.Get(AccessToken)
+            _ = SessionInfoService.Get(AccessToken)
                 ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
 
             DepartmentTree? tree = null;
-            if (!string.IsNullOrEmpty(sessionInfo.CompanyId))
+            var companyId = CompanyScope.CompanyId;
+            if (!string.IsNullOrEmpty(companyId))
             {
-                tree = Services.GetRequiredService<IDepartmentTreeService>().Get(sessionInfo.CompanyId);
+                tree = Services.GetRequiredService<IDepartmentTreeService>().Get(companyId);
             }
             return new GetDepartmentTreeResult { Tree = tree };
         }

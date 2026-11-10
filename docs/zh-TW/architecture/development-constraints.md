@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: d953f06c8d202aac1a3e14ede348bcb99beb6749 -->
+<!-- source: en/architecture/development-constraints.md blob: 57aca5c73c4c5ed51e53dc536bed02386d5d28a3 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -138,7 +138,7 @@ singleton，一個請求在讀、另一個請求在寫同一個 cached 實例時
 | API 層直接引用 Repository 層（指 `Polhem.Api.Core`、`Polhem.Api.Server`；**不含**組合根 `Polhem.Hosting`，接線各層本就是它的職責） | 違反分層架構 | 透過 Business Object 間接存取 |
 | Business Object 直接建立 `DbConnection` | 繞過連線管理與日誌 | 把查詢放進 repository（見下一列）；由 repository 使用 `DbAccess` |
 | BO 引用 `Polhem.Db`（`Polhem.Business.csproj` 無 `Polhem.Db` 的 `ProjectReference`） | BO 是業務邏輯的薄殼，資料存取屬於 Repository | FormSchema-driven CRUD → `IDataFormRepository`；自訂查詢 → 繼承 `RepositoryBase`、由 `CreateDbAccess()` 取得資料庫存取的 repository |
-| BO 寫死 `databaseId` 字串或直接讀 `SessionInfo.CompanyId` / `CompanyInfo` | 將 BO 與路由實作耦合；部署設定變更時會壞 | 使用 `BusinessObject.ResolveDatabaseId(DbScope)`（自訂 bo repo）或 `CreateDataFormRepository(progId)`（FormSchema CRUD）；helper 內部委派給 `IRepositoryDatabaseRouter`，這是單一真相來源 |
+| BO 寫死 `databaseId` 字串或直接讀 `SessionInfo.CompanyId` / `SessionInfo.CompanyScope` / `CompanyInfo` | 將 BO 與路由實作耦合；部署設定變更時會壞。同一個 token 同時進入另一家公司時，再讀一次 session 也可能讀到和請求授權時不同的公司（[ADR-063](../../../maintainers/adr/adr-063-one-company-scope-per-request.md)） | 使用 `BusinessObject.ResolveDatabaseId(DbScope)`（自訂 bo repo）或 `CreateDataFormRepository(progId)`（FormSchema CRUD）；helper 內部委派給 `IRepositoryDatabaseRouter`，這是單一真相來源。目前的公司請讀 `BusinessObject.CompanyScope` |
 | Client 端從 DI 容器解析 Repository 服務 | 僅限 Server 端使用 | 透過 `ApiConnector` 呼叫 API |
 | 跳過 Payload Pipeline 順序 | 破壞加解密一致性 | 維持 Serialize → Compress → Encrypt |
 | 在 BO 中直接回傳 API 型別 | BO 不應依賴 API 序列化格式 | 回傳 BO 型別，由 `ApiOutputConverter` 依命名慣例自動對應 |

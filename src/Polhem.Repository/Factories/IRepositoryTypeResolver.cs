@@ -31,5 +31,14 @@ namespace Polhem.Repository.Factories
         /// <param name="progId">The program identifier.</param>
         /// <returns><see cref="DataFormRepository"/> itself, or a type derived from it.</returns>
         Type Resolve(Guid accessToken, string progId);
+
+        /// <summary>
+        /// Resolves the repository type for <paramref name="progId"/> under the customization
+        /// <paramref name="customizeId"/>, taken from the request's snapshot of the session's company scope rather
+        /// than read from the session again (ADR-063).
+        /// </summary>
+        /// <param name="customizeId">The session's customization code; empty for none.</param>
+        /// <param name="progId">The program identifier.</param>
+        Type Resolve(string customizeId, string progId);
     }
 }

@@ -37,12 +37,16 @@ namespace Polhem.Business.Permission
 
         /// <inheritdoc/>
         public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
+            => ResolveFilter(_sessionInfoService.Get(accessToken)?.CompanyScope ?? SessionCompanyScope.None, modelId, action, formSchema);
+
+        /// <inheritdoc/>
+        public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema)
         {
-            // One snapshot for the whole resolution; see SessionInfo.CompanyScope.
-            var session = _sessionInfoService.Get(accessToken)?.CompanyScope;
+            ArgumentNullException.ThrowIfNull(companyScope);
+            var session = companyScope;
             var scopes = ResolveScopes(session, modelId, action);
             if (scopes == null) { return null; }                                  // unrestricted (All)
-            if (scopes.Count == 0 || session == null) { return DenyAll(formSchema); }
+            if (scopes.Count == 0) { return DenyAll(formSchema); }
 
             var master = formSchema?.MasterTable;
             var ownerFields = FieldNames(master?.GetOwnerFields());

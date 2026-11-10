@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
-using System.Reflection.Emit;
+using Polhem.Tests.Shared;
 using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.UI.Core.UnitTests
@@ -24,97 +24,13 @@ namespace Polhem.UI.Core.UnitTests
     /// </remarks>
     public class UICoreServiceLocatorGateTests
     {
-        private static readonly Dictionary<short, OpCode> s_opCodes = typeof(OpCodes)
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Select(f => (OpCode)f.GetValue(null)!)
-            .ToDictionary(op => op.Value);
-
-        private static IEnumerable<MethodBase> MethodsOf(Type type)
-        {
-            const BindingFlags all = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public
-                | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
-            foreach (var method in type.GetMethods(all))
-                yield return method;
-            foreach (var constructor in type.GetConstructors(all))
-                yield return constructor;
-            foreach (var nested in type.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                foreach (var method in MethodsOf(nested))
-                    yield return method;
-            }
-        }
-
-        /// <summary>Returns every member a method's IL refers to through a metadata token.</summary>
-        private static IEnumerable<MemberInfo> ReferencedMembers(MethodBase method)
-        {
-            var il = method.GetMethodBody()?.GetILAsByteArray();
-            if (il is null) yield break;
-
-            var position = 0;
-            while (position < il.Length)
-            {
-                short value = il[position++];
-                if (value == 0xFE) value = (short)(0xFE00 | il[position++]);
-                var opCode = s_opCodes[value];
-
-                switch (opCode.OperandType)
-                {
-                    case OperandType.InlineMethod:
-                    case OperandType.InlineField:
-                    case OperandType.InlineTok:
-                        var token = BitConverter.ToInt32(il, position);
-                        var member = Resolve(method, token);
-                        if (member is not null) yield return member;
-                        position += 4;
-                        break;
-                    case OperandType.InlineSwitch:
-                        position += 4 + (4 * BitConverter.ToInt32(il, position));
-                        break;
-                    case OperandType.InlineNone:
-                        break;
-                    case OperandType.ShortInlineBrTarget:
-                    case OperandType.ShortInlineI:
-                    case OperandType.ShortInlineVar:
-                        position += 1;
-                        break;
-                    case OperandType.InlineVar:
-                        position += 2;
-                        break;
-                    case OperandType.InlineI8:
-                    case OperandType.InlineR:
-                        position += 8;
-                        break;
-                    default:
-                        position += 4;
-                        break;
-                }
-            }
-        }
-
-        private static MemberInfo? Resolve(MethodBase method, int token)
-        {
-            var typeArguments = method.DeclaringType?.IsGenericType == true
-                ? method.DeclaringType.GetGenericArguments()
-                : null;
-            var methodArguments = method.IsGenericMethod ? method.GetGenericArguments() : null;
-            try
-            {
-                return method.Module.ResolveMember(token, typeArguments, methodArguments);
-            }
-            catch (ArgumentException)
-            {
-                // A token for a type or a signature, not a member; neither can be a call into UIServices.
-                return null;
-            }
-        }
-
         private static bool IsUIServicesMember(MemberInfo member) => member.DeclaringType == typeof(UIServices);
 
         // Types declared in source only: coverage instrumentation injects a tracker type with no namespace.
         private static MethodBase[] UICoreMethods() => typeof(UIServices).Assembly.GetTypes()
             .Where(t => !t.IsNested && t != typeof(UIServices)
                 && t.Namespace?.StartsWith("Polhem.UI.Core", StringComparison.Ordinal) == true)
-            .SelectMany(MethodsOf)
+            .SelectMany(IlMemberReferences.MethodsOf)
             .ToArray();
 
         [Fact]
@@ -124,7 +40,7 @@ namespace Polhem.UI.Core.UnitTests
             var methods = UICoreMethods();
 
             var offenders = methods
-                .Where(m => ReferencedMembers(m).Any(IsUIServicesMember))
+                .Where(m => IlMemberReferences.Of(m).Any(IsUIServicesMember))
                 .Select(m => $"{m.DeclaringType?.FullName}.{m.Name}")
                 .ToArray();
 
@@ -141,10 +57,10 @@ namespace Polhem.UI.Core.UnitTests
             // `SetField` calls `FormValueBinding.ToColumnValue` directly; `LoadAsync` calls
             // `FormDataGuard.RequireConnector` from inside its compiler-generated state machine. A type outside
             // `Polhem.UI.Core.DataObjects` is scanned too.
-            Assert.Contains(methods, m => ReferencedMembers(m).Any(r =>
+            Assert.Contains(methods, m => IlMemberReferences.Of(m).Any(r =>
                 r.DeclaringType == typeof(FormValueBinding) && r.Name == nameof(FormValueBinding.ToColumnValue)));
             Assert.Contains(methods, m => m.DeclaringType?.DeclaringType == typeof(FormDataObject)
-                && ReferencedMembers(m).Any(r => r.DeclaringType == typeof(FormDataGuard)));
+                && IlMemberReferences.Of(m).Any(r => r.DeclaringType == typeof(FormDataGuard)));
             Assert.Contains(methods, m => m.DeclaringType == typeof(FormValueBinding));
         }
 
@@ -155,7 +71,7 @@ namespace Polhem.UI.Core.UnitTests
             var probe = typeof(UICoreServiceLocatorGateTests).GetMethod(
                 nameof(ReadsUIServices), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-            Assert.Contains(ReferencedMembers(probe), IsUIServicesMember);
+            Assert.Contains(IlMemberReferences.Of(probe), IsUIServicesMember);
         }
 
         private static string ReadsUIServices() => UIServices.Get<IUserContext>()?.User?.TimeZone ?? string.Empty;

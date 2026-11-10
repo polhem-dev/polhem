@@ -69,6 +69,8 @@ namespace Polhem.Api.Server.UnitTests.Form
     /// </summary>
     internal sealed class StubCrudFormRepositoryFactory : IRepositoryFactory
     {
+        public T CreateFormRepository<T>(Guid accessToken, string progId, global::Polhem.Definition.Identity.SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
         private readonly IDataFormRepository _data;
 
         public StubCrudFormRepositoryFactory(IDataFormRepository data)

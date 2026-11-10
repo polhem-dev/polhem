@@ -158,7 +158,7 @@ namespace Polhem.Business.Form
         {
             if (IsAuditPolicyForm) { return s_auditPolicyRule; }
 
-            string? companyId = SessionInfoService.Get(AccessToken)?.CompanyId;
+            string? companyId = CompanyScope.CompanyId;
             if (string.IsNullOrEmpty(companyId)) { return null; }
 
             return Services.GetService<IAuditRuleService>()?.Get(companyId)?.Find(ProgId);

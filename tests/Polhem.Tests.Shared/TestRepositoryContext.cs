@@ -109,6 +109,8 @@ namespace Polhem.Tests.Shared
                 DbScope.Log => DbCategoryIds.Log,
                 _ => "testdb",
             };
+
+            public string Resolve(DbScope scope, Polhem.Definition.Identity.SessionCompanyScope companyScope) => Resolve(scope, Guid.Empty);
         }
 
         private sealed class EmptyServiceProvider : IServiceProvider

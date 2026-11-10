@@ -359,6 +359,8 @@ namespace Polhem.Business.UnitTests.AuditLog
 
         private sealed class FakeAuth : ICompanyAuthorizationService
         {
+            public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action) => Can(Guid.Empty, modelId, action);
+
             private readonly bool _allowed;
             public FakeAuth(bool allowed) { _allowed = allowed; }
             public bool Can(Guid accessToken, string modelId, PermissionActions action) => _allowed;
@@ -419,6 +421,8 @@ namespace Polhem.Business.UnitTests.AuditLog
 
         private sealed class StubAuditLogRepositoryFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IAuditLogRepository _repo;
             public StubAuditLogRepositoryFactory(IAuditLogRepository repo) { _repo = repo; }
 

@@ -1,4 +1,5 @@
 using Polhem.Definition;
+using Polhem.Definition.Identity;
 
 namespace Polhem.Business.Form
 {
@@ -63,6 +64,27 @@ namespace Polhem.Business.Form
 
         /// <summary>Gets the access token of the call being extended.</summary>
         protected Guid AccessToken { get; }
+
+        /// <summary>
+        /// Gets the extended call's snapshot of the session's company scope, the one the business object authorized
+        /// the call with.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: read the current company from here, and pass this to <c>ICompanyAuthorizationService.Can</c>,
+        /// <c>IScopeResolver.ResolveFilter</c> and <c>IRepositoryFactory.CreateFormRepository</c>. Reading the session
+        /// through <see cref="AccessToken"/> again can see another company, when the same token enters one while the
+        /// call runs (ADR-063). A plugin built with a context that carries no snapshot reads the session once.
+        /// </remarks>
+        protected SessionCompanyScope CompanyScope
+            => LazyInitializer.EnsureInitialized(ref _companyScope, ReadCompanyScope);
+
+        private SessionCompanyScope? _companyScope;
+
+        private SessionCompanyScope ReadCompanyScope()
+            => Context.CompanyScope
+                ?? (AccessToken == Guid.Empty
+                    ? SessionCompanyScope.None
+                    : Context.SessionInfoService.Get(AccessToken)?.CompanyScope ?? SessionCompanyScope.None);
 
         /// <summary>Gets the program identifier this plugin is bound to.</summary>
         protected string ProgId { get; }

@@ -92,7 +92,7 @@ namespace Polhem.Business.Form
             if (StringUtilities.IsNotEmpty(args.Value))
             {
                 if (Guid.TryParse(args.Value, out var rowId)
-                    && BoFactory.CreateBusinessObject(AccessToken, field.RelationProgId, IsLocalCall) is FormBusinessObject related)
+                    && BoFactory.CreateBusinessObject(AccessToken, field.RelationProgId, IsLocalCall, CompanyScope) is FormBusinessObject related)
                 {
                     row = related.ResolveRelationRow(rowId, mappings.Select(m => m.SourceField));
                 }

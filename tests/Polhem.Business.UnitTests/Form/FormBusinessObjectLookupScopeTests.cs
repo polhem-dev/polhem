@@ -150,12 +150,16 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class ReadScopeResolver : IScopeResolver
         {
+            public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
             public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
                 => action == PermissionActions.Read ? s_readScope : null;
         }
 
         private sealed class RepoFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _repo;
             public RepoFactory(IDataFormRepository repo) { _repo = repo; }
             public T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository => (T)_repo;

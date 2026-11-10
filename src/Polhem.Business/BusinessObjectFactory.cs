@@ -71,11 +71,18 @@ namespace Polhem.Business
         /// </para>
         /// </remarks>
         public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall)
+            => CreateBusinessObject(accessToken, progId, isLocalCall, ReadCompanyScope(accessToken));
+
+        /// <inheritdoc/>
+        public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall, SessionCompanyScope companyScope)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
+            ArgumentNullException.ThrowIfNull(companyScope);
 
-            var type = _resolver.Resolve(GetCustomizeId(accessToken), progId);
-            var ctx = BuildContext();
+            // The snapshot picks the business object's type through its customization and goes with it, so the
+            // type, the authorization and the data of the call all come from the same company (ADR-063).
+            var type = _resolver.Resolve(companyScope.CustomizeId, progId);
+            var ctx = BuildContext(companyScope);
             return Activator.CreateInstance(type, ctx, accessToken, CanonicalProgId(progId), isLocalCall)!;
         }
 
@@ -116,15 +123,16 @@ namespace Polhem.Business
         /// The session is the only accepted source: the code selects which tenant's customization
         /// files are read, so a caller-supplied value would be a cross-tenant read.
         /// </remarks>
-        private string GetCustomizeId(Guid accessToken)
+        private SessionCompanyScope ReadCompanyScope(Guid accessToken)
         {
             if (accessToken == Guid.Empty)
-                return string.Empty;
-            return _sessionInfoService.Get(accessToken)?.CustomizeId ?? string.Empty;
+                return SessionCompanyScope.None;
+            return _sessionInfoService.Get(accessToken)?.CompanyScope ?? SessionCompanyScope.None;
         }
 
-        private BusinessObjectContext BuildContext() => new BusinessObjectContext
+        private BusinessObjectContext BuildContext(SessionCompanyScope companyScope) => new BusinessObjectContext
         {
+            CompanyScope = companyScope,
             DefineAccess = _defineAccess,
             SessionInfoService = _sessionInfoService,
             LanguageService = _languageService,

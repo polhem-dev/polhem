@@ -31,5 +31,17 @@ namespace Polhem.Definition
         /// <c>Services.GetService&lt;T&gt;</c> for audit.
         /// </summary>
         IServiceProvider Services { get; }
+
+        /// <summary>
+        /// Gets the request's snapshot of the session's company scope, or <c>null</c> when the context was built
+        /// without one, in which case the business object reads the session once, the first time it needs the scope.
+        /// </summary>
+        /// <remarks>
+        /// Every company-dependent decision of one request (authorization, record scope, the company database, the
+        /// company rows are stamped with, the customization) uses this one snapshot, so a concurrent
+        /// <c>EnterCompany</c> on the same token cannot pair one company's roles with another company's data
+        /// (ADR-063).
+        /// </remarks>
+        SessionCompanyScope? CompanyScope => null;
     }
 }

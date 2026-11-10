@@ -24,5 +24,18 @@ namespace Polhem.Definition
         /// state which side of that boundary it is on rather than inherit the permissive value.
         /// </param>
         object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall);
+
+        /// <summary>
+        /// Creates the business object registered for the supplied progId, for a call that has already taken its
+        /// snapshot of the session's company scope, such as one business object calling another.
+        /// </summary>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="isLocalCall">Indicates whether the call originates from a local source.</param>
+        /// <param name="companyScope">
+        /// The calling request's snapshot. The created business object uses it rather than reading the session
+        /// again, so both see the same company (ADR-063).
+        /// </param>
+        object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall, Identity.SessionCompanyScope companyScope);
     }
 }

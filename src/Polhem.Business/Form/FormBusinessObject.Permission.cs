@@ -33,7 +33,7 @@ namespace Polhem.Business.Form
             if (string.IsNullOrEmpty(modelId)) { return; }
 
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
-            if (!authorization.Can(AccessToken, modelId, action))
+            if (!authorization.Can(CompanyScope, modelId, action))
                 throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", action, modelId);
         }
 
@@ -47,7 +47,7 @@ namespace Polhem.Business.Form
             if (string.IsNullOrEmpty(modelId)) { return; }
 
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
-            if (actions.Any(action => authorization.Can(AccessToken, modelId, action))) { return; }
+            if (actions.Any(action => authorization.Can(CompanyScope, modelId, action))) { return; }
             var required = actions.Aggregate(PermissionActions.None, (all, action) => all | action);
             throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", required, modelId);
         }
@@ -64,7 +64,7 @@ namespace Polhem.Business.Form
             if (string.IsNullOrEmpty(schema.PermissionModelId)) { return null; }
 
             var resolver = Services.GetRequiredService<IScopeResolver>();
-            return resolver.ResolveFilter(AccessToken, schema.PermissionModelId, action, schema);
+            return resolver.ResolveFilter(CompanyScope, schema.PermissionModelId, action, schema);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Polhem.Business.Form
 
             // s_writeActions holds only non-zero flags, so None is a safe "no denial" sentinel.
             var denied = s_writeActions.FirstOrDefault(
-                action => required.HasFlag(action) && !authorization.Can(AccessToken, modelId, action));
+                action => required.HasFlag(action) && !authorization.Can(CompanyScope, modelId, action));
             if (denied != PermissionActions.None)
                 throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", denied, modelId);
         }
