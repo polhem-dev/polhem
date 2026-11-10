@@ -17,7 +17,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
     public class UIServicesUsageGateTests
     {
         // The shared layer, the host and the UI package, which is everything a Blazor application runs.
-        // `FormDataObject` lives in `Polhem.UI.Core`, which this scan cannot see into; DataObjectsServiceLocatorGateTests
+        // `FormDataObject` lives in `Polhem.UI.Core`, which this scan cannot see into; UICoreServiceLocatorGateTests
         // in Polhem.UI.Core.UnitTests covers it.
         private static readonly string[] s_assemblyPaths =
         [

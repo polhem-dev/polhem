@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: ea787c3fb139afbea098353f7ca2f56a851a17bd -->
+<!-- source: en/reference/terminology.md blob: d11e37662839783c265547dfc2461d29304e00a5 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -327,7 +327,7 @@
 | `IUserContext` | 使用者情境介面 | 前端所見的已登入使用者：`User`、`Capabilities`、`Company` 與 `DefaultLanguage`。未註冊時，畫面把使用者視為匿名且不受限制 |
 | `IFormDefinitionSource` | 表單定義來源介面 | 依目前 UI 語系提供畫面所需的 `FormSchema`、`FormLayout`、幣別與單位主檔（命名空間 `Polhem.UI.Core.Definitions`）。`StorageDefinitionSource` 從 `IDefineStorage` 照原樣讀取；bridge 的實作從後端讀取 |
 | `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件），由 `FormDataObject` 使用 |
-| `FormDataObject` | 表單資料物件 | 各端表單檢視與欄位編輯器綁定的資料物件（命名空間 `Polhem.UI.Core.DataObjects`）：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤、透過 `IFormApiConnector` 執行 CRUD 往返，並提供暫存列編輯協定。使用者時區由建構它的 head 傳入，所以它從不讀取 `UIServices` |
+| `FormDataObject` | 表單資料物件 | 各端表單檢視與欄位編輯器綁定的資料物件（命名空間 `Polhem.UI.Core.DataObjects`）：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤、透過 `IFormApiConnector` 執行 CRUD 往返，並提供暫存列編輯協定。使用者時區由建構它的 head 傳入；它不讀取 `UIServices` |
 
 ### API 橋接（`Polhem.UI.ApiBridge`）
 

@@ -63,7 +63,8 @@
   並觸發 `RowAdded`；`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發
   `RowEditFieldChanged`，提交時才發布。
 - 建構它的 head 傳入登入使用者的時區（`timeZoneProvider`），新資料列的日期預設值依此決定；未傳入時為 UTC。
-  它從不讀取 `UIServices`，因此可用在同一個 process 服務多位使用者的 host。
+  本套件中除了 `UIServices` 本身，沒有任何程式讀取 `UIServices`，因此它可用在同一個 process 服務多位使用者的 host；
+  這點改變時 `UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
 
 ### 各 head 共用的欄位編輯器規則
 
@@ -96,8 +97,8 @@
   三者皆無時，就以 host 設定的內容運作。
 - **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor head 參考本套件只為了值規則與
   `FormDataObject`；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
-  （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗；`Polhem.UI.Core.DataObjects` 下任何程式呼叫 `UIServices`，
-  `DataObjectsServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
+  （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗；本套件中除了 `UIServices` 本身有任何程式呼叫
+  `UIServices`，`UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構

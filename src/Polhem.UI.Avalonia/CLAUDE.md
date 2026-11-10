@@ -39,8 +39,8 @@ controls + a composed GridControl + a FormView/ListView View layer + the lookup 
 - **Head-agnostic logic goes to `Polhem.UI.Core`**, which every front end references, Blazor included:
   `FormDataObject` (`Polhem.UI.Core.DataObjects`) and its value rules, `FormValueBinding` and `FormDataGuard`, live
   there once. Blazor must not use `UIServices` (process-wide) or reference `Polhem.UI.ApiBridge` (single-user);
-  `UIServicesUsageGateTests` enforces it. `FormDataObject` itself never reads `UIServices` either: a head passes the
-  user's time zone in, and `DataObjectsServiceLocatorGateTests` enforces that.
+  `UIServicesUsageGateTests` enforces it. Nothing in `Polhem.UI.Core` but `UIServices` itself reads it either, since
+  Blazor runs that assembly: a head passes the user's time zone in, and `UICoreServiceLocatorGateTests` enforces that.
 - **This project never references the API client.** Views reach the backend through `IFormApiConnector`
   (`Polhem.Api.Contracts`) and resolve their services as: their own property, then the `Resolve*` hook, then
   `UIServices.Provider`; with nothing registered they run without a backend. `POLHEM9001` blocks a reference to

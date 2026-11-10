@@ -328,7 +328,7 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `IUserContext` | 使用者情境介面 | The signed-in user as a front end sees it: `User`, `Capabilities`, `Company` and `DefaultLanguage`. With none registered, the views treat the user as anonymous and unrestricted |
 | `IFormDefinitionSource` | 表單定義來源介面 | Supplies the `FormSchema`, `FormLayout`, currency and unit masters a view is built from, in the current UI culture (namespace `Polhem.UI.Core.Definitions`). `StorageDefinitionSource` reads them as stored from an `IDefineStorage`; the bridge's implementation reads them from the backend |
 | `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | The form value rules every head shares (DataSet seeding, value coercion, display formatting, CRUD preconditions), used by `FormDataObject` |
-| `FormDataObject` | 表單資料物件 | The data object every head's form views and field editors bind to (namespace `Polhem.UI.Core.DataObjects`): carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, runs the CRUD round trips through an `IFormApiConnector`, and exposes the buffered row-edit protocol. The head that constructs it passes the user's time zone, so it never reads `UIServices` |
+| `FormDataObject` | 表單資料物件 | The data object every head's form views and field editors bind to (namespace `Polhem.UI.Core.DataObjects`): carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, runs the CRUD round trips through an `IFormApiConnector`, and exposes the buffered row-edit protocol. The head that constructs it passes the user's time zone; it does not read `UIServices` |
 
 ### API Bridge (`Polhem.UI.ApiBridge`)
 

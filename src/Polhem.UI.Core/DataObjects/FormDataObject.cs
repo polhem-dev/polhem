@@ -29,7 +29,7 @@ namespace Polhem.UI.Core.DataObjects
     /// IMPORTANT: this type never reads the process-wide <see cref="UIServices"/>. The Blazor Server head
     /// serves many users from one process, so a value read from there would belong to whoever registered it.
     /// Anything per user, such as the time zone, is passed in by the head that constructs the object.
-    /// <c>DataObjectsServiceLocatorGateTests</c> enforces it.
+    /// <c>UICoreServiceLocatorGateTests</c> enforces it for the whole assembly.
     /// </para>
     /// </remarks>
     public sealed partial class FormDataObject

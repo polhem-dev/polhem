@@ -132,6 +132,6 @@ the current code:
   single type is now `Polhem.UI.Core.DataObjects.FormDataObject`, which takes an `IFormApiConnector` and the user's
   time zone from the head that constructs it. Decision 6 widens accordingly: the Blazor head references
   `Polhem.UI.Core` for the value rules and `FormDataObject`. `UIServicesUsageGateTests` reads the Blazor assemblies'
-  type references and cannot see a call made inside `Polhem.UI.Core`, so `DataObjectsServiceLocatorGateTests`
-  (`tests/Polhem.UI.Core.UnitTests`) reads the IL under `Polhem.UI.Core.DataObjects` and fails on any call to
-  `UIServices`.
+  type references and cannot see a call made inside `Polhem.UI.Core`, so `UICoreServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) reads the IL of the whole assembly and fails on any call to `UIServices` from
+  outside `UIServices` itself.

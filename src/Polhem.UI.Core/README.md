@@ -70,8 +70,9 @@ application's own data through its own implementation of `IFormApiConnector`.
   raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer the edits of one row, which raise
   `RowEditFieldChanged` until the commit publishes them.
 - The head that constructs it passes the signed-in user's time zone (`timeZoneProvider`), which a new row's dates
-  default to; without one they default to UTC. The object never reads `UIServices`, so it is safe in a host that
-  serves many users from one process.
+  default to; without one they default to UTC. Nothing in this package but `UIServices` itself reads `UIServices`,
+  so the object is safe in a host that serves many users from one process; `UICoreServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) fails when that changes.
 
 ### Field Editor Rules Shared by Every Head
 
@@ -110,8 +111,8 @@ two heads behave the same:
   then `UIServices.Provider`; with none of them it runs on what the host set.
 - **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor head references this
   package for the value rules and `FormDataObject` only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)
-  fails when it references `UIServices` or `Polhem.UI.ApiBridge`, and `DataObjectsServiceLocatorGateTests`
-  (`tests/Polhem.UI.Core.UnitTests`) fails when anything under `Polhem.UI.Core.DataObjects` calls `UIServices`.
+  fails when it references `UIServices` or `Polhem.UI.ApiBridge`, and `UICoreServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) fails when anything in this package but `UIServices` itself calls `UIServices`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
