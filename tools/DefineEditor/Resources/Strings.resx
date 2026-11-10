@@ -499,8 +499,9 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="XmlView_Split" xml:space="preserve"><value>Split</value></data>
   <data name="XmlView_SplitTooltip" xml:space="preserve"><value>Show the tree above the XML, each following the other</value></data>
   <data name="XmlView_DesignLocked" xml:space="preserve"><value>Fix the XML or switch to Design to edit in the tree</value></data>
-  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>Write the expression with the fields of the table and the functions on the right; double-click one to insert it. The expression is checked as you type.</value></data>
+  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>Write the expression with the fields of the table, the functions and the types on the right; double-click one to insert it. Suggestions appear as you type a name or a dot, and Ctrl+Space (Cmd+I on macOS) lists what fits the caret. The expression is checked as you type.</value></data>
   <data name="ExpressionEditor_Message" xml:space="preserve"><value>Message shown when the condition fails</value></data>
   <data name="ExpressionEditor_Fields" xml:space="preserve"><value>Fields</value></data>
   <data name="ExpressionEditor_Functions" xml:space="preserve"><value>Functions</value></data>
+  <data name="ExpressionEditor_Types" xml:space="preserve"><value>Types</value></data>
 </root>

@@ -110,8 +110,8 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("The symbol tree has the fields and then the functions as its two headings")]
-        public void CreateExpressionEditor_SymbolGroups_FieldsThenFunctions()
+        [DisplayName("The symbol tree has the fields, the functions and the types as headings, each type listing its static members")]
+        public void CreateExpressionEditor_SymbolGroups_FieldsFunctionsTypes()
         {
             var document = Load();
             var field = document.Schema.Tables!["Order"].Fields!["tax"];
@@ -120,7 +120,12 @@ namespace Polhem.DefineEditor.UnitTests
 
             Assert.Collection(editor.SymbolGroups,
                 group => Assert.Same(editor.Fields, group.Items),
-                group => Assert.Same(editor.Functions, group.Items));
+                group => Assert.Same(editor.Functions, group.Items),
+                group => Assert.Same(editor.Types, group.Items));
+            Assert.All(editor.SymbolGroups, group => Assert.True(group.IsExpanded));
+            var math = editor.Types.Single(t => t.Title == "Math");
+            Assert.False(math.IsExpanded);
+            Assert.Contains(math.Items.OfType<ExpressionSymbol>(), m => m.InsertText == "Math.Round(");
         }
 
         [Fact]
