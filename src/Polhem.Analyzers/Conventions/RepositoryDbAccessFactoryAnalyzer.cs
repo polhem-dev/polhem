@@ -6,31 +6,35 @@ using Microsoft.CodeAnalysis.Operations;
 namespace Polhem.Analyzers.Conventions
 {
     /// <summary>
-    /// Reports POLHEM3004: a repository reaches the database through its context's database access
-    /// factory instead of <c>RepositoryBase.CreateDbAccess</c>.
+    /// Reports POLHEM3004: a repository creates a database access some other way than
+    /// <c>RepositoryBase.CreateDbAccess</c>: through the context's <c>DbAccessFactory</c>, through any
+    /// <c>IDbAccessFactory</c> (injected or resolved from services), or with <c>new DbAccess(...)</c>.
     /// </summary>
     /// <remarks>
     /// Several companies can share one company database. A company-bound repository confines its
     /// hand-written statements through the database access <c>CreateDbAccess</c> hands out, which is
-    /// bound to the session's company and refuses a statement that does not name it. The factory on the
-    /// context hands out an unbound one, so a statement run through it reads and writes every company's
-    /// rows without any sign that the company was forgotten. This rule makes that bypass visible at build
-    /// time.
+    /// bound to the session's company and refuses a statement that does not name it. Every other way of
+    /// creating one hands out an unbound access, so a statement run through it reads and writes every
+    /// company's rows without any sign that the company was forgotten. This rule makes that bypass
+    /// visible at build time, in the repository and in any type nested inside it. A helper outside the
+    /// repository that is handed the context is not seen.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class RepositoryDbAccessFactoryAnalyzer : DiagnosticAnalyzer
     {
         private const string RepositoryBase = "Polhem.Repository.RepositoryBase";
         private const string RepositoryContext = "Polhem.Repository.IRepositoryContext";
+        private const string DbAccessFactoryType = "Polhem.Db.IDbAccessFactory";
+        private const string DbAccessType = "Polhem.Db.DbAccess";
         private const string FactoryProperty = "DbAccessFactory";
 
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
             id: DiagnosticIds.RepositoryBypassesCompanyBinding,
             title: "Repository must create its database access through CreateDbAccess",
-            messageFormat: "Repository '{0}' reaches the database through the context's DbAccessFactory, which hands out "
-                         + "a database access not bound to the company. On a company database shared by several "
-                         + "companies its statements read and write every company's rows. Fix: call CreateDbAccess(), "
-                         + "or CreateDbAccess(databaseId, companyId) when there is no session.",
+            messageFormat: "Repository '{0}' creates a database access outside CreateDbAccess, so it is not bound to "
+                         + "the company. On a company database shared by several companies its statements read and "
+                         + "write every company's rows. Fix: call CreateDbAccess(), or CreateDbAccess(databaseId, "
+                         + "companyId) when there is no session.",
             category: "Polhem.Repository",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
@@ -51,26 +55,50 @@ namespace Polhem.Analyzers.Conventions
             {
                 var repositoryBase = startContext.Compilation.GetTypeByMetadataName(RepositoryBase);
                 var repositoryContext = startContext.Compilation.GetTypeByMetadataName(RepositoryContext);
-                if (repositoryBase is null || repositoryContext is null)
+                var factoryType = startContext.Compilation.GetTypeByMetadataName(DbAccessFactoryType);
+                var dbAccessType = startContext.Compilation.GetTypeByMetadataName(DbAccessType);
+                if (repositoryBase is null || repositoryContext is null || factoryType is null || dbAccessType is null)
                     return;
 
-                startContext.RegisterOperationAction(
-                    operationContext => AnalyzePropertyReference(operationContext, repositoryBase, repositoryContext),
-                    OperationKind.PropertyReference);
+                startContext.RegisterOperationAction(operationContext =>
+                {
+                    var reference = (IPropertyReferenceOperation)operationContext.Operation;
+                    if (reference.Property.Name == FactoryProperty
+                        && IsOrImplements(reference.Property.ContainingType, repositoryContext))
+                        ReportInRepository(operationContext, repositoryBase);
+                }, OperationKind.PropertyReference);
+
+                startContext.RegisterOperationAction(operationContext =>
+                {
+                    var invocation = (IInvocationOperation)operationContext.Operation;
+                    // A call on the context's factory property is already reported at the property.
+                    bool onContextFactory = invocation.Instance is IPropertyReferenceOperation { Property.Name: FactoryProperty };
+                    if (!onContextFactory
+                        && IsOrImplements(invocation.TargetMethod.ContainingType, factoryType)
+                        && SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ReturnType, dbAccessType))
+                        ReportInRepository(operationContext, repositoryBase);
+                }, OperationKind.Invocation);
+
+                startContext.RegisterOperationAction(operationContext =>
+                {
+                    var creation = (IObjectCreationOperation)operationContext.Operation;
+                    if (SymbolEqualityComparer.Default.Equals(creation.Type, dbAccessType))
+                        ReportInRepository(operationContext, repositoryBase);
+                }, OperationKind.ObjectCreation);
             });
         }
 
-        private static void AnalyzePropertyReference(
-            OperationAnalysisContext context, INamedTypeSymbol repositoryBase, INamedTypeSymbol repositoryContext)
+        /// <summary>
+        /// Reports the operation when it sits in a repository, or in a type nested inside one.
+        /// </summary>
+        private static void ReportInRepository(OperationAnalysisContext context, INamedTypeSymbol repositoryBase)
         {
-            var reference = (IPropertyReferenceOperation)context.Operation;
-            if (reference.Property.Name != FactoryProperty) return;
-            if (!IsOrImplements(reference.Property.ContainingType, repositoryContext)) return;
-
-            var containingType = context.ContainingSymbol.ContainingType;
-            if (containingType is null || !DerivesFrom(containingType, repositoryBase)) return;
-
-            context.ReportDiagnostic(Diagnostic.Create(Rule, reference.Syntax.GetLocation(), containingType.Name));
+            for (var type = context.ContainingSymbol.ContainingType; type is not null; type = type.ContainingType)
+            {
+                if (!DerivesFrom(type, repositoryBase)) continue;
+                context.ReportDiagnostic(Diagnostic.Create(Rule, context.Operation.Syntax.GetLocation(), type.Name));
+                return;
+            }
         }
 
         private static bool IsOrImplements(INamedTypeSymbol type, INamedTypeSymbol contract)

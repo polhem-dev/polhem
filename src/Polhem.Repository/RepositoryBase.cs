@@ -73,6 +73,13 @@ namespace Polhem.Repository
                 throw new InvalidOperationException(
                     "The session entered another company while the request was being routed; retry the request.");
             }
+            // A company-bound repository without a company would have nothing to confine its statements
+            // to. The default router has already refused a session without one; a replaced router may not.
+            if (CompanyId.Length == 0)
+            {
+                throw new InvalidOperationException(
+                    "A company-bound repository needs a session that has entered a company.");
+            }
         }
 
         /// <summary>
@@ -155,9 +162,8 @@ namespace Polhem.Repository
             var sessionService = ctx.Services.GetService<ISessionInfoService>()
                 ?? throw new InvalidOperationException(
                     $"A company-bound repository needs an {nameof(ISessionInfoService)} to read the session's company.");
-            // The router has already refused a missing session and one without a company, so both
-            // are present here unless the session ended in between; an empty id then binds nothing
-            // and the company-bound repositories refuse to run.
+            // The default router has already refused a missing session and one without a company. An
+            // empty id here is refused by the constructor, so it never reaches a statement.
             var companyId = sessionService.Get(accessToken)?.CompanyId;
             return string.IsNullOrEmpty(companyId) ? string.Empty : CompanyInfo.NormalizeId(companyId);
         }
@@ -204,10 +210,18 @@ namespace Polhem.Repository
         /// Creates a <see cref="DbAccess"/> against the supplied database.
         /// </summary>
         /// <param name="databaseId">The target database id.</param>
+        /// <remarks>
+        /// IMPORTANT: Naming this repository's own company database does not escape the company: the
+        /// access is then bound to <see cref="CompanyId"/>, exactly as <see cref="CreateDbAccess()"/> binds it.
+        /// Any other database, such as <c>common</c>, comes back unbound.
+        /// </remarks>
         protected DbAccess CreateDbAccess(string databaseId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
-            return new DbAccess(databaseId, Context.ConnectionManager);
+            var dbAccess = new DbAccess(databaseId, Context.ConnectionManager);
+            bool ownCompanyDatabase = CompanyId.Length > 0
+                && string.Equals(databaseId, DatabaseId, StringComparison.Ordinal);
+            return ownCompanyDatabase ? dbAccess.BindCompany(CompanyId) : dbAccess;
         }
     }
 }

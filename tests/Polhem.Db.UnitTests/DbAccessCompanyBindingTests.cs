@@ -63,6 +63,19 @@ namespace Polhem.Db.UnitTests
             Assert.Throws<InvalidOperationException>(() => spec.CreateCommand(DatabaseType.SQLServer, conn));
         }
 
+        [Theory]
+        [InlineData("polhem_company_id")]
+        [InlineData("@polhem_company_id")]
+        [DisplayName("A command that brings its own parameter under the reserved company parameter name is refused")]
+        public void CreateCommand_ReservedParameterName_Throws(string name)
+        {
+            var spec = new DbCommandSpec(DbCommandKind.DataTable, "SELECT * FROM t WHERE sys_company_id = {@CompanyId}",
+                new Dictionary<string, object> { { name, "c002" } });
+            using var conn = new SqlConnection();
+
+            Assert.Throws<InvalidOperationException>(() => spec.CreateCommand(DatabaseType.SQLServer, conn, "c001"));
+        }
+
         [Fact]
         [DisplayName("BindCompany stores the company in its lowercase form")]
         public void BindCompany_MixedCase_StoresLowercase()

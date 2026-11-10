@@ -383,6 +383,11 @@ namespace Polhem.Db
                     "This database access is bound to a company, but the command does not reference " +
                     $"{CommandTextVariable.CompanyId}. Confine the statement to the company with it.");
             }
+            if (referencesCompany && Parameters.Any(p => IsCompanyParameterName(p.Name)))
+            {
+                throw new InvalidOperationException(
+                    $"The parameter name '{CompanyParameterName}' is reserved for {CommandTextVariable.CompanyId}.");
+            }
             if (boundCompanyId is null && referencesCompany)
             {
                 throw new InvalidOperationException(
@@ -391,6 +396,9 @@ namespace Polhem.Db
             }
             return referencesCompany;
         }
+
+        private static bool IsCompanyParameterName(string name)
+            => string.Equals(name.TrimStart('@', ':', '?'), CompanyParameterName, StringComparison.OrdinalIgnoreCase);
 
         private string ExpandParametersVariable(string commandText)
         {
