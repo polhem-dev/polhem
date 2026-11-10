@@ -40,6 +40,10 @@ namespace Polhem.Repository.UnitTests
         /// session that has entered a company. This file tests the factory itself (type mapping, contract checks,
         /// scope declarations); session routing is covered by the RepositoryDatabaseRouter tests.
         /// </remarks>
+        // Employee is a company form, whose repository reads its company from the session.
+        private Guid CompanySessionToken()
+            => TestSessionFactory.CreateAccessToken(_fx, companyId: SharedDatabaseState.SeedCompanyId);
+
         private sealed class StubRouter : IRepositoryDatabaseRouter
         {
             public string Resolve(Definition.DbScope scope, Guid accessToken) => scope switch
@@ -142,7 +146,7 @@ namespace Polhem.Repository.UnitTests
         public void CreateFormRepository_ReturnsRepositoryBoundToProgId()
         {
             var repository = CreateFactory()
-                .CreateFormRepository<IDataFormRepository>(Guid.Empty, "Employee");
+                .CreateFormRepository<IDataFormRepository>(CompanySessionToken(), "Employee");
 
             var typed = Assert.IsType<DataFormRepository>(repository);
             Assert.Equal("Employee", typed.ProgId);
@@ -155,7 +159,7 @@ namespace Polhem.Repository.UnitTests
             var factory = CreateFactory();
 
             var ex = Assert.Throws<InvalidOperationException>(
-                () => factory.CreateFormRepository<IUnimplementedFormRepository>(Guid.Empty, "Employee"));
+                () => factory.CreateFormRepository<IUnimplementedFormRepository>(CompanySessionToken(), "Employee"));
 
             Assert.Contains("Employee", ex.Message, StringComparison.Ordinal);
             Assert.Contains(nameof(IUnimplementedFormRepository), ex.Message, StringComparison.Ordinal);

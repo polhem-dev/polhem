@@ -68,8 +68,24 @@ namespace Polhem.Db.Dml
                 && ProtectedFields.IsProtected(mapping.TableJoin.RightTable, mapping.SourceField);
         }
 
+        /// <summary>
+        /// Determines whether <paramref name="fieldName"/> is <see cref="SysFields.CompanyId"/> on a table
+        /// of a company form: a physical column <see cref="TableSchemaGenerator"/> adds although the form
+        /// does not declare it.
+        /// </summary>
+        /// <remarks>
+        /// The form repository confines every query of a company form with a condition on this column,
+        /// so a filter naming it can only narrow the result to the caller's own company.
+        /// </remarks>
+        internal static bool IsCompanyColumn(FormTable formTable, string fieldName)
+            => string.Equals(fieldName, SysFields.CompanyId, StringComparison.OrdinalIgnoreCase)
+               && formTable.Collection?.Owner is FormSchema schema
+               && string.Equals(schema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal);
+
         private static void RequireQueryable(FormTable formTable, string fieldName, SelectContext selectContext, string usage)
         {
+            if (IsCompanyColumn(formTable, fieldName)) { return; }
+
             var field = formTable.Fields!.GetOrDefault(fieldName)
                 ?? throw new InvalidOperationException(
                     $"{usage} references the field '{fieldName}', which table '{formTable.TableName}' does not declare.");

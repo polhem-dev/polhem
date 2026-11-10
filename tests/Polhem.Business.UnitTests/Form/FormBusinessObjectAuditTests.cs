@@ -426,7 +426,7 @@ namespace Polhem.Business.UnitTests.Form
             row[SysFields.Name] = sysName;
             row["dept_rowid"] = Guid.Empty;
             ctx.DbAccess.Execute(
-                new InsertCommandBuilder(ctx.EmployeeSchema, ctx.DbType).Build(CrudTestContext.ProgId, row));
+                new InsertCommandBuilder(ctx.EmployeeSchema, ctx.DbType, CrudTestContext.CompanyId).Build(CrudTestContext.ProgId, row));
         }
 
         private static void TryDelete(CrudTestContext ctx, Guid rowId)

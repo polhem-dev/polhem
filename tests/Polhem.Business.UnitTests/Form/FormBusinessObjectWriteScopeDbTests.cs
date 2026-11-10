@@ -134,15 +134,17 @@ namespace Polhem.Business.UnitTests.Form
 
         private static void InsertMaster(TransientForm form, string table, Guid rowId, Guid owner)
             => form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {form.Quote(table)} ({form.Quote(SysFields.RowId)}, {form.Quote("sys_id")}, {form.Quote(OwnerField)}) " +
-                "VALUES ({0}, {1}, {2})",
-                rowId, "M" + rowId.ToString("N")[..6], owner);
+                $"INSERT INTO {form.Quote(table)} ({form.Quote(SysFields.RowId)}, {form.Quote("sys_id")}, {form.Quote(OwnerField)}, " +
+                $"{form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3})",
+                rowId, "M" + rowId.ToString("N")[..6], owner, TransientForm.CompanyId);
 
         private static void InsertDetail(TransientForm form, string table, Guid rowId, Guid masterRowId)
             => form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {form.Quote(table)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.MasterRowId)}, {form.Quote("qty")}) " +
-                "VALUES ({0}, {1}, {2})",
-                rowId, masterRowId, 1);
+                $"INSERT INTO {form.Quote(table)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.MasterRowId)}, {form.Quote("qty")}, " +
+                $"{form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3})",
+                rowId, masterRowId, 1, TransientForm.CompanyId);
 
         private static int StoredQty(TransientForm form, string table, Guid rowId)
         {

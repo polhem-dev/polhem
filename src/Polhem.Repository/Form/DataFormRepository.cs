@@ -47,6 +47,7 @@ namespace Polhem.Repository.Form
             : base(ctx, accessToken, progId, Factories.RepositoryFactory.ParseCategoryId(schema.CategoryId))
         {
             _schema = schema;
+            RequireCompanyForCompanyForm();
         }
 
         /// <summary>
@@ -60,12 +61,59 @@ namespace Polhem.Repository.Form
         /// <remarks>
         /// For tests, and for callers holding a schema that is not (or not yet) in the define store.
         /// A separate constructor rather than optional parameters, so the two construction paths are
-        /// distinguishable at the call site.
+        /// distinguishable at the call site. A company form names its company through the overload
+        /// that takes one.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when <paramref name="schema"/> is a company form.</exception>
         public DataFormRepository(IRepositoryContext ctx, string progId, FormSchema schema, string databaseId)
             : base(ctx, progId, databaseId)
         {
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+            RequireCompanyForCompanyForm();
+        }
+
+        /// <summary>
+        /// Initializes a new <see cref="DataFormRepository"/> against an explicit schema, database and
+        /// company, skipping the definition lookup, the router and the session.
+        /// </summary>
+        /// <param name="ctx">The shared repository context.</param>
+        /// <param name="progId">The program identifier (also the master table name).</param>
+        /// <param name="schema">The form schema to drive SELECT construction with.</param>
+        /// <param name="databaseId">The database identifier used for connection and dialect resolution.</param>
+        /// <param name="companyId">The company whose rows a company form reads and writes.</param>
+        public DataFormRepository(IRepositoryContext ctx, string progId, FormSchema schema, string databaseId, string companyId)
+            : base(ctx, progId, databaseId, companyId)
+        {
+            _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+        }
+
+        /// <summary>
+        /// Gets whether the form is a company form, whose rows carry <see cref="SysFields.CompanyId"/>.
+        /// </summary>
+        private bool IsCompanyForm
+            => string.Equals(_schema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal);
+
+        // IMPORTANT: Every statement this repository runs on a company form is confined to
+        // `CompanyId`. A company form without a company would have nothing to confine them to, so it is
+        // refused while the repository is built rather than allowed to read every company's rows.
+        private void RequireCompanyForCompanyForm()
+        {
+            if (IsCompanyForm && string.IsNullOrEmpty(CompanyId))
+            {
+                throw new InvalidOperationException(
+                    $"FormSchema '{_schema.ProgId}' is a company form, so its repository needs a company; " +
+                    "build it from a session that has entered one, or pass the company id.");
+            }
+        }
+
+        /// <summary>
+        /// Creates the command builder every SELECT, COUNT and DELETE of this repository goes through,
+        /// confined to <see cref="RepositoryBase.CompanyId"/> on a company form.
+        /// </summary>
+        private Polhem.Db.Dml.IFormCommandBuilder CreateCommandBuilder(DatabaseType databaseType)
+        {
+            var builder = DbDialectRegistry.Get(databaseType).CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            return IsCompanyForm ? new CompanyScopedFormCommandBuilder(builder, CompanyId) : builder;
         }
 
         /// <inheritdoc/>
@@ -82,8 +130,7 @@ namespace Polhem.Repository.Form
                 : _schema.ListFields;  // empty falls through to SelectCommandBuilder as "all fields"
 
             var connInfo = Context.ConnectionManager.GetConnectionInfo(DatabaseId);
-            var builder = DbDialectRegistry.Get(connInfo.DatabaseType)
-                .CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            var builder = CreateCommandBuilder(connInfo.DatabaseType);
             var dbAccess = Context.DbAccessFactory.Create(DatabaseId);
 
             if (paging == null)
@@ -230,8 +277,7 @@ namespace Polhem.Repository.Form
         public DataSet? GetData(Guid rowId, FilterNode? scopeFilter = null)
         {
             var connInfo = Context.ConnectionManager.GetConnectionInfo(DatabaseId);
-            var builder = DbDialectRegistry.Get(connInfo.DatabaseType)
-                .CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            var builder = CreateCommandBuilder(connInfo.DatabaseType);
             var dbAccess = Context.DbAccessFactory.Create(DatabaseId);
 
             // Master row by sys_rowid, AND-combined with the record-scope filter when supplied so
@@ -287,8 +333,7 @@ namespace Polhem.Repository.Form
             if (rowIds.Count == 0) { return result; }
 
             var connInfo = Context.ConnectionManager.GetConnectionInfo(DatabaseId);
-            var builder = DbDialectRegistry.Get(connInfo.DatabaseType)
-                .CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            var builder = CreateCommandBuilder(connInfo.DatabaseType);
             var dbAccess = Context.DbAccessFactory.Create(DatabaseId);
             var fields = IncludeRowId(selectFields);
 
@@ -348,11 +393,16 @@ namespace Polhem.Repository.Form
 
                 var tableSchema = formTable.GenerateDbTable();
                 RemoveProtectedFields(tableSchema);
-                // The owning company is not the caller's to choose, and the form's DataTable has no such
-                // column for the INSERT and UPDATE parameters to read. Left out, a new row takes the
-                // column's default and an update never moves a row to another company.
-                tableSchema.Fields!.Remove(SysFields.CompanyId);
-                var spec = new Polhem.Db.Dml.TableSchemaCommandBuilder(dbType, tableSchema).BuildUpdateSpec(dataTable);
+                var commandBuilder = new Polhem.Db.Dml.TableSchemaCommandBuilder(dbType, tableSchema);
+                // The owning company is not the caller's to choose. On a company form the column is pinned
+                // to this repository's company: a new row is stamped with it, and an update or delete of a
+                // row id that belongs to another company touches nothing. Anywhere else a form that
+                // declares the column still cannot write it.
+                if (IsCompanyForm)
+                    commandBuilder.PinField(SysFields.CompanyId, CompanyId);
+                else
+                    tableSchema.Fields!.Remove(SysFields.CompanyId);
+                var spec = commandBuilder.BuildUpdateSpec(dataTable);
                 specs.Add(spec);
                 specTableNames.Add(formTable.TableName);
             }
@@ -379,8 +429,7 @@ namespace Polhem.Repository.Form
         public bool ExistsInScope(Guid rowId, FilterNode? scopeFilter)
         {
             var connInfo = Context.ConnectionManager.GetConnectionInfo(DatabaseId);
-            var builder = DbDialectRegistry.Get(connInfo.DatabaseType)
-                .CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            var builder = CreateCommandBuilder(connInfo.DatabaseType);
             var dbAccess = Context.DbAccessFactory.Create(DatabaseId);
 
             var filter = CombineWithScope(FilterCondition.Equal(SysFields.RowId, rowId), scopeFilter);
@@ -393,8 +442,7 @@ namespace Polhem.Repository.Form
         public int Delete(Guid rowId, FilterNode? scopeFilter = null)
         {
             var connInfo = Context.ConnectionManager.GetConnectionInfo(DatabaseId);
-            var builder = DbDialectRegistry.Get(connInfo.DatabaseType)
-                .CreateFormCommandBuilder(_schema, Context.DefineAccess);
+            var builder = CreateCommandBuilder(connInfo.DatabaseType);
 
             // Record-scope gate: when a scope filter is supplied, confirm the master row is in scope
             // before touching anything. Out of scope → delete nothing (no cascade), report zero.

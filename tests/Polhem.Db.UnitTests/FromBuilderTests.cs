@@ -54,6 +54,32 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("LEFT JOIN [st_dept] B ON A.[dept_id] = B.[dept_id]", result);
         }
 
+        [Theory]
+        [InlineData(true, "LEFT JOIN [ft_customer] B ON A.[customer_rowid] = B.[sys_rowid] AND B.[sys_company_id] = A.[sys_company_id]")]
+        [InlineData(false, "LEFT JOIN [ft_customer] B ON A.[customer_rowid] = B.[sys_rowid]\n")]
+        [DisplayName("Build adds the company match to a join only when the join asks for it")]
+        public void Build_MatchCompany_AddsCompanyCondition(bool matchCompany, string expected)
+        {
+            var joins = new TableJoinCollection
+            {
+                new TableJoin
+                {
+                    Key = "j1",
+                    LeftTable = "ft_order",
+                    LeftAlias = "A",
+                    LeftField = "customer_rowid",
+                    RightTable = "ft_customer",
+                    RightAlias = "B",
+                    RightField = "sys_rowid",
+                    MatchCompany = matchCompany,
+                }
+            };
+
+            var result = new FromBuilder(DatabaseType.SQLServer).Build("ft_order", joins) + "\n";
+
+            Assert.Contains(expected, result, StringComparison.Ordinal);
+        }
+
         [Fact]
         [DisplayName("Build with several joins orders them by RightAlias")]
         public void Build_MultipleJoins_OrderedByRightAlias()

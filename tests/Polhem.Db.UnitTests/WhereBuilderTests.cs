@@ -251,6 +251,24 @@ namespace Polhem.Db.UnitTests
             Assert.Throws<InvalidOperationException>(() => builder.Build(root, null));
         }
 
+        [Fact]
+        [DisplayName("Build keeps a sys_company_id condition on the main table even when a relation field is named sys_company_id")]
+        public void Build_CompanyIdShadowedByRelationField_StaysOnMainTable()
+        {
+            var context = new SelectContext();
+            context.FieldMappings.Add(new QueryFieldMapping
+            {
+                FieldName = "sys_company_id",
+                SourceAlias = "B",
+                SourceField = "sys_company_id",
+            });
+            var builder = new WhereBuilder(DatabaseType.SQLServer);
+
+            var result = builder.Build(FilterCondition.Equal("sys_company_id", "c001"), context, includeWhereKeyword: false);
+
+            Assert.Equal("A.[sys_company_id] = @p0", result.WhereClause);
+        }
+
         /// <summary>
         /// Builds a context whose field mapping resolves `RefDeptName` to a joined table,
         /// leaving every other field on the main table.

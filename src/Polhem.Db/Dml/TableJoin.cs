@@ -52,6 +52,17 @@ namespace Polhem.Db.Dml
         public string RightField { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets whether the join also requires the right-side row to belong to the same
+        /// company as the main row: both tables carry <see cref="Polhem.Definition.SysFields.CompanyId"/>,
+        /// and the join matches it to the main table's (alias <c>A</c>).
+        /// </summary>
+        /// <remarks>
+        /// A foreign key holds a row id, which a caller can set to a row of another company sharing
+        /// the database. Matching the company keeps such a row from being read through the join.
+        /// </remarks>
+        public bool MatchCompany { get; set; }
+
+        /// <summary>
         /// Returns a string representation of this object.
         /// </summary>
         public override string ToString()

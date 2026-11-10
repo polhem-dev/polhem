@@ -271,9 +271,10 @@ namespace Polhem.Repository.UnitTests
         {
             var rowId = Guid.NewGuid();
             form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {form.Quote(form.Schema.ProgId)} ({form.Quote(SysFields.RowId)}, {form.Quote(GroupColumn)}) " +
-                "VALUES ({0}, {1})",
-                rowId, group);
+                $"INSERT INTO {form.Quote(form.Schema.ProgId)} ({form.Quote(SysFields.RowId)}, {form.Quote(GroupColumn)}, " +
+                $"{form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2})",
+                rowId, group, TransientForm.CompanyId);
             return rowId.ToString().ToUpperInvariant();
         }
     }

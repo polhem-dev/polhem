@@ -1,1 +1,6 @@
 #nullable enable
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinField(string! fieldName, object! value) -> Polhem.Db.Dml.TableSchemaCommandBuilder!
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedField.get -> string!
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedValue.get -> object?
+Polhem.Db.Dml.TableJoin.MatchCompany.get -> bool
+Polhem.Db.Dml.TableJoin.MatchCompany.set -> void

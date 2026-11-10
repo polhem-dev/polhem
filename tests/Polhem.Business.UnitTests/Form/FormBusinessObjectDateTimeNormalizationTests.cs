@@ -351,17 +351,17 @@ namespace Polhem.Business.UnitTests.Form
             string master = form.Quote(form.Schema.ProgId);
             string detail = form.Quote(DetailName(form));
             form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {master} ({Columns(form, SysFields.RowId, Note, SysFields.InsertTime, SysFields.UpdateTime, EventTime, DefaultedTime, ComputedTime)}) " +
-                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})",
-                rowId, "stored", s_storedInsert, s_storedUpdate, s_storedEvent, s_storedEvent, s_storedEvent);
+                $"INSERT INTO {master} ({Columns(form, SysFields.RowId, Note, SysFields.InsertTime, SysFields.UpdateTime, EventTime, DefaultedTime, ComputedTime, SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+                rowId, "stored", s_storedInsert, s_storedUpdate, s_storedEvent, s_storedEvent, s_storedEvent, TransientForm.CompanyId);
 
-            string lineColumns = Columns(form, SysFields.RowId, SysFields.MasterRowId, Note, LineTime);
+            string lineColumns = Columns(form, SysFields.RowId, SysFields.MasterRowId, Note, LineTime, SysFields.CompanyId);
             form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {detail} ({lineColumns}) VALUES ({{0}}, {{1}}, {{2}}, {{3}})",
-                lineId, rowId, "stored line", s_storedLine);
+                $"INSERT INTO {detail} ({lineColumns}) VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}})",
+                lineId, rowId, "stored line", s_storedLine, TransientForm.CompanyId);
             form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {detail} ({lineColumns}) VALUES ({{0}}, {{1}}, {{2}}, {{3}})",
-                deletedLineId, rowId, "stored deleted line", s_storedDeletedLine);
+                $"INSERT INTO {detail} ({lineColumns}) VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}})",
+                deletedLineId, rowId, "stored deleted line", s_storedDeletedLine, TransientForm.CompanyId);
         }
 
         private static string Columns(TransientForm form, params string[] names)

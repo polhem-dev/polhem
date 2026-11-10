@@ -175,9 +175,10 @@ namespace Polhem.Repository.UnitTests
             var progId = form.Schema.ProgId;
             form.DbAccess.ExecuteNonQuery(
                 $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(FlagColumn)}, " +
-                $"{form.Quote(ShortColumn)}, {form.Quote(IntegerColumn)}, {form.Quote(LongColumn)}, {form.Quote(CurrencyColumn)}) " +
-                "VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
-                rowId, flag, (short)2, 3, 4L, price);
+                $"{form.Quote(ShortColumn)}, {form.Quote(IntegerColumn)}, {form.Quote(LongColumn)}, {form.Quote(CurrencyColumn)}, " +
+                $"{form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})",
+                rowId, flag, (short)2, 3, 4L, price, TransientForm.CompanyId);
             return rowId;
         }
     }

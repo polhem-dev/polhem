@@ -99,9 +99,10 @@ namespace Polhem.Api.Core.UnitTests
             {
                 var rowId = Guid.NewGuid();
                 form.DbAccess.ExecuteNonQuery(
-                    $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(NameColumn)}, {form.Quote(InstantColumn)}) " +
-                    "VALUES ({0}, {1}, {2})",
-                    rowId, "before", s_firstOccurrenceUtc);
+                    $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(NameColumn)}, {form.Quote(InstantColumn)}, " +
+                    $"{form.Quote(SysFields.CompanyId)}) " +
+                    "VALUES ({0}, {1}, {2}, {3})",
+                    rowId, "before", s_firstOccurrenceUtc, TransientForm.CompanyId);
 
                 // Server-side `GetData` hands UTC to the connector; the client holds the copy converted into the user's time zone.
                 var loaded = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), progId)

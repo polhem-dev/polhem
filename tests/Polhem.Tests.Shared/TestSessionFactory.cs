@@ -17,20 +17,25 @@ namespace Polhem.Tests.Shared
         /// <param name="fixture">The fixture that holds the target session service.</param>
         /// <param name="userId">The user account; defaults to "test".</param>
         /// <param name="expiresIn">How long the session is valid; defaults to one hour.</param>
+        /// <param name="companyId">The company the session has entered; empty leaves it outside any company.</param>
         /// <returns>A valid access token.</returns>
-        public static Guid CreateAccessToken(PolhemTestFixture fixture, string userId = "test", TimeSpan? expiresIn = null)
+        public static Guid CreateAccessToken(PolhemTestFixture fixture, string userId = "test", TimeSpan? expiresIn = null,
+            string companyId = "")
         {
             ArgumentNullException.ThrowIfNull(fixture);
             var sessionService = fixture.GetRequiredService<ISessionInfoService>();
             var accessToken = Guid.NewGuid();
-            sessionService.Set(new SessionInfo
+            var session = new SessionInfo
             {
                 AccessToken = accessToken,
                 UserId = userId,
                 UserName = userId,
                 ExpiredAt = DateTime.UtcNow.Add(expiresIn ?? TimeSpan.FromHours(1)),
                 ApiEncryptionKey = Array.Empty<byte>()
-            });
+            };
+            if (companyId.Length > 0)
+                session.CompanyScope = new SessionCompanyScope(companyId, string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
+            sessionService.Set(session);
             return accessToken;
         }
     }

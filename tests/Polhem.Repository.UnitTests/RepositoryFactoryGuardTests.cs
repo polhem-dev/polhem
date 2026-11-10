@@ -113,7 +113,7 @@ namespace Polhem.Repository.UnitTests
         {
             var define = defineAccess ?? new StubDefineAccess();
             return new(
-                TestRepositoryContext.CreateServices(),
+                TestRepositoryContext.CreateServices(SharedDatabaseState.SeedCompanyId),
                 define,
                 dbAccessFactory ?? new StubDbAccessFactory(),
                 connectionManager ?? new StubConnectionManager(),

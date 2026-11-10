@@ -114,9 +114,10 @@ namespace Polhem.Api.Core.UnitTests
             {
                 var rowId = Guid.NewGuid();
                 form.DbAccess.ExecuteNonQuery(
-                    $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(InstantColumn)}, {form.Quote(DayColumn)}) " +
-                    "VALUES ({0}, {1}, {2})",
-                    rowId, s_storedUtc, s_storedDay);
+                    $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(InstantColumn)}, {form.Quote(DayColumn)}, " +
+                    $"{form.Quote(SysFields.CompanyId)}) " +
+                    "VALUES ({0}, {1}, {2}, {3})",
+                    rowId, s_storedUtc, s_storedDay, TransientForm.CompanyId);
 
                 var loaded = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), progId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
