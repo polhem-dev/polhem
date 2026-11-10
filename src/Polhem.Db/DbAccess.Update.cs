@@ -54,9 +54,9 @@ namespace Polhem.Db
         /// </summary>
         private int ApplySpec(DataTableUpdateSpec spec, DbConnection connection, DbTransaction? tran)
         {
-            DbCommand? insert = spec.InsertCommand?.CreateCommand(DatabaseType, connection);
-            DbCommand? update = spec.UpdateCommand?.CreateCommand(DatabaseType, connection);
-            DbCommand? delete = spec.DeleteCommand?.CreateCommand(DatabaseType, connection);
+            DbCommand? insert = spec.InsertCommand?.CreateCommand(DatabaseType, connection, _companyId);
+            DbCommand? update = spec.UpdateCommand?.CreateCommand(DatabaseType, connection, _companyId);
+            DbCommand? delete = spec.DeleteCommand?.CreateCommand(DatabaseType, connection, _companyId);
             // The framework re-fetches saved rows via GetData, so the adapter must not try to read
             // results back into the DataTable after each command.
             if (insert != null) { insert.CommandTimeout = ResolveTimeout(spec.InsertCommand!.CommandTimeout); insert.UpdatedRowSource = UpdateRowSource.None; }

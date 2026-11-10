@@ -163,8 +163,15 @@ namespace Polhem.Repository
         }
 
         /// <summary>
-        /// Creates a <see cref="DbAccess"/> against this repository's resolved database.
+        /// Creates a <see cref="DbAccess"/> against this repository's resolved database, bound to
+        /// <see cref="CompanyId"/> when the repository has one.
         /// </summary>
+        /// <remarks>
+        /// IMPORTANT: Bound to a company, the database access refuses a command that does not reference
+        /// <see cref="CommandTextVariable.CompanyId"/>, so every statement a company-bound repository writes
+        /// has to say which company's rows it reads or writes (<c>WHERE sys_company_id = {@CompanyId}</c>,
+        /// or the value of the column in an INSERT).
+        /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown when this repository has no database of its own.</exception>
         protected DbAccess CreateDbAccess()
         {
@@ -173,7 +180,24 @@ namespace Polhem.Repository
                 throw new InvalidOperationException(
                     $"{GetType().Name} is not bound to a database; call the overload that takes a databaseId.");
             }
-            return new DbAccess(DatabaseId, Context.ConnectionManager);
+            var dbAccess = new DbAccess(DatabaseId, Context.ConnectionManager);
+            return string.IsNullOrEmpty(CompanyId) ? dbAccess : dbAccess.BindCompany(CompanyId);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="DbAccess"/> against the supplied database, bound to the supplied company.
+        /// </summary>
+        /// <param name="databaseId">The target database id.</param>
+        /// <param name="companyId">The company every command is confined to.</param>
+        /// <remarks>
+        /// For a repository that serves one company's data without a session, such as a cache loading it.
+        /// The commands must reference <see cref="CommandTextVariable.CompanyId"/>.
+        /// </remarks>
+        protected DbAccess CreateDbAccess(string databaseId, string companyId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
+            return new DbAccess(databaseId, Context.ConnectionManager).BindCompany(companyId);
         }
 
         /// <summary>

@@ -34,12 +34,12 @@ namespace Polhem.Business.Session
         }
 
         /// <inheritdoc/>
-        public EmployeeContext Resolve(string userId, string databaseId)
+        public EmployeeContext Resolve(string userId, string databaseId, string companyId)
         {
             var userRowId = _repositoryFactory.Create<IUserRepository>().GetRowIdBySysId(userId);
             if (userRowId == Guid.Empty) { return EmployeeContext.Empty; }
 
-            var employee = _repositoryFactory.Create<IEmployeeRepository>().GetByUserRowId(databaseId, userRowId);
+            var employee = _repositoryFactory.Create<IEmployeeRepository>().GetByUserRowId(databaseId, companyId, userRowId);
             if (employee == null) { return new EmployeeContext(userRowId, Guid.Empty, Guid.Empty); }
 
             return new EmployeeContext(userRowId, employee.RowId, employee.DeptRowId);

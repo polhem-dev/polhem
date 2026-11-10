@@ -1,1 +1,11 @@
 #nullable enable
+*REMOVED*Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository.GetRules(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditRule!>!
+*REMOVED*Polhem.Repository.Abstractions.System.IDepartmentRepository.GetDepartments(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
+*REMOVED*Polhem.Repository.Abstractions.System.IEmployeeRepository.GetByUserRowId(string! databaseId, System.Guid userRowId) -> Polhem.Definition.Organization.EmployeeRow?
+*REMOVED*Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetRoleGrants(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.RoleGrantRow!>!
+*REMOVED*Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetUserRoles(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!
+Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository.GetRules(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditRule!>!
+Polhem.Repository.Abstractions.System.IDepartmentRepository.GetDepartments(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
+Polhem.Repository.Abstractions.System.IEmployeeRepository.GetByUserRowId(string! databaseId, string! companyId, System.Guid userRowId) -> Polhem.Definition.Organization.EmployeeRow?
+Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetRoleGrants(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.RoleGrantRow!>!
+Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetUserRoles(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!

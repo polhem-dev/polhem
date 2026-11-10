@@ -41,6 +41,7 @@
          types (FieldDbType, BusinessObject, ApiAccessControlAttribute). -->
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Business\Polhem.Business.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Repository\Polhem.Repository.csproj" />
   </ItemGroup>
 
   <ItemGroup>

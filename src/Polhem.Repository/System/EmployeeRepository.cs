@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Core;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Definition.Organization;
 using Polhem.Repository.Abstractions.System;
 
@@ -31,9 +32,10 @@ namespace Polhem.Repository.System
         }
 
         /// <inheritdoc/>
-        public EmployeeRow? GetByUserRowId(string databaseId, Guid userRowId)
+        public EmployeeRow? GetByUserRowId(string databaseId, string companyId, Guid userRowId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
             if (userRowId == Guid.Empty) { return null; }
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
@@ -43,9 +45,11 @@ namespace Polhem.Repository.System
             string colName = dbType.QuoteIdentifier("sys_name");
             string colDept = dbType.QuoteIdentifier("dept_rowid");
             string colUser = dbType.QuoteIdentifier("user_rowid");
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
-            string sql = $"SELECT {colRowId}, {colId}, {colName}, {colDept}, {colUser} FROM {tbl} WHERE {colUser} = {{0}}";
-            var dbAccess = CreateDbAccess(databaseId);
+            string sql = $"SELECT {colRowId}, {colId}, {colName}, {colDept}, {colUser} FROM {tbl} " +
+                         $"WHERE {colUser} = {{0}} AND {colCompany} = {CommandTextVariable.CompanyId}";
+            var dbAccess = CreateDbAccess(databaseId, companyId);
             var table = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql, userRowId)).Table!;
             if (table.Rows.Count == 0) { return null; }
 

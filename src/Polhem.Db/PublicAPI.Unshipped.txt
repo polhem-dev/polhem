@@ -4,3 +4,6 @@ Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedField.get -> string!
 Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedValue.get -> object?
 Polhem.Db.Dml.TableJoin.MatchCompany.get -> bool
 Polhem.Db.Dml.TableJoin.MatchCompany.set -> void
+const Polhem.Db.CommandTextVariable.CompanyId = "{@CompanyId}" -> string!
+Polhem.Db.DbAccess.BindCompany(string! companyId) -> Polhem.Db.DbAccess!
+Polhem.Db.DbAccess.BoundCompanyId.get -> string?

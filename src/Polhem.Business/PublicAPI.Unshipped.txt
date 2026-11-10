@@ -1,1 +1,3 @@
 #nullable enable
+*REMOVED*Polhem.Business.Session.EmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Business.Session.EmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!

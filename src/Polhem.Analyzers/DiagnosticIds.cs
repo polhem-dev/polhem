@@ -101,6 +101,12 @@ namespace Polhem.Analyzers
         public const string MissingExecFuncAccessControl = "POLHEM3003";
 
         /// <summary>
+        /// A repository reaches the database through its context's database access factory instead of
+        /// <c>RepositoryBase.CreateDbAccess</c>, bypassing the company binding.
+        /// </summary>
+        public const string RepositoryBypassesCompanyBinding = "POLHEM3004";
+
+        /// <summary>
         /// A form schema declares no <c>PermissionModelId</c>, so its layer-1 authorization is a
         /// no-op and every authenticated caller may read and write through it.
         /// </summary>

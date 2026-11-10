@@ -157,6 +157,25 @@ namespace Polhem.Db
         /// <param name="databaseType">The database type.</param>
         /// <param name="connection">The database connection used to create and bind the command.</param>
         public DbCommand CreateCommand(DatabaseType databaseType, DbConnection connection)
+            => CreateCommand(databaseType, connection, boundCompanyId: null);
+
+        /// <summary>
+        /// The name of the parameter <see cref="CommandTextVariable.CompanyId"/> becomes. It starts with a
+        /// letter because Oracle does not accept a bind name that starts with an underscore.
+        /// </summary>
+        internal const string CompanyParameterName = "polhem_company_id";
+
+        /// <summary>
+        /// Creates the command for a <see cref="DbAccess"/> that may be bound to a company.
+        /// </summary>
+        /// <param name="databaseType">The database type.</param>
+        /// <param name="connection">The database connection used to create and bind the command.</param>
+        /// <param name="boundCompanyId">The company the <see cref="DbAccess"/> is bound to, or <c>null</c> when it is not.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a bound command does not reference <see cref="CommandTextVariable.CompanyId"/>, or an
+        /// unbound one does.
+        /// </exception>
+        internal DbCommand CreateCommand(DatabaseType databaseType, DbConnection connection, string? boundCompanyId)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection), "Connection cannot be null.");
             if (string.IsNullOrWhiteSpace(CommandText))
@@ -178,6 +197,8 @@ namespace Polhem.Db
                     $"this command is {Kind}.");
             }
 
+            bool referencesCompany = RequireCompanyBinding(boundCompanyId);
+
             string parameterPrefix = databaseType.GetParameterPrefix();
             var cmd = connection.CreateCommand();
             // Pass through for StoredProcedure; skip parameter resolution
@@ -190,6 +211,11 @@ namespace Polhem.Db
             foreach (var spec in Parameters)
             {
                 cmd.Parameters.Add(CreateParameter(cmd, databaseType, parameterPrefix, spec));
+            }
+            if (referencesCompany)
+            {
+                cmd.Parameters.Add(CreateParameter(cmd, databaseType, parameterPrefix,
+                    new DbParameterSpec(CompanyParameterName, boundCompanyId!) { DbType = DbType.String }));
             }
 
             ApplyOracleBindByName(databaseType, cmd);
@@ -323,7 +349,10 @@ namespace Polhem.Db
             if (string.IsNullOrWhiteSpace(CommandText))
                 throw new InvalidOperationException("Failed to execute SQL command: Command text is empty.");
 
-            string commandText = ExpandParametersVariable(CommandText);
+            // The company placeholder becomes a parameter name directly, so the placeholder pass below,
+            // which would look for a parameter called "@CompanyId", never sees it.
+            string commandText = ExpandParametersVariable(CommandText)
+                .Replace(CommandTextVariable.CompanyId, parameterPrefix + CompanyParameterName, StringComparison.Ordinal);
 
             return s_placeholderRegex.Replace(commandText, match =>
             {
@@ -338,6 +367,29 @@ namespace Polhem.Db
 
                 return string.IsNullOrEmpty(parameterPrefix) ? name : parameterPrefix + name;
             });
+        }
+
+        /// <summary>
+        /// Checks that the command and the company binding of its <see cref="DbAccess"/> agree, and
+        /// returns whether the command references <see cref="CommandTextVariable.CompanyId"/>.
+        /// </summary>
+        private bool RequireCompanyBinding(string? boundCompanyId)
+        {
+            bool referencesCompany = CommandType != CommandType.StoredProcedure
+                && CommandText.Contains(CommandTextVariable.CompanyId, StringComparison.Ordinal);
+            if (boundCompanyId is not null && !referencesCompany)
+            {
+                throw new InvalidOperationException(
+                    "This database access is bound to a company, but the command does not reference " +
+                    $"{CommandTextVariable.CompanyId}. Confine the statement to the company with it.");
+            }
+            if (boundCompanyId is null && referencesCompany)
+            {
+                throw new InvalidOperationException(
+                    $"The command references {CommandTextVariable.CompanyId}, but the database access is not " +
+                    "bound to a company.");
+            }
+            return referencesCompany;
         }
 
         private string ExpandParametersVariable(string commandText)

@@ -38,7 +38,7 @@ namespace Polhem.Repository.UnitTests
         {
             var databaseId = TestDbConventions.GetDatabaseId(dbType, "common");
 
-            var rules = CreateRepo().GetRules(databaseId);
+            var rules = CreateRepo().GetRules(databaseId, SharedDatabaseState.SeedCompanyId);
 
             Assert.Empty(rules);
         }
@@ -67,7 +67,7 @@ namespace Polhem.Repository.UnitTests
         [DisplayName("An empty databaseId throws instead of quietly returning an empty list")]
         public void GetRules_EmptyDatabaseId_Throws()
         {
-            var exception = Record.Exception(() => CreateRepo().GetRules(string.Empty));
+            var exception = Record.Exception(() => CreateRepo().GetRules(string.Empty, SharedDatabaseState.SeedCompanyId));
 
             Assert.IsType<ArgumentException>(exception);
         }
