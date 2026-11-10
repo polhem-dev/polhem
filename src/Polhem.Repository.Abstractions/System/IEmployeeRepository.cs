@@ -14,7 +14,8 @@ namespace Polhem.Repository.Abstractions.System
         /// or <c>null</c> when the user has no employee record there.
         /// </summary>
         /// <param name="databaseId">The company database id.</param>
+        /// <param name="companyId">The company whose rows are read; a company database may hold several companies.</param>
         /// <param name="userRowId">The user row id (common <c>st_user.sys_rowid</c>).</param>
-        EmployeeRow? GetByUserRowId(string databaseId, Guid userRowId);
+        EmployeeRow? GetByUserRowId(string databaseId, string companyId, Guid userRowId);
     }
 }

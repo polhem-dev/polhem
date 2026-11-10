@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Core;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Definition.Logging;
@@ -33,9 +34,10 @@ namespace Polhem.Repository.AuditLog
         }
 
         /// <inheritdoc/>
-        public IReadOnlyList<AuditRule> GetRules(string databaseId)
+        public IReadOnlyList<AuditRule> GetRules(string databaseId, string companyId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
 
@@ -55,9 +57,11 @@ namespace Polhem.Repository.AuditLog
             string colChange = dbType.QuoteIdentifier("change_mode");
             string colAccess = dbType.QuoteIdentifier("access_mode");
             string colSensitive = dbType.QuoteIdentifier("is_sensitive");
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
-            string sql = $"SELECT {colId}, {colChange}, {colAccess}, {colSensitive} FROM {tbl}";
-            var dbAccess = CreateDbAccess(databaseId);
+            string sql = $"SELECT {colId}, {colChange}, {colAccess}, {colSensitive} FROM {tbl} " +
+                         $"WHERE {colCompany} = {CommandTextVariable.CompanyId}";
+            var dbAccess = CreateDbAccess(databaseId, companyId);
             var table = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql)).Table!;
 
             var list = new List<AuditRule>(table.Rows.Count);

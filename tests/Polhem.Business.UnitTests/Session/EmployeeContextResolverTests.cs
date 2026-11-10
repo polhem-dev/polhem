@@ -30,7 +30,7 @@ namespace Polhem.Business.UnitTests.Session
             var employee = new EmployeeRow(s_employeeRowId, "E001", "Alice", s_deptRowId, s_userRowId);
             var resolver = Create(s_userRowId, employee);
 
-            var ctx = resolver.Resolve("001", DbId);
+            var ctx = resolver.Resolve("001", DbId, "c001");
 
             Assert.Equal(s_userRowId, ctx.UserRowId);
             Assert.Equal(s_employeeRowId, ctx.EmployeeRowId);
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests.Session
         {
             var resolver = Create(s_userRowId, employee: null);
 
-            var ctx = resolver.Resolve("001", DbId);
+            var ctx = resolver.Resolve("001", DbId, "c001");
 
             Assert.Equal(s_userRowId, ctx.UserRowId);
             Assert.Equal(Guid.Empty, ctx.EmployeeRowId);
@@ -57,7 +57,7 @@ namespace Polhem.Business.UnitTests.Session
             // The user repository returns `Guid.Empty` (no such account), so the employee is not looked up.
             var resolver = Create(Guid.Empty, new EmployeeRow(s_employeeRowId, "E001", "Alice", s_deptRowId, s_userRowId));
 
-            var ctx = resolver.Resolve("nobody", DbId);
+            var ctx = resolver.Resolve("nobody", DbId, "c001");
 
             Assert.Equal(EmployeeContext.Empty, ctx);
         }
@@ -69,7 +69,7 @@ namespace Polhem.Business.UnitTests.Session
             var employee = new EmployeeRow(s_employeeRowId, "E001", "Alice", Guid.Empty, s_userRowId);
             var resolver = Create(s_userRowId, employee);
 
-            var ctx = resolver.Resolve("001", DbId);
+            var ctx = resolver.Resolve("001", DbId, "c001");
 
             Assert.Equal(s_userRowId, ctx.UserRowId);
             Assert.Equal(s_employeeRowId, ctx.EmployeeRowId);
@@ -118,7 +118,7 @@ namespace Polhem.Business.UnitTests.Session
         {
             private readonly EmployeeRow? _employee;
             public FakeEmployeeRepository(EmployeeRow? employee) { _employee = employee; }
-            public EmployeeRow? GetByUserRowId(string databaseId, Guid userRowId) => _employee;
+            public EmployeeRow? GetByUserRowId(string databaseId, string companyId, Guid userRowId) => _employee;
         }
     }
 }

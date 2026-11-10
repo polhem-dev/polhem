@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Db;
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Repository.System;
 using Polhem.Tests.Shared;
@@ -14,6 +15,8 @@ namespace Polhem.Repository.UnitTests
     /// </summary>
     public class EmployeeRepositoryTests : IClassFixture<SharedDbFixture>
     {
+        private const string OtherCompanyId = "c002";
+
         private readonly SharedDbFixture _fx;
         public EmployeeRepositoryTests(SharedDbFixture fx) { _fx = fx; }
 
@@ -36,15 +39,16 @@ namespace Polhem.Repository.UnitTests
             string colName = dbType.QuoteIdentifier("sys_name");
             string colDept = dbType.QuoteIdentifier("dept_rowid");
             string colUser = dbType.QuoteIdentifier("user_rowid");
-            string cols = $"({colRowId}, {colId}, {colName}, {colDept}, {colUser})";
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
+            string cols = $"({colRowId}, {colId}, {colName}, {colDept}, {colUser}, {colCompany})";
 
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
-                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}})",
-                empRowId, empId, "測試員工", deptRowId, userRowId));
+                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}})",
+                empRowId, empId, "測試員工", deptRowId, userRowId, SharedDatabaseState.SeedCompanyId));
 
             try
             {
-                var employee = CreateRepo().GetByUserRowId(databaseId, userRowId);
+                var employee = CreateRepo().GetByUserRowId(databaseId, SharedDatabaseState.SeedCompanyId, userRowId);
 
                 Assert.NotNull(employee);
                 Assert.Equal(empRowId, employee!.RowId);
@@ -52,7 +56,8 @@ namespace Polhem.Repository.UnitTests
                 Assert.Equal(deptRowId, employee.DeptRowId);
                 Assert.Equal(userRowId, employee.UserRowId);
 
-                Assert.Null(CreateRepo().GetByUserRowId(databaseId, Guid.NewGuid()));
+                Assert.Null(CreateRepo().GetByUserRowId(databaseId, SharedDatabaseState.SeedCompanyId, Guid.NewGuid()));
+                Assert.Null(CreateRepo().GetByUserRowId(databaseId, OtherCompanyId, userRowId));
             }
             finally
             {

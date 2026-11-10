@@ -1,4 +1,4 @@
-<!-- source: en/reference/analyzer-rules.md blob: 64cd2f4a9b1c8ad0c3e07c516e863b979d78a2a4 -->
+<!-- source: en/reference/analyzer-rules.md blob: a5011a626ae2757cface3cd337c5a3d73a49e628 -->
 # Analyzer 規則
 
 [English](../../en/reference/analyzer-rules.md) · [← 文件索引](../README.md)
@@ -57,6 +57,7 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 | POLHEM3001 | Warning | BO 的 public 方法必須被 `[ApiAccessControl]` 涵蓋 |
 | POLHEM3002 | Warning | 定義層集合屬性必須使用框架集合型別——**框架內部規則**，不套用於消費端專案 |
 | POLHEM3003 | Warning | `IExecFuncHandler` 實作的 public 方法必須被 `[ExecFuncAccessControl]` 涵蓋 |
+| POLHEM3004 | Warning | Repository 必須透過 `CreateDbAccess` 取得資料庫存取，不可直接用 context 的 `DbAccessFactory`，綁定公司的 repository 其語句才會限定在自己的公司 |
 
 ### 序列化與 wire 合約（POLHEM4xxx）
 

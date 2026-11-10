@@ -21,6 +21,7 @@ namespace Polhem.Db
         private readonly string _databaseId = string.Empty;
         private readonly IAnomalyLogWriter? _anomalyWriter;
         private readonly DbAccessAnomalyLogOptions? _anomalyOptions;
+        private string? _companyId;
 
         #region Constructors
 
@@ -298,7 +299,7 @@ namespace Polhem.Db
         private DbCommandResult ExecuteNonQueryCore(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction;
@@ -316,7 +317,7 @@ namespace Polhem.Db
         private DbCommandResult ExecuteScalarCore(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction;
@@ -339,7 +340,7 @@ namespace Polhem.Db
         private DbCommandResult ExecuteDataTableCore(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction;
@@ -386,7 +387,7 @@ namespace Polhem.Db
         /// <remarks>
         /// Called after `LowercaseColumnNames` so the declared names match the canonical lowercase form.
         /// Declaring the option on a kind that returns no table is rejected earlier, in
-        /// <see cref="DbCommandSpec.CreateCommand"/>.
+        /// <see cref="DbCommandSpec.CreateCommand(Polhem.Definition.Database.DatabaseType, System.Data.Common.DbConnection)"/>.
         /// </remarks>
         private static void ApplyDateColumns(DbCommandSpec command, DataTable table)
         {
@@ -405,7 +406,7 @@ namespace Polhem.Db
             ArgumentNullException.ThrowIfNull(command);
 
             using (var scope = CreateScope())
-            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!))
+            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 using (var reader = cmd.ExecuteReader())
@@ -462,6 +463,34 @@ namespace Polhem.Db
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets the company this database access is bound to, in its stored (lowercase) form, or
+        /// <c>null</c> when it is bound to none.
+        /// </summary>
+        public string? BoundCompanyId => _companyId;
+
+        /// <summary>
+        /// Binds this database access to one company: from then on every command it runs must
+        /// reference <see cref="CommandTextVariable.CompanyId"/>, which carries the company as a parameter.
+        /// </summary>
+        /// <param name="companyId">The company the commands are confined to.</param>
+        /// <returns>This database access.</returns>
+        /// <remarks>
+        /// A command without the placeholder is refused when it is created, so a statement that forgot the
+        /// company fails the first time it runs instead of reading every company's rows. The check does not
+        /// see whether every company table in the statement is compared with the placeholder.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when it is already bound to another company.</exception>
+        public DbAccess BindCompany(string companyId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
+            var normalized = Polhem.Definition.Identity.CompanyInfo.NormalizeId(companyId);
+            if (_companyId is not null && !string.Equals(_companyId, normalized, StringComparison.Ordinal))
+                throw new InvalidOperationException("This database access is already bound to another company.");
+            _companyId = normalized;
+            return this;
+        }
 
         /// <summary>
         /// Returns a string representation of this object.

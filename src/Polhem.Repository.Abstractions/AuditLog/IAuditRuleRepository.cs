@@ -13,13 +13,14 @@ namespace Polhem.Repository.Abstractions.AuditLog
         /// Reads every rule row from the company database's <c>st_audit_rule</c> table.
         /// </summary>
         /// <param name="databaseId">The company database id.</param>
+        /// <param name="companyId">The company whose rows are read; a company database may hold several companies.</param>
         /// <returns>
         /// The rules, or an empty list when the table holds none. An empty list is also returned
         /// when the table does not exist at all: a deployment upgraded before the table was
         /// introduced must keep auditing on its previous deployment-wide settings rather than
         /// failing every save.
         /// </returns>
-        IReadOnlyList<AuditRule> GetRules(string databaseId);
+        IReadOnlyList<AuditRule> GetRules(string databaseId, string companyId);
 
         /// <summary>
         /// Announces that the specified company's rules changed, so caches in this and other
