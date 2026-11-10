@@ -317,7 +317,12 @@ namespace Polhem.Web.Blazor.Components
                 _roundingContext = roundingContext;
                 _listRows = list.Table;
                 _paging.Apply(1, list.Paging);
-                if (EffectiveIsCompact) ShowCardPage(1, list.Table);
+                if (EffectiveIsCompact)
+                {
+                    ShowCardPage(1, list.Table);
+                    // The first load can run before the browser is connected, so it scrolls after the render.
+                    _scrollCardsToTop = true;
+                }
                 _isListPaged = list.Paging is not null;
                 _dataObject = new FormDataObject(schema, Client.Form(ProgId));
                 _liveComputation = new FormLiveComputation(
