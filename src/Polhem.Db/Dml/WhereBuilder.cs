@@ -1,3 +1,4 @@
+using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Database;
 
@@ -56,7 +57,12 @@ namespace Polhem.Db.Dml
             if (node.Kind == FilterNodeKind.Condition)
             {
                 var cond = (FilterCondition)node;
-                var mapping = selectContext.FieldMappings.GetOrDefault(cond.FieldName);
+                // IMPORTANT: `sys_company_id` always names the main table's column. It is what a company
+                // form's queries are confined on, and a relation field the form names the same way must
+                // not move that condition onto a joined table.
+                var mapping = string.Equals(cond.FieldName, SysFields.CompanyId, StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : selectContext.FieldMappings.GetOrDefault(cond.FieldName);
                 string fieldExpr;
                 if (mapping != null)
                 {

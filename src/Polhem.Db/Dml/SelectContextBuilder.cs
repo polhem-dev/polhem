@@ -139,12 +139,12 @@ namespace Polhem.Db.Dml
             }
         }
 
-        /// <summary>
-        /// A set of reserved SQL keywords used to avoid alias collisions.
-        /// </summary>
         private static bool IsCompanyForm(FormSchema? schema)
             => schema != null && string.Equals(schema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal);
 
+        /// <summary>
+        /// A set of reserved SQL keywords used to avoid alias collisions.
+        /// </summary>
         private static readonly HashSet<string> s_sqlKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "AS", "BY", "IF", "IN", "IS", "OF", "OR", "TO", "ON",

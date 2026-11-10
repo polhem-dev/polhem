@@ -40,7 +40,7 @@ namespace Polhem.Repository
         /// <exception cref="Polhem.Core.Exceptions.AuthenticationRequiredException">Thrown when the scope is company-bound and the session is missing or expired.</exception>
         /// <exception cref="Polhem.Core.Exceptions.UserMessageException">Thrown when the scope is company-bound and the session's company is unavailable.</exception>
         /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">Thrown when the scope is company-bound and the session has not entered a company.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the scope is company-bound and no <see cref="ISessionInfoService"/> is registered.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the scope is company-bound and no <see cref="ISessionInfoService"/> is registered, or the session entered another company while the repository was being built.</exception>
         /// <remarks>
         /// The resolution is eager so a bad route fails while the repository is being built, before
         /// any data has been touched — the timing the form factory already had. Scope is a
@@ -54,8 +54,25 @@ namespace Polhem.Repository
             AccessToken = accessToken;
             ProgId = progId ?? string.Empty;
             Scope = scope;
-            DatabaseId = scope is { } value ? ctx.Router.Resolve(value, accessToken) : string.Empty;
-            CompanyId = scope == DbScope.Company ? ResolveSessionCompanyId(ctx, accessToken) : string.Empty;
+            if (scope != DbScope.Company)
+            {
+                DatabaseId = scope is { } value ? ctx.Router.Resolve(value, accessToken) : string.Empty;
+                CompanyId = string.Empty;
+                return;
+            }
+
+            // WARNING: The router reads the session's company to pick the database, and the company is
+            // read here again to confine the rows. An EnterCompany on the same token in between would
+            // pair one company's database with another company's id, so the company is read on both
+            // sides of the routing and a change refuses the request rather than misfiling its rows.
+            var companyBefore = ResolveSessionCompanyId(ctx, accessToken);
+            DatabaseId = ctx.Router.Resolve(DbScope.Company, accessToken);
+            CompanyId = ResolveSessionCompanyId(ctx, accessToken);
+            if (!string.Equals(companyBefore, CompanyId, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "The session entered another company while the request was being routed; retry the request.");
+            }
         }
 
         /// <summary>

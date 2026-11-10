@@ -57,10 +57,6 @@ namespace Polhem.Db.Dml
             return new DbCommandSpec(DbCommandKind.NonQuery, sql, whereResult.Parameters);
         }
 
-        /// <summary>
-        /// Walks the filter tree, validates that each referenced field belongs to the target table
-        /// and is not a RelationField, and returns a copy with field names replaced by quoted identifiers.
-        /// </summary>
         private FilterCondition QuotedCopy(FilterCondition cond) => new()
         {
             FieldName = _databaseType.QuoteIdentifier(cond.FieldName),
@@ -70,6 +66,10 @@ namespace Polhem.Db.Dml
             IgnoreIfNull = cond.IgnoreIfNull,
         };
 
+        /// <summary>
+        /// Walks the filter tree, validates that each referenced field belongs to the target table
+        /// and is not a RelationField, and returns a copy with field names replaced by quoted identifiers.
+        /// </summary>
         private FilterNode QuoteAndValidateFields(FilterNode node, FormTable formTable)
         {
             if (node.Kind == FilterNodeKind.Condition)
