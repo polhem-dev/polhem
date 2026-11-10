@@ -46,6 +46,7 @@ namespace Polhem.Web.Blazor.Controls
     /// </remarks>
     public abstract partial class GridControlBase : ComponentBase, IBindTableControl, IUIControl, IDisposable
     {
+        private bool _disposed;
         private FormDataObject? _subscribed;
         private SingleFormMode? _controlStateMode;
         private DataRow? _selectedRow;
@@ -329,8 +330,20 @@ namespace Polhem.Web.Blazor.Controls
         /// <inheritdoc />
         public void Dispose()
         {
-            Subscribe(null);
+            Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the data object subscription.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            if (disposing)
+                Subscribe(null);
         }
 
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>

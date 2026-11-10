@@ -80,7 +80,7 @@ namespace Polhem.Business.Session
             var capabilities = snapshot?.GetAllowedByModel(roles) ?? [];
             // Snapshot the user's record-scope identity (user/employee/department row ids) so
             // layer-2 scope filtering runs from the session without re-hitting the database.
-            var employeeContext = _employeeContextResolver.Resolve(sessionInfo.UserId, companyInfo.CompanyDatabaseId);
+            var employeeContext = _employeeContextResolver.Resolve(sessionInfo.UserId, companyInfo.CompanyDatabaseId, companyId);
 
             // The customization code is derived from the company (empty when the company ships no
             // customization); the session-level overlay reads it downstream.

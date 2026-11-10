@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Controls
         private readonly IJSRuntime _js;
         private readonly string _openPopupSelector;
         private readonly int _replayDelayMilliseconds;
-        private ValueTask<IJSObjectReference>? _loading;
+        private Task<IJSObjectReference>? _loading;
         private IJSObjectReference? _module;
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace Polhem.Web.Blazor.Controls
         public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
             if (_module is not null) return;
-            _loading ??= _js.InvokeAsync<IJSObjectReference>("import", cancellationToken, ModulePath);
-            _module = await _loading.Value.Preserve().ConfigureAwait(true);
+            _loading ??= _js.InvokeAsync<IJSObjectReference>("import", cancellationToken, ModulePath).AsTask();
+            _module = await _loading.ConfigureAwait(true);
         }
 
         /// <summary>

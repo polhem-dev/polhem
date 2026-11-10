@@ -1,7 +1,5 @@
 using Polhem.Definition.Forms;
-using Polhem.Definition.Identity;
 using Polhem.Core;
-using Polhem.Core.Data;
 
 namespace Polhem.Definition.Database
 {
@@ -54,10 +52,9 @@ namespace Polhem.Definition.Database
                 DisplayName = formTable.DisplayName
             };
 
-            bool companyScoped = IsCompanyScoped(formTable);
             AddFields(formTable, tableSchema);
-            if (companyScoped) AddCompanyIdField(tableSchema);
-            AddIndexes(formTable, tableSchema, companyScoped);
+            AddIndexes(formTable, tableSchema);
+            if (IsCompanyScoped(formTable)) tableSchema.ApplyCompanyScope();
 
             return tableSchema;
         }
@@ -65,23 +62,6 @@ namespace Polhem.Definition.Database
         private static bool IsCompanyScoped(FormTable formTable)
             => formTable.Collection?.Owner is FormSchema schema
                && string.Equals(schema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal);
-
-        /// <summary>
-        /// Adds <see cref="SysFields.CompanyId"/> after <see cref="SysFields.RowId"/>, unless the form table
-        /// declares it itself.
-        /// </summary>
-        private static void AddCompanyIdField(TableSchema tableSchema)
-        {
-            var fields = tableSchema.Fields!;
-            if (fields.Contains(SysFields.CompanyId)) return;
-
-            var field = new DbField(SysFields.CompanyId, "Company Id", FieldDbType.String)
-            {
-                Length = CompanyInfo.CompanyIdMaxLength
-            };
-            int rowIdIndex = fields.Contains(SysFields.RowId) ? fields.IndexOf(fields[SysFields.RowId]) : -1;
-            fields.Insert(rowIdIndex + 1, field);
-        }
 
         /// <summary>
         /// Adds fields to the table schema.
@@ -109,7 +89,7 @@ namespace Polhem.Definition.Database
         /// <summary>
         /// Adds indexes to the table schema.
         /// </summary>
-        private static void AddIndexes(FormTable formTable, TableSchema tableSchema, bool companyScoped)
+        private static void AddIndexes(FormTable formTable, TableSchema tableSchema)
         {
             // Pre-check to avoid null reference
             if (tableSchema.Fields == null) return;
@@ -122,13 +102,10 @@ namespace Polhem.Definition.Database
             if (tableSchema.Fields.Contains(SysFields.RowId))
                 tableSchema.Indexes!.Add("rx_{0}", SysFields.RowId, true);
 
-            // Create unique sequential number index. Companies sharing one database may reuse the same
-            // number, so on a company table the number is unique within its company only.
+            // Create unique sequential number index; on a company table ApplyCompanyScope then makes the
+            // number unique within one company.
             if (tableSchema.Fields.Contains(SysFields.Id))
-            {
-                string fields = companyScoped ? $"{SysFields.CompanyId},{SysFields.Id}" : SysFields.Id;
-                tableSchema.Indexes!.Add("uk_{0}", fields, true);
-            }
+                tableSchema.Indexes!.Add("uk_{0}", SysFields.Id, true);
 
             // Create foreign key indexes
             if (formTable.Fields == null) { return; }

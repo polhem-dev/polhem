@@ -15,6 +15,7 @@ namespace Polhem.Repository.Abstractions.System
         /// <see cref="DepartmentTree"/> assembles them into the nested hierarchy.
         /// </summary>
         /// <param name="databaseId">The company database id.</param>
-        IReadOnlyList<DepartmentRow> GetDepartments(string databaseId);
+        /// <param name="companyId">The company whose rows are read; a company database may hold several companies.</param>
+        IReadOnlyList<DepartmentRow> GetDepartments(string databaseId, string companyId);
     }
 }

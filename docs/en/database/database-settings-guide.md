@@ -438,9 +438,32 @@ For bo repos (the BO-layer Repositories) the framework provides `IRepositoryData
 
 BO methods consume the router via `BusinessObject.ResolveDatabaseId(DbScope)` or, for FormSchema-driven CRUD, the `CreateDataFormRepository(progId)` helper which routes automatically based on the schema's `CategoryId`.
 
-Cross-DatabaseItem aggregation (e.g. log year-range queries) and explicit archive access (e.g. reading `log_2024`) are not part of the default routing path — the application layer specifies the target databaseId directly and creates a custom bo repo via `IDbAccessFactory`.
+Cross-DatabaseItem aggregation (e.g. log year-range queries) and explicit archive access (e.g. reading `log_2024`) are not part of the default routing path — the application layer specifies the target databaseId directly and creates a custom bo repo via `IDbAccessFactory`. That path is for data with no company; company data goes through a repository's `CreateDbAccess()`, which is bound to the company (§5.5).
 
 `DatabaseItem.CategoryId` and `DbCategorySettings` are used only at the design phase (§5.1–5.2) and the deployment phase (§5.3) described above. At runtime, BO methods speak in terms of `DbScope` (the runtime access intent) rather than CategoryId strings; the one place a CategoryId string is read at runtime is a form repository turning its schema's `CategoryId` into a `DbScope` (§3.4).
+
+
+### 5.5 Companies Sharing a Company Database
+
+Several companies may name the same `DatabaseItem` as their `company_database_id`: paying customers can keep a database
+each while trial companies share one, and the difference is only whether their ids point at the same item. A database
+of its own keeps a company apart by itself; in a shared one, the rows say which company they belong to.
+
+- Every table of a `company` form carries `sys_company_id`, the lowercase id of the company that owns the row, and its
+  unique indexes lead with it, so a document number is unique within one company.
+  `TableSchemaGenerator` adds both when it derives the table schema; a single-company database has the same columns, so
+  moving a company to a database of its own copies data and changes no schema.
+- The form repository stamps the session's company on every row it inserts and confines every read, update and delete
+  to it. A relation join between two company forms also matches the company.
+- Hand-written SQL in a repository runs through `CreateDbAccess()`, which is bound to the company: the statement names
+  it with `{@CompanyId}`, and one that does not is refused. See
+  [Customising the Repository for a ProgId](../guides/development-cookbook.md#customising-the-repository-for-a-progid).
+- Company ids are stored in lowercase, up to 10 ASCII letters and digits; `EnterCompany` accepts any case.
+
+A row whose `sys_company_id` is empty belongs to no company, and no company sees it. `db upgrade` gives such rows the
+company of their database when only one company points at it (§7).
+
+The reasons are in [ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md).
 
 ---
 
@@ -561,6 +584,7 @@ already exists is left as it is.
 | `db create` | For each `DatabaseItem`, creates the database its connection string names when it does not exist. |
 | `db check` | Opens a connection to each `DatabaseItem` and reports `ok` or the engine's error. Nothing is created, except that SQLite creates an empty file when its connection string allows it. |
 | `db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...` | For each category in `DbCategorySettings`, builds or upgrades every table in every `DatabaseItem` whose `CategoryId` is that category. `--table` limits it to the named tables and can be repeated; a name no category registers is reported and fails the command. `--dry-run` prints the statements without running them; `--allow-narrowing` permits changes that shorten a column. |
+| `db add-company-column [--dry-run]` | Adds `sys_company_id` and company-led unique indexes to every table schema registered under the `company` category that lacks them, and saves the definitions. `--dry-run` lists them without saving. Run `db upgrade` afterwards to apply them to the databases. |
 | `db seed-admin --company <id> [options]` | Creates the first user, a company and the user's access to it in the common database. The company id is up to 10 ASCII letters and digits and is stored in lowercase (`ACME` becomes `acme`); signing in to the company accepts it in any case. Options: `--user` (default `admin`), `--name`, `--company-name`, `--company-database`, `--currency` (default `USD`), `--no-deployment-admin`. |
 
 **`db create` per engine.** The login in the connection string needs permission to create databases. When it has
@@ -574,6 +598,19 @@ none, have a DBA create them and continue with `db upgrade`.
 
 **`db upgrade`** needs a `DatabaseItem` for every category that has tables. A database item with an empty
 `CategoryId` counts as belonging to the category its `Id` names.
+
+Before it changes anything, `db upgrade` checks that the deployment is ready for companies sharing a database (§5.5),
+and stops with the list of what to fix when it is not:
+
+- A table schema under the `company` category without `sys_company_id`, such as one written by an earlier version.
+  `db add-company-column` adds it.
+- A company id in `st_company` that is not up to 10 lowercase ASCII letters and digits. It is not rewritten for you:
+  renaming a company touches every place its id is stored.
+
+Once the check passes, `st_company.sys_id` may narrow to the company id's width without `--allow-narrowing`. After the
+tables, each row of a company table that has no `sys_company_id` is given the company whose `company_database_id`
+names its database, and the count is printed. When several companies name that database, the rows are listed as a
+problem and left for you to assign; a database no company names is left alone.
 
 **`db seed-admin`** never changes a row that already exists; in particular it never replaces an existing user's
 password. The password is read from the `POLHEM_ADMIN_PASSWORD` environment variable, or prompted for without echoing;

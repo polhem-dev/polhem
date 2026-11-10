@@ -26,7 +26,7 @@ namespace Polhem.UI.Avalonia.Views
             // cannot Read drop out. No-op when no company context is active.
             LayoutCapabilityApplier.ApplyGrid(listLayout, Schema, ResolveUserContext()?.Capabilities);
             _grid.EnableServerSort();
-            _grid.SortRequested += (_, fieldName) => _ = OnSortRequestedAsync(fieldName);
+            _grid.SortRequested += (sender, fieldName) => _ = OnSortRequestedAsync(fieldName);
             // Columns render immediately; rows arrive with the first ReloadAsync. The master table
             // lets drop-down columns show their (localized) list item text instead of stored codes.
             _grid.Bind(listLayout, rows: null, Schema.MasterTable);

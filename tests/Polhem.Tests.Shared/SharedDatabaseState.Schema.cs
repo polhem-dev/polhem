@@ -248,7 +248,13 @@ namespace Polhem.Tests.Shared
             bool wasMissing = schemaProvider.GetTableSchema(tableName) is null;
             try
             {
-                bool created = builder.Execute(categoryId, tableName);
+                // `st_company.sys_id` narrowed to the company id's width. A persistent local database built
+                // before that holds the wider column, and the upgrade refuses a narrowing unless asked; the
+                // seed company id fits, as `db upgrade` checks before it allows the same narrowing.
+                var options = string.Equals(tableName, "st_company", StringComparison.OrdinalIgnoreCase)
+                    ? new UpgradeOptions { AllowColumnNarrowing = true }
+                    : null;
+                bool created = builder.Execute(categoryId, tableName, options);
                 Console.WriteLine($"SharedDatabaseState: {databaseId} {tableName} schema — {(created ? "created/upgraded" : "up-to-date")}");
             }
             catch (DbException ex)

@@ -160,7 +160,7 @@ namespace Polhem.Db
         private async Task<DbCommandResult> ExecuteNonQueryCoreAsync(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction, CancellationToken cancellationToken)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction;
@@ -179,7 +179,7 @@ namespace Polhem.Db
         private async Task<DbCommandResult> ExecuteScalarCoreAsync(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction, CancellationToken cancellationToken)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction;
@@ -198,7 +198,7 @@ namespace Polhem.Db
         private async Task<DbCommandResult> ExecuteDataTableCoreAsync(
             DbCommandSpec command, DbConnection connection, DbTransaction? transaction, CancellationToken cancellationToken)
         {
-            using (var cmd = command.CreateCommand(DatabaseType, connection))
+            using (var cmd = command.CreateCommand(DatabaseType, connection, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 if (transaction != null) cmd.Transaction = transaction; // Set the transaction first
@@ -235,7 +235,7 @@ namespace Polhem.Db
             ArgumentNullException.ThrowIfNull(command);
 
             using (var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false))
-            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!))
+            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId))
             {
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
                 using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))

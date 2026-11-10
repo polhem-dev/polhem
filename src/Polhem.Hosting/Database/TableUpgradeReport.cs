@@ -17,6 +17,11 @@ namespace Polhem.Hosting.Database
         public IReadOnlyList<string> Problems { get; init; } = [];
 
         /// <summary>
+        /// Gets the rows of company tables that carried no company and were given one, or would be in a dry run.
+        /// </summary>
+        public IReadOnlyList<CompanyRowAssignment> CompanyAssignments { get; init; } = [];
+
+        /// <summary>
         /// Gets whether every table succeeded and no category was left out.
         /// </summary>
         public bool Succeeded => Problems.Count == 0 && Tables.All(t => t.Outcome != TableUpgradeOutcome.Failed);

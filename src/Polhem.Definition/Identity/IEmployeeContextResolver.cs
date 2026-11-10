@@ -14,6 +14,7 @@ namespace Polhem.Definition.Identity
         /// </summary>
         /// <param name="userId">The user business id (<c>st_user.sys_id</c>).</param>
         /// <param name="databaseId">The company database id (where <c>st_employee</c> lives).</param>
-        EmployeeContext Resolve(string userId, string databaseId);
+        /// <param name="companyId">The company whose employee is resolved; a company database may hold several companies.</param>
+        EmployeeContext Resolve(string userId, string databaseId, string companyId);
     }
 }

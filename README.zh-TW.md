@@ -105,6 +105,7 @@ dotnet add package Polhem.Db
 | **Polhem.UI.Core.dll** | 所有前端（含 Blazor head）共用的前端層：UI 服務合約（`UIServices` / `IUserContext` / `IFormDefinitionSource`）、表單值規則（`FormValueBinding` / `FormDataGuard`）與權限能力解析器。不含傳輸，只透過 `Polhem.Api.Contracts` 接觸後端。 |
 | **Polhem.UI.ApiBridge.dll** | 把單一使用者的前端接上 Polhem 後端：用戶端連線狀態（`ClientInfo`）、endpoint 與 API 金鑰持久化（`IEndpointStorage` / `FileEndpointStorage`），以及以 `AddPolhemUIApiBridge()` 註冊、以 API 實作的 `Polhem.UI.Core` 服務。不適用多使用者 host。 |
 | **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
+| **Polhem.UI.Avalonia.Shell.dll** | 現成的 Avalonia 前端：連線、登入公司，並開啟伺服器選單上的每張表單。桌面、瀏覽器、iOS 與 Android head 共用；應用程式繼承 `ShellApplication` 即可。 |
 | **Polhem.Web.Blazor.dll** | Blazor head 的共用層（`FormDataObject`、欄位編輯器基底、`BlazorUserContext`），不含 UI 框架與宿主。 |
 | **Polhem.Web.Blazor.Mud.dll** | Blazor head 的 MudBlazor UI 套件：表單頁、版面、Grid、欄位編輯器、對話框與外殼。 |
 | **Polhem.Web.Blazor.Fluent.dll** | Blazor head 的 Fluent UI 套件，頁面與行為都和 MudBlazor 套件相同。 |
@@ -134,9 +135,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 
 ## 🌟 完整示範應用 — Polhem.Northwind
 
-[`apps/Polhem.Northwind`](apps/Polhem.Northwind/README.zh-TW.md) 是最完整的示範應用：經典 Northwind 進銷存案例，**幾乎完全由定義組成**（主檔表單、含 lookup 的主從訂單、僅一個手寫商業物件，其餘皆 XML）。同一套共用 `Polhem.Northwind.UI` 跑在 **四個 Avalonia head** —— Desktop、Browser（WASM）、iOS、Android —— 連同一個 JSON-RPC 後端。
+[`apps/Polhem.Northwind`](apps/Polhem.Northwind/README.zh-TW.md) 是最完整的示範應用：經典 Northwind 進銷存案例，**幾乎完全由定義組成**（主檔表單、含 lookup 的主從訂單、僅一個手寫商業物件，其餘皆 XML）。同一套共用 `Polhem.Northwind.UI` 跑在 **四個 Avalonia head** —— Desktop、Browser（WASM）、iOS、Android —— 連同一個 JSON-RPC 後端。另有 **四個 Blazor head** —— Server 與 WebAssembly，各有 MudBlazor 與 Fluent UI 版本 —— 以同一份定義開啟同樣的表單。
 
-四個 head 渲染同一張訂單表單 —— 同一份定義、同一套控件，差別只在最外層的平台殼：
+四個 Avalonia head 渲染同一張訂單表單 —— 同一份定義、同一套控件，差別只在最外層的平台殼：
 
 | 桌面 | Browser（WASM） |
 |---|---|
@@ -154,8 +155,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Blazor
 
 | 類別 | Demo | 重點 |
 |------|------|------|
-| Blazor | [`Blazor.Mud.DemoCenter`](samples/Blazor.Mud.DemoCenter/README.zh-TW.md) | 同一套主題導向 demo center，使用 `Polhem.Web.Blazor.Mud`（MudBlazor，無後端） |
-| Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.zh-TW.md) | 主題導向控件 demo center（DevExpress 風格）：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 主題/FormMode 工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（Semi.Avalonia，無後端） |
+| Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.zh-TW.md) | 依主題分類的控制項 demo center：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 淺色/深色工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（`Polhem.UI.Avalonia`，Semi.Avalonia 佈景，無後端） |
+| Blazor | [`Blazor.Mud.DemoCenter`](samples/Blazor.Mud.DemoCenter/README.zh-TW.md) | 同樣的主題與案例，使用 `Polhem.Web.Blazor.Mud`（MudBlazor，無後端） |
+| Blazor | [`Blazor.Fluent.DemoCenter`](samples/Blazor.Fluent.DemoCenter/README.zh-TW.md) | 同樣的主題與案例，使用 `Polhem.Web.Blazor.Fluent`（Fluent UI，無後端） |
 
 ## 從 Bee.NET 遷移
 

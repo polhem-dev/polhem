@@ -148,11 +148,23 @@ other sessions.
 |-----------|--------|------------------|
 | API layer directly references the Repository layer (`Polhem.Api.Core`, `Polhem.Api.Server`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
 | Business Object directly creates a `DbConnection` | Bypasses connection management and logging | Put the query in a repository (next row); the repository uses `DbAccess` |
-| BO references `Polhem.Db` (`Polhem.Business.csproj` has no `ProjectReference` to `Polhem.Db`) | BO is a thin shell over business logic; data access belongs to Repository | FormSchema-driven CRUD → `IDataFormRepository`; custom queries → ad-hoc bo repo with `IDbAccessFactory` |
+| BO references `Polhem.Db` (`Polhem.Business.csproj` has no `ProjectReference` to `Polhem.Db`) | BO is a thin shell over business logic; data access belongs to Repository | FormSchema-driven CRUD → `IDataFormRepository`; custom queries → a repository deriving from `RepositoryBase` that takes its database access from `CreateDbAccess()` |
 | BO hard-codes a `databaseId` string or reads `SessionInfo.CompanyId` / `CompanyInfo` directly | Couples BO to the routing implementation; breaks when deployments change | Use `BusinessObject.ResolveDatabaseId(DbScope)` (custom bo repo) or `CreateDataFormRepository(progId)` (FormSchema CRUD); the helpers delegate to `IRepositoryDatabaseRouter` which is the single source of truth |
 | Client side resolves Repository services from a DI container | Server-only | Call the API via `ApiConnector` |
 | Skipping the Payload Pipeline order | Breaks encryption / decryption consistency | Maintain Serialize → Compress → Encrypt |
 | BO returns API types directly | BO must not depend on API serialization formats | Return BO types; `ApiOutputConverter` maps them automatically by naming convention |
+
+## Company Data Constraints
+
+Several companies may share one company database, and the rows of every company table say which company they belong
+to (`sys_company_id`; see [Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)).
+The form repository confines its statements to the session's company by itself. Hand-written SQL has to name the company:
+
+| Rule | Why |
+|------|-----|
+| Run hand-written SQL on company tables through a repository's `CreateDbAccess()`, never through `IDbAccessFactory` or `new DbAccess(...)` | `CreateDbAccess()` is bound to the company and refuses a statement that does not name it; any other access is unbound and reads every company's rows. The POLHEM3004 analyzer reports a repository that takes another way |
+| Compare every company table in the statement with `sys_company_id = {@CompanyId}`, and write `{@CompanyId}` into the column of a row you insert | The binding checks only that the placeholder is present, not that a join of two company tables compares both |
+| Do not choose the company yourself | The repository takes it from the session. A cache or a background job with no session names it with `CreateDbAccess(databaseId, companyId)` |
 
 ## ExecFunc Development Constraints
 

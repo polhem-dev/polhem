@@ -1,4 +1,7 @@
+using Polhem.Core.Data;
 using Polhem.Definition.Attributes;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Sorting;
 using Polhem.Core.Serialization;
 using System.Text.Json.Serialization;
 using System.ComponentModel;
@@ -131,6 +134,59 @@ namespace Polhem.Definition.Database
                     return index;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Makes this a table whose rows belong to a company: adds <see cref="SysFields.CompanyId"/> after
+        /// <see cref="SysFields.RowId"/> when it is missing, and leads with it every unique index other than
+        /// the row identity indexes (on <see cref="SysFields.No"/> or <see cref="SysFields.RowId"/> alone).
+        /// </summary>
+        /// <returns><c>true</c> when the table changed.</returns>
+        /// <remarks>
+        /// Companies sharing one company database may reuse a number or any other business key, so such a
+        /// key is unique within one company only. <see cref="TableSchemaGenerator"/> applies this to every
+        /// table of a company form schema. WARNING: a table schema served by the definition cache is shared;
+        /// apply this to a <see cref="Clone"/>.
+        /// </remarks>
+        public bool ApplyCompanyScope()
+        {
+            bool changed = false;
+            var fields = Fields!;
+            if (!fields.Contains(SysFields.CompanyId))
+            {
+                int rowIdIndex = fields.Contains(SysFields.RowId) ? fields.IndexOf(fields[SysFields.RowId]) : -1;
+                fields.Insert(rowIdIndex + 1, new DbField(SysFields.CompanyId, "Company Id", FieldDbType.String)
+                {
+                    Length = CompanyInfo.CompanyIdMaxLength
+                });
+                changed = true;
+            }
+            foreach (var index in Indexes!.Where(NeedsCompanyLead))
+            {
+                // An index that already holds the column further back gets it moved to the front.
+                var keys = index.IndexFields!;
+                var existing = keys.Contains(SysFields.CompanyId) ? keys[SysFields.CompanyId] : null;
+                if (existing is not null) keys.Remove(existing);
+                keys.Insert(0, existing ?? new IndexField(SysFields.CompanyId, SortDirection.Asc));
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// Determines whether this table already carries what <see cref="ApplyCompanyScope"/> adds.
+        /// </summary>
+        public bool HasCompanyScope()
+            => Fields!.Contains(SysFields.CompanyId) && !Indexes!.Any(NeedsCompanyLead);
+
+        private static bool NeedsCompanyLead(DbTableIndex index)
+        {
+            if (!index.Unique || index.IndexFields is not { Count: > 0 } keys) return false;
+            if (string.Equals(keys[0].FieldName, SysFields.CompanyId, StringComparison.OrdinalIgnoreCase)) return false;
+            bool rowIdentity = keys.Count == 1
+                && (string.Equals(keys[0].FieldName, SysFields.No, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(keys[0].FieldName, SysFields.RowId, StringComparison.OrdinalIgnoreCase));
+            return !rowIdentity;
         }
 
         /// <summary>

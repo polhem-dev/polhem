@@ -61,6 +61,7 @@ namespace Polhem.Web.Blazor.Components
     /// </remarks>
     public abstract partial class FormPageBase : ComponentBase, IDisposable
     {
+        private bool _disposed;
         private FormSchema? _schema;
         private FormLayout? _formLayout;
         private LayoutGrid? _listLayout;
@@ -249,8 +250,24 @@ namespace Polhem.Web.Blazor.Components
         /// <returns>The operation.</returns>
         protected virtual Task FocusDeleteCancelAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-        /// <inheritdoc/>
-        public void Dispose() => DetachForm();
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Detaches the page from its form.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            if (disposing)
+                DetachForm();
+        }
 
         private async Task LoadFormAsync()
         {

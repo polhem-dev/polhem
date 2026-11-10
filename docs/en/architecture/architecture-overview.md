@@ -227,16 +227,11 @@ public class SalesOrderBO : BusinessObject
         return refreshed;
     }
 
-    // Reports: BO selects DB scope explicitly, implements SQL directly
-    // (ReportFilter and SalesReportRepo are your own types)
+    // Reports: the repository registered for this ProgId implements the SQL directly
+    // (ReportFilter and ISalesRepository are your own types)
     [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
     public DataSet GetSalesSummaryReport(ReportFilter filter)
-    {
-        var dbId = ResolveDatabaseId(DbScope.Company);   // type-safe, no magic string
-        var repo = new SalesReportRepo(
-            Services.GetRequiredService<IDbAccessFactory>(), dbId);
-        return repo.GetSummary(filter);   // custom SQL inside the repository
-    }
+        => CreateFormRepository<ISalesRepository>().GetSummary(filter);   // custom SQL inside the repository
 }
 ```
 

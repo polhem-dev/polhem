@@ -1,1 +1,13 @@
 #nullable enable
+Polhem.Hosting.Database.CompanyRowAssignment
+Polhem.Hosting.Database.CompanyRowAssignment.CompanyId.get -> string!
+Polhem.Hosting.Database.CompanyRowAssignment.CompanyId.init -> void
+Polhem.Hosting.Database.CompanyRowAssignment.CompanyRowAssignment() -> void
+Polhem.Hosting.Database.CompanyRowAssignment.DatabaseId.get -> string!
+Polhem.Hosting.Database.CompanyRowAssignment.DatabaseId.init -> void
+Polhem.Hosting.Database.CompanyRowAssignment.Rows.get -> int
+Polhem.Hosting.Database.CompanyRowAssignment.Rows.init -> void
+Polhem.Hosting.Database.CompanyRowAssignment.TableName.get -> string!
+Polhem.Hosting.Database.CompanyRowAssignment.TableName.init -> void
+Polhem.Hosting.Database.TableUpgradeReport.CompanyAssignments.get -> System.Collections.Generic.IReadOnlyList<Polhem.Hosting.Database.CompanyRowAssignment!>!
+Polhem.Hosting.Database.TableUpgradeReport.CompanyAssignments.init -> void

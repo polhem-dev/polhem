@@ -110,7 +110,7 @@ namespace Polhem.Repository.UnitTests
             // depending on an admin API that does not exist yet. The company ID has a random suffix so leftovers in
             // the provider databases do not pollute later runs.
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(dbType, DbCategoryIds.Common));
-            var companyId = string.Concat("DISABLED_", Guid.NewGuid().ToString("N").AsSpan(0, 8));
+            var companyId = string.Concat("dis", Guid.NewGuid().ToString("N").AsSpan(0, 7));
             string tbl = dbType.QuoteIdentifier("st_company");
             string colRowId = dbType.QuoteIdentifier("sys_rowid");
             string colId = dbType.QuoteIdentifier("sys_id");

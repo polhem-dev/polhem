@@ -300,6 +300,11 @@ public static class NorthwindSchemaSeeder
                 "UPDATE st_company SET default_currency = {0} WHERE sys_id = {1} AND default_currency = ''",
                 NorthwindCredentials.DefaultCurrency,
                 NorthwindCredentials.CompanyId));
+            // Company ids are stored lowercase. A northwind.db seeded before that holds NORTHWIND, which
+            // SQLite's NOCASE columns still match, so this rewrites it to the stored form in place.
+            dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                "UPDATE st_company SET sys_id = {0} WHERE sys_id = {0}",
+                NorthwindCredentials.CompanyId));
             return;
         }
 
@@ -424,7 +429,15 @@ public static class NorthwindSchemaSeeder
                 if (category.Tables == null) { continue; }
                 var builder = new TableSchemaBuilder(category.Id, defineAccess, connectionManager);
                 foreach (var table in category.Tables)
-                    builder.Execute(category.Id, table.TableName);
+                {
+                    // st_company.sys_id narrowed to the company id's width. A northwind.db built before keeps
+                    // the wider column, and an upgrade refuses a narrowing unless asked; the demo company's id
+                    // fits it, which is what `db upgrade` checks before it allows the same narrowing.
+                    var options = string.Equals(table.TableName, "st_company", StringComparison.OrdinalIgnoreCase)
+                        ? new UpgradeOptions { AllowColumnNarrowing = true }
+                        : null;
+                    builder.Execute(category.Id, table.TableName, options);
+                }
             }
         }
 

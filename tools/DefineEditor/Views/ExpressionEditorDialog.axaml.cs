@@ -21,6 +21,7 @@ public partial class ExpressionEditorDialog : Window
         Editor.Options.EnableHyperlinks = false;
         Editor.Options.EnableEmailHyperlinks = false;
         Editor.TextArea.TextView.BackgroundRenderers.Add(_underline);
+        InstallCompletion();
         Editor.TextChanged += (_, _) =>
         {
             if (_viewModel is not null) _viewModel.Expression = Editor.Text;

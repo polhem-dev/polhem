@@ -103,7 +103,7 @@ namespace Polhem.Business.UnitTests.Form
         private sealed class NoOpAuditRuleRepository : IAuditRuleRepository
         {
             public List<string> Notified { get; } = [];
-            public IReadOnlyList<AuditRule> GetRules(string databaseId) => [];
+            public IReadOnlyList<AuditRule> GetRules(string databaseId, string companyId) => [];
             public void NotifyRulesChanged(string companyId) => Notified.Add(companyId);
         }
 

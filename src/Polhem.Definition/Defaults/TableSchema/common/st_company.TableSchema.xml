@@ -3,7 +3,7 @@
 	<Fields>
 		<DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
 		<DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
-		<DbField FieldName="sys_id" Caption="Company Id" DbType="String" Length="20" />
+		<DbField FieldName="sys_id" Caption="Company Id" DbType="String" Length="10" />
 		<DbField FieldName="sys_name" Caption="Company Name" DbType="String" Length="50" />
 		<DbField FieldName="company_database_id" Caption="Company Database Id" DbType="String" Length="50" />
 		<DbField FieldName="customize_id" Caption="Customize Id" DbType="String" Length="50" />

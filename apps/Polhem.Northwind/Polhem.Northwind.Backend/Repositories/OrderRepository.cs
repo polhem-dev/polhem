@@ -25,6 +25,12 @@ namespace Polhem.Northwind.Backend.Repositories;
 /// this demo got away with only because both categories map to the same SQLite file.
 /// </para>
 /// <para>
+/// The database is not enough on its own: several companies can share one company database, so each
+/// query also names the company with <c>sys_company_id = {@CompanyId}</c>. The base hands out a database
+/// access bound to the session's company, which fills that placeholder and refuses a statement that
+/// leaves it out, so a query that forgot the company fails the first time it runs.
+/// </para>
+/// <para>
 /// The constructor takes exactly the framework's three parameters. A subclass that needs its own
 /// dependencies adds interface-typed ones and the factory injects them from DI, but it must not add
 /// a second <c>string</c> or <c>Guid</c> — those are already supplied, leaving nothing to bind a
@@ -50,7 +56,7 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
         if (rowId == Guid.Empty) { return string.Empty; }
 
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
-            "SELECT status FROM ft_order WHERE sys_rowid = {0}", rowId);
+            "SELECT status FROM ft_order WHERE sys_rowid = {0} AND sys_company_id = {@CompanyId}", rowId);
         return ValueUtilities.CStr(CreateDbAccess().Execute(spec).Scalar ?? string.Empty);
     }
 
@@ -60,7 +66,7 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
         ArgumentException.ThrowIfNullOrWhiteSpace(likePrefix);
 
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
-            "SELECT MAX(sys_id) FROM ft_order WHERE sys_id LIKE {0}", likePrefix);
+            "SELECT MAX(sys_id) FROM ft_order WHERE sys_id LIKE {0} AND sys_company_id = {@CompanyId}", likePrefix);
         return CreateDbAccess().Execute(spec).Scalar as string;
     }
 
@@ -70,7 +76,7 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
         if (productRowId == Guid.Empty) { return null; }
 
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
-            "SELECT units_in_stock FROM ft_product WHERE sys_rowid = {0}", productRowId);
+            "SELECT units_in_stock FROM ft_product WHERE sys_rowid = {0} AND sys_company_id = {@CompanyId}", productRowId);
         var value = CreateDbAccess().Execute(spec).Scalar;
         return value is null or DBNull ? null : ValueUtilities.CInt(value);
     }

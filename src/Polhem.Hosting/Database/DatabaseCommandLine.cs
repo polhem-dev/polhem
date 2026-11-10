@@ -7,8 +7,8 @@ using Polhem.Db.Schema;
 namespace Polhem.Hosting.Database
 {
     /// <summary>
-    /// Runs the <c>db</c> commands of a host: <c>db create</c>, <c>db check</c>, <c>db upgrade</c> and
-    /// <c>db seed-admin</c>, backed by <see cref="IDatabaseInitializer"/>.
+    /// Runs the <c>db</c> commands of a host: <c>db create</c>, <c>db check</c>, <c>db upgrade</c>,
+    /// <c>db add-company-column</c> and <c>db seed-admin</c>, backed by <see cref="IDatabaseInitializer"/>.
     /// </summary>
     /// <remarks>
     /// A host calls <see cref="TryRun(IServiceProvider, string[])"/> after building its service
@@ -46,6 +46,9 @@ namespace Polhem.Hosting.Database
             "  db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
             "                                Build or upgrade the tables registered in DbCategorySettings: every\n" +
             "                                table, or only the ones named with --table.\n" +
+            "  db add-company-column [--dry-run]\n" +
+            "                                Add the company column and company-led unique indexes to the table\n" +
+            "                                schemas registered under the company category that lack them.\n" +
             "  db seed-admin --company <id> [--company-name <name>] [--company-database <id>]\n" +
             "                [--user <id>] [--name <name>] [--currency <code>] [--no-deployment-admin]\n" +
             "                                Create the first administrator, a company and the access between them.\n" +
@@ -88,6 +91,7 @@ namespace Polhem.Hosting.Database
                     "create" => RunCreate(services, options, output),
                     "check" => RunCheck(services, options, output),
                     "upgrade" => RunUpgrade(services, options, output),
+                    "add-company-column" => RunAddCompanyColumn(services, options, output),
                     "seed-admin" => RunSeedAdmin(services, options, output, readSecret, getEnvironmentVariable),
                     _ => WriteUsage(output, command.Length == 0 || command == "help"
                         ? null : $"Unknown command 'db {command}'."),
@@ -192,6 +196,11 @@ namespace Polhem.Hosting.Database
             var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(
                 upgradeOptions, dryRun, table => WriteTable(output, table), tableNames);
 
+            foreach (var assignment in report.CompanyAssignments)
+            {
+                output.WriteLine($"  {assignment.DatabaseId}.{assignment.TableName}: {assignment.Rows} rows " +
+                    $"{(dryRun ? "would be given" : "given")} company '{assignment.CompanyId}'");
+            }
             foreach (var problem in report.Problems)
                 output.WriteLine($"  {problem}");
 
@@ -204,6 +213,25 @@ namespace Polhem.Hosting.Database
             summary.Append(", ").Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Failed)).Append(" failed.");
             output.WriteLine(summary.ToString());
             return report.Succeeded ? Success : Failure;
+        }
+
+        private static int RunAddCompanyColumn(IServiceProvider services, string[] options, TextWriter output)
+        {
+            var dryRun = TakeFlag(ref options, "--dry-run");
+            RejectUnknown(options);
+
+            var defineAccess = services.GetRequiredService<Polhem.Definition.Storage.IDefineAccess>();
+            var changed = CompanyScopeDefinitions.AddMissing(defineAccess, dryRun);
+            foreach (var table in changed)
+                output.WriteLine($"  company.{table}: {(dryRun ? "would add" : "added")} the company column");
+            if (changed.Count == 0)
+            {
+                output.WriteLine("Every company table schema already has the company column.");
+                return Success;
+            }
+            var verb = dryRun ? "would change" : "changed";
+            output.WriteLine($"{changed.Count} table schemas {verb}. Run 'db upgrade' to apply them to the databases.");
+            return Success;
         }
 
         private static void WriteTable(TextWriter output, TableUpgradeEntry table)

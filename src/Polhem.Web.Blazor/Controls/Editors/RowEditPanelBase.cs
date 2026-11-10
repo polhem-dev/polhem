@@ -29,6 +29,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
     /// </remarks>
     public abstract class RowEditPanelBase : ComponentBase, IDisposable
     {
+        private bool _disposed;
         private FormDataObject? _sessionObject;
         private DataRow? _row;
 
@@ -119,8 +120,20 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <inheritdoc />
         public void Dispose()
         {
-            EndSession(commit: false);
+            Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Rolls back the row edit session that is still open.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            if (disposing)
+                EndSession(commit: false);
         }
 
         /// <summary>Commits the session and reports it.</summary>

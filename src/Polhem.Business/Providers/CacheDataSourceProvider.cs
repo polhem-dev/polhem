@@ -114,8 +114,8 @@ namespace Polhem.Business.Providers
 
             string databaseId = company.CompanyDatabaseId;
             var repository = _repositoryFactory.Create<IRolePermissionRepository>();
-            var grants = repository.GetRoleGrants(databaseId);
-            var userRoles = repository.GetUserRoles(databaseId);
+            var grants = repository.GetRoleGrants(databaseId, company.CompanyId);
+            var userRoles = repository.GetUserRoles(databaseId, company.CompanyId);
             return new CompanyRolePermissions(companyId, grants, userRoles);
         }
 
@@ -125,7 +125,7 @@ namespace Polhem.Business.Providers
             var company = GetCompanyInfo(companyId);
             if (company == null) { return null; }
 
-            var rows = _repositoryFactory.Create<IDepartmentRepository>().GetDepartments(company.CompanyDatabaseId);
+            var rows = _repositoryFactory.Create<IDepartmentRepository>().GetDepartments(company.CompanyDatabaseId, company.CompanyId);
             return new DepartmentTree(companyId, rows);
         }
 
@@ -135,7 +135,7 @@ namespace Polhem.Business.Providers
             var company = GetCompanyInfo(companyId);
             if (company == null) { return null; }
 
-            var rules = _repositoryFactory.Create<IAuditRuleRepository>().GetRules(company.CompanyDatabaseId);
+            var rules = _repositoryFactory.Create<IAuditRuleRepository>().GetRules(company.CompanyDatabaseId, company.CompanyId);
             return new CompanyAuditRules(companyId, rules);
         }
 

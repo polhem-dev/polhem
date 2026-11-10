@@ -14,13 +14,15 @@ namespace Polhem.Repository.Abstractions.System
         /// <c>st_role</c> for the role business id).
         /// </summary>
         /// <param name="databaseId">The company database id.</param>
-        IReadOnlyList<RoleGrantRow> GetRoleGrants(string databaseId);
+        /// <param name="companyId">The company whose rows are read; a company database may hold several companies.</param>
+        IReadOnlyList<RoleGrantRow> GetRoleGrants(string databaseId, string companyId);
 
         /// <summary>
         /// Gets all user-role assignments in the given company database (<c>st_user_role</c>
         /// joined to <c>st_role</c> for the role business id).
         /// </summary>
         /// <param name="databaseId">The company database id.</param>
-        IReadOnlyList<UserRoleRow> GetUserRoles(string databaseId);
+        /// <param name="companyId">The company whose rows are read; a company database may hold several companies.</param>
+        IReadOnlyList<UserRoleRow> GetUserRoles(string databaseId, string companyId);
     }
 }

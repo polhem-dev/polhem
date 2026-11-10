@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using Polhem.Db.Manager;
 using Polhem.Definition;
+using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 
@@ -8,8 +10,12 @@ namespace Polhem.Repository.UnitTests
     /// <summary>
     /// How a company-bound <see cref="RepositoryBase"/> takes its company from the session.
     /// </summary>
-    public class RepositoryBaseCompanyBindingTests
+    public class RepositoryBaseCompanyBindingTests : IClassFixture<SharedDbFixture>
     {
+        private readonly SharedDbFixture _fx;
+
+        public RepositoryBaseCompanyBindingTests(SharedDbFixture fx) { _fx = fx; }
+
         [Fact]
         [DisplayName("A company-bound repository takes the session's company in its lowercase form")]
         public void Construct_CompanyScope_BindsSessionCompany()
@@ -37,6 +43,27 @@ namespace Polhem.Repository.UnitTests
             Assert.Equal(string.Empty, repository.BoundCompanyId);
         }
 
+        [Fact]
+        [DisplayName("A company-bound repository refuses to be built when the session has entered no company")]
+        public void Construct_CompanyScopeWithoutCompany_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() => new ProbeRepository(Context(new SwitchingSessions(string.Empty))));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a company-bound repository binds a database access to its own database to the company, and not one to another database")]
+        public void CreateDbAccess_ByDatabaseId_BindsOnlyItsOwnDatabase()
+        {
+            var ctx = TestRepositoryContext.Create(
+                _fx.GetRequiredService<IDbConnectionManager>(),
+                router: new ProviderScopedRouter(DatabaseType.SQLite),
+                services: new SwitchingSessions("c001"));
+            var repository = new ProbeRepository(ctx);
+
+            Assert.Equal("c001", repository.Open(repository.OwnDatabaseId).BoundCompanyId);
+            Assert.Null(repository.Open(TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "common")).BoundCompanyId);
+        }
+
         private static IRepositoryContext Context(SwitchingSessions sessions)
             => TestRepositoryContext.Create(services: sessions);
 
@@ -44,6 +71,8 @@ namespace Polhem.Repository.UnitTests
             : RepositoryBase(ctx, Guid.NewGuid(), string.Empty, scope)
         {
             public string BoundCompanyId => CompanyId;
+            public string OwnDatabaseId => DatabaseId;
+            public Polhem.Db.DbAccess Open(string databaseId) => CreateDbAccess(databaseId);
         }
 
         /// <summary>

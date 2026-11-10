@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Db;
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
 using Polhem.Repository.System;
@@ -16,6 +17,8 @@ namespace Polhem.Repository.UnitTests
     /// </summary>
     public class RolePermissionRepositoryTests : IClassFixture<SharedDbFixture>
     {
+        private const string OtherCompanyId = "c002";
+
         private readonly SharedDbFixture _fx;
         public RolePermissionRepositoryTests(SharedDbFixture fx) { _fx = fx; }
 
@@ -43,6 +46,7 @@ namespace Polhem.Repository.UnitTests
             string colAction = dbType.QuoteIdentifier("action");
             string colScope = dbType.QuoteIdentifier("scope");
             string colInsTime = dbType.QuoteIdentifier("sys_insert_time");
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
             string nowExpr = dbType == DatabaseType.PostgreSQL || dbType == DatabaseType.SQLite ? "CURRENT_TIMESTAMP"
                            : dbType == DatabaseType.SQLServer ? "GETDATE()"
@@ -50,24 +54,26 @@ namespace Polhem.Repository.UnitTests
                            : "SYSTIMESTAMP";
 
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
-                $"INSERT INTO {tblGrant} ({colRowId}, {colRoleId}, {colModelId}, {colAction}, {colScope}, {colInsTime}) " +
-                $"VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {nowExpr})",
-                grantRowId, roleId, "PurchaseOrder", action, scope));
+                $"INSERT INTO {tblGrant} ({colRowId}, {colRoleId}, {colModelId}, {colAction}, {colScope}, {colCompany}, {colInsTime}) " +
+                $"VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {nowExpr})",
+                grantRowId, roleId, "PurchaseOrder", action, scope, SharedDatabaseState.SeedCompanyId));
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
-                $"INSERT INTO {tblUserRole} ({colRowId}, {colUserId}, {colRoleId}, {colInsTime}) " +
-                $"VALUES ({{0}}, {{1}}, {{2}}, {nowExpr})",
-                userRoleRowId, userId, roleId));
+                $"INSERT INTO {tblUserRole} ({colRowId}, {colUserId}, {colRoleId}, {colCompany}, {colInsTime}) " +
+                $"VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {nowExpr})",
+                userRoleRowId, userId, roleId, SharedDatabaseState.SeedCompanyId));
 
             try
             {
                 var repo = CreateRepo();
 
-                var grant = repo.GetRoleGrants(databaseId).Single(g => g.RoleId == roleId);
+                var grant = repo.GetRoleGrants(databaseId, SharedDatabaseState.SeedCompanyId).Single(g => g.RoleId == roleId);
+                Assert.DoesNotContain(repo.GetRoleGrants(databaseId, OtherCompanyId), g => g.RoleId == roleId);
                 Assert.Equal("PurchaseOrder", grant.ModelId);
                 Assert.Equal(PermissionActions.Read, grant.Action);
                 Assert.Equal(ScopeStrategy.Dept, grant.Scope);
 
-                var userRole = repo.GetUserRoles(databaseId).Single(u => u.RoleId == roleId);
+                var userRole = repo.GetUserRoles(databaseId, SharedDatabaseState.SeedCompanyId).Single(u => u.RoleId == roleId);
+                Assert.DoesNotContain(repo.GetUserRoles(databaseId, OtherCompanyId), u => u.RoleId == roleId);
                 Assert.Equal(userId, userRole.UserId);
             }
             finally

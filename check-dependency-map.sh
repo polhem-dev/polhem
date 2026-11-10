@@ -32,7 +32,7 @@ git ls-files 'src/*/*.csproj' | while read -r file; do
     { grep -oE 'ProjectReference Include="[^"]+"' "$file" || true; } \
         | sed -E 's/.*[\\/]([^\\/]+)\.csproj"/\1/' \
         | while read -r target; do
-            if grep -qxF "$target" "$work/projects" && [ "$name" != "Polhem.Analyzers" ]; then
+            if grep -qxF "$target" "$work/projects" && [[ "$name" != "Polhem.Analyzers" ]]; then
                 echo "$name -> $target"
             fi
         done
@@ -41,8 +41,9 @@ done | sort > "$work/actual"
 failed=0
 
 report() {
-    echo "$1: $2"
-    sed 's/^/  /' "$3"
+    local doc=$1 problem=$2 lines=$3
+    echo "$doc: $problem"
+    sed 's/^/  /' "$lines"
     failed=1
 }
 
@@ -97,38 +98,38 @@ for doc in docs/*/architecture/dependency-map.md; do
     sort -u -o "$work/overview" "$work/overview"
     sort -o "$work/listed" "$work/listed"
 
-    if [ -s "$work/errors" ]; then report "$doc" "the diagrams cannot be read" "$work/errors"; fi
+    if [[ -s "$work/errors" ]]; then report "$doc" "the diagrams cannot be read" "$work/errors"; fi
 
     comm -23 "$work/actual" "$work/edges" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "in the csproj files but not in the area diagrams" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "in the csproj files but not in the area diagrams" "$work/diff"; fi
     comm -13 "$work/actual" "$work/edges" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "in the area diagrams but not in the csproj files" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "in the area diagrams but not in the csproj files" "$work/diff"; fi
 
     cut -d' ' -f1 "$work/members" | sort > "$work/declared"
     comm -23 "$work/projects" "$work/declared" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "projects in no area" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "projects in no area" "$work/diff"; fi
     comm -13 "$work/projects" "$work/declared" | sort -u > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "projects in an area that are not in src/" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "projects in an area that are not in src/" "$work/diff"; fi
     uniq -d "$work/declared" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "projects in more than one area" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "projects in more than one area" "$work/diff"; fi
 
     awk 'NR == FNR { area[$1] = $2; next }
          (area[$1] != "" && area[$3] != "" && area[$1] != area[$3]) { print area[$1], area[$3] }' \
         "$work/members" "$work/actual" | sort -u > "$work/crossings"
     comm -23 "$work/crossings" "$work/overview" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "area pairs the references cross but the overview does not show" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "area pairs the references cross but the overview does not show" "$work/diff"; fi
     comm -13 "$work/crossings" "$work/overview" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "area pairs in the overview that no reference crosses" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "area pairs in the overview that no reference crosses" "$work/diff"; fi
 
     comm -23 "$work/members" "$work/listed" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "projects of an area that its overview box does not list" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "projects of an area that its overview box does not list" "$work/diff"; fi
     comm -13 "$work/members" "$work/listed" > "$work/diff"
-    if [ -s "$work/diff" ]; then report "$doc" "projects an overview box lists that are not in its area" "$work/diff"; fi
+    if [[ -s "$work/diff" ]]; then report "$doc" "projects an overview box lists that are not in its area" "$work/diff"; fi
 
     rm -f "$work/edges" "$work/members" "$work/overview" "$work/listed" "$work/errors"
 done
 
-if [ "$failed" -ne 0 ]; then
+if [[ "$failed" -ne 0 ]]; then
     echo "Update the diagrams in docs/en/architecture/dependency-map.md and its translations to match the csproj files."
     exit 1
 fi

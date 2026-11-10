@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 49176a52d13e22cf4b99f7754e1f6c8eb2a5c229 -->
+<!-- source: en/guides/development-cookbook.md blob: 6e389fff7cdb69fa242fafcd13b8fde7db87a778 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -318,10 +318,13 @@ var repository = CreateDataFormRepository(ProgId);
 // Services.GetRequiredService<IRepositoryFactory>()
 //         .CreateFormRepository<IDataFormRepository>(AccessToken, ProgId);
 
-// 自訂 bo repo —— 取目標 scope 的 databaseId 再建 repo
+// 對公司資料寫的手寫 SQL —— 用為 ProgId 登記的 repository，它綁定 session 所在的公司
+//（見下方「為 ProgId 客製 Repository」）
+var report = CreateFormRepository<IOrderRepository>().GetMonthlySales(month);
+
+// 只需要知道某個 scope 的 databaseId 時
 var logDbId = ResolveDatabaseId(DbScope.Log);         // "log"（不需 session）
 var companyDbId = ResolveDatabaseId(DbScope.Company); // 透過 session.CompanyId → CompanyInfo.CompanyDatabaseId
-var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFactory>(), companyDbId);
 ```
 
 `DbScope` 解析規則：
@@ -585,11 +588,17 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
     public string GetStoredStatus(Guid rowId)
     {
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
-            "SELECT status FROM ft_order WHERE sys_rowid = {0}", rowId);
+            "SELECT status FROM ft_order WHERE sys_rowid = {0} AND sys_company_id = {@CompanyId}", rowId);
         return CreateDbAccess().Execute(spec).Scalar as string ?? string.Empty;
     }
 }
 ```
+
+多家公司可以共用一個公司資料庫，每張 company 表都帶 `sys_company_id`（見
+[資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）。`company` 表單的 repository，其
+`CreateDbAccess()` 綁定 session 所在的公司：`{@CompanyId}` 會變成帶有該公司的參數，沒有寫這個佔位符的語句在執行時會被拒絕，
+所以忘了指定公司的查詢會直接失敗，而不是讀到所有公司的資料。repository 若用其他方式取得資料庫存取（context 的
+`DbAccessFactory`、注入的 `IDbAccessFactory`、`new DbAccess(...)`），拿到的都沒有綁定公司；POLHEM3004 analyzer 會報出來。
 
 ```xml
 <ProgramItem ProgId="Order"
@@ -608,7 +617,7 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 
 子類可以有自己的相依——工廠以 `ActivatorUtilities` 建構它，介面型別的建構子參數會自 DI 注入。但**不得**再宣告第二個 `string` 或 `Guid` 參數，那兩個型別已被工廠的引數佔用。
 
-子類只能新增成員，不會改變繼承來的成員。`DataFormRepository` 的 `GetList`、`GetData`、`Save`、`Delete` 等 `IDataFormRepository` 成員都不是 virtual。子類自己的成員以 protected 的 `CreateDbAccess()`、`DatabaseId` 與 `Context`（連線管理、cache-notify 服務）為基礎撰寫。
+子類只能新增成員，不會改變繼承來的成員。`DataFormRepository` 的 `GetList`、`GetData`、`Save`、`Delete` 等 `IDataFormRepository` 成員都不是 virtual。子類自己的成員以 protected 的 `CreateDbAccess()`、`DatabaseId`、`CompanyId` 與 `Context`（連線管理、cache-notify 服務）為基礎撰寫。
 
 ### FormSchema → SQL 產生
 

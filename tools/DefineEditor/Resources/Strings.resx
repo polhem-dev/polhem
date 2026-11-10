@@ -499,8 +499,17 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="XmlView_Split" xml:space="preserve"><value>Split</value></data>
   <data name="XmlView_SplitTooltip" xml:space="preserve"><value>Show the tree above the XML, each following the other</value></data>
   <data name="XmlView_DesignLocked" xml:space="preserve"><value>Fix the XML or switch to Design to edit in the tree</value></data>
-  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>Write the expression with the fields of the table and the functions on the right; double-click one to insert it. The expression is checked as you type.</value></data>
+  <data name="ExpressionEditor_Hint" xml:space="preserve"><value>Write the expression with the fields of the table, the functions and the types on the right; double-click one to insert it. Suggestions appear as you type a name or a dot, and Ctrl+Space (Cmd+I on macOS) lists what fits the caret. The expression is checked as you type.</value></data>
   <data name="ExpressionEditor_Message" xml:space="preserve"><value>Message shown when the condition fails</value></data>
   <data name="ExpressionEditor_Fields" xml:space="preserve"><value>Fields</value></data>
   <data name="ExpressionEditor_Functions" xml:space="preserve"><value>Functions</value></data>
+  <data name="ExpressionEditor_Types" xml:space="preserve"><value>Types</value></data>
+  <data name="ExpressionTrial_Title" xml:space="preserve"><value>Try it out</value></data>
+  <data name="ExpressionTrial_Hint" xml:space="preserve"><value>Type sample values for the fields the expression reads; an empty box is an empty field. Numbers are not rounded by the company's settings, and Now() uses this computer's time zone (the server saves on a UTC basis).</value></data>
+  <data name="ExpressionTrial_Empty" xml:space="preserve"><value>(left empty)</value></data>
+  <data name="ExpressionTrial_WhenApplies" xml:space="preserve"><value>Applies: the condition is checked</value></data>
+  <data name="ExpressionTrial_WhenSkips" xml:space="preserve"><value>Skipped: the rule does not apply to this row</value></data>
+  <data name="ExpressionTrial_ConditionPasses" xml:space="preserve"><value>Passes</value></data>
+  <data name="ExpressionTrial_ConditionFails" xml:space="preserve"><value>Fails: {0}</value></data>
+  <data name="ExpressionTrial_NoInputs" xml:space="preserve"><value>The expression reads no field.</value></data>
 </root>
