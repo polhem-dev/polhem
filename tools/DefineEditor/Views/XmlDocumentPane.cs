@@ -300,23 +300,10 @@ public sealed partial class XmlDocumentPane : UserControl
 
                 var segment = new TextSegment { StartOffset = start, EndOffset = end };
                 foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
-                    drawingContext.DrawGeometry(null, Pen, Wave(rect.BottomLeft, rect.Right));
+                    drawingContext.DrawGeometry(null, Pen, WavyLine.Build(rect.BottomLeft, rect.Right));
             }
         }
 
         private static bool IsNameChar(char c) => char.IsLetterOrDigit(c) || c is ':' or '_' or '-' or '.';
-
-        private static StreamGeometry Wave(Point from, double right)
-        {
-            const double step = 2.5;
-            var geometry = new StreamGeometry();
-            using var context = geometry.Open();
-            context.BeginFigure(new Point(from.X, from.Y - 1), isFilled: false);
-            var up = true;
-            for (var x = from.X + step; x <= right + step; x += step, up = !up)
-                context.LineTo(new Point(Math.Min(x, right), from.Y - (up ? 2.5 : 0)));
-            context.EndFigure(isClosed: false);
-            return geometry;
-        }
     }
 }

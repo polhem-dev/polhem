@@ -1,3 +1,5 @@
 #nullable enable
 const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
 const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!
+static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
+static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?

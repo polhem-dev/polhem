@@ -139,5 +139,38 @@ namespace Polhem.Definition.UnitTests.Forms
 
             Assert.Empty(_calculator.ValidateExpressions(schema));
         }
+
+        [Fact]
+        [DisplayName("GetVariableTypes keys each field by its declared name and types it as an empty cell is coerced")]
+        public void GetVariableTypes_Table_KeysByDeclaredNameWithCoercedType()
+        {
+            var schema = new FormSchema("Probe", "Probe");
+            var table = schema.Tables!.Add("Probe", "Probe");
+            table.Fields!.Add(new FormField("UnitPrice", "Unit Price", FieldDbType.Decimal));
+            table.Fields!.Add(new FormField("order_date", "Order Date", FieldDbType.Date));
+            table.Fields!.Add(new FormField("customer_rowid", "Customer", FieldDbType.Guid));
+
+            var types = FormExpressionCalculator.GetVariableTypes(table);
+
+            Assert.Equal(typeof(decimal), types["UnitPrice"]);
+            Assert.False(types.ContainsKey("unitprice"));
+            Assert.Equal(Polhem.Core.Expressions.ExpressionPolicy.CoerceValue(null, FieldDbType.Date).GetType(),
+                types["order_date"]);
+            Assert.Equal(typeof(Guid), types["customer_rowid"]);
+        }
+
+        [Fact]
+        [DisplayName("ResolveRuleTable returns the master table for an empty target, the named table, or null when absent")]
+        public void ResolveRuleTable_Targets_ResolveAsRulesAreEvaluated()
+        {
+            var schema = BuildSchema();
+            var master = new FormRule("m", "true", "m");
+            var detail = new FormRule("d", "true", "d") { TargetTable = "OrderLine" };
+            var missing = new FormRule("x", "true", "x") { TargetTable = "Nothing" };
+
+            Assert.Same(schema.MasterTable, FormExpressionCalculator.ResolveRuleTable(master, schema));
+            Assert.Same(schema.Tables!["OrderLine"], FormExpressionCalculator.ResolveRuleTable(detail, schema));
+            Assert.Null(FormExpressionCalculator.ResolveRuleTable(missing, schema));
+        }
     }
 }
