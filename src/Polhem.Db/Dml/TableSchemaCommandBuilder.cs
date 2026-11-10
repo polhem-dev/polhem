@@ -89,6 +89,18 @@ namespace Polhem.Db.Dml
             });
         }
 
+        /// <summary>
+        /// Adds the parameter an INSERT reads one field from: the fixed value for the pinned field, the
+        /// row's value for any other.
+        /// </summary>
+        private void AddInsertParameter(DbCommandSpec command, DbField field)
+        {
+            if (IsPinned(field))
+                AddPinnedParameter(command);
+            else
+                command.Parameters.Add(field);
+        }
+
         private void AppendPinnedCondition(StringBuilder buffer, DbCommandSpec command)
         {
             if (PinnedField.Length == 0) { return; }
@@ -152,10 +164,7 @@ namespace Polhem.Db.Dml
                     if (count > 0)
                         buffer.Append(", ");
                     buffer.Append(GetParameterName(field.FieldName));
-                    if (IsPinned(field))
-                        AddPinnedParameter(command);
-                    else
-                        command.Parameters.Add(field); // Add command parameter
+                    AddInsertParameter(command, field);
                     count++;
                 }
             }

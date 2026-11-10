@@ -85,23 +85,7 @@ namespace Polhem.Db.Dml
             }
             var srcTable = srcFormDefine.MasterTable!;
 
-            // Create the JOIN entry if it does not already exist
-            var join = context.Joins.GetOrDefault(key);
-            if (join == null)
-            {
-                join = new TableJoin()
-                {
-                    Key = key,
-                    LeftTable = leftTable,
-                    LeftAlias = leftAlias,
-                    LeftField = foreignKeyField.FieldName,
-                    RightTable = SelectFieldGuard.DbTableNameOf(srcTable),
-                    RightAlias = GetActiveTableAlias(),
-                    RightField = SysFields.RowId,
-                    MatchCompany = IsCompanyForm(_formTable.Collection?.Owner as FormSchema) && IsCompanyForm(srcFormDefine),
-                };
-                context.Joins.Add(join);
-            }
+            var join = GetOrAddJoin(context, key, foreignKeyField, leftTable, leftAlias, srcFormDefine);
 
             foreach (var mapping in fieldMappings)
             {
@@ -137,6 +121,31 @@ namespace Polhem.Db.Dml
                     context.FieldMappings.Add(fieldMapping);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the join stored under <paramref name="key"/>, creating it from the foreign key to the
+        /// related form's master table when it does not exist yet.
+        /// </summary>
+        private TableJoin GetOrAddJoin(SelectContext context, string key, FormField foreignKeyField,
+            string leftTable, string leftAlias, FormSchema relatedSchema)
+        {
+            var join = context.Joins.GetOrDefault(key);
+            if (join != null) { return join; }
+
+            join = new TableJoin()
+            {
+                Key = key,
+                LeftTable = leftTable,
+                LeftAlias = leftAlias,
+                LeftField = foreignKeyField.FieldName,
+                RightTable = SelectFieldGuard.DbTableNameOf(relatedSchema.MasterTable!),
+                RightAlias = GetActiveTableAlias(),
+                RightField = SysFields.RowId,
+                MatchCompany = IsCompanyForm(_formTable.Collection?.Owner as FormSchema) && IsCompanyForm(relatedSchema),
+            };
+            context.Joins.Add(join);
+            return join;
         }
 
         private static bool IsCompanyForm(FormSchema? schema)
