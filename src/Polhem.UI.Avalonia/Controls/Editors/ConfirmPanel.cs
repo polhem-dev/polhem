@@ -14,7 +14,6 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// <summary>The width the dialog keeps on a screen wide enough for it.</summary>
         internal const double PreferredMinWidth = 320;
 
-        private readonly Button _confirmButton;
         private readonly Button _cancelButton;
 
         /// <summary>Initializes a new instance of <see cref="ConfirmPanel"/>.</summary>
@@ -23,9 +22,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// <param name="cancelText">The caption of the button that backs out.</param>
         public ConfirmPanel(string message, string confirmText, string cancelText)
         {
-            _confirmButton = new Button { Content = confirmText };
-            _confirmButton.Classes.Add("Danger");
-            _confirmButton.Click += (_, _) => Confirmed?.Invoke(this, EventArgs.Empty);
+            var confirmButton = new Button { Content = confirmText };
+            confirmButton.Classes.Add("Danger");
+            confirmButton.Click += (_, _) => Confirmed?.Invoke(this, EventArgs.Empty);
 
             _cancelButton = new Button { Content = cancelText };
             _cancelButton.Click += (_, _) => Cancel();
@@ -38,7 +37,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 Margin = new Thickness(0, 16, 0, 0),
             };
             buttons.Children.Add(_cancelButton);
-            buttons.Children.Add(_confirmButton);
+            buttons.Children.Add(confirmButton);
 
             var body = new DockPanel { Margin = new Thickness(16), LastChildFill = true };
             DockPanel.SetDock(buttons, Dock.Bottom);

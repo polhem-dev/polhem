@@ -42,7 +42,11 @@ namespace Polhem.UI.Avalonia.Shell.Localization
         internal static IEnumerable<CultureInfo> Candidates(CultureInfo culture)
         {
             ArgumentNullException.ThrowIfNull(culture);
+            return EnumerateCandidates(culture);
+        }
 
+        private static IEnumerable<CultureInfo> EnumerateCandidates(CultureInfo culture)
+        {
             var chain = new List<CultureInfo>();
             for (var level = culture; !string.IsNullOrEmpty(level.Name); level = level.Parent)
                 chain.Add(level);
