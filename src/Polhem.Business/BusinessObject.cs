@@ -82,11 +82,26 @@ namespace Polhem.Business
         /// business object constructed without one reads the session the first time this is used.
         /// <c>SessionCompanyScopeReadGateTests</c> (tests/Polhem.Business.UnitTests) fails when framework code reads
         /// the session's company members anywhere else.
+        /// <para>
+        /// IMPORTANT: a business object serves one call. The snapshot is not refreshed, so an instance kept past its
+        /// call goes on acting for the company, and with the roles, it started with after the session has left that
+        /// company, signed out or expired. Create a new business object for each call.
+        /// </para>
         /// </remarks>
         protected SessionCompanyScope CompanyScope
-            => _companyScope ??= AccessToken == Guid.Empty
+            => LazyInitializer.EnsureInitialized(ref _companyScope, ReadCompanyScope);
+
+        private SessionCompanyScope ReadCompanyScope()
+            => AccessToken == Guid.Empty
                 ? SessionCompanyScope.None
                 : SessionInfoService.Get(AccessToken)?.CompanyScope ?? SessionCompanyScope.None;
+
+        /// <summary>
+        /// Returns this business object's context carrying its <see cref="CompanyScope"/>, for what it creates during
+        /// the call, such as form plugins.
+        /// </summary>
+        private protected IBusinessObjectContext CompanyScopedContext()
+            => new CompanyScopedBusinessObjectContext(Context, CompanyScope);
 
         /// <summary>
         /// Gets the program identifier this instance was addressed by.

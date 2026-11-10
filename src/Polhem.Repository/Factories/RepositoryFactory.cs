@@ -157,7 +157,7 @@ namespace Polhem.Repository.Factories
         /// Thrown when the resolver returns a type that does not derive from <see cref="DataFormRepository"/>.
         /// </exception>
         protected virtual IDataFormRepository CreateFormRepositoryCore(Guid accessToken, string progId)
-            => CreateFormRepository(_ctx, _typeResolver.Resolve(accessToken, progId), accessToken, progId);
+            => BuildFormRepository(_ctx, _typeResolver.Resolve(accessToken, progId), accessToken, progId);
 
         /// <summary>
         /// Builds the repository bound to a progId for a request that has taken its snapshot of the session's
@@ -175,10 +175,10 @@ namespace Polhem.Repository.Factories
         /// Thrown when the resolver returns a type that does not derive from <see cref="DataFormRepository"/>.
         /// </exception>
         protected virtual IDataFormRepository CreateFormRepositoryCore(Guid accessToken, string progId, SessionCompanyScope companyScope)
-            => CreateFormRepository(
+            => BuildFormRepository(
                 _ctx.WithCompanyScope(companyScope), _typeResolver.Resolve(companyScope.CustomizeId, progId), accessToken, progId);
 
-        private IDataFormRepository CreateFormRepository(RepositoryContext ctx, Type type, Guid accessToken, string progId)
+        private IDataFormRepository BuildFormRepository(RepositoryContext ctx, Type type, Guid accessToken, string progId)
         {
             if (type == typeof(DataFormRepository))
                 return new DataFormRepository(ctx, accessToken, progId);

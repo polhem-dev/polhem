@@ -1,6 +1,7 @@
 #nullable enable
 Polhem.Business.BusinessObject.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope!
 Polhem.Business.BusinessObjectFactory.CreateBusinessObject(System.Guid accessToken, string! progId, bool isLocalCall, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> object!
+Polhem.Business.Form.FormBusinessPlugin.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope!
 Polhem.Business.Permission.ScopeResolver.ResolveFilter(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
 *REMOVED*Polhem.Business.Session.EmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
 Polhem.Business.Session.EmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!

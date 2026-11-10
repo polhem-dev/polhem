@@ -58,7 +58,8 @@ namespace Polhem.Repository
             Scope = scope;
             if (scope != DbScope.Company)
             {
-                DatabaseId = scope is { } value ? ctx.Router.Resolve(value, accessToken) : string.Empty;
+                // Common and Log route to fixed databases that no session decides.
+                DatabaseId = scope is { } value ? ctx.Router.Resolve(value, SessionCompanyScope.None) : string.Empty;
                 CompanyId = string.Empty;
                 return;
             }

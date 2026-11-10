@@ -32,7 +32,8 @@ can now share a database.
 `BusinessObjectFactory` reads the session's `SessionCompanyScope` once per call and hands it to the business object
 through `IBusinessObjectContext.CompanyScope`. It also picks the business object's type from the snapshot's
 customization. The business object exposes it as `BusinessObject.CompanyScope`; one constructed without a snapshot reads
-the session the first time the property is used.
+the session the first time the property is used. The form plugins a business object runs get the same snapshot through
+the context it creates them with (`FormBusinessPlugin.CompanyScope`).
 
 ### 2. The snapshot travels down, not the token
 
@@ -60,12 +61,17 @@ construction.
 `EnterCompany`, `LeaveCompany` and `Logout` still replace the scope in place. A request already running keeps acting for
 the company it started with; the next request sees the new one.
 
+The snapshot is not refreshed, so a business object serves one call. Host code that keeps an instance past its call,
+such as a background job holding one from `CreateFormBO`, goes on acting with the company and roles it started with
+after the session has left the company, signed out or expired. The access-token paths used to re-read the session on
+every check; the snapshot paths do not.
+
 ### 5. A gate keeps it that way
 
 `SessionCompanyScopeReadGateTests` (`tests/Polhem.Business.UnitTests`) reads the IL of `Polhem.Business`,
 `Polhem.Repository` and `Polhem.ObjectCaching`. It fails when a method reads a company member of `SessionInfo`, or calls
-an access-token overload of the services above, outside a short list of snapshot points, write-side methods and public
-entry points, each listed with its reason. `FormBusinessObjectCompanyScopeSnapshotTests` switches the session's company
+an access-token overload of the services above (on the interface or on an implementation), outside a short list of
+snapshot points, write-side methods and public entry points, each listed with its reason and its parameter types. `FormBusinessObjectCompanyScopeSnapshotTests` switches the session's company
 right after authorization and checks that the record scope and the repository still get the authorized company.
 
 ## Consequences
@@ -77,8 +83,10 @@ right after authorization and checks that the record scope and the repository st
 - A host that overrides `RepositoryFactory.CreateFormRepositoryCore(Guid, string)` overrides the new
   `CreateFormRepositoryCore(Guid, string, SessionCompanyScope)` as well, because the framework's business objects create
   their repositories through it.
-- Host business objects that read `SessionInfoService.Get(AccessToken)?.CompanyId` keep working but are not protected;
-  they should read `CompanyScope`. The gate covers only the framework's own assemblies.
+- Host business objects and form plugins that read `SessionInfoService.Get(AccessToken)?.CompanyId` keep working but are
+  not protected; they should read `CompanyScope`. The gate covers only the framework's own assemblies.
+- `Polhem.Api.Server` still reads the session's company for the anomaly log and the exception mapper. Those records can
+  name another company than the request's when the token switches meanwhile; neither decides access.
 - A request costs one session read for its company instead of several.
 
 ## Alternatives considered

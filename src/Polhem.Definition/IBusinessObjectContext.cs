@@ -34,7 +34,7 @@ namespace Polhem.Definition
 
         /// <summary>
         /// Gets the request's snapshot of the session's company scope, or <c>null</c> when the context was built
-        /// without one, in which case the business object reads the session once when it is constructed.
+        /// without one, in which case the business object reads the session once, the first time it needs the scope.
         /// </summary>
         /// <remarks>
         /// Every company-dependent decision of one request (authorization, record scope, the company database, the

@@ -5,6 +5,7 @@ using Polhem.Definition.Identity;
 using Polhem.Repository;
 using Polhem.Repository.Abstractions;
 using Polhem.Repository.Abstractions.Factories;
+using Polhem.Repository.Factories;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Business.UnitTests
@@ -45,55 +46,75 @@ namespace Polhem.Business.UnitTests
             typeof(Polhem.ObjectCaching.Services.CompanyAuthorizationService).Assembly,
         ];
 
-        // "Type.Method" entries allowed to read the session's company members, with why.
+        // "Type.Method(parameter types)" entries allowed to read the session's company members, with why. The
+        // parameter types keep an allowance from covering an overload of the same name.
         private static readonly HashSet<string> s_allowedReaders = new(StringComparer.Ordinal)
         {
-            // The snapshots themselves: the request's, taken by the factory, and a business object's own when it
-            // was constructed without one.
-            "BusinessObjectFactory.ReadCompanyScope",
-            "BusinessObject.get_CompanyScope",
+            // The snapshots themselves: the request's, taken by the factory, and a business object's or a plugin's
+            // own when it was constructed without one.
+            "BusinessObjectFactory.ReadCompanyScope(Guid)",
+            "BusinessObject.ReadCompanyScope()",
+            "FormBusinessPlugin.ReadCompanyScope()",
             // Public access-token entry points, each reading the session once and handing the read to the
             // snapshot overload. Framework code inside a request does not call them (the second test).
-            "CompanyAuthorizationService.Can",
-            "ScopeResolver.ResolveFilter",
-            "RepositoryDatabaseRouter.Resolve",
-            "ProgramSettingsRepositoryTypeResolver.GetCustomizeId",
+            "CompanyAuthorizationService.Can(Guid, String, PermissionActions)",
+            "ScopeResolver.ResolveFilter(Guid, String, PermissionActions, FormSchema)",
+            "RepositoryDatabaseRouter.Resolve(DbScope, Guid)",
+            "ProgramSettingsRepositoryTypeResolver.GetCustomizeId(Guid)",
             // A repository built without the request's snapshot, by code outside a business object, reads the
             // session once and takes both its database and its company from that read.
-            "RepositoryBase.ReadSessionCompanyScope",
-            // The write side: entering, leaving and signing out change the scope, and persist it.
-            "SystemBusinessObject.LeaveCompany",
-            "SystemBusinessObject.Logout",
-            "SystemBusinessObject.CreateSeed",
+            "RepositoryBase.ReadSessionCompanyScope(IRepositoryContext, Guid)",
+            // The write side: leaving and signing out change the scope, and the seed persists it.
+            "SystemBusinessObject.LeaveCompany(LeaveCompanyArgs)",
+            "SystemBusinessObject.Logout(LogoutArgs)",
+            "SystemBusinessObject.CreateSeed(SessionInfo)",
         };
 
-        // "Type.Method" entries allowed to call an access-token entry point that reads the session itself.
+        // "Type.Method(parameter types)" entries allowed to call an access-token entry point.
         private static readonly HashSet<string> s_allowedTokenCallers = new(StringComparer.Ordinal)
         {
             // The access-token overloads of the extensions are public API for host code without a snapshot.
-            "BusinessObjectFactoryExtensions.CreateFormBO",
-            "BusinessObjectFactoryExtensions.CreateSystemBO",
-            // Routes a repository that is not company-bound (Common, Log), which reads no session.
-            "RepositoryBase..ctor",
+            "BusinessObjectFactoryExtensions.CreateFormBO(IBusinessObjectFactory, Guid, String, Boolean)",
+            "BusinessObjectFactoryExtensions.CreateSystemBO(IBusinessObjectFactory, Guid, Boolean)",
+            // The factory's own access-token path, for code without a snapshot.
+            "RepositoryFactory.CreateFormRepository(Guid, String)",
+            "RepositoryFactory.CreateFormRepositoryCore(Guid, String)",
         };
+
+        // Services whose access-token members read the session themselves.
+        private static readonly Type[] s_sessionReadingServices =
+        [
+            typeof(ICompanyAuthorizationService),
+            typeof(IScopeResolver),
+            typeof(IRepositoryDatabaseRouter),
+            typeof(IRepositoryFactory),
+            typeof(IRepositoryTypeResolver),
+            typeof(IBusinessObjectFactory),
+        ];
+
+        private static readonly string[] s_entryPointNames =
+        [
+            nameof(ICompanyAuthorizationService.Can),
+            nameof(IScopeResolver.ResolveFilter),
+            nameof(IRepositoryDatabaseRouter.Resolve),
+            nameof(IRepositoryFactory.CreateFormRepository),
+            "CreateFormRepositoryCore",
+            nameof(IBusinessObjectFactory.CreateBusinessObject),
+        ];
 
         private static bool IsCompanyRead(MemberInfo member)
             => member.DeclaringType == typeof(SessionInfo) && s_companyMembers.Contains(member.Name, StringComparer.Ordinal);
 
+        // Matches the member on the interface and on any implementation, so a call through a concrete type counts.
         private static bool IsTokenEntryPoint(MemberInfo member)
         {
-            if (member is not MethodInfo method) { return false; }
+            if (member is not MethodInfo method || method.DeclaringType is not { } type) { return false; }
+            if (!s_entryPointNames.Contains(method.Name, StringComparer.Ordinal)) { return false; }
+            if (!s_sessionReadingServices.Any(service => service.IsAssignableFrom(type))) { return false; }
             var parameters = method.GetParameters();
             // An overload that also takes the snapshot uses it; only one without it reads the session itself.
-            var takesToken = parameters.Any(p => p.ParameterType == typeof(Guid))
+            return parameters.Any(p => p.ParameterType == typeof(Guid))
                 && parameters.All(p => p.ParameterType != typeof(SessionCompanyScope));
-            var type = method.DeclaringType;
-            return takesToken && (
-                (type == typeof(ICompanyAuthorizationService) && method.Name == nameof(ICompanyAuthorizationService.Can))
-                || (type == typeof(IScopeResolver) && method.Name == nameof(IScopeResolver.ResolveFilter))
-                || (type == typeof(IRepositoryDatabaseRouter) && method.Name == nameof(IRepositoryDatabaseRouter.Resolve))
-                || (type == typeof(IRepositoryFactory) && method.Name == nameof(IRepositoryFactory.CreateFormRepository))
-                || (type == typeof(IBusinessObjectFactory) && method.Name == nameof(IBusinessObjectFactory.CreateBusinessObject)));
         }
 
         private static IEnumerable<(string Where, MemberInfo Member)> Calls()
@@ -103,9 +124,19 @@ namespace Polhem.Business.UnitTests
                 .SelectMany(IlMemberReferences.MethodsOf)
                 .SelectMany(m => IlMemberReferences.Of(m).Select(r => ($"{IlMemberReferences.OuterType(m)!.Name}.{SourceName(m)}", r)));
 
+        // A method written in source is named with its parameter types; a compiler-generated one (a closure, a state
+        // machine) cannot be, and goes by the name of the method it was written in.
+        private static string SourceName(MethodBase method)
+        {
+            var name = SourceMethodName(method);
+            if (method.DeclaringType?.DeclaringType != null && method.DeclaringType.Name.StartsWith('<')) { return name; }
+            if (method.Name.StartsWith('<')) { return name; }
+            return $"{name}({string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name))})";
+        }
+
         // A compiler-generated method is named after the method it was written in: `<LoadAsync>d__5` or
         // `<GetList>b__3_0`. The state machine's own `MoveNext` takes its name from the nested type.
-        private static string SourceName(MethodBase method)
+        private static string SourceMethodName(MethodBase method)
         {
             var name = method.Name == "MoveNext" && method.DeclaringType?.Name.StartsWith('<') == true
                 ? method.DeclaringType.Name
@@ -153,12 +184,16 @@ namespace Polhem.Business.UnitTests
         {
             var calls = Calls().ToArray();
 
-            Assert.Contains(calls, c => c.Where == "BusinessObject.get_CompanyScope" && IsCompanyRead(c.Member));
+            Assert.Contains(calls, c => c.Where == "BusinessObject.ReadCompanyScope()" && IsCompanyRead(c.Member));
             Assert.Contains(calls, c => c.Where.StartsWith("FormBusinessObject.", StringComparison.Ordinal)
                 && c.Member is MethodInfo { Name: nameof(ICompanyAuthorizationService.Can) } can
                 && can.GetParameters()[0].ParameterType == typeof(SessionCompanyScope));
-            Assert.Contains(calls, c => c.Where == "BusinessObjectFactoryExtensions.CreateFormBO" && IsTokenEntryPoint(c.Member));
-            Assert.Contains(calls, c => c.Where == "CompanyAuthorizationService.Can" && IsCompanyRead(c.Member));
+            Assert.Contains(calls, c => c.Where == "BusinessObjectFactoryExtensions.CreateFormBO(IBusinessObjectFactory, Guid, String, Boolean)"
+                && IsTokenEntryPoint(c.Member));
+            // A call through a concrete type counts: the factory's token path calls its own resolver by interface,
+            // and its own core by the concrete type.
+            Assert.Contains(calls, c => c.Where == "RepositoryFactory.CreateFormRepository(Guid, String)" && IsTokenEntryPoint(c.Member));
+            Assert.Contains(calls, c => c.Where == "CompanyAuthorizationService.Can(Guid, String, PermissionActions)" && IsCompanyRead(c.Member));
         }
     }
 }

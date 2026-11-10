@@ -52,7 +52,7 @@ namespace Polhem.Business.Form
         /// </remarks>
         private FormPluginRunner CreatePluginRunner()
             => PluginResolver.Resolve(GetCurrentCustomizeId(), ProgId)
-                .CreateRunner(Context, AccessToken, ProgId);
+                .CreateRunner(CompanyScopedContext(), AccessToken, ProgId);
 
         /// <summary>
         /// Returns true when the schema declares any enabled <c>BeforeDelete</c> rule.
