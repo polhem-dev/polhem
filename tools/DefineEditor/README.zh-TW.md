@@ -43,6 +43,9 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 版面欄位與欄的 `FieldName`、版面表格的 `TableName`（取自該版面的 FormSchema）；索引欄位的 `FieldName`；選單項目的 `ProgId`
 （`ProgramSettings.xml` 裡的程式）。下拉只是建議，手動輸入的值會保留，指向不存在項目的值由驗證回報。
 FormSchema 的 `ListFields` 與 `LookupFields` 可從 **…** 按鈕開啟欄位挑選器，勾選主表欄位並調整順序。
+規則的 `When`、`Condition` 與欄位的 `ValueExpression`、`DefaultValueExpression` 可從 **…** 按鈕開啟運算式編輯器：
+運算式可分行撰寫、不需 XML 跳脫，旁邊列出所屬資料表的欄位與 helper 函式可供插入，輸入時即時解析，並在解析中斷處畫底線。
+規則的訊息與條件在同一個視窗編輯。
 
 從活頁簿匯入時，若表單已有 TableSchema 或 FormLayout，會先詢問如何處理（TableSchema 合併、保留或覆寫；版面保留或重新產生），
 再列出會變更的檔案，最後的對話框可接著替這張表單的資料表升級資料庫。

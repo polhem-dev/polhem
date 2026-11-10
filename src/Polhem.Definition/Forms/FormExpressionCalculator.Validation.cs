@@ -35,7 +35,7 @@ namespace Polhem.Definition.Forms
             foreach (var formTable in schema.Tables)
             {
                 if (formTable.Fields == null) { continue; }
-                var variableTypes = BuildVariableTypes(formTable);
+                var variableTypes = GetVariableTypes(formTable);
                 foreach (var field in formTable.Fields)
                 {
                     ValidateFieldExpression(issues, variableTypes, formTable, field,
@@ -50,7 +50,7 @@ namespace Polhem.Definition.Forms
             {
                 var formTable = ResolveRuleTable(rule, schema);
                 if (formTable?.Fields == null) { continue; }
-                var variableTypes = BuildVariableTypes(formTable);
+                var variableTypes = GetVariableTypes(formTable);
                 ValidateRuleExpression(issues, variableTypes, formTable, rule, rule.When, nameof(FormRule.When));
                 ValidateRuleExpression(issues, variableTypes, formTable, rule,
                     rule.Condition, nameof(FormRule.Condition));
@@ -94,19 +94,23 @@ namespace Polhem.Definition.Forms
         }
 
         /// <summary>
-        /// Builds the variable types a table's expressions are parsed against: each field by its declared name,
+        /// Gets the variable types a table's expressions are parsed against: each field by its declared name,
         /// typed as <see cref="BuildVariables"/> types it at run time.
         /// </summary>
+        /// <param name="formTable">The table whose fields are the variables.</param>
+        /// <returns>The variable types, keyed by <see cref="FormField.FieldName"/> with ordinal comparison.</returns>
         /// <remarks>
         /// The type is taken from the value <see cref="ExpressionPolicy.CoerceValue"/> produces for an empty
         /// cell, because the evaluator types each run-time variable by the value <see cref="BuildVariables"/>
         /// hands it, and that value always comes from <see cref="ExpressionPolicy.CoerceValue"/>. Deriving the
         /// type any other way would be a second statement of that rule, free to drift from the first.
         /// </remarks>
-        private static Dictionary<string, Type> BuildVariableTypes(FormTable formTable)
+        public static IReadOnlyDictionary<string, Type> GetVariableTypes(FormTable formTable)
         {
+            ArgumentNullException.ThrowIfNull(formTable);
             var variableTypes = new Dictionary<string, Type>(StringComparer.Ordinal);
-            foreach (var field in formTable.Fields!)
+            if (formTable.Fields == null) { return variableTypes; }
+            foreach (var field in formTable.Fields)
             {
                 if (StringUtilities.IsEmpty(field.FieldName)) { continue; }
                 variableTypes[field.FieldName] = ExpressionPolicy.CoerceValue(null, field.DbType).GetType();

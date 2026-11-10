@@ -27,5 +27,11 @@ namespace Polhem.Core.Expressions
         /// Gets the expression text that failed, when available.
         /// </summary>
         public string? Expression { get; init; }
+
+        /// <summary>
+        /// Gets the zero-based character offset in <see cref="Expression"/> where parsing failed, when the parser
+        /// reports one.
+        /// </summary>
+        public int? Position { get; init; }
     }
 }

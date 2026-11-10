@@ -148,6 +148,27 @@ namespace Polhem.Expressions
         ];
 
         /// <summary>
+        /// Gets the helper functions every expression can call, in the order they are registered.
+        /// </summary>
+        public static IReadOnlyList<ExpressionFunction> HelperFunctions { get; } =
+            s_helperFunctions
+                .Select(helper => new ExpressionFunction(helper.Name, helper.Function.Method.ReturnType,
+                    helper.Function.Method.GetParameters()))
+                .ToArray();
+
+        /// <summary>
+        /// Gets the types an expression can name, keyed by the name it uses (for example <c>Math</c>, <c>Guid</c>,
+        /// <c>string</c>).
+        /// </summary>
+        /// <remarks>
+        /// Read from the interpreter, so it is exactly the set the parser accepts; a definition editor offers these
+        /// names and the static members of their types.
+        /// </remarks>
+        public IReadOnlyDictionary<string, Type> ReferencedTypes =>
+            _interpreter.ReferencedTypes.ToDictionary(reference => reference.Name, reference => reference.Type,
+                StringComparer.Ordinal);
+
+        /// <summary>
         /// Registers the curated helper functions available to every expression.
         /// </summary>
         /// <param name="interpreter">The interpreter to register into.</param>
@@ -283,7 +304,7 @@ namespace Polhem.Expressions
             var message = ex.InnerException is { } inner
                 ? $"Failed to parse expression: {ex.Message} {inner.Message}"
                 : $"Failed to parse expression: {ex.Message}";
-            return new ExpressionEvaluationException(message, ex) { Expression = expression };
+            return new ExpressionEvaluationException(message, ex) { Expression = expression, Position = ex.Position };
         }
 
         /// <summary>

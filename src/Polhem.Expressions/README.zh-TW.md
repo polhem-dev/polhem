@@ -16,6 +16,8 @@ UI 用戶端（輸入時的即時預覽）共用，因此同一個計算欄位�
 `Validate` 依變數型別解析運算式，使用與 `Evaluate` 相同的註冊型別與 helper 函式，解析失敗時丟出
 `ExpressionEvaluationException`，不會編譯任何東西。`FormExpressionCalculator.ValidateExpressions`（`Polhem.Definition`）
 以執行期相同的欄位型別，對 FormSchema 的每個運算式執行這項檢查；DefineEditor 驗證或存檔表單時會顯示結果。
+例外的 `Position` 是解析中斷處的位置。`HelperFunctions` 與 `ReferencedTypes` 列出運算式可用的函式與型別名稱，
+編輯器可直接取用，不必自己維護一份。
 
 這項檢查對數值常值最有用：帶小數點的常值是 `double`，而 `decimal` 與 `double` 之間沒有運算子，所以 decimal 欄位寫成
 `amount * 1.05` 無法解析，要寫 `amount * 1.05m`。這樣的運算式在伺服器端會讓存檔失敗；在用戶端的即時預覽中，
