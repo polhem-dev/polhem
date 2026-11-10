@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: dcf7fbc7f405f7d2509f689db8c4392ed955c970 -->
+<!-- source: en/architecture/architecture-overview.md blob: 3ffb46054e49ac418f6246a903cb4d81f8f9a8a9 -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -228,16 +228,11 @@ public class SalesOrderBO : BusinessObject
         return refreshed;
     }
 
-    // 報表：BO 顯式指定 DB scope、自行撰寫 SQL
-    // （ReportFilter 與 SalesReportRepo 是你自己的型別）
+    // 報表：為此 ProgId 登記的 repository 自行撰寫 SQL
+    // （ReportFilter 與 ISalesRepository 是你自己的型別）
     [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
     public DataSet GetSalesSummaryReport(ReportFilter filter)
-    {
-        var dbId = ResolveDatabaseId(DbScope.Company);  // 型別安全，無 magic string
-        var repo = new SalesReportRepo(
-            Services.GetRequiredService<IDbAccessFactory>(), dbId);
-        return repo.GetSummary(filter);   // 自訂 SQL 寫在 repository 內
-    }
+        => CreateFormRepository<ISalesRepository>().GetSummary(filter);   // 自訂 SQL 寫在 repository 內
 }
 ```
 

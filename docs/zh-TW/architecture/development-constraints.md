@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: e48494d88c69b124bb7b2e88d7160756f7e90e85 -->
+<!-- source: en/architecture/development-constraints.md blob: d953f06c8d202aac1a3e14ede348bcb99beb6749 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -137,11 +137,23 @@ singleton，一個請求在讀、另一個請求在寫同一個 cached 實例時
 |----------|------|----------|
 | API 層直接引用 Repository 層（指 `Polhem.Api.Core`、`Polhem.Api.Server`；**不含**組合根 `Polhem.Hosting`，接線各層本就是它的職責） | 違反分層架構 | 透過 Business Object 間接存取 |
 | Business Object 直接建立 `DbConnection` | 繞過連線管理與日誌 | 把查詢放進 repository（見下一列）；由 repository 使用 `DbAccess` |
-| BO 引用 `Polhem.Db`（`Polhem.Business.csproj` 無 `Polhem.Db` 的 `ProjectReference`） | BO 是業務邏輯的薄殼，資料存取屬於 Repository | FormSchema-driven CRUD → `IDataFormRepository`；自訂查詢 → 自訂 bo repo 配合 `IDbAccessFactory` |
+| BO 引用 `Polhem.Db`（`Polhem.Business.csproj` 無 `Polhem.Db` 的 `ProjectReference`） | BO 是業務邏輯的薄殼，資料存取屬於 Repository | FormSchema-driven CRUD → `IDataFormRepository`；自訂查詢 → 繼承 `RepositoryBase`、由 `CreateDbAccess()` 取得資料庫存取的 repository |
 | BO 寫死 `databaseId` 字串或直接讀 `SessionInfo.CompanyId` / `CompanyInfo` | 將 BO 與路由實作耦合；部署設定變更時會壞 | 使用 `BusinessObject.ResolveDatabaseId(DbScope)`（自訂 bo repo）或 `CreateDataFormRepository(progId)`（FormSchema CRUD）；helper 內部委派給 `IRepositoryDatabaseRouter`，這是單一真相來源 |
 | Client 端從 DI 容器解析 Repository 服務 | 僅限 Server 端使用 | 透過 `ApiConnector` 呼叫 API |
 | 跳過 Payload Pipeline 順序 | 破壞加解密一致性 | 維持 Serialize → Compress → Encrypt |
 | 在 BO 中直接回傳 API 型別 | BO 不應依賴 API 序列化格式 | 回傳 BO 型別，由 `ApiOutputConverter` 依命名慣例自動對應 |
+
+## 公司資料限制
+
+多家公司可以共用一個公司資料庫，每張 company 表的資料列都標明自己屬於哪家公司（`sys_company_id`；見
+[資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）。表單 repository 自己會把語句限定在
+session 所在的公司；手寫 SQL 則必須自己指定公司：
+
+| 規則 | 原因 |
+|------|------|
+| 對 company 表的手寫 SQL 一律透過 repository 的 `CreateDbAccess()` 執行，不可用 `IDbAccessFactory` 或 `new DbAccess(...)` | `CreateDbAccess()` 綁定公司，會拒絕沒有指定公司的語句；其他方式取得的存取都沒有綁定，會讀到所有公司的資料。repository 用其他方式取得時，POLHEM3004 analyzer 會報出來 |
+| 語句裡每一張 company 表都要比對 `sys_company_id = {@CompanyId}`，INSERT 的資料列也要把 `{@CompanyId}` 寫進這一欄 | 綁定只檢查佔位符有沒有出現，看不出兩張 company 表的 JOIN 是否兩邊都有比對 |
+| 不要自己決定公司 | repository 從 session 取得公司。沒有 session 的快取或背景工作，用 `CreateDbAccess(databaseId, companyId)` 指定 |
 
 ## ExecFunc 開發限制
 

@@ -7,3 +7,5 @@ static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.
 static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
 *REMOVED*Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
 Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Definition.Database.TableSchema.ApplyCompanyScope() -> bool
+Polhem.Definition.Database.TableSchema.HasCompanyScope() -> bool

@@ -3,6 +3,7 @@ using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Db.Schema;
 using Polhem.Definition.Database;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 
@@ -122,6 +123,11 @@ namespace Polhem.Hosting.Database
         {
             var databaseSettings = _defineAccess.GetDatabaseSettings();
             var categories = _defineAccess.GetDbCategorySettings().Categories;
+
+            var readiness = CheckCompanyReadiness(databaseSettings, tableNames);
+            if (readiness.Count > 0)
+                return new TableUpgradeReport { Problems = readiness };
+
             var tables = new List<TableUpgradeEntry>();
             var problems = new List<string>();
             var wanted = tableNames is { Count: > 0 }
@@ -150,7 +156,8 @@ namespace Polhem.Hosting.Database
                 {
                     foreach (var table in categoryTables)
                     {
-                        var entry = UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun);
+                        var entry = UpgradeTable(databaseId, category.Id, table.TableName,
+                            NarrowingAllowedFor(category.Id, table.TableName, options), dryRun);
                         tables.Add(entry);
                         tableCompleted?.Invoke(entry);
                     }
@@ -161,7 +168,26 @@ namespace Polhem.Hosting.Database
                 problems.AddRange(wanted.Where(name => !found.Contains(name)).Order(StringComparer.OrdinalIgnoreCase)
                     .Select(name => $"Table '{name}' is not registered in the database category settings, so it was not built."));
             }
-            return new TableUpgradeReport { Tables = tables, Problems = problems };
+            var assignments = AssignCompanyRows(databaseSettings, tableNames, dryRun, problems);
+            return new TableUpgradeReport { Tables = tables, Problems = problems, CompanyAssignments = assignments };
+        }
+
+        /// <summary>
+        /// Returns the options a table is upgraded with: <c>st_company</c> may narrow, because the
+        /// readiness check has just confirmed that every company id fits <see cref="CompanyInfo.CompanyIdMaxLength"/>.
+        /// </summary>
+        /// <remarks>
+        /// The width of <c>st_company.sys_id</c> came down to the company id's width. Any other narrowing still
+        /// needs <see cref="UpgradeOptions.AllowColumnNarrowing"/>; this allows the whole <c>st_company</c>
+        /// plan to narrow, which only the framework's definition of the table can ask for.
+        /// </remarks>
+        private static UpgradeOptions? NarrowingAllowedFor(string categoryId, string tableName, UpgradeOptions? options)
+        {
+            bool companyTable = string.Equals(categoryId, DbCategoryIds.Common, StringComparison.Ordinal)
+                && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
+            return companyTable && options?.AllowColumnNarrowing != true
+                ? new UpgradeOptions { AllowColumnNarrowing = true }
+                : options;
         }
 
         private TableUpgradeEntry UpgradeTable(

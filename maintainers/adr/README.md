@@ -81,4 +81,5 @@ understanding why the design is the way it is.
 | [059](adr-059-blazor-shared-layer.md) | The Blazor head splits into a shared layer, UI packages and host packages | ✅ Accepted |
 | [060](adr-060-mudblazor-first-ui-package.md) | MudBlazor is the first Blazor UI package, with no generic UI abstraction | ✅ Accepted |
 | [061](adr-061-fluent-ui-second-ui-package.md) | Fluent UI is the second Blazor UI package | ✅ Accepted |
+| [062](adr-062-row-level-tenancy.md) | Row-level tenancy: companies sharing a company database | ✅ Accepted |
 | [058](adr-058-field-value-change-callback.md) | A field change can call back its own form's BO, which returns the values for the rest of the row | ✅ Accepted |

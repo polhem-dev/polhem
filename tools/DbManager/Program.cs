@@ -18,6 +18,8 @@ internal static class Program
         "  check                        Open a connection to each database in DatabaseSettings.\n" +
         "  upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
         "                               Build or upgrade the tables registered in DbCategorySettings.\n" +
+        "  add-company-column [--dry-run]\n" +
+        "                               Add the company column to the company table schemas that lack it.\n" +
         "  seed-admin --company <id> [options]\n" +
         "                               Create the first administrator, a company and the access between them.\n" +
         "\n" +

@@ -40,7 +40,7 @@ namespace Polhem.Definition.Identity
         #endregion
 
         /// <summary>
-        /// The longest company id the framework accepts when it creates a company: the width of
+        /// The longest company id the framework accepts: the width of <c>st_company.sys_id</c> and of
         /// <see cref="SysFields.CompanyId"/>, which carries a copy of the id on every company row.
         /// </summary>
         public const int CompanyIdMaxLength = 10;
