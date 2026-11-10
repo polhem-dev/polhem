@@ -27,6 +27,7 @@ used. Run `polhem-db --help` for the commands and their options.
 | `create` | Creates the databases named in DatabaseSettings that do not exist, and the master key file SystemSettings names when it is missing |
 | `check` | Opens a connection to each database in DatabaseSettings |
 | `upgrade` | Builds or upgrades the tables registered in DbCategorySettings; `--table` limits it to named tables, `--dry-run` only lists the statements |
+| `add-company-column` | Adds the company column and company-led unique indexes to the company table schemas that lack them, which `upgrade` asks for before it runs; `--dry-run` only lists them |
 | `seed-admin` | Creates the first administrator, a company and the access between them |
 
 The commands are those an application's server runs with `dotnet run -- db <command>`, described with their exit codes

@@ -9,3 +9,5 @@ Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Defi
 Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
 *REMOVED*Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
 Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Definition.Database.TableSchema.ApplyCompanyScope() -> bool
+Polhem.Definition.Database.TableSchema.HasCompanyScope() -> bool

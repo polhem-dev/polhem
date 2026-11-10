@@ -25,6 +25,7 @@ dotnet tool exec Polhem.DbManager@<版號> -- upgrade --define ./Define
 | `create` | 建立 DatabaseSettings 中還不存在的資料庫；SystemSettings 指定的主金鑰檔不存在時一併建立 |
 | `check` | 逐一連線 DatabaseSettings 中的每個資料庫 |
 | `upgrade` | 建立或升級 DbCategorySettings 登記的資料表；`--table` 只處理指定的表，`--dry-run` 只列出陳述式 |
+| `add-company-column` | 對缺少公司欄位的 company table schema，加上該欄與以它為首欄的唯一索引；`upgrade` 執行前會要求先做這一步。`--dry-run` 只列出 |
 | `seed-admin` | 建立第一位管理者、一家公司，以及兩者之間的權限 |
 
 這些指令與應用程式 Server 以 `dotnet run -- db <指令>` 執行的相同，結束碼等細節見

@@ -325,10 +325,13 @@ var repository = CreateDataFormRepository(ProgId);
 // Services.GetRequiredService<IRepositoryFactory>()
 //         .CreateFormRepository<IDataFormRepository>(AccessToken, ProgId);
 
-// Custom bo repo — resolve databaseId for the target scope, then build the repo
+// Hand-written SQL on company data — a repository registered for the ProgId, bound to the session's company
+// (see "Customising the Repository for a ProgId" below)
+var report = CreateFormRepository<IOrderRepository>().GetMonthlySales(month);
+
+// The databaseId of a scope, for code that only needs to know it
 var logDbId = ResolveDatabaseId(DbScope.Log);         // "log" (no session needed)
 var companyDbId = ResolveDatabaseId(DbScope.Company); // routes via session.CompanyId → CompanyInfo.CompanyDatabaseId
-var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFactory>(), companyDbId);
 ```
 
 `DbScope` resolution rules:
@@ -611,11 +614,19 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
     public string GetStoredStatus(Guid rowId)
     {
         var spec = new DbCommandSpec(DbCommandKind.Scalar,
-            "SELECT status FROM ft_order WHERE sys_rowid = {0}", rowId);
+            "SELECT status FROM ft_order WHERE sys_rowid = {0} AND sys_company_id = {@CompanyId}", rowId);
         return CreateDbAccess().Execute(spec).Scalar as string ?? string.Empty;
     }
 }
 ```
+
+Several companies can share one company database, and every company table carries `sys_company_id` (see
+[Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)). The
+`CreateDbAccess()` of a repository for a `company` form is bound to the session's company: `{@CompanyId}` becomes a
+parameter carrying it, and a statement that does not contain the placeholder is refused when it runs, so a query that
+forgot the company fails instead of reading every company's rows. A repository that takes a database access any other
+way (the context's `DbAccessFactory`, an injected `IDbAccessFactory`, `new DbAccess(...)`) gets one that is not bound;
+the POLHEM3004 analyzer reports it.
 
 ```xml
 <ProgramItem ProgId="Order"
@@ -634,7 +645,7 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 
 A subclass may add its own dependencies — the factory builds it with `ActivatorUtilities`, so interface-typed constructor parameters are injected from DI. It must not add a second `string` or `Guid` parameter, since those are already supplied by the factory.
 
-A subclass adds members; it does not change the inherited ones. `DataFormRepository`'s `GetList`, `GetData`, `Save`, `Delete` and the other `IDataFormRepository` members are not virtual. The protected `CreateDbAccess()`, `DatabaseId` and `Context` (connection manager, cache-notify service) are what its own members build on.
+A subclass adds members; it does not change the inherited ones. `DataFormRepository`'s `GetList`, `GetData`, `Save`, `Delete` and the other `IDataFormRepository` members are not virtual. The protected `CreateDbAccess()`, `DatabaseId`, `CompanyId` and `Context` (connection manager, cache-notify service) are what its own members build on.
 
 ### FormSchema → SQL Generation
 

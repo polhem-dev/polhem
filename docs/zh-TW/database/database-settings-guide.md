@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: d6b24b75e78d71b28bb276c7d9beff862eb87034 -->
+<!-- source: en/database/database-settings-guide.md blob: dcf2a8e68934560b497f7b75fabd04be722247e4 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -438,9 +438,28 @@ DatabaseItem item = dbSettingsProvider.GetItem(databaseId);
 
 BO 方法透過 `BusinessObject.ResolveDatabaseId(DbScope)` 或（FormSchema-driven CRUD 用）`CreateDataFormRepository(progId)` helper 消費 router；後者依 schema 的 `CategoryId` 自動路由。
 
-跨 DatabaseItem 聚合（如 log 跨年查詢）與封存資料的明確存取（如查 `log_2024`）不在預設路由範圍內——業務層直接指定目標 databaseId、透過 `IDbAccessFactory` 建自訂 bo repo。
+跨 DatabaseItem 聚合（如 log 跨年查詢）與封存資料的明確存取（如查 `log_2024`）不在預設路由範圍內——業務層直接指定目標 databaseId、透過 `IDbAccessFactory` 建自訂 bo repo。這條路只用於不屬於任何公司的資料；公司資料要透過 repository 的 `CreateDbAccess()`，它綁定公司（§5.5）。
 
 `DatabaseItem.CategoryId` 與 `DbCategorySettings` 只在前述的設計階段（5.1–5.2）與部署階段（5.3）使用。執行時 BO 方法用 `DbScope`（執行時存取意圖）表達，不再操作 CategoryId 字串；執行時唯一讀取 CategoryId 字串的地方，是表單 Repository 將其 schema 的 `CategoryId` 轉成 `DbScope`（§3.4）。
+
+### 5.5 多家公司共用公司資料庫
+
+多家公司可以把同一個 `DatabaseItem` 設為自己的 `company_database_id`：付費客戶各有一個資料庫，試用公司則共用一個，差別只在
+它們的代號是否指向同一個項目。公司有自己的資料庫時，公司之間本來就分開；共用時，則由資料列標明自己屬於哪家公司。
+
+- `company` 表單的每張表都帶 `sys_company_id`，存放擁有該列的公司代號（小寫），唯一索引也以它為首欄，所以單號只在同一家
+  公司內唯一。`TableSchemaGenerator` 衍生 table schema 時會加上這兩者；單一公司的資料庫也有同樣的欄位，所以把一家公司搬到
+  獨立的資料庫只是搬資料，不必改 schema。
+- 表單 repository 新增資料列時會寫入 session 所在的公司，讀取、更新、刪除也都限定在該公司。兩個公司表單之間的關聯 JOIN
+  同樣會比對公司。
+- repository 裡的手寫 SQL 透過 `CreateDbAccess()` 執行，它綁定公司：語句用 `{@CompanyId}` 指定公司，沒有指定的會被拒絕。
+  見[為 ProgId 客製 Repository](../guides/development-cookbook.md#為-progid-客製-repository)。
+- 公司代號以小寫儲存，最多 10 個 ASCII 英文字母或數字；`EnterCompany` 大小寫皆可。
+
+`sys_company_id` 為空的資料列不屬於任何公司，任何公司都看不到。只有一家公司指向該資料庫時，`db upgrade` 會把這些資料列
+指派給那家公司（§7）。
+
+設計理由見 [ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md)。
 
 ---
 
@@ -560,6 +579,7 @@ dotnet run -- db seed-admin --company ACME
 | `db create` | 對每個 `DatabaseItem`，連線字串所指的資料庫不存在時建立它。 |
 | `db check` | 逐一連線每個 `DatabaseItem`，回報 `ok` 或資料庫引擎的錯誤。不會建立任何東西；只有 SQLite 在連線字串允許時會建立空白檔案。 |
 | `db upgrade [--dry-run] [--allow-narrowing] [--table <名稱>]...` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--table` 只處理指定的資料表，可重複；沒有任何分類登記的名稱會被列出，指令以失敗結束。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。 |
+| `db add-company-column [--dry-run]` | 對登記在 `company` 分類下、缺少 `sys_company_id` 的每個 table schema，加上這一欄與以它為首欄的唯一索引，並存回定義。`--dry-run` 只列出、不存檔。之後執行 `db upgrade` 套用到資料庫。 |
 | `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。公司代號最多 10 個 ASCII 英文字母或數字，一律以小寫儲存（`ACME` 會存成 `acme`）；進入公司時大小寫皆可。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
 
 **各引擎的 `db create`。** 連線字串中的登入帳號需要建立資料庫的權限；沒有的話，請 DBA 建好資料庫後直接執行
@@ -573,6 +593,15 @@ dotnet run -- db seed-admin --company ACME
 
 **`db upgrade`** 需要每個有資料表的分類都有對應的 `DatabaseItem`。`CategoryId` 空白的資料庫項目，視為屬於其
 `Id` 所指的分類。
+
+`db upgrade` 在變更任何東西之前，會先檢查部署是否已準備好讓多家公司共用資料庫（§5.5）；沒準備好時就停下，並列出要修正的項目：
+
+- `company` 分類下沒有 `sys_company_id` 的 table schema，例如由舊版產生的。`db add-company-column` 會補上。
+- `st_company` 中不是「最多 10 個小寫 ASCII 英文字母或數字」的公司代號。不會自動改寫：重新命名公司會牽動所有存放該代號的地方。
+
+檢查通過後，`st_company.sys_id` 收窄為公司代號的寬度時不需要 `--allow-narrowing`。資料表升級完成後，company 表中沒有
+`sys_company_id` 的資料列，會指派給 `company_database_id` 指向其資料庫的那家公司，並輸出筆數。有多家公司指向該資料庫時，
+這些資料列會列為問題，留給你自行指派；沒有任何公司指向的資料庫則不處理。
 
 **`db seed-admin`** 不會變更任何已存在的資料列，尤其不會取代既有使用者的密碼。密碼從環境變數
 `POLHEM_ADMIN_PASSWORD` 讀取，或以不回顯的提示輸入；沒有對應的命令列選項。`company` 分類恰有一個 `DatabaseItem`
