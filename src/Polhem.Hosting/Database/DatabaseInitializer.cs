@@ -154,12 +154,12 @@ namespace Polhem.Hosting.Database
 
                 foreach (var databaseId in databases)
                 {
-                    foreach (var table in categoryTables)
+                    foreach (var tableName in categoryTables.Select(table => table.TableName))
                     {
                         bool mayNarrowCompanyId = companyIdsChecked
                             && string.Equals(category.Id, DbCategoryIds.Common, StringComparison.Ordinal)
-                            && string.Equals(table.TableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
-                        var entry = UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun, mayNarrowCompanyId);
+                            && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
+                        var entry = UpgradeTable(databaseId, category.Id, tableName, options, dryRun, mayNarrowCompanyId);
                         tables.Add(entry);
                         tableCompleted?.Invoke(entry);
                     }

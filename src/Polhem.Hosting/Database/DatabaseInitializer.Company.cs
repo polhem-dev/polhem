@@ -124,7 +124,9 @@ namespace Polhem.Hosting.Database
                 if (!hasColumn && !dryRun) continue;
                 try
                 {
-                    AssignTable(databaseId, databaseType, dbAccess, table, hasColumn, companies, dryRun, assignments, problems);
+                    var (assignment, problem) = AssignTable(databaseId, databaseType, dbAccess, table, hasColumn, companies, dryRun);
+                    if (assignment is not null) assignments.Add(assignment);
+                    if (problem is not null) problems.Add(problem);
                 }
                 catch (DbException ex)
                 {
@@ -133,9 +135,13 @@ namespace Polhem.Hosting.Database
             }
         }
 
-        private static void AssignTable(
+        /// <summary>
+        /// Gives one table's rows with no company their company, or says why it cannot.
+        /// </summary>
+        /// <returns>The rows given a company, or the problem that stopped it; both empty when there was nothing to do.</returns>
+        private static (CompanyRowAssignment? Assignment, string? Problem) AssignTable(
             string databaseId, DatabaseType databaseType, DbAccess dbAccess, string table, bool hasColumn,
-            List<string> companies, bool dryRun, List<CompanyRowAssignment> assignments, List<string> problems)
+            List<string> companies, bool dryRun)
         {
             string quotedTable = databaseType.QuoteIdentifier(table);
             string column = databaseType.QuoteIdentifier(SysFields.CompanyId);
@@ -146,26 +152,25 @@ namespace Polhem.Hosting.Database
                 ? $"SELECT COUNT(*) FROM {quotedTable} WHERE {unassigned}"
                 : $"SELECT COUNT(*) FROM {quotedTable}";
             int rows = Convert.ToInt32(dbAccess.ExecuteScalar(countSql), CultureInfo.InvariantCulture);
-            if (rows == 0) return;
+            if (rows == 0) return (null, null);
 
             if (companies.Count > 1)
             {
-                problems.Add(
+                return (null,
                     $"{databaseId}.{table} has {rows} rows with no company, and several companies in {CompanyTable} " +
                     $"name {databaseId} as their database ({string.Join(", ", companies)}), so which one the rows " +
                     $"belong to cannot be told. Set {SysFields.CompanyId} on them by hand.");
-                return;
             }
 
             if (!dryRun)
                 dbAccess.ExecuteNonQuery($"UPDATE {quotedTable} SET {column} = {{0}} WHERE {unassigned}", companies[0]);
-            assignments.Add(new CompanyRowAssignment
+            return (new CompanyRowAssignment
             {
                 DatabaseId = databaseId,
                 TableName = table,
                 CompanyId = companies[0],
                 Rows = rows,
-            });
+            }, null);
         }
 
         /// <summary>

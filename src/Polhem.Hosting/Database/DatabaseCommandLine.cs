@@ -224,9 +224,13 @@ namespace Polhem.Hosting.Database
             var changed = CompanyScopeDefinitions.AddMissing(defineAccess, dryRun);
             foreach (var table in changed)
                 output.WriteLine($"  company.{table}: {(dryRun ? "would add" : "added")} the company column");
-            output.WriteLine(changed.Count == 0
-                ? "Every company table schema already has the company column."
-                : $"{changed.Count} table schemas {(dryRun ? "would change" : "changed")}. Run 'db upgrade' to apply them to the databases.");
+            if (changed.Count == 0)
+            {
+                output.WriteLine("Every company table schema already has the company column.");
+                return Success;
+            }
+            var verb = dryRun ? "would change" : "changed";
+            output.WriteLine($"{changed.Count} table schemas {verb}. Run 'db upgrade' to apply them to the databases.");
             return Success;
         }
 
