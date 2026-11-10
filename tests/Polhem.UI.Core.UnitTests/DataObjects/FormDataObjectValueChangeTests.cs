@@ -8,13 +8,13 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.UI.Avalonia.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
-    /// How the Avalonia <see cref="FormDataObject"/> hands field changes to the server callback: the origin it stamps on
+    /// How <see cref="FormDataObject"/> hands field changes to the server callback: the origin it stamps on
     /// each write, the single call one edit makes, and the values it writes back. The callback rules themselves are
     /// covered by <c>FieldValueChangeCoordinatorTests</c>.
     /// </summary>

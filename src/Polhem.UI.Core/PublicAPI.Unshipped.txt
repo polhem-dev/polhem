@@ -1,4 +1,48 @@
 #nullable enable
-const Polhem.UI.Core.Fields.GridColumnRules.DefaultMinWidth = 120 -> int
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.FieldName.get -> string!
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row) -> void
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin) -> void
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.Origin.get -> Polhem.UI.Core.Fields.FieldValueOrigin
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
+Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
+Polhem.UI.Core.DataObjects.FormDataObject
+Polhem.UI.Core.DataObjects.FormDataObject.ApplyLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Data.DataRow? targetRow = null) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.BeginRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.CancelRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.ClearLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow? targetRow = null) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.CommitRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.DataSet.get -> System.Data.DataSet!
+Polhem.UI.Core.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
+Polhem.UI.Core.DataObjects.FormDataObject.DeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.DataObjects.FormDataObject.DetailTables.get -> System.Collections.Generic.IEnumerable<System.Data.DataTable!>!
+Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChangeApplied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChangeFailed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.FormDataObject(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Contracts.Form.IFormApiConnector? connector = null, System.Func<string!>? timeZoneProvider = null) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!
+Polhem.UI.Core.DataObjects.FormDataObject.GetField(string! fieldName) -> string!
+Polhem.UI.Core.DataObjects.FormDataObject.GetFormField(string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Core.DataObjects.FormDataObject.GetFormField(string! tableName, string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Core.DataObjects.FormDataObject.InitializeNewMaster() -> void
+Polhem.UI.Core.DataObjects.FormDataObject.IsDirty.get -> bool
+Polhem.UI.Core.DataObjects.FormDataObject.IsDirtyChanged -> System.EventHandler?
+Polhem.UI.Core.DataObjects.FormDataObject.IsLoading.get -> bool
+Polhem.UI.Core.DataObjects.FormDataObject.LoadAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.DataObjects.FormDataObject.MasterRow.get -> System.Data.DataRow?
+Polhem.UI.Core.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTable!
+Polhem.UI.Core.DataObjects.FormDataObject.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.DataObjects.FormDataObject.RowAdded -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.RowDeleted -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.SaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Core.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
+Polhem.UI.Core.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
+Polhem.UI.Core.DataObjects.RowChangedEventArgs
+Polhem.UI.Core.DataObjects.RowChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Core.DataObjects.RowChangedEventArgs.RowChangedEventArgs(string! tableName, System.Data.DataRow! row) -> void
+Polhem.UI.Core.DataObjects.RowChangedEventArgs.TableName.get -> string!
 Polhem.UI.Core.Fields.GridColumnRules
+const Polhem.UI.Core.Fields.GridColumnRules.DefaultMinWidth = 120 -> int
 static Polhem.UI.Core.Fields.GridColumnRules.GetMinWidth(Polhem.Definition.Layouts.LayoutColumn! column) -> int

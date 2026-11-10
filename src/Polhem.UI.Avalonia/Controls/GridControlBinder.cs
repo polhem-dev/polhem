@@ -1,5 +1,5 @@
 using Polhem.UI.Avalonia.Controls.Editors;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.UI.Avalonia.Controls
 {

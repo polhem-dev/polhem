@@ -327,7 +327,8 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `UIServices` | UI 服務 | Static holder of the `IServiceProvider` that controls created from markup resolve their services from (`IFormApiConnectorFactory`, `IFormDefinitionSource`, `IUserContext`). A single-user head sets `Provider` once at startup; unset, the controls run on what the host sets on them. Process-wide state: **do not use it in Blazor Server** |
 | `IUserContext` | 使用者情境介面 | The signed-in user as a front end sees it: `User`, `Capabilities`, `Company` and `DefaultLanguage`. With none registered, the views treat the user as anonymous and unrestricted |
 | `IFormDefinitionSource` | 表單定義來源介面 | Supplies the `FormSchema`, `FormLayout`, currency and unit masters a view is built from, in the current UI culture (namespace `Polhem.UI.Core.Definitions`). `StorageDefinitionSource` reads them as stored from an `IDefineStorage`; the bridge's implementation reads them from the backend |
-| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | The form value rules every head shares (DataSet seeding, value coercion, display formatting, CRUD preconditions), used by both the Avalonia and the Blazor `FormDataObject` |
+| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | The form value rules every head shares (DataSet seeding, value coercion, display formatting, CRUD preconditions), used by `FormDataObject` |
+| `FormDataObject` | 表單資料物件 | The data object every head's form views and field editors bind to (namespace `Polhem.UI.Core.DataObjects`): carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, runs the CRUD round trips through an `IFormApiConnector`, and exposes the buffered row-edit protocol. The head that constructs it passes the user's time zone, so it never reads `UIServices` |
 
 ### API Bridge (`Polhem.UI.ApiBridge`)
 
@@ -352,16 +353,14 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `GridEditMode` | 表格編輯模式 | UI-layer editing model for `GridControl`: `InCell` (cell editing) / `EditForm` (popup row editing) |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm-mode editing surface built from the field editors; uses the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`) |
 | `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. When the host sets only `ProgId`, it resolves `Schema`, `Layout` and `FormConnector` through `DefinitionSource` and the services registered in `UIServices.Provider`; with none registered, the host sets them itself |
-| `FormDataObject` | 表單資料物件 | The view-model object bound by the Avalonia controls: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, and exposes the buffered row-edit protocol |
 
 ### Web Frontend (`Polhem.Web.Blazor.*`)
 
-The Blazor head is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor` (`FormDataObject` and the component bases), the UI package `Polhem.Web.Blazor.Mud` (`FormLayoutPresenter`, the field editors, `GridControl`) and the host `Polhem.Web.Blazor.Server`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
+The Blazor head is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor` (the component bases, which bind the `FormDataObject` of `Polhem.UI.Core`), the UI package `Polhem.Web.Blazor.Mud` (`FormLayoutPresenter`, the field editors, `GridControl`) and the host `Polhem.Web.Blazor.Server`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `FormLayoutPresenter` (Razor component) | 表單版面呈現元件 | Blazor component that renders the master sections of a `FormLayout`, one field editor per field; the Avalonia head has a control of the same name |
-| `FormDataObject` | 表單資料物件 | Data-binding object the Blazor field editors bind to. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.UI.Core` (`FormValueBinding`, `FormDataGuard`) |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (a DI-scoped `PolhemApiClient` per circuit) |
 
 ### Api Client Providers (`Polhem.Api.Client`)

@@ -54,6 +54,17 @@
   （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
   整個 process 共用的狀態。
 
+### 表單資料物件
+
+- `DataObjects/FormDataObject` -- 各 head 的表單檢視與欄位編輯器綁定的資料物件。由 `FormSchema` 衍生記憶體內
+  `DataSet`（主檔列 + 明細資料表），提供 `GetField` / `SetField`（主檔列或指定的資料列）雙向綁定，值變更時觸發
+  `FieldValueChanged` 與 `DataSetReplaced`，並透過 `IFormApiConnector` 執行 `LoadAsync` / `SaveAsync` /
+  `DeleteAsync` / `NewAsync`。新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）
+  並觸發 `RowAdded`；`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發
+  `RowEditFieldChanged`，提交時才發布。
+- 建構它的 head 傳入登入使用者的時區（`timeZoneProvider`），新資料列的日期預設值依此決定；未傳入時為 UTC。
+  它從不讀取 `UIServices`，因此可用在同一個 process 服務多位使用者的 host。
+
 ### 各 head 共用的欄位編輯器規則
 
 `Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server` 的欄位編輯器共用的規則，讓兩端行為一致：
@@ -83,14 +94,16 @@
 - **與 UI 框架無關** -- 不含 UI 框架型別，因此同一套合約與規則可服務所有前端。
 - **畫面的解析順序** -- 控制項先用自己的屬性，再用可覆寫的 `Resolve*` hook，最後才是 `UIServices.Provider`；
   三者皆無時，就以 host 設定的內容運作。
-- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor head 參考本套件只為了值規則；
-  它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
-  （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗。
+- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor head 參考本套件只為了值規則與
+  `FormDataObject`；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
+  （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗；`Polhem.UI.Core.DataObjects` 下任何程式呼叫 `UIServices`，
+  `DataObjectsServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構
 
 - 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
+- `DataObjects/` -- `FormDataObject`、`FieldValueChangedEventArgs`、`RowChangedEventArgs`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`

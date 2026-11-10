@@ -102,7 +102,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | 繼承控件沿用 Semi 樣式 | [src/Polhem.UI.Avalonia/Controls/Editors/](../../src/Polhem.UI.Avalonia/Controls/Editors/)（各控件 `StyleKeyOverride`） |
 | ambient 綁定（容器設一次） | [FormScope.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FormScope.cs) |
 | FormMode / AllowEditModes 驅動唯讀 | [FieldEditorBinder.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FieldEditorBinder.cs) 的 `AllowsEdit` / `OnFormModeChanged` |
-| 欄位值即時刷新 | [FormDataObject.cs](../../src/Polhem.UI.Avalonia/DataObjects/FormDataObject.cs) 的 `FieldValueChanged` 事件 |
+| 欄位值即時刷新 | [FormDataObject.cs](../../src/Polhem.UI.Core/DataObjects/FormDataObject.cs) 的 `FieldValueChanged` 事件 |
 
 ## 主題 / FormMode 自測矩陣
 

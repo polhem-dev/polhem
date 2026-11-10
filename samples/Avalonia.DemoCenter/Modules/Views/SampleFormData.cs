@@ -2,7 +2,7 @@ using System.Data;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Avalonia.DemoCenter.Modules.Views
 {

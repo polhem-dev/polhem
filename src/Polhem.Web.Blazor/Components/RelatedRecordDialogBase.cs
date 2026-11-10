@@ -10,7 +10,7 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.Components
 {
@@ -162,7 +162,8 @@ namespace Polhem.Web.Blazor.Components
                 LayoutCapabilityApplier.Apply(formLayout, schema, capabilities);
                 var roundingContext = await BlazorDefinitions
                     .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
-                var dataObject = new FormDataObject(schema, Client.Form(target.ProgId));
+                var dataObject = new FormDataObject(
+                    schema, Client.Form(target.ProgId), () => Client.Session.Credentials.UserTimeZoneId);
                 await dataObject.LoadAsync(target.RowId).ConfigureAwait(true);
                 if (version != _loadVersion) return;
 

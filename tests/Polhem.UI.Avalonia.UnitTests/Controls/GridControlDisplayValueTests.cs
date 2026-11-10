@@ -9,7 +9,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 using Polhem.UI.Avalonia.Controls;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {

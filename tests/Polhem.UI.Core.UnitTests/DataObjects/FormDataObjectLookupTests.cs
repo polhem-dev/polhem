@@ -4,9 +4,9 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.UI.Avalonia.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
     /// FormDataObject lookup write-back tests: ApplyLookupSelection writes the rowid and the mapped fields,

@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.UI.Avalonia.Controls.Editors;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Avalonia.DemoCenter.Modules.DataEditors;
 
 namespace Avalonia.DemoCenter.Modules.DataBinding

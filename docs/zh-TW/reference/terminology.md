@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 7cb35f27fa523fdf5c120c72d290c3e022076cd1 -->
+<!-- source: en/reference/terminology.md blob: ea787c3fb139afbea098353f7ca2f56a851a17bd -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -326,7 +326,8 @@
 | `UIServices` | UI 服務 | Static 類別，持有由 markup 建立的控制項用來解析服務（`IFormApiConnectorFactory`、`IFormDefinitionSource`、`IUserContext`）的 `IServiceProvider`。單一使用者的 head 在啟動時設定一次 `Provider`；未設定時，控制項依 host 設在它們身上的值運作。屬整個 process 共用的狀態：**不要用於 Blazor Server** |
 | `IUserContext` | 使用者情境介面 | 前端所見的已登入使用者：`User`、`Capabilities`、`Company` 與 `DefaultLanguage`。未註冊時，畫面把使用者視為匿名且不受限制 |
 | `IFormDefinitionSource` | 表單定義來源介面 | 依目前 UI 語系提供畫面所需的 `FormSchema`、`FormLayout`、幣別與單位主檔（命名空間 `Polhem.UI.Core.Definitions`）。`StorageDefinitionSource` 從 `IDefineStorage` 照原樣讀取；bridge 的實作從後端讀取 |
-| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件），Avalonia 與 Blazor 的 `FormDataObject` 都使用 |
+| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件），由 `FormDataObject` 使用 |
+| `FormDataObject` | 表單資料物件 | 各端表單檢視與欄位編輯器綁定的資料物件（命名空間 `Polhem.UI.Core.DataObjects`）：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤、透過 `IFormApiConnector` 執行 CRUD 往返，並提供暫存列編輯協定。使用者時區由建構它的 head 傳入，所以它從不讀取 `UIServices` |
 
 ### API 橋接（`Polhem.UI.ApiBridge`）
 
@@ -351,16 +352,14 @@
 | `GridEditMode` | 表格編輯模式 | `GridControl` 的 UI 層編輯模型：`InCell`（逐格）/ `EditForm`（彈窗整列） |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm 模式的編輯面，由 field editors 組成；走暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`） |
 | `FormView` | 表單檢視 | Avalonia 單筆容器：master 區 + 明細 `GridControl` + toolbar（New / Save / Delete）；清單側為 `ListView`。host 只設 `ProgId` 時，透過 `DefinitionSource` 與 `UIServices.Provider` 中註冊的服務取得 `Schema`、`Layout` 與 `FormConnector`；未註冊時由 host 自行設定 |
-| `FormDataObject` | 表單資料物件 | Avalonia 控件綁定的 view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，並提供暫存列編輯協定 |
 
 ### Web 前端（`Polhem.Web.Blazor.*`）
 
-Blazor head 分成三種 Razor Class Library（RCL）：共用的 `Polhem.Web.Blazor`（`FormDataObject` 與元件基底）、UI 套件 `Polhem.Web.Blazor.Mud`（`FormLayoutPresenter`、欄位編輯器、`GridControl`）與宿主 `Polhem.Web.Blazor.Server`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
+Blazor head 分成三種 Razor Class Library（RCL）：共用的 `Polhem.Web.Blazor`（元件基底，綁定 `Polhem.UI.Core` 的 `FormDataObject`）、UI 套件 `Polhem.Web.Blazor.Mud`（`FormLayoutPresenter`、欄位編輯器、`GridControl`）與宿主 `Polhem.Web.Blazor.Server`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `FormLayoutPresenter`（Razor 元件） | 表單版面呈現元件 | Blazor 元件，呈現 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器；Avalonia 端有同名控制項 |
-| `FormDataObject` | 表單資料物件 | Blazor 欄位編輯器綁定的資料物件。與 Avalonia 端的 `FormDataObject` 是不同型別；兩端共用的值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件）集中於 `Polhem.UI.Core`（`FormValueBinding`、`FormDataGuard`） |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（每個 circuit 一個 DI scope 的 `PolhemApiClient`） |
 
 ### API 連線提供者（`Polhem.Api.Client`）

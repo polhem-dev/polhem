@@ -27,11 +27,8 @@
     <ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />
     <!-- The engine tests need a real evaluator; the package itself takes one from its caller. -->
     <ProjectReference Include="..\..\src\Polhem.Expressions\Polhem.Expressions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />
-    <Compile Include="..\Polhem.Tests.Shared\CultureScope.cs" Link="CultureScope.cs" />
+    <!-- The FormDataObject tests drive it through API client connectors, as the heads do. -->
+    <ProjectReference Include="..\Polhem.Tests.Shared\Polhem.Tests.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

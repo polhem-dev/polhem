@@ -6,6 +6,8 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core;
+using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 
@@ -57,7 +59,10 @@ namespace Polhem.UI.Avalonia.Views
 
             if (Schema is null || FormConnector is null) return null;
 
-            _dataObject = new FormDataObject(Schema, FormConnector);
+            // The time zone comes from the same place as the live computation's below, so a new row's dates
+            // and its computed defaults agree.
+            _dataObject = new FormDataObject(Schema, FormConnector,
+                static () => UIServices.Get<IUserContext>()?.User?.TimeZone ?? string.Empty);
             // Live preview recomputes computed fields as the user edits. It is subscribed once because the
             // data object keeps these events across `DataSet` replacements on Load, New, and Save. The
             // rounding context (Tier 2 currency and unit masters plus company decimals) aligns previews to

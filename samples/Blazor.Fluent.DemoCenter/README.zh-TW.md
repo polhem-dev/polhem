@@ -43,7 +43,7 @@ dotnet run --project samples/Blazor.Fluent.DemoCenter/Blazor.Fluent.DemoCenter.c
 ### 沒有對應的項目
 
 - **Property Grid**（`PropertyGridModule`）：`Polhem.Web.Blazor.Fluent` 沒有 `PropertyGridControl`。
-- **以自有資料執行 `FormPage`**：`FormPage` 和 `FormDataObject` 的載入、儲存方法都經過 `PolhemApiClient`，所以需要 Polhem 後端；Avalonia 的 `ListView`、`FormView` 則接受 `IFormApiConnector`。`WithoutBackendModule` 示範改用公開控制項能做到的部分，`FormPage` 本身見 `apps/Polhem.Northwind`。
+- **以自有資料執行 `FormPage`**：`FormPage` 透過 `PolhemApiClient` 載入與儲存，所以需要 Polhem 後端；`FormDataObject` 與 Avalonia 的 `ListView`、`FormView` 則接受 `IFormApiConnector`。`WithoutBackendModule` 示範改用公開控制項能做到的部分，`FormPage` 本身見 `apps/Polhem.Northwind`。
 
 ## 新增案例
 

@@ -36,9 +36,11 @@ controls + a composed GridControl + a FormView/ListView View layer + the lookup 
 - The UI families have converged on **two tracks, Avalonia + Blazor.Server** (`Polhem.UI.Maui` /
   `Polhem.Web.Blazor.Wasm` have been removed), so **"port to another UI family" has only one target left,
   Blazor.Server**.
-- **Head-agnostic logic goes to `Polhem.UI.Core`**, which every front end references, Blazor.Server included: the
-  `FormDataObject` value rules live there once, in `FormValueBinding` and `FormDataGuard`. Blazor must not use
-  `UIServices` (process-wide) or reference `Polhem.UI.ApiBridge` (single-user); `UIServicesUsageGateTests` enforces it.
+- **Head-agnostic logic goes to `Polhem.UI.Core`**, which every front end references, Blazor included:
+  `FormDataObject` (`Polhem.UI.Core.DataObjects`) and its value rules, `FormValueBinding` and `FormDataGuard`, live
+  there once. Blazor must not use `UIServices` (process-wide) or reference `Polhem.UI.ApiBridge` (single-user);
+  `UIServicesUsageGateTests` enforces it. `FormDataObject` itself never reads `UIServices` either: a head passes the
+  user's time zone in, and `DataObjectsServiceLocatorGateTests` enforces that.
 - **This project never references the API client.** Views reach the backend through `IFormApiConnector`
   (`Polhem.Api.Contracts`) and resolve their services as: their own property, then the `Resolve*` hook, then
   `UIServices.Provider`; with nothing registered they run without a backend. `POLHEM9001` blocks a reference to

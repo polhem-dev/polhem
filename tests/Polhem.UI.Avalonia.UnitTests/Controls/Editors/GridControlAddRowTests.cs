@@ -3,7 +3,7 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.UI.Avalonia.Controls;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.Definition.Layouts;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors

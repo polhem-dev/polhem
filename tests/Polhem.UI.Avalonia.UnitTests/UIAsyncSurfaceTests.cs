@@ -45,6 +45,7 @@ namespace Polhem.UI.Avalonia.UnitTests
         public void AsyncSurface_FindsMembersInBothAssemblies()
         {
             Assert.Contains(AsyncSurface.Methods(typeof(UIServices).Assembly), m => m.DeclaringType == typeof(IFormDefinitionSource));
+            Assert.Contains(AsyncSurface.Methods(typeof(UIServices).Assembly), m => m.DeclaringType == typeof(Polhem.UI.Core.DataObjects.FormDataObject));
             Assert.Contains(AsyncSurface.Methods(typeof(FormView).Assembly), m => m.DeclaringType == typeof(FormView));
         }
     }

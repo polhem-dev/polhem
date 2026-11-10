@@ -1,10 +1,90 @@
 #nullable enable
+Polhem.Web.Blazor.Components.FormPageBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Components.RelatedRecordDialogBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Components.RelatedRecordDialogBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.BoundDataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.BoundDataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.FormScope.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScope.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.FormScopeContext.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
+Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CurrencySettings.set -> void
+Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.get -> string!
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.set -> void
+Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.GridControlBase.BoundDataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.BoundDataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Controls.GridControlBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.FieldName.get -> string!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.Origin.get -> Polhem.UI.Core.Fields.FieldValueOrigin
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.Row.get -> System.Data.DataRow!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.ApplyLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Data.DataRow? targetRow = null) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.BeginRowEdit(System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.CancelRowEdit(System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.ClearLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow? targetRow = null) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.CommitRowEdit(System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.DataSet.get -> System.Data.DataSet!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.DeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.DetailTables.get -> System.Collections.Generic.IEnumerable<System.Data.DataTable!>!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.FieldValueChangeApplied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.FieldValueChangeFailed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.FormDataObject(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.GetField(string! fieldName) -> string!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.GetFormField(string! fieldName) -> Polhem.Definition.Forms.FormField?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.GetFormField(string! tableName, string! fieldName) -> Polhem.Definition.Forms.FormField?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.InitializeNewMaster() -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.IsDirty.get -> bool
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.IsDirtyChanged -> System.EventHandler?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.IsLoading.get -> bool
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.LoadAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.MasterRow.get -> System.Data.DataRow?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTable!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.RowAdded -> System.EventHandler<Polhem.Web.Blazor.DataObjects.RowChangedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.RowDeleted -> System.EventHandler<Polhem.Web.Blazor.DataObjects.RowChangedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.Web.Blazor.DataObjects.FieldValueChangedEventArgs!>?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.SaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.RowChangedEventArgs
+*REMOVED*Polhem.Web.Blazor.DataObjects.RowChangedEventArgs.Row.get -> System.Data.DataRow!
+*REMOVED*Polhem.Web.Blazor.DataObjects.RowChangedEventArgs.RowChangedEventArgs(string! tableName, System.Data.DataRow! row) -> void
+*REMOVED*Polhem.Web.Blazor.DataObjects.RowChangedEventArgs.TableName.get -> string!
 virtual Polhem.Web.Blazor.Components.FormPageBase.Dispose(bool disposing) -> void
 virtual Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Dispose(bool disposing) -> void
 virtual Polhem.Web.Blazor.Controls.GridControlBase.Dispose(bool disposing) -> void

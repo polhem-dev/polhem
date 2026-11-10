@@ -1,6 +1,8 @@
 #nullable enable
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.CurrencySettings.set -> void
+Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DefaultCurrencyCode.get -> string!
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DefaultCurrencyCode.set -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?

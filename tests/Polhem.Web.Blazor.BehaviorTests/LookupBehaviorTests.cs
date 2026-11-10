@@ -8,7 +8,7 @@ using Polhem.Api.Contracts.Form;
 using Polhem.UI.Core.Definitions;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls.Editors;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {

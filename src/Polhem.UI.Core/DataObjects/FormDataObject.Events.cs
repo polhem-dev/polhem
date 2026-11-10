@@ -1,9 +1,9 @@
 using System.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.UI.Core;
 
-namespace Polhem.Web.Blazor.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
     /// DataTable-event half of <see cref="FormDataObject"/>: bridges the table events of the current
@@ -13,9 +13,10 @@ namespace Polhem.Web.Blazor.DataObjects
     public sealed partial class FormDataObject
     {
         /// <summary>
-        /// The single assignment point for <see cref="DataSet"/>: moves the table event subscriptions
-        /// from the old dataset to the new one (subscribing only after the server has fully populated
-        /// it, so loading raises nothing) and notifies subscribers.
+        /// The single assignment point for <see cref="DataSet"/>: moves the table
+        /// event subscriptions from the old dataset to the new one (subscribing only
+        /// after the server has fully populated it, so loading raises nothing) and
+        /// notifies subscribers.
         /// </summary>
         private void ReplaceDataSet(DataSet dataSet, bool notify = true)
         {
@@ -50,29 +51,28 @@ namespace Polhem.Web.Blazor.DataObjects
             }
         }
 
-        private void EnsureOwnedRow(DataRow row)
-        {
-            if (!ReferenceEquals(row.Table.DataSet, DataSet))
-                throw new ArgumentException("Row does not belong to this data object's DataSet.", nameof(row));
-        }
-
         /// <summary>
-        /// Seeds a freshly created row's persisted columns with type-appropriate non-null values drawn from
-        /// the FormSchema, so a new row never reaches the database with a NULL that would violate a NOT NULL
-        /// constraint: <c>sys_rowid</c> gets a fresh key, <c>sys_master_rowid</c> links to the loaded master,
-        /// and the other columns default by type. This is the seeding the Avalonia head and the server's
-        /// <c>GetNewData</c> do, through the same <see cref="FormRowDefaults"/>.
+        /// Seeds a freshly created row's persisted columns with type-appropriate non-null values
+        /// drawn from the FormSchema, so a new row never reaches the database with a NULL that would
+        /// violate a NOT NULL constraint. <c>sys_rowid</c> gets a fresh key, <c>sys_master_rowid</c>
+        /// links to the loaded master, and other columns default by <see cref="FieldDbType"/>
+        /// (text → empty string, numeric → 0, Date → today, DateTime → now, …), dates in the user's time zone. Columns that already
+        /// carry a value (e.g. a schema-pinned default) are left untouched.
         /// </summary>
         private void OnTableNewRow(object? sender, DataTableNewRowEventArgs e)
         {
             var formTable = _schema.Tables?.GetOrDefault(e.Row.Table.TableName);
             if (formTable is null) return;
-            FormRowDefaults.Apply(formTable, e.Row, ResolveMasterRowId(), UserTimeZoneId);
+
+            // Same schema-driven seeding the server uses for the GetNewData master row, plus the
+            // master link for a detail row (the client knows the loaded master).
+            FormRowDefaults.Apply(formTable, e.Row, ResolveMasterRowId(), _timeZoneProvider?.Invoke() ?? string.Empty);
         }
 
-        // The master row's sys_rowid a new detail row links through sys_master_rowid. Returns the raw value
-        // (Guid or the provider's exact string form) so the link preserves the master's casing: a re-parsed
-        // Guid would lowercase a string key and orphan the detail under a case-sensitive comparison.
+        // The master row's sys_rowid a new detail row links through sys_master_rowid. Returns the
+        // raw value (Guid or the provider's exact string form) so the link preserves the master's
+        // casing — a re-parsed Guid would lowercase a string key and orphan the detail under a
+        // case-sensitive comparison (e.g. SQLite stores GUIDs as case-sensitive TEXT).
         private object? ResolveMasterRowId()
         {
             var master = MasterRow;
@@ -83,8 +83,8 @@ namespace Polhem.Web.Blazor.DataObjects
 
         private void OnTableColumnChanged(object? sender, DataColumnChangeEventArgs e)
         {
-            // Seeding a detached row (NewRow before Rows.Add) stays silent; attaching the row marks
-            // dirty through RowChanged instead.
+            // Seeding a detached row (NewRow before Rows.Add) stays silent; attaching
+            // the row marks dirty through RowChanged instead.
             if (e.Row.RowState == DataRowState.Detached) return;
             var origin = _writeOrigin;
             var args = new FieldValueChangedEventArgs(
@@ -93,14 +93,17 @@ namespace Polhem.Web.Blazor.DataObjects
                 FormValueBinding.ToBindingString(e.ProposedValue),
                 e.Row,
                 origin);
-            // A row under an edit session publishes FieldValueChanged only at commit; a cancelled session
-            // must leak none for values that were rolled back. The session still hears each proposed value.
+            // Rows under an explicit edit session publish FieldValueChanged only at
+            // commit, when CommitRowEdit re-publishes the session's changes; a cancelled
+            // session must leak none for values that were rolled back. The session
+            // itself still hears about each proposed value, so its editors can preview.
             if (_rowsInEdit.Contains(e.Row))
             {
                 RowEditFieldChanged?.Invoke(this, args);
                 NotifyValueChange(args.TableName, args.FieldName, e.Row, origin);
                 return;
             }
+
             IsDirty = true;
             FieldValueChanged?.Invoke(this, args);
             NotifyValueChange(args.TableName, args.FieldName, e.Row, origin);
@@ -108,8 +111,9 @@ namespace Polhem.Web.Blazor.DataObjects
 
         private void OnTableRowChanged(object? sender, DataRowChangeEventArgs e)
         {
-            // Only data mutations dirty the object; framework actions (AcceptChanges raises Commit,
-            // RejectChanges raises Rollback) do not. Rows in an edit session dirty the object at commit.
+            // Only data mutations dirty the object; framework actions (AcceptChanges
+            // raises Commit, RejectChanges raises Rollback) do not. Rows in an
+            // explicit edit session dirty the object at commit, not per keystroke.
             if (_rowsInEdit.Contains(e.Row)) return;
             if (e.Action is DataRowAction.Add or DataRowAction.Change)
                 IsDirty = true;

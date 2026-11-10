@@ -9,7 +9,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Definitions;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {

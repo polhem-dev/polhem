@@ -6,18 +6,18 @@ using Polhem.Api.Core.Messages.Form;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.Web.Blazor.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
     /// <see cref="FormDataObject"/>'s async methods must write their results on the context they were
-    /// called from, which for a component is the circuit's dispatcher.
+    /// called from: the UI thread for a native head, the circuit's dispatcher for a Blazor component.
     /// </summary>
     public class FormDataObjectContextTests
     {
         /// <summary>
-        /// A single-threaded context standing in for a circuit's dispatcher. It runs every posted
+        /// A single-threaded context standing in for a UI thread or a circuit's dispatcher. It runs every posted
         /// callback on its own thread and counts them.
         /// </summary>
         private sealed class DispatcherContext : SynchronizationContext, IDisposable

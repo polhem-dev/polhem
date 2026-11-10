@@ -3,13 +3,13 @@ using System.Data;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.Web.Blazor.UnitTests.DataObjects
+namespace Polhem.UI.Core.UnitTests.DataObjects
 {
     /// <summary>
     /// The row lifecycle of <see cref="FormDataObject"/>: new-row seeding, the row events, and buffered edit
-    /// sessions, which the detail grid and its edit form rely on. These mirror the Avalonia data object.
+    /// sessions, which the detail grid and its edit form rely on.
     /// </summary>
     public class FormDataObjectRowLifecycleTests
     {

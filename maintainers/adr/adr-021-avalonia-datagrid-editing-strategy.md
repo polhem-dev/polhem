@@ -124,7 +124,7 @@ the current code:
 - **2026-09-27: dirtiness is tracked without a call.** `FormDataObject.MarkDirty()` no longer exists. `IsDirty` has a
   private setter and is set by the bridge from the ADO.NET `ColumnChanged` / `RowChanged` events, so a write straight
   to the `DataRow` from a cell editor marks the form dirty with no extra call
-  (`src/Polhem.UI.Avalonia/DataObjects/FormDataObject.Events.cs`).
+  (`src/Polhem.UI.Core/DataObjects/FormDataObject.Events.cs`; the type moved to `Polhem.UI.Core` on 2026-11-10).
 - **2026-09-27: `DynamicForm` was folded into `FormView`.** There is no separate `DynamicForm` control; the detail
   editing mode is `FormView.DetailEditMode` (`src/Polhem.UI.Avalonia/Views/FormView.cs`), next to
   `GridControl.EditMode`.

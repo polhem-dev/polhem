@@ -11,7 +11,7 @@ using Polhem.Definition.Sorting;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls;
 using Polhem.Web.Blazor.Controls.Editors;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {

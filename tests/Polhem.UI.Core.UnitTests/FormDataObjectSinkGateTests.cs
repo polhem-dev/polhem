@@ -1,22 +1,22 @@
 using System.ComponentModel;
 using System.Reflection;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.UI.Avalonia.UnitTests
+namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="FormDataObject"/> must not carry its own copy of the value conversion rules that moved down to <c>Polhem.Api.Client</c>.
+    /// <see cref="FormDataObject"/> must not carry its own copy of the value conversion rules in
+    /// <see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// These members used to have a verbatim copy in this head and in <c>Polhem.Web.Blazor.Server</c>, and the doc said "deliberately parallel,
-    /// nothing enforces it". Then they really drifted: one side of <c>ConvertToColumnValue</c> fixed
-    /// "do not write <c>DBNull</c> into a NOT NULL column" while the other kept running with the bug.
-    /// The single implementation now lives in <c>Polhem.Api.Client.FormValueBinding</c> / <c>FormDataGuard</c>.
+    /// These members used to have a verbatim copy in the Avalonia head and in the Blazor head, and the doc said
+    /// "deliberately parallel, nothing enforces it". Then they really drifted: one side of <c>ConvertToColumnValue</c>
+    /// fixed "do not write <c>DBNull</c> into a NOT NULL column" while the other kept running with the bug.
     /// </para>
     /// <para>
     /// NOTE: This gate catches **a copy pasted back under the original name**, which is the mistake that actually happened
-    /// (hitting a bug in this head, not knowing about the shared implementation, and adding a private method on the spot).
+    /// (hitting a bug, not knowing about the shared implementation, and adding a private method on the spot).
     /// It does not catch a renamed copy, so do not treat it as full duplicate detection.
     /// </para>
     /// </remarks>
@@ -33,7 +33,7 @@ namespace Polhem.UI.Avalonia.UnitTests
         ];
 
         [Fact]
-        [DisplayName("FormDataObject does not redeclare the members moved down to Polhem.Api.Client")]
+        [DisplayName("FormDataObject does not redeclare the value rules of FormValueBinding and FormDataGuard")]
         public void FormDataObject_DoesNotRedeclareSunkMembers()
         {
             var declared = typeof(FormDataObject)
@@ -48,7 +48,7 @@ namespace Polhem.UI.Avalonia.UnitTests
 
             Assert.True(
                 redeclared.Length == 0,
-                $"These members moved down to Polhem.Api.Client and must not be redeclared here: {string.Join(", ", redeclared)}");
+                $"These members belong to FormValueBinding or FormDataGuard and must not be redeclared here: {string.Join(", ", redeclared)}");
         }
     }
 }

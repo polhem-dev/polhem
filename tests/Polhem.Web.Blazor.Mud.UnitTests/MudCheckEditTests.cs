@@ -3,7 +3,7 @@ using Bunit;
 using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.Web.Blazor.Mud.Controls.Editors;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 

@@ -121,3 +121,17 @@ the connector contract there lets `FormApiConnector` implement it without an ada
 `Polhem.Api.Client` still carries the JSON-RPC server packages through `Polhem.Api.Core`, which mixes the shared
 message types with the server-side dispatch. It does not cross into the business-object layer and no longer reaches a
 front end; splitting `Polhem.Api.Core` is separate work. Resolved by [ADR-055](adr-055-api-core-split-from-server.md).
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-11-10: `FormDataObject` joins `Polhem.UI.Core`.** Decision 3 kept the form value rules in `Polhem.UI.Core`,
+  but the Avalonia and Blazor heads each kept their own `FormDataObject` around them, and the two copies drifted. The
+  single type is now `Polhem.UI.Core.DataObjects.FormDataObject`, which takes an `IFormApiConnector` and the user's
+  time zone from the head that constructs it. Decision 6 widens accordingly: the Blazor head references
+  `Polhem.UI.Core` for the value rules and `FormDataObject`. `UIServicesUsageGateTests` reads the Blazor assemblies'
+  type references and cannot see a call made inside `Polhem.UI.Core`, so `DataObjectsServiceLocatorGateTests`
+  (`tests/Polhem.UI.Core.UnitTests`) reads the IL under `Polhem.UI.Core.DataObjects` and fails on any call to
+  `UIServices`.

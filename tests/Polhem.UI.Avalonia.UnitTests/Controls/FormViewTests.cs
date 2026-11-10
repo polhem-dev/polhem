@@ -15,7 +15,7 @@ using Polhem.UI.Core;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Views;
 using Polhem.UI.Avalonia.Controls.Editors;
-using Polhem.UI.Avalonia.DataObjects;
+using Polhem.UI.Core.DataObjects;
 using Polhem.Tests.Shared;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls

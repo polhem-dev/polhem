@@ -1,11 +1,12 @@
 using System.Data;
 using Polhem.UI.Core.Fields;
 
-namespace Polhem.Web.Blazor.DataObjects
+namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
-    /// Event data for <see cref="FormDataObject.FieldValueChanged"/>. Raised for master and detail
-    /// tables alike; master subscribers filter by <see cref="TableName"/> and ignore <see cref="Row"/>.
+    /// Event data for <see cref="FormDataObject.FieldValueChanged"/>. Raised for
+    /// master and detail tables alike; master subscribers filter by
+    /// <see cref="TableName"/> and ignore <see cref="Row"/>.
     /// </summary>
     /// <remarks>
     /// <see cref="TableName"/> / <see cref="FieldName"/> carry the casing the <see cref="DataTable"/>
@@ -67,7 +68,8 @@ namespace Polhem.Web.Blazor.DataObjects
         public string Value { get; }
 
         /// <summary>
-        /// Gets the row whose field changed.
+        /// Gets the row whose field changed. Master subscribers can ignore this;
+        /// detail subscribers use it to locate the affected row.
         /// </summary>
         public DataRow Row { get; }
     }
