@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Db;
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Repository.System;
 using Polhem.Tests.Shared;
@@ -14,6 +15,8 @@ namespace Polhem.Repository.UnitTests
     /// </summary>
     public class DepartmentRepositoryTests : IClassFixture<SharedDbFixture>
     {
+        private const string OtherCompanyId = "c002";
+
         private readonly SharedDbFixture _fx;
         public DepartmentRepositoryTests(SharedDbFixture fx) { _fx = fx; }
 
@@ -36,18 +39,20 @@ namespace Polhem.Repository.UnitTests
             string colName = dbType.QuoteIdentifier("sys_name");
             string colManager = dbType.QuoteIdentifier("manager_rowid");
             string colParent = dbType.QuoteIdentifier("parent_rowid");
-            string cols = $"({colRowId}, {colId}, {colName}, {colManager}, {colParent})";
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
+            string cols = $"({colRowId}, {colId}, {colName}, {colManager}, {colParent}, {colCompany})";
 
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
-                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}})",
-                parentRowId, parentId, "母部門", Guid.Empty, Guid.Empty));
+                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}})",
+                parentRowId, parentId, "母部門", Guid.Empty, Guid.Empty, SharedDatabaseState.SeedCompanyId));
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
-                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}})",
-                childRowId, childId, "子部門", Guid.Empty, parentRowId));
+                $"INSERT INTO {tbl} {cols} VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}})",
+                childRowId, childId, "子部門", Guid.Empty, parentRowId, SharedDatabaseState.SeedCompanyId));
 
             try
             {
-                var all = CreateRepo().GetDepartments(databaseId);
+                var all = CreateRepo().GetDepartments(databaseId, SharedDatabaseState.SeedCompanyId);
+                Assert.DoesNotContain(CreateRepo().GetDepartments(databaseId, OtherCompanyId), d => d.RowId == parentRowId);
 
                 var parent = all.Single(d => d.RowId == parentRowId);
                 Assert.Equal(parentId, parent.DeptId);

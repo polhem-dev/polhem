@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Core;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Definition.Organization;
 using Polhem.Repository.Abstractions.System;
 
@@ -32,9 +33,10 @@ namespace Polhem.Repository.System
         }
 
         /// <inheritdoc/>
-        public IReadOnlyList<DepartmentRow> GetDepartments(string databaseId)
+        public IReadOnlyList<DepartmentRow> GetDepartments(string databaseId, string companyId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
             string tbl = dbType.QuoteIdentifier("st_department");
@@ -43,9 +45,11 @@ namespace Polhem.Repository.System
             string colName = dbType.QuoteIdentifier("sys_name");
             string colParent = dbType.QuoteIdentifier("parent_rowid");
             string colManager = dbType.QuoteIdentifier("manager_rowid");
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
-            string sql = $"SELECT {colRowId}, {colId}, {colName}, {colParent}, {colManager} FROM {tbl}";
-            var dbAccess = CreateDbAccess(databaseId);
+            string sql = $"SELECT {colRowId}, {colId}, {colName}, {colParent}, {colManager} FROM {tbl} " +
+                         $"WHERE {colCompany} = {CommandTextVariable.CompanyId}";
+            var dbAccess = CreateDbAccess(databaseId, companyId);
             var table = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql)).Table!;
 
             var list = new List<DepartmentRow>(table.Rows.Count);

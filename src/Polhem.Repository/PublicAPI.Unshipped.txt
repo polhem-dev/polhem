@@ -2,3 +2,4 @@
 Polhem.Repository.Form.DataFormRepository.DataFormRepository(Polhem.Repository.IRepositoryContext! ctx, string! progId, Polhem.Definition.Forms.FormSchema! schema, string! databaseId, string! companyId) -> void
 Polhem.Repository.RepositoryBase.CompanyId.get -> string!
 Polhem.Repository.RepositoryBase.RepositoryBase(Polhem.Repository.IRepositoryContext! ctx, string! progId, string! databaseId, string! companyId) -> void
+Polhem.Repository.RepositoryBase.CreateDbAccess(string! databaseId, string! companyId) -> Polhem.Db.DbAccess!

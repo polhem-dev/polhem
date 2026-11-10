@@ -95,9 +95,9 @@ namespace Polhem.Business.UnitTests
         private void InsertEmployee(Guid empRowId, string empId, Guid deptRowId, Guid userRowId)
         {
             var insert = new DbCommandSpec(DbCommandKind.NonQuery,
-                "INSERT INTO st_employee (sys_rowid, sys_id, sys_name, dept_rowid, user_rowid) " +
-                "VALUES ({0}, {1}, {2}, {3}, {4})",
-                empRowId, empId, "BO 測試員工", deptRowId, userRowId);
+                "INSERT INTO st_employee (sys_rowid, sys_id, sys_name, dept_rowid, user_rowid, sys_company_id) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+                empRowId, empId, "BO 測試員工", deptRowId, userRowId, SeedCompanyId);
             CompanyDb().Execute(insert);
         }
 

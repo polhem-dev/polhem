@@ -62,6 +62,7 @@ build time, where the message can name both the cause and the fix.
 | POLHEM3001 | Warning | A public method on a business object must be covered by `[ApiAccessControl]` |
 | POLHEM3002 | Warning | Definition-layer collection properties must use a framework collection type — framework-internal, does not apply to consumer projects |
 | POLHEM3003 | Warning | A public method on an `IExecFuncHandler` implementation must be covered by `[ExecFuncAccessControl]` |
+| POLHEM3004 | Warning | A repository must create its database access through `CreateDbAccess`, not the context's `DbAccessFactory`, so a company-bound repository's statements stay confined to its company |
 
 ### Serialisation and wire contracts (POLHEM4xxx)
 

@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Core;
 using Polhem.Db;
+using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Repository.Abstractions.System;
@@ -36,9 +37,10 @@ namespace Polhem.Repository.System
         }
 
         /// <inheritdoc/>
-        public IReadOnlyList<RoleGrantRow> GetRoleGrants(string databaseId)
+        public IReadOnlyList<RoleGrantRow> GetRoleGrants(string databaseId, string companyId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
             string tbl = dbType.QuoteIdentifier("st_role_grant");
@@ -46,9 +48,11 @@ namespace Polhem.Repository.System
             string colModelId = dbType.QuoteIdentifier("model_id");
             string colAction = dbType.QuoteIdentifier("action");
             string colScope = dbType.QuoteIdentifier("scope");
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
-            string sql = $"SELECT {colRoleId}, {colModelId}, {colAction}, {colScope} FROM {tbl}";
-            var dbAccess = CreateDbAccess(databaseId);
+            string sql = $"SELECT {colRoleId}, {colModelId}, {colAction}, {colScope} FROM {tbl} " +
+                         $"WHERE {colCompany} = {CommandTextVariable.CompanyId}";
+            var dbAccess = CreateDbAccess(databaseId, companyId);
             var table = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql)).Table!;
 
             var list = new List<RoleGrantRow>(table.Rows.Count);
@@ -64,17 +68,20 @@ namespace Polhem.Repository.System
         }
 
         /// <inheritdoc/>
-        public IReadOnlyList<UserRoleRow> GetUserRoles(string databaseId)
+        public IReadOnlyList<UserRoleRow> GetUserRoles(string databaseId, string companyId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
             string tbl = dbType.QuoteIdentifier("st_user_role");
             string colUserId = dbType.QuoteIdentifier("user_id");
             string colRoleId = dbType.QuoteIdentifier(ColRoleId);
+            string colCompany = dbType.QuoteIdentifier(SysFields.CompanyId);
 
-            string sql = $"SELECT {colUserId}, {colRoleId} FROM {tbl}";
-            var dbAccess = CreateDbAccess(databaseId);
+            string sql = $"SELECT {colUserId}, {colRoleId} FROM {tbl} " +
+                         $"WHERE {colCompany} = {CommandTextVariable.CompanyId}";
+            var dbAccess = CreateDbAccess(databaseId, companyId);
             var table = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql)).Table!;
 
             var list = new List<UserRoleRow>(table.Rows.Count);
