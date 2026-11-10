@@ -26,8 +26,9 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <param name="expression">The current expression.</param>
     /// <param name="message">The rule's message, edited beside its condition; <c>null</c> when there is none to edit.</param>
     /// <param name="evaluator">The evaluator that parses the expression.</param>
+    /// <param name="trial">The try-out area; <c>null</c> for none.</param>
     public ExpressionEditorViewModel(string title, FormTable table, Type returnType, string expression, string? message,
-        DynamicExpressoEvaluator evaluator)
+        DynamicExpressoEvaluator evaluator, ExpressionTrialViewModel? trial = null)
     {
         ArgumentNullException.ThrowIfNull(table);
         Title = title;
@@ -63,9 +64,13 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
                 StringComparer.Ordinal);
         CompletionSources = new ExpressionCompletionSources(_variableTypes, DynamicExpressoEvaluator.HelperFunctions,
             referencedTypes, name => listValues.GetValueOrDefault(name));
+        Trial = trial;
         _expression = expression;
         Validate();
     }
+
+    /// <summary>The try-out area, where sample values give the expression's result; <c>null</c> when there is none.</summary>
+    public ExpressionTrialViewModel? Trial { get; }
 
     /// <summary>The window title: what is being edited.</summary>
     public string Title { get; }
@@ -109,28 +114,28 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
 
     partial void OnExpressionChanged(string value) => Validate();
 
+    partial void OnMessageChanged(string value) => Trial?.Update(Expression, !HasError, Message);
+
     partial void OnErrorChanged(string value) => OnPropertyChanged(nameof(HasError));
 
     // An empty expression is valid: an empty When means the rule always applies, and an empty field expression means
     // the field has none.
     private void Validate()
     {
-        if (string.IsNullOrWhiteSpace(Expression))
+        ErrorPosition = null;
+        Error = string.Empty;
+        if (!string.IsNullOrWhiteSpace(Expression))
         {
-            ErrorPosition = null;
-            Error = string.Empty;
-            return;
+            try
+            {
+                _evaluator.Validate(Expression, _variableTypes, _returnType);
+            }
+            catch (ExpressionEvaluationException ex)
+            {
+                ErrorPosition = ex.Position;
+                Error = ex.Message;
+            }
         }
-        try
-        {
-            _evaluator.Validate(Expression, _variableTypes, _returnType);
-            ErrorPosition = null;
-            Error = string.Empty;
-        }
-        catch (ExpressionEvaluationException ex)
-        {
-            ErrorPosition = ex.Position;
-            Error = ex.Message;
-        }
+        Trial?.Update(Expression, !HasError, Message);
     }
 }

@@ -110,6 +110,14 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     private static readonly DynamicExpressoEvaluator s_evaluator = new();
     private static readonly FormExpressionCalculator s_expressionCalculator = new(s_evaluator);
 
+    // The helpers take an IANA id; Windows reports its own id for the local zone.
+    private static string LocalTimeZoneId()
+    {
+        var local = TimeZoneInfo.Local;
+        if (local.HasIanaId) return local.Id;
+        return TimeZoneInfo.TryConvertWindowsIdToIanaId(local.Id, out var iana) ? iana : string.Empty;
+    }
+
     private static ValidationIssue ToValidationIssue(FormExpressionIssue issue)
     {
         var owner = issue.FieldName is not null
@@ -359,13 +367,17 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
             case FormRule rule when property.Name is nameof(FormRule.When) or nameof(FormRule.Condition):
                 return FormExpressionCalculator.ResolveRuleTable(rule, Schema) is { } ruleTable
                     ? new ExpressionEditorViewModel($"{rule.RuleId} · {property.Name}", ruleTable, typeof(bool),
-                        expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator)
+                        expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator,
+                        new ExpressionTrialViewModel(ruleTable, null, property.Name, s_expressionCalculator, s_evaluator,
+                            LocalTimeZoneId()))
                     : null;
             case FormField field when property.Name is nameof(FormField.ValueExpression)
                     or nameof(FormField.DefaultValueExpression):
                 return field.Table is { } fieldTable
                     ? new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}", fieldTable, typeof(object),
-                        expression, null, s_evaluator)
+                        expression, null, s_evaluator,
+                        new ExpressionTrialViewModel(fieldTable, field, property.Name, s_expressionCalculator, s_evaluator,
+                            LocalTimeZoneId()))
                     : null;
             default:
                 return null;
