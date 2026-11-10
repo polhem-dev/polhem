@@ -41,6 +41,19 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Scrolling to the end over a slow link as soon as the cards appear reads the next page")]
+        public async Task SlowLink_ScrollAtOnce_ReadsNextPage()
+        {
+            var page = await OpenAsync(slow: true);
+            await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(50);
+
+            // A scroll back to the top that reached the browser after the cards would undo this one.
+            await ScrollToEndAsync(page);
+
+            await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(100);
+        }
+
+        [BrowserFact]
         [DisplayName("A page arriving does not move what is on screen")]
         public async Task Scroll_KeepsPosition()
         {

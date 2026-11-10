@@ -42,18 +42,20 @@ namespace Polhem.Web.Blazor.Components
 
         private void ShowCardPage(int page, DataTable? table)
         {
-            if (page == 1)
-            {
-                _selectedRowId = null;
-                _scrollCardsToTop = true;
-            }
+            if (page == 1) _selectedRowId = null;
             CardState.ShowPage(page, table?.Rows.Cast<DataRow>() ?? []);
         }
 
         /// <summary>
-        /// Returns the cards to their first card after page 1 replaced them. Left at the old position, the end of the
+        /// Returns the cards to their first card when page 1 replaces them. Left at the old position, the end of the
         /// shorter list would be in view and read the next page at once. A UI package overrides this.
         /// </summary>
+        /// <remarks>
+        /// A read of page 1 calls this before the new cards render. Called after they render instead, it reaches the
+        /// browser a round trip after the cards (Blazor Server runs <c>OnAfterRenderAsync</c> once the browser has
+        /// acknowledged the render), and undoes a scroll the user made in between, so the end they scrolled to never
+        /// reads the next page.
+        /// </remarks>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
         protected virtual Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;

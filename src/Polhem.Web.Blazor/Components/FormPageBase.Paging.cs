@@ -43,6 +43,11 @@ namespace Polhem.Web.Blazor.Components
                     sortFields: _paging.CreateSort(), paging: _paging.CreateOptions(page), cancellationToken: cancellationToken)
                 .ConfigureAwait(true);
             if (version != _loadVersion || !_paging.IsCurrent(request)) return;
+            if (EffectiveIsCompact && page == 1)
+            {
+                await ScrollCardsToTopAsync(cancellationToken).ConfigureAwait(true);
+                if (version != _loadVersion || !_paging.IsCurrent(request)) return;
+            }
 
             var rowCount = response.Table?.Rows.Count ?? 0;
             _paging.Apply(page, response.Paging);
