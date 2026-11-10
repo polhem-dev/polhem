@@ -1,4 +1,3 @@
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Polhem.Core.Expressions;
 using Polhem.DefineEditor.Services;
@@ -28,7 +27,7 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <param name="message">The rule's message, edited beside its condition; <c>null</c> when there is none to edit.</param>
     /// <param name="evaluator">The evaluator that parses the expression.</param>
     public ExpressionEditorViewModel(string title, FormTable table, Type returnType, string expression, string? message,
-        IExpressionEvaluator evaluator)
+        DynamicExpressoEvaluator evaluator)
     {
         ArgumentNullException.ThrowIfNull(table);
         Title = title;
@@ -40,16 +39,30 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
         Fields = (table.Fields ?? [])
             .Where(f => _variableTypes.ContainsKey(f.FieldName))
             .Select(f => new ExpressionSymbol(f.FieldName, f.FieldName,
-                $"{TypeName(_variableTypes[f.FieldName])} · {f.Caption}"))
+                $"{ExpressionMembers.TypeName(_variableTypes[f.FieldName])} · {f.Caption}"))
             .ToList();
         Functions = DynamicExpressoEvaluator.HelperFunctions
-            .Select(f => new ExpressionSymbol(f.Name, f.Name + "(" + (f.Parameters.Count > 0 ? "" : ")"), Signature(f)))
+            .Select(f => new ExpressionSymbol(f.Name, f.Name + "(" + (f.Parameters.Count > 0 ? "" : ")"),
+                ExpressionMembers.Signature(f)))
+            .ToList();
+        var referencedTypes = evaluator.ReferencedTypes;
+        Types = ExpressionMembers.FeaturedTypes(referencedTypes)
+            .Select(t => new ExpressionSymbolGroup(t.Key, ExpressionMembers.Of(t.Value, isStatic: true, t.Key + ".")
+                .Select(m => new ExpressionSymbol(m.Label, m.InsertText, m.Detail))
+                .ToList()))
             .ToList();
         SymbolGroups =
         [
-            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Fields"], Fields),
-            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Functions"], Functions),
+            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Fields"], Fields, IsExpanded: true),
+            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Functions"], Functions, IsExpanded: true),
+            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Types"], Types, IsExpanded: true),
         ];
+        var listValues = (table.Fields ?? [])
+            .Where(f => f.ListItems is { Count: > 0 })
+            .ToDictionary(f => f.FieldName, f => (IReadOnlyList<string>)f.ListItems!.Select(i => i.Value).ToList(),
+                StringComparer.Ordinal);
+        CompletionSources = new ExpressionCompletionSources(_variableTypes, DynamicExpressoEvaluator.HelperFunctions,
+            referencedTypes, name => listValues.GetValueOrDefault(name));
         _expression = expression;
         Validate();
     }
@@ -63,7 +76,13 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <summary>The helper functions every expression can call.</summary>
     public IReadOnlyList<ExpressionSymbol> Functions { get; }
 
-    /// <summary>The fields and the functions, as the two headings of the symbol tree.</summary>
+    /// <summary>The types an expression can name, each with its static members.</summary>
+    public IReadOnlyList<ExpressionSymbolGroup> Types { get; }
+
+    /// <summary>What the completion offers names from.</summary>
+    public ExpressionCompletionSources CompletionSources { get; }
+
+    /// <summary>The fields, the functions and the types, as the headings of the symbol tree.</summary>
     public IReadOnlyList<ExpressionSymbolGroup> SymbolGroups { get; }
 
     /// <summary>Whether the rule's message is edited beside the expression.</summary>
@@ -114,22 +133,4 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
             Error = ex.Message;
         }
     }
-
-    private static string Signature(ExpressionFunction function) =>
-        string.Create(CultureInfo.InvariantCulture,
-            $"({string.Join(", ", function.Parameters.Select(p => $"{TypeName(p.ParameterType)} {p.Name}"))}) → {TypeName(function.ReturnType)}");
-
-    // The names an expression writes the common types with, so the list reads like the expressions themselves.
-    private static string TypeName(Type type) => Type.GetTypeCode(type) switch
-    {
-        TypeCode.String => "string",
-        TypeCode.Boolean => "bool",
-        TypeCode.Int32 => "int",
-        TypeCode.Int64 => "long",
-        TypeCode.Int16 => "short",
-        TypeCode.Decimal => "decimal",
-        TypeCode.Double => "double",
-        TypeCode.Single => "float",
-        _ => Nullable.GetUnderlyingType(type) is { } inner ? TypeName(inner) + "?" : type.Name,
-    };
 }

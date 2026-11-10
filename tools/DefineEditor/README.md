@@ -49,9 +49,12 @@ menu entry's `ProgId` (the programs in `ProgramSettings.xml`). The drop-down onl
 validation reports one that names nothing. A FormSchema's `ListFields` and `LookupFields` open a field picker from the
 **…** button, where the master table's fields are ticked and put in order. A rule's `When` and `Condition` and a
 field's `ValueExpression` and `DefaultValueExpression` open an expression editor from the **…** button: the expression
-is written on several lines without XML escaping, the fields of its table and the helper functions are listed beside it
-to insert, and it is parsed as you type, with the place it stops parsing underlined. A rule's message is edited beside
-its condition.
+is written on several lines without XML escaping, the fields of its table, the helper functions and the types it can name
+(`Math`, `Convert`, `DateTime` and others, with their static members) are listed beside it to insert, and it is parsed
+as you type, with the place it stops parsing underlined. As you type, the first letter of a name offers the fields,
+functions and types, a dot offers the members of what is before it (`note.`, `Today().`, `Math.`), and a quote after
+`==` offers a drop-down field's values; Ctrl+Space (Cmd+I on macOS) lists what fits the caret. A rule's message is
+edited beside its condition.
 
 Importing a workbook asks how to treat a TableSchema or a FormLayout the form already has (merge, keep or overwrite the
 TableSchema; keep or regenerate the layout), lists the files it will change, and ends with a dialog that offers to

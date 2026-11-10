@@ -44,7 +44,10 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 （`ProgramSettings.xml` 裡的程式）。下拉只是建議，手動輸入的值會保留，指向不存在項目的值由驗證回報。
 FormSchema 的 `ListFields` 與 `LookupFields` 可從 **…** 按鈕開啟欄位挑選器，勾選主表欄位並調整順序。
 規則的 `When`、`Condition` 與欄位的 `ValueExpression`、`DefaultValueExpression` 可從 **…** 按鈕開啟運算式編輯器：
-運算式可分行撰寫、不需 XML 跳脫，旁邊列出所屬資料表的欄位與 helper 函式可供插入，輸入時即時解析，並在解析中斷處畫底線。
+運算式可分行撰寫、不需 XML 跳脫，旁邊列出所屬資料表的欄位、helper 函式與可用的型別（`Math`、`Convert`、`DateTime` 等，
+含其靜態成員）可供插入，輸入時即時解析，並在解析中斷處畫底線。輸入名稱的第一個字母時會建議欄位、函式與型別，
+輸入句點時建議前面那個值的成員（`note.`、`Today().`、`Math.`），在 `==` 後輸入引號時建議下拉欄位的值；
+Ctrl+Space（macOS 為 Cmd+I）列出游標處可用的項目。
 規則的訊息與條件在同一個視窗編輯。
 
 從活頁簿匯入時，若表單已有 TableSchema 或 FormLayout，會先詢問如何處理（TableSchema 合併、保留或覆寫；版面保留或重新產生），
