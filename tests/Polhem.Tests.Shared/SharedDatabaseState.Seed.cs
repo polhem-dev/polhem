@@ -12,6 +12,11 @@ namespace Polhem.Tests.Shared
     /// </content>
     public static partial class SharedDatabaseState
     {
+        /// <summary>
+        /// The id of the company every shared test database is seeded with, in its stored (lowercase) form.
+        /// </summary>
+        public const string SeedCompanyId = "c001";
+
         private static void EnsureSeedData(DatabaseType dbType, string databaseId, IDbConnectionManager connectionManager)
         {
             var dbAccess = new DbAccess(databaseId, connectionManager);
@@ -113,7 +118,14 @@ namespace Polhem.Tests.Shared
             string colEnabled = dbType.QuoteIdentifier("enabled");
             string colInsTime = dbType.QuoteIdentifier("sys_insert_time");
 
-            var existing = LookupRowId(dbType, dbAccess, tbl, colRowId, colId, "C001");
+            // Company ids are stored lowercase (`CompanyInfo.NormalizeId`). A database seeded before that
+            // rule holds 'C001', which a case-sensitive engine would no longer find; rename it in place so
+            // the row, its grants and its rowid carry on. On a case-insensitive collation the predicate
+            // matches the lowercase row too and rewrites it unchanged.
+            dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                $"UPDATE {tbl} SET {colId} = {{0}} WHERE {colId} = {{1}}", SeedCompanyId, "C001"));
+
+            var existing = LookupRowId(dbType, dbAccess, tbl, colRowId, colId, SeedCompanyId);
             if (existing != Guid.Empty)
             {
                 // A company must carry a default currency, and a C001 inserted before that rule carries
@@ -122,9 +134,9 @@ namespace Polhem.Tests.Shared
                 var backfill = new DbCommandSpec(DbCommandKind.NonQuery,
                     $"UPDATE {tbl} SET {colDefCur} = 'USD' " +
                     $"WHERE {colId} = {{0}} AND ({colDefCur} IS NULL OR {colDefCur} = '')",
-                    "C001");
+                    SeedCompanyId);
                 dbAccess.Execute(backfill);
-                Console.WriteLine($"SharedDatabaseState: {databaseId} seed company 'C001' already exists (rowid={existing})");
+                Console.WriteLine($"SharedDatabaseState: {databaseId} seed company '{SeedCompanyId}' already exists (rowid={existing})");
                 return existing;
             }
 
@@ -143,15 +155,15 @@ namespace Polhem.Tests.Shared
             var insert = new DbCommandSpec(DbCommandKind.NonQuery,
                 $"INSERT INTO {tbl} ({colRowId}, {colId}, {colName}, {colDbId}, {colNumFmt}, {colDefCur}, {colCashRnd}, {colAllowCur}, {colEnabled}, {colInsTime}) " +
                 $"VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {{6}}, {{7}}, {enabledLiteral}, {now})",
-                newRowId, "C001", "測試公司", companyDbId, string.Empty, "USD", string.Empty, string.Empty);
-            return InsertOrAdopt(databaseId, "seed company 'C001'",
+                newRowId, SeedCompanyId, "測試公司", companyDbId, string.Empty, "USD", string.Empty, string.Empty);
+            return InsertOrAdopt(databaseId, $"seed company '{SeedCompanyId}'",
                 () =>
                 {
                     dbAccess.Execute(insert);
-                    Console.WriteLine($"SharedDatabaseState: {databaseId} seed company 'C001' inserted (rowid={newRowId})");
+                    Console.WriteLine($"SharedDatabaseState: {databaseId} seed company '{SeedCompanyId}' inserted (rowid={newRowId})");
                     return newRowId;
                 },
-                () => LookupRowId(dbType, dbAccess, tbl, colRowId, colId, "C001"));
+                () => LookupRowId(dbType, dbAccess, tbl, colRowId, colId, SeedCompanyId));
         }
 
         private static void EnsureSeedUserCompany(

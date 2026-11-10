@@ -54,7 +54,7 @@ namespace Polhem.Api.Server.UnitTests.System
                 Method = $"{SysProgIds.System}.{SystemActions.EnterCompany}",
                 Params = new TestPayload
                 {
-                    Value = new EnterCompanyRequest { CompanyId = "C001" },
+                    Value = new EnterCompanyRequest { CompanyId = SharedDatabaseState.SeedCompanyId },
                 },
                 Id = Guid.NewGuid().ToString(),
             };
@@ -66,7 +66,7 @@ namespace Polhem.Api.Server.UnitTests.System
             Assert.Null(response.Error);
             var result = Assert.IsType<EnterCompanyResponse>(response.Result!.Value);
             Assert.NotNull(result.Company);
-            Assert.Equal("C001", result.Company.CompanyId);
+            Assert.Equal(SharedDatabaseState.SeedCompanyId, result.Company.CompanyId);
             Assert.Equal("測試公司", result.Company.CompanyName);
             // ApiOutputConverter must copy the capability snapshot through the Result → Response
             // reflection copy (empty when the seed grants the user nothing, but never null).
@@ -74,7 +74,7 @@ namespace Polhem.Api.Server.UnitTests.System
 
             var session = _fx.GetRequiredService<ISessionInfoService>().Get(accessToken);
             Assert.NotNull(session);
-            Assert.Equal("C001", session.CompanyId);
+            Assert.Equal(SharedDatabaseState.SeedCompanyId, session.CompanyId);
         }
 
         [DbFact(DatabaseType.SQLServer)]

@@ -35,6 +35,7 @@ namespace Polhem.Hosting.Database
             var userName = string.IsNullOrWhiteSpace(seed.UserName) ? seed.UserId : seed.UserName;
             var companyName = string.IsNullOrWhiteSpace(seed.CompanyName) ? seed.CompanyId : seed.CompanyName;
             ValidateSeed(seed, userName, companyName);
+            var companyId = CompanyInfo.NormalizeId(seed.CompanyId);
             var companyDatabaseId = ResolveCompanyDatabase(seed.CompanyDatabaseId);
 
             var databaseId = DbCategoryIds.Common;
@@ -42,7 +43,7 @@ namespace Polhem.Hosting.Database
             var dbAccess = _dbAccessFactory.Create(databaseId);
 
             var userRowId = FindRowId(dbAccess, databaseType, "st_user", seed.UserId);
-            var companyRowId = FindRowId(dbAccess, databaseType, "st_company", seed.CompanyId);
+            var companyRowId = FindRowId(dbAccess, databaseType, "st_company", companyId);
             bool userCreated = userRowId == Guid.Empty;
             bool companyCreated = companyRowId == Guid.Empty;
             if (userCreated) userRowId = Guid.NewGuid();
@@ -54,7 +55,7 @@ namespace Polhem.Hosting.Database
             if (userCreated)
                 batch.Commands.Add(InsertUser(databaseType, userRowId, seed, userName));
             if (companyCreated)
-                batch.Commands.Add(InsertCompany(databaseType, companyRowId, seed, companyName, companyDatabaseId));
+                batch.Commands.Add(InsertCompany(databaseType, companyRowId, seed, companyId, companyName, companyDatabaseId));
             if (accessGranted)
                 batch.Commands.Add(InsertAccess(databaseType, userRowId, companyRowId));
 
@@ -75,6 +76,11 @@ namespace Polhem.Hosting.Database
             RequireText(seed.UserId, MaxUserIdLength, "user id", nameof(seed.UserId));
             RequireText(userName, MaxUserNameLength, "user name", nameof(seed.UserName));
             RequireText(seed.CompanyId, CompanyInfo.CompanyIdMaxLength, "company id", nameof(seed.CompanyId));
+            if (!CompanyInfo.IsValidId(CompanyInfo.NormalizeId(seed.CompanyId)))
+            {
+                throw new ArgumentException(
+                    $"The company id '{seed.CompanyId}' may contain only ASCII letters and digits.", nameof(seed));
+            }
             RequireText(companyName, MaxCompanyNameLength, "company name", nameof(seed.CompanyName));
 
             // IMPORTANT: no message here may include the password, not even a prefix of it.
@@ -174,7 +180,8 @@ namespace Polhem.Hosting.Database
         }
 
         private static DbCommandSpec InsertCompany(
-            DatabaseType databaseType, Guid rowId, AdministratorSeed seed, string companyName, string companyDatabaseId)
+            DatabaseType databaseType, Guid rowId, AdministratorSeed seed, string companyId, string companyName,
+            string companyDatabaseId)
         {
             // The three XML columns are Text, which MySQL gives no default, so they are written
             // explicitly as empty strings.
@@ -182,7 +189,7 @@ namespace Polhem.Hosting.Database
                 SysFields.RowId, SysFields.Id, SysFields.Name, "company_database_id", "customize_id",
                 "number_formats_xml", "default_currency", "cash_rounding_xml", "allowed_currencies_xml", "enabled");
             return new DbCommandSpec(DbCommandKind.NonQuery, sql,
-                rowId, seed.CompanyId, companyName, companyDatabaseId, string.Empty,
+                rowId, companyId, companyName, companyDatabaseId, string.Empty,
                 string.Empty, seed.DefaultCurrency, string.Empty, string.Empty, true);
         }
 

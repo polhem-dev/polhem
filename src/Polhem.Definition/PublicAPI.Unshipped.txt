@@ -1,4 +1,6 @@
 #nullable enable
+static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
+static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
 const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
 const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!
 static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!

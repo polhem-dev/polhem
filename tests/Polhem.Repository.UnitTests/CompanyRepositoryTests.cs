@@ -29,9 +29,9 @@ namespace Polhem.Repository.UnitTests
         private void RunGetByIdEnabled(DatabaseType databaseType)
         {
             var repo = CreateRepo(databaseType);
-            var result = repo.GetById("C001");
+            var result = repo.GetById(SharedDatabaseState.SeedCompanyId);
             Assert.NotNull(result);
-            Assert.Equal("C001", result.CompanyId);
+            Assert.Equal(SharedDatabaseState.SeedCompanyId, result.CompanyId);
             Assert.Equal("測試公司", result.CompanyName);
             Assert.False(string.IsNullOrEmpty(result.CompanyDatabaseId));
             // Seed company 'C001' ships no customization. customize_id is AllowNull=false, so the

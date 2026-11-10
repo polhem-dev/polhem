@@ -64,7 +64,7 @@ public static class NorthwindCredentials
     /// The single demo company the session auto-enters at login. Company-scoped forms
     /// (<c>CategoryId="company"</c>) resolve their database through this id.
     /// </summary>
-    public const string CompanyId = "NORTHWIND";
+    public const string CompanyId = "northwind";
 
     /// <summary>The demo company display name.</summary>
     public const string CompanyName = "Northwind Traders";

@@ -51,7 +51,7 @@ namespace Polhem.Repository.System
             string sql = $"SELECT {colId}, {colName}, {colDbId}, {colCustId}, {colNumFmt}, {colDefCur}, {colCashRnd}, {colAllowCur} \n" +
                          $"FROM {tbl} \n" +
                          $"WHERE {colId} = {{0}} AND {colEnabled} = {{1}}";
-            var command = new DbCommandSpec(DbCommandKind.DataTable, sql, companyId, true);
+            var command = new DbCommandSpec(DbCommandKind.DataTable, sql, CompanyInfo.NormalizeId(companyId), true);
             var dbAccess = CreateDbAccess();
             var result = dbAccess.Execute(command);
             var table = result.Table!;

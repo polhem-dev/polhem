@@ -30,7 +30,7 @@ builder.Services.AddPolhemShell(shell =>
     // demo-tw is left out: this head signs every account in under the language the sign-in switch shows.
     shell.SignInHint = "Use demo / demo, or demo-ro / demo for the read-only account.";
     // This head references no backend, so it does not share NorthwindCredentials.CompanyId. Change both together.
-    shell.DefaultCompanyId = "NORTHWIND";
+    shell.DefaultCompanyId = "northwind";
     if (NorthwindDemoSite.IsUnder(new Uri(builder.HostEnvironment.BaseAddress).AbsolutePath, NorthwindDemoSite.BlazorWasmPath))
     {
         // Served by the demo site, next to the other front ends; the sign-in screen leaves out the link to itself.
