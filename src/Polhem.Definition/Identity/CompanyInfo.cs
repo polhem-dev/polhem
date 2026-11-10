@@ -51,9 +51,10 @@ namespace Polhem.Definition.Identity
         /// <returns>The id in the form <c>st_company.sys_id</c> stores it.</returns>
         /// <remarks>
         /// The framework compares company ids with <see cref="StringComparison.OrdinalIgnoreCase"/>,
-        /// while a database compares them by its collation, which is case-sensitive on PostgreSQL,
-        /// Oracle and SQLite. One stored form keeps the two from disagreeing about whether <c>C001</c>
-        /// and <c>c001</c> are the same company. Every id that reaches a query on <c>st_company</c>
+        /// while a database compares them by its collation: case-sensitive on PostgreSQL and Oracle,
+        /// case-insensitive on SQL Server and MySQL by default, and on SQLite through the
+        /// <c>COLLATE NOCASE</c> the framework gives its text columns. One stored form keeps the two from
+        /// disagreeing about whether <c>C001</c> and <c>c001</c> are the same company. Every id that reaches a query on <c>st_company</c>
         /// or is bound to a session passes through here first.
         /// </remarks>
         public static string NormalizeId(string companyId)
