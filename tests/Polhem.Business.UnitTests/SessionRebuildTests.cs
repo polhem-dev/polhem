@@ -18,7 +18,7 @@ namespace Polhem.Business.UnitTests
     /// </remarks>
     public class SessionRebuildTests : IClassFixture<SharedDbFixture>
     {
-        private const string SeedCompanyId = "C001";
+        private const string SeedCompanyId = SharedDatabaseState.SeedCompanyId;
         private readonly SharedDbFixture _fx;
 
         public SessionRebuildTests(SharedDbFixture fx) { _fx = fx; }

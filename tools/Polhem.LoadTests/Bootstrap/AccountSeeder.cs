@@ -2,6 +2,7 @@ using System.Globalization;
 using Polhem.Core;
 using Polhem.Core.Security;
 using Polhem.Db;
+using Polhem.Definition.Identity;
 using Polhem.LoadTests.Configuration;
 
 namespace Polhem.LoadTests.Bootstrap
@@ -50,7 +51,8 @@ namespace Polhem.LoadTests.Bootstrap
 
         private static Guid EnsureCompany(DbAccess dbAccess, AuthOptions auth, string companyDatabaseId)
         {
-            var existing = ResolveRowId(dbAccess, "st_company", auth.CompanyId);
+            var companyId = CompanyInfo.NormalizeId(auth.CompanyId);
+            var existing = ResolveRowId(dbAccess, "st_company", companyId);
             if (existing != Guid.Empty) { return existing; }
 
             var rowId = Guid.NewGuid();
@@ -61,7 +63,7 @@ namespace Polhem.LoadTests.Bootstrap
 
             dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql,
                 rowId,
-                auth.CompanyId,
+                companyId,
                 "Load test company",
                 companyDatabaseId,
                 string.Empty,
