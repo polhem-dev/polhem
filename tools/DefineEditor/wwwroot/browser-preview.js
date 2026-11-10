@@ -23,10 +23,9 @@ window.polhemBrowserPreview = {
         this.dotnet = dotnet;
         if (this.following) return;
         this.following = true;
-        var self = this;
-        document.addEventListener('pointerdown', function (e) {
-            var target = self.targetOf(e.target);
-            if (target && self.dotnet) self.dotnet.invokeMethodAsync('SelectFromPreview', target.kind, target.index, target.item);
+        document.addEventListener('pointerdown', (e) => {
+            var target = this.targetOf(e.target);
+            if (target && this.dotnet) this.dotnet.invokeMethodAsync('SelectFromPreview', target.kind, target.index, target.item);
         }, true);
     },
 
@@ -52,10 +51,8 @@ window.polhemBrowserPreview = {
 
     // The header cells of a detail grid's columns, in order: the cells that carry the header class or hold it.
     headerCells: function (detail) {
-        var self = this;
-        return Array.prototype.map.call(detail.querySelectorAll('.polhem-grid__header'), function (header) {
-            return header.closest(self.headerCellSelector) || header;
-        });
+        return Array.prototype.map.call(detail.querySelectorAll('.polhem-grid__header'), (header) =>
+            header.closest(this.headerCellSelector) || header);
     },
 
     indexIn: function (selector, element) {
