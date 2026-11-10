@@ -34,6 +34,10 @@
 - `IUserRepository`、`IUserCompanyRepository`、`ICompanyRepository`、`IDepartmentRepository`、
   `IEmployeeRepository`、`IRolePermissionRepository`、`IApiKeyRepository` -- 框架的使用者、公司、組織、權限與
   API 金鑰資料表
+- `IAdministratorSeedRepository` -- 在一個交易中寫入新部署的第一位管理員、公司與存取權（`AdministratorSeedRecord`、
+  `AdministratorSeedOutcome`）
+- `ICompanyRowAssignmentRepository` -- 計算公司資料表中不屬於任何公司的列，並把它們指派給公司，
+  供替已有資料的資料庫加上 `sys_company_id` 的升級使用
 
 ### 稽核紀錄合約（`AuditLog/`）
 

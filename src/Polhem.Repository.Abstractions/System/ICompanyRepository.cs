@@ -20,5 +20,12 @@ namespace Polhem.Repository.Abstractions.System
         /// </summary>
         /// <param name="companyId">The company business id.</param>
         CompanyInfo? GetById(string companyId);
+
+        /// <summary>
+        /// Returns every company recorded in the common database <paramref name="databaseId"/>, enabled or not, with
+        /// the database item its data lives in.
+        /// </summary>
+        /// <param name="databaseId">A database item of the common category.</param>
+        IReadOnlyList<CompanyDatabase> GetCompanyDatabases(string databaseId);
     }
 }

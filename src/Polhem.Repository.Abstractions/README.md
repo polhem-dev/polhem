@@ -34,6 +34,10 @@
 - `IUserRepository`, `IUserCompanyRepository`, `ICompanyRepository`, `IDepartmentRepository`,
   `IEmployeeRepository`, `IRolePermissionRepository`, `IApiKeyRepository` -- the framework's user, company,
   organization, permission and API key tables
+- `IAdministratorSeedRepository` -- writes a new deployment's first administrator, company and access in one
+  transaction (`AdministratorSeedRecord`, `AdministratorSeedOutcome`)
+- `ICompanyRowAssignmentRepository` -- counts the rows of a company table that belong to no company and gives them
+  their company, for an upgrade that adds `sys_company_id` to a database with data
 
 ### Audit Log Contracts (`AuditLog/`)
 

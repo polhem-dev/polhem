@@ -3,6 +3,50 @@
 Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository.GetRules(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditRule!>!
 Polhem.Repository.Abstractions.Factories.IRepositoryFactory.CreateFormRepository<T>(System.Guid accessToken, string! progId, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> T!
 Polhem.Repository.Abstractions.IRepositoryDatabaseRouter.Resolve(Polhem.Definition.DbScope scope, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.AccessGranted.get -> bool
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.AccessGranted.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.AdministratorSeedOutcome() -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.AdministratorSeedOutcome(bool UserCreated, bool CompanyCreated, bool AccessGranted) -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.CompanyCreated.get -> bool
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.CompanyCreated.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.Deconstruct(out bool UserCreated, out bool CompanyCreated, out bool AccessGranted) -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.Equals(Polhem.Repository.Abstractions.System.AdministratorSeedOutcome other) -> bool
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.UserCreated.get -> bool
+Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.UserCreated.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.AdministratorSeedRecord() -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyDatabaseId.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyDatabaseId.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyId.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyId.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyName.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.CompanyName.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.DefaultCurrency.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.DefaultCurrency.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.DeploymentAdmin.get -> bool
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.DeploymentAdmin.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.PasswordHash.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.PasswordHash.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.UserId.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.UserId.init -> void
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.UserName.get -> string!
+Polhem.Repository.Abstractions.System.AdministratorSeedRecord.UserName.init -> void
+Polhem.Repository.Abstractions.System.CompanyDatabase
+Polhem.Repository.Abstractions.System.CompanyDatabase.<Clone>$() -> Polhem.Repository.Abstractions.System.CompanyDatabase!
+Polhem.Repository.Abstractions.System.CompanyDatabase.CompanyDatabase(string! CompanyId, string! DatabaseId) -> void
+Polhem.Repository.Abstractions.System.CompanyDatabase.CompanyId.get -> string!
+Polhem.Repository.Abstractions.System.CompanyDatabase.CompanyId.init -> void
+Polhem.Repository.Abstractions.System.CompanyDatabase.DatabaseId.get -> string!
+Polhem.Repository.Abstractions.System.CompanyDatabase.DatabaseId.init -> void
+Polhem.Repository.Abstractions.System.CompanyDatabase.Deconstruct(out string! CompanyId, out string! DatabaseId) -> void
+Polhem.Repository.Abstractions.System.CompanyDatabase.Equals(Polhem.Repository.Abstractions.System.CompanyDatabase? other) -> bool
+Polhem.Repository.Abstractions.System.IAdministratorSeedRepository
+Polhem.Repository.Abstractions.System.IAdministratorSeedRepository.SeedAdministrator(Polhem.Repository.Abstractions.System.AdministratorSeedRecord! record) -> Polhem.Repository.Abstractions.System.AdministratorSeedOutcome
+Polhem.Repository.Abstractions.System.ICompanyRepository.GetCompanyDatabases(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Repository.Abstractions.System.CompanyDatabase!>!
+Polhem.Repository.Abstractions.System.ICompanyRowAssignmentRepository
+Polhem.Repository.Abstractions.System.ICompanyRowAssignmentRepository.AssignUnassignedRows(string! databaseId, string! tableName, string! companyId) -> void
+Polhem.Repository.Abstractions.System.ICompanyRowAssignmentRepository.CountUnassignedRows(string! databaseId, string! tableName, bool hasCompanyColumn) -> int
 *REMOVED*Polhem.Repository.Abstractions.System.IDepartmentRepository.GetDepartments(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
 Polhem.Repository.Abstractions.System.IDepartmentRepository.GetDepartments(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
 *REMOVED*Polhem.Repository.Abstractions.System.IEmployeeRepository.GetByUserRowId(string! databaseId, System.Guid userRowId) -> Polhem.Definition.Organization.EmployeeRow?
@@ -11,3 +55,13 @@ Polhem.Repository.Abstractions.System.IEmployeeRepository.GetByUserRowId(string!
 Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetRoleGrants(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.RoleGrantRow!>!
 *REMOVED*Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetUserRoles(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!
 Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetUserRoles(string! databaseId, string! companyId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!
+override Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.GetHashCode() -> int
+override Polhem.Repository.Abstractions.System.CompanyDatabase.Equals(object? obj) -> bool
+override Polhem.Repository.Abstractions.System.CompanyDatabase.GetHashCode() -> int
+override Polhem.Repository.Abstractions.System.CompanyDatabase.ToString() -> string!
+static Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.operator !=(Polhem.Repository.Abstractions.System.AdministratorSeedOutcome left, Polhem.Repository.Abstractions.System.AdministratorSeedOutcome right) -> bool
+static Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.operator ==(Polhem.Repository.Abstractions.System.AdministratorSeedOutcome left, Polhem.Repository.Abstractions.System.AdministratorSeedOutcome right) -> bool
+static Polhem.Repository.Abstractions.System.CompanyDatabase.operator !=(Polhem.Repository.Abstractions.System.CompanyDatabase? left, Polhem.Repository.Abstractions.System.CompanyDatabase? right) -> bool
+static Polhem.Repository.Abstractions.System.CompanyDatabase.operator ==(Polhem.Repository.Abstractions.System.CompanyDatabase? left, Polhem.Repository.Abstractions.System.CompanyDatabase? right) -> bool
+~override Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.Equals(object obj) -> bool
+~override Polhem.Repository.Abstractions.System.AdministratorSeedOutcome.ToString() -> string

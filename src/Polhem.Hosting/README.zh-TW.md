@@ -10,10 +10,13 @@
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 - 也可由沒有 ASP.NET Core 的宿主使用：在行程內執行後端的桌面 head、主控台、Worker Service 與整合測試。
 
-組合根本質上橫跨所有層，因此「API 層不得引用 Repository 層」這條約束不適用於此。適用的是：此套件目前**沒有
-自己的 SQL**，也應維持如此。它的 hosted service 都只是外殼 —— cache-notify 輪詢器透過 `ICacheNotifyReader`
-（`Polhem.Db`）讀取，預設的稽核 sink 透過 `IAuditLogWriteRepository`（`Polhem.Repository.Abstractions`，
-實作在 `Polhem.Repository`）寫入。語句的組裝與執行屬於那些層；在此新增 SQL 就是分層倒退。
+組合根本質上橫跨所有層，因此「API 層不得引用 Repository 層」這條約束不適用於此。適用的是：此套件**沒有
+自己的 SQL**。它的 hosted service 都只是外殼 —— cache-notify 輪詢器透過 `ICacheNotifyReader`（`Polhem.Db`）
+讀取，預設的稽核 sink 透過 `IAuditLogWriteRepository`（`Polhem.Repository.Abstractions`，實作在
+`Polhem.Repository`）寫入。`db` 指令背後的資料庫初始化，透過 `IAdministratorSeedRepository` 寫入第一位管理員，
+透過 `ICompanyRowAssignmentRepository` 把既有資料指派給公司。此套件若建構 `DbCommandSpec` 或 `DbBatchSpec`、
+經由 `DbAccess` 執行語句（`Execute*`、`Query*`、`Update*`），或建立、執行 ADO.NET 命令，
+`HostingHoldsNoSqlGateTests`（`tests/Polhem.Hosting.UnitTests`）會失敗。
 
 ## 目標框架
 
