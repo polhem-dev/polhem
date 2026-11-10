@@ -36,7 +36,7 @@ namespace Polhem.Hosting.UnitTests
             _access = new CacheDefineAccess(storage, paths, new CacheContainerService(storage, paths, $"init-company-{Guid.NewGuid():N}"), []);
             _connectionManager = new DbConnectionManagerService(new DefineAccessDatabaseSettingsProvider(_access));
             _dbAccessFactory = new DbAccessFactory(_connectionManager);
-            _initializer = new DatabaseInitializer(_access, _connectionManager, _dbAccessFactory);
+            _initializer = new DatabaseInitializer(_access, _connectionManager, TestRepositoryFactory.Create(_access, _connectionManager));
         }
 
         public void Dispose()

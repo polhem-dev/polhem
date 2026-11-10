@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
@@ -7,6 +6,7 @@ using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Polhem.Hosting.Database;
 using Polhem.ObjectCaching;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Hosting.UnitTests
 {
@@ -29,7 +29,7 @@ namespace Polhem.Hosting.UnitTests
             var storage = new FileDefineStorage(paths);
             _access = new CacheDefineAccess(storage, paths, new CacheContainerService(storage, paths, $"init-check-{Guid.NewGuid():N}"), []);
             _connectionManager = new DbConnectionManagerService(new DefineAccessDatabaseSettingsProvider(_access));
-            _initializer = new DatabaseInitializer(_access, _connectionManager, new DbAccessFactory(_connectionManager));
+            _initializer = new DatabaseInitializer(_access, _connectionManager, TestRepositoryFactory.Create(_access, _connectionManager));
         }
 
         public void Dispose()

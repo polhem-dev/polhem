@@ -1,10 +1,8 @@
-using Polhem.Core;
 using Polhem.Core.Security;
-using Polhem.Db;
-using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.Repository.Abstractions.System;
 using Polhem.Definition.Storage;
 
 namespace Polhem.Hosting.Database
@@ -38,35 +36,16 @@ namespace Polhem.Hosting.Database
             var companyId = CompanyInfo.NormalizeId(seed.CompanyId);
             var companyDatabaseId = ResolveCompanyDatabase(seed.CompanyDatabaseId);
 
-            var databaseId = DbCategoryIds.Common;
-            var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
-            var dbAccess = _dbAccessFactory.Create(databaseId);
-
-            var userRowId = FindRowId(dbAccess, databaseType, "st_user", seed.UserId);
-            var companyRowId = FindRowId(dbAccess, databaseType, "st_company", companyId);
-            bool userCreated = userRowId == Guid.Empty;
-            bool companyCreated = companyRowId == Guid.Empty;
-            if (userCreated) userRowId = Guid.NewGuid();
-            if (companyCreated) companyRowId = Guid.NewGuid();
-            bool accessGranted = userCreated || companyCreated
-                || !HasAccess(dbAccess, databaseType, userRowId, companyRowId);
-
-            var batch = new DbBatchSpec { UseTransaction = true };
-            if (userCreated)
-                batch.Commands.Add(InsertUser(databaseType, userRowId, seed, userName));
-            if (companyCreated)
-                batch.Commands.Add(InsertCompany(databaseType, companyRowId, seed, companyId, companyName, companyDatabaseId));
-            if (accessGranted)
-                batch.Commands.Add(InsertAccess(databaseType, userRowId, companyRowId));
-
-            if (batch.Commands.Count > 0)
-                dbAccess.ExecuteBatch(batch);
+            var outcome = _repositoryFactory.Create<IAdministratorSeedRepository>().SeedAdministrator(
+                new AdministratorSeedRecord(
+                    seed.UserId, userName, PasswordHasher.HashPassword(seed.Password), seed.DeploymentAdmin,
+                    companyId, companyName, companyDatabaseId, seed.DefaultCurrency));
 
             return new AdministratorSeedResult
             {
-                UserCreated = userCreated,
-                CompanyCreated = companyCreated,
-                AccessGranted = accessGranted,
+                UserCreated = outcome.UserCreated,
+                CompanyCreated = outcome.CompanyCreated,
+                AccessGranted = outcome.AccessGranted,
                 CompanyDatabaseId = companyDatabaseId,
             };
         }
@@ -150,60 +129,6 @@ namespace Polhem.Hosting.Database
                     $"Several database items belong to the '{DbCategoryIds.Company}' category " +
                     $"({string.Join(", ", companyDatabases)}); name the one this company uses.", nameof(requested)),
             };
-        }
-
-        private static Guid FindRowId(DbAccess dbAccess, DatabaseType databaseType, string table, string sysId)
-        {
-            var sql = $"SELECT {databaseType.QuoteIdentifier(SysFields.RowId)} FROM {databaseType.QuoteIdentifier(table)} " +
-                      $"WHERE {databaseType.QuoteIdentifier(SysFields.Id)} = {{0}}";
-            var scalar = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, sql, sysId)).Scalar;
-            return scalar is null || scalar is DBNull ? Guid.Empty : ValueUtilities.CGuid(scalar);
-        }
-
-        private static bool HasAccess(DbAccess dbAccess, DatabaseType databaseType, Guid userRowId, Guid companyRowId)
-        {
-            var sql = $"SELECT COUNT(*) FROM {databaseType.QuoteIdentifier("st_user_company")} " +
-                      $"WHERE {databaseType.QuoteIdentifier("user_rowid")} = {{0}} " +
-                      $"AND {databaseType.QuoteIdentifier("company_rowid")} = {{1}}";
-            var scalar = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, sql, userRowId, companyRowId)).Scalar;
-            return scalar is not null && ValueUtilities.CInt(scalar) > 0;
-        }
-
-        private static DbCommandSpec InsertUser(DatabaseType databaseType, Guid rowId, AdministratorSeed seed, string userName)
-        {
-            // time_zone and culture are left empty so the user follows the deployment defaults.
-            var sql = BuildInsert(databaseType, "st_user",
-                SysFields.RowId, SysFields.Id, SysFields.Name, "password", "email", "note", "time_zone", "culture", "deployment_admin");
-            return new DbCommandSpec(DbCommandKind.NonQuery, sql,
-                rowId, seed.UserId, userName, PasswordHasher.HashPassword(seed.Password),
-                string.Empty, string.Empty, string.Empty, string.Empty, seed.DeploymentAdmin);
-        }
-
-        private static DbCommandSpec InsertCompany(
-            DatabaseType databaseType, Guid rowId, AdministratorSeed seed, string companyId, string companyName,
-            string companyDatabaseId)
-        {
-            // The three XML columns are Text, which MySQL gives no default, so they are written
-            // explicitly as empty strings.
-            var sql = BuildInsert(databaseType, "st_company",
-                SysFields.RowId, SysFields.Id, SysFields.Name, "company_database_id", "customize_id",
-                "number_formats_xml", "default_currency", "cash_rounding_xml", "allowed_currencies_xml", "enabled");
-            return new DbCommandSpec(DbCommandKind.NonQuery, sql,
-                rowId, companyId, companyName, companyDatabaseId, string.Empty,
-                string.Empty, seed.DefaultCurrency, string.Empty, string.Empty, true);
-        }
-
-        private static DbCommandSpec InsertAccess(DatabaseType databaseType, Guid userRowId, Guid companyRowId)
-        {
-            var sql = BuildInsert(databaseType, "st_user_company", SysFields.RowId, "user_rowid", "company_rowid");
-            return new DbCommandSpec(DbCommandKind.NonQuery, sql, Guid.NewGuid(), userRowId, companyRowId);
-        }
-
-        private static string BuildInsert(DatabaseType databaseType, string table, params string[] columns)
-        {
-            var columnList = string.Join(", ", columns.Select(column => databaseType.QuoteIdentifier(column)));
-            var valueList = string.Join(", ", columns.Select((_, index) => $"{{{index}}}"));
-            return $"INSERT INTO {databaseType.QuoteIdentifier(table)} ({columnList}) VALUES ({valueList})";
         }
     }
 }

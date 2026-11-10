@@ -11,11 +11,13 @@
 - Also usable from hosts without ASP.NET Core: desktop heads that run the backend in-process, console, Worker Service and integration tests.
 
 A composition root reaches across every layer by definition, so the "API layer must not reference the
-Repository layer" constraint does not apply here. What does apply: this package currently holds **no SQL of
-its own**, and should stay that way. Its hosted services are shells — the cache-notify poller reads through
-`ICacheNotifyReader` (`Polhem.Db`) and the default audit sink writes through `IAuditLogWriteRepository`
-(`Polhem.Repository.Abstractions`, implemented in `Polhem.Repository`). Statement construction and
-execution belong to those layers; new SQL added here would be a layering regression.
+Repository layer" constraint does not apply here. What does apply: this package holds **no SQL of its own**.
+Its hosted services are shells — the cache-notify poller reads through `ICacheNotifyReader` (`Polhem.Db`) and
+the default audit sink writes through `IAuditLogWriteRepository` (`Polhem.Repository.Abstractions`, implemented
+in `Polhem.Repository`). The database initializer behind the `db` commands seeds the first administrator through
+`IAdministratorSeedRepository` and gives existing rows their company through `ICompanyRowAssignmentRepository`.
+`HostingHoldsNoSqlGateTests` (`tests/Polhem.Hosting.UnitTests`) fails when this package builds or runs a
+database command.
 
 ## Target Framework
 

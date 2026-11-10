@@ -1,12 +1,10 @@
 using System.Data.Common;
-using System.Globalization;
-using Polhem.Core;
-using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.Repository.Abstractions.System;
 
 namespace Polhem.Hosting.Database
 {
@@ -111,7 +109,7 @@ namespace Polhem.Hosting.Database
             List<CompanyRowAssignment> assignments, List<string> problems)
         {
             var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
-            var dbAccess = _dbAccessFactory.Create(databaseId);
+            var repository = _repositoryFactory.Create<ICompanyRowAssignmentRepository>();
             var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(databaseId, _connectionManager);
             foreach (var table in tables)
             {
@@ -124,7 +122,7 @@ namespace Polhem.Hosting.Database
                 if (!hasColumn && !dryRun) continue;
                 try
                 {
-                    var (assignment, problem) = AssignTable(databaseId, databaseType, dbAccess, table, hasColumn, companies, dryRun);
+                    var (assignment, problem) = AssignTable(repository, databaseId, table, hasColumn, companies, dryRun);
                     if (assignment is not null) assignments.Add(assignment);
                     if (problem is not null) problems.Add(problem);
                 }
@@ -140,18 +138,10 @@ namespace Polhem.Hosting.Database
         /// </summary>
         /// <returns>The rows given a company, or the problem that stopped it; both empty when there was nothing to do.</returns>
         private static (CompanyRowAssignment? Assignment, string? Problem) AssignTable(
-            string databaseId, DatabaseType databaseType, DbAccess dbAccess, string table, bool hasColumn,
+            ICompanyRowAssignmentRepository repository, string databaseId, string table, bool hasColumn,
             List<string> companies, bool dryRun)
         {
-            string quotedTable = databaseType.QuoteIdentifier(table);
-            string column = databaseType.QuoteIdentifier(SysFields.CompanyId);
-            // Oracle stores an empty string as NULL, so a row with no company is either.
-            string unassigned = $"{column} IS NULL OR {column} = ''";
-
-            string countSql = hasColumn
-                ? $"SELECT COUNT(*) FROM {quotedTable} WHERE {unassigned}"
-                : $"SELECT COUNT(*) FROM {quotedTable}";
-            int rows = Convert.ToInt32(dbAccess.ExecuteScalar(countSql), CultureInfo.InvariantCulture);
+            int rows = repository.CountUnassignedRows(databaseId, table, hasColumn);
             if (rows == 0) return (null, null);
 
             if (companies.Count > 1)
@@ -163,7 +153,7 @@ namespace Polhem.Hosting.Database
             }
 
             if (!dryRun)
-                dbAccess.ExecuteNonQuery($"UPDATE {quotedTable} SET {column} = {{0}} WHERE {unassigned}", companies[0]);
+                repository.AssignUnassignedRows(databaseId, table, companies[0]);
             return (new CompanyRowAssignment
             {
                 DatabaseId = databaseId,
@@ -192,12 +182,9 @@ namespace Polhem.Hosting.Database
                     var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(commonId, _connectionManager);
                     if (schemaProvider.GetTableSchema(CompanyTable) is null) continue;
 
-                    var table = _dbAccessFactory.Create(commonId).ExecuteDataTable(
-                        $"SELECT {databaseType.QuoteIdentifier(SysFields.Id)}, {databaseType.QuoteIdentifier("company_database_id")} " +
-                        $"FROM {databaseType.QuoteIdentifier(CompanyTable)}");
-                    if (table is null) continue;
-                    companies.AddRange(table.Rows.Cast<System.Data.DataRow>()
-                        .Select(row => (ValueUtilities.CStr(row[0]), ValueUtilities.CStr(row[1]))));
+                    companies.AddRange(_repositoryFactory.Create<ICompanyRepository>()
+                        .GetCompanyDatabases(commonId)
+                        .Select(company => (company.CompanyId, company.DatabaseId)));
                 }
                 catch (DbException)
                 {

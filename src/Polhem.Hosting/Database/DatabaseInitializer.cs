@@ -1,11 +1,11 @@
 using System.Data.Common;
-using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Db.Schema;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
+using Polhem.Repository.Abstractions.Factories;
 
 namespace Polhem.Hosting.Database
 {
@@ -17,20 +17,23 @@ namespace Polhem.Hosting.Database
     {
         private readonly IDefineAccess _defineAccess;
         private readonly IDbConnectionManager _connectionManager;
-        private readonly IDbAccessFactory _dbAccessFactory;
+        private readonly IRepositoryFactory _repositoryFactory;
 
         /// <summary>
         /// Initializes a new <see cref="DatabaseInitializer"/>.
         /// </summary>
         /// <param name="defineAccess">Definition access, for the settings and table schemas.</param>
         /// <param name="connectionManager">The connection manager.</param>
-        /// <param name="dbAccessFactory">Creates the data access used to seed the administrator.</param>
+        /// <param name="repositoryFactory">
+        /// Creates the repositories that seed the administrator and give existing rows their company. This class
+        /// writes no SQL of its own; <c>HostingHoldsNoSqlGateTests</c> enforces it.
+        /// </param>
         public DatabaseInitializer(
-            IDefineAccess defineAccess, IDbConnectionManager connectionManager, IDbAccessFactory dbAccessFactory)
+            IDefineAccess defineAccess, IDbConnectionManager connectionManager, IRepositoryFactory repositoryFactory)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
-            _dbAccessFactory = dbAccessFactory ?? throw new ArgumentNullException(nameof(dbAccessFactory));
+            _repositoryFactory = repositoryFactory ?? throw new ArgumentNullException(nameof(repositoryFactory));
         }
 
         /// <inheritdoc/>

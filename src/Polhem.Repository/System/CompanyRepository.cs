@@ -82,5 +82,18 @@ namespace Polhem.Repository.System
                 AllowedCurrencies = allowedCurrencies
             };
         }
+
+        /// <inheritdoc/>
+        public IReadOnlyList<CompanyDatabase> GetCompanyDatabases(string databaseId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+
+            var dbType = Context.ConnectionManager.GetConnectionInfo(databaseId).DatabaseType;
+            string sql = $"SELECT {dbType.QuoteIdentifier(SysFields.Id)}, {dbType.QuoteIdentifier("company_database_id")} " +
+                         $"FROM {dbType.QuoteIdentifier("st_company")}";
+            var table = CreateDbAccess(databaseId).Execute(new DbCommandSpec(DbCommandKind.DataTable, sql)).Table!;
+            return [.. table.Rows.Cast<global::System.Data.DataRow>()
+                .Select(row => new CompanyDatabase(ValueUtilities.CStr(row[0]), ValueUtilities.CStr(row[1])))];
+        }
     }
 }
