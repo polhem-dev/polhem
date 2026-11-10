@@ -115,6 +115,7 @@
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>Properties…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>Edit the selected node's properties in a dialog</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>Properties — {0}</value></data>
+  <data name="Preview_Show" xml:space="preserve"><value>Show</value></data>
   <data name="Preview_ViewMode" xml:space="preserve"><value>View mode</value></data>
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>Phone width</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>Field names</value></data>

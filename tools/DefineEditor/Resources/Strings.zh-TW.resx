@@ -102,6 +102,7 @@
   <data name="FormLayout_EditProperties" xml:space="preserve"><value>屬性設定…</value></data>
   <data name="FormLayout_EditPropertiesTooltip" xml:space="preserve"><value>在對話框中編輯所選節點的屬性</value></data>
   <data name="NodePropertiesDialog_Title" xml:space="preserve"><value>屬性設定 — {0}</value></data>
+  <data name="Preview_Show" xml:space="preserve"><value>顯示</value></data>
   <data name="Preview_ViewMode" xml:space="preserve"><value>檢視模式</value></data>
   <data name="Preview_PhoneWidth" xml:space="preserve"><value>手機寬度</value></data>
   <data name="Preview_FieldNames" xml:space="preserve"><value>欄位名稱</value></data>
