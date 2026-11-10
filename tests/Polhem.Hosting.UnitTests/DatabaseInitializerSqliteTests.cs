@@ -29,7 +29,7 @@ namespace Polhem.Hosting.UnitTests
             var storage = new FileDefineStorage(paths);
             _access = new CacheDefineAccess(storage, paths, new CacheContainerService(storage, paths, $"init-sqlite-{Guid.NewGuid():N}"), []);
             _connectionManager = new DbConnectionManagerService(new DefineAccessDatabaseSettingsProvider(_access));
-            _initializer = new DatabaseInitializer(_access, _connectionManager, TestRepositoryFactory.Create(_access, _connectionManager));
+            _initializer = new DatabaseInitializer(_access, _connectionManager, () => TestRepositoryFactory.Create(_access, _connectionManager));
         }
 
         public void Dispose()

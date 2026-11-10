@@ -109,7 +109,7 @@ namespace Polhem.Hosting.Database
             List<CompanyRowAssignment> assignments, List<string> problems)
         {
             var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
-            var repository = _repositoryFactory.Create<ICompanyRowAssignmentRepository>();
+            var repository = _repositoryFactory.Value.Create<ICompanyRowAssignmentRepository>();
             var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(databaseId, _connectionManager);
             foreach (var table in tables)
             {
@@ -182,7 +182,7 @@ namespace Polhem.Hosting.Database
                     var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(commonId, _connectionManager);
                     if (schemaProvider.GetTableSchema(CompanyTable) is null) continue;
 
-                    companies.AddRange(_repositoryFactory.Create<ICompanyRepository>()
+                    companies.AddRange(_repositoryFactory.Value.Create<ICompanyRepository>()
                         .GetCompanyDatabases(commonId)
                         .Select(company => (company.CompanyId, company.DatabaseId)));
                 }

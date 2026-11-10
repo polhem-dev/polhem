@@ -17,7 +17,7 @@ namespace Polhem.Hosting.Database
     {
         private readonly IDefineAccess _defineAccess;
         private readonly IDbConnectionManager _connectionManager;
-        private readonly IRepositoryFactory _repositoryFactory;
+        private readonly Lazy<IRepositoryFactory> _repositoryFactory;
 
         /// <summary>
         /// Initializes a new <see cref="DatabaseInitializer"/>.
@@ -25,15 +25,17 @@ namespace Polhem.Hosting.Database
         /// <param name="defineAccess">Definition access, for the settings and table schemas.</param>
         /// <param name="connectionManager">The connection manager.</param>
         /// <param name="repositoryFactory">
-        /// Creates the repositories that seed the administrator and give existing rows their company. This class
-        /// writes no SQL of its own; <c>HostingHoldsNoSqlGateTests</c> enforces it.
+        /// Returns the factory that creates the repositories that seed the administrator and give existing rows their
+        /// company; called the first time one is needed, so <c>db create</c> and <c>db check</c> do not depend on it.
+        /// This class builds no SQL of its own; <c>HostingHoldsNoSqlGateTests</c> enforces it.
         /// </param>
         public DatabaseInitializer(
-            IDefineAccess defineAccess, IDbConnectionManager connectionManager, IRepositoryFactory repositoryFactory)
+            IDefineAccess defineAccess, IDbConnectionManager connectionManager, Func<IRepositoryFactory> repositoryFactory)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
-            _repositoryFactory = repositoryFactory ?? throw new ArgumentNullException(nameof(repositoryFactory));
+            ArgumentNullException.ThrowIfNull(repositoryFactory);
+            _repositoryFactory = new Lazy<IRepositoryFactory>(repositoryFactory);
         }
 
         /// <inheritdoc/>

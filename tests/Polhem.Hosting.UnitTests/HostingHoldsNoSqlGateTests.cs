@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Data.Common;
 using System.Reflection;
 using Polhem.Db;
 using Polhem.Tests.Shared;
@@ -17,13 +18,22 @@ namespace Polhem.Hosting.UnitTests
     /// </remarks>
     public class HostingHoldsNoSqlGateTests
     {
+        // What counts as running SQL: building a framework command, running one through DbAccess (Execute*, Query*,
+        // Update*), or going around DbAccess to ADO.NET (a command created from a connection, or run directly).
+        private static readonly string[] s_dbAccessVerbs = ["Execute", "Query", "Update"];
+
         private static bool RunsSql(MemberInfo member)
             => member switch
             {
                 ConstructorInfo constructor
-                    => constructor.DeclaringType == typeof(DbCommandSpec) || constructor.DeclaringType == typeof(DbBatchSpec),
-                MethodInfo method
-                    => method.DeclaringType == typeof(DbAccess) && method.Name.StartsWith("Execute", StringComparison.Ordinal),
+                    => constructor.DeclaringType == typeof(DbCommandSpec) || constructor.DeclaringType == typeof(DbBatchSpec)
+                       || typeof(DbCommand).IsAssignableFrom(constructor.DeclaringType),
+                MethodInfo method when method.DeclaringType == typeof(DbAccess)
+                    => s_dbAccessVerbs.Any(verb => method.Name.StartsWith(verb, StringComparison.Ordinal)),
+                MethodInfo method when typeof(DbConnection).IsAssignableFrom(method.DeclaringType)
+                    => method.Name is nameof(DbConnection.CreateCommand),
+                MethodInfo method when typeof(DbCommand).IsAssignableFrom(method.DeclaringType)
+                    => method.Name.StartsWith("Execute", StringComparison.Ordinal),
                 _ => false,
             };
 

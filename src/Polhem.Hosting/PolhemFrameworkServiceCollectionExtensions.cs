@@ -171,7 +171,7 @@ namespace Polhem.Hosting
             services.AddSingleton<Database.IDatabaseInitializer>(sp => new Database.DatabaseInitializer(
                 sp.GetRequiredService<IDefineAccess>(),
                 sp.GetRequiredService<IDbConnectionManager>(),
-                sp.GetRequiredService<IRepositoryFactory>()));
+                () => sp.GetRequiredService<IRepositoryFactory>()));
 
             // 6b. Cache-notify bump primitive — stateless; builds dialect SQL per call and runs
             //     it on the caller's transaction. No consumer wired yet (poller / business

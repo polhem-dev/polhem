@@ -123,6 +123,11 @@ namespace Polhem.Hosting.Database
             {
                 return WriteFailure(output, ex);
             }
+            catch (NotSupportedException ex)
+            {
+                // A repository factory of the host's own that cannot create a framework repository the commands use.
+                return WriteFailure(output, ex);
+            }
         }
 
         private static int WriteFailure(TextWriter output, Exception exception)

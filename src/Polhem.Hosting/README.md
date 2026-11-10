@@ -16,8 +16,9 @@ Its hosted services are shells — the cache-notify poller reads through `ICache
 the default audit sink writes through `IAuditLogWriteRepository` (`Polhem.Repository.Abstractions`, implemented
 in `Polhem.Repository`). The database initializer behind the `db` commands seeds the first administrator through
 `IAdministratorSeedRepository` and gives existing rows their company through `ICompanyRowAssignmentRepository`.
-`HostingHoldsNoSqlGateTests` (`tests/Polhem.Hosting.UnitTests`) fails when this package builds or runs a
-database command.
+`HostingHoldsNoSqlGateTests` (`tests/Polhem.Hosting.UnitTests`) fails when this package builds a `DbCommandSpec`
+or `DbBatchSpec`, runs a statement through `DbAccess` (`Execute*`, `Query*`, `Update*`), or creates or runs an
+ADO.NET command.
 
 ## Target Framework
 

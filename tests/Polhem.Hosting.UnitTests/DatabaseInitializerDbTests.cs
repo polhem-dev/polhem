@@ -78,7 +78,7 @@ namespace Polhem.Hosting.UnitTests
                 access.SaveDatabaseSettings(BuildSettings(databaseType, template, definePath, databaseNames));
 
                 using var connectionManager = new DbConnectionManagerService(new DefineAccessDatabaseSettingsProvider(access));
-                var initializer = new DatabaseInitializer(access, connectionManager, TestRepositoryFactory.Create(access, connectionManager));
+                var initializer = new DatabaseInitializer(access, connectionManager, () => TestRepositoryFactory.Create(access, connectionManager));
 
                 AssertCreate(databaseType, initializer);
                 AssertUpgrade(databaseType, initializer);

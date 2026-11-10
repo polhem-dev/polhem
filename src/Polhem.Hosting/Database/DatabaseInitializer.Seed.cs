@@ -36,10 +36,18 @@ namespace Polhem.Hosting.Database
             var companyId = CompanyInfo.NormalizeId(seed.CompanyId);
             var companyDatabaseId = ResolveCompanyDatabase(seed.CompanyDatabaseId);
 
-            var outcome = _repositoryFactory.Create<IAdministratorSeedRepository>().SeedAdministrator(
-                new AdministratorSeedRecord(
-                    seed.UserId, userName, PasswordHasher.HashPassword(seed.Password), seed.DeploymentAdmin,
-                    companyId, companyName, companyDatabaseId, seed.DefaultCurrency));
+            var outcome = _repositoryFactory.Value.Create<IAdministratorSeedRepository>().SeedAdministrator(
+                new AdministratorSeedRecord
+                {
+                    UserId = seed.UserId,
+                    UserName = userName,
+                    PasswordHash = PasswordHasher.HashPassword(seed.Password),
+                    DeploymentAdmin = seed.DeploymentAdmin,
+                    CompanyId = companyId,
+                    CompanyName = companyName,
+                    CompanyDatabaseId = companyDatabaseId,
+                    DefaultCurrency = seed.DefaultCurrency,
+                });
 
             return new AdministratorSeedResult
             {
