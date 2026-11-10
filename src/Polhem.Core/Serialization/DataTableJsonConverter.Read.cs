@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Polhem.Core.Data;
 
@@ -91,6 +92,7 @@ namespace Polhem.Core.Serialization
                     reader.Read();
                     ReadColumnField(ref reader, col, key);
                 }
+                col.DefaultValue = ResolveDefaultValue(col);
                 list.Add(col);
             }
             return list;
@@ -106,8 +108,28 @@ namespace Polhem.Core.Serialization
                 case "readOnly": col.ReadOnly = reader.GetBoolean(); break;
                 case "maxLength": col.MaxLength = reader.GetInt32(); break;
                 case "caption": col.Caption = reader.GetString() ?? string.Empty; break;
-                case "defaultValue": col.DefaultValue = reader.TokenType == JsonTokenType.Null ? null : ReadPrimitiveValue(ref reader); break;
+                // Kept raw: `type` may come after it, and the value can only be read back against the column's type.
+                case "defaultValue": col.RawDefaultValue = reader.TokenType == JsonTokenType.Null ? null : JsonElement.ParseValue(ref reader); break;
             }
+        }
+
+        /// <summary>
+        /// Reads a column's <c>defaultValue</c> back against the column's own type, the way a cell of that column is read.
+        /// </summary>
+        /// <remarks>
+        /// The writer emits the default through the same path as a cell, so a <c>byte[]</c> default is base64, a decimal
+        /// one is quoted, and a date one is ISO-8601. Read without the column's type, an empty <c>byte[]</c> came back as
+        /// the string <c>""</c>, which a <c>byte[]</c> column rejects, so no table with a Binary column read back.
+        /// </remarks>
+        private static object? ResolveDefaultValue(ColumnDef col)
+        {
+            if (col.RawDefaultValue is not { } raw) return null;
+
+            var targetType = DbTypeConverter.ToType(col.FieldType);
+            var valueReader = new Utf8JsonReader(Encoding.UTF8.GetBytes(raw.GetRawText()));
+            valueReader.Read();
+            var value = ReadPrimitiveValue(ref valueReader, targetType);
+            return value is null ? null : ConvertValue(value, targetType);
         }
 
         /// <summary>
@@ -219,10 +241,7 @@ namespace Polhem.Core.Serialization
         /// Reads a primitive JSON value from the reader and returns it as a .NET object.
         /// </summary>
         /// <param name="reader">The JSON reader positioned on the value.</param>
-        /// <param name="targetType">
-        /// The CLR type of the destination column when known; <c>null</c> for contexts with no
-        /// column (such as a column's own <c>defaultValue</c>).
-        /// </param>
+        /// <param name="targetType">The CLR type of the destination column when known.</param>
         private static object? ReadPrimitiveValue(ref Utf8JsonReader reader, Type? targetType = null)
         {
             switch (reader.TokenType)

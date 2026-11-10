@@ -4,6 +4,7 @@ using System.Data;
 using System.Globalization;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.Transformers;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -174,12 +175,22 @@ namespace Polhem.Api.Core.UnitTests
             return values.GetValue(0)!;
         }
 
+        // One column per field type, built by `AddColumn` as the framework builds its own tables, so each column
+        // carries the default value and the DataType the server sends. A Binary column's empty `byte[]` default
+        // once failed the JSON read of every table that had one, and the earlier two-column sample did not have one.
         private static DataTable SampleTable()
         {
             var table = new DataTable("t");
-            table.Columns.Add("code", typeof(string));
-            table.Columns.Add("amount", typeof(decimal));
-            table.Rows.Add("c1", 12.5m);
+            foreach (var dbType in Enum.GetValues<FieldDbType>().Where(t => t != FieldDbType.Unknown))
+                table.AddColumn(dbType.ToString().ToLowerInvariant(), dbType);
+
+            var row = table.NewRow();
+            foreach (DataColumn column in table.Columns)
+            {
+                if (!column.AutoIncrement)
+                    row[column] = Sample(column.DataType, MaxDepth)!;
+            }
+            table.Rows.Add(row);
             table.AcceptChanges();
             return table;
         }
@@ -270,6 +281,16 @@ namespace Polhem.Api.Core.UnitTests
             {
                 differences.Add($"{path}: expected {expected.Rows.Count} rows of {expected.Columns.Count} columns, got {actual.Rows.Count} of {actual.Columns.Count}");
                 return;
+            }
+            foreach (DataColumn column in expected.Columns)
+            {
+                var actualColumn = actual.Columns[column.ColumnName];
+                if (actualColumn is null || actualColumn.DataType != column.DataType)
+                {
+                    differences.Add($"{path}.{column.ColumnName}: expected a {column.DataType.Name} column, got {actualColumn?.DataType.Name ?? "none"}");
+                    continue;
+                }
+                Compare(column.DefaultValue, actualColumn.DefaultValue, $"{path}.{column.ColumnName}.DefaultValue", differences);
             }
             for (var r = 0; r < expected.Rows.Count; r++)
             {

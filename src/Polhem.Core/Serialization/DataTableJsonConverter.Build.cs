@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.Json;
 using Polhem.Core.Data;
 
 namespace Polhem.Core.Serialization
@@ -113,6 +114,7 @@ namespace Polhem.Core.Serialization
             public bool ReadOnly { get; set; }
             public int MaxLength { get; set; } = -1;
             public string Caption { get; set; } = string.Empty;
+            public JsonElement? RawDefaultValue { get; set; }
             public object? DefaultValue { get; set; }
         }
 

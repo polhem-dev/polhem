@@ -137,10 +137,8 @@ namespace Polhem.Core.Serialization
         /// in `wire-fixtures/bodies/` writing the same type two different ways.
         /// </para>
         /// <para>
-        /// A column's `defaultValue` shares this path for consistency. In practice it is never one of
-        /// the quoted types: `FieldDbTypeExtensions.GetDefaultValue` yields `0` (an <see cref="int"/>)
-        /// for the numeric field types, so the reader — which has no column context there — is not
-        /// asked to parse a quoted number back.
+        /// A column's `defaultValue` shares this path, and the reader reads it back against the
+        /// column's type the way it reads a cell, once the column's whole definition is in.
         /// </para>
         /// </remarks>
         private static void WriteCellValue(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)

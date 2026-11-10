@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Text.Json;
+using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 
 namespace Polhem.Core.UnitTests.Serialization
@@ -170,6 +171,61 @@ namespace Polhem.Core.UnitTests.Serialization
             // Swallowing it here would turn a broken payload into a normal-looking 0.
             var ex = Record.Exception(() => JsonSerializer.Deserialize<DataTable>(json, s_options));
             Assert.IsType<ArgumentException>(ex);
+        }
+
+        public static TheoryData<FieldDbType> FieldDbTypes()
+        {
+            var data = new TheoryData<FieldDbType>();
+            // `Unknown` names no column type; `AddColumn` rejects it.
+            foreach (var dbType in Enum.GetValues<FieldDbType>().Where(t => t != FieldDbType.Unknown))
+                data.Add(dbType);
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(FieldDbTypes))]
+        [DisplayName("A column built by AddColumn reads back with its default value and a row that takes it")]
+        public void AddColumn_EveryFieldDbType_RoundTripsWithDefault(FieldDbType dbType)
+        {
+            var table = new DataTable("T");
+            var column = table.AddColumn("value", dbType);
+            table.Rows.Add(table.NewRow());
+
+            var restored = RoundTrip(table);
+
+            // A Binary column's default is an empty `byte[]`. It was read back as the string "", which a
+            // `byte[]` column rejects, so a table with a Binary column did not read back at all.
+            var restoredColumn = restored.Columns["value"]!;
+            Assert.Equal(column.DataType, restoredColumn.DataType);
+            Assert.Equal(column.DefaultValue, restoredColumn.DefaultValue);
+            Assert.Equal(table.Rows[0]["value"], restored.Rows[0]["value"]);
+        }
+
+        [Fact]
+        [DisplayName("A default value written before the column's type is still read against that type")]
+        public void DefaultValue_BeforeType_IsReadAgainstColumnType()
+        {
+            // The JSON object's member order is not guaranteed; a client in another language may write the
+            // default first.
+            const string json = """
+                {
+                  "tableName": "T",
+                  "columns": [
+                    { "defaultValue": "", "name": "photo", "type": "Binary", "allowNull": true },
+                    { "defaultValue": "12345678901234.567", "name": "amount", "type": "Decimal", "allowNull": true },
+                    { "defaultValue": "2026-07-28", "name": "note", "type": "String", "allowNull": true }
+                  ],
+                  "primaryKeys": [],
+                  "rows": []
+                }
+                """;
+
+            var restored = JsonSerializer.Deserialize<DataTable>(json, s_options)!;
+
+            Assert.Equal(Array.Empty<byte>(), Assert.IsType<byte[]>(restored.Columns["photo"]!.DefaultValue));
+            Assert.Equal(12345678901234.567m, Assert.IsType<decimal>(restored.Columns["amount"]!.DefaultValue));
+            // Read without the column's type, the text was taken for a date and came back as "07/28/2026 00:00:00".
+            Assert.Equal("2026-07-28", restored.Columns["note"]!.DefaultValue);
         }
 }
 }
