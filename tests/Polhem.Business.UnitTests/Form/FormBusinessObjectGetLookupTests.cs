@@ -193,7 +193,7 @@ namespace Polhem.Business.UnitTests.Form
                 var defineAccess = fx.GetRequiredService<IDefineAccess>();
                 EmployeeSchema = defineAccess.GetFormSchema("Employee");
 
-                _repository = new DataFormRepository(TestRepositoryContext.Create(fx.GetRequiredService<IDbConnectionManager>(), defineAccess: defineAccess, dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>()), ProgId, EmployeeSchema, databaseId);
+                _repository = new DataFormRepository(TestRepositoryContext.Create(fx.GetRequiredService<IDbConnectionManager>(), defineAccess: defineAccess, dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>()), ProgId, EmployeeSchema, databaseId, SharedDatabaseState.SeedCompanyId);
             }
 
             public DatabaseType DbType { get; }

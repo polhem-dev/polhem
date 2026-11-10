@@ -238,9 +238,10 @@ namespace Polhem.Api.Server.UnitTests.Form
         private static void Insert(TransientForm form, string progId, string sysId, int qty, decimal amount)
         {
             form.DbAccess.ExecuteNonQuery(
-                $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.Id)}, {form.Quote(Qty)}, {form.Quote(Amount)}) " +
-                "VALUES ({0}, {1}, {2}, {3})",
-                Guid.NewGuid(), sysId, qty, amount);
+                $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.Id)}, {form.Quote(Qty)}, {form.Quote(Amount)}, " +
+                $"{form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4})",
+                Guid.NewGuid(), sysId, qty, amount, TransientForm.CompanyId);
         }
 
         private sealed class FormRepositoryFactory(IDataFormRepository repository) : IRepositoryFactory

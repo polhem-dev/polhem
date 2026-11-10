@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Polhem.Db;
 using Polhem.Definition;
+using Polhem.Definition.Identity;
 
 namespace Polhem.Repository
 {
@@ -38,11 +40,13 @@ namespace Polhem.Repository
         /// <exception cref="Polhem.Core.Exceptions.AuthenticationRequiredException">Thrown when the scope is company-bound and the session is missing or expired.</exception>
         /// <exception cref="Polhem.Core.Exceptions.UserMessageException">Thrown when the scope is company-bound and the session's company is unavailable.</exception>
         /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">Thrown when the scope is company-bound and the session has not entered a company.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the scope is company-bound and no <see cref="ISessionInfoService"/> is registered.</exception>
         /// <remarks>
         /// The resolution is eager so a bad route fails while the repository is being built, before
         /// any data has been touched — the timing the form factory already had. Scope is a
         /// constructor parameter rather than an overridable property so nothing virtual is called
-        /// during construction.
+        /// during construction. A company-bound repository also takes <see cref="CompanyId"/> from
+        /// the session here, the same session the router read the company database from.
         /// </remarks>
         protected RepositoryBase(IRepositoryContext ctx, Guid accessToken, string progId, DbScope? scope)
         {
@@ -51,6 +55,7 @@ namespace Polhem.Repository
             ProgId = progId ?? string.Empty;
             Scope = scope;
             DatabaseId = scope is { } value ? ctx.Router.Resolve(value, accessToken) : string.Empty;
+            CompanyId = scope == DbScope.Company ? ResolveSessionCompanyId(ctx, accessToken) : string.Empty;
         }
 
         /// <summary>
@@ -74,6 +79,26 @@ namespace Polhem.Repository
             ProgId = progId ?? string.Empty;
             Scope = null;
             DatabaseId = databaseId;
+            CompanyId = string.Empty;
+        }
+
+        /// <summary>
+        /// Initializes a new <see cref="RepositoryBase"/> bound to an explicit database and company,
+        /// skipping the router and the session.
+        /// </summary>
+        /// <param name="ctx">The shared construction context.</param>
+        /// <param name="progId">The program identifier; empty for the framework axis.</param>
+        /// <param name="databaseId">The database this repository reads and writes.</param>
+        /// <param name="companyId">The company whose rows this repository reads and writes.</param>
+        /// <remarks>
+        /// For callers that already know the target database and company and have no session to
+        /// read them from, such as a cache loading one company's data.
+        /// </remarks>
+        protected RepositoryBase(IRepositoryContext ctx, string progId, string databaseId, string companyId)
+            : this(ctx, progId, databaseId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
+            CompanyId = CompanyInfo.NormalizeId(companyId);
         }
 
         /// <summary>Gets the shared construction context.</summary>
@@ -96,6 +121,29 @@ namespace Polhem.Repository
         /// <c>null</c> and the caller supplies one per method.
         /// </summary>
         protected string DatabaseId { get; }
+
+        /// <summary>
+        /// Gets the company this repository is bound to, in its stored (lowercase) form, or an empty
+        /// string when it is bound to none.
+        /// </summary>
+        /// <remarks>
+        /// Set for a company-bound <see cref="Scope"/> from the session, or by the constructor that
+        /// names a company. It is the value company rows are filtered on and stamped with
+        /// (<see cref="SysFields.CompanyId"/>).
+        /// </remarks>
+        protected string CompanyId { get; }
+
+        private static string ResolveSessionCompanyId(IRepositoryContext ctx, Guid accessToken)
+        {
+            var sessionService = ctx.Services.GetService<ISessionInfoService>()
+                ?? throw new InvalidOperationException(
+                    $"A company-bound repository needs an {nameof(ISessionInfoService)} to read the session's company.");
+            // The router has already refused a missing session and one without a company, so both
+            // are present here unless the session ended in between; an empty id then binds nothing
+            // and the company-bound repositories refuse to run.
+            var companyId = sessionService.Get(accessToken)?.CompanyId;
+            return string.IsNullOrEmpty(companyId) ? string.Empty : CompanyInfo.NormalizeId(companyId);
+        }
 
         /// <summary>
         /// Creates a <see cref="DbAccess"/> against this repository's resolved database.

@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: db5ae8293158d646712f95b9afb1889d474ffeea -->
+<!-- source: en/reference/terminology.md blob: 7cb35f27fa523fdf5c120c72d290c3e022076cd1 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -290,7 +290,7 @@
 | `sys_no` | 流水號 | 資料列的自動遞增流水號，由資料庫產生；是產生出的 TableSchema 的主鍵 |
 | `sys_rowid` | 唯一識別碼 | 資料列的全域唯一識別碼（GUID），新資料列初始化時填入（`FormRowDefaults`） |
 | `sys_master_rowid` | 主檔外鍵 | 主檔資料列的 `sys_rowid`（明細表使用），新明細列初始化時填入 |
-| `sys_company_id` | 公司代號 | 資料列所屬公司的公司代號，會加到 `company` 表單定義的每一張表。表單存檔不會寫入此欄，新資料列取欄位預設值 |
+| `sys_company_id` | 公司代號 | 資料列所屬公司的公司代號，會加到 `company` 表單定義的每一張表。表單存檔會寫入 session 所在的公司，表單的讀取、更新與刪除只會碰到該公司的資料列 |
 | `sys_insert_time` | 建立時間 | 資料列的建立時間戳記，存檔時由伺服器蓋上 |
 | `sys_update_time` | 更新時間 | 資料列的最後更新時間戳記，存檔時由伺服器蓋上 |
 | `sys_valid_date` | 生效日期 | 資料列的生效起始日期。只是命名慣例：框架既不填入也不以它過濾 |

@@ -3,6 +3,7 @@ using Polhem.Db.CacheNotify;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Storage;
 using Polhem.Repository;
 using Polhem.Repository.Abstractions;
@@ -67,6 +68,29 @@ namespace Polhem.Tests.Shared
         /// Gets an <see cref="IServiceProvider"/> that resolves nothing, for tests that only need to satisfy a signature.
         /// </summary>
         public static IServiceProvider CreateServices() => EmptyServiceProvider.Instance;
+
+        /// <summary>
+        /// Returns a service provider whose only service is an <see cref="ISessionInfoService"/> that
+        /// answers every access token with a session in <paramref name="companyId"/>, which is what a
+        /// company-bound repository reads its company from.
+        /// </summary>
+        /// <param name="companyId">The company every session has entered.</param>
+        public static IServiceProvider CreateServices(string companyId) => new CompanySessionProvider(companyId);
+
+        private sealed class CompanySessionProvider(string companyId) : IServiceProvider, ISessionInfoService
+        {
+            public object? GetService(Type serviceType) => serviceType == typeof(ISessionInfoService) ? this : null;
+
+            public SessionInfo Get(Guid accessToken) => new()
+            {
+                AccessToken = accessToken,
+                CompanyScope = new SessionCompanyScope(companyId, string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty),
+            };
+
+            public void Set(SessionInfo sessionInfo) => throw new NotSupportedException();
+
+            public void Remove(Guid accessToken) => throw new NotSupportedException();
+        }
 
         /// <summary>
         /// Default router: Common and Log return fixed database ids like the production

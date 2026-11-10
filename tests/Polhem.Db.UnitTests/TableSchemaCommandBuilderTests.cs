@@ -160,6 +160,66 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("A pinned field is inserted from its own fixed parameter, not from the row")]
+        public void BuildInsertCommand_PinnedField_UsesFixedValue()
+        {
+            var builder = new TableSchemaCommandBuilder(DatabaseType.SQLServer, BuildCompanySchema())
+                .PinField(SysFields.CompanyId, "c001");
+
+            var command = builder.BuildInsertCommand();
+
+            var parameter = command.Parameters.Single(p => p.Name == SysFields.CompanyId);
+            Assert.Equal("c001", parameter.Value);
+            Assert.Equal(string.Empty, parameter.SourceColumn);
+            Assert.Contains("[sys_company_id]", command.CommandText, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("An UPDATE leaves a pinned field out of SET and only touches rows that hold its value")]
+        public void BuildUpdateCommand_PinnedField_NotSetAndRequired()
+        {
+            var builder = new TableSchemaCommandBuilder(DatabaseType.SQLServer, BuildCompanySchema())
+                .PinField(SysFields.CompanyId, "c001");
+
+            var command = builder.BuildUpdateCommand();
+
+            Assert.DoesNotContain("[sys_company_id]=@sys_company_id,", command.CommandText, StringComparison.Ordinal);
+            Assert.Contains("And [sys_company_id]=@sys_company_id", command.CommandText, StringComparison.Ordinal);
+            var parameter = Assert.Single(command.Parameters, p => p.Name == SysFields.CompanyId);
+            Assert.Equal("c001", parameter.Value);
+            Assert.Equal(string.Empty, parameter.SourceColumn);
+        }
+
+        [Fact]
+        [DisplayName("A DELETE only touches rows that hold the pinned field's value")]
+        public void BuildDeleteCommand_PinnedField_Required()
+        {
+            var builder = new TableSchemaCommandBuilder(DatabaseType.SQLServer, BuildCompanySchema())
+                .PinField(SysFields.CompanyId, "c001");
+
+            var command = builder.BuildDeleteCommand();
+
+            Assert.Contains("And [sys_company_id]=@sys_company_id", command.CommandText, StringComparison.Ordinal);
+            Assert.Equal("c001", command.Parameters.Single(p => p.Name == SysFields.CompanyId).Value);
+        }
+
+        [Fact]
+        [DisplayName("PinField throws for a field the table schema does not have")]
+        public void PinField_UnknownField_Throws()
+        {
+            var builder = new TableSchemaCommandBuilder(DatabaseType.SQLServer, BuildSampleSchema());
+
+            Assert.Throws<InvalidOperationException>(() => builder.PinField(SysFields.CompanyId, "c001"));
+        }
+
+        private static TableSchema BuildCompanySchema()
+        {
+            var schema = BuildSampleSchema();
+            schema.Fields!.Add(SysFields.CompanyId, "Company", FieldDbType.String, 10);
+            return schema;
+        }
+
+        [Fact]
         [DisplayName("BuildUpdateSpec throws ArgumentNullException for a null DataTable")]
         public void BuildUpdateSpec_NullDataTable_Throws()
         {

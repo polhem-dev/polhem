@@ -100,6 +100,31 @@ namespace Polhem.Db.UnitTests.Dml
             Assert.Equal("Category", join.RightTable);
         }
 
+        [Theory]
+        [InlineData(DbCategoryIds.Company, DbCategoryIds.Company, true)]
+        [InlineData(DbCategoryIds.Company, DbCategoryIds.Common, false)]
+        [InlineData(DbCategoryIds.Common, DbCategoryIds.Company, false)]
+        [DisplayName("Build matches the company on a join only when both the main and the related form are company forms")]
+        public void Build_CompanyForms_MatchCompanyOnJoin(string mainCategory, string relatedCategory, bool expected)
+        {
+            var mainSchema = new FormSchema("Order", "Order") { CategoryId = mainCategory };
+            var table = NewMainTable();
+            mainSchema.Tables!.Add(table);
+            var fk = AddForeignKey(table, "category_rowid", "Category");
+            fk.RelationFieldMappings!.Add("sys_id", "ref_category_id");
+
+            var used = new HashSet<string> { "ref_category_id" };
+            var define = new StubDefineAccess(_ =>
+            {
+                var schema = NewRelationSchema("Category", "sys_id");
+                schema.CategoryId = relatedCategory;
+                return schema;
+            });
+            var context = new SelectContextBuilder(table, used, define).Build();
+
+            Assert.Equal(expected, Assert.Single(context.Joins).MatchCompany);
+        }
+
         [Fact]
         [DisplayName("Build throws InvalidOperationException when the relation FormSchema does not exist")]
         public void Build_RelationSchemaNotFound_Throws()

@@ -97,7 +97,8 @@ namespace Polhem.Db.Dml
                     LeftField = foreignKeyField.FieldName,
                     RightTable = SelectFieldGuard.DbTableNameOf(srcTable),
                     RightAlias = GetActiveTableAlias(),
-                    RightField = SysFields.RowId
+                    RightField = SysFields.RowId,
+                    MatchCompany = IsCompanyForm(_formTable.Collection?.Owner as FormSchema) && IsCompanyForm(srcFormDefine),
                 };
                 context.Joins.Add(join);
             }
@@ -141,6 +142,9 @@ namespace Polhem.Db.Dml
         /// <summary>
         /// A set of reserved SQL keywords used to avoid alias collisions.
         /// </summary>
+        private static bool IsCompanyForm(FormSchema? schema)
+            => schema != null && string.Equals(schema.CategoryId, DbCategoryIds.Company, StringComparison.Ordinal);
+
         private static readonly HashSet<string> s_sqlKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "AS", "BY", "IF", "IN", "IS", "OF", "OR", "TO", "ON",

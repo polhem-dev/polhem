@@ -26,8 +26,10 @@ namespace Polhem.Definition
         /// <see cref="Polhem.Definition.Database.TableSchemaGenerator"/> adds this column to every table of a
         /// form schema whose <see cref="Polhem.Definition.Forms.FormSchema.CategoryId"/> is
         /// <see cref="Polhem.Definition.Database.DbCategoryIds.Company"/>, and leads the <c>uk_{0}</c> index with
-        /// it. It is what separates companies that share one company database. A form save does not write
-        /// this column: the form repository leaves it out of the statements it generates.
+        /// it. It is what separates companies that share one company database. The form repository
+        /// (<c>DataFormRepository</c>) stamps it on every row it inserts with the company it is bound to, and
+        /// confines every read, update and delete to that company; <c>DataFormRepositoryCompanyIsolationTests</c>
+        /// pins that on every supported database. Hand-written queries are not confined.
         /// </remarks>
         public const string CompanyId = "sys_company_id";
 

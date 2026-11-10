@@ -298,7 +298,7 @@ namespace Polhem.Business.UnitTests.Form
                 _dbAccess = new Lazy<DbAccess>(() => fx.NewDbAccess(databaseId));
                 var repositoryContext = TestRepositoryContext.Create(fx.GetRequiredService<IDbConnectionManager>(),
                     defineAccess: defineAccess, dbAccessFactory: fx.GetRequiredService<IDbAccessFactory>());
-                var employees = new DataFormRepository(repositoryContext, "Employee", EmployeeSchema, databaseId);
+                var employees = new DataFormRepository(repositoryContext, "Employee", EmployeeSchema, databaseId, SharedDatabaseState.SeedCompanyId);
 
                 var overrides = new List<(Type, object?)> { (typeof(IRepositoryFactory), new SingleRepositoryFactory(employees)) };
                 if (authorization is not null) { overrides.Add((typeof(ICompanyAuthorizationService), authorization)); }

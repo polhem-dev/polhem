@@ -170,6 +170,9 @@ public static class NorthwindSchemaSeeder
         foreach (var seed in s_seeds.Where(s => s.Deferred is not null))
             ApplyDeferredRelations(dbAccess, seed, seedDir);
 
+        foreach (var seed in s_seeds)
+            StampCompany(dbAccess, seed.Table);
+
         VerifyTablesExist(defineAccess, connectionManager);
     }
 
@@ -458,8 +461,8 @@ public static class NorthwindSchemaSeeder
         {
             if (seed.Key is not null && RowExists(dbAccess, seed, row, transaction)) continue;
 
-            var columns = new List<string> { "sys_rowid" };
-            var values = new List<object> { Guid.NewGuid() };
+            var columns = new List<string> { "sys_rowid", SysFields.CompanyId };
+            var values = new List<object> { Guid.NewGuid(), NorthwindCredentials.CompanyId };
 
             foreach (var pair in row)
             {
@@ -479,6 +482,22 @@ public static class NorthwindSchemaSeeder
         }
 
         transaction.Commit();
+    }
+
+    /// <summary>
+    /// Gives every row of a seeded company table that carries no company the demo company.
+    /// </summary>
+    /// <remarks>
+    /// The form repository reads only the rows of the session's company, so a row without one is
+    /// invisible. Rows inserted above carry the company already; this is for a <c>northwind.db</c>
+    /// seeded before the column existed, whose rows the schema upgrade gave the column's empty default
+    /// (<c>NULL</c> on Oracle). The demo has one company, so every such row is its row.
+    /// </remarks>
+    private static void StampCompany(DbAccess dbAccess, string table)
+    {
+        var sql = $"UPDATE {table} SET {SysFields.CompanyId} = {{0}} " +
+                  $"WHERE {SysFields.CompanyId} IS NULL OR {SysFields.CompanyId} = ''";
+        dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql, NorthwindCredentials.CompanyId));
     }
 
     // Whether a stored row matches the seed row on every key column, read inside the insert transaction so the

@@ -125,7 +125,7 @@ namespace Polhem.Business.UnitTests.Form
             row["sys_id"] = sysId;
             row[SysFields.Name] = sysName;
             row["dept_rowid"] = deptRowId;
-            var spec = new InsertCommandBuilder(ctx.EmployeeSchema, ctx.DbType).Build(CrudTestContext.ProgId, row);
+            var spec = new InsertCommandBuilder(ctx.EmployeeSchema, ctx.DbType, CrudTestContext.CompanyId).Build(CrudTestContext.ProgId, row);
             ctx.DbAccess.Execute(spec);
         }
 

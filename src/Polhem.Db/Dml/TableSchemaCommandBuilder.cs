@@ -35,6 +35,69 @@ namespace Polhem.Db.Dml
         public TableSchema TableSchema { get; }
 
         /// <summary>
+        /// Gets the field the generated statements pin to <see cref="PinnedValue"/>, or an empty string
+        /// when none is pinned.
+        /// </summary>
+        public string PinnedField { get; private set; } = string.Empty;
+
+        /// <summary>
+        /// Gets the value <see cref="PinnedField"/> is pinned to.
+        /// </summary>
+        public object? PinnedValue { get; private set; }
+
+        /// <summary>
+        /// Pins one field of the table to a fixed value in every statement this builder generates:
+        /// the INSERT writes <paramref name="value"/> into it whatever the row holds, the UPDATE leaves
+        /// it out of the SET list, and the UPDATE and DELETE only touch a row that holds
+        /// <paramref name="value"/>.
+        /// </summary>
+        /// <param name="fieldName">A field of <see cref="TableSchema"/>.</param>
+        /// <param name="value">The value the field is pinned to.</param>
+        /// <returns>This builder.</returns>
+        /// <remarks>
+        /// The value is a parameter of its own rather than one read from the
+        /// <see cref="System.Data.DataTable"/>, so a row cannot supply a different one, and a row that
+        /// holds another value is reported by the update as affecting no rows.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when the table schema has no such field.</exception>
+        public TableSchemaCommandBuilder PinField(string fieldName, object value)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(fieldName);
+            ArgumentNullException.ThrowIfNull(value);
+            if (!TableSchema.Fields!.Contains(fieldName))
+            {
+                throw new InvalidOperationException(
+                    $"Table '{TableSchema.TableName}' has no field '{fieldName}' to pin.");
+            }
+            PinnedField = fieldName;
+            PinnedValue = value;
+            return this;
+        }
+
+        private bool IsPinned(DbField field)
+            => PinnedField.Length > 0 && string.Equals(field.FieldName, PinnedField, StringComparison.OrdinalIgnoreCase);
+
+        private void AddPinnedParameter(DbCommandSpec command)
+        {
+            var field = TableSchema.Fields![PinnedField];
+            command.Parameters.Add(new DbParameterSpec
+            {
+                Name = field.FieldName,
+                DbType = DbTypeConverter.ToDbType(field.DbType),
+                Value = PinnedValue,
+                Size = (field.DbType == FieldDbType.String) ? field.Length : 0,
+            });
+        }
+
+        private void AppendPinnedCondition(StringBuilder buffer, DbCommandSpec command)
+        {
+            if (PinnedField.Length == 0) { return; }
+            buffer.AppendLine(CultureInfo.InvariantCulture,
+                $" And {QuoteIdentifier(PinnedField)}={GetParameterName(PinnedField)}");
+            AddPinnedParameter(command);
+        }
+
+        /// <summary>
         /// Returns the properly quoted identifier string for the current database type.
         /// </summary>
         /// <param name="identifier">The identifier name to quote.</param>
@@ -89,7 +152,10 @@ namespace Polhem.Db.Dml
                     if (count > 0)
                         buffer.Append(", ");
                     buffer.Append(GetParameterName(field.FieldName));
-                    command.Parameters.Add(field); // Add command parameter
+                    if (IsPinned(field))
+                        AddPinnedParameter(command);
+                    else
+                        command.Parameters.Add(field); // Add command parameter
                     count++;
                 }
             }
@@ -116,7 +182,7 @@ namespace Polhem.Db.Dml
             int setCount = 0;
             foreach (DbField field in this.TableSchema.Fields)
             {
-                if (field != keyField && field.DbType != FieldDbType.AutoIncrement)
+                if (field != keyField && field.DbType != FieldDbType.AutoIncrement && !IsPinned(field))
                 {
                     fieldName = QuoteIdentifier(field.FieldName);
                     // Add command parameter
@@ -132,6 +198,7 @@ namespace Polhem.Db.Dml
             command.Parameters.Add(keyField, System.Data.DataRowVersion.Original);
             buffer.AppendLine();
             buffer.AppendLine(CultureInfo.InvariantCulture, $"Where {fieldName}={GetParameterName(keyField.FieldName)}");
+            AppendPinnedCondition(buffer, command);
 
             command.CommandText = buffer.ToString();
             return command;
@@ -152,6 +219,7 @@ namespace Polhem.Db.Dml
             string fieldName = QuoteIdentifier(keyField.FieldName);
             command.Parameters.Add(keyField, System.Data.DataRowVersion.Original);
             buffer.AppendLine(CultureInfo.InvariantCulture, $"Where {fieldName}={GetParameterName(keyField.FieldName)}");
+            AppendPinnedCondition(buffer, command);
 
             command.CommandText = buffer.ToString();
             return command;
