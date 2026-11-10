@@ -152,8 +152,8 @@ namespace Polhem.UI.Avalonia.Views
             contentArea.Children.Add(_cardList);
 
             _pager = new ListPagerBar { IsVisible = false };
-            _pager.PageRequested += (_, page) => _ = LoadPageAsync(page, CancellationToken.None);
-            _pager.PageSizeRequested += (_, pageSize) =>
+            _pager.PageRequested += (sender, page) => _ = LoadPageAsync(page, CancellationToken.None);
+            _pager.PageSizeRequested += (sender, pageSize) =>
             {
                 _paging.SetPageSize(pageSize);
                 _ = LoadPageAsync(_paging.Page, CancellationToken.None);

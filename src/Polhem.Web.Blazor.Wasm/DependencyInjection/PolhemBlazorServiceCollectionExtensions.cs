@@ -25,8 +25,8 @@ namespace Polhem.Web.Blazor.Wasm.DependencyInjection
 
             var options = new PolhemBlazorOptions();
             configure(options);
-            ArgumentException.ThrowIfNullOrWhiteSpace(options.Endpoint, nameof(PolhemBlazorOptions.Endpoint));
-            ArgumentNullException.ThrowIfNull(options.ApiKey, nameof(PolhemBlazorOptions.ApiKey));
+            ArgumentException.ThrowIfNullOrWhiteSpace(options.Endpoint);
+            ArgumentNullException.ThrowIfNull(options.ApiKey);
 
             services.AddSingleton(options);
             return services.AddPolhemBlazorClient(options,

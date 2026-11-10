@@ -9,9 +9,11 @@ namespace Polhem.Web.Blazor.Server.Shell
     /// </summary>
     internal sealed class ShellLanguageSwitcher(NavigationManager navigation) : IShellLanguageSwitcher
     {
+        private const string RootPath = "/";
+
         public void Switch(PolhemShellLanguage language)
         {
-            string returnPath = "/" + navigation.ToBaseRelativePath(navigation.Uri);
+            string returnPath = RootPath + navigation.ToBaseRelativePath(navigation.Uri);
             navigation.NavigateTo(PolhemShellCulture.BuildSwitchUri(language.Culture, returnPath), forceLoad: true);
         }
     }

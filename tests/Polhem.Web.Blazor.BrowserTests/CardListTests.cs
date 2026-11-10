@@ -26,7 +26,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             return page;
         }
 
-        private static Task ScrollToEndAsync(IPage page) => page.EvaluateAsync("window.scrollTo(0, document.documentElement.scrollHeight)");
+        private static async Task ScrollToEndAsync(IPage page) => await page.EvaluateAsync("window.scrollTo(0, document.documentElement.scrollHeight)");
 
         [BrowserFact]
         [DisplayName("A narrow screen shows cards, and scrolling to the end reads the next page")]

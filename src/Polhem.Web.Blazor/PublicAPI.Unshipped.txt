@@ -5,3 +5,6 @@ Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.get -> s
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.DefaultCurrencyCode.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.set -> void
+virtual Polhem.Web.Blazor.Components.FormPageBase.Dispose(bool disposing) -> void
+virtual Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Dispose(bool disposing) -> void
+virtual Polhem.Web.Blazor.Controls.GridControlBase.Dispose(bool disposing) -> void

@@ -95,7 +95,7 @@ function isOnOpeningCell(target) {
 
 function followClick(pending) {
     const target = pending.target.closest(FOCUSABLE);
-    target && target.focus();
+    target?.focus();
     if (!isTextCell(document.activeElement)) {
         // No editor is coming, so keys typed after the click go where it landed.
         const typed = queue.filter(item => item.text).map(item => item.text).join('');
@@ -116,7 +116,7 @@ function nextStop(from, backwards) {
 
 // The render that brings the text back can arrive after the call that closed the editor returned.
 function focusTextWhenRendered(row, attempts) {
-    const text = row && row.querySelector(`.${TEXT_CELL}`);
+    const text = row?.querySelector(`.${TEXT_CELL}`);
     if (text) {
         restingCell = text;
         text.focus();
@@ -131,7 +131,7 @@ function findInput(editor) {
     const direct = editor.querySelector('input:not([type=checkbox]), textarea, select, input, [role=combobox]');
     if (direct) return direct;
     for (const element of editor.querySelectorAll('*')) {
-        const inner = element.shadowRoot && element.shadowRoot.querySelector('input, textarea');
+        const inner = element.shadowRoot?.querySelector('input, textarea');
         if (inner) return inner;
     }
     return null;
@@ -155,7 +155,7 @@ export async function focusEditor(editor, cell, openPopupSelector, replayDelay) 
     }
     const original = input.value;
     input.focus();
-    input.select && input.select();
+    input.select?.();
 
     const close = () => {
         const row = editor.closest('td');
@@ -198,7 +198,7 @@ export async function focusEditor(editor, cell, openPopupSelector, replayDelay) 
             // text would show and then be lost. Inserted text counts as typing.
             document.execCommand('insertText', false, typed);
         }
-        if (pendingLeave && pendingLeave.enter && commitsOnEnter) {
+        if (pendingLeave?.enter && commitsOnEnter) {
             commitAndClose();
         } else if (pendingLeave && !pendingLeave.enter) {
             input.blur();
@@ -206,7 +206,7 @@ export async function focusEditor(editor, cell, openPopupSelector, replayDelay) 
                 followClick(pendingLeave);
             } else {
                 const next = nextStop(editor, pendingLeave.backwards);
-                next && next.focus();
+                next?.focus();
             }
         }
     };
