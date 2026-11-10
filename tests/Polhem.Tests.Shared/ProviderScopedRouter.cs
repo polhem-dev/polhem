@@ -45,5 +45,8 @@ namespace Polhem.Tests.Shared
             DbScope.Company => TestDbConventions.GetDatabaseId(_databaseType, DbCategoryIds.Company),
             _ => throw new InvalidOperationException($"Unsupported DbScope value: {scope}."),
         };
+
+        /// <inheritdoc/>
+        public string Resolve(DbScope scope, Polhem.Definition.Identity.SessionCompanyScope companyScope) => Resolve(scope, Guid.Empty);
     }
 }

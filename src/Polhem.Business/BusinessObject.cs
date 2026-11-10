@@ -58,7 +58,10 @@ namespace Polhem.Business
             AccessToken = accessToken;
             ProgId = progId ?? string.Empty;
             IsLocalCall = isLocalCall;
+            _companyScope = ctx.CompanyScope;
         }
+
+        private SessionCompanyScope? _companyScope;
 
         #endregion
 
@@ -66,6 +69,24 @@ namespace Polhem.Business
         /// Gets the access token.
         /// </summary>
         public Guid AccessToken { get; }
+
+        /// <summary>
+        /// Gets this call's snapshot of the session's company scope: the company, its roles, the customization
+        /// and the record-scope identity.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: every company-dependent decision of one call goes through this one snapshot, not through
+        /// <see cref="SessionInfoService"/>. A concurrent <c>EnterCompany</c> on the same token replaces the session's
+        /// scope at any moment, and reading it twice could authorize with one company's roles and then route to
+        /// another company's data (ADR-063). The factory takes the snapshot when it creates the business object; a
+        /// business object constructed without one reads the session the first time this is used.
+        /// <c>SessionCompanyScopeReadGateTests</c> (tests/Polhem.Business.UnitTests) fails when framework code reads
+        /// the session's company members anywhere else.
+        /// </remarks>
+        protected SessionCompanyScope CompanyScope
+            => _companyScope ??= AccessToken == Guid.Empty
+                ? SessionCompanyScope.None
+                : SessionInfoService.Get(AccessToken)?.CompanyScope ?? SessionCompanyScope.None;
 
         /// <summary>
         /// Gets the program identifier this instance was addressed by.
@@ -143,18 +164,18 @@ namespace Polhem.Business
         protected IServiceProvider Services => _ctx.Services;
 
         /// <summary>
-        /// Resolves the physical databaseId for the supplied <see cref="DbScope"/>,
-        /// using the current <see cref="AccessToken"/> for the per-session lookup
-        /// path (<see cref="DbScope.Company"/>).
+        /// Resolves the physical databaseId for the supplied <see cref="DbScope"/>, using this call's
+        /// <see cref="CompanyScope"/> for the company database (<see cref="DbScope.Company"/>).
         /// </summary>
         /// <param name="scope">The bo repo's access intent.</param>
         protected string ResolveDatabaseId(DbScope scope)
             => Services.GetRequiredService<IRepositoryDatabaseRouter>()
-                       .Resolve(scope, AccessToken);
+                       .Resolve(scope, CompanyScope);
 
         /// <summary>
-        /// Convenience wrapper around <see cref="IRepositoryFactory.CreateFormRepository{T}"/> that
-        /// auto-passes the current <see cref="AccessToken"/>.
+        /// Convenience wrapper around
+        /// <see cref="IRepositoryFactory.CreateFormRepository{T}(Guid, string, SessionCompanyScope)"/> that
+        /// auto-passes the current <see cref="AccessToken"/> and <see cref="CompanyScope"/>.
         /// </summary>
         /// <param name="progId">The program identifier.</param>
         protected IDataFormRepository CreateDataFormRepository(string progId)
@@ -187,7 +208,7 @@ namespace Polhem.Business
         /// <param name="progId">The program identifier.</param>
         protected T CreateFormRepository<T>(string progId) where T : class, IDataFormRepository
             => Services.GetRequiredService<IRepositoryFactory>()
-                       .CreateFormRepository<T>(AccessToken, progId);
+                       .CreateFormRepository<T>(AccessToken, progId, CompanyScope);
 
         /// <summary>
         /// Resolves localized text for the given full key using the current session's
@@ -244,9 +265,7 @@ namespace Polhem.Business
         /// </remarks>
         protected string GetCurrentCustomizeId()
         {
-            if (AccessToken == Guid.Empty)
-                return string.Empty;
-            return SessionInfoService.Get(AccessToken)?.CustomizeId ?? string.Empty;
+            return CompanyScope.CustomizeId;
         }
 
         /// <summary>
@@ -266,7 +285,7 @@ namespace Polhem.Business
         private protected (string? UserId, string? UserName, string? CompanyId, string? CompanyName) ResolveAuditIdentity()
         {
             var session = SessionInfoService.Get(AccessToken);
-            var companyId = session?.CompanyId;
+            var companyId = CompanyScope.CompanyId;
             string? companyName = null;
             if (!string.IsNullOrEmpty(companyId))
                 companyName = Services.GetService<ICompanyInfoService>()?.Get(companyId)?.CompanyName;

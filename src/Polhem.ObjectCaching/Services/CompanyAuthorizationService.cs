@@ -26,19 +26,22 @@ namespace Polhem.ObjectCaching.Services
 
         /// <inheritdoc/>
         public bool Can(Guid accessToken, string modelId, PermissionActions action)
+            => Can(_sessionInfoService.Get(accessToken)?.CompanyScope ?? SessionCompanyScope.None, modelId, action);
+
+        /// <inheritdoc/>
+        public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action)
         {
-            // One snapshot for the whole check: the company and the roles must come from the same
-            // company entry, and a concurrent EnterCompany / LeaveCompany swaps the whole scope.
-            var scope = _sessionInfoService.Get(accessToken)?.CompanyScope;
-            if (scope == null || string.IsNullOrEmpty(scope.CompanyId) || scope.Roles.Count == 0)
+            ArgumentNullException.ThrowIfNull(companyScope);
+            // The company and the roles come from the same snapshot, so they cannot straddle a company switch.
+            if (string.IsNullOrEmpty(companyScope.CompanyId) || companyScope.Roles.Count == 0)
             {
                 return false;
             }
 
-            var snapshot = _rolePermissionService.Get(scope.CompanyId);
+            var snapshot = _rolePermissionService.Get(companyScope.CompanyId);
             if (snapshot == null) { return false; }
 
-            return snapshot.GetAllowed(scope.Roles, modelId).HasFlag(action);
+            return snapshot.GetAllowed(companyScope.Roles, modelId).HasFlag(action);
         }
     }
 }

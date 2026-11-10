@@ -332,6 +332,8 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class SingleRepositoryFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _repository;
             public SingleRepositoryFactory(IDataFormRepository repository) => _repository = repository;
             public T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository => (T)_repository;
@@ -340,6 +342,8 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class StubAuthorization : ICompanyAuthorizationService
         {
+            public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action) => Can(Guid.Empty, modelId, action);
+
             private readonly PermissionActions _granted;
             public StubAuthorization(PermissionActions granted = PermissionActions.None) => _granted = granted;
             public bool Can(Guid accessToken, string modelId, PermissionActions action) => (_granted & action) == action;

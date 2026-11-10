@@ -154,12 +154,16 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class AllowAll : ICompanyAuthorizationService
         {
+            public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action) => Can(Guid.Empty, modelId, action);
+
             public bool Can(Guid accessToken, string modelId, PermissionActions action) => true;
         }
 
         /// <summary>The <c>Own</c> strategy for every action: the owner column must be the caller.</summary>
         private sealed class OwnScopeResolver : IScopeResolver
         {
+            public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
             public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
                 => FilterCondition.In(OwnerField, [s_me]);
         }

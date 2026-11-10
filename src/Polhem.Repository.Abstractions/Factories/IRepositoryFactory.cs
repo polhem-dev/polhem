@@ -8,13 +8,13 @@ namespace Polhem.Repository.Abstractions.Factories
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The progId axis</b> (<see cref="CreateFormRepository{T}"/>): the type varies per progId
+    /// <b>The progId axis</b> (<see cref="CreateFormRepository{T}(Guid, string)"/>): the type varies per progId
     /// and is resolved through the registry, mirroring
     /// <c>IBusinessObjectFactory.CreateBusinessObject(token, progId)</c>. This is where one business
     /// object owns one repository.
     /// </para>
     /// <para>
-    /// <b>The framework axis</b> (<see cref="Create{T}"/>): the type is fixed and there is no progId
+    /// <b>The framework axis</b> (<see cref="Create{T}(Guid)"/>): the type is fixed and there is no progId
     /// to speak of. Its repositories are shared infrastructure — the session store, the key store,
     /// the per-company organisation tables — read by background services and cache providers that
     /// are not business objects and have no request to belong to. Naming the interface is the honest
@@ -56,5 +56,20 @@ namespace Polhem.Repository.Abstractions.Factories
         /// </param>
         /// <exception cref="NotSupportedException">Thrown when no implementation is registered for <typeparamref name="T"/>.</exception>
         T Create<T>(Guid accessToken = default) where T : class;
+
+        /// <summary>
+        /// Creates the repository registered for the supplied progId, as
+        /// <see cref="CreateFormRepository{T}(Guid, string)"/> does, for a request that has taken its snapshot of the
+        /// session's company scope.
+        /// </summary>
+        /// <typeparam name="T">The repository interface to return.</typeparam>
+        /// <param name="accessToken">The current request's access token.</param>
+        /// <param name="progId">The program identifier.</param>
+        /// <param name="companyScope">
+        /// The request's snapshot. A company-bound repository takes its database, its company and the
+        /// customization that selects its type from it, rather than reading the session again (ADR-063).
+        /// </param>
+        T CreateFormRepository<T>(Guid accessToken, string progId, Polhem.Definition.Identity.SessionCompanyScope companyScope)
+            where T : class, IDataFormRepository;
     }
 }

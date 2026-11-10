@@ -87,9 +87,9 @@ namespace Polhem.Business.Form
         /// </summary>
         private CompanyInfo? ResolveCompanyInfo()
         {
-            var session = SessionInfoService.Get(AccessToken);
-            if (session == null || string.IsNullOrEmpty(session.CompanyId)) { return null; }
-            return Services.GetService<ICompanyInfoService>()?.Get(session.CompanyId);
+            var companyId = CompanyScope.CompanyId;
+            if (string.IsNullOrEmpty(companyId)) { return null; }
+            return Services.GetService<ICompanyInfoService>()?.Get(companyId);
         }
     }
 }

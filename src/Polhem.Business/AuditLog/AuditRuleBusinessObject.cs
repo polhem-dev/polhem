@@ -63,7 +63,7 @@ namespace Polhem.Business.AuditLog
         /// </remarks>
         private void InvalidateRules()
         {
-            string? companyId = SessionInfoService.Get(AccessToken)?.CompanyId;
+            string? companyId = CompanyScope.CompanyId;
             if (string.IsNullOrEmpty(companyId)) { return; }
 
             Services.GetService<IAuditRuleService>()?.Remove(companyId);

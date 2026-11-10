@@ -680,6 +680,8 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class StubFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, global::Polhem.Definition.Identity.SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _repository;
             public StubFactory(IDataFormRepository repository) => _repository = repository;
             public T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository => (T)_repository;

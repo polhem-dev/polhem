@@ -38,5 +38,24 @@ namespace Polhem.Repository.Abstractions
         /// but the corresponding <see cref="Polhem.Definition.Identity.CompanyInfo"/> is not available in the cache.
         /// </exception>
         string Resolve(DbScope scope, Guid accessToken);
+
+        /// <summary>
+        /// Resolves the databaseId for the given scope from a snapshot of the session's company scope.
+        /// </summary>
+        /// <param name="scope">The bo repo's access intent.</param>
+        /// <param name="companyScope">
+        /// The request's snapshot of the session's company scope. Ignored for <see cref="DbScope.Common"/> and
+        /// <see cref="DbScope.Log"/>. Inside a request, pass the request's one snapshot rather than letting the
+        /// access-token overload read the session again, so the database and the rest of the request agree on the
+        /// company (ADR-063).
+        /// </param>
+        /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">
+        /// <paramref name="scope"/> is <see cref="DbScope.Company"/> but the snapshot has no company.
+        /// </exception>
+        /// <exception cref="Polhem.Core.Exceptions.UserMessageException">
+        /// <paramref name="scope"/> is <see cref="DbScope.Company"/> and the company's
+        /// <see cref="Polhem.Definition.Identity.CompanyInfo"/> is not available in the cache.
+        /// </exception>
+        string Resolve(DbScope scope, Polhem.Definition.Identity.SessionCompanyScope companyScope);
     }
 }

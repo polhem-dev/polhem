@@ -73,12 +73,16 @@ namespace Polhem.Repository.UnitTests
 
         private sealed class StubRouter : IRepositoryDatabaseRouter
         {
+            public string Resolve(DbScope scope, global::Polhem.Definition.Identity.SessionCompanyScope companyScope) => Resolve(scope, Guid.Empty);
+
             public string Resolve(DbScope scope, Guid accessToken) => DbCategoryIds.Common;
         }
 
         /// <summary>Always returns the given type and records the arguments the factory passed in.</summary>
         private sealed class StubTypeResolver(Type type) : IRepositoryTypeResolver
         {
+            public Type Resolve(string customizeId, string progId) => Resolve(Guid.Empty, progId);
+
             public Guid? ReceivedAccessToken { get; private set; }
             public string? ReceivedProgId { get; private set; }
 

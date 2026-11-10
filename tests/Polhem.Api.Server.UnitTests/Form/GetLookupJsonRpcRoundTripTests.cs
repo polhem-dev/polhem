@@ -138,6 +138,8 @@ namespace Polhem.Api.Server.UnitTests.Form
 
         private sealed class StubFormRepositoryFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _data;
             public StubFormRepositoryFactory(IDataFormRepository data) { _data = data; }
             public T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository => (T)_data;

@@ -82,6 +82,8 @@ namespace Polhem.Business.UnitTests.Security
 
         private sealed class FakeRepositoryFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IUserRepository _userRepository;
             public FakeRepositoryFactory(IUserRepository userRepository) { _userRepository = userRepository; }
 

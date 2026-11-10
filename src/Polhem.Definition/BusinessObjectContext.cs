@@ -24,5 +24,8 @@ namespace Polhem.Definition
 
         /// <inheritdoc/>
         public required IServiceProvider Services { get; init; }
+
+        /// <inheritdoc/>
+        public SessionCompanyScope? CompanyScope { get; init; }
     }
 }

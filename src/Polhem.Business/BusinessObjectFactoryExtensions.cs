@@ -1,6 +1,7 @@
 using Polhem.Business.Form;
 using Polhem.Business.System;
 using Polhem.Definition;
+using Polhem.Definition.Identity;
 
 namespace Polhem.Business
 {
@@ -54,5 +55,45 @@ namespace Polhem.Business
             return (ISystemBusinessObject)factory.CreateBusinessObject(accessToken, SysProgIds.System, isLocalCall);
         }
 
+        /// <summary>
+        /// Creates a form business object that shares the calling request's snapshot of the session's company scope.
+        /// </summary>
+        /// <param name="factory">The business object factory.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="isLocalCall">Whether the call originates from a local source.</param>
+        /// <param name="companyScope">The calling business object's <c>CompanyScope</c>.</param>
+        /// <remarks>
+        /// A business object calling another passes its own snapshot, so both act for the same company even when
+        /// the session enters another company meanwhile (ADR-063).
+        /// </remarks>
+        public static IFormBusinessObject CreateFormBO(
+            this IBusinessObjectFactory factory,
+            Guid accessToken,
+            string progId,
+            bool isLocalCall,
+            SessionCompanyScope companyScope)
+        {
+            ArgumentNullException.ThrowIfNull(factory);
+            return (IFormBusinessObject)factory.CreateBusinessObject(accessToken, progId, isLocalCall, companyScope);
+        }
+
+        /// <summary>
+        /// Creates the system business object that shares the calling request's snapshot of the session's company
+        /// scope.
+        /// </summary>
+        /// <param name="factory">The business object factory.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="isLocalCall">Whether the call originates from a local source.</param>
+        /// <param name="companyScope">The calling business object's <c>CompanyScope</c>.</param>
+        public static ISystemBusinessObject CreateSystemBO(
+            this IBusinessObjectFactory factory,
+            Guid accessToken,
+            bool isLocalCall,
+            SessionCompanyScope companyScope)
+        {
+            ArgumentNullException.ThrowIfNull(factory);
+            return (ISystemBusinessObject)factory.CreateBusinessObject(accessToken, SysProgIds.System, isLocalCall, companyScope);
+        }
     }
 }

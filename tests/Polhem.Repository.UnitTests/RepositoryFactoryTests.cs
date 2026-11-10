@@ -46,6 +46,8 @@ namespace Polhem.Repository.UnitTests
 
         private sealed class StubRouter : IRepositoryDatabaseRouter
         {
+            public string Resolve(global::Polhem.Definition.DbScope scope, global::Polhem.Definition.Identity.SessionCompanyScope companyScope) => Resolve(scope, Guid.Empty);
+
             public string Resolve(Definition.DbScope scope, Guid accessToken) => scope switch
             {
                 Definition.DbScope.Common => Definition.Database.DbCategoryIds.Common,

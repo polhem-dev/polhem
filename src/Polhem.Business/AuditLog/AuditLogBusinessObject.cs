@@ -252,7 +252,7 @@ namespace Polhem.Business.AuditLog
             => Services.GetRequiredService<IRepositoryFactory>().Create<IAuditLogRepository>();
 
         /// <summary>Resolves the caller's current company id (denormalised query scope); null when none.</summary>
-        private string? CurrentCompanyId() => SessionInfoService.Get(AccessToken)?.CompanyId;
+        private string? CurrentCompanyId() => CompanyScope.CompanyId;
 
         /// <summary>
         /// Enforces the audit-read permission gate: only roles granted <see cref="PermissionActions.Read"/>
@@ -261,7 +261,7 @@ namespace Polhem.Business.AuditLog
         private void EnsureAuditReadAllowed()
         {
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
-            if (!authorization.Can(AccessToken, SysProgIds.AuditLog, PermissionActions.Read))
+            if (!authorization.Can(CompanyScope, SysProgIds.AuditLog, PermissionActions.Read))
                 throw new UserMessageException(PolhemMessages.AuditLogReadDenied, "Not authorized to read the audit log.");
         }
 

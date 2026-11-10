@@ -1,13 +1,19 @@
 #nullable enable
-static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
-static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
+Polhem.Definition.BusinessObjectContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
+Polhem.Definition.BusinessObjectContext.CompanyScope.init -> void
+Polhem.Definition.Database.TableSchema.ApplyCompanyScope() -> bool
+Polhem.Definition.Database.TableSchema.HasCompanyScope() -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> object?
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
+Polhem.Definition.IBusinessObjectContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
+Polhem.Definition.IBusinessObjectFactory.CreateBusinessObject(System.Guid accessToken, string! progId, bool isLocalCall, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> object!
+Polhem.Definition.Identity.ICompanyAuthorizationService.Can(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
+*REMOVED*Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Definition.Identity.IScopeResolver.ResolveFilter(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
 const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
 const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!
 static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
 static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
-Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> object?
-Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
-*REMOVED*Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
-Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
-Polhem.Definition.Database.TableSchema.ApplyCompanyScope() -> bool
-Polhem.Definition.Database.TableSchema.HasCompanyScope() -> bool
+static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
+static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!

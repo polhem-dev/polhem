@@ -26,12 +26,29 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("A company-bound repository refuses to be built when the session enters another company while it is routed")]
-        public void Construct_CompanyChangesDuringRouting_Throws()
+        [DisplayName("A company-bound repository reads the session once, so a company entered while it is built does not reach it")]
+        public void Construct_CompanyChangesDuringConstruction_KeepsTheFirstRead()
         {
             var sessions = new SwitchingSessions("c001", "c002");
 
-            Assert.Throws<InvalidOperationException>(() => new ProbeRepository(Context(sessions)));
+            var repository = new ProbeRepository(Context(sessions));
+
+            Assert.Equal("c001", repository.BoundCompanyId);
+        }
+
+        [Fact]
+        [DisplayName("A company-bound repository built with the request's snapshot takes its company and database from it, not from the session")]
+        public void Construct_ContextCarriesSnapshot_UsesItInsteadOfTheSession()
+        {
+            var sessions = new SwitchingSessions("c002");
+            var router = new RepositoryDatabaseRouter(sessions, new TwoCompanies());
+            var ctx = ((RepositoryContext)TestRepositoryContext.Create(router: router, services: sessions))
+                .WithCompanyScope(new SessionCompanyScope("c001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty));
+
+            var repository = new ProbeRepository(ctx);
+
+            Assert.Equal("c001", repository.BoundCompanyId);
+            Assert.Equal(TwoCompanies.DatabaseOf("c001"), repository.OwnDatabaseId);
         }
 
         [Fact]
@@ -64,6 +81,21 @@ namespace Polhem.Repository.UnitTests
             Assert.Null(repository.Open(TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "common")).BoundCompanyId);
         }
 
+        [Fact]
+        [DisplayName("A company-bound repository routes to the database of the company it binds to, even when the session switches away and back while it is built")]
+        public void Construct_CompanySwitchesAwayAndBack_RoutesToTheBoundCompany()
+        {
+            // A concurrent EnterCompany(B) and EnterCompany(A) on the same token, interleaved with the reads of one
+            // repository construction. Reading the company before and after routing sees A both times, while the
+            // router in between reads B, which would pair company A's id with company B's database.
+            var sessions = new SwitchingSessions("c001", "c002", "c001");
+            var router = new RepositoryDatabaseRouter(sessions, new TwoCompanies());
+
+            var repository = new ProbeRepository(TestRepositoryContext.Create(router: router, services: sessions));
+
+            Assert.Equal(TwoCompanies.DatabaseOf(repository.BoundCompanyId), repository.OwnDatabaseId);
+        }
+
         private static IRepositoryContext Context(SwitchingSessions sessions)
             => TestRepositoryContext.Create(services: sessions);
 
@@ -79,6 +111,17 @@ namespace Polhem.Repository.UnitTests
         /// Answers the first read with the first company and every later read with the last one,
         /// as a session does when EnterCompany runs between two reads.
         /// </summary>
+        private sealed class TwoCompanies : ICompanyInfoService
+        {
+            public static string DatabaseOf(string companyId) => "db_" + companyId;
+
+            public CompanyInfo? Get(string companyId) => new() { CompanyId = companyId, CompanyDatabaseId = DatabaseOf(companyId) };
+
+            public void Set(CompanyInfo companyInfo) => throw new NotSupportedException();
+
+            public void Remove(string companyId) => throw new NotSupportedException();
+        }
+
         private sealed class SwitchingSessions(params string[] companies) : IServiceProvider, ISessionInfoService
         {
             private int _reads;

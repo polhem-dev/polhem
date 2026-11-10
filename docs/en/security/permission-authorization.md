@@ -237,11 +237,13 @@ UserContext.SignOut();                            // signs the circuit's client 
 
 Everything above is scoped to a company: roles, grants and the department tree all live in **each company's own database**, and `ICompanyAuthorizationService.Can` returns `false` when the session has entered no company.
 
+Within one request, the company is read from the session once. A business object keeps that read as its `CompanyScope` and hands it to the authorization check, the record scope and its repositories, so all of them act for the same company even when the same token enters another company while the request runs ([ADR-063](../../../maintainers/adr/adr-063-one-company-scope-per-request.md)). The access-token overloads of these services read the session themselves; call them only from code that has no `CompanyScope`.
+
 Some assets belong to the **installation** rather than to any company — an API key identifies a calling *application*, not a tenant. Guarding those with company permissions would mean one tenant's administrator could act for all of them. They are therefore governed by a separate, parallel decision.
 
 | | Company authorization | Deployment authorization |
 |---|---|---|
-| Interface | `ICompanyAuthorizationService.Can(token, modelId, action)` | `IDeploymentAuthorizationService.Can(token, action)` |
+| Interface | `ICompanyAuthorizationService.Can(companyScope, modelId, action)`; a business object passes its `CompanyScope` | `IDeploymentAuthorizationService.Can(token, action)` |
 | Question | May this user do X **inside company C**? | May this user do X **to the installation**? |
 | Identity source | `st_role` / `st_role_grant` / `st_user_role` in each company database | `st_user.deployment_admin` in the common database |
 | Requires a company | Yes — no company context, no permission | No — by definition there is none |

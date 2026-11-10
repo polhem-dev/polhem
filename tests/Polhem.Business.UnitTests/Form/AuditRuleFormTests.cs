@@ -71,6 +71,8 @@ namespace Polhem.Business.UnitTests.Form
         /// </summary>
         private sealed class AllowAllAuthorization : ICompanyAuthorizationService
         {
+            public bool Can(SessionCompanyScope companyScope, string modelId, PermissionActions action) => Can(Guid.Empty, modelId, action);
+
             public bool Can(Guid accessToken, string modelId, PermissionActions action) => true;
         }
 
@@ -80,12 +82,16 @@ namespace Polhem.Business.UnitTests.Form
         /// </summary>
         private sealed class UnrestrictedScopeResolver : IScopeResolver
         {
+            public global::Polhem.Definition.Filters.FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, global::Polhem.Definition.Forms.FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
             public Polhem.Definition.Filters.FilterNode? ResolveFilter(
                 Guid accessToken, string modelId, PermissionActions action, Polhem.Definition.Forms.FormSchema formSchema) => null;
         }
 
         private sealed class StubFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly IDataFormRepository _repository;
             private readonly IAuditRuleRepository? _auditRules;
             public StubFactory(IDataFormRepository repository, IAuditRuleRepository? auditRules)

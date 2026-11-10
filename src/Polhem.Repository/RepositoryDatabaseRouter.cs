@@ -33,6 +33,18 @@ namespace Polhem.Repository
         /// <inheritdoc/>
         public string Resolve(DbScope scope, Guid accessToken)
         {
+            if (scope != DbScope.Company)
+                return Resolve(scope, SessionCompanyScope.None);
+
+            var session = _sessionService.Get(accessToken)
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
+            return Resolve(scope, session.CompanyScope);
+        }
+
+        /// <inheritdoc/>
+        public string Resolve(DbScope scope, SessionCompanyScope companyScope)
+        {
+            ArgumentNullException.ThrowIfNull(companyScope);
             // Common / Log share fixed databaseIds across all sessions and do not
             // require an access token. This lets pre-EnterCompany methods (Login,
             // Logout, etc.) write audit logs without resolving a company context.
@@ -45,14 +57,12 @@ namespace Polhem.Repository
             if (scope != DbScope.Company)
                 throw new InvalidOperationException($"Unsupported DbScope value: {scope}.");
 
-            var session = _sessionService.Get(accessToken)
-                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
-
-            if (string.IsNullOrEmpty(session.CompanyId))
+            var companyId = companyScope.CompanyId;
+            if (string.IsNullOrEmpty(companyId))
                 throw new CompanyNotEnteredException(PolhemMessages.CompanyNotEntered,
                     "No company has been entered for this session.");
 
-            var company = _companyService.Get(session.CompanyId)
+            var company = _companyService.Get(companyId)
                 ?? throw new UserMessageException(PolhemMessages.CompanyInfoUnavailable,
                     "Company information unavailable; please re-enter the company.");
 

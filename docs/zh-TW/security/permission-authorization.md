@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: fc02d08d940e82e3ff9d0e8c415ab4648c4e965d -->
+<!-- source: en/security/permission-authorization.md blob: 4fbfc287d8afe871bac53fd4b5bfc906c40fb318 -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -238,11 +238,13 @@ UserContext.SignOut();                            // 讓 circuit 的 client 登�
 
 以上全部以公司為範圍：角色、授權、部門樹都放在**各公司自己的資料庫**，session 未進入公司時 `ICompanyAuthorizationService.Can` 一律回 `false`。
 
+同一個請求只從 session 讀一次公司。business object 把這次讀到的內容保存為 `CompanyScope`，交給授權檢查、列範圍與它的 repository，因此即使同一個 token 在請求進行中進入另一家公司，這些環節仍為同一家公司運作（[ADR-063](../../../maintainers/adr/adr-063-one-company-scope-per-request.md)）。這些服務吃 access token 的多載會自行讀 session，只在沒有 `CompanyScope` 的程式中呼叫。
+
 但有一類資產屬於**整個部署**、不屬於任何公司 —— API 金鑰識別的是呼叫的*應用程式*，不是租戶。用公司層權限去守它，等於讓一家租戶的管理員替所有租戶做決定。因此另立一條平行的判定。
 
 | | 公司層授權 | 部署層授權 |
 |---|---|---|
-| 介面 | `ICompanyAuthorizationService.Can(token, modelId, action)` | `IDeploymentAuthorizationService.Can(token, action)` |
+| 介面 | `ICompanyAuthorizationService.Can(companyScope, modelId, action)`；business object 傳入自己的 `CompanyScope` | `IDeploymentAuthorizationService.Can(token, action)` |
 | 問題 | 這位使用者能不能**在公司 C 內**做 X？ | 這位使用者能不能對**整個部署**做 X？ |
 | 身分來源 | 各公司資料庫的 `st_role` / `st_role_grant` / `st_user_role` | common 資料庫的 `st_user.deployment_admin` |
 | 需要公司脈絡 | 需要 —— 沒進公司就無權 | 不需要 —— 依定義本來就沒有 |

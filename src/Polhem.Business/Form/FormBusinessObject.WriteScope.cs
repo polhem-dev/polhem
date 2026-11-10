@@ -164,7 +164,7 @@ namespace Polhem.Business.Form
                 if (scopeByAction.TryGetValue(action, out var cached)) { return cached; }
 
                 resolver ??= Services.GetRequiredService<IScopeResolver>();
-                var resolved = resolver.ResolveFilter(AccessToken, schema.PermissionModelId, action, schema);
+                var resolved = resolver.ResolveFilter(CompanyScope, schema.PermissionModelId, action, schema);
                 scopeByAction[action] = resolved;
                 return resolved;
             };

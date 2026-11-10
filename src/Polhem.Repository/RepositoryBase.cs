@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Core.Exceptions;
 using Polhem.Db;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
 
 namespace Polhem.Repository
 {
@@ -40,13 +42,13 @@ namespace Polhem.Repository
         /// <exception cref="Polhem.Core.Exceptions.AuthenticationRequiredException">Thrown when the scope is company-bound and the session is missing or expired.</exception>
         /// <exception cref="Polhem.Core.Exceptions.UserMessageException">Thrown when the scope is company-bound and the session's company is unavailable.</exception>
         /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">Thrown when the scope is company-bound and the session has not entered a company.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the scope is company-bound and no <see cref="ISessionInfoService"/> is registered, or the session entered another company while the repository was being built.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the scope is company-bound, the context carries no company scope snapshot, and no <see cref="ISessionInfoService"/> is registered.</exception>
         /// <remarks>
         /// The resolution is eager so a bad route fails while the repository is being built, before
         /// any data has been touched — the timing the form factory already had. Scope is a
         /// constructor parameter rather than an overridable property so nothing virtual is called
-        /// during construction. A company-bound repository also takes <see cref="CompanyId"/> from
-        /// the session here, the same session the router read the company database from.
+        /// during construction. A company-bound repository takes its database and <see cref="CompanyId"/>
+        /// from one snapshot of the session's company scope: the context's, or one read here.
         /// </remarks>
         protected RepositoryBase(IRepositoryContext ctx, Guid accessToken, string progId, DbScope? scope)
         {
@@ -61,18 +63,13 @@ namespace Polhem.Repository
                 return;
             }
 
-            // WARNING: The router reads the session's company to pick the database, and the company is
-            // read here again to confine the rows. An EnterCompany on the same token in between would
-            // pair one company's database with another company's id, so the company is read on both
-            // sides of the routing and a change refuses the request rather than misfiling its rows.
-            var companyBefore = ResolveSessionCompanyId(ctx, accessToken);
-            DatabaseId = ctx.Router.Resolve(DbScope.Company, accessToken);
-            CompanyId = ResolveSessionCompanyId(ctx, accessToken);
-            if (!string.Equals(companyBefore, CompanyId, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(
-                    "The session entered another company while the request was being routed; retry the request.");
-            }
+            // WARNING: The database and the company come from one snapshot of the session's
+            // company scope. Reading the session once for each would let an EnterCompany on the same token in
+            // between pair one company's database with another company's id (ADR-063). The request's snapshot,
+            // when the context carries one, also keeps them in step with the request's authorization.
+            var companyScope = ctx.CompanyScope ?? ReadSessionCompanyScope(ctx, accessToken);
+            DatabaseId = ctx.Router.Resolve(DbScope.Company, companyScope);
+            CompanyId = string.IsNullOrEmpty(companyScope.CompanyId) ? string.Empty : CompanyInfo.NormalizeId(companyScope.CompanyId);
             // A company-bound repository without a company would have nothing to confine its statements
             // to. The default router has already refused a session without one; a replaced router may not.
             if (CompanyId.Length == 0)
@@ -157,15 +154,14 @@ namespace Polhem.Repository
         /// </remarks>
         protected string CompanyId { get; }
 
-        private static string ResolveSessionCompanyId(IRepositoryContext ctx, Guid accessToken)
+        private static SessionCompanyScope ReadSessionCompanyScope(IRepositoryContext ctx, Guid accessToken)
         {
             var sessionService = ctx.Services.GetService<ISessionInfoService>()
                 ?? throw new InvalidOperationException(
                     $"A company-bound repository needs an {nameof(ISessionInfoService)} to read the session's company.");
-            // The default router has already refused a missing session and one without a company. An
-            // empty id here is refused by the constructor, so it never reaches a statement.
-            var companyId = sessionService.Get(accessToken)?.CompanyId;
-            return string.IsNullOrEmpty(companyId) ? string.Empty : CompanyInfo.NormalizeId(companyId);
+            var session = sessionService.Get(accessToken)
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
+            return session.CompanyScope;
         }
 
         /// <summary>

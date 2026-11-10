@@ -45,6 +45,8 @@ namespace Polhem.Hosting.UnitTests
 
         private sealed class StubRepositoryFactory : IRepositoryFactory
         {
+            public T CreateFormRepository<T>(Guid accessToken, string progId, SessionCompanyScope companyScope) where T : class, IDataFormRepository => CreateFormRepository<T>(accessToken, progId);
+
             private readonly ISessionRepository _repository;
             public StubRepositoryFactory(ISessionRepository repository) { _repository = repository; }
 
