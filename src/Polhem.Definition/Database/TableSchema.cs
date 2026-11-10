@@ -163,7 +163,11 @@ namespace Polhem.Definition.Database
             }
             foreach (var index in Indexes!.Where(NeedsCompanyLead))
             {
-                index.IndexFields!.Insert(0, new IndexField(SysFields.CompanyId, SortDirection.Asc));
+                // An index that already holds the column further back gets it moved to the front.
+                var keys = index.IndexFields!;
+                var existing = keys.Contains(SysFields.CompanyId) ? keys[SysFields.CompanyId] : null;
+                if (existing is not null) keys.Remove(existing);
+                keys.Insert(0, existing ?? new IndexField(SysFields.CompanyId, SortDirection.Asc));
                 changed = true;
             }
             return changed;

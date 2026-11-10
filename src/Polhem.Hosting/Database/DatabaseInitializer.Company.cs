@@ -22,13 +22,20 @@ namespace Polhem.Hosting.Database
         /// Lists what must be fixed before the tables are upgraded: company ids that are not in their
         /// stored form, and company table schemas without the company column.
         /// </summary>
+        /// <returns>
+        /// The problems, and whether every common database's <c>st_company</c> was read, which is what lets
+        /// <c>sys_id</c> narrow to the company id's width.
+        /// </returns>
         /// <remarks>
         /// Both checks run before anything changes. A company id that is not lowercase would no longer be
         /// found on PostgreSQL and Oracle, and one longer than <see cref="CompanyInfo.CompanyIdMaxLength"/>
         /// does not fit the column it is copied into; renaming a company touches every place its id is
-        /// stored, which is the administrator's call, so the upgrade stops instead of rewriting it.
+        /// stored, which is the administrator's call, so the upgrade stops instead of rewriting it. A
+        /// database that cannot be read here is not a problem of its own: its tables report it when they
+        /// are upgraded.
         /// </remarks>
-        private List<string> CheckCompanyReadiness(DatabaseSettings settings, IReadOnlyCollection<string>? tableNames)
+        private (List<string> Problems, bool CompanyIdsChecked) CheckCompanyReadiness(
+            DatabaseSettings settings, IReadOnlyCollection<string>? tableNames)
         {
             var problems = new List<string>();
 
@@ -40,7 +47,8 @@ namespace Polhem.Hosting.Database
                     "Run 'db add-company-column' to add it to them, then upgrade again.");
             }
 
-            var invalid = ReadCompanyIds(settings)
+            var (companies, complete) = ReadCompanies(settings);
+            var invalid = companies
                 .Select(row => row.CompanyId)
                 .Where(id => !CompanyInfo.IsValidId(id))
                 .Order(StringComparer.Ordinal)
@@ -52,7 +60,7 @@ namespace Polhem.Hosting.Database
                     $"ASCII letters and digits: {string.Join(", ", invalid)}. Rename them, and every place the id is " +
                     "stored, before upgrading.");
             }
-            return problems;
+            return (problems, complete);
         }
 
         /// <summary>
@@ -65,6 +73,7 @@ namespace Polhem.Hosting.Database
         /// belongs to the company <c>company_database_id</c> names. A database that several companies
         /// point at has no such answer, and its rows are reported and left for the administrator. A
         /// database no company points at is skipped: no company could read its rows before either.
+        /// Database ids are matched without regard to case, as the connection lookup matches them.
         /// </remarks>
         private List<CompanyRowAssignment> AssignCompanyRows(
             DatabaseSettings settings, IReadOnlyCollection<string>? tableNames, bool dryRun, List<string> problems)
@@ -73,46 +82,70 @@ namespace Polhem.Hosting.Database
             var tables = CompanyScopeDefinitions.CompanyTables(_defineAccess, tableNames).ToList();
             if (tables.Count == 0) return assignments;
 
-            var companiesByDatabase = ReadCompanyIds(settings)
-                .GroupBy(row => row.DatabaseId, StringComparer.Ordinal)
-                .ToDictionary(g => g.Key, g => g.Select(row => row.CompanyId).ToList(), StringComparer.Ordinal);
+            var companiesByDatabase = ReadCompanies(settings).Companies
+                .GroupBy(row => row.DatabaseId, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Select(row => row.CompanyId).ToList(), StringComparer.OrdinalIgnoreCase);
 
             foreach (var databaseId in GetCategoryDatabases(settings, DbCategoryIds.Company))
             {
                 var companies = companiesByDatabase.GetValueOrDefault(databaseId) ?? [];
                 if (companies.Count == 0) continue;
-
-                var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
-                var dbAccess = _dbAccessFactory.Create(databaseId);
-                var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(databaseId, _connectionManager);
-                foreach (var table in tables)
+                try
                 {
-                    // A dry run, or a table that failed to build, leaves the table absent: nothing to give.
-                    if (schemaProvider.GetTableSchema(table) is null) continue;
-                    try
-                    {
-                        AssignTable(databaseId, databaseType, dbAccess, table, companies, dryRun, assignments, problems);
-                    }
-                    catch (DbException ex)
-                    {
-                        problems.Add($"Could not give {databaseId}.{table} its company: {ex.Message}");
-                    }
+                    AssignDatabase(databaseId, tables, companies, dryRun, assignments, problems);
+                }
+                catch (DbException ex)
+                {
+                    problems.Add($"Could not give the rows of {databaseId} their company: {ex.Message}");
+                }
+                catch (KeyNotFoundException ex)
+                {
+                    problems.Add($"Could not give the rows of {databaseId} their company: {ex.Message}");
                 }
             }
             return assignments;
         }
 
+        private void AssignDatabase(
+            string databaseId, List<string> tables, List<string> companies, bool dryRun,
+            List<CompanyRowAssignment> assignments, List<string> problems)
+        {
+            var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
+            var dbAccess = _dbAccessFactory.Create(databaseId);
+            var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(databaseId, _connectionManager);
+            foreach (var table in tables)
+            {
+                // A dry run of a new deployment leaves the table absent; nothing to give.
+                var actual = schemaProvider.GetTableSchema(table);
+                if (actual is null) continue;
+                // Without the column, the table either failed to upgrade (reported on its own) or this is a
+                // dry run, after which every row would carry the column's empty default.
+                bool hasColumn = actual.Fields!.Contains(SysFields.CompanyId);
+                if (!hasColumn && !dryRun) continue;
+                try
+                {
+                    AssignTable(databaseId, databaseType, dbAccess, table, hasColumn, companies, dryRun, assignments, problems);
+                }
+                catch (DbException ex)
+                {
+                    problems.Add($"Could not give {databaseId}.{table} its company: {ex.Message}");
+                }
+            }
+        }
+
         private static void AssignTable(
-            string databaseId, DatabaseType databaseType, DbAccess dbAccess, string table, List<string> companies,
-            bool dryRun, List<CompanyRowAssignment> assignments, List<string> problems)
+            string databaseId, DatabaseType databaseType, DbAccess dbAccess, string table, bool hasColumn,
+            List<string> companies, bool dryRun, List<CompanyRowAssignment> assignments, List<string> problems)
         {
             string quotedTable = databaseType.QuoteIdentifier(table);
             string column = databaseType.QuoteIdentifier(SysFields.CompanyId);
             // Oracle stores an empty string as NULL, so a row with no company is either.
             string unassigned = $"{column} IS NULL OR {column} = ''";
 
-            int rows = Convert.ToInt32(
-                dbAccess.ExecuteScalar($"SELECT COUNT(*) FROM {quotedTable} WHERE {unassigned}"), CultureInfo.InvariantCulture);
+            string countSql = hasColumn
+                ? $"SELECT COUNT(*) FROM {quotedTable} WHERE {unassigned}"
+                : $"SELECT COUNT(*) FROM {quotedTable}";
+            int rows = Convert.ToInt32(dbAccess.ExecuteScalar(countSql), CultureInfo.InvariantCulture);
             if (rows == 0) return;
 
             if (companies.Count > 1)
@@ -136,26 +169,41 @@ namespace Polhem.Hosting.Database
         }
 
         /// <summary>
-        /// Reads every company's id and database from <c>st_company</c>, or nothing when the common
-        /// database has no such table yet.
+        /// Reads every company's id and database from <c>st_company</c> in each common database.
         /// </summary>
-        private List<(string CompanyId, string DatabaseId)> ReadCompanyIds(DatabaseSettings settings)
+        /// <returns>
+        /// The companies, and whether every common database was read. A database that does not exist yet, or
+        /// has no <c>st_company</c> yet, holds no company and counts as read; one that cannot be reached does not.
+        /// </returns>
+        private (List<(string CompanyId, string DatabaseId)> Companies, bool Complete) ReadCompanies(DatabaseSettings settings)
         {
-            var commonId = GetCategoryDatabases(settings, DbCategoryIds.Common).FirstOrDefault();
-            if (commonId is null) return [];
+            var companies = new List<(string CompanyId, string DatabaseId)>();
+            bool complete = true;
+            foreach (var commonId in GetCategoryDatabases(settings, DbCategoryIds.Common))
+            {
+                try
+                {
+                    var databaseType = _connectionManager.GetConnectionInfo(commonId).DatabaseType;
+                    var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(commonId, _connectionManager);
+                    if (schemaProvider.GetTableSchema(CompanyTable) is null) continue;
 
-            var databaseType = _connectionManager.GetConnectionInfo(commonId).DatabaseType;
-            var schemaProvider = DbDialectRegistry.Get(databaseType).CreateTableSchemaProvider(commonId, _connectionManager);
-            if (schemaProvider.GetTableSchema(CompanyTable) is null) return [];
-
-            var table = _dbAccessFactory.Create(commonId).ExecuteDataTable(
-                $"SELECT {databaseType.QuoteIdentifier(SysFields.Id)}, {databaseType.QuoteIdentifier("company_database_id")} " +
-                $"FROM {databaseType.QuoteIdentifier(CompanyTable)}");
-            return table is null
-                ? []
-                : table.Rows.Cast<System.Data.DataRow>()
-                    .Select(row => (ValueUtilities.CStr(row[0]), ValueUtilities.CStr(row[1])))
-                    .ToList();
+                    var table = _dbAccessFactory.Create(commonId).ExecuteDataTable(
+                        $"SELECT {databaseType.QuoteIdentifier(SysFields.Id)}, {databaseType.QuoteIdentifier("company_database_id")} " +
+                        $"FROM {databaseType.QuoteIdentifier(CompanyTable)}");
+                    if (table is null) continue;
+                    companies.AddRange(table.Rows.Cast<System.Data.DataRow>()
+                        .Select(row => (ValueUtilities.CStr(row[0]), ValueUtilities.CStr(row[1]))));
+                }
+                catch (DbException)
+                {
+                    complete = false;
+                }
+                catch (KeyNotFoundException)
+                {
+                    complete = false;
+                }
+            }
+            return (companies, complete);
         }
     }
 }

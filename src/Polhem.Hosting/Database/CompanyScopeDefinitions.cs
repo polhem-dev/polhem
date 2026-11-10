@@ -18,10 +18,26 @@ namespace Polhem.Hosting.Database
         /// Returns the names of the company tables, among <paramref name="tableNames"/> or all of them,
         /// whose table schema does not carry the company column and indexes yet.
         /// </summary>
+        /// <remarks>
+        /// A registered table with no table schema at all is left out: upgrading it fails on its own, with
+        /// the reason.
+        /// </remarks>
         public static IReadOnlyList<string> FindMissing(IDefineAccess defineAccess, IReadOnlyCollection<string>? tableNames = null)
             => CompanyTables(defineAccess, tableNames)
-                .Where(name => !defineAccess.GetTableSchema(DbCategoryIds.Company, name).HasCompanyScope())
+                .Where(name => TryGet(defineAccess, name) is { } schema && !schema.HasCompanyScope())
                 .ToList();
+
+        private static TableSchema? TryGet(IDefineAccess defineAccess, string tableName)
+        {
+            try
+            {
+                return defineAccess.GetTableSchema(DbCategoryIds.Company, tableName);
+            }
+            catch (DefinitionNotFoundException)
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Adds the company column and company-led unique indexes to every company table schema that lacks
@@ -34,8 +50,8 @@ namespace Polhem.Hosting.Database
             foreach (var name in CompanyTables(defineAccess, tableNames: null))
             {
                 // The cached instance is shared by every reader; change a copy and save that.
-                var schema = defineAccess.GetTableSchema(DbCategoryIds.Company, name).Clone();
-                if (!schema.ApplyCompanyScope()) continue;
+                var schema = TryGet(defineAccess, name)?.Clone();
+                if (schema is null || !schema.ApplyCompanyScope()) continue;
                 if (!dryRun) defineAccess.SaveTableSchema(DbCategoryIds.Company, schema);
                 changed.Add(name);
             }

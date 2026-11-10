@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;
+using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
@@ -141,6 +142,43 @@ namespace Polhem.Hosting.UnitTests
                 && p.Contains("acme", StringComparison.Ordinal) && p.Contains("globex", StringComparison.Ordinal));
             Assert.Empty(report.CompanyAssignments);
             Assert.Equal(string.Empty, StoredCompany(rowId));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A company's database id matches its database item without regard to case, as the connection lookup does")]
+        public void UpgradeTables_DatabaseIdInAnotherCase_AssignsRows()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            InsertCompany("acme", "COMPANY");
+            var rowId = InsertDepartmentWithoutCompany();
+
+            var report = _initializer.UpgradeTables();
+
+            Assert.True(report.Succeeded, string.Join("; ", report.Problems));
+            Assert.Equal("acme", StoredCompany(rowId));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A dry run on a table that has no company column yet counts every row as one the upgrade would give a company")]
+        public void UpgradeTables_DryRunBeforeColumnExists_CountsEveryRow()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            var scoped = _access.GetTableSchema(DbCategoryIds.Company, DepartmentTable).Clone();
+            RemoveCompanyColumn(DepartmentTable);
+            new TableSchemaBuilder(DbCategoryIds.Company, _access, _connectionManager)
+                .Execute(DbCategoryIds.Company, DepartmentTable, new UpgradeOptions { AllowColumnNarrowing = true });
+            _access.SaveTableSchema(DbCategoryIds.Company, scoped);
+            InsertCompany("acme", DbCategoryIds.Company);
+            _dbAccessFactory.Create(DbCategoryIds.Company).ExecuteNonQuery(
+                $"INSERT INTO {DepartmentTable} (sys_rowid, sys_id, sys_name) VALUES ({{0}}, {{1}}, {{2}})",
+                Guid.NewGuid(), "D01", "Sales");
+
+            var report = _initializer.UpgradeTables(dryRun: true);
+
+            Assert.True(report.Succeeded, string.Join("; ", report.Problems));
+            Assert.Equal(1, Assert.Single(report.CompanyAssignments).Rows);
         }
 
         [DbFact(DatabaseType.SQLite)]

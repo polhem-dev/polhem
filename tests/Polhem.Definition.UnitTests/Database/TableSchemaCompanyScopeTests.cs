@@ -56,6 +56,20 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
+        [DisplayName("ApplyCompanyScope moves sys_company_id to the front of a unique index that holds it further back")]
+        public void ApplyCompanyScope_CompanyFieldNotFirst_MovesItToFront()
+        {
+            var schema = BuildSchema();
+            schema.Fields!.Add(SysFields.CompanyId, "Company", FieldDbType.String, CompanyInfo.CompanyIdMaxLength);
+            schema.Indexes!["uk_{0}"].IndexFields!.Add(new IndexField(SysFields.CompanyId, Polhem.Definition.Sorting.SortDirection.Asc));
+
+            Assert.True(schema.ApplyCompanyScope());
+
+            Assert.Equal(s_companyAndId, Keys(schema, "uk_{0}"));
+            Assert.True(schema.HasCompanyScope());
+        }
+
+        [Fact]
         [DisplayName("HasCompanyScope is false while a business unique index does not lead with sys_company_id")]
         public void HasCompanyScope_ColumnButUnscopedIndex_ReturnsFalse()
         {

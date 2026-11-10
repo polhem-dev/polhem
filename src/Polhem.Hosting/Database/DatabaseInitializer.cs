@@ -124,7 +124,7 @@ namespace Polhem.Hosting.Database
             var databaseSettings = _defineAccess.GetDatabaseSettings();
             var categories = _defineAccess.GetDbCategorySettings().Categories;
 
-            var readiness = CheckCompanyReadiness(databaseSettings, tableNames);
+            var (readiness, companyIdsChecked) = CheckCompanyReadiness(databaseSettings, tableNames);
             if (readiness.Count > 0)
                 return new TableUpgradeReport { Problems = readiness };
 
@@ -156,8 +156,10 @@ namespace Polhem.Hosting.Database
                 {
                     foreach (var table in categoryTables)
                     {
-                        var entry = UpgradeTable(databaseId, category.Id, table.TableName,
-                            NarrowingAllowedFor(category.Id, table.TableName, options), dryRun);
+                        bool mayNarrowCompanyId = companyIdsChecked
+                            && string.Equals(category.Id, DbCategoryIds.Common, StringComparison.Ordinal)
+                            && string.Equals(table.TableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
+                        var entry = UpgradeTable(databaseId, category.Id, table.TableName, options, dryRun, mayNarrowCompanyId);
                         tables.Add(entry);
                         tableCompleted?.Invoke(entry);
                     }
@@ -173,31 +175,33 @@ namespace Polhem.Hosting.Database
         }
 
         /// <summary>
-        /// Returns the options a table is upgraded with: <c>st_company</c> may narrow, because the
-        /// readiness check has just confirmed that every company id fits <see cref="CompanyInfo.CompanyIdMaxLength"/>.
+        /// Returns the options <c>st_company</c> is upgraded with: it may narrow when the only column it changes
+        /// is <c>sys_id</c>, whose width came down to <see cref="CompanyInfo.CompanyIdMaxLength"/> and which the
+        /// readiness check has just confirmed every company id fits.
         /// </summary>
         /// <remarks>
-        /// The width of <c>st_company.sys_id</c> came down to the company id's width. Any other narrowing still
-        /// needs <see cref="UpgradeOptions.AllowColumnNarrowing"/>; this allows the whole <c>st_company</c>
-        /// plan to narrow, which only the framework's definition of the table can ask for.
+        /// A change to any other column of the table keeps the usual rule, so a narrowing there still needs
+        /// <see cref="UpgradeOptions.AllowColumnNarrowing"/>.
         /// </remarks>
-        private static UpgradeOptions? NarrowingAllowedFor(string categoryId, string tableName, UpgradeOptions? options)
+        private static UpgradeOptions? CompanyIdNarrowingOptions(TableSchemaDiff diff, UpgradeOptions? options)
         {
-            bool companyTable = string.Equals(categoryId, DbCategoryIds.Common, StringComparison.Ordinal)
-                && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
-            return companyTable && options?.AllowColumnNarrowing != true
-                ? new UpgradeOptions { AllowColumnNarrowing = true }
-                : options;
+            if (options?.AllowColumnNarrowing == true) return options;
+            var altered = diff.Changes.OfType<Polhem.Db.Schema.Changes.AlterFieldChange>().ToList();
+            bool onlyCompanyId = altered.Count > 0 && altered.All(c =>
+                string.Equals(c.NewField.FieldName, Polhem.Definition.SysFields.Id, StringComparison.OrdinalIgnoreCase));
+            return onlyCompanyId ? new UpgradeOptions { AllowColumnNarrowing = true } : options;
         }
 
         private TableUpgradeEntry UpgradeTable(
-            string databaseId, string categoryId, string tableName, UpgradeOptions? options, bool dryRun)
+            string databaseId, string categoryId, string tableName, UpgradeOptions? options, bool dryRun,
+            bool mayNarrowCompanyId = false)
         {
             var entry = new TableUpgradeEntry { DatabaseId = databaseId, CategoryId = categoryId, TableName = tableName };
             try
             {
                 var builder = new TableSchemaBuilder(databaseId, _defineAccess, _connectionManager);
                 var diff = builder.CompareToDiff(categoryId, tableName);
+                if (mayNarrowCompanyId) options = CompanyIdNarrowingOptions(diff, options);
                 var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
                 var orchestrator = new TableUpgradeOrchestrator(DbDialectRegistry.Get(databaseType), _connectionManager);
                 var plan = orchestrator.Plan(diff, options);
