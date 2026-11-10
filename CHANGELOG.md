@@ -16,6 +16,7 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
 
 - **Breaking:** The Avalonia and Blazor heads share one `FormDataObject`, which moves to `Polhem.UI.Core.DataObjects` and takes the user's time zone from the code that constructs it.
+- A table with a Binary column reads back over the JSON body codec and the Plain format again, so such a form can be created and saved from a JSON client.
 
 ## [1.12.1] - 2026-11-06
 

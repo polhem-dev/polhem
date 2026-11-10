@@ -15,6 +15,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.13.0.md](docs/zh-TW/changelogs/1.13.0.md)
 
 - **破壞性變更：** Avalonia 與 Blazor head 共用同一個 `FormDataObject`，移至 `Polhem.UI.Core.DataObjects`，並由建構它的程式傳入使用者時區。
+- 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
 
 ## [1.12.1] - 2026-11-06
 

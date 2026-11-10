@@ -84,13 +84,27 @@ namespace Polhem.Core.Serialization
                     continue;
 
                 var col = new ColumnDef();
+                // `type` may come after `defaultValue`, and the default can only be read back against the column's
+                // type. A copy of the reader at the value reads it once the whole definition is in; a converter is
+                // handed its whole value buffered, so the copy stays valid while this one moves on.
+                var defaultReader = default(Utf8JsonReader);
+                var hasDefault = false;
                 while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
                 {
                     if (reader.TokenType != JsonTokenType.PropertyName) continue;
                     var key = reader.GetString();
                     reader.Read();
+                    if (key == "defaultValue")
+                    {
+                        hasDefault = reader.TokenType != JsonTokenType.Null;
+                        defaultReader = reader;
+                        reader.Skip();
+                        continue;
+                    }
                     ReadColumnField(ref reader, col, key);
                 }
+                if (hasDefault)
+                    col.DefaultValue = ReadDefaultValue(ref defaultReader, col.FieldType);
                 list.Add(col);
             }
             return list;
@@ -106,8 +120,24 @@ namespace Polhem.Core.Serialization
                 case "readOnly": col.ReadOnly = reader.GetBoolean(); break;
                 case "maxLength": col.MaxLength = reader.GetInt32(); break;
                 case "caption": col.Caption = reader.GetString() ?? string.Empty; break;
-                case "defaultValue": col.DefaultValue = reader.TokenType == JsonTokenType.Null ? null : ReadPrimitiveValue(ref reader); break;
             }
+        }
+
+        /// <summary>
+        /// Reads a column's <c>defaultValue</c> back against the column's own type, the way a cell of that column is read.
+        /// </summary>
+        /// <remarks>
+        /// The writer emits the default through the same path as a cell, so a <c>byte[]</c> default is base64, a decimal
+        /// one is quoted, and a date one is ISO-8601. Read without the column's type, an empty <c>byte[]</c> came back as
+        /// the string <c>""</c>, which a <c>byte[]</c> column rejects, so no table with a Binary column read back.
+        /// </remarks>
+        /// <param name="reader">A copy of the reader positioned on the value.</param>
+        /// <param name="fieldType">The column's field type, known once its whole definition is read.</param>
+        private static object? ReadDefaultValue(ref Utf8JsonReader reader, FieldDbType fieldType)
+        {
+            var targetType = DbTypeConverter.ToType(fieldType);
+            var value = ReadPrimitiveValue(ref reader, targetType);
+            return value is null ? null : ConvertValue(value, targetType);
         }
 
         /// <summary>
@@ -219,10 +249,7 @@ namespace Polhem.Core.Serialization
         /// Reads a primitive JSON value from the reader and returns it as a .NET object.
         /// </summary>
         /// <param name="reader">The JSON reader positioned on the value.</param>
-        /// <param name="targetType">
-        /// The CLR type of the destination column when known; <c>null</c> for contexts with no
-        /// column (such as a column's own <c>defaultValue</c>).
-        /// </param>
+        /// <param name="targetType">The CLR type of the destination column when known.</param>
         private static object? ReadPrimitiveValue(ref Utf8JsonReader reader, Type? targetType = null)
         {
             switch (reader.TokenType)
