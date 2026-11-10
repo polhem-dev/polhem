@@ -90,8 +90,18 @@ namespace Polhem.Definition.Forms
         /// Resolves the table a rule targets: the master table when <see cref="FormRule.TargetTable"/>
         /// is empty, otherwise the named table (null when absent).
         /// </summary>
-        private static FormTable? ResolveRuleTable(FormRule rule, FormSchema schema)
+        /// <param name="rule">The rule.</param>
+        /// <param name="schema">The schema that owns the rule.</param>
+        /// <returns>The table the rule is evaluated against, or <c>null</c> when it names no table of the schema.</returns>
+        /// <remarks>
+        /// A rule whose table is absent is skipped by both <see cref="ValidateRules"/> and
+        /// <see cref="ValidateExpressions"/>; an editor resolves the variables of a rule's expressions through this method
+        /// so it agrees with them.
+        /// </remarks>
+        public static FormTable? ResolveRuleTable(FormRule rule, FormSchema schema)
         {
+            ArgumentNullException.ThrowIfNull(rule);
+            ArgumentNullException.ThrowIfNull(schema);
             if (StringUtilities.IsEmpty(rule.TargetTable)) { return schema.MasterTable; }
             return schema.Tables != null && schema.Tables.Contains(rule.TargetTable)
                 ? schema.Tables[rule.TargetTable] : null;

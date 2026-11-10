@@ -71,5 +71,43 @@ namespace Polhem.Expressions.UnitTests
 
             Assert.Empty(_evaluator.GetCompiledInvokers());
         }
+
+        [Fact]
+        [DisplayName("Validate reports the offset of an unknown identifier as the exception position")]
+        public void Validate_UnknownIdentifier_ReportsPosition()
+        {
+            var ex = Assert.Throws<ExpressionEvaluationException>(() =>
+                _evaluator.Validate("amount * qty", Types(("amount", typeof(decimal))), typeof(object)));
+
+            Assert.Equal("amount * qty".IndexOf("qty", StringComparison.Ordinal), ex.Position);
+        }
+
+        [Fact]
+        [DisplayName("Every listed helper function parses as a call with arguments of its parameter types")]
+        public void HelperFunctions_EachListedFunction_ParsesAsCall()
+        {
+            Assert.NotEmpty(DynamicExpressoEvaluator.HelperFunctions);
+            foreach (var function in DynamicExpressoEvaluator.HelperFunctions)
+            {
+                var types = function.Parameters
+                    .Select((parameter, index) => ($"p{index}", parameter.ParameterType))
+                    .ToArray();
+                var call = $"{function.Name}({string.Join(", ", types.Select(t => t.Item1))})";
+
+                var exception = Record.Exception(() => _evaluator.Validate(call, Types(types), function.ReturnType));
+
+                Assert.Null(exception);
+            }
+        }
+
+        [Fact]
+        [DisplayName("ReferencedTypes lists the type names an expression can use, such as Math and Guid")]
+        public void ReferencedTypes_ContainsMathAndGuid()
+        {
+            var referenced = _evaluator.ReferencedTypes;
+
+            Assert.Equal(typeof(Math), referenced["Math"]);
+            Assert.Equal(typeof(Guid), referenced["Guid"]);
+        }
     }
 }

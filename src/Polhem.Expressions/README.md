@@ -18,6 +18,8 @@ while typing), so a computed field yields the same result on both sides.
 functions as `Evaluate`, and throws `ExpressionEvaluationException` when it does not parse. Nothing is compiled.
 `FormExpressionCalculator.ValidateExpressions` (`Polhem.Definition`) runs it over every expression of a FormSchema,
 with each field typed as the runtime types it, and DefineEditor shows the result when it validates or saves a form.
+The exception's `Position` is the offset where parsing stopped. `HelperFunctions` and `ReferencedTypes` list the
+functions and type names an expression can use, so an editor can offer them without keeping its own copy.
 
 The check matters most for numeric literals: a literal with a decimal point is a `double`, and there is no operator
 between `decimal` and `double`, so `amount * 1.05` on a decimal field does not parse. Write `amount * 1.05m`. On the

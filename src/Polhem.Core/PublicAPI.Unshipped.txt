@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Core.Expressions.ExpressionEvaluationException.Position.get -> int?
+Polhem.Core.Expressions.ExpressionEvaluationException.Position.init -> void

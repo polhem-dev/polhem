@@ -107,7 +107,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     /// fails the server's save, and on the client it silently stops the live computation, so it is an error here.
     /// </summary>
     /// <remarks>Shared across documents: the evaluator is thread-safe and building its interpreter is not free.</remarks>
-    private static readonly FormExpressionCalculator s_expressionCalculator = new(new DynamicExpressoEvaluator());
+    private static readonly DynamicExpressoEvaluator s_evaluator = new();
+    private static readonly FormExpressionCalculator s_expressionCalculator = new(s_evaluator);
 
     private static ValidationIssue ToValidationIssue(FormExpressionIssue issue)
     {
@@ -333,7 +334,75 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     /// form's ListFields and LookupFields; no editor for any other property.
     /// </summary>
     public Func<Task<bool>>? ProvideValueEditor(PropertyDescriptor property, object component) =>
-        ProvideRelationEditor(property, component) ?? ProvideFieldPicker(property, component);
+        ProvideRelationEditor(property, component) ?? ProvideFieldPicker(property, component)
+        ?? ProvideExpressionEditor(property, component);
+
+    /// <summary>
+    /// The expression editor beside a rule's When and Condition and a field's ValueExpression and
+    /// DefaultValueExpression; <c>null</c> for any other property, or when the table the expression reads is missing.
+    /// </summary>
+    public Func<Task<bool>>? ProvideExpressionEditor(PropertyDescriptor property, object component) =>
+        CreateExpressionEditor(property, component) is not null
+            ? () => EditExpressionAsync(property, component)
+            : null;
+
+    /// <summary>
+    /// Builds the editor for the expression <paramref name="property"/> holds on <paramref name="component"/>, with the
+    /// variables and result type <see cref="FormExpressionCalculator.ValidateExpressions"/> parses it with; <c>null</c>
+    /// when the property is not an expression or its table is missing.
+    /// </summary>
+    public ExpressionEditorViewModel? CreateExpressionEditor(PropertyDescriptor property, object component)
+    {
+        var expression = property.GetValue(component) as string ?? string.Empty;
+        switch (component)
+        {
+            case FormRule rule when property.Name is nameof(FormRule.When) or nameof(FormRule.Condition):
+                return FormExpressionCalculator.ResolveRuleTable(rule, Schema) is { } ruleTable
+                    ? new ExpressionEditorViewModel($"{rule.RuleId} · {property.Name}", ruleTable, typeof(bool),
+                        expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator)
+                    : null;
+            case FormField field when property.Name is nameof(FormField.ValueExpression)
+                    or nameof(FormField.DefaultValueExpression):
+                return field.Table is { } fieldTable
+                    ? new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}", fieldTable, typeof(object),
+                        expression, null, s_evaluator)
+                    : null;
+            default:
+                return null;
+        }
+    }
+
+    private async Task<bool> EditExpressionAsync(PropertyDescriptor property, object component)
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null) return false; // smoke / headless
+        var editor = CreateExpressionEditor(property, component);
+        if (editor is null || !await ExpressionEditorDialog.ShowAsync(owner, editor)) return false;
+        return ApplyExpressionEdit(editor, property, component);
+    }
+
+    /// <summary>
+    /// Writes what <paramref name="editor"/> holds back to <paramref name="component"/>: the expression, and a rule's
+    /// message when it was edited beside the condition. Returns whether anything changed.
+    /// </summary>
+    public static bool ApplyExpressionEdit(ExpressionEditorViewModel editor, PropertyDescriptor property, object component)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        ArgumentNullException.ThrowIfNull(property);
+        var changed = false;
+        if (!string.Equals(property.GetValue(component) as string ?? string.Empty, editor.Expression, StringComparison.Ordinal))
+        {
+            property.SetValue(component, editor.Expression);
+            changed = true;
+        }
+        if (editor.HasMessage && component is FormRule rule
+            && !string.Equals(rule.Message, editor.Message, StringComparison.Ordinal))
+        {
+            rule.Message = editor.Message;
+            changed = true;
+        }
+        return changed;
+    }
 
     /// <summary>
     /// The field picker for the form's ListFields and LookupFields, which name master-table fields as a

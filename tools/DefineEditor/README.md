@@ -47,7 +47,11 @@ A property that names something the solution already has offers it in a drop-dow
 `FieldName` and a layout grid's `TableName` (read from the layout's FormSchema), an index field's `FieldName`, and a
 menu entry's `ProgId` (the programs in `ProgramSettings.xml`). The drop-down only suggests: a typed value is kept, and
 validation reports one that names nothing. A FormSchema's `ListFields` and `LookupFields` open a field picker from the
-**…** button, where the master table's fields are ticked and put in order.
+**…** button, where the master table's fields are ticked and put in order. A rule's `When` and `Condition` and a
+field's `ValueExpression` and `DefaultValueExpression` open an expression editor from the **…** button: the expression
+is written on several lines without XML escaping, the fields of its table and the helper functions are listed beside it
+to insert, and it is parsed as you type, with the place it stops parsing underlined. A rule's message is edited beside
+its condition.
 
 Importing a workbook asks how to treat a TableSchema or a FormLayout the form already has (merge, keep or overwrite the
 TableSchema; keep or regenerate the layout), lists the files it will change, and ends with a dialog that offers to

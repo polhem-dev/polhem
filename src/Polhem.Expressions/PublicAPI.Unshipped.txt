@@ -1,1 +1,8 @@
 #nullable enable
+Polhem.Expressions.DynamicExpressoEvaluator.ReferencedTypes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
+Polhem.Expressions.ExpressionFunction
+Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Type! returnType, System.Collections.Generic.IReadOnlyList<System.Reflection.ParameterInfo!>! parameters) -> void
+Polhem.Expressions.ExpressionFunction.Name.get -> string!
+Polhem.Expressions.ExpressionFunction.Parameters.get -> System.Collections.Generic.IReadOnlyList<System.Reflection.ParameterInfo!>!
+Polhem.Expressions.ExpressionFunction.ReturnType.get -> System.Type!
+static Polhem.Expressions.DynamicExpressoEvaluator.HelperFunctions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Expressions.ExpressionFunction!>!
