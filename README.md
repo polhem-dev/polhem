@@ -107,6 +107,7 @@ dotnet add package Polhem.Db
 | **Polhem.UI.Core.dll** | Shared front-end layer referenced by every front end, the Blazor head included: the UI service contracts (`UIServices` / `IUserContext` / `IFormDefinitionSource`), the form value rules (`FormValueBinding` / `FormDataGuard`) and the permission capability resolver. No transport; reaches the backend only through `Polhem.Api.Contracts`. |
 | **Polhem.UI.ApiBridge.dll** | Connects a single-user front end to a Polhem backend: client connection state (`ClientInfo`), endpoint and API key persistence (`IEndpointStorage` / `FileEndpointStorage`), and the API-backed `Polhem.UI.Core` services registered with `AddPolhemUIApiBridge()`. Not for multi-user hosts. |
 | **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
+| **Polhem.UI.Avalonia.Shell.dll** | A ready-made Avalonia front end for a Polhem backend: connect, sign in to a company, and open every form of the server's menu. Shared by the desktop, browser, iOS and Android heads; an application derives from `ShellApplication`. |
 | **Polhem.Web.Blazor.dll** | The shared layer of the Blazor head (`FormDataObject`, the field editor bases, `BlazorUserContext`), with no UI framework or host. |
 | **Polhem.Web.Blazor.Mud.dll** | The MudBlazor UI package of the Blazor head: the form page, record layout, grid, field editors, dialogs and shell. |
 | **Polhem.Web.Blazor.Fluent.dll** | The Fluent UI package of the Blazor head, with the same pages and behavior as the MudBlazor one. |
@@ -137,9 +138,9 @@ Ready to build your own? [Getting Started](https://github.com/polhem-dev/polhem/
 
 ## 🌟 Featured demo — Polhem.Northwind
 
-[`apps/Polhem.Northwind`](https://github.com/polhem-dev/polhem/blob/main/apps/Polhem.Northwind/README.md) is the flagship demo: the classic Northwind inventory case built almost entirely from definitions (master files, master-detail orders with lookups, exactly one hand-written business object — everything else is XML). The same shared `Polhem.Northwind.UI` runs on **four Avalonia heads** — Desktop, Browser (WASM), iOS, and Android — against one JSON-RPC server.
+[`apps/Polhem.Northwind`](https://github.com/polhem-dev/polhem/blob/main/apps/Polhem.Northwind/README.md) is the flagship demo: the classic Northwind inventory case built almost entirely from definitions (master files, master-detail orders with lookups, exactly one hand-written business object — everything else is XML). The same shared `Polhem.Northwind.UI` runs on **four Avalonia heads** — Desktop, Browser (WASM), iOS, and Android — against one JSON-RPC server. **Four Blazor heads** — Server and WebAssembly, each on MudBlazor and on Fluent UI — open the same forms from the same definitions.
 
-The same Order form rendered by each head — same definitions, same controls, only the platform shell differs:
+The same Order form rendered by each Avalonia head — same definitions, same controls, only the platform shell differs:
 
 | Desktop | Browser (WASM) |
 |---|---|
@@ -157,8 +158,9 @@ The control demo centers live in-repo under [`samples/`](https://github.com/polh
 
 | Category | Demo | Shows |
 |----------|------|-------|
-| Blazor | [`Blazor.Mud.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Mud.DemoCenter/README.md) | The same topic-oriented demo center over `Polhem.Web.Blazor.Mud` (MudBlazor, no backend) |
-| Avalonia | [`Avalonia.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Avalonia.DemoCenter/README.md) | Theme-oriented control demo center (DevExpress-style): nav tree (theme → case) + Demo/Source tabs + theme/FormMode toolbar; covers data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity (Semi.Avalonia, no backend) |
+| Avalonia | [`Avalonia.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Avalonia.DemoCenter/README.md) | Topic-oriented control demo center: a navigation tree (topic → case), Demo/Source tabs and a Light/Dark toolbar; covers data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity (`Polhem.UI.Avalonia` on Semi.Avalonia, no backend) |
+| Blazor | [`Blazor.Mud.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Mud.DemoCenter/README.md) | The same topics and cases over `Polhem.Web.Blazor.Mud` (MudBlazor, no backend) |
+| Blazor | [`Blazor.Fluent.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Fluent.DemoCenter/README.md) | The same topics and cases over `Polhem.Web.Blazor.Fluent` (Fluent UI, no backend) |
 
 
 ## Migrating from Bee.NET
