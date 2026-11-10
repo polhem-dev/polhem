@@ -561,7 +561,7 @@ already exists is left as it is.
 | `db create` | For each `DatabaseItem`, creates the database its connection string names when it does not exist. |
 | `db check` | Opens a connection to each `DatabaseItem` and reports `ok` or the engine's error. Nothing is created, except that SQLite creates an empty file when its connection string allows it. |
 | `db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...` | For each category in `DbCategorySettings`, builds or upgrades every table in every `DatabaseItem` whose `CategoryId` is that category. `--table` limits it to the named tables and can be repeated; a name no category registers is reported and fails the command. `--dry-run` prints the statements without running them; `--allow-narrowing` permits changes that shorten a column. |
-| `db seed-admin --company <id> [options]` | Creates the first user, a company and the user's access to it in the common database. Options: `--user` (default `admin`), `--name`, `--company-name`, `--company-database`, `--currency` (default `USD`), `--no-deployment-admin`. |
+| `db seed-admin --company <id> [options]` | Creates the first user, a company and the user's access to it in the common database. The company id is up to 10 ASCII letters and digits and is stored in lowercase (`ACME` becomes `acme`); signing in to the company accepts it in any case. Options: `--user` (default `admin`), `--name`, `--company-name`, `--company-database`, `--currency` (default `USD`), `--no-deployment-admin`. |
 
 **`db create` per engine.** The login in the connection string needs permission to create databases. When it has
 none, have a DBA create them and continue with `db upgrade`.

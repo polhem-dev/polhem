@@ -56,6 +56,7 @@ namespace Polhem.Business.Session
         {
             ArgumentNullException.ThrowIfNull(sessionInfo);
             ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
+            companyId = CompanyInfo.NormalizeId(companyId);
 
             var companyInfo = _companyInfoService.Get(companyId);
             if (companyInfo == null) { return null; }

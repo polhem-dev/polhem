@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: 256b0fad49749dac736f8690b157318e1396e890 -->
+<!-- source: en/database/database-settings-guide.md blob: d6b24b75e78d71b28bb276c7d9beff862eb87034 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -560,7 +560,7 @@ dotnet run -- db seed-admin --company ACME
 | `db create` | 對每個 `DatabaseItem`，連線字串所指的資料庫不存在時建立它。 |
 | `db check` | 逐一連線每個 `DatabaseItem`，回報 `ok` 或資料庫引擎的錯誤。不會建立任何東西；只有 SQLite 在連線字串允許時會建立空白檔案。 |
 | `db upgrade [--dry-run] [--allow-narrowing] [--table <名稱>]...` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--table` 只處理指定的資料表，可重複；沒有任何分類登記的名稱會被列出，指令以失敗結束。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。 |
-| `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
+| `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。公司代號最多 10 個 ASCII 英文字母或數字，一律以小寫儲存（`ACME` 會存成 `acme`）；進入公司時大小寫皆可。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
 
 **各引擎的 `db create`。** 連線字串中的登入帳號需要建立資料庫的權限；沒有的話，請 DBA 建好資料庫後直接執行
 `db upgrade`。

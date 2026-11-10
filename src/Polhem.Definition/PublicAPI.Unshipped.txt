@@ -1,3 +1,5 @@
 #nullable enable
+static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
+static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
 const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
 const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!

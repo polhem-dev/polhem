@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests
 
         public SystemBusinessObjectLifecycleTests(SharedDbFixture fx) { _fx = fx; }
 
-        private static string UniqueCompanyId() => "C_" + Guid.NewGuid().ToString("N")[..12];
+        private static string UniqueCompanyId() => "c" + Guid.NewGuid().ToString("N")[..9];
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("The whole session lifecycle Login → EnterCompany(A) → EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout stays consistent")]
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             // companyA uses seed C001, which already maps to user '001'. companyB is created and granted here,
             // going through the real `st_company` / `st_user_company` path that the `HasAccess` check requires.
-            const string companyA = "C001";
+            const string companyA = SharedDatabaseState.SeedCompanyId;
             var companyB = UniqueCompanyId();
             var (companyBRowId, grantBRowId) = InsertCompanyAndGrantForSeedUser(companyB);
 

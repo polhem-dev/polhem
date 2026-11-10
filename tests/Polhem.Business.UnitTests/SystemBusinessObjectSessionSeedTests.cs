@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
     /// </remarks>
     public class SystemBusinessObjectSessionSeedTests : IClassFixture<SharedDbFixture>
     {
-        private const string SeedCompanyId = "C001";
+        private const string SeedCompanyId = SharedDatabaseState.SeedCompanyId;
         private readonly SharedDbFixture _fx;
 
         public SystemBusinessObjectSessionSeedTests(SharedDbFixture fx) { _fx = fx; }

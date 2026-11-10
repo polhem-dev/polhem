@@ -179,5 +179,47 @@ namespace Polhem.Definition.UnitTests.Identity
             Assert.Equal(0.05m, rounding.FindUnit("CHF"));
             Assert.Null(rounding.FindUnit("USD"));
         }
+
+        [Theory]
+        [InlineData("C001", "c001")]
+        [InlineData("NorthWind", "northwind")]
+        [InlineData("c001", "c001")]
+        [DisplayName("NormalizeId returns the lowercase form of a company id")]
+        public void NormalizeId_MixedCase_ReturnsLowercase(string input, string expected)
+        {
+            Assert.Equal(expected, CompanyInfo.NormalizeId(input));
+        }
+
+        [Fact]
+        [DisplayName("NormalizeId throws ArgumentNullException for null")]
+        public void NormalizeId_Null_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => CompanyInfo.NormalizeId(null!));
+        }
+
+        [Theory]
+        [InlineData("c001")]
+        [InlineData("a")]
+        [InlineData("abcde12345")]
+        [DisplayName("IsValidId accepts one to ten lowercase ASCII letters and digits")]
+        public void IsValidId_CanonicalId_ReturnsTrue(string companyId)
+        {
+            Assert.True(CompanyInfo.IsValidId(companyId));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("abcde123456")]
+        [InlineData("C001")]
+        [InlineData("co_1")]
+        [InlineData("c 01")]
+        [InlineData("公司")]
+        [InlineData("é01")]
+        [DisplayName("IsValidId rejects an empty, too long, uppercase or non-alphanumeric id")]
+        public void IsValidId_InvalidId_ReturnsFalse(string? companyId)
+        {
+            Assert.False(CompanyInfo.IsValidId(companyId));
+        }
     }
 }

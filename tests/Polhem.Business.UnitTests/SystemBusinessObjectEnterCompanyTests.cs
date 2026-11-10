@@ -17,7 +17,7 @@ namespace Polhem.Business.UnitTests
     public class SystemBusinessObjectEnterCompanyTests : IClassFixture<SharedDbFixture>
     {
         private const string SeedUserId = "001";
-        private const string SeedCompanyId = "C001";
+        private const string SeedCompanyId = SharedDatabaseState.SeedCompanyId;
         // BO tests are bound to SQL Server. The company permission tables (`st_role_grant` / `st_user_role`) live in the
         // company-category DB, so `company_database_id` must point there for `EnterCompany` to load the role snapshot.
         private static readonly string s_companyDbId = TestDbConventions.GetDatabaseId(DatabaseType.SQLServer, "company");
@@ -128,8 +128,29 @@ namespace Polhem.Business.UnitTests
                 var session = sessionService.Get(accessToken);
                 Assert.NotNull(session);
                 Assert.Equal(SeedCompanyId, session.CompanyId);
-                // Seed company 'C001' ships no customization → standard (empty) code.
+                // The seed company ships no customization → standard (empty) code.
                 Assert.Equal(string.Empty, session.CustomizeId);
+            }
+            finally
+            {
+                sessionService.Remove(accessToken);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("EnterCompany with an uppercase company id binds the session to the stored lowercase id")]
+        public void EnterCompany_UppercaseCompanyId_BindsLowercaseId()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
+
+            try
+            {
+                var result = bo.EnterCompany(new EnterCompanyArgs { CompanyId = SeedCompanyId.ToUpperInvariant() });
+
+                Assert.Equal(SeedCompanyId, result.Company.CompanyId);
+                Assert.Equal(SeedCompanyId, sessionService.Get(accessToken)!.CompanyId);
             }
             finally
             {
@@ -142,7 +163,7 @@ namespace Polhem.Business.UnitTests
         public void EnterCompany_CustomizedCompany_SetsThenClearsSessionCustomizeId()
         {
             const string customizeId = "ACME";
-            var companyId = "CUST_" + Guid.NewGuid().ToString("N")[..6];
+            var companyId = "cust" + Guid.NewGuid().ToString("N")[..6];
             var companyRowId = InsertCompanyWithCustomize(companyId, customizeId);
             var userRowId = LookupUserRowId(SeedUserId);
             var grantRowId = InsertGrant(userRowId, companyRowId);
@@ -246,7 +267,7 @@ namespace Polhem.Business.UnitTests
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);
             var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
-            var unknown = "UNK_" + Guid.NewGuid().ToString("N")[..6];
+            var unknown = "unk" + Guid.NewGuid().ToString("N")[..6];
 
             try
             {
@@ -268,7 +289,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("EnterCompany throws Company access denied when the company exists but the user has no grant")]
         public void EnterCompany_NoAccess_ThrowsAccessDenied()
         {
-            var companyId = "NOGRANT_" + Guid.NewGuid().ToString("N")[..6];
+            var companyId = "nog" + Guid.NewGuid().ToString("N")[..6];
             var companyRowId = InsertCompany(companyId, enabled: true);
             try
             {
@@ -297,7 +318,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("EnterCompany throws Company access denied when the company is disabled even though the user has a grant")]
         public void EnterCompany_DisabledCompany_ThrowsAccessDenied()
         {
-            var companyId = "DIS_" + Guid.NewGuid().ToString("N")[..6];
+            var companyId = "dis" + Guid.NewGuid().ToString("N")[..6];
             var companyRowId = InsertCompany(companyId, enabled: false);
             var userRowId = LookupUserRowId(SeedUserId);
             var grantRowId = InsertGrant(userRowId, companyRowId);
@@ -329,7 +350,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("EnterCompany switching to another granted company overwrites SessionInfo.CompanyId")]
         public void EnterCompany_SwitchToAnotherCompany_Overwrites()
         {
-            var companyB = "ALT_" + Guid.NewGuid().ToString("N")[..6];
+            var companyB = "alt" + Guid.NewGuid().ToString("N")[..6];
             var companyBRowId = InsertCompany(companyB, enabled: true);
             var userRowId = LookupUserRowId(SeedUserId);
             var grantRowId = InsertGrant(userRowId, companyBRowId);

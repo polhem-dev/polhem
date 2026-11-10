@@ -20,7 +20,7 @@ public class NorthwindApp : ShellApplication
         AppTitle = "Polhem.Northwind",
         DefaultEndpoint = "http://localhost:5100/api",
         DefaultApiKey = "northwind-demo",
-        DefaultCompanyId = "NORTHWIND",
+        DefaultCompanyId = "northwind",
         DefaultUserId = "demo",
         DefaultPassword = "demo",
         // The seeder writes `demo-tw` as well: the same account with a zh-TW culture.

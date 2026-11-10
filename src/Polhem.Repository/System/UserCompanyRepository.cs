@@ -1,6 +1,7 @@
 using Polhem.Core;
 using Polhem.Db;
 using Polhem.Definition;
+using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.System;
 
 namespace Polhem.Repository.System
@@ -49,7 +50,7 @@ namespace Polhem.Repository.System
                 $"INNER JOIN {companyTbl} c ON c.{sysRowId} = uc.{companyRowId} \n" +
                 $"WHERE u.{sysId} = {{0}} AND c.{sysId} = {{1}} AND c.{enabled} = {{2}}";
 
-            var command = new DbCommandSpec(DbCommandKind.Scalar, sql, userId, companyId, true);
+            var command = new DbCommandSpec(DbCommandKind.Scalar, sql, userId, CompanyInfo.NormalizeId(companyId), true);
             var dbAccess = CreateDbAccess();
             var result = dbAccess.Execute(command);
             return ValueUtilities.CInt(result.Scalar!) > 0;

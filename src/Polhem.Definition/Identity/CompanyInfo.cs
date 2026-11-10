@@ -45,6 +45,34 @@ namespace Polhem.Definition.Identity
         public const int CompanyIdMaxLength = 10;
 
         /// <summary>
+        /// Returns the canonical form of a company id: lowercase.
+        /// </summary>
+        /// <param name="companyId">The company id as a caller wrote it.</param>
+        /// <returns>The id in the form <c>st_company.sys_id</c> stores it.</returns>
+        /// <remarks>
+        /// The framework compares company ids with <see cref="StringComparison.OrdinalIgnoreCase"/>,
+        /// while a database compares them by its collation, which is case-sensitive on PostgreSQL,
+        /// Oracle and SQLite. One stored form keeps the two from disagreeing about whether <c>C001</c>
+        /// and <c>c001</c> are the same company. Every id that reaches a query on <c>st_company</c>
+        /// or is bound to a session passes through here first.
+        /// </remarks>
+        public static string NormalizeId(string companyId)
+        {
+            ArgumentNullException.ThrowIfNull(companyId);
+            return companyId.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Gets whether <paramref name="companyId"/> is a valid canonical company id: one to
+        /// <see cref="CompanyIdMaxLength"/> characters, each a lowercase ASCII letter or a digit.
+        /// </summary>
+        /// <param name="companyId">The id to check, normally the result of <see cref="NormalizeId"/>.</param>
+        public static bool IsValidId(string? companyId)
+            => !string.IsNullOrEmpty(companyId)
+               && companyId.Length <= CompanyIdMaxLength
+               && companyId.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c));
+
+        /// <summary>
         /// Gets the company id (unique key).
         /// </summary>
         public string CompanyId { get; init; } = string.Empty;
