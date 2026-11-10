@@ -74,7 +74,7 @@ public partial class ExpressionEditorDialog : Window
 
     private void InsertSelected(object? sender)
     {
-        if (sender is not ListBox { SelectedItem: ExpressionSymbol symbol }) return;
+        if (sender is not TreeView { SelectedItem: ExpressionSymbol symbol }) return;
         var selection = Editor.TextArea.Selection;
         if (!selection.IsEmpty) selection.ReplaceSelectionWithText(string.Empty);
         Editor.Document.Insert(Editor.CaretOffset, symbol.InsertText);

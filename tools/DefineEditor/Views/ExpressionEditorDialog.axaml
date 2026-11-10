@@ -33,33 +33,29 @@
                                      Foreground="{DynamicResource SemiColorDanger}"/>
             </Border>
 
-            <Grid DockPanel.Dock="Right" Width="270" Margin="10,0,0,0" RowDefinitions="Auto,3*,Auto,2*">
-                <TextBlock Grid.Row="0" Classes="muted" Margin="0,0,0,4" Text="{loc:Loc ExpressionEditor_Fields}"/>
-                <ListBox Grid.Row="1" x:Name="FieldList" ItemsSource="{Binding Fields}"
-                         DoubleTapped="OnSymbolDoubleTapped" KeyDown="OnSymbolKeyDown"
-                         AutomationProperties.Name="{loc:Loc ExpressionEditor_Fields}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ExpressionSymbol">
-                            <StackPanel ToolTip.Tip="{Binding Detail}">
-                                <TextBlock Text="{Binding Name}"/>
-                                <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11"
-                                           TextTrimming="CharacterEllipsis"/>
-                            </StackPanel>
+            <Border DockPanel.Dock="Right" Width="320" Margin="10,0,0,0" BorderThickness="1" CornerRadius="4"
+                    BorderBrush="{DynamicResource SemiColorBorder}">
+                <TreeView x:Name="SymbolTree" ItemsSource="{Binding SymbolGroups}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          DoubleTapped="OnSymbolDoubleTapped" KeyDown="OnSymbolKeyDown">
+                    <TreeView.Styles>
+                        <Style Selector="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True"/>
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="vm:ExpressionSymbolGroup" ItemsSource="{Binding Items}">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                        </TreeDataTemplate>
+                        <DataTemplate DataType="vm:ExpressionSymbol">
+                            <DockPanel ToolTip.Tip="{Binding Detail}">
+                                <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding Detail}" Classes="muted" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <TextBlock Grid.Row="2" Classes="muted" Margin="0,8,0,4" Text="{loc:Loc ExpressionEditor_Functions}"/>
-                <ListBox Grid.Row="3" x:Name="FunctionList" ItemsSource="{Binding Functions}"
-                         DoubleTapped="OnSymbolDoubleTapped" KeyDown="OnSymbolKeyDown"
-                         AutomationProperties.Name="{loc:Loc ExpressionEditor_Functions}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ExpressionSymbol">
-                            <TextBlock Text="{Binding Detail}" TextTrimming="CharacterEllipsis"
-                                       ToolTip.Tip="{Binding Detail}"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+                    </TreeView.DataTemplates>
+                </TreeView>
+            </Border>
 
             <Border BorderThickness="1" CornerRadius="4" BorderBrush="{DynamicResource SemiColorBorder}">
                 <ae:TextEditor x:Name="Editor" ShowLineNumbers="False" WordWrap="True"

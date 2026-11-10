@@ -110,6 +110,20 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("The symbol tree has the fields and then the functions as its two headings")]
+        public void CreateExpressionEditor_SymbolGroups_FieldsThenFunctions()
+        {
+            var document = Load();
+            var field = document.Schema.Tables!["Order"].Fields!["tax"];
+
+            var editor = document.CreateExpressionEditor(Property(field, nameof(FormField.ValueExpression)), field)!;
+
+            Assert.Collection(editor.SymbolGroups,
+                group => Assert.Same(editor.Fields, group.Items),
+                group => Assert.Same(editor.Functions, group.Items));
+        }
+
+        [Fact]
         [DisplayName("A rule condition that does not produce a boolean is an error, with where parsing stopped")]
         public void Expression_UnknownIdentifier_ReportsErrorAndPosition()
         {

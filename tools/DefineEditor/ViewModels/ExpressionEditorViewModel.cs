@@ -1,6 +1,7 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Polhem.Core.Expressions;
+using Polhem.DefineEditor.Services;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
 
@@ -44,6 +45,11 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
         Functions = DynamicExpressoEvaluator.HelperFunctions
             .Select(f => new ExpressionSymbol(f.Name, f.Name + "(" + (f.Parameters.Count > 0 ? "" : ")"), Signature(f)))
             .ToList();
+        SymbolGroups =
+        [
+            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Fields"], Fields),
+            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Functions"], Functions),
+        ];
         _expression = expression;
         Validate();
     }
@@ -56,6 +62,9 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
 
     /// <summary>The helper functions every expression can call.</summary>
     public IReadOnlyList<ExpressionSymbol> Functions { get; }
+
+    /// <summary>The fields and the functions, as the two headings of the symbol tree.</summary>
+    public IReadOnlyList<ExpressionSymbolGroup> SymbolGroups { get; }
 
     /// <summary>Whether the rule's message is edited beside the expression.</summary>
     public bool HasMessage { get; }
@@ -108,7 +117,7 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
 
     private static string Signature(ExpressionFunction function) =>
         string.Create(CultureInfo.InvariantCulture,
-            $"{function.Name}({string.Join(", ", function.Parameters.Select(p => $"{TypeName(p.ParameterType)} {p.Name}"))}) → {TypeName(function.ReturnType)}");
+            $"({string.Join(", ", function.Parameters.Select(p => $"{TypeName(p.ParameterType)} {p.Name}"))}) → {TypeName(function.ReturnType)}");
 
     // The names an expression writes the common types with, so the list reads like the expressions themselves.
     private static string TypeName(Type type) => Type.GetTypeCode(type) switch
