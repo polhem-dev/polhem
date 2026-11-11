@@ -29,8 +29,8 @@ namespace Polhem.Definition.UnitTests
         // Files whose catch-alls another change owns, with the reason. Remove an entry when that change lands.
         private static readonly string[] s_exempt =
         [
-            // The batch runners wrap every failure, a cancellation included, in an InvalidOperationException; the health
-            // plan's P2-6 changes what they catch.
+            // The batch runners wrap every failure, a cancellation included, in an InvalidOperationException;
+            // https://github.com/polhem-dev/polhem/issues/427 changes what they catch.
             "src/Polhem.Db/DbAccess.cs",
             "src/Polhem.Db/DbAccess.Async.cs",
         ];
