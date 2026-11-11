@@ -4,6 +4,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Avalonia.DemoCenter.Modules.DataEditors;
 using Avalonia.DemoCenter.Modules.Views;
+using Polhem.UI.Core.Editing;
 
 namespace Avalonia.DemoCenter.Modules.DataBinding
 {

@@ -14,11 +14,11 @@ using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core.DataObjects;
 using Polhem.Web.Blazor.DataObjects;
-using Polhem.Web.Blazor.Controls;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.Web.Blazor.Components
 {

@@ -9,6 +9,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core.DataObjects;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

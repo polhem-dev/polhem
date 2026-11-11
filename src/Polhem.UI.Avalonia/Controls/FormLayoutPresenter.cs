@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.Controls
 {

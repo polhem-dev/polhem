@@ -1,21 +1,17 @@
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.DataObjects;
 
-namespace Polhem.UI.Avalonia.Controls.Editors
+namespace Polhem.UI.Core.Editing
 {
     /// <summary>
-    /// Contract shared by the field editor controls that pair each
-    /// <see cref="ControlType"/> with an Avalonia control bound to a
-    /// <see cref="FormDataObject"/> field. Extends the definition-layer
-    /// <see cref="IBindFieldControl"/> / <see cref="IUIControl"/> contracts with the
-    /// explicit binding surface used by <see cref="Polhem.UI.Avalonia.Views.FormView"/> and code-behind callers.
+    /// Contract of the field editors that pair each <see cref="ControlType"/> with a control bound to a
+    /// <see cref="FormDataObject"/> field, shared by every UI head. Extends the definition-layer
+    /// <see cref="IBindFieldControl"/> and <see cref="IUIControl"/> contracts with the explicit binding surface.
     /// </summary>
     /// <remarks>
-    /// Editors can alternatively bind ambiently: place them under a container whose
-    /// <see cref="FormScope.DataObjectProperty"/> is set and assign
-    /// <see cref="IBindFieldControl.FieldName"/>; the editor binds itself when it
-    /// attaches to the logical tree. Detaching from the tree releases the binding,
-    /// so explicitly bound editors that are re-attached must be bound again.
+    /// Editors usually bind from their context instead: given <see cref="IBindFieldControl.FieldName"/>, an editor inside
+    /// a form scope binds to the scope's data object. An explicit <c>Bind</c> wins over the context until
+    /// <see cref="Unbind"/>.
     /// </remarks>
     public interface IFieldEditor : IBindFieldControl, IUIControl
     {

@@ -13,6 +13,7 @@ using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.Web.Blazor.Controls
 {

@@ -8,6 +8,7 @@ using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core.DataObjects;
 using Avalonia.DemoCenter.Modules.DataEditors;
+using Polhem.UI.Core.Editing;
 
 namespace Avalonia.DemoCenter.Modules.Grids
 {

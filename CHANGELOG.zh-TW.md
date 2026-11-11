@@ -18,6 +18,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** repository 的手寫 SQL 經由綁定公司的 `CreateDbAccess()` 執行，並以 `{@CompanyId}` 指明公司；POLHEM3004 analyzer 會報出改用其他資料庫存取的 repository。
 - **破壞性變更：** `IDepartmentRepository`、`IEmployeeRepository`、`IRolePermissionRepository`、`IAuditRuleRepository` 與 `IEmployeeContextResolver` 中存取公司資料庫的方法改為需要公司代號，公司代號也改以小寫儲存。
 - **破壞性變更：** Avalonia 與 Blazor head 共用同一個 `FormDataObject`，移至 `Polhem.UI.Core.DataObjects`，並由建構它的程式傳入使用者時區。
+- **破壞性變更：** 兩個 head 各寫一份的 `IFieldEditor` 與 `GridEditMode` 移至 `Polhem.UI.Core.Editing`；用到它們的程式要加上這個 `using`。
 - **破壞性變更：** 一個請求只從 session 讀一次公司，並把這份快照交給授權、列範圍、路由與 repository，使同一個 token 在請求進行中進入的另一家公司，無法讓某家公司的角色作用到另一家公司的資料；相關服務新增吃快照的多載。
 - **破壞性變更：** `AddPolhemFramework` 建立的伺服器拒收 JSON-RPC 批次；需要批次的主機以 `AddJsonRpcServer` 設定 `MaxBatchSize`。
 - **破壞性變更：** 登入會在鎖定計數與密碼檢查之前，拒絕長度超過 `MaxLoginUserIdLength`（預設為 `st_user.sys_id` 的 20 個字元）的帳號或過長的密碼；驗證較長帳號的子類別請提高上限。

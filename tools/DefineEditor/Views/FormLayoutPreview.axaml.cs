@@ -9,6 +9,7 @@ using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.DefineEditor.Views;
 
