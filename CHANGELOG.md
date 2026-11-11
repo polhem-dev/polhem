@@ -22,6 +22,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - **Breaking:** One request reads the session's company once and passes that snapshot to authorization, record scope, routing and its repositories, so a company entered on the same token meanwhile cannot pair one company's roles with another company's data; the services involved gain overloads that take the snapshot.
 - **Breaking:** A server set up by `AddPolhemFramework` refuses JSON-RPC batches; a host that needs them sets `MaxBatchSize` through `AddJsonRpcServer`.
 - **Breaking:** Sign-in refuses a user id longer than `MaxLoginUserIdLength` (by default the 20 characters of `st_user.sys_id`) or an over-long password before the lockout tracker or the password check sees it; a subclass that authenticates longer ids raises the limit.
+- **Breaking:** `GridControlBase` implements `IAsyncDisposable` so a disposed grid releases its data object subscriptions; a grid derived from it outside the framework that declares its own `DisposeAsync` releases its resources in `Dispose(bool)` instead.
 - **Breaking:** The framework's `Department` and `Employee` forms declare permission models of the same name, which ship in its `PermissionModels.xml`, so only roles granted them can maintain the department and employee rows that record scope is read from.
 - The `db seed` and `db upgrade` commands write through new framework repositories instead of SQL in `Polhem.Hosting`, and `ICompanyRepository` gains `GetCompanyDatabases`.
 - An audit value longer than its column, or holding a NUL character, no longer makes the database refuse its whole batch: it is cut to the column's width and the NUL replaced. A refused batch is retried one entry at a time, and the file fallback escapes control characters.
@@ -30,6 +31,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - A table with a read-only column and a modified row reads back over the JSON body codec and the Plain format, as it already did over MessagePack.
 - A form's list or count filter converts a string value to the type of its field, so a date, a `Guid` or a quoted number sent in a Plain body filters a typed column on PostgreSQL and Oracle, and no longer returns no rows on SQL Server; text a database used to convert on its own, such as `""` for a number or `1` for a boolean, is now refused.
 - An Avalonia editor bound to a detail row no longer throws when the form replaces its dataset, for example on New; it is left alone, as in Blazor. The rules both heads share for this, for time write-back, lookup display fields, menu rows, check-box cells and sort marks now live once in `Polhem.UI.Core`.
+- A MudBlazor or Fluent UI grid releases its data object subscriptions when it is disposed; before, the data object kept every grid a page had shown. The rules both Blazor UI packages repeated (the column filter, the menu drawer, card clicks, rejected numeric and time entries, the grid's editor script and the dialog parameters) now live in `Polhem.Web.Blazor`, and the column filter has behavior tests.
 
 ## [1.12.1] - 2026-11-06
 

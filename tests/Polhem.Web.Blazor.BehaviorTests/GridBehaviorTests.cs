@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Reflection;
 using Bunit;
 using Bunit.Rendering;
 using Microsoft.AspNetCore.Components;
@@ -165,6 +166,27 @@ namespace Polhem.Web.Blazor.BehaviorTests
                 b.CloseComponent();
             });
         }
+
+        [Fact]
+        [DisplayName("Disposing the grid releases its data object subscriptions")]
+        public async Task Dispose_ReleasesSubscriptions()
+        {
+            var dataObject = BuildOrder();
+            RenderGrid(dataObject, SingleFormMode.View);
+            Assert.NotNull(EventDelegate(dataObject, nameof(FormDataObject.RowAdded)));
+
+            await DisposeComponentsAsync();
+
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.RowAdded)));
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.RowDeleted)));
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.FieldValueChanged)));
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.DataSetReplaced)));
+        }
+
+        private static Delegate? EventDelegate(FormDataObject dataObject, string eventName)
+            => (Delegate?)typeof(FormDataObject)
+                .GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(dataObject);
 
         [Fact]
         [DisplayName("The grid lists the rows of its table and the layout's captions")]

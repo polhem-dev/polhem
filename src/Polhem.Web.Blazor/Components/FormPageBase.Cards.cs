@@ -1,5 +1,7 @@
 using System.Data;
 using System.Globalization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using Polhem.Definition;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
@@ -47,8 +49,9 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>
-        /// Returns the cards to their first card when page 1 replaces them. Left at the old position, the end of the
-        /// shorter list would be in view and read the next page at once. A UI package overrides this.
+        /// Returns the cards to their first card when page 1 replaces them, by scrolling the window to its top. Left at
+        /// the old position, the end of the shorter list would be in view and read the next page at once. A UI package
+        /// whose cards scroll inside an element of their own overrides this.
         /// </summary>
         /// <remarks>
         /// A read of page 1 calls this before the new cards render. Called after they render instead, it reaches the
@@ -58,7 +61,27 @@ namespace Polhem.Web.Blazor.Components
         /// </remarks>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected virtual Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        protected virtual async Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default)
+        {
+            if (JS is null) return;
+            await JS.InvokeVoidAsync("scrollTo", cancellationToken, 0, 0).ConfigureAwait(true);
+        }
+
+        /// <summary>
+        /// Selects a card on a click and opens its record on a double-click. A double-click also raises two clicks, so the
+        /// browser's click count (<see cref="MouseEventArgs.Detail"/>) tells them apart.
+        /// </summary>
+        /// <param name="row">The card's row.</param>
+        /// <param name="e">The click.</param>
+        /// <param name="cancellationToken">A token that cancels opening the record.</param>
+        /// <returns>The operation.</returns>
+        protected Task OnCardClick(DataRow row, MouseEventArgs e, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(e);
+            if (e.Detail >= 2) return ActivateCardAsync(row, cancellationToken);
+            SelectCard(row);
+            return Task.CompletedTask;
+        }
 
         /// <summary>Reads the next page of the cards, unless a call runs or there is nothing more to read.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
