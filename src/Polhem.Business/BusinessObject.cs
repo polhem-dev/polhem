@@ -350,6 +350,8 @@ namespace Polhem.Business
             }
             catch (Exception ex)
             {
+                // Boundary: the operation is already committed, so a failed audit write is logged and not rethrown; only a
+                // cancellation is.
                 Services.GetService<ILoggerFactory>()?
                     .CreateLogger(GetType())
                     .LogError(ex,

@@ -110,8 +110,13 @@ namespace Polhem.Web.Blazor.Components
             {
                 await LoadListPageAsync(1, cancellationToken).ConfigureAwait(true);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
+                // Boundary: the cards show why they could not be read; an escaped exception would end the circuit.
                 _notice = ex.Message;
             }
         }

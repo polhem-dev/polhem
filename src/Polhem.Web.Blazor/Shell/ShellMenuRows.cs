@@ -51,9 +51,13 @@ namespace Polhem.Web.Blazor.Shell
             {
                 return (await LoadAsync(client, options, cancellationToken).ConfigureAwait(true), null);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                // A UI boundary, like the other components': the failure may be a user message, a refusal, a
+                // Boundary: as in the other components, the failure may be a user message, a refusal, a
                 // JSON-RPC error or an unreachable server, and each is reported by its message.
                 return (null, ex.Message);
             }

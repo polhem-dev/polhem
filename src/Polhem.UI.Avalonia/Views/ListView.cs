@@ -332,6 +332,7 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (Exception ex)
             {
+                // Boundary: a failed page read is shown on the list, which keeps the rows it had.
                 ReportError(ex);
             }
             finally
@@ -437,6 +438,7 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (Exception ex)
             {
+                // Boundary: a schema that cannot be read is shown on the list, which then stays empty.
                 ReportError(ex);
                 return false;
             }

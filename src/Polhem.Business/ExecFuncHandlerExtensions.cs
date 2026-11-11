@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Polhem.Core.Exceptions;
 using Polhem.Business.Attributes;
@@ -88,8 +89,9 @@ namespace Polhem.Business
 
                 method.Invoke(handler, new object[] { args, result });
             }
-            catch (Exception ex)
+            catch (TargetInvocationException ex)
             {
+                // The method's own exception, not the reflection wrapper, is what the caller and the error mapping see.
                 var rootEx = ex.Unwrap();
                 ExceptionDispatchInfo.Capture(rootEx).Throw();  // Re-throw preserving the original stack trace
                 throw;   // Unreachable. It is here only because the compiler cannot see that.

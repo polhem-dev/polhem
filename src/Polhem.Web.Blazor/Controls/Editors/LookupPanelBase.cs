@@ -129,7 +129,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
             }
             catch (Exception ex)
             {
-                // UI boundary: surface the failure on the panel instead of breaking the picker,
+                // Boundary: surface the failure on the panel instead of breaking the picker,
                 // as the Avalonia panel does.
                 _error = ex.Message;
             }

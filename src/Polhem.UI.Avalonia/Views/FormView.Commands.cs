@@ -49,6 +49,8 @@ namespace Polhem.UI.Avalonia.Views
                 }
                 catch (Exception ex)
                 {
+                    // Boundary: the view reports a failure to build the form on itself; only a cancellation the caller asked for
+                    // reaches the caller.
                     ReportError(ex);
                     return null;
                 }
@@ -136,6 +138,7 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (Exception ex)
             {
+                // Boundary: the view reports a failure on itself; only a cancellation the caller asked for reaches the caller.
                 ReportError(ex);
             }
             finally
