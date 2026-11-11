@@ -32,6 +32,16 @@ namespace Polhem.Business.System
             // tracker by default; a host that removes it runs without lockout, hence the null checks.
             var tracker = Services.GetService<ILoginAttemptTracker>();
 
+            // IMPORTANT: refused before the tracker and the key derivation see the input, and audited with the id cut
+            // to the limit. Login is anonymous, and an id of any length was kept as a tracker key for minutes and
+            // queued for the audit whole.
+            if (!IsAcceptableCredential(args))
+            {
+                WriteLoginAudit(LoginEvent.LoginFailed, Truncate(args.UserId, MaxLoginUserIdLength), null, null,
+                    "Credentials longer than accepted.", LoginSource);
+                throw new UserMessageException(PolhemMessages.LoginInvalidCredentials, "Invalid username or password.");
+            }
+
             // 0. Check if the account is locked out due to excessive failed attempts
             if (tracker != null && tracker.IsLockedOut(args.UserId))
             {
@@ -194,6 +204,36 @@ namespace Polhem.Business.System
         }
 
         private const string LoginSource = "System.Login";
+
+        // Far above any password a person types; the bound only keeps an anonymous caller from handing the key
+        // derivation a value of any size.
+        private const int MaxLoginPasswordLength = 1024;
+
+        /// <summary>
+        /// Gets the longest user id <see cref="Login"/> accepts, in characters. A longer one is refused as invalid
+        /// credentials before the lockout tracker or <see cref="AuthenticateUser"/> sees it, and the failed sign-in is
+        /// audited with the id cut to this length.
+        /// </summary>
+        /// <remarks>
+        /// The default is <see cref="UserInfo.UserIdMaxLength"/>, the width of the framework's own account table.
+        /// A subclass whose <see cref="AuthenticateUser"/> checks another directory with longer ids raises it.
+        /// </remarks>
+        protected virtual int MaxLoginUserIdLength => UserInfo.UserIdMaxLength;
+
+        // Counted in Unicode characters, as PostgreSQL and MySQL count a column's width, so a stored id with characters
+        // outside the BMP still signs in. The UTF-16 length is checked first and bounds the cost of counting.
+        private bool IsAcceptableCredential(LoginArgs args)
+            => WithinCharacters(args.UserId, MaxLoginUserIdLength)
+               && WithinCharacters(args.Password, MaxLoginPasswordLength);
+
+        private static bool WithinCharacters(string? value, int max)
+        {
+            if (value is null || value.Length <= max) { return true; }
+            return value.Length <= 2 * max && value.EnumerateRunes().Count() <= max;
+        }
+
+        private static string? Truncate(string? value, int length)
+            => value is null || value.Length <= length ? value : value[..length];
         private const string LogoutSource = "System.Logout";
         private const string CreateSessionSource = "System.CreateSession";
 

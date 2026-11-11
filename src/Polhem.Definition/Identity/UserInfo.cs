@@ -6,6 +6,15 @@ namespace Polhem.Definition.Identity
     public sealed class UserInfo : IUserInfo
     {
         /// <summary>
+        /// The longest user id the framework's own account table holds: the width of <c>st_user.sys_id</c>.
+        /// </summary>
+        /// <remarks>
+        /// <c>DefaultsTests.UserIdMaxLength_MatchesStUserIdWidth</c> fails when the shipped table definition changes
+        /// without this value.
+        /// </remarks>
+        public const int UserIdMaxLength = 20;
+
+        /// <summary>
         /// Gets or sets the user account ID.
         /// </summary>
         public string UserId { get; set; } = string.Empty;

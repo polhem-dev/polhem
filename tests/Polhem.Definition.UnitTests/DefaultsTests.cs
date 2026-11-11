@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Logging;
@@ -65,6 +66,15 @@ namespace Polhem.Definition.UnitTests
             var files = Defaults.ListEmbedded();
 
             Assert.Contains(expected, files);
+        }
+
+        [Fact]
+        [DisplayName("UserInfo.UserIdMaxLength equals the width of st_user.sys_id in the shipped TableSchema")]
+        public void UserIdMaxLength_MatchesStUserIdWidth()
+        {
+            var schema = XmlCodec.Deserialize<TableSchema>(ReadEmbedded("TableSchema/common/st_user.TableSchema.xml"));
+
+            Assert.Equal(UserInfo.UserIdMaxLength, schema!.Fields!.GetOrDefault("sys_id")!.Length);
         }
 
         [Fact]
