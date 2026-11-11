@@ -104,6 +104,12 @@ namespace Polhem.Web.Blazor.UnitTests.Controls
         private sealed class GridProbe : GridControlBase
         {
             public GridEditorHost Host => EditorHost;
+
+            protected override string OpenPopupSelector => string.Empty;
+
+            protected override void RefreshRowList()
+            {
+            }
         }
     }
 }

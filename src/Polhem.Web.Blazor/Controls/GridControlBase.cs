@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
@@ -44,7 +45,7 @@ namespace Polhem.Web.Blazor.Controls
     /// column's header is parenthesised and a required one shows the required cue (<see cref="FieldCaptionRules"/>).
     /// </para>
     /// </remarks>
-    public abstract partial class GridControlBase : ComponentBase, IBindTableControl, IUIControl, IDisposable
+    public abstract partial class GridControlBase : ComponentBase, IBindTableControl, IUIControl, IDisposable, IAsyncDisposable
     {
         private bool _disposed;
         private FormDataObject? _subscribed;
@@ -195,6 +196,26 @@ namespace Polhem.Web.Blazor.Controls
         [Inject]
         private IServiceProvider? Services { get; set; }
 
+        [Inject]
+        private IJSRuntime? JS { get; set; }
+
+        private GridEditorScript? _script;
+
+        /// <summary>Gets the CSS selector that matches a popup of the UI framework while it is open.</summary>
+        /// <remarks>The editor script lets a key through to an open popup instead of the grid.</remarks>
+        protected abstract string OpenPopupSelector { get; }
+
+        /// <summary>
+        /// Gets how long the editor script waits before it replays keys typed ahead into a new editor; zero by default.
+        /// </summary>
+        protected virtual int ReplayDelayMilliseconds => 0;
+
+        /// <summary>Gets the script that holds keys typed before a cell's editor arrives and focuses the editor.</summary>
+        protected GridEditorScript Script
+            => _script ??= new GridEditorScript(
+                JS ?? throw new InvalidOperationException("The grid's editor script needs a renderer's JavaScript runtime."),
+                OpenPopupSelector, ReplayDelayMilliseconds);
+
         /// <summary>Gets the data object the grid is bound to, or <c>null</c>.</summary>
         protected FormDataObject? BoundDataObject => DataObject ?? Scope?.DataObject;
 
@@ -325,13 +346,56 @@ namespace Polhem.Web.Blazor.Controls
         {
             Subscribe(BoundDataObject);
             CloseEditorUnlessInCellEdit();
+            RefreshRowList();
         }
+
+        /// <inheritdoc />
+        protected override bool ShouldRender()
+        {
+            RefreshRowList();
+            return true;
+        }
+
+        /// <summary>
+        /// Takes <see cref="VisibleRows"/> into the list the UI framework's grid reads. Called before every render, so a UI
+        /// package keeps the list in whatever shape its grid needs.
+        /// </summary>
+        protected abstract void RefreshRowList();
+
+        // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
+        /// <inheritdoc />
+        protected override Task OnAfterRenderAsync(bool firstRender)
+            => VisibleColumns.Any(IsInCellEditor) ? Script.LoadAsync() : Task.CompletedTask;
+
+        /// <summary>Gets the CSS class of a row, which marks the selected one.</summary>
+        /// <param name="row">The row.</param>
+        /// <returns>The class.</returns>
+        protected string RowClass(DataRow row)
+            => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
+
+        /// <summary>Gets the CSS class of a column's header, which marks a required column.</summary>
+        /// <param name="column">The column.</param>
+        /// <returns>The class.</returns>
+        protected string HeaderClass(LayoutColumn column)
+            => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
 
         /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Releases the editor script and the data object subscription.</summary>
+        /// <remarks>
+        /// A renderer calls only this method on a component that also implements <see cref="IDisposable"/>, so it releases
+        /// the subscription too.
+        /// </remarks>
+        /// <returns>The operation.</returns>
+        public async ValueTask DisposeAsync()
+        {
+            if (_script is not null) await _script.DisposeAsync().ConfigureAwait(true);
+            Dispose();
         }
 
         /// <summary>

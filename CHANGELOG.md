@@ -30,6 +30,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - A table with a read-only column and a modified row reads back over the JSON body codec and the Plain format, as it already did over MessagePack.
 - A form's list or count filter converts a string value to the type of its field, so a date, a `Guid` or a quoted number sent in a Plain body filters a typed column on PostgreSQL and Oracle, and no longer returns no rows on SQL Server; text a database used to convert on its own, such as `""` for a number or `1` for a boolean, is now refused.
 - An Avalonia editor bound to a detail row no longer throws when the form replaces its dataset, for example on New; it is left alone, as in Blazor. The rules both heads share for this, for time write-back, lookup display fields, menu rows, check-box cells and sort marks now live once in `Polhem.UI.Core`.
+- A MudBlazor or Fluent UI grid releases its data object subscriptions when it is disposed; before, the data object kept every grid a page had shown. The rules both Blazor UI packages repeated (the column filter, the menu drawer, card clicks, rejected numeric and time entries, the grid's editor script and the dialog parameters) now live in `Polhem.Web.Blazor`, and the column filter has behavior tests.
 
 ## [1.12.1] - 2026-11-06
 

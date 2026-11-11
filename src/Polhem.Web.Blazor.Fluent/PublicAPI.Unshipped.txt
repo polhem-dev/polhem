@@ -38,3 +38,11 @@ override Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Toggle() -> void
 *REMOVED*Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Layout.set -> void
 *REMOVED*Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
 *REMOVED*Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Row.set -> void
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.OpenPopupSelector.get -> string!
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.RefreshRowList() -> void
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.ReplayDelayMilliseconds.get -> int
+*REMOVED*Polhem.Web.Blazor.Fluent.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnInitialized() -> void
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnParametersSet() -> void
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.ShouldRender() -> bool

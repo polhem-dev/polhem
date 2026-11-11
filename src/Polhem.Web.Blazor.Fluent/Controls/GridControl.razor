@@ -1,7 +1,5 @@
 @namespace Polhem.Web.Blazor.Fluent.Controls
 @inherits GridControlBase
-@implements IAsyncDisposable
-@inject Microsoft.JSInterop.IJSRuntime JS
 @using System.Data
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
@@ -75,7 +73,7 @@
                     @if (IsInCellEditor(current))
                     {
                         <GridEditorCell Host="EditorHost"
-                                        Script="_script"
+                                        Script="Script"
                                         EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
                                         EditorParameters="BuildEditorParameters(current, context)"
                                         Text="@FormatCell(context, current)"
@@ -120,47 +118,21 @@
 }
 
 @code {
-    // What `fluent-listbox` and the calendar use while they are open.
-    private const string OpenPopupSelector = ":popover-open";
-    // A Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
-    private const int ReplayDelayMilliseconds = 50;
-
     private IQueryable<DataRow> _rows = Enumerable.Empty<DataRow>().AsQueryable();
     private List<DataRow> _lastRows = [];
-    private GridEditorScript _script = default!;
     private readonly string _gridClass = $"polhem-grid--{Guid.NewGuid():N}";
 
+    // What `fluent-listbox` and the calendar use while they are open.
     /// <inheritdoc />
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _script = new GridEditorScript(JS, OpenPopupSelector, ReplayDelayMilliseconds);
-    }
+    protected override string OpenPopupSelector => ":popover-open";
 
-    // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
+    // A Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
     /// <inheritdoc />
-    protected override Task OnAfterRenderAsync(bool firstRender)
-        => VisibleColumns.Any(IsInCellEditor) ? _script.LoadAsync() : Task.CompletedTask;
-
-    /// <inheritdoc />
-    public ValueTask DisposeAsync() => _script.DisposeAsync();
-
-    /// <inheritdoc />
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-        RefreshRowList();
-    }
-
-    /// <inheritdoc />
-    protected override bool ShouldRender()
-    {
-        RefreshRowList();
-        return true;
-    }
+    protected override int ReplayDelayMilliseconds => 50;
 
     // A new IQueryable makes the grid read its items again, so it is replaced only when the rows changed.
-    private void RefreshRowList()
+    /// <inheritdoc />
+    protected override void RefreshRowList()
     {
         var rows = VisibleRows.ToList();
         if (rows.SequenceEqual(_lastRows)) return;
@@ -171,12 +143,6 @@
     private Task OnRowClick(FluentDataGridRow<DataRow> row) => row.Item is { } item ? SelectRowAsync(item) : Task.CompletedTask;
 
     private Task OnRowDoubleClick(FluentDataGridRow<DataRow> row) => row.Item is { } item ? ActivateRowAsync(item) : Task.CompletedTask;
-
-    private string RowClass(DataRow row)
-        => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
-
-    private string HeaderClass(LayoutColumn column)
-        => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
 
     private static string ColumnWidth(LayoutColumn column)
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,

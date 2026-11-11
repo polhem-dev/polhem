@@ -34,3 +34,10 @@
 *REMOVED*Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Layout.set -> void
 *REMOVED*Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
 *REMOVED*Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.set -> void
+override Polhem.Web.Blazor.Mud.Controls.GridControl.OpenPopupSelector.get -> string!
+override Polhem.Web.Blazor.Mud.Controls.GridControl.RefreshRowList() -> void
+*REMOVED*Polhem.Web.Blazor.Mud.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
+*REMOVED*override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+*REMOVED*override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void
+*REMOVED*override Polhem.Web.Blazor.Mud.Controls.GridControl.OnParametersSet() -> void
+*REMOVED*override Polhem.Web.Blazor.Mud.Controls.GridControl.ShouldRender() -> bool
