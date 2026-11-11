@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: bcfb2a9622be1ef14b2f28820a6ee2ab48eadd19 -->
+<!-- source: en/database/database-schema-upgrade.md blob: 17ce419c9add0aa2fab3c80cedb4db12d24a4695 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -21,6 +21,12 @@ Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchem
 > **升級成功返回後，DB 至少包含 define 裡所有欄位，且型別／長度／nullable 與 define 一致**——方言無法表達定義的地方除外，例如 Oracle 的文字欄一律為 nullable（[資料庫方言差異 §3.1](database-dialect-differences.md#31-oracle-就是-null)）。
 
 這是從應用程式視角唯一重要的事。內部走 `ALTER TABLE` 或整表 rebuild 是 library 的選擇，呼叫端不需要關心。
+
+> **把既有部署升級成帶 `sys_company_id` 的公司資料表時，請用 `db upgrade`。** 下列 API 只會以空值加上這個欄位，
+> 不做其他事。`sys_company_id` 為空的資料列不屬於任何公司，所以既有的每一列都會從每家公司消失。`db upgrade` 會先檢查
+> 公司資料表的 schema 是否帶有這個欄位、公司代號是否為儲存形式；升級後，若資料庫只屬於一家公司，就把沒有公司的資料列
+> 指派給它，多家公司共用的資料庫則會列出這些資料列，留給你自行指派（`db add-company-column` 會替缺少欄位的 schema 加上它）。見
+> [資料庫設定 §5.5 與 §7](database-settings-guide.md#55-多家公司共用公司資料庫)。
 
 ## 2. 入口 API
 

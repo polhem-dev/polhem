@@ -1,4 +1,4 @@
-<!-- source: en/database/temporal-types.md blob: 87b07af00662dbf91a7b33bea27bb5d3b56a5669 -->
+<!-- source: en/database/temporal-types.md blob: 3ef32a6d5ed454e16d8ab01155187809791e8123 -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../../en/database/temporal-types.md) · [← 文件索引](../README.md)
@@ -143,9 +143,11 @@ ADO.NET 把 `date` 欄位一律回報為 `System.DateTime`，因此非框架產�
 ```csharp
 // A. 宣告貼著查詢寫——選項與 SQL 同處一地。
 var spec = new DbCommandSpec(DbCommandKind.DataTable,
-    "SELECT order_date, created_at, amount FROM ft_order WHERE amount > {0}", 1000m);
+    "SELECT order_date, created_at, amount FROM ft_order WHERE sys_company_id = {@CompanyId} AND amount > {0}",
+    1000m);
 spec.DateColumns.Add("order_date");
-var table = dbAccess.Execute(spec).Table!;
+// 在 repository 內：綁定 session 的公司，所以語句要寫出公司。
+var table = CreateDbAccess().Execute(spec).Table!;
 
 // B. 事後標記——適用於自行組裝、或來自他處的表格。
 table.SetDateColumns("order_date", "due_date");

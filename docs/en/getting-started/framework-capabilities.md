@@ -115,7 +115,7 @@ See [Tenant Customization](../definitions/customization.md).
 
 | Mechanism | What it provides |
 |-----------|------------------|
-| **Company scope** | Each company gets its own database and settings; `EnterCompany` and `LeaveCompany` switch the session's scope |
+| **Company scope** | Each company has its own settings, and a database of its own or one shared with other companies, whose rows are separated by `sys_company_id` ([Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)); `EnterCompany` and `LeaveCompany` switch the session's scope |
 | **Customize overlay** | Per-tenant overrides for FormLayout, LanguageResource, ProgramSettings, MenuSettings and PluginSettings, without forking the base definitions |
 | **Department tree** | Per-company organisational hierarchy exposed as a typed tree |
 | **Employee context** | The employee record and department behind the current user, resolved on `EnterCompany` and kept on the session for record-scope filtering |
@@ -152,6 +152,6 @@ See [Tenant Customization](../definitions/customization.md).
 | **Audit streams** | Login events, data access, data changes (before/after diffgram) and anomalies (API and database) |
 | **AuditLog business object** | Query API over the audit streams, with both detail listings and aggregates |
 | **Polhem.Analyzers** | Build-time diagnostics shipped with the packages, so convention violations are reported when the project builds. See [Analyzer Rules](../reference/analyzer-rules.md) |
-| **UI control families** | Avalonia (schema-driven native control subclasses, grid, lookup dialogs) and Blazor Server |
+| **UI control families** | Avalonia (schema-driven native control subclasses, grid, lookup dialogs) and Blazor, on MudBlazor (`Polhem.Web.Blazor.Mud`) or Fluent UI (`Polhem.Web.Blazor.Fluent`), hosted by Blazor Server (`Polhem.Web.Blazor.Server`) or Blazor WebAssembly (`Polhem.Web.Blazor.Wasm`) |
 | **`ClientDefineAccess`** | Clients read definitions through the API and cache them, never touching the file system |
 | **Client storage seams** | `IEndpointStorage` and `IApiKeyStorage` let each head persist endpoints and keys the way its platform allows |

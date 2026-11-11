@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: dcf2a8e68934560b497f7b75fabd04be722247e4 -->
+<!-- source: en/database/database-settings-guide.md blob: 2fb387d963def5d919149e56c2a522d6bec6255e -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -438,7 +438,7 @@ DatabaseItem item = dbSettingsProvider.GetItem(databaseId);
 
 BO 方法透過 `BusinessObject.ResolveDatabaseId(DbScope)` 或（FormSchema-driven CRUD 用）`CreateDataFormRepository(progId)` helper 消費 router；後者依 schema 的 `CategoryId` 自動路由。
 
-跨 DatabaseItem 聚合（如 log 跨年查詢）與封存資料的明確存取（如查 `log_2024`）不在預設路由範圍內——業務層直接指定目標 databaseId、透過 `IDbAccessFactory` 建自訂 bo repo。這條路只用於不屬於任何公司的資料；公司資料要透過 repository 的 `CreateDbAccess()`，它綁定公司（§5.5）。
+跨 DatabaseItem 聚合（如 log 跨年查詢）與封存資料的明確存取（如查 `log_2024`）不在預設路由範圍內——業務層在繼承 `RepositoryBase` 的自訂 bo repo 中直接指定目標 databaseId，以 `CreateDbAccess(databaseId)` 取得資料庫存取。除非該 id 正是 repository 自己的公司資料庫，否則這個存取沒有綁定公司，所以只用於不屬於任何公司的資料；公司資料要透過 `CreateDbAccess()`，沒有 session 的程式碼則用 `CreateDbAccess(databaseId, companyId)`，兩者都綁定公司（§5.5）。
 
 `DatabaseItem.CategoryId` 與 `DbCategorySettings` 只在前述的設計階段（5.1–5.2）與部署階段（5.3）使用。執行時 BO 方法用 `DbScope`（執行時存取意圖）表達，不再操作 CategoryId 字串；執行時唯一讀取 CategoryId 字串的地方，是表單 Repository 將其 schema 的 `CategoryId` 轉成 `DbScope`（§3.4）。
 

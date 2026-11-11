@@ -250,7 +250,7 @@ LeaveCompany()             ──→  back to Logged-in
 Logout()                   ──→  Session destroyed (implicitly clears CompanyId)
 ```
 
-Three logical database scopes (`DbScope.Common` / `DbScope.Log` / `DbScope.Company`) map to physical databases via `IRepositoryDatabaseRouter`. `Common` and `Log` route to fixed databaseIds and can be used pre-EnterCompany; `Company` requires the session to have entered a company.
+Three logical database scopes (`DbScope.Common` / `DbScope.Log` / `DbScope.Company`) map to physical databases via `IRepositoryDatabaseRouter`. `Common` and `Log` route to fixed databaseIds and can be used pre-EnterCompany; `Company` requires the session to have entered a company and routes to that company's database. Companies may have a database each or share one; in a shared one the rows of each company are separated by `sys_company_id` ([Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)).
 
 ---
 

@@ -11,9 +11,11 @@ namespace Polhem.Definition.Identity
     /// via the cached <see cref="ICompanyInfoService"/>. <c>CompanyDatabaseId</c> references
     /// a logical <see cref="DatabaseSettings"/> entry. Multiple companies may point at the
     /// same id, and then share that database's tables. The company tables carry
-    /// <see cref="SysFields.CompanyId"/>, and the form repository keeps each company to its own rows;
-    /// hand-written queries are not confined, so a query an application writes itself has to filter on the
-    /// column. The log database is shared across all companies under a fixed
+    /// <see cref="SysFields.CompanyId"/>, and the form repository keeps each company to its own rows. A
+    /// repository's hand-written SQL runs through a database access bound to the company, which refuses a
+    /// statement that does not reference the <c>{@CompanyId}</c> placeholder. It checks only that the placeholder
+    /// is present, so each statement still has to compare the column with it; SQL run some other way is not
+    /// confined. The log database is shared across all companies under a fixed
     /// <c>"log"</c> databaseId (see <see cref="DbScope.Log"/>), so there is no per-company
     /// log database id property.
     /// <para>

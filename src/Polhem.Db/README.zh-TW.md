@@ -22,6 +22,18 @@
 - `DbCommandSpec` -- 參數化命令規格，支援位置型（`{0}`）與具名（`{Name}`）佔位符自動轉換
 - `DbBatchSpec` -- 批次執行，可選擇性包裹交易並設定隔離等級
 
+### 綁定公司
+
+多家公司可以共用一個公司資料庫，以 `sys_company_id` 區分各公司的資料
+（[資料庫設定 §5.5](../../docs/zh-TW/database/database-settings-guide.md#55-多家公司共用公司資料庫)）。
+
+- `DbAccess.BindCompany(companyId)` 把資料庫存取綁定到一家公司。之後它執行的每個命令都必須含有 `{@CompanyId}`
+  佔位符（`CommandTextVariable.CompanyId`），它會變成帶著該公司的參數；沒有佔位符的命令在建立時就被拒絕，
+  而沒有綁定的存取則會拒絕含有佔位符的命令。
+- 這項檢查只看佔位符是否存在，不檢查語句中每張公司資料表是否都有與它比對。
+- Repository 不必自己呼叫 `BindCompany`：`Polhem.Repository` 的 `RepositoryBase.CreateDbAccess()` 回傳的存取已綁定
+  repository 所屬的公司。
+
 ### 連線與提供者管理
 
 - `IDbConnectionManager` -- 集中式連線資訊註冊

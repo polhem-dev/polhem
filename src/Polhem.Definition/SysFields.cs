@@ -29,7 +29,10 @@ namespace Polhem.Definition
         /// it. It is what separates companies that share one company database. The form repository
         /// (<c>DataFormRepository</c>) stamps it on every row it inserts with the company it is bound to, and
         /// confines every read, update and delete to that company; <c>DataFormRepositoryCompanyIsolationTests</c>
-        /// pins that on every supported database. Hand-written queries are not confined.
+        /// pins that on every supported database. A repository's hand-written SQL runs through its
+        /// <c>CreateDbAccess()</c>, which is bound to the company and refuses a statement that does not name it with
+        /// <c>{@CompanyId}</c> (<c>DbAccessCompanyBindingTests</c>); the POLHEM3004 analyzer reports a repository that
+        /// takes an access some other way.
         /// </remarks>
         public const string CompanyId = "sys_company_id";
 

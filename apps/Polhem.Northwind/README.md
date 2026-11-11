@@ -369,6 +369,9 @@ Northwind has a `Region` table the demo leaves out — so you can add it yoursel
 ### 1. The table — `Define/TableSchema/company/ft_region.TableSchema.xml`
 
 A region is business data, so it goes in the **company** category (`TableSchema/company/`), alongside the other `ft_` tables.
+Like every company table it carries `sys_company_id`, the company a row belongs to, and its unique index starts with it,
+so two companies sharing a database can each have a region `N`. The form repository fills and filters the column itself,
+so the form below does not list it. A table without it fails as soon as the form reads it.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -376,6 +379,7 @@ A region is business data, so it goes in the **company** category (`TableSchema/
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
     <DbField FieldName="sys_id" Caption="Region Code" DbType="String" Length="20" />
     <DbField FieldName="sys_name" Caption="Region Name" DbType="String" Length="50" />
   </Fields>
@@ -387,7 +391,7 @@ A region is business data, so it goes in the **company** category (`TableSchema/
       <IndexFields><IndexField FieldName="sys_rowid" /></IndexFields>
     </DbTableIndex>
     <DbTableIndex Name="uk_{0}" Unique="true">
-      <IndexFields><IndexField FieldName="sys_id" /></IndexFields>
+      <IndexFields><IndexField FieldName="sys_company_id" /><IndexField FieldName="sys_id" /></IndexFields>
     </DbTableIndex>
   </Indexes>
 </TableSchema>
@@ -455,7 +459,7 @@ Add it inside the `master-data` folder. `Id` is the node key and must be unique 
 
 ### 7. Restart
 
-Restart the server (it creates `ft_region`) and the desktop client. **Regions** is now in the left menu under Master Data, with working list, new, edit, delete, and a unique-code check from the `uk_` index — all from definition edits, no compilation of your own code.
+Restart the server (it creates `ft_region`) and the desktop client. **Regions** is now in the left menu under Master Data, with working list, new, edit, delete, and a unique-code check per company from the `uk_` index — all from definition edits, no compilation of your own code.
 
 ### Or describe it in Excel
 

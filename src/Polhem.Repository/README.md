@@ -22,6 +22,19 @@
 - `DataFormRepository` -- default `IDataFormRepository` for FormSchema-driven CRUD, resolved by ProgId. A
   program can bind its own subclass through `ProgramItem.Repository` in `ProgramSettings`.
 
+### Row-Level Tenancy
+
+Several companies can share one company database, and every table of a `company` form carries `sys_company_id`
+([Database Settings §5.5](../../docs/en/database/database-settings-guide.md#55-companies-sharing-a-company-database)).
+
+- `DataFormRepository` stamps the session's company on every row it inserts and confines every read, update and
+  delete to it; a relation join between two company forms also matches the company.
+- `RepositoryBase.CreateDbAccess()` returns a `DbAccess` bound to the repository's company, so hand-written SQL names
+  the company with `{@CompanyId}` (`sys_company_id = {@CompanyId}`), and a statement without it is refused when it
+  runs. Code with no session uses `CreateDbAccess(databaseId, companyId)`.
+- A `DbAccess` taken any other way (`IDbAccessFactory`, the context's `DbAccessFactory`, `new DbAccess(...)`) is not
+  bound; the POLHEM3004 analyzer reports it in a repository.
+
 ### Framework Repositories (internal)
 
 The repositories of the framework tables (sessions, users, companies, departments, employees, roles, API keys,

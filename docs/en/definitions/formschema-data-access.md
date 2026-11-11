@@ -168,6 +168,14 @@ The following examples use three simplified `FormSchema` definitions. The SQL sh
 - `Employee` — `dept_rowid` references `Department`
 - `Department` — `pm_rowid` references `Employee` (department head)
 
+All three are `company` forms, so every table carries `sys_company_id` (see
+[ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md)). A join between two `company` forms also matches the
+company of the joined row to the main row's (`AND B.[sys_company_id] = A.[sys_company_id]`): a foreign key holds a row id,
+which could point at a row of another company sharing the database. The builder writes it on the same line as the `ON`;
+the examples break it onto its own line for reading. The form repository then confines the main table to the session's
+company with an outer condition on `A.[sys_company_id]`, a parameter of its own that the examples below leave out (it
+also shifts the numbering of the other parameters). SQL you write by hand has to do both itself.
+
 ### Example 1: Master-Only Query (No JOIN)
 
 ```csharp
@@ -197,6 +205,7 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", filter);
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 WHERE B.[sys_name] LIKE @p0
 ```
 
@@ -217,7 +226,9 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", null, sortFields
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_department] C ON B.[dept_rowid] = C.[sys_rowid]
+    AND C.[sys_company_id] = A.[sys_company_id]
 ORDER BY C.[sys_name] ASC
 ```
 
@@ -237,8 +248,11 @@ SELECT A.[sys_id], A.[sys_name],
        D.[sys_name] AS [ref_pm_dept_name]
 FROM [ft_project] A
 LEFT JOIN [st_department] B ON A.[owner_dept_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_employee]   C ON A.[pm_rowid]         = C.[sys_rowid]
+    AND C.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_department] D ON C.[dept_rowid]       = D.[sys_rowid]
+    AND D.[sys_company_id] = A.[sys_company_id]
 ```
 
 Two reference fields walk different `FormSchema` chains; the branching JOINs are created automatically.
@@ -261,6 +275,7 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", filterGroup, sor
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 WHERE (A.[sys_name] LIKE @p0 AND B.[sys_name] = @p1)
 ORDER BY A.[sys_id] ASC
 ```
@@ -312,7 +327,7 @@ The following "limitations" are deliberate tradeoffs aligned with the `FormSchem
 
 | Limitation | Rationale |
 |---|---|
-| JOINs must be single-column equi-joins (FK = PK) | `FormSchema` RelationFields always reference `RowId` via equality |
+| JOINs are equi-joins on the foreign key (FK = PK), plus the company match when both forms are `company` forms | `FormSchema` RelationFields always reference `RowId` via equality; the company match keeps a foreign key from reaching another company's row |
 | JOINs target physical tables only (no subquery / CTE / TVF) | `FormSchema` maps to physical tables; there is no "subquery-as-form" concept |
 | Main table alias is fixed to `A` | aligned with `SelectContextBuilder`'s alias generator (`A → B → ... → Z → ZA → ZB`, skipping SQL keywords) |
 | Filters and sorts name only fields the form declares | a column that can be compared can be read one comparison at a time, so the form's field list bounds what a query can reach; an undeclared or protected field throws `InvalidOperationException` |

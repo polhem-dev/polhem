@@ -14,6 +14,9 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.13.0.md](docs/zh-TW/changelogs/1.13.0.md)
 
+- **破壞性變更：** 多家公司可以共用一個公司資料庫：每張公司資料表加上 `sys_company_id`，表單 repository 與框架的公司查詢只讀寫 session 所屬公司的資料列；既有部署以 `db add-company-column` 與 `db upgrade` 升級。
+- **破壞性變更：** repository 的手寫 SQL 經由綁定公司的 `CreateDbAccess()` 執行，並以 `{@CompanyId}` 指明公司；POLHEM3004 analyzer 會報出改用其他資料庫存取的 repository。
+- **破壞性變更：** `IDepartmentRepository`、`IEmployeeRepository`、`IRolePermissionRepository`、`IAuditRuleRepository` 與 `IEmployeeContextResolver` 中存取公司資料庫的方法改為需要公司代號，公司代號也改以小寫儲存。
 - **破壞性變更：** Avalonia 與 Blazor head 共用同一個 `FormDataObject`，移至 `Polhem.UI.Core.DataObjects`，並由建構它的程式傳入使用者時區。
 - **破壞性變更：** 一個請求只從 session 讀一次公司，並把這份快照交給授權、列範圍、路由與 repository，使同一個 token 在請求進行中進入的另一家公司，無法讓某家公司的角色作用到另一家公司的資料；相關服務新增吃快照的多載。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。

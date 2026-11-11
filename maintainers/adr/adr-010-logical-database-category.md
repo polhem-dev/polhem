@@ -7,7 +7,8 @@
 
 Accepted (2026-05-10), partially superseded: the category ids are fixed to `common`, `company` and `log`, and
 `FormSchema.CategoryId` is read at runtime, which overturns key point 1 of the Decision and its "not involved at
-runtime" (see "Implementation evolution").
+runtime" (see "Implementation evolution"). Separating the rows of companies that share a company database is superseded
+by [ADR-062](adr-062-row-level-tenancy.md).
 
 ## Context
 
@@ -334,6 +335,11 @@ the current code:
   POLHEM1002 and refused at runtime as described above, and POLHEM2001 reports a FormSchema table that is not
   registered under its category, so the `DbCategory.Tables` child nodes are no longer only a documentary index. The
   rules are listed in [Analyzer rules](../../docs/en/reference/analyzer-rules.md).
+- **2026-11-10: the framework separates companies that share a database.** "Later extension: runtime routing" says the
+  rows of companies sharing a `CompanyDatabaseId` are told apart by a company column "which the framework's form
+  repositories neither add nor filter by". [ADR-062](adr-062-row-level-tenancy.md) overturns that: every company table
+  carries `sys_company_id`, the form repositories stamp and filter it, a relation join between two company forms matches
+  it, and a repository's hand-written SQL runs through a database access bound to the company. The router is unchanged.
 
 ## Related documents
 

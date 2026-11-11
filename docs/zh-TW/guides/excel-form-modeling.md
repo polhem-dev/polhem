@@ -1,4 +1,4 @@
-<!-- source: en/guides/excel-form-modeling.md blob: 794c29c738cf9105a07e0d8549abf7fc22d572cf -->
+<!-- source: en/guides/excel-form-modeling.md blob: fc1728ced3dcacec4753c8d52cfa08c4bf719bb3 -->
 # 用 Excel 建模表單
 
 [English](../../en/guides/excel-form-modeling.md) · [← 文件索引](../README.md)
@@ -86,6 +86,8 @@ dotnet polhem forms import Quote.xlsx --define ./Define
 - **主檔** 以程式代號命名。Tables 工作表一列都沒有時，會自動建立主檔。
 - **資料庫表名** 預設為 `ft_` 加上資料表代號的小寫底線形式：`QuoteLine` 會變成 `ft_quote_line`。
 - **系統欄位**：每張表補上 `sys_no` 與 `sys_rowid`，每張明細表再補上 `sys_master_rowid`，都設為隱藏。
+  `company` 表單每張表的 TableSchema 另有 `sys_company_id`（資料列所屬的公司），並作為唯一索引的第一欄；它不是表單的欄位，
+  由表單 repository 寫入與過濾。
 - **關聯欄位**：指定了關聯表單的欄位（`customer_rowid` 關聯 `Customer`）會設為 `Guid`，並補上顯示關聯資料的兩個欄位
   `ref_customer_id` 與 `ref_customer_name`，分別對應關聯表單的 `sys_id` 與 `sys_name`。它們的標題沿用關聯欄位的
   標題：`Customer Code`、`客戶代號`。

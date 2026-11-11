@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 6e389fff7cdb69fa242fafcd13b8fde7db87a778 -->
+<!-- source: en/guides/development-cookbook.md blob: 243288b5ab93c0d579a479b408c788bfb72e65ee -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -303,7 +303,7 @@ FormSchema（Single Source of Truth）
 - 該 FormSchema 衍生的所有 `TableSchema` 應持久化於 `TableSchema/{categoryId}/` 子目錄
 - 該 FormSchema 的資料表位於哪個資料庫（`CategoryId` → `DbScope` → `IRepositoryDatabaseRouter`）
 
-業務資料表（`ft_*`）屬於 `company`，也就是各公司各自的資料庫。`common` 放跨公司共用的框架資料表，`log` 放稽核與異常 log。框架自帶 `Employee` 與 `Department` 表單（company 資料表 `st_employee` / `st_department`），所以應用程式不要重用這兩個 progId；見 [框架保留命名](../reference/framework-reserved-names.md)。
+業務資料表（`ft_*`）屬於 `company`，也就是公司資料庫；公司可以獨用一個，也可以與其他公司共用，共用時以 `sys_company_id` 區分各公司的資料（見 [資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）。`common` 放跨公司共用的框架資料表，`log` 放稽核與異常 log。框架自帶 `Employee` 與 `Department` 表單（company 資料表 `st_employee` / `st_department`），所以應用程式不要重用這兩個 progId；見 [框架保留命名](../reference/framework-reserved-names.md)。
 
 `SaveFormSchema` 會驗證 `CategoryId` 必填（透過 `TableSchemaGenerator.GetCategoryId(formSchema)`），未設定時拋出 `InvalidOperationException`。
 
@@ -446,10 +446,15 @@ culture 翻譯這個 key 時，就送出英文文字。不帶 key 的建構子�
 `DataFormRepository.Save` 不是 virtual，也沒有提供把額外 statement 加進其交易的掛勾點；那個交易由
 `DbAccess.UpdateDataTables` 開啟並提交。因此能與資料原子提交的，要不是由資料庫強制的條件（唯一索引、
 check 與 foreign key constraint），就是由你自己掌握的寫入路徑：在客製 repository（見下方「為 ProgId 客製
-Repository」）上寫一個方法，開連線、開 `DbTransaction`，每個 statement 都透過
-`new DbAccess(connection, databaseType).Execute(command, transaction)` 執行，最後只提交一次 —— 框架自己的
-repository 也是這個模式。再由覆寫的 `DoSave` 取代 `base.DoSave(context)` 呼叫它，並自行設定
-`context.RefreshedDataSet` 與 `context.AffectedRows`。
+Repository」）上寫一個方法，把它的 statement 當成一個批次執行：
+`CreateDbAccess().ExecuteBatch(new DbBatchSpec { UseTransaction = true, ... })`，全部一起提交，或全部回復。批次裡的
+每個 statement 都要以 `sys_company_id = {@CompanyId}` 指明公司（新增資料列時，則把 `{@CompanyId}` 寫進該欄位）：
+`CreateDbAccess()` 綁定 session 的公司，會拒絕沒有它的 statement。需要看到批次自己寫入結果的檢查，應寫在 statement
+本身，也就是有條件的 `UPDATE ... WHERE ...`，而不是在它之前先讀一次。再由覆寫的 `DoSave` 取代
+`base.DoSave(context)` 呼叫這個方法，並自行設定 `context.RefreshedDataSet` 與 `context.AffectedRows`。
+
+不要用 `new DbAccess(connection, databaseType)` 在自己開的連線上建交易：這樣取得的存取不綁公司，多家公司共用資料庫時
+會讀寫所有公司的資料列，POLHEM3004 analyzer 也會報出。
 
 ### 業務 plugin
 

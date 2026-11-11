@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 57aca5c73c4c5ed51e53dc536bed02386d5d28a3 -->
+<!-- source: en/architecture/development-constraints.md blob: 938bbeff5cf0008c9a2b936f1f460a535deba5c2 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -24,7 +24,7 @@
 
 - 在 `AddPolhemFramework` 之前解析框架服務 → DI 容器拋 `InvalidOperationException`（服務未註冊）
 - `SystemSettingsLoader.Load` 指向不存在的 `SystemSettings.xml` → 拋 `FileNotFoundException`
-- 以資料庫 id 建構 `DbAccess` → 建構子需要 `IDbConnectionManager`（傳 `null` 會拋 `ArgumentNullException`）；請改透過 DI 注入的 `IDbAccessFactory.Create(databaseId)` 取得實例。（另有一個 ctor 接已開啟的 `DbConnection` 加其 `DatabaseType`，不需連線管理員——供自行持有連線的呼叫端使用，例如在既有交易內寫入的程式碼）
+- 以資料庫 id 建構 `DbAccess` → 建構子需要 `IDbConnectionManager`（傳 `null` 會拋 `ArgumentNullException`）；請改透過 DI 注入的 `IDbAccessFactory.Create(databaseId)` 取得實例；在 repository 內則用 `RepositoryBase.CreateDbAccess()`，它會把公司資料綁定到公司。（另有一個 ctor 接已開啟的 `DbConnection` 加其 `DatabaseType`，不需連線管理員——供自行持有連線的呼叫端使用，例如在既有交易內寫入的程式碼）
 
 ### 參考範例
 

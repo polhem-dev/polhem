@@ -71,24 +71,34 @@ Rules:
 
 ## 3. Grant roles
 
-Roles, grants and assignments live in each **company database** (`st_` framework tables, per-company config):
+Roles, grants and assignments live in each **company database** (`st_` framework tables, per-company config). Several
+companies can share one company database, so every row carries the company it belongs to in `sys_company_id`, the company
+id in its stored lowercase form; the framework reads only the rows of the session's company:
 
 | Table | Columns | Meaning |
 |-------|---------|---------|
-| `st_role` | `sys_id`, `sys_name` | a role (a unit you assign) |
-| `st_role_grant` | `role_id`, `model_id`, `action`, `scope` | one (role, model, action) the role is granted, plus its record scope |
-| `st_user_role` | `user_id`, `role_id` | user ↔ role assignment (`user_id` is `st_user.sys_id`) |
+| `st_role` | `sys_company_id`, `sys_id`, `sys_name` | a role (a unit you assign) |
+| `st_role_grant` | `sys_company_id`, `role_id`, `model_id`, `action`, `scope` | one (role, model, action) the role is granted, plus its record scope |
+| `st_user_role` | `sys_company_id`, `user_id`, `role_id` | user ↔ role assignment (`user_id` is `st_user.sys_id`) |
+
+A row written without `sys_company_id` belongs to no company, and the framework does not read it: the grant has no
+effect, and no error says so. `db upgrade` later finds such rows. In a database only one company uses, it gives them to
+that company, so the grant takes effect from then on; in a database several companies share, it reports them for you to
+assign.
 
 `st_role_grant` is **per-action**: the presence of a row is the layer-1 grant; its `scope` (a `ScopeStrategy`) drives layer-2. This is what lets a role *read* its whole department but *update* only its own records.
 
 ```sql
 -- "Buyer" can read the department-and-sub PurchaseOrders, but only update/delete its own:
-INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
-  ('Buyer', 'PurchaseOrder', 2 /*Read*/,   4 /*DeptAndSub*/),
-  ('Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
-  ('Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
+INSERT INTO st_role_grant (sys_company_id, role_id, model_id, action, scope) VALUES
+  ('acme', 'Buyer', 'PurchaseOrder', 2 /*Read*/,   4 /*DeptAndSub*/),
+  ('acme', 'Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
+  ('acme', 'Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
 -- scope = ScopeStrategy: Inherit=0, All=1, Own=2, Dept=3, DeptAndSub=4
 -- action = PermissionActions (flags): Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
+
+-- Assign the role to a user of the same company:
+INSERT INTO st_user_role (sys_company_id, user_id, role_id) VALUES ('acme', 'alice', 'Buyer');
 ```
 
 `scope = Inherit (0)` defers to the model's per-action default (section 1).
@@ -170,10 +180,10 @@ Each non-`None` category maps **by convention** to a permission model whose id e
 ```sql
 -- A viewer may see cost but not change it (Read only); an editor may change it (Read + Update).
 -- Editing requires Read too — Update without Read leaves the field hidden.
-INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
-  ('CostViewer', 'Cost', 2 /*Read*/,   1 /*All*/),
-  ('CostEditor', 'Cost', 2 /*Read*/,   1 /*All*/),
-  ('CostEditor', 'Cost', 4 /*Update*/, 1 /*All*/);
+INSERT INTO st_role_grant (sys_company_id, role_id, model_id, action, scope) VALUES
+  ('acme', 'CostViewer', 'Cost', 2 /*Read*/,   1 /*All*/),
+  ('acme', 'CostEditor', 'Cost', 2 /*Read*/,   1 /*All*/),
+  ('acme', 'CostEditor', 'Cost', 4 /*Update*/, 1 /*All*/);
 ```
 
 The category gate is **company-wide and orthogonal to the form's own model**: seeing a `Cost` column depends on `Cost.Read`, *independent* of `PurchaseOrder.Read`. A user may be permitted to read purchase orders yet still have their cost columns hidden. This matches ERP practice — cost/amount/PII visibility is a data-classification concern that should be consistent across every form, granted once.
@@ -235,7 +245,7 @@ UserContext.SignOut();                            // signs the circuit's client 
 
 # Part 3 — Deployment-level administration (outside the company model)
 
-Everything above is scoped to a company: roles, grants and the department tree all live in **each company's own database**, and `ICompanyAuthorizationService.Can` returns `false` when the session has entered no company.
+Everything above is scoped to a company: roles, grants and the department tree are **the company's own rows** in its company database (a database of its own, or one it shares, told apart by `sys_company_id`), and `ICompanyAuthorizationService.Can` returns `false` when the session has entered no company.
 
 Within one request, the company is read from the session once. A business object keeps that read as its `CompanyScope` and hands it to the authorization check, the record scope and its repositories, so all of them act for the same company even when the same token enters another company while the request runs ([ADR-063](../../../maintainers/adr/adr-063-one-company-scope-per-request.md)). The access-token overloads of these services read the session themselves; call them only from code that has no `CompanyScope`.
 
@@ -245,7 +255,7 @@ Some assets belong to the **installation** rather than to any company — an API
 |---|---|---|
 | Interface | `ICompanyAuthorizationService.Can(companyScope, modelId, action)`; a business object passes its `CompanyScope` | `IDeploymentAuthorizationService.Can(token, action)` |
 | Question | May this user do X **inside company C**? | May this user do X **to the installation**? |
-| Identity source | `st_role` / `st_role_grant` / `st_user_role` in each company database | `st_user.deployment_admin` in the common database |
+| Identity source | the company's rows of `st_role` / `st_role_grant` / `st_user_role` in its company database | `st_user.deployment_admin` in the common database |
 | Requires a company | Yes — no company context, no permission | No — by definition there is none |
 
 > **The two never grant each other anything.** A deployment administrator gains **no data rights in any company**: reading or writing a company's records still runs the Action and Record gates of Part 1, which consult that company's roles and know nothing about the flag. A company administrator gains nothing here. Neither check falls back to the other.

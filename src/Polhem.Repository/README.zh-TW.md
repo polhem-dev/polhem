@@ -21,6 +21,19 @@
 - `DataFormRepository` -- `IDataFormRepository` 的預設實作，負責以 FormSchema 驅動的 CRUD，依 ProgId 解析。
   程式可以透過 `ProgramSettings` 的 `ProgramItem.Repository` 綁定自己的子類別。
 
+### 資料列層級的多公司隔離
+
+多家公司可以共用一個公司資料庫，`company` 表單的每張表都帶 `sys_company_id`
+（[資料庫設定 §5.5](../../docs/zh-TW/database/database-settings-guide.md#55-多家公司共用公司資料庫)）。
+
+- `DataFormRepository` 在新增的每一列寫入 session 的公司，並把每次讀取、更新與刪除限定在該公司；兩個 company
+  表單之間的關聯 join 也會比對公司。
+- `RepositoryBase.CreateDbAccess()` 回傳綁定 repository 所屬公司的 `DbAccess`，所以手寫 SQL 要以 `{@CompanyId}`
+  寫出公司（`sys_company_id = {@CompanyId}`），沒有寫的語句在執行時會被拒絕。沒有 session 的程式碼改用
+  `CreateDbAccess(databaseId, companyId)`。
+- 以其他方式（`IDbAccessFactory`、context 的 `DbAccessFactory`、`new DbAccess(...)`）取得的 `DbAccess` 沒有綁定公司；
+  在 repository 中這樣取得時，POLHEM3004 analyzer 會報出來。
+
 ### 框架 Repository（internal）
 
 框架資料表（session、使用者、公司、部門、員工、角色、API 金鑰、稽核紀錄與稽核規則，以及資料庫管理）的
