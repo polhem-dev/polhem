@@ -46,6 +46,21 @@ namespace Polhem.Web.Blazor.Controls.Editors
             RefreshFromSource();
         }
 
+        /// <summary>
+        /// Commits <paramref name="text"/> like <see cref="CommitText"/>, and returns whether the editor took it.
+        /// </summary>
+        /// <param name="text">The text the input reported.</param>
+        /// <returns>
+        /// <c>false</c> when the entry was rejected: the shown text stayed as it was although it differs from what was
+        /// typed. An input whose value does not change keeps showing what was typed, so a UI package recreates it then.
+        /// </returns>
+        protected bool TryCommitText(string? text)
+        {
+            var shown = Text;
+            CommitText(text);
+            return !string.Equals(Text, shown, StringComparison.Ordinal) || string.Equals(Text, text, StringComparison.Ordinal);
+        }
+
         /// <inheritdoc />
         protected override void RefreshFromSource()
         {

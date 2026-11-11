@@ -1,5 +1,5 @@
 @namespace Polhem.Web.Blazor.Fluent.Controls
-@using System.Globalization
+@inherits GridColumnFilterBase
 @using Polhem.Definition.Forms
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
@@ -7,17 +7,17 @@
 
 <span class="polhem-grid-filter">
     <FluentButton Id="@_buttonId"
-                  Class="@(Filters.IsFiltered(Column.FieldName) ? "polhem-grid-filter__button polhem-grid-filter__button--active" : "polhem-grid-filter__button")"
-                  Appearance="@(Filters.IsFiltered(Column.FieldName) ? ButtonAppearance.Primary : ButtonAppearance.Transparent)"
-                  Title="@string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption)"
+                  Class="@(IsFiltered ? "polhem-grid-filter__button polhem-grid-filter__button--active" : "polhem-grid-filter__button")"
+                  Appearance="@(IsFiltered ? ButtonAppearance.Primary : ButtonAppearance.Transparent)"
+                  Title="@ButtonLabel"
                   StopPropagation="true"
                   OnClick="Toggle">▾</FluentButton>
     @* WARNING: the text boxes are native inputs. A Fluent input can overwrite what is typed just after it takes the focus,
        which here would apply an empty filter while the panel closes as usual. Enter also submits only from a native input.
        WARNING: the popover opens only when `Opened` turns true on an element that is already there, so it stays in the markup
        and only its content comes and goes. A click outside or Escape closes it and drops what was typed and not applied. *@
-    <FluentPopover AnchorId="@_buttonId" Opened="_isOpen" OpenedChanged="OnOpenedChanged" Class="polhem-grid-filter__panel">
-        @if (_isOpen)
+    <FluentPopover AnchorId="@_buttonId" Opened="IsOpen" OpenedChanged="OnOpenedChanged" Class="polhem-grid-filter__panel">
+        @if (IsOpen)
         {
             <form class="polhem-grid-filter__form" @onsubmit="() => ApplyAsync()" @onsubmit:preventDefault @onkeydown="OnKeyDown">
                 @switch (Kind)
@@ -31,27 +31,27 @@
                                       Items="Choices"
                                       OptionText="@(c => c.Value)"
                                       OptionValue="@(c => c.Key)"
-                                      @bind-Value="_first"
+                                      @bind-Value="First"
                                       Width="100%" />
                         break;
                     case ColumnFilterKind.Text:
                         <label class="polhem-grid-filter__first">
                             <span class="polhem-native-input__label">@Column.Caption</span>
-                            <input @ref="_firstInputReference" class="polhem-native-input" @bind="_first" />
+                            <input @ref="_firstInputReference" class="polhem-native-input" @bind="First" />
                         </label>
                         break;
                     default:
                         <label class="polhem-grid-filter__first">
                             <span class="polhem-native-input__label">@Text(PolhemUIText.FilterFrom)</span>
-                            <input @ref="_firstInputReference" class="polhem-native-input" placeholder="@RangePlaceholder" @bind="_first" />
+                            <input @ref="_firstInputReference" class="polhem-native-input" placeholder="@RangePlaceholder" @bind="First" />
                         </label>
                         <label class="polhem-grid-filter__second">
                             <span class="polhem-native-input__label">@Text(PolhemUIText.FilterTo)</span>
-                            <input class="polhem-native-input" placeholder="@RangePlaceholder" @bind="_second" />
+                            <input class="polhem-native-input" placeholder="@RangePlaceholder" @bind="Second" />
                         </label>
                         break;
                 }
-                @if (_isInvalid)
+                @if (IsInvalid)
                 {
                     <div class="polhem-grid-filter__error" role="alert">@Text(PolhemUIText.FilterInvalid)</div>
                 }
@@ -65,63 +65,18 @@
 </span>
 
 @code {
-    private bool _isOpen;
-    private bool _isInvalid;
     private bool _focusFirst;
-    private string _first = string.Empty;
-    private string _second = string.Empty;
     private readonly string _buttonId = $"polhem-filter-{Guid.NewGuid():N}";
     private ElementReference _firstInputReference;
 
-    /// <summary>Gets or sets the column.</summary>
-    [Parameter, EditorRequired]
-    public LayoutColumn Column { get; set; } = default!;
-
-    /// <summary>Gets or sets the schema field of the column.</summary>
-    [Parameter, EditorRequired]
-    public FormField Field { get; set; } = default!;
-
-    /// <summary>Gets or sets what the filter takes.</summary>
-    [Parameter, EditorRequired]
-    public ColumnFilterKind Kind { get; set; }
-
-    /// <summary>Gets or sets the list's filters, which hold what was entered before.</summary>
-    [Parameter, EditorRequired]
-    public ListFilterState Filters { get; set; } = default!;
-
-    /// <summary>Gets or sets the callback raised with a value the filters can read.</summary>
-    [Parameter]
-    public EventCallback<ColumnFilterChange> Applied { get; set; }
-
-    [Inject]
-    private IServiceProvider? Services { get; set; }
-
     // Fluent's text input has no date type.
-    private string? RangePlaceholder => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime ? "yyyy-MM-dd" : null;
+    private string? RangePlaceholder => IsDateRange ? "yyyy-MM-dd" : null;
 
-    private IEnumerable<KeyValuePair<string, string>> Choices
+    /// <inheritdoc />
+    protected override void Toggle()
     {
-        get
-        {
-            yield return new(string.Empty, string.Empty);
-            if (Kind == ColumnFilterKind.Boolean)
-            {
-                yield return new(bool.TrueString, Text(PolhemUIText.True));
-                yield return new(bool.FalseString, Text(PolhemUIText.False));
-                yield break;
-            }
-            foreach (var item in Field.ListItems!) yield return new(item.Value, item.Text);
-        }
-    }
-
-    private string Text(string key) => PolhemUIText.Get(Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(Services), key);
-
-    private void Toggle()
-    {
-        _isOpen = !_isOpen;
-        _isInvalid = false;
-        _focusFirst = _isOpen;
-        (_first, _second) = Filters.GetEntered(Column.FieldName);
+        base.Toggle();
+        _focusFirst = IsOpen;
     }
 
     /// <inheritdoc />
@@ -135,31 +90,5 @@
     private void OnOpenedChanged(bool opened)
     {
         if (!opened) Close();
-    }
-
-    private void Close() => _isOpen = false;
-
-    private void OnKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Escape") Close();
-    }
-
-    private async Task ApplyAsync()
-    {
-        // A trial on a state of its own: the real one changes only through the host, which reads the list again.
-        if (!new ListFilterState().TrySet(Field, Kind, _first, _second))
-        {
-            _isInvalid = true;
-            return;
-        }
-        _isOpen = false;
-        await Applied.InvokeAsync(new ColumnFilterChange(Field, Kind, _first, _second)).ConfigureAwait(true);
-    }
-
-    private Task ClearAsync()
-    {
-        _first = string.Empty;
-        _second = string.Empty;
-        return ApplyAsync();
     }
 }

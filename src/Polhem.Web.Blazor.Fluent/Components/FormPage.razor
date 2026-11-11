@@ -1,6 +1,5 @@
 @namespace Polhem.Web.Blazor.Fluent.Components
 @inherits FormPageBase
-@inject Microsoft.JSInterop.IJSRuntime JS
 @using Microsoft.JSInterop
 @using Polhem.Definition.Language
 @using Polhem.Definition.Settings
@@ -190,17 +189,3 @@
                              OnRefused="OnRelationRefused" />
     }
 </div>
-
-@code {
-    /// <inheritdoc />
-    protected override async Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default)
-        => await JS.InvokeVoidAsync("scrollTo", cancellationToken, 0, 0).ConfigureAwait(true);
-
-    // `Detail` is the browser's click count, because a double-click also fires two clicks.
-    private Task OnCardClick(System.Data.DataRow row, MouseEventArgs e)
-    {
-        if (e.Detail >= 2) return ActivateCardAsync(row);
-        SelectCard(row);
-        return Task.CompletedTask;
-    }
-}

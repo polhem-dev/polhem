@@ -1,18 +1,18 @@
 @namespace Polhem.Web.Blazor.Mud.Controls
-@using System.Globalization
+@inherits GridColumnFilterBase
 @using Polhem.Definition.Forms
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
 @using Polhem.UI.Core.Connectors
 
 <span class="polhem-grid-filter">
-    <MudIconButton Class="@(Filters.IsFiltered(Column.FieldName) ? "polhem-grid-filter__button polhem-grid-filter__button--active" : "polhem-grid-filter__button")"
+    <MudIconButton Class="@(IsFiltered ? "polhem-grid-filter__button polhem-grid-filter__button--active" : "polhem-grid-filter__button")"
                    Icon="@Icons.Material.Filled.FilterList"
                    Size="Size.Small"
-                   Color="@(Filters.IsFiltered(Column.FieldName) ? Color.Primary : Color.Default)"
-                   aria-label="@string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption)"
+                   Color="@(IsFiltered ? Color.Primary : Color.Default)"
+                   aria-label="@ButtonLabel"
                    OnClick="Toggle" />
-    @if (_isOpen)
+    @if (IsOpen)
     {
         @* A click outside or Escape closes the popover and drops what was typed and not applied. *@
         <MudOverlay Visible="true" AutoClose="true" OnClosed="Close" />
@@ -21,14 +21,14 @@
                 @switch (Kind)
                 {
                     case ColumnFilterKind.Boolean:
-                        <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="_first" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
+                        <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="First" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
                             <MudSelectItem T="string" Value="@string.Empty" />
                             <MudSelectItem T="string" Value="@bool.TrueString">@Text(PolhemUIText.True)</MudSelectItem>
                             <MudSelectItem T="string" Value="@bool.FalseString">@Text(PolhemUIText.False)</MudSelectItem>
                         </MudSelect>
                         break;
                     case ColumnFilterKind.Choice:
-                        <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="_first" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
+                        <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="First" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
                             <MudSelectItem T="string" Value="@string.Empty" />
                             @foreach (var item in Field.ListItems!)
                             {
@@ -37,14 +37,14 @@
                         </MudSelect>
                         break;
                     case ColumnFilterKind.Text:
-                        <MudTextField T="string" Class="polhem-grid-filter__first" @bind-Value="_first" Immediate="true" AutoFocus="true" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption" />
+                        <MudTextField T="string" Class="polhem-grid-filter__first" @bind-Value="First" Immediate="true" AutoFocus="true" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption" />
                         break;
                     default:
-                        <MudTextField T="string" Class="polhem-grid-filter__first" @bind-Value="_first" Immediate="true" AutoFocus="true" InputType="RangeInputType" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Text(PolhemUIText.FilterFrom)" Shrink="true" />
-                        <MudTextField T="string" Class="polhem-grid-filter__second" @bind-Value="_second" Immediate="true" InputType="RangeInputType" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Text(PolhemUIText.FilterTo)" Shrink="true" />
+                        <MudTextField T="string" Class="polhem-grid-filter__first" @bind-Value="First" Immediate="true" AutoFocus="true" InputType="RangeInputType" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Text(PolhemUIText.FilterFrom)" Shrink="true" />
+                        <MudTextField T="string" Class="polhem-grid-filter__second" @bind-Value="Second" Immediate="true" InputType="RangeInputType" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Text(PolhemUIText.FilterTo)" Shrink="true" />
                         break;
                 }
-                @if (_isInvalid)
+                @if (IsInvalid)
                 {
                     <div class="polhem-grid-filter__error" role="alert">@Text(PolhemUIText.FilterInvalid)</div>
                 }
@@ -58,77 +58,5 @@
 </span>
 
 @code {
-    private bool _isOpen;
-    private bool _isInvalid;
-    private string _first = string.Empty;
-    private string _second = string.Empty;
-
-    /// <summary>Gets or sets the column.</summary>
-    [Parameter, EditorRequired]
-    public LayoutColumn Column { get; set; } = default!;
-
-    /// <summary>Gets or sets the schema field of the column.</summary>
-    [Parameter, EditorRequired]
-    public FormField Field { get; set; } = default!;
-
-    /// <summary>Gets or sets what the filter takes.</summary>
-    [Parameter, EditorRequired]
-    public ColumnFilterKind Kind { get; set; }
-
-    /// <summary>Gets or sets the list's filters, which hold what was entered before.</summary>
-    [Parameter, EditorRequired]
-    public ListFilterState Filters { get; set; } = default!;
-
-    /// <summary>Gets or sets the callback raised with a value the filters can read.</summary>
-    [Parameter]
-    public EventCallback<ColumnFilterChange> Applied { get; set; }
-
-    [Inject]
-    private IServiceProvider? Services { get; set; }
-
-    private InputType RangeInputType => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime ? InputType.Date : InputType.Text;
-
-    private string Text(string key) => PolhemUIText.Get(Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(Services), key);
-
-    // MudSelect shows the value it holds unless it is told the text.
-    private string ChoiceText(string? value)
-    {
-        if (string.IsNullOrEmpty(value)) return string.Empty;
-        if (Kind == ColumnFilterKind.Boolean)
-            return Text(string.Equals(value, bool.TrueString, StringComparison.OrdinalIgnoreCase) ? PolhemUIText.True : PolhemUIText.False);
-        return Field.ListItems?.FirstOrDefault(i => string.Equals(i.Value, value, StringComparison.Ordinal))?.Text ?? value;
-    }
-
-    private void Toggle()
-    {
-        _isOpen = !_isOpen;
-        _isInvalid = false;
-        (_first, _second) = Filters.GetEntered(Column.FieldName);
-    }
-
-    private void Close() => _isOpen = false;
-
-    private void OnKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Escape") Close();
-    }
-
-    private async Task ApplyAsync()
-    {
-        // A trial on a state of its own: the real one changes only through the host, which reads the list again.
-        if (!new ListFilterState().TrySet(Field, Kind, _first, _second))
-        {
-            _isInvalid = true;
-            return;
-        }
-        _isOpen = false;
-        await Applied.InvokeAsync(new ColumnFilterChange(Field, Kind, _first, _second)).ConfigureAwait(true);
-    }
-
-    private Task ClearAsync()
-    {
-        _first = string.Empty;
-        _second = string.Empty;
-        return ApplyAsync();
-    }
+    private InputType RangeInputType => IsDateRange ? InputType.Date : InputType.Text;
 }

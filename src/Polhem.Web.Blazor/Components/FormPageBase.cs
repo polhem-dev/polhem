@@ -18,6 +18,7 @@ using Polhem.Web.Blazor.Controls;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 
 namespace Polhem.Web.Blazor.Components
 {
@@ -153,6 +154,10 @@ namespace Polhem.Web.Blazor.Components
         // Nullable: a component created outside a renderer has no services, and still renders.
         [Inject]
         private IServiceProvider? Services { get; set; }
+
+        // Nullable for the same reason; the cards then stay where they are.
+        [Inject]
+        private IJSRuntime? JS { get; set; }
 
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
