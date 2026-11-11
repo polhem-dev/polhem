@@ -99,6 +99,7 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (Exception ex)
             {
+                // Boundary: a failed delete is shown on the list; thrown from a click handler it would end the app.
                 ReportError(ex);
             }
             finally

@@ -55,6 +55,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("Every defined database type has an identifier quoting and a parameter prefix")]
+        public void EveryDatabaseType_HasQuotingAndParameterPrefix()
+        {
+            foreach (var dbType in Enum.GetValues<DatabaseType>())
+            {
+                var quoted = dbType.QuoteIdentifier("name");
+                Assert.True(quoted.Length > "name".Length, $"{dbType} returned '{quoted}'.");
+                Assert.NotEmpty(dbType.GetParameterPrefix());
+            }
+        }
+
+        [Fact]
         [DisplayName("QuoteIdentifier throws NotSupportedException for an unsupported database type")]
         public void QuoteIdentifier_UnsupportedType_Throws()
         {

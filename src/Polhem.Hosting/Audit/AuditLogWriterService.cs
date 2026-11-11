@@ -129,6 +129,8 @@ namespace Polhem.Hosting.Audit
             }
             catch (Exception ex)
             {
+                // Boundary: one failed batch must not stop the writer, which serves the whole process; the batch is
+                // logged as lost.
                 _logger.LogError(ex, "Audit log drain failed; the batch is lost and the writer continues.");
             }
         }

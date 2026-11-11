@@ -32,7 +32,7 @@ namespace Polhem.Core.Data
             {
                 return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 throw new InvalidOperationException(
                     $"Failed to convert field '{columnName}' to type {typeof(T).Name}: {ex.Message}", ex
@@ -64,7 +64,7 @@ namespace Polhem.Core.Data
             {
                 return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 throw new InvalidOperationException(
                     $"Failed to convert field '{columnName}' to type {typeof(T).Name}: {ex.Message}", ex

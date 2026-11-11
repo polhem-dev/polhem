@@ -246,7 +246,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             }
             catch (Exception ex)
             {
-                // UI boundary: an async click handler must not crash the app; surface
+                // Boundary: an async click handler must not crash the app; surface
                 // the failure to the host (or the tooltip as a last resort). Runs on the
                 // UI thread, so a direct event raise after the null check is safe.
                 if (LookupFailed is null)

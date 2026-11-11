@@ -95,7 +95,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             }
             catch (Exception ex)
             {
-                // NOTE: any failure, of any type, is shown to the viewer; the screen is the place to report it, and
+                // Boundary: any failure, of any type, is shown to the viewer; the screen is the place to report it, and
                 // rethrowing from a command would end as an unobserved task exception.
                 SetStatus("Status_ConnectFailed", isError: true, ex.Message);
             }

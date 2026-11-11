@@ -1,5 +1,8 @@
 using System.Data.Common;
 using System.Globalization;
+using Polhem.Db.Providers.MySql;
+using Polhem.Db.Providers.PostgreSql;
+using Polhem.Db.Providers.SqlServer;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Manager
@@ -102,10 +105,10 @@ namespace Polhem.Db.Manager
             command.CommandText = databaseType switch
             {
                 // Guarded again in case another process created it after the probe.
-                DatabaseType.SQLServer => $"IF DB_ID(N'{databaseName}') IS NULL CREATE DATABASE [{databaseName}]",
-                DatabaseType.MySQL => $"CREATE DATABASE IF NOT EXISTS `{databaseName}`",
+                DatabaseType.SQLServer => $"IF DB_ID(N'{databaseName}') IS NULL CREATE DATABASE {SqlSchemaSyntax.QuoteName(databaseName)}",
+                DatabaseType.MySQL => $"CREATE DATABASE IF NOT EXISTS {MySqlSchemaSyntax.QuoteName(databaseName)}",
                 // PostgreSQL has no IF NOT EXISTS here and refuses the statement inside a transaction.
-                DatabaseType.PostgreSQL => $"CREATE DATABASE \"{databaseName}\"",
+                DatabaseType.PostgreSQL => $"CREATE DATABASE {PgSchemaSyntax.QuoteName(databaseName)}",
                 _ => throw new NotSupportedException($"Creating a database on {databaseType} is not supported."),
             };
             command.ExecuteNonQuery();

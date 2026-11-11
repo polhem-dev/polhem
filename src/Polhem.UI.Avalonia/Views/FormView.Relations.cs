@@ -43,7 +43,7 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (Exception ex)
             {
-                // UI boundary: the request comes from a gesture handler, so a failure is shown, not thrown.
+                // Boundary: the request comes from a gesture handler, so a failure is shown, not thrown.
                 ReportError(ex);
                 return;
             }

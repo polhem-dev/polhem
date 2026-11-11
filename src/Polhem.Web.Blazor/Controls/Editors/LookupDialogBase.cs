@@ -128,7 +128,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
             }
             catch (Exception ex)
             {
-                // UI boundary: the dialog shows the failure instead of breaking the page, and the host hears
+                // Boundary: the dialog shows the failure instead of breaking the page, and the host hears
                 // about it through OnFailed.
                 _schema = null;
                 _connector = null;
