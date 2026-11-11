@@ -21,18 +21,11 @@
                 @switch (Kind)
                 {
                     case ColumnFilterKind.Boolean:
-                        <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="First" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
-                            <MudSelectItem T="string" Value="@string.Empty" />
-                            <MudSelectItem T="string" Value="@bool.TrueString">@Text(PolhemUIText.True)</MudSelectItem>
-                            <MudSelectItem T="string" Value="@bool.FalseString">@Text(PolhemUIText.False)</MudSelectItem>
-                        </MudSelect>
-                        break;
                     case ColumnFilterKind.Choice:
                         <MudSelect T="string" Class="polhem-grid-filter__first" @bind-Value="First" ToStringFunc="ChoiceText" Variant="Variant.Outlined" Margin="Margin.Dense" Label="@Column.Caption">
-                            <MudSelectItem T="string" Value="@string.Empty" />
-                            @foreach (var item in Field.ListItems!)
+                            @foreach (var choice in Choices)
                             {
-                                <MudSelectItem T="string" Value="@item.Value">@item.Text</MudSelectItem>
+                                <MudSelectItem T="string" Value="@choice.Key">@choice.Value</MudSelectItem>
                             }
                         </MudSelect>
                         break;

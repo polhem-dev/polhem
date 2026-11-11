@@ -150,5 +150,35 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.Empty(_applied);
             Assert.Empty(FindInPanel(cut, Form));
         }
+
+        [Fact]
+        [DisplayName("The button closes an open panel, and opening it again shows no error from before")]
+        public void Toggle_Twice_ClosesAndForgetsTheError()
+        {
+            var cut = RenderOpen();
+            EnterFirst(InPanel(cut, FirstInput), "abc");
+            InPanel(cut, Form).Submit();
+            Assert.Single(FindInPanel(cut, Error));
+
+            cut.Find(OpenButton).Click();
+            Assert.Empty(FindInPanel(cut, Form));
+
+            cut.Find(OpenButton).Click();
+            Assert.Empty(FindInPanel(cut, Error));
+        }
+
+        [Fact]
+        [DisplayName("After Escape the panel opens with the applied entry again, not what was typed")]
+        public void Escape_ThenReopen_ShowsTheAppliedEntry()
+        {
+            Assert.True(_filters.TrySet(_field, ColumnFilterKind.Number, "2", "5"));
+            var cut = RenderOpen();
+            EnterFirst(InPanel(cut, FirstInput), "9");
+            InPanel(cut, Form).KeyDown("Escape");
+
+            cut.Find(OpenButton).Click();
+
+            Assert.Equal("2", InPanel(cut, FirstInput).GetAttribute("value"));
+        }
     }
 }

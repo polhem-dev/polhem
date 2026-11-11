@@ -126,7 +126,7 @@
     /// <inheritdoc />
     protected override string OpenPopupSelector => ":popover-open";
 
-    // A Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
+    // WARNING: a Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
     /// <inheritdoc />
     protected override int ReplayDelayMilliseconds => 50;
 

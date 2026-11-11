@@ -179,6 +179,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.RowAdded)));
             Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.RowDeleted)));
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.FieldValueChanged)));
+            Assert.Null(EventDelegate(dataObject, nameof(FormDataObject.DataSetReplaced)));
         }
 
         private static Delegate? EventDelegate(FormDataObject dataObject, string eventName)

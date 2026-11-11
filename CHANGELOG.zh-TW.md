@@ -21,6 +21,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** 一個請求只從 session 讀一次公司，並把這份快照交給授權、列範圍、路由與 repository，使同一個 token 在請求進行中進入的另一家公司，無法讓某家公司的角色作用到另一家公司的資料；相關服務新增吃快照的多載。
 - **破壞性變更：** `AddPolhemFramework` 建立的伺服器拒收 JSON-RPC 批次；需要批次的主機以 `AddJsonRpcServer` 設定 `MaxBatchSize`。
 - **破壞性變更：** 登入會在鎖定計數與密碼檢查之前，拒絕長度超過 `MaxLoginUserIdLength`（預設為 `st_user.sys_id` 的 20 個字元）的帳號或過長的密碼；驗證較長帳號的子類別請提高上限。
+- **破壞性變更：** `GridControlBase` 改為實作 `IAsyncDisposable`，讓 grid 釋放時取消對 data object 的訂閱；框架以外繼承它並自行宣告 `DisposeAsync` 的 grid，請改在 `Dispose(bool)` 釋放資源。
 - **破壞性變更：** 框架的 `Department` 與 `Employee` 表單宣告同名的權限模型（隨框架的 `PermissionModels.xml` 提供），只有獲授權的角色能維護記錄範圍所依據的部門與員工資料。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬或含 NUL 字元的稽核值，不再讓資料庫拒絕整批寫入：值會截斷到欄寬，NUL 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。

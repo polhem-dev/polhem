@@ -108,7 +108,6 @@ Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsDateRange.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsFiltered.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsInvalid.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsOpen.get -> bool
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsRange.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs! e) -> void
@@ -162,8 +161,8 @@ Polhem.Web.Blazor.Controls.GridControlBase.DisposeAsync() -> System.Threading.Ta
 Polhem.Web.Blazor.Controls.GridControlBase.HeaderClass(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.RowClass(System.Data.DataRow! row) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.Script.get -> Polhem.Web.Blazor.Controls.GridEditorScript!
-abstract Polhem.Web.Blazor.Controls.GridControlBase.OpenPopupSelector.get -> string!
-abstract Polhem.Web.Blazor.Controls.GridControlBase.RefreshRowList() -> void
 override Polhem.Web.Blazor.Controls.GridControlBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Controls.GridControlBase.ShouldRender() -> bool
 virtual Polhem.Web.Blazor.Controls.GridControlBase.ReplayDelayMilliseconds.get -> int
+virtual Polhem.Web.Blazor.Controls.GridControlBase.OpenPopupSelector.get -> string?
+virtual Polhem.Web.Blazor.Controls.GridControlBase.RefreshRowList() -> void

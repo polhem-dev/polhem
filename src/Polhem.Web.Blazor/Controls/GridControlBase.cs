@@ -201,9 +201,12 @@ namespace Polhem.Web.Blazor.Controls
 
         private GridEditorScript? _script;
 
-        /// <summary>Gets the CSS selector that matches a popup of the UI framework while it is open.</summary>
+        /// <summary>
+        /// Gets the CSS selector that matches a popup of the UI framework while it is open, or <c>null</c> for a grid
+        /// that uses no editor script; <c>null</c> by default.
+        /// </summary>
         /// <remarks>The editor script lets a key through to an open popup instead of the grid.</remarks>
-        protected abstract string OpenPopupSelector { get; }
+        protected virtual string? OpenPopupSelector => null;
 
         /// <summary>
         /// Gets how long the editor script waits before it replays keys typed ahead into a new editor; zero by default.
@@ -211,10 +214,14 @@ namespace Polhem.Web.Blazor.Controls
         protected virtual int ReplayDelayMilliseconds => 0;
 
         /// <summary>Gets the script that holds keys typed before a cell's editor arrives and focuses the editor.</summary>
+        /// <exception cref="InvalidOperationException">
+        /// The grid has no <see cref="OpenPopupSelector"/>, or it was created outside a renderer.
+        /// </exception>
         protected GridEditorScript Script
             => _script ??= new GridEditorScript(
                 JS ?? throw new InvalidOperationException("The grid's editor script needs a renderer's JavaScript runtime."),
-                OpenPopupSelector, ReplayDelayMilliseconds);
+                OpenPopupSelector ?? throw new InvalidOperationException("The grid declares no OpenPopupSelector, so it has no editor script."),
+                ReplayDelayMilliseconds);
 
         /// <summary>Gets the data object the grid is bound to, or <c>null</c>.</summary>
         protected FormDataObject? BoundDataObject => DataObject ?? Scope?.DataObject;
@@ -358,14 +365,16 @@ namespace Polhem.Web.Blazor.Controls
 
         /// <summary>
         /// Takes <see cref="VisibleRows"/> into the list the UI framework's grid reads. Called before every render, so a UI
-        /// package keeps the list in whatever shape its grid needs.
+        /// package keeps the list in whatever shape its grid needs. Does nothing by default.
         /// </summary>
-        protected abstract void RefreshRowList();
+        protected virtual void RefreshRowList()
+        {
+        }
 
         // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
         /// <inheritdoc />
         protected override Task OnAfterRenderAsync(bool firstRender)
-            => VisibleColumns.Any(IsInCellEditor) ? Script.LoadAsync() : Task.CompletedTask;
+            => OpenPopupSelector is not null && VisibleColumns.Any(IsInCellEditor) ? Script.LoadAsync() : Task.CompletedTask;
 
         /// <summary>Gets the CSS class of a row, which marks the selected one.</summary>
         /// <param name="row">The row.</param>
@@ -386,16 +395,17 @@ namespace Polhem.Web.Blazor.Controls
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>Releases the editor script and the data object subscription.</summary>
+        /// <summary>Releases the data object subscription and the editor script.</summary>
         /// <remarks>
         /// A renderer calls only this method on a component that also implements <see cref="IDisposable"/>, so it releases
-        /// the subscription too.
+        /// the subscription too. A derived grid releases its own resources in an override of <see cref="Dispose(bool)"/>.
         /// </remarks>
         /// <returns>The operation.</returns>
         public async ValueTask DisposeAsync()
         {
-            if (_script is not null) await _script.DisposeAsync().ConfigureAwait(true);
+            // The subscription first: releasing the script talks to the browser and can fail.
             Dispose();
+            if (_script is not null) await _script.DisposeAsync().ConfigureAwait(true);
         }
 
         /// <summary>

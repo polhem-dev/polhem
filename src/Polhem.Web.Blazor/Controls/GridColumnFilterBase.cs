@@ -16,8 +16,8 @@ namespace Polhem.Web.Blazor.Controls
     /// Opening the panel fills it with what was entered before. Applying first tries the entry on a filter state of its
     /// own and, when the filters cannot read it, shows an error and sends nothing; the real state changes only through
     /// the host, which reads the list again. Clearing applies an empty entry. Escape closes the panel and drops what was
-    /// typed and not applied. <c>GridColumnFilterBehaviorTests</c> (tests/Polhem.Web.Blazor.BehaviorTests) holds every
-    /// UI package to these rules.
+    /// typed and not applied. <c>GridColumnFilterBehaviorTests</c> (tests/Polhem.Web.Blazor.BehaviorTests) checks these
+    /// rules; the MudBlazor and Fluent UI packages each run it over their own filter.
     /// </remarks>
     public abstract class GridColumnFilterBase : ComponentBase
     {
@@ -62,9 +62,6 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Gets the accessible name of the button that opens the panel.</summary>
         protected string ButtonLabel
             => string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption);
-
-        /// <summary>Gets whether the filter takes a range, read from a pair of boxes.</summary>
-        protected bool IsRange => Kind is not (ColumnFilterKind.Boolean or ColumnFilterKind.Choice or ColumnFilterKind.Text);
 
         /// <summary>Gets whether a range is of dates.</summary>
         protected bool IsDateRange => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime;
