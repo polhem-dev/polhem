@@ -18,7 +18,7 @@ namespace Polhem.Web.Blazor.UnitTests
         private static readonly string[] s_forbiddenPrefixes =
         [
             "MudBlazor", "Microsoft.FluentUI", "DevExpress", "Polhem.Web.Blazor.Server", "Polhem.Web.Blazor.Mud", "Polhem.Web.Blazor.Fluent",
-            "Microsoft.AspNetCore.Components.Server", "Microsoft.AspNetCore.Components.WebAssembly",
+            "Microsoft.AspNetCore.Components.WebAssembly",
         ];
 
         [Fact]

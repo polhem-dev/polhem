@@ -141,7 +141,18 @@
     <Error Condition="'@(_PolhemBoundaryViolation)' != ''"
            Code="POLHEM9001"
            Text="$(MSBuildProjectName) is locked to an explicit dependency allowlist (ADR-038, ADR-054). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by everything that references this assembly. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the allowlist of the closure test (tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, or tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs for the front-end layer, or tests/Polhem.Api.Client.UnitTests/ApiClientDependencyGateTests.cs for Polhem.Api.Core), and record why in the ADR." />
-    <Error Condition="('$(MSBuildProjectName)' == 'Polhem.Web.Blazor' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Wasm') And '@(FrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App'))' != ''"
+  </Target>
+
+  <!--
+    The Blazor packages a browser loads (ADR-059): the shared layer, the WebAssembly host and the UI packages. The ASP.NET
+    Core shared framework cannot load in WebAssembly, and a closure test cannot see it, because a shared framework is not a
+    library in .deps.json. This is a target of its own because the UI packages are not on the dependency allowlist above.
+    The SDK has merged transitive framework references into @(FrameworkReference) by Build, so an indirect one fails too.
+  -->
+  <Target Name="PolhemVerifyBrowserFramework"
+          BeforeTargets="Build"
+          Condition="'$(MSBuildProjectName)' == 'Polhem.Web.Blazor' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Wasm' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Mud' Or '$(MSBuildProjectName)' == 'Polhem.Web.Blazor.Fluent'">
+    <Error Condition="'@(FrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App'))' != ''"
            Code="POLHEM9001"
            Text="$(MSBuildProjectName) must not reference the Microsoft.AspNetCore.App framework (ADR-059): it would keep the package out of WebAssembly. Code that needs ASP.NET Core belongs in a host package such as Polhem.Web.Blazor.Server." />
   </Target>

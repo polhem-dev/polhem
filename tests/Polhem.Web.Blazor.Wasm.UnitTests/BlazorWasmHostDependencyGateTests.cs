@@ -11,13 +11,16 @@ namespace Polhem.Web.Blazor.Wasm.UnitTests
     /// <remarks>
     /// The complement of <c>POLHEM9001</c> in <c>src/Directory.Build.targets</c>, which sees direct references. This
     /// reads the graph from this test assembly's own <c>.deps.json</c>, as <c>BlazorSharedLayerDependencyGateTests</c> does.
+    /// A shared framework such as <c>Microsoft.AspNetCore.App</c>, and the assemblies only it carries
+    /// (<c>Microsoft.AspNetCore.Components.Server</c>), are not libraries in that file, so this test cannot see them; the
+    /// <c>PolhemVerifyBrowserFramework</c> target in <c>src/Directory.Build.targets</c> refuses a direct or transitive
+    /// framework reference.
     /// </remarks>
     public class BlazorWasmHostDependencyGateTests
     {
         private static readonly string[] s_forbiddenPrefixes =
         [
             "MudBlazor", "Microsoft.FluentUI", "DevExpress", "Polhem.Web.Blazor.Server", "Polhem.Web.Blazor.Mud", "Polhem.Web.Blazor.Fluent",
-            "Microsoft.AspNetCore.Components.Server", "Microsoft.AspNetCore.App",
         ];
 
         [Fact]
