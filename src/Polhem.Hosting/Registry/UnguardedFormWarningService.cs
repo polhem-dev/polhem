@@ -27,6 +27,13 @@ namespace Polhem.Hosting.Registry
     /// to be registered to be served: a progId the registry does not name resolves to
     /// <see cref="FormBusinessObject"/>. A candidate without a readable form schema is skipped.
     /// </para>
+    /// <para>
+    /// An unguarded form with a table over <c>st_employee</c> or <c>st_department</c> gets a second warning of its own:
+    /// those tables decide the Dept and DeptAndSub record scopes, so leaving them open undoes record scope on every
+    /// other form. A deployment whose Define folder still holds a framework default of these forms from before they
+    /// declared a model is the expected case, because materializing the defaults does not overwrite a file unless
+    /// <see cref="Polhem.Definition.MaterializeOptions.Overwrite"/> is set.
+    /// </para>
     /// </remarks>
     internal sealed class UnguardedFormWarningService : IHostedService
     {
@@ -59,6 +66,14 @@ namespace Polhem.Hosting.Registry
                 _logger.LogWarning(
                     "Forms without a PermissionModelId are readable and writable by every authenticated user of the company: {ProgIds}.",
                     string.Join(", ", progIds));
+            }
+
+            var scopeSources = progIds.Where(IsScopeSource).ToList();
+            if (scopeSources.Count > 0)
+            {
+                _logger.LogWarning(
+                    "Forms {ProgIds} use the department or employee tables that the Dept and DeptAndSub record scopes are read from, and declare no PermissionModelId, so any authenticated user can move an employee to another department and widen their own record scope. Bind them to a permission model, as the framework's default Department and Employee forms do.",
+                    string.Join(", ", scopeSources));
             }
             return Task.CompletedTask;
         }
@@ -120,6 +135,19 @@ namespace Polhem.Hosting.Registry
                 return [];
             }
             return (registry.Items ?? []).Select(item => item.ProgId);
+        }
+
+        // st_employee gives each user the department that record scope starts from, and st_department gives the tree
+        // that DeptAndSub walks. Either one, writable by everyone, lets a user widen their own scope.
+        private static readonly string[] s_scopeSourceTables = ["st_employee", "st_department"];
+
+        private bool IsScopeSource(string progId)
+        {
+            var tables = TryGetFormSchema(progId)?.Tables;
+            if (tables == null) { return false; }
+            return tables.Any(table => s_scopeSourceTables.Contains(
+                string.IsNullOrWhiteSpace(table.DbTableName) ? table.TableName : table.DbTableName,
+                StringComparer.OrdinalIgnoreCase));
         }
 
         private static bool IsFormProgId(string progId)

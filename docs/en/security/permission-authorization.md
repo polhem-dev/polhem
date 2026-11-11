@@ -113,6 +113,20 @@ st_user.sys_rowid  ──(st_employee.user_rowid)──▶  st_employee  ──(
 
 On `EnterCompany`, the framework resolves `user → employee → department` once and snapshots `UserRowId`, `EmployeeRowId`, `DeptRowId` onto the session. Scope filtering then runs zero-DB. A user without a linked employee gets empty employee/department — `Own` still matches their `UserRowId`, while `Dept`/`DeptAndSub` match nothing (fail-closed).
 
+Because these rows decide scope, the framework's `Department` and `Employee` forms declare the `Department` and
+`Employee` permission models, which ship in its `PermissionModels.xml`. A user who could edit them could move their
+own employee row to the top department and widen every `Dept` / `DeptAndSub` scope they hold. Grant `Create`, `Update`
+and `Delete` on the two models only to roles that maintain the organization. Grant `Read` to every role that picks a
+department or an employee in another form: `GetLookup` is not action-gated, but it applies the `Read` record scope
+(section 5), so a role without `Read` finds no candidates. Grant them with scope `All`: neither form marks a department
+or owner field, so a `Dept`, `DeptAndSub` or `Own` grant on them admits no row.
+
+A deployment whose `DefinePath` already held these forms before they declared a model keeps its copies: materializing
+the framework's defaults does not overwrite a file by default (`MaterializeOptions.Overwrite`), and the
+`PermissionModels.xml` the deployment holds, materialized or its own, is the one read. Such a deployment adds `PermissionModelId="Department"` and `PermissionModelId="Employee"` to its two FormSchema
+files, registers the two models in its `PermissionModels.xml`, and grants them. Until then the host logs a warning at
+startup naming every unguarded form over `st_employee` or `st_department`.
+
 ## 5. How enforcement behaves
 
 ### Layer 1 — action gate
