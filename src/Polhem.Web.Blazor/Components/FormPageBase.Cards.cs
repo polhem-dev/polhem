@@ -126,8 +126,6 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="row">The card's row.</param>
         /// <param name="column">The column.</param>
         /// <returns>Whether it is checked.</returns>
-        protected static bool IsCardChecked(DataRow row, LayoutColumn column)
-            => row.Table.Columns.Contains(column.FieldName)
-                && string.Equals(FormValueBinding.ToBindingString(row[column.FieldName]), bool.TrueString, StringComparison.OrdinalIgnoreCase);
+        protected static bool IsCardChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
     }
 }

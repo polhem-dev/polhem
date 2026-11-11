@@ -9,12 +9,8 @@ namespace Polhem.Web.Blazor.UnitTests.Shell
     /// </summary>
     public class ShellMenuRowsTests
     {
-        private static List<ShellMenuRow> Flatten(MenuSettings settings)
-        {
-            var rows = new List<ShellMenuRow>();
-            ShellMenuRows.AddNodes(rows, settings.Items, node => node.Caption);
-            return rows;
-        }
+        private static IReadOnlyList<ShellMenuRow> Flatten(MenuSettings settings)
+            => ShellMenuRows.Flatten(settings.Items, node => node.Caption);
 
         [Fact]
         [DisplayName("Folders become headers followed by their forms, depth first, in display order")]

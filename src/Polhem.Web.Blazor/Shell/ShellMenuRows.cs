@@ -3,6 +3,7 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core.Navigation;
 using Polhem.Web.Blazor.Components;
 
 namespace Polhem.Web.Blazor.Shell
@@ -11,9 +12,7 @@ namespace Polhem.Web.Blazor.Shell
     /// Turns the server's <see cref="MenuSettings"/> into the flat rows the shell's menu shows.
     /// </summary>
     /// <remarks>
-    /// The same rule the Avalonia shell applies: order and visibility come from
-    /// <see cref="MenuNodeCollection.GetDisplayNodes"/>, each folder becomes a header followed by its contents, depth
-    /// first, and a folder left with nothing to open is dropped. Captions follow the circuit's UI culture through the
+    /// The rows follow <see cref="MenuRows.Flatten"/>, which every UI head shares. Captions follow the circuit's UI culture through the
     /// menu's language resources when the definition loader is on.
     /// </remarks>
     internal static class ShellMenuRows
@@ -35,9 +34,7 @@ namespace Polhem.Web.Blazor.Shell
                     .GetMenuLocalizerAsync(lang, cancellationToken).ConfigureAwait(true)
                 : null;
 
-            var rows = new List<ShellMenuRow>();
-            AddNodes(rows, settings.Items, node => localizer?.GetCaption(node, lang) ?? node.Caption);
-            return rows;
+            return Flatten(settings.Items, node => localizer?.GetCaption(node, lang) ?? node.Caption);
         }
 
         /// <summary>
@@ -62,26 +59,8 @@ namespace Polhem.Web.Blazor.Shell
             }
         }
 
-        internal static void AddNodes(List<ShellMenuRow> rows, MenuNodeCollection? nodes, Func<MenuNodeBase, string> caption)
-        {
-            if (nodes is null) return;
-
-            foreach (var node in nodes.GetDisplayNodes())
-            {
-                switch (node)
-                {
-                    case MenuFolder folder:
-                        int headerIndex = rows.Count;
-                        rows.Add(new ShellMenuRow(caption(folder), null));
-                        AddNodes(rows, folder.Items, caption);
-                        if (rows.Count == headerIndex + 1)
-                            rows.RemoveAt(headerIndex);
-                        break;
-                    case MenuEntry entry when !string.IsNullOrWhiteSpace(entry.ProgId):
-                        rows.Add(new ShellMenuRow(caption(entry), entry.ProgId));
-                        break;
-                }
-            }
-        }
+        internal static IReadOnlyList<ShellMenuRow> Flatten(MenuNodeCollection? nodes, Func<MenuNodeBase, string> caption)
+            => MenuRows.Flatten(nodes, caption, header => new ShellMenuRow(header, null),
+                (text, progId) => new ShellMenuRow(text, progId));
     }
 }

@@ -1,7 +1,12 @@
 using System.ComponentModel;
+using System.Data;
+using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
+using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 
@@ -10,7 +15,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
     /// <summary>
     /// Additional coverage for <see cref="FieldEditorBinder"/>: the <c>OnFormModeChanged</c> path triggered through
     /// the FormScope property (the class handler path, as opposed to calling
-    /// <c>SetControlState</c> directly).
+    /// <c>SetControlState</c> directly), the attached layout, and a row binding when the dataset is replaced.
     /// </summary>
     public class FieldEditorBinderAdditionalTests
     {
@@ -117,6 +122,68 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             editor.Bind(BuildDataObject(), explicitField);
             Assert.Same(explicitField, binder.LayoutField);
+        }
+
+        [Fact]
+        [DisplayName("Replacing the dataset leaves a row-bound editor alone instead of reading a row the data object no longer owns")]
+        public async Task DataSetReplaced_RowBinding_DoesNotRereadTheOldRow()
+        {
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add("note", "Note", FieldDbType.String);
+            schema.Tables.Add("Line", "Line").Fields!.Add("item", "Item", FieldDbType.String);
+            var connector = new NewDataConnector(schema);
+            var dataObject = new FormDataObject(schema, connector);
+            dataObject.InitializeNewMaster();
+            var lines = dataObject.DataSet.Tables["Line"]!;
+            var line = lines.NewRow();
+            line["item"] = "Bolt";
+            lines.Rows.Add(line);
+            var editor = new TextEdit();
+            editor.Bind(dataObject, new LayoutField { FieldName = "item", Caption = "Item" }, line);
+
+            var exception = await Record.ExceptionAsync(() => dataObject.NewAsync());
+
+            Assert.Null(exception);
+            Assert.Equal("Bolt", editor.Text);
+        }
+
+        /// <summary>
+        /// Serves a fresh dataset for <see cref="FormDataObject.NewAsync"/>, which replaces the data object's dataset.
+        /// </summary>
+        private sealed class NewDataConnector(FormSchema schema) : IFormApiConnector
+        {
+            public string ProgId => schema.ProgId;
+
+            public Task<IGetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
+            {
+                var dataSet = new DataSet();
+                foreach (var table in schema.Tables!)
+                {
+                    var dataTable = dataSet.Tables.Add(table.TableName);
+                    foreach (var field in table.Fields!) { dataTable.Columns.Add(field.FieldName); }
+                }
+                dataSet.Tables[0].Rows.Add(dataSet.Tables[0].NewRow());
+                return Task.FromResult<IGetNewDataResponse>(new NewData(dataSet));
+            }
+
+            public Task<IGetListResponse> GetListAsync(string selectFields = "", FilterNode? filter = null,
+                SortFieldCollection? sortFields = null, PagingOptions? paging = null, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IGetLookupResponse> GetLookupAsync(string searchText = "", PagingOptions? paging = null,
+                CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IGetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<ISaveResponse> SaveAsync(DataSet dataSet, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IDeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            private sealed record NewData(DataSet? DataSet) : IGetNewDataResponse;
         }
     }
 }

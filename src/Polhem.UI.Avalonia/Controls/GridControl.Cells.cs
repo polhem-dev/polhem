@@ -46,12 +46,10 @@ namespace Polhem.UI.Avalonia.Controls
         // the lookup dialog and the selection writes back through the data object.
         private Control BuildLookupCell(DataRowView? rowView, LayoutColumn column, FormField lookupField)
         {
-            var displayFields = SplitDisplayFields(column.DisplayFields);
-            if (displayFields.Length == 0)
-                displayFields = [.. lookupField.GetDisplayFields()];
+            var displayFields = LookupFieldRules.ResolveDisplayFieldNames(column, lookupField);
             var text = new TextBlock
             {
-                Text = ComposeDisplayText(rowView, displayFields, column.DisplayFormat, column.NumberFormat),
+                Text = GridCellFormatter.ComposeDisplayText(rowView?.Row, displayFields, column.DisplayFormat, column.NumberFormat),
                 Margin = new Thickness(8, 4),
                 VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
             };
@@ -182,10 +180,7 @@ namespace Polhem.UI.Avalonia.Controls
                 }
                 else
                 {
-                    var value = string.Equals(
-                        FormatCell(rowView, column.FieldName, string.Empty, string.Empty),
-                        bool.TrueString, StringComparison.OrdinalIgnoreCase);
-                    checkBox = new CheckBox { IsChecked = value, IsEnabled = false };
+                    checkBox = new CheckBox { IsChecked = GridCellFormatter.IsChecked(rowView?.Row, column.FieldName), IsEnabled = false };
                 }
                 checkBox.HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Center;
                 checkBox.VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center;
@@ -348,7 +343,7 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 var checkBox = new CheckBox
                 {
-                    IsChecked = string.Equals(current, bool.TrueString, StringComparison.OrdinalIgnoreCase),
+                    IsChecked = GridCellFormatter.IsChecked(rowView.Row, fieldName),
                 };
                 checkBox.IsCheckedChanged += (_, _) =>
                     WriteCell(rowView, dataColumn, (checkBox.IsChecked ?? false).ToString());

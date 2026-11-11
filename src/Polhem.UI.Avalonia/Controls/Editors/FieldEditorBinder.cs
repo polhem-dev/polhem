@@ -302,6 +302,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
 
         private void OnDataSetReplaced(object? sender, EventArgs e)
         {
+            if (!FieldValueChangeFilter.RefreshesOnDataSetReplaced(TargetRow)) return;
             RunSuppressed(_refresh);
         }
 
@@ -310,22 +311,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // `_suppress` is true while this editor itself is writing back, so a
             // self-originated event is ignored; changes to the same field that other
             // parties wrote (for example lookup write-backs) refresh the editor.
-            // Master bindings filter by the master table name; row bindings match the
-            // exact target row. Comparisons are case-insensitive to follow DataTable
-            // semantics — `AddColumn` stores column names uppercase while
-            // wire-deserialized tables keep the original casing.
             if (_suppress) return;
-            if (TargetRow is not null)
-            {
-                if (!ReferenceEquals(e.Row, TargetRow)) return;
-            }
-            else if (!string.Equals(e.TableName, DataObject?.MasterTable.TableName, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-            if (string.Equals(e.FieldName, FieldName, StringComparison.OrdinalIgnoreCase)
-                || (WatchFieldNames is { Count: > 0 } watched
-                    && watched.Any(w => string.Equals(e.FieldName, w, StringComparison.OrdinalIgnoreCase))))
+            if (FieldValueChangeFilter.Concerns(e, TargetRow, DataObject?.MasterTable.TableName, FieldName, WatchFieldNames))
             {
                 RunSuppressed(_refresh);
             }

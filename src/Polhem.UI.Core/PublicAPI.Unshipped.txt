@@ -46,3 +46,12 @@ Polhem.UI.Core.DataObjects.RowChangedEventArgs.TableName.get -> string!
 Polhem.UI.Core.Fields.GridColumnRules
 const Polhem.UI.Core.Fields.GridColumnRules.DefaultMinWidth = 120 -> int
 static Polhem.UI.Core.Fields.GridColumnRules.GetMinWidth(Polhem.Definition.Layouts.LayoutColumn! column) -> int
+Polhem.UI.Core.Fields.TimeFieldFormat
+static Polhem.UI.Core.Fields.TimeFieldFormat.ResolveWriteBack(string? text, string! current) -> string!
+Polhem.UI.Core.DataObjects.FieldValueChangeFilter
+static Polhem.UI.Core.DataObjects.FieldValueChangeFilter.Concerns(Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs! e, System.Data.DataRow? targetRow, string? masterTableName, string! fieldName, System.Collections.Generic.IReadOnlyList<string!>? watchFieldNames) -> bool
+static Polhem.UI.Core.DataObjects.FieldValueChangeFilter.RefreshesOnDataSetReplaced(System.Data.DataRow? targetRow) -> bool
+Polhem.UI.Core.Navigation.MenuRows
+static Polhem.UI.Core.Navigation.MenuRows.Flatten<TRow>(Polhem.Definition.Settings.MenuNodeCollection? nodes, System.Func<Polhem.Definition.Settings.MenuNodeBase!, string!>! caption, System.Func<string!, TRow>! header, System.Func<string!, string!, TRow>! form) -> System.Collections.Generic.IReadOnlyList<TRow>!
+static Polhem.UI.Core.Fields.GridCellFormatter.IsChecked(System.Data.DataRow? row, string! fieldName) -> bool
+static Polhem.UI.Core.Fields.GridCellFormatter.SortMark(Polhem.Definition.Sorting.SortDirection? direction) -> string!

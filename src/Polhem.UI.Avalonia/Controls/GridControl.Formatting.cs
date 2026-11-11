@@ -13,16 +13,6 @@ namespace Polhem.UI.Avalonia.Controls
     /// </summary>
     public partial class GridControl
     {
-        private static string[] SplitDisplayFields(string displayFields)
-            => string.IsNullOrEmpty(displayFields)
-                ? []
-                : displayFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        // Joins the non-empty display-field values (e.g. "D001 - Engineering").
-        private static string ComposeDisplayText(
-            DataRowView? rowView, string[] displayFields, string displayFormat, string numberFormat)
-            => GridCellFormatter.ComposeDisplayText(rowView?.Row, displayFields, displayFormat, numberFormat);
-
         private static string FormatCell(DataRowView? row, string fieldName, string displayFormat, string numberFormat)
         {
             if (row is null) return string.Empty;

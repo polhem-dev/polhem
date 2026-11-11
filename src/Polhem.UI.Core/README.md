@@ -69,6 +69,9 @@ application's own data through its own implementation of `IFormApiConnector`.
   row is seeded with the schema's defaults (a fresh `sys_rowid`, the link to the master, non-null values by type) and
   raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer the edits of one row, which raise
   `RowEditFieldChanged` until the commit publishes them.
+- `DataObjects/FieldValueChangeFilter` -- which of those changes a bound field editor reacts to, and that an editor
+  bound to one row does not reread it when the dataset is replaced.
+- `Navigation/MenuRows` -- flattens a menu definition into the header and form rows a shell's menu shows.
 - The head that constructs it passes the signed-in user's time zone (`timeZoneProvider`), which a new row's dates
   default to; without one they default to UTC. Nothing in this package but `UIServices` itself reads `UIServices`,
   so the object is safe in a host that serves many users from one process; `UICoreServiceLocatorGateTests`
@@ -85,8 +88,11 @@ two heads behave the same:
 - `NumericFieldFormat` -- number format resolution (currency and unit decimals included), display, input parsing and
   the value written back.
 - `DateTimeFieldFormat` -- the display, input and binding-string rules of a date-and-time field.
+- `TimeFieldFormat` -- the value a time-of-day editor writes back.
 - `GridCellFormatter` -- the text a grid cell shows: list item text, instants, Booleans, per-row currency and unit
-  decimals, and the composed display fields of a lookup column.
+  decimals, and the composed display fields of a lookup column; whether a check-box cell is checked and the mark of
+  a sorted column.
+- `GridColumnRules` -- a grid column's minimum width.
 - `FieldCaptionRules` -- the caption convention: a read-only grid header is parenthesised, a required caption is
   highlighted, and read-only wins.
 - `LookupFieldRules`, `LookupDisplay` -- whether a field looks up, which program it opens, which fields it shows and
@@ -118,9 +124,10 @@ two heads behave the same:
 ## Directory Structure
 
 - project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
-- `DataObjects/` -- `FormDataObject`, `FieldValueChangedEventArgs`, `RowChangedEventArgs`
+- `DataObjects/` -- `FormDataObject`, `FieldValueChangedEventArgs`, `FieldValueChangeFilter`, `RowChangedEventArgs`
+- `Navigation/` -- `MenuRows`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
-  `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `FieldCaptionRules`
+  `TimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `GridColumnRules`, `FieldCaptionRules`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`, `ListSelectFields`, `ListPagingState`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`

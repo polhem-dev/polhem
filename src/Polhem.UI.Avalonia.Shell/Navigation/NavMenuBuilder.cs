@@ -1,5 +1,6 @@
 using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core.Navigation;
 
 namespace Polhem.UI.Avalonia.Shell.Navigation
 {
@@ -7,10 +8,7 @@ namespace Polhem.UI.Avalonia.Shell.Navigation
     /// Turns the server's <see cref="MenuSettings"/> into the flat list of rows the navigation menu shows.
     /// </summary>
     /// <remarks>
-    /// A menu definition nests folders arbitrarily, while the shell's menu is a flat list, so each folder becomes a
-    /// header row followed by its contents, depth first. Order and visibility come from
-    /// <see cref="MenuNodeCollection.GetDisplayNodes"/>, the same rule every UI head applies. A folder left with no
-    /// form to open is dropped, so the menu shows no header without links.
+    /// The rule is <see cref="MenuRows.Flatten"/>, which every UI head shares; this class only supplies the rows.
     /// </remarks>
     internal static class NavMenuBuilder
     {
@@ -26,31 +24,7 @@ namespace Polhem.UI.Avalonia.Shell.Navigation
         {
             ArgumentNullException.ThrowIfNull(caption);
 
-            var items = new List<NavItem>();
-            AddNodes(items, nodes, caption);
-            return items;
-        }
-
-        private static void AddNodes(List<NavItem> items, MenuNodeCollection? nodes, Func<MenuNodeBase, string> caption)
-        {
-            if (nodes is null) return;
-
-            foreach (var node in nodes.GetDisplayNodes())
-            {
-                switch (node)
-                {
-                    case MenuFolder folder:
-                        var headerIndex = items.Count;
-                        items.Add(NavItem.Header(caption(folder)));
-                        AddNodes(items, folder.Items, caption);
-                        if (!items.Skip(headerIndex + 1).Any(i => !i.IsHeader))
-                            items.RemoveRange(headerIndex, items.Count - headerIndex);
-                        break;
-                    case MenuEntry entry when !string.IsNullOrWhiteSpace(entry.ProgId):
-                        items.Add(NavItem.Form(caption(entry), entry.ProgId));
-                        break;
-                }
-            }
+            return MenuRows.Flatten(nodes, caption, NavItem.Header, NavItem.Form);
         }
     }
 }

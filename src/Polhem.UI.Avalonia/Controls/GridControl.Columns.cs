@@ -116,10 +116,8 @@ namespace Polhem.UI.Avalonia.Controls
 
         // The grid has no sort of its own in this mode, so the mark is part of the caption.
         private string SortMark(LayoutColumn column)
-        {
-            if (_sortFieldName is null || !StringUtilities.IsEquals(_sortFieldName, column.FieldName)) return string.Empty;
-            return _sortDirection == SortDirection.Desc ? " \u25BC" : " \u25B2";
-        }
+            => GridCellFormatter.SortMark(
+                _sortFieldName is not null && StringUtilities.IsEquals(_sortFieldName, column.FieldName) ? _sortDirection : null);
 
         // Oracle cannot order by a `Text` column, and a binary value has no meaningful order.
         private bool IsServerSortable(LayoutColumn column)

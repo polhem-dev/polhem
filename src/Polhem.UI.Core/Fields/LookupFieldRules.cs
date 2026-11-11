@@ -24,7 +24,7 @@ namespace Polhem.UI.Core.Fields
 
         /// <summary>
         /// Resolves the local fields whose values a lookup field shows: the layout field's
-        /// <see cref="LayoutFieldBase.DisplayFields"/> when set, else <see cref="FormField.GetDisplayFields"/>.
+        /// <see cref="LayoutFieldBase.DisplayFields"/> when it names any field, else <see cref="FormField.GetDisplayFields"/>.
         /// </summary>
         /// <param name="layoutField">The layout field or grid column, or <c>null</c>.</param>
         /// <param name="formField">The schema field, or <c>null</c>.</param>
@@ -33,7 +33,10 @@ namespace Polhem.UI.Core.Fields
         {
             var fromLayout = layoutField?.DisplayFields;
             if (!string.IsNullOrEmpty(fromLayout))
-                return fromLayout.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            {
+                var names = fromLayout.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (names.Length > 0) return names;
+            }
             return formField?.GetDisplayFields() ?? [];
         }
 
