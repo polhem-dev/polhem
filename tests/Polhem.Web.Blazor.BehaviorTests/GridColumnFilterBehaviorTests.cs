@@ -43,6 +43,19 @@ namespace Polhem.Web.Blazor.BehaviorTests
         protected virtual IReadOnlyList<IElement> FindInPanel(IRenderedComponent<ContainerFragment> cut, string selector)
             => cut.FindAll(selector);
 
+        /// <summary>
+        /// Retries <paramref name="assertion"/> until the panel's renders satisfy it. A package that draws the panel in a
+        /// host of its own (MudBlazor's popover provider) renders it a render after the filter, so a check made right
+        /// after an action can run before the panel shows the result.
+        /// </summary>
+        /// <param name="cut">The rendered filter.</param>
+        /// <param name="assertion">The check on the panel.</param>
+        protected virtual void WaitForPanel(IRenderedComponent<ContainerFragment> cut, Action assertion)
+            => cut.WaitForAssertion(assertion, PanelTimeout);
+
+        /// <summary>Gets how long a panel check is retried.</summary>
+        protected static TimeSpan PanelTimeout { get; } = TimeSpan.FromSeconds(5);
+
         /// <summary>Gets the filter component, which derives from <see cref="GridColumnFilterBase"/>.</summary>
         protected abstract Type FilterType { get; }
 
@@ -58,7 +71,11 @@ namespace Polhem.Web.Blazor.BehaviorTests
         protected abstract void EnterFirst(IElement input, string text);
 
         private IElement InPanel(IRenderedComponent<ContainerFragment> cut, string selector)
-            => Assert.Single(FindInPanel(cut, selector));
+        {
+            IElement? found = null;
+            WaitForPanel(cut, () => found = Assert.Single(FindInPanel(cut, selector)));
+            return found!;
+        }
 
         private IRenderedComponent<ContainerFragment> RenderFilter()
         {
@@ -92,7 +109,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             var cut = RenderOpen();
 
-            Assert.Equal("2", InPanel(cut, FirstInput).GetAttribute("value"));
+            WaitForPanel(cut, () => Assert.Equal("2", Assert.Single(FindInPanel(cut, FirstInput)).GetAttribute("value")));
         }
 
         [Fact]
@@ -105,8 +122,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
             InPanel(cut, Form).Submit();
 
             Assert.Empty(_applied);
-            Assert.Single(FindInPanel(cut, Error));
-            Assert.Single(FindInPanel(cut, Form));
+            WaitForPanel(cut, () => Assert.Single(FindInPanel(cut, Error)));
+            WaitForPanel(cut, () => Assert.Single(FindInPanel(cut, Form)));
         }
 
         [Fact]
@@ -121,7 +138,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
             var change = Assert.Single(_applied);
             Assert.Equal("3", change.First);
             Assert.Same(_field, change.Field);
-            Assert.Empty(FindInPanel(cut, Form));
+            WaitForPanel(cut, () => Assert.Empty(FindInPanel(cut, Form)));
         }
 
         [Fact]
@@ -148,7 +165,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
             InPanel(cut, Form).KeyDown("Escape");
 
             Assert.Empty(_applied);
-            Assert.Empty(FindInPanel(cut, Form));
+            WaitForPanel(cut, () => Assert.Empty(FindInPanel(cut, Form)));
         }
 
         [Fact]
@@ -158,13 +175,17 @@ namespace Polhem.Web.Blazor.BehaviorTests
             var cut = RenderOpen();
             EnterFirst(InPanel(cut, FirstInput), "abc");
             InPanel(cut, Form).Submit();
-            Assert.Single(FindInPanel(cut, Error));
+            WaitForPanel(cut, () => Assert.Single(FindInPanel(cut, Error)));
 
             cut.Find(OpenButton).Click();
-            Assert.Empty(FindInPanel(cut, Form));
+            WaitForPanel(cut, () => Assert.Empty(FindInPanel(cut, Form)));
 
             cut.Find(OpenButton).Click();
-            Assert.Empty(FindInPanel(cut, Error));
+            WaitForPanel(cut, () =>
+            {
+                Assert.Single(FindInPanel(cut, Form));
+                Assert.Empty(FindInPanel(cut, Error));
+            });
         }
 
         [Fact]
@@ -178,7 +199,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             cut.Find(OpenButton).Click();
 
-            Assert.Equal("2", InPanel(cut, FirstInput).GetAttribute("value"));
+            WaitForPanel(cut, () => Assert.Equal("2", Assert.Single(FindInPanel(cut, FirstInput)).GetAttribute("value")));
         }
     }
 }
