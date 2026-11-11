@@ -72,7 +72,10 @@ namespace Polhem.Hosting.UnitTests
         [InlineData("a\tb", @"a\tb")]
         [InlineData("a\r\nb", @"a\r\nb")]
         [InlineData("", "")]
-        [DisplayName("Escape writes a backslash, a tab, a carriage return and a line feed as two-character escapes")]
+        [InlineData("a\u001b[2Jb", @"a\u001B[2Jb")]
+        [InlineData("a\u0085b\u2028c\u2029d", @"a\u0085b\u2028c\u2029d")]
+        [InlineData("a\0b", @"a\u0000b")]
+        [DisplayName("Escape writes backslash, tab, CR and LF as two-character escapes and other control characters and line separators as \\uXXXX")]
         public void Escape_ControlCharacters_AreEscaped(string value, string expected)
             => Assert.Equal(expected, AuditLogDbSink.Escape(value));
 

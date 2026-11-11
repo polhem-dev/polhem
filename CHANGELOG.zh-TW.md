@@ -20,7 +20,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** Avalonia 與 Blazor head 共用同一個 `FormDataObject`，移至 `Polhem.UI.Core.DataObjects`，並由建構它的程式傳入使用者時區。
 - **破壞性變更：** 一個請求只從 session 讀一次公司，並把這份快照交給授權、列範圍、路由與 repository，使同一個 token 在請求進行中進入的另一家公司，無法讓某家公司的角色作用到另一家公司的資料；相關服務新增吃快照的多載。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
-- 超過欄寬的稽核值（例如登入失敗時過長的帳號）會截斷到欄寬，不再讓資料庫拒絕整批寫入；被拒的批次改為逐筆重試，備援檔也會跳脫換行與 tab。
+- 超過欄寬或含 NUL 字元的稽核值，不再讓資料庫拒絕整批寫入：值會截斷到欄寬，NUL 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
 - 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
 
 ## [1.12.1] - 2026-11-06

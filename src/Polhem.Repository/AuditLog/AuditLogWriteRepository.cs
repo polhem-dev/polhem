@@ -93,7 +93,8 @@ namespace Polhem.Repository.AuditLog
         /// IMPORTANT: several values come straight from an unauthenticated caller (a sign-in's user id, a JSON-RPC
         /// method name). Written as they are, one over-long value made SQL Server, PostgreSQL, MySQL and Oracle refuse
         /// the whole batch, and every other entry in it was lost with it, so a caller could erase other users' audit
-        /// records. SQLite does not enforce widths, so this does not show there.
+        /// records; a NUL character did the same on PostgreSQL. Both are made acceptable here, whatever the schema.
+        /// SQLite enforces neither, so this does not show there.
         /// </para>
         /// </remarks>
         public static DbCommandSpec BuildInsert(AuditEntry entry, TableSchema? schema)
@@ -120,13 +121,16 @@ namespace Polhem.Repository.AuditLog
             return new DbCommandSpec(DbCommandKind.NonQuery, sb.ToString(), values);
         }
 
-        // Cuts a string to the column's declared width in characters, without splitting a surrogate pair.
+        // Makes a string value one every supported database accepts: a NUL character, which PostgreSQL refuses in text
+        // columns, becomes U+FFFD, and the value is cut to the column's declared width in characters without
+        // splitting a surrogate pair.
         private static object? Fit(object? value, DbField? field)
         {
-            if (value is not string text || field is null || field.DbType != FieldDbType.String || field.Length <= 0
-                || text.Length <= field.Length)
+            if (value is not string text) { return value; }
+            if (text.Contains('\0', StringComparison.Ordinal)) { text = text.Replace('\0', '\uFFFD'); }
+            if (field is null || field.DbType != FieldDbType.String || field.Length <= 0 || text.Length <= field.Length)
             {
-                return value;
+                return text;
             }
             int length = field.Length;
             if (char.IsHighSurrogate(text[length - 1])) { length--; }

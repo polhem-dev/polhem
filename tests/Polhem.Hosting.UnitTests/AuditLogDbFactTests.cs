@@ -322,6 +322,39 @@ namespace Polhem.Hosting.UnitTests
             public DbAccess Create(string requestedId) => inner.Create(databaseId);
         }
 
+        // PostgreSQL refuses a NUL character in a text column, which an unauthenticated caller can put in a user id.
+        private void RunBatchWithNulValue(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var withNul = Guid.NewGuid();
+            var nul = new LoginAuditEntry { SysRowId = withNul, UserId = "a\0b", Event = LoginEvent.LoginFailed };
+
+            CreateWriteRepository(databaseType).WriteBatch([NewLoginEntry(first), nul]);
+
+            Assert.Equal(1L, CountLoginRows(databaseType, first));
+            Assert.Equal(1L, CountLoginRows(databaseType, withNul));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_SqlServer_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_PostgreSql_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_MySql_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_Sqlite_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_Oracle_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.Oracle);
+
         // The batch the sink writes, with one entry whose user id an unauthenticated caller made too long.
         private void RunBatchWithOverlongValue(DatabaseType databaseType)
         {

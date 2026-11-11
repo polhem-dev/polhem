@@ -172,11 +172,13 @@ namespace Polhem.Hosting.Audit
 
         /// <summary>
         /// Escapes a value for the tab-delimited fallback line: a backslash, a tab, a carriage return or a line feed
-        /// in a value becomes <c>\\</c>, <c>\t</c>, <c>\r</c> or <c>\n</c>.
+        /// becomes <c>\\</c>, <c>\t</c>, <c>\r</c> or <c>\n</c>, and every other control character, and the
+        /// Unicode line and paragraph separators, becomes <c>\uXXXX</c>.
         /// </summary>
         /// <remarks>
         /// IMPORTANT: values such as a sign-in's user id come from an unauthenticated caller. Written as they are, a
-        /// line feed in one started a new line that read as an audit record of its own.
+        /// line feed in one started a new line that read as an audit record of its own, and terminal escape sequences
+        /// or separators some log readers treat as line breaks could do the same.
         /// </remarks>
         internal static string Escape(string? value)
         {
@@ -190,6 +192,8 @@ namespace Polhem.Hosting.Audit
                     '\t' => sb.Append(@"\t"),
                     '\r' => sb.Append(@"\r"),
                     '\n' => sb.Append(@"\n"),
+                    _ when char.IsControl(c) || c is '\u2028' or '\u2029'
+                        => sb.Append(CultureInfo.InvariantCulture, $@"\u{(int)c:X4}"),
                     _ => sb.Append(c),
                 };
             }
