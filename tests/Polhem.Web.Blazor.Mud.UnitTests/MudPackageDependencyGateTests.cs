@@ -12,8 +12,8 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
     {
         private static readonly string[] s_forbiddenPrefixes =
         [
-            "Polhem.Web.Blazor.Server", "Polhem.Web.Blazor.Fluent", "Microsoft.FluentUI", "DevExpress",
-            "Microsoft.AspNetCore.Components.Server", "Microsoft.AspNetCore.Components.WebAssembly",
+            "Polhem.Web.Blazor.Server", "Polhem.Web.Blazor.Wasm", "Polhem.Web.Blazor.Fluent", "Microsoft.FluentUI", "DevExpress",
+            "Microsoft.AspNetCore.Components.WebAssembly",
         ];
 
         [Fact]
@@ -24,6 +24,19 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
 
             Assert.Contains("MudBlazor", closure, StringComparer.OrdinalIgnoreCase);
             Assert.DoesNotContain(closure, name => s_forbiddenPrefixes.Any(p => name.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        [Fact]
+        [DisplayName("Polhem.Web.Blazor.Mud is compiled against no host package or other UI framework")]
+        public void Package_ReferencedAssemblies_ContainNoHostOrOtherFramework()
+        {
+            // The compiled references, which a reference marked PrivateAssets="all" hides from .deps.json but not from here.
+            var referenced = typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly.GetReferencedAssemblies()
+                .Select(name => name.Name ?? string.Empty)
+                .ToArray();
+
+            Assert.Contains("Polhem.Web.Blazor", referenced, StringComparer.OrdinalIgnoreCase);
+            Assert.DoesNotContain(referenced, name => s_forbiddenPrefixes.Any(p => name.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
         }
 
         private static HashSet<string> ResolveDependencyClosure(string root)

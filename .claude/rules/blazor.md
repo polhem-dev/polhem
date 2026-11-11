@@ -16,7 +16,11 @@ What is not tied to a framework lives in `Polhem.Web.Blazor` too: the grid's and
 stays in the UI package and is passed in (`GridEditorScript` takes the selector of an open popup).
 
 `POLHEM9001`, `BlazorSharedLayerDependencyGateTests`, `BlazorWasmHostDependencyGateTests`,
-`MudPackageDependencyGateTests` and `FluentPackageDependencyGateTests` enforce the references.
+`BlazorServerHostDependencyGateTests`, `MudPackageDependencyGateTests` and `FluentPackageDependencyGateTests` enforce the
+references. Which projects `POLHEM9001` governs is set in `src/Directory.Build.targets` (`PolhemEnforceDependencyBoundary`,
+and `PolhemVerifyBrowserFramework` for the shared framework). The closure tests read `.deps.json`, which shows no shared
+framework and no reference marked `PrivateAssets="all"`; the targets cover the first, and the tests also check each
+assembly's compiled references for the second.
 
 **Put a rule in the shared base and only markup in the UI package.** A new behavior gets a test in
 `tests/Polhem.Web.Blazor.BehaviorTests`, which every UI package derives from, not a test against one package's markup.
