@@ -199,7 +199,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             }
             catch (Exception ex)
             {
-                // UI boundary: surface the failure on the panel instead of crashing
+                // Boundary: surface the failure on the panel instead of crashing
                 // the picker (mirrors FormView's ReportError behaviour).
                 ShowError(ex.Message);
             }

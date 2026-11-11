@@ -37,9 +37,22 @@ conn.Dispose();
 
 ## Exception handling
 
-- **Do not** catch base types such as `Exception` or `SystemException` (they hide unexpected errors)
+- **Do not** catch base types such as `Exception` or `SystemException` (they hide unexpected errors); name the types
+  you expect, or filter with `when` on the types you take (`when (ex is A or B)`; a filter that only excludes, such as
+  `is not`, still takes everything else). Three shapes are allowed, because nothing else can take their place:
+  - **Cleanup, then rethrow**: the catch ends with `throw;`, like a `finally` that runs only on failure.
+  - **Boundary**: the exception cannot go further up, such as a UI event handler (an escaped exception ends the
+    Avalonia app or the Blazor circuit), one unit of work in a background service, or an audit write after the
+    operation committed. The catch's first line is a `// Boundary:` comment that says why. When the method takes a
+    `CancellationToken`, catch `OperationCanceledException` first with `when (cancellationToken.IsCancellationRequested)`
+    and rethrow it, so a cancellation is not reported as a failure.
+  - **Wrap, then rethrow**: only when the exceptions cannot be listed (a deserializer, a transport); first line
+    `// Boundary:` as well.
 - **No** empty catch blocks (they swallow the exception and the error disappears silently)
 - To rethrow after a catch, use `throw;` (keeps the stack), not `throw ex;`
+- `CatchAllBoundaryGateTests` (tests/Polhem.Definition.UnitTests) fails on a catch-all in `src/` that neither ends with
+  `throw;` nor starts with `// Boundary:`, and on an empty catch-all. Whether a boundary passes its own cancellation on,
+  and whether a reason holds, are reviewed by hand.
 
 ```csharp
 // ✅ Correct: catch only the expected exception type

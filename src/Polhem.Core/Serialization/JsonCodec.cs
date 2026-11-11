@@ -216,6 +216,8 @@ namespace Polhem.Core.Serialization
             }
             catch (Exception ex)
             {
+                // Boundary: any failure to read or parse the file is rethrown, naming the file. File I/O and the serializer
+                // fail with types that cannot be listed in full.
                 // WARNING: the file name only, never the path. InvalidOperationException maps to
                 // JsonRpcErrorCode.UserMessage, and that mapping returns Message verbatim to the
                 // caller — so an authenticated remote caller hitting a corrupt definition file

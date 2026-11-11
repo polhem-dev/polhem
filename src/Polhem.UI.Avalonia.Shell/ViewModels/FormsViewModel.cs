@@ -83,7 +83,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             }
             catch (Exception ex)
             {
-                // A failed menu load must not end as an unobserved task exception; an empty menu would hide it.
+                // Boundary: a failed menu load must not end as an unobserved task exception; an empty menu would hide it.
                 NavItems.Add(NavItem.Header(ShellLocalizer.Current.Format("Forms_MenuLoadFailed", ex.Message)));
                 return;
             }
@@ -130,7 +130,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             }
             catch (Exception ex)
             {
-                // NOTE: the local session is discarded either way, so a server that did not answer is no reason to
+                // Boundary: the local session is discarded either way, so a server that did not answer is no reason to
                 // keep the forms on screen. Rethrowing from a command would end as an unobserved task exception.
                 Trace.TraceWarning("Sign-out did not reach the server: {0}", ex.Message);
             }

@@ -362,6 +362,7 @@ namespace Polhem.Web.Blazor.Components
             }
             catch (Exception ex)
             {
+                // Boundary: the page shows why the form could not be loaded; an escaped exception would end the circuit.
                 if (version == _loadVersion) _error = ex.Message;
             }
             finally

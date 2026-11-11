@@ -173,7 +173,7 @@ namespace Polhem.Web.Blazor.Components
             }
             catch (Exception ex)
             {
-                // The opener's record stays on screen behind the dialog, which shows why this one could not open.
+                // Boundary: the opener's record stays on screen behind the dialog, which shows why this one could not open.
                 if (version == _loadVersion) Error = ex.Message;
             }
         }

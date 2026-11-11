@@ -183,7 +183,7 @@ namespace Polhem.Web.Blazor.Components
             }
             catch (Exception ex)
             {
-                // The form stays on screen with what the user entered, so a rejected save can be corrected.
+                // Boundary: the form stays on screen with what the user entered, so a rejected save can be corrected.
                 _notice = ex.Message;
             }
             finally

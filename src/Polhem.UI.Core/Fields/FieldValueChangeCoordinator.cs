@@ -128,13 +128,13 @@ namespace Polhem.UI.Core.Fields
                 response = await _connector.FieldValueChangeAsync(tableName, fieldName, value, Snapshot(row), cancellationToken)
                     .ConfigureAwait(true);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                // UI boundary: nothing up the stack awaits a callback the edit started, so a transport or server
+                // Boundary: nothing up the stack awaits a callback the edit started, so a transport or server
                 // failure is handed to the view through `Failed`, the way the views report a failed save.
                 if (IsCurrent(row, key, sequence, fieldName, value))
                     Failed?.Invoke(this, new FieldValueChangeFailedEventArgs(tableName, fieldName, row, ex));
