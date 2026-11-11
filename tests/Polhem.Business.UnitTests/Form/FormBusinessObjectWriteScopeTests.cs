@@ -32,9 +32,12 @@ namespace Polhem.Business.UnitTests.Form
         private const string ProgId = "WsForm";
         private const string DetailTable = "WsForm_Item";
         private const string OwnerField = "owner_rowid";
+        private const string DeptField = "dept_rowid";
 
         private static readonly Guid s_me = Guid.NewGuid();
         private static readonly Guid s_someoneElse = Guid.NewGuid();
+        private static readonly Guid s_myDept = Guid.NewGuid();
+        private static readonly Guid s_otherDept = Guid.NewGuid();
 
         private readonly PolhemTestFixture _fx;
 
@@ -210,9 +213,72 @@ namespace Polhem.Business.UnitTests.Form
             Assert.Single(repo.Saved);
         }
 
+        // -------- New values under the department scopes --------
+
+        [Fact]
+        [DisplayName("Under the Dept scope, Save refuses an Added master filed under another department")]
+        public void Save_DeptScope_AddedMasterInOtherDepartment_ThrowsForbidden()
+        {
+            var repo = new RecordingRepo();
+            var ds = NewDataSet();
+            AddMaster(ds, Guid.NewGuid(), s_me, s_otherDept);
+
+            Assert.Throws<ForbiddenException>(() => Bo(repo, resolver: new DeptScopeResolver()).Save(new SaveArgs { DataSet = ds }));
+            Assert.Empty(repo.Saved);
+        }
+
+        [Fact]
+        [DisplayName("Control case: under the Dept scope, an Added master filed under the caller's department is saved")]
+        public void Save_DeptScope_AddedMasterInOwnDepartment_Passes()
+        {
+            var repo = new RecordingRepo();
+            var ds = NewDataSet();
+            AddMaster(ds, Guid.NewGuid(), s_someoneElse, s_myDept);
+
+            var ex = Record.Exception(() => Bo(repo, resolver: new DeptScopeResolver()).Save(new SaveArgs { DataSet = ds }));
+
+            Assert.Null(ex);
+            Assert.Single(repo.Saved);
+        }
+
+        [Fact]
+        [DisplayName("Under the Dept scope, Save refuses a Modified master that moves an in-scope record to another department")]
+        public void Save_DeptScope_ModifiedMasterMovedToOtherDepartment_ThrowsForbidden()
+        {
+            var rowId = Guid.NewGuid();
+            var repo = new RecordingRepo { InScope = { rowId } };
+            var ds = NewDataSet();
+            var row = AddMaster(ds, rowId, s_me, s_myDept);
+            ds.AcceptChanges();
+            row[DeptField] = s_otherDept;
+
+            Assert.Throws<ForbiddenException>(() => Bo(repo, resolver: new DeptScopeResolver()).Save(new SaveArgs { DataSet = ds }));
+            Assert.Empty(repo.Saved);
+        }
+
+        [Fact]
+        [DisplayName("Under the own-or-department scope, an Added master passes on either condition and is refused when it meets neither")]
+        public void Save_OwnOrDeptScope_AddedMaster_AdmittedByEitherCondition()
+        {
+            var repo = new RecordingRepo();
+            var bo = Bo(repo, resolver: new OwnOrDeptScopeResolver());
+
+            var mineElsewhere = NewDataSet();
+            AddMaster(mineElsewhere, Guid.NewGuid(), s_me, s_otherDept);
+            var othersInMyDept = NewDataSet();
+            AddMaster(othersInMyDept, Guid.NewGuid(), s_someoneElse, s_myDept);
+            var neither = NewDataSet();
+            AddMaster(neither, Guid.NewGuid(), s_someoneElse, s_otherDept);
+
+            Assert.Null(Record.Exception(() => bo.Save(new SaveArgs { DataSet = mineElsewhere })));
+            Assert.Null(Record.Exception(() => bo.Save(new SaveArgs { DataSet = othersInMyDept })));
+            Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = neither }));
+            Assert.Equal(2, repo.Saved.Count);
+        }
+
         // -------- Fixtures --------
 
-        private FormBusinessObject Bo(RecordingRepo repo, string permissionModelId = "WsModel")
+        private FormBusinessObject Bo(RecordingRepo repo, string permissionModelId = "WsModel", IScopeResolver? resolver = null)
         {
             var defineAccess = new FormSchemaOverlayDefineAccess(
                 _fx.GetRequiredService<IDefineAccess>(), BuildSchema(permissionModelId));
@@ -225,7 +291,7 @@ namespace Polhem.Business.UnitTests.Form
                 Services = new TestOverrideServiceProvider(_fx.Provider,
                 [
                     (typeof(ICompanyAuthorizationService), new AllowAll()),
-                    (typeof(IScopeResolver), new OwnScopeResolver()),
+                    (typeof(IScopeResolver), resolver ?? new OwnScopeResolver()),
                     (typeof(IRepositoryFactory), new RepoFactory(repo)),
                 ]),
             };
@@ -239,6 +305,7 @@ namespace Polhem.Business.UnitTests.Form
             master.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
             master.Fields.Add("sys_id", "ID", FieldDbType.String);
             master.Fields.Add(OwnerField, "Owner", FieldDbType.Guid).ScopeRole = ScopeRole.Owner;
+            master.Fields.Add(DeptField, "Department", FieldDbType.Guid).ScopeRole = ScopeRole.Dept;
 
             var detail = schema.Tables.Add(DetailTable, "Write scope item");
             detail.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
@@ -254,6 +321,7 @@ namespace Polhem.Business.UnitTests.Form
             master.Columns.Add(SysFields.RowId, typeof(Guid));
             master.Columns.Add("sys_id");
             master.Columns.Add(OwnerField, typeof(Guid));
+            master.Columns.Add(DeptField, typeof(Guid));
 
             var detail = ds.Tables.Add(DetailTable);
             detail.Columns.Add(SysFields.RowId, typeof(Guid));
@@ -262,13 +330,14 @@ namespace Polhem.Business.UnitTests.Form
             return ds;
         }
 
-        private static DataRow AddMaster(DataSet ds, Guid rowId, Guid owner)
+        private static DataRow AddMaster(DataSet ds, Guid rowId, Guid owner, Guid? dept = null)
         {
             var table = ds.Tables[ProgId]!;
             var row = table.NewRow();
             row[SysFields.RowId] = rowId;
             row["sys_id"] = "m";
             row[OwnerField] = owner;
+            row[DeptField] = dept ?? s_myDept;
             table.Rows.Add(row);
             return row;
         }
@@ -304,6 +373,24 @@ namespace Polhem.Business.UnitTests.Form
 
             public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
                 => FilterCondition.In(OwnerField, [s_me]);
+        }
+
+        /// <summary>The <c>Dept</c> strategy: the department column must be the caller's department.</summary>
+        private sealed class DeptScopeResolver : IScopeResolver
+        {
+            public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
+                => FilterCondition.Equal(DeptField, s_myDept);
+        }
+
+        /// <summary>The shape two roles with <c>Own</c> and <c>Dept</c> resolve to: either condition admits the row.</summary>
+        private sealed class OwnOrDeptScopeResolver : IScopeResolver
+        {
+            public FilterNode? ResolveFilter(SessionCompanyScope companyScope, string modelId, PermissionActions action, FormSchema formSchema) => ResolveFilter(Guid.Empty, modelId, action, formSchema);
+
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
+                => FilterGroup.Any(FilterCondition.In(OwnerField, [s_me]), FilterCondition.Equal(DeptField, s_myDept));
         }
 
         private sealed class RepoFactory : IRepositoryFactory

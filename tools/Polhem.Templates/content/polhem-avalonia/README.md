@@ -52,6 +52,10 @@ Run these from **Terminal → Run Task…** in VS Code.
 Run the **Polhem: Upgrade database** task after you change table definitions by hand. The same commands are available
 from a terminal: `dotnet run --project src/PolhemApp.Server -- db create | check | upgrade | seed-admin`.
 
+The framework's `Department`, `Employee` and `AuditRule` forms are permission-checked and closed by default: grant
+their permission models to a role in `st_role_grant`, one row per action, before a user can open them or pick a
+department or an employee from one of your forms.
+
 <!--#if (browser || ios || android) -->
 ## The other clients
 

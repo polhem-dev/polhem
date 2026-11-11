@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: ee7b47b4a48edd09c4585977cc14be9de9e1bdc9 -->
+<!-- source: en/security/permission-authorization.md blob: 3c363f4232a873a973ad1eb6cd71a79e81801646 -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -111,6 +111,16 @@ st_user.sys_rowid  ──(st_employee.user_rowid)──▶  st_employee  ──(
 ```
 
 `EnterCompany` 時框架一次性解析 `user → employee → 部門`，把 `UserRowId`、`EmployeeRowId`、`DeptRowId` 快照進 session，之後 scope 過濾零 DB。未綁員工的使用者其 employee/部門為空——`Own` 仍會比對 `UserRowId`，`Dept`/`DeptAndSub` 則不匹配任何列（fail-closed）。
+
+由於這些資料列決定記錄範圍，框架的 `Department` 與 `Employee` 表單宣告了 `Department` 與 `Employee` 權限模型，兩者隨框架的
+`PermissionModels.xml` 提供。能編輯它們的使用者，可以把自己的員工資料移到最上層部門，擴大他持有的每個 `Dept`／`DeptAndSub`
+範圍。這兩個模型的 `Create`、`Update`、`Delete` 只授權給負責維護組織的角色。需要在其他表單挑選部門或員工的角色，請授予 `Read`：
+`GetLookup` 不經過動作閘門，但會套用 `Read` 的記錄範圍（第 5 節），沒有 `Read` 的角色找不到任何候選資料。範圍請用 `All`：這兩張表單都沒有標記部門或擁有者欄位，所以在它們上面的 `Dept`、`DeptAndSub` 或 `Own` 授權不會放行任何資料。
+
+`DefinePath` 在這兩張表單宣告模型之前就已有它們的部署，會保留自己的副本：寫入框架預設定義時預設不會覆寫既有檔案（`MaterializeOptions.Overwrite`），
+而且讀取的是部署手上那份 `PermissionModels.xml`（不論是寫入的預設檔還是自己的檔）。這類部署要在兩個 FormSchema 檔加上 `PermissionModelId="Department"` 與
+`PermissionModelId="Employee"`，在自己的 `PermissionModels.xml` 登記這兩個模型，再授權給角色。在此之前，host 啟動時會記錄一則警告，
+列出每個未受保護、寫入 `st_employee` 或 `st_department` 的表單。
 
 ## 5. enforcement 行為
 

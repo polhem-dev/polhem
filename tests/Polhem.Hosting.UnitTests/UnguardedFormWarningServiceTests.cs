@@ -69,6 +69,32 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
+        [DisplayName("An unguarded form over st_employee or st_department gets a second warning that it decides record scope")]
+        public async Task StartAsync_UnguardedScopeSourceForm_LogsRecordScopeWarning()
+        {
+            var access = CreateAccess();
+            access.SaveFormSchema(Schema("Staff", permissionModelId: string.Empty, tableName: "st_employee"));
+            access.SaveFormSchema(Schema("Unit", permissionModelId: string.Empty, tableName: "ST_DEPARTMENT"));
+            access.SaveFormSchema(Schema("People", permissionModelId: string.Empty, dbTableName: "st_employee"));
+            access.SaveFormSchema(Schema("OpenForm", permissionModelId: string.Empty));
+            access.SaveFormSchema(Schema("GuardedStaff", permissionModelId: "Employee", tableName: "st_employee"));
+            access.SaveProgramSettings(Registry());
+            var logger = new ListLogger();
+
+            await new UnguardedFormWarningService(access, new FileDefineStorage(_paths), logger).StartAsync(CancellationToken.None);
+
+            Assert.Equal(2, logger.Entries.Count);
+            var scope = logger.Entries[1];
+            Assert.Equal(LogLevel.Warning, scope.Level);
+            Assert.Contains("record scope", scope.Message, StringComparison.Ordinal);
+            Assert.Contains("Staff", scope.Message, StringComparison.Ordinal);
+            Assert.Contains("Unit", scope.Message, StringComparison.Ordinal);
+            Assert.Contains("People", scope.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("OpenForm", scope.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("GuardedStaff", scope.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A form both stored and registered under another casing is named once, in the stored spelling")]
         public void FindUnguardedForms_StoredAndRegisteredInOtherCasing_NamesItOnce()
         {
@@ -115,10 +141,11 @@ namespace Polhem.Hosting.UnitTests
             return new CacheDefineAccess(storage, _paths, cache, Array.Empty<byte>());
         }
 
-        private static FormSchema Schema(string progId, string permissionModelId)
+        private static FormSchema Schema(string progId, string permissionModelId, string? tableName = null, string? dbTableName = null)
         {
             var schema = new FormSchema(progId, progId) { CategoryId = "company", PermissionModelId = permissionModelId };
-            var table = schema.Tables!.Add(progId, progId);
+            var table = schema.Tables!.Add(tableName ?? progId, progId);
+            table.DbTableName = dbTableName ?? string.Empty;
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
             return schema;
         }

@@ -232,6 +232,24 @@ namespace Polhem.Definition.UnitTests
             Assert.Equal("Department", schema!.ProgId);
         }
 
+        [Fact]
+        [DisplayName("Every shipped FormSchema declares a permission model that the shipped PermissionModels registers")]
+        public void OpenEmbedded_FormSchema_DeclaresRegisteredPermissionModel()
+        {
+            var models = XmlCodec.Deserialize<PermissionModels>(ReadEmbedded("PermissionModels.xml"))!.Models!;
+            var forms = Defaults.ListEmbedded()
+                .Where(path => path.StartsWith("FormSchema/", StringComparison.Ordinal))
+                .ToList();
+
+            Assert.NotEmpty(forms);
+            Assert.All(forms, path =>
+            {
+                var schema = XmlCodec.Deserialize<FormSchema>(ReadEmbedded(path))!;
+                Assert.False(string.IsNullOrEmpty(schema.PermissionModelId), path);
+                Assert.True(models.Contains(schema.PermissionModelId), $"{path}: {schema.PermissionModelId}");
+            });
+        }
+
         [Theory]
         [InlineData("Department")]
         [InlineData("Employee")]

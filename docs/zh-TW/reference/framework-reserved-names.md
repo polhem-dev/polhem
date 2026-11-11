@@ -1,4 +1,4 @@
-<!-- source: en/reference/framework-reserved-names.md blob: 20a6d21f2e3963f470b61a0344c2622db51d2228 -->
+<!-- source: en/reference/framework-reserved-names.md blob: 86d88ba4e9c5893150532de6f094561173e74ae7 -->
 # 框架保留命名
 
 [English](../../en/reference/framework-reserved-names.md) · [← 文件索引](../README.md)
@@ -78,9 +78,11 @@
 
 | progId | 對應表 | 用途 |
 |--------|-------|------|
-| `Department` | `st_department` | 部門維護表單。 |
-| `Employee` | `st_employee` | 員工維護表單。 |
-| `AuditRule` | `st_audit_rule` | 稽核規則維護表單。**唯一宣告 `PermissionModelId` 的框架預設 form** —— 稽核政策是特權操作，enforcement 為 fail-closed，需先授權才能使用。 |
+| `Department` | `st_department` | 部門維護表單。宣告 `Department` 權限模型：部門樹決定 `DeptAndSub` 記錄範圍。 |
+| `Employee` | `st_employee` | 員工維護表單。宣告 `Employee` 權限模型：員工所屬部門決定 `Dept` 與 `DeptAndSub` 記錄範圍。 |
+| `AuditRule` | `st_audit_rule` | 稽核規則維護表單。宣告 `AuditRule` 權限模型：稽核政策是特權操作。 |
+
+這三個模型都隨框架的 `PermissionModels.xml` 提供。enforcement 為 fail-closed，模型必須先授權給角色，對應的表單才能使用。
 
 每個 form progId 共通繼承的 FormBO action 清單見 [API 方法參考 §軸：Form](../api/api-method-reference.md)。
 

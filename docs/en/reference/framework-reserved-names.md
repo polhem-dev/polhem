@@ -77,9 +77,11 @@ The framework ships these forms as part of its organisation / record-scope featu
 
 | progId | Backing table | Purpose |
 |--------|---------------|---------|
-| `Department` | `st_department` | Department maintenance form. |
-| `Employee` | `st_employee` | Employee maintenance form. |
-| `AuditRule` | `st_audit_rule` | Audit rule maintenance form. **The only framework-shipped form that declares a `PermissionModelId`** — audit policy is a privileged operation, and enforcement is fail-closed, so the model must be granted before the form can be used. |
+| `Department` | `st_department` | Department maintenance form. Declares the `Department` permission model: the department tree decides the `DeptAndSub` record scope. |
+| `Employee` | `st_employee` | Employee maintenance form. Declares the `Employee` permission model: an employee's department decides the `Dept` and `DeptAndSub` record scopes. |
+| `AuditRule` | `st_audit_rule` | Audit rule maintenance form. Declares the `AuditRule` permission model: audit policy is a privileged operation. |
+
+Each of these models ships in the framework's `PermissionModels.xml`. Enforcement is fail-closed, so a model must be granted to a role before its form can be used.
 
 See [API Method Reference §Axis: Form](../api/api-method-reference.md#axis-form-formbusinessobject) for the standard FormBO actions inherited by every form progId.
 

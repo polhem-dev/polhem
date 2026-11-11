@@ -3,10 +3,12 @@
   Permission model registry — one file per deployment, listing every authorizable target model
   with the actions it supports and each action's default record-scope strategy.
 
-  Shipped with the single model the framework itself requires: `AuditRule`, declared by
-  AuditRule.FormSchema.xml. Enforcement is fail-closed, so the model must also be granted to a
-  role (st_role_grant) before anyone can maintain audit rules — registering it here is necessary
-  but not sufficient.
+  Shipped with the models of the framework's own forms: `AuditRule`, `Department` and `Employee`,
+  declared by the FormSchema of the same name. Department and Employee are guarded because they
+  decide record scope: the Dept and DeptAndSub strategies read a user's department from
+  st_employee, so a user who could edit them could widen their own scope. Enforcement is
+  fail-closed, so each model must also be granted to a role (st_role_grant) before anyone can
+  maintain those forms or look them up; registering it here is necessary but not sufficient.
 
   Add one PermissionModel per aggregate root the deployment wants to authorize. A form opts in by
   setting FormSchema.PermissionModelId; a form that leaves it empty is not permission-checked.
@@ -14,6 +16,22 @@
 <PermissionModels xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Models>
     <PermissionModel ModelId="AuditRule" DisplayName="Audit Rule">
+      <Rules>
+        <PermissionRule Action="Create" />
+        <PermissionRule Action="Read" />
+        <PermissionRule Action="Update" />
+        <PermissionRule Action="Delete" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Department" DisplayName="Department">
+      <Rules>
+        <PermissionRule Action="Create" />
+        <PermissionRule Action="Read" />
+        <PermissionRule Action="Update" />
+        <PermissionRule Action="Delete" />
+      </Rules>
+    </PermissionModel>
+    <PermissionModel ModelId="Employee" DisplayName="Employee">
       <Rules>
         <PermissionRule Action="Create" />
         <PermissionRule Action="Read" />
