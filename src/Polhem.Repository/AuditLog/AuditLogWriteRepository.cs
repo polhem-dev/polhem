@@ -93,8 +93,9 @@ namespace Polhem.Repository.AuditLog
         /// IMPORTANT: several values come straight from an unauthenticated caller (a sign-in's user id, a JSON-RPC
         /// method name). Written as they are, one over-long value made SQL Server, PostgreSQL, MySQL and Oracle refuse
         /// the whole batch, and every other entry in it was lost with it, so a caller could erase other users' audit
-        /// records; a NUL character did the same on PostgreSQL. Both are made acceptable here, whatever the schema.
-        /// SQLite enforces neither, so this does not show there.
+        /// records. A NUL character did the same on PostgreSQL, and a lone UTF-16 surrogate made Npgsql fail to encode
+        /// the statement. All are made acceptable here, whatever the schema. SQLite enforces none of these, so they do
+        /// not show there.
         /// </para>
         /// </remarks>
         public static DbCommandSpec BuildInsert(AuditEntry entry, TableSchema? schema)
@@ -122,12 +123,12 @@ namespace Polhem.Repository.AuditLog
         }
 
         // Makes a string value one every supported database accepts: a NUL character, which PostgreSQL refuses in text
-        // columns, becomes U+FFFD, and the value is cut to the column's declared width in characters without
-        // splitting a surrogate pair.
+        // columns, and a lone surrogate, which PostgreSQL cannot encode as UTF-8, become U+FFFD, and the value is cut
+        // to the column's declared width in characters without splitting a surrogate pair.
         private static object? Fit(object? value, DbField? field)
         {
             if (value is not string text) { return value; }
-            if (text.Contains('\0', StringComparison.Ordinal)) { text = text.Replace('\0', '\uFFFD'); }
+            text = ReplaceUnencodable(text);
             if (field is null || field.DbType != FieldDbType.String || field.Length <= 0 || text.Length <= field.Length)
             {
                 return text;
@@ -135,6 +136,32 @@ namespace Polhem.Repository.AuditLog
             int length = field.Length;
             if (char.IsHighSurrogate(text[length - 1])) { length--; }
             return text[..length];
+        }
+
+        private static string ReplaceUnencodable(string text)
+        {
+            int i = 0;
+            while (i < text.Length && !IsUnencodableAt(text, i)) { i += char.IsHighSurrogate(text[i]) ? 2 : 1; }
+            if (i >= text.Length) { return text; }
+
+            var sb = new StringBuilder(text.Length);
+            sb.Append(text, 0, i);
+            while (i < text.Length)
+            {
+                if (IsUnencodableAt(text, i)) { sb.Append('\uFFFD'); i++; }
+                else if (char.IsHighSurrogate(text[i])) { sb.Append(text, i, 2); i += 2; }
+                else { sb.Append(text[i]); i++; }
+            }
+            return sb.ToString();
+        }
+
+        // True for a NUL, a low surrogate, or a high surrogate not followed by a low one. A well-formed pair is read
+        // from its high half, so its low half is never tested on its own.
+        private static bool IsUnencodableAt(string text, int index)
+        {
+            char c = text[index];
+            if (c == '\0' || char.IsLowSurrogate(c)) { return true; }
+            return char.IsHighSurrogate(c) && (index + 1 >= text.Length || !char.IsLowSurrogate(text[index + 1]));
         }
     }
 }
