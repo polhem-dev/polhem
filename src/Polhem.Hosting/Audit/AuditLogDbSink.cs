@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Globalization;
 using System.Text;
 using Polhem.Definition.Database;
 using Polhem.Definition.Logging;
@@ -45,21 +46,68 @@ namespace Polhem.Hosting.Audit
             ArgumentNullException.ThrowIfNull(entries);
             if (entries.Count == 0) { return; }
 
+            var failure = TryWrite(entries);
+            if (failure is null) { return; }
+
+            _logger.LogError(failure, "Audit log write failed against the '{DatabaseId}' database.", DbCategoryIds.Log);
+            if (entries.Count == 1)
+            {
+                SpillToFile(entries);
+                return;
+            }
+            SpillToFile(RetryOneByOne(entries));
+        }
+
+        /// <summary>
+        /// Writes the entries of a failed batch one at a time and returns the ones that still fail, so one entry the
+        /// database refuses does not take the rest of its batch with it.
+        /// </summary>
+        /// <remarks>
+        /// Two failures in a row are taken for an outage rather than for bad entries: every entry not yet tried is
+        /// returned as failed without trying it, so a database that is down costs two more attempts, not one per
+        /// entry.
+        /// </remarks>
+        private List<AuditEntry> RetryOneByOne(IReadOnlyList<AuditEntry> entries)
+        {
+            var failed = new List<AuditEntry>();
+            int consecutiveFailures = 0;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (consecutiveFailures >= 2)
+                {
+                    failed.AddRange(entries.Skip(i));
+                    break;
+                }
+                var failure = TryWrite([entries[i]]);
+                if (failure is null)
+                {
+                    consecutiveFailures = 0;
+                    continue;
+                }
+                consecutiveFailures++;
+                failed.Add(entries[i]);
+                _logger.LogError(failure, "Audit log entry for '{TableName}' was refused by the '{DatabaseId}' database.",
+                    entries[i].TableName, DbCategoryIds.Log);
+            }
+            return failed;
+        }
+
+        // Resilience: a log-store outage must not surface into the business flow. DbException covers every
+        // provider's exception type (Sql / Npgsql / MySql / Oracle).
+        private Exception? TryWrite(IReadOnlyList<AuditEntry> entries)
+        {
             try
             {
                 _repository.WriteBatch(entries);
+                return null;
             }
             catch (DbException ex)
             {
-                // Resilience: a log-store outage must not surface into the business flow. DbException
-                // covers every provider's exception type (Sql / Npgsql / MySql / Oracle).
-                _logger.LogError(ex, "Audit log write failed against the '{DatabaseId}' database.", DbCategoryIds.Log);
-                SpillToFile(entries);
+                return ex;
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Audit log write failed against the '{DatabaseId}' database.", DbCategoryIds.Log);
-                SpillToFile(entries);
+                return ex;
             }
         }
 
@@ -90,7 +138,7 @@ namespace Polhem.Hosting.Audit
         private void SpillToFile(IReadOnlyList<AuditEntry> entries)
         {
             var path = _options.FileFallbackPath;
-            if (string.IsNullOrEmpty(path)) { return; }
+            if (string.IsNullOrEmpty(path) || entries.Count == 0) { return; }
 
             var sb = new StringBuilder();
             foreach (var entry in entries)
@@ -98,9 +146,10 @@ namespace Polhem.Hosting.Audit
                 sb.Append(entry.TableName);
                 foreach (var column in entry.GetColumns())
                 {
-                    sb.Append('\t').Append(column.Name).Append('=').Append(column.Value);
+                    sb.Append('\t').Append(column.Name).Append('=')
+                      .Append(Escape(Convert.ToString(column.Value, CultureInfo.InvariantCulture)));
                 }
-                sb.AppendLine();
+                sb.Append('\n');
             }
 
             try
@@ -119,6 +168,32 @@ namespace Polhem.Hosting.Audit
                 // path typo must not be able to do that.
                 _logger.LogError(ex, "Audit log file fallback write failed at '{Path}'.", path);
             }
+        }
+
+        /// <summary>
+        /// Escapes a value for the tab-delimited fallback line: a backslash, a tab, a carriage return or a line feed
+        /// in a value becomes <c>\\</c>, <c>\t</c>, <c>\r</c> or <c>\n</c>.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: values such as a sign-in's user id come from an unauthenticated caller. Written as they are, a
+        /// line feed in one started a new line that read as an audit record of its own.
+        /// </remarks>
+        internal static string Escape(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) { return string.Empty; }
+            var sb = new StringBuilder(value.Length);
+            foreach (var c in value)
+            {
+                _ = c switch
+                {
+                    '\\' => sb.Append(@"\\"),
+                    '\t' => sb.Append(@"\t"),
+                    '\r' => sb.Append(@"\r"),
+                    '\n' => sb.Append(@"\n"),
+                    _ => sb.Append(c),
+                };
+            }
+            return sb.ToString();
         }
     }
 }

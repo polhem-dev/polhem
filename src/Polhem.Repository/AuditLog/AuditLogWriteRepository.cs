@@ -2,6 +2,7 @@ using System.Text;
 using Polhem.Definition;
 using Polhem.Db;
 using Polhem.Definition.Database;
+using Polhem.Core.Data;
 using Polhem.Definition.Logging;
 using Polhem.Repository.Abstractions.AuditLog;
 
@@ -39,27 +40,63 @@ namespace Polhem.Repository.AuditLog
             // commit latency per entry. It also made a failure half-written: the entries before the
             // failing one were committed and then spilled to the fallback file a second time.
             var batch = new DbBatchSpec { UseTransaction = true };
+            var schemas = new Dictionary<string, TableSchema?>(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in entries)
             {
-                batch.Commands.Add(BuildInsert(entry));
+                if (!schemas.TryGetValue(entry.TableName, out var schema))
+                {
+                    schema = FindSchema(entry.TableName);
+                    schemas[entry.TableName] = schema;
+                }
+                batch.Commands.Add(BuildInsert(entry, schema));
             }
 
             var dbAccess = Context.DbAccessFactory.Create(DbCategoryIds.Log);
             dbAccess.ExecuteBatch(batch);
         }
 
+        // The log table's definition gives the column widths. Without one, nothing is truncated and an over-long value
+        // fails its batch as before, which the sink then retries entry by entry.
+        private TableSchema? FindSchema(string tableName)
+        {
+            try
+            {
+                return Context.DefineAccess.GetTableSchema(DbCategoryIds.Log, tableName);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+        }
+
         /// <summary>
-        /// Builds a parameterised INSERT for one entry. Column order is the entry's own stable
-        /// order; values bind positionally through <c>{@Parameters}</c>, with null mapped to
-        /// <see cref="DBNull.Value"/> so nullable columns are written as SQL NULL.
+        /// Builds the INSERT for one entry without truncating its values.
         /// </summary>
-        /// <remarks>
-        /// Public because it is the canonical write-side column contract: tests that seed audit
-        /// rows for read-side queries build them through this method rather than restating the
-        /// column list, so the two sides cannot drift apart.
-        /// </remarks>
         /// <param name="entry">The entry to persist.</param>
-        public static DbCommandSpec BuildInsert(AuditEntry entry)
+        public static DbCommandSpec BuildInsert(AuditEntry entry) => BuildInsert(entry, schema: null);
+
+        /// <summary>
+        /// Builds a parameterised INSERT for one entry, cutting each string value to the width its column declares
+        /// in <paramref name="schema"/>. Column order is the entry's own stable order; values bind positionally
+        /// through <c>{@Parameters}</c>, with null mapped to <see cref="DBNull.Value"/> so nullable columns are
+        /// written as SQL NULL.
+        /// </summary>
+        /// <param name="entry">The entry to persist.</param>
+        /// <param name="schema">The log table's definition, or <c>null</c> to write the values as they are.</param>
+        /// <remarks>
+        /// <para>
+        /// Public because it is the canonical write-side column contract: tests that seed audit rows for read-side
+        /// queries build them through this method rather than restating the column list, so the two sides cannot
+        /// drift apart.
+        /// </para>
+        /// <para>
+        /// IMPORTANT: several values come straight from an unauthenticated caller (a sign-in's user id, a JSON-RPC
+        /// method name). Written as they are, one over-long value made SQL Server, PostgreSQL, MySQL and Oracle refuse
+        /// the whole batch, and every other entry in it was lost with it, so a caller could erase other users' audit
+        /// records. SQLite does not enforce widths, so this does not show there.
+        /// </para>
+        /// </remarks>
+        public static DbCommandSpec BuildInsert(AuditEntry entry, TableSchema? schema)
         {
             ArgumentNullException.ThrowIfNull(entry);
 
@@ -77,10 +114,23 @@ namespace Polhem.Repository.AuditLog
             var values = new object[columns.Count];
             for (int i = 0; i < columns.Count; i++)
             {
-                values[i] = columns[i].Value ?? DBNull.Value;
+                values[i] = Fit(columns[i].Value, schema?.Fields?.GetOrDefault(columns[i].Name)) ?? DBNull.Value;
             }
 
             return new DbCommandSpec(DbCommandKind.NonQuery, sb.ToString(), values);
+        }
+
+        // Cuts a string to the column's declared width in characters, without splitting a surrogate pair.
+        private static object? Fit(object? value, DbField? field)
+        {
+            if (value is not string text || field is null || field.DbType != FieldDbType.String || field.Length <= 0
+                || text.Length <= field.Length)
+            {
+                return value;
+            }
+            int length = field.Length;
+            if (char.IsHighSurrogate(text[length - 1])) { length--; }
+            return text[..length];
         }
     }
 }
