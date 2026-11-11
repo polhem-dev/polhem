@@ -154,9 +154,11 @@ Two equivalent ways, sharing one implementation:
 ```csharp
 // A. Declare next to the query — the option travels with the SQL.
 var spec = new DbCommandSpec(DbCommandKind.DataTable,
-    "SELECT order_date, created_at, amount FROM ft_order WHERE amount > {0}", 1000m);
+    "SELECT order_date, created_at, amount FROM ft_order WHERE sys_company_id = {@CompanyId} AND amount > {0}",
+    1000m);
 spec.DateColumns.Add("order_date");
-var table = dbAccess.Execute(spec).Table!;
+// In a repository: bound to the session's company, so the statement names it.
+var table = CreateDbAccess().Execute(spec).Table!;
 
 // B. Mark afterwards — for tables you assemble yourself or receive from elsewhere.
 table.SetDateColumns("order_date", "due_date");

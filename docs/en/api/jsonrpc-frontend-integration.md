@@ -194,7 +194,8 @@ that the backend answers authenticated calls with `-32001` (`Unauthorized`) and 
 in again.
 
 Some methods require entering a company first (`System.EnterCompany`) to set
-`SessionInfo.CompanyId` — this routes form CRUD to the company-specific database. A form whose
+`SessionInfo.CompanyId` — this routes form CRUD to the company's database and confines it to the
+company's rows, since several companies can share one database. A form whose
 `CategoryId` is `company` called without a company answers `-32002` (`CompanyNotEntered`).
 Business forms belong in `company`, and the samples' `Staff` form (`ft_staff`) is no exception:
 every sample client calls `EnterCompany` right after `Login`, with the one company the demo backend

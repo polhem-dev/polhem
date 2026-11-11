@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: 3ffb46054e49ac418f6246a903cb4d81f8f9a8a9 -->
+<!-- source: en/architecture/architecture-overview.md blob: 16a788861ca872812c848945b1151795ca27762a -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -251,7 +251,7 @@ LeaveCompany()             ──→  回到已登入
 Logout()                   ──→  Session 銷毀（隱含清掉 CompanyId）
 ```
 
-三類邏輯資料庫範疇（`DbScope.Common` / `DbScope.Log` / `DbScope.Company`）透過 `IRepositoryDatabaseRouter` 對映到實體資料庫。`Common` 與 `Log` 走固定 databaseId、未進公司也能用；`Company` 必須先 `EnterCompany`。
+三類邏輯資料庫範疇（`DbScope.Common` / `DbScope.Log` / `DbScope.Company`）透過 `IRepositoryDatabaseRouter` 對映到實體資料庫。`Common` 與 `Log` 走固定 databaseId、未進公司也能用；`Company` 必須先 `EnterCompany`，並對映到該公司的資料庫。各公司可以各有一個資料庫，也可以共用一個；共用時以 `sys_company_id` 區分各公司的資料（[資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）。
 
 ---
 

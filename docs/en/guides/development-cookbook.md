@@ -310,7 +310,7 @@ Every FormSchema must specify `CategoryId`, which corresponds to the `Id` of a `
 - TableSchemas derived from this FormSchema are persisted under the `TableSchema/{categoryId}/` subdirectory
 - Which database the tables of this FormSchema live in (`CategoryId` → `DbScope` → `IRepositoryDatabaseRouter`)
 
-Business tables (`ft_*`) belong in `company`, the per-company database. `common` holds the framework tables shared across companies, and `log` the audit and anomaly logs. The framework ships its own `Employee` and `Department` forms (company tables `st_employee` / `st_department`), so an application does not reuse those progIds; see [Framework-Reserved Names](../reference/framework-reserved-names.md).
+Business tables (`ft_*`) belong in `company`, the company database, which a company has to itself or shares with other companies, its rows separated by `sys_company_id` (see [Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)). `common` holds the framework tables shared across companies, and `log` the audit and anomaly logs. The framework ships its own `Employee` and `Department` forms (company tables `st_employee` / `st_department`), so an application does not reuse those progIds; see [Framework-Reserved Names](../reference/framework-reserved-names.md).
 
 `SaveFormSchema` validates that `CategoryId` is non-empty (via `TableSchemaGenerator.GetCategoryId(formSchema)`); throws `InvalidOperationException` when missing.
 
@@ -462,10 +462,16 @@ synchronously and then failing leaves nothing to retry from.
 which `DbAccess.UpdateDataTables` opens and commits. What commits atomically with the record is therefore
 either enforced by the database (unique indexes, check and foreign key constraints) or written by a write
 path you own: a method on a custom repository (see "Customising the Repository for a ProgId" below) that
-opens a connection, begins a `DbTransaction`, runs every statement through
-`new DbAccess(connection, databaseType).Execute(command, transaction)` and commits once — the pattern the
-framework's own repositories use. A `DoSave` override then calls it in place of `base.DoSave(context)` and
-sets `context.RefreshedDataSet` and `context.AffectedRows` itself.
+runs its statements as one batch, `CreateDbAccess().ExecuteBatch(new DbBatchSpec { UseTransaction = true, ... })`,
+which commits them together or rolls all of them back. Every statement in the batch names the company with
+`sys_company_id = {@CompanyId}` (or writes `{@CompanyId}` into the column of a row it inserts): `CreateDbAccess()` is bound
+to the session's company and refuses a statement without it. A check that must see the batch's own writes belongs in the
+statement itself, a conditional `UPDATE ... WHERE ...`, rather than in a read before it. A `DoSave` override then calls the
+method in place of `base.DoSave(context)` and sets `context.RefreshedDataSet` and `context.AffectedRows` itself.
+
+Do not build the transaction on a connection of your own with `new DbAccess(connection, databaseType)`: that access is not
+bound to the company, so where companies share a database it reads and writes every company's rows, and the POLHEM3004
+analyzer reports it.
 
 ### Business Plugins
 

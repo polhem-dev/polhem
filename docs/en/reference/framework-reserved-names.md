@@ -28,7 +28,10 @@ The `st_` prefix means "framework-owned table". It is **orthogonal to which data
 | `st_define` | DB-backed definition storage (FormSchema / TableSchema / etc., when not stored as XML files). |
 | `st_cache_notify` | Cross-node cache invalidation channel ([ADR-017](../../../maintainers/adr/adr-017-db-cache-invalidation.md)). |
 
-### 1.2 Company database (per-tenant)
+### 1.2 Company database
+
+A company has a database of its own or shares one with other companies. Every table here carries `sys_company_id`,
+which keeps the companies of a shared database apart ([Database Settings §5.5](../database/database-settings-guide.md#55-companies-sharing-a-company-database)).
 
 | Table | Purpose |
 |-------|---------|

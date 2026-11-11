@@ -15,6 +15,9 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 
 Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
 
+- **Breaking:** Several companies can share one company database: every company table gets `sys_company_id`, and the form repositories and the framework's company queries read and write only the session's company's rows; an existing deployment upgrades with `db add-company-column` and `db upgrade`.
+- **Breaking:** A repository's hand-written SQL runs through a company-bound `CreateDbAccess()` and names the company with `{@CompanyId}`, and the POLHEM3004 analyzer reports a repository that takes another database access.
+- **Breaking:** The company-database methods of `IDepartmentRepository`, `IEmployeeRepository`, `IRolePermissionRepository`, `IAuditRuleRepository` and `IEmployeeContextResolver` take a company id, and company ids are stored in lowercase.
 - **Breaking:** The Avalonia and Blazor heads share one `FormDataObject`, which moves to `Polhem.UI.Core.DataObjects` and takes the user's time zone from the code that constructs it.
 - **Breaking:** One request reads the session's company once and passes that snapshot to authorization, record scope, routing and its repositories, so a company entered on the same token meanwhile cannot pair one company's roles with another company's data; the services involved gain overloads that take the snapshot.
 - The `db seed` and `db upgrade` commands write through new framework repositories instead of SQL in `Polhem.Hosting`, and `ICompanyRepository` gains `GetCompanyDatabases`.

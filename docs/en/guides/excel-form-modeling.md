@@ -95,6 +95,8 @@ the workbook leaves it out:
 - **The master table** is named after the program id. A workbook without a Tables sheet row gets one.
 - **Database table names** default to `ft_` plus the table name in snake case: `QuoteLine` becomes `ft_quote_line`.
 - **System fields**: every table gets `sys_no` and `sys_rowid`, and every detail table `sys_master_rowid`, hidden.
+  The TableSchema of every table of a `company` form also gets `sys_company_id`, the company that owns the row, which
+  leads its unique index; it is not a field of the form, and the form repository fills and filters it.
 - **Relation fields**: a field with a related form (`customer_rowid` related to `Customer`) becomes a `Guid` and gets
   the two fields that show the related record, `ref_customer_id` and `ref_customer_name`, mapped from the related
   form's `sys_id` and `sys_name`. Their captions follow the relation field's: `Customer Code`, `客戶代號`.

@@ -438,7 +438,7 @@ For bo repos (the BO-layer Repositories) the framework provides `IRepositoryData
 
 BO methods consume the router via `BusinessObject.ResolveDatabaseId(DbScope)` or, for FormSchema-driven CRUD, the `CreateDataFormRepository(progId)` helper which routes automatically based on the schema's `CategoryId`.
 
-Cross-DatabaseItem aggregation (e.g. log year-range queries) and explicit archive access (e.g. reading `log_2024`) are not part of the default routing path — the application layer specifies the target databaseId directly and creates a custom bo repo via `IDbAccessFactory`. That path is for data with no company; company data goes through a repository's `CreateDbAccess()`, which is bound to the company (§5.5).
+Cross-DatabaseItem aggregation (e.g. log year-range queries) and explicit archive access (e.g. reading `log_2024`) are not part of the default routing path — the application layer specifies the target databaseId directly in a custom bo repo deriving from `RepositoryBase`, which takes its database access from `CreateDbAccess(databaseId)`. That access is unbound unless the id is the repository's own company database, so it is for data with no company; company data goes through `CreateDbAccess()`, or `CreateDbAccess(databaseId, companyId)` for code with no session, both bound to the company (§5.5).
 
 `DatabaseItem.CategoryId` and `DbCategorySettings` are used only at the design phase (§5.1–5.2) and the deployment phase (§5.3) described above. At runtime, BO methods speak in terms of `DbScope` (the runtime access intent) rather than CategoryId strings; the one place a CategoryId string is read at runtime is a form repository turning its schema's `CategoryId` into a `DbScope` (§3.4).
 

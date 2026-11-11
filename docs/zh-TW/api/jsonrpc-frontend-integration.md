@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: d234d2c5b049f519cc62447fe9c178fb789b8eda -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: cb082bc004bc9efbeda6c220a44a7b592dda0933 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -180,7 +180,7 @@ Token 是 `Guid` 字串。Token 在登入回應所帶的 `expiredAt` 時間到�
 （`Unauthorized`）回應 authenticated 呼叫，client 必須重新登入。
 
 某些方法需要先進入公司（`System.EnterCompany`）以設定 `SessionInfo.CompanyId`，
-讓 form CRUD 路由到公司專屬資料庫。`CategoryId` 為 `company` 的表單若在未進公司時呼叫，會回 `-32002`
+讓 form CRUD 路由到該公司的資料庫，並只存取該公司的資料列（多家公司可以共用一個資料庫）。`CategoryId` 為 `company` 的表單若在未進公司時呼叫，會回 `-32002`
 （`CompanyNotEntered`）。業務表單應放在 `company`，範例的 `Staff` 表單（`ft_staff`）也不例外：每個範例
 client 都在 `Login` 之後緊接著呼叫 `EnterCompany`，進入 demo 後端種下的唯一一間公司（`DEMO`）。範例把它命名為
 `Staff` 而不是 `Employee`，因為框架把 `Employee` 保留給自己的表單（`st_employee`，見

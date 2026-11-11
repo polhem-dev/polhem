@@ -344,6 +344,9 @@ Northwind 有一張 `Region` 表，demo 刻意沒做 —— 留給你自己加�
 ### 1. 資料表 —— `Define/TableSchema/company/ft_region.TableSchema.xml`
 
 Region 是業務資料，所以放在 **company** 分類（`TableSchema/company/`），與其他 `ft_` 表一起。
+和所有 company 表一樣，它帶有 `sys_company_id`，記錄資料列屬於哪家公司，唯一索引也以它開頭，
+所以共用同一個資料庫的兩家公司都能有代碼為 `N` 的地區。表單的 repository 會自行寫入並依它過濾，
+所以下面的表單不列出它。少了這個欄位的資料表，表單一讀取就會失敗。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -351,6 +354,7 @@ Region 是業務資料，所以放在 **company** 分類（`TableSchema/company/
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
     <DbField FieldName="sys_id" Caption="Region Code" DbType="String" Length="20" />
     <DbField FieldName="sys_name" Caption="Region Name" DbType="String" Length="50" />
   </Fields>
@@ -362,7 +366,7 @@ Region 是業務資料，所以放在 **company** 分類（`TableSchema/company/
       <IndexFields><IndexField FieldName="sys_rowid" /></IndexFields>
     </DbTableIndex>
     <DbTableIndex Name="uk_{0}" Unique="true">
-      <IndexFields><IndexField FieldName="sys_id" /></IndexFields>
+      <IndexFields><IndexField FieldName="sys_company_id" /><IndexField FieldName="sys_id" /></IndexFields>
     </DbTableIndex>
   </Indexes>
 </TableSchema>
@@ -430,7 +434,7 @@ Region 是業務資料，所以放在 **company** 分類（`TableSchema/company/
 
 ### 7. 重啟
 
-重啟 server（它會建立 `ft_region`）與桌面前端。**Regions** 現在出現在左側選單的 Master Data 之下，具備可用的清單、新增、修改、刪除，以及來自 `uk_` 索引的唯一代碼檢查 —— 全部來自定義修改，不編譯你自己的任何程式碼。
+重啟 server（它會建立 `ft_region`）與桌面前端。**Regions** 現在出現在左側選單的 Master Data 之下，具備可用的清單、新增、修改、刪除，以及來自 `uk_` 索引、依公司區分的唯一代碼檢查 —— 全部來自定義修改，不編譯你自己的任何程式碼。
 
 ### 或者用 Excel 描述
 

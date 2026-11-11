@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: 4fbfc287d8afe871bac53fd4b5bfc906c40fb318 -->
+<!-- source: en/security/permission-authorization.md blob: 2d4139ba6261446579d80d2455c20f0e78090a33 -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -72,24 +72,30 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 
 ## 3. 授權角色
 
-角色、授權、指派存於各**company 資料庫**（`st_` 框架表，公司內配置）：
+角色、授權、指派存於各**company 資料庫**（`st_` 框架表，公司內配置）。多家公司可以共用一個 company 資料庫，
+所以每一列都在 `sys_company_id` 記錄它屬於哪家公司，值為小寫儲存的公司代號；框架只讀取 session 所屬公司的資料列：
 
 | 表 | 欄位 | 意義 |
 |----|------|------|
-| `st_role` | `sys_id`, `sys_name` | 角色（指派的打包單位） |
-| `st_role_grant` | `role_id`, `model_id`, `action`, `scope` | 角色對某 model 某 action 的授權 + 其 record scope |
-| `st_user_role` | `user_id`, `role_id` | user ↔ role 指派（`user_id` 即 `st_user.sys_id`） |
+| `st_role` | `sys_company_id`, `sys_id`, `sys_name` | 角色（指派的打包單位） |
+| `st_role_grant` | `sys_company_id`, `role_id`, `model_id`, `action`, `scope` | 角色對某 model 某 action 的授權 + 其 record scope |
+| `st_user_role` | `sys_company_id`, `user_id`, `role_id` | user ↔ role 指派（`user_id` 即 `st_user.sys_id`） |
+
+寫入時沒有 `sys_company_id` 的資料列不屬於任何公司，永遠不會被讀到：該授權不會生效，也不會有任何錯誤訊息。
 
 `st_role_grant` 是 **per-action**：有列即為層一授權；其 `scope`（`ScopeStrategy`）驅動層二。這正是「某角色看得到整個部門、卻只能改自己的」之所以可能。
 
 ```sql
 -- 「採購員」可看部門及子部門的採購單，但只能改／刪自己的：
-INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
-  ('Buyer', 'PurchaseOrder', 2 /*Read*/,   4 /*DeptAndSub*/),
-  ('Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
-  ('Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
+INSERT INTO st_role_grant (sys_company_id, role_id, model_id, action, scope) VALUES
+  ('acme', 'Buyer', 'PurchaseOrder', 2 /*Read*/,   4 /*DeptAndSub*/),
+  ('acme', 'Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
+  ('acme', 'Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
 -- scope = ScopeStrategy：Inherit=0, All=1, Own=2, Dept=3, DeptAndSub=4
 -- action = PermissionActions（flags）：Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
+
+-- 把角色指派給同一家公司的使用者：
+INSERT INTO st_user_role (sys_company_id, user_id, role_id) VALUES ('acme', 'alice', 'Buyer');
 ```
 
 `scope = Inherit (0)` → 取 model 該 action 的預設（第 1 節）。
@@ -171,10 +177,10 @@ st_user.sys_rowid  ──(st_employee.user_rowid)──▶  st_employee  ──(
 ```sql
 -- Viewer 看得到成本但不能改（只授 Read）；Editor 可改（授 Read + Update）。
 -- 編輯也需要 Read——只授 Update 而無 Read 會讓該欄被隱藏。
-INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
-  ('CostViewer', 'Cost', 2 /*Read*/,   1 /*All*/),
-  ('CostEditor', 'Cost', 2 /*Read*/,   1 /*All*/),
-  ('CostEditor', 'Cost', 4 /*Update*/, 1 /*All*/);
+INSERT INTO st_role_grant (sys_company_id, role_id, model_id, action, scope) VALUES
+  ('acme', 'CostViewer', 'Cost', 2 /*Read*/,   1 /*All*/),
+  ('acme', 'CostEditor', 'Cost', 2 /*Read*/,   1 /*All*/),
+  ('acme', 'CostEditor', 'Cost', 4 /*Update*/, 1 /*All*/);
 ```
 
 分類 gate 是**全公司一致、且與表單自身 model 正交**：看不看得到 `Cost` 欄取決於 `Cost.Read`，*獨立於* `PurchaseOrder.Read`。使用者可能有權讀採購單、卻仍被隱藏成本欄。這貼合 ERP 實務——成本／金額／個資的可見性是**資料分類**問題，應跨所有表單一致、授權一次。
@@ -236,7 +242,7 @@ UserContext.SignOut();                            // 讓 circuit 的 client 登�
 
 # 第三部分 — 部署層管理（公司模型之外）
 
-以上全部以公司為範圍：角色、授權、部門樹都放在**各公司自己的資料庫**，session 未進入公司時 `ICompanyAuthorizationService.Can` 一律回 `false`。
+以上全部以公司為範圍：角色、授權、部門樹都是**該公司自己的資料列**，存放在它的 company 資料庫（自己專用的，或以 `sys_company_id` 區分的共用資料庫），session 未進入公司時 `ICompanyAuthorizationService.Can` 一律回 `false`。
 
 同一個請求只從 session 讀一次公司。business object 把這次讀到的內容保存為 `CompanyScope`，交給授權檢查、列範圍與它的 repository，因此即使同一個 token 在請求進行中進入另一家公司，這些環節仍為同一家公司運作（[ADR-063](../../../maintainers/adr/adr-063-one-company-scope-per-request.md)）。這些服務吃 access token 的多載會自行讀 session，只在沒有 `CompanyScope` 的程式中呼叫。
 
@@ -246,7 +252,7 @@ UserContext.SignOut();                            // 讓 circuit 的 client 登�
 |---|---|---|
 | 介面 | `ICompanyAuthorizationService.Can(companyScope, modelId, action)`；business object 傳入自己的 `CompanyScope` | `IDeploymentAuthorizationService.Can(token, action)` |
 | 問題 | 這位使用者能不能**在公司 C 內**做 X？ | 這位使用者能不能對**整個部署**做 X？ |
-| 身分來源 | 各公司資料庫的 `st_role` / `st_role_grant` / `st_user_role` | common 資料庫的 `st_user.deployment_admin` |
+| 身分來源 | 公司資料庫中屬於該公司的 `st_role` / `st_role_grant` / `st_user_role` 資料列 | common 資料庫的 `st_user.deployment_admin` |
 | 需要公司脈絡 | 需要 —— 沒進公司就無權 | 不需要 —— 依定義本來就沒有 |
 
 > **兩者互不授予。** 部署層管理員**不會因此取得任何公司的資料權限**：讀寫某公司的資料仍走第一部分的動作與列邊界，那兩道閘查的是該公司的角色，對這個旗標一無所知。反過來，公司管理員在部署層也什麼都不是。兩條判定不互相 fallback。

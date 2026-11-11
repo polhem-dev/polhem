@@ -22,6 +22,19 @@
 - `DbCommandSpec` -- parameterized command specification supporting positional (`{0}`) and named (`{Name}`) placeholders with automatic conversion
 - `DbBatchSpec` -- batch execution with optional transaction wrapping and configurable isolation levels
 
+### Company Binding
+
+Several companies can share one company database, their rows separated by `sys_company_id`
+([Database Settings §5.5](../../docs/en/database/database-settings-guide.md#55-companies-sharing-a-company-database)).
+
+- `DbAccess.BindCompany(companyId)` binds a database access to one company. Every command it then runs must contain
+  the `{@CompanyId}` placeholder (`CommandTextVariable.CompanyId`), which becomes a parameter carrying the company;
+  a command without it is refused when it is created, and an unbound access refuses a command that has it.
+- The check sees only that the placeholder is present, not that every company table in the statement is compared
+  with it.
+- Repositories do not call `BindCompany` themselves: `RepositoryBase.CreateDbAccess()` in `Polhem.Repository` returns
+  an access already bound to the repository's company.
+
 ### Connection & Provider Management
 
 - `IDbConnectionManager` -- centralized connection information registry

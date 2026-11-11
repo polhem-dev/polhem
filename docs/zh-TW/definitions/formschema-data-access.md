@@ -1,4 +1,4 @@
-<!-- source: en/definitions/formschema-data-access.md blob: d60f72fe34508ac237d907e0b75083c442755a75 -->
+<!-- source: en/definitions/formschema-data-access.md blob: db0111736736eafb0605b1708fd60f293f439443 -->
 # FormSchema 驅動的資料庫存取
 
 [English](../../en/definitions/formschema-data-access.md) · [← 文件索引](../README.md)
@@ -169,6 +169,12 @@ Definition-Driven Architecture（整體架構）
 - `Employee`（員工）— `dept_rowid` 參照 `Department`
 - `Department`（部門）— `pm_rowid` 參照 `Employee`（部門主管）
 
+三者都是 `company` 表單，所以每張表都有 `sys_company_id`（見
+[ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md)）。兩個 `company` 表單之間的 JOIN，還會比對被 JOIN 那一列
+與主表那一列的公司（`AND B.[sys_company_id] = A.[sys_company_id]`）：外鍵存的是 row id，可能指向共用同一個資料庫的另一家
+公司的資料列。表單 repository 接著會在外層加上 `A.[sys_company_id] = @company` 條件，把主表限定在 session 的公司；下列
+範例省略了這一層。自己手寫的 SQL 兩者都要自行處理。
+
 ### 範例 1：純主檔查詢（無 JOIN）
 
 ```csharp
@@ -198,6 +204,7 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", filter);
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 WHERE B.[sys_name] LIKE @p0
 ```
 
@@ -218,7 +225,9 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", null, sortFields
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_department] C ON B.[dept_rowid] = C.[sys_rowid]
+    AND C.[sys_company_id] = A.[sys_company_id]
 ORDER BY C.[sys_name] ASC
 ```
 
@@ -238,8 +247,11 @@ SELECT A.[sys_id], A.[sys_name],
        D.[sys_name] AS [ref_pm_dept_name]
 FROM [ft_project] A
 LEFT JOIN [st_department] B ON A.[owner_dept_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_employee]   C ON A.[pm_rowid]         = C.[sys_rowid]
+    AND C.[sys_company_id] = A.[sys_company_id]
 LEFT JOIN [st_department] D ON C.[dept_rowid]       = D.[sys_rowid]
+    AND D.[sys_company_id] = A.[sys_company_id]
 ```
 
 兩個參考欄位走不同的 `FormSchema` 鏈，分支 JOIN 自動建立。
@@ -262,6 +274,7 @@ var command = builder.BuildSelect("Project", "sys_id,sys_name", filterGroup, sor
 SELECT A.[sys_id], A.[sys_name]
 FROM [ft_project] A
 LEFT JOIN [st_employee] B ON A.[pm_rowid] = B.[sys_rowid]
+    AND B.[sys_company_id] = A.[sys_company_id]
 WHERE (A.[sys_name] LIKE @p0 AND B.[sys_name] = @p1)
 ORDER BY A.[sys_id] ASC
 ```
@@ -313,7 +326,7 @@ ORDER BY A.[sys_id] ASC
 
 | 限制 | 為什麼 |
 |---|---|
-| JOIN 必為單欄位等值（FK = PK） | `FormSchema` 的 RelationField 一律經 `RowId` 等值參照 |
+| JOIN 為外鍵等值（FK = PK）；兩邊都是 `company` 表單時再加上公司比對 | `FormSchema` 的 RelationField 一律經 `RowId` 等值參照；公司比對讓外鍵碰不到另一家公司的資料列 |
 | JOIN 對象必為實體表（無子查詢 / CTE / TVF） | `FormSchema` 對映實體表，沒有「子查詢式表單」的概念 |
 | 主表別名固定為 `A` | 與 `SelectContextBuilder` 的別名生成器一致（`A → B → ... → Z → ZA → ZB`，跳過 SQL 保留字） |
 | 篩選與排序只能使用表單宣告的欄位 | 可以比較的欄位就能被逐次比較讀出，所以表單的欄位清單就是查詢能觸及的範圍；未宣告或受保護的欄位會拋出 `InvalidOperationException` |

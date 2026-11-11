@@ -1,4 +1,4 @@
-<!-- source: en/reference/framework-reserved-names.md blob: 22cf9a001dd19b2bf883e47f45d38fd5dba987aa -->
+<!-- source: en/reference/framework-reserved-names.md blob: 20a6d21f2e3963f470b61a0344c2622db51d2228 -->
 # 框架保留命名
 
 [English](../../en/reference/framework-reserved-names.md) · [← 文件索引](../README.md)
@@ -29,7 +29,10 @@
 | `st_define` | DB-backed 定義儲存（FormSchema / TableSchema 等，非 XML 檔案版本）。 |
 | `st_cache_notify` | 跨節點 cache 失效通道（[ADR-017](../../../maintainers/adr/adr-017-db-cache-invalidation.md)）。 |
 
-### 1.2 公司資料庫（per-tenant）
+### 1.2 公司資料庫
+
+公司可以有自己的資料庫，也可以與其他公司共用一個。這裡的每張表都帶 `sys_company_id`，在共用的資料庫中以它區分各公司的資料
+（[資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）。
 
 | 表名 | 用途 |
 |------|------|

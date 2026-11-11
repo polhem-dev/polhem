@@ -30,7 +30,7 @@ understanding why the design is the way it is.
 | [007](adr-007-convention-based-type-resolution.md) | Derive API types automatically by naming convention | ✅ Accepted |
 | [008](adr-008-polhem-db-namespace-layout.md) | Polhem.Db namespace layout: separating the syntax layer from the model layer | ✅ Accepted |
 | [009](adr-009-cache-implementation.md) | Polhem.ObjectCaching adopts Microsoft.Extensions.Caching.Memory + IChangeToken | ✅ Accepted |
-| [010](adr-010-logical-database-category.md) | Logical database categories (DbCategory) decouple database deployment flexibility | ✅ Accepted, partially superseded |
+| [010](adr-010-logical-database-category.md) | Logical database categories (DbCategory) decouple database deployment flexibility | ✅ Accepted, partially superseded (row separation by ADR-062) |
 | [011](adr-011-di-replaces-service-locator.md) | Adopt DI to replace the static Service Locator | ✅ Accepted |
 | [012](adr-012-session-company-context.md) | Session company context model (two-phase session lifecycle) | ✅ Accepted |
 | [013](adr-013-frontend-api-connection-strategy.md) | Front-end API connection strategy — separate `Polhem.UI.*` and `Polhem.Web.*` families | ✅ Accepted |

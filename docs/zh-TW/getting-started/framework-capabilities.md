@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/framework-capabilities.md blob: 60ba561ff39663c64fdb821e29f182ed7484c961 -->
+<!-- source: en/getting-started/framework-capabilities.md blob: 4b11ddea49dff0ec0601b650fbc31bd6bfb131f8 -->
 # 框架機制清單
 
 [English](../../en/getting-started/framework-capabilities.md) · [← 文件索引](../README.md)
@@ -116,7 +116,7 @@
 
 | 機制 | 提供什麼 |
 |------|---------|
-| **公司範圍** | 每家公司各有自己的資料庫與設定；`EnterCompany` / `LeaveCompany` 切換 session 的範圍 |
+| **公司範圍** | 每家公司各有自己的設定，資料庫可以獨用，也可以與其他公司共用，共用時以 `sys_company_id` 區分各公司的資料（[資料庫設定 §5.5](../database/database-settings-guide.md#55-多家公司共用公司資料庫)）；`EnterCompany` / `LeaveCompany` 切換 session 的範圍 |
 | **客製覆寫層** | FormLayout、LanguageResource、ProgramSettings、MenuSettings、PluginSettings 可逐租戶覆寫，不必分岔套裝定義 |
 | **部門樹** | 以 typed 樹狀物件提供的 per-company 組織階層 |
 | **員工脈絡** | 目前使用者背後的員工與部門資料，於 `EnterCompany` 時解析並保存在 session 上，供 record scope 過濾使用 |
@@ -153,6 +153,6 @@
 | **稽核流** | 登入事件、資料存取、資料變更（前後值 diffgram）、異常（API 與資料庫） |
 | **AuditLog 商業物件** | 稽核流的查詢 API，同時提供明細列表與彙總 |
 | **Polhem.Analyzers** | 隨套件發佈的建置期診斷，專案建置時即回報違反慣例之處。見 [Analyzer 規則](../reference/analyzer-rules.md) |
-| **UI 控件家族** | Avalonia（schema 驅動的原生控件子類、Grid、lookup 開窗）與 Blazor Server 雙軌 |
+| **UI 控件家族** | Avalonia（schema 驅動的原生控件子類、Grid、lookup 開窗）與 Blazor；Blazor 可選 MudBlazor（`Polhem.Web.Blazor.Mud`）或 Fluent UI（`Polhem.Web.Blazor.Fluent`），由 Blazor Server（`Polhem.Web.Blazor.Server`）或 Blazor WebAssembly（`Polhem.Web.Blazor.Wasm`）承載 |
 | **`ClientDefineAccess`** | client 經 API 讀取定義並快取，完全不碰檔案系統 |
 | **Client 儲存接縫** | `IEndpointStorage` 與 `IApiKeyStorage` 讓各 head 以自己平台允許的方式持久化端點與金鑰 |
