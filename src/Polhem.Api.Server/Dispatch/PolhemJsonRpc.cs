@@ -18,6 +18,10 @@ namespace Polhem.Api.Server.Dispatch
         /// binder and error contract.
         /// </summary>
         /// <returns>The options.</returns>
+        /// <remarks>
+        /// Batch requests are refused (<c>MaxBatchSize</c> is 0). A host that serves batches sets a size through
+        /// <c>AddJsonRpcServer</c>, and its rate limit then has to count calls rather than HTTP requests.
+        /// </remarks>
         public static JsonRpcServerOptions CreateServerOptions()
         {
             var options = new JsonRpcServerOptions
@@ -26,6 +30,10 @@ namespace Polhem.Api.Server.Dispatch
                 MethodPolicy = new PolhemMethodPolicy(),
                 ParameterBinder = new PolhemParameterBinder(),
                 ExceptionMapper = PolhemExceptionMapper.Map,
+                // IMPORTANT: batches are refused. A rate limit counts HTTP requests, and one batch carried many
+                // anonymous sign-ins, each a full password key derivation. The framework's clients send no batch;
+                // a host that needs them sets `MaxBatchSize` through `AddJsonRpcServer`.
+                MaxBatchSize = 0,
             };
             options.Filters.Add(new PolhemAccessFilter());
             options.Filters.Add(new PolhemPayloadFilter());

@@ -322,6 +322,16 @@ API Request / Response and BO Args / Result types must follow naming conventions
 - During lockout, `SystemBusinessObject.Login` rejects the attempt before checking the password
 - Successful login resets the failure counter
 - The counts are kept per process: with several nodes, each node keeps its own
+- `SystemBusinessObject.Login` refuses a user id longer than `MaxLoginUserIdLength` (by default
+  `UserInfo.UserIdMaxLength`, the width of `st_user.sys_id`, counted in Unicode characters) or an over-long password
+  as invalid credentials, before the tracker or the password check sees it; the audit records the id cut to that
+  length. A subclass whose `AuthenticateUser` checks a directory with longer ids overrides `MaxLoginUserIdLength`
+- `Login` is anonymous, and each attempt for an unknown account still runs a full password key derivation, so it costs
+  server CPU and the lockout does not limit it (a different account each time). Put a rate limit in front of the API
+  that counts calls per client
+- The server set up by `AddPolhemFramework` refuses JSON-RPC batches, so one HTTP request carries one call. A host that
+  enables them with `AddJsonRpcServer(server => server.MaxBatchSize = n)` must count each call of a batch in that rate
+  limit
 
 ## Session Persistence Constraints
 

@@ -12,9 +12,9 @@ namespace Polhem.Hosting.Database
     /// </content>
     internal sealed partial class DatabaseInitializer
     {
-        // Column widths of the framework's st_user and st_company definitions. A longer value would
-        // be truncated or refused by the engine, which is a worse message than this one.
-        private const int MaxUserIdLength = 20;
+        // Column widths of the framework's st_user and st_company definitions; the user id's is
+        // `UserInfo.UserIdMaxLength`. A longer value would be truncated or refused by the engine, which is a worse
+        // message than this one.
         private const int MaxUserNameLength = 20;
         private const int MaxCompanyNameLength = 50;
         private const int MinPasswordLength = 8;
@@ -60,7 +60,7 @@ namespace Polhem.Hosting.Database
 
         private void ValidateSeed(AdministratorSeed seed, string userName, string companyName)
         {
-            RequireText(seed.UserId, MaxUserIdLength, "user id", nameof(seed.UserId));
+            RequireText(seed.UserId, UserInfo.UserIdMaxLength, "user id", nameof(seed.UserId));
             RequireText(userName, MaxUserNameLength, "user name", nameof(seed.UserName));
             RequireText(seed.CompanyId, CompanyInfo.CompanyIdMaxLength, "company id", nameof(seed.CompanyId));
             if (!CompanyInfo.IsValidId(CompanyInfo.NormalizeId(seed.CompanyId)))

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 938bbeff5cf0008c9a2b936f1f460a535deba5c2 -->
+<!-- source: en/architecture/development-constraints.md blob: 452f123b43f9de57e9c7459bb5b6d40ce09dd065 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -309,6 +309,13 @@ API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOut
 - 鎖定期間，`SystemBusinessObject.Login` 在檢查密碼之前就拒絕嘗試
 - 成功登入會重置失敗計數器
 - 計數依行程分開保存：多節點時，每個節點各自計數
+- `SystemBusinessObject.Login` 會把長度超過 `MaxLoginUserIdLength`（預設為 `UserInfo.UserIdMaxLength`，即
+  `st_user.sys_id` 的欄寬，以 Unicode 字元計算）的帳號，或過長的密碼，當成帳密錯誤拒絕，且在鎖定計數與密碼檢查
+  之前就拒絕；稽核記錄的帳號會截到該長度。若子類別的 `AuthenticateUser` 改向帳號較長的目錄服務驗證，請覆寫 `MaxLoginUserIdLength`
+- `Login` 不需登入即可呼叫，而且對不存在的帳號仍會跑完整的密碼金鑰衍生，所以會消耗伺服器 CPU，鎖定機制也擋不住
+  （每次換一個帳號）。請在 API 前面加上以「每個用戶端的呼叫數」計算的速率限制
+- `AddPolhemFramework` 建立的伺服器拒收 JSON-RPC 批次，一個 HTTP 請求只帶一個呼叫。主機若以
+  `AddJsonRpcServer(server => server.MaxBatchSize = n)` 開啟批次，速率限制必須把批次裡的每個呼叫都算進去
 
 ## Session 持久化限制
 

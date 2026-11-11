@@ -72,6 +72,9 @@ namespace Polhem.Api.Client.Providers
         /// <param name="requests">The requests.</param>
         /// <param name="cancellationToken">A token that cancels the HTTP call.</param>
         /// <returns>The responses; notifications have none.</returns>
+        /// <remarks>
+        /// A server set up by <c>AddPolhemFramework</c> refuses batches unless its host sets a batch size.
+        /// </remarks>
         public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)
             => _transport.SendBatchAsync(requests, cancellationToken);
 

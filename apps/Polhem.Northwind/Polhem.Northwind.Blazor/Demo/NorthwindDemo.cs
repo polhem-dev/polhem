@@ -99,11 +99,9 @@ public static class NorthwindDemo
         builder.Services.AddKeyedSingleton<IFileProvider>(BlazorWasmBundleKey, (_, _) => new PhysicalFileProvider(blazorWasmBundle));
         builder.Services.AddKeyedSingleton<IFileProvider>(FluentWasmBundleKey, (_, _) => new PhysicalFileProvider(fluentWasmBundle));
 
-        // The rate limit counts HTTP requests, and a batch would carry many calls in one. The Polhem clients send
-        // no batches, so the demo refuses them rather than letting a batch multiply the limit.
-        builder.Services.AddJsonRpcServer(
-            server => server.MaxBatchSize = 0,
-            http => http.MaxRequestBodySize = MaxApiRequestBodySize);
+        // The rate limit counts HTTP requests. It holds because the framework refuses JSON-RPC batches by default;
+        // turning them on here would let one request carry many calls.
+        builder.Services.AddJsonRpcServer(configureHttp: http => http.MaxRequestBodySize = MaxApiRequestBodySize);
         builder.Services.AddPolhemApiKeyGateCheck();
 
         // Northwind's SystemSettings.xml turns debug mode on for the development hosts, and in debug mode an error

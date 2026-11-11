@@ -7,3 +7,4 @@ Polhem.Business.Permission.ScopeResolver.ResolveFilter(Polhem.Definition.Identit
 Polhem.Business.Session.EmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
 static Polhem.Business.BusinessObjectFactoryExtensions.CreateFormBO(this Polhem.Definition.IBusinessObjectFactory! factory, System.Guid accessToken, string! progId, bool isLocalCall, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> Polhem.Business.Form.IFormBusinessObject!
 static Polhem.Business.BusinessObjectFactoryExtensions.CreateSystemBO(this Polhem.Definition.IBusinessObjectFactory! factory, System.Guid accessToken, bool isLocalCall, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> Polhem.Business.System.ISystemBusinessObject!
+virtual Polhem.Business.System.SystemBusinessObject.MaxLoginUserIdLength.get -> int

@@ -8,6 +8,8 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 using Polhem.Core.Exceptions;
+using Polhem.Definition;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.UnitTests
 {
@@ -23,10 +25,15 @@ namespace Polhem.Business.UnitTests
         private sealed class RecordingTracker : ILoginAttemptTracker
         {
             public bool LockedOut { get; set; }
+            public int LookupCount { get; private set; }
             public int FailureCount { get; private set; }
             public int ResetCount { get; private set; }
 
-            public bool IsLockedOut(string userId) => LockedOut;
+            public bool IsLockedOut(string userId)
+            {
+                LookupCount++;
+                return LockedOut;
+            }
             public void RecordFailure(string userId) => FailureCount++;
             public void Reset(string userId) => ResetCount++;
         }
@@ -170,6 +177,96 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<UserMessageException>(() => bo.Login(args));
             Assert.Equal(1, tracker.FailureCount);
             Assert.Equal(0, tracker.ResetCount);
+        }
+
+        [Theory]
+        [InlineData(UserInfo.UserIdMaxLength + 1, 8)]
+        [InlineData(1_000_000, 8)]
+        [InlineData(8, 1025)]
+        [DisplayName("Login refuses an over-long user id or password as invalid credentials before the tracker or the authentication sees it")]
+        public void Login_OverLongCredential_RefusedBeforeTrackerAndAuthentication(int userIdLength, int passwordLength)
+        {
+            var tracker = new RecordingTracker();
+            var authCalls = 0;
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ =>
+            {
+                authCalls++;
+                return (true, "anything");
+            });
+            var args = new LoginArgs { UserId = new string('u', userIdLength), Password = new string('p', passwordLength) };
+
+            var ex = Assert.Throws<UserMessageException>(() => bo.Login(args));
+
+            Assert.Equal(PolhemMessages.LoginInvalidCredentials, ex.MessageKey);
+            Assert.Equal(0, authCalls);
+            Assert.Equal(0, tracker.LookupCount);
+            Assert.Equal(0, tracker.FailureCount);
+        }
+
+        [Fact]
+        [DisplayName("Login passes a user id of exactly the maximum length on to the tracker and the authentication")]
+        public void Login_UserIdAtMaximum_ReachesAuthentication()
+        {
+            var tracker = new RecordingTracker();
+            var authCalls = 0;
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ =>
+            {
+                authCalls++;
+                return (false, string.Empty);
+            });
+            var args = new LoginArgs { UserId = new string('u', UserInfo.UserIdMaxLength), Password = "x" };
+
+            Assert.Throws<UserMessageException>(() => bo.Login(args));
+
+            Assert.Equal(1, authCalls);
+            Assert.Equal(1, tracker.FailureCount);
+        }
+
+        [Theory]
+        [InlineData(UserInfo.UserIdMaxLength, 1)]
+        [InlineData(UserInfo.UserIdMaxLength + 1, 0)]
+        [DisplayName("Login counts the user id in Unicode characters, so an id outside the BMP is measured by its characters, not its UTF-16 units")]
+        public void Login_UserIdOutsideBmp_CountedInCharacters(int characters, int expectedAuthCalls)
+        {
+            var authCalls = 0;
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), new RecordingTracker()));
+            var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ =>
+            {
+                authCalls++;
+                return (false, string.Empty);
+            });
+            var args = new LoginArgs { UserId = string.Concat(Enumerable.Repeat("\U0001F600", characters)), Password = "x" };
+
+            Assert.Throws<UserMessageException>(() => bo.Login(args));
+
+            Assert.Equal(expectedAuthCalls, authCalls);
+        }
+
+        [Fact]
+        [DisplayName("A subclass that raises MaxLoginUserIdLength accepts a longer user id")]
+        public void Login_SubclassRaisesLimit_AcceptsLongerUserId()
+        {
+            var tracker = new RecordingTracker();
+            var authCalls = 0;
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new DirectoryLoginObject(ctx, _ =>
+            {
+                authCalls++;
+                return (false, string.Empty);
+            });
+            var args = new LoginArgs { UserId = "someone@directory.example.com", Password = "x" };
+
+            Assert.Throws<UserMessageException>(() => bo.Login(args));
+
+            Assert.Equal(1, authCalls);
+        }
+
+        private sealed class DirectoryLoginObject(IBusinessObjectContext ctx, Func<LoginArgs, (bool, string)> authenticator)
+            : TestableSystemBusinessObject(ctx, Guid.Empty, authenticator)
+        {
+            protected override int MaxLoginUserIdLength => 256;
         }
 
         [Fact]

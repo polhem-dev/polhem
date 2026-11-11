@@ -17,3 +17,4 @@ static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.
 static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
 static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
 static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
+const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
