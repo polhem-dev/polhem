@@ -28,6 +28,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - A table with a Binary column reads back over the JSON body codec and the Plain format again, so such a form can be created and saved from a JSON client.
 - A `DateTime` filter value, parameter value or message property arrives over the JSON body codec as the same UTC instant MessagePack delivers, instead of keeping an Unspecified or Local kind; a JSON response now marks such a value with `Z`.
 - A table with a read-only column and a modified row reads back over the JSON body codec and the Plain format, as it already did over MessagePack.
+- A form's list or count filter converts a string value to the type of its field, so a date, a `Guid` or a quoted number sent in a Plain body filters a typed column on PostgreSQL and Oracle, and no longer returns no rows on SQL Server; text a database used to convert on its own, such as `""` for a number or `1` for a boolean, is now refused.
 
 ## [1.12.1] - 2026-11-06
 

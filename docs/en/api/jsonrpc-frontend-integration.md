@@ -138,11 +138,28 @@ A member typed `object` on the server — a filter condition's `value` and `seco
 `parameters` entry — names no CLR type in a Plain body, so the server binds it by JSON kind: a
 string stays a string, an integer that fits becomes a `long` and any other number a `decimal`, a
 boolean a `bool`, and an array an `object[]` (the shape the `In` operator expects). **A date or a
-`Guid` is sent as a string and stays a string**: the server does not guess types from text. A
-client that needs typed values uses the JSON body codec (`"codec": "json"` with `Encoded` or
-`Encrypted`), whose `[code, value]` envelope carries the type — that envelope is what
-`WireValueEnvelope` in `wire-contracts/messages.d.ts` describes; a Plain body carries the bare value
-instead.
+`Guid` is sent as a string and stays a string**: the server does not guess types from text.
+
+A filter on a form's list or count is the exception. Its string values are converted to the type of
+the field they are compared with before the query is built, so a date, a `Guid` or a quoted number
+filters a typed column on every database (`GetListFilterValueDbTests` runs this on each one):
+
+- a `DateTime` field reads ISO 8601 text as a UTC instant: text with an offset is moved to UTC by it,
+  and text without one is taken to be UTC, so send UTC (`date.toISOString()` does);
+- a `Date` field reads the date written, with no time-zone conversion. Send `yyyy-MM-dd`; do not
+  send `date.toISOString()`, which turns local midnight east of UTC into the previous day;
+- a `Guid`, numeric or `Boolean` field reads its invariant text form (`true` or `false`, a number
+  with no group separators);
+- `String`, `Text` and `Time` fields keep the string, and so do the `Like`, `Contains`,
+  `StartsWith` and `EndsWith` operators, since they match text.
+
+A relation field converts by the `DbType` it declares, so declare the type of the column it reads.
+A string that is not valid for its field's type is refused, including text a database used to
+convert on its own, such as `""` for a number or `1` for a boolean. `parameters` entries and other `object`
+members are not converted. A client that needs typed values there uses the JSON body codec
+(`"codec": "json"` with `Encoded` or `Encrypted`), whose `[code, value]` envelope carries the type —
+that envelope is what `WireValueEnvelope` in `wire-contracts/messages.d.ts` describes; a Plain body
+carries the bare value instead.
 
 Cells of a `DataTable` read by their column's `type`:
 

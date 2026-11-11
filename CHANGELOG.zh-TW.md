@@ -27,6 +27,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
 - `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
 - 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。
+- 表單清單與筆數查詢的過濾條件會把字串值轉成其欄位的型別，因此 Plain body 送出的日期、`Guid` 或加了引號的數字，可以在 PostgreSQL 與 Oracle 上過濾有型別的欄位，在 SQL Server 上也不再查無資料；資料庫過去會自行轉換的文字（例如數字欄位的 `""`、布林欄位的 `1`）現在會被拒絕。
 
 ## [1.12.1] - 2026-11-06
 
