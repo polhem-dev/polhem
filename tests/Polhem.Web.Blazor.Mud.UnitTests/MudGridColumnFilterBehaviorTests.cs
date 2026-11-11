@@ -35,6 +35,10 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
             => _popovers.FindAll(selector);
 
         /// <inheritdoc />
+        protected override void WaitForPanel(IRenderedComponent<ContainerFragment> cut, Action assertion)
+            => _popovers.WaitForAssertion(assertion, PanelTimeout);
+
+        /// <inheritdoc />
         protected override void EnterFirst(IElement input, string text) => input.Input(text);
     }
 }
