@@ -155,7 +155,7 @@ namespace Polhem.Db
         /// usually means the server or the connection already ended the transaction, and letting it
         /// escape would replace the original error with a less useful one.
         /// </remarks>
-        private static void TryRollbackQuiet(DbTransaction? tran)
+        internal static void TryRollbackQuiet(DbTransaction? tran)
         {
             if (tran?.Connection == null) return;
             try

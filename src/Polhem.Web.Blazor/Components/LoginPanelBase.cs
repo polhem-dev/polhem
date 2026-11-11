@@ -136,9 +136,13 @@ namespace Polhem.Web.Blazor.Components
                     await OnLoggedIn.InvokeAsync(response).ConfigureAwait(true);
                 }
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                // Surface the failure inline rather than letting it tear down
+                // Boundary: surface the failure inline rather than letting it tear down
                 // the SignalR circuit. The backend already classifies the
                 // error (bad credentials, locked account, network) into the
                 // exception message, which is what the user sees.

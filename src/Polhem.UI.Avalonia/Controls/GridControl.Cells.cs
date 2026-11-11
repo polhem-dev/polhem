@@ -156,7 +156,7 @@ namespace Polhem.UI.Avalonia.Controls
             }
             catch (Exception ex)
             {
-                // UI boundary: an async pointer handler must not crash the app, so the failure
+                // Boundary: an async pointer handler must not crash the app, so the failure
                 // is surfaced as the grid's tooltip.
                 ToolTip.SetTip(this, ex.Message);
             }

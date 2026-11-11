@@ -108,7 +108,8 @@ namespace Polhem.Api.Client.Connectors
             }
             catch (Exception ex)
             {
-                // Preserve the original error message for callers to inspect or log
+                // Boundary: Ping reports whether the server answers, so any transport or server failure becomes one
+                // exception, which keeps the original as its inner exception.
                 throw new InvalidOperationException("Connection failed during Ping.", ex);
             }
         }

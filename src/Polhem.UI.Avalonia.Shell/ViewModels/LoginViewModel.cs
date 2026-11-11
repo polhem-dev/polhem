@@ -125,7 +125,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
             }
             catch (Exception ex)
             {
-                // NOTE: any failure is the viewer's to see; rethrowing from a command would end as an unobserved
+                // Boundary: any failure is the viewer's to see; rethrowing from a command would end as an unobserved
                 // task exception.
                 SetStatus("Status_LoginFailed", isError: true, ex.Message);
             }

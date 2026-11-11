@@ -117,7 +117,7 @@ namespace Polhem.Db.Schema
                 }
                 catch
                 {
-                    try { txn.Rollback(); } catch { /* ignore rollback errors */ }
+                    DbAccess.TryRollbackQuiet(txn);
                     throw;
                 }
             }

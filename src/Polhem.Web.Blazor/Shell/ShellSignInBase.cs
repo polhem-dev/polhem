@@ -68,9 +68,13 @@ namespace Polhem.Web.Blazor.Shell
             {
                 await UserContext.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(true);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                // A UI boundary, like the panel's own sign-in: a refusal (such as "Company access denied") arrives as
+                // Boundary: as in the panel's own sign-in, a refusal (such as "Company access denied") arrives as
                 // whichever exception the server's error maps to, and an escaped exception would end the circuit.
                 Error = PolhemShellText.Format(PolhemShellText.EnterCompanyFailed, ex.Message);
                 UserContext.SignOut();

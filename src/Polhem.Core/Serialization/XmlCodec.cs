@@ -106,6 +106,8 @@ namespace Polhem.Core.Serialization
             }
             catch (Exception ex)
             {
+                // Boundary: any failure to read or parse the file is rethrown, naming the file. File I/O and the serializer
+                // fail with types that cannot be listed in full.
                 // WARNING: the file name only, never the path. A debug-mode host passes this message
                 // to the remote caller, so an authenticated caller hitting a corrupt definition file
                 // would otherwise be handed the server's absolute directory layout. The message of an
