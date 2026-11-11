@@ -92,7 +92,7 @@ namespace Polhem.Db.Dml
                         $"DELETE filter cannot reference {field.Type} field '{cond.FieldName}'. "
                         + "Only physical columns of the target table are supported.");
 
-                return QuotedCopy(cond);
+                return QuotedCopy((FilterCondition)FilterValueCoercion.Coerce(cond, formTable));
             }
 
             if (node.Kind == FilterNodeKind.Group)

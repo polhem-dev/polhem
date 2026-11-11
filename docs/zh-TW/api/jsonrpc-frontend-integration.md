@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: cb082bc004bc9efbeda6c220a44a7b592dda0933 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 6087cd2ff6f0d1000891b733028dde2cdccd4d4a -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -130,9 +130,24 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
 伺服端型別為 `object` 的成員 —— 過濾條件的 `value` 與 `secondValue`、`parameters` 的項目 —— 在 Plain body
 裡沒有指名 CLR 型別，因此伺服端依 JSON 種類綁定：字串仍是字串，放得下的整數成為 `long`、其他數字成為
 `decimal`，布林值成為 `bool`，陣列成為 `object[]`（`In` 運算子要的形狀）。**日期或 `Guid` 以字串送出，
-也維持字串**：伺服端不會從文字猜型別。需要帶型別的值時，client 改用 JSON body codec（`"codec": "json"`
-搭配 `Encoded` 或 `Encrypted`），它的 `[code, value]` 信封會帶上型別 —— `wire-contracts/messages.d.ts`
-裡的 `WireValueEnvelope` 描述的正是這個信封；Plain body 帶的則是裸值。
+也維持字串**：伺服端不會從文字猜型別。
+
+表單清單與筆數查詢的過濾條件是例外：組查詢之前，其中的字串值會轉成所比對欄位的型別，因此日期、`Guid`
+或加了引號的數字，在每一種資料庫上都能過濾有型別的欄位（`GetListFilterValueDbTests` 在每一種資料庫上執行）：
+
+- `DateTime` 欄位把 ISO 8601 文字讀成 UTC 時間點：帶時差的文字依時差換算成 UTC，沒帶時差的視為 UTC，
+  所以請送 UTC（`date.toISOString()` 即是）；
+- `Date` 欄位讀取寫出的日期，不做時區換算。請送 `yyyy-MM-dd`；不要送 `date.toISOString()`，它會把 UTC 以東的
+  當地午夜變成前一天；
+- `Guid`、數值與 `Boolean` 欄位讀取與文化無關的文字形式（`true` 或 `false`、不含千分位的數字）；
+- `String`、`Text` 與 `Time` 欄位保留字串，`Like`、`Contains`、`StartsWith` 與 `EndsWith` 運算子也是，
+  因為它們比對的是文字。
+
+relation 欄位依其宣告的 `DbType` 轉換，因此請宣告它所讀取欄位的型別。不符合欄位型別的字串會被拒絕，包括資料庫
+過去會自行轉換的文字，例如數字欄位的 `""`、布林欄位的 `1`。`parameters` 的項目與其他 `object` 成員不會轉換；需要在那裡帶型別的值時，
+client 改用 JSON body codec（`"codec": "json"` 搭配 `Encoded` 或 `Encrypted`），它的 `[code, value]`
+信封會帶上型別 —— `wire-contracts/messages.d.ts` 裡的 `WireValueEnvelope` 描述的正是這個信封；Plain body
+帶的則是裸值。
 
 `DataTable` 的儲存格依其欄位的 `type` 解讀：
 

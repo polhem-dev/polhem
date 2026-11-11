@@ -42,6 +42,11 @@ namespace Polhem.Api.Server.UnitTests.Form
     {
         private const string Qty = "qty";
         private const string Amount = "amount";
+        private const string DueDate = "due_date";
+        private const string LoggedAt = "logged_at";
+        private const string RefUid = "ref_uid";
+
+        private static readonly Guid s_refB = new("6c1f4c0e-8a0b-4d8e-9a3c-2f5b7d9e1a04");
 
         private readonly SharedDbFixture _fx;
 
@@ -76,6 +81,26 @@ namespace Polhem.Api.Server.UnitTests.Form
         public Task Plain_SqlServer_EqualFilters_ReturnOneRow() => RunPlainEqual(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a Plain GetList filtering a date, a date and time, a Guid and a decimal column with string values returns the matching row")]
+        public Task Plain_Sqlite_StringTypedFilters_ReturnMatchingRow() => RunPlainStringTyped(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a Plain GetList filtering a date, a date and time, a Guid and a decimal column with string values returns the matching row")]
+        public Task Plain_SqlServer_StringTypedFilters_ReturnMatchingRow() => RunPlainStringTyped(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a Plain GetList filtering a date, a date and time, a Guid and a decimal column with string values returns the matching row")]
+        public Task Plain_PostgreSql_StringTypedFilters_ReturnMatchingRow() => RunPlainStringTyped(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a Plain GetList filtering a date, a date and time, a Guid and a decimal column with string values returns the matching row")]
+        public Task Plain_MySql_StringTypedFilters_ReturnMatchingRow() => RunPlainStringTyped(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a Plain GetList filtering a date, a date and time, a Guid and a decimal column with string values returns the matching row")]
+        public Task Plain_Oracle_StringTypedFilters_ReturnMatchingRow() => RunPlainStringTyped(DatabaseType.Oracle);
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a GetList over the JSON body codec filtering with In, Between, a range and NotEqual returns the matching rows")]
         public Task JsonCodec_Sqlite_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLite);
 
@@ -106,6 +131,38 @@ namespace Polhem.Api.Server.UnitTests.Form
                 var table = await ExecutePlain(executor, progId, body);
 
                 Assert.Equal(["B", "C"], SysIds(table));
+            });
+        }
+
+        /// <summary>
+        /// A <c>Plain</c> body names no CLR type, so a date, a Guid and a quoted decimal arrive as strings. Bound as
+        /// text, PostgreSQL refuses to compare them with the typed column (<c>operator does not exist: date &gt;=
+        /// text</c>) and Oracle fails to convert them. SQL Server converted the quoted decimal to the column's own precision,
+        /// so <c>'10.5'</c> compared as 11 and the filter returned no rows without an error.
+        /// </summary>
+        private Task RunPlainStringTyped(DatabaseType databaseType)
+        {
+            return WithSeededForm(databaseType, async (executor, progId) =>
+            {
+                var body = $$"""
+                    {
+                      "selectFields": "sys_id",
+                      "filter": {
+                        "kind": "Group",
+                        "nodes": [
+                          { "fieldName": "due_date", "operator": "Between", "value": "2026-01-02", "secondValue": "2026-01-03" },
+                          { "fieldName": "logged_at", "operator": "LessThan", "value": "2026-01-02T12:00:00Z" },
+                          { "fieldName": "ref_uid", "operator": "In", "value": ["{{s_refB}}", "{{Guid.Empty}}"] },
+                          { "fieldName": "amount", "operator": "GreaterThan", "value": "10.5" }
+                        ]
+                      },
+                      "sortFields": [{ "fieldName": "sys_id", "direction": "Asc" }]
+                    }
+                    """;
+
+                var table = await ExecutePlain(executor, progId, body);
+
+                Assert.Equal(["B"], SysIds(table));
             });
         }
 
@@ -200,6 +257,9 @@ namespace Polhem.Api.Server.UnitTests.Form
             table.Fields.Add(SysFields.Id, "Code", FieldDbType.String).MaxLength = 20;
             table.Fields.Add(Qty, "Quantity", FieldDbType.Integer);
             table.Fields.Add(Amount, "Amount", FieldDbType.Decimal);
+            table.Fields.Add(DueDate, "Due date", FieldDbType.Date);
+            table.Fields.Add(LoggedAt, "Logged at", FieldDbType.DateTime);
+            table.Fields.Add(RefUid, "Reference", FieldDbType.Guid);
 
             var form = new TransientForm(_fx, databaseType, schema);
             form.CreateTables();
@@ -207,9 +267,11 @@ namespace Polhem.Api.Server.UnitTests.Form
             {
                 // Whole amounts: the generated column has the default scale of 0, and the point here is that a
                 // fractional filter value binds, not how each provider rounds a stored fraction.
-                Insert(form, progId, "A", 1, 5m);
-                Insert(form, progId, "B", 2, 11m);
-                Insert(form, progId, "C", 3, 20m);
+                // B is the only row inside every string-typed filter of `RunPlainStringTyped`; A and C each fall
+                // outside more than one, so a filter that is silently ignored still changes the result.
+                Insert(form, progId, "A", 1, 5m, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 1, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid());
+                Insert(form, progId, "B", 2, 11m, new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Unspecified), s_refB);
+                Insert(form, progId, "C", 3, 20m, new DateTime(2026, 1, 3, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid());
 
                 var services = new TestOverrideServiceProvider(
                     _fx.Provider,
@@ -235,13 +297,14 @@ namespace Polhem.Api.Server.UnitTests.Form
             }
         }
 
-        private static void Insert(TransientForm form, string progId, string sysId, int qty, decimal amount)
+        private static void Insert(TransientForm form, string progId, string sysId, int qty, decimal amount,
+            DateTime dueDate, DateTime loggedAt, Guid refUid)
         {
             form.DbAccess.ExecuteNonQuery(
                 $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.Id)}, {form.Quote(Qty)}, {form.Quote(Amount)}, " +
-                $"{form.Quote(SysFields.CompanyId)}) " +
-                "VALUES ({0}, {1}, {2}, {3}, {4})",
-                Guid.NewGuid(), sysId, qty, amount, TransientForm.CompanyId);
+                $"{form.Quote(DueDate)}, {form.Quote(LoggedAt)}, {form.Quote(RefUid)}, {form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+                Guid.NewGuid(), sysId, qty, amount, dueDate, loggedAt, refUid, TransientForm.CompanyId);
         }
 
         private sealed class FormRepositoryFactory(IDataFormRepository repository) : IRepositoryFactory

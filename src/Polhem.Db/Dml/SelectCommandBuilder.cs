@@ -60,6 +60,7 @@ namespace Polhem.Db.Dml
 
             var selectContext = GetSelectContext(formTable, selectFields, filter, sortFields);
             SelectFieldGuard.ValidateFilterAndSort(formTable, filter, sortFields, selectContext);
+            filter = filter == null ? null : FilterValueCoercion.Coerce(filter, formTable);
 
             var sqlParts = new List<string>
             {
@@ -111,6 +112,7 @@ namespace Polhem.Db.Dml
 
             var selectContext = GetCountContext(formTable, filter);
             SelectFieldGuard.ValidateFilterAndSort(formTable, filter, null, selectContext);
+            filter = filter == null ? null : FilterValueCoercion.Coerce(filter, formTable);
 
             var sqlParts = new List<string>
             {
