@@ -55,6 +55,20 @@ namespace Polhem.UI.Core.UnitTests.Fields
         }
 
         [Fact]
+        [DisplayName("ResolveDisplayFieldNames splits and trims the layout's names, and falls back to the schema when they name no field")]
+        public void ResolveDisplayFieldNames_TrimsAndFallsBackWhenEmpty()
+        {
+            var field = BuildLookupField();
+
+            Assert.Equal(["sys_id", "sys_name"], LookupFieldRules.ResolveDisplayFieldNames(
+                new LayoutField { FieldName = "dept_rowid", DisplayFields = " sys_id , sys_name " }, field));
+            Assert.Equal(["ref_dept_id", "ref_dept_name"], LookupFieldRules.ResolveDisplayFieldNames(
+                new LayoutField { FieldName = "dept_rowid", DisplayFields = " , " }, field));
+            Assert.Empty(LookupFieldRules.ResolveDisplayFieldNames(
+                new LayoutField { FieldName = "dept_rowid", DisplayFields = " , " }, null));
+        }
+
+        [Fact]
         [DisplayName("ApplySelection writes the row id and every mapped field")]
         public void ApplySelection_WritesRowIdAndMappings()
         {

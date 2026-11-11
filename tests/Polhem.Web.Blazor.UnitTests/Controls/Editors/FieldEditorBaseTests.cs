@@ -1,13 +1,18 @@
 using System.ComponentModel;
+using System.Data;
 using System.Reflection;
 using Bunit;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components;
+using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
+using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.Web.Blazor.Controls.Editors;
+using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
 using Polhem.UI.Core.DataObjects;
+using Polhem.Web.Blazor.Controls.Editors;
 
 namespace Polhem.Web.Blazor.UnitTests.Controls.Editors
 {
@@ -196,6 +201,28 @@ namespace Polhem.Web.Blazor.UnitTests.Controls.Editors
         }
 
         [Fact]
+        [DisplayName("Replacing the dataset leaves a row-bound editor alone instead of reading a row the data object no longer owns")]
+        public async Task DataSetReplaced_RowBinding_DoesNotRereadTheOldRow()
+        {
+            var schema = BuildSchema();
+            var dataObject = new FormDataObject(schema, new NewDataConnector(schema));
+            dataObject.InitializeNewMaster();
+            var detail = dataObject.DataSet.Tables["Skill"]!;
+            var row = detail.NewRow();
+            row["skill_name"] = "Chess";
+            detail.Rows.Add(row);
+            var cut = Render<ProbeEditor>(p => p
+                .Add(c => c.FieldName, "skill_name")
+                .Add(c => c.Row, row)
+                .Add(c => c.DataObject, dataObject));
+
+            var exception = await Record.ExceptionAsync(() => dataObject.NewAsync());
+
+            Assert.Null(exception);
+            Assert.Equal("Chess", cut.Find(InputSelector).GetAttribute("value"));
+        }
+
+        [Fact]
         [DisplayName("Disposing the editor releases its data object subscriptions")]
         public async Task Dispose_ReleasesSubscriptions()
         {
@@ -227,5 +254,44 @@ namespace Polhem.Web.Blazor.UnitTests.Controls.Editors
             => (Delegate?)typeof(FormDataObject)
                 .GetField(eventName, BindingFlags.Instance | BindingFlags.NonPublic)!
                 .GetValue(dataObject);
+
+        /// <summary>
+        /// Serves a fresh dataset for <see cref="FormDataObject.NewAsync"/>, which replaces the data object's dataset.
+        /// </summary>
+        private sealed class NewDataConnector(FormSchema schema) : IFormApiConnector
+        {
+            public string ProgId => schema.ProgId;
+
+            public Task<IGetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
+            {
+                var dataSet = new DataSet();
+                foreach (var table in schema.Tables!)
+                {
+                    var dataTable = dataSet.Tables.Add(table.TableName);
+                    foreach (var field in table.Fields!) { dataTable.Columns.Add(field.FieldName); }
+                }
+                dataSet.Tables[0].Rows.Add(dataSet.Tables[0].NewRow());
+                return Task.FromResult<IGetNewDataResponse>(new NewData(dataSet));
+            }
+
+            public Task<IGetListResponse> GetListAsync(string selectFields = "", FilterNode? filter = null,
+                SortFieldCollection? sortFields = null, PagingOptions? paging = null, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IGetLookupResponse> GetLookupAsync(string searchText = "", PagingOptions? paging = null,
+                CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IGetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<ISaveResponse> SaveAsync(DataSet dataSet, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            public Task<IDeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
+
+            private sealed record NewData(DataSet? DataSet) : IGetNewDataResponse;
+        }
     }
 }

@@ -76,10 +76,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
         /// <returns>Whether it is checked.</returns>
-        protected static bool IsChecked(DataRow row, LayoutColumn column)
-            => row.Table.Columns.Contains(column.FieldName)
-                && string.Equals(FormValueBinding.ToBindingString(row[column.FieldName]), bool.TrueString,
-                    StringComparison.OrdinalIgnoreCase);
+        protected static bool IsChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
 
         // The schema field behind a column: through the data object for a bound grid, through the supplied
         // table for a list-mode grid; null when neither knows the field.
@@ -139,11 +136,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Gets the mark a sorted column's caption ends with, or an empty string.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The mark.</returns>
-        protected string SortMark(LayoutColumn column)
-        {
-            if (!IsSorted(column)) return string.Empty;
-            return SortDirection == SortDirection.Desc ? " \u25BC" : " \u25B2";
-        }
+        protected string SortMark(LayoutColumn column) => GridCellFormatter.SortMark(IsSorted(column) ? SortDirection : null);
 
         /// <summary>Gets the <c>aria-sort</c> value of a column's header, or <c>null</c> when it is not sorted.</summary>
         /// <param name="column">The column.</param>

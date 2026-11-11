@@ -359,8 +359,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
 
         private void OnDataSetReplaced(object? sender, EventArgs e)
         {
-            // A row-scoped binding points into the replaced dataset, which no longer owns the row.
-            if (TargetRow is not null) return;
+            if (!FieldValueChangeFilter.RefreshesOnDataSetReplaced(TargetRow)) return;
             _ = InvokeAsync(() =>
             {
                 RefreshFromSource();
@@ -370,21 +369,9 @@ namespace Polhem.Web.Blazor.Controls.Editors
 
         private void OnFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
         {
-            // `_writing` is true while this editor itself writes back, so a self-originated change is
-            // ignored. Master bindings filter by the master table name and row bindings by the exact row.
-            // Names compare case-insensitively, following DataTable lookup semantics.
+            // `_writing` is true while this editor itself writes back, so a self-originated change is ignored.
             if (_writing) return;
-            if (TargetRow is not null)
-            {
-                if (!ReferenceEquals(e.Row, TargetRow)) return;
-            }
-            else if (!string.Equals(e.TableName, BoundDataObject?.MasterTable.TableName, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-            if (string.Equals(e.FieldName, BoundFieldName, StringComparison.OrdinalIgnoreCase)
-                || (WatchFieldNames is { Count: > 0 } watched
-                    && watched.Any(w => string.Equals(e.FieldName, w, StringComparison.OrdinalIgnoreCase))))
+            if (FieldValueChangeFilter.Concerns(e, TargetRow, BoundDataObject?.MasterTable.TableName, BoundFieldName, WatchFieldNames))
             {
                 _ = InvokeAsync(() =>
                 {

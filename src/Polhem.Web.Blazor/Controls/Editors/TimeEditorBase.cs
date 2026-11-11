@@ -1,4 +1,5 @@
 using Polhem.Core;
+using Polhem.UI.Core.Fields;
 
 namespace Polhem.Web.Blazor.Controls.Editors
 {
@@ -39,19 +40,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <inheritdoc />
         protected override string? GetWriteBackValue()
         {
-            if (string.IsNullOrWhiteSpace(Text))
-            {
-                // An emptied box is an explicit "unset"; the empty string is how an unfilled time of day
-                // is stored, because midnight is a legal value and cannot stand in for it.
-                _value = string.Empty;
-            }
-            else
-            {
-                // Text that does not parse is not passed on either: the time column coercion would throw
-                // `FormatException` for it inside the event handler.
-                string normalized = ValueUtilities.CTimeString(Text);
-                if (StringUtilities.IsNotEmpty(normalized)) { _value = normalized; }
-            }
+            _value = TimeFieldFormat.ResolveWriteBack(Text, _value);
             return _value;
         }
     }

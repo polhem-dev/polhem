@@ -62,6 +62,9 @@
   `DeleteAsync` / `NewAsync`。新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）
   並觸發 `RowAdded`；`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發
   `RowEditFieldChanged`，提交時才發布。
+- `DataObjects/FieldValueChangeFilter` -- 綁定的欄位編輯器要對哪些變更做出反應，以及資料集被替換時，綁在單一列上的
+  編輯器不重讀該列。
+- `Navigation/MenuRows` -- 把選單定義展平成 shell 選單顯示的標題列與表單列。
 - 建構它的 head 傳入登入使用者的時區（`timeZoneProvider`），新資料列的日期預設值依此決定；未傳入時為 UTC。
   本套件中除了 `UIServices` 本身，沒有任何程式讀取 `UIServices`，因此它可用在同一個 process 服務多位使用者的 host；
   這點改變時 `UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
@@ -74,8 +77,10 @@
 - `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
 - `NumericFieldFormat` -- 數值格式解析（含幣別與單位的小數位數）、顯示、輸入剖析，以及寫回的值。
 - `DateTimeFieldFormat` -- 日期時間欄位的顯示、輸入與綁定字串規則。
+- `TimeFieldFormat` -- 時間欄位編輯器寫回的值。
 - `GridCellFormatter` -- grid 儲存格顯示的文字：清單項目文字、日期時間、布林值、依各列幣別與單位決定的小數位數，以及查詢
-  欄位串接後的顯示欄位。
+  欄位串接後的顯示欄位；勾選欄是否勾選，以及已排序欄位的標記。
+- `GridColumnRules` -- grid 欄位的最小寬度。
 - `FieldCaptionRules` -- 標題慣例：唯讀的 grid 表頭加括號、必填的標題加上醒目標示，兩者同時成立時以唯讀為準。
 - `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
 
@@ -104,9 +109,10 @@
 ## 目錄結構
 
 - 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
-- `DataObjects/` -- `FormDataObject`、`FieldValueChangedEventArgs`、`RowChangedEventArgs`
+- `DataObjects/` -- `FormDataObject`、`FieldValueChangedEventArgs`、`FieldValueChangeFilter`、`RowChangedEventArgs`
+- `Navigation/` -- `MenuRows`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
-  `LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`FieldCaptionRules`
+  `TimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`GridColumnRules`、`FieldCaptionRules`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`、`ListSelectFields`、`ListPagingState`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

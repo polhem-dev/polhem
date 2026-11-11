@@ -2,6 +2,7 @@ using System.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Sorting;
 
 namespace Polhem.UI.Core.Fields
 {
@@ -31,8 +32,10 @@ namespace Polhem.UI.Core.Fields
             Func<bool, string> booleanText)
         {
             ArgumentNullException.ThrowIfNull(column);
-            var displayFields = SplitDisplayFields(column.DisplayFields);
-            return displayFields.Length == 0
+            // Only the column's own display fields: a lookup column without them shows its stored value here. The
+            // Avalonia grid draws its lookup cells itself and falls back to the schema's display fields there.
+            var displayFields = LookupFieldRules.ResolveDisplayFieldNames(column, formField: null);
+            return displayFields.Count == 0
                 ? FormatCell(row, column, formField, currencySettings, defaultCurrencyCode, unitSettings, booleanText)
                 : ComposeDisplayText(row, displayFields, column.DisplayFormat, column.NumberFormat);
         }
@@ -102,9 +105,28 @@ namespace Polhem.UI.Core.Fields
                 : string.Empty));
         }
 
-        private static string[] SplitDisplayFields(string displayFields)
-            => string.IsNullOrEmpty(displayFields)
-                ? []
-                : displayFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        /// <summary>
+        /// Returns whether a check-box cell is checked: its value reads as <see cref="bool.TrueString"/>, in any case.
+        /// </summary>
+        /// <param name="row">The row to read, or <c>null</c>.</param>
+        /// <param name="fieldName">The check-box field.</param>
+        /// <returns><c>true</c> when the row has the field and its value is true.</returns>
+        public static bool IsChecked(DataRow? row, string fieldName)
+            => row is not null
+                && row.Table.Columns.Contains(fieldName)
+                && string.Equals(FormValueBinding.ToBindingString(row[fieldName]), bool.TrueString, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Returns the mark a sorted column's caption ends with: a down arrow for a descending sort and an up arrow
+        /// otherwise, each after a space.
+        /// </summary>
+        /// <param name="direction">The column's sort direction, or <c>null</c> when the column is not sorted.</param>
+        /// <returns>The mark, or an empty string for an unsorted column.</returns>
+        public static string SortMark(SortDirection? direction) => direction switch
+        {
+            null => string.Empty,
+            SortDirection.Desc => " \u25BC",
+            _ => " \u25B2",
+        };
     }
 }

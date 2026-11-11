@@ -113,5 +113,56 @@ namespace Polhem.UI.Core.UnitTests.Fields
             Assert.True(FieldCaptionRules.ShowsRequiredCue(readOnly: false, required: true));
             Assert.False(FieldCaptionRules.ShowsRequiredCue(readOnly: true, required: true));
         }
+
+        [Fact]
+        [DisplayName("ComposeDisplayText joins the display-field values of the row")]
+        public void ComposeDisplayText_WithDisplayFields_JoinsValues()
+        {
+            Assert.Equal("D01 - Engineering",
+                GridCellFormatter.ComposeDisplayText(BuildRow(), ["ref_id", "ref_name"], string.Empty, string.Empty));
+        }
+
+        [Fact]
+        [DisplayName("ComposeDisplayText leaves out a display field the row does not have")]
+        public void ComposeDisplayText_MissingField_IsLeftOut()
+        {
+            Assert.Equal("D01",
+                GridCellFormatter.ComposeDisplayText(BuildRow(), ["ref_id", "no_such_field"], string.Empty, string.Empty));
+        }
+
+        [Fact]
+        [DisplayName("ComposeDisplayText returns an empty string without a row or display fields")]
+        public void ComposeDisplayText_NoRowOrFields_ReturnsEmpty()
+        {
+            Assert.Equal(string.Empty, GridCellFormatter.ComposeDisplayText(null, ["ref_id"], string.Empty, string.Empty));
+            Assert.Equal(string.Empty, GridCellFormatter.ComposeDisplayText(BuildRow(), [], string.Empty, string.Empty));
+        }
+
+        [Fact]
+        [DisplayName("IsChecked is true for a true Boolean or the text True in any case, and false otherwise")]
+        public void IsChecked_ReadsTrueValues()
+        {
+            var table = new DataTable("Line");
+            table.Columns.Add("flag", typeof(bool));
+            table.Columns.Add("text", typeof(string));
+            var row = table.Rows.Add(true, "TRUE");
+            var unset = table.Rows.Add(DBNull.Value, "1");
+
+            Assert.True(GridCellFormatter.IsChecked(row, "flag"));
+            Assert.True(GridCellFormatter.IsChecked(row, "text"));
+            Assert.False(GridCellFormatter.IsChecked(unset, "flag"));
+            Assert.False(GridCellFormatter.IsChecked(unset, "text"));
+            Assert.False(GridCellFormatter.IsChecked(row, "missing"));
+            Assert.False(GridCellFormatter.IsChecked(null, "flag"));
+        }
+
+        [Fact]
+        [DisplayName("SortMark is an arrow after a space for a sorted column and empty for an unsorted one")]
+        public void SortMark_FollowsTheDirection()
+        {
+            Assert.Equal(" \u25B2", GridCellFormatter.SortMark(Polhem.Definition.Sorting.SortDirection.Asc));
+            Assert.Equal(" \u25BC", GridCellFormatter.SortMark(Polhem.Definition.Sorting.SortDirection.Desc));
+            Assert.Equal(string.Empty, GridCellFormatter.SortMark(null));
+        }
     }
 }

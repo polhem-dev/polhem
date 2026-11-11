@@ -28,6 +28,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
 - 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。
 - 表單清單與筆數查詢的過濾條件會把字串值轉成其欄位的型別，因此 Plain body 送出的日期、`Guid` 或加了引號的數字，可以在 PostgreSQL 與 Oracle 上過濾有型別的欄位，在 SQL Server 上也不再查無資料；資料庫過去會自行轉換的文字（例如數字欄位的 `""`、布林欄位的 `1`）現在會被拒絕。
+- Avalonia 綁在明細列上的編輯器，在表單替換資料集時（例如新增）不再擲出例外，改為與 Blazor 一樣保持不動。兩個 head 共用的這項規則，以及時間欄寫回、lookup 顯示欄位、選單列、勾選欄與排序標記的規則，現在只在 `Polhem.UI.Core` 寫一份。
 
 ## [1.12.1] - 2026-11-06
 
