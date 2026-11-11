@@ -25,6 +25,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬或含 NUL 字元的稽核值，不再讓資料庫拒絕整批寫入：值會截斷到欄寬，NUL 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
 - 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
+- `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
 
 ## [1.12.1] - 2026-11-06
 

@@ -86,6 +86,10 @@ namespace Polhem.Api.Core.Transformers
             options.Converters.Add(new JsonStringEnumConverter());
             options.Converters.Add(WireValueJsonConverter.Instance);
 
+            // Deliberately absent from `JsonCodec`, so the Plain format keeps the DateTimeKind. This one matches
+            // MessagePack, which delivers every DateTime as a UTC instant (see `WireDateTime`).
+            options.Converters.Add(new UtcDateTimeJsonConverter());
+
             return options;
         }
 

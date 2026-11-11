@@ -20,8 +20,9 @@ namespace Polhem.Api.Core.JsonRpc
     /// (<see cref="DataSetDateTime.UnspecifiedLocal"/>) is the offending value.
     ///
     /// A loose DateTime has no such buffer, and <see cref="DateTimeKind.Local"/> shifts the reading
-    /// on both wires —— MessagePack converts to UTC as it writes, JSON writes an offset that the
-    /// reader re-applies in its own zone (possibly landing on another day).
+    /// on every wire —— MessagePack and the JSON body codec convert to UTC with the writer's zone as
+    /// they write, and the Plain format writes an offset that the reader re-applies in its own zone
+    /// (possibly landing on another day).
     ///
     /// The check is deliberately targeted rather than a general reflection walk: it inspects the
     /// carriers that actually admit caller-supplied time values —— the DataSet/DataTable members of
@@ -148,8 +149,8 @@ namespace Polhem.Api.Core.JsonRpc
             {
                 throw new InvalidOperationException(
                     $"Filter condition on '{fieldName}' carries a DateTime with Kind=Local. " +
-                    "Local values shift on both wires (MessagePack converts to UTC on write, JSON " +
-                    "writes an offset the reader re-applies), so only Unspecified or Utc may cross " +
+                    "Local values shift on every wire (MessagePack and the JSON body codec convert to UTC " +
+                    "with the writer's zone, Plain writes an offset the reader re-applies), so only Unspecified or Utc may cross " +
                     "the wire. See maintainers/adr/adr-032-datetime-timezone.md (D6).");
             }
 

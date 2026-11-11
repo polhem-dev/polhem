@@ -91,7 +91,7 @@ namespace Polhem.Api.Core.UnitTests
                 "WireValueCode.Decimal. Quoted: a JSON number is a double and cannot hold a decimal's precision.");
             yield return ("string", "hello", "WireValueCode.String.");
             yield return ("datetime", s_fixedUtc,
-                "WireValueCode.DateTime. Round-trip \"O\" format, which keeps DateTimeKind (ADR-032 depends on it).");
+                "WireValueCode.DateTime. Round-trip \"O\" format, always the UTC instant; a value without an offset is read as UTC.");
             yield return ("datetimeoffset", new DateTimeOffset(s_fixedUtc).ToOffset(TimeSpan.FromHours(8)),
                 "WireValueCode.DateTimeOffset. Round-trip \"O\" format.");
             yield return ("timespan", new TimeSpan(1, 2, 3, 4, 5), "WireValueCode.TimeSpan. Constant \"c\" format.");
