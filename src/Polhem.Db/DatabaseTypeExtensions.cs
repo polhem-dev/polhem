@@ -1,3 +1,8 @@
+using Polhem.Db.Providers.MySql;
+using Polhem.Db.Providers.Oracle;
+using Polhem.Db.Providers.PostgreSql;
+using Polhem.Db.Providers.Sqlite;
+using Polhem.Db.Providers.SqlServer;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db
@@ -21,15 +26,16 @@ namespace Polhem.Db
         };
 
         /// <summary>
-        /// Dictionary mapping database types to their identifier quoting functions.
+        /// Maps each database type to its dialect's identifier quoting, which the DDL builders use as well, so a query
+        /// and the table it reads quote a name the same way.
         /// </summary>
         private static readonly Dictionary<DatabaseType, Func<string, string>> s_quoteIdentifiers = new Dictionary<DatabaseType, Func<string, string>>
         {
-            { DatabaseType.SQLServer, s => $"[{s.Replace("]", "]]")}]" },
-            { DatabaseType.PostgreSQL, s => $"\"{s.Replace("\"", "\"\"")}\"" },
-            { DatabaseType.MySQL, s => $"`{s.Replace("`", "``")}`" },
-            { DatabaseType.Oracle, s => $"\"{s.ToUpperInvariant().Replace("\"", "\"\"")}\"" },
-            { DatabaseType.SQLite, s => $"\"{s.Replace("\"", "\"\"")}\"" }
+            { DatabaseType.SQLServer, SqlSchemaSyntax.QuoteName },
+            { DatabaseType.PostgreSQL, PgSchemaSyntax.QuoteName },
+            { DatabaseType.MySQL, MySqlSchemaSyntax.QuoteName },
+            { DatabaseType.Oracle, OracleSchemaSyntax.QuoteName },
+            { DatabaseType.SQLite, SqliteSchemaSyntax.QuoteName }
         };
 
         /// <summary>
