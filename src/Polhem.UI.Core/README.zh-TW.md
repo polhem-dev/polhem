@@ -65,6 +65,7 @@
 - `DataObjects/FieldValueChangeFilter` -- 綁定的欄位編輯器要對哪些變更做出反應，以及資料集被替換時，綁在單一列上的
   編輯器不重讀該列。
 - `Navigation/MenuRows` -- 把選單定義展平成 shell 選單顯示的標題列與表單列。
+- `Editing/IFieldEditor`、`Editing/GridEditMode` -- 每個欄位編輯器實作的綁定契約，以及 grid 的編輯模型，各 head 相同。
 - 建構它的 head 傳入登入使用者的時區（`timeZoneProvider`），新資料列的日期預設值依此決定；未傳入時為 UTC。
   本套件中除了 `UIServices` 本身，沒有任何程式讀取 `UIServices`，因此它可用在同一個 process 服務多位使用者的 host；
   這點改變時 `UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
@@ -111,6 +112,7 @@
 - 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
 - `DataObjects/` -- `FormDataObject`、`FieldValueChangedEventArgs`、`FieldValueChangeFilter`、`RowChangedEventArgs`
 - `Navigation/` -- `MenuRows`
+- `Editing/` -- `IFieldEditor`、`GridEditMode`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `TimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`GridColumnRules`、`FieldCaptionRules`

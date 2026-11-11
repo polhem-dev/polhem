@@ -55,3 +55,11 @@ Polhem.UI.Core.Navigation.MenuRows
 static Polhem.UI.Core.Navigation.MenuRows.Flatten<TRow>(Polhem.Definition.Settings.MenuNodeCollection? nodes, System.Func<Polhem.Definition.Settings.MenuNodeBase!, string!>! caption, System.Func<string!, TRow>! header, System.Func<string!, string!, TRow>! form) -> System.Collections.Generic.IReadOnlyList<TRow>!
 static Polhem.UI.Core.Fields.GridCellFormatter.IsChecked(System.Data.DataRow? row, string! fieldName) -> bool
 static Polhem.UI.Core.Fields.GridCellFormatter.SortMark(Polhem.Definition.Sorting.SortDirection? direction) -> string!
+Polhem.UI.Core.Editing.GridEditMode
+Polhem.UI.Core.Editing.GridEditMode.EditForm = 1 -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.UI.Core.Editing.GridEditMode.InCell = 0 -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.UI.Core.Editing.IFieldEditor
+Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Core.Editing.IFieldEditor.Unbind() -> void

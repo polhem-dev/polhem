@@ -72,6 +72,8 @@ application's own data through its own implementation of `IFormApiConnector`.
 - `DataObjects/FieldValueChangeFilter` -- which of those changes a bound field editor reacts to, and that an editor
   bound to one row does not reread it when the dataset is replaced.
 - `Navigation/MenuRows` -- flattens a menu definition into the header and form rows a shell's menu shows.
+- `Editing/IFieldEditor`, `Editing/GridEditMode` -- the binding contract every field editor implements and the editing
+  model of a grid, the same in every head.
 - The head that constructs it passes the signed-in user's time zone (`timeZoneProvider`), which a new row's dates
   default to; without one they default to UTC. Nothing in this package but `UIServices` itself reads `UIServices`,
   so the object is safe in a host that serves many users from one process; `UICoreServiceLocatorGateTests`
@@ -126,6 +128,7 @@ two heads behave the same:
 - project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
 - `DataObjects/` -- `FormDataObject`, `FieldValueChangedEventArgs`, `FieldValueChangeFilter`, `RowChangedEventArgs`
 - `Navigation/` -- `MenuRows`
+- `Editing/` -- `IFieldEditor`, `GridEditMode`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `TimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `GridColumnRules`, `FieldCaptionRules`

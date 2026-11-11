@@ -14,6 +14,7 @@ using Polhem.UI.Core.DataObjects;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

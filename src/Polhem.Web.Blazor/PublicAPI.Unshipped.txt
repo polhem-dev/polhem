@@ -21,9 +21,6 @@ Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.C
 Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.Web.Blazor.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
-Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
-Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
-Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Bind(Polhem.Web.Blazor.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
@@ -166,3 +163,16 @@ override Polhem.Web.Blazor.Controls.GridControlBase.ShouldRender() -> bool
 virtual Polhem.Web.Blazor.Controls.GridControlBase.ReplayDelayMilliseconds.get -> int
 virtual Polhem.Web.Blazor.Controls.GridControlBase.OpenPopupSelector.get -> string?
 virtual Polhem.Web.Blazor.Controls.GridControlBase.RefreshRowList() -> void
+Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EffectiveDetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.Web.Blazor.Controls.GridControlBase.EditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.IFieldEditor.Unbind() -> void
+*REMOVED*Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EffectiveDetailEditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.EditMode.get -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditMode.EditForm = 1 -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditMode.InCell = 0 -> Polhem.Web.Blazor.Controls.GridEditMode

@@ -10,7 +10,7 @@ using Polhem.UI.Core.DataObjects;
 namespace Polhem.Web.Blazor.Controls.Editors
 {
     /// <summary>
-    /// The state and commands of the editing surface of the <see cref="Polhem.Web.Blazor.Controls.GridEditMode.EditForm"/> mode: one field editor per visible
+    /// The state and commands of the editing surface of the <see cref="Polhem.UI.Core.Editing.GridEditMode.EditForm"/> mode: one field editor per visible
     /// <see cref="LayoutColumn"/>, bound to a single row through the buffered edit protocol of
     /// <see cref="FormDataObject"/>. OK commits (<see cref="FormDataObject.CommitRowEdit"/>), Cancel restores
     /// (<see cref="FormDataObject.CancelRowEdit"/>). The counterpart of the Avalonia head's <c>Polhem.UI.Avalonia.Controls.Editors.RowEditPanel</c>.

@@ -3,6 +3,7 @@ using System.Reflection;
 using Avalonia.Controls;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

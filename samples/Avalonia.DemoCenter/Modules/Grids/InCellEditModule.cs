@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls;
 using Avalonia.DemoCenter.Modules.DataEditors;
 using Avalonia.DemoCenter.Modules.Views;
+using Polhem.UI.Core.Editing;
 
 namespace Avalonia.DemoCenter.Modules.Grids
 {

@@ -26,7 +26,7 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 | `GridControl` | `ContentControl`，內含 `DataGrid`（經 `InnerGrid` 公開），由 `LayoutGrid` 驅動；實作 `IBindTableControl` / `IUIControl`。cell 顯示走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`（見 ADR-020）。 |
 | Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `TimeEdit` / `NumericEdit` / `DropDownEdit` / `CheckEdit`） | 與 `ControlType` 的值一一對應（`Auto` 依欄位挑選）；繼承原生控件並實作 `IBindFieldControl` / `IUIControl`，自動套用 `FormField` metadata（MaxLength、ListItems）。 |
 | `FormScope` | 可繼承的 attached properties（`DataObject` / `FormMode`）：容器設一次，子孫編輯器憑 `FieldName` 自動綁定。 |
-| `GridEditMode` | grid 的 UI 層編輯模型：`InCell`（逐格編輯，ADR-021 混合策略）或 `EditForm`（唯讀 grid + 彈窗整列編輯）。 |
+| `GridControl.EditMode` | grid 的 `GridEditMode`（來自 `Polhem.UI.Core.Editing`）：`InCell`（逐格編輯，ADR-021 混合策略）或 `EditForm`（唯讀 grid + 彈窗整列編輯）。 |
 | `RowEditPanel` / `RowEditDialog` | EditForm 模式的編輯面，由 field editors 組成；經暫存列編輯協定確認或取消。 |
 | `ObjectTreeView` | `TreeView` 子類，顯示 `ObjectTreeBuilder`（`Polhem.Definition.ObjectTree`）依 `[TreeNode]` 標註建出的 `ObjectTreeNode` 樹：設定 `RootNode`，可選 `IconSelector`；`IsExpanded` 雙向繫結；`CommandProvider` 以選取節點的命令填入右鍵選單。 |
 | `FormDataObject` | 不在本套件：檢視與編輯器綁定的資料物件位於 `Polhem.UI.Core.DataObjects`。`FormView` 以 `UIServices.Provider` 中 `IUserContext` 的登入使用者時區建構它；自行建構時也照樣傳入時區，否則新資料列的日期預設值為 UTC。 |

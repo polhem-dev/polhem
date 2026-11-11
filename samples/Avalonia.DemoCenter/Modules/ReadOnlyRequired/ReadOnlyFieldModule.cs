@@ -5,6 +5,7 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Avalonia.DemoCenter.Modules.DataEditors;
+using Polhem.UI.Core.Editing;
 
 namespace Avalonia.DemoCenter.Modules.ReadOnlyRequired
 {

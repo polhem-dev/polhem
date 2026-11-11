@@ -10,7 +10,8 @@
 
 - `FormLiveComputation`（`Polhem.Web.Blazor.DataObjects`）。元件綁定的是各 head 共用、位於
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md) 的 `FormDataObject`。
-- `FieldEditorBase`、`IFieldEditor` 與 `FormScope`（`Polhem.Web.Blazor.Controls.Editors`），所有欄位編輯器的基底。
+- `FieldEditorBase` 與 `FormScope`（`Polhem.Web.Blazor.Controls.Editors`），所有欄位編輯器的基底，實作 `Polhem.UI.Core.Editing`
+  的 `IFieldEditor`。
 - `TextEditorBase`、`NumericEditorBase`、`CheckEditorBase`、`DropDownEditorBase`、`DateEditorBase`、`TimeEditorBase` 與 `DateTimeEditorBase`，各類編輯器的取值與提交規則；markup 由 UI 套件提供。
 - `ButtonEditorBase`、`LookupPanelBase` 與 `LookupDialogBase`（`Polhem.Web.Blazor.Controls.Editors`），查詢流程。
 - `RowEditPanelBase`，編輯表單的工作階段。
@@ -18,7 +19,8 @@
 - `FormLayoutPresenterBase`（`Polhem.Web.Blazor.Controls`），依 `FormLayout` 呈現紀錄的規則。
 - `RelatedRecordDialogBase`、`LoginPanelBase` 與 `CompactViewportObserver`（`Polhem.Web.Blazor.Components`）。
 - `PolhemShellOptions`、`PolhemShellHome`、`PolhemShellSignInLinks`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `IShellLanguageSwitcher`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。
-- `GridControlBase`、`GridEditMode` 與 `GridEditorHost`（`Polhem.Web.Blazor.Controls`），Grid 的狀態與命令，以及讓 Grid 只開一個編輯器。
+- `GridControlBase` 與 `GridEditorHost`（`Polhem.Web.Blazor.Controls`），Grid 的狀態與命令，以及讓 Grid 只開一個編輯器；
+  編輯模型是 `Polhem.UI.Core.Editing` 的 `GridEditMode`。
 - `BlazorUserContext`（`Polhem.Web.Blazor.Identity`），單一 scope 內已登入使用者的內容。
 
 ## 資料物件與使用者脈絡

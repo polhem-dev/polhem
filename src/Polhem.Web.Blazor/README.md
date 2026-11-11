@@ -12,12 +12,14 @@ An application does not use this package alone. It references one host package, 
 
 - `FormLiveComputation` (`Polhem.Web.Blazor.DataObjects`). The components bind the `FormDataObject` of
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), which every head shares.
-- `FieldEditorBase`, `IFieldEditor` and `FormScope` (`Polhem.Web.Blazor.Controls.Editors`), the base of every field editor.
+- `FieldEditorBase` and `FormScope` (`Polhem.Web.Blazor.Controls.Editors`), the base of every field editor, which implements
+  `IFieldEditor` from `Polhem.UI.Core.Editing`.
 - `TextEditorBase`, `NumericEditorBase`, `CheckEditorBase`, `DropDownEditorBase`, `DateEditorBase`, `TimeEditorBase` and `DateTimeEditorBase`, the value and commit rules of each editor kind. A UI package supplies the markup.
 - `ButtonEditorBase`, `LookupPanelBase` and `LookupDialogBase` (`Polhem.Web.Blazor.Controls.Editors`), the lookup flow.
 - `RowEditPanelBase`, the edit form's session.
 - `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `BlazorDefinitions`, `PolhemBlazorText` and `IBlazorDefinitionOptions`, which a UI package loads definitions and text through.
-- `GridControlBase`, `GridEditMode` and `GridEditorHost` (`Polhem.Web.Blazor.Controls`), the state and commands of a grid, and keeping one editor open in it.
+- `GridControlBase` and `GridEditorHost` (`Polhem.Web.Blazor.Controls`), the state and commands of a grid, and keeping one
+  editor open in it; its editing model is `GridEditMode` from `Polhem.UI.Core.Editing`.
 - `FormLayoutPresenterBase` (`Polhem.Web.Blazor.Controls`), the rules of a record rendered from a `FormLayout`.
 - `RelatedRecordDialogBase`, `LoginPanelBase` and `CompactViewportObserver` (`Polhem.Web.Blazor.Components`).
 - `PolhemShellOptions`, `PolhemShellHome`, `PolhemShellSignInLinks`, `ShellLayoutBase`, `ShellNavMenuBase`, `ShellSignInBase` and `IShellLanguageSwitcher` (`Polhem.Web.Blazor.Shell`), the shell's state; a host package supplies the language switch.

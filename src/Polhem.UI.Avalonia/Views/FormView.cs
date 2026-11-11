@@ -12,6 +12,7 @@ using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Core.DataObjects;
 using Polhem.Definition.Language;
+using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.Views
 {

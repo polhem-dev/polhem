@@ -20,9 +20,6 @@ Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.Bind(Polhem.UI.Core.DataObjects
 *REMOVED*Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
 *REMOVED*Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
 *REMOVED*Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
-Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
-Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
-Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
 *REMOVED*Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row) -> void
 Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row) -> void
 *REMOVED*Polhem.UI.Avalonia.Controls.Editors.TextEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
@@ -87,3 +84,20 @@ static Polhem.UI.Avalonia.Controls.Editors.FormScope.SetDataObject(Avalonia.Cont
 static Polhem.UI.Avalonia.Controls.Editors.RowEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 *REMOVED*static readonly Polhem.UI.Avalonia.Controls.Editors.FormScope.DataObjectProperty -> Avalonia.AttachedProperty<Polhem.UI.Avalonia.DataObjects.FormDataObject?>!
 static readonly Polhem.UI.Avalonia.Controls.Editors.FormScope.DataObjectProperty -> Avalonia.AttachedProperty<Polhem.UI.Core.DataObjects.FormDataObject?>!
+Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.UI.Avalonia.Controls.GridControl.EditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+Polhem.UI.Avalonia.Views.FormView.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
+static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Editing.GridEditMode>!
+static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Editing.GridEditMode>!
+static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Editing.GridEditMode>!
+*REMOVED*Polhem.UI.Avalonia.Controls.Editors.IFieldEditor
+*REMOVED*Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Unbind() -> void
+*REMOVED*Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*Polhem.UI.Avalonia.Controls.GridControl.EditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*Polhem.UI.Avalonia.Controls.GridEditMode.EditForm = 1 -> Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*Polhem.UI.Avalonia.Controls.GridEditMode.InCell = 0 -> Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*Polhem.UI.Avalonia.Views.FormView.DetailEditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
+*REMOVED*static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
+*REMOVED*static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
+*REMOVED*static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
