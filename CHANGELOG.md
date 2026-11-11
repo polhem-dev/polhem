@@ -26,6 +26,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - The `db seed` and `db upgrade` commands write through new framework repositories instead of SQL in `Polhem.Hosting`, and `ICompanyRepository` gains `GetCompanyDatabases`.
 - An audit value longer than its column, or holding a NUL character, no longer makes the database refuse its whole batch: it is cut to the column's width and the NUL replaced. A refused batch is retried one entry at a time, and the file fallback escapes control characters.
 - A table with a Binary column reads back over the JSON body codec and the Plain format again, so such a form can be created and saved from a JSON client.
+- A `DateTime` filter value, parameter value or message property arrives over the JSON body codec as the same UTC instant MessagePack delivers, instead of keeping an Unspecified or Local kind; a JSON response now marks such a value with `Z`.
 
 ## [1.12.1] - 2026-11-06
 

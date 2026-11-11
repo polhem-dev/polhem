@@ -1,6 +1,6 @@
 {
   "case": "value-datetime",
-  "description": "WireValueCode.DateTime. Round-trip \u0022O\u0022 format, which keeps DateTimeKind (ADR-032 depends on it).",
+  "description": "WireValueCode.DateTime. Round-trip \u0022O\u0022 format, always the UTC instant; a value without an offset is read as UTC.",
   "codec": "json",
   "type": "Polhem.Definition.Collections.Parameter, Polhem.Definition",
   "body": {

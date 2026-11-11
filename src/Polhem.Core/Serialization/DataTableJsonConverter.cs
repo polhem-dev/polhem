@@ -157,6 +157,11 @@ namespace Polhem.Core.Serialization
                 case ulong u:
                     writer.WriteStringValue(u.ToString(CultureInfo.InvariantCulture));
                     break;
+                case DateTime dt:
+                    // Written here rather than through the options, so a `DateTime` converter a caller registers for
+                    // its other members cannot change the naive cell values the client's connector converts.
+                    writer.WriteStringValue(dt);
+                    break;
                 default:
                     JsonSerializer.Serialize(writer, value, value.GetType(), options);
                     break;

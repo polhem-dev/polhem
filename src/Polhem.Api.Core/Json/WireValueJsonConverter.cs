@@ -182,8 +182,8 @@ namespace Polhem.Api.Core.Json
 
                 case WireValueCode.String: writer.WriteStringValue((string)value); break;
 
-                // Round-trip formats: "O" keeps DateTimeKind, which ADR-032 depends on.
-                case WireValueCode.DateTime: writer.WriteStringValue(((DateTime)value).ToString("O", culture)); break;
+                // Round-trip formats. A DateTime is written as the UTC instant the MessagePack codec writes (see `WireDateTime`).
+                case WireValueCode.DateTime: writer.WriteStringValue(WireDateTime.ToUtc((DateTime)value).ToString("O", culture)); break;
                 case WireValueCode.DateTimeOffset: writer.WriteStringValue(((DateTimeOffset)value).ToString("O", culture)); break;
                 case WireValueCode.TimeSpan: writer.WriteStringValue(((TimeSpan)value).ToString("c", culture)); break;
                 case WireValueCode.DateOnly: writer.WriteStringValue(((DateOnly)value).ToString("O", culture)); break;
@@ -227,8 +227,7 @@ namespace Polhem.Api.Core.Json
                 case WireValueCode.String: return reader.GetString();
 
                 case WireValueCode.DateTime:
-                    return DateTime.ParseExact(RequireString(ref reader, code), "O", culture,
-                        DateTimeStyles.RoundtripKind);
+                    return DateTime.ParseExact(RequireString(ref reader, code), "O", culture, WireDateTime.ParseStyles);
                 case WireValueCode.DateTimeOffset:
                     return DateTimeOffset.ParseExact(RequireString(ref reader, code), "O", culture,
                         DateTimeStyles.RoundtripKind);
