@@ -31,6 +31,32 @@ namespace Polhem.Web.Blazor.Shell
         /// </summary>
         protected bool IsMenuToggled { get; private set; }
 
+        /// <summary>
+        /// Gets whether the screen is narrow, as the compact viewport observer last reported. The threshold is the form
+        /// page's, so the menu and the page switch together.
+        /// </summary>
+        protected bool IsNarrow { get; private set; }
+
+        /// <summary>
+        /// Gets whether the menu is shown: on a wide screen unless it is toggled, on a narrow one only while it is toggled.
+        /// </summary>
+        protected bool IsDrawerOpen => IsNarrow ? IsMenuToggled : !IsMenuToggled;
+
+        /// <summary>Follows a change of width and clears the toggle, so the menu starts in its default state.</summary>
+        /// <param name="compact">Whether the screen is now narrow.</param>
+        protected void OnCompactChanged(bool compact)
+        {
+            IsNarrow = compact;
+            CloseMenu();
+        }
+
+        /// <summary>Follows a menu that opened or closed itself, such as a drawer closed by a click outside it.</summary>
+        /// <param name="open">Whether the menu is now shown.</param>
+        protected void OnDrawerOpenChanged(bool open)
+        {
+            if (open != IsDrawerOpen) ToggleMenu();
+        }
+
         /// <summary>Toggles the menu.</summary>
         protected void ToggleMenu() => IsMenuToggled = !IsMenuToggled;
 

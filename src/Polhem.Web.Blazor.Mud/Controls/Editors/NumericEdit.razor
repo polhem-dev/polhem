@@ -24,12 +24,8 @@
     // input does not have the focus, so the display format returns too.
     private void Commit(string? value)
     {
-        var shown = Text;
-        CommitText(value);
-        if (string.Equals(Text, shown, StringComparison.Ordinal) && !string.Equals(Text, value, StringComparison.Ordinal))
-        {
-            EndEditing();
-            _generation++;
-        }
+        if (TryCommitText(value)) return;
+        EndEditing();
+        _generation++;
     }
 }

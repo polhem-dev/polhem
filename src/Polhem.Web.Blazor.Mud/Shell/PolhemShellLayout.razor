@@ -12,6 +12,8 @@
 }
 else
 {
+    @* Measured rather than left to MudDrawer's responsive variant, which keeps its own open state and its own breakpoint.
+       This keeps the switch of ShellLayoutBase and the form page's compact threshold. *@
     <CompactViewportObserver CompactChanged="OnCompactChanged" />
     <MudLayout Class="polhem-shell">
         <MudAppBar Dense="true" Elevation="1" Class="polhem-shell__header">
@@ -19,13 +21,13 @@ else
                            aria-label="@PolhemShellText.Get(PolhemShellText.ToggleMenu)" OnClick="ToggleMenu" />
             <span class="polhem-shell__title">@Options.AppTitle</span>
             <MudSpacer />
-            @if (!_isNarrow)
+            @if (!IsNarrow)
             {
                 <span class="polhem-shell__user">@UserContext.User?.UserName · @UserContext.Company.CompanyName</span>
             }
             <MudButton Class="polhem-shell__signout" Color="Color.Inherit" Size="Size.Small" OnClick="SignOut">@PolhemShellText.Get(PolhemShellText.SignOut)</MudButton>
         </MudAppBar>
-        <MudDrawer Open="IsDrawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="@(_isNarrow ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
+        <MudDrawer Open="IsDrawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="@(IsNarrow ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
                    ClipMode="DrawerClipMode.Always" Elevation="1" Width="@DrawerWidth" Class="polhem-shell__nav">
             <PolhemShellNavMenu OnNavigated="CloseMenu" />
         </MudDrawer>
@@ -35,21 +37,4 @@ else
 
 @code {
     private const string DrawerWidth = "200px";
-
-    // Measured rather than left to MudDrawer's responsive variant, which keeps its own open state and its own breakpoint.
-    // This keeps the switch of ShellLayoutBase and the form page's compact threshold.
-    private bool _isNarrow;
-
-    private bool IsDrawerOpen => _isNarrow ? IsMenuToggled : !IsMenuToggled;
-
-    private void OnCompactChanged(bool compact)
-    {
-        _isNarrow = compact;
-        CloseMenu();
-    }
-
-    private void OnDrawerOpenChanged(bool open)
-    {
-        if (open != IsDrawerOpen) ToggleMenu();
-    }
 }

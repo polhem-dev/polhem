@@ -1,7 +1,5 @@
 @namespace Polhem.Web.Blazor.Mud.Controls
 @inherits GridControlBase
-@implements IAsyncDisposable
-@inject Microsoft.JSInterop.IJSRuntime JS
 @using System.Data
 @using Polhem.Definition.Language
 @using Polhem.Definition.Layouts
@@ -78,7 +76,7 @@
                         @if (IsInCellEditor(current))
                         {
                             <GridEditorCell Host="EditorHost"
-                                            Script="_script"
+                                            Script="Script"
                                             EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
                                             EditorParameters="BuildEditorParameters(current, context.Item)"
                                             Text="@FormatCell(context.Item, current)"
@@ -124,51 +122,20 @@
 }
 
 @code {
-    private const string OpenPopupSelector = ".mud-popover-open";
-
     private List<DataRow> _rows = [];
-    private GridEditorScript _script = default!;
 
     /// <inheritdoc />
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _script = new GridEditorScript(JS, OpenPopupSelector);
-    }
-
-    // Loaded before any cell opens, so a key typed before the first editor arrives is already held.
-    /// <inheritdoc />
-    protected override Task OnAfterRenderAsync(bool firstRender)
-        => VisibleColumns.Any(IsInCellEditor) ? _script.LoadAsync() : Task.CompletedTask;
+    protected override string OpenPopupSelector => ".mud-popover-open";
 
     /// <inheritdoc />
-    public ValueTask DisposeAsync() => _script.DisposeAsync();
-
-    /// <inheritdoc />
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-        RefreshRowList();
-    }
-
-    /// <inheritdoc />
-    protected override bool ShouldRender()
-    {
-        RefreshRowList();
-        return true;
-    }
-
-    private void RefreshRowList() => _rows = VisibleRows.ToList();
+    protected override void RefreshRowList() => _rows = VisibleRows.ToList();
 
     // MudDataGrid has no double-click event; a click reports how many clicks it is.
     private Task OnRowClick(DataGridRowClickEventArgs<DataRow> e)
         => e.MouseEventArgs.Detail >= 2 ? ActivateRowAsync(e.Item) : SelectRowAsync(e.Item);
 
-    private string RowClass(DataRow row, int index)
-        => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
-
-    private string HeaderClass(LayoutColumn column)
-        => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
+    // MudDataGrid passes the row's index as well.
+    private string RowClass(DataRow row, int index) => RowClass(row);
 
     private static string ColumnStyle(LayoutColumn column)
         => string.Create(System.Globalization.CultureInfo.InvariantCulture,
