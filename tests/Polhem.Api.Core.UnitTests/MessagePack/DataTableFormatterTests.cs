@@ -299,6 +299,9 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
             table.Rows[1]["amount"] = 99.99m;
             table.Rows[2].Delete();
             table.Rows.Add(4, "D", DBNull.Value, 1m, Guid.NewGuid());
+            // Set after the rows, the way `DataTable.Load` leaves an identity column; it must not stop either codec
+            // from restoring the Modified row.
+            id.ReadOnly = true;
 
             var jsonOptions = new JsonSerializerOptions();
             jsonOptions.Converters.Add(new DataTableJsonConverter());

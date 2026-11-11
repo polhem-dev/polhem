@@ -25,7 +25,6 @@ namespace Polhem.Core.Serialization
                 var dc = new DataColumn(col.Name, netType)
                 {
                     AllowDBNull = col.AllowNull,
-                    ReadOnly = col.ReadOnly,
                     MaxLength = col.MaxLength,
                     Caption = col.Caption,
                     DefaultValue = col.DefaultValue ?? DBNull.Value
@@ -87,6 +86,15 @@ namespace Polhem.Core.Serialization
                         row.Delete();
                         break;
                 }
+            }
+
+            // ReadOnly is applied after the rows: restoring a Modified row writes its current values into a row that is
+            // already in the table, which a read-only column would refuse. The MessagePack `DataTableFormatter` does the
+            // same; `DataTable_JsonSerializeWithReadOnlyColumn_RestoresEveryRowState` covers this side and
+            // `BothCodecs_RebuildTheSameTable` compares the two.
+            for (var i = 0; i < columns.Count; i++)
+            {
+                dt.Columns[i].ReadOnly = columns[i].ReadOnly;
             }
 
             return dt;

@@ -115,6 +115,63 @@ namespace Polhem.Core.UnitTests
                 "The restored DataTable is not equal to the original DataTable");
         }
 
+        /// <summary>
+        /// A read-only column must not stop a changed row from being restored. Restoring a Modified row writes its
+        /// current values into a row that is already in the table, which a read-only column refuses.
+        /// </summary>
+        [Fact]
+        [DisplayName("A read-only column does not stop a Modified row from being restored over JSON, and every row state and the flag survive")]
+        public void DataTable_JsonSerializeWithReadOnlyColumn_RestoresEveryRowState()
+        {
+            var table = new DataTable("t");
+            table.Columns.Add("id", typeof(int));
+            table.Columns.Add("name", typeof(string));
+            table.Rows.Add(1, "old");
+            table.Rows.Add(2, "gone");
+            table.Rows.Add(3, "kept");
+            table.AcceptChanges();
+            table.Rows[0]["name"] = "new";
+            table.Rows[1].Delete();
+            table.Rows.Add(4, "added");
+            table.Columns["id"]!.ReadOnly = true;
+
+            var restored = JsonRoundTripTable(table);
+
+            Assert.True(restored.Columns["id"]!.ReadOnly);
+            Assert.False(restored.Columns["name"]!.ReadOnly);
+            Assert.Equal(DataRowState.Modified, restored.Rows[0].RowState);
+            Assert.Equal(1, restored.Rows[0]["id"]);
+            Assert.Equal("old", restored.Rows[0]["name", DataRowVersion.Original]);
+            Assert.Equal("new", restored.Rows[0]["name"]);
+            Assert.Equal(DataRowState.Deleted, restored.Rows[1].RowState);
+            Assert.Equal(DataRowState.Unchanged, restored.Rows[2].RowState);
+            Assert.Equal(DataRowState.Added, restored.Rows[3].RowState);
+            Assert.Equal(4, restored.Rows[3]["id"]);
+        }
+
+        /// <summary>
+        /// The same through a DataSet, which rebuilds each of its tables the same way.
+        /// </summary>
+        [Fact]
+        [DisplayName("A read-only column in a DataSet table does not stop a Modified row from being restored over JSON")]
+        public void DataSet_JsonSerializeWithReadOnlyColumn_RestoresModifiedRow()
+        {
+            var dataSet = new DataSet("ds");
+            var table = dataSet.Tables.Add("t");
+            table.Columns.Add("id", typeof(int));
+            table.Columns.Add("name", typeof(string));
+            table.Rows.Add(1, "old");
+            dataSet.AcceptChanges();
+            table.Rows[0]["name"] = "new";
+            table.Columns["id"]!.ReadOnly = true;
+
+            var restored = JsonRoundTripDataSet(dataSet).Tables["t"]!;
+
+            Assert.True(restored.Columns["id"]!.ReadOnly);
+            Assert.Equal(DataRowState.Modified, restored.Rows[0].RowState);
+            Assert.Equal("new", restored.Rows[0]["name"]);
+        }
+
         #endregion
 
         #region 2. Coverage of every FieldDbType
