@@ -25,7 +25,8 @@ This is the only thing that matters from the application's perspective. Whether 
 > the column with an empty value and stop there. A row whose `sys_company_id` is empty belongs to no company, so every
 > existing row would disappear from every company. `db upgrade` first checks that the company table schemas carry the
 > column and that the company ids are in their stored form, and after upgrading gives the rows with no company the
-> company of their database (`db add-company-column` adds the column to schemas that lack it). See
+> company of their database when only one company uses it; in a database several companies share, it reports them for
+> you to assign (`db add-company-column` adds the column to schemas that lack it). See
 > [Database Settings §5.5 and §7](database-settings-guide.md#55-companies-sharing-a-company-database).
 
 ## 2. Entry-Point APIs

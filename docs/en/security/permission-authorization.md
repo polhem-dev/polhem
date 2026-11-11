@@ -81,8 +81,10 @@ id in its stored lowercase form; the framework reads only the rows of the sessio
 | `st_role_grant` | `sys_company_id`, `role_id`, `model_id`, `action`, `scope` | one (role, model, action) the role is granted, plus its record scope |
 | `st_user_role` | `sys_company_id`, `user_id`, `role_id` | user ↔ role assignment (`user_id` is `st_user.sys_id`) |
 
-A row written without `sys_company_id` belongs to no company and is never read: the grant has no effect, and nothing
-reports it.
+A row written without `sys_company_id` belongs to no company, and the framework does not read it: the grant has no
+effect, and no error says so. `db upgrade` later finds such rows. In a database only one company uses, it gives them to
+that company, so the grant takes effect from then on; in a database several companies share, it reports them for you to
+assign.
 
 `st_role_grant` is **per-action**: the presence of a row is the layer-1 grant; its `scope` (a `ScopeStrategy`) drives layer-2. This is what lets a role *read* its whole department but *update* only its own records.
 

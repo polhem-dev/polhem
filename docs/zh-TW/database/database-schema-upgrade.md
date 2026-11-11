@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: 7fa7b161a4adc50232431a2fbfe3ce2dc044bb44 -->
+<!-- source: en/database/database-schema-upgrade.md blob: 17ce419c9add0aa2fab3c80cedb4db12d24a4695 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -24,8 +24,8 @@ Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchem
 
 > **把既有部署升級成帶 `sys_company_id` 的公司資料表時，請用 `db upgrade`。** 下列 API 只會以空值加上這個欄位，
 > 不做其他事。`sys_company_id` 為空的資料列不屬於任何公司，所以既有的每一列都會從每家公司消失。`db upgrade` 會先檢查
-> 公司資料表的 schema 是否帶有這個欄位、公司代號是否為儲存形式，升級後再把沒有公司的資料列指派給其資料庫所屬的公司
-> （`db add-company-column` 會替缺少欄位的 schema 加上它）。見
+> 公司資料表的 schema 是否帶有這個欄位、公司代號是否為儲存形式；升級後，若資料庫只屬於一家公司，就把沒有公司的資料列
+> 指派給它，多家公司共用的資料庫則會列出這些資料列，留給你自行指派（`db add-company-column` 會替缺少欄位的 schema 加上它）。見
 > [資料庫設定 §5.5 與 §7](database-settings-guide.md#55-多家公司共用公司資料庫)。
 
 ## 2. 入口 API

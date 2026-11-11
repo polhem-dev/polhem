@@ -171,9 +171,10 @@ The following examples use three simplified `FormSchema` definitions. The SQL sh
 All three are `company` forms, so every table carries `sys_company_id` (see
 [ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md)). A join between two `company` forms also matches the
 company of the joined row to the main row's (`AND B.[sys_company_id] = A.[sys_company_id]`): a foreign key holds a row id,
-which could point at a row of another company sharing the database. The form repository then confines the main table to
-the session's company with an outer `A.[sys_company_id] = @company` condition, which the examples below leave out. SQL you
-write by hand has to do both itself.
+which could point at a row of another company sharing the database. The builder writes it on the same line as the `ON`;
+the examples break it onto its own line for reading. The form repository then confines the main table to the session's
+company with an outer condition on `A.[sys_company_id]`, a parameter of its own that the examples below leave out (it
+also shifts the numbering of the other parameters). SQL you write by hand has to do both itself.
 
 ### Example 1: Master-Only Query (No JOIN)
 

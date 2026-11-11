@@ -1,4 +1,4 @@
-<!-- source: en/security/permission-authorization.md blob: 2d4139ba6261446579d80d2455c20f0e78090a33 -->
+<!-- source: en/security/permission-authorization.md blob: ee7b47b4a48edd09c4585977cc14be9de9e1bdc9 -->
 # 權限與授權指南
 
 [English](../../en/security/permission-authorization.md) · [← 文件索引](../README.md)
@@ -81,7 +81,9 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 | `st_role_grant` | `sys_company_id`, `role_id`, `model_id`, `action`, `scope` | 角色對某 model 某 action 的授權 + 其 record scope |
 | `st_user_role` | `sys_company_id`, `user_id`, `role_id` | user ↔ role 指派（`user_id` 即 `st_user.sys_id`） |
 
-寫入時沒有 `sys_company_id` 的資料列不屬於任何公司，永遠不會被讀到：該授權不會生效，也不會有任何錯誤訊息。
+寫入時沒有 `sys_company_id` 的資料列不屬於任何公司，框架不會讀取它：該授權不會生效，也沒有錯誤訊息告訴你。之後執行
+`db upgrade` 會找出這類資料列：只有一家公司使用的資料庫，會把它們指派給那家公司，授權從此生效；多家公司共用的資料庫，
+則會列出它們，留給你自行指派。
 
 `st_role_grant` 是 **per-action**：有列即為層一授權；其 `scope`（`ScopeStrategy`）驅動層二。這正是「某角色看得到整個部門、卻只能改自己的」之所以可能。
 

@@ -1,4 +1,4 @@
-<!-- source: en/definitions/formschema-data-access.md blob: db0111736736eafb0605b1708fd60f293f439443 -->
+<!-- source: en/definitions/formschema-data-access.md blob: 657615633891ec8368534ba64c182dbe7a9dd254 -->
 # FormSchema 驅動的資料庫存取
 
 [English](../../en/definitions/formschema-data-access.md) · [← 文件索引](../README.md)
@@ -172,8 +172,9 @@ Definition-Driven Architecture（整體架構）
 三者都是 `company` 表單，所以每張表都有 `sys_company_id`（見
 [ADR-062](../../../maintainers/adr/adr-062-row-level-tenancy.md)）。兩個 `company` 表單之間的 JOIN，還會比對被 JOIN 那一列
 與主表那一列的公司（`AND B.[sys_company_id] = A.[sys_company_id]`）：外鍵存的是 row id，可能指向共用同一個資料庫的另一家
-公司的資料列。表單 repository 接著會在外層加上 `A.[sys_company_id] = @company` 條件，把主表限定在 session 的公司；下列
-範例省略了這一層。自己手寫的 SQL 兩者都要自行處理。
+公司的資料列。產生器會把它寫在 `ON` 的同一行，範例為了閱讀另起一行。表單 repository 接著會在外層加上對
+`A.[sys_company_id]` 的條件，把主表限定在 session 的公司；這個條件使用它自己的參數，下列範例省略了這一層（它也會讓其他
+參數的編號往後移）。自己手寫的 SQL 兩者都要自行處理。
 
 ### 範例 1：純主檔查詢（無 JOIN）
 
