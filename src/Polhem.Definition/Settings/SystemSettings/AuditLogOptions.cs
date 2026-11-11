@@ -35,9 +35,10 @@ namespace Polhem.Definition.Settings
 
         /// <summary>
         /// Gets or sets the bounded in-memory queue capacity for the background writer. When the
-        /// queue is full, writes degrade to synchronous instead of dropping the entry. A batch the
-        /// log database rejects is spilled to <see cref="FileFallbackPath"/> when one is set, and is
-        /// otherwise lost after being logged at error level.
+        /// queue is full, writes degrade to synchronous instead of dropping the entry. When the log
+        /// database rejects a batch, its entries are retried one at a time; those it still rejects,
+        /// and the rest of the batch once two in a row fail, are spilled to <see cref="FileFallbackPath"/>
+        /// when one is set, and are otherwise lost after being logged at error level.
         /// </summary>
         [Category("AuditLog")]
         [Description("Bounded in-memory queue capacity for the background writer. When full, writes degrade to synchronous.")]

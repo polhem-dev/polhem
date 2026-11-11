@@ -21,6 +21,7 @@ Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1
 - **Breaking:** The Avalonia and Blazor heads share one `FormDataObject`, which moves to `Polhem.UI.Core.DataObjects` and takes the user's time zone from the code that constructs it.
 - **Breaking:** One request reads the session's company once and passes that snapshot to authorization, record scope, routing and its repositories, so a company entered on the same token meanwhile cannot pair one company's roles with another company's data; the services involved gain overloads that take the snapshot.
 - The `db seed` and `db upgrade` commands write through new framework repositories instead of SQL in `Polhem.Hosting`, and `ICompanyRepository` gains `GetCompanyDatabases`.
+- An audit value longer than its column, or holding a NUL character, no longer makes the database refuse its whole batch: it is cut to the column's width and the NUL replaced. A refused batch is retried one entry at a time, and the file fallback escapes control characters.
 - A table with a Binary column reads back over the JSON body codec and the Plain format again, so such a form can be created and saved from a JSON client.
 
 ## [1.12.1] - 2026-11-06

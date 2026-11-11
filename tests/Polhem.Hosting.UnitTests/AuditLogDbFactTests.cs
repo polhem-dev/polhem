@@ -1,9 +1,11 @@
 using System.ComponentModel;
+using System.Data.Common;
 using System.Globalization;
 using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Definition.Database;
 using Polhem.Definition.Logging;
+using Polhem.Definition.Storage;
 using Polhem.Repository.AuditLog;
 using Polhem.Tests.Shared;
 
@@ -239,7 +241,8 @@ namespace Polhem.Hosting.UnitTests
             var factory = new RedirectingDbAccessFactory(
                 _fx.GetRequiredService<IDbAccessFactory>(), TestDbConventions.GetDatabaseId(databaseType, "log"));
             return new AuditLogWriteRepository(
-                TestRepositoryContext.Create(dbAccessFactory: factory), Guid.Empty, string.Empty);
+                TestRepositoryContext.Create(defineAccess: _fx.GetRequiredService<IDefineAccess>(), dbAccessFactory: factory),
+                Guid.Empty, string.Empty);
         }
 
         private long CountLoginRows(DatabaseType databaseType, Guid rowId)
@@ -318,5 +321,121 @@ namespace Polhem.Hosting.UnitTests
         {
             public DbAccess Create(string requestedId) => inner.Create(databaseId);
         }
+
+        // PostgreSQL refuses a NUL character in a text column, which an unauthenticated caller can put in a user id.
+        private void RunBatchWithNulValue(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var withNul = Guid.NewGuid();
+            var nul = new LoginAuditEntry { SysRowId = withNul, UserId = "a\0b", Event = LoginEvent.LoginFailed };
+
+            CreateWriteRepository(databaseType).WriteBatch([NewLoginEntry(first), nul]);
+
+            Assert.Equal(1L, CountLoginRows(databaseType, first));
+            Assert.Equal(1L, CountLoginRows(databaseType, withNul));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_SqlServer_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_PostgreSql_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_MySql_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_Sqlite_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a WriteBatch with a NUL character in a value persists every entry of the batch")]
+        public void WriteBatch_Oracle_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.Oracle);
+
+        // The batch the sink writes, with one entry whose user id an unauthenticated caller made too long.
+        private void RunBatchWithOverlongValue(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var overlong = Guid.NewGuid();
+            var last = Guid.NewGuid();
+            var tooLong = new LoginAuditEntry { SysRowId = overlong, UserId = new string('x', 500), Event = LoginEvent.LoginFailed };
+
+            CreateWriteRepository(databaseType).WriteBatch([NewLoginEntry(first), tooLong, NewLoginEntry(last)]);
+
+            Assert.Equal(1L, CountLoginRows(databaseType, first));
+            Assert.Equal(1L, CountLoginRows(databaseType, overlong));
+            Assert.Equal(1L, CountLoginRows(databaseType, last));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a WriteBatch with one over-long value persists every entry of the batch")]
+        public void WriteBatch_SqlServer_OverlongValueKeepsTheBatch() => RunBatchWithOverlongValue(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a WriteBatch with one over-long value persists every entry of the batch")]
+        public void WriteBatch_PostgreSql_OverlongValueKeepsTheBatch() => RunBatchWithOverlongValue(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a WriteBatch with one over-long value persists every entry of the batch")]
+        public void WriteBatch_MySql_OverlongValueKeepsTheBatch() => RunBatchWithOverlongValue(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a WriteBatch with one over-long value persists every entry of the batch")]
+        public void WriteBatch_Sqlite_OverlongValueKeepsTheBatch() => RunBatchWithOverlongValue(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a WriteBatch with one over-long value persists every entry of the batch")]
+        public void WriteBatch_Oracle_OverlongValueKeepsTheBatch() => RunBatchWithOverlongValue(DatabaseType.Oracle);
+
+        // A sign-in's user id comes from an unauthenticated caller and st_log_login.user_id is 50 characters wide.
+        private void RunOverlongValue(DatabaseType databaseType)
+        {
+            var databaseId = TestDbConventions.GetDatabaseId(databaseType, "log");
+            var dbAccess = _fx.GetRequiredService<IDbAccessFactory>().Create(databaseId);
+            var schema = _fx.GetRequiredService<IDefineAccess>().GetTableSchema("log", "st_log_login");
+            var width = schema.Fields!["user_id"].Length;
+            var rowId = Guid.NewGuid();
+            var entry = new LoginAuditEntry
+            {
+                SysRowId = rowId,
+                UserId = new string('x', width * 4),
+                Event = LoginEvent.LoginFailed,
+            };
+
+            if (databaseType != DatabaseType.SQLite)
+            {
+                // Control: without the column widths the database refuses the row, which once took its whole batch.
+                Assert.ThrowsAny<DbException>(() => dbAccess.Execute(AuditLogWriteRepository.BuildInsert(entry)));
+            }
+
+            dbAccess.Execute(AuditLogWriteRepository.BuildInsert(entry, schema));
+
+            var stored = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT user_id FROM st_log_login WHERE sys_rowid={0}", rowId)).Scalar;
+            Assert.Equal(new string('x', width), Convert.ToString(stored, CultureInfo.InvariantCulture));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: an audit value longer than its column is cut to the column's width and written")]
+        public void OverlongValue_SqlServer_IsCutToWidth() => RunOverlongValue(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: an audit value longer than its column is cut to the column's width and written")]
+        public void OverlongValue_PostgreSql_IsCutToWidth() => RunOverlongValue(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: an audit value longer than its column is cut to the column's width and written")]
+        public void OverlongValue_MySql_IsCutToWidth() => RunOverlongValue(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: an audit value longer than its column is cut to the column's width and written")]
+        public void OverlongValue_Sqlite_IsCutToWidth() => RunOverlongValue(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: an audit value longer than its column is cut to the column's width and written")]
+        public void OverlongValue_Oracle_IsCutToWidth() => RunOverlongValue(DatabaseType.Oracle);
     }
 }
