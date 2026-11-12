@@ -108,6 +108,33 @@ namespace Polhem.Api.Client.UnitTests.Definitions
             Assert.Equal("Male", svc.GetLangEnum("zh-TW", "Common", "Gender")!.GetText("M"));
         }
 
+        [Fact]
+        [DisplayName("A namespace and language written in another case resolve against the snapshot, for text and enums alike")]
+        public void Lookup_DifferentCase_Resolves()
+        {
+            var resource = ResEnum("Gender", ("M", "男"));
+            resource.Items.Add("OK", "確定");
+            var svc = Build(("zh-TW", "Common", resource, null));
+
+            Assert.Equal("確定", svc.GetLangText("zh-tw", "common", "OK"));
+            Assert.Equal("男", svc.GetLangEnumText("ZH-TW", "COMMON.Gender", "M"));
+        }
+
+        [Fact]
+        [DisplayName("A snapshot with two keys that differ only in case is accepted and answers from one of them")]
+        public void Constructor_KeysDifferOnlyInCase_KeepsOne()
+        {
+            var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.Ordinal)
+            {
+                [SnapshotLanguageService.BuildKey("zh-TW", "Common")] = new LanguageLayers(Res(("OK", "確定")), null),
+                [SnapshotLanguageService.BuildKey("zh-TW", "common")] = new LanguageLayers(Res(("OK", "確定")), null),
+            };
+
+            var svc = new SnapshotLanguageService(snapshot, string.Empty);
+
+            Assert.Equal("確定", svc.GetLangText("zh-TW", "COMMON", "OK"));
+        }
+
         // ---- Fixtures ----
 
         private static SnapshotLanguageService Build(
