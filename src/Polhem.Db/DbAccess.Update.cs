@@ -23,13 +23,12 @@ namespace Polhem.Db
         {
             ValidateUpdateSpec(spec);
 
-            var subject = UpdateSubject(spec);
-            using (var scope = RunWithAnomalyDetection(subject, CreateScope, NoCounts))
+            using (var scope = RunWithAnomalyDetection(s_openSubject, CreateScope, NoCounts))
             {
                 DbTransaction? tran = null;
                 try
                 {
-                    tran = RunWithAnomalyDetection(subject, () => BeginTransactionIfRequested(scope, spec), NoCounts);
+                    tran = RunWithAnomalyDetection(s_beginSubject, () => BeginTransactionIfRequested(scope, spec), NoCounts);
                     int affected = ApplySpecWithAnomalyDetection(spec, scope.Connection!, tran);
                     if (tran != null) { CommitWithAnomalyDetection(tran); }
                     return affected;
@@ -189,13 +188,12 @@ namespace Polhem.Db
             if (specs.Count == 0) return Array.Empty<int>();
             foreach (var spec in specs) ValidateUpdateSpec(spec);
 
-            var opening = UpdateSubject(specs[0]);
-            using (var scope = RunWithAnomalyDetection(opening, CreateScope, NoCounts))
+            using (var scope = RunWithAnomalyDetection(s_openSubject, CreateScope, NoCounts))
             {
                 DbTransaction? tran = null;
                 try
                 {
-                    tran = RunWithAnomalyDetection(opening, () => scope.Connection!.BeginTransaction(), NoCounts);
+                    tran = RunWithAnomalyDetection(s_beginSubject, () => scope.Connection!.BeginTransaction(), NoCounts);
                     var affected = new int[specs.Count];
                     for (int i = 0; i < specs.Count; i++)
                         affected[i] = ApplySpecWithAnomalyDetection(specs[i], scope.Connection!, tran);

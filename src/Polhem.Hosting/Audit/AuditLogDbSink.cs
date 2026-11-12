@@ -85,7 +85,7 @@ namespace Polhem.Hosting.Audit
                 }
                 consecutiveFailures++;
                 failed.Add(entries[i]);
-                _logger.LogError(failure, "Audit log entry for '{TableName}' was refused by the '{DatabaseId}' database.",
+                _logger.LogError(failure, "Audit log entry for '{TableName}' could not be written to the '{DatabaseId}' database.",
                     entries[i].TableName, DbCategoryIds.Log);
             }
             return failed;

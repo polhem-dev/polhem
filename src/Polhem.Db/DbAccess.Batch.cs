@@ -13,8 +13,11 @@ namespace Polhem.Db
     /// </remarks>
     public partial class DbAccess
     {
-        // A commit has no command text of its own; the anomaly log names it with this fixed text.
-        private static readonly AnomalySubject s_commitSubject = new("COMMIT", 0);
+        // Opening a connection, beginning a transaction and committing it have no command text of their own, so the
+        // anomaly log names each with fixed text. None is bound by a command timeout, so elapsed time does not imply one.
+        private static readonly AnomalySubject s_openSubject = new("OPEN", 0, InferTimeoutFromElapsed: false);
+        private static readonly AnomalySubject s_beginSubject = new("BEGIN TRANSACTION", 0, InferTimeoutFromElapsed: false);
+        private static readonly AnomalySubject s_commitSubject = new("COMMIT", 0, InferTimeoutFromElapsed: false);
 
         /// <summary>
         /// Executes multiple database commands as a batch.
@@ -30,12 +33,11 @@ namespace Polhem.Db
         {
             ValidateBatch(batch);
 
-            var opening = AnomalySubject.Of(batch.Commands[0]);
             var result = new DbBatchResult();
-            using var scope = RunWithAnomalyDetection(opening, CreateScope, NoCounts);
+            using var scope = RunWithAnomalyDetection(s_openSubject, CreateScope, NoCounts);
             var connection = scope.Connection!;
             using var tran = batch.UseTransaction
-                ? RunWithAnomalyDetection(opening, () => BeginBatchTransaction(connection, batch), NoCounts)
+                ? RunWithAnomalyDetection(s_beginSubject, () => BeginBatchTransaction(connection, batch), NoCounts)
                 : null;
 
             for (int i = 0; i < batch.Commands.Count; i++)
@@ -66,9 +68,11 @@ namespace Polhem.Db
         /// <remarks>
         /// When a command fails or is cancelled, the transaction (if any) is rolled back and the exception is
         /// rethrown unchanged, with the failing command's index in <see cref="Exception.Data"/> under
-        /// <see cref="DbBatchSpec.FailedIndexDataKey"/>. A provider that reports a cancelled command as a
-        /// <see cref="DbException"/> (SQL Server does) has it rethrown as an <see cref="OperationCanceledException"/>
-        /// that carries it, so a cancellation always arrives as one. A failed commit is rethrown unchanged.
+        /// <see cref="DbBatchSpec.FailedIndexDataKey"/>. A <see cref="DbException"/> that arrives after
+        /// <paramref name="cancellationToken"/> was cancelled is rethrown as an <see cref="OperationCanceledException"/>
+        /// that carries it, because SQL Server reports a cancelled command that way; an error that happened just
+        /// before the cancellation is reported the same way and is not recorded as an anomaly. Once every command
+        /// has run the commit is not cancelled, and a failed commit is rethrown unchanged.
         /// </remarks>
         public async Task<DbBatchResult> ExecuteBatchAsync(DbBatchSpec batch, CancellationToken cancellationToken = default)
         {
@@ -88,14 +92,13 @@ namespace Polhem.Db
 
         private async Task<DbBatchResult> RunBatchAsync(DbBatchSpec batch, CancellationToken cancellationToken)
         {
-            var opening = AnomalySubject.Of(batch.Commands[0]);
             var result = new DbBatchResult();
             using var scope = await RunWithAnomalyDetectionAsync(
-                opening, () => CreateScopeAsync(cancellationToken), NoCounts, cancellationToken).ConfigureAwait(false);
+                s_openSubject, () => CreateScopeAsync(cancellationToken), NoCounts, cancellationToken).ConfigureAwait(false);
             var connection = scope.Connection!;
             var tran = batch.UseTransaction
                 ? await RunWithAnomalyDetectionAsync(
-                    opening, () => BeginBatchTransactionAsync(connection, batch, cancellationToken), NoCounts, cancellationToken)
+                    s_beginSubject, () => BeginBatchTransactionAsync(connection, batch, cancellationToken), NoCounts, cancellationToken)
                     .ConfigureAwait(false)
                 : null;
             try
@@ -121,11 +124,13 @@ namespace Polhem.Db
 
                 if (tran != null)
                 {
+                    // NOTE: once every command has run, the commit is not cancelled. A commit cancelled mid-flight
+                    // leaves the outcome unknown: the server may have committed while the caller is told it did not.
                     await RunWithAnomalyDetectionAsync(s_commitSubject, async () =>
                     {
-                        await tran.CommitAsync(cancellationToken).ConfigureAwait(false);
+                        await tran.CommitAsync(CancellationToken.None).ConfigureAwait(false);
                         return true;
-                    }, NoCounts, cancellationToken).ConfigureAwait(false);
+                    }, NoCounts, CancellationToken.None).ConfigureAwait(false);
                 }
                 return result;
             }

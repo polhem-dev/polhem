@@ -58,7 +58,7 @@ namespace Polhem.Db.UnitTests
         {
             var entry = Assert.Single(writer.Entries);
             Assert.Equal(AnomalyKind.Error, entry.Kind);
-            Assert.Contains(commandText, entry.Command, StringComparison.Ordinal);
+            Assert.Equal(commandText, entry.Command);
         }
 
         [DbFact(DatabaseType.SQLite)]
@@ -173,7 +173,8 @@ namespace Polhem.Db.UnitTests
 
             AssertSingleError(writer, insert);
         }
-            [DbFact(DatabaseType.SQLite)]
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("A failing ExecuteAsync on a caller's transaction records an Error anomaly")]
         public async Task ExecuteAsyncWithTransaction_Failure_RecordsError()
         {

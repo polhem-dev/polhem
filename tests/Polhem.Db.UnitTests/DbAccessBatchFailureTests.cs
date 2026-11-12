@@ -102,7 +102,9 @@ namespace Polhem.Db.UnitTests
         {
             // SqlClient reports a command cancelled mid-flight as a `SqlException`; the batch turns it into a cancellation.
             var dbAccess = NewDbAccess(DatabaseType.SQLServer);
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+            // A pooled connection makes opening and beginning quick, so the cancellation lands while the command waits.
+            dbAccess.ExecuteScalar("SELECT 1");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             var batch = new DbBatchSpec
             {
                 UseTransaction = true,

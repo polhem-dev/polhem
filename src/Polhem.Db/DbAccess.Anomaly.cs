@@ -142,8 +142,9 @@ namespace Polhem.Db
         /// <summary>
         /// What an anomaly is recorded against: the command template (never its parameter values) and the
         /// timeout the command ran with, which tells a timeout from another failure. A subject that spans several
-        /// round trips turns off <see cref="InferTimeoutFromElapsed"/>, since its total time says nothing about one
-        /// command's timeout.
+        /// round trips, or is not bound by a command timeout, turns off <see cref="InferTimeoutFromElapsed"/>, since its total
+        /// time says nothing about one command's timeout. Slow is still recorded for it: a write or a wait that takes
+        /// that long is worth seeing whatever its cause.
         /// </summary>
         private readonly record struct AnomalySubject(string CommandText, int CommandTimeout, bool InferTimeoutFromElapsed = true)
         {
