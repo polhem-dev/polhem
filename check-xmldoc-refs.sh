@@ -13,6 +13,9 @@
 # **upward cross-assembly references** (for example Polhem.ObjectCaching mentioning AddPolhemFramework in
 # Polhem.Hosting: the dependency points the other way, so cref cannot resolve it).
 #
+# `.razor` files are read too: the `///` comments in their `@code` blocks ship in the same .xml file. Only their `///`
+# lines are searched for `<c>`, since markup may contain the tag; every other line still counts as code below.
+#
 # Expected output: the OK line only. For each other line, decide whether it really points to nothing or is a
 # new exception that belongs in the allowlist.
 set -uo pipefail
@@ -63,7 +66,7 @@ is_allowed() {
 # exception. The test compares the file with its `tr -d '\000'` output: a shell variable cannot hold NUL, so a
 # grep pattern cannot find it.
 NUL_HITS=$(
-  find src tests tools apps samples -name '*.cs' \
+  find src tests tools apps samples \( -name '*.cs' -o -name '*.razor' \) \
        -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" 2>/dev/null \
   | while IFS= read -r f; do
       tr -d '\000' < "$f" | cmp -s - "$f" || echo "$f"
@@ -79,7 +82,7 @@ fi
 # deliberate: this script only asks "does this name still exist", not "which layer is it in".
 CODE=$(mktemp)
 trap 'rm -f "$CODE"' EXIT
-find src tests tools apps samples -name '*.cs' \
+find src tests tools apps samples \( -name '*.cs' -o -name '*.razor' \) \
      -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" -print0 2>/dev/null \
   | xargs -0 grep -hv '^[[:space:]]*///' > "$CODE"
 
@@ -89,12 +92,15 @@ while IFS= read -r id; do
   grep -qw -- "$id" "$CODE" && continue
   status=1
   echo "Points to a type that does not exist: <c>${id}</c>"
-  grep -rn --include='*.cs' --exclude-dir=bin --exclude-dir=obj "<c>${id}</c>" src \
+  grep -rn --include='*.cs' --include='*.razor' --exclude-dir=bin --exclude-dir=obj "<c>${id}</c>" src \
     | sed 's/^/    /'
 done < <(
-  find src -name '*.cs' -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" -print0 \
-    | xargs -0 grep -ho '<c>[A-Z][A-Za-z0-9_]*</c>' \
-    | sed 's|<c>\(.*\)</c>|\1|' | sort -u
+  {
+    find src -name '*.cs' -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" -print0 \
+      | xargs -0 grep -ho '<c>[A-Z][A-Za-z0-9_]*</c>'
+    find src -name '*.razor' -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" -print0 \
+      | xargs -0 grep -h '^[[:space:]]*///' | grep -o '<c>[A-Z][A-Za-z0-9_]*</c>'
+  } | sed 's|<c>\(.*\)</c>|\1|' | sort -u
 )
 
 # ---------------------------------------------------------------------------
@@ -130,7 +136,7 @@ while IFS= read -r line; do
   cref_status=1
   echo "Uses <c> where <see cref> should be used: ${id}  (${file})"
 done < <(
-  for f in $(find src -name '*.cs' -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB"); do
+  for f in $(find src \( -name '*.cs' -o -name '*.razor' \) -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB"); do
     proj=$(echo "$f" | cut -d/ -f2)
     grep -h '^[[:space:]]*///' "$f" | grep -o '<c>[A-Za-z_][A-Za-z0-9_.]*</c>' \
       | sed 's|<c>\(.*\)</c>|\1|' \
