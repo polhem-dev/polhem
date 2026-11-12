@@ -136,8 +136,20 @@ namespace Polhem.Api.Client.Definitions
             ArgumentNullException.ThrowIfNull(localizedSchema);
 
             string effectiveLayoutId = string.IsNullOrWhiteSpace(layoutId) ? progId : layoutId;
-            var customize = await _defineAccess.GetCustomizeFormLayoutAsync(progId, effectiveLayoutId, cancellationToken).ConfigureAwait(false);
-            var @base = await _defineAccess.GetFormLayoutAsync(effectiveLayoutId, cancellationToken).ConfigureAwait(false);
+            FormLayout? customize, @base;
+            if (FetchConcurrently)
+            {
+                var customizeTask = _defineAccess.GetCustomizeFormLayoutAsync(progId, effectiveLayoutId, cancellationToken);
+                var baseTask = _defineAccess.GetFormLayoutAsync(effectiveLayoutId, cancellationToken);
+                await Task.WhenAll((Task)customizeTask, baseTask).ConfigureAwait(false);
+                customize = await customizeTask.ConfigureAwait(false);
+                @base = await baseTask.ConfigureAwait(false);
+            }
+            else
+            {
+                customize = await _defineAccess.GetCustomizeFormLayoutAsync(progId, effectiveLayoutId, cancellationToken).ConfigureAwait(false);
+                @base = await _defineAccess.GetFormLayoutAsync(effectiveLayoutId, cancellationToken).ConfigureAwait(false);
+            }
 
             var definition = CustomizeOverlay.PickFormLayout(customize, @base)
                 ?? throw new InvalidOperationException(
@@ -200,18 +212,45 @@ namespace Polhem.Api.Client.Definitions
         private async Task<Dictionary<string, LanguageLayers>> FetchLayersAsync(IEnumerable<string> namespaces,
             string lang, string defaultLanguage, CancellationToken cancellationToken)
         {
-            var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.OrdinalIgnoreCase);
-            foreach (string language in LanguageFallback.GetChain(lang, defaultLanguage))
+            var pairs = LanguageFallback.GetChain(lang, defaultLanguage)
+                .SelectMany(language => namespaces.Select(ns => (Language: language, Namespace: ns)))
+                .ToList();
+            var layers = new LanguageLayers[pairs.Count];
+            if (FetchConcurrently)
             {
-                foreach (string ns in namespaces)
-                {
-                    var customize = await _defineAccess.GetCustomizeLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
-                    var @base = await SafeGetLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
-                    snapshot[SnapshotLanguageService.BuildKey(language, ns)] = new LanguageLayers(@base, customize);
-                }
+                await Task.WhenAll(pairs.Select(async (pair, i) =>
+                    layers[i] = await FetchLayersAsync(pair.Language, pair.Namespace, cancellationToken).ConfigureAwait(false)))
+                    .ConfigureAwait(false);
             }
+            else
+            {
+                for (int i = 0; i < pairs.Count; i++)
+                    layers[i] = await FetchLayersAsync(pairs[i].Language, pairs[i].Namespace, cancellationToken).ConfigureAwait(false);
+            }
+
+            var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < pairs.Count; i++)
+                snapshot[SnapshotLanguageService.BuildKey(pairs[i].Language, pairs[i].Namespace)] = layers[i];
             return snapshot;
         }
+
+        private async Task<LanguageLayers> FetchLayersAsync(string language, string ns, CancellationToken cancellationToken)
+        {
+            var customize = await _defineAccess.GetCustomizeLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
+            var @base = await SafeGetLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
+            return new LanguageLayers(@base, customize);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the definitions a form needs are fetched at once rather than one after
+        /// another.
+        /// </summary>
+        /// <remarks>
+        /// Only a remote client gains: each fetch is a round trip, and on a cold cache a form needs one per layer,
+        /// namespace and culture of the fall-back chain. An in-process client has no round trip to save, and its calls
+        /// run on the caller's services, which are not meant to be used by several calls at once.
+        /// </remarks>
+        private bool FetchConcurrently => !_defineAccess.Client.IsLocal;
 
         private static HashSet<string> CollectNamespaces(FormSchema schema)
         {

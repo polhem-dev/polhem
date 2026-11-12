@@ -4,13 +4,16 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Organization;
 using Polhem.Definition.Security;
+using Polhem.Definition.Storage;
 using Polhem.ObjectCaching.Database;
+using Polhem.ObjectCaching.Define;
 
 namespace Polhem.ObjectCaching.UnitTests.Database
 {
     /// <summary>
-    /// Tests the negative caching of the two caches whose keys come from the caller: unknown access tokens
-    /// (<see cref="SessionInfoCache"/>) and unknown API key identifiers (<see cref="ApiKeyCache"/>). A miss is
+    /// Tests the negative caching of the caches whose keys come from the caller: unknown access tokens
+    /// (<see cref="SessionInfoCache"/>), unknown API key identifiers (<see cref="ApiKeyCache"/>) and missing language
+    /// resources (<see cref="LanguageResourceCache"/>). A miss is
     /// remembered, but in a set capped per cache, so a stream of distinct unknown keys cannot grow memory without bound.
     /// </summary>
     public class NegativeCacheBoundTests
@@ -103,6 +106,26 @@ namespace Polhem.ObjectCaching.UnitTests.Database
                 cache.Get($"probe-{i}");
 
             Assert.Equal(ApiKeyCache.MaxNegativeIds, cache.BoundedNegativeCount);
+        }
+
+        [Fact]
+        [DisplayName("Miss markers for missing language resources are capped at MaxNegativeLanguages")]
+        public void LanguageResourceCache_ManyMissingResources_MarkersAreCapped()
+        {
+            var root = Directory.CreateTempSubdirectory("polhem-lang-").FullName;
+            try
+            {
+                var cache = new LanguageResourceCache(new FileDefineStorage(new PathOptions { DefinePath = root }), NewPrefix());
+
+                for (int i = 0; i < LanguageResourceCache.MaxNegativeLanguages + 500; i++)
+                    Assert.Null(cache.Get("en", $"probe{i}"));
+
+                Assert.Equal(LanguageResourceCache.MaxNegativeLanguages, cache.BoundedNegativeCount);
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
         }
     }
 }
