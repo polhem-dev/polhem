@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 6087cd2ff6f0d1000891b733028dde2cdccd4d4a -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 97f9212c7801eb47bb522c9ba29826abbbbb4201 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -15,9 +15,9 @@
 
 | 前端類型 | 用哪個 client | Wire format |
 |----------|-------------|-------------|
-| Blazor Server（in-process） | `Polhem.Api.Client`（Local） | 直接 DI 派遣，不走 HTTP |
-| Blazor WASM | `Polhem.Api.Client`（Remote） | HTTP + MessagePack + AES-CBC-HMAC |
-| Avalonia（`Polhem.UI.Avalonia`：桌面、瀏覽器、iOS、Android） | `Polhem.UI.ApiBridge`，底層為 `Polhem.Api.Client`（Remote；桌面也可 Local） | 同上 |
+| Blazor Server | `Polhem.Api.Client`（Local，或 Remote） | Local：直接 DI 派遣，不走 HTTP；Remote：與 Avalonia 相同 |
+| Blazor WASM | `Polhem.Api.Client`（Remote） | HTTP + `Encoded` MessagePack，不加密：瀏覽器執行環境沒有 RSA，所以要求 `Encrypted` 的方法會被拒絕 |
+| Avalonia（`Polhem.UI.Avalonia`：桌面、瀏覽器、iOS、Android） | `Polhem.UI.ApiBridge`，底層為 `Polhem.Api.Client`（Remote；桌面也可 Local） | HTTP + MessagePack + AES-CBC-HMAC |
 | .NET MAUI / WPF / WinForms | `Polhem.Api.Client`（Remote） | 同上 |
 | **React / Vue / Angular / vanilla JS** | **fetch + JSON-RPC**（本指引） | **HTTPS + 純 JSON** |
 | TypeScript SPA / Node.js client | 同上 — fetch + JSON-RPC，可加 TS 型別 | HTTPS + 純 JSON |
@@ -168,9 +168,10 @@ client 改用 JSON body codec（`"codec": "json"` 搭配 `Encoded` 或 `Encrypte
 | `X-Api-Key` | 是，`System.Ping` 除外 | 應用程式的 API 金鑰 | 部署發出第一把啟用中的金鑰（`st_api_key`）之前，任何非空值都會通過；之後只有已發出、啟用中且未到期的金鑰才會通過。見 [API 金鑰管理](../security/api-key-management.md)。 |
 | `Authorization` | 宣告為 `Authenticated` 的方法 | `Bearer <accessToken>` | 從 `System.Login` 回應拿到的 GUID。不帶此 header 的請求即為匿名呼叫，只有宣告為 `Anonymous` 的方法會接受。 |
 
-金鑰被拒，或 `Authorization` header 不是格式正確的 `Bearer <guid>`，會在派遣前以 **HTTP 401** 拒絕，
-body 仍是 JSON-RPC 錯誤（`-32600`）。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，
-以 HTTP 200 回 `-32001`。
+金鑰被拒，或 `Authorization` header 不是格式正確的 `Bearer <guid>`，會在方法執行前被拒，以 **HTTP 200**
+回應，body 帶 JSON-RPC 錯誤 `-32600`。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，
+回 `-32001`，同樣是 HTTP 200。請檢查 body 的 `error`，不要看 HTTP 狀態：只有 body 不是 `application/json`（415）
+或過大（413）時才會是其他狀態。
 
 Host 必須設好 CORS。Northwind 伺服器在
 [`Program.cs`](../../../apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs)
@@ -196,10 +197,9 @@ Token 是 `Guid` 字串。Token 在登入回應所帶的 `expiredAt` 時間到�
 
 某些方法需要先進入公司（`System.EnterCompany`）以設定 `SessionInfo.CompanyId`，
 讓 form CRUD 路由到該公司的資料庫，並只存取該公司的資料列（多家公司可以共用一個資料庫）。`CategoryId` 為 `company` 的表單若在未進公司時呼叫，會回 `-32002`
-（`CompanyNotEntered`）。業務表單應放在 `company`，範例的 `Staff` 表單（`ft_staff`）也不例外：每個範例
-client 都在 `Login` 之後緊接著呼叫 `EnterCompany`，進入 demo 後端種下的唯一一間公司（`DEMO`）。範例把它命名為
-`Staff` 而不是 `Employee`，因為框架把 `Employee` 保留給自己的表單（`st_employee`，見
-[框架保留命名](../reference/framework-reserved-names.md)）；應用程式的表單要用自己的 progId。
+（`CompanyNotEntered`）。業務表單應放在 `company`，所以 client 要在 `Login` 之後緊接著呼叫 `EnterCompany`；Northwind 示範的公司是
+`northwind`（公司代號一律小寫）。應用程式的表單要用自己的 progId：框架把 `Employee` 等名稱保留給自己的表單
+（`st_employee`，見 [框架保留命名](../reference/framework-reserved-names.md)）。
 
 ---
 
@@ -221,7 +221,7 @@ Plain client 可呼叫的 `Public` 方法：
 | Anonymous | `System.Ping`、`System.GetCommonConfiguration`、`System.Login`、`<ProgId>.ExecFuncAnonymous` |
 | Authenticated — Session | `System.EnterCompany`、`System.LeaveCompany`、`System.Logout`、`System.GetDepartmentTree` |
 | Authenticated — Definition | `System.GetDefine`、`System.GetFormSchema`、`System.GetFormLayout`、`System.GetLanguage`、`System.GetCustomizeFormLayout`、`System.GetCustomizeLanguage` |
-| Authenticated — Form | `<ProgId>.GetList`、`GetLookup`、`GetNewData`、`GetData`、`Save`、`Delete`、`ExecFunc` |
+| Authenticated — Form | `<ProgId>.GetList`、`GetLookup`、`GetNewData`、`GetData`、`Save`、`Delete`、`FieldValueChange`、`ExecFunc` |
 
 **定義以 XML 傳回**
 
@@ -236,7 +236,7 @@ XML 相同。定義在每條路徑上都以 XML 傳輸，因為它們的巢狀�
 | `System.GetLanguage` | `{ lang, namespace }` | `{ xml }` — 單一 namespace × 單一語系的 `LanguageResource`（`Items` + `Enums`）；未存檔時為空字串 |
 | `System.GetDefine` | `{ defineType, keys }` | `{ xml }` — 遠端呼叫者可讀的任一定義型別：`FormSchema`、`FormLayout`、`Language`、`MenuSettings`、`CurrencySettings`、`UnitSettings`。其他型別一律拒絕。 |
 
-用瀏覽器的 `DOMParser` 解析 XML；範例的 `parseDefineXml`（以及下方的 TypeScript wrapper）會把它轉成一般物件。
+用瀏覽器的 `DOMParser` 解析 XML；下方 TypeScript wrapper 的 `parseDefineXml` 會把它轉成一般物件。
 伺服端不做在地化也不做合併：schema 裡的標題是基底文字，租戶的客製層則是另外的呼叫
 （`System.GetCustomizeFormLayout`、`System.GetCustomizeLanguage`）。要以使用者的語言顯示標題，
 以使用者的語系與表單的 `progId`（作為 namespace）呼叫 `System.GetLanguage`，再依 `FormSchemaLocalizer`
@@ -325,8 +325,8 @@ async function rpcCall<T>(method: string, value: object): Promise<T> {
   if (_accessToken) headers.Authorization = `Bearer ${_accessToken}`;
 
   const res = await fetch(ENDPOINT, { method: 'POST', headers, body: JSON.stringify(body) });
-  // 派遣前的拒絕（API 金鑰、Authorization header、無法解析的 body）帶 4xx 狀態，
-  // body 仍是 JSON-RPC 錯誤，所以先讀 body。
+  // 每個 JSON-RPC 錯誤（包括被拒的 API 金鑰）都是 HTTP 200，錯誤在 body 裡；
+  // 只有 body 不是 JSON（415）或過大（413）才是 4xx。所以先讀 body。
   const data = (await res.json().catch(() => undefined)) as JsonRpcResponse<T> | undefined;
   if (data?.error) throw new RpcError(data.error.code, data.error.message, data.error.data);
   if (!res.ok || !data?.result) throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`);

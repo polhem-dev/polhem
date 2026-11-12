@@ -173,8 +173,8 @@ app.Run();
   it before the host starts serving. `AddPolhemPayload` registers the payload compressor and encryptor the settings
   name.
 - **The framework does not create its tables.** Even an anonymous call reads `st_api_key` to check the `X-Api-Key`
-  header, and a lookup that fails because the table is missing rejects the call; the cache-notify poller reads
-  `st_cache_notify`. The loop creates every table `DbCategorySettings.xml` registers under `common`, and on later
+  header (while the table does not exist, no key has been issued and any non-empty key passes; a lookup that fails
+  for another reason rejects the call), and the cache-notify poller reads `st_cache_notify`. The loop creates every table `DbCategorySettings.xml` registers under `common`, and on later
   starts brings them in line with their TableSchema. A real application creates its own tables the same way, with
   one `TableSchemaBuilder` per database (see [Database Schema Upgrade](../database/database-schema-upgrade.md)).
 - `AddPolhemApiKeyGateCheck` logs at startup while no API key has been issued (a warning in the Development

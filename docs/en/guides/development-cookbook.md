@@ -807,18 +807,24 @@ What kind of frontend are you building?
 │   → See "Polhem.UI.* heads" below
 │
 ├── Blazor Server (ASP.NET Core server-rendered)
-│   → Use Polhem.Web.Blazor.Mud on Polhem.Web.Blazor.Server, with circuit-scoped connectors
+│   → Use a UI package (Polhem.Web.Blazor.Mud or Polhem.Web.Blazor.Fluent) on
+│     Polhem.Web.Blazor.Server, with circuit-scoped connectors
 │   → See "Blazor Server" below
+│
+├── Blazor WebAssembly (runs in the browser)
+│   → Use the same UI packages on Polhem.Web.Blazor.Wasm, which calls the server over HTTP
+│   → See the Polhem.Web.Blazor.Wasm README
 │
 └── No .NET (JavaScript, TypeScript, …)
     → Call the JSON-RPC endpoint directly
     → See JSON-RPC Frontend Integration
 ```
 
-> The framework ships two UI packages: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Mud`.
-> Any other .NET frontend — WinForms, WPF, a Blazor WebAssembly app of your own — has no framework UI
-> package and uses `Polhem.UI.ApiBridge` (`ClientInfo`) or `Polhem.Api.Client` directly. A client without .NET
-> follows [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md).
+> The framework's UI packages are `Polhem.UI.Avalonia` for Avalonia, and `Polhem.Web.Blazor.Mud` or
+> `Polhem.Web.Blazor.Fluent` for Blazor, on the `Polhem.Web.Blazor.Server` or
+> [`Polhem.Web.Blazor.Wasm`](../../../src/Polhem.Web.Blazor.Wasm/README.md) host. Any other .NET frontend, such as
+> WinForms or WPF, has no framework UI package and uses `Polhem.UI.ApiBridge` (`ClientInfo`) or `Polhem.Api.Client`
+> directly. A client without .NET follows [JSON-RPC Frontend Integration](../api/jsonrpc-frontend-integration.md).
 
 ### Polhem.UI.* heads (ClientInfo)
 
@@ -959,7 +965,7 @@ app.Run();
 The mode is chosen in `AddPolhemBlazor`, and each circuit's `PolhemApiClient` is created accordingly:
 
 - **Local mode (in-process)** — `options.UseLocalProvider()`, the default: the components and the backend share the ASP.NET Core process, and the client dispatches in process (`PolhemApiClient.CreateLocal`) with no HTTP. **Every call is a trusted local call**: the access token check and the `LocalOnly` restriction are skipped. Use it only when every user of the site may see the whole backend, such as an internal administration tool.
-- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api", apiKey)`: the backend runs in another process or server, the client goes over HTTP (`PolhemApiClient.CreateRemote`), and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`, but `apiKey` must be the key the server issued for this application: every circuit's client sends it as the `X-Api-Key` header, and without an accepted one the server answers every method except `System.Ping` with `401 Unauthorized`, so the sign-in fails first. The key identifies the application, not a user, which is why every circuit shares it.
+- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api", apiKey)`: the backend runs in another process or server, the client goes over HTTP (`PolhemApiClient.CreateRemote`), and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`, but `apiKey` must be the key the server issued for this application: every circuit's client sends it as the `X-Api-Key` header, and without an accepted one the server answers every method except `System.Ping` with the JSON-RPC error `-32600` (in an HTTP 200 response), so the sign-in fails first. The key identifies the application, not a user, which is why every circuit shares it.
 
 ### Avalonia (Polhem.UI.Avalonia)
 
@@ -1016,5 +1022,6 @@ Worked examples: [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README
 |---------|-----------------------|---------------|--------------------|------|-------------|
 | `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (the static `ClientInfo.ApiClient`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `UIServices.Provider = …AddPolhemUIApiBridge()…` and `ClientInfo.InitializeAsync` at startup |
 | Blazor Server | DI scope | **N users / process** (per SignalR circuit) | Startup configuration (`UseRemoteProvider(endpoint, apiKey)`) | Local or Remote | `AddPolhemBlazor` (+ `AddPolhemFramework` for Local) |
+| Blazor WebAssembly | DI | **1 user / browser tab** | Startup configuration (`options.Endpoint`, `options.ApiKey`) | Remote | `AddPolhemBlazor` from `Polhem.Web.Blazor.Wasm` |
 
 > ⚠️ **Do not use `Polhem.UI.ApiBridge.ClientInfo` or `Polhem.UI.Core.UIServices` in Blazor Server.** `ClientInfo` keeps one signed-in client in a static property — only **one** access token per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. `UIServices.Provider` is process-wide in the same way. The Blazor head references `Polhem.UI.Core` only for the value rules it shares with the native heads; `UIServicesUsageGateTests` fails when it uses `UIServices` or references `Polhem.UI.ApiBridge`. See [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) and [ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).

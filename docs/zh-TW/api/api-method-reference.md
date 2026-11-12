@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: f44ab2e618ef479ea28be4c5f6011ce30564c52e -->
+<!-- source: en/api/api-method-reference.md blob: 6cd5bc2f8e59a0067d33cc5655bff7ddaa8b7bae -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -92,7 +92,7 @@ polhem-connector-js 不寫 frame，所以開關開啟時，以它建構的瀏覽
 | `GetDefine` | Public | Authenticated | 以 XML 原樣回傳任一定義型別（選單則套用 session 租戶的覆寫）。遠端呼叫者只能讀取 client 渲染表單與選單所需的型別 —— `FormSchema`、`FormLayout`、`Language`、`MenuSettings`、`CurrencySettings`、`UnitSettings`；其餘型別遠端一律拒絕。本機呼叫可讀取任何型別。 |
 | `SaveDefine` | LocalOnly | Authenticated | XML envelope 持久化定義資料；同時失效對應 cache slot。寫入定義屬部署期作業，遠端呼叫一律拒絕 —— 讀取請用 `GetDefine`。 |
 | `GetCustomizePluginSettings` | LocalOnly | Authenticated | 以 XML 讀回單一租戶的業務 plugin 綁定；該租戶沒有客製時回空字串。LocalOnly 的理由同 `SaveCustomizePluginSettings`。 |
-| `SaveCustomizePluginSettings` | LocalOnly | Authenticated | 儲存單一租戶的業務 plugin 綁定，整份取代。寫入前逐一驗證每個綁定型別——必須可載入、繼承 `FormBusinessPlugin`、且至少 override 一個時點——一筆不合格就整份拒存。這些綁定決定「哪些程式碼會在存檔與刪除流程裡執行」，因此遠端呼叫一律拒絕。 |
+| `SaveCustomizePluginSettings` | LocalOnly | Authenticated | 儲存單一租戶的業務 plugin 綁定，整份取代。寫入前逐一驗證每個綁定型別——必須可載入、繼承 `FormBusinessPlugin`、且恰好 override 綁定宣告的那個時點——一筆不合格就整份拒存。這些綁定決定「哪些程式碼會在存檔與刪除流程裡執行」，因此遠端呼叫一律拒絕。 |
 | `CreateApiKey` | Encrypted | Authenticated | 發放 API 金鑰，完整明文金鑰**只回傳一次** —— 伺服端只存雜湊，無法再次顯示。金鑰屬於整個部署、不屬於任何公司，因此遠端呼叫者必須是部署層管理員（`st_user.deployment_admin`），僅「已登入」不足。本機呼叫免管理員，尚無管理員的部署才鑄得出第一把金鑰。 |
 | `ListApiKeys` | Encrypted | Authenticated | 列出已發放的金鑰（含已停用），回傳的摘要**不帶任何憑證素材** —— 儲存的雜湊絕不離開伺服端。把關同 `CreateApiKey`。 |
 | `SetApiKeyEnabled` | Encrypted | Authenticated | 啟用或停用金鑰。停用即撤銷路徑，**立即**在所有伺服器行程生效，不等快取過期。把關同 `CreateApiKey`。 |

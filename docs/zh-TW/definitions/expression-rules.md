@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: affaa3fa123d393fe7a4962edaf5ff49a30b14e5 -->
+<!-- source: en/definitions/expression-rules.md blob: d4c8a2b84d726c0a307fcf302764f6eb7abe5fe4 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -15,7 +15,7 @@
 | 欄位預設值 | `FormField.DefaultValueExpression` | 建立新列時（蓋過字面預設值）；存檔時只填新列中仍為空的欄位 |
 | 驗證 / 前置檢查 | `FormSchema` 下的 `FormRule` | `BeforeSave` / `BeforeDelete` |
 
-> **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia 與 Blazor.Server 兩個 head 的即時運算（各 head 的 `FormLiveComputation`，底層共用 `FormLiveComputationEngine`）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
+> **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia 與 Blazor（Server 與 WebAssembly）head 的即時運算（`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 各自的 `FormLiveComputation`，底層共用 `FormLiveComputationEngine`）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
 
 ## 運算式語法
 

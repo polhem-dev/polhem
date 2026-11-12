@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 243288b5ab93c0d579a479b408c788bfb72e65ee -->
+<!-- source: en/guides/development-cookbook.md blob: ee568ae7087a2aacb96886eea3066cadceaed929 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -778,18 +778,24 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 │   → 參考下方「Polhem.UI.* head」章節
 │
 ├── Blazor Server（ASP.NET Core server-rendered）
-│   → 使用 Polhem.Web.Blazor.Server 上的 Polhem.Web.Blazor.Mud，connector 以 circuit 為 scope
+│   → 在 Polhem.Web.Blazor.Server 上使用 UI 套件（Polhem.Web.Blazor.Mud 或
+│     Polhem.Web.Blazor.Fluent），connector 以 circuit 為 scope
 │   → 參考下方「Blazor Server」章節
+│
+├── Blazor WebAssembly（在瀏覽器中執行）
+│   → 在 Polhem.Web.Blazor.Wasm 上使用同樣的 UI 套件，透過 HTTP 呼叫伺服器
+│   → 參考 Polhem.Web.Blazor.Wasm 的 README
 │
 └── 沒有 .NET（JavaScript、TypeScript…）
     → 直接呼叫 JSON-RPC 端點
     → 參考 JSON-RPC 前端整合指引
 ```
 
-> 框架提供兩個 UI 套件：`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Mud`。
-> 其他 .NET 前端——WinForms、WPF、你自己的 Blazor WebAssembly app——沒有對應的框架 UI 套件，
-> 直接使用 `Polhem.UI.ApiBridge`（`ClientInfo`）或 `Polhem.Api.Client`。沒有 .NET 的 client 依
-> [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)。
+> 框架的 UI 套件：Avalonia 用 `Polhem.UI.Avalonia`；Blazor 用 `Polhem.Web.Blazor.Mud` 或
+> `Polhem.Web.Blazor.Fluent`，搭配 `Polhem.Web.Blazor.Server` 或
+> [`Polhem.Web.Blazor.Wasm`](../../../src/Polhem.Web.Blazor.Wasm/README.zh-TW.md) 宿主。其他 .NET 前端（例如
+> WinForms、WPF）沒有對應的框架 UI 套件，直接使用 `Polhem.UI.ApiBridge`（`ClientInfo`）或 `Polhem.Api.Client`。
+> 沒有 .NET 的 client 依 [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)。
 
 ### Polhem.UI.* head（ClientInfo）
 
@@ -930,7 +936,7 @@ app.Run();
 模式在 `AddPolhemBlazor` 選定，每個 circuit 的 `PolhemApiClient` 依此建立：
 
 - **Local mode（in-process）**—— `options.UseLocalProvider()`，預設值：元件與後端共用同一個 ASP.NET Core process，client 在 process 內分派（`PolhemApiClient.CreateLocal`），沒有 HTTP。**每次呼叫都是受信任的 local 呼叫**：access token 檢查與 `LocalOnly` 限制都會略過。只有在網站的每個使用者都可以看到整個後端時才使用，例如內部管理工具。
-- **Remote mode（HTTP）**—— `options.UseRemoteProvider("https://api.example.com/api", apiKey)`：後端在另一個 process 或 server，client 走 HTTP（`PolhemApiClient.CreateRemote`），每次呼叫都和其他 API client 一樣接受檢查。此時 Blazor 宿主不需要 `AddPolhemFramework`，但 `apiKey` 必須是伺服器核發給此應用程式的 key：每個 circuit 的 client 都會把它當作 `X-Api-Key` 標頭送出，而沒有被接受的 key 時伺服器對 `System.Ping` 以外的每個方法都回應 `401 Unauthorized`，所以最先失敗的是登入。key 識別的是應用程式而不是使用者，因此所有 circuit 共用同一把。
+- **Remote mode（HTTP）**—— `options.UseRemoteProvider("https://api.example.com/api", apiKey)`：後端在另一個 process 或 server，client 走 HTTP（`PolhemApiClient.CreateRemote`），每次呼叫都和其他 API client 一樣接受檢查。此時 Blazor 宿主不需要 `AddPolhemFramework`，但 `apiKey` 必須是伺服器核發給此應用程式的 key：每個 circuit 的 client 都會把它當作 `X-Api-Key` 標頭送出，而沒有被接受的 key 時伺服器對 `System.Ping` 以外的每個方法都回應 JSON-RPC 錯誤 `-32600`（HTTP 狀態為 200），所以最先失敗的是登入。key 識別的是應用程式而不是使用者，因此所有 circuit 共用同一把。
 
 ### Avalonia（Polhem.UI.Avalonia）
 
@@ -987,5 +993,6 @@ var record = new FormView { Schema = schema, Layout = layout, FormConnector = co
 |------|---------|-----------|---------------|------|---------|
 | `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（static 的 `ClientInfo.ApiClient`） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `UIServices.Provider = …AddPolhemUIApiBridge()…` 與 `ClientInfo.InitializeAsync` |
 | Blazor Server | DI scope | **N 個使用者 / process**（per SignalR circuit） | 啟動設定（`UseRemoteProvider(endpoint, apiKey)`） | Local 或 Remote | `AddPolhemBlazor`（Local 另加 `AddPolhemFramework`） |
+| Blazor WebAssembly | DI | **1 個使用者 / 瀏覽器分頁** | 啟動設定（`options.Endpoint`、`options.ApiKey`） | Remote | `Polhem.Web.Blazor.Wasm` 的 `AddPolhemBlazor` |
 
 > ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.ApiBridge.ClientInfo` 或 `Polhem.UI.Core.UIServices`**：`ClientInfo` 把一個已登入的 client 存在 static 屬性，一個 process 內只能存 **1 個** access token。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。`UIServices.Provider` 同樣是整個 process 共用。Blazor 端引用 `Polhem.UI.Core` 只為了與 native 各端共用的值規則；它使用 `UIServices` 或引用 `Polhem.UI.ApiBridge` 時，`UIServicesUsageGateTests` 會失敗。詳見 [ADR-013](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) 與 [ADR-054](../../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)（英文）。
