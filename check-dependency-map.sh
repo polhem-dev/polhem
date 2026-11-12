@@ -181,7 +181,7 @@ for doc in docs/*/architecture/dependency-map.md; do
     touch "$work/rows" "$work/table"
     uniq -d "$work/table" > "$work/diff"
     if [[ -s "$work/diff" ]]; then report "$doc" "packages named twice in one row of the external package table" "$work/diff"; fi
-    sort -o "$work/table" "$work/table"
+    sort -u -o "$work/table" "$work/table"
     sort -o "$work/rows" "$work/rows"
 
     comm -23 "$work/projects" <(sort -u "$work/rows") > "$work/diff"
