@@ -233,7 +233,10 @@ namespace Polhem.Business.System
         }
 
         private static string? Truncate(string? value, int length)
-            => value is null || value.Length <= length ? value : value[..length];
+        {
+            if (value is null || value.Length <= length) { return value; }
+            return value[..(length > 0 && char.IsHighSurrogate(value[length - 1]) ? length - 1 : length)];
+        }
         private const string LogoutSource = "System.Logout";
         private const string CreateSessionSource = "System.CreateSession";
 

@@ -355,6 +355,39 @@ namespace Polhem.Hosting.UnitTests
         [DisplayName("Oracle: a WriteBatch with a NUL character in a value persists every entry of the batch")]
         public void WriteBatch_Oracle_NulValueKeepsTheBatch() => RunBatchWithNulValue(DatabaseType.Oracle);
 
+        // PostgreSQL cannot encode a lone UTF-16 surrogate as UTF-8, and a caller can put one in a user id.
+        private void RunBatchWithLoneSurrogate(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var withSurrogate = Guid.NewGuid();
+            var entry = new LoginAuditEntry { SysRowId = withSurrogate, UserId = "a\uD83Db\uDE00", Event = LoginEvent.LoginFailed };
+
+            CreateWriteRepository(databaseType).WriteBatch([NewLoginEntry(first), entry]);
+
+            Assert.Equal(1L, CountLoginRows(databaseType, first));
+            Assert.Equal(1L, CountLoginRows(databaseType, withSurrogate));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a WriteBatch with a lone surrogate in a value persists every entry of the batch")]
+        public void WriteBatch_SqlServer_LoneSurrogateKeepsTheBatch() => RunBatchWithLoneSurrogate(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a WriteBatch with a lone surrogate in a value persists every entry of the batch")]
+        public void WriteBatch_PostgreSql_LoneSurrogateKeepsTheBatch() => RunBatchWithLoneSurrogate(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a WriteBatch with a lone surrogate in a value persists every entry of the batch")]
+        public void WriteBatch_MySql_LoneSurrogateKeepsTheBatch() => RunBatchWithLoneSurrogate(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a WriteBatch with a lone surrogate in a value persists every entry of the batch")]
+        public void WriteBatch_Sqlite_LoneSurrogateKeepsTheBatch() => RunBatchWithLoneSurrogate(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a WriteBatch with a lone surrogate in a value persists every entry of the batch")]
+        public void WriteBatch_Oracle_LoneSurrogateKeepsTheBatch() => RunBatchWithLoneSurrogate(DatabaseType.Oracle);
+
         // The batch the sink writes, with one entry whose user id an unauthenticated caller made too long.
         private void RunBatchWithOverlongValue(DatabaseType databaseType)
         {
