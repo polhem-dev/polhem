@@ -23,10 +23,6 @@ namespace Polhem.Db
         private DbCommandResult RunWithAnomalyDetection(DbCommandSpec command, Func<DbCommandResult> exec)
             => RunWithAnomalyDetection(AnomalySubject.Of(command), exec, MeasureResult);
 
-        private Task<DbCommandResult> RunWithAnomalyDetectionAsync(
-            DbCommandSpec command, Func<Task<DbCommandResult>> exec, CancellationToken cancellationToken)
-            => RunWithAnomalyDetectionAsync(AnomalySubject.Of(command), exec, MeasureResult, cancellationToken);
-
         private T RunWithAnomalyDetection<T>(AnomalySubject subject, Func<T> exec, Func<T, AnomalyCounts> measure)
         {
             if (!IsAnomalyLoggingEnabled) { return exec(); }
@@ -46,6 +42,10 @@ namespace Polhem.Db
                 throw;
             }
         }
+
+        private Task<DbCommandResult> RunWithAnomalyDetectionAsync(
+            DbCommandSpec command, Func<Task<DbCommandResult>> exec, CancellationToken cancellationToken)
+            => RunWithAnomalyDetectionAsync(AnomalySubject.Of(command), exec, MeasureResult, cancellationToken);
 
         // NOTE: a provider may report a cancelled command as a `DbException` (SQL Server does), so a failure seen
         // after the caller's token was cancelled is the caller's cancellation, not an anomaly.
