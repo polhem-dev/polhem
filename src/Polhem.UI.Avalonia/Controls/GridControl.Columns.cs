@@ -178,5 +178,8 @@ namespace Polhem.UI.Avalonia.Controls
             FieldCaptionStyle.ApplyCaptionForeground(header, column.ReadOnly, required);
             return header;
         }
+
+        private static IEnumerable<LayoutColumn> EnumerateVisibleColumns(LayoutGrid layout)
+            => layout.Columns?.Where(c => c.Visible) ?? Enumerable.Empty<LayoutColumn>();
     }
 }

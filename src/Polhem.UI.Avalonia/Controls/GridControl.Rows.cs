@@ -1,6 +1,8 @@
 using System.Data;
+using Avalonia.Controls;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Core;
 using Polhem.UI.Core.Editing;
 
 namespace Polhem.UI.Avalonia.Controls
@@ -117,6 +119,15 @@ namespace Polhem.UI.Avalonia.Controls
             if (rowView is null) return;
             _grid.SelectedItem = rowView;
             _grid.ScrollIntoView(rowView, null);
+        }
+
+        private void OnSelectionChangedCore(object? sender, SelectionChangedEventArgs e)
+        {
+            var handler = RowSelected;
+            if (handler is null) return;
+            if (_grid.SelectedItem is not DataRowView rowView) return;
+            if (!FormDataGuard.TryGetRowId(rowView.Row, out var rowId)) return;
+            handler(this, rowId);
         }
     }
 }
