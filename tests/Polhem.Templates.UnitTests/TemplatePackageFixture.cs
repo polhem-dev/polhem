@@ -30,6 +30,10 @@ public sealed class TemplatePackageFixture : IDisposable
     public TemplatePackageFixture()
     {
         Root = Directory.CreateTempSubdirectory("polhem-templates-").FullName;
+        // Every command below runs under Root, outside the repository, where the repository's global.json does not reach.
+        // Without a copy the newest installed SDK builds the framework and the generated apps, which on 2026-11-12 was a
+        // .NET 11 SDK on the CI runner whose analyzers rejected code the pinned SDK accepts.
+        File.Copy(Path.Combine(TemplatePaths.RepositoryRoot, "global.json"), Path.Combine(Root, "global.json"));
         Feed = Path.Combine(Root, "feed");
         Hive = Path.Combine(Root, "hive");
         Packages = Path.Combine(Root, "packages");

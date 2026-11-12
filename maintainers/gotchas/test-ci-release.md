@@ -53,6 +53,21 @@ dotnet build apps/Polhem.Northwind/Polhem.Northwind.slnx --configuration Release
 XAML/axaml bindings are especially dangerous: they are **string bindings that grep can find but the C# compiler cannot
 see**.
 
+## The runner image's newest SDK builds the code unless `global.json` says otherwise
+
+**Symptom**: on 2026-11-12 the `templates` check failed on `main` with IDE0028 in `Polhem.Analyzers`, in files no recent
+commit had touched, while the `build` check of the same run passed.
+
+**Root cause**: `actions/setup-dotnet` with `dotnet-version: 10.0.x` installs that SDK but does not make it the one
+`dotnet` uses: without a `global.json`, the newest installed SDK wins. The runner image released that week
+preinstalled the .NET 11 SDK, whose analyzers flag code the .NET 10 SDK accepts. The two jobs had landed on different
+image versions, which is why only one failed. The template tests also run every `dotnet` command in a temporary folder,
+where a `global.json` in the repository does not reach.
+
+**Fix**: `global.json` at the repository root pins the 10.0 band (`rollForward: latestFeature` takes the newest 10.0.x
+installed), and `TemplatePackageFixture` copies it into its temporary folder. Moving to a new SDK major is a deliberate
+change to `global.json`, made together with whatever its analyzers report.
+
 ## A wrongly chosen test fixture misjudged as flaky
 
 **Symptom**: `LogoutJsonRpcRoundTripTests` / `LeaveCompanyJsonRpcRoundTripTests` occasionally go red in CI; the
