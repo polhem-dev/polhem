@@ -111,10 +111,11 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<ICacheDataSourceProvider>));
 
             // 4b. Tenant customization-override layer: per-customizeId cache provider + reader.
-            //     Both honour PathOptions.CustomizePath — when it is empty (the standard,
-            //     non-customized deployment) the reader short-circuits every lookup to null, so
-            //     all consumers degrade to pure base, bit-for-bit identical to before. Always
-            //     registered; behaviour is gated entirely by CustomizePath, not by presence.
+            //     Always registered; what they find depends on the definition storage. With the
+            //     file storage, PathOptions.CustomizePath decides: when it is empty (the standard,
+            //     non-customized deployment) the reader answers every lookup with null, so all
+            //     consumers read the base layer only. With a DB storage the reader is the storage
+            //     itself, and the customize_id of its rows decides.
             services.AddSingleton<ICacheContainerProvider>(sp =>
                 new CacheContainerProvider(sp.GetRequiredService<PathOptions>()));
             //     The reader follows the storage. A DB-backed IDefineStorage keeps base and

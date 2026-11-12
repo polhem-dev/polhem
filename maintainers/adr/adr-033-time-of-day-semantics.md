@@ -145,10 +145,17 @@ the current code:
 
 - **2026-09-27: the UI layer and the public documents exist.** "The UI layer and the public documents are not
   implemented yet" in "Consequences" describes the time of the decision. The Avalonia editor is
-  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor Server editor of the same name is
-  `src/Polhem.Web.Blazor.Server/Controls/Editors/TimeEdit.cs` (it replaced `DynamicForm` on 2026-10-25); both normalize input with
+  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor editor of the same name, then in
+  `Polhem.Web.Blazor.Server`, replaced `DynamicForm` on 2026-10-25 (it now derives from
+  `src/Polhem.Web.Blazor/Controls/Editors/TimeEditorBase.cs` in each UI package); both normalize input with
   `ValueUtilities.CTimeString` and store an empty string for an emptied box. The consumer guidance is
   [Temporal Types](../../docs/en/database/temporal-types.md).
+- **2026-09-27: the server does not normalize.** `FieldDbTypeExtensions.ToFieldValue`, which "Rationale" names as the
+  place where every value is normalized, was called by no write path in Polhem, only by tests, and was removed with the
+  1.0 API trim (#10). Values are normalized on the client: `FormValueBinding` (`src/Polhem.UI.Core/FormValueBinding.cs`) and the time
+  editors of each head call `ValueUtilities.CTimeString`. The server stores a time-of-day value as it receives it, so
+  a client that bypasses those, such as a JavaScript client of the JSON-RPC API, can store `"8:30"`, and the sorting
+  and range guarantee in "Rationale" holds only for values that went through that normalization.
 
 ## Related
 

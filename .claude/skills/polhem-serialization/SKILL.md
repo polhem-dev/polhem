@@ -171,9 +171,11 @@ cross-version compatibility. `WireValueCodePinTests` pins them for both codecs. 
 var xml = XmlCodec.Serialize(obj);
 var fromXml = XmlCodec.Deserialize<Foo>(xml)!;
 
-// JSON (transport axis): same place
-var json = JsonSerializer.Serialize(obj);
-var fromJson = JsonSerializer.Deserialize<Foo>(json)!;
+// JSON (transport axis): same place, through the framework's options rather than JsonSerializer's defaults
+// (camelCase, omitted defaults). What the JSON body codec carries uses JsonBodyOptions.Options instead, through a
+// JsonPayloadCodec in Polhem.Api.Core.UnitTests, as WireFixtureTests does.
+var json = JsonCodec.Serialize(obj);
+var fromJson = JsonCodec.Deserialize<Foo>(json)!;
 
 // MessagePack (transport axis): put it in Polhem.Api.Core.UnitTests (the codec lives there)
 var bytes = MessagePackCodec.Serialize(obj);

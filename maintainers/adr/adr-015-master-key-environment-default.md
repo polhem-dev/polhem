@@ -202,9 +202,11 @@ pre-stable policy the version is released as a minor (4.6.0), consistent with v4
 
 - `src/Polhem.Definition/Settings/SystemSettings/MasterKeySource.cs` — the config model and the ctor default
 - `src/Polhem.Definition/Security/MasterKeyProvider.cs` — the read logic of the File / Environment branches
-- `samples/Polhem.Samples.Shared/DemoCredentials.cs` — the hardcoded `DemoMasterKey` constant
+- `apps/Polhem.Northwind/Polhem.Northwind.Backend/NorthwindCredentials.cs` — the hardcoded `DemoMasterKey` constant,
+  and `NorthwindBackend.cs` beside it, which sets it when `POLHEM_MASTER_KEY` is missing
 - `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` — the `TestMasterKey` constant and the bootstrap auto-set logic
-- [samples/README.md](../../samples/README.md) — the master key section, separating demo from production
+- [apps/Polhem.Northwind/README.md](../../apps/Polhem.Northwind/README.md) — the notice under "Running the demo" that
+  the demo key is public and a deployment sets its own
 - [12-factor app: Config](https://12factor.net/config) — the industry principle aligned with
 
 ## Out of scope
@@ -238,3 +240,8 @@ with the current code:
   the `MasterKeySource` of `SystemSettings.xml`.
 - **2026-09-28: The migration hint is removed before 1.0.0.** Bee.NET compatibility is not a goal of 1.0.0, so the
   error for a missing variable names only the variable that was looked up.
+- **2026-10 to 2026-11: the demo moved to Northwind.** The samples this ADR names (`samples/Polhem.Samples.Shared`,
+  `samples/QuickStart.Server`, `DemoCredentials`) were removed; the samples that remain run without a backend and need
+  no master key. The demo backend is now `apps/Polhem.Northwind`: `NorthwindBackend.AddNorthwindBackend` sets
+  `NorthwindCredentials.DemoMasterKey` when `POLHEM_MASTER_KEY` is missing, and the Northwind README states that the
+  key is public and that a deployment sets its own. The test bootstrap's `TestMasterKey` is unchanged.

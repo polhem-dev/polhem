@@ -48,7 +48,7 @@ namespace Polhem.Api.Server.UnitTests
             ["SystemBusinessObject.GetCommonConfiguration"] =
                 "The client startup flow needs it before login to decide the compression and encryption settings. The response is the deployment-level payload configuration and contains no data.",
             ["SystemBusinessObject.CreateSession"] =
-                "Declared LocalOnly, so remote calls are rejected at the BO layer. It is not part of the anonymous attack surface; Anonymous only matters for in-process calls.",
+                "Declared LocalOnly, so remote calls are rejected by the access check before the method runs. It is not part of the anonymous attack surface; Anonymous only matters for in-process calls.",
             ["BusinessObject.ExecFuncAnonymous"] =
                 "Lets an application plug in its own anonymous functions. **Its attack surface depends on how the application implements it**; the framework only requires Encoded or stronger transport.",
         };

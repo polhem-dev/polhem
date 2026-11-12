@@ -26,8 +26,8 @@ namespace Polhem.Tests.Shared
         /// <summary>
         /// Hard-coded Base64 AES-CBC-HMAC combined key (64 bytes) used by the test
         /// process when <c>POLHEM_MASTER_KEY</c> is not set in the environment. Kept
-        /// independent from <c>DemoCredentials.DemoMasterKey</c> so test runs and
-        /// sample runs cannot leak encrypted state into one another.
+        /// independent from <c>NorthwindCredentials.DemoMasterKey</c> so test runs and
+        /// demo runs cannot leak encrypted state into one another.
         /// </summary>
         private const string TestMasterKey =
             "oQGvs51A0u5Rn8RPJPkQ9xqXevf451mDHpsaJR7nN8WCM0X0zskVqTqDQBtSpSq8MdvmfKUPKAulOJShd9KDXg==";

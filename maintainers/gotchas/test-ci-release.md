@@ -300,7 +300,7 @@ The rounds from the bee-library period are archived in the old repository's `doc
 3. **A P0 finding is worth the cost of measurement, to pin a "theoretical inference" down as a "known failure mode".**
    The P0 in the serialization dimension (definition responses losing all their content on the MessagePack wire) was
    originally only an inference. After building a standalone console project in the scratchpad with a
-   ProjectReference to `Polhem.Api.Core` and measuring through the public `MessagePackPayloadSerializer`, the failure
+   ProjectReference to `Polhem.Api.Core` and measuring through the public `MessagePackPayloadSerializer` (since replaced by `MessagePackPayloadCodec`), the failure
    mode was pinned down as a **silent empty shell**; the choice of fix depended on this answer.
 
 > **A process gap that has been closed**: the public API gate missed marking breaking changes two rounds in a row (the

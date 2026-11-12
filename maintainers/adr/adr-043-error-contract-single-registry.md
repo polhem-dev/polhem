@@ -2,7 +2,9 @@
 
 ## Status
 
-**Accepted (2026-09-02)**
+**Accepted (2026-09-02)**. The registry still stands; where its two consumers live changed with
+[ADR-049](adr-049-jsonrpc-packages-in-1-2.md), [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) and
+[ADR-055](adr-055-api-core-split-from-server.md), described under "Implementation evolution".
 
 ## Context
 
@@ -137,4 +139,13 @@ the current code:
   the internal `MethodNotFoundException`, and a `Plain` body that cannot be read into the method's type throws the
   internal `InvalidParamsException` (both in `src/Polhem.Api.Core/JsonRpc/`). The registry maps them to -32601 and
   -32602 with a fixed message and rebuilds no type on the client.
-
+- **2026-10-02 to 2026-10-16: the two consumers moved.** `JsonRpcExecutor` and its `MapException` are gone: the
+  `Polhem.JsonRpc` packages took over the protocol ([ADR-049](adr-049-jsonrpc-packages-in-1-2.md)), and the outbound
+  direction became `PolhemExceptionMapper`, which [ADR-055](adr-055-api-core-split-from-server.md) moved to
+  `src/Polhem.Api.Server/Dispatch/PolhemExceptionMapper.cs`. `ReplayRejectedException` became the
+  `Polhem.JsonRpc.Payload` type of the same name, so it no longer lives in `Polhem.Api.Core`; the registry stays there
+  (`src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs`) because both ends still reference that assembly. The client
+  side is `ApiConnector`'s private `MapError`, which calls `JsonRpcErrorContract.TryRebuild`; `FinalizeResponse` no
+  longer exists. [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) removed `MethodNotFoundException` and its row.
+  Elsewhere in this ADR, paths that name `Polhem.Base`, `JsonRpcExecutor` or `FinalizeResponse` describe the code of
+  their date.

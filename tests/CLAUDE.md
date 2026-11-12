@@ -157,6 +157,13 @@ Skips when `RuntimeFeature.IsDynamicCodeSupported` is false, which is what the m
 admits. **Do not use for**: making an AOT gate failure of the framework's own wire types go away; that failure is the
 bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribute.cs`) is the source.
 
+### Needs a .NET workload: `[WorkloadFact]`
+
+Only in `tests/Polhem.Templates.UnitTests`, for a template test that builds a generated client head with a .NET
+workload; such a test runs only where the workload is installed, which CI is not. What it checks and when it skips is
+in the attribute's XML doc (`tests/Polhem.Templates.UnitTests/WorkloadFactAttribute.cs`). Do not use it to skip a test
+that needs no workload.
+
 ### Needs a real browser: `[BrowserFact]`
 
 `tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
@@ -213,8 +220,8 @@ test class that modifies that static in the same `[Collection("<name>")]`. Templ
 
 ### Narrow serializations that still exist
 
-Most tests now use fixture-scoped DI instances, which removes the race risk naturally. Every existing `[Collection]`
-protects a process-wide static that has not been moved to DI yet:
+Most tests now use fixture-scoped DI instances, which removes the race risk naturally. The collections below protect a
+process-wide static that has not been moved to DI yet:
 
 | Collection (the constant users reference) | Protects |
 |---|---|
@@ -223,7 +230,12 @@ protects a process-wide static that has not been moved to DI yet:
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
 | `CacheNotifyVersionsCollection.Name` | `CacheInfo.NotifyVersions`, for the classes whose poll sessions read a real `st_cache_notify` table (`Polhem.Hosting.UnitTests`) |
 
-Each definition is a `static` class declaring `public const string Name`, and every user writes
+One collection exists for another reason: `TemplatePackageCollection.Name` (`tests/Polhem.Templates.UnitTests`) shares
+one `TemplatePackageFixture`, which packs the framework and the templates once per run, between the template test
+classes. Its classes run one after another as a consequence. It is a `sealed` class implementing
+`ICollectionFixture<TemplatePackageFixture>`, since a fixture collection cannot be static.
+
+Every other definition is a `static` class declaring `public const string Name`, and every user writes
 `[Collection(XxxCollection.Name)]`. A mistyped constant does not compile; a mistyped string literal would silently
 create a collection nobody shares.
 
@@ -280,10 +292,12 @@ Full template in `maintainers/testing-patterns.md`.
 
 ## Common analyzer rejections
 
-The strict build stage of `build-ci.yml` blocks the PR outright. These are especially easy to hit:
+The `build` check of `build-ci.yml` blocks the PR on the rules below. S2699 is a SonarCloud rule: the strict build does
+not check it, and only the full-mode build that SonarScanner wraps does (`tests/Directory.Build.props` makes it an
+error there). These are especially easy to hit:
 
-- **S2699**: every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not make a bare
-  call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
+- **S2699** (full mode only): every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not
+  make a bare call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
 - **CA1861**: do not pass a constant array inline as `new[] { ... }` as an argument (it allocates on every call).
   Extract it to a `private static readonly string[] s_xxx = { ... }` at the top of the file.
 - **IDE0005**: copying the header from another test file easily brings in unrelated `using` directives. Remove them
