@@ -113,6 +113,18 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
+        [DisplayName("Validator reports a PermissionModelId that matches a registered model only when case is ignored")]
+        public void Validate_ModelIdDiffersInCase_ReturnsError()
+        {
+            var schemas = new FormSchema[] { BuildForm("purchaseorder") };
+
+            var errors = PermissionBindingValidator.Validate(schemas, BuildRegistry());
+
+            var error = Assert.Single(errors);
+            Assert.Contains("'purchaseorder' is registered as 'PurchaseOrder'", error);
+        }
+
+        [Fact]
         [DisplayName("Validator reports an error for a PermissionModelId that does not exist")]
         public void Validate_UnknownModelId_ReturnsError()
         {

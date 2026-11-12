@@ -154,8 +154,8 @@ filters a typed column on every database (`GetListFilterValueDbTests` runs this 
   `StartsWith` and `EndsWith` operators, since they match text.
 
 A relation field converts by the `DbType` it declares, so declare the type of the column it reads.
-A string that is not valid for its field's type is refused, including text a database used to
-convert on its own, such as `""` for a number or `1` for a boolean. `parameters` entries and other `object`
+A string that is not valid for its field's type is refused with `-32602 InvalidParams` and a message naming the
+field, including text a database used to convert on its own, such as `""` for a number or `1` for a boolean. `parameters` entries and other `object`
 members are not converted. A client that needs typed values there uses the JSON body codec
 (`"codec": "json"` with `Encoded` or `Encrypted`), whose `[code, value]` envelope carries the type —
 that envelope is what `WireValueEnvelope` in `wire-contracts/messages.d.ts` describes; a Plain body
@@ -290,7 +290,7 @@ larger than it accepts. Up to 1.1.0 a response also echoed the method name in a 
 | `-32700` | `ParseError` | Malformed JSON in the request body | Fix client serialization |
 | `-32600` | `InvalidRequest` | Not a valid JSON-RPC request (no `method`, wrong `jsonrpc`), a rejected API key, or a malformed `Authorization` header | Inspect headers and body |
 | `-32601` | `MethodNotFound` | The method name is not `progId.action`, or names no action the business object exposes; the message is fixed and does not repeat the name | Check method name / casing |
-| `-32602` | `InvalidParams` | The parameters carry no value to bind (no `params`, no `value`, or a `null` one); a `Plain` body could not be read into the type the method takes; or, while the host requires the wire frame, a signed-in session called a [replay-protected](api-method-reference.md#replay-protection) method with a `Plain` or `Encoded` payload. The message is always "Invalid params.". Arguments that are readable but invalid answer `-32099` | Fix the `params` shape, or call that method `Encrypted` |
+| `-32602` | `InvalidParams` | The parameters carry no value to bind (no `params`, no `value`, or a `null` one); a `Plain` body could not be read into the type the method takes; or, while the host requires the wire frame, a signed-in session called a [replay-protected](api-method-reference.md#replay-protection) method with a `Plain` or `Encoded` payload; the message of these is always "Invalid params.". A filter value that cannot be read as the type of its field answers this code too, with a message naming the field. Other arguments that are readable but invalid answer `-32099` | Fix the `params` shape or the named filter value, or call that method `Encrypted` |
 | `-32603` | `InternalError` | Unhandled server-side exception (`-32000` up to 1.1.0). An `Encrypted` payload that fails authentication lands here too, so a client whose payload version does not match the server's sees it on every `Encrypted` call | Not user-facing. The message is "Internal server error" unless the server runs in debug mode. When every `Encrypted` call fails this way and other formats work, check that the client and the server are on matching versions |
 | `-32001` | `Unauthorized` | The method needs a signed-in caller and the access token is missing, unknown or expired | Sign in again |
 | `-32002` | `CompanyNotEntered` | Method needs company context | Call `System.EnterCompany` first |

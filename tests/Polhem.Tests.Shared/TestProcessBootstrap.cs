@@ -133,7 +133,7 @@ namespace Polhem.Tests.Shared
             var bootstrapStorage = new FileDefineStorage(pathOptions);
             var bootstrapAccess = new CacheDefineAccess(bootstrapStorage, pathOptions);
 
-            SharedDatabaseState.EnsureRegistered(bootstrapAccess);
+            SharedDatabaseState.EnsureRegistered(bootstrapAccess, pathOptions);
 
             // Boot-time settings are read through `SystemSettingsLoader`, which does not depend on `IDefineAccess`.
             // `tests/Define/SystemSettings.xml` points `MasterKeySource` at the `POLHEM_MASTER_KEY` environment

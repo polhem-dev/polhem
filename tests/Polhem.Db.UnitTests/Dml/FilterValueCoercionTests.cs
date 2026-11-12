@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Core.Exceptions;
 using Polhem.Db.Dml;
 using Polhem.Definition;
 using Polhem.Definition.Database;
@@ -116,7 +117,7 @@ namespace Polhem.Db.UnitTests.Dml
         [DisplayName("A string that is not valid for its field's type is refused with the field's name")]
         public void Coerce_InvalidValue_Throws()
         {
-            var ex = Assert.Throws<InvalidOperationException>(() => CoercedValue(SysFields.RowId, "not-a-guid"));
+            var ex = Assert.Throws<InvalidRequestValueException>(() => CoercedValue(SysFields.RowId, "not-a-guid"));
 
             Assert.Contains(SysFields.RowId, ex.Message, StringComparison.Ordinal);
             Assert.DoesNotContain("not-a-guid", ex.Message, StringComparison.Ordinal);
@@ -133,7 +134,7 @@ namespace Polhem.Db.UnitTests.Dml
         [DisplayName("Text a database might once have converted is refused: non-ISO dates, grouped or trailing-sign numbers, 1 for a boolean, an empty number")]
         public void Coerce_LenientForms_AreRefused(string field, string text)
         {
-            Assert.Throws<InvalidOperationException>(() => CoercedValue(field, text));
+            Assert.Throws<InvalidRequestValueException>(() => CoercedValue(field, text));
         }
 
         [Fact]

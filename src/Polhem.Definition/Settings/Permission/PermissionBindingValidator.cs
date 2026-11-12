@@ -55,21 +55,34 @@ namespace Polhem.Definition.Settings
                 {
                     if (field.SensitiveCategory == SensitiveCategory.None) { continue; }
                     string modelId = field.SensitiveCategory.ToPermissionModelId();
-                    if (models.Models == null || !models.Models.Contains(modelId))
+                    string? registered = FindModelId(models, modelId);
+                    if (registered == null)
                         yield return $"Form '{schema.ProgId}': field '{table.TableName}.{field.FieldName}' has SensitiveCategory '{field.SensitiveCategory}' but its well-known model '{modelId}' does not exist in the permission registry.";
+                    else if (!string.Equals(registered, modelId, StringComparison.Ordinal))
+                        yield return $"Form '{schema.ProgId}': field '{table.TableName}.{field.FieldName}' has SensitiveCategory '{field.SensitiveCategory}', whose model '{modelId}' is registered as '{registered}'. Model ids are compared exactly at run time, so the case must match.";
                 }
             }
         }
 
-        // PermissionModelId must reference an existing model (when declared).
+        // PermissionModelId must reference an existing model (when declared), spelled exactly as the registry spells it.
         private static IEnumerable<string> ValidateModelIdReference(FormSchema schema, PermissionModels models)
         {
-            if (!string.IsNullOrEmpty(schema.PermissionModelId)
-                && (models.Models == null || !models.Models.Contains(schema.PermissionModelId)))
+            if (string.IsNullOrEmpty(schema.PermissionModelId)) { yield break; }
+            string? registered = FindModelId(models, schema.PermissionModelId);
+            if (registered == null)
             {
                 yield return $"Form '{schema.ProgId}': PermissionModelId '{schema.PermissionModelId}' does not exist in the permission registry.";
             }
+            else if (!string.Equals(registered, schema.PermissionModelId, StringComparison.Ordinal))
+            {
+                yield return $"Form '{schema.ProgId}': PermissionModelId '{schema.PermissionModelId}' is registered as '{registered}'. Model ids are compared exactly at run time (the role grants and the capabilities), so the case must match.";
+            }
         }
+
+        // The registry's collection finds a model whatever the case of the id, but the run-time checks compare model
+        // ids exactly; this returns the registry's own spelling so the two can be told apart.
+        private static string? FindModelId(PermissionModels models, string modelId)
+            => models.Models != null && models.Models.Contains(modelId) ? models.Models[modelId].ModelId : null;
 
         // Record scope is master-only: a detail (non-master) table must not mark any scope role.
         // Such a column would be silently ignored by the resolver, so flag it as a configuration

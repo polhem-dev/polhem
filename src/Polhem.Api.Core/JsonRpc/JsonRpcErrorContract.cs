@@ -98,6 +98,10 @@ namespace Polhem.Api.Core.JsonRpc
             new(typeof(InvalidParamsException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
             new(typeof(InvalidPayloadException), JsonRpcErrorCode.InvalidParams, null, "Invalid params."),
 
+            // A value the caller sent that cannot be read as its type. Its message names only what the caller sent, so
+            // it travels verbatim. Ahead of the ArgumentException row it derives from.
+            new(typeof(InvalidRequestValueException), JsonRpcErrorCode.InvalidParams, null),
+
             // Ahead of the UnauthorizedAccessException row it derives from, which would otherwise
             // swallow it into UserMessage with a fixed message.
             new(typeof(AuthenticationRequiredException), JsonRpcErrorCode.Unauthorized,

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Transformers;
 using Polhem.Core.Data;
@@ -107,6 +108,23 @@ namespace Polhem.Api.Server.UnitTests.Form
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SQL Server: a GetList over the JSON body codec filtering with In, Between, a range and NotEqual returns the matching rows")]
         public Task JsonCodec_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a Plain GetList whose filter value is not valid for its field answers InvalidParams and names the field")]
+        public Task Plain_Sqlite_InvalidFilterValue_ReturnsInvalidParams() => WithSeededForm(DatabaseType.SQLite, async (executor, progId) =>
+        {
+            const string Body = """{"selectFields":"sys_id","filter":{"fieldName":"due_date","value":"02/01/2026"},"sortFields":[{"fieldName":"sys_id"}]}""";
+            var requestJson = $$"""
+                {"jsonrpc":"2.0","method":"{{progId}}.{{FormActions.GetList}}","params":{"format":0,"value":{{Body}}},"id":"plain-bad"}
+                """;
+
+            var response = await executor.ExecuteJsonAsync(requestJson);
+
+            Assert.NotNull(response.Error);
+            Assert.Equal((int)JsonRpcErrorCode.InvalidParams, response.Error!.Code);
+            Assert.Contains(DueDate, response.Error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("02/01/2026", response.Error.Message, StringComparison.Ordinal);
+        });
 
         private Task RunPlainRangeAndSet(DatabaseType databaseType)
         {

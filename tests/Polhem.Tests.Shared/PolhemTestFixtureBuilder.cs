@@ -94,7 +94,7 @@ namespace Polhem.Tests.Shared
 
             // NOTE: there is deliberately no per-fixture cache key prefix. The bootstrap and the fixture have
             // different `ICacheContainer` instances but share the underlying `CacheInfo.Provider`, and a prefix
-            // would hide the bootstrap's changes to `DatabaseSettings.Items` from the fixture's cache.
+            // would hide the `DatabaseSettings` the bootstrap published (with the test databases) from the fixture's cache.
             // Sessions stay isolated because access tokens are random `Guid` values.
 
             var provider = services.BuildServiceProvider();
@@ -107,7 +107,7 @@ namespace Polhem.Tests.Shared
                 var defineAccess = provider.GetRequiredService<Polhem.Definition.Storage.IDefineAccess>();
                 // …though "shares the same cache" only holds until someone invalidates that slot,
                 // so re-apply the registrations before reading them rather than assuming.
-                SharedDatabaseState.EnsureDatabaseSettingsApplied(defineAccess);
+                SharedDatabaseState.EnsureDatabaseSettingsApplied(defineAccess, paths);
                 SharedDatabaseState.EnsureSchemaAndSeed(
                     defineAccess,
                     provider.GetRequiredService<IDbConnectionManager>());

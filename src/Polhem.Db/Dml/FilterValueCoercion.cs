@@ -1,5 +1,6 @@
 using System.Globalization;
 using Polhem.Core.Data;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 
@@ -48,7 +49,7 @@ namespace Polhem.Db.Dml
         /// </summary>
         /// <param name="node">The filter, with the field names the table declares.</param>
         /// <param name="formTable">The table whose fields the filter names.</param>
-        /// <exception cref="InvalidOperationException">A string value cannot be read as its field's type.</exception>
+        /// <exception cref="InvalidRequestValueException">A string value cannot be read as its field's type.</exception>
         public static FilterNode Coerce(FilterNode node, FormTable formTable)
         {
             if (node is FilterGroup group)
@@ -105,7 +106,7 @@ namespace Polhem.Db.Dml
                 _ => text,
             };
 
-            return parsed ?? throw new InvalidOperationException(
+            return parsed ?? throw new InvalidRequestValueException(
                 $"The filter value for the field '{field.FieldName}' is not a valid {field.DbType}.");
         }
     }

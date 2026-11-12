@@ -15,6 +15,17 @@ namespace Polhem.ObjectCaching.Define
         private readonly IDefineStorage _storage;
 
         /// <summary>
+        /// Upper bound on the number of missing language resources remembered at once.
+        /// </summary>
+        /// <remarks>
+        /// The language and namespace of a lookup come from the caller (<c>System.GetLanguage</c> takes them from any
+        /// signed-in user), so the miss markers are capped rather than kept in the shared cache provider. The resources
+        /// an application really looks up and lacks are a handful per language; past the cap a miss goes uncached and
+        /// costs one storage read.
+        /// </remarks>
+        internal static readonly int MaxNegativeLanguages = 10_000;
+
+        /// <summary>
         /// Initializes a new instance of <see cref="LanguageResourceCache"/>.
         /// </summary>
         /// <param name="storage">The define storage backing this cache.</param>
@@ -23,6 +34,9 @@ namespace Polhem.ObjectCaching.Define
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
+
+        /// <inheritdoc/>
+        protected override int MaxNegativeEntries => MaxNegativeLanguages;
 
         /// <summary>
         /// Gets the cache item expiration policy.
