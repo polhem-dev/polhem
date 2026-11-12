@@ -30,6 +30,6 @@ The package pins an exact Fluent UI version, so do not reference a different one
 - Dialogs render where they are placed, not in a provider. They do not see the surrounding `FormScope`.
 - A date shows in its storage format, `yyyy-MM-dd`, and a year and month as `yyyy-MM`.
 - A column can be moved only after the grid's script has loaded, a moment after the page.
-- Toolbar and filter buttons use text symbols rather than icons.
+- The column filter button uses a text symbol rather than an icon; the toolbar buttons are icons.
 
 Northwind runs the package on both hosts: `Polhem.Northwind.BlazorFluent` on Blazor Server and `Polhem.Northwind.BlazorFluentWasm` on Blazor WebAssembly.

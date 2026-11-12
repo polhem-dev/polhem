@@ -56,6 +56,7 @@
 - `Form/` -- `IGetListRequest`、`IGetDataRequest`、`IGetNewDataRequest`、`ISaveRequest`、`IDeleteRequest`、`IGetLookupRequest` 及其回應
 - `Form/IFormApiConnector` -- 用戶端對單一程式呼叫的表單操作（`GetListAsync`、`GetLookupAsync`、`GetNewDataAsync`、`GetDataAsync`、`SaveAsync`、`DeleteAsync`），回傳上述的回應介面。前端相依於這個合約而非傳輸：`Polhem.Api.Client` 的 `FormApiConnector` 以 JSON-RPC 實作它，沒有 Polhem 後端的應用程式則以自己的資料實作它。
 - `Form/IFormApiConnectorFactory` -- `Create(progId)` 回傳某個程式的 `IFormApiConnector`；前端的畫面解析它來建立連接器。
+- `Form/IFieldValueChangeConnector`、`IFieldValueChangeRequest`、`IFieldValueChangeResponse` -- 標示 `ValueChangeCallback` 的欄位變動時回呼表單的 business object，並傳回它要求在該列修改的內容。實作它的連接器才能讓前端發出這個呼叫；JSON-RPC 的 `FormApiConnector` 有實作。
 - `AuditLog/` -- 異動、存取、登入與異常紀錄查詢，以及 `IAuditLogListResponse`、`IAuditLogAggregateResponse`、`RecordFieldChange`
 
 ## 主要公開 API

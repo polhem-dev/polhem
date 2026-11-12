@@ -37,6 +37,11 @@
 
 需要 **.NET 10 SDK**。資料庫為 SQLite，首次執行時自動建立並灌入種子 —— 免安裝。
 
+> **示範用的 master key 是公開的。** 未設定 `POLHEM_MASTER_KEY` 時，後端會把它設為 `NorthwindCredentials.DemoMasterKey`，
+> 這個值公開在本 repository 裡，讓剛 clone 下來的專案不必設定就能執行；任何人都能用它解開它所保護的內容。以本示範為基礎的
+> 部署必須在後端啟動前，透過部署機制設定自己的 `POLHEM_MASTER_KEY`；見
+> [ADR-015](../../maintainers/adr/adr-015-master-key-environment-default.md)（英文）。
+
 ### 從 VS Code（推薦）
 
 開啟此 repository，在「執行與偵錯」下拉選 **Run Polhem.Northwind (Server + Desktop)**，按 <kbd>F5</kbd>。它會一併建置並啟動 JSON-RPC 後端與桌面前端。
@@ -241,7 +246,7 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 
 **兩步都跑在框架程式碼上。** 應用沒有替換任何服務，也沒有覆寫任何方法：
 
-- **認證**走框架自己的 `st_user` 檢查。seeder 在首次啟動時把 `demo` 與 `demo-tw` 帳號寫進 `st_user`（既有的 `northwind.db` 缺哪個就補哪個），密碼以 `PasswordHasher` 現算雜湊存入（不是寫死的雜湊值，否則換一次雜湊參數就對不上）。比對帳號密碼在每個部署都一樣，所以那件事屬於框架。
+- **認證**走框架自己的 `st_user` 檢查。seeder 在首次啟動時把 `demo`、`demo-tw` 與 `demo-ro` 帳號寫進 `st_user`（既有的 `northwind.db` 缺哪個就補哪個），密碼以 `PasswordHasher` 現算雜湊存入（不是寫死的雜湊值，否則換一次雜湊參數就對不上）。比對帳號密碼在每個部署都一樣，所以那件事屬於框架。
 - **進公司**走框架自己的 `EnterCompany`。seeder 寫入對應的 `st_company` 與 `st_user_company` 兩列，該呼叫接著驗公司存在且啟用、查使用者的存取權，再把角色與員工脈絡快照到 session 上。
 
 `st_user` 那一列同時帶著 `time_zone` 與 `culture`，於是 session 的時區、以及 client 的語言，都取自**使用者**而不是伺服器或部署預設值。Blazor Server head 的畫面是唯一的例外，[說明在該 head 的段落](#網頁前端blazor-server)。
@@ -462,10 +467,14 @@ apps/Polhem.Northwind/
 ├── Polhem.Northwind.Backend/        兩個 host 共用的後端：OrderBO、它的 Repository、seeder 與種子資料
 ├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia head 使用
 ├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Mud），在同一個行程執行後端
+├── Polhem.Northwind.BlazorFluent/   同一個 Blazor Server head，改用 Polhem.Web.Blazor.Fluent
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head（Polhem.Web.Blazor.Mud），是 server 的 JSON-RPC client
+├── Polhem.Northwind.BlazorFluentWasm/  同一個 Blazor WebAssembly head，改用 Polhem.Web.Blazor.Fluent
+├── Shared/                          公開示範網站上各前端的路徑，以及它們之間的連結
 ├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）
 ├── Polhem.Northwind.iOS/            iOS 進入點（Avalonia.iOS）
-└── Polhem.Northwind.Android/        Android 進入點（Avalonia.Android）
+├── Polhem.Northwind.Android/        Android 進入點（Avalonia.Android）
+└── Dockerfile                       把公開示範網站包成一個容器
 ```

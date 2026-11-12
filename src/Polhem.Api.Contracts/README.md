@@ -56,6 +56,7 @@
 - `Form/` -- `IGetListRequest`, `IGetDataRequest`, `IGetNewDataRequest`, `ISaveRequest`, `IDeleteRequest`, `IGetLookupRequest` and their responses
 - `Form/IFormApiConnector` -- the form operations a client calls for one program (`GetListAsync`, `GetLookupAsync`, `GetNewDataAsync`, `GetDataAsync`, `SaveAsync`, `DeleteAsync`), returning the response interfaces above. A front end depends on this contract, not on a transport: `Polhem.Api.Client`'s `FormApiConnector` implements it over JSON-RPC, and an application without a Polhem backend implements it over its own data.
 - `Form/IFormApiConnectorFactory` -- `Create(progId)` returns the `IFormApiConnector` of a program; the views of a front end resolve it to create their connectors.
+- `Form/IFieldValueChangeConnector`, `IFieldValueChangeRequest`, `IFieldValueChangeResponse` -- calls the form's business object back when a field marked `ValueChangeCallback` changes, and returns what it asks to change in the row. A connector that implements it lets the front end make that call; the JSON-RPC `FormApiConnector` does.
 - `AuditLog/` -- the change, access, login and anomaly log queries, with `IAuditLogListResponse`, `IAuditLogAggregateResponse` and `RecordFieldChange`
 
 ## Key Public APIs

@@ -118,13 +118,9 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 ## 相依限制
 
-引用 `Polhem.Api.Client`、[`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md) 與 ASP.NET Core。後端服務由宿主註冊：
-Local 模式以 `AddPolhemFramework`，Remote 模式則由遠端伺服器提供。
-
-`Polhem.UI.Core` 提供各 head 共用的表單值規則（`FormValueBinding`、`FormDataGuard`、元素能力解析器）。它的行程層級
-部分不可使用：本 head 在同一行程服務多位使用者，因此不得使用 `UIServices`，也不得參考 `Polhem.UI.ApiBridge`，
-兩者都在每個行程只持有一位使用者。`UIServicesUsageGateTests`（`tests/Polhem.Web.Blazor.Server.UnitTests`）會讀取
-編譯後組件的參考，違反時測試失敗。見 [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
+引用 [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.zh-TW.md)（由它帶入 API client 與共用規則）以及 ASP.NET Core
+共用框架（`Microsoft.AspNetCore.App`）。後端服務由宿主註冊：Local 模式以 `AddPolhemFramework`，Remote 模式則由遠端伺服器提供。
+讓 `UIServices` 與 `Polhem.UI.ApiBridge` 不進入任何 Blazor 套件的規則，說明在 `Polhem.Web.Blazor` 的 README。
 
 ## 授權
 

@@ -43,7 +43,7 @@
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | 依 `CommonConfiguration.ApiPayloadOptions` 註冊伺服器讀寫 payload 外殼所用的選項（壓縮器、加密器、frame）。不呼叫時採預設值：gzip、aes-cbc-hmac、不開 frame。.NET 用戶端把相同設定存放在 `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |
 | `IDatabaseInitializer` | 建立 `DatabaseSettings` 的資料庫、建立或升級 `DbCategorySettings` 的資料表，並建立第一位管理員與公司。由 `AddPolhemFramework` 註冊 |
-| `DatabaseCommandLine.TryRun` | 從主機的命令列執行 `db create`、`db upgrade` 與 `db seed-admin`，背後是 `IDatabaseInitializer` |
+| `DatabaseCommandLine.TryRun` | 從主機的命令列執行 `db` 指令（建立資料庫、建立與升級資料表、建立第一位管理員…），背後是 `IDatabaseInitializer` |
 
 ## 使用方式
 
@@ -113,8 +113,8 @@ var login = await client.System.LoginAsync("demo", "demo");
 if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exitCode;
 ```
 
-之後 `dotnet run -- db create`、`db upgrade` 與 `db seed-admin --company <id>` 就會在不啟動主機的情況下執行。
-指令與選項說明見 [DatabaseSettings 指引](../../docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)。
+之後 `dotnet run -- db create`、`db upgrade`、`db seed-admin --company <id>` 與其他 `db` 指令就會在不啟動主機的情況下執行。
+`dotnet run -- db` 不帶指令時會列出全部指令；各指令的使用時機見 [DatabaseSettings 指引](../../docs/zh-TW/database/database-settings-guide.md#7-初始化新部署)。
 
 ## 設計慣例
 
@@ -127,6 +127,8 @@ if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exit
 
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` 與其輔助方法
 - `PolhemHostApplicationBuilderExtensions.cs`、`PolhemBackendOptions.cs` -- `AddPolhemBackend` 與其選項
+- `BackendDefaultTypes.cs` -- `BackendComponents` 項目留空時採用的型別名稱
+- `ApiKeys/` -- 尚未發出任何 API 金鑰時的啟動警告
 - `Audit/` -- `IAuditLogSink` 與內部的稽核寫入器
 - `CacheNotify/` -- cache-notify 輪詢器
 - `Database/` -- 啟動時檢查 `DatabaseSettings` 具備框架必需的項目，以及 `db` 指令背後的資料庫初始化

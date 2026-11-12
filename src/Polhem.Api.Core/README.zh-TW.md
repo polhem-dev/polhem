@@ -81,7 +81,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 ### 內建訊息
 
 - 內建操作的 request/response 型別位於 `Messages/System/`（登入、session、公司、定義、API 金鑰）、
-  `Messages/Form/`（清單、資料、儲存、刪除、查詢）與 `Messages/AuditLog/`；`ExecFuncRequest` /
+  `Messages/Form/`（清單、資料、儲存、刪除、查詢、欄位值變更）與 `Messages/AuditLog/`；`ExecFuncRequest` /
   `ExecFuncResponse` 位於 `Messages/`。
 
 ## 主要公開 API

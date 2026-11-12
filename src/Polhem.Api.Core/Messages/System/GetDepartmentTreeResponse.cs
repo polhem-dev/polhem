@@ -4,8 +4,8 @@ using Polhem.Definition.Organization;
 namespace Polhem.Api.Core.Messages.System
 {
     /// <summary>
-    /// API response for the get department tree operation. The tree is a typed object,
-    /// serialised as JSON on the Plain wire format and MessagePack otherwise.
+    /// API response for the get department tree operation. The tree is a typed object, written by the
+    /// envelope's JSON on the Plain format and otherwise by the body codec the request declares.
     /// </summary>
     public sealed class GetDepartmentTreeResponse : ApiResponse, IGetDepartmentTreeResponse
     {

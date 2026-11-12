@@ -30,6 +30,6 @@
 - 對話框渲染在放置的位置，而不是 provider 裡。它們看不到外層的 `FormScope`。
 - 日期以儲存格式 `yyyy-MM-dd` 顯示，年月為 `yyyy-MM`。
 - 欄位要等表格的腳本載入後才能拖曳，也就是頁面載入後稍等一下。
-- 工具列和篩選按鈕使用文字符號，不用圖示。
+- 欄位篩選按鈕使用文字符號，不用圖示；工具列按鈕是圖示。
 
 Northwind 在兩種宿主上都使用本套件：Blazor Server 是 `Polhem.Northwind.BlazorFluent`，Blazor WebAssembly 是 `Polhem.Northwind.BlazorFluentWasm`。

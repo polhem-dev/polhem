@@ -42,6 +42,14 @@ An application does not use this package alone. It references one host package, 
 
 This package references no UI framework and no ASP.NET Core host, so it can load in WebAssembly. `POLHEM9001` enforces it.
 
+It references `Polhem.Api.Client`, `Polhem.Expressions` and [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), which
+supplies the form value rules every head shares (`FormValueBinding`, `FormDataGuard`, the element capability
+resolver). The process-wide parts of `Polhem.UI.Core` are off limits: a Blazor Server site serves several users from
+one process, so no Blazor package may use `UIServices` or reference `Polhem.UI.ApiBridge`, both of which hold one user
+per process. `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) reads the references of the
+shared layer, the host and the UI package and fails when one does. See
+[ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
+
 ## License
 
 MIT

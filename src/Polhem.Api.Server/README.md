@@ -42,7 +42,7 @@
   `AddPolhemFramework` registers the default; a host replaces it by registering its own.
 - `ApiAuthorizationContext` / `ApiAuthorizationResult` -- authorization input and outcome types.
 - `ApiAccessValidator` -- enforces method-level protection via `ApiAccessControlAttribute`.
-- `ApiCallContext` -- per-call metadata (token, protection level, caller identity).
+- `ApiCallContext` -- per-call metadata: the access token, whether the call is local, and the payload format.
 
 ## Key Public APIs
 

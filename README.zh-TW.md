@@ -81,7 +81,7 @@ dotnet add package Polhem.Db
 |---|---|
 | **Polhem.Core.dll** | 提供基礎函式與工具（序列化、加密等），作為共通基礎模組。 |
 | **Polhem.Definition.dll** | 定義系統結構化資料，包含 FormSchema、欄位結構描述與版面配置。 |
-| **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia 前端即時預覽共用，兩端算法一致。 |
+| **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia、Blazor 前端的即時預覽共用，兩端算法一致。 |
 | **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）與表單連接器契約（`IFormApiConnector`）。 |
 | **Polhem.Api.Core.dll** | 前後端共用的 API wire 層：請求與回應訊息、Payload 加解密與序列化管線。 |
 
@@ -112,13 +112,14 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.Server.dll** | Blazor head 的 Blazor Server 宿主：Local 或 Remote 模式的 circuit client，以及外殼的註冊與語系端點。 |
 | **Polhem.Web.Blazor.Wasm.dll** | Blazor head 的 Blazor WebAssembly 宿主：遠端 client 與外殼的語系切換。 |
 
-### Tooling（dotnet tool）
+### Tooling（dotnet tool 與範本）
 
 | 套件 | 安裝 | 說明 |
 |---|---|---|
-| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>升版：`dotnet tool update -g Polhem.Cli` | 框架 CLI，命令名 `dotnet polhem`。`defines` 系列命令用來 materialize 與列出 `Polhem.Definition.dll` 內嵌的框架預設定義檔（供新消費者 bootstrap `DefinePath`）；`keys` 系列命令產生 `SystemSettings.xml` 所用的受保護金鑰。見 [Polhem.Cli README](tools/Polhem.Cli/README.zh-TW.md)；各選項以 `dotnet polhem --help` 列出。 |
-| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor`（本機工具） | 定義檔的桌面編輯器，命令名 `polhem-define [DefinePath]`；可從 Excel 活頁簿匯入表單。見 [DefineEditor README](tools/DefineEditor/README.zh-TW.md)。 |
+| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>升版：`dotnet tool update -g Polhem.Cli` | 框架 CLI，命令名 `dotnet polhem`：materialize 框架預設的定義檔、產生 `SystemSettings.xml` 所用的受保護金鑰，以及處理表單活頁簿。各命令見 [Polhem.Cli README](tools/Polhem.Cli/README.zh-TW.md)；`dotnet polhem --help` 會列出它們。 |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor`（本機工具） | 定義檔的桌面編輯器，命令名 `dotnet polhem-define [DefinePath]`；可從 Excel 活頁簿匯入表單。見 [DefineEditor README](tools/DefineEditor/README.zh-TW.md)。 |
 | **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | 資料庫管理工具，命令名 `polhem-db`：依定義資料夾建立、檢查與升級資料庫，支援所有資料庫，不需要專案。DefineEditor 需要時會執行它。見 [DbManager README](tools/DbManager/README.zh-TW.md)。 |
+| **Polhem.Templates** | `dotnet new install Polhem.Templates` | 建立新 Polhem 應用程式的 `dotnet new` 範本：`polhem-avalonia`，以及使用 MudBlazor 或 Fluent UI 的 Blazor Server 與 Blazor WebAssembly 網站。見 [Polhem.Templates README](tools/Polhem.Templates/README.zh-TW.md)。 |
 
 ## 🚀 Quick Start
 

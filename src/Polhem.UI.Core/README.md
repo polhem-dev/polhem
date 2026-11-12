@@ -8,7 +8,7 @@
 
 - **Layer**: UI Layer (shared front-end foundation)
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
-- Every front end references it, the Blazor head (`Polhem.Web.Blazor.Server`) included. It reaches the backend only through the contracts in `Polhem.Api.Contracts`; it references neither `Polhem.Api.Client` nor `Polhem.Api.Core`. The reasons are in [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
+- Every front end references it, the Blazor shared layer (`Polhem.Web.Blazor`) included. It reaches the backend only through the contracts in `Polhem.Api.Contracts`; it references neither `Polhem.Api.Client` nor `Polhem.Api.Core`. The reasons are in [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).
 - Connecting a single-user head to a Polhem backend is the job of [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md), which implements the contracts below over the API client.
 
 ## Target Framework
@@ -59,6 +59,10 @@ application's own data through its own implementation of `IFormApiConnector`.
 - `FormLiveComputationEngine` -- the live recomputation of computed fields and new-row default expressions that
   every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
   user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
+  `LiveComputationDegradation` describes why it stopped computing: the field whose expression failed, and the failure.
+- `Connectors/ListFilterState` -- the column filters of a form list, turned into the same `FilterNode` by every head.
+- `Connectors/CardListState` -- the rows of a list a phone shows as cards, accumulated a page at a time as the user
+  scrolls.
 
 ### The Form Data Object
 
@@ -81,8 +85,8 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 ### Field Editor Rules Shared by Every Head
 
-`Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` both use, so the
-two heads behave the same:
+`Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` both use, so the
+heads behave the same:
 
 - `FieldEditRules` -- whether a field accepts input, from the form mode, the layout read-only flag and
   `AllowEditModes`.
@@ -99,6 +103,10 @@ two heads behave the same:
   highlighted, and read-only wins.
 - `LookupFieldRules`, `LookupDisplay` -- whether a field looks up, which program it opens, which fields it shows and
   how they are joined, and how a selection is written back or cleared.
+- `RelationOpenRules` -- when a relation field on a read-only form offers to open the record it points at, which
+  record that is, and whether the user may see it.
+- `FieldValueChangeCoordinator` -- calls the business object back when the user changes a field marked
+  `ValueChangeCallback`, and writes what the server returns into the same row.
 
 ### Permission Capabilities
 
@@ -117,7 +125,7 @@ two heads behave the same:
 - **Framework-agnostic** -- no UI-framework types, so the same contracts and rules serve every front end.
 - **Resolution order in the views** -- a control uses its own property first, then its overridable `Resolve*` hook,
   then `UIServices.Provider`; with none of them it runs on what the host set.
-- **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor head references this
+- **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor packages reference this
   package for the value rules and `FormDataObject` only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)
   fails when it references `UIServices` or `Polhem.UI.ApiBridge`, and `UICoreServiceLocatorGateTests`
   (`tests/Polhem.UI.Core.UnitTests`) fails when anything in this package but `UIServices` itself calls `UIServices`.
