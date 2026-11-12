@@ -1,5 +1,6 @@
 using Polhem.Core;
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Db.Providers.MySql;
 using Polhem.Db.Providers.Oracle;
 using Polhem.Db.Providers.PostgreSql;
@@ -8,6 +9,7 @@ using Polhem.Db.Providers.SqlServer;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
+using Polhem.ObjectCaching.Define;
 using Microsoft.Data.Sqlite;
 
 namespace Polhem.Tests.Shared
@@ -54,9 +56,9 @@ namespace Polhem.Tests.Shared
 
         private static void EnsureFallbackCommonDatabaseItem(IDefineAccess bootstrapAccess)
         {
-            if (bootstrapAccess.GetDatabaseSettings().Items!.Contains("common")) return;
-            AddDatabaseItemIfMissing(
-                bootstrapAccess, id: "common", categoryId: "common",
+            if (bootstrapAccess.GetDatabaseSettings().Items!.Contains("common")
+                || s_registeredItems.Exists(item => item.Id == "common")) return;
+            AddDatabaseItem(id: "common", categoryId: "common",
                 dbType: DatabaseType.SQLServer, serverId: string.Empty, dbName: "common");
         }
 
@@ -72,9 +74,7 @@ namespace Polhem.Tests.Shared
             // Backward-compat: framework convention historically uses the bare "common"
             // DatabaseItem.Id for the SQL Server default. Bind it to the same server with
             // DbName="common" so the {@DbName} placeholder resolves identically to common_sqlserver.
-            AddDatabaseItemIfMissing(
-                bootstrapAccess,
-                id: "common",
+            AddDatabaseItem(id: "common",
                 categoryId: "common",
                 dbType: DatabaseType.SQLServer,
                 serverId: TestDbConventions.GetServerId(DatabaseType.SQLServer),
@@ -156,21 +156,17 @@ namespace Polhem.Tests.Shared
             List<string> categoryIds)
         {
             var serverId = TestDbConventions.GetServerId(dbType);
-            AddDatabaseServerIfMissing(bootstrapAccess, serverId, dbType, connStr);
+            AddDatabaseServer(serverId, dbType, connStr);
             foreach (var categoryId in categoryIds)
             {
                 var id = TestDbConventions.GetDatabaseId(dbType, categoryId);
-                AddDatabaseItemIfMissing(bootstrapAccess, id, categoryId, dbType, serverId, ResolveDbName(dbType, categoryId));
+                AddDatabaseItem(id, categoryId, dbType, serverId, ResolveDbName(dbType, categoryId));
             }
         }
 
-        private static void AddDatabaseServerIfMissing(IDefineAccess bootstrapAccess, string serverId, DatabaseType dbType, string connStr)
-        {
-            s_registeredServers.Add(new RegisteredServer(serverId, dbType, connStr));
-            var dbSettings = bootstrapAccess.GetDatabaseSettings();
-            if (dbSettings.Servers!.Contains(serverId)) return;
-            dbSettings.Servers.Add(NewServer(s_registeredServers[^1]));
-        }
+        // Records the entry only; ApplyRegistrations publishes every recorded entry at once.
+        private static void AddDatabaseServer(string serverId, DatabaseType dbType, string connStr)
+            => s_registeredServers.Add(new RegisteredServer(serverId, dbType, connStr));
 
         private static DatabaseServer NewServer(RegisteredServer server) => new()
         {
@@ -179,12 +175,26 @@ namespace Polhem.Tests.Shared
             ConnectionString = server.ConnectionString
         };
 
-        private static void AddDatabaseItemIfMissing(IDefineAccess bootstrapAccess, string id, string categoryId, DatabaseType dbType, string serverId, string dbName)
+        // Records the entry only; ApplyRegistrations publishes every recorded entry at once.
+        private static void AddDatabaseItem(string id, string categoryId, DatabaseType dbType, string serverId, string dbName)
+            => s_registeredItems.Add(new RegisteredItem(id, categoryId, dbType, serverId, dbName));
+
+        // WARNING: the DatabaseSettings instance in the cache is shared by every test running in the process, and
+        // other test classes read it while this runs. It is never changed in place: the entries are added to a copy,
+        // and the copy replaces the cached instance in one step, so a reader sees either the old instance or the
+        // complete new one. The cache slot is keyed by type name alone, so a DatabaseSettingsCache built over any
+        // PathOptions replaces the slot every define access reads.
+        private static void ApplyRegistrations(IDefineAccess access, PathOptions paths)
         {
-            s_registeredItems.Add(new RegisteredItem(id, categoryId, dbType, serverId, dbName));
-            var dbSettings = bootstrapAccess.GetDatabaseSettings();
-            if (dbSettings.Items!.Contains(id)) return;
-            dbSettings.Items.Add(NewItem(s_registeredItems[^1]));
+            var current = access.GetDatabaseSettings();
+            var servers = s_registeredServers.Where(s => !current.Servers!.Contains(s.Id)).ToList();
+            var items = s_registeredItems.Where(i => !current.Items!.Contains(i.Id)).ToList();
+            if (servers.Count == 0 && items.Count == 0) return;
+
+            var copy = current.Clone();
+            foreach (var server in servers) copy.Servers!.Add(NewServer(server));
+            foreach (var item in items) copy.Items!.Add(NewItem(item));
+            new DatabaseSettingsCache(paths).Set(copy);
         }
 
         // A fresh instance per application: the same entry is written to more than one

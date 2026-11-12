@@ -1,4 +1,5 @@
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
@@ -48,12 +49,14 @@ namespace Polhem.Tests.Shared
         /// whose connection string env var is set. Idempotent across the process.
         /// </summary>
         /// <param name="bootstrapAccess">
-        /// A <c>CacheDefineAccess</c> backed by the same <c>CacheContainer</c> the rest
-        /// of the framework will read from; new items are added to its <c>DatabaseSettings</c>.
+        /// A <c>CacheDefineAccess</c> backed by the same cache the rest of the framework will read from; the
+        /// <c>DatabaseSettings</c> it caches is replaced by a copy that holds the new entries.
         /// </param>
-        public static void EnsureRegistered(IDefineAccess bootstrapAccess)
+        /// <param name="paths">The path options of <paramref name="bootstrapAccess"/>.</param>
+        public static void EnsureRegistered(IDefineAccess bootstrapAccess, PathOptions paths)
         {
             ArgumentNullException.ThrowIfNull(bootstrapAccess);
+            ArgumentNullException.ThrowIfNull(paths);
             lock (s_registerLock)
             {
                 if (s_registered) return;
@@ -65,6 +68,7 @@ namespace Polhem.Tests.Shared
                 RegisterMySql(bootstrapAccess, categoryIds);
                 RegisterOracle(bootstrapAccess, categoryIds);
                 EnsureFallbackCommonDatabaseItem(bootstrapAccess);
+                ApplyRegistrations(bootstrapAccess, paths);
 
                 s_registered = true;
             }
@@ -83,20 +87,14 @@ namespace Polhem.Tests.Shared
         /// of trusting that nobody else has touched the slot.
         /// </remarks>
         /// <param name="access">The define access whose <c>DatabaseSettings</c> to top up.</param>
-        public static void EnsureDatabaseSettingsApplied(IDefineAccess access)
+        /// <param name="paths">The path options of <paramref name="access"/>.</param>
+        public static void EnsureDatabaseSettingsApplied(IDefineAccess access, PathOptions paths)
         {
             ArgumentNullException.ThrowIfNull(access);
+            ArgumentNullException.ThrowIfNull(paths);
             lock (s_registerLock)
             {
-                var dbSettings = access.GetDatabaseSettings();
-                foreach (var server in s_registeredServers)
-                {
-                    if (!dbSettings.Servers!.Contains(server.Id)) dbSettings.Servers.Add(NewServer(server));
-                }
-                foreach (var item in s_registeredItems)
-                {
-                    if (!dbSettings.Items!.Contains(item.Id)) dbSettings.Items.Add(NewItem(item));
-                }
+                ApplyRegistrations(access, paths);
             }
         }
 
