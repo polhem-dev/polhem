@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Connects Polhem front ends to a Polhem backend: the client connection state and the API-backed implementations of the Polhem.UI.Core services.</Description>
+    <Description>Connects single-user Polhem front ends, such as the Avalonia heads, to a Polhem backend: the client connection state and the API-backed implementations of the Polhem.UI.Core services.</Description>
     <PackageTags>polhem;ui;client;api;bridge</PackageTags>
   </PropertyGroup>
 

@@ -37,6 +37,12 @@ Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. E
 
 Requires the **.NET 10 SDK**. The database is SQLite, created and seeded on first run — no setup.
 
+> **The demo's master key is public.** When `POLHEM_MASTER_KEY` is not set, the backend sets it to
+> `NorthwindCredentials.DemoMasterKey`, a value published in this repository, so that a fresh clone runs with no setup.
+> Anyone can use it to decrypt what it protects. A deployment built from this demo must set its own
+> `POLHEM_MASTER_KEY` through its deployment mechanism before the backend starts; see
+> [ADR-015](../../maintainers/adr/adr-015-master-key-environment-default.md).
+
 ### From VS Code (recommended)
 
 Open the repository, pick **Run Polhem.Northwind (Server + Desktop)** from the Run & Debug dropdown, and press <kbd>F5</kbd>. It builds and launches the JSON-RPC server and the desktop client together.
@@ -259,7 +265,7 @@ Signing in answers two questions, and the framework asks them separately. `Login
 
 **Both steps run entirely on framework code.** The application substitutes no service and overrides no method:
 
-- **Authentication** is the framework's own `st_user` check. The seeder writes the `demo` and `demo-tw` accounts on first start (and adds either one to an existing `northwind.db` that lacks it), with the password hashed through `PasswordHasher` at seed time (not a literal hash, which would silently stop matching the first time the hashing parameters change). Comparing an account and a password is the same operation in every deployment, so it belongs to the framework.
+- **Authentication** is the framework's own `st_user` check. The seeder writes the `demo`, `demo-tw` and `demo-ro` accounts on first start (and adds any of them to an existing `northwind.db` that lacks it), with the password hashed through `PasswordHasher` at seed time (not a literal hash, which would silently stop matching the first time the hashing parameters change). Comparing an account and a password is the same operation in every deployment, so it belongs to the framework.
 - **Company entry** is the framework's own `EnterCompany`. The seeder writes the matching `st_company` and `st_user_company` rows, and the call then validates the company exists and is enabled, checks the user's access, and snapshots roles and the employee context onto the session.
 
 That `st_user` row also carries `time_zone` and `culture`, so the session takes its zone, and the client its language, from the **user** rather than from the server or a deployment default. The Blazor Server head's screens are the one exception, [described with that head](#web-client-blazor-server).
@@ -486,12 +492,16 @@ apps/Polhem.Northwind/
 │   └── Language/{lang}/          localized captions, one file per progId
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
 ├── Polhem.Northwind.Backend/        the backend both hosts run: OrderBO, its repository, the seeder and seed data
-├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia heads
+├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia and Blazor WebAssembly heads
 ├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Mud), running the backend in process
+├── Polhem.Northwind.BlazorFluent/   the same application on Polhem.Web.Blazor.Fluent, mounted by Polhem.Northwind.Blazor under its own path
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head (Polhem.Web.Blazor.Mud), a JSON-RPC client of the server
+├── Polhem.Northwind.BlazorFluentWasm/  the same Blazor WebAssembly head on Polhem.Web.Blazor.Fluent
+├── Shared/                          the paths of the front ends on the public demo site, and the links between them
 ├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)
 ├── Polhem.Northwind.iOS/            iOS entry point (Avalonia.iOS)
-└── Polhem.Northwind.Android/        Android entry point (Avalonia.Android)
+├── Polhem.Northwind.Android/        Android entry point (Avalonia.Android)
+└── Dockerfile                       the public demo site as one container
 ```

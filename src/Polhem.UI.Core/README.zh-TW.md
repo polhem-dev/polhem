@@ -8,7 +8,7 @@
 
 - **層級**：UI 層（共享前端基礎）
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
-- 所有前端都參考它，Blazor head（`Polhem.Web.Blazor.Server`）也不例外。它只透過 `Polhem.Api.Contracts` 的合約接觸後端，既不參考 `Polhem.Api.Client`，也不參考 `Polhem.Api.Core`。理由見 [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
+- 所有前端都參考它，Blazor 共用層（`Polhem.Web.Blazor`）也不例外。它只透過 `Polhem.Api.Contracts` 的合約接觸後端，既不參考 `Polhem.Api.Client`，也不參考 `Polhem.Api.Core`。理由見 [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
 - 把單一使用者的 head 接上 Polhem 後端是 [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md) 的職責，它以 API client 實作下列合約。
 
 ## 目標框架
@@ -52,7 +52,9 @@
 - `FormDataGuard` -- 表單的 CRUD 呼叫送到連接器前檢查的前置條件；每種失敗在所有 head 都只有一種措辭。
 - `FormLiveComputationEngine` -- 各 head 共用的計算欄位即時重算與新資料列預設值運算式評估。運算引擎
   （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
-  整個 process 共用的狀態。
+  整個 process 共用的狀態。`LiveComputationDegradation` 描述它停止計算的原因：運算式失敗的欄位，以及失敗本身。
+- `Connectors/ListFilterState` -- 表單清單的欄位篩選，各 head 都把它轉成同一個 `FilterNode`。
+- `Connectors/CardListState` -- 手機以卡片顯示的清單資料列，隨使用者捲動一次讀一頁累積。
 
 ### 表單資料物件
 
@@ -72,7 +74,7 @@
 
 ### 各 head 共用的欄位編輯器規則
 
-`Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor.Server` 的欄位編輯器共用的規則，讓兩端行為一致：
+`Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的欄位編輯器共用的規則，讓各 head 行為一致：
 
 - `FieldEditRules` -- 依表單模式、版面唯讀旗標與 `AllowEditModes` 判斷欄位可否輸入。
 - `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
@@ -84,6 +86,8 @@
 - `GridColumnRules` -- grid 欄位的最小寬度。
 - `FieldCaptionRules` -- 標題慣例：唯讀的 grid 表頭加括號、必填的標題加上醒目標示，兩者同時成立時以唯讀為準。
 - `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
+- `RelationOpenRules` -- 唯讀表單上的關聯欄位何時提供開啟所指記錄、開啟哪一筆，以及使用者能否看到它。
+- `FieldValueChangeCoordinator` -- 使用者修改標示 `ValueChangeCallback` 的欄位時回呼 business object，並把伺服端傳回的值寫入同一列。
 
 ### 權限能力
 
@@ -101,8 +105,7 @@
 - **與 UI 框架無關** -- 不含 UI 框架型別，因此同一套合約與規則可服務所有前端。
 - **畫面的解析順序** -- 控制項先用自己的屬性，再用可覆寫的 `Resolve*` hook，最後才是 `UIServices.Provider`；
   三者皆無時，就以 host 設定的內容運作。
-- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor head 參考本套件只為了值規則與
-  `FormDataObject`；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
+- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor 套件使用本套件中 `UIServices` 以外的一切；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
   （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗；本套件中除了 `UIServices` 本身有任何程式呼叫
   `UIServices`，`UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。

@@ -83,7 +83,7 @@ dotnet add package Polhem.Db
 |---|---|
 | **Polhem.Core.dll** | Core utilities such as serialization, encryption, and general-purpose helpers. |
 | **Polhem.Definition.dll** | Defines system-wide structured types including FormSchema, field schemas, and layout configurations. |
-| **Polhem.Expressions.dll** | Portable, sandboxed expression evaluator (DynamicExpresso-backed) for computed fields and validation rules; shared by backend save and Avalonia client live preview so both sides compute identically. |
+| **Polhem.Expressions.dll** | Portable, sandboxed expression evaluator (DynamicExpresso-backed) for computed fields and validation rules; shared by the backend save and the live preview of the Avalonia and Blazor front ends, so both sides compute identically. |
 | **Polhem.Api.Contracts.dll** | Shared data contracts (request/response models) and the form connector contract (`IFormApiConnector`) used by both frontend and backend. |
 | **Polhem.Api.Core.dll** | The API wire layer both ends share: request and response messages, payload encryption, and the serialization pipeline. |
 
@@ -114,13 +114,14 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.Server.dll** | The Blazor Server host of the Blazor head: the circuit client in Local or Remote mode, and the shell's registration and culture endpoint. |
 | **Polhem.Web.Blazor.Wasm.dll** | The Blazor WebAssembly host of the Blazor head: the remote client and the shell's language switch. |
 
-### Tooling (dotnet tool)
+### Tooling (dotnet tools and templates)
 
 | Package | Install | Description |
 |---|---|---|
-| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`. The `defines` commands materialise and list the framework default define files embedded in `Polhem.Definition.dll` (to bootstrap a new consumer's `DefinePath`); the `keys` commands generate protected keys for `SystemSettings.xml`. See the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists the options. |
-| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor` (local tool) | Desktop editor for the definition files, invoked as `polhem-define [DefinePath]`; imports forms from Excel workbooks. See the [DefineEditor README](https://github.com/polhem-dev/polhem/blob/main/tools/DefineEditor/README.md). |
+| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`: it materialises the framework's default define files, generates protected keys for `SystemSettings.xml` and works with form workbooks. The commands are in the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists them. |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor` (local tool) | Desktop editor for the definition files, invoked as `dotnet polhem-define [DefinePath]`; imports forms from Excel workbooks. See the [DefineEditor README](https://github.com/polhem-dev/polhem/blob/main/tools/DefineEditor/README.md). |
 | **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | Database manager invoked as `polhem-db`: creates, checks and upgrades the databases a definition folder describes, for every supported database, without a project. DefineEditor runs it on demand. See the [DbManager README](https://github.com/polhem-dev/polhem/blob/main/tools/DbManager/README.md). |
+| **Polhem.Templates** | `dotnet new install Polhem.Templates` | `dotnet new` templates for a new Polhem application: `polhem-avalonia`, and Blazor Server and Blazor WebAssembly sites on MudBlazor or Fluent UI. See the [Polhem.Templates README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Templates/README.md). |
 
 
 ## 🚀 Quick Start

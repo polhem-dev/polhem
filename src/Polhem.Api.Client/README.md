@@ -34,9 +34,9 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
   (environment bootstrap), definition reads and saves (`GetDefineAsync` / `SaveDefineAsync` and typed variants
   such as `GetFormSchemaAsync`), API key management and `ExecFuncAsync`. The full list is the class itself.
 - `FormApiConnector` -- bound to one `ProgId`: `GetListAsync`, `GetDataAsync`, `GetNewDataAsync`, `SaveAsync`,
-  `DeleteAsync`, `GetLookupAsync`, `ExecFuncAsync` and `ExecFuncAnonymousAsync`. It implements
-  `Polhem.Api.Contracts.Form.IFormApiConnector`, the contract the front ends depend on: its public methods return the
-  concrete messages, and the contract members forward to them.
+  `DeleteAsync`, `GetLookupAsync`, `FieldValueChangeAsync`, `ExecFuncAsync` and `ExecFuncAnonymousAsync`. It implements
+  `Polhem.Api.Contracts.Form.IFormApiConnector` and `IFieldValueChangeConnector`, the contracts the front ends depend
+  on: its public methods return the concrete messages, and the contract members forward to them.
 - `AuditLogApiConnector` -- reads the audit and anomaly logs.
 - Every action method is asynchronous, carries the `Async` suffix and takes a trailing `CancellationToken`.
   All connectors share the payload pipeline (encoding, compression, encryption) of `ApiConnector`.

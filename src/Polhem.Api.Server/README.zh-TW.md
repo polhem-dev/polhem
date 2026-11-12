@@ -39,7 +39,7 @@
   host 註冊自己的實作即可替換。
 - `ApiAuthorizationContext` / `ApiAuthorizationResult` -- 授權輸入與結果型別。
 - `ApiAccessValidator` -- 透過 `ApiAccessControlAttribute` 強制方法層級保護。
-- `ApiCallContext` -- 每次呼叫的中繼資料（Token、保護等級、呼叫者身分）。
+- `ApiCallContext` -- 每次呼叫的中繼資料：access token、是否為本機呼叫，以及 payload 格式。
 
 ## 主要公開 API
 

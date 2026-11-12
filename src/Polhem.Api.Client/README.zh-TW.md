@@ -34,8 +34,8 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
   定義讀寫（`GetDefineAsync` / `SaveDefineAsync` 以及 `GetFormSchemaAsync` 等具型別版本）、API 金鑰管理與
   `ExecFuncAsync`。完整清單以類別本身為準。
 - `FormApiConnector` -- 綁定單一 `ProgId`：`GetListAsync`、`GetDataAsync`、`GetNewDataAsync`、`SaveAsync`、
-  `DeleteAsync`、`GetLookupAsync`、`ExecFuncAsync` 與 `ExecFuncAnonymousAsync`。它實作前端所相依的合約
-  `Polhem.Api.Contracts.Form.IFormApiConnector`：公開方法回傳具體的訊息型別，合約成員則轉呼叫這些方法。
+  `DeleteAsync`、`GetLookupAsync`、`FieldValueChangeAsync`、`ExecFuncAsync` 與 `ExecFuncAnonymousAsync`。它實作前端所相依的合約
+  `Polhem.Api.Contracts.Form.IFormApiConnector` 與 `IFieldValueChangeConnector`：公開方法回傳具體的訊息型別，合約成員則轉呼叫這些方法。
 - `AuditLogApiConnector` -- 查詢稽核與異常紀錄。
 - 所有動作方法都是非同步、帶 `Async` 後綴，並以 `CancellationToken` 作為最後一個參數。
   所有連接器共用 `ApiConnector` 的 payload 管線（編碼、壓縮、加密）。

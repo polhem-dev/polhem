@@ -6,7 +6,7 @@
 
 ## 架構定位
 
-- **層級**：基礎設施層（Polhem 框架最底層）
+- **層級**：基礎（Polhem 框架最底層）
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 
 ## 目標框架
@@ -88,6 +88,6 @@
 
 ## 目錄結構
 
-資料夾依功能分組原始碼：`Attributes/`、`Collections/`、`Data/`、`Exceptions/`、`Expressions/`、
+資料夾依功能分組原始碼：`Collections/`、`Data/`、`Exceptions/`、`Expressions/`、
 `Security/`、`Serialization/`。通用工具（`ValueUtilities`、`FrameworkClock`、`StringUtilities`、
 `FileUtilities`、`SysInfo`、`IKeyObject` 等）放在專案根目錄。

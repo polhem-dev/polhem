@@ -6,7 +6,7 @@ Core type library for the definition-driven architecture, describing forms, data
 
 ## Architecture Position
 
-**Layer**: Infrastructure
+**Layer**: Foundation
 
 Polhem.Definition sits at the foundation of the Polhem framework, providing the shared type system that all upper layers depend on. It defines the "language" of the definition-driven architecture — every form, database table, UI layout, and system setting is expressed through types declared here.
 

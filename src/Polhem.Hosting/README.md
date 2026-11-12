@@ -46,7 +46,7 @@ this package. A head that runs the backend in its own process references both: i
 | `PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload` | Registers the payload options (compressor, encryptor, frame) the server reads and writes the payload envelope with, from `CommonConfiguration.ApiPayloadOptions`. Without it the defaults apply: gzip, aes-cbc-hmac, no frame. A .NET client keeps the same settings in `PolhemApiClient.PayloadOptions` |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
 | `IDatabaseInitializer` | Creates the databases of `DatabaseSettings`, builds or upgrades the tables of `DbCategorySettings`, and seeds the first administrator and company. Registered by `AddPolhemFramework` |
-| `DatabaseCommandLine.TryRun` | Runs `db create`, `db upgrade` and `db seed-admin` from a host's command line, backed by `IDatabaseInitializer` |
+| `DatabaseCommandLine.TryRun` | Runs the `db` commands (creating the databases, building and upgrading the tables, seeding the first administrator, …) from a host's command line, backed by `IDatabaseInitializer` |
 
 ## Usage
 
@@ -118,9 +118,10 @@ for a `db` command after building the host and before starting it:
 if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exitCode;
 ```
 
-`dotnet run -- db create`, `db upgrade` and `db seed-admin --company <id>` then run without starting the host. The
-commands and their options are described in the
-[DatabaseSettings guide](../../docs/en/database/database-settings-guide.md#7-initializing-a-new-deployment).
+`dotnet run -- db create`, `db upgrade`, `db seed-admin --company <id>` and the other `db` commands then run without
+starting the host. `dotnet run -- db` with no command prints them all; the
+[DatabaseSettings guide](../../docs/en/database/database-settings-guide.md#7-initializing-a-new-deployment) describes
+when to use each.
 
 ## Design Conventions
 
@@ -133,6 +134,8 @@ commands and their options are described in the
 
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
 - `PolhemHostApplicationBuilderExtensions.cs`, `PolhemBackendOptions.cs` -- `AddPolhemBackend` and its options
+- `BackendDefaultTypes.cs` -- the type names used when a `BackendComponents` entry is left blank
+- `ApiKeys/` -- the startup warning while no API key has been issued
 - `Audit/` -- `IAuditLogSink` and the internal audit writers
 - `CacheNotify/` -- the cache-notify poller
 - `Database/` -- the startup check that `DatabaseSettings` has the items the framework requires, and the database initialization behind the `db` commands
