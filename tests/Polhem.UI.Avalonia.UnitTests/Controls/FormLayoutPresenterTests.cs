@@ -104,6 +104,20 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Single(FindAll<GridControl>(presenter));
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        [DisplayName("A detail grid has a bounded height so it virtualizes its rows, in the regular and the compact layout")]
+        public void Render_DetailGrid_HasBoundedHeight(bool isCompact)
+        {
+            var presenter = new FormLayoutPresenter { IsCompact = isCompact };
+            presenter.Layout = BuildLayout();
+
+            var grid = Assert.Single(FindAll<GridControl>(presenter));
+            Assert.Equal(FormLayoutPresenter.DetailGridMaxHeight, grid.MaxHeight);
+            Assert.True(grid.MaxHeight > grid.MinHeight);
+        }
+
         [Fact]
         [DisplayName("Without a data object, each field gets the editor its ControlType names and carries its FieldName")]
         public void Render_NoDataObject_CreatesEditorPerControlType()

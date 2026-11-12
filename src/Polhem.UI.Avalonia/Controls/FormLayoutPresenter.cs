@@ -46,6 +46,18 @@ namespace Polhem.UI.Avalonia.Controls
         public static readonly StyledProperty<RoundingContext?> RoundingContextProperty =
             AvaloniaProperty.Register<FormLayoutPresenter, RoundingContext?>(nameof(RoundingContext));
 
+        /// <summary>
+        /// The tallest a detail grid grows, about a dozen rows.
+        /// </summary>
+        /// <remarks>
+        /// The form body is a vertical <see cref="ScrollViewer"/> around stack panels, which measure a child with
+        /// unbounded height. Without a bound the <see cref="DataGrid"/> realizes every row, and a detail grid is
+        /// refreshed whenever an edit changes a computed field, so each such edit rebuilt every row: measured on
+        /// 2026-11-12, about 0.2 seconds per edit at 50 rows and 0.8 seconds at 200. With the bound the grid
+        /// virtualizes and scrolls its own rows, and an edit costs about the same at any row count.
+        /// </remarks>
+        internal const double DetailGridMaxHeight = 480;
+
         private readonly StackPanel _host;
         // Detail grids by table name, repopulated on every render so a host can refresh one grid
         // (realized cells do not track later DataRow writes).
@@ -260,6 +272,7 @@ namespace Polhem.UI.Avalonia.Controls
             var grid = new GridControl
             {
                 MinHeight = 120,
+                MaxHeight = DetailGridMaxHeight,
                 EditMode = IsCompact ? GridEditMode.EditForm : DetailEditMode,
             };
             // Currency/unit-aware cell decimals (Tier 2), set before Bind so the first render uses them.

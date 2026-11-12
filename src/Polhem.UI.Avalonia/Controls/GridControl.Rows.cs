@@ -1,5 +1,7 @@
 using System.Data;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core;
@@ -113,10 +115,8 @@ namespace Polhem.UI.Avalonia.Controls
         private void RefreshAndFocusRow(DataRow row)
         {
             RefreshRows();
-            var rowView = _dataTable?.DefaultView
-                .Cast<DataRowView>()
-                .FirstOrDefault(v => ReferenceEquals(v.Row, row));
-            if (rowView is null) return;
+            if (FindRowView(row) is not { } rowView) return;
+            _grid.UpdateLayout();
             _grid.SelectedItem = rowView;
             _grid.ScrollIntoView(rowView, null);
         }
@@ -129,5 +129,45 @@ namespace Polhem.UI.Avalonia.Controls
             if (!FormDataGuard.TryGetRowId(rowView.Row, out var rowId)) return;
             handler(this, rowId);
         }
+
+        // Re-realizing replaces every row container, which drops the selection and, in a grid of bounded height,
+        // scrolls back to the first row. A detail grid is re-realized after every edit that changes a computed
+        // field, so without this the grid would jump to its top while the user works further down.
+        private readonly record struct RowViewport(DataRow? First, DataRow? Last, DataRow? Selected);
+
+        private RowViewport CaptureViewport()
+        {
+            DataRow? first = null, last = null;
+            double firstTop = double.MaxValue, lastTop = double.MinValue;
+            var height = _grid.Bounds.Height;
+            foreach (var container in _grid.GetVisualDescendants().OfType<DataGridRow>())
+            {
+                if (!container.IsVisible || container.DataContext is not DataRowView view) continue;
+                if (container.TranslatePoint(default, _grid) is not { } origin) continue;
+                var top = origin.Y;
+                if (top + container.Bounds.Height <= 0 || top >= height) continue;
+                if (top < firstTop) { firstTop = top; first = view.Row; }
+                if (top > lastTop) { lastTop = top; last = view.Row; }
+            }
+            var selected = (_grid.SelectedItem as DataRowView)?.Row;
+            return new RowViewport(first, last, selected);
+        }
+
+        private void RestoreViewport(RowViewport viewport)
+        {
+            // `ScrollIntoView` measures against realized rows, and a new ItemsSource has none until the next
+            // layout pass.
+            if (viewport.First is not null || viewport.Last is not null)
+                _grid.UpdateLayout();
+            if (viewport.Last is { } last && FindRowView(last) is { } lastView)
+                _grid.ScrollIntoView(lastView, null);
+            if (viewport.First is { } first && FindRowView(first) is { } firstView)
+                _grid.ScrollIntoView(firstView, null);
+            if (viewport.Selected is { } selected && FindRowView(selected) is { } selectedView)
+                _grid.SelectedItem = selectedView;
+        }
+
+        private DataRowView? FindRowView(DataRow row)
+            => _dataTable?.DefaultView.Cast<DataRowView>().FirstOrDefault(v => ReferenceEquals(v.Row, row));
     }
 }
