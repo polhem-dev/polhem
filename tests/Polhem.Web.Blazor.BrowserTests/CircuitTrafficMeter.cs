@@ -42,9 +42,23 @@ namespace Polhem.Web.Blazor.BrowserTests
             ArgumentNullException.ThrowIfNull(action);
             await WaitForQuietAsync().ConfigureAwait(false);
             long before = Interlocked.Read(ref _bytes);
+            long framesBefore = Interlocked.Read(ref _frames);
             await action().ConfigureAwait(false);
+            // A slow first render, as on a CI runner still compiling, must not count as quiet before it sends anything.
+            await WaitForFirstFrameAsync(framesBefore).ConfigureAwait(false);
             await WaitForQuietAsync().ConfigureAwait(false);
             return Interlocked.Read(ref _bytes) - before;
+        }
+
+        private async Task WaitForFirstFrameAsync(long framesBefore)
+        {
+            var deadline = DateTime.UtcNow + s_deadline;
+            while (Interlocked.Read(ref _frames) == framesBefore)
+            {
+                if (DateTime.UtcNow > deadline)
+                    throw new TimeoutException($"The circuit sent nothing within {s_deadline.TotalSeconds} seconds of the action.");
+                await _page.WaitForTimeoutAsync(20).ConfigureAwait(false);
+            }
         }
 
         private async Task WaitForQuietAsync()

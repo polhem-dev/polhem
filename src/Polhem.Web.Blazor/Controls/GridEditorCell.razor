@@ -66,8 +66,7 @@ else
 
     // Built only while the cell holds the editor, so the cells at rest allocate nothing for it.
     private Dictionary<string, object?> EditorParameters()
-        => Host.EditorParametersBuilder?.Invoke(Column, Row)
-           ?? throw new InvalidOperationException("The grid's editor host has no parameter builder.");
+        => Host.EditorParametersBuilder!(Column, Row);
 
     private string TextClass => IsNumeric ? "polhem-grid-cell__text polhem-grid-cell__text--numeric" : "polhem-grid-cell__text";
 
@@ -105,7 +104,14 @@ else
     }
 
     /// <inheritdoc />
-    protected override void OnInitialized() => _rendered = CurrentState();
+    protected override void OnInitialized()
+    {
+        // Checked when the cell first renders rather than when the user first focuses it, so a grid that forgot to set
+        // the builder fails on its first page instead of on a later click.
+        if (Host.EditorParametersBuilder is null)
+            throw new InvalidOperationException($"The {nameof(GridEditorHost)} of the grid has no {nameof(GridEditorHost.EditorParametersBuilder)}.");
+        _rendered = CurrentState();
+    }
 
     /// <summary>
     /// Renders the cell only when what it shows changed, or while it holds the editor. A value committed in one cell
