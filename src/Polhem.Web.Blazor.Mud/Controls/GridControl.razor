@@ -79,10 +79,9 @@
                             <GridEditorCell Host="EditorHost"
                                             Script="Script"
                                             EditorType="FieldEditorFactory.GetEditorType(current.ControlType)"
-                                            EditorParameters="BuildEditorParameters(current, context.Item)"
+                                            Row="context.Item"
+                                            Column="current"
                                             Text="@FormatCell(context.Item, current)"
-                                            IsNumeric="@(current.ControlType == ControlType.NumericEdit)"
-                                            IsCheck="@(current.ControlType == ControlType.CheckEdit)"
                                             IsChecked="@IsChecked(context.Item, current)" />
                         }
                         else if (current.ControlType == ControlType.CheckEdit)

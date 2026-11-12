@@ -88,24 +88,12 @@
                 <div class="polhem-card-list">
                     @foreach (var row in CardRows)
                     {
-                        <div class="@(IsCardSelected(row) ? "polhem-card polhem-card--selected" : "polhem-card")"
-                             @key="row"
-                             @onclick="e => OnCardClick(row, e)">
-                            @foreach (var column in CardColumns)
-                            {
-                                <div class="polhem-card__line">
-                                    <span class="polhem-card__caption">@column.Caption</span>
-                                    @if (column.ControlType == Polhem.Definition.Layouts.ControlType.CheckEdit)
-                                    {
-                                        <input type="checkbox" disabled checked="@IsCardChecked(row, column)" aria-label="@column.Caption" />
-                                    }
-                                    else
-                                    {
-                                        <span class="polhem-card__value">@FormatCardValue(row, column)</span>
-                                    }
-                                </div>
-                            }
-                        </div>
+                        <ListCard @key="row"
+                                  Row="row"
+                                  Layout="ListLayout"
+                                  IsSelected="IsCardSelected(row)"
+                                  FormatValue="FormatCardValue"
+                                  OnClick="e => OnCardClick(row, e)" />
                     }
                     @if (CanLoadMoreCards)
                     {

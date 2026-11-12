@@ -19,5 +19,9 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
 
         /// <inheritdoc />
         protected override long FirstLoadLimitBytes => 2_100_000;
+
+        /// <inheritdoc />
+        /// <remarks>Measured on 2026-11-12: a commit sent 5.6 KB more than a move, about 28 bytes a row.</remarks>
+        protected override long CommitAllowanceBytes => 7_500;
     }
 }

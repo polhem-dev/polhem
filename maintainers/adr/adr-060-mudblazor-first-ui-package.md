@@ -68,5 +68,17 @@ arrives and replays them in order, which writes the text before the click runs. 
   1000 took 3.2 s on localhost, measured once on 2026-11-02, about a second per 200 cards. Raising it is a separate
   decision, with no measurement yet of the browser at 5000.
 - MudBlazor renders the table header itself, so `aria-sort` is not set on it. The direction shows in the caption.
+  *Amended 2026-11-12:* Fluent UI is the same. Both packages write `aria-sort` from their own sort state, which the
+  grid turns off because the server sorts, and neither offers a way to set it on the header cell.
 - A key pressed before the focus reaches a dialog goes to the page behind, so on a slow link an early Escape has to be
   pressed again.
+
+## Implementation evolution
+
+- 2026-11-12: a value committed in a grid cell rendered every `GridEditorCell` again, and selecting a card rendered every
+  card. Measured on 200 rows by 15 columns, a commit sent 58 KB (MudBlazor) and 45 KB (Fluent UI) against about 6 KB
+  and 3 KB for a move, and on 1000 cards a selection sent 44 KB against 2.7 KB on 50. A cell now renders only when
+  what it shows changes or while it holds the editor, and builds the editor's parameters only then; a card
+  (`ListCard`) renders only when its row, its layout or its selection changes. A commit now sends 21.8 KB and 8.7 KB,
+  most of it the UI framework's own rows and cells rendering with the grid, and a selection sends the same on 300 cards
+  as on 50. `GridPerformanceTests` and `CardListTests` fail if either grows back.

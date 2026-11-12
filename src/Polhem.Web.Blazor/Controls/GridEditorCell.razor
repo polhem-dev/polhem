@@ -2,11 +2,13 @@
 @implements IGridEditorSlot
 @implements IAsyncDisposable
 @using Microsoft.JSInterop
+@using System.Data
+@using Polhem.Definition.Layouts
 
 @* A cell shows text until it takes the focus, because an editor in every cell costs too much on a circuit. *@
 @if (ReferenceEquals(Host.Active, this))
 {
-    <div @ref="_editor" class="polhem-grid-cell__editor"><DynamicComponent Type="EditorType" Parameters="EditorParameters" /></div>
+    <div @ref="_editor" class="polhem-grid-cell__editor"><DynamicComponent Type="EditorType" Parameters="EditorParameters()" /></div>
 }
 else
 {
@@ -40,25 +42,32 @@ else
     [Parameter, EditorRequired]
     public Type EditorType { get; set; } = default!;
 
-    /// <summary>Gets or sets the parameters of the editor.</summary>
+    /// <summary>Gets or sets the row the cell edits.</summary>
     [Parameter, EditorRequired]
-    public Dictionary<string, object?> EditorParameters { get; set; } = default!;
+    public DataRow Row { get; set; } = default!;
+
+    /// <summary>Gets or sets the column the cell edits.</summary>
+    [Parameter, EditorRequired]
+    public LayoutColumn Column { get; set; } = default!;
 
     /// <summary>Gets or sets the text the cell shows at rest.</summary>
     [Parameter]
     public string Text { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets whether the value is a number, aligned to the right.</summary>
-    [Parameter]
-    public bool IsNumeric { get; set; }
-
-    /// <summary>Gets or sets whether the cell shows a check box at rest.</summary>
-    [Parameter]
-    public bool IsCheck { get; set; }
-
     /// <summary>Gets or sets the state of the check box at rest.</summary>
     [Parameter]
     public bool IsChecked { get; set; }
+
+    private RenderedState _rendered;
+
+    private bool IsNumeric => Column.ControlType == ControlType.NumericEdit;
+
+    private bool IsCheck => Column.ControlType == ControlType.CheckEdit;
+
+    // Built only while the cell holds the editor, so the cells at rest allocate nothing for it.
+    private Dictionary<string, object?> EditorParameters()
+        => Host.EditorParametersBuilder?.Invoke(Column, Row)
+           ?? throw new InvalidOperationException("The grid's editor host has no parameter builder.");
 
     private string TextClass => IsNumeric ? "polhem-grid-cell__text polhem-grid-cell__text--numeric" : "polhem-grid-cell__text";
 
@@ -94,6 +103,28 @@ else
         _focusEditor = true;
         Host.Activate(this);
     }
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => _rendered = CurrentState();
+
+    /// <summary>
+    /// Renders the cell only when what it shows changed, or while it holds the editor. A value committed in one cell
+    /// renders the whole grid again, and without this every cell of every row went through a render and a diff.
+    /// </summary>
+    /// <returns>Whether the cell renders.</returns>
+    protected override bool ShouldRender()
+    {
+        var current = CurrentState();
+        if (!current.IsActive && current == _rendered) return false;
+        _rendered = current;
+        return true;
+    }
+
+    private RenderedState CurrentState()
+        => new(ReferenceEquals(Host.Active, this), Text, IsChecked, EditorType, Row, Column);
+
+    private readonly record struct RenderedState(bool IsActive, string Text, bool IsChecked, Type EditorType, DataRow Row,
+        LayoutColumn Column);
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)

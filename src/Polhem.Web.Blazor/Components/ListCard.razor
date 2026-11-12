@@ -1,0 +1,20 @@
+@namespace Polhem.Web.Blazor.Components
+@using Polhem.Definition.Layouts
+@using Polhem.UI.Core.Fields
+
+<div class="@(IsSelected ? "polhem-card polhem-card--selected" : "polhem-card")" @onclick="OnClickAsync">
+    @foreach (var column in Layout.Columns?.Where(c => c.Visible) ?? [])
+    {
+        <div class="polhem-card__line">
+            <span class="polhem-card__caption">@column.Caption</span>
+            @if (column.ControlType == ControlType.CheckEdit)
+            {
+                <input type="checkbox" disabled checked="@GridCellFormatter.IsChecked(Row, column.FieldName)" aria-label="@column.Caption" />
+            }
+            else
+            {
+                <span class="polhem-card__value">@FormatValue(Row, column)</span>
+            }
+        </div>
+    }
+</div>

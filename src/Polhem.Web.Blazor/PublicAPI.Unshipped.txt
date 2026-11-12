@@ -176,3 +176,32 @@ Polhem.Web.Blazor.Controls.GridControlBase.EditMode.get -> Polhem.UI.Core.Editin
 *REMOVED*Polhem.Web.Blazor.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Controls.GridEditMode.EditForm = 1 -> Polhem.Web.Blazor.Controls.GridEditMode
 *REMOVED*Polhem.Web.Blazor.Controls.GridEditMode.InCell = 0 -> Polhem.Web.Blazor.Controls.GridEditMode
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.EditorParameters.get -> System.Collections.Generic.Dictionary<string!, object?>!
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.EditorParameters.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.Row.get -> System.Data.DataRow!
+Polhem.Web.Blazor.Controls.GridEditorCell.Row.set -> void
+Polhem.Web.Blazor.Controls.GridEditorCell.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
+Polhem.Web.Blazor.Controls.GridEditorCell.Column.set -> void
+Polhem.Web.Blazor.Components.ListCard
+Polhem.Web.Blazor.Components.ListCard.ListCard() -> void
+Polhem.Web.Blazor.Components.ListCard.Row.get -> System.Data.DataRow!
+Polhem.Web.Blazor.Components.ListCard.Row.set -> void
+Polhem.Web.Blazor.Components.ListCard.Layout.get -> Polhem.Definition.Layouts.LayoutGrid!
+Polhem.Web.Blazor.Components.ListCard.Layout.set -> void
+Polhem.Web.Blazor.Components.ListCard.IsSelected.get -> bool
+Polhem.Web.Blazor.Components.ListCard.IsSelected.set -> void
+Polhem.Web.Blazor.Components.ListCard.FormatValue.get -> System.Func<System.Data.DataRow!, Polhem.Definition.Layouts.LayoutColumn!, string!>!
+Polhem.Web.Blazor.Components.ListCard.FormatValue.set -> void
+Polhem.Web.Blazor.Components.ListCard.OnClick.get -> Microsoft.AspNetCore.Components.EventCallback<Microsoft.AspNetCore.Components.Web.MouseEventArgs!>
+Polhem.Web.Blazor.Components.ListCard.OnClick.set -> void
+override Polhem.Web.Blazor.Components.ListCard.OnInitialized() -> void
+override Polhem.Web.Blazor.Components.ListCard.ShouldRender() -> bool
+~override Polhem.Web.Blazor.Components.ListCard.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+override Polhem.Web.Blazor.Controls.GridEditorCell.OnInitialized() -> void
+override Polhem.Web.Blazor.Controls.GridEditorCell.ShouldRender() -> bool
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.IsNumeric.get -> bool
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.IsNumeric.set -> void
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.IsCheck.get -> bool
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.IsCheck.set -> void
+Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.get -> System.Func<Polhem.Definition.Layouts.LayoutColumn!, System.Data.DataRow!, System.Collections.Generic.Dictionary<string!, object?>!>?
+Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.set -> void
