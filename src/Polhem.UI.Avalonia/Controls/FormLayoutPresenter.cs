@@ -127,6 +127,10 @@ namespace Polhem.UI.Avalonia.Controls
         {
             if (_updateDepth > 0) return;
 
+            // A render builds new detail grids, and a host renders again after every command, a save included.
+            // Each detail grid scrolls its own rows, so its place and selection are carried over to its successor.
+            var places = _detailGrids.ToDictionary(
+                pair => pair.Key, pair => pair.Value.CaptureViewport(), StringComparer.OrdinalIgnoreCase);
             _host.Children.Clear();
             _detailGrids.Clear();
             if (Layout is not { } layout) return;
@@ -135,6 +139,11 @@ namespace Polhem.UI.Avalonia.Controls
                 _host.Children.Add(BuildSection(section, layout));
             foreach (var detail in layout.Details ?? Enumerable.Empty<LayoutGrid>())
                 _host.Children.Add(BuildDetailSection(detail));
+            foreach (var (tableName, place) in places)
+            {
+                if (_detailGrids.TryGetValue(tableName, out var grid))
+                    grid.RestoreViewportWhenShown(place);
+            }
         }
 
         /// <summary>

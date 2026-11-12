@@ -1,6 +1,7 @@
 using System.Data;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
@@ -135,41 +136,74 @@ namespace Polhem.UI.Avalonia.Controls
         // scrolls back to the first row. A detail grid is re-realized after every edit that changes a computed
         // field, so without this the grid would jump to its top while the user works further down. Rows are
         // matched by reference, then by `sys_rowid`, so a save or reload that replaces the data set keeps the place.
-        private readonly record struct RowRef(DataRow Row, Guid? RowId);
+        internal readonly record struct RowRef(DataRow Row, Guid? RowId);
 
-        private readonly record struct RowViewport(RowRef? First, RowRef? Last, RowRef? Selected);
+        /// <summary>
+        /// The rows a grid shows, top to bottom, and its selected row, so the grid, or a grid built to replace it,
+        /// can return to them.
+        /// </summary>
+        /// <param name="Visible">The rows in view, top to bottom, each with whether its top edge is in view.</param>
+        /// <param name="Selected">The selected row, if any.</param>
+        internal readonly record struct RowViewport(IReadOnlyList<(RowRef Row, bool WholeTop)> Visible, RowRef? Selected);
 
-        private RowViewport CaptureViewport()
+        internal RowViewport CaptureViewport()
         {
-            RowRef? first = null, last = null;
-            double firstTop = double.MaxValue, lastTop = double.MinValue;
+            var visible = new List<(double Top, RowRef Row, bool WholeTop)>();
             foreach (var container in _grid.GetVisualDescendants().OfType<DataGridRow>())
             {
                 if (!container.IsVisible || container.DataContext is not DataRowView view) continue;
                 if (container.GetVisualParent() is not Visual presenter) continue;
                 // Bounds are relative to the rows presenter, so a row scrolled partly out of view has a negative
-                // top or a bottom past the presenter. The restore scrolls the last row in view to the bottom edge
-                // and then the first one back to the top edge, so the first must be a whole row: a partial one
-                // would be scrolled fully into view, shifting the grid.
+                // top or a bottom past the presenter.
                 var top = container.Bounds.Y;
                 if (top + container.Bounds.Height <= 0 || top >= presenter.Bounds.Height) continue;
-                if (top >= 0 && top < firstTop) { firstTop = top; first = ToRef(view.Row); }
-                if (top > lastTop) { lastTop = top; last = ToRef(view.Row); }
+                if (ToRef(view.Row) is { } rowRef)
+                    visible.Add((top, rowRef, top >= 0));
             }
             RowRef? selected = _grid.SelectedItem is DataRowView selectedView ? ToRef(selectedView.Row) : null;
-            return new RowViewport(first, last, selected);
+            return new RowViewport(
+                visible.OrderBy(v => v.Top).Select(v => (v.Row, v.WholeTop)).ToList(), selected);
         }
 
-        private void RestoreViewport(RowViewport viewport)
+        /// <summary>
+        /// Returns a grid that is not in a window yet, such as one a render just built, to
+        /// <paramref name="viewport"/> once it is: it has no rows to scroll to before then.
+        /// </summary>
+        internal void RestoreViewportWhenShown(RowViewport viewport)
         {
-            // `ScrollIntoView` measures against realized rows, and a new ItemsSource has none until the next
-            // layout pass.
-            if (viewport.First is not null || viewport.Last is not null)
+            if (_grid.IsAttachedToVisualTree())
+            {
+                RestoreViewport(viewport);
+                return;
+            }
+
+            void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
+            {
+                _grid.AttachedToVisualTree -= OnAttached;
+                // Posted: the attach happens inside a layout pass, which `RestoreViewport` would re-enter.
+                Dispatcher.UIThread.Post(() => RestoreViewport(viewport), DispatcherPriority.Loaded);
+            }
+            _grid.AttachedToVisualTree += OnAttached;
+        }
+
+        internal void RestoreViewport(RowViewport viewport)
+        {
+            if (viewport.Visible.Count > 0)
+            {
+                // `ScrollIntoView` measures against realized rows, and a new ItemsSource has none until the next
+                // layout pass.
                 _grid.UpdateLayout();
-            if (viewport.Last is { } last && FindRowView(last) is { } lastView)
-                _grid.ScrollIntoView(lastView, null);
-            if (viewport.First is { } first && FindRowView(first) is { } firstView)
-                _grid.ScrollIntoView(firstView, null);
+                // Scroll the lowest row still in the table to the bottom edge, then the highest one whose top was
+                // in view back to the top edge. A row that is gone, such as one just deleted, is passed over for
+                // its neighbour; a partial top row is skipped, since scrolling it fully into view would shift
+                // the grid.
+                var last = viewport.Visible.Reverse().Select(v => FindRowView(v.Row)).FirstOrDefault(v => v is not null);
+                if (last is not null)
+                    _grid.ScrollIntoView(last, null);
+                var first = viewport.Visible.Where(v => v.WholeTop).Select(v => FindRowView(v.Row)).FirstOrDefault(v => v is not null);
+                if (first is not null)
+                    _grid.ScrollIntoView(first, null);
+            }
             if (viewport.Selected is { } selected && FindRowView(selected) is { } selectedView)
                 _grid.SelectedItem = selectedView;
         }
