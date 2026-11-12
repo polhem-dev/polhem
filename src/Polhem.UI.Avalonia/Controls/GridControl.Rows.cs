@@ -29,12 +29,14 @@ namespace Polhem.UI.Avalonia.Controls
             var dataObject = _binder.DataObject;
             if (dataObject is null) return;
 
+            var viewport = CaptureViewport();
             var tables = dataObject.DataSet.Tables;
             var tableName = TableName;
             _dataTable = tableName.Length > 0 && tables.Contains(tableName) ? tables[tableName] : null;
             if (_layout is null)
                 RebuildFallbackColumns();
             RebuildRows();
+            RestoreViewport(viewport);
         }
 
         private bool CanUseEditForm
@@ -73,8 +75,7 @@ namespace Polhem.UI.Avalonia.Controls
             _grid.IsReadOnly = readOnly;
             // Always-on editor cells capture the enabled state when their template
             // builds, so an editability switch must re-realize the rows.
-            _grid.ItemsSource = null;
-            RebuildRows();
+            RefreshRows();
         }
 
         private async Task AddRowAsync()
@@ -132,24 +133,30 @@ namespace Polhem.UI.Avalonia.Controls
 
         // Re-realizing replaces every row container, which drops the selection and, in a grid of bounded height,
         // scrolls back to the first row. A detail grid is re-realized after every edit that changes a computed
-        // field, so without this the grid would jump to its top while the user works further down.
-        private readonly record struct RowViewport(DataRow? First, DataRow? Last, DataRow? Selected);
+        // field, so without this the grid would jump to its top while the user works further down. Rows are
+        // matched by reference, then by `sys_rowid`, so a save or reload that replaces the data set keeps the place.
+        private readonly record struct RowRef(DataRow Row, Guid? RowId);
+
+        private readonly record struct RowViewport(RowRef? First, RowRef? Last, RowRef? Selected);
 
         private RowViewport CaptureViewport()
         {
-            DataRow? first = null, last = null;
+            RowRef? first = null, last = null;
             double firstTop = double.MaxValue, lastTop = double.MinValue;
-            var height = _grid.Bounds.Height;
             foreach (var container in _grid.GetVisualDescendants().OfType<DataGridRow>())
             {
                 if (!container.IsVisible || container.DataContext is not DataRowView view) continue;
-                if (container.TranslatePoint(default, _grid) is not { } origin) continue;
-                var top = origin.Y;
-                if (top + container.Bounds.Height <= 0 || top >= height) continue;
-                if (top < firstTop) { firstTop = top; first = view.Row; }
-                if (top > lastTop) { lastTop = top; last = view.Row; }
+                if (container.GetVisualParent() is not Visual presenter) continue;
+                // Bounds are relative to the rows presenter, so a row scrolled partly out of view has a negative
+                // top or a bottom past the presenter. The restore scrolls the last row in view to the bottom edge
+                // and then the first one back to the top edge, so the first must be a whole row: a partial one
+                // would be scrolled fully into view, shifting the grid.
+                var top = container.Bounds.Y;
+                if (top + container.Bounds.Height <= 0 || top >= presenter.Bounds.Height) continue;
+                if (top >= 0 && top < firstTop) { firstTop = top; first = ToRef(view.Row); }
+                if (top > lastTop) { lastTop = top; last = ToRef(view.Row); }
             }
-            var selected = (_grid.SelectedItem as DataRowView)?.Row;
+            RowRef? selected = _grid.SelectedItem is DataRowView selectedView ? ToRef(selectedView.Row) : null;
             return new RowViewport(first, last, selected);
         }
 
@@ -167,7 +174,23 @@ namespace Polhem.UI.Avalonia.Controls
                 _grid.SelectedItem = selectedView;
         }
 
-        private DataRowView? FindRowView(DataRow row)
-            => _dataTable?.DefaultView.Cast<DataRowView>().FirstOrDefault(v => ReferenceEquals(v.Row, row));
+        private static RowRef? ToRef(DataRow row)
+        {
+            // A deleted row's values cannot be read, and it is not shown again anyway.
+            if (row.RowState is DataRowState.Deleted or DataRowState.Detached) return null;
+            return new RowRef(row, FormDataGuard.TryGetRowId(row, out var rowId) ? rowId : null);
+        }
+
+        private DataRowView? FindRowView(DataRow row) => FindRowView(new RowRef(row, null));
+
+        private DataRowView? FindRowView(RowRef rowRef)
+        {
+            if (_dataTable is null) return null;
+            var views = _dataTable.DefaultView.Cast<DataRowView>();
+            return views.FirstOrDefault(v => ReferenceEquals(v.Row, rowRef.Row))
+                ?? (rowRef.RowId is { } rowId
+                    ? views.FirstOrDefault(v => FormDataGuard.TryGetRowId(v.Row, out var id) && id == rowId)
+                    : null);
+        }
     }
 }

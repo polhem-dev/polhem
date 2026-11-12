@@ -107,7 +107,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        [DisplayName("A detail grid has a bounded height so it virtualizes its rows, in the regular and the compact layout")]
+        [DisplayName("A detail grid has a bounded height, in the regular and the compact layout")]
         public void Render_DetailGrid_HasBoundedHeight(bool isCompact)
         {
             var presenter = new FormLayoutPresenter { IsCompact = isCompact };

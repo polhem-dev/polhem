@@ -274,7 +274,8 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         /// <summary>
-        /// Raised when the user selects a row; carries the row's
+        /// Raised when a row becomes selected, by the user or when the grid restores or moves the selection
+        /// after re-realizing its rows or adding a row; carries the row's
         /// <see cref="SysFields.RowId"/> Guid. Rows without a parseable
         /// <c>sys_rowid</c> are silently ignored.
         /// </summary>
