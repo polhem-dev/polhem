@@ -10,6 +10,10 @@ using Polhem.Repository.Abstractions.Form;
 
 namespace Polhem.Repository.Form
 {
+    /// <summary>
+    /// Read side of <see cref="DataFormRepository"/>: the paged list and its sort, a new record's data, a record's
+    /// data, and rows fetched by row id in batches. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public partial class DataFormRepository
     {
         /// <inheritdoc/>

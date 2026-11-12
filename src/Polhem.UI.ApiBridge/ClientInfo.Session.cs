@@ -8,6 +8,10 @@ using Polhem.Definition.Settings;
 
 namespace Polhem.UI.ApiBridge
 {
+    /// <summary>
+    /// Signed-in state of <see cref="ClientInfo"/>: the login result, the entered company and its capabilities, and the
+    /// user's culture. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public static partial class ClientInfo
     {
         /// <summary>

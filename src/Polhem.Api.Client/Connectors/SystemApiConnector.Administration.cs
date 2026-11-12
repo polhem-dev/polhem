@@ -4,6 +4,10 @@ using Polhem.Definition.Security;
 
 namespace Polhem.Api.Client.Connectors
 {
+    /// <summary>
+    /// Administration calls of <see cref="SystemApiConnector"/>: API keys, the deployment administrator flag and the
+    /// customization plug-in settings. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public partial class SystemApiConnector
     {
         /// <summary>

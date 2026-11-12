@@ -6,6 +6,10 @@ using System.Net.Sockets;
 
 namespace Polhem.UI.ApiBridge
 {
+    /// <summary>
+    /// Connection members of <see cref="ClientInfo"/>: the endpoint, the API key, and initializing the connection from
+    /// the stored settings and the command line. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public static partial class ClientInfo
     {
         private static void SetConnectType(ConnectType connectType, string endpoint)

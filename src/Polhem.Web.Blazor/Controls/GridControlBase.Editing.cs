@@ -6,6 +6,10 @@ using Polhem.UI.Core.Editing;
 
 namespace Polhem.Web.Blazor.Controls
 {
+    /// <summary>
+    /// Row editing of <see cref="GridControlBase"/>: adding, deleting, selecting and activating rows, and the edit
+    /// form. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public abstract partial class GridControlBase
     {
         /// <summary>

@@ -2,6 +2,10 @@ using Polhem.UI.Core.DataObjects;
 
 namespace Polhem.Web.Blazor.Controls
 {
+    /// <summary>
+    /// The data object subscription of <see cref="GridControlBase"/>: the change events it renders on, and releasing
+    /// them on disposal. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public abstract partial class GridControlBase
     {
         /// <inheritdoc />

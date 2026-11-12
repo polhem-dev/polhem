@@ -9,6 +9,10 @@ using Polhem.Definition.Organization;
 
 namespace Polhem.Api.Client.Connectors
 {
+    /// <summary>
+    /// Definition calls of <see cref="SystemApiConnector"/>: reading definitions, both layers of the tenant
+    /// customization, and saving a definition. Split out for file size only; behaviour is unchanged.
+    /// </summary>
     public partial class SystemApiConnector
     {
         /// <summary>
