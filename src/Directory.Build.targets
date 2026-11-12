@@ -23,8 +23,11 @@
     Polhem.Api.Core, which would carry MessagePack and the JSON-RPC packages into every front end,
     fails the build here.
 
-    The same boundary is asserted from the other end by closure tests, classes named *DependencyGateTests under
-    tests/ (the definition layer's is DefinitionDependencyGateTests, the Avalonia front end's
+    Polhem.Api.Core and the Blazor shared layer and WebAssembly host are governed too; the condition on
+    PolhemEnforceDependencyBoundary below is the list.
+
+    The same boundary is asserted from the other end by closure tests, classes named *DependencyGateTests
+    under tests/ (the definition layer's is DefinitionDependencyGateTests, the Avalonia front end's
     FrontEndDependencyGateTests), which walk the full transitive closure. The two are complements, not duplicates: this target catches the direct
     edge at the moment it is written, the test catches a package that arrives indirectly through a
     project reference — which is exactly how DynamicExpresso.Core got in.

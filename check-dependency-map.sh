@@ -15,13 +15,16 @@
 # - The external package table, between the `dependency-map:packages` comments, lists every project once, and each
 #   project's packages are exactly the `PackageReference` and `FrameworkReference` items of its csproj that reach a
 #   consumer: an item marked `PrivateAssets` all is left out. Only names are compared. A row may name several projects
-#   separated by ` / `, and `*(none)*` means no packages; a version after a name (`2.x`) and a `FrameworkReference: `
-#   prefix are ignored.
+#   separated by ` / `, and a cell that contains `(none)` means no packages, whatever else it says; a version after a
+#   name (`2.x`) and a `FrameworkReference: ` prefix are ignored, so package and framework references are compared
+#   alike. A package named twice in one row is reported.
 #
 # Left out: `Polhem.Analyzers`, which only orders the build and never reaches a consumer, and project references that
 # leave src/.
 #
-# Known limit: a csproj reference is matched as text, so a reference added by a shared props or targets file is not seen.
+# Known limits: a csproj reference is matched as text, so a reference added by a shared props or targets file is not
+# seen, an item's `Condition` is not evaluated, and an item inside an XML comment still counts (the last two report a
+# difference rather than hide one).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -51,9 +54,10 @@ git ls-files 'src/*/*.csproj' | while read -r file; do
         BEGIN { RS = "<" }
         /^(Package|Framework)Reference[ \t\r\n]/ {
             pending = ""
-            if (!match($0, /Include="[^"]+"/)) next
-            item = substr($0, RSTART + 9, RLENGTH - 10)
-            if (tolower($0) ~ /privateassets="all"/) next
+            if (!match($0, /Include[ \t\r\n]*=[ \t\r\n]*["\047][^"\047]+["\047]/)) next
+            item = substr($0, RSTART, RLENGTH)
+            sub(/^Include[ \t\r\n]*=[ \t\r\n]*["\047]/, "", item); sub(/["\047]$/, "", item)
+            if (tolower($0) ~ /privateassets[ \t\r\n]*=[ \t\r\n]*["\047]all["\047]/) next
             if ($0 ~ /\/>/) print project, item
             else pending = item
             next
@@ -175,6 +179,8 @@ for doc in docs/*/architecture/dependency-map.md; do
         }
     ' "$doc"
     touch "$work/rows" "$work/table"
+    uniq -d "$work/table" > "$work/diff"
+    if [[ -s "$work/diff" ]]; then report "$doc" "packages named twice in one row of the external package table" "$work/diff"; fi
     sort -o "$work/table" "$work/table"
     sort -o "$work/rows" "$work/rows"
 
