@@ -182,13 +182,14 @@ namespace Polhem.Tests.Shared
         // WARNING: the DatabaseSettings instance in the cache is shared by every test running in the process, and
         // other test classes read it while this runs. It is never changed in place: the entries are added to a copy,
         // and the copy replaces the cached instance in one step, so a reader sees either the old instance or the
-        // complete new one. The cache slot is keyed by type name alone, so a DatabaseSettingsCache built over any
-        // PathOptions replaces the slot every define access reads.
+        // complete new one. The slot is keyed by the type name and the container's prefix; the fixtures read the
+        // unprefixed one, which a DatabaseSettingsCache built over any PathOptions replaces.
         private static void ApplyRegistrations(IDefineAccess access, PathOptions paths)
         {
             var current = access.GetDatabaseSettings();
             var servers = s_registeredServers.Where(s => !current.Servers!.Contains(s.Id)).ToList();
-            var items = s_registeredItems.Where(i => !current.Items!.Contains(i.Id)).ToList();
+            var items = s_registeredItems.Where(i => !current.Items!.Contains(i.Id))
+                .DistinctBy(i => i.Id, StringComparer.OrdinalIgnoreCase).ToList();
             if (servers.Count == 0 && items.Count == 0) return;
 
             var copy = current.Clone();

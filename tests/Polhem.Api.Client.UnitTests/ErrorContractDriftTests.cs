@@ -47,9 +47,9 @@ namespace Polhem.Api.Client.UnitTests
 
         /// <summary>
         /// Error codes deliberately not rebuilt: they arise outside the executor (transport or parsing layer), or
-        /// they report a protocol mistake whose code already says everything and whose message is not meant for
-        /// users (<see cref="JsonRpcErrorCode.MethodNotFound"/>, <see cref="JsonRpcErrorCode.InvalidParams"/>), so the
-        /// caller always falls into the generic branch.
+        /// they report a mistake in the request whose code already says what kind it is
+        /// (<see cref="JsonRpcErrorCode.MethodNotFound"/>, <see cref="JsonRpcErrorCode.InvalidParams"/>), so the
+        /// caller always falls into the generic branch, which keeps the message.
         /// </summary>
         private static readonly JsonRpcErrorCode[] s_transportOnlyCodes =
         [

@@ -6,8 +6,10 @@ namespace Polhem.Core.Exceptions
     /// </summary>
     /// <remarks>
     /// The JSON-RPC transport sends it as <c>InvalidParams</c> (<c>-32602</c>) with its message, so throw it only with
-    /// text that names what the caller sent: a field name and a type, never a table, a column or a server detail. It
-    /// derives from <see cref="ArgumentException"/>, so an in-process caller that catches that type still sees it.
+    /// text that names what the caller sent, such as a field name the form declares and its type, never a table name or
+    /// a server detail. It derives from <see cref="ArgumentException"/>, so code that calls a business object or a
+    /// repository directly can catch that type. A call through the JSON-RPC client, the in-process one included,
+    /// receives the error code instead, because the client rebuilds no exception type for it.
     /// </remarks>
     public sealed class InvalidRequestValueException : ArgumentException
     {

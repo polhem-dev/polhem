@@ -31,7 +31,9 @@ namespace Polhem.Api.Core.JsonRpc
 
         /// <summary>
         /// Invalid method parameters or incorrect format (-32602): a <c>Plain</c> body could not be read
-        /// into the type the method takes. Sent with a fixed message.
+        /// into the type the method takes, or a value in it could not be read as the type it stands for.
+        /// <see cref="JsonRpcErrorContract"/> decides per exception type whether the message is fixed or sent
+        /// as thrown.
         /// </summary>
         InvalidParams = -32602,
 
