@@ -150,9 +150,9 @@ the current code:
   `src/Polhem.Web.Blazor/Controls/Editors/TimeEditorBase.cs` in each UI package); both normalize input with
   `ValueUtilities.CTimeString` and store an empty string for an emptied box. The consumer guidance is
   [Temporal Types](../../docs/en/database/temporal-types.md).
-- **2026-09-27: normalization is no longer done in one place on the write path.** `FieldDbTypeExtensions.ToFieldValue`,
-  which "Rationale" names as the place where every value is normalized, was removed with the 1.0 API trim (#10).
-  Values are now normalized on the client: `FormValueBinding` (`src/Polhem.UI.Core/FormValueBinding.cs`) and the time
+- **2026-09-27: the server does not normalize.** `FieldDbTypeExtensions.ToFieldValue`, which "Rationale" names as the
+  place where every value is normalized, was called by no write path in Polhem, only by tests, and was removed with the
+  1.0 API trim (#10). Values are normalized on the client: `FormValueBinding` (`src/Polhem.UI.Core/FormValueBinding.cs`) and the time
   editors of each head call `ValueUtilities.CTimeString`. The server stores a time-of-day value as it receives it, so
   a client that bypasses those, such as a JavaScript client of the JSON-RPC API, can store `"8:30"`, and the sorting
   and range guarantee in "Rationale" holds only for values that went through that normalization.

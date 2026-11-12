@@ -159,11 +159,10 @@ bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribut
 
 ### Needs a .NET workload: `[WorkloadFact]`
 
-Only in `tests/Polhem.Templates.UnitTests`: a template test that builds a generated client head (Android, iOS, the
-browser) names the workloads that can build it, and skips where none is installed. CI installs no workload, so those
-builds run on a developer's machine only; CI still checks what the template generates for those heads. The attribute's
-XML doc (`tests/Polhem.Templates.UnitTests/WorkloadFactAttribute.cs`) is the source. Do not use it to skip a test that
-needs no workload.
+Only in `tests/Polhem.Templates.UnitTests`, for a template test that builds a generated client head with a .NET
+workload; such a test runs only where the workload is installed, which CI is not. What it checks and when it skips is
+in the attribute's XML doc (`tests/Polhem.Templates.UnitTests/WorkloadFactAttribute.cs`). Do not use it to skip a test
+that needs no workload.
 
 ### Needs a real browser: `[BrowserFact]`
 
@@ -233,9 +232,10 @@ process-wide static that has not been moved to DI yet:
 
 One collection exists for another reason: `TemplatePackageCollection.Name` (`tests/Polhem.Templates.UnitTests`) shares
 one `TemplatePackageFixture`, which packs the framework and the templates once per run, between the template test
-classes. Its classes run one after another as a consequence.
+classes. Its classes run one after another as a consequence. It is a `sealed` class implementing
+`ICollectionFixture<TemplatePackageFixture>`, since a fixture collection cannot be static.
 
-Each definition is a `static` class declaring `public const string Name`, and every user writes
+Every other definition is a `static` class declaring `public const string Name`, and every user writes
 `[Collection(XxxCollection.Name)]`. A mistyped constant does not compile; a mistyped string literal would silently
 create a collection nobody shares.
 
@@ -292,10 +292,11 @@ Full template in `maintainers/testing-patterns.md`.
 
 ## Common analyzer rejections
 
-The strict build stage of `build-ci.yml` blocks the PR outright on the compiler and analyzer rules below; SonarCloud,
-which runs only in full mode and is not a required check, reports S2699. These are especially easy to hit:
+The `build` check of `build-ci.yml` blocks the PR on the rules below. S2699 is a SonarCloud rule: the strict build does
+not check it, and only the full-mode build that SonarScanner wraps does (`tests/Directory.Build.props` makes it an
+error there). These are especially easy to hit:
 
-- **S2699** (SonarCloud): every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not
+- **S2699** (full mode only): every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not
   make a bare call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
 - **CA1861**: do not pass a constant array inline as `new[] { ... }` as an argument (it allocates on every call).
   Extract it to a `private static readonly string[] s_xxx = { ... }` at the top of the file.

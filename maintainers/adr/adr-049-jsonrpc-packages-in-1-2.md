@@ -219,10 +219,11 @@ types this move left behind.
     without running the call.
   - In-process calls serialize their parameters like remote ones, so the server never holds the caller's objects.
     A filter value in a `Plain` body arrives as text, as it always did over HTTP.
-  - Masked failures are logged under the category `Polhem.Api.Core.Dispatch.PolhemExceptionMapper` (since ADR-055,
-    `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`) instead of the
+  - Masked failures are logged under the category `Polhem.Api.Core.Dispatch.PolhemExceptionMapper` instead of the
     executor's, and the startup check logs under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` instead of
     `Polhem.Api.AspNetCore`. A logging configuration that filtered the old categories must be updated.
+    *Amended 2026-10-16:* [ADR-055](adr-055-api-core-split-from-server.md) moves the mapper, so its category is
+    `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`.
 - Behaviour that differs because the payload moved (decision 5):
   - An envelope whose `format` is not 0, 1 or 2 is refused as invalid parameters; it used to be accepted and fail
     further on.
