@@ -216,81 +216,6 @@ namespace Polhem.Db
             };
 
         /// <summary>
-        /// Executes multiple database commands as a batch; rolls back the transaction and throws on any failure.
-        /// </summary>
-        /// <param name="batch">The batch command specification.</param>
-        public DbBatchResult ExecuteBatch(DbBatchSpec batch)
-        {
-            ArgumentNullException.ThrowIfNull(batch);
-            if (batch.Commands == null) throw new ArgumentException("batch.Commands cannot be null.", nameof(batch));
-            if (batch.Commands.Count == 0) throw new ArgumentException("Batch contains no commands.", nameof(batch));
-
-            var result = new DbBatchResult();
-
-            using (var scope = CreateScope())
-            {
-                DbTransaction? tran = null;
-
-                try
-                {
-                    if (batch.UseTransaction)
-                    {
-                        tran = batch.IsolationLevel.HasValue
-                            ? scope.Connection!.BeginTransaction(batch.IsolationLevel.Value)
-                            : scope.Connection!.BeginTransaction();
-                    }
-
-                    for (int i = 0; i < batch.Commands.Count; i++)
-                    {
-                        var spec = batch.Commands[i];
-
-                        try
-                        {
-                            DbCommandResult item;
-                            switch (spec.Kind)
-                            {
-                                case DbCommandKind.NonQuery:
-                                    item = ExecuteNonQueryCore(spec, scope.Connection!, tran);
-                                    result.RowsAffectedSum += item.RowsAffected;
-                                    break;
-                                case DbCommandKind.Scalar:
-                                    item = ExecuteScalarCore(spec, scope.Connection!, tran);
-                                    break;
-                                case DbCommandKind.DataTable:
-                                    item = ExecuteDataTableCore(spec, scope.Connection!, tran);
-                                    break;
-                                default:
-                                    throw new NotSupportedException($"Unsupported DbCommandKind: {spec.Kind}.");
-                            }
-
-                            result.Results.Add(item);
-                        }
-                        catch (Exception ex)
-                        {
-                            // Any command failure: roll back and throw with the command index
-                            TryRollbackQuiet(tran);
-                            throw new InvalidOperationException(
-                                $"Failed to execute batch at index {i}: {spec.Kind}.", ex);
-                        }
-                    }
-
-                    // Commit only after all commands succeed
-                    try { tran?.Commit(); }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Failed to commit transaction.", ex);
-                    }
-                }
-                finally
-                {
-                    if (tran != null) tran.Dispose();
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Executes a NonQuery database command and returns the number of rows affected.
         /// </summary>
         /// <param name="command">The database command specification.</param>
@@ -405,21 +330,15 @@ namespace Polhem.Db
         {
             ArgumentNullException.ThrowIfNull(command);
 
-            using (var scope = CreateScope())
-            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId))
+            return RunWithAnomalyDetection(AnomalySubject.Of(command), () =>
             {
+                using var scope = CreateScope();
+                using var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId);
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
-                using (var reader = cmd.ExecuteReader())
-                {
-                    var list = new List<T>();
-                    var mapper = ILMapper<T>.CreateMapFunc(reader);
-                    foreach (var item in ILMapper<T>.MapToEnumerable(reader, mapper))
-                    {
-                        list.Add(item);
-                    }
-                    return list;
-                }
-            }
+                using var reader = cmd.ExecuteReader();
+                var mapper = ILMapper<T>.CreateMapFunc(reader);
+                return ILMapper<T>.MapToEnumerable(reader, mapper).ToList();
+            }, list => new AnomalyCounts(0, list.Count));
         }
 
         #endregion

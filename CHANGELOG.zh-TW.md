@@ -24,8 +24,10 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** 登入會在鎖定計數與密碼檢查之前，拒絕長度超過 `MaxLoginUserIdLength`（預設為 `st_user.sys_id` 的 20 個字元）的帳號或過長的密碼；驗證較長帳號的子類別請提高上限。
 - **破壞性變更：** `GridControlBase` 改為實作 `IAsyncDisposable`，讓 grid 釋放時取消對 data object 的訂閱；框架以外繼承它並自行宣告 `DisposeAsync` 的 grid，請改在 `Dispose(bool)` 釋放資源。
 - **破壞性變更：** 框架的 `Department` 與 `Employee` 表單宣告同名的權限模型（隨框架的 `PermissionModels.xml` 提供），只有獲授權的角色能維護記錄範圍所依據的部門與員工資料。
+- **破壞性變更：** `DbAccess` 批次失敗時回滾並丟出原本的例外（例如 `DbException`），不再包成 `InvalidOperationException`，被取消的 `ExecuteBatchAsync` 丟出 `OperationCanceledException`，provider 把取消回報成 `DbException` 時也一樣；失敗指令的位置放在 `Data`，鍵為 `DbBatchSpec.FailedIndexDataKey`。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬、含 NUL 字元或孤立 UTF-16 surrogate 的稽核值，不再讓整批寫入失敗：值會截斷到欄寬，NUL 與 surrogate 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
+- `DbAccess` 的每個入口都會記錄資料庫異常，不只 `Execute`：非同步執行、批次、型別化查詢與 `DataTable` 寫入也會記錄。
 - 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
 - `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
 - 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。

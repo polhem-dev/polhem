@@ -17,25 +17,16 @@ namespace Polhem.Db
         /// </summary>
         /// <param name="command">The database command specification.</param>
         /// <param name="cancellationToken">A cancellation token for cancelling long-running commands.</param>
-        public async Task<DbCommandResult> ExecuteAsync(
+        public Task<DbCommandResult> ExecuteAsync(
             DbCommandSpec command, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(command);
 
-            using (var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false))
+            return RunWithAnomalyDetectionAsync(command, async () =>
             {
-                switch (command.Kind)
-                {
-                    case DbCommandKind.NonQuery:
-                        return await ExecuteNonQueryCoreAsync(command, scope.Connection!, null, cancellationToken).ConfigureAwait(false);
-                    case DbCommandKind.Scalar:
-                        return await ExecuteScalarCoreAsync(command, scope.Connection!, null, cancellationToken).ConfigureAwait(false);
-                    case DbCommandKind.DataTable:
-                        return await ExecuteDataTableCoreAsync(command, scope.Connection!, null, cancellationToken).ConfigureAwait(false);
-                    default:
-                        throw new NotSupportedException($"Unsupported DbCommandKind: {command.Kind}.");
-                }
-            }
+                using var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false);
+                return await DispatchExecuteAsync(command, scope.Connection!, null, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken);
         }
 
         /// <summary>
@@ -54,101 +45,19 @@ namespace Polhem.Db
             var conn = transaction.Connection
                        ?? throw new InvalidOperationException("Transaction has no associated connection.");
 
-            switch (command.Kind)
-            {
-                case DbCommandKind.NonQuery:
-                    return ExecuteNonQueryCoreAsync(command, conn, transaction, cancellationToken);
-                case DbCommandKind.Scalar:
-                    return ExecuteScalarCoreAsync(command, conn, transaction, cancellationToken);
-                case DbCommandKind.DataTable:
-                    return ExecuteDataTableCoreAsync(command, conn, transaction, cancellationToken);
-                default:
-                    throw new NotSupportedException($"Unsupported DbCommandKind: {command.Kind}.");
-            }
+            return RunWithAnomalyDetectionAsync(
+                command, () => DispatchExecuteAsync(command, conn, transaction, cancellationToken), cancellationToken);
         }
 
-        /// <summary>
-        /// Asynchronously executes multiple database commands as a batch; rolls back the transaction and throws on any failure.
-        /// </summary>
-        /// <param name="batch">The batch command specification.</param>
-        /// <param name="cancellationToken">A cancellation token for cancelling long-running commands.</param>
-        public async Task<DbBatchResult> ExecuteBatchAsync(DbBatchSpec batch, CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(batch);
-            if (batch.Commands == null) throw new ArgumentException("batch.Commands cannot be null.", nameof(batch));
-            if (batch.Commands.Count == 0) throw new ArgumentException("Batch contains no commands.", nameof(batch));
-
-            var result = new DbBatchResult();
-
-            using (var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false))
+        private Task<DbCommandResult> DispatchExecuteAsync(
+            DbCommandSpec command, DbConnection connection, DbTransaction? transaction, CancellationToken cancellationToken)
+            => command.Kind switch
             {
-                DbTransaction? tran = null;
-
-                try
-                {
-                    if (batch.UseTransaction)
-                    {
-                        var connection = scope.Connection!;
-                        tran = batch.IsolationLevel.HasValue
-                            ? await connection.BeginTransactionAsync(batch.IsolationLevel.Value, cancellationToken).ConfigureAwait(false)
-                            : await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-                    }
-
-                    for (int i = 0; i < batch.Commands.Count; i++)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        var spec = batch.Commands[i];
-
-                        try
-                        {
-                            DbCommandResult item;
-                            switch (spec.Kind)
-                            {
-                                case DbCommandKind.NonQuery:
-                                    item = await ExecuteNonQueryCoreAsync(spec, scope.Connection!, tran, cancellationToken).ConfigureAwait(false);
-                                    result.RowsAffectedSum += item.RowsAffected;
-                                    break;
-                                case DbCommandKind.Scalar:
-                                    item = await ExecuteScalarCoreAsync(spec, scope.Connection!, tran, cancellationToken).ConfigureAwait(false);
-                                    break;
-                                case DbCommandKind.DataTable:
-                                    item = await ExecuteDataTableCoreAsync(spec, scope.Connection!, tran, cancellationToken).ConfigureAwait(false);
-                                    break;
-                                default:
-                                    throw new NotSupportedException($"Unsupported DbCommandKind: {spec.Kind}.");
-                            }
-
-                            result.Results.Add(item);
-                        }
-                        catch (Exception ex)
-                        {
-                            // Any command failure: roll back and throw with the command index
-                            TryRollbackQuiet(tran);
-                            throw new InvalidOperationException(
-                                $"Failed to execute batch at index {i}: {spec.Kind}.", ex);
-                        }
-                    }
-
-                    // Commit only after all commands succeed
-                    try
-                    {
-                        if (tran != null)
-                            await tran.CommitAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Failed to commit transaction.", ex);
-                    }
-                }
-                finally
-                {
-                    if (tran != null) await tran.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-
-            return result;
-        }
+                DbCommandKind.NonQuery => ExecuteNonQueryCoreAsync(command, connection, transaction, cancellationToken),
+                DbCommandKind.Scalar => ExecuteScalarCoreAsync(command, connection, transaction, cancellationToken),
+                DbCommandKind.DataTable => ExecuteDataTableCoreAsync(command, connection, transaction, cancellationToken),
+                _ => throw new NotSupportedException($"Unsupported DbCommandKind: {command.Kind}."),
+            };
 
         /// <summary>
         /// Asynchronously executes a NonQuery database command and returns the number of rows affected.
@@ -230,25 +139,24 @@ namespace Polhem.Db
         /// <param name="command">The database command specification.</param>
         /// <param name="cancellationToken">A cancellation token for cancelling long-running commands.</param>
         /// <returns>A <see cref="List{T}"/> containing the mapped results.</returns>
-        public async Task<List<T>> QueryAsync<T>(DbCommandSpec command, CancellationToken cancellationToken = default)
+        public Task<List<T>> QueryAsync<T>(DbCommandSpec command, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(command);
 
-            using (var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false))
-            using (var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId))
+            return RunWithAnomalyDetectionAsync(AnomalySubject.Of(command), async () =>
             {
+                using var scope = await CreateScopeAsync(cancellationToken).ConfigureAwait(false);
+                using var cmd = command.CreateCommand(DatabaseType, scope.Connection!, _companyId);
                 cmd.CommandTimeout = ResolveTimeout(command.CommandTimeout);
-                using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+                var list = new List<T>();
+                var mapper = ILMapper<T>.CreateMapFunc(reader); // Build a mapper based on the current column set
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    var list = new List<T>();
-                    var mapper = ILMapper<T>.CreateMapFunc(reader); // Build a mapper based on the current column set
-                    while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-                    {
-                        list.Add(mapper(reader));
-                    }
-                    return list;
+                    list.Add(mapper(reader));
                 }
-            }
+                return list;
+            }, list => new AnomalyCounts(0, list.Count), cancellationToken);
         }
 
         #endregion

@@ -7,3 +7,4 @@ Polhem.Db.Dml.TableJoin.MatchCompany.set -> void
 const Polhem.Db.CommandTextVariable.CompanyId = "{@CompanyId}" -> string!
 Polhem.Db.DbAccess.BindCompany(string! companyId) -> Polhem.Db.DbAccess!
 Polhem.Db.DbAccess.BoundCompanyId.get -> string?
+const Polhem.Db.DbBatchSpec.FailedIndexDataKey = "Polhem.BatchIndex" -> string!
