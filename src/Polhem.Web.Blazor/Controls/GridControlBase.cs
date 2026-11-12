@@ -7,7 +7,6 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Sorting;
-using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
@@ -300,50 +299,6 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>
-        /// Has no effect: an in-cell editor commits its value when the user leaves it, so no edit is pending
-        /// when a host inspects or saves the data set. Present for the <see cref="IBindTableControl"/> contract
-        /// the Avalonia grid also implements.
-        /// </summary>
-        public void EndEdit()
-        {
-        }
-
-        /// <summary>
-        /// Appends a new row to the bound table. The owning <see cref="FormDataObject"/> seeds it with the
-        /// schema's defaults; a list-mode table gets type-appropriate empty values for its non-null columns.
-        /// </summary>
-        /// <returns>The new row, or <c>null</c> when there is no table.</returns>
-        public DataRow? AddRow()
-        {
-            if (Table is not { } table) return null;
-            var row = table.NewRow();
-            if (BoundDataObject is null)
-            {
-                foreach (DataColumn column in table.Columns)
-                {
-                    if (!column.AllowDBNull && (column.DefaultValue is null || column.DefaultValue == DBNull.Value))
-                        row[column] = FormValueBinding.GetEmptyValue(column.DataType);
-                }
-            }
-            table.Rows.Add(row);
-            _selectedRow = row;
-            _ = InvokeAsync(StateHasChanged);
-            return row;
-        }
-
-        /// <summary>
-        /// Deletes the selected row (marks it <see cref="DataRowState.Deleted"/> so the save sends the deletion);
-        /// a no-op when nothing is selected.
-        /// </summary>
-        public void DeleteSelectedRow()
-        {
-            if (SelectedRow is not { } row) return;
-            row.Delete();
-            _selectedRow = null;
-            _ = InvokeAsync(StateHasChanged);
-        }
-
-        /// <summary>
         /// Renders the rows again. Rows refresh by themselves when the data object reports a change; call
         /// this after changing a list-mode table in place.
         /// </summary>
@@ -389,151 +344,9 @@ namespace Polhem.Web.Blazor.Controls
         protected string HeaderClass(LayoutColumn column)
             => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
 
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>Releases the data object subscription and the editor script.</summary>
-        /// <remarks>
-        /// A renderer calls only this method on a component that also implements <see cref="IDisposable"/>, so it releases
-        /// the subscription too. A derived grid releases its own resources in an override of <see cref="Dispose(bool)"/>.
-        /// </remarks>
-        /// <returns>The operation.</returns>
-        public async ValueTask DisposeAsync()
-        {
-            // The subscription first: releasing the script talks to the browser and can fail.
-            Dispose();
-            if (_script is not null) await _script.DisposeAsync().ConfigureAwait(true);
-        }
-
-        /// <summary>
-        /// Releases the data object subscription.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-            _disposed = true;
-            if (disposing)
-                Subscribe(null);
-        }
-
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
         protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
-
-        private void CloseEditorUnlessInCellEdit()
-        {
-            if (!InCellEdit) EditorHost.Close();
-        }
-
-        private void Subscribe(FormDataObject? dataObject)
-        {
-            if (ReferenceEquals(dataObject, _subscribed)) return;
-            if (_subscribed is not null)
-            {
-                _subscribed.DataSetReplaced -= OnDataSetReplaced;
-                _subscribed.FieldValueChanged -= OnFieldValueChanged;
-                _subscribed.RowAdded -= OnRowChanged;
-                _subscribed.RowDeleted -= OnRowChanged;
-            }
-            _subscribed = dataObject;
-            if (dataObject is not null)
-            {
-                dataObject.DataSetReplaced += OnDataSetReplaced;
-                dataObject.FieldValueChanged += OnFieldValueChanged;
-                dataObject.RowAdded += OnRowChanged;
-                dataObject.RowDeleted += OnRowChanged;
-            }
-        }
-
-        private void OnDataSetReplaced(object? sender, EventArgs e)
-        {
-            _selectedRow = null;
-            _editingRow = null;
-            _ = InvokeAsync(StateHasChanged);
-        }
-
-        private void OnFieldValueChanged(object? sender, FieldValueChangedEventArgs e)
-        {
-            if (string.Equals(e.TableName, EffectiveTableName, StringComparison.OrdinalIgnoreCase))
-                _ = InvokeAsync(StateHasChanged);
-        }
-
-        private void OnRowChanged(object? sender, RowChangedEventArgs e)
-        {
-            if (string.Equals(e.TableName, EffectiveTableName, StringComparison.OrdinalIgnoreCase))
-                _ = InvokeAsync(StateHasChanged);
-        }
-
-        /// <summary>Selects a row and reports it through <see cref="RowSelected"/>.</summary>
-        /// <param name="row">The row.</param>
-        /// <param name="cancellationToken">A token that cancels the operation.</param>
-        /// <returns>The operation.</returns>
-        protected async Task SelectRowAsync(DataRow row, CancellationToken cancellationToken = default)
-        {
-            _selectedRow = row;
-            if (RowSelected.HasDelegate && FormDataGuard.TryGetRowId(row, out var rowId))
-                await RowSelected.InvokeAsync(rowId).ConfigureAwait(true);
-        }
-
-        /// <summary>
-        /// Selects a row, opens it in the edit form when the grid edits that way, and reports it through
-        /// <see cref="RowActivated"/>.
-        /// </summary>
-        /// <param name="row">The row.</param>
-        /// <param name="cancellationToken">A token that cancels the operation.</param>
-        /// <returns>The operation.</returns>
-        protected async Task ActivateRowAsync(DataRow row, CancellationToken cancellationToken = default)
-        {
-            _selectedRow = row;
-            if (CanUseEditForm) OpenEditForm(row, isNew: false);
-            if (RowActivated.HasDelegate && FormDataGuard.TryGetRowId(row, out var rowId))
-                await RowActivated.InvokeAsync(rowId).ConfigureAwait(true);
-        }
-
-        /// <summary>Runs the toolbar's Add.</summary>
-        protected void OnAddClicked()
-        {
-            if (!HasData) return;
-            var row = AddRow();
-            if (row is not null && EditMode == GridEditMode.EditForm)
-                OpenEditForm(row, isNew: true);
-        }
-
-        /// <summary>Runs the toolbar's Edit.</summary>
-        protected void EditSelectedRow()
-        {
-            if (SelectedRow is { } row && CanUseEditForm)
-                OpenEditForm(row, isNew: false);
-        }
-
-        private void OpenEditForm(DataRow row, bool isNew)
-        {
-            _editingRow = row;
-            _editingNewRow = isNew;
-        }
-
-        /// <summary>Closes the edit form after its row was committed.</summary>
-        protected void OnEditCommitted()
-        {
-            _selectedRow = _editingRow;
-            _editingRow = null;
-        }
-
-        /// <summary>Closes the edit form without committing. A cancelled Add removes the blank row again instead of leaving an empty line in the table.</summary>
-        protected void OnEditCancelled()
-        {
-            if (_editingNewRow && _editingRow is { } row && row.Table is { } table)
-            {
-                table.Rows.Remove(row);
-                _selectedRow = null;
-            }
-            _editingRow = null;
-        }
     }
 }
