@@ -29,10 +29,10 @@ Do not add a generic control interface such as `IGrid`.
 ## A component's type summary goes in its `.razor.cs`
 
 The Razor generator turns CS1591 off in the code it generates, so the build does not ask for a component's type
-summary. Every public component therefore has a `<Name>.razor.cs` holding `public partial class <Name>` with its
+summary. By convention a public component has a `<Name>.razor.cs` holding `public partial class <Name>` with its
 `/// <summary>`. The `*TypeDocGateTests` in the unit test projects of `Polhem.Web.Blazor`, `.Mud`, `.Fluent` and
-`.Server` read the built documentation file and fail on a public type without one; a new package with components needs
-its own.
+`.Server` read the built documentation file and fail on a public type in the package's namespace without a summary,
+wherever it is written; a new package with components needs its own.
 
 ## Before upgrading MudBlazor, verify at run time
 
