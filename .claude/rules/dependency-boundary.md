@@ -64,7 +64,7 @@ shared by several layers".
 | Gate | Location | When it goes red |
 |------|------|--------|
 | **Build-time lock** `POLHEM9001` | `src/Directory.Build.targets` | The moment you write it, `dotnet build` fails |
-| **Transitive closure test** | `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs`; for the front-end layer `tests/Polhem.UI.Avalonia.UnitTests/FrontEndDependencyGateTests.cs` | When tests run |
+| **Transitive closure test** | The `*DependencyGateTests` classes under `tests/`, for example `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs` (the header of `src/Directory.Build.targets` says how they pair with the lock) | When tests run |
 
 **Both are needed**, because the build-time lock cannot see "a **package** brought in indirectly through some
 `ProjectReference`" (that is exactly how DynamicExpresso got in), while the closure test only tells you when tests

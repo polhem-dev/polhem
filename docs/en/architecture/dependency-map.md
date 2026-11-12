@@ -267,6 +267,8 @@ graph BT
 
 ## External Package Dependencies
 
+<!-- dependency-map:packages:start -->
+
 | Project | External Packages |
 |---------|-------------------|
 | Polhem.Core | *(none)* |
@@ -280,12 +282,16 @@ graph BT
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Hosting.Abstractions 10.x |
 | Polhem.Web.Blazor | Microsoft.AspNetCore.Components.Web 10.x |
+| Polhem.Web.Blazor.Mud | MudBlazor 9.x |
+| Polhem.Web.Blazor.Fluent | Microsoft.FluentUI.AspNetCore.Components 5.x |
 | Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App` |
 | Polhem.UI.Avalonia | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x |
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.UI.Avalonia.Shell | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x, Semi.Avalonia 12.x, Semi.Avalonia.DataGrid 12.x, CommunityToolkit.Mvvm 8.x, Microsoft.Extensions.DependencyInjection 10.x |
-| Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core | *(none)* |
+| Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core / Polhem.Web.Blazor.Wasm | *(none)* |
+
+<!-- dependency-map:packages:end -->
 
 > `Polhem.Api.Core`'s MessagePack reference is the only transport-format package in the framework, and
 > keeping it the only one is the point of [ADR-036](../../../maintainers/adr/adr-036-wire-serialization-externalized.md).
@@ -293,7 +299,8 @@ graph BT
 > [polhem-dev/polhem-jsonrpc](https://github.com/polhem-dev/polhem-jsonrpc); the version the framework uses is set in
 > `PolhemJsonRpc.props` at the repository root. An HTTP host adds `Polhem.JsonRpc.AspNetCore` itself.
 > Build-time-only references (`PrivateAssets="all"`: SourceLink, the public API analyzers, the
-> repository's own analyzers) are omitted — they reach no consumer.
+> repository's own analyzers) are omitted — they reach no consumer. `check-dependency-map.sh` compares the package
+> names in this table with the csproj files; versions are not compared.
 
 ## Target Framework Summary
 
@@ -303,18 +310,18 @@ host rather than a choice.
 
 ## Tooling Packages (separately distributed)
 
-Not part of the `src/` library graph above — these ship as `dotnet tool` global tools on NuGet:
+Not part of the `src/` library graph above — these ship as `dotnet tool` packages on NuGet:
 
 | Package | Command | Description |
 |---------|---------|-------------|
-| **Polhem.Cli** (`tools/Polhem.Cli/`) | `dotnet polhem` | Framework CLI; `dotnet polhem --help` lists its commands. References `Polhem.Definition`, whose public `Defaults` API it calls for materialise / list operations on embedded framework defaults. Versioned with the framework (both read `Version.props`). |
-| **Polhem.DefineEditor** (`tools/DefineEditor/`) | `polhem-define` | Avalonia desktop tool for visually editing the define types; also built as a macOS `.app`. Carries no database driver: it runs Polhem.DbManager for database work. |
+| **Polhem.Cli** (`tools/Polhem.Cli/`) | `dotnet polhem` | Framework CLI; `dotnet polhem --help` lists its commands. References `Polhem.Definition`, whose public `Defaults` API it calls for materialise / list operations on embedded framework defaults, and `tools/Polhem.Definition.Spreadsheet` (MiniExcel) for the form workbooks. Versioned with the framework (both read `Version.props`). |
+| **Polhem.DefineEditor** (`tools/DefineEditor/`) | `dotnet polhem-define` (local tool) | Avalonia desktop tool for visually editing the define types; also built as a macOS `.app`. Carries no database driver: it runs Polhem.DbManager for database work. |
 | **Polhem.DbManager** (`tools/DbManager/`) | `polhem-db` | Runs the `db` commands of `Polhem.Hosting` against a definition folder, with the drivers of every supported database. |
 
 ## Architectural Notes
 
 - **Polhem.Core** is the lowest-level foundation package with no internal dependencies.
-- **Polhem.Expressions** holds `DynamicExpressoEvaluator`, the DynamicExpresso-backed implementation of the expression engine. The *abstraction* — `IExpressionEvaluator`, `ExpressionPolicy`, `ExpressionEvaluationException` — lives in `Polhem.Core.Expressions`, so `Polhem.Definition` (the `FormExpressionCalculator`) and `Polhem.Business` (the rule processor) consume the engine without taking a dependency on DynamicExpresso; only the composition roots that pick an implementation (`Polhem.Hosting` for DI registration, `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server` for client-side live preview) reference this package; the live preview engine they share, `FormLiveComputationEngine` in `Polhem.UI.Core`, takes the evaluator from them. That split keeps the definition layer free of third-party packages while a field computed on the client still matches what the server writes on save. See [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) and [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md).
+- **Polhem.Expressions** holds `DynamicExpressoEvaluator`, the DynamicExpresso-backed implementation of the expression engine. The *abstraction* — `IExpressionEvaluator`, `ExpressionPolicy`, `ExpressionEvaluationException` — lives in `Polhem.Core.Expressions`, so `Polhem.Definition` (the `FormExpressionCalculator`) and `Polhem.Business` (the rule processor) consume the engine without taking a dependency on DynamicExpresso; only the composition roots that pick an implementation (`Polhem.Hosting` for DI registration, `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` for client-side live preview) reference this package; the live preview engine they share, `FormLiveComputationEngine` in `Polhem.UI.Core`, takes the evaluator from them. That split keeps the definition layer free of third-party packages while a field computed on the client still matches what the server writes on save. See [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) and [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md).
 - **Polhem.Definition** is the most depended-on project. Its direct dependents are Contracts, Db, RepoAbs, Caching, Business, Api.Core and UI.Avalonia.
 - **Polhem.Api.Contracts** is a shared contract/abstraction layer, not an application-level API project. Despite the "API" name, both `Polhem.Business` and `Polhem.Api.Core` depend on it (`Business → Contracts`, `Core → Contracts`), so it sits *below* them — the diagram puts it in **Foundation** rather than with the API projects.
 - **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Server`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It has its own **Composition root** area rather than sharing one with `Polhem.Api.Server`: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
@@ -328,4 +335,4 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` globa
 - **`Polhem.UI.*` family criterion**: every front end references `Polhem.UI.Core`, so referencing it no longer decides the family. What decides it is whether the package builds on the single-user model, where one process serves one signed-in user and the services come from the process-wide `UIServices.Provider` (and, with a backend, from `Polhem.UI.ApiBridge`).
   - Single-user → `Polhem.UI.*` (current: `Polhem.UI.Core`, `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`, `Polhem.UI.Avalonia.Shell`; future: `Polhem.UI.WinForms`, `Polhem.UI.Wpf`, etc.)
   - Serves several users from one process, with its own state management → independent family prefix (e.g. `Polhem.Web.Blazor.*`). The Blazor head used to stay away from `Polhem.UI.Core` because that package held the process-wide `ClientInfo`; that state now lives in `Polhem.UI.ApiBridge`, so the Blazor head references `Polhem.UI.Core` for the shared value rules but must not use `UIServices` or reference `Polhem.UI.ApiBridge`. `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`) fails when it does.
-- The **Web frontend layer** is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor`, a UI package (`Polhem.Web.Blazor.Mud`, `Polhem.Web.Blazor.Fluent`) and a host package (`Polhem.Web.Blazor.Server`, `Polhem.Web.Blazor.Wasm`); an application chooses one UI package and one host package, and the two do not reference each other ([adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)). The shared layer depends on `Polhem.Api.Client`, on `Polhem.UI.Core` for the value rules it shares with the native heads, and on `Polhem.Expressions` for the live preview of computed fields; the Blazor Server host chooses the transport in `AddPolhemBlazor`, while the WebAssembly host is always remote: `UseRemoteProvider` (each circuit's `PolhemApiClient` calls over HTTP) or `UseLocalProvider` (in process, for trusted users only, which also needs `AddPolhemFramework` on the same service collection).
+- The **Web frontend layer** is three kinds of package: the shared `Polhem.Web.Blazor`, a UI package (`Polhem.Web.Blazor.Mud`, `Polhem.Web.Blazor.Fluent`) and a host package (`Polhem.Web.Blazor.Server`, `Polhem.Web.Blazor.Wasm`); an application chooses one UI package and one host package, and the two do not reference each other ([adr-059](../../../maintainers/adr/adr-059-blazor-shared-layer.md)). All but the WebAssembly host are Razor Class Libraries; the WebAssembly host is a plain class library that a Blazor WebAssembly project references. The shared layer depends on `Polhem.Api.Client`, on `Polhem.UI.Core` for the value rules it shares with the native heads, and on `Polhem.Expressions` for the live preview of computed fields. The Blazor Server host chooses the transport in `AddPolhemBlazor`: `UseRemoteProvider` (each circuit's `PolhemApiClient` calls over HTTP) or `UseLocalProvider` (in process, for trusted users only, which also needs `AddPolhemFramework` on the same service collection). The WebAssembly host is always remote.

@@ -32,10 +32,11 @@ controls + a composed GridControl + a FormView/ListView View layer + the lookup 
   schema-driven behavior must be **built into the subclass**.
 - **When evaluating structure or naming decisions, do not object on the grounds of "aligning with Blazor"**:
   Avalonia is the leading reference implementation and may deliberately diverge; its decisions are rather the
-  template Blazor.Server will follow later.
-- The UI families have converged on **two tracks, Avalonia + Blazor.Server** (`Polhem.UI.Maui` /
-  `Polhem.Web.Blazor.Wasm` have been removed), so **"port to another UI family" has only one target left,
-  Blazor.Server**.
+  template Blazor will follow later.
+- The other UI family is **Blazor**: the shared layer `Polhem.Web.Blazor`, the UI packages
+  (`Polhem.Web.Blazor.Mud`, `Polhem.Web.Blazor.Fluent`) and the Server and WebAssembly hosts. "Port to another UI
+  family" means putting the rule in the Blazor shared layer, so both UI packages and both hosts get it
+  (`.claude/rules/blazor.md`).
 - **Head-agnostic logic goes to `Polhem.UI.Core`**, which every front end references, Blazor included:
   `FormDataObject` (`Polhem.UI.Core.DataObjects`) and its value rules, `FormValueBinding` and `FormDataGuard`, live
   there once. Blazor must not use `UIServices` (process-wide) or reference `Polhem.UI.ApiBridge` (single-user);
