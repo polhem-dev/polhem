@@ -23,7 +23,7 @@ See [development-cookbook.md § Framework Initialization Order](../guides/develo
 
 - Resolving framework services before `AddPolhemFramework` → DI container throws `InvalidOperationException` (service not registered)
 - Calling `SystemSettingsLoader.Load` on a path with no `SystemSettings.xml` → throws `FileNotFoundException`
-- Constructing a `DbAccess` by database id → its constructor requires an `IDbConnectionManager` (a `null` one throws `ArgumentNullException`); obtain those instances through DI-injected `IDbAccessFactory.Create(databaseId)` instead, and in a repository through `RepositoryBase.CreateDbAccess()`, which binds company data to the company. (Another constructor takes an already-open `DbConnection` plus its `DatabaseType` and needs no connection manager — it is for callers that own the connection, such as code that writes inside an existing transaction.)
+- Constructing a `DbAccess` by database id → its constructor requires an `IDbConnectionManager` (a `null` one throws `ArgumentNullException`); obtain those instances through DI-injected `IDbAccessFactory.Create(databaseId)` instead (never for company tables), or, in a repository, through `RepositoryBase.CreateDbAccess()`, which binds company data to the company (see [Company Data Constraints](#company-data-constraints)). (Another constructor takes an already-open `DbConnection` plus its `DatabaseType` and needs no connection manager — it is for callers that own the connection, such as code that writes inside an existing transaction.)
 
 ### Reference Example
 
@@ -227,7 +227,7 @@ The key is a full language key, `{namespace}.{subKey}`, split at the first dot; 
 
 ### Client-Side Behaviour
 
-`ApiConnector.FinalizeResponse` rebuilds exceptions based on `JsonRpcError.Code`:
+`ApiConnector` rebuilds exceptions based on `JsonRpcError.Code`, through `JsonRpcErrorContract.TryRebuild`:
 
 - A code that declares an exception type → rebuilt as that type, carrying the message verbatim (no prefix), so the caller can branch on the type. `-32099` is always rebuilt as `UserMessageException`, whichever type was thrown on the server; `-32001` is rebuilt as `AuthenticationRequiredException`, which derives from `UnauthorizedAccessException`.
 - Every other code → `InvalidOperationException($"API error: {code} - {message}")`, preserving the protocol-level debugging info

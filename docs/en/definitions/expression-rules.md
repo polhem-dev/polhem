@@ -14,7 +14,7 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 | Field default | `FormField.DefaultValueExpression` | When a new row is created (over the literal default); at save, only where a new row's field is still empty |
 | Validation / precondition | `FormRule` under `FormSchema` | `BeforeSave` / `BeforeDelete` |
 
-> **The backend is authoritative.** On save, `FormBusinessObject.DoBeforeSave` recomputes computed fields from the definition and overwrites whatever the client submitted, then runs the validation rules; `DoBeforeDelete` runs the delete rules. The live computation of the Avalonia and Blazor.Server heads (each head's `FormLiveComputation`, over the shared `FormLiveComputationEngine`) recomputes fields as the user edits, but it is a UX preview only: it rounds with the framework's default decimal places, and the server corrects the values on save.
+> **The backend is authoritative.** On save, `FormBusinessObject.DoBeforeSave` recomputes computed fields from the definition and overwrites whatever the client submitted, then runs the validation rules; `DoBeforeDelete` runs the delete rules. The live computation of the Avalonia and Blazor heads, Server and WebAssembly alike (`FormLiveComputation` in `Polhem.UI.Avalonia` and in `Polhem.Web.Blazor`, over the shared `FormLiveComputationEngine`) recomputes fields as the user edits, but it is a UX preview only: it rounds with the framework's default decimal places, and the server corrects the values on save.
 
 ## Expression Syntax
 

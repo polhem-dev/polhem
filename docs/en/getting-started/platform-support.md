@@ -49,7 +49,7 @@ the head, not to the Polhem packages.
   every browser user's call as a trusted in-process call (the access token and `LocalOnly` checks are skipped): use
   it only when every user of the site may see the whole backend, and call `UseRemoteProvider(endpoint, apiKey)` in
   `AddPolhemBlazor` otherwise. Remote mode needs the application's API key there, or the server refuses the first
-  call with `401 Unauthorized`. The remarks on `PolhemBlazorOptions` spell out what Local skips and why every
+  call with the JSON-RPC error `-32600`. The remarks on `PolhemBlazorOptions` spell out what Local skips and why every
   circuit sends the same key. The Northwind Blazor Server head runs the Northwind backend in Local mode and switches
   to Remote by configuration; see
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md#web-client-blazor-server) and, for the components
@@ -189,10 +189,11 @@ Two behaviours differ by platform without any setup:
 ## 4. What is verified, and where
 
 - **The unsupported configurations**: POLHEM9004, in `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`.
-- **Running without dynamic code**: this repository's CI runs the test projects of every package a client head ships
-  (`Polhem.Core`, `Polhem.Definition`, `Polhem.Expressions`, `Polhem.Api.Core`, `Polhem.Api.Client`, `Polhem.UI.Core`,
-  `Polhem.UI.ApiBridge`, `Polhem.UI.Avalonia`) a second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets,
-  plus `Polhem.Api.Server.UnitTests` for the dispatch round trips, which encode and decode every message as a client does.
+- **Running without dynamic code**: this repository's CI runs the test projects of the packages a client head ships a
+  second time with `DynamicCodeSupport=false`, the switch the iOS SDK sets, together with `Polhem.Api.Server.UnitTests`
+  for the dispatch round trips, which encode and decode every message as a client does. The list of projects is the
+  "Mobile AOT gate" step of
+  [`.github/workflows/build-ci.yml`](../../../.github/workflows/build-ci.yml).
 - **The expression descriptor**: `TrimmerDescriptorGateTests` in `tests/Polhem.Expressions.UnitTests`.
 - **The heads themselves**: the Northwind browser, iOS and Android heads are the reference configuration, but this
   repository's CI does not build them. A change to one of the settings above is checked by building and running the

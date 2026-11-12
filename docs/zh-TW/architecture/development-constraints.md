@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 452f123b43f9de57e9c7459bb5b6d40ce09dd065 -->
+<!-- source: en/architecture/development-constraints.md blob: 8b1ecc2d87e5c19ff7b1152f79c60cb2c6494f02 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -24,7 +24,7 @@
 
 - 在 `AddPolhemFramework` 之前解析框架服務 → DI 容器拋 `InvalidOperationException`（服務未註冊）
 - `SystemSettingsLoader.Load` 指向不存在的 `SystemSettings.xml` → 拋 `FileNotFoundException`
-- 以資料庫 id 建構 `DbAccess` → 建構子需要 `IDbConnectionManager`（傳 `null` 會拋 `ArgumentNullException`）；請改透過 DI 注入的 `IDbAccessFactory.Create(databaseId)` 取得實例；在 repository 內則用 `RepositoryBase.CreateDbAccess()`，它會把公司資料綁定到公司。（另有一個 ctor 接已開啟的 `DbConnection` 加其 `DatabaseType`，不需連線管理員——供自行持有連線的呼叫端使用，例如在既有交易內寫入的程式碼）
+- 以資料庫 id 建構 `DbAccess` → 建構子需要 `IDbConnectionManager`（傳 `null` 會拋 `ArgumentNullException`）；請改透過 DI 注入的 `IDbAccessFactory.Create(databaseId)` 取得實例（公司資料表除外）；在 repository 內則用 `RepositoryBase.CreateDbAccess()`，它會把公司資料綁定到公司（見[公司資料限制](#公司資料限制)）。（另有一個 ctor 接已開啟的 `DbConnection` 加其 `DatabaseType`，不需連線管理員——供自行持有連線的呼叫端使用，例如在既有交易內寫入的程式碼）
 
 ### 參考範例
 
@@ -216,7 +216,7 @@ throw new UserMessageException("MyApp.Order.CreditLimit", "Order {0} exceeds the
 
 ### Client 端的對應行為
 
-`ApiConnector.FinalizeResponse` 依 `JsonRpcError.Code` 重建例外：
+`ApiConnector` 依 `JsonRpcError.Code`，經由 `JsonRpcErrorContract.TryRebuild` 重建例外：
 
 - 有宣告例外型別的 code → 重建為該型別，帶原訊息、無前綴，呼叫端可依型別分支。`-32099` 一律重建為 `UserMessageException`，不論伺服端拋的是哪個型別；`-32001` 重建為 `AuthenticationRequiredException`，它衍生自 `UnauthorizedAccessException`。
 - 其餘 code → 拋出 `InvalidOperationException($"API error: {code} - {message}")`，保留協定層除錯資訊

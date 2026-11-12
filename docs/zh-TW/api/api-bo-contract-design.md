@@ -1,4 +1,4 @@
-<!-- source: en/api/api-bo-contract-design.md blob: fe9dcb5d837541f55e0c6c770559cc739be4262a -->
+<!-- source: en/api/api-bo-contract-design.md blob: 11e558ed7b79aa552c0d79e46005d5f518257580 -->
 # API 合約與 BO 參數設計原則
 
 [English](../../en/api/api-bo-contract-design.md) · [← 文件索引](../README.md)
@@ -256,8 +256,8 @@ public LoginResult Login(LoginArgs args) { ... }
 
 例如 `PingResult` 會自動對應到 `PingResponse`。查找結果以 result 型別為 key 快取，每個型別只解析一次。
 
-> 沒有任何機制檢查這個慣例。名稱不以 `Result` 結尾、或在 `Polhem.Api.Core` 找不到 `{Action}Response` 的 result
-> 型別不會被轉換：`ApiOutputConverter` 直接回傳 BO result 本身，就這樣送出。背景請參閱 [ADR-007](../../../maintainers/adr/adr-007-convention-based-type-resolution.md)。
+> 框架自己的 result 型別由 `BusinessResultResponsePairingTests` 檢查配對；應用程式自訂的型別則沒有任何機制檢查。
+> 名稱不以 `Result` 結尾、或在 `Polhem.Api.Core` 找不到 `{Action}Response` 的 result 型別不會被轉換：`ApiOutputConverter` 直接回傳 BO result 本身，就這樣送出。背景請參閱 [ADR-007](../../../maintainers/adr/adr-007-convention-based-type-resolution.md)。
 
 ### ExecFunc 模式
 

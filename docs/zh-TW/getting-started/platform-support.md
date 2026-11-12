@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/platform-support.md blob: fdcc9d053a44e03f655c5b6e2d26642548e5de04 -->
+<!-- source: en/getting-started/platform-support.md blob: 2dc7bbb6298016b31897fdad1038aea62b370725 -->
 # 平台支援
 
 [English](../../en/getting-started/platform-support.md) · [← 文件索引](../README.md)
@@ -45,7 +45,7 @@
   session）是每個 circuit 一份，而不是每個行程一份。它預設的 Local 模式會把每位瀏覽器使用者的呼叫都當成受信任的行程內呼叫（略過存取權杖與
   `LocalOnly` 檢查）：只有在網站的每位使用者都可以看到整個後端時才使用，否則請在 `AddPolhemBlazor` 中呼叫
   `UseRemoteProvider(endpoint, apiKey)`。Remote 模式需要在這裡傳入應用程式的 API key，否則伺服器會以
-  `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
+  JSON-RPC 錯誤 `-32600` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及為何每個 circuit
   送出同一個 key。Northwind 的 Blazor Server head 以 Local 模式執行 Northwind 後端，並可經設定切換為 Remote；見
   [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md#網頁前端blazor-server)，單獨看元件則見
   [`samples/Blazor.Mud.DemoCenter`](../../../samples/Blazor.Mud.DemoCenter/README.zh-TW.md) 與
@@ -168,9 +168,8 @@ DynamicExpresso 求值的程式碼也有相同限制。
 
 - **不支援的設定**：POLHEM9004，位於 `src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`。
 - **在沒有動態程式碼的情況下執行**：本 repository 的 CI 會以 `DynamicCodeSupport=false`（iOS SDK 設定的開關）把用戶端
-  head 會帶到的每個套件的測試專案（`Polhem.Core`、`Polhem.Definition`、`Polhem.Expressions`、`Polhem.Api.Core`、
-  `Polhem.Api.Client`、`Polhem.UI.Core`、`Polhem.UI.ApiBridge`、`Polhem.UI.Avalonia`）再跑一次，另加
-  `Polhem.Api.Server.UnitTests` 的派遣往返測試（它們像用戶端一樣編碼與解碼每一種訊息）。
+  head 會帶到的套件的測試專案再跑一次，另加 `Polhem.Api.Server.UnitTests` 的派遣往返測試（它們像用戶端一樣編碼與解碼每一種訊息）。
+  專案清單在 [`.github/workflows/build-ci.yml`](../../../.github/workflows/build-ci.yml) 的「Mobile AOT gate」步驟。
 - **運算式描述檔**：`tests/Polhem.Expressions.UnitTests` 中的 `TrimmerDescriptorGateTests`。
 - **head 本身**：Northwind 的瀏覽器、iOS 與 Android head 是參考設定，但本 repository 的 CI 不會建置它們。修改上述任何設定後，
   要靠建置並執行該 head 來檢查。

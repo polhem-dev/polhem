@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 76b3caca7e0ec7a9ad88045c47174abe96ecb662 -->
+<!-- source: en/getting-started/getting-started.md blob: 9abe70af38e9eed5a30ce74bfd12ba6aeec8becc -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -169,8 +169,8 @@ app.Run();
 
 - `SysInfo.Initialize` 設定的是請求處理時會讀的全程序值（除錯旗標、允許的型別命名空間），要在 host 開始服務之前
   呼叫。`AddPolhemPayload` 註冊設定檔指名的 payload 壓縮器與加密器。
-- **框架不會替你建資料表。** 即使是匿名呼叫，也會讀 `st_api_key` 來檢查 `X-Api-Key` 標頭，而因資料表不存在
-  而查詢失敗時，呼叫會被拒絕；cache-notify 輪詢器則會讀 `st_cache_notify`。上面的迴圈建立
+- **框架不會替你建資料表。** 即使是匿名呼叫，也會讀 `st_api_key` 來檢查 `X-Api-Key` 標頭（資料表還不存在時視為
+  尚未發出任何金鑰，任何非空值都會通過；因其他原因查詢失敗時，呼叫會被拒絕）；cache-notify 輪詢器則會讀 `st_cache_notify`。上面的迴圈建立
   `DbCategorySettings.xml` 在 `common` 底下登記的每一張表，之後每次啟動再依 TableSchema 把它們調整一致。
   實際的應用程式也用同樣方式建自己的資料表，每個資料庫一個 `TableSchemaBuilder`
   （見[資料庫 Schema 升級](../database/database-schema-upgrade.md)）。

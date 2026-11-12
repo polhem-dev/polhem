@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: d11e37662839783c265547dfc2461d29304e00a5 -->
+<!-- source: en/reference/terminology.md blob: bbcf89e56555bc793a1cc5ece202c095b503d87a -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -355,12 +355,12 @@
 
 ### Web 前端（`Polhem.Web.Blazor.*`）
 
-Blazor head 分成三種 Razor Class Library（RCL）：共用的 `Polhem.Web.Blazor`（元件基底，綁定 `Polhem.UI.Core` 的 `FormDataObject`）、UI 套件 `Polhem.Web.Blazor.Mud`（`FormLayoutPresenter`、欄位編輯器、`GridControl`）與宿主 `Polhem.Web.Blazor.Server`，並以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken。框架沒有 Blazor WebAssembly 套件；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`PolhemApiClient.CreateRemote`）連後端。
+Blazor head 由三種套件組成：共用的 `Polhem.Web.Blazor`（元件基底，綁定 `Polhem.UI.Core` 的 `FormDataObject`）、UI 套件 `Polhem.Web.Blazor.Mud` 或 `Polhem.Web.Blazor.Fluent`（`FormLayoutPresenter`、欄位編輯器、`GridControl`），以及宿主。宿主是 `Polhem.Web.Blazor.Server`（以 DI scope 的 `PolhemApiClient` 讓每個 SignalR circuit 各自持有 AccessToken），或 `Polhem.Web.Blazor.Wasm`（在瀏覽器中執行，透過 HTTP 呼叫伺服器）。
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `FormLayoutPresenter`（Razor 元件） | 表單版面呈現元件 | Blazor 元件，呈現 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器；Avalonia 端有同名控制項 |
-| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（每個 circuit 一個 DI scope 的 `PolhemApiClient`） |
+| `AddPolhemBlazor` | Blazor 宿主註冊擴充方法 | 每個宿主套件各自定義的 `IServiceCollection` 擴充方法：`Polhem.Web.Blazor.Server` 為每個 circuit 註冊一個 DI scope 的 `PolhemApiClient`，`Polhem.Web.Blazor.Wasm` 註冊瀏覽器的遠端 client |
 
 ### API 連線提供者（`Polhem.Api.Client`）
 

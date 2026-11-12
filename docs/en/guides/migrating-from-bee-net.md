@@ -64,7 +64,7 @@ These are strings. A build with the old names succeeds, and the problem only sho
 | Default environment variable of the master key | `BEE_MASTER_KEY` | `POLHEM_MASTER_KEY` | Only a `SystemSettings.xml` that leaves the variable name to the default is affected: the master key is not found at startup. A `MasterKeySource` whose `Value` names the variable keeps using that name; the defaults that `dotnet bee defines materialize` wrote name `BEE_MASTER_KEY` |
 | Analyzer diagnostic IDs in `.editorconfig`, `#pragma warning`, `NoWarn` and `[SuppressMessage]` | `BEE1001` | `POLHEM1001` (same numbers) | The setting is silently ignored |
 | MSBuild properties for definition file checks | `BeeDefinitionFilesGlob`, `BeeRequireDefinitionFiles`, `BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`, `PolhemRequireDefinitionFiles`, `PolhemAnalyzeDefinitionFiles` | The setting is silently ignored and the default applies |
-| CSS classes of the Blazor components | `bee-dynamic-form`, `bee-dynamic-grid`, `bee-form-page`, `bee-login-panel` | `polhem-dynamic-form`, `polhem-dynamic-grid`, `polhem-form-page`, `polhem-login-panel` | Your own style rules no longer apply |
+| CSS classes of the Blazor components | `bee-dynamic-form`, `bee-dynamic-grid`, `bee-form-page`, `bee-login-panel` | `polhem-form-layout`, `polhem-grid`, `polhem-form-page`, `polhem-login-panel` (the form layout and the grid are drawn by the UI package, `Polhem.Web.Blazor.Mud` or `Polhem.Web.Blazor.Fluent`) | Your own style rules no longer apply |
 | Logging categories, such as filters under `Logging:LogLevel` | `Bee.Api.AspNetCore` | `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` | The filter no longer matches |
 | The `Exception.Data` key of `SerializationErrorData.FilePath` | `Bee.FilePath` | `Polhem.FilePath` | Code that reads the key finds nothing |
 
@@ -103,7 +103,8 @@ grep -rnE "Bee\.|Bee[A-Z]|BEE_|BEE[0-9]{4}|dotnet[- ]bee|bee-(dynamic|form|login
 - **`GetList` without paging returns one page**, capped at `PagingOptions.MaxPageSize`.
 - **Built-in text is English, with `zh-TW` translations.** Captions, UI text and messages follow the user's culture,
   which the login response now carries: `UserInfo.Culture` is empty until sign-in instead of `zh-TW`. The labels of
-  `PolhemLoginPanel` and `DynamicGrid.EmptyText` are `string?`, and `null` shows the localized text.
+  `PolhemLoginPanel` are `string?`, and `null` shows the localized text; an empty list always shows the localized
+  "no data" text.
 - **`CBool` no longer reads Chinese words as true.** Only `1`, `T`, `TRUE`, `Y` and `YES` (ignoring case) are true.
 - **Clients keep their endpoint in a new place.** The endpoint and the API key are stored in `endpoint.txt` and
   `apikey.txt` under the per-user local application data folder, in a subfolder named after the application

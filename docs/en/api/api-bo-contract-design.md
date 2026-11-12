@@ -266,7 +266,8 @@ Convention:
 
 For example, `PingResult` is automatically mapped to `PingResponse`. The lookup is cached per result type, so each type is resolved only once.
 
-> Nothing checks the convention. A result type whose name does not end in `Result`, or that has no
+> For the framework's own result types, `BusinessResultResponsePairingTests` checks the pairing. Nothing checks it for
+> an application's own types: a result type whose name does not end in `Result`, or that has no
 > `{Action}Response` in `Polhem.Api.Core`, is not converted: `ApiOutputConverter` returns the BO result
 > itself, which then travels as it is. See [ADR-007](../../../maintainers/adr/adr-007-convention-based-type-resolution.md) for background.
 

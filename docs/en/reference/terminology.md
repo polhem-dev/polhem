@@ -356,12 +356,12 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 ### Web Frontend (`Polhem.Web.Blazor.*`)
 
-The Blazor head is three kinds of Razor Class Library (RCL): the shared `Polhem.Web.Blazor` (the component bases, which bind the `FormDataObject` of `Polhem.UI.Core`), the UI package `Polhem.Web.Blazor.Mud` (`FormLayoutPresenter`, the field editors, `GridControl`) and the host `Polhem.Web.Blazor.Server`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`PolhemApiClient.CreateRemote`) directly.
+The Blazor head is built from three kinds of package: the shared `Polhem.Web.Blazor` (the component bases, which bind the `FormDataObject` of `Polhem.UI.Core`), a UI package, `Polhem.Web.Blazor.Mud` or `Polhem.Web.Blazor.Fluent` (`FormLayoutPresenter`, the field editors, `GridControl`), and a host. The host is `Polhem.Web.Blazor.Server`, with a DI-scoped `PolhemApiClient` so each SignalR circuit carries its own AccessToken, or `Polhem.Web.Blazor.Wasm`, which runs in the browser and calls the server over HTTP.
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `FormLayoutPresenter` (Razor component) | 表單版面呈現元件 | Blazor component that renders the master sections of a `FormLayout`, one field editor per field; the Avalonia head has a control of the same name |
-| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (a DI-scoped `PolhemApiClient` per circuit) |
+| `AddPolhemBlazor` | Blazor 宿主註冊擴充方法 | `IServiceCollection` extension that each host package defines: `Polhem.Web.Blazor.Server` registers a DI-scoped `PolhemApiClient` per circuit, `Polhem.Web.Blazor.Wasm` the browser's remote client |
 
 ### Api Client Providers (`Polhem.Api.Client`)
 

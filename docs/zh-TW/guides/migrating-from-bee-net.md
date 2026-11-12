@@ -1,4 +1,4 @@
-<!-- source: en/guides/migrating-from-bee-net.md blob: 81a1ac00bc11da02c8b73be57597343891bd6acf -->
+<!-- source: en/guides/migrating-from-bee-net.md blob: cd79c873892ccb2993ef894e29a4bbee821d599c -->
 # 從 Bee.NET 遷移
 
 [English](../../en/guides/migrating-from-bee-net.md) · [← 文件索引](../README.md)
@@ -60,7 +60,7 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](../../../CHANGELOG.zh-TW.md)
 | 主金鑰的預設環境變數 | `BEE_MASTER_KEY` | `POLHEM_MASTER_KEY` | 只影響沿用預設變數名稱的 `SystemSettings.xml`：啟動時找不到主金鑰。`MasterKeySource` 的 `Value` 寫明變數名稱時，照樣使用該名稱；`dotnet bee defines materialize` 寫出的預設檔寫的是 `BEE_MASTER_KEY` |
 | `.editorconfig`、`#pragma warning`、`NoWarn` 與 `[SuppressMessage]` 中的 analyzer 診斷代號 | `BEE1001` | `POLHEM1001`（數字不變） | 設定被靜默忽略 |
 | 定義檔檢查用的 MSBuild 屬性 | `BeeDefinitionFilesGlob`、`BeeRequireDefinitionFiles`、`BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`、`PolhemRequireDefinitionFiles`、`PolhemAnalyzeDefinitionFiles` | 設定被靜默忽略，改用預設值 |
-| Blazor 元件的 CSS class | `bee-dynamic-form`、`bee-dynamic-grid`、`bee-form-page`、`bee-login-panel` | `polhem-dynamic-form`、`polhem-dynamic-grid`、`polhem-form-page`、`polhem-login-panel` | 自訂的樣式規則不再套用 |
+| Blazor 元件的 CSS class | `bee-dynamic-form`、`bee-dynamic-grid`、`bee-form-page`、`bee-login-panel` | `polhem-form-layout`、`polhem-grid`、`polhem-form-page`、`polhem-login-panel`（表單版面與表格由 UI 套件 `Polhem.Web.Blazor.Mud` 或 `Polhem.Web.Blazor.Fluent` 繪製） | 自訂的樣式規則不再套用 |
 | logging category，例如 `Logging:LogLevel` 底下的篩選 | `Bee.Api.AspNetCore` | `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` | 篩選不再符合 |
 | `SerializationErrorData.FilePath` 這個 `Exception.Data` 的 key | `Bee.FilePath` | `Polhem.FilePath` | 讀取該 key 的程式碼找不到值 |
 
@@ -95,8 +95,8 @@ grep -rnE "Bee\.|Bee[A-Z]|BEE_|BEE[0-9]{4}|dotnet[- ]bee|bee-(dynamic|form|login
   重放防護開啟時，`CreateApiKey`、`SetApiKeyEnabled`、`SetApiKeyExpiry` 需要 frame sequence。
 - **未分頁的 `GetList` 只回傳一頁**，上限為 `PagingOptions.MaxPageSize`。
 - **內建文字改為英文，並附 `zh-TW` 翻譯。** 標題、UI 文字與訊息依使用者的文化呈現，而登入回應現在會帶回這個文化：
-  `UserInfo.Culture` 在登入前是空字串，不再是 `zh-TW`。`PolhemLoginPanel` 的各標籤與 `DynamicGrid.EmptyText` 改為
-  `string?`，`null` 顯示在地化文字。
+  `UserInfo.Culture` 在登入前是空字串，不再是 `zh-TW`。`PolhemLoginPanel` 的各標籤改為
+  `string?`，`null` 顯示在地化文字；空清單一律顯示在地化的「沒有資料」文字。
 - **`CBool` 不再把中文詞視為 true。** 只有 `1`、`T`、`TRUE`、`Y`、`YES`（不分大小寫）為 true。
 - **用戶端把端點存到新的位置。** 端點與 API 金鑰存成每位使用者本機應用程式資料資料夾下、以應用程式命名的子資料夾中的
   `endpoint.txt` 與 `apikey.txt`（`FileEndpointStorage`）。組件旁的 `{ExeName}.Settings.xml` 不再讀取，使用者要重新
