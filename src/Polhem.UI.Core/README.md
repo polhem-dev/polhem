@@ -125,8 +125,8 @@ heads behave the same:
 - **Framework-agnostic** -- no UI-framework types, so the same contracts and rules serve every front end.
 - **Resolution order in the views** -- a control uses its own property first, then its overridable `Resolve*` hook,
   then `UIServices.Provider`; with none of them it runs on what the host set.
-- **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor packages reference this
-  package for the value rules and `FormDataObject` only; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)
+- **Process-wide state stays out of multi-user hosts** -- `UIServices` is static. The Blazor packages use everything in this
+  package but `UIServices`; `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)
   fails when it references `UIServices` or `Polhem.UI.ApiBridge`, and `UICoreServiceLocatorGateTests`
   (`tests/Polhem.UI.Core.UnitTests`) fails when anything in this package but `UIServices` itself calls `UIServices`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).

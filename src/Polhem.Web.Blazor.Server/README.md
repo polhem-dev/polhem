@@ -127,7 +127,7 @@ The shell runs on the provider the host chose, so the Local mode warning above a
 References [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.md), which brings the API client and the shared rules,
 and the ASP.NET Core shared framework (`Microsoft.AspNetCore.App`). The backend services are registered by the host:
 with `AddPolhemFramework` in Local mode, or by the remote server in Remote mode. The rule that keeps `UIServices` and
-`Polhem.UI.ApiBridge` out of every Blazor package is described in the `Polhem.Web.Blazor` README.
+`Polhem.UI.ApiBridge` out of the Blazor packages is described in the `Polhem.Web.Blazor` README.
 
 ## License
 

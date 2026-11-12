@@ -105,8 +105,7 @@
 - **與 UI 框架無關** -- 不含 UI 框架型別，因此同一套合約與規則可服務所有前端。
 - **畫面的解析順序** -- 控制項先用自己的屬性，再用可覆寫的 `Resolve*` hook，最後才是 `UIServices.Provider`；
   三者皆無時，就以 host 設定的內容運作。
-- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor 套件參考本套件只為了值規則與
-  `FormDataObject`；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
+- **行程層級狀態不進入多使用者 host** -- `UIServices` 是靜態的。Blazor 套件使用本套件中 `UIServices` 以外的一切；它若參考 `UIServices` 或 `Polhem.UI.ApiBridge`，`UIServicesUsageGateTests`
   （`tests/Polhem.Web.Blazor.Server.UnitTests`）會失敗；本套件中除了 `UIServices` 本身有任何程式呼叫
   `UIServices`，`UICoreServiceLocatorGateTests`（`tests/Polhem.UI.Core.UnitTests`）會失敗。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。

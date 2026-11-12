@@ -465,9 +465,9 @@ apps/Polhem.Northwind/
 │   └── Language/{lang}/          在地化標題，每個 progId 一個檔
 ├── Customize/{customizeId}/      租戶客製層（結構與 Define/ 相同，只放要覆寫的檔）
 ├── Polhem.Northwind.Backend/        兩個 host 共用的後端：OrderBO、它的 Repository、seeder 與種子資料
-├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia head 使用
+├── Polhem.Northwind.Server/         後端的 JSON-RPC host，給 Avalonia 與 Blazor WebAssembly head 使用
 ├── Polhem.Northwind.Blazor/         Blazor Server head（Polhem.Web.Blazor.Mud），在同一個行程執行後端
-├── Polhem.Northwind.BlazorFluent/   同一個 Blazor Server head，改用 Polhem.Web.Blazor.Fluent
+├── Polhem.Northwind.BlazorFluent/   改用 Polhem.Web.Blazor.Fluent 的同一個應用程式，由 Polhem.Northwind.Blazor 掛在自己的路徑下
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head（Polhem.Web.Blazor.Mud），是 server 的 JSON-RPC client
 ├── Polhem.Northwind.BlazorFluentWasm/  同一個 Blazor WebAssembly head，改用 Polhem.Web.Blazor.Fluent
 ├── Shared/                          公開示範網站上各前端的路徑，以及它們之間的連結

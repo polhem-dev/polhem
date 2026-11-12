@@ -120,7 +120,7 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 引用 [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.zh-TW.md)（由它帶入 API client 與共用規則）以及 ASP.NET Core
 共用框架（`Microsoft.AspNetCore.App`）。後端服務由宿主註冊：Local 模式以 `AddPolhemFramework`，Remote 模式則由遠端伺服器提供。
-讓 `UIServices` 與 `Polhem.UI.ApiBridge` 不進入任何 Blazor 套件的規則，說明在 `Polhem.Web.Blazor` 的 README。
+讓 `UIServices` 與 `Polhem.UI.ApiBridge` 不進入 Blazor 套件的規則，說明在 `Polhem.Web.Blazor` 的 README。
 
 ## 授權
 

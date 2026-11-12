@@ -492,9 +492,9 @@ apps/Polhem.Northwind/
 │   └── Language/{lang}/          localized captions, one file per progId
 ├── Customize/{customizeId}/      the tenant customization layer (same shape as Define/; holds only what it overrides)
 ├── Polhem.Northwind.Backend/        the backend both hosts run: OrderBO, its repository, the seeder and seed data
-├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia heads
+├── Polhem.Northwind.Server/         JSON-RPC host of the backend, for the Avalonia and Blazor WebAssembly heads
 ├── Polhem.Northwind.Blazor/         Blazor Server head (Polhem.Web.Blazor.Mud), running the backend in process
-├── Polhem.Northwind.BlazorFluent/   the same Blazor Server head on Polhem.Web.Blazor.Fluent
+├── Polhem.Northwind.BlazorFluent/   the same application on Polhem.Web.Blazor.Fluent, mounted by Polhem.Northwind.Blazor under its own path
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head (Polhem.Web.Blazor.Mud), a JSON-RPC client of the server
 ├── Polhem.Northwind.BlazorFluentWasm/  the same Blazor WebAssembly head on Polhem.Web.Blazor.Fluent
 ├── Shared/                          the paths of the front ends on the public demo site, and the links between them
