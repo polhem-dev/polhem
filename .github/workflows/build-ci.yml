@@ -10,6 +10,7 @@ on:
       - '*.slnx'
       - '*.props'
       - '.github/workflows/build-ci.yml'
+      - '.github/scripts/detect-docs-only.sh'
       - 'SonarQube.Analysis.xml'
   # No paths filter on pull requests: `build` is a required check of the branch protection on `main`, and a
   # required check that never starts leaves a documentation-only pull request waiting forever. A pull request that
@@ -53,36 +54,17 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Decides whether this run builds at all. Only a pull request whose changes are all `.md` files skips the
-    # build; a push or a manual dispatch always builds. The skip is done step by step rather than on the job:
-    # GitHub reports a job skipped by `if:` as a passing check, so if the detection lived in a separate job, a
-    # failure there would skip `build` and let the pull request merge. Inside this job, a failed detection fails
-    # `build`. Every later step is gated on `build == 'true'`, either directly or through "Resolve database scope",
-    # whose outputs stay empty when it is skipped.
-    # HEAD is the merge commit GitHub creates for the pull request, so `HEAD^1..HEAD` is exactly what the pull
-    # request would change on the current `main`, even when the branch is behind it. `--no-renames` lists both
-    # sides of a rename, so renaming a `.cs` file to `.md` still builds. Anything unexpected (no merge commit, an
-    # empty list) builds.
+    # Decides whether this job builds at all; the rules and their reasons are in the header of
+    # `.github/scripts/detect-docs-only.sh`, which the `templates` job runs too. Every later step is gated on
+    # `build == 'true'`, either directly or through "Resolve database scope", whose outputs stay empty when it is
+    # skipped.
     # The `sqlserver` service above still starts on a documentation-only pull request, because `services:` has no
     # `if:`. That costs the image pull and start, well under the cost of the build and tests.
     - name: Detect documentation-only pull request
       id: changes
       env:
         EVENT_NAME: ${{ github.event_name }}
-      run: |
-        build=true
-        if [ "$EVENT_NAME" = "pull_request" ] && git rev-parse -q --verify HEAD^2 > /dev/null; then
-          files=$(git diff --name-only --no-renames HEAD^1 HEAD)
-          echo "Changed files:"
-          printf '%s\n' "$files"
-          if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qv '\.md$'; then
-            build=false
-          fi
-        fi
-        echo "build=$build" >> "$GITHUB_OUTPUT"
-        if [ "$build" = false ]; then
-          echo "Only .md files changed: skipping the build, tests and SonarCloud (docs-check.yml checks the documents)"
-        fi
+      run: .github/scripts/detect-docs-only.sh
 
     # Decides which database tests run. The default is lite (SQL Server + SQLite).
     # Full mode must be requested explicitly: a manual dispatch with db_scope=all, or [all-db] in the commit message.
@@ -282,6 +264,8 @@ jobs:
     # through $GITHUB_ENV and exist only in full mode; only the two that both modes need are listed here.
     # Coverage is collected only in full mode: lite mode does not run SonarScanner, so nobody would collect it,
     # and a report without three providers would only push the SonarCloud numbers down.
+    # The template tests run in the `templates` job instead; the filter leaves out only that project, so a new test
+    # project is picked up here without any list to update.
     - name: Test with coverage
       if: steps.changes.outputs.build == 'true'
       env:
@@ -295,6 +279,7 @@ jobs:
         POLHEM_TEST_CONNSTR_SQLITE: "Data Source=file:polhem_test_{@DbName}?mode=memory&cache=shared"
       run: >-
         dotnet test Polhem.slnx --configuration Release --no-build --verbosity normal
+        --filter "FullyQualifiedName!~Polhem.Templates.UnitTests."
         ${{ steps.scope.outputs.full == 'true' && '--collect:"XPlat Code Coverage;Format=opencover"' || '' }}
 
     - name: SonarScanner End
@@ -393,3 +378,37 @@ jobs:
         do
           dotnet test "$proj" --configuration Release --verbosity normal -p:DynamicCodeSupport=false
         done
+
+  # The template tests generate, build, publish and start whole applications. They share one packed feed, so they run
+  # one after another and take several minutes, which made them the slowest part of the `build` job's test step.
+  # Here they run beside `build`. `build` leaves them out with a filter on this project's namespace.
+  # This job is a required check of the branch protection on `main`, like `build`, so it also always starts on a pull
+  # request and skips its work when only `.md` files changed.
+  templates:
+    runs-on: ubuntu-latest
+    # Each `dotnet` command of the template tests may take up to 10 minutes before the fixture gives up; this caps a
+    # hung run well below GitHub's default of 360 minutes.
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        # The detection below compares HEAD with its first parent.
+        fetch-depth: 2
+
+    - name: Detect documentation-only pull request
+      id: changes
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: .github/scripts/detect-docs-only.sh
+
+    - name: Setup .NET
+      if: steps.changes.outputs.build == 'true'
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Template tests
+      if: steps.changes.outputs.build == 'true'
+      run: dotnet test tests/Polhem.Templates.UnitTests/Polhem.Templates.UnitTests.csproj --configuration Release --verbosity normal
