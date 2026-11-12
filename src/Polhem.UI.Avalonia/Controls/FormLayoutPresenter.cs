@@ -127,7 +127,8 @@ namespace Polhem.UI.Avalonia.Controls
         {
             if (_updateDepth > 0) return;
 
-            // A render builds new detail grids, and a host renders again after every command, a save included.
+            // A render builds new detail grids, and `FormView` renders again after a load, a new record or a save,
+            // a refused save included.
             // Each detail grid scrolls its own rows, so its place and selection are carried over to its successor.
             var places = _detailGrids.ToDictionary(
                 pair => pair.Key, pair => pair.Value.CaptureViewport(), StringComparer.OrdinalIgnoreCase);

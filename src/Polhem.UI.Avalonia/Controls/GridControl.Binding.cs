@@ -127,7 +127,7 @@ namespace Polhem.UI.Avalonia.Controls
         /// later <see cref="DataRow"/> writes.
         /// </summary>
         /// <remarks>
-        /// The rows that were wholly in view and the selected row are found again, by reference or by
+        /// The rows that were in view and the selected row are found again, by reference or by
         /// <c>sys_rowid</c>, and scrolled back into view and selected; a row that is no longer in the table is
         /// skipped.
         /// </remarks>

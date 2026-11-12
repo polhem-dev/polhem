@@ -146,8 +146,14 @@ namespace Polhem.UI.Avalonia.Controls
         /// <param name="Selected">The selected row, if any.</param>
         internal readonly record struct RowViewport(IReadOnlyList<(RowRef Row, bool WholeTop)> Visible, RowRef? Selected);
 
+        // A place handed over by a render and not yet restored, because the grid has not been shown.
+        private RowViewport? _pendingViewport;
+
         internal RowViewport CaptureViewport()
         {
+            // A grid rendered again before it was ever shown has no rows to read; the place it was given still holds.
+            if (_pendingViewport is { } pending) return pending;
+
             var visible = new List<(double Top, RowRef Row, bool WholeTop)>();
             foreach (var container in _grid.GetVisualDescendants().OfType<DataGridRow>())
             {
@@ -171,20 +177,30 @@ namespace Polhem.UI.Avalonia.Controls
         /// </summary>
         internal void RestoreViewportWhenShown(RowViewport viewport)
         {
+            _pendingViewport = viewport;
+            // Posted in both cases: the inner grid is attached during a layout pass, which `RestoreViewport` would
+            // re-enter.
             if (_grid.IsAttachedToVisualTree())
             {
-                RestoreViewport(viewport);
+                PostRestore();
                 return;
             }
 
             void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
             {
                 _grid.AttachedToVisualTree -= OnAttached;
-                // Posted: the attach happens inside a layout pass, which `RestoreViewport` would re-enter.
-                Dispatcher.UIThread.Post(() => RestoreViewport(viewport), DispatcherPriority.Loaded);
+                PostRestore();
             }
             _grid.AttachedToVisualTree += OnAttached;
         }
+
+        private void PostRestore()
+            => Dispatcher.UIThread.Post(() =>
+            {
+                if (_pendingViewport is not { } viewport) return;
+                _pendingViewport = null;
+                RestoreViewport(viewport);
+            }, DispatcherPriority.Loaded);
 
         internal void RestoreViewport(RowViewport viewport)
         {
