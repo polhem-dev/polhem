@@ -126,10 +126,17 @@ namespace Polhem.UI.Avalonia.Controls
         /// cells capture their value when their template builds and do not track
         /// later <see cref="DataRow"/> writes.
         /// </summary>
+        /// <remarks>
+        /// The rows that were in view and the selected row are found again, by reference or by
+        /// <c>sys_rowid</c>, and scrolled back into view and selected; a row that is no longer in the table is
+        /// skipped.
+        /// </remarks>
         public void RefreshRows()
         {
+            var viewport = CaptureViewport();
             _grid.ItemsSource = null;
             RebuildRows();
+            RestoreViewport(viewport);
         }
 
         /// <summary>
@@ -194,8 +201,9 @@ namespace Polhem.UI.Avalonia.Controls
             // event bridge; no explicit notification is needed here.
             _dataTable.Rows.Add(row);
             // The DataGrid does not observe DataView changes — re-realize so the
-            // new row shows up.
-            RefreshRows();
+            // new row shows up, and select it: a detail grid has a bounded height,
+            // so the new last row may be below the rows in view.
+            RefreshAndFocusRow(row);
         }
 
         /// <summary>
