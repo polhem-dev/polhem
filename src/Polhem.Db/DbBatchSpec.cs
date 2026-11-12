@@ -8,6 +8,13 @@ namespace Polhem.Db
     public sealed class DbBatchSpec
     {
         /// <summary>
+        /// The key under which <see cref="DbAccess.ExecuteBatch(DbBatchSpec)"/> and
+        /// <see cref="DbAccess.ExecuteBatchAsync(DbBatchSpec, CancellationToken)"/> put the index of the failing
+        /// command (an <see cref="int"/>) in the rethrown exception's <see cref="Exception.Data"/>.
+        /// </summary>
+        public const string FailedIndexDataKey = "Polhem.BatchIndex";
+
+        /// <summary>
         /// Gets or sets the collection of commands to execute (executed in order).
         /// </summary>
         public DbCommandSpecCollection Commands { get; set; } = [];

@@ -26,15 +26,6 @@ namespace Polhem.Definition.UnitTests
         private static readonly Regex s_lineComment = new(@"//[^\n]*", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex s_blockComment = new(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline, TimeSpan.FromSeconds(1));
 
-        // Files whose catch-alls another change owns, with the reason. Remove an entry when that change lands.
-        private static readonly string[] s_exempt =
-        [
-            // The batch runners wrap every failure, a cancellation included, in an InvalidOperationException;
-            // https://github.com/polhem-dev/polhem/issues/427 changes what they catch.
-            "src/Polhem.Db/DbAccess.cs",
-            "src/Polhem.Db/DbAccess.Async.cs",
-        ];
-
         [Fact]
         [DisplayName("Every catch-all in src ends with throw; or starts with a // Boundary: reason, and none is empty")]
         public void CatchAlls_HaveAnAllowedShape()
@@ -47,7 +38,6 @@ namespace Polhem.Definition.UnitTests
             {
                 var relative = Path.GetRelativePath(root, path).Replace('\\', '/');
                 if (relative.Contains("/bin/", StringComparison.Ordinal) || relative.Contains("/obj/", StringComparison.Ordinal)) continue;
-                if (s_exempt.Contains(relative, StringComparer.Ordinal)) continue;
 
                 var text = File.ReadAllText(path);
                 foreach (Match match in s_catchAll.Matches(text))

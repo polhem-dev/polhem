@@ -279,7 +279,7 @@ namespace Polhem.Hosting.UnitTests
             var repository = CreateWriteRepository(databaseType);
 
             // The second and third entries share a `sys_rowid`, so the third violates the unique index.
-            Assert.ThrowsAny<InvalidOperationException>(() => repository.WriteBatch(
+            Assert.ThrowsAny<DbException>(() => repository.WriteBatch(
                 [NewLoginEntry(first), NewLoginEntry(duplicate), NewLoginEntry(duplicate)]));
 
             Assert.Equal(0L, CountLoginRows(databaseType, first));

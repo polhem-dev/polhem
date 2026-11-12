@@ -23,14 +23,15 @@ namespace Polhem.Db
         {
             ValidateUpdateSpec(spec);
 
-            using (var scope = CreateScope())
+            var subject = UpdateSubject(spec);
+            using (var scope = RunWithAnomalyDetection(subject, CreateScope, NoCounts))
             {
                 DbTransaction? tran = null;
                 try
                 {
-                    tran = BeginTransactionIfRequested(scope, spec);
-                    int affected = ApplySpec(spec, scope.Connection!, tran);
-                    tran?.Commit();
+                    tran = RunWithAnomalyDetection(subject, () => BeginTransactionIfRequested(scope, spec), NoCounts);
+                    int affected = ApplySpecWithAnomalyDetection(spec, scope.Connection!, tran);
+                    if (tran != null) { CommitWithAnomalyDetection(tran); }
                     return affected;
                 }
                 catch
@@ -43,6 +44,23 @@ namespace Polhem.Db
                     tran?.Dispose();
                 }
             }
+        }
+
+        private void CommitWithAnomalyDetection(DbTransaction tran)
+            => RunWithAnomalyDetection(s_commitSubject, () => { tran.Commit(); return true; }, NoCounts);
+
+        private int ApplySpecWithAnomalyDetection(DataTableUpdateSpec spec, DbConnection connection, DbTransaction? tran)
+            => RunWithAnomalyDetection(
+                UpdateSubject(spec), () => ApplySpec(spec, connection, tran), affected => new AnomalyCounts(affected, 0));
+
+        // The data adapter runs whichever of the commands the changed rows need, one round trip per row, and its failure
+        // does not say which one failed. So an anomaly names every command of the spec, and a timeout is told only by
+        // the provider's message.
+        private static AnomalySubject UpdateSubject(DataTableUpdateSpec spec)
+        {
+            DbCommandSpec[] commands = [.. new[] { spec.InsertCommand, spec.UpdateCommand, spec.DeleteCommand }.OfType<DbCommandSpec>()];
+            return new AnomalySubject(
+                string.Join("; ", commands.Select(c => c.CommandText)), 0, InferTimeoutFromElapsed: false);
         }
 
         /// <summary>
@@ -171,17 +189,18 @@ namespace Polhem.Db
             if (specs.Count == 0) return Array.Empty<int>();
             foreach (var spec in specs) ValidateUpdateSpec(spec);
 
-            using (var scope = CreateScope())
+            var opening = UpdateSubject(specs[0]);
+            using (var scope = RunWithAnomalyDetection(opening, CreateScope, NoCounts))
             {
                 DbTransaction? tran = null;
                 try
                 {
-                    tran = scope.Connection!.BeginTransaction();
+                    tran = RunWithAnomalyDetection(opening, () => scope.Connection!.BeginTransaction(), NoCounts);
                     var affected = new int[specs.Count];
                     for (int i = 0; i < specs.Count; i++)
-                        affected[i] = ApplySpec(specs[i], scope.Connection, tran);
+                        affected[i] = ApplySpecWithAnomalyDetection(specs[i], scope.Connection!, tran);
 
-                    tran.Commit();
+                    CommitWithAnomalyDetection(tran);
                     return affected;
                 }
                 catch

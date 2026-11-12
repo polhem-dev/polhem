@@ -1,4 +1,3 @@
-using System.Data.Common;
 using System.Globalization;
 using System.Text;
 using Polhem.Definition.Database;
@@ -92,9 +91,6 @@ namespace Polhem.Hosting.Audit
             return failed;
         }
 
-        // Resilience: a log-store outage must not surface into the business flow. DbException covers every
-        // provider's exception type (Sql / Npgsql / MySql / Oracle). An EncoderFallbackException is a value the
-        // provider could not encode on the client, so it is retried entry by entry like a refusal.
         private Exception? TryWrite(IReadOnlyList<AuditEntry> entries)
         {
             try
@@ -102,16 +98,11 @@ namespace Polhem.Hosting.Audit
                 _repository.WriteBatch(entries);
                 return null;
             }
-            catch (DbException ex)
+            catch (Exception ex)
             {
-                return ex;
-            }
-            catch (InvalidOperationException ex)
-            {
-                return ex;
-            }
-            catch (EncoderFallbackException ex)
-            {
+                // Boundary: a log-store failure must not surface into the business flow, and whatever the provider
+                // throws (a refusal, a value it cannot encode or bind, a connection it cannot open) is answered the
+                // same way, by the entry-by-entry retry and the file fallback. Nothing here takes a cancellation token.
                 return ex;
             }
         }
