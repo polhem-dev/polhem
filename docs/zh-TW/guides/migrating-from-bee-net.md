@@ -1,4 +1,4 @@
-<!-- source: en/guides/migrating-from-bee-net.md blob: b603ea9e5fe4878d712e56e23200ba7b99dc49e2 -->
+<!-- source: en/guides/migrating-from-bee-net.md blob: cd79c873892ccb2993ef894e29a4bbee821d599c -->
 # 從 Bee.NET 遷移
 
 [English](../../en/guides/migrating-from-bee-net.md) · [← 文件索引](../README.md)
@@ -60,7 +60,7 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](../../../CHANGELOG.zh-TW.md)
 | 主金鑰的預設環境變數 | `BEE_MASTER_KEY` | `POLHEM_MASTER_KEY` | 只影響沿用預設變數名稱的 `SystemSettings.xml`：啟動時找不到主金鑰。`MasterKeySource` 的 `Value` 寫明變數名稱時，照樣使用該名稱；`dotnet bee defines materialize` 寫出的預設檔寫的是 `BEE_MASTER_KEY` |
 | `.editorconfig`、`#pragma warning`、`NoWarn` 與 `[SuppressMessage]` 中的 analyzer 診斷代號 | `BEE1001` | `POLHEM1001`（數字不變） | 設定被靜默忽略 |
 | 定義檔檢查用的 MSBuild 屬性 | `BeeDefinitionFilesGlob`、`BeeRequireDefinitionFiles`、`BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`、`PolhemRequireDefinitionFiles`、`PolhemAnalyzeDefinitionFiles` | 設定被靜默忽略，改用預設值 |
-| Blazor 元件的 CSS class | `bee-form-page`、`bee-login-panel`；`bee-dynamic-form`、`bee-dynamic-grid` | `polhem-form-page`、`polhem-login-panel`；動態表單與表格沒有對應的 class，因為表單頁與表格改由 UI 套件（`Polhem.Web.Blazor.Mud` 或 `Polhem.Web.Blazor.Fluent`）繪製 | 自訂的樣式規則不再套用 |
+| Blazor 元件的 CSS class | `bee-dynamic-form`、`bee-dynamic-grid`、`bee-form-page`、`bee-login-panel` | `polhem-form-layout`、`polhem-grid`、`polhem-form-page`、`polhem-login-panel`（表單版面與表格由 UI 套件 `Polhem.Web.Blazor.Mud` 或 `Polhem.Web.Blazor.Fluent` 繪製） | 自訂的樣式規則不再套用 |
 | logging category，例如 `Logging:LogLevel` 底下的篩選 | `Bee.Api.AspNetCore` | `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` | 篩選不再符合 |
 | `SerializationErrorData.FilePath` 這個 `Exception.Data` 的 key | `Bee.FilePath` | `Polhem.FilePath` | 讀取該 key 的程式碼找不到值 |
 

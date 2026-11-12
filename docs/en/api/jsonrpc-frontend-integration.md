@@ -17,7 +17,7 @@ it works or has to write a client of their own.
 |----------------|---------------|-------------|
 | Blazor Server | `Polhem.Api.Client` (Local, or Remote) | Local: direct DI dispatch, no HTTP; Remote: as for Avalonia |
 | Blazor WASM | `Polhem.Api.Client` (Remote) | `Encoded` MessagePack over HTTP, not encrypted: the browser runtime has no RSA, so methods that require `Encrypted` are refused |
-| Avalonia (`Polhem.UI.Avalonia`: desktop, browser, iOS, Android) | `Polhem.UI.ApiBridge` over `Polhem.Api.Client` (Remote, or Local on desktop) | MessagePack + AES-CBC-HMAC over HTTP |
+| Avalonia (`Polhem.UI.Avalonia`: desktop, browser, iOS, Android) | `Polhem.UI.ApiBridge` over `Polhem.Api.Client` (Remote, or Local on desktop) | MessagePack + AES-CBC-HMAC over HTTP; the browser head sends `Encoded` payloads, as Blazor WASM does |
 | .NET MAUI / WPF / WinForms | `Polhem.Api.Client` (Remote) | Same as above |
 | **React / Vue / Angular / vanilla JS** | **fetch + JSON-RPC** (this guide) | **Plain JSON over HTTPS** |
 | TypeScript SPA / Node.js client | Same — fetch + JSON-RPC, with optional TS types | Plain JSON over HTTPS |
@@ -186,8 +186,9 @@ See [Temporal Types](../database/temporal-types.md) and [Time Zones](../database
 A rejected API key, or an `Authorization` header that is not a well-formed `Bearer <guid>`, is refused
 before the method runs, with **HTTP 200** and a JSON-RPC error `-32600` in the body. A missing, unknown or
 expired token on a method that needs one reaches the method's access check and answers `-32001`, also with
-HTTP 200. Check the body's `error`, not the HTTP status: only a body that is not `application/json` (415) or
-is too large (413) gets another status.
+HTTP 200. Check the body's `error`, not the HTTP status: by default only a body that is not `application/json`
+(415) or is too large (413) gets another status, and a message of notifications only gets 204. A host can
+answer errors with another status by setting `JsonRpcHttpOptions.StatusCodeSelector`; Polhem does not set it.
 
 CORS must be configured on the host. The Northwind server opens a development-only policy
 in [`Program.cs`](../../../apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs);
@@ -354,8 +355,9 @@ async function rpcCall<T>(method: string, value: object): Promise<T> {
   if (_accessToken) headers.Authorization = `Bearer ${_accessToken}`;
 
   const res = await fetch(ENDPOINT, { method: 'POST', headers, body: JSON.stringify(body) });
-  // Every JSON-RPC error, a rejected API key included, comes with HTTP 200 and the error in the
-  // body; only a body that is not JSON (415) or is too large (413) gets a 4xx. Read the body first.
+  // By default every JSON-RPC error, a rejected API key included, comes with HTTP 200 and the
+  // error in the body; only a body that is not JSON (415) or is too large (413) gets a 4xx.
+  // Read the body first.
   const data = (await res.json().catch(() => undefined)) as JsonRpcResponse<T> | undefined;
   if (data?.error) throw new RpcError(data.error.code, data.error.message, data.error.data);
   if (!res.ok || !data?.result) throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`);

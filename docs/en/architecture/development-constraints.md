@@ -23,7 +23,7 @@ See [development-cookbook.md § Framework Initialization Order](../guides/develo
 
 - Resolving framework services before `AddPolhemFramework` → DI container throws `InvalidOperationException` (service not registered)
 - Calling `SystemSettingsLoader.Load` on a path with no `SystemSettings.xml` → throws `FileNotFoundException`
-- Constructing a `DbAccess` by database id → its constructor requires an `IDbConnectionManager` (a `null` one throws `ArgumentNullException`); obtain those instances through DI-injected `IDbAccessFactory.Create(databaseId)` instead, except for company tables, and in a repository through `RepositoryBase.CreateDbAccess()`, which binds company data to the company (see [Company Data Constraints](#company-data-constraints)). (Another constructor takes an already-open `DbConnection` plus its `DatabaseType` and needs no connection manager — it is for callers that own the connection, such as code that writes inside an existing transaction.)
+- Constructing a `DbAccess` by database id → its constructor requires an `IDbConnectionManager` (a `null` one throws `ArgumentNullException`); obtain those instances through DI-injected `IDbAccessFactory.Create(databaseId)` instead (never for company tables), or, in a repository, through `RepositoryBase.CreateDbAccess()`, which binds company data to the company (see [Company Data Constraints](#company-data-constraints)). (Another constructor takes an already-open `DbConnection` plus its `DatabaseType` and needs no connection manager — it is for callers that own the connection, such as code that writes inside an existing transaction.)
 
 ### Reference Example
 

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 4ba9e5399694991b3e87772970b32b8d8457e987 -->
+<!-- source: en/architecture/development-constraints.md blob: 8b1ecc2d87e5c19ff7b1152f79c60cb2c6494f02 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)

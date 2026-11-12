@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 97f9212c7801eb47bb522c9ba29826abbbbb4201 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: a7b8981d3b31eb373455810d6aad115228ada388 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -17,7 +17,7 @@
 |----------|-------------|-------------|
 | Blazor Server | `Polhem.Api.Client`（Local，或 Remote） | Local：直接 DI 派遣，不走 HTTP；Remote：與 Avalonia 相同 |
 | Blazor WASM | `Polhem.Api.Client`（Remote） | HTTP + `Encoded` MessagePack，不加密：瀏覽器執行環境沒有 RSA，所以要求 `Encrypted` 的方法會被拒絕 |
-| Avalonia（`Polhem.UI.Avalonia`：桌面、瀏覽器、iOS、Android） | `Polhem.UI.ApiBridge`，底層為 `Polhem.Api.Client`（Remote；桌面也可 Local） | HTTP + MessagePack + AES-CBC-HMAC |
+| Avalonia（`Polhem.UI.Avalonia`：桌面、瀏覽器、iOS、Android） | `Polhem.UI.ApiBridge`，底層為 `Polhem.Api.Client`（Remote；桌面也可 Local） | HTTP + MessagePack + AES-CBC-HMAC；瀏覽器 head 與 Blazor WASM 一樣送 `Encoded` |
 | .NET MAUI / WPF / WinForms | `Polhem.Api.Client`（Remote） | 同上 |
 | **React / Vue / Angular / vanilla JS** | **fetch + JSON-RPC**（本指引） | **HTTPS + 純 JSON** |
 | TypeScript SPA / Node.js client | 同上 — fetch + JSON-RPC，可加 TS 型別 | HTTPS + 純 JSON |
@@ -170,8 +170,9 @@ client 改用 JSON body codec（`"codec": "json"` 搭配 `Encoded` 或 `Encrypte
 
 金鑰被拒，或 `Authorization` header 不是格式正確的 `Bearer <guid>`，會在方法執行前被拒，以 **HTTP 200**
 回應，body 帶 JSON-RPC 錯誤 `-32600`。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，
-回 `-32001`，同樣是 HTTP 200。請檢查 body 的 `error`，不要看 HTTP 狀態：只有 body 不是 `application/json`（415）
-或過大（413）時才會是其他狀態。
+回 `-32001`，同樣是 HTTP 200。請檢查 body 的 `error`，不要看 HTTP 狀態：預設只有 body 不是 `application/json`（415）
+或過大（413）時才會是其他狀態，只含 notification 的訊息則回 204。host 可以設定 `JsonRpcHttpOptions.StatusCodeSelector`
+讓錯誤改回其他狀態；Polhem 沒有設定它。
 
 Host 必須設好 CORS。Northwind 伺服器在
 [`Program.cs`](../../../apps/Polhem.Northwind/Polhem.Northwind.Server/Program.cs)
@@ -325,7 +326,7 @@ async function rpcCall<T>(method: string, value: object): Promise<T> {
   if (_accessToken) headers.Authorization = `Bearer ${_accessToken}`;
 
   const res = await fetch(ENDPOINT, { method: 'POST', headers, body: JSON.stringify(body) });
-  // 每個 JSON-RPC 錯誤（包括被拒的 API 金鑰）都是 HTTP 200，錯誤在 body 裡；
+  // 預設每個 JSON-RPC 錯誤（包括被拒的 API 金鑰）都是 HTTP 200，錯誤在 body 裡；
   // 只有 body 不是 JSON（415）或過大（413）才是 4xx。所以先讀 body。
   const data = (await res.json().catch(() => undefined)) as JsonRpcResponse<T> | undefined;
   if (data?.error) throw new RpcError(data.error.code, data.error.message, data.error.data);
