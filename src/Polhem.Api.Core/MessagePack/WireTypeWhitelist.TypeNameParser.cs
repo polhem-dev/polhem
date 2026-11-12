@@ -5,8 +5,9 @@ namespace Polhem.Api.Core.MessagePack
 {
     /// <summary>
     /// The parser behind <see cref="IsAssemblyQualifiedNameAllowed"/>: it walks an assembly-qualified type name
-    /// (generic arguments, array ranks, assembly specifications) and collects the plain type names
-    /// it contains, so each can be checked against the allow-list.
+    /// (generic arguments, array ranks, assembly specifications), rejects an assembly specification outside the
+    /// trusted assemblies, and collects the plain type names it contains, so each can be checked against the
+    /// allow-list.
     /// </summary>
     internal static partial class WireTypeWhitelist
     {
