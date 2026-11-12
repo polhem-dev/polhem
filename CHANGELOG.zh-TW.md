@@ -28,6 +28,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬、含 NUL 字元或孤立 UTF-16 surrogate 的稽核值，不再讓整批寫入失敗：值會截斷到欄寬，NUL 與 surrogate 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
 - `DbAccess` 的每個入口都會記錄資料庫異常，不只 `Execute`：非同步執行、批次、型別化查詢與 `DataTable` 寫入也會記錄。
+- 表單欄位以不同大小寫寫同一個共用語系 namespace 時（例如 `common.Gender` 與 `Common.Status`），Avalonia 與 Blazor 前端不再讓寫成另一種大小寫的欄位維持未翻譯：前端比對語系 namespace 時不分大小寫，與伺服端的語系快取相同。
 - 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
 - `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
 - 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。

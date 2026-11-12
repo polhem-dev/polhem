@@ -200,7 +200,7 @@ namespace Polhem.Api.Client.Definitions
         private async Task<Dictionary<string, LanguageLayers>> FetchLayersAsync(IEnumerable<string> namespaces,
             string lang, string defaultLanguage, CancellationToken cancellationToken)
         {
-            var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.Ordinal);
+            var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.OrdinalIgnoreCase);
             foreach (string language in LanguageFallback.GetChain(lang, defaultLanguage))
             {
                 foreach (string ns in namespaces)

@@ -30,9 +30,19 @@ namespace Polhem.Api.Client.Definitions
         /// missing from the snapshot counts as a miss for that culture.
         /// </param>
         /// <param name="defaultLanguage">The system default language, the last hop of the fall-back chain; empty drops it.</param>
+        /// <remarks>
+        /// The keys are copied and matched without regard to case, whatever comparer
+        /// <paramref name="snapshot"/> uses, as the server's language cache keys them: a schema that writes
+        /// <c>common.Gender</c> in one field and <c>Common.Status</c> in another reads one namespace. When two keys
+        /// differ only in case, one of them is kept.
+        /// </remarks>
         public SnapshotLanguageService(IReadOnlyDictionary<string, LanguageLayers> snapshot, string defaultLanguage)
         {
-            _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
+            ArgumentNullException.ThrowIfNull(snapshot);
+            var copy = new Dictionary<string, LanguageLayers>(snapshot.Count, StringComparer.OrdinalIgnoreCase);
+            foreach (var (key, layers) in snapshot)
+                copy[key] = layers;
+            _snapshot = copy;
             DefaultLanguage = defaultLanguage ?? string.Empty;
         }
 
