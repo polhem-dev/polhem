@@ -1,3 +1,6 @@
 #nullable enable
 Polhem.Core.Expressions.ExpressionEvaluationException.Position.get -> int?
 Polhem.Core.Expressions.ExpressionEvaluationException.Position.init -> void
+Polhem.Core.Exceptions.InvalidRequestValueException
+Polhem.Core.Exceptions.InvalidRequestValueException.InvalidRequestValueException(string! message) -> void
+Polhem.Core.Exceptions.InvalidRequestValueException.InvalidRequestValueException(string! message, System.Exception! innerException) -> void

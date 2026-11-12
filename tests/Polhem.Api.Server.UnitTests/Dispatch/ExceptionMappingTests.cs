@@ -41,6 +41,18 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
         }
 
         [Fact]
+        [DisplayName("MapCode returns the InvalidParams code and the original message for InvalidRequestValueException, ahead of the ArgumentException row")]
+        public void MapCode_InvalidRequestValueException_ReturnsInvalidParamsCode()
+        {
+            var ex = new InvalidRequestValueException("The filter value for the field 'due_date' is not a valid Date.");
+
+            var (code, message) = PolhemExceptionMapper.MapCode(ex);
+
+            Assert.Equal(JsonRpcErrorCode.InvalidParams, code);
+            Assert.Equal("The filter value for the field 'due_date' is not a valid Date.", message);
+        }
+
+        [Fact]
         [DisplayName("MapCode returns the CompanyAccessDenied code and the original message for CompanyAccessDeniedException")]
         public void MapCode_CompanyAccessDeniedException_ReturnsCompanyAccessDeniedCode()
         {

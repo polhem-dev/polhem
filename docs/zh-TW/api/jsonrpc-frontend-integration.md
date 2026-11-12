@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: a7b8981d3b31eb373455810d6aad115228ada388 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 762158f487e942f7f3ff309ee43a60c8c8541717 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -143,8 +143,8 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
 - `String`、`Text` 與 `Time` 欄位保留字串，`Like`、`Contains`、`StartsWith` 與 `EndsWith` 運算子也是，
   因為它們比對的是文字。
 
-relation 欄位依其宣告的 `DbType` 轉換，因此請宣告它所讀取欄位的型別。不符合欄位型別的字串會被拒絕，包括資料庫
-過去會自行轉換的文字，例如數字欄位的 `""`、布林欄位的 `1`。`parameters` 的項目與其他 `object` 成員不會轉換；需要在那裡帶型別的值時，
+relation 欄位依其宣告的 `DbType` 轉換，因此請宣告它所讀取欄位的型別。不符合欄位型別的字串會以 `-32602 InvalidParams`
+拒絕，訊息會指出欄位，包括資料庫過去會自行轉換的文字，例如數字欄位的 `""`、布林欄位的 `1`。`parameters` 的項目與其他 `object` 成員不會轉換；需要在那裡帶型別的值時，
 client 改用 JSON body codec（`"codec": "json"` 搭配 `Encoded` 或 `Encrypted`），它的 `[code, value]`
 信封會帶上型別 —— `wire-contracts/messages.d.ts` 裡的 `WireValueEnvelope` 描述的正是這個信封；Plain body
 帶的則是裸值。
@@ -262,7 +262,7 @@ XML 相同。定義在每條路徑上都以 XML 傳輸，因為它們的巢狀�
 | `-32700` | `ParseError` | request body 不是合法 JSON | 修 client 序列化 |
 | `-32600` | `InvalidRequest` | 不是有效的 JSON-RPC 請求（缺 `method`、`jsonrpc` 不對）、金鑰被拒，或 `Authorization` header 格式錯誤 | 檢查 headers 與 body |
 | `-32601` | `MethodNotFound` | 方法名稱不是 `progId.action` 格式，或沒有對應業務物件公開的 action；訊息固定，不會回帶名稱 | 檢查方法名稱 / 大小寫 |
-| `-32602` | `InvalidParams` | 參數沒有可繫結的值（沒有 `params`、沒有 `value`，或 `value` 為 `null`）；`Plain` 本文無法讀成方法所接受的型別；或 host 要求 wire frame 時，已登入 session 以 `Plain` 或 `Encoded` payload 呼叫[有重放防護](api-method-reference.md#重放防護)的方法。訊息固定為「Invalid params.」。讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構，或改以 `Encrypted` 呼叫該方法 |
+| `-32602` | `InvalidParams` | 參數沒有可繫結的值（沒有 `params`、沒有 `value`，或 `value` 為 `null`）；`Plain` 本文無法讀成方法所接受的型別；或 host 要求 wire frame 時，已登入 session 以 `Plain` 或 `Encoded` payload 呼叫[有重放防護](api-method-reference.md#重放防護)的方法；這幾種的訊息固定為「Invalid params.」。過濾值無法讀成其欄位的型別時也回這個代碼，訊息會指出欄位。其他讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構，或改以 `Encrypted` 呼叫該方法 |
 | `-32603` | `InternalError` | 未處理的 server 端例外（1.1.0 以前為 `-32000`）。驗證失敗的 `Encrypted` payload 也會落在這裡，所以 payload 版本與伺服端不相符的用戶端，每個 `Encrypted` 呼叫都會收到它 | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」。若所有 `Encrypted` 呼叫都這樣失敗、其他格式正常，請確認用戶端與伺服端的版本相符 |
 | `-32001` | `Unauthorized` | 方法需要已登入的呼叫者，而 access token 缺漏、未知或已過期 | 重新登入 |
 | `-32002` | `CompanyNotEntered` | 方法需要公司 context | 先呼叫 `System.EnterCompany` |
