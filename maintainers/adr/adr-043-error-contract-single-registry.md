@@ -2,7 +2,9 @@
 
 ## Status
 
-**Accepted (2026-09-02)**
+**Accepted (2026-09-02)**. The registry still stands; where its two consumers live changed with
+[ADR-049](adr-049-jsonrpc-packages-in-1-2.md), [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) and
+[ADR-055](adr-055-api-core-split-from-server.md), described under "Implementation evolution".
 
 ## Context
 
@@ -120,6 +122,15 @@ putting them into the registry would only make it carry things that do not belon
 An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
 the current code:
 
+- **2026-10-02 to 2026-10-16: the two consumers moved.** `JsonRpcExecutor` and its `MapException` are gone: the
+  `Polhem.JsonRpc` packages took over the protocol ([ADR-049](adr-049-jsonrpc-packages-in-1-2.md)), and the outbound
+  direction became `PolhemExceptionMapper`, which [ADR-055](adr-055-api-core-split-from-server.md) moved to
+  `src/Polhem.Api.Server/Dispatch/PolhemExceptionMapper.cs`. `ReplayRejectedException` became the
+  `Polhem.JsonRpc.Payload` type of the same name, so it no longer lives in `Polhem.Api.Core`; the registry stays there
+  (`src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs`) because both ends still reference that assembly. The client
+  side is `ApiConnector`'s private `MapError`, which calls `JsonRpcErrorContract.TryRebuild`; `FinalizeResponse` no
+  longer exists. [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md) removed `MethodNotFoundException` and its row.
+  Paths below that name `Polhem.Base` or `JsonRpcExecutor` describe the code of their date.
 - **2026-09-27: BCL exceptions no longer reach remote callers verbatim.** The BCL rows of the registry keep their
   error code but travel with a fixed message per row, and the real message is logged on the server
   (`JsonRpcExecutor.Logger`). Only the framework's own exception types carry their message to the caller; a throw site

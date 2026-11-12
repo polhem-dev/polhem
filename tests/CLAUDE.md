@@ -157,6 +157,14 @@ Skips when `RuntimeFeature.IsDynamicCodeSupported` is false, which is what the m
 admits. **Do not use for**: making an AOT gate failure of the framework's own wire types go away; that failure is the
 bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribute.cs`) is the source.
 
+### Needs a .NET workload: `[WorkloadFact]`
+
+Only in `tests/Polhem.Templates.UnitTests`: a template test that builds a generated client head (Android, iOS, the
+browser) names the workloads that can build it, and skips where none is installed. CI installs no workload, so those
+builds run on a developer's machine only; CI still checks what the template generates for those heads. The attribute's
+XML doc (`tests/Polhem.Templates.UnitTests/WorkloadFactAttribute.cs`) is the source. Do not use it to skip a test that
+needs no workload.
+
 ### Needs a real browser: `[BrowserFact]`
 
 `tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
@@ -213,8 +221,8 @@ test class that modifies that static in the same `[Collection("<name>")]`. Templ
 
 ### Narrow serializations that still exist
 
-Most tests now use fixture-scoped DI instances, which removes the race risk naturally. Every existing `[Collection]`
-protects a process-wide static that has not been moved to DI yet:
+Most tests now use fixture-scoped DI instances, which removes the race risk naturally. The collections below protect a
+process-wide static that has not been moved to DI yet:
 
 | Collection (the constant users reference) | Protects |
 |---|---|
@@ -222,6 +230,10 @@ protects a process-wide static that has not been moved to DI yet:
 | `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Core` and `Polhem.Api.Server` each define their own; across assemblies it has to be this way) |
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
 | `CacheNotifyVersionsCollection.Name` | `CacheInfo.NotifyVersions`, for the classes whose poll sessions read a real `st_cache_notify` table (`Polhem.Hosting.UnitTests`) |
+
+One collection exists for another reason: `TemplatePackageCollection.Name` (`tests/Polhem.Templates.UnitTests`) shares
+one `TemplatePackageFixture`, which packs the framework and the templates once per run, between the template test
+classes. Its classes run one after another as a consequence.
 
 Each definition is a `static` class declaring `public const string Name`, and every user writes
 `[Collection(XxxCollection.Name)]`. A mistyped constant does not compile; a mistyped string literal would silently
@@ -280,10 +292,11 @@ Full template in `maintainers/testing-patterns.md`.
 
 ## Common analyzer rejections
 
-The strict build stage of `build-ci.yml` blocks the PR outright. These are especially easy to hit:
+The strict build stage of `build-ci.yml` blocks the PR outright on the compiler and analyzer rules below; SonarCloud,
+which runs only in full mode and is not a required check, reports S2699. These are especially easy to hit:
 
-- **S2699**: every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not make a bare
-  call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
+- **S2699** (SonarCloud): every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not
+  make a bare call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
 - **CA1861**: do not pass a constant array inline as `new[] { ... }` as an argument (it allocates on every call).
   Extract it to a `private static readonly string[] s_xxx = { ... }` at the top of the file.
 - **IDE0005**: copying the header from another test file easily brings in unrelated `using` directives. Remove them

@@ -2,7 +2,11 @@
 
 ## Status
 
-**Accepted (2026-10-02)**, decision 6 and a consequence amended by [ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md)
+**Accepted (2026-10-02)**, decision 6 and a consequence amended by [ADR-050](adr-050-jsonrpc-1-1-wire-break-in-1-3.md);
+the kept `PayloadFormat` removed by [ADR-051](adr-051-remove-jsonrpc-leftovers-in-1-x.md); the
+`Polhem.Api.Core.Dispatch` components moved to `Polhem.Api.Server.Dispatch` by
+[ADR-055](adr-055-api-core-split-from-server.md), so the log category below is now
+`Polhem.Api.Server.Dispatch.PolhemExceptionMapper`
 
 Amends decision 5 of [ADR-048](adr-048-rename-base-to-core-in-1-1.md) and narrows the scope of the compatibility rule
 stated in the context of [ADR-046](adr-046-api-evolution-policies-for-1-0.md).
@@ -215,7 +219,8 @@ types this move left behind.
     without running the call.
   - In-process calls serialize their parameters like remote ones, so the server never holds the caller's objects.
     A filter value in a `Plain` body arrives as text, as it always did over HTTP.
-  - Masked failures are logged under the category `Polhem.Api.Core.Dispatch.PolhemExceptionMapper` instead of the
+  - Masked failures are logged under the category `Polhem.Api.Core.Dispatch.PolhemExceptionMapper` (since ADR-055,
+    `Polhem.Api.Server.Dispatch.PolhemExceptionMapper`) instead of the
     executor's, and the startup check logs under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` instead of
     `Polhem.Api.AspNetCore`. A logging configuration that filtered the old categories must be updated.
 - Behaviour that differs because the payload moved (decision 5):

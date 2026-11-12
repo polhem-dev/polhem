@@ -10,7 +10,7 @@ namespace Polhem.Api.Server.Dispatch
     /// </summary>
     /// <remarks>
     /// Whether the caller may use the method with the payload format it chose is checked later, by
-    /// <see cref="PolhemPayloadFilter"/>, once the format is known.
+    /// <see cref="PolhemAccessFilter"/>, which reads the format from the request's envelope.
     /// </remarks>
     public sealed class PolhemMethodPolicy : IJsonRpcMethodPolicy
     {
