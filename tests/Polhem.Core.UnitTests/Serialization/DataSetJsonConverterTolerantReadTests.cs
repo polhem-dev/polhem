@@ -25,6 +25,21 @@ namespace Polhem.Core.UnitTests.Serialization
         private const string DetailTable =
             """{"tableName":"D","columns":[{"name":"MId","type":"Integer"}],"primaryKeys":[],"rows":[]}""";
 
+        [Theory]
+        [InlineData("""{"tables":[{{MasterTable}}]}""")]
+        [InlineData("""{"dataSetName":null,"tables":[{{MasterTable}}]}""")]
+        [InlineData("""{"dataSetName":"","tables":[{{MasterTable}}]}""")]
+        [DisplayName("A payload without a data set name reads under the default name instead of throwing")]
+        public void Read_MissingDataSetName_KeepsDefaultName(string template)
+        {
+            string json = template.Replace("{{MasterTable}}", MasterTable, StringComparison.Ordinal);
+
+            var dataSet = JsonSerializer.Deserialize<DataSet>(json, Options())!;
+
+            Assert.Equal(new DataSet().DataSetName, dataSet.DataSetName);
+            Assert.Equal("M", Assert.Single(dataSet.Tables.Cast<DataTable>()).TableName);
+        }
+
         [Fact]
         [DisplayName("Elements of the tables array that are not objects are skipped")]
         public void Read_TablesWithNonObjectElements_SkipsThem()

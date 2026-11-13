@@ -66,6 +66,7 @@ namespace Polhem.Repository.UnitTests
         // CA1861: the `typeof()` arrays are hoisted into static readonly fields.
         private static readonly Type[] s_convertDefaultValueParams = [typeof(string), typeof(Type)];
         private static readonly Type[] s_tryCoerceToGuidParams = [typeof(object)];
+        private static readonly Type[] s_tryConvertDefaultValueParams = [typeof(string), typeof(Type), typeof(object).MakeByRefType()];
 
         private static DataFormRepository CreateRepository(FormSchema? schema = null)
         {
@@ -284,12 +285,14 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("not-a-number")]
         [InlineData("abc")]
-        [DisplayName("ConvertDefaultValue returns DBNull.Value for an invalid string with the int type")]
-        public void ConvertDefaultValue_IntType_InvalidString_ReturnsDBNull(string invalidInt)
+        [InlineData("99999999999")]
+        [DisplayName("TryConvertDefaultValue reports failure for a string the int type cannot hold, so the default is not applied")]
+        public void TryConvertDefaultValue_IntType_InvalidString_ReturnsFalse(string invalidInt)
         {
-            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
-            var result = method.Invoke(null, new object[] { invalidInt, typeof(int) });
-            Assert.Same(DBNull.Value, result);
+            var method = GetPrivateStaticMethod("TryConvertDefaultValue", s_tryConvertDefaultValueParams);
+            var args = new object?[] { invalidInt, typeof(int), null };
+            var converted = (bool)method.Invoke(null, args)!;
+            Assert.False(converted);
         }
 
         #endregion

@@ -167,7 +167,8 @@ namespace Polhem.Core.Serialization
 
         private static DataSet BuildDataSet(string dataSetName, List<DataTable> tables, List<RelationDef> relations)
         {
-            var ds = new DataSet(dataSetName);
+            // `DataSet` refuses an empty name, so a payload without `dataSetName` keeps the default one.
+            var ds = dataSetName.Length == 0 ? new DataSet() : new DataSet(dataSetName);
 
             foreach (var table in tables)
                 ds.Tables.Add(table);

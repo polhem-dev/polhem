@@ -61,12 +61,13 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData leaves a default that cannot convert to its column type empty, and skips virtual fields")]
-        public void GetNewData_UnconvertibleDefaults_LeaveDbNull()
+        [DisplayName("GetNewData ignores a default that cannot convert to its column type, and skips virtual fields")]
+        public void GetNewData_UnconvertibleDefaults_AreIgnored()
         {
             var schema = Schema("EdgeDefaults");
             var master = schema.MasterTable!;
             master.Fields!.Add("due_on", "Due on", FieldDbType.Date).DefaultValue = "not-a-date";
+            master.Fields.Add("plain_on", "Plain on", FieldDbType.Date);
             master.Fields.Add("ref_guid", "Ref", FieldDbType.Guid).DefaultValue = "not-a-guid";
             master.Fields!.Add(new FormField("calc", "Calc", FieldDbType.Decimal, FieldType.VirtualField));
             var detail = schema.Tables!.Add("EdgeDefaults_Item", "Item");
@@ -76,10 +77,25 @@ namespace Polhem.Repository.UnitTests
             var dataSet = Repo(schema).GetNewData();
 
             var row = dataSet.Tables["EdgeDefaults"]!.Rows[0];
-            Assert.Equal(DBNull.Value, row["due_on"]);
+            Assert.Equal(row["plain_on"], row["due_on"]);
             Assert.Equal(Guid.Empty, row["ref_guid"]);
             Assert.False(dataSet.Tables["EdgeDefaults"]!.Columns.Contains("calc"));
             Assert.False(dataSet.Tables["EdgeDefaults_Item"]!.Columns.Contains("detail_calc"));
+        }
+
+        [Theory]
+        [InlineData("abc")]
+        [InlineData("99999999999")]
+        [DisplayName("GetNewData keeps the column's own default for an integer default that cannot convert, instead of throwing")]
+        public void GetNewData_UnconvertibleIntegerDefault_KeepsColumnDefault(string defaultValue)
+        {
+            var schema = Schema("EdgeIntDefault");
+            schema.MasterTable!.Fields!.Add("qty", "Quantity", FieldDbType.Integer).DefaultValue = defaultValue;
+
+            var dataSet = Repo(schema).GetNewData();
+
+            var table = dataSet.Tables["EdgeIntDefault"]!;
+            Assert.Equal(table.Columns["qty"]!.DefaultValue, table.Rows[0]["qty"]);
         }
 
         [Fact]
