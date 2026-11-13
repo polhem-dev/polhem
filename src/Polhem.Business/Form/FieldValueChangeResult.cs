@@ -1,6 +1,5 @@
 using System.Data;
 using Polhem.Api.Contracts.Form;
-using Polhem.Core.Collections;
 
 namespace Polhem.Business.Form
 {
@@ -10,9 +9,6 @@ namespace Polhem.Business.Form
     /// </summary>
     public sealed class FieldValueChangeResult : BusinessResult, IFieldValueChangeResponse
     {
-        private Dictionary<string, string> _errors = new(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, string> _warnings = new(StringComparer.OrdinalIgnoreCase);
-
         /// <summary>
         /// Gets or sets a one-row table of the fields to write and their values, or <c>null</c> when nothing is to be
         /// written. <see cref="SetValue(string, object?, Type)"/> builds it.
@@ -22,20 +18,12 @@ namespace Polhem.Business.Form
         /// <summary>
         /// Gets or sets the validation errors, keyed by field name.
         /// </summary>
-        public Dictionary<string, string> Errors
-        {
-            get => _errors;
-            set => _errors = value.WithIgnoreCaseKeys();
-        }
+        public Dictionary<string, string> Errors { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Gets or sets the warnings, keyed by field name.
         /// </summary>
-        public Dictionary<string, string> Warnings
-        {
-            get => _warnings;
-            set => _warnings = value.WithIgnoreCaseKeys();
-        }
+        public Dictionary<string, string> Warnings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <inheritdoc />
         IReadOnlyDictionary<string, string> IFieldValueChangeResponse.Errors => Errors;
