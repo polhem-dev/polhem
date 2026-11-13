@@ -93,21 +93,19 @@ namespace Polhem.Db.Dml
             var culture = CultureInfo.InvariantCulture;
             object? parsed = field.DbType switch
             {
-                FieldDbType.DateTime => DateTimeOffset.TryParseExact(text, s_dateFormats, culture, DateTimeStyles.AssumeUniversal, out var instant)
-                    ? instant.UtcDateTime : null,
-                FieldDbType.Date => DateTimeOffset.TryParseExact(text, s_dateFormats, culture, DateTimeStyles.AssumeUniversal, out var date)
-                    ? date.DateTime.Date : null,
-                FieldDbType.Guid => Guid.TryParse(text, out var guid) ? guid : null,
+                FieldDbType.DateTime => Parsed(DateTimeOffset.TryParseExact(text, s_dateFormats, culture, DateTimeStyles.AssumeUniversal, out var instant),
+                    instant.UtcDateTime),
+                FieldDbType.Date => Parsed(DateTimeOffset.TryParseExact(text, s_dateFormats, culture, DateTimeStyles.AssumeUniversal, out var date),
+                    date.DateTime.Date),
+                FieldDbType.Guid => Parsed(Guid.TryParse(text, out var guid), guid),
                 FieldDbType.Integer or FieldDbType.AutoIncrement
-                    => int.TryParse(text, NumberStyles.Integer, culture, out var i) ? i : null,
-                FieldDbType.Short => short.TryParse(text, NumberStyles.Integer, culture, out var s) ? s : null,
-                FieldDbType.Long => long.TryParse(text, NumberStyles.Integer, culture, out var l) ? l : null,
+                    => Parsed(int.TryParse(text, NumberStyles.Integer, culture, out var i), i),
+                FieldDbType.Short => Parsed(short.TryParse(text, NumberStyles.Integer, culture, out var s), s),
+                FieldDbType.Long => Parsed(long.TryParse(text, NumberStyles.Integer, culture, out var l), l),
                 FieldDbType.Decimal or FieldDbType.Currency
-                    => decimal.TryParse(text, DecimalStyles, culture, out var d) ? d : null,
-                FieldDbType.Boolean => bool.TryParse(text, out var b) ? b : null,
-                // The stored form is the fixed-width "HH:mm" the save writes, so "8:30" must match "08:30". An empty
-                // string is how a time of day that was not filled in is stored, and matches those rows.
-                FieldDbType.Time => text.Trim().Length == 0 ? string.Empty : NullIfEmpty(ValueUtilities.CTimeString(text)),
+                    => Parsed(decimal.TryParse(text, DecimalStyles, culture, out var d), d),
+                FieldDbType.Boolean => Parsed(bool.TryParse(text, out var b), b),
+                FieldDbType.Time => ParseTimeOfDay(text),
                 _ => text,
             };
 
@@ -115,6 +113,15 @@ namespace Polhem.Db.Dml
                 $"The filter value for the field '{field.FieldName}' is not a valid {field.DbType}.");
         }
 
-        private static string? NullIfEmpty(string text) => text.Length == 0 ? null : text;
+        private static object? Parsed<T>(bool succeeded, T value) where T : struct => succeeded ? value : null;
+
+        // The stored form is the fixed-width "HH:mm" the save writes, so "8:30" must match "08:30". An empty string is
+        // how a time of day that was not filled in is stored, and matches those rows.
+        private static string? ParseTimeOfDay(string text)
+        {
+            if (text.Trim().Length == 0) return string.Empty;
+            var normalized = ValueUtilities.CTimeString(text);
+            return normalized.Length == 0 ? null : normalized;
+        }
     }
 }

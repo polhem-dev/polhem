@@ -50,7 +50,7 @@ namespace Polhem.Expressions
     {
         private readonly Interpreter _interpreter;
         private readonly ConcurrentDictionary<string, Func<object?[], object?>> _cache = new(StringComparer.Ordinal);
-        private readonly object _parseLock = new();
+        private readonly Lock _parseLock = new();
         private readonly bool _preferInterpretation;
 
         /// <summary>

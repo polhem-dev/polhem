@@ -16,17 +16,17 @@
 set -euo pipefail
 
 build=true
-if [ "${EVENT_NAME:-}" = "pull_request" ] && git rev-parse -q --verify HEAD^2 > /dev/null; then
+if [[ "${EVENT_NAME:-}" == "pull_request" ]] && git rev-parse -q --verify HEAD^2 > /dev/null; then
   files=$(git diff --name-only --no-renames HEAD^1 HEAD)
   echo "Changed files:"
   printf '%s\n' "$files"
   # A here-string, not a pipe: `grep -q` exits at the first match, and under `pipefail` the writer's SIGPIPE on a
   # long list would turn a pull request with code into a documentation-only one.
-  if [ -n "$files" ] && ! grep -qv '\.md$' <<< "$files"; then
+  if [[ -n "$files" ]] && ! grep -qv '\.md$' <<< "$files"; then
     build=false
   fi
 fi
 echo "build=$build" >> "$GITHUB_OUTPUT"
-if [ "$build" = false ]; then
+if [[ "$build" == false ]]; then
   echo "Only .md files changed: skipping the build and tests (docs-check.yml checks the documents)"
 fi
