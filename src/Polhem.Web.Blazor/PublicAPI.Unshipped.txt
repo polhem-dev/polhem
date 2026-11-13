@@ -212,3 +212,7 @@ Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.set -> void
 *REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadRoundingContextAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, Polhem.Definition.Identity.CompanyInfo? company, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
 *REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadSchemaAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 *REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.BuildCssClass(string! modifierClass) -> string!
+Polhem.Web.Blazor.Identity.BlazorUserContext.SessionRejected -> System.EventHandler?
+override Polhem.Web.Blazor.Shell.ShellLayoutBase.OnInitialized() -> void
+Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose() -> void
+virtual Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose(bool disposing) -> void

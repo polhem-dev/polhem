@@ -49,7 +49,8 @@ namespace Polhem.Api.Core.Transformers
 
         /// <summary>
         /// Sets the compressor and the encryptor that <paramref name="settings"/> names on existing options, leaving the
-        /// rest, <see cref="PayloadOptions.RequireFrame"/> included, as it was.
+        /// rest, <see cref="PayloadOptions.RequireFrame"/> included, as it was. Options that already hold them are not
+        /// written to, so applying the same settings again changes nothing.
         /// </summary>
         /// <param name="options">The options to change.</param>
         /// <param name="settings">The compressor and encryptor names.</param>
@@ -61,18 +62,34 @@ namespace Polhem.Api.Core.Transformers
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(settings);
 
-            options.Compressor = settings.Compressor switch
-            {
-                "gzip" => new GzipPayloadCompressor(),
-                "none" or "" => NoPayloadCompressor.Instance,
-                _ => throw new NotSupportedException($"Unsupported compressor: {settings.Compressor}"),
-            };
+            // Only what differs is written. An in-process client shares the server's own options, and applying the
+            // server's settings to them again must not rewrite an object every call is reading.
+            ApplyCompressor(options, settings.Compressor);
+            ApplyEncryptor(options, settings.Encryptor, isDebugMode);
+        }
 
-            switch (settings.Encryptor)
+        private static void ApplyCompressor(PayloadOptions options, string compressor)
+        {
+            switch (compressor)
+            {
+                case "gzip":
+                    if (options.Compressor is not GzipPayloadCompressor) options.Compressor = new GzipPayloadCompressor();
+                    break;
+                case "none" or "":
+                    if (options.Compressor is not NoPayloadCompressor) options.Compressor = NoPayloadCompressor.Instance;
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported compressor: {compressor}");
+            }
+        }
+
+        private static void ApplyEncryptor(PayloadOptions options, string encryptor, bool isDebugMode)
+        {
+            switch (encryptor)
             {
                 case "aes-cbc-hmac":
-                    options.Encryptor = new AesCbcHmacPayloadEncryptor();
-                    options.AllowNoEncryption = false;
+                    if (options.Encryptor is not AesCbcHmacPayloadEncryptor) options.Encryptor = new AesCbcHmacPayloadEncryptor();
+                    if (options.AllowNoEncryption) options.AllowNoEncryption = false;
                     break;
                 case "none" or "":
                     if (!isDebugMode)
@@ -80,11 +97,11 @@ namespace Polhem.Api.Core.Transformers
                         throw new InvalidOperationException(
                             "The encryptor 'none' is only permitted in debug mode. Configure a valid encryptor for production.");
                     }
-                    options.Encryptor = NoPayloadEncryptor.Instance;
-                    options.AllowNoEncryption = true;
+                    if (options.Encryptor is not NoPayloadEncryptor) options.Encryptor = NoPayloadEncryptor.Instance;
+                    if (!options.AllowNoEncryption) options.AllowNoEncryption = true;
                     break;
                 default:
-                    throw new NotSupportedException($"Unsupported encryptor: {settings.Encryptor}");
+                    throw new NotSupportedException($"Unsupported encryptor: {encryptor}");
             }
         }
     }

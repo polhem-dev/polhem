@@ -63,8 +63,11 @@ namespace Polhem.Business
         {
             try
             {
-                // Invoke the custom method corresponding to FuncId by reflection
-                var method = handler.GetType().GetMethod(args.FuncId);
+                // Only a public method with the handler signature: a method of the same name with other parameters, or
+                // an overload of it, is never picked, and an overload no longer makes the lookup ambiguous.
+                var method = handler.GetType().GetMethod(args.FuncId,
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static,
+                    [typeof(ExecFuncArgs), typeof(ExecFuncResult)]);
                 if (method == null)
                     throw new MissingMethodException($"Method {args.FuncId} not found.");
 

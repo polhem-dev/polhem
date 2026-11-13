@@ -128,7 +128,13 @@
     protected override string OpenPopupSelector => ".mud-popover-open";
 
     /// <inheritdoc />
-    protected override void RefreshRowList() => _rows = VisibleRows.ToList();
+    protected override void RefreshRowList()
+    {
+        // The same rows keep the same list, so MudDataGrid does not take a new Items list on every render.
+        var rows = VisibleRows.ToList();
+        if (rows.SequenceEqual(_rows)) return;
+        _rows = rows;
+    }
 
     // MudDataGrid has no double-click event; a click reports how many clicks it is.
     private Task OnRowClick(DataGridRowClickEventArgs<DataRow> e)

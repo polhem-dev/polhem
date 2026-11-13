@@ -101,7 +101,8 @@ namespace Polhem.Db.Providers.Oracle
         /// </remarks>
         private static string BuildDropIfExistsStatement(string tableName)
         {
-            string quoted = OracleSchemaSyntax.QuoteName(tableName);
+            // The statement sits inside a string literal, so a quote in the name is doubled once more.
+            string quoted = OracleSchemaSyntax.EscapeSqlString(OracleSchemaSyntax.QuoteName(tableName));
             return "BEGIN\r\n" +
                    $"  EXECUTE IMMEDIATE 'DROP TABLE {quoted} CASCADE CONSTRAINTS';\r\n" +
                    "EXCEPTION\r\n" +

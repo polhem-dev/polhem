@@ -1,6 +1,7 @@
 using Polhem.Definition.Settings;
 using Polhem.Api.Core.Transformers;
 using Polhem.Core;
+using Polhem.Core.Exceptions;
 using Polhem.Core.Security;
 using Polhem.Core.Serialization;
 using Polhem.Api.Core.Messages.System;
@@ -165,7 +166,10 @@ namespace Polhem.Api.Client.Connectors
             SysInfo.Initialize(configuration);
             Client.DefaultLanguage = configuration.DefaultLanguage;
             // The server decides the compressor and the encryptor; the rest of the client's payload options stay.
-            PolhemPayload.Apply(Client.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
+            // WARNING: an in-process client may hold the backend's own options, which every request of the backend
+            // reads while this runs. They already carry the backend's choice, so they are never written to.
+            if (!Client.SharesServerPayloadOptions)
+                PolhemPayload.Apply(Client.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
 
         /// <summary>
@@ -318,17 +322,26 @@ namespace Polhem.Api.Client.Connectors
 
         /// <summary>
         /// Asynchronously destroys the current session, clearing any company context first.
-        /// Idempotent — succeeds even if the session is already expired or unknown.
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <remarks>
-        /// On success the client is signed out locally as well (<see cref="PolhemApiClient.SignOut"/>).
+        /// The client is signed out locally as well (<see cref="PolhemApiClient.SignOut"/>). A session the server
+        /// already ended, because it expired or is unknown, counts as signed out: the call returns an empty response
+        /// instead of throwing, after <see cref="PolhemApiClient.SessionRejected"/> was raised.
         /// </remarks>
         public virtual async Task<LogoutResponse> LogoutAsync(CancellationToken cancellationToken = default)
         {
             var request = new LogoutRequest();
-            var result = await ExecuteAsync<LogoutResponse>(SystemActions.Logout, request, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+            LogoutResponse result;
+            try
+            {
+                result = await ExecuteAsync<LogoutResponse>(SystemActions.Logout, request, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (AuthenticationRequiredException)
+            {
+                result = new LogoutResponse();
+            }
             Client.SignOut();
             return result;
         }

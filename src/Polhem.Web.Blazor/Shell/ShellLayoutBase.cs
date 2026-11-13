@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Shell
     /// The menu button collapses the menu on a wide screen and slides it over the page on a narrow one; picking a form
     /// closes the narrow overlay.
     /// </remarks>
-    public abstract class ShellLayoutBase : LayoutComponentBase
+    public abstract class ShellLayoutBase : LayoutComponentBase, IDisposable
     {
         /// <summary>Gets the user context the layout follows.</summary>
         [Inject]
@@ -62,6 +62,40 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Clears the toggle.</summary>
         protected void CloseMenu() => IsMenuToggled = false;
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            UserContext.SessionRejected += OnSessionRejected;
+        }
+
+        // The server ended the session, so the layout signs out and goes back to its sign-in screen. The context is
+        // cleared here, on the dispatcher, because a render reads it.
+        private void OnSessionRejected(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+        {
+            UserContext.SignOut();
+            IsMenuToggled = false;
+            Navigation.NavigateTo("");
+            StateHasChanged();
+        });
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Stops following the user context. A derived layout that holds resources of its own overrides it and calls
+        /// the base.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing) UserContext.SessionRejected -= OnSessionRejected;
+        }
 
         /// <summary>Signs out and returns to the sign-in screen.</summary>
         /// <remarks>The client and the context are the circuit's, so signing out is local to this browser tab.</remarks>

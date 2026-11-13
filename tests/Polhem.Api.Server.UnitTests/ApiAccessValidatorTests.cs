@@ -89,6 +89,36 @@ namespace Polhem.Api.Server.UnitTests
         }
 
         [Fact]
+        [DisplayName("A local call that carries an access token the validator refuses, such as an expired session's, is refused")]
+        public void ValidateAccess_LocalCallWithRefusedToken_Throws()
+        {
+            var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
+            var context = new ApiCallContext { Format = PayloadFormat.Plain, IsLocalCall = true, AccessToken = Guid.NewGuid() };
+
+            Assert.Throws<AuthenticationRequiredException>(() => ApiAccessValidator.ValidateAccess(method!, context, s_denyAll));
+        }
+
+        [Fact]
+        [DisplayName("A local call with no access token, the server's own code, is still trusted")]
+        public void ValidateAccess_LocalCallWithoutToken_Passes()
+        {
+            var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
+            var context = new ApiCallContext { Format = PayloadFormat.Plain, IsLocalCall = true, AccessToken = Guid.Empty };
+
+            Assert.Null(Record.Exception(() => ApiAccessValidator.ValidateAccess(method!, context, s_denyAll)));
+        }
+
+        [Fact]
+        [DisplayName("A local call that carries a live access token passes whatever the protection level")]
+        public void ValidateAccess_LocalCallWithLiveToken_Passes()
+        {
+            var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
+            var context = new ApiCallContext { Format = PayloadFormat.Plain, IsLocalCall = true, AccessToken = Guid.NewGuid() };
+
+            Assert.Null(Record.Exception(() => ApiAccessValidator.ValidateAccess(method!, context, new FakeTokenProvider { Result = true })));
+        }
+
+        [Fact]
         [DisplayName("ValidateAccess throws ArgumentNullException for a null tokenValidator")]
         public void ValidateAccess_NullTokenValidator_Throws()
         {

@@ -40,7 +40,20 @@ namespace Polhem.Web.Blazor.Identity
             ArgumentNullException.ThrowIfNull(defaultLanguage);
             _client = client;
             _defaultLanguage = defaultLanguage;
+            // The client and this context share the circuit's lifetime, so the subscription needs no removal.
+            _client.SessionRejected += (_, _) => SessionRejected?.Invoke(this, EventArgs.Empty);
         }
+
+        /// <summary>
+        /// Raised when the server refused a call because the session it carried has ended, for example because it
+        /// expired. Nothing is cleared yet: the handler calls <see cref="SignOut"/>.
+        /// </summary>
+        /// <remarks>
+        /// It is raised on the thread of the refused call, while the circuit may be rendering from this context, so
+        /// the handler signs out on the circuit's dispatcher (<c>InvokeAsync</c>), as <see cref="Shell.ShellLayoutBase"/>
+        /// does before it returns to its sign-in screen.
+        /// </remarks>
+        public event EventHandler? SessionRejected;
 
         /// <inheritdoc/>
         public UserInfo? User { get; private set; }
@@ -82,7 +95,8 @@ namespace Polhem.Web.Blazor.Identity
         /// <returns>The server's response.</returns>
         public async Task<EnterCompanyResponse> EnterCompanyAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var response = await _client.System.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(false);
+            // Back on the circuit's dispatcher, so a render never sees the new company with the old capabilities.
+            var response = await _client.System.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(true);
             Company = response.Company;
             Capabilities = new Dictionary<string, PermissionActions>(response.Capabilities, StringComparer.Ordinal);
             return response;

@@ -83,6 +83,20 @@ namespace Polhem.Api.Core.UnitTests.Payload
         }
 
         [Fact]
+        [DisplayName("Applying the settings the options already hold writes nothing, so shared options are not rewritten")]
+        public void Apply_SameSettings_KeepsTheInstances()
+        {
+            var options = PolhemPayload.CreateOptions();
+            var compressor = options.Compressor;
+            var encryptor = options.Encryptor;
+
+            PolhemPayload.Apply(options, new ApiPayloadOptions(), isDebugMode: false);
+
+            Assert.Same(compressor, options.Compressor);
+            Assert.Same(encryptor, options.Encryptor);
+        }
+
+        [Fact]
         [DisplayName("Unknown compressor and encryptor names are not supported")]
         public void Apply_UnknownNames_Throw()
         {

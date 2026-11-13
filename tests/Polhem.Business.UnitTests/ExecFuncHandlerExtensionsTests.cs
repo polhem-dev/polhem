@@ -23,6 +23,17 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
+        [DisplayName("InvokeExecFunc does not pick a method of that name without the handler signature")]
+        public void InvokeExecFunc_MethodWithOtherSignature_ThrowsMissingMethodException()
+        {
+            var handler = new FakeExecFuncHandler();
+            var args = new ExecFuncArgs(nameof(FakeExecFuncHandler.OtherSignature));
+
+            Assert.Throws<MissingMethodException>(() =>
+                handler.InvokeExecFunc(ApiAccessRequirement.Authenticated, args, new ExecFuncResult()));
+        }
+
+        [Fact]
         [DisplayName("InvokeExecFunc calling an authenticated method anonymously throws AuthenticationRequiredException")]
         public void InvokeExecFunc_AnonymousCallsAuthenticated_ThrowsUnauthorized()
         {

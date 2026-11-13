@@ -8,9 +8,10 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     /// </summary>
     /// <remarks>
     /// WARNING: <see cref="PolhemBlazorProviderMode.Local"/>, the default, treats every browser user's
-    /// call as a trusted in-process call: the backend skips the access token check and the
+    /// call as a trusted in-process call: the backend skips the protection level and the
     /// <c>LocalOnly</c> restriction, and the business-object checks keyed on the local-call flag pass
-    /// too. That is only appropriate when every user of the site is trusted with the whole backend,
+    /// too. A call that carries the user's access token is refused once the session expires; a call
+    /// without one is not checked against any session. That is only appropriate when every user of the site is trusted with the whole backend,
     /// such as an internal administration tool. A site that serves users who must be held to their
     /// own permissions should call <see cref="UseRemoteProvider"/> and reach the backend over HTTP,
     /// where each call is checked like any other API client's.

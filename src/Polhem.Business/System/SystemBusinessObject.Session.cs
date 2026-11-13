@@ -161,8 +161,10 @@ namespace Polhem.Business.System
         /// </summary>
         /// <param name="args">The input arguments (currently carries no fields).</param>
         /// <remarks>
-        /// Idempotent — calling on an unknown or already-expired access token succeeds
-        /// without error. The clean-up sequence is: clear <see cref="SessionInfo.CompanyId"/>
+        /// The method requires authentication, so a call through the API with an unknown or expired access token is
+        /// refused before it runs; the client's <c>SystemApiConnector.LogoutAsync</c> treats that
+        /// refusal as already signed out. Called directly, it succeeds on such a token without error. The clean-up
+        /// sequence is: clear <see cref="SessionInfo.CompanyId"/>
         /// (no-op if already null), delete the seed from <c>st_session</c>, then remove the
         /// session entry from the cache. Callers do not need to call <c>LeaveCompany</c>
         /// before <c>Logout</c>.

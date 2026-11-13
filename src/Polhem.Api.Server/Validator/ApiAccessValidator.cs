@@ -31,6 +31,10 @@ namespace Polhem.Api.Server.Validator
         /// it. The attribute is resolved from the method, then the method it overrides, then the declaring
         /// type, so a type-level attribute covers all of its methods. Analyzer rule POLHEM3001 reports an
         /// uncovered public business object method at build time, before a client discovers it.
+        /// <para>
+        /// A local call skips the protection level, but one that carries an access token to a method that requires
+        /// authentication is validated like a remote one, so an expired session is refused in-process too.
+        /// </para>
         /// </remarks>
         public static void ValidateAccess(MethodInfo method, ApiCallContext context, IAccessTokenValidator tokenValidator)
         {
@@ -43,9 +47,19 @@ namespace Polhem.Api.Server.Validator
                     $"API method '{method.DeclaringType?.FullName}.{method.Name}' is not accessible without {nameof(ApiAccessControlAttribute)}.");
             }
 
-            // Local calls are allowed regardless of protection level
+            // A local call is allowed whatever the protection level. One that carries an access token still has to
+            // carry a live one: a Blazor Server circuit in Local mode calls in-process for a signed-in browser user,
+            // and without this check that user's session never expired while the circuit kept using it. A local
+            // call with no token is the server's own code, which is trusted as before.
             if (context.IsLocalCall)
+            {
+                if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && context.AccessToken != Guid.Empty
+                    && !tokenValidator.Validate(context.AccessToken))
+                {
+                    throw new AuthenticationRequiredException(PolhemMessages.SessionAccessTokenInvalid, "AccessToken is required or invalid.");
+                }
                 return;
+            }
 
             // Check whether an AccessToken is required
             if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && !IsTokenValid(context.AccessToken, tokenValidator))

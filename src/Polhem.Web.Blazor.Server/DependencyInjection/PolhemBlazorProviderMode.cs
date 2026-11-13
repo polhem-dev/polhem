@@ -11,11 +11,14 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// </summary>
         /// <remarks>
         /// WARNING: every call made in this mode is a trusted local call, whichever browser user caused
-        /// it. The backend skips the access token check and the <c>LocalOnly</c> restriction for it, and
+        /// it. The backend skips the protection level and the <c>LocalOnly</c> restriction for it, and
         /// the checks that business objects key on the local-call flag let it through as well (for
         /// example saving definitions, minting sessions without credentials, managing API keys). Use it
         /// only when every user of the site is trusted with the whole backend; otherwise use
-        /// <see cref="Remote"/>, where calls pass the same checks as any other API client.
+        /// <see cref="Remote"/>, where calls pass the same checks as any other API client. A call that
+        /// carries the signed-in user's access token still needs a live session: an expired one is refused,
+        /// and the shell returns to its sign-in screen. A call without a token, such as one made before
+        /// signing in, is not checked against any session.
         /// </remarks>
         Local = 0,
 
