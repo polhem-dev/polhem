@@ -22,7 +22,7 @@
             <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding TreeFindStatus}"/>
             <TextBox x:Name="FindBox" Width="190" Classes="clearButton search-box"
                      Text="{Binding TreeFindText, Mode=TwoWay}"
-                     Watermark="{Binding TreeFindWatermark}"
+                     PlaceholderText="{Binding TreeFindWatermark}"
                      AutomationProperties.Name="{loc:Loc TreeFind_Watermark}"
                      KeyDown="OnFindKeyDown" TextChanged="OnFindTextChanged">
                 <TextBox.InnerLeftContent>
