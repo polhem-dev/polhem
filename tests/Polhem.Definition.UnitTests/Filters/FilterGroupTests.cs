@@ -135,25 +135,38 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup ShouldSerializeNodes returns false for an empty collection")]
-        public void FilterGroup_ShouldSerializeNodes_EmptyCollection_ReturnsFalse()
+        [DisplayName("FilterGroup NodesSpecified is false for an empty collection")]
+        public void FilterGroup_NodesSpecified_EmptyCollection_ReturnsFalse()
         {
             // Arrange
             var group = new FilterGroup();
 
             // Act & Assert
-            Assert.False(group.ShouldSerializeNodes());
+            Assert.False(group.NodesSpecified);
         }
 
         [Fact]
-        [DisplayName("FilterGroup ShouldSerializeNodes returns true for a non-empty collection")]
-        public void FilterGroup_ShouldSerializeNodes_NonEmpty_ReturnsTrue()
+        [DisplayName("FilterGroup NodesSpecified is true for a non-empty collection")]
+        public void FilterGroup_NodesSpecified_NonEmpty_ReturnsTrue()
         {
             // Arrange
             var group = FilterGroup.All(FilterCondition.Equal("A", 1));
 
             // Act & Assert
-            Assert.True(group.ShouldSerializeNodes());
+            Assert.True(group.NodesSpecified);
+        }
+
+        [Fact]
+        [DisplayName("JSON omits the nodes of an empty group, and reading it back gives an empty group")]
+        public void FilterGroup_EmptyGroup_JsonOmitsNodesAndReadsBackEmpty()
+        {
+            var json = JsonCodec.Serialize(new FilterGroup(LogicalOperator.Or));
+
+            Assert.DoesNotContain("nodes", json, StringComparison.OrdinalIgnoreCase);
+            var back = JsonCodec.Deserialize<FilterGroup>(json);
+            Assert.NotNull(back);
+            Assert.Equal(LogicalOperator.Or, back!.Operator);
+            Assert.Empty(back.Nodes);
         }
 
         [Fact]

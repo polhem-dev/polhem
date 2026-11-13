@@ -17,7 +17,7 @@ An application does not use this package alone. It references one host package, 
 - `TextEditorBase`, `NumericEditorBase`, `CheckEditorBase`, `DropDownEditorBase`, `DateEditorBase`, `TimeEditorBase` and `DateTimeEditorBase`, the value and commit rules of each editor kind. A UI package supplies the markup.
 - `ButtonEditorBase`, `LookupPanelBase` and `LookupDialogBase` (`Polhem.Web.Blazor.Controls.Editors`), the lookup flow.
 - `RowEditPanelBase`, the edit form's session.
-- `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `BlazorDefinitions`, `PolhemBlazorText` and `IBlazorDefinitionOptions`, which a UI package loads definitions and text through.
+- `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `PolhemBlazorText` and `IBlazorDefinitionOptions`, which a UI package reads text and definition options through.
 - `GridControlBase` and `GridEditorHost` (`Polhem.Web.Blazor.Controls`), the state and commands of a grid, and keeping one
   editor open in it; its editing model is `GridEditMode` from `Polhem.UI.Core.Editing`.
 - `FormLayoutPresenterBase` (`Polhem.Web.Blazor.Controls`), the rules of a record rendered from a `FormLayout`.

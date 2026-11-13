@@ -15,7 +15,7 @@
 - `TextEditorBase`、`NumericEditorBase`、`CheckEditorBase`、`DropDownEditorBase`、`DateEditorBase`、`TimeEditorBase` 與 `DateTimeEditorBase`，各類編輯器的取值與提交規則；markup 由 UI 套件提供。
 - `ButtonEditorBase`、`LookupPanelBase` 與 `LookupDialogBase`（`Polhem.Web.Blazor.Controls.Editors`），查詢流程。
 - `RowEditPanelBase`，編輯表單的工作階段。
-- `FormPageBase`（`Polhem.Web.Blazor.Components`），表單頁的狀態與命令；`BlazorDefinitions`、`PolhemBlazorText` 與 `IBlazorDefinitionOptions`，UI 套件透過它們載入定義與文字。
+- `FormPageBase`（`Polhem.Web.Blazor.Components`），表單頁的狀態與命令；`PolhemBlazorText` 與 `IBlazorDefinitionOptions`，UI 套件透過它們取得文字與定義選項。
 - `FormLayoutPresenterBase`（`Polhem.Web.Blazor.Controls`），依 `FormLayout` 呈現紀錄的規則。
 - `RelatedRecordDialogBase`、`LoginPanelBase` 與 `CompactViewportObserver`（`Polhem.Web.Blazor.Components`）。
 - `PolhemShellOptions`、`PolhemShellHome`、`PolhemShellSignInLinks`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `IShellLanguageSwitcher`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。

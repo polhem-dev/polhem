@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/framework-capabilities.md blob: 4b11ddea49dff0ec0601b650fbc31bd6bfb131f8 -->
+<!-- source: en/getting-started/framework-capabilities.md blob: 5d6348b540828c0f1001e4e330ba49fc4df60bee -->
 # 框架機制清單
 
 [English](../../en/getting-started/framework-capabilities.md) · [← 文件索引](../README.md)
@@ -43,7 +43,7 @@
 | **Schema 升級** | diff → plan → execute 管線，自動判定 ALTER 或重建，支援乾跑。見 [Schema 升級](../database/database-schema-upgrade.md) |
 | **分頁 / 排序 / 篩選** | `PagingInfo`、`SortField`，以及支援 AND / OR 巢狀群組的 `FilterNode` 條件樹 |
 | **數值捨入政策** | round-then-sum：計算出的數值欄位逐列依 `NumberKind` 捨入，因此由捨入後各列加總的合計會與各列對得上 |
-| **連線範圍** | `DbConnectionScope` 管理一個工作單元內的連線與交易生命週期 |
+| **連線範圍** | `DbAccess` 每次呼叫自行開啟並關閉連線，或在呼叫端傳入的連線上執行所有呼叫 |
 | **異常偵測** | `DbAccess` 把執行失敗的命令，以及超過設定門檻（執行時間、讀取列數、異動列數）的命令寫入資料庫異常日誌 |
 | **Repository 雙軌** | CRUD 由 FormSchema 驅動的 `DataFormRepository` 承接；報表與批次交給自寫 Repository |
 

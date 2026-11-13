@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Polhem.Tests.Shared;
 using System.Reflection;
-using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -19,7 +18,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         // `Polhem.UI.Core`, whose surface UIAsyncSurfaceTests in Polhem.UI.Avalonia.UnitTests scans.
         private static IEnumerable<MethodInfo> Methods()
             => AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Components.FormPageBase).Assembly)
-                .Concat(AsyncSurface.Methods(typeof(PolhemAccessTokenProvider).Assembly))
+                .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions).Assembly))
                 .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly))
                 .Concat(AsyncSurface.Methods(typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly));
 

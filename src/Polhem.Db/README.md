@@ -18,7 +18,6 @@
 ### Database Access
 
 - `DbAccess` -- primary entry point for executing queries, batch commands, and DataTable updates
-- `DbConnectionScope` -- scoped connection lifetime management
 - `DbCommandSpec` -- parameterized command specification supporting positional (`{0}`) and named (`{Name}`) placeholders with automatic conversion
 - `DbBatchSpec` -- batch execution with optional transaction wrapping and configurable isolation levels
 
@@ -191,7 +190,7 @@ converted — see [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.
   `Oracle/`, `Sqlite/`)
 - `Manager/` -- `IDbConnectionManager`, `DbProviderRegistry`, `DbDialectRegistry`, `DbConnectionInfo`,
   `ConnectionStringTemplate`
-- project root -- `DbAccess`, `DbCommandSpec`, `DbBatchSpec`, `DbConnectionScope` and their result and parameter types
+- project root -- `DbAccess`, `DbCommandSpec`, `DbBatchSpec` and their result and parameter types
 
 The namespace layout follows three principles (see [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md)):
 

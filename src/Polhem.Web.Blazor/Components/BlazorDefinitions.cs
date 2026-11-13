@@ -18,7 +18,7 @@ namespace Polhem.Web.Blazor.Components
     /// A form page and the lookup it opens both load through here, so a lookup's title and columns read in the same
     /// language as the form that opened it.
     /// </remarks>
-    public static class BlazorDefinitions
+    internal static class BlazorDefinitions
     {
         /// <summary>
         /// Returns the loader a component uses: <paramref name="componentLoader"/> when set, else one over the

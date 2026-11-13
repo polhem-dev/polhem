@@ -8,7 +8,7 @@ namespace Polhem.Db
     /// If the connection is created by this class, it is closed on Dispose();
     /// if an external connection is supplied, it is not closed — only opened if necessary.
     /// </summary>
-    public sealed class DbConnectionScope : IDisposable
+    internal sealed class DbConnectionScope : IDisposable
     {
         /// <summary>
         /// Gets the current database connection.

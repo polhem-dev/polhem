@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Text.Json.Serialization;
 using Polhem.Core.Collections;
 using System.Xml.Serialization;
 
@@ -60,9 +62,12 @@ namespace Polhem.Definition.Organization
         internal DepartmentNodeCollection GetOrCreateChildren() => _children ??= [];
 
         /// <summary>
-        /// Determines whether the <see cref="Children"/> property should be serialized — XmlSerializer
-        /// honours <c>ShouldSerialize{PropertyName}()</c>, so a leaf omits an empty <c>Children</c> element.
+        /// Gets whether <see cref="Children"/> is written; <c>false</c> for a leaf. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        public bool ShouldSerializeChildren() => Children != null && Children.Count > 0;
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ChildrenSpecified => _children is { Count: > 0 };
     }
 }

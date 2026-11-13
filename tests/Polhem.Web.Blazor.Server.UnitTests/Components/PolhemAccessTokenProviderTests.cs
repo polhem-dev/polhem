@@ -1,3 +1,5 @@
+// The type under test is obsolete until 2.0 removes it; its own tests are the one place that still names it.
+#pragma warning disable CS0618
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Web.Blazor.Server.Components;

@@ -205,3 +205,10 @@ override Polhem.Web.Blazor.Controls.GridEditorCell.ShouldRender() -> bool
 *REMOVED*Polhem.Web.Blazor.Controls.GridEditorCell.IsCheck.set -> void
 Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.get -> System.Func<Polhem.Definition.Layouts.LayoutColumn!, System.Data.DataRow!, System.Collections.Generic.Dictionary<string!, object?>!>?
 Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.set -> void
+
+*REMOVED*Polhem.Web.Blazor.Components.BlazorDefinitions
+*REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.CreateLoader(Polhem.Api.Client.PolhemApiClient! client, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, Polhem.Api.Client.Definitions.FormDefinitionLoader? componentLoader) -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+*REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadFormLayoutAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, Polhem.Definition.Forms.FormSchema! schema, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+*REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadRoundingContextAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, Polhem.Definition.Identity.CompanyInfo? company, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
+*REMOVED*static Polhem.Web.Blazor.Components.BlazorDefinitions.LoadSchemaAsync(Polhem.Api.Client.PolhemApiClient! client, Polhem.Api.Client.Definitions.FormDefinitionLoader? loader, string! progId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.BuildCssClass(string! modifierClass) -> string!

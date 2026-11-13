@@ -18,7 +18,6 @@
 ### 資料庫存取
 
 - `DbAccess` -- 主要進入點，執行查詢、批次命令與 DataTable 更新
-- `DbConnectionScope` -- 限定範圍的連線生命週期管理
 - `DbCommandSpec` -- 參數化命令規格，支援位置型（`{0}`）與具名（`{Name}`）佔位符自動轉換
 - `DbBatchSpec` -- 批次執行，可選擇性包裹交易並設定隔離等級
 
@@ -184,7 +183,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 - `Storage/` -- `DbDefineStorage`（定義存放於資料庫）
 - `Providers/` -- `IDialectFactory`，每個 provider 一個子資料夾（`SqlServer/`、`PostgreSql/`、`MySql/`、`Oracle/`、`Sqlite/`）
 - `Manager/` -- `IDbConnectionManager`、`DbProviderRegistry`、`DbDialectRegistry`、`DbConnectionInfo`、`ConnectionStringTemplate`
-- 專案根目錄 -- `DbAccess`、`DbCommandSpec`、`DbBatchSpec`、`DbConnectionScope` 及其結果與參數型別
+- 專案根目錄 -- `DbAccess`、`DbCommandSpec`、`DbBatchSpec` 及其結果與參數型別
 
 命名空間佈局遵循三項原則（見 [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md)）：
 
