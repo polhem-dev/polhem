@@ -81,15 +81,25 @@ SELECT * FROM ft_shift WHERE work_start BETWEEN '08:00' AND '17:00' ORDER BY wor
 
 Values written from the UI are normalised (`"8:30"` is stored as `"08:30"`): the time editor, a cell
 in the Avalonia `GridControl` and `FormDataObject.SetField` all go through the single implementation
-in `FormValueBinding.ToColumnValue`. **The server does not normalise again** — the database stores
-whatever the `DataSet` holds — so the following writes fall outside that guarantee and must normalise
-with `ValueUtilities.CTimeString` themselves:
+in `FormValueBinding.ToColumnValue`. A form's `Save` normalises again on the server, so a client that
+sends `"8:30"` through the API stores `"08:30"` too, and a value that is not a time of day is refused
+with `-32602 InvalidParams` naming the field. A filter on a form's list or count normalises its
+time-of-day values the same way, so `"8:30"` finds the rows stored as `"08:30"`.
 
-- Assigning a `DataRow` directly (`row["work_start"] = "8:30"`).
+Writes that bypass a form's `Save` fall outside that guarantee and must normalise with
+`ValueUtilities.CTimeString` themselves:
+
+- A hand-written `INSERT` or `UPDATE`, or a repository or `DbAccess` call made in-process.
 - A column with no `Time` marker — for example a time-of-day column read back by hand-written SQL
   (`DateColumns` / `SetDateColumns` mark calendar days only). See the unmarked list in §4 for the rest.
-- Data sent by a non-.NET client.
-- A hand-written `INSERT` or `UPDATE`.
+
+Up to 1.12, the server stored what it received, so a database written by a client that did not
+normalise may already hold values such as `"8:30"`. This finds them (SQL Server; use `LENGTH` on the
+other databases):
+
+```sql
+SELECT * FROM ft_shift WHERE work_start <> '' AND LEN(work_start) <> 5
+```
 
 ## 4. `DataSet` layer
 

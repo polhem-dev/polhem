@@ -46,6 +46,7 @@ namespace Polhem.Api.Server.UnitTests.Form
         private const string DueDate = "due_date";
         private const string LoggedAt = "logged_at";
         private const string RefUid = "ref_uid";
+        private const string Starts = "starts";
 
         private static readonly Guid s_refB = new("6c1f4c0e-8a0b-4d8e-9a3c-2f5b7d9e1a04");
 
@@ -125,6 +126,43 @@ namespace Polhem.Api.Server.UnitTests.Form
             Assert.Contains(DueDate, response.Error.Message, StringComparison.Ordinal);
             Assert.DoesNotContain("02/01/2026", response.Error.Message, StringComparison.Ordinal);
         });
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a Plain GetList filtering a time of day sent without its leading zero matches the rows stored in the fixed-width form")]
+        public Task Plain_Sqlite_UnpaddedTimeOfDay_MatchesStoredRows() => RunPlainTimeOfDay(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a Plain GetList filtering a time of day sent without its leading zero matches the rows stored in the fixed-width form")]
+        public Task Plain_SqlServer_UnpaddedTimeOfDay_MatchesStoredRows() => RunPlainTimeOfDay(DatabaseType.SQLServer);
+
+        /// <summary>
+        /// The rows store "08:30", "09:00" and "17:30". Compared as sent, "8:00" to "9:00" would be a text range that
+        /// excludes "08:30" and "09:00", and "8:30" would match nothing.
+        /// </summary>
+        private Task RunPlainTimeOfDay(DatabaseType databaseType)
+        {
+            return WithSeededForm(databaseType, async (executor, progId) =>
+            {
+                var body = """
+                    {
+                      "selectFields": "sys_id",
+                      "filter": {
+                        "kind": "Group",
+                        "operator": "Or",
+                        "nodes": [
+                          { "fieldName": "starts", "operator": "Between", "value": "8:00", "secondValue": "9:00" },
+                          { "fieldName": "starts", "value": "5:30" }
+                        ]
+                      },
+                      "sortFields": [{ "fieldName": "sys_id" }]
+                    }
+                    """;
+
+                var table = await ExecutePlain(executor, progId, body);
+
+                Assert.Equal(["A", "B"], SysIds(table));
+            });
+        }
 
         private Task RunPlainRangeAndSet(DatabaseType databaseType)
         {
@@ -278,6 +316,7 @@ namespace Polhem.Api.Server.UnitTests.Form
             table.Fields.Add(DueDate, "Due date", FieldDbType.Date);
             table.Fields.Add(LoggedAt, "Logged at", FieldDbType.DateTime);
             table.Fields.Add(RefUid, "Reference", FieldDbType.Guid);
+            table.Fields.Add(Starts, "Starts", FieldDbType.Time);
 
             var form = new TransientForm(_fx, databaseType, schema);
             form.CreateTables();
@@ -287,9 +326,9 @@ namespace Polhem.Api.Server.UnitTests.Form
                 // fractional filter value binds, not how each provider rounds a stored fraction.
                 // B is the only row inside every string-typed filter of `RunPlainStringTyped`; A and C each fall
                 // outside more than one, so a filter that is silently ignored still changes the result.
-                Insert(form, progId, "A", 1, 5m, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 1, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid());
-                Insert(form, progId, "B", 2, 11m, new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Unspecified), s_refB);
-                Insert(form, progId, "C", 3, 20m, new DateTime(2026, 1, 3, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid());
+                Insert(form, progId, "A", 1, 5m, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 1, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid(), "08:30");
+                Insert(form, progId, "B", 2, 11m, new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Unspecified), s_refB, "09:00");
+                Insert(form, progId, "C", 3, 20m, new DateTime(2026, 1, 3, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Unspecified), Guid.NewGuid(), "17:30");
 
                 var services = new TestOverrideServiceProvider(
                     _fx.Provider,
@@ -316,13 +355,13 @@ namespace Polhem.Api.Server.UnitTests.Form
         }
 
         private static void Insert(TransientForm form, string progId, string sysId, int qty, decimal amount,
-            DateTime dueDate, DateTime loggedAt, Guid refUid)
+            DateTime dueDate, DateTime loggedAt, Guid refUid, string starts)
         {
             form.DbAccess.ExecuteNonQuery(
                 $"INSERT INTO {form.Quote(progId)} ({form.Quote(SysFields.RowId)}, {form.Quote(SysFields.Id)}, {form.Quote(Qty)}, {form.Quote(Amount)}, " +
-                $"{form.Quote(DueDate)}, {form.Quote(LoggedAt)}, {form.Quote(RefUid)}, {form.Quote(SysFields.CompanyId)}) " +
-                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
-                Guid.NewGuid(), sysId, qty, amount, dueDate, loggedAt, refUid, TransientForm.CompanyId);
+                $"{form.Quote(DueDate)}, {form.Quote(LoggedAt)}, {form.Quote(RefUid)}, {form.Quote(Starts)}, {form.Quote(SysFields.CompanyId)}) " +
+                "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})",
+                Guid.NewGuid(), sysId, qty, amount, dueDate, loggedAt, refUid, starts, TransientForm.CompanyId);
         }
 
         private sealed class FormRepositoryFactory(IDataFormRepository repository) : IRepositoryFactory

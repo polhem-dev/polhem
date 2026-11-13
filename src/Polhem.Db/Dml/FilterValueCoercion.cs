@@ -1,4 +1,5 @@
 using System.Globalization;
+using Polhem.Core;
 using Polhem.Core.Data;
 using Polhem.Core.Exceptions;
 using Polhem.Definition.Filters;
@@ -25,7 +26,8 @@ namespace Polhem.Db.Dml
     /// so their values are left alone, and so is the company column the framework confines a company form on. Dates
     /// are read in their ISO 8601 forms only. A <see cref="FieldDbType.DateTime"/> value is a UTC instant, as on the typed
     /// wires: text with an offset is moved to UTC by it, and text without one is taken to be UTC. A
-    /// <see cref="FieldDbType.Date"/> value is the date written, with no time-zone conversion.
+    /// <see cref="FieldDbType.Date"/> value is the date written, with no time-zone conversion. A
+    /// <see cref="FieldDbType.Time"/> value is written in its fixed-width <c>HH:mm</c> form, as the save stores it.
     /// </para>
     /// </remarks>
     internal static class FilterValueCoercion
@@ -103,11 +105,16 @@ namespace Polhem.Db.Dml
                 FieldDbType.Decimal or FieldDbType.Currency
                     => decimal.TryParse(text, DecimalStyles, culture, out var d) ? d : null,
                 FieldDbType.Boolean => bool.TryParse(text, out var b) ? b : null,
+                // The stored form is the fixed-width "HH:mm" the save writes, so "8:30" must match "08:30". An empty
+                // string is how a time of day that was not filled in is stored, and matches those rows.
+                FieldDbType.Time => text.Length == 0 ? text : NullIfEmpty(ValueUtilities.CTimeString(text)),
                 _ => text,
             };
 
             return parsed ?? throw new InvalidRequestValueException(
                 $"The filter value for the field '{field.FieldName}' is not a valid {field.DbType}.");
         }
+
+        private static string? NullIfEmpty(string text) => text.Length == 0 ? null : text;
     }
 }

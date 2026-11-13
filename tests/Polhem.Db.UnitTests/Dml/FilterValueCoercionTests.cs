@@ -77,11 +77,49 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Text and time-of-day fields keep their string values")]
-        public void Coerce_TextAndTimeFields_KeepStrings()
+        [DisplayName("Text fields keep their string values")]
+        public void Coerce_TextFields_KeepStrings()
         {
             Assert.Equal("2026-01-02", CoercedValue(SysFields.Id, "2026-01-02"));
-            Assert.Equal("09:30", CoercedValue("start_time", "09:30"));
+        }
+
+        [Theory]
+        [InlineData("09:30", "09:30")]
+        [InlineData("9:30", "09:30")]
+        [InlineData("", "")]
+        [DisplayName("A time-of-day value is written in its fixed-width form, and an empty one matches the rows not filled in")]
+        public void Coerce_TimeOfDay_BecomesFixedWidth(string text, string expected)
+        {
+            Assert.Equal(expected, CoercedValue("start_time", text));
+        }
+
+        [Fact]
+        [DisplayName("The time-of-day values of an In list and of Between are written in their fixed-width form")]
+        public void Coerce_TimeOfDayInAndBetween_BecomeFixedWidth()
+        {
+            var filter = FilterGroup.All(
+                new FilterCondition("start_time", ComparisonOperator.In, new List<string> { "8:00", "17:30" }),
+                new FilterCondition("start_time", ComparisonOperator.Between, "8:00", "9:15"));
+
+            var group = Assert.IsType<FilterGroup>(FilterValueCoercion.Coerce(filter, Table()));
+
+            var inValues = Assert.IsType<object?[]>(((FilterCondition)group.Nodes[0]).Value);
+            Assert.Equal(["08:00", "17:30"], inValues);
+            var between = (FilterCondition)group.Nodes[1];
+            Assert.Equal("08:00", between.Value);
+            Assert.Equal("09:15", between.SecondValue);
+        }
+
+        [Theory]
+        [InlineData("25:00")]
+        [InlineData("noon")]
+        [InlineData("09:30:15")]
+        [DisplayName("A value that is not a time of day is refused as an invalid request naming the field")]
+        public void Coerce_InvalidTimeOfDay_IsRefused(string text)
+        {
+            var ex = Assert.Throws<InvalidRequestValueException>(() => CoercedValue("start_time", text));
+
+            Assert.Contains("start_time", ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
