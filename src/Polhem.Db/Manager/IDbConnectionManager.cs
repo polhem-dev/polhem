@@ -9,7 +9,7 @@ namespace Polhem.Db.Manager
     /// <remarks>
     /// Resolved through DI ctor injection; <see cref="DbConnectionManagerService"/>
     /// is the default implementation registered by
-    /// <c>Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework</c>.
+    /// <c>Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework</c>.
     /// </remarks>
     public interface IDbConnectionManager
     {

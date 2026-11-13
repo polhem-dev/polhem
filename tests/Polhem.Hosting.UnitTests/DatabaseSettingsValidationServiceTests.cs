@@ -4,6 +4,7 @@ using Polhem.Definition.Settings;
 using Polhem.Hosting.Database;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

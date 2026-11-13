@@ -1,6 +1,6 @@
 using Polhem.Definition;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// Options for <see cref="PolhemHostApplicationBuilderExtensions.AddPolhemBackend"/>.

@@ -9,6 +9,7 @@ using Polhem.ObjectCaching;
 using Polhem.ObjectCaching.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.LoadTests.Bootstrap
 {

@@ -8,7 +8,7 @@ using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// Constructing the pluggable services `AddPolhemFramework` registers, from the type names the

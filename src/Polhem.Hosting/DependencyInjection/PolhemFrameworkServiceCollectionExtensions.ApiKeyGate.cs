@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// The startup check a host opts into when it serves the API over HTTP.

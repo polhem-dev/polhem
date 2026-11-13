@@ -1,9 +1,9 @@
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Definition.Storage;
-using Polhem.Hosting;
 using Polhem.ObjectCaching;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Tests.Shared
 {

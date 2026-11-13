@@ -12,7 +12,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.DbManager;
 

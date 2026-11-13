@@ -1,8 +1,8 @@
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
-using Polhem.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Tests.Shared
 {

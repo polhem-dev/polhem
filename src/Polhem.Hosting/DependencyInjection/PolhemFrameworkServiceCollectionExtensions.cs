@@ -33,7 +33,7 @@ using Polhem.JsonRpc.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// Registers Polhem framework services in the DI container.

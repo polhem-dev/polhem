@@ -9,6 +9,7 @@ using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Polhem.ObjectCaching;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

@@ -11,3 +11,41 @@ Polhem.Hosting.Database.CompanyRowAssignment.TableName.get -> string!
 Polhem.Hosting.Database.CompanyRowAssignment.TableName.init -> void
 Polhem.Hosting.Database.TableUpgradeReport.CompanyAssignments.get -> System.Collections.Generic.IReadOnlyList<Polhem.Hosting.Database.CompanyRowAssignment!>!
 Polhem.Hosting.Database.TableUpgradeReport.CompanyAssignments.init -> void
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.PolhemBackendOptions() -> void
+Polhem.Hosting.DependencyInjection.PolhemHostApplicationBuilderExtensions
+Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.CustomizePath.get -> string!
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.DefinePath.get -> string?
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.DefinePath.set -> void
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.CustomizePath.set -> void
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.MaterializeDefaults.get -> bool
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.MaterializeDefaults.set -> void
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.MaterializeOptions.get -> Polhem.Definition.MaterializeOptions?
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.AutoCreateMasterKey.get -> bool
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.MaterializeOptions.set -> void
+Polhem.Hosting.DependencyInjection.PolhemBackendOptions.AutoCreateMasterKey.set -> void
+static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Hosting.DependencyInjection.PolhemHostApplicationBuilderExtensions.AddPolhemBackend(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, System.Action<Polhem.Hosting.DependencyInjection.PolhemBackendOptions!>? configure = null) -> Polhem.Definition.PathOptions!
+static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions, bool autoCreateMasterKey) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.ApiPayloadOptions! settings, bool isDebugMode, System.Action<Polhem.JsonRpc.Payload.PayloadOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*Polhem.Hosting.PolhemBackendOptions
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.AutoCreateMasterKey.get -> bool
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.AutoCreateMasterKey.set -> void
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.CustomizePath.get -> string!
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.CustomizePath.set -> void
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.DefinePath.get -> string?
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.DefinePath.set -> void
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.MaterializeDefaults.get -> bool
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.MaterializeDefaults.set -> void
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.MaterializeOptions.get -> Polhem.Definition.MaterializeOptions?
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.MaterializeOptions.set -> void
+*REMOVED*Polhem.Hosting.PolhemBackendOptions.PolhemBackendOptions() -> void
+*REMOVED*Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions
+*REMOVED*Polhem.Hosting.PolhemHostApplicationBuilderExtensions
+*REMOVED*static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions, bool autoCreateMasterKey) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemPayload(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.ApiPayloadOptions! settings, bool isDebugMode, System.Action<Polhem.JsonRpc.Payload.PayloadOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*static Polhem.Hosting.PolhemHostApplicationBuilderExtensions.AddPolhemBackend(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, System.Action<Polhem.Hosting.PolhemBackendOptions!>? configure = null) -> Polhem.Definition.PathOptions!

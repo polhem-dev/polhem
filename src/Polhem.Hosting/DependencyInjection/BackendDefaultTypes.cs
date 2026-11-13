@@ -1,4 +1,4 @@
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// The type names the composition root falls back to when a

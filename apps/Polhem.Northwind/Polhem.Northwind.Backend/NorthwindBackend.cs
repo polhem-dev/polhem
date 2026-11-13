@@ -10,6 +10,7 @@ using Polhem.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Northwind.Backend;
 

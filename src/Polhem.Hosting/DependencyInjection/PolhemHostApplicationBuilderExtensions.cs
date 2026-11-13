@@ -2,7 +2,7 @@ using Microsoft.Extensions.Hosting;
 using Polhem.Core;
 using Polhem.Definition;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// Brings up the Polhem backend in a host built with an <see cref="IHostApplicationBuilder"/>.

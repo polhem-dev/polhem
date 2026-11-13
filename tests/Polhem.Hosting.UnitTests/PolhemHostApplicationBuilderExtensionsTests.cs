@@ -5,6 +5,7 @@ using Polhem.Definition;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.JsonRpc.Payload;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

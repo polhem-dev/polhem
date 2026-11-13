@@ -5,7 +5,7 @@ using Polhem.Definition.Settings;
 using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Payload.Server;
 
-namespace Polhem.Hosting
+namespace Polhem.Hosting.DependencyInjection
 {
     /// <summary>
     /// The payload settings of the server: the compressor and encryptor, the codecs, and replay protection.
