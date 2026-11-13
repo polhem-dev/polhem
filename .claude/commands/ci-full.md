@@ -6,8 +6,9 @@ argument-hint: "[branch name, default main]"
 # CI Full
 
 Trigger **full-mode** CI on branch `$1` (`main` if not given): the lite-mode databases (SQL Server, SQLite) plus
-PostgreSQL, MySQL and Oracle, and a SonarCloud scan; about 8 minutes when last measured. The authoritative list is the
-`Resolve database scope` step of `.github/workflows/build-ci.yml` (`POLHEM_TEST_REQUIRED_DATABASES`).
+PostgreSQL, MySQL and Oracle, and a SonarCloud scan; about 8 minutes when last measured. The authoritative list is
+`.github/scripts/resolve-db-scope.sh` (`POLHEM_TEST_REQUIRED_DATABASES`), which the `Resolve database scope` step of
+`.github/workflows/build-ci.yml` runs.
 
 > `build-ci.yml` defaults to lite mode (SQL Server + SQLite, Sonar skipped, about 3.5 minutes).
 > For the criteria and the rule "ask the user before pushing", see

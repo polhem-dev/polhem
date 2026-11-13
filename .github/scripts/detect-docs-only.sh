@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Decides whether a Build CI job builds at all, and writes `build=true` or `build=false` to `$GITHUB_OUTPUT`.
-# Both jobs of `.github/workflows/build-ci.yml` (`build` and `templates`) run it as their step `changes`.
+# Every job of `.github/workflows/build-ci.yml` (`build`, `templates` and `browser`) runs it as its step `changes`.
 #
 # Only a pull request whose changes are all `.md` files skips the build; a push or a manual dispatch always builds.
 # The skip is done step by step rather than on the job: GitHub reports a job skipped by `if:` as a passing check, so
