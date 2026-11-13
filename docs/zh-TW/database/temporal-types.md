@@ -1,4 +1,4 @@
-<!-- source: en/database/temporal-types.md blob: 3ef32a6d5ed454e16d8ab01155187809791e8123 -->
+<!-- source: en/database/temporal-types.md blob: 82cc7c3ec17f34f427523d193c2f148e00cf632c -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../../en/database/temporal-types.md) · [← 文件索引](../README.md)
@@ -76,15 +76,29 @@ SELECT * FROM ft_shift WHERE work_start BETWEEN '08:00' AND '17:00' ORDER BY wor
 ```
 
 由 UI 寫入的值會正規化（`"8:30"` 存成 `"08:30"`）：時刻編輯控件、Avalonia `GridControl` 的儲存格與
-`FormDataObject.SetField` 都經過 `FormValueBinding.ToColumnValue` 這一個實作。
-**伺服器端不會再正規化一次**，資料庫存的就是 `DataSet` 裡的值，因此下列寫入不在此保證內，
-需自行以 `ValueUtilities.CTimeString` 正規化：
+`FormDataObject.SetField` 都經過 `FormValueBinding.ToColumnValue` 這一個實作。表單的 `Save` 在伺服器端會再正規化
+一次，所以經由 API 送出 `"8:30"` 的客戶端同樣存成 `"08:30"`；不是時刻的值會以 `-32602 InvalidParams` 拒絕，訊息
+會指出欄位。表單清單與筆數查詢的過濾條件也以同樣方式正規化時刻值，所以 `"8:30"` 找得到存成 `"08:30"` 的列。
 
-- 直接指派 `DataRow`（`row["work_start"] = "8:30"`）。
+不經過表單 `Save` 的寫入不在此保證內，需自行以 `ValueUtilities.CTimeString` 正規化：
+
+- 自寫的 `INSERT` / `UPDATE`，或在同一行程內直接呼叫 repository 或 `DbAccess`。
 - 沒有 `Time` 標記的欄位 —— 例如自寫 SQL 查回的時刻欄（`DateColumns` / `SetDateColumns` 只標日曆日），
   其餘情形見第 4 節的未標記清單。
-- 非 .NET 客戶端送出的資料。
-- 自寫的 `INSERT` / `UPDATE`。
+
+1.12 以前伺服器照收照存，所以由沒有正規化的客戶端寫入的資料庫，可能已經有 `"8:30"` 或 `"25:00"` 這類值。它們
+維持原樣：沒有改到它的存檔會保留它；而以 `"8:30"` 過濾時比對的是 `"08:30"`，因此找不到存成 `"8:30"` 的列。可用
+下列查詢找出（在 Oracle 上空字串就是 `NULL`）：
+
+```sql
+-- SQL Server
+SELECT * FROM ft_shift
+WHERE work_start <> ''
+  AND work_start NOT LIKE '[01][0-9]:[0-5][0-9]' AND work_start NOT LIKE '2[0-3]:[0-5][0-9]'
+
+-- PostgreSQL（MySQL：NOT REGEXP；Oracle：work_start IS NOT NULL AND NOT REGEXP_LIKE(work_start, '...')）
+SELECT * FROM ft_shift WHERE work_start <> '' AND work_start !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+```
 
 ## 4. `DataSet` 層
 

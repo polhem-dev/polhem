@@ -156,6 +156,14 @@ the current code:
   editors of each head call `ValueUtilities.CTimeString`. The server stores a time-of-day value as it receives it, so
   a client that bypasses those, such as a JavaScript client of the JSON-RPC API, can store `"8:30"`, and the sorting
   and range guarantee in "Rationale" holds only for values that went through that normalization.
+- **1.13.0: the server normalizes again.** `FormBusinessObject.Save` writes every time-of-day value of the added and
+  modified rows in the `HH:mm` form (`SaveTimeOfDayNormalizer`), before `DoBeforeSave` and again after the plugins, and
+  refuses a value that is not a time of day: from the caller with `InvalidRequestValueException`, from server code
+  with `InvalidOperationException`. A filter on a form's list, count or delete converts its time-of-day values the
+  same way (`FilterValueCoercion`). Writes that bypass `Save`, such as hand-written SQL or an in-process repository
+  call, still normalize themselves. Values stored before 1.13.0 are not rewritten, and a save that does not change
+  one keeps it. Covered by `FormBusinessObjectTimeOfDayTests` (SQLite) and `GetListFilterValueDbTests` (SQLite and
+  SQL Server).
 
 ## Related
 

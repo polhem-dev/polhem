@@ -30,13 +30,23 @@ namespace Polhem.Business.Form
         /// </para>
         /// <code>
         /// NormalizeDateTimes  outside the transaction
+        /// times of day        outside the transaction
         /// DoBeforeSave        outside the transaction
         /// new-value scope     outside the transaction
+        /// times of day        outside the transaction
         /// required fields     outside the transaction
         /// DoSave              INSIDE the transaction
         /// change audit        outside the transaction
         /// DoAfterSave         outside the transaction
         /// </code>
+        /// <para>
+        /// Every <see cref="Polhem.Core.Data.FieldDbType.Time"/> value of the added and modified rows is written in its
+        /// fixed-width <c>HH:mm</c> form, once before <c>DoBeforeSave</c> and again after the <c>BeforeSave</c> plugins,
+        /// so a client that sends <c>8:30</c> stores <c>08:30</c>. A value the caller sent that is not a time of day is
+        /// refused with <see cref="Polhem.Core.Exceptions.InvalidRequestValueException"/>; one that a custom business
+        /// object or a plugin wrote throws <see cref="InvalidOperationException"/>. Covered by
+        /// <c>FormBusinessObjectTimeOfDayTests</c>.
+        /// </para>
         /// <para>
         /// Customise by overriding one of those three, not this method: the authorization and
         /// write-scope checks above them live here, and an override that replaces this method takes
@@ -94,6 +104,8 @@ namespace Polhem.Business.Form
 
             // Before any rule, plugin or audit capture reads the data set, so all of them see UTC.
             NormalizeDateTimes(context);
+            // Likewise, so they all see a time of day in its fixed-width form.
+            SaveTimeOfDayNormalizer.Normalize(schema, args.DataSet, fromCaller: true);
 
             // One runner for the whole call: BeforeSave and AfterSave must see the same plugin
             // instances, so state computed in the first is still there in the second.
@@ -108,6 +120,9 @@ namespace Polhem.Business.Form
             // Layer-2 record scope on the values being stored. After BeforeSave, so the owner and
             // department values checked are the ones defaults and plugins leave behind.
             EnforceNewValueScope(args.DataSet);
+
+            // A time of day that a custom business object or a plugin wrote is stored in the same form.
+            SaveTimeOfDayNormalizer.Normalize(schema, args.DataSet, fromCaller: false);
 
             // After BeforeSave as well, so a required field that a default expression, a custom
             // business object or a plugin fills counts as filled.

@@ -27,6 +27,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** `GridEditorCell` 改收 `Row` 與 `Column`，取代 `EditorParameters`、`IsNumeric` 與 `IsCheck`，並只在持有編輯器時，向它的 `GridEditorHost` 取得編輯器的參數。
 - **破壞性變更：** `DbAccess` 批次失敗時回滾並丟出原本的例外（例如 `DbException`），不再包成 `InvalidOperationException`，被取消的 `ExecuteBatchAsync` 丟出 `OperationCanceledException`，provider 把取消回報成 `DbException` 時也一樣；失敗指令的位置放在 `Data`，鍵為 `DbBatchSpec.FailedIndexDataKey`。
 - **破壞性變更：** 只有框架自己使用的 `BlazorDefinitions`、`DbConnectionScope` 與 `ApiSessionContext.NextSequence` 改為 internal；移除 `FieldEditorBase.BuildCssClass`；`FilterGroup.NodesSpecified` 與 `DepartmentNode.ChildrenSpecified` 取代原本的 `ShouldSerialize` 方法，因此 JSON 與 XML 一樣省略空的 `nodes` 或 `children`。
+- **破壞性變更：** 表單存檔時把每個時刻值寫成固定寬度的 `HH:mm`，不是時刻的值以 `-32602 InvalidParams` 拒絕，因此 API 的客戶端不再能存入 `8:30` 或非時刻的文字；清單與筆數查詢的過濾條件也以同樣格式比對時刻值。
 - `PolhemAccessTokenProvider` 標為過時，預計在 2.0 移除：頁面從 circuit 的 client 讀取登入狀態，應用程式則由 `PolhemShellLayout` 持有登入狀態。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬、含 NUL 字元或孤立 UTF-16 surrogate 的稽核值，不再讓整批寫入失敗：值會截斷到欄寬，NUL 與 surrogate 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。

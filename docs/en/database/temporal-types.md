@@ -81,15 +81,32 @@ SELECT * FROM ft_shift WHERE work_start BETWEEN '08:00' AND '17:00' ORDER BY wor
 
 Values written from the UI are normalised (`"8:30"` is stored as `"08:30"`): the time editor, a cell
 in the Avalonia `GridControl` and `FormDataObject.SetField` all go through the single implementation
-in `FormValueBinding.ToColumnValue`. **The server does not normalise again** — the database stores
-whatever the `DataSet` holds — so the following writes fall outside that guarantee and must normalise
-with `ValueUtilities.CTimeString` themselves:
+in `FormValueBinding.ToColumnValue`. A form's `Save` normalises again on the server, so a client that
+sends `"8:30"` through the API stores `"08:30"` too, and a value that is not a time of day is refused
+with `-32602 InvalidParams` naming the field. A filter on a form's list or count normalises its
+time-of-day values the same way, so `"8:30"` finds the rows stored as `"08:30"`.
 
-- Assigning a `DataRow` directly (`row["work_start"] = "8:30"`).
+Writes that bypass a form's `Save` fall outside that guarantee and must normalise with
+`ValueUtilities.CTimeString` themselves:
+
+- A hand-written `INSERT` or `UPDATE`, or a repository or `DbAccess` call made in-process.
 - A column with no `Time` marker — for example a time-of-day column read back by hand-written SQL
   (`DateColumns` / `SetDateColumns` mark calendar days only). See the unmarked list in §4 for the rest.
-- Data sent by a non-.NET client.
-- A hand-written `INSERT` or `UPDATE`.
+
+Up to 1.12, the server stored what it received, so a database written by a client that did not
+normalise may already hold values such as `"8:30"` or `"25:00"`. They stay as stored: a save that does
+not change one keeps it, and a filter no longer finds `"8:30"` with `"8:30"`, because it compares
+`"08:30"`. These queries find them (on Oracle an empty string is `NULL`):
+
+```sql
+-- SQL Server
+SELECT * FROM ft_shift
+WHERE work_start <> ''
+  AND work_start NOT LIKE '[01][0-9]:[0-5][0-9]' AND work_start NOT LIKE '2[0-3]:[0-5][0-9]'
+
+-- PostgreSQL (MySQL: NOT REGEXP; Oracle: work_start IS NOT NULL AND NOT REGEXP_LIKE(work_start, '...'))
+SELECT * FROM ft_shift WHERE work_start <> '' AND work_start !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+```
 
 ## 4. `DataSet` layer
 
