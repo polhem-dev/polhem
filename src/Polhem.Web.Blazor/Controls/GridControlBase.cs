@@ -62,7 +62,12 @@ namespace Polhem.Web.Blazor.Controls
         /// Gets the host that keeps one editor open in the grid, for a UI package that renders editors on demand. The
         /// grid closes its editor when it stops editing in cells, as when the form enters View mode.
         /// </summary>
-        protected GridEditorHost EditorHost { get; } = new();
+        protected GridEditorHost EditorHost { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GridControlBase"/> class.
+        /// </summary>
+        protected GridControlBase() => EditorHost = new GridEditorHost { EditorParametersBuilder = BuildEditorParameters };
 
         /// <summary>
         /// Gets or sets the grid layout that defines the columns and the allowed actions.

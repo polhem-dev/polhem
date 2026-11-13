@@ -52,6 +52,40 @@ namespace Polhem.Web.Blazor.BrowserTests
             Assert.InRange(Interlocked.Read(ref received), 1, FirstLoadLimitBytes);
         }
 
+        [BrowserFact]
+        [DisplayName("Committing a value in a cell of 200 rows by 15 columns sends about what moving to the next cell sends")]
+        public async Task CommitInCell_LargeGrid_SendsAboutAMove()
+        {
+            var page = await _fixture.Browser.NewPageAsync();
+            var meter = new CircuitTrafficMeter(page);
+            await page.GotoAsync(_fixture.Address + "/perf");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await Assertions.Expect(page.Locator("tr.polhem-grid__row")).ToHaveCountAsync(200);
+            await page.Locator("tr.polhem-grid__row").Nth(5).Locator(".polhem-grid-cell__text").First.ClickAsync();
+            await Assertions.Expect(page.Locator(".polhem-grid-cell__editor input")).ToBeFocusedAsync();
+
+            var moves = new List<long>();
+            var commits = new List<long>();
+            foreach (var _ in Enumerable.Range(0, 4))
+            {
+                moves.Add(await meter.MeasureAsync(() => page.Keyboard.PressAsync("Tab")));
+                await page.Keyboard.TypeAsync("x");
+                commits.Add(await meter.MeasureAsync(() => page.Keyboard.PressAsync("Tab")));
+            }
+            _output.WriteLine($"move {moves.Average():N0} bytes, commit and move {commits.Average():N0} bytes");
+
+            // Before each cell rendered only when what it shows changed, a commit sent 45 to 58 KB here, ten to fourteen
+            // times a move, because every cell rendered again. What a commit still sends beyond a move is mostly the UI
+            // framework's own rows and cells, which render again with the grid.
+            Assert.InRange(commits.Average(), 1, moves.Average() + CommitAllowanceBytes);
+        }
+
+        /// <summary>
+        /// Gets how much more than a move a commit may send, which depends on the UI framework: its rows and cells render
+        /// again with the grid, at a cost per row of its own.
+        /// </summary>
+        protected abstract long CommitAllowanceBytes { get; }
+
         private static readonly TimeSpan s_quietPeriod = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan s_quietDeadline = TimeSpan.FromSeconds(20);
 

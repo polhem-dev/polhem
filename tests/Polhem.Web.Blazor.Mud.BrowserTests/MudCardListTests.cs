@@ -1,4 +1,5 @@
 using Polhem.Web.Blazor.BrowserTests;
+using Xunit.Abstractions;
 
 namespace Polhem.Web.Blazor.Mud.BrowserTests
 {
@@ -11,7 +12,8 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         /// Initializes a new instance of <see cref="MudCardListTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public MudCardListTests(MudCardListFixture fixture) : base(fixture)
+        /// <param name="output">Where the measurements go.</param>
+        public MudCardListTests(MudCardListFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

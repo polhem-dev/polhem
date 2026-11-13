@@ -1,3 +1,6 @@
+using System.Data;
+using Polhem.Definition.Layouts;
+
 namespace Polhem.Web.Blazor.Controls
 {
     /// <summary>
@@ -10,6 +13,12 @@ namespace Polhem.Web.Blazor.Controls
         /// Gets the cell showing the editor, or <c>null</c>.
         /// </summary>
         public IGridEditorSlot? Active { get; private set; }
+
+        /// <summary>
+        /// Gets or sets what builds the parameters of the editor a cell opens, from the cell's column and row. The grid
+        /// sets it once, so a cell at rest neither carries nor allocates the editor's parameters.
+        /// </summary>
+        public Func<LayoutColumn, DataRow, Dictionary<string, object?>>? EditorParametersBuilder { get; set; }
 
         /// <summary>
         /// Gives the editor to <paramref name="slot"/>, closing the one open elsewhere.

@@ -169,6 +169,40 @@ namespace Polhem.Web.Blazor.BehaviorTests
         }
 
         [Fact]
+        [DisplayName("A value committed in one cell renders that cell again and no other")]
+        public async Task CommitValue_RendersOnlyTheChangedCell()
+        {
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order");
+            var fields = schema.Tables.Add("Line", "Line").Fields!;
+            var layout = new LayoutGrid { TableName = "Line", AllowActions = GridControlAllowActions.All };
+            foreach (var column in new[] { "a", "b", "c" })
+            {
+                fields.Add(column, column, FieldDbType.String);
+                layout.Columns!.Add(new LayoutColumn(column, column, ControlType.TextEdit));
+            }
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+            var lines = dataObject.DataSet.Tables["Line"]!;
+            foreach (var index in Enumerable.Range(0, 20))
+            {
+                var line = lines.NewRow();
+                line["a"] = line["b"] = line["c"] = $"r{index}";
+                lines.Rows.Add(line);
+            }
+            var cut = RenderGrid(dataObject, layout: layout);
+            var cells = cut.FindComponents<GridEditorCell>();
+            Assert.Equal(60, cells.Count);
+            var before = cells.Select(cell => cell.RenderCount).ToArray();
+
+            await cut.InvokeAsync(() => dataObject.SetField(lines.Rows[5], "b", "changed"));
+
+            var rendered = cells.Where((cell, index) => cell.RenderCount != before[index]).ToArray();
+            var only = Assert.Single(rendered);
+            Assert.Equal("changed", only.Find(".polhem-grid-cell__text").TextContent);
+        }
+
+        [Fact]
         [DisplayName("Disposing the grid releases its data object subscriptions")]
         public async Task Dispose_ReleasesSubscriptions()
         {

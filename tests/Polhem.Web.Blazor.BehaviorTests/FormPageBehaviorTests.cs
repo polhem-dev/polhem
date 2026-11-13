@@ -901,6 +901,25 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.Empty(cut.FindAll(Card));
         }
 
+        [Fact]
+        [DisplayName("Selecting another card renders the two cards whose selection changed and no other")]
+        public void Cards_Click_RendersOnlyTheCardsWhoseSelectionChanged()
+        {
+            using var culture = new CultureScope("en-US");
+            var cut = RenderCards();
+            cut.FindAll(Card)[0].Click();
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".polhem-card--selected")));
+            var cards = cut.FindComponents<ListCard>();
+            Assert.Equal(50, cards.Count);
+            var before = cards.Select(card => card.RenderCount).ToArray();
+
+            cut.FindAll(Card)[1].Click();
+
+            cut.WaitForAssertion(() => Assert.Contains("polhem-card--selected", cut.FindAll(Card)[1].ClassName, StringComparison.Ordinal));
+            var rendered = cards.Select((card, index) => (card, index)).Where(c => c.card.RenderCount != before[c.index]).Select(c => c.index);
+            Assert.Equal([0, 1], rendered);
+        }
+
         /// <summary>Opens the filter of the first column, enters text and applies it.</summary>
         /// <param name="cut">The rendered page.</param>
         /// <param name="text">The text.</param>

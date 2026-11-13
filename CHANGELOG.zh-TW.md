@@ -24,6 +24,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** 登入會在鎖定計數與密碼檢查之前，拒絕長度超過 `MaxLoginUserIdLength`（預設為 `st_user.sys_id` 的 20 個字元）的帳號或過長的密碼；驗證較長帳號的子類別請提高上限。
 - **破壞性變更：** `GridControlBase` 改為實作 `IAsyncDisposable`，讓 grid 釋放時取消對 data object 的訂閱；框架以外繼承它並自行宣告 `DisposeAsync` 的 grid，請改在 `Dispose(bool)` 釋放資源。
 - **破壞性變更：** 框架的 `Department` 與 `Employee` 表單宣告同名的權限模型（隨框架的 `PermissionModels.xml` 提供），只有獲授權的角色能維護記錄範圍所依據的部門與員工資料。
+- **破壞性變更：** `GridEditorCell` 改收 `Row` 與 `Column`，取代 `EditorParameters`、`IsNumeric` 與 `IsCheck`，並只在持有編輯器時，向它的 `GridEditorHost` 取得編輯器的參數。
 - **破壞性變更：** `DbAccess` 批次失敗時回滾並丟出原本的例外（例如 `DbException`），不再包成 `InvalidOperationException`，被取消的 `ExecuteBatchAsync` 丟出 `OperationCanceledException`，provider 把取消回報成 `DbException` 時也一樣；失敗指令的位置放在 `Data`，鍵為 `DbBatchSpec.FailedIndexDataKey`。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
 - 超過欄寬、含 NUL 字元或孤立 UTF-16 surrogate 的稽核值，不再讓整批寫入失敗：值會截斷到欄寬，NUL 與 surrogate 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
@@ -35,6 +36,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。
 - 表單清單與筆數查詢的過濾條件會把字串值轉成其欄位的型別，因此 Plain body 送出的日期、`Guid` 或加了引號的數字，可以在 PostgreSQL 與 Oracle 上過濾有型別的欄位，在 SQL Server 上也不再查無資料；資料庫過去會自行轉換的文字（例如數字欄位的 `""`、布林欄位的 `1`）現在會以 `-32602 InvalidParams` 拒絕，訊息會指出欄位。
 - Avalonia 綁在明細列上的編輯器，在表單替換資料集時（例如新增）不再擲出例外，改為與 Blazor 一樣保持不動。兩個 head 共用的這項規則，以及時間欄寫回、lookup 顯示欄位、選單列、勾選欄與排序標記的規則，現在只在 `Polhem.UI.Core` 寫一份。
+- 在 Blazor grid 的儲存格提交一個值時，只重繪內容有變的儲存格；選取一張卡片時，只重繪選取狀態改變的兩張卡片，兩者都不再把整個 grid 或整份卡片清單重新經由 circuit 送出。
 - MudBlazor 與 Fluent UI 的 grid 在釋放時會取消對 data object 的訂閱；原本 data object 會一直留著頁面顯示過的每個 grid。兩個 Blazor UI 套件重複的規則（欄位篩選、選單抽屜、卡片點擊、被拒的數值與時間輸入、grid 的編輯器腳本、對話框參數）現在放在 `Polhem.Web.Blazor`，欄位篩選也有了行為測試。
 
 ## [1.12.1] - 2026-11-06

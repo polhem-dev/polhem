@@ -1,4 +1,5 @@
 using Polhem.Web.Blazor.BrowserTests;
+using Xunit.Abstractions;
 
 namespace Polhem.Web.Blazor.Fluent.BrowserTests
 {
@@ -11,7 +12,8 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
         /// Initializes a new instance of <see cref="FluentCardListTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        public FluentCardListTests(FluentCardListFixture fixture) : base(fixture)
+        /// <param name="output">Where the measurements go.</param>
+        public FluentCardListTests(FluentCardListFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

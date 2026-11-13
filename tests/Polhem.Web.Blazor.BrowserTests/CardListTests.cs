@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Playwright;
+using Xunit.Abstractions;
 
 namespace Polhem.Web.Blazor.BrowserTests
 {
@@ -11,12 +12,18 @@ namespace Polhem.Web.Blazor.BrowserTests
     {
         private const string Card = ".polhem-card";
         private readonly BrowserSiteFixture _fixture;
+        private readonly ITestOutputHelper _output;
 
         /// <summary>
         /// Initializes a new instance of <see cref="CardListTests"/>.
         /// </summary>
         /// <param name="fixture">The site and the browser.</param>
-        protected CardListTests(BrowserSiteFixture fixture) => _fixture = fixture;
+        /// <param name="output">Where the measurements go.</param>
+        protected CardListTests(BrowserSiteFixture fixture, ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _output = output;
+        }
 
         private async Task<IPage> OpenAsync(bool slow = false, int width = 400)
         {
@@ -27,6 +34,41 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         private static async Task ScrollToEndAsync(IPage page) => await page.EvaluateAsync("window.scrollTo(0, document.documentElement.scrollHeight)");
+
+        [BrowserFact]
+        [DisplayName("Selecting a card sends no more for a long list than for a short one")]
+        public async Task SelectCard_TrafficDoesNotGrowWithTheList()
+        {
+            var page = await _fixture.Browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 400, Height = 700 } });
+            var meter = new CircuitTrafficMeter(page);
+            await page.GotoAsync(_fixture.Address + "/form");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(50);
+            var shortList = await SelectAlternatelyAsync(page, meter);
+
+            var deadline = DateTime.UtcNow.AddSeconds(60);
+            while (await page.Locator(Card).CountAsync() < 300 && DateTime.UtcNow < deadline)
+            {
+                await ScrollToEndAsync(page);
+                await page.WaitForTimeoutAsync(200);
+            }
+            await Assertions.Expect(page.Locator(Card)).ToHaveCountAsync(300);
+            await page.EvaluateAsync("window.scrollTo(0, 0)");
+            var longList = await SelectAlternatelyAsync(page, meter);
+            _output.WriteLine($"select on 50 cards {shortList:N0} bytes, on 300 cards {longList:N0} bytes");
+
+            // Before a card rendered only when its selection changed, every card sent its click handler again: about 44
+            // bytes a card, 13 KB more here than on the short list.
+            Assert.InRange(longList, 1, shortList + 1_000);
+        }
+
+        private static async Task<double> SelectAlternatelyAsync(IPage page, CircuitTrafficMeter meter)
+        {
+            var sizes = new List<long>();
+            foreach (var index in Enumerable.Range(0, 4))
+                sizes.Add(await meter.MeasureAsync(() => page.Locator(Card).Nth(index % 2).ClickAsync()));
+            return sizes.Average();
+        }
 
         [BrowserFact]
         [DisplayName("A narrow screen shows cards, and scrolling to the end reads the next page")]
