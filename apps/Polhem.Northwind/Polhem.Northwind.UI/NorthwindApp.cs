@@ -15,7 +15,7 @@ namespace Polhem.Northwind.UI;
 public class NorthwindApp : ShellApplication
 {
     /// <inheritdoc/>
-    protected override ShellOptions CreateOptions() => new()
+    protected override PolhemShellOptions CreateOptions() => new()
     {
         AppTitle = "Polhem.Northwind",
         DefaultEndpoint = "http://localhost:5100/api",

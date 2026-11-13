@@ -13,7 +13,7 @@ namespace Polhem.UI.Avalonia.Shell
     /// <see cref="ShellApplication.ConfigureOptions"/>. The shell reads the options once, when the application
     /// initializes; changing them afterwards has no effect.
     /// </remarks>
-    public sealed class ShellOptions
+    public sealed class PolhemShellOptions
     {
         /// <summary>
         /// Gets or sets the application title, shown in the window title, on the connection screen and in the top

@@ -6,7 +6,7 @@ namespace Polhem.UI.Avalonia.Shell.UnitTests;
 
 public class FormsViewModelTests
 {
-    private static readonly ShellOptions s_options = new() { AppTitle = "Demo" };
+    private static readonly PolhemShellOptions s_options = new() { AppTitle = "Demo" };
 
     private static Task<IReadOnlyList<NavItem>> NoMenu() => Task.FromResult<IReadOnlyList<NavItem>>([]);
 

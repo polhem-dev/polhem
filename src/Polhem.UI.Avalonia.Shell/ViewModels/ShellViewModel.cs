@@ -16,7 +16,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
     /// </remarks>
     internal sealed partial class ShellViewModel : ViewModelBase
     {
-        private readonly ShellOptions _options;
+        private readonly PolhemShellOptions _options;
         private readonly IShellPreferenceStorage _preferences;
 
         /// <summary>Gets the view model of the step on screen.</summary>
@@ -34,7 +34,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         private ShellLanguageOption _selectedLanguage;
 
         /// <summary>Initializes the shell on the connection step.</summary>
-        public ShellViewModel(ShellOptions options, IShellPreferenceStorage preferences)
+        public ShellViewModel(PolhemShellOptions options, IShellPreferenceStorage preferences)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(preferences);

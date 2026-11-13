@@ -12,7 +12,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
     /// </summary>
     internal sealed partial class ConnectionViewModel : ViewModelBase
     {
-        private readonly ShellOptions _options;
+        private readonly PolhemShellOptions _options;
         private readonly Action _onConnected;
 
         /// <summary>Gets or sets the JSON-RPC endpoint: the stored one, else the application's default.</summary>
@@ -40,7 +40,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// </summary>
         /// <param name="options">The application's options.</param>
         /// <param name="onConnected">Invoked after a successful connection.</param>
-        public ConnectionViewModel(ShellOptions options, Action onConnected)
+        public ConnectionViewModel(PolhemShellOptions options, Action onConnected)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(onConnected);
