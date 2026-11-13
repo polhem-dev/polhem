@@ -58,7 +58,7 @@ namespace Polhem.UI.ApiBridge.UnitTests
             {
                 ClientInfo.EndpointStorage = originalStorage;
                 ClientInfo.SupportedConnectTypes = originalSupportedTypes;
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -81,7 +81,7 @@ namespace Polhem.UI.ApiBridge.UnitTests
             finally
             {
                 ClientInfo.SupportedConnectTypes = originalSupportedTypes;
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
     }

@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests.Dml
         [DisplayName("A date string becomes the date written, without a time-zone conversion")]
         public void Coerce_DateString_KeepsTheWrittenDate(string text)
         {
-            Assert.Equal(new DateTime(2026, 1, 2), CoercedValue("due_date", text));
+            Assert.Equal(new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Unspecified), CoercedValue("due_date", text));
         }
 
         [Fact]

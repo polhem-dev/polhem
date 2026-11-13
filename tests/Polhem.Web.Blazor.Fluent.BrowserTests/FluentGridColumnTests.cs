@@ -29,10 +29,25 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
         /// <inheritdoc />
         protected override string DraggableColumn => ".polhem-grid thead th[draggable=true]";
 
-        // The grid marks a header draggable when it renders, and its script starts listening some round trips later.
+        // The grid marks a header draggable when it renders, and Fluent UI's script attaches the reorder and the resize
+        // listeners some round trips later, in two calls. Both are observable: the resize call adds its own handles, and
+        // a header that listens starts a reorder on dragstart, which the probe ends again with dragend.
+        private const string ColumnsReadyProbe = """
+            () => {
+                const header = document.querySelector('.polhem-grid thead th[draggable=true]');
+                if (!header || !document.querySelector('.polhem-grid [actual-resize-handle]')) return false;
+                header.dispatchEvent(new DragEvent('dragstart', { bubbles: true }));
+                const listening = document.querySelector('.polhem-grid [col-reorder-active]') !== null;
+                header.dispatchEvent(new DragEvent('dragend', { bubbles: true }));
+                return listening;
+            }
+            """;
+
         /// <inheritdoc />
-        protected override Task WaitForColumnsReadyAsync(IPage page) => page.WaitForTimeoutAsync(2000);
-    
+        protected override async Task WaitForColumnsReadyAsync(IPage page)
+            => await page.WaitForFunctionAsync(ColumnsReadyProbe, null,
+                new PageWaitForFunctionOptions { PollingInterval = 100, Timeout = 15000 });
+
         [BrowserFact]
         [DisplayName("Dragging the edge back narrows the column by the distance dragged")]
         public async Task DragEdgeBack_NarrowsByTheDistance()

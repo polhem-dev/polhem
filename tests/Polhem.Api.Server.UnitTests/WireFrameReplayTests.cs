@@ -226,15 +226,19 @@ namespace Polhem.Api.Server.UnitTests
             var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
-                Params = new TestPayload { Format = PayloadFormat.Plain, Value = new ExecFuncRequest("noop") },
+                Params = new TestPayload { Format = PayloadFormat.Plain, Value = new ExecFuncRequest("Hello") },
             };
 
             var first = await executor.ExecuteAsync(request);
             var second = await executor.ExecuteAsync(request);
 
-            // InternalError means the call reached the BO, past the payload filter.
-            Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
-            Assert.Equal((int)JsonRpcErrorCode.InternalError, second.Error!.Code);
+            // Both answers come from the business object, so the same request passed the payload filter twice.
+            Assert.All(new[] { first, second }, response =>
+            {
+                Assert.Null(response.Error);
+                var result = Assert.IsType<ExecFuncResponse>(response.Result!.Value);
+                Assert.Contains(result.Parameters!, parameter => parameter.Name == "Hello" && Equals(parameter.Value, "Hello system-level BusinessObject"));
+            });
         }
 
         [Fact]

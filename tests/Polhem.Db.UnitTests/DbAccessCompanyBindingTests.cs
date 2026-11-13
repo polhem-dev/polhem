@@ -111,12 +111,24 @@ namespace Polhem.Db.UnitTests
         [DisplayName("SQLite: a bound database access runs a statement that names the company")]
         public void Execute_BoundWithPlaceholder_Runs()
         {
-            var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "company")).BindCompany("c001");
+            var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "company");
+            var setup = _fx.NewDbAccess(databaseId);
+            var table = $"tb_bind_{Guid.NewGuid():N}";
+            setup.Execute(new DbCommandSpec(DbCommandKind.NonQuery, $"CREATE TABLE {table} (sys_company_id TEXT NOT NULL)"));
+            try
+            {
+                foreach (var company in new[] { "c001", "c001", "c002" })
+                    setup.Execute(new DbCommandSpec(DbCommandKind.NonQuery, $"INSERT INTO {table} (sys_company_id) VALUES ({{0}})", company));
 
-            var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
-                $"SELECT COUNT(*) FROM st_department WHERE sys_company_id = {CommandTextVariable.CompanyId}"));
+                var result = _fx.NewDbAccess(databaseId).BindCompany("c001").Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                    $"SELECT COUNT(*) FROM {table} WHERE sys_company_id = {CommandTextVariable.CompanyId}"));
 
-            Assert.NotNull(result.Scalar);
+                Assert.Equal(2L, Convert.ToInt64(result.Scalar, System.Globalization.CultureInfo.InvariantCulture));
+            }
+            finally
+            {
+                setup.Execute(new DbCommandSpec(DbCommandKind.NonQuery, $"DROP TABLE {table}"));
+            }
         }
     }
 }

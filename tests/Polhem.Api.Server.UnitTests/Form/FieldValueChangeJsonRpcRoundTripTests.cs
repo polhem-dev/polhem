@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Server.UnitTests.Dispatch;
 using Polhem.Definition;
@@ -42,7 +43,9 @@ namespace Polhem.Api.Server.UnitTests.Form
         {
             var response = await Dispatch(new FieldValueChangeRequest { TableName = "Employee", FieldName = "no_such_field" });
 
-            Assert.NotNull(response.Error);
+            // The business object refuses the field it does not know, so the caller gets a message, not a fault of
+            // the dispatch, the payload or the session.
+            Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
         }
 
         private Task<TestRpcResponse> Dispatch(FieldValueChangeRequest value)
