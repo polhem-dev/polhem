@@ -30,6 +30,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - **破壞性變更：** 表單存檔時把每個時刻值寫成固定寬度的 `HH:mm`，不是時刻的值以 `-32602 InvalidParams` 拒絕，因此 API 的客戶端不再能存入 `8:30` 或非時刻的文字；清單與筆數查詢的過濾條件也以同樣格式比對時刻值。
 - **破壞性變更：** 帶存取權杖的行程內呼叫，在 session 過期時會被拒絕，與遠端呼叫相同；Local 模式的 Blazor Server 網站會在使用者的 session 結束時登出並回到登入畫面，不再因 circuit 持續運作而讓 session 一直有效。新增的 `PolhemApiClient.SessionRejected` 事件回報被伺服器結束的 session，`LogoutAsync` 遇到這種 session 視為已登出，不再丟出例外。
 - **破壞性變更：** 移除 `ClientInfo.CreateFormApiConnector`、`ClientInfo.CreateAuditLogApiConnector`、`ApiHeaders.ContentType` 與 `FieldMappingCollection.FindByDestination`，`FormPluginChain.TypesForStage` 改為 internal；`CacheInfo.NotifyVersions` 與 `SaveContext.AffectedRows` 只能讀取，`ApiAuthorizationResult` 與 `ApiCallContext` 只在建立時給值，`SessionCompanyBinding.Capabilities` 改為唯讀。
+- 框架套件改為相依 `Polhem.JsonRpc` 套件的單一確切版本，不再用版本範圍，因為存取判定有一半在這些套件裡；參考 `Polhem.JsonRpc.AspNetCore` 的應用程式要用同一個版本，專案範本也已改用。`Polhem.Hosting`、`Polhem.Api.Server` 與 `Polhem.Web.Blazor.Server` 補上原本只經由其他參考取得的套件宣告。
 - `PolhemAccessTokenProvider` 標為過時，預計在 2.0 移除：頁面從 circuit 的 client 讀取登入狀態，應用程式則由 `PolhemShellLayout` 持有登入狀態。
 - 健檢的小型修正：初始化程式讀取設定、以及 repository 把自己的資料庫綁定到公司時，database id 的比對不分大小寫；在非 Development 環境開著 debug 模式時，啟動會記錄錯誤；行程內的 client 初始化時不再改寫伺服器的 payload 設定；存檔與欄位變更回應裡以欄位或資料表名稱為鍵的對照表，經過 wire 之後仍不分大小寫；ExecFunc 只會選中符合處理常式簽章的方法；Oracle 重建資料表時會跳脫表名中的引號。
 - `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。

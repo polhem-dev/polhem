@@ -10,6 +10,8 @@
   <ItemGroup>
     <!-- The executor logs the real message of a failure whose caller only sees a generic one. -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <!-- The filters and the object factory resolve their services from the call's service provider. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <!--

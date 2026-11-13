@@ -11,6 +11,21 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
+  <!-- The composition root registers the JSON-RPC server and the payload envelope itself, so it declares them rather
+       than relying on Polhem.Api.Server to bring them. PolhemJsonRpcSource switches to a local checkout; see
+       PolhemJsonRpc.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload.Server" Version="$(PolhemJsonRpcVersion)" />
+    <PackageReference Include="Polhem.JsonRpc.Payload" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload.Server/Polhem.JsonRpc.Payload.Server.csproj" />
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload/Polhem.JsonRpc.Payload.csproj" />
   </ItemGroup>
 
   <ItemGroup>

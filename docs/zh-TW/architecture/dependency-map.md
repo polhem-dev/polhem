@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 320e52bf8cb50179d823813cc5af9cd3dbd859ce -->
+<!-- source: en/architecture/dependency-map.md blob: f658dcea41b9386b297f6ad53ad901f2ae272f93 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -269,14 +269,14 @@ graph BT
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Api.Core | MessagePack 3.x、Polhem.JsonRpc.Payload |
-| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server |
+| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x、Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
-| Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Hosting.Abstractions 10.x |
+| Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x、Microsoft.Extensions.Hosting.Abstractions 10.x、Microsoft.Extensions.Logging.Abstractions 10.x、Polhem.JsonRpc.Server、Polhem.JsonRpc.Payload.Server、Polhem.JsonRpc.Payload |
 | Polhem.Web.Blazor | Microsoft.AspNetCore.Components.Web 10.x |
 | Polhem.Web.Blazor.Mud | MudBlazor 9.x |
 | Polhem.Web.Blazor.Fluent | Microsoft.FluentUI.AspNetCore.Components 5.x |
-| Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App` |
+| Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App`、Polhem.JsonRpc.Payload |
 | Polhem.UI.Avalonia | Avalonia 12.x、Avalonia.Controls.DataGrid 12.x |
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
@@ -287,8 +287,8 @@ graph BT
 
 > `Polhem.Api.Core` 的 MessagePack 是框架內**唯一**的傳輸格式套件，而讓它維持唯一正是
 > [ADR-036](../../../maintainers/adr/adr-036-wire-serialization-externalized.md) 的用意。`Polhem.JsonRpc.*` 套件維護在
-> [polhem-dev/polhem-jsonrpc](https://github.com/polhem-dev/polhem-jsonrpc)，框架使用的版本設定在 repo 根目錄的
-> `PolhemJsonRpc.props`；HTTP 宿主自行加入 `Polhem.JsonRpc.AspNetCore`。僅建置期的參考
+> [polhem-dev/polhem-jsonrpc](https://github.com/polhem-dev/polhem-jsonrpc)，框架使用的確切版本設定在 repo 根目錄的
+> `PolhemJsonRpc.props`（檔頭說明為什麼不用版本範圍）；HTTP 宿主自行加入 `Polhem.JsonRpc.AspNetCore`。僅建置期的參考
 > （`PrivateAssets="all"`：SourceLink、公開 API 分析器、本 repo 自己的 analyzer）
 > 不列入 —— 它們不會流到任何消費者。`check-dependency-map.sh` 會比對本表的套件名稱與 csproj 檔，版本不比對。
 

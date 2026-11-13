@@ -12,7 +12,7 @@ namespace Polhem.Analyzers.Definitions
     /// tables that nothing can ever resolve, and the tables appear simply to be unregistered.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class DbCategorySettingsScopeAnalyzer : DiagnosticAnalyzer
+    public sealed class DbCategorySettingsScopeAnalyzer : DefinitionFileAnalyzer
     {
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
             id: DiagnosticIds.InvalidDbCategoryId,
@@ -31,14 +31,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             foreach (var file in context.Options.AdditionalFiles)
             {

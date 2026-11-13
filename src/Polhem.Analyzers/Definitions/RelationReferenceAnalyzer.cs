@@ -14,7 +14,7 @@ namespace Polhem.Analyzers.Definitions
     /// than an error.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class RelationReferenceAnalyzer : DiagnosticAnalyzer
+    public sealed class RelationReferenceAnalyzer : DefinitionFileAnalyzer
     {
         private static readonly DiagnosticDescriptor UnknownProgId = new DiagnosticDescriptor(
             id: DiagnosticIds.UnknownRelationProgId,
@@ -49,14 +49,8 @@ namespace Polhem.Analyzers.Definitions
             ImmutableArray.Create(UnknownProgId, UnknownSourceField);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

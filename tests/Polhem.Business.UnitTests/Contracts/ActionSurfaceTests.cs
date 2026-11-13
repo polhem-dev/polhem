@@ -39,7 +39,8 @@ namespace Polhem.Business.UnitTests.Contracts
         ];
 
         /// <summary>
-        /// The constants class → BO type mapping for each axis. Add a row when adding an axis.
+        /// The constants class → BO type mapping for each axis. <see cref="Axes_ListEveryActionsClass"/> fails when an axis
+        /// has no row.
         /// </summary>
         private static readonly (Type Actions, Type BusinessObject)[] s_axes =
         [
@@ -47,6 +48,21 @@ namespace Polhem.Business.UnitTests.Contracts
             (typeof(FormActions), typeof(FormBusinessObject)),
             (typeof(AuditLogActions), typeof(AuditLogBusinessObject)),
         ];
+
+        [Fact]
+        [DisplayName("Every static *Actions class of Polhem.Definition is an axis of this table, so a new axis cannot pass unchecked")]
+        public void Axes_ListEveryActionsClass()
+        {
+            var declared = typeof(SystemActions).Assembly.GetExportedTypes()
+                .Where(type => type is { IsAbstract: true, IsSealed: true }
+                    && type.Name.EndsWith("Actions", StringComparison.Ordinal))
+                .ToList();
+            var listed = s_axes.Select(axis => axis.Actions).ToHashSet();
+
+            Assert.Contains(typeof(SystemActions), declared);
+            Assert.All(declared, type => Assert.True(listed.Contains(type),
+                $"{type.FullName} declares actions but has no row in s_axes, so none of its actions is checked."));
+        }
 
         /// <summary>
         /// Expands into one (BO type, action name) case each, so a failure message names the action directly.

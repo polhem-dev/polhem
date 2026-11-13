@@ -25,6 +25,15 @@
     <ProjectReference Include="..\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />
   </ItemGroup>
 
+  <!-- Local mode hands the circuit's client the backend's payload options. PolhemJsonRpcSource switches to a local
+       checkout; see PolhemJsonRpc.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Payload" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Payload/Polhem.JsonRpc.Payload.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Polhem.Web.Blazor.Components" />
     <Using Include="Polhem.Web.Blazor.Shell" />

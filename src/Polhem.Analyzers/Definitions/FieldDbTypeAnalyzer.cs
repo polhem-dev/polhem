@@ -15,7 +15,7 @@ namespace Polhem.Analyzers.Definitions
     /// the file, not the offending attribute.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class FieldDbTypeAnalyzer : DiagnosticAnalyzer
+    public sealed class FieldDbTypeAnalyzer : DefinitionFileAnalyzer
     {
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
             id: DiagnosticIds.InvalidFieldDbType,
@@ -34,14 +34,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 
