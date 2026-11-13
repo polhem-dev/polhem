@@ -1,5 +1,6 @@
 using System.Data;
 using Polhem.Api.Contracts.Form;
+using Polhem.Core.Collections;
 
 namespace Polhem.Business.Form
 {
@@ -24,10 +25,7 @@ namespace Polhem.Business.Form
         public Dictionary<string, string> Errors
         {
             get => _errors;
-            // A reader that replaces the dictionary, as the wire codecs do, must not lose the case-insensitive keys.
-            set => _errors = Equals(value?.Comparer, StringComparer.OrdinalIgnoreCase)
-                ? value!
-                : new(value ?? [], StringComparer.OrdinalIgnoreCase);
+            set => _errors = value.WithIgnoreCaseKeys();
         }
 
         /// <summary>
@@ -36,10 +34,7 @@ namespace Polhem.Business.Form
         public Dictionary<string, string> Warnings
         {
             get => _warnings;
-            // A reader that replaces the dictionary, as the wire codecs do, must not lose the case-insensitive keys.
-            set => _warnings = Equals(value?.Comparer, StringComparer.OrdinalIgnoreCase)
-                ? value!
-                : new(value ?? [], StringComparer.OrdinalIgnoreCase);
+            set => _warnings = value.WithIgnoreCaseKeys();
         }
 
         /// <inheritdoc />

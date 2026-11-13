@@ -1,5 +1,6 @@
 using System.Data;
 using Polhem.Api.Contracts.Form;
+using Polhem.Core.Collections;
 
 namespace Polhem.Api.Core.Messages.Form
 {
@@ -24,10 +25,7 @@ namespace Polhem.Api.Core.Messages.Form
         public Dictionary<string, int> AffectedRows
         {
             get => _affectedRows;
-            // A reader that replaces the dictionary, as the wire codecs do, must not lose the case-insensitive keys.
-            set => _affectedRows = Equals(value?.Comparer, StringComparer.OrdinalIgnoreCase)
-                ? value!
-                : new(value ?? [], StringComparer.OrdinalIgnoreCase);
+            set => _affectedRows = value.WithIgnoreCaseKeys();
         }
 
         /// <inheritdoc />
