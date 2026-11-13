@@ -54,6 +54,7 @@ build time, where the message can name both the cause and the fix.
 | POLHEM2005 | Warning | A form schema must have a corresponding form layout — the runtime renders the stored layout and fails without one |
 | POLHEM2006 | Warning | A persisted form schema field must exist as a column in the table schema |
 | POLHEM2007 | Info | Language resources should cover the same keys across cultures |
+| POLHEM2008 | Error | A relation field must declare the same `DbType` as the source field it is mapped from (`Integer`/`AutoIncrement`, `Decimal`/`Currency` and `String`/`Text` count as the same) |
 
 ### Coding conventions (POLHEM3xxx)
 

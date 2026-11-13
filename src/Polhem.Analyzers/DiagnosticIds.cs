@@ -86,6 +86,12 @@ namespace Polhem.Analyzers
         public const string InconsistentLanguageCoverage = "POLHEM2007";
 
         /// <summary>
+        /// A relation field declares a data type that holds its values differently from the source field it is
+        /// mapped from.
+        /// </summary>
+        public const string RelationFieldTypeMismatch = "POLHEM2008";
+
+        /// <summary>
         /// A public method on a business object declares no API access control.
         /// </summary>
         public const string MissingApiAccessControl = "POLHEM3001";

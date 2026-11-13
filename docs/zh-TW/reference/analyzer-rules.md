@@ -1,4 +1,4 @@
-<!-- source: en/reference/analyzer-rules.md blob: a5011a626ae2757cface3cd337c5a3d73a49e628 -->
+<!-- source: en/reference/analyzer-rules.md blob: 368b960667e6d0058db0723a4000b714c4ffc3f9 -->
 # Analyzer 規則
 
 [English](../../en/reference/analyzer-rules.md) · [← 文件索引](../README.md)
@@ -49,6 +49,7 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 | POLHEM2005 | Warning | FormSchema 必須有對應的 FormLayout——執行階段渲染已存檔的版面，缺檔即失敗 |
 | POLHEM2006 | Warning | FormSchema 的持久化欄位必須存在於 TableSchema |
 | POLHEM2007 | Info | 各語系應覆蓋相同的翻譯 key |
+| POLHEM2008 | Error | 關聯欄位宣告的 `DbType` 必須與它對應的來源欄位相同（`Integer`/`AutoIncrement`、`Decimal`/`Currency`、`String`/`Text` 視為相同） |
 
 ### 程式碼慣例（POLHEM3xxx）
 
