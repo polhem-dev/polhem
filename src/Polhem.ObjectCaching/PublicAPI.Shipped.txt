@@ -31,6 +31,7 @@ Polhem.ObjectCaching.CacheDefineAccess
 Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths) -> void
 Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths, Polhem.ObjectCaching.ICacheContainer! cache, byte[]! configEncryptionKey) -> void
 Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths, Polhem.ObjectCaching.ICacheContainer! cache, byte[]! configEncryptionKey, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader) -> void
+Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths, Polhem.ObjectCaching.ICacheContainer! cache, byte[]! configEncryptionKey, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader, Microsoft.Extensions.Logging.ILogger<Polhem.ObjectCaching.CacheDefineAccess!>? logger) -> void
 Polhem.ObjectCaching.CacheDefineAccess.FindFormLayout(string! customizeId, string! layoutId) -> Polhem.Definition.Layouts.FormLayout?
 Polhem.ObjectCaching.CacheDefineAccess.GetCurrencySettings() -> Polhem.Definition.Settings.CurrencySettings!
 Polhem.ObjectCaching.CacheDefineAccess.GetDatabaseSettings() -> Polhem.Definition.Settings.DatabaseSettings!
@@ -109,25 +110,35 @@ Polhem.ObjectCaching.Database.SessionInfoCache.Get(System.Guid accessToken) -> P
 Polhem.ObjectCaching.Database.SessionInfoCache.Remove(System.Guid accessToken) -> void
 Polhem.ObjectCaching.Database.SessionInfoCache.SessionInfoCache(string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.CurrencySettingsCache
+Polhem.ObjectCaching.Define.CurrencySettingsCache.CurrencySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.DatabaseSettingsCache
 Polhem.ObjectCaching.Define.DatabaseSettingsCache.DatabaseSettingsCache(Polhem.Definition.PathOptions! paths, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.DbCategorySettingsCache
+Polhem.ObjectCaching.Define.DbCategorySettingsCache.DbCategorySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.FormLayoutCache
+Polhem.ObjectCaching.Define.FormLayoutCache.FormLayoutCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.FormSchemaCache
+Polhem.ObjectCaching.Define.FormSchemaCache.FormSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.LanguageResourceCache
 Polhem.ObjectCaching.Define.LanguageResourceCache.Get(string! lang, string! ns) -> Polhem.Definition.Language.LanguageResource?
+Polhem.ObjectCaching.Define.LanguageResourceCache.LanguageResourceCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.LanguageResourceCache.Remove(string! lang, string! ns) -> void
 Polhem.ObjectCaching.Define.MenuSettingsCache
+Polhem.ObjectCaching.Define.MenuSettingsCache.MenuSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.PermissionModelsCache
 Polhem.ObjectCaching.Define.PermissionModelsCache.PermissionModelsCache(Polhem.Definition.PathOptions! paths, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.PluginSettingsCache
+Polhem.ObjectCaching.Define.PluginSettingsCache.PluginSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.ProgramSettingsCache
+Polhem.ObjectCaching.Define.ProgramSettingsCache.ProgramSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.SystemSettingsCache
 Polhem.ObjectCaching.Define.SystemSettingsCache.SystemSettingsCache(Polhem.Definition.PathOptions! paths, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.TableSchemaCache
 Polhem.ObjectCaching.Define.TableSchemaCache.Get(string! categoryId, string! tableName) -> Polhem.Definition.Database.TableSchema?
 Polhem.ObjectCaching.Define.TableSchemaCache.Remove(string! categoryId, string! tableName) -> void
+Polhem.ObjectCaching.Define.TableSchemaCache.TableSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.UnitSettingsCache
+Polhem.ObjectCaching.Define.UnitSettingsCache.UnitSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.ICacheContainer
 Polhem.ObjectCaching.ICacheContainer.ApiKey.get -> Polhem.ObjectCaching.Database.ApiKeyCache!
 Polhem.ObjectCaching.ICacheContainer.ApiKeyGate.get -> Polhem.ObjectCaching.Database.ApiKeyGateCache!
@@ -184,6 +195,8 @@ Polhem.ObjectCaching.Services.AuditRuleService.AuditRuleService(Polhem.ObjectCac
 Polhem.ObjectCaching.Services.AuditRuleService.Get(string! companyId) -> Polhem.Definition.Logging.CompanyAuditRules?
 Polhem.ObjectCaching.Services.AuditRuleService.Remove(string! companyId) -> void
 Polhem.ObjectCaching.Services.CompanyAuthorizationService
+Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
+Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
 Polhem.ObjectCaching.Services.CompanyAuthorizationService.CompanyAuthorizationService(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService, Polhem.Definition.Identity.IRolePermissionService! rolePermissionService) -> void
 Polhem.ObjectCaching.Services.CompanyInfoService
 Polhem.ObjectCaching.Services.CompanyInfoService.CompanyInfoService(Polhem.ObjectCaching.ICacheContainer! cache) -> void
@@ -206,15 +219,20 @@ Polhem.ObjectCaching.Services.SessionInfoService.Set(Polhem.Definition.Identity.
 override Polhem.ObjectCaching.Database.ApiKeyGateCache.CacheGroup.get -> string!
 static Polhem.ObjectCaching.CacheInfo.Initialize(Polhem.Definition.Settings.BackendConfiguration! configuration) -> void
 static Polhem.ObjectCaching.CacheInfo.NotifyVersions.get -> Polhem.ObjectCaching.ICacheNotifyVersionStore!
-static Polhem.ObjectCaching.CacheInfo.NotifyVersions.set -> void
 static Polhem.ObjectCaching.CacheInfo.Provider.get -> Polhem.ObjectCaching.Providers.ICacheProvider!
 static Polhem.ObjectCaching.CacheInfo.Provider.set -> void
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.AbsoluteMinutes -> int
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeIds -> int
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.NegativeMinutes -> int
+static readonly Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeTokens -> int
+static readonly Polhem.ObjectCaching.Database.SessionInfoCache.NegativeMinutes -> int
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.CacheGroup.get -> string!
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.CreateInstance(string! key) -> T?
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.Get(string! key) -> T?
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.GetCacheKey(string! key) -> string!
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.GetNegativePolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy?
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
+virtual Polhem.ObjectCaching.KeyObjectCache<T>.MaxNegativeEntries.get -> int
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.Remove(string! key) -> void
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.Set(T! value) -> void
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.Set(string! key, T! value) -> void
@@ -225,21 +243,3 @@ virtual Polhem.ObjectCaching.ObjectCache<T>.GetKey() -> string!
 virtual Polhem.ObjectCaching.ObjectCache<T>.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
 virtual Polhem.ObjectCaching.ObjectCache<T>.Remove() -> void
 virtual Polhem.ObjectCaching.ObjectCache<T>.Set(T! value) -> void
-Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths, Polhem.ObjectCaching.ICacheContainer! cache, byte[]! configEncryptionKey, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader, Microsoft.Extensions.Logging.ILogger<Polhem.ObjectCaching.CacheDefineAccess!>? logger) -> void
-Polhem.ObjectCaching.Define.CurrencySettingsCache.CurrencySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.DbCategorySettingsCache.DbCategorySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.FormLayoutCache.FormLayoutCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.FormSchemaCache.FormSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.LanguageResourceCache.LanguageResourceCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.MenuSettingsCache.MenuSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.PluginSettingsCache.PluginSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.ProgramSettingsCache.ProgramSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.TableSchemaCache.TableSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Define.UnitSettingsCache.UnitSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
-Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
-static readonly Polhem.ObjectCaching.Database.ApiKeyCache.AbsoluteMinutes -> int
-static readonly Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeIds -> int
-static readonly Polhem.ObjectCaching.Database.ApiKeyCache.NegativeMinutes -> int
-static readonly Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeTokens -> int
-static readonly Polhem.ObjectCaching.Database.SessionInfoCache.NegativeMinutes -> int
-virtual Polhem.ObjectCaching.KeyObjectCache<T>.MaxNegativeEntries.get -> int

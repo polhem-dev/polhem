@@ -3,7 +3,6 @@ Polhem.Api.Client.ApiConnectValidator
 Polhem.Api.Client.ApiSessionContext
 Polhem.Api.Client.ApiSessionContext.ApiSessionContext() -> void
 Polhem.Api.Client.ApiSessionContext.Credentials.get -> Polhem.Api.Client.ApiSessionCredentials!
-Polhem.Api.Client.ApiSessionContext.NextSequence() -> long
 Polhem.Api.Client.ApiSessionContext.SignIn(Polhem.Api.Client.ApiSessionCredentials! credentials) -> void
 Polhem.Api.Client.ApiSessionContext.SignOut() -> void
 Polhem.Api.Client.ApiSessionCredentials
@@ -95,6 +94,7 @@ Polhem.Api.Client.PolhemApiClient.Form(string! progId) -> Polhem.Api.Client.Conn
 Polhem.Api.Client.PolhemApiClient.IsLocal.get -> bool
 Polhem.Api.Client.PolhemApiClient.PayloadOptions.get -> Polhem.JsonRpc.Payload.PayloadOptions!
 Polhem.Api.Client.PolhemApiClient.Session.get -> Polhem.Api.Client.ApiSessionContext!
+Polhem.Api.Client.PolhemApiClient.SessionRejected -> System.EventHandler?
 Polhem.Api.Client.PolhemApiClient.SignOut() -> void
 Polhem.Api.Client.PolhemApiClient.System.get -> Polhem.Api.Client.Connectors.SystemApiConnector!
 Polhem.Api.Client.SupportedConnectTypes

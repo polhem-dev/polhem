@@ -1,3 +1,1 @@
 #nullable enable
-*REMOVED*Polhem.Api.Client.ApiSessionContext.NextSequence() -> long
-Polhem.Api.Client.PolhemApiClient.SessionRejected -> System.EventHandler?

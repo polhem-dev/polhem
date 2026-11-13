@@ -11,14 +11,14 @@ Polhem.Api.Server.Authorization.ApiAuthorizationContext.Method.get -> string!
 Polhem.Api.Server.Authorization.ApiAuthorizationContext.Method.set -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationResult
 Polhem.Api.Server.Authorization.ApiAuthorizationResult.AccessToken.get -> System.Guid
-Polhem.Api.Server.Authorization.ApiAuthorizationResult.AccessToken.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.AccessToken.init -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationResult.ApiAuthorizationResult() -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationResult.Code.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
-Polhem.Api.Server.Authorization.ApiAuthorizationResult.Code.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.Code.init -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationResult.ErrorMessage.get -> string!
-Polhem.Api.Server.Authorization.ApiAuthorizationResult.ErrorMessage.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.ErrorMessage.init -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationResult.IsValid.get -> bool
-Polhem.Api.Server.Authorization.ApiAuthorizationResult.IsValid.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.IsValid.init -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationValidator
 Polhem.Api.Server.Authorization.ApiAuthorizationValidator.ApiAuthorizationValidator() -> void
 Polhem.Api.Server.Authorization.ApiAuthorizationValidator.Validate(Polhem.Api.Server.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Server.Authorization.ApiAuthorizationResult!
@@ -47,13 +47,13 @@ Polhem.Api.Server.Dispatch.PolhemPayloadFilter.PolhemPayloadFilter() -> void
 Polhem.Api.Server.Validator.ApiAccessValidator
 Polhem.Api.Server.Validator.ApiCallContext
 Polhem.Api.Server.Validator.ApiCallContext.AccessToken.get -> System.Guid
-Polhem.Api.Server.Validator.ApiCallContext.AccessToken.set -> void
+Polhem.Api.Server.Validator.ApiCallContext.AccessToken.init -> void
 Polhem.Api.Server.Validator.ApiCallContext.ApiCallContext() -> void
 Polhem.Api.Server.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.JsonRpc.Payload.PayloadFormat format) -> void
 Polhem.Api.Server.Validator.ApiCallContext.Format.get -> Polhem.JsonRpc.Payload.PayloadFormat
-Polhem.Api.Server.Validator.ApiCallContext.Format.set -> void
+Polhem.Api.Server.Validator.ApiCallContext.Format.init -> void
 Polhem.Api.Server.Validator.ApiCallContext.IsLocalCall.get -> bool
-Polhem.Api.Server.Validator.ApiCallContext.IsLocalCall.set -> void
+Polhem.Api.Server.Validator.ApiCallContext.IsLocalCall.init -> void
 const Polhem.Api.Server.Dispatch.PolhemJsonRpc.AccessTokenItem = "Polhem.AccessToken" -> string!
 static Polhem.Api.Server.Authorization.ApiAuthorizationResult.Fail(Polhem.Api.Core.JsonRpc.JsonRpcErrorCode code, string! errorMessage) -> Polhem.Api.Server.Authorization.ApiAuthorizationResult!
 static Polhem.Api.Server.Authorization.ApiAuthorizationResult.Success(System.Guid accessToken) -> Polhem.Api.Server.Authorization.ApiAuthorizationResult!

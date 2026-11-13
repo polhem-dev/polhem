@@ -1,19 +1,7 @@
 #nullable enable
 Polhem.Web.Blazor.Mud.Components.ConfirmDialog
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.CancelText.get -> string?
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.CancelText.set -> void
 Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmDialog() -> void
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmText.get -> string?
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.ConfirmText.set -> void
 Polhem.Web.Blazor.Mud.Components.ConfirmDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Message.get -> string?
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Message.set -> void
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnCancelled.set -> void
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnConfirmed.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.OnConfirmed.set -> void
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Title.get -> string?
-Polhem.Web.Blazor.Mud.Components.ConfirmDialog.Title.set -> void
 Polhem.Web.Blazor.Mud.Components.FocusedButton
 Polhem.Web.Blazor.Mud.Components.FocusedButton.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
 Polhem.Web.Blazor.Mud.Components.FocusedButton.ChildContent.set -> void
@@ -50,19 +38,7 @@ Polhem.Web.Blazor.Mud.Controls.Editors.MemoEdit.MemoEdit() -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.NumericEdit
 Polhem.Web.Blazor.Mud.Controls.Editors.NumericEdit.NumericEdit() -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Compact.get -> bool
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Compact.set -> void
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DataObject.set -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCancelled.set -> void
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.EditCommitted.set -> void
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Layout.set -> void
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
-Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.Row.set -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditDialog.RowEditDialog() -> void
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel
 Polhem.Web.Blazor.Mud.Controls.Editors.RowEditPanel.RowEditPanel() -> void
@@ -75,19 +51,8 @@ Polhem.Web.Blazor.Mud.Controls.Editors.YearMonthEdit.YearMonthEdit() -> void
 Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter
 Polhem.Web.Blazor.Mud.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
 Polhem.Web.Blazor.Mud.Controls.GridColumnFilter
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Applied.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Column.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Field.get -> Polhem.Definition.Forms.FormField!
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Field.set -> void
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Filters.set -> void
 Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.GridColumnFilter() -> void
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
-Polhem.Web.Blazor.Mud.Controls.GridColumnFilter.Kind.set -> void
 Polhem.Web.Blazor.Mud.Controls.GridControl
-Polhem.Web.Blazor.Mud.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Polhem.Web.Blazor.Mud.Controls.GridControl.GridControl() -> void
 Polhem.Web.Blazor.Mud.DependencyInjection.PolhemMudServiceCollectionExtensions
 Polhem.Web.Blazor.Mud.Shell.PolhemShellLayout
@@ -107,11 +72,8 @@ Polhem.Web.Blazor.Mud._Imports
 Polhem.Web.Blazor.Mud._Imports.Execute() -> void
 Polhem.Web.Blazor.Mud._Imports._Imports() -> void
 override Polhem.Web.Blazor.Mud.Components.FocusedButton.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Mud.Components.FormPage.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Mud.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Mud.Controls.GridControl.OnInitialized() -> void
-override Polhem.Web.Blazor.Mud.Controls.GridControl.OnParametersSet() -> void
-override Polhem.Web.Blazor.Mud.Controls.GridControl.ShouldRender() -> bool
+override Polhem.Web.Blazor.Mud.Controls.GridControl.OpenPopupSelector.get -> string!
+override Polhem.Web.Blazor.Mud.Controls.GridControl.RefreshRowList() -> void
 override Polhem.Web.Blazor.Mud.Theming.PolhemMudProviders.OnParametersSet() -> void
 static Polhem.Web.Blazor.Mud.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!
 static Polhem.Web.Blazor.Mud.DependencyInjection.PolhemMudServiceCollectionExtensions.AddPolhemMud(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

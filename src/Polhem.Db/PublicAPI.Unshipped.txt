@@ -1,15 +1,1 @@
 #nullable enable
-Polhem.Db.Dml.TableSchemaCommandBuilder.PinField(string! fieldName, object! value) -> Polhem.Db.Dml.TableSchemaCommandBuilder!
-Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedField.get -> string!
-Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedValue.get -> object?
-Polhem.Db.Dml.TableJoin.MatchCompany.get -> bool
-Polhem.Db.Dml.TableJoin.MatchCompany.set -> void
-const Polhem.Db.CommandTextVariable.CompanyId = "{@CompanyId}" -> string!
-Polhem.Db.DbAccess.BindCompany(string! companyId) -> Polhem.Db.DbAccess!
-Polhem.Db.DbAccess.BoundCompanyId.get -> string?
-const Polhem.Db.DbBatchSpec.FailedIndexDataKey = "Polhem.BatchIndex" -> string!
-*REMOVED*Polhem.Db.DbConnectionScope
-*REMOVED*Polhem.Db.DbConnectionScope.Connection.get -> System.Data.Common.DbConnection?
-*REMOVED*Polhem.Db.DbConnectionScope.Dispose() -> void
-*REMOVED*static Polhem.Db.DbConnectionScope.Create(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null) -> Polhem.Db.DbConnectionScope!
-*REMOVED*static Polhem.Db.DbConnectionScope.CreateAsync(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbConnectionScope!>!

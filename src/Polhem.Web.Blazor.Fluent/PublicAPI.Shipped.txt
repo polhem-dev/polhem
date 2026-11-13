@@ -1,18 +1,6 @@
 #nullable enable
 Polhem.Web.Blazor.Fluent.Components.ConfirmDialog
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.CancelText.get -> string?
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.CancelText.set -> void
 Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.ConfirmDialog() -> void
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.ConfirmText.get -> string?
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.ConfirmText.set -> void
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.Message.get -> string?
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.Message.set -> void
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.OnCancelled.set -> void
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.OnConfirmed.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.OnConfirmed.set -> void
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.Title.get -> string?
-Polhem.Web.Blazor.Fluent.Components.ConfirmDialog.Title.set -> void
 Polhem.Web.Blazor.Fluent.Components.FormPage
 Polhem.Web.Blazor.Fluent.Components.FormPage.FormPage() -> void
 Polhem.Web.Blazor.Fluent.Components.PolhemDialog
@@ -53,18 +41,6 @@ Polhem.Web.Blazor.Fluent.Controls.Editors.MemoEdit.MemoEdit() -> void
 Polhem.Web.Blazor.Fluent.Controls.Editors.NumericEdit
 Polhem.Web.Blazor.Fluent.Controls.Editors.NumericEdit.NumericEdit() -> void
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Compact.get -> bool
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Compact.set -> void
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.DataObject.get -> Polhem.Web.Blazor.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.DataObject.set -> void
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.EditCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.EditCancelled.set -> void
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.EditCommitted.set -> void
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Layout.set -> void
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Row.get -> System.Data.DataRow?
-Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.Row.set -> void
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditDialog.RowEditDialog() -> void
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditPanel
 Polhem.Web.Blazor.Fluent.Controls.Editors.RowEditPanel.RowEditPanel() -> void
@@ -77,19 +53,8 @@ Polhem.Web.Blazor.Fluent.Controls.Editors.YearMonthEdit.YearMonthEdit() -> void
 Polhem.Web.Blazor.Fluent.Controls.FormLayoutPresenter
 Polhem.Web.Blazor.Fluent.Controls.FormLayoutPresenter.FormLayoutPresenter() -> void
 Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Applied.set -> void
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Column.set -> void
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Field.get -> Polhem.Definition.Forms.FormField!
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Field.set -> void
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Filters.set -> void
 Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.GridColumnFilter() -> void
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
-Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Kind.set -> void
 Polhem.Web.Blazor.Fluent.Controls.GridControl
-Polhem.Web.Blazor.Fluent.Controls.GridControl.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Polhem.Web.Blazor.Fluent.Controls.GridControl.GridControl() -> void
 Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>
 Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>.PolhemDataGrid(Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration! configuration) -> void
@@ -101,17 +66,19 @@ Polhem.Web.Blazor.Fluent.Shell.PolhemShellNavMenu.PolhemShellNavMenu() -> void
 Polhem.Web.Blazor.Fluent.Shell.PolhemShellSignIn
 Polhem.Web.Blazor.Fluent.Shell.PolhemShellSignIn.PolhemShellSignIn() -> void
 Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders
+Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.IsDarkMode.get -> bool?
+Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.IsDarkMode.set -> void
 Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.PolhemFluentProviders() -> void
 Polhem.Web.Blazor.Fluent._Imports
 Polhem.Web.Blazor.Fluent._Imports.Execute() -> void
 Polhem.Web.Blazor.Fluent._Imports._Imports() -> void
-override Polhem.Web.Blazor.Fluent.Components.FormPage.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Fluent.Components.PolhemDialog.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnInitialized() -> void
-override Polhem.Web.Blazor.Fluent.Controls.GridControl.OnParametersSet() -> void
-override Polhem.Web.Blazor.Fluent.Controls.GridControl.ShouldRender() -> bool
+override Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Toggle() -> void
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.OpenPopupSelector.get -> string!
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.RefreshRowList() -> void
+override Polhem.Web.Blazor.Fluent.Controls.GridControl.ReplayDelayMilliseconds.get -> int
+override Polhem.Web.Blazor.Fluent.Theming.PolhemFluentProviders.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 static Polhem.Web.Blazor.Fluent.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!
 static Polhem.Web.Blazor.Fluent.DependencyInjection.PolhemFluentServiceCollectionExtensions.AddPolhemFluent(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 virtual Polhem.Web.Blazor.Fluent.Controls.Editors.DateEdit.ModifierClass.get -> string!

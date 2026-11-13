@@ -29,3 +29,11 @@ POLHEM3002 | Polhem.Definition | Warning | DefinitionCollectionPropertyAnalyzer 
 POLHEM3003 | Polhem.Business | Warning | ExecFuncAccessControlAnalyzer — an ExecFunc handler method must declare access control
 POLHEM4005 | Polhem.Serialization | Warning | CollectionAddOverloadAnalyzer — a framework collection should expose a single public Add
 POLHEM4006 | Polhem.Serialization | Error | ParameterlessConstructorAnalyzer — a serialized type must have a public parameterless constructor
+
+## Release 1.13.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+POLHEM3004 | Polhem.Repository | Warning | RepositoryDbAccessFactoryAnalyzer — a repository must create its database access through CreateDbAccess
