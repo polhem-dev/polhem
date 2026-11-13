@@ -50,6 +50,24 @@
         "maxLength": -1,
         "caption": "row_guid",
         "defaultValue": null
+      },
+      {
+        "name": "photo",
+        "type": "Binary",
+        "allowNull": true,
+        "readOnly": false,
+        "maxLength": -1,
+        "caption": "photo",
+        "defaultValue": ""
+      },
+      {
+        "name": "total",
+        "type": "Integer",
+        "allowNull": true,
+        "readOnly": true,
+        "maxLength": -1,
+        "caption": "total",
+        "defaultValue": null
       }
     ],
     "primaryKeys": [
@@ -63,7 +81,9 @@
           "amount": "79228162514264337593543950335",
           "ref_no": "9007199254740993",
           "hired_at": "2026-03-14T15:09:26.535",
-          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff"
+          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+          "photo": "AQL6/w==",
+          "total": 3
         }
       },
       {
@@ -73,14 +93,18 @@
           "amount": "0.0000000000000000000000000001",
           "ref_no": "1",
           "hired_at": "2026-03-14T15:09:26.535",
-          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff"
+          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+          "photo": null,
+          "total": 5
         },
         "original": {
           "sys_id": "E002",
           "amount": "10",
           "ref_no": "1",
           "hired_at": "2026-03-14T15:09:26.535",
-          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff"
+          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+          "photo": null,
+          "total": 5
         }
       },
       {
@@ -90,7 +114,9 @@
           "amount": "7",
           "ref_no": "9223372036854775807",
           "hired_at": "2026-03-14T15:09:26.535",
-          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff"
+          "row_guid": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+          "photo": null,
+          "total": 8
         }
       }
     ]
