@@ -77,16 +77,17 @@ namespace Polhem.Web.Blazor.BehaviorTests
             return found!;
         }
 
-        private IRenderedComponent<ContainerFragment> RenderFilter()
+        private IRenderedComponent<ContainerFragment> RenderFilter(FormField? field = null, ColumnFilterKind kind = ColumnFilterKind.Number)
         {
             OnBeforeRender();
             var type = FilterType;
+            field ??= _field;
             return Render(b =>
             {
                 b.OpenComponent(0, type);
-                b.AddAttribute(1, nameof(GridColumnFilterBase.Column), new LayoutColumn { FieldName = _field.FieldName, Caption = _field.Caption });
-                b.AddAttribute(2, nameof(GridColumnFilterBase.Field), _field);
-                b.AddAttribute(3, nameof(GridColumnFilterBase.Kind), ColumnFilterKind.Number);
+                b.AddAttribute(1, nameof(GridColumnFilterBase.Column), new LayoutColumn { FieldName = field.FieldName, Caption = field.Caption });
+                b.AddAttribute(2, nameof(GridColumnFilterBase.Field), field);
+                b.AddAttribute(3, nameof(GridColumnFilterBase.Kind), kind);
                 b.AddAttribute(4, nameof(GridColumnFilterBase.Filters), _filters);
                 b.AddAttribute(5, nameof(GridColumnFilterBase.Applied),
                     EventCallback.Factory.Create<ColumnFilterChange>(this, change => _applied.Add(change)));
@@ -200,6 +201,32 @@ namespace Polhem.Web.Blazor.BehaviorTests
             cut.Find(OpenButton).Click();
 
             WaitForPanel(cut, () => Assert.Equal("2", Assert.Single(FindInPanel(cut, FirstInput)).GetAttribute("value")));
+        }
+
+        [Fact]
+        [DisplayName("A Boolean column's panel offers a choice instead of a text box")]
+        public void Open_BooleanColumn_OffersAChoice()
+        {
+            var cut = RenderFilter(new FormField("active", "Active", FieldDbType.Boolean), ColumnFilterKind.Boolean);
+
+            cut.Find(OpenButton).Click();
+
+            WaitForPanel(cut, () =>
+            {
+                Assert.Single(FindInPanel(cut, ".polhem-grid-filter__first"));
+                Assert.Empty(FindInPanel(cut, ".polhem-grid-filter__second"));
+            });
+        }
+
+        [Fact]
+        [DisplayName("A date column's panel offers a range of two boxes")]
+        public void Open_DateColumn_OffersARange()
+        {
+            var cut = RenderFilter(new FormField("hired", "Hired", FieldDbType.Date), ColumnFilterKind.Date);
+
+            cut.Find(OpenButton).Click();
+
+            WaitForPanel(cut, () => Assert.Single(FindInPanel(cut, ".polhem-grid-filter__second")));
         }
     }
 }
