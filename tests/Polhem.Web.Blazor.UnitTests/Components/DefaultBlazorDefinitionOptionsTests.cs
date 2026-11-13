@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.UnitTests.Components
         [DisplayName("Without host options the definitions are assembled by the loader with no default language")]
         public void Instance_UsesTheLoaderWithoutDefaultLanguage()
         {
-            IBlazorDefinitionOptions options = DefaultBlazorDefinitionOptions.Instance;
+            var options = DefaultBlazorDefinitionOptions.Instance;
 
             Assert.True(options.UseDefinitionLoader);
             Assert.Equal(string.Empty, options.DefaultLanguage);

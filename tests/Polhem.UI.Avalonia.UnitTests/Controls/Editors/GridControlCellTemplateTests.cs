@@ -122,7 +122,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             Assert.True(checkBox.IsEnabled);
             Assert.Equal(global::Avalonia.Layout.HorizontalAlignment.Center, checkBox.HorizontalAlignment);
-            Assert.Equal(true, fixture.Lines.Rows[0]["done"]);
+            Assert.True(fixture.Lines.Rows[0]["done"] is true);
         }
 
         [Fact]

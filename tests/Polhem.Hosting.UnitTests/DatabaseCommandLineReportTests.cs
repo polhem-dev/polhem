@@ -169,7 +169,7 @@ namespace Polhem.Hosting.UnitTests
             return new CacheDefineAccess(storage, paths, new CacheContainerService(storage, paths, $"cmdline-{Guid.NewGuid():N}"), []);
         }
 
-        private static void RemoveCompanyColumn(IDefineAccess access, string tableName)
+        private static void RemoveCompanyColumn(CacheDefineAccess access, string tableName)
         {
             var schema = access.GetTableSchema(DbCategoryIds.Company, tableName).Clone();
             schema.Fields!.Remove(SysFields.CompanyId);

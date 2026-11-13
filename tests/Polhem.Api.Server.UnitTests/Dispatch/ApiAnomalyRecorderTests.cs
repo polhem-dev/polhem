@@ -33,7 +33,7 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
             public void Remove(Guid accessToken) { }
         }
 
-        private static IServiceProvider Services(IAnomalyLogWriter? writer, AuditLogOptions? options)
+        private static ServiceProvider Services(IAnomalyLogWriter? writer, AuditLogOptions? options)
         {
             var services = new ServiceCollection();
             if (writer != null) services.AddSingleton(writer);

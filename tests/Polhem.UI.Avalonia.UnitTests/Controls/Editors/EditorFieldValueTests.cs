@@ -88,7 +88,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             editor.Bind(dataObject, ColumnOf(layout, "done"), row);
 
-            Assert.Equal(true, editor.FieldValue);
+            Assert.True(editor.FieldValue is true);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         {
             var editor = new CheckEdit { IsChecked = null };
 
-            Assert.Equal(false, editor.FieldValue);
+            Assert.True(editor.FieldValue is false);
         }
 
         [Fact]
