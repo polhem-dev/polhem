@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: ab265421cfcd7773eea387c30b6f41c915434987 -->
+<!-- source: en/getting-started/getting-started.md blob: 360e81bc649c1b1289800ca3075b6717245ec7f8 -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -129,7 +129,7 @@ using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Polhem.JsonRpc.AspNetCore;
 
 DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));

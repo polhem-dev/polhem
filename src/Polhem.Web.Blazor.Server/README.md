@@ -81,7 +81,6 @@ its title and the values the sign-in screen starts with, and keeps only its own 
 ```csharp
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Shell;
 
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 builder.Services.AddPolhemShell(shell =>

@@ -60,8 +60,8 @@ application's own data through its own implementation of `IFormApiConnector`.
   every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
   user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
   `LiveComputationDegradation` describes why it stopped computing: the field whose expression failed, and the failure.
-- `Connectors/ListFilterState` -- the column filters of a form list, turned into the same `FilterNode` by every head.
-- `Connectors/CardListState` -- the rows of a list a phone shows as cards, accumulated a page at a time as the user
+- `Lists/ListFilterState` -- the column filters of a form list, turned into the same `FilterNode` by every head.
+- `Lists/CardListState` -- the rows of a list a phone shows as cards, accumulated a page at a time as the user
   scrolls.
 
 ### The Form Data Object
@@ -140,5 +140,6 @@ heads behave the same:
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `TimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `GridColumnRules`, `FieldCaptionRules`
-- `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`, `ListSelectFields`, `ListPagingState`
+- `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
+- `Lists/` -- `ListFilterState`, `CardListState`, `ListPagingState`, `ListSelectFields`, `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`

@@ -131,7 +131,7 @@ using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Polhem.JsonRpc.AspNetCore;
 
 DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));

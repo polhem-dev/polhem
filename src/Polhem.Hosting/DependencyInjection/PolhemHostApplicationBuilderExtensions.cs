@@ -17,7 +17,10 @@ namespace Polhem.Hosting.DependencyInjection
         /// </summary>
         /// <param name="builder">The host builder.</param>
         /// <param name="configure">Changes to the defaults of <see cref="PolhemBackendOptions"/>.</param>
-        /// <returns>The paths the framework was registered with.</returns>
+        /// <returns>
+        /// The paths the framework was registered with, unlike the other registration methods, which return what they
+        /// extend: a host that creates or upgrades its databases at startup needs the definition folder this method found.
+        /// </returns>
         /// <remarks>
         /// <para>Register the database providers and dialects before the host runs; this method does not, so a host
         /// carries only the drivers it uses. A host that serves the API over HTTP adds the JSON-RPC endpoint itself.</para>

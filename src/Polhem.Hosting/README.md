@@ -55,7 +55,7 @@ Register the database providers first (see the `Polhem.Db` README).
 ### ASP.NET Core host
 
 ```csharp
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Polhem.JsonRpc.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,7 +89,7 @@ using Microsoft.Extensions.Hosting;
 using Polhem.Api.Client;
 using Polhem.Core;
 using Polhem.Definition;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 
 var paths = new PathOptions { DefinePath = definePath };
 var settings = SystemSettingsLoader.Load(paths);
@@ -132,9 +132,10 @@ when to use each.
 
 ## Directory Structure
 
-- `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
-- `PolhemHostApplicationBuilderExtensions.cs`, `PolhemBackendOptions.cs` -- `AddPolhemBackend` and its options
-- `BackendDefaultTypes.cs` -- the type names used when a `BackendComponents` entry is left blank
+- `DependencyInjection/` (namespace `Polhem.Hosting.DependencyInjection`):
+  - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
+  - `PolhemHostApplicationBuilderExtensions.cs`, `PolhemBackendOptions.cs` -- `AddPolhemBackend` and its options
+  - `BackendDefaultTypes.cs` -- the type names used when a `BackendComponents` entry is left blank
 - `ApiKeys/` -- the startup warning while no API key has been issued
 - `Audit/` -- `IAuditLogSink` and the internal audit writers
 - `CacheNotify/` -- the cache-notify poller

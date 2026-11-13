@@ -75,7 +75,6 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 ```csharp
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 using Polhem.Web.Blazor.Server.DependencyInjection;
-using Polhem.Web.Blazor.Server.Shell;
 
 builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 builder.Services.AddPolhemShell(shell =>

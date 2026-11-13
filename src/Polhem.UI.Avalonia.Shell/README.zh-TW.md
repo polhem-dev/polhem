@@ -24,15 +24,15 @@
 | 步驟 | 畫面 |
 |------|------|
 | 連線 | 服務端點與 API 金鑰，先 ping 過才往下走。兩者都會記住。 |
-| 登入 | 公司代號、帳號、密碼。先 `Login`，再 `EnterCompany`。公司代號預設為這台裝置上次進入的公司。下方列出 `ShellOptions.SignInLinks`，透過平台的 launcher 開啟。 |
+| 登入 | 公司代號、帳號、密碼。先 `Login`，再 `EnterCompany`。公司代號預設為這台裝置上次進入的公司。下方列出 `PolhemShellOptions.SignInLinks`，透過平台的 launcher 開啟。 |
 | 表單 | 選單由伺服器的 `MenuSettings` 產生；每個項目以分頁開啟表單，先顯示 `ListView`，選取記錄後換成 `FormView`。iOS 與 Android 改為整個畫面只放一個表單：選另一個項目就取代目前的表單，選單從表單上方滑出，選好後自動收起。**登出**回到登入畫面；再次登入會重新取得所有定義，所以程式執行中改了定義，不必重新啟動就看得到。 |
 
-登入前的介面語言：應用程式設了 `ShellOptions.DefaultLanguage` 就用它，否則跟隨作業系統（英文或繁體中文；其他語言退回英文），可在連線與登入畫面切換，選擇會被記住。
+登入前的介面語言：應用程式設了 `PolhemShellOptions.DefaultLanguage` 就用它，否則跟隨作業系統（英文或繁體中文；其他語言退回英文），可在連線與登入畫面切換，選擇會被記住。
 命令列加上 `Language=en` 或 `Language=zh-TW` 可指定單次執行的語言，不會改動記住的選擇；smoke test 這類自動化執行就是用它。
 登入後改由帳號的 culture 決定：`ClientInfo.ApplyLoginResult` 會把它設為整個 process 的 culture；登出後回到語言選單上顯示的語言。
 Semi 主題自帶的文字（例如日期選擇器的年／月／日提示）也跟著同一個語言；Semi 沒有的語言退回英文。
 
-殼會以 DefineEditor 的配色套用 Semi 主題（`Polhem.UI.Avalonia` 的 `VisualStudioTheme`；預設淺色，可用 `ShellOptions.DefaultThemeVariant` 改為深色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，
+殼會以 DefineEditor 的配色套用 Semi 主題（`Polhem.UI.Avalonia` 的 `VisualStudioTheme`；預設淺色，可用 `PolhemShellOptions.DefaultThemeVariant` 改為深色，表單畫面有深淺切換），並把 API bridge 註冊為 `UIServices.Provider`。殼不加入字型，
 由各端自行選擇。
 
 ## 用法
@@ -44,7 +44,7 @@ using Polhem.UI.Avalonia.Shell;
 
 public class MyApp : ShellApplication
 {
-    protected override ShellOptions CreateOptions() => new()
+    protected override PolhemShellOptions CreateOptions() => new()
     {
         AppTitle = "My App",
         DefaultEndpoint = "http://localhost:5000/api",
@@ -64,7 +64,7 @@ AppBuilder.Configure<MyApp>().UsePlatformDetect().WithInterFont().StartWithClass
 public partial class AppDelegate : AvaloniaAppDelegate<MyApp> { }
 ```
 
-每個選項的說明在 `ShellOptions` 的 XML 文件。各端不同的設定透過 `ShellApplication.ConfigureOptions` 調整。
+每個選項的說明在 `PolhemShellOptions` 的 XML 文件。各端不同的設定透過 `ShellApplication.ConfigureOptions` 調整。
 瀏覽器端沒有可持久保存的檔案系統，因此以 `BrowserLocalStorage` 把端點、API 金鑰與殼的偏好設定存在 `localStorage`；
 字型畫不出中日韓文字時，也要關掉語言切換：
 
