@@ -27,7 +27,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
         private static ILocator LineCell(IPage page, int column)
             => page.Locator("tr.polhem-grid__row").First.Locator(".polhem-grid-cell__text, .polhem-grid-cell__editor").Nth(column);
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Picking an option with the mouse writes it")]
@@ -80,7 +80,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             await Assertions.Expect(Data(page)).ToContainTextAsync("flag=False");
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Tabbing into a select cell gives it the focus, and the keyboard picks an option")]
@@ -137,7 +137,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             return page;
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("The row edit dialog commits typed text on OK clicked right after typing")]

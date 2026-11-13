@@ -48,7 +48,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             return page;
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Choosing a row and OK writes the value and closes the lookup")]
@@ -64,7 +64,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator("#data")).ToContainTextAsync(LookupTestData.SalesId.ToString());
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("A double-click on a row writes the value and closes the lookup")]
@@ -78,7 +78,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator("#data")).ToContainTextAsync(LookupTestData.EngineeringId.ToString());
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Typing a search and pressing Enter at once searches for what was typed")]
@@ -95,7 +95,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(1);
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Escape closes the lookup and writes nothing")]

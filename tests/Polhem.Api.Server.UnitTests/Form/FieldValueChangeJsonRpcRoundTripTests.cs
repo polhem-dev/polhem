@@ -43,9 +43,10 @@ namespace Polhem.Api.Server.UnitTests.Form
         {
             var response = await Dispatch(new FieldValueChangeRequest { TableName = "Employee", FieldName = "no_such_field" });
 
-            // The business object refuses the field it does not know, so the caller gets a message, not a fault of
-            // the dispatch, the payload or the session.
+            // The business object refuses the field it does not know. The tests run in debug mode, so the message is the
+            // refusal's own text, which tells it apart from the other failures that map to the same code.
             Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
+            Assert.Contains("no_such_field", response.Error.Message, StringComparison.Ordinal);
         }
 
         private Task<TestRpcResponse> Dispatch(FieldValueChangeRequest value)

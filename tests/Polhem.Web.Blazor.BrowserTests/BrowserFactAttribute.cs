@@ -17,10 +17,13 @@ namespace Polhem.Web.Blazor.BrowserTests
         /// <summary>
         /// Initializes a new instance of <see cref="BrowserFactAttribute"/>.
         /// </summary>
-        public BrowserFactAttribute()
-        {
-            if (Environment.GetEnvironmentVariable("CI") is null && !s_chromePaths.Any(File.Exists))
-                Skip = "Chrome is not installed.";
-        }
+        public BrowserFactAttribute() => Skip = SkipReason();
+
+        /// <summary>
+        /// Gets the reason to skip a browser test on this machine, or <c>null</c> to run it.
+        /// </summary>
+        /// <returns>The reason, or <c>null</c>.</returns>
+        internal static string? SkipReason()
+            => Environment.GetEnvironmentVariable("CI") is null && !s_chromePaths.Any(File.Exists) ? "Chrome is not installed." : null;
     }
 }
