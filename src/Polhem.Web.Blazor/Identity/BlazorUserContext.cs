@@ -82,7 +82,8 @@ namespace Polhem.Web.Blazor.Identity
         /// <returns>The server's response.</returns>
         public async Task<EnterCompanyResponse> EnterCompanyAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var response = await _client.System.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(false);
+            // Back on the circuit's dispatcher, so a render never sees the new company with the old capabilities.
+            var response = await _client.System.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(true);
             Company = response.Company;
             Capabilities = new Dictionary<string, PermissionActions>(response.Capabilities, StringComparer.Ordinal);
             return response;

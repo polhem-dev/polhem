@@ -217,7 +217,7 @@ namespace Polhem.Repository
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
             var dbAccess = new DbAccess(databaseId, Context.ConnectionManager);
             bool ownCompanyDatabase = CompanyId.Length > 0
-                && string.Equals(databaseId, DatabaseId, StringComparison.Ordinal);
+                && string.Equals(databaseId, DatabaseId, StringComparison.OrdinalIgnoreCase);
             return ownCompanyDatabase ? dbAccess.BindCompany(CompanyId) : dbAccess;
         }
     }

@@ -205,6 +205,9 @@ namespace Polhem.Hosting
             //       frame it depends on is off. Logs only; never fails.
             services.AddHostedService<Registry.ReplayProtectionWarningService>();
 
+            // 6b-5. Startup error when debug mode is on outside the Development environment. Logs only; never fails.
+            services.AddHostedService<Registry.DebugModeWarningService>();
+
             // 6c. Cache-notify polling hosted service. The poller publishes observed versions to
             //     CacheInfo.NotifyVersions; each cache entry carrying a matching ChangeNotifyKey
             //     expires on its next read. The poller is only registered when enabled; hosts without

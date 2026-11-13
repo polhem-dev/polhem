@@ -81,6 +81,20 @@ namespace Polhem.Repository.UnitTests
             Assert.Null(repository.Open(TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "common")).BoundCompanyId);
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: naming the repository's own database in another case still binds the access to the company")]
+        public void CreateDbAccess_OwnDatabaseInOtherCase_BindsTheCompany()
+        {
+            var ctx = TestRepositoryContext.Create(
+                _fx.GetRequiredService<IDbConnectionManager>(),
+                router: new ProviderScopedRouter(DatabaseType.SQLite),
+                services: new SwitchingSessions("c001"));
+            var repository = new ProbeRepository(ctx);
+
+            // The database settings match an id without regard to case, so this names the same database.
+            Assert.Equal("c001", repository.Open(repository.OwnDatabaseId.ToUpperInvariant()).BoundCompanyId);
+        }
+
         [Fact]
         [DisplayName("A company-bound repository routes to the database of the company it binds to, even when the session switches away and back while it is built")]
         public void Construct_CompanySwitchesAwayAndBack_RoutesToTheBoundCompany()

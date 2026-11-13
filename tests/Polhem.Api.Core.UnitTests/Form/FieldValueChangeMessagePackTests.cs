@@ -88,5 +88,35 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Empty(restored.Errors);
             Assert.Empty(restored.Warnings);
         }
+
+        [Fact]
+        [DisplayName("The error, warning and affected-row maps match a field or table name in any case after both body codecs")]
+        public void ResponseMaps_AfterBothCodecs_MatchKeysInAnyCase()
+        {
+            var change = new FieldValueChangeResponse();
+            change.Errors["Quantity"] = "Too many.";
+            change.Warnings["Price"] = "Below cost.";
+            var save = new SaveResponse();
+            save.AffectedRows["OrderDetail"] = 3;
+            var json = new Polhem.JsonRpc.Payload.JsonPayloadCodec(Polhem.Api.Core.Transformers.JsonBodyOptions.Options);
+
+            var changes = new[]
+            {
+                MessagePackCodec.Deserialize<FieldValueChangeResponse>(MessagePackCodec.Serialize(change))!,
+                (FieldValueChangeResponse)json.Deserialize(json.Serialize(change, typeof(FieldValueChangeResponse)), typeof(FieldValueChangeResponse))!,
+            };
+            var saves = new[]
+            {
+                MessagePackCodec.Deserialize<SaveResponse>(MessagePackCodec.Serialize(save))!,
+                (SaveResponse)json.Deserialize(json.Serialize(save, typeof(SaveResponse)), typeof(SaveResponse))!,
+            };
+
+            Assert.All(changes, restored =>
+            {
+                Assert.True(restored.Errors.ContainsKey("quantity"));
+                Assert.True(restored.Warnings.ContainsKey("PRICE"));
+            });
+            Assert.All(saves, restored => Assert.Equal(3, restored.AffectedRows["orderdetail"]));
+        }
     }
 }

@@ -121,7 +121,9 @@ namespace Polhem.Hosting.Database
             var companyDatabases = GetCategoryDatabases(_defineAccess.GetDatabaseSettings(), DbCategoryIds.Company);
             if (!string.IsNullOrWhiteSpace(requested))
             {
-                if (companyDatabases.Contains(requested, StringComparer.Ordinal)) return requested;
+                // The settings' own spelling, which the company row then stores.
+                var match = companyDatabases.FirstOrDefault(id => string.Equals(id, requested, StringComparison.OrdinalIgnoreCase));
+                if (match is not null) return match;
                 throw new ArgumentException(
                     $"The database '{requested}' is not a database item of the '{DbCategoryIds.Company}' category.",
                     nameof(requested));

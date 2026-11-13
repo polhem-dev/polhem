@@ -118,6 +118,21 @@ namespace Polhem.Hosting.Database
             }
         }
 
+        /// <summary>
+        /// Upgrades the tables of one category in one of its databases, one entry per table as each finishes.
+        /// </summary>
+        private IEnumerable<TableUpgradeEntry> UpgradeDatabase(string databaseId, string categoryId,
+            List<TableItem> tables, UpgradeOptions? options, bool dryRun, bool companyIdsChecked)
+        {
+            foreach (var tableName in tables.Select(table => table.TableName))
+            {
+                bool mayNarrowCompanyId = companyIdsChecked
+                    && string.Equals(categoryId, DbCategoryIds.Common, StringComparison.Ordinal)
+                    && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
+                yield return UpgradeTable(databaseId, categoryId, tableName, options, dryRun, mayNarrowCompanyId);
+            }
+        }
+
         private static DatabaseCheckEntry CheckFailed(string databaseId, string databaseName, string error)
             => new() { DatabaseId = databaseId, DatabaseName = databaseName, Error = error };
 
@@ -157,17 +172,11 @@ namespace Polhem.Hosting.Database
                     continue;
                 }
 
-                foreach (var databaseId in databases)
+                foreach (var entry in databases.SelectMany(databaseId =>
+                    UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked)))
                 {
-                    foreach (var tableName in categoryTables.Select(table => table.TableName))
-                    {
-                        bool mayNarrowCompanyId = companyIdsChecked
-                            && string.Equals(category.Id, DbCategoryIds.Common, StringComparison.Ordinal)
-                            && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
-                        var entry = UpgradeTable(databaseId, category.Id, tableName, options, dryRun, mayNarrowCompanyId);
-                        tables.Add(entry);
-                        tableCompleted?.Invoke(entry);
-                    }
+                    tables.Add(entry);
+                    tableCompleted?.Invoke(entry);
                 }
             }
             if (wanted is not null)
@@ -233,8 +242,10 @@ namespace Polhem.Hosting.Database
             }
             catch (KeyNotFoundException)
             {
-                var databaseType = GetDatabaseType(_defineAccess.GetDatabaseSettings(), databaseId);
-                return WithError(entry, ProviderNotRegistered(databaseType));
+                var settings = _defineAccess.GetDatabaseSettings();
+                return WithError(entry, FindItem(settings, databaseId) is { } item
+                    ? ProviderNotRegistered(GetDatabaseType(settings, item))
+                    : $"The database '{databaseId}' is not in the database settings.");
             }
             catch (DefinitionNotFoundException ex)
             {
@@ -284,19 +295,18 @@ namespace Polhem.Hosting.Database
         private static List<string> GetCategoryDatabases(DatabaseSettings settings, string categoryId)
         {
             if (settings.Items is null) return [];
+            // A database id is a key of the settings, which match it without regard to case; a category id is one of
+            // the fixed lowercase values the repository factory parses.
             return settings.Items
                 .Where(item => string.IsNullOrEmpty(item.CategoryId)
-                    ? string.Equals(item.Id, categoryId, StringComparison.Ordinal)
+                    ? string.Equals(item.Id, categoryId, StringComparison.OrdinalIgnoreCase)
                     : string.Equals(item.CategoryId, categoryId, StringComparison.Ordinal))
                 .Select(item => item.Id)
                 .ToList();
         }
 
-        private static DatabaseType GetDatabaseType(DatabaseSettings settings, string databaseId)
-        {
-            var item = settings.Items?.FirstOrDefault(i => string.Equals(i.Id, databaseId, StringComparison.Ordinal));
-            return item is null ? DatabaseType.SQLServer : GetDatabaseType(settings, item);
-        }
+        private static DatabaseItem? FindItem(DatabaseSettings settings, string databaseId)
+            => settings.Items?.FirstOrDefault(i => string.Equals(i.Id, databaseId, StringComparison.OrdinalIgnoreCase));
 
         private static DatabaseType GetDatabaseType(DatabaseSettings settings, DatabaseItem item)
         {

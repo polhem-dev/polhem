@@ -91,6 +91,20 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("Oracle GetCommandText doubles a quote in the table name inside the EXECUTE IMMEDIATE literal")]
+        public void GetCommandText_QuoteInTableName_IsDoubledInTheDropLiteral()
+        {
+            var define = BuildDefineSchema();
+            define.TableName = "st_o'demo";
+            var real = BuildRealSchema();
+            real.TableName = "st_o'demo";
+
+            string sql = BuildSql(define, real);
+
+            Assert.Contains("EXECUTE IMMEDIATE 'DROP TABLE \"ST_O''DEMO\" CASCADE CONSTRAINTS'", sql);
+        }
+
+        [Fact]
         [DisplayName("Oracle GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
