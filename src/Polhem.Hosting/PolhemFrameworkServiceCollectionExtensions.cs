@@ -73,6 +73,11 @@ namespace Polhem.Hosting
         /// process exits, so anything encrypted with it cannot be decrypted by the next run; use it for
         /// tests and throwaway development hosts.
         /// </param>
+        /// <remarks>
+        /// A host that replaces a framework service registers its own after this call. Most services are added with
+        /// <c>Add</c>, where the last registration wins, so a registration made before this call is overridden; only the
+        /// few added with <c>TryAdd</c> keep one made earlier.
+        /// </remarks>
         public static IServiceCollection AddPolhemFramework(
             this IServiceCollection services,
             BackendConfiguration configuration,

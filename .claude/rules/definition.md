@@ -22,6 +22,8 @@ is shared**, regardless of where the data is loaded from, so it applies to both 
 `SessionInfo` is the exception (it is per-session by nature; the cache key is the access token). The one admitted
 in-place mutation is `CacheDefineAccess.GetDatabaseSettings`, which decrypts passwords on the cached instance; its
 WARNING remarks list the three conditions that make it safe, and they do not generalise. Do not copy the shape.
+A collection getter that creates its empty collection on the first read (`FormSchema.Tables`) also writes to a cached
+instance, harmlessly: the collection is empty. A getter that does more than that is a mutation like any other.
 **The complete type list lives only in `docs/en/architecture/development-constraints.md`; this file does not copy it.**
 
 - Need a per-session change → `cached.Clone()` first, then mutate. Not every definition type has `Clone()` today

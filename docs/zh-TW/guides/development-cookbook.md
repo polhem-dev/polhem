@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 34f7262d3b4a2629051bab1dd74195e3cfce8911 -->
+<!-- source: en/guides/development-cookbook.md blob: 99e5c6281c8aa64af67fa4907f820a043633311d -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -983,7 +983,7 @@ var list = new ListView { Schema = schema, FormConnector = connector };
 var record = new FormView { Schema = schema, Layout = layout, FormConnector = connector };
 ```
 
-若要改從本機資料夾讀取定義，把畫面的 `DefinitionSource` 設為建在 `FileDefineStorage` 上的 `StorageDefinitionSource`（`Polhem.UI.Core.Definitions`）；它照原樣回傳定義，不套語系資源，也不套租戶客製。沒有註冊使用者情境時，畫面把使用者視為匿名且不受限制。可執行的範例在 [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/)，以記憶體內的 connector 呈現 `ListView` 與 `FormView`。
+若要改從本機資料夾讀取定義，把畫面的 `DefinitionSource` 設為建在 `FileDefineStorage` 上的 `StorageDefinitionSource`（`Polhem.UI.Core.Definitions`）；它照原樣回傳定義，不套語系資源，也不套租戶客製。沒有註冊使用者情境時，畫面把使用者視為匿名且不受限制。[`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/) 以另一種方式在沒有後端的情況下執行 `ListView` 與 `FormView`：在程式中建立 schema 與 layout、直接設給畫面，資料列則由記憶體內的 connector 提供。
 
 實際範例：[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md)（完整 CRUD 流程；桌面、瀏覽器、iOS 與 Android head 共用一個 UI 專案）與 [`samples/Avalonia.DemoCenter`](../../../samples/Avalonia.DemoCenter/README.zh-TW.md)（控件 demo center）。
 

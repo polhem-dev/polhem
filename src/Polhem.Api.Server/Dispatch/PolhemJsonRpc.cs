@@ -19,8 +19,15 @@ namespace Polhem.Api.Server.Dispatch
         /// </summary>
         /// <returns>The options.</returns>
         /// <remarks>
+        /// <para>
         /// Batch requests are refused (<c>MaxBatchSize</c> is 0). A host that serves batches sets a size through
         /// <c>AddJsonRpcServer</c>, and its rate limit then has to count calls rather than HTTP requests.
+        /// </para>
+        /// <para>
+        /// IMPORTANT: a host that assembles its own options keeps <see cref="PolhemAccessFilter"/> ahead of
+        /// <see cref="PolhemPayloadFilter"/>. The access check is what keeps a request the caller may not make from
+        /// reaching decryption and deserialization.
+        /// </para>
         /// </remarks>
         public static JsonRpcServerOptions CreateServerOptions()
         {

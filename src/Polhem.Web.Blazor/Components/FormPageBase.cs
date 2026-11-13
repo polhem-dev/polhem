@@ -37,7 +37,7 @@ namespace Polhem.Web.Blazor.Components
     /// <see cref="CultureInfo.CurrentUICulture"/> and <see cref="CultureInfo.CurrentCulture"/>; the
     /// captions do because the page assembles its definitions through a
     /// <see cref="FormDefinitionLoader"/> (see <see cref="DefinitionLoader"/>). A
-    /// host applies the signed-in user's culture — <c>LoginResponse.Culture</c>
+    /// host applies the signed-in user's culture — <see cref="Polhem.Api.Core.Messages.System.LoginResponse.Culture"/>
     /// — through ASP.NET Core request localization (for example a culture cookie set after sign-in),
     /// because a circuit's culture is fixed when it starts. The page localizes when it initializes;
     /// a language switch takes effect on pages opened afterwards.

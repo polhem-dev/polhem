@@ -379,6 +379,12 @@ namespace Polhem.Business
         /// </summary>
         /// <param name="args">The input arguments.</param>
         /// <param name="result">The output result.</param>
+        /// <remarks>
+        /// <see cref="ExecFunc"/> checks only that the caller is signed in, and a handler method only what its
+        /// <see cref="Polhem.Business.Attributes.ExecFuncAccessControlAttribute"/> declares. Neither applies a form's permission model, so on a form business
+        /// object every signed-in user of the company can call a function that the form's permissions would deny them.
+        /// A function that reads or changes the form's data checks the caller's permissions itself.
+        /// </remarks>
         protected virtual void DoExecFunc(ExecFuncArgs args, ExecFuncResult result)
         { }
 

@@ -472,7 +472,7 @@ the decision was written in another table **below** the struck-through list, and
 | Item | Reason kept |
 |------|---------|
 | `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute`) | Re-judged as "a design not yet wired up"; the tree view builder that consumes it is separate future work |
-| The designer attributes on definition types: `[Description]`, `[Category]` (with the `PropertyCategories` constants), `[Browsable]`, `[NotifyParentProperty]`, `[TypeConverter(typeof(ExpandableObjectConverter))]` | Decided in the 2026-09-26 round: kept for the planned Avalonia property grid editor, which is to read them. Nothing reads them today, which is expected until that editor exists. `[DefaultValue]` is not in this row: `XmlSerializer` honours it |
+| The designer attributes on definition types: `[Description]`, `[Category]` (with the `PropertyCategories` constants), `[Browsable]`, `[NotifyParentProperty]`, `[TypeConverter(typeof(ExpandableObjectConverter))]` | Read today: the Avalonia `PropertyGridControl` (`PropertyGridMetadata`) reads them through `TypeDescriptor`, and DefineEditor reads `[Description]`. Do not list them as unused. `[DefaultValue]` is not in this row: `XmlSerializer` honours it |
 | `IDefineField` | Implemented by `DbField`; an abstraction not yet consumed, not dead code |
 | `IElementCapabilityResolver` | Its implementation `ElementCapabilityResolver.Default` (in `Polhem.UI.Core` since adr-054) is called by `LayoutCapabilityApplier`, `FormView.Commands` and `ListView.Commands`, and by DemoCenter |
 | `PermissionBindingValidator` | Decided 2026-08-07: keep the code and fix the docs instead; it is a validation API the host calls itself, not something that takes effect at load time |

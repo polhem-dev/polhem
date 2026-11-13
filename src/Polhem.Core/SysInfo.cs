@@ -31,8 +31,7 @@ namespace Polhem.Core
         /// Gets the list of type namespaces allowed for JSON-RPC data transfer (read-only).
         /// Only types in these namespaces are permitted for deserialization to ensure security.
         /// Use <see cref="Initialize"/> to configure custom namespaces.
-        /// Note: Polhem.Core, Polhem.Definition, Polhem.Api.Contracts, Polhem.Api.Core and Polhem.Business are
-        /// built-in default namespaces and do not need to be specified.
+        /// The framework's own namespaces are always in the list and do not need to be specified.
         /// </summary>
         public static IReadOnlyList<string> AllowedTypeNamespaces => s_allowedTypeNamespaces;
 

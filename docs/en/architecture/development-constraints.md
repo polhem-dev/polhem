@@ -89,6 +89,12 @@ handed to you by the cache as frozen.
   reasoning is on `CacheDefineAccess.GetDatabaseSettings`). It is not a pattern
   to copy. `SaveDatabaseSettings` encrypts a clone, so the instance you pass to
   it is not turned into ciphertext.
+- A definition type's collection getter creates its empty collection on the
+  first read (`FormSchema.Tables`, for example), and that read can be on a cached
+  instance. It is harmless because the collection is empty: two first reads at
+  once each create one and either may be kept, and adding to it is what this rule
+  forbids. Anything beyond creating an empty collection in a getter is a mutation
+  this rule forbids too.
 
 ### Forbidden Patterns
 

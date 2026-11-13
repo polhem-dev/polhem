@@ -313,8 +313,8 @@ namespace Polhem.Core.Serialization
 
             if (targetType == typeof(Guid))
             {
-                if (value is string guidStr)
-                    return Guid.Parse(guidStr);
+                if (value is string guidText)
+                    return Guid.Parse(guidText);
                 return value;
             }
 
@@ -322,8 +322,8 @@ namespace Polhem.Core.Serialization
             {
                 if (value is DateTime dt)
                     return dt;
-                if (value is string dtStr)
-                    return DateTime.Parse(dtStr, CultureInfo.InvariantCulture);
+                if (value is string dateTimeText)
+                    return DateTime.Parse(dateTimeText, CultureInfo.InvariantCulture);
                 return value;
             }
 

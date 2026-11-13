@@ -43,22 +43,16 @@ namespace Polhem.Db.Providers.SqlServer
         /// <param name="tableName">The table name.</param>
         public TableSchema? GetTableSchema(string tableName)
         {
-            // Return null if the table does not exist
             if (!TableExists(tableName)) { return null; }
 
             var dbTable = new TableSchema();
             dbTable.TableName = tableName;
-            // Retrieve the table-level description from extended property
             dbTable.DisplayName = GetTableDescription(tableName);
 
-            // Retrieve the index data source
             var indexes = GetTableIndexes(tableName);
-            // Parse the primary key
             ParsePrimaryKey(dbTable, indexes);
-            // Parse the remaining indexes
             IndexRowsParser.ParseIndexes(dbTable, indexes);
 
-            // Retrieve the column data source
             var columns = GetColumns(tableName);
             foreach (DataRow row in columns.Rows)
             {
@@ -129,9 +123,7 @@ namespace Polhem.Db.Providers.SqlServer
             table.DefaultView.Sort = "KeyOrdinal";
             if (table.DefaultView.IsEmpty()) { return; }
 
-            // Get the index name
             string name = ValueUtilities.CStr(table.DefaultView[0]["name"]);
-            // Read the primary key index.
             var tableIndex = new DbTableIndex();
             tableIndex.PrimaryKey = true;
             tableIndex.Name = name;
