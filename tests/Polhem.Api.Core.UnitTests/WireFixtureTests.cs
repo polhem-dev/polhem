@@ -116,6 +116,12 @@ namespace Polhem.Api.Core.UnitTests
         /// and a value such as <c>1234.56</c> happens to look unchanged even after <c>JSON.parse</c> turns it into a
         /// double, so the fixture would fail to demonstrate the rule. With <c>decimal.MaxValue</c> and 2^53+1, a reader
         /// that treats them as numbers stops matching immediately.
+        /// <para>
+        /// <c>photo</c> is a Binary column whose default is an empty <c>byte[]</c>, and <c>total</c> is read-only while
+        /// the Modified row carries it in both <c>current</c> and <c>original</c>. Both shapes once failed to read back
+        /// over JSON (a default written as base64 came back as the string <c>""</c>, and the read-only flag was applied
+        /// before the rows), and a client in another language has to read them as well.
+        /// </para>
         /// </remarks>
         private static DataTable BuildTable()
         {
@@ -125,15 +131,19 @@ namespace Polhem.Api.Core.UnitTests
             table.Columns.Add("ref_no", typeof(long));
             table.Columns.Add("hired_at", typeof(DateTime));
             table.Columns.Add("row_guid", typeof(Guid));
+            table.Columns.Add("photo", typeof(byte[])).DefaultValue = Array.Empty<byte>();
+            var total = table.Columns.Add("total", typeof(int));
             table.PrimaryKey = [table.Columns["sys_id"]!];
 
-            var unchanged = table.Rows.Add("E001", 79228162514264337593543950335m, 9007199254740993L, s_fixedUtc, s_fixedGuid);
-            var modified = table.Rows.Add("E002", 10m, 1L, s_fixedUtc, s_fixedGuid);
+            var unchanged = table.Rows.Add("E001", 79228162514264337593543950335m, 9007199254740993L, s_fixedUtc, s_fixedGuid,
+                new byte[] { 1, 2, 250, 255 }, 3);
+            var modified = table.Rows.Add("E002", 10m, 1L, s_fixedUtc, s_fixedGuid, DBNull.Value, 5);
             table.AcceptChanges();
             _ = unchanged;
             modified["amount"] = 0.0000000000000000000000000001m;   // A Modified row puts both current and original on the wire.
 
-            table.Rows.Add("E003", 7m, long.MaxValue, s_fixedUtc, s_fixedGuid);  // Added
+            table.Rows.Add("E003", 7m, long.MaxValue, s_fixedUtc, s_fixedGuid, DBNull.Value, 8);  // Added
+            total.ReadOnly = true;   // After the rows, as a provider-reported identity or computed column would be.
             return table;
         }
 
@@ -295,6 +305,13 @@ namespace Polhem.Api.Core.UnitTests
             ];
             foreach (var name in required)
                 Assert.Contains(name, names);
+
+            // The table shapes a reader has got wrong before: a Binary column with a default, and a read-only column
+            // on a Modified row. Without them in the fixture, a client's suite could not catch either.
+            var table = BuildTable();
+            Assert.Contains(table.Columns.Cast<DataColumn>(), c => c.DataType == typeof(byte[]) && c.DefaultValue is byte[]);
+            Assert.Contains(table.Columns.Cast<DataColumn>(), c => c.ReadOnly);
+            Assert.Contains(table.Rows.Cast<DataRow>(), r => r.RowState == DataRowState.Modified);
 
             // Every discriminator needs a fixture: missing one means some type silently gets a wrong value on the TS side.
             //

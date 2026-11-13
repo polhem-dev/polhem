@@ -94,6 +94,12 @@ These are the places where a plausible-looking implementation is silently wrong:
 - **`DataTable` cells carry no discriminator** — their types come from the column metadata in the
   same document, so the table shape is identical to a Plain payload's. That is what makes the
   quoting rule above load-bearing here: a cell has nothing else to say "this is a decimal".
+- **A column's `defaultValue` is read against the column's type**, as its cells are. A Binary column's
+  default is base64, so `""` is an empty byte array, not an empty string; the `datatable` fixture's
+  `photo` column has exactly that default.
+- **Apply a column's `readOnly` after its rows.** A `Modified` row writes its current values into a row
+  already in the table, which a read-only column refuses; the `datatable` fixture's `total` column is
+  read-only on a `Modified` row.
 - **Enums travel as strings** (`"GreaterThan"`, `"Desc"`).
 - **Date and time values are round-trip formatted** and the wire is UTC in both directions. Applying
   the user's time zone is the client's job, and nothing on the server checks it — get it wrong and
