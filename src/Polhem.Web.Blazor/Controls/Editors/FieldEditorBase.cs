@@ -238,17 +238,6 @@ namespace Polhem.Web.Blazor.Controls.Editors
         }
 
         /// <summary>
-        /// Builds the class attribute of the rendered input: the shared editor class, the editor's own
-        /// modifier class, and the read-only modifier when the editor does not accept input.
-        /// </summary>
-        /// <param name="modifierClass">The editor's modifier class, such as <c>polhem-field-editor--text</c>.</param>
-        /// <returns>The class attribute value.</returns>
-        protected string BuildCssClass(string modifierClass)
-            => IsEditable
-                ? "polhem-field-editor " + modifierClass
-                : "polhem-field-editor " + modifierClass + " polhem-field-editor--readonly";
-
-        /// <summary>
         /// Pulls the bound value from the data object into the editor's display state.
         /// </summary>
         protected abstract void RefreshFromSource();

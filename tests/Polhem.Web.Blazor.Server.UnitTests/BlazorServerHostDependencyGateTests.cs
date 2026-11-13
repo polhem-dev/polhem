@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using Polhem.Web.Blazor.Server.Components;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -46,7 +45,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         public void Host_ReferencedAssemblies_ContainNoUIFrameworkOrOtherHost()
         {
             // The compiled references, which a reference marked PrivateAssets="all" hides from .deps.json but not from here.
-            var referenced = typeof(PolhemAccessTokenProvider).Assembly.GetReferencedAssemblies()
+            var referenced = typeof(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions).Assembly.GetReferencedAssemblies()
                 .Select(name => name.Name ?? string.Empty)
                 .ToArray();
 

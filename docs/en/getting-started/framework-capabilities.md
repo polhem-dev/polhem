@@ -42,7 +42,7 @@ See [FormSchema-Driven Database Access](../definitions/formschema-data-access.md
 | **Schema upgrade** | diff → plan → execute pipeline with automatic ALTER-vs-rebuild decisions and dry runs. See [Database Schema Upgrade](../database/database-schema-upgrade.md) |
 | **Paging, sorting, filtering** | `PagingInfo`, `SortField` and a `FilterNode` condition tree supporting nested AND / OR groups |
 | **Numeric rounding policy** | Round-then-sum: computed numeric fields are rounded per row by their `NumberKind`, so a total summed from the rounded rows matches them |
-| **Connection scope** | `DbConnectionScope` owns connection and transaction lifetime across a unit of work |
+| **Connection scope** | `DbAccess` opens and closes a connection for each call, or runs every call on a connection the caller passes in |
 | **Anomaly detection** | `DbAccess` records failed commands and commands over the configured thresholds (execution time, rows read, rows affected) to the database anomaly log |
 | **Two-track repositories** | CRUD comes from `DataFormRepository` driven by the FormSchema; reports and batch work go to a hand-written repository |
 

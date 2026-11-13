@@ -17,7 +17,12 @@ namespace Polhem.Web.Blazor.Server.Components
     /// clears both: <see cref="Polhem.Api.Client.PolhemApiClient.SignOut"/> and <see cref="Clear"/>.
     /// State lives in memory only, scoped to the SignalR circuit. It does not survive a reconnect to
     /// a new circuit or a page refresh.
+    /// <para>
+    /// Obsolete: nothing in the framework or its samples places it. A page reads the signed-in state from the circuit's
+    /// client, <c>Client.Session.Credentials</c>, and the shell's layout holds it for an application.
+    /// </para>
     /// </remarks>
+    [Obsolete("Read the signed-in state from the circuit's PolhemApiClient (Client.Session.Credentials), or use the shell's layout. PolhemAccessTokenProvider is planned for removal in 2.0.")]
     public sealed partial class PolhemAccessTokenProvider : ComponentBase
     {
         private bool _isAttached;

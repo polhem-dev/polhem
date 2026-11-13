@@ -22,7 +22,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         private static readonly string[] s_assemblyPaths =
         [
             typeof(Polhem.Web.Blazor.Components.FormPageBase).Assembly.Location,
-            typeof(Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider).Assembly.Location,
+            typeof(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions).Assembly.Location,
             typeof(Polhem.Web.Blazor.Mud.Controls.GridControl).Assembly.Location,
             typeof(Polhem.Web.Blazor.Fluent.Controls.GridControl).Assembly.Location,
         ];

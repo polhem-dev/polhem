@@ -50,8 +50,8 @@ circuit 在自己的 client 上登入，所以一位使用者的身分不會進�
 
 ## 本套件提供的內容
 
-- `PolhemAccessTokenProvider` -- 持有頁面的登入狀態（存取權杖），並以 cascading value 提供給子元件。實際的呼叫
-  使用 circuit 的 `PolhemApiClient`，登入時已在其上完成登入。
+- `PolhemAccessTokenProvider` -- 自 1.13.0 起標為過時，預計在 2.0 移除。頁面從 circuit 的 `PolhemApiClient`
+  （`Client.Session.Credentials`，登入時已在其上完成登入）讀取登入狀態；應用程式則由外殼的 `PolhemShellLayout` 持有它。
 
 控制項來自 UI 套件，例如 [`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.zh-TW.md)；狀態來自共用的 [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.zh-TW.md)。應用程式參考一個 UI 套件和這個宿主。
 

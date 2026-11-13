@@ -1,1 +1,2 @@
 #nullable enable
+*REMOVED*Polhem.Api.Client.ApiSessionContext.NextSequence() -> long

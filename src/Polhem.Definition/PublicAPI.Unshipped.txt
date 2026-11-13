@@ -18,3 +18,7 @@ static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.
 static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
 static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
 const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
+*REMOVED*Polhem.Definition.Filters.FilterGroup.ShouldSerializeNodes() -> bool
+*REMOVED*Polhem.Definition.Organization.DepartmentNode.ShouldSerializeChildren() -> bool
+Polhem.Definition.Filters.FilterGroup.NodesSpecified.get -> bool
+Polhem.Definition.Organization.DepartmentNode.ChildrenSpecified.get -> bool

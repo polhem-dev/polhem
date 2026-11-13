@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: ee568ae7087a2aacb96886eea3066cadceaed929 -->
+<!-- source: en/guides/development-cookbook.md blob: 34f7262d3b4a2629051bab1dd74195e3cfce8911 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -927,7 +927,7 @@ app.Run();
 }
 ```
 
-`PolhemLoginPanel` 在 circuit 的 client 上登入，並把 token 交給 `PolhemAccessTokenProvider`，由它保存頁面的登入狀態並以 cascading 方式傳遞；`FormPage` 依 `ProgId` 呈現整張表單。[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 有以它們建成的 Blazor head。元件自己的文字來自 `AddPolhemBlazor` 註冊的 `IStringLocalizer<PolhemUIText>` —— 一個 `LanguageResourceStringLocalizer`，依 circuit 目前的 UI culture，先讀宿主的語系資源，再讀框架內附的翻譯。宿主若自行為 `PolhemUIText` 註冊 localizer，會保留宿主的那一個。
+`PolhemLoginPanel` 在 circuit 的 client 上登入並觸發 `OnLoggedIn`；此後 client 就帶著這個 session，頁面像上面的範例一樣從 `Client.Session.Credentials` 讀取。`FormPage` 依 `ProgId` 呈現整張表單。`PolhemShellLayout` 為應用程式把這些組在一起，包含登入、公司、伺服器的選單與路由頁面；[`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.zh-TW.md) 的 Blazor head 都以它作為預設版面。元件自己的文字來自 `AddPolhemBlazor` 註冊的 `IStringLocalizer<PolhemUIText>` —— 一個 `LanguageResourceStringLocalizer`，依 circuit 目前的 UI culture，先讀宿主的語系資源，再讀框架內附的翻譯。宿主若自行為 `PolhemUIText` 註冊 localizer，會保留宿主的那一個。
 
 `FormPage` 載入定義的方式與 Avalonia 畫面相同：經由它為每個頁面在 circuit 的 client 上建立的 `FormDefinitionLoader`（以 `PolhemBlazorOptions.DefaultLanguage` 作為語言回退的最後一站），因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用。在 `AddPolhemBlazor` 中設定 `options.UseDefinitionLoader = false` 會照原樣呈現定義；把 loader 傳給頁面的 `DefinitionLoader` 參數，則可改變單一頁面的組裝方式（例如提供 `CompanyAccessor`，套用公司的數值格式）。儲存前，`FormPage` 會檢查標記為 `Required` 的欄位；只要有空白，就在工具列上方列出這些欄位，且不送出儲存。Avalonia 的 `FormView` 也會這樣做，訊息顯示在它的錯誤列。
 

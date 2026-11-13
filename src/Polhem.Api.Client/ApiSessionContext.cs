@@ -25,6 +25,11 @@ namespace Polhem.Api.Client
         /// Replaces the credentials with those of a new sign-in.
         /// </summary>
         /// <param name="credentials">The new credentials.</param>
+        /// <remarks>
+        /// <see cref="Polhem.Api.Client.Connectors.SystemApiConnector"/> calls it after a successful login. It is public for a
+        /// front end that signs in through its own bridge, such as <c>ClientInfo</c> in <c>Polhem.UI.ApiBridge</c>; other code that holds
+        /// the client should not replace the credentials.
+        /// </remarks>
         public void SignIn(ApiSessionCredentials credentials)
         {
             ArgumentNullException.ThrowIfNull(credentials);
@@ -52,6 +57,6 @@ namespace Polhem.Api.Client
         /// client signs in again and receives a new token.
         /// </para>
         /// </remarks>
-        public long NextSequence() => Interlocked.Increment(ref _sequence);
+        internal long NextSequence() => Interlocked.Increment(ref _sequence);
     }
 }

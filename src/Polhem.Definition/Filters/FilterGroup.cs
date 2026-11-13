@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Text.Json.Serialization;
 
@@ -45,15 +46,13 @@ namespace Polhem.Definition.Filters
         public FilterNodeCollection Nodes { get; set; }
 
         /// <summary>
-        /// Determines whether the Nodes property should be serialized.
+        /// Gets whether <see cref="Nodes"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <returns>
-        /// XmlSerializer automatically detects ShouldSerialize[PropertyName]() methods; if the method returns false, the property is not serialized.
-        /// </returns>
-        public bool ShouldSerializeNodes()
-        {
-            return Nodes != null && Nodes.Count > 0;
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool NodesSpecified => Nodes is { Count: > 0 };
 
         /// <summary>
         /// Creates an AND group.
