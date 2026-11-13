@@ -18,8 +18,9 @@ namespace Polhem.Db.Dml
     /// convert it, and SQL Server converted it to the column's own precision, so `'10.5'` compared with a whole-number
     /// decimal column as 11 and the filter returned no rows. The field's
     /// <see cref="FormField.DbType"/> says what the value means, so the conversion happens here, once, for every
-    /// payload format. <c>GetListFilterValueDbTests</c> runs it against each database; a relation field converts by
-    /// the type it declares, which nothing checks against its source column.
+    /// payload format. <c>GetListFilterValueDbTests</c> runs it against each database. A relation field converts by
+    /// the type it declares; analyzer rule POLHEM2008 reports a definition file whose relation field declares a type
+    /// other than its source column's.
     /// </para>
     /// <para>
     /// Only <see cref="string"/> values are converted, and only for comparisons. The <c>LIKE</c> operators match text,
