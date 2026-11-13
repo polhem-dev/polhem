@@ -322,7 +322,7 @@ reflection.
      A custom type must derive from `DataFormRepository` and is built with `ActivatorUtilities`; read the WARNING in
      the `DataFormRepository` ctor remarks before giving a subclass its own ctor parameters
    - **If the type cannot be resolved, it throws**, the same policy as the BO axis: data access has no harmless degraded mode
-4. `IRepositoryFactory` is registered in `Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` through
+4. `IRepositoryFactory` is registered in `Polhem.Hosting/DependencyInjection/PolhemFrameworkServiceCollectionExtensions.cs` through
    `CreateConfigurableService`, which builds the configured type with `ActivatorUtilities`. A new ctor dependency on
    the factory must therefore be resolvable from DI; when it is not, the exception names the missing service
    (`CreateConfigurableService_UnregisteredCtorDependency_ExceptionNamesMissingService` covers that)

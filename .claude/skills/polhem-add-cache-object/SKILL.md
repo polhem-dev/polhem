@@ -87,7 +87,7 @@ The source is the database; it is loaded at runtime and invalidated by cache-not
 | 7 | `src/Polhem.Repository.Abstractions/.../I<X>Repository.cs` + `src/Polhem.Repository/.../<X>Repository.cs` | The data source (DB reads); **also add the interface → implementation entry to the framework type table in `src/Polhem.Repository/Factories/RepositoryFactory.cs`**, which is what `IRepositoryFactory.Create<T>()` resolves from |
 | 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
 | 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below); the ctor passes `dataSource` to the new cache |
-| 10 | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` | Register only the service; do **not** register repositories one by one (see below) |
+| 10 | `src/Polhem.Hosting/DependencyInjection/PolhemFrameworkServiceCollectionExtensions.cs` | Register only the service; do **not** register repositories one by one (see below) |
 | (11) | cache-notify bump point | The BO/Repository that writes the configuration calls `ICacheNotifyService.Touch(cacheKey, transaction, databaseType)` in the **same transaction** (see below) |
 
 ### Dependency constraint: why the data-fetch method returns a domain type
@@ -309,5 +309,5 @@ Put check / lookup logic in **the POCO's methods** where possible (such as `Comp
 | POCO + check logic template | `src/Polhem.Definition/Identity/CompanyRolePermissions.cs` (`GetAllowed` / `GetKey`) |
 | The two sync points | `src/Polhem.ObjectCaching/CacheContainerService.cs` (ctor initialisation / property declaration) |
 | ICacheContainer | `src/Polhem.ObjectCaching/ICacheContainer.cs` |
-| DI registration | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` (service; `ICacheContainer` receives a deferred factory) |
+| DI registration | `src/Polhem.Hosting/DependencyInjection/PolhemFrameworkServiceCollectionExtensions.cs` (service; `ICacheContainer` receives a deferred factory) |
 | POCO pure unit test template | `tests/Polhem.Definition.UnitTests/Identity/CompanyRolePermissionsTests.cs` |
