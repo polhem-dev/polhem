@@ -91,6 +91,8 @@
     <!-- The only transport-format package in the framework (ADR-036). -->
     <PolhemAllowedDependency Include="MessagePack" />
     <PolhemAllowedDependency Include="Polhem.JsonRpc.Payload" />
+    <!-- Folded in from Polhem.JsonRpc.Payload when PolhemJsonRpcSource builds it from a local checkout. -->
+    <PolhemAllowedDependency Include="Polhem.JsonRpc" />
     <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
     <PolhemAllowedDependency Include="Polhem.Definition" />
     <PolhemAllowedDependency Include="Polhem.Core" />
@@ -108,6 +110,8 @@
     <PolhemAllowedDependency Include="Polhem.JsonRpc.Server" />
     <PolhemAllowedDependency Include="Polhem.JsonRpc.Payload.Server" />
     <PolhemAllowedDependency Include="Polhem.JsonRpc.Payload" />
+    <!-- Folded in from the JSON-RPC projects when PolhemJsonRpcSource builds them from a local checkout. -->
+    <PolhemAllowedDependency Include="Polhem.JsonRpc" />
     <PolhemAllowedDependency Include="Polhem.Api.Core" />
     <PolhemAllowedDependency Include="Polhem.Api.Contracts" />
     <PolhemAllowedDependency Include="Polhem.Definition" />

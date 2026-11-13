@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 9abe70af38e9eed5a30ce74bfd12ba6aeec8becc -->
+<!-- source: en/getting-started/getting-started.md blob: ab265421cfcd7773eea387c30b6f41c915434987 -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -26,7 +26,7 @@
 dotnet new web -o MyApp.Server
 cd MyApp.Server
 dotnet add package Polhem.Hosting
-dotnet add package Polhem.JsonRpc.AspNetCore
+dotnet add package Polhem.JsonRpc.AspNetCore --version 1.2.0
 dotnet add package Polhem.Db
 dotnet add package Microsoft.Data.Sqlite
 ```
@@ -34,7 +34,7 @@ dotnet add package Microsoft.Data.Sqlite
 `Microsoft.Data.Sqlite` 是下文所用 SQLite 資料庫的 ADO.NET driver。框架本身不附任何 driver；
 步驟 3 列出各資料庫對應的套件。
 
-**該選哪些 host 套件？** `Polhem.Hosting` 是組合根，`Polhem.JsonRpc.AspNetCore` 以 HTTP 提供 API。若你的 host 不是 ASP.NET Core —— WinForms、WPF、Console、Worker Service —— 只參考 `Polhem.Hosting`，並略過步驟 5。
+**該選哪些 host 套件？** `Polhem.Hosting` 是組合根，`Polhem.JsonRpc.AspNetCore` 以 HTTP 提供 API；請使用 Polhem 套件所相依的版本，因為它們相依 `Polhem.JsonRpc` 套件的單一確切版本。若你的 host 不是 ASP.NET Core —— WinForms、WPF、Console、Worker Service —— 只參考 `Polhem.Hosting`，並略過步驟 5。
 
 ## 2. 備妥 `DefinePath`
 

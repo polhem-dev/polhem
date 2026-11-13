@@ -26,7 +26,7 @@ Each step links to the document that covers it in depth. Everything shown here i
 dotnet new web -o MyApp.Server
 cd MyApp.Server
 dotnet add package Polhem.Hosting
-dotnet add package Polhem.JsonRpc.AspNetCore
+dotnet add package Polhem.JsonRpc.AspNetCore --version 1.2.0
 dotnet add package Polhem.Db
 dotnet add package Microsoft.Data.Sqlite
 ```
@@ -34,7 +34,7 @@ dotnet add package Microsoft.Data.Sqlite
 `Microsoft.Data.Sqlite` is the ADO.NET driver for the SQLite database used below. The framework ships no driver;
 step 3 lists the package for each database.
 
-**Which host packages?** `Polhem.Hosting` is the composition root. `Polhem.JsonRpc.AspNetCore` serves the API over HTTP. If you are hosting outside ASP.NET Core — WinForms, WPF, Console, Worker Service — reference `Polhem.Hosting` alone and skip step 5.
+**Which host packages?** `Polhem.Hosting` is the composition root. `Polhem.JsonRpc.AspNetCore` serves the API over HTTP; take the version the Polhem packages depend on, since they name one exact version of the `Polhem.JsonRpc` packages. If you are hosting outside ASP.NET Core — WinForms, WPF, Console, Worker Service — reference `Polhem.Hosting` alone and skip step 5.
 
 ## 2. Materialise the `DefinePath`
 
