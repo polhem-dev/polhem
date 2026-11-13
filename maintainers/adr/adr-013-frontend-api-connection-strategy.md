@@ -189,3 +189,6 @@ v4.4 and is kept to show the context of the decision.
   families can use it, as the Negative consequences above anticipated.
 - **`VersionInfo` removed.** The `VersionInfo` listed under "What it consumes" had no callers and was removed before
   1.0; `Polhem.UI.Core` holds `ClientInfo`, the endpoint and API key storage abstractions and `IUIViewService`.
+- **1.13.0: connectors come from the client.** `ClientInfo.CreateFormApiConnector` and `CreateAuditLogApiConnector`,
+  one-line wrappers over `ClientInfo.ApiClient`, were removed; the native family calls `ClientInfo.ApiClient.Form(progId)`
+  and `ClientInfo.ApiClient.AuditLog`.

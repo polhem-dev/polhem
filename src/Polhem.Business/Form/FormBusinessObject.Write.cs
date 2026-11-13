@@ -307,6 +307,7 @@ namespace Polhem.Business.Form
         {
             var (refreshed, affected) = context.Repository.Save(context.DataSet);
             context.RefreshedDataSet = refreshed;
+            context.AffectedRows.Clear();
             foreach (var (table, rows) in affected) context.AffectedRows[table] = rows;
         }
 
