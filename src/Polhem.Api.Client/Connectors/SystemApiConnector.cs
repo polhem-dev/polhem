@@ -165,9 +165,11 @@ namespace Polhem.Api.Client.Connectors
             var configuration = AdoptServerConfiguration(serverConfiguration, SysInfo.IsDebugMode, SysInfo.AllowedTypeNamespaces);
             SysInfo.Initialize(configuration);
             Client.DefaultLanguage = configuration.DefaultLanguage;
-            // The server decides the compressor and the encryptor; the rest of the client's payload options stay. An
-            // in-process client may share the server's own options, which already hold them, so Apply writes nothing.
-            PolhemPayload.Apply(Client.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
+            // The server decides the compressor and the encryptor; the rest of the client's payload options stay.
+            // WARNING: an in-process client may hold the backend's own options, which every request of the backend
+            // reads while this runs. They already carry the backend's choice, so they are never written to.
+            if (!Client.SharesServerPayloadOptions)
+                PolhemPayload.Apply(Client.PayloadOptions, configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
 
         /// <summary>

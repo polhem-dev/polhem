@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Messages;
 using Polhem.Core.Exceptions;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Payload;
@@ -51,6 +52,20 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
             await Assert.ThrowsAsync<AuthenticationRequiredException>(
                 () => new TestApiConnector(client).ExecuteAsync<string>("Order", "GetList", new object(), PayloadFormat.Plain));
+
+            Assert.Equal(0, raised);
+        }
+
+        [Fact]
+        [DisplayName("ExecFuncAnonymous refusing a function that needs a signed-in caller does not raise SessionRejected")]
+        public async Task Unauthorized_AnonymousAction_DoesNotRaiseTheEvent()
+        {
+            var client = TestClients.Fake(Unauthorized());
+            int raised = 0;
+            client.SessionRejected += (_, _) => raised++;
+
+            await Assert.ThrowsAsync<AuthenticationRequiredException>(
+                () => client.System.ExecFuncAnonymousAsync(new ExecFuncRequest { FuncId = "Secret" }));
 
             Assert.Equal(0, raised);
         }

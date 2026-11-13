@@ -61,7 +61,11 @@ namespace Polhem.Api.Client
         {
             ArgumentNullException.ThrowIfNull(services);
             return new PolhemApiClient(token => new LocalApiProvider(services, token), isLocal: true,
-                string.Empty, string.Empty, payloadOptions);
+                string.Empty, string.Empty, payloadOptions)
+            {
+                SharesServerPayloadOptions = payloadOptions is not null
+                    && ReferenceEquals(payloadOptions, services.GetService(typeof(PayloadOptions))),
+            };
         }
 
         /// <summary>
@@ -107,6 +111,12 @@ namespace Polhem.Api.Client
         /// Gets whether calls run in process; <c>false</c> when they go over HTTP.
         /// </summary>
         public bool IsLocal { get; }
+
+        /// <summary>
+        /// Gets whether <see cref="PayloadOptions"/> is the instance the in-process backend registered, which its
+        /// own requests read, so <see cref="Connectors.SystemApiConnector.InitializeAsync"/> must not write to it.
+        /// </summary>
+        internal bool SharesServerPayloadOptions { get; private init; }
 
         /// <summary>
         /// Gets the API service endpoint; empty for an in-process client.

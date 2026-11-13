@@ -41,14 +41,19 @@ namespace Polhem.Web.Blazor.Identity
             _client = client;
             _defaultLanguage = defaultLanguage;
             // The client and this context share the circuit's lifetime, so the subscription needs no removal.
-            _client.SessionRejected += (_, _) => EndSession();
+            _client.SessionRejected += (_, _) => SessionRejected?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raised when the server ended the session, for example because it expired: the context is already signed
-        /// out. It is raised on the thread of the call the server refused, so a component marshals to its dispatcher.
+        /// Raised when the server refused a call because the session it carried has ended, for example because it
+        /// expired. Nothing is cleared yet: the handler calls <see cref="SignOut"/>.
         /// </summary>
-        public event EventHandler? SessionEnded;
+        /// <remarks>
+        /// It is raised on the thread of the refused call, while the circuit may be rendering from this context, so
+        /// the handler signs out on the circuit's dispatcher (<c>InvokeAsync</c>), as <see cref="Shell.ShellLayoutBase"/>
+        /// does before it returns to its sign-in screen.
+        /// </remarks>
+        public event EventHandler? SessionRejected;
 
         /// <inheritdoc/>
         public UserInfo? User { get; private set; }
@@ -106,12 +111,6 @@ namespace Polhem.Web.Blazor.Identity
             User = null;
             Company = null;
             Capabilities = null;
-        }
-
-        private void EndSession()
-        {
-            SignOut();
-            SessionEnded?.Invoke(this, EventArgs.Empty);
         }
     }
 }

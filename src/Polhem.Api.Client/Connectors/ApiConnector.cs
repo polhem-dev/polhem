@@ -6,6 +6,7 @@ using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Client;
+using Polhem.Definition;
 using Polhem.JsonRpc.Payload;
 using Polhem.JsonRpc.Payload.Client;
 
@@ -103,7 +104,9 @@ namespace Polhem.Api.Client.Connectors
                     opened = await CreatePayloadConnector(credentials).InvokeAsync<object>(
                         $"{progId}.{action}", value, EffectiveFormat(format, credentials), cancellationToken).ConfigureAwait(false);
                 }
-                catch (AuthenticationRequiredException)
+                // An anonymous action never checks the session, so its refusal says nothing about it: ExecFuncAnonymous
+                // refuses this way a function that needs a signed-in caller, while the session stays valid.
+                catch (AuthenticationRequiredException) when (!string.Equals(action, SystemActions.ExecFuncAnonymous, StringComparison.Ordinal))
                 {
                     Client.OnSessionRejected(credentials);
                     throw;

@@ -67,12 +67,14 @@ namespace Polhem.Web.Blazor.Shell
         protected override void OnInitialized()
         {
             base.OnInitialized();
-            UserContext.SessionEnded += OnSessionEnded;
+            UserContext.SessionRejected += OnSessionRejected;
         }
 
-        // The server ended the session, so the layout goes back to its sign-in screen as a sign-out would.
-        private void OnSessionEnded(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+        // The server ended the session, so the layout signs out and goes back to its sign-in screen. The context is
+        // cleared here, on the dispatcher, because a render reads it.
+        private void OnSessionRejected(object? sender, EventArgs e) => _ = InvokeAsync(() =>
         {
+            UserContext.SignOut();
             IsMenuToggled = false;
             Navigation.NavigateTo("");
             StateHasChanged();
@@ -81,7 +83,7 @@ namespace Polhem.Web.Blazor.Shell
         /// <inheritdoc/>
         public void Dispose()
         {
-            UserContext.SessionEnded -= OnSessionEnded;
+            UserContext.SessionRejected -= OnSessionRejected;
             GC.SuppressFinalize(this);
         }
 
