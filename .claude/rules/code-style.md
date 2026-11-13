@@ -146,8 +146,9 @@ but follow these rules:
 The folder structure must map to the namespace (IDE0130): `src/Polhem.Db/Schema/` → `namespace Polhem.Db.Schema`.
 
 **The only exception**: `src/Polhem.Definition/Settings/` uses its subfolders as a logical grouping without
-sub-namespaces. Each subfolder holds one settings file's model (the `*Settings` type and its parts) and the types that
-serve it, such as `Permission/`'s validator and converter, and all of them stay in `Polhem.Definition.Settings`.
+sub-namespaces. Each subfolder holds one settings file's model (its root type, such as `MenuSettings` or
+`PermissionModels`, and its parts) and the types that serve it, such as `Permission/`'s validator and converter, and all
+of them stay in `Polhem.Definition.Settings`.
 
 > This cannot be enforced by `.editorconfig` (IDE0130 is a global rule and cannot make an exception for one folder),
 > so the prompt guards it.
