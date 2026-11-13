@@ -52,4 +52,32 @@ public class FormsViewModelTests
         Assert.True(row.IsHeader);
         Assert.Contains("boom", row.Title, StringComparison.Ordinal);
     }
+
+    [Fact]
+    [DisplayName("The menu button closes an open navigation pane and opens it again")]
+    public void TogglePane_Twice_ClosesThenOpens()
+    {
+        var vm = new FormsViewModel(s_options, NoMenu, () => Task.CompletedTask, () => { });
+
+        vm.TogglePaneCommand.Execute(null);
+        var afterFirst = vm.IsPaneOpen;
+        vm.TogglePaneCommand.Execute(null);
+
+        Assert.False(afterFirst);
+        Assert.True(vm.IsPaneOpen);
+    }
+
+    [Fact]
+    [DisplayName("The loaded menu rows appear in the order the menu returned them")]
+    public async Task MenuLoaded_LoadSucceeds_AddsRowsInOrder()
+    {
+        NavItem[] rows = [NavItem.Header("Sales"), NavItem.Form("Orders", "Order")];
+        var vm = new FormsViewModel(s_options, () => Task.FromResult<IReadOnlyList<NavItem>>(rows),
+            () => Task.CompletedTask, () => { });
+
+        await vm.MenuLoaded;
+
+        Assert.Equal(rows, vm.NavItems);
+        Assert.Equal("Demo", vm.AppTitle);
+    }
 }

@@ -40,7 +40,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
             return schema;
         }
 
-        private IRenderedComponent<ContainerFragment> RenderPresenter(FormLayout? layout, FormDataObject? dataObject = null, bool compact = false)
+        private IRenderedComponent<ContainerFragment> RenderPresenter(FormLayout? layout, FormDataObject? dataObject = null, bool compact = false,
+            RoundingContext? roundingContext = null)
         {
             var type = PresenterType;
             return Render(b =>
@@ -49,6 +50,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
                 b.AddAttribute(1, nameof(FormLayoutPresenterBase.Layout), layout);
                 b.AddAttribute(2, nameof(FormLayoutPresenterBase.DataObject), dataObject);
                 b.AddAttribute(3, nameof(FormLayoutPresenterBase.IsCompact), compact);
+                if (roundingContext is not null)
+                    b.AddAttribute(4, nameof(FormLayoutPresenterBase.RoundingContext), roundingContext);
                 b.CloseComponent();
             });
         }
@@ -239,6 +242,46 @@ namespace Polhem.Web.Blazor.BehaviorTests
             cut.InvokeAsync(() => dataObject.SetField(OrderTestData.Line(dataObject, 0), "amount", "42"));
 
             cut.WaitForAssertion(() => Assert.StartsWith("42", cut.Find("#polhem-row-edit-amount").GetAttribute("value"), StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("A section and a detail without a caption show none, and the detail grid gets the rounding context")]
+        public void Presenter_NoCaptions_PassesTheRoundingContext()
+        {
+            var schema = OrderTestData.BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            layout.Sections![0].Caption = string.Empty;
+            layout.Sections[0].ShowCaption = true;
+            layout.Details![0].Caption = string.Empty;
+            var currencies = new CurrencySettings();
+            var units = new UnitSettings();
+            var rounding = new RoundingContext
+            {
+                CurrencySettings = currencies,
+                UnitSettings = units,
+                Company = new Polhem.Definition.Identity.CompanyInfo { DefaultCurrency = "TWD" },
+            };
+
+            var cut = RenderPresenter(layout, OrderTestData.BuildOrder(schema), roundingContext: rounding);
+
+            Assert.Empty(cut.FindAll(".polhem-form-layout__section-caption"));
+            Assert.Empty(cut.FindAll(".polhem-form-layout__detail-caption"));
+            var grid = cut.FindComponent<GridControlBase>().Instance;
+            Assert.Same(currencies, grid.CurrencySettings);
+            Assert.Same(units, grid.UnitSettings);
+            Assert.Equal("TWD", grid.DefaultCurrencyCode);
+        }
+
+        [Fact]
+        [DisplayName("A rounding context without a company gives the detail grid no default currency")]
+        public void Presenter_RoundingWithoutCompany_NoDefaultCurrency()
+        {
+            var schema = OrderTestData.BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+
+            var cut = RenderPresenter(layout, OrderTestData.BuildOrder(schema), roundingContext: new RoundingContext());
+
+            Assert.Equal(string.Empty, cut.FindComponent<GridControlBase>().Instance.DefaultCurrencyCode);
         }
     }
 }

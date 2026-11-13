@@ -29,18 +29,20 @@ namespace Polhem.Business.UnitTests.Permission
         private static bool Matches(FilterNode filter, DataRow row)
             => ScopeFilterEvaluator.Matches(filter, row, DataRowVersion.Current);
 
-        public static TheoryData<Type, object> SameGuidInEachStorageForm => new()
-        {
-            { typeof(Guid), s_dept },
-            { typeof(string), s_dept.ToString() },
-            { typeof(byte[]), s_dept.ToByteArray() },
-        };
-
         [Theory]
-        [MemberData(nameof(SameGuidInEachStorageForm))]
+        [InlineData("Guid")]
+        [InlineData("String")]
+        [InlineData("Bytes")]
         [DisplayName("A department Equal condition matches the same id stored as a Guid, a string or an Oracle byte array")]
-        public void Equal_Guid_MatchesEachStorageForm(Type columnType, object stored)
+        public void Equal_Guid_MatchesEachStorageForm(string storageForm)
         {
+            (Type columnType, object stored) = storageForm switch
+            {
+                "Guid" => (typeof(Guid), (object)s_dept),
+                "String" => (typeof(string), s_dept.ToString()),
+                _ => (typeof(byte[]), s_dept.ToByteArray()),
+            };
+
             Assert.True(Matches(FilterCondition.Equal(Dept, s_dept), Row((Dept, columnType, stored))));
         }
 
@@ -101,19 +103,22 @@ namespace Polhem.Business.UnitTests.Permission
             Assert.False(Matches(FilterCondition.In(Dept, []), Row((Dept, typeof(Guid), s_dept))));
         }
 
-        public static TheoryData<FilterCondition> UnsupportedConditions =>
-        [
-            FilterCondition.NotEqual(Dept, s_other),
-            FilterCondition.Contains(Dept, string.Empty),
-            FilterCondition.StartsWith(Dept, string.Empty),
-            FilterCondition.Between(Dept, Guid.Empty, s_dept),
-        ];
-
         [Theory]
-        [MemberData(nameof(UnsupportedConditions))]
+        [InlineData("NotEqual")]
+        [InlineData("Contains")]
+        [InlineData("StartsWith")]
+        [InlineData("Between")]
         [DisplayName("An operator the evaluator does not understand refuses the row, even where the database would admit it")]
-        public void UnsupportedOperator_RefusesRow(FilterCondition condition)
+        public void UnsupportedOperator_RefusesRow(string operatorName)
         {
+            var condition = operatorName switch
+            {
+                "NotEqual" => FilterCondition.NotEqual(Dept, s_other),
+                "Contains" => FilterCondition.Contains(Dept, string.Empty),
+                "StartsWith" => FilterCondition.StartsWith(Dept, string.Empty),
+                _ => FilterCondition.Between(Dept, Guid.Empty, s_dept),
+            };
+
             Assert.False(Matches(condition, Row((Dept, typeof(string), s_dept.ToString()))));
         }
 

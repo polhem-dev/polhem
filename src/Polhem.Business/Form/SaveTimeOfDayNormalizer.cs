@@ -41,20 +41,23 @@ namespace Polhem.Business.Form
             foreach (var formTable in schema.Tables)
             {
                 if (formTable.Fields == null || !dataSet.Tables.Contains(formTable.TableName)) { continue; }
+                NormalizeTable(formTable, dataSet.Tables[formTable.TableName]!, fromCaller);
+            }
+        }
 
-                var table = dataSet.Tables[formTable.TableName]!;
-                foreach (var field in formTable.Fields)
+        private static void NormalizeTable(FormTable formTable, DataTable table, bool fromCaller)
+        {
+            foreach (var field in formTable.Fields!)
+            {
+                if (field.Type != FieldType.DbField || field.DbType != FieldDbType.Time) { continue; }
+                var column = table.Columns[field.FieldName];
+                // A column with an expression computes its own value and rejects a write.
+                if (column == null || column.Expression.Length > 0) { continue; }
+
+                foreach (DataRow row in table.Rows)
                 {
-                    if (field.Type != FieldType.DbField || field.DbType != FieldDbType.Time) { continue; }
-                    var column = table.Columns[field.FieldName];
-                    // A column with an expression computes its own value and rejects a write.
-                    if (column == null || column.Expression.Length > 0) { continue; }
-
-                    foreach (DataRow row in table.Rows)
-                    {
-                        if (row.RowState is not (DataRowState.Added or DataRowState.Modified)) { continue; }
-                        NormalizeCell(row, column, formTable.TableName, fromCaller);
-                    }
+                    if (row.RowState is not (DataRowState.Added or DataRowState.Modified)) { continue; }
+                    NormalizeCell(row, column, formTable.TableName, fromCaller);
                 }
             }
         }

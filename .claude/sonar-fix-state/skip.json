@@ -1,14 +1,5 @@
 {
-  "issues": {
-    "AaFhy6BxyLYg0y0cUtWv": {
-      "rule": "external_roslyn:MVVMTK0042",
-      "component": "src/Polhem.UI.Avalonia.Shell/ViewModels/ShellViewModel.cs",
-      "field": "_selectedLanguage",
-      "attempts": 0,
-      "reason": "Kept as a field on purpose (Won't Fix in SonarCloud). The constructor writes the field so that OnSelectedLanguageChanged does not run at start-up. A partial property can only be set through its generated setter, so the hook would save the language preference on every launch and, when the current culture is not in Languages, switch the interface language to Languages[0].",
-      "lastAttempt": "2026-10-24"
-    }
-  },
+  "issues": {},
   "files": {},
   "humanReview": {}
 }

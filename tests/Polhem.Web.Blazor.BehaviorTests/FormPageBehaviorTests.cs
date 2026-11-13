@@ -98,10 +98,10 @@ namespace Polhem.Web.Blazor.BehaviorTests
             return cut;
         }
 
-        private IRenderedComponent<ContainerFragment> RenderList(bool confirmDelete = true)
+        private IRenderedComponent<ContainerFragment> RenderList(bool confirmDelete = true, int rows = 2)
         {
             var cut = RenderPage(confirmDelete);
-            cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(RowSelector).Count));
+            cut.WaitForAssertion(() => Assert.Equal(rows, cut.FindAll(RowSelector).Count));
             return cut;
         }
 
@@ -998,6 +998,90 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             cut.WaitForAssertion(() => Assert.Single(cut.FindAll(RowSelector)));
             Assert.Empty(cut.FindAll(ClearFilters));
+        }
+
+        private IRenderedComponent<ContainerFragment> RenderFollowingViewport()
+        {
+            var cut = Render(builder =>
+            {
+                builder.OpenComponent(0, PageType);
+                builder.AddAttribute(1, "ProgId", FormPageTestBackend.EmpProgId);
+                builder.CloseComponent();
+            });
+            cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(RowSelector)));
+            return cut;
+        }
+
+        private static Task ReportViewport(IRenderedComponent<ContainerFragment> cut, bool compact)
+        {
+            var observer = cut.FindComponent<CompactViewportObserver>();
+            return cut.InvokeAsync(() => observer.Instance.CompactChanged.InvokeAsync(compact));
+        }
+
+        [Fact]
+        [DisplayName("A page that follows the viewport turns the grid into cards when it narrows, and back when it widens")]
+        public async Task Viewport_CrossesTheWidth_SwitchesTheSurface()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { TotalRows = 120, DistinctRows = true });
+            var cut = RenderFollowingViewport();
+
+            await ReportViewport(cut, true);
+
+            cut.WaitForAssertion(() => Assert.Equal(50, cut.FindAll(Card).Count));
+            Assert.Empty(cut.FindAll(RowSelector));
+            Assert.Equal(1, backend.ListPaging[^1].Page);
+
+            await ReportViewport(cut, false);
+
+            cut.WaitForAssertion(() => Assert.Equal(50, cut.FindAll(RowSelector).Count));
+            Assert.Empty(cut.FindAll(Card));
+        }
+
+        [Fact]
+        [DisplayName("A viewport report that changes nothing reads nothing")]
+        public async Task Viewport_SameReport_ReadsNothing()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderFollowingViewport();
+            var reads = backend.GetListCount;
+
+            await ReportViewport(cut, false);
+
+            Assert.Equal(reads, backend.GetListCount);
+        }
+
+        [Fact]
+        [DisplayName("Deleting the only row of the last page reads the page before it")]
+        public void Delete_LastRowOfLastPage_StepsBack()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register(new FormPageTestBackend { TotalRows = 51, DistinctRows = true });
+            var cut = RenderList(confirmDelete: false, rows: 50);
+            Button(cut, Pager, PolhemUIText.NextPage)!.Click();
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(RowSelector)));
+            cut.FindAll(RowSelector)[0].Click();
+            backend.TotalRows = 50;
+
+            Command(cut, PolhemUIText.Delete).Click();
+
+            cut.WaitForAssertion(() => Assert.Equal(50, cut.FindAll(RowSelector).Count));
+            Assert.Equal(1, backend.ListPaging[^1].Page);
+        }
+
+        [Fact]
+        [DisplayName("A click on a card selects it and a click on the selected card keeps it selected")]
+        public void Cards_ClickTwice_KeepsTheSelection()
+        {
+            using var culture = new CultureScope("en-US");
+            var cut = RenderCards();
+
+            cut.FindAll(Card)[1].Click();
+            cut.FindAll(Card)[1].Click();
+
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".polhem-card--selected")));
+            Assert.False(Command(cut, PolhemUIText.View).HasAttribute("disabled"));
         }
     }
 }

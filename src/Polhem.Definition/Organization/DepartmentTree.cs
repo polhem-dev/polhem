@@ -106,7 +106,7 @@ namespace Polhem.Definition.Organization
 
         // ---- lazy query index (not serialised) ----
         private Dictionary<Guid, DepartmentNode>? _byRowId;
-        private readonly object _indexLock = new();
+        private readonly Lock _indexLock = new();
         private volatile bool _indexBuilt;
 
         private void EnsureIndex()

@@ -26,6 +26,7 @@ namespace Polhem.Web.Blazor.Controls
             // The subscription first: releasing the script talks to the browser and can fail.
             Dispose();
             if (_script is not null) await _script.DisposeAsync().ConfigureAwait(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

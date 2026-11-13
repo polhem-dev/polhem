@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests.Dml
             Assert.Equal(42, CoercedValue("qty", "42"));
             Assert.Equal(9007199254740993L, CoercedValue("big", "9007199254740993"));
             Assert.Equal(10.5m, CoercedValue("amount", "10.5"));
-            Assert.Equal(true, CoercedValue("active", "true"));
+            Assert.True(CoercedValue("active", "true") is true);
         }
 
         [Theory]

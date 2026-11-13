@@ -83,31 +83,36 @@ namespace Polhem.Core.Serialization
                 if (reader.TokenType != JsonTokenType.StartObject)
                     continue;
 
-                var col = new ColumnDef();
-                // `type` may come after `defaultValue`, and the default can only be read back against the column's
-                // type. A copy of the reader at the value reads it once the whole definition is in; a converter is
-                // handed its whole value buffered, so the copy stays valid while this one moves on.
-                var defaultReader = default(Utf8JsonReader);
-                var hasDefault = false;
-                while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
-                {
-                    if (reader.TokenType != JsonTokenType.PropertyName) continue;
-                    var key = reader.GetString();
-                    reader.Read();
-                    if (key == "defaultValue")
-                    {
-                        hasDefault = reader.TokenType != JsonTokenType.Null;
-                        defaultReader = reader;
-                        reader.Skip();
-                        continue;
-                    }
-                    ReadColumnField(ref reader, col, key);
-                }
-                if (hasDefault)
-                    col.DefaultValue = ReadDefaultValue(ref defaultReader, col.FieldType);
-                list.Add(col);
+                list.Add(ReadColumn(ref reader));
             }
             return list;
+        }
+
+        private static ColumnDef ReadColumn(ref Utf8JsonReader reader)
+        {
+            var col = new ColumnDef();
+            // `type` may come after `defaultValue`, and the default can only be read back against the column's
+            // type. A copy of the reader at the value reads it once the whole definition is in; a converter is
+            // handed its whole value buffered, so the copy stays valid while this one moves on.
+            var defaultReader = default(Utf8JsonReader);
+            var hasDefault = false;
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+            {
+                if (reader.TokenType != JsonTokenType.PropertyName) continue;
+                var key = reader.GetString();
+                reader.Read();
+                if (key == "defaultValue")
+                {
+                    hasDefault = reader.TokenType != JsonTokenType.Null;
+                    defaultReader = reader;
+                    reader.Skip();
+                    continue;
+                }
+                ReadColumnField(ref reader, col, key);
+            }
+            if (hasDefault)
+                col.DefaultValue = ReadDefaultValue(ref defaultReader, col.FieldType);
+            return col;
         }
 
         private static void ReadColumnField(ref Utf8JsonReader reader, ColumnDef col, string? key)

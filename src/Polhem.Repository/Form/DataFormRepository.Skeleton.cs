@@ -222,7 +222,25 @@ namespace Polhem.Repository.Form
                     continue;
 
                 var column = row.Table.Columns[field.FieldName]!;
-                row[field.FieldName] = ConvertDefaultValue(field.DefaultValue, column.DataType);
+                // A default the column type cannot hold is ignored, so the field starts as it would without one.
+                // Writing `DBNull` instead would throw, because `AddColumn` makes a column with a typed default refuse
+                // nulls.
+                if (TryConvertDefaultValue(field.DefaultValue, column.DataType, out var value))
+                    row[field.FieldName] = value;
+            }
+        }
+
+        private static bool TryConvertDefaultValue(string raw, Type targetType, out object value)
+        {
+            value = DBNull.Value;
+            try
+            {
+                value = ConvertDefaultValue(raw, targetType);
+                return true;
+            }
+            catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+            {
+                return false;
             }
         }
 
@@ -232,18 +250,7 @@ namespace Polhem.Repository.Form
                 return raw;
             if (targetType == typeof(Guid))
                 return Guid.TryParse(raw, out var g) ? g : Guid.Empty;
-            try
-            {
-                return Convert.ChangeType(raw, targetType, CultureInfo.InvariantCulture);
-            }
-            catch (FormatException)
-            {
-                return DBNull.Value;
-            }
-            catch (InvalidCastException)
-            {
-                return DBNull.Value;
-            }
+            return Convert.ChangeType(raw, targetType, CultureInfo.InvariantCulture);
         }
     }
 }

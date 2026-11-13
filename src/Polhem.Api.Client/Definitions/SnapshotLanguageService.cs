@@ -21,7 +21,7 @@ namespace Polhem.Api.Client.Definitions
     /// </remarks>
     public sealed class SnapshotLanguageService : ILanguageService
     {
-        private readonly IReadOnlyDictionary<string, LanguageLayers> _snapshot;
+        private readonly Dictionary<string, LanguageLayers> _snapshot;
         /// <summary>
         /// Initializes a new <see cref="SnapshotLanguageService"/>.
         /// </summary>
