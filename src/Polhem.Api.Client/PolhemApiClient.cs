@@ -182,6 +182,28 @@ namespace Polhem.Api.Client
         public void SignOut() => Session.SignOut();
 
         /// <summary>
+        /// Raised when the server refuses a call as unauthorized while the call carried this client's current access
+        /// token, which means the session has ended, for example because it expired.
+        /// </summary>
+        /// <remarks>
+        /// A call that carried an earlier sign-in's token, or no token, does not raise it, so a late answer to an old
+        /// call cannot end a new session. The handler runs on the thread that made the call; a UI marshals to its own
+        /// thread before it changes what is shown.
+        /// </remarks>
+        public event EventHandler? SessionRejected;
+
+        /// <summary>
+        /// Raises <see cref="SessionRejected"/> when <paramref name="credentials"/> are still this client's current
+        /// sign-in.
+        /// </summary>
+        /// <param name="credentials">The credentials the refused call carried.</param>
+        internal void OnSessionRejected(ApiSessionCredentials credentials)
+        {
+            if (credentials.AccessToken == Guid.Empty || !ReferenceEquals(credentials, Session.Credentials)) return;
+            SessionRejected?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// Creates the transport of one call.
         /// </summary>
         /// <param name="accessToken">The access token the call carries.</param>

@@ -40,7 +40,15 @@ namespace Polhem.Web.Blazor.Identity
             ArgumentNullException.ThrowIfNull(defaultLanguage);
             _client = client;
             _defaultLanguage = defaultLanguage;
+            // The client and this context share the circuit's lifetime, so the subscription needs no removal.
+            _client.SessionRejected += (_, _) => EndSession();
         }
+
+        /// <summary>
+        /// Raised when the server ended the session, for example because it expired: the context is already signed
+        /// out. It is raised on the thread of the call the server refused, so a component marshals to its dispatcher.
+        /// </summary>
+        public event EventHandler? SessionEnded;
 
         /// <inheritdoc/>
         public UserInfo? User { get; private set; }
@@ -98,6 +106,12 @@ namespace Polhem.Web.Blazor.Identity
             User = null;
             Company = null;
             Capabilities = null;
+        }
+
+        private void EndSession()
+        {
+            SignOut();
+            SessionEnded?.Invoke(this, EventArgs.Empty);
         }
     }
 }

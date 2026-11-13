@@ -16,7 +16,9 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// example saving definitions, minting sessions without credentials, managing API keys). Use it
         /// only when every user of the site is trusted with the whole backend; otherwise use
         /// <see cref="Remote"/>, where calls pass the same checks as any other API client. A call that
-        /// carries the signed-in user's access token still needs a live session: an expired one is refused.
+        /// carries the signed-in user's access token still needs a live session: an expired one is refused,
+        /// and the shell returns to its sign-in screen. A call without a token, such as one made before
+        /// signing in, is not checked against any session.
         /// </remarks>
         Local = 0,
 

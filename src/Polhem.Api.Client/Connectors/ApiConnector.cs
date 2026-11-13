@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
+using Polhem.Core.Exceptions;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Transformers;
 using Polhem.JsonRpc;
@@ -96,8 +97,17 @@ namespace Polhem.Api.Client.Connectors
             {
                 // The payload connector seals the parameters and opens the result in the same format, bound to the
                 // same method (remote or local). `object` opens the result into the type its envelope names.
-                var opened = await CreatePayloadConnector(credentials).InvokeAsync<object>(
-                    $"{progId}.{action}", value, EffectiveFormat(format, credentials), cancellationToken).ConfigureAwait(false);
+                object? opened;
+                try
+                {
+                    opened = await CreatePayloadConnector(credentials).InvokeAsync<object>(
+                        $"{progId}.{action}", value, EffectiveFormat(format, credentials), cancellationToken).ConfigureAwait(false);
+                }
+                catch (AuthenticationRequiredException)
+                {
+                    Client.OnSessionRejected(credentials);
+                    throw;
+                }
 
                 result = FinalizeResult<T>(opened);
             }

@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Shell
     /// The menu button collapses the menu on a wide screen and slides it over the page on a narrow one; picking a form
     /// closes the narrow overlay.
     /// </remarks>
-    public abstract class ShellLayoutBase : LayoutComponentBase
+    public abstract class ShellLayoutBase : LayoutComponentBase, IDisposable
     {
         /// <summary>Gets the user context the layout follows.</summary>
         [Inject]
@@ -62,6 +62,28 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Clears the toggle.</summary>
         protected void CloseMenu() => IsMenuToggled = false;
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            UserContext.SessionEnded += OnSessionEnded;
+        }
+
+        // The server ended the session, so the layout goes back to its sign-in screen as a sign-out would.
+        private void OnSessionEnded(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+        {
+            IsMenuToggled = false;
+            Navigation.NavigateTo("");
+            StateHasChanged();
+        });
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            UserContext.SessionEnded -= OnSessionEnded;
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>Signs out and returns to the sign-in screen.</summary>
         /// <remarks>The client and the context are the circuit's, so signing out is local to this browser tab.</remarks>

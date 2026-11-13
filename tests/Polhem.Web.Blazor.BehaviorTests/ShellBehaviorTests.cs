@@ -3,6 +3,7 @@ using Bunit;
 using Bunit.Rendering;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Api.Client;
 using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Identity;
 using Polhem.Web.Blazor.Shell;
@@ -131,6 +132,21 @@ namespace Polhem.Web.Blazor.BehaviorTests
             SignInToMenu(cut);
 
             cut.Find("button.polhem-shell__signout").Click();
+
+            cut.WaitForAssertion(() => cut.Find(".polhem-shell-signin"));
+            Assert.Null(Services.GetRequiredService<BlazorUserContext>().User);
+        }
+
+        [Fact]
+        [DisplayName("A session the server ends returns the shell to the sign-in screen and clears the user")]
+        public async Task SessionRejected_ReturnsToSignIn()
+        {
+            var cut = RenderLayout();
+            SignInToMenu(cut);
+            var client = Services.GetRequiredService<PolhemApiClient>();
+
+            // The client raises the event on the thread of the refused call, not on the renderer's dispatcher.
+            await Task.Run(() => client.OnSessionRejected(client.Session.Credentials));
 
             cut.WaitForAssertion(() => cut.Find(".polhem-shell-signin"));
             Assert.Null(Services.GetRequiredService<BlazorUserContext>().User);
