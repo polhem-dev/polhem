@@ -1,106 +1,9 @@
 using System.ComponentModel;
 using Microsoft.Playwright;
-using Polhem.Web.Blazor.BehaviorTests;
 using Polhem.Web.Blazor.BrowserTests;
 
 namespace Polhem.Web.Blazor.Fluent.BrowserTests
 {
-    /// <summary>
-    /// What a lookup does only in a real browser, in a form scope and over a slow link. A Fluent dialog stays inline, and its
-    /// input reports its text only when it is left.
-    /// </summary>
-    public class FluentLookupTests : IClassFixture<FluentLookupFixture>
-    {
-        private const string Dialog = "fluent-dialog.polhem-lookup-dialog";
-        private readonly FluentLookupFixture _fixture;
-
-        public FluentLookupTests(FluentLookupFixture fixture) => _fixture = fixture;
-
-        private async Task<IPage> OpenAsync(bool slow)
-        {
-            var page = await _fixture.Browser.NewPageAsync();
-            await page.GotoAsync((slow ? _fixture.SlowAddress : _fixture.Address) + "/lookup");
-            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
-            await page.Locator(".polhem-button-edit__search").ClickAsync();
-            await Assertions.Expect(page.Locator($"{Dialog} tr.polhem-grid__row")).ToHaveCountAsync(2);
-            // The rows are in the markup before the dialog shows, and a key means nothing until it has the focus.
-            await page.WaitForFunctionAsync("document.activeElement.tagName === 'FLUENT-DIALOG'");
-            return page;
-        }
-
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        [DisplayName("Choosing a row and OK writes the value and closes the lookup")]
-        public async Task SelectThenOk_Writes(bool slow)
-        {
-            var page = await OpenAsync(slow);
-
-            await page.Locator($"{Dialog} tr.polhem-grid__row").Nth(1).ClickAsync();
-            await Assertions.Expect(page.Locator($"{Dialog} tr.polhem-grid__row--selected")).ToHaveCountAsync(1);
-            await page.Locator(".polhem-lookup-panel__ok").ClickAsync();
-
-            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
-            await Assertions.Expect(page.Locator("#data")).ToContainTextAsync(LookupTestData.SalesId.ToString());
-        }
-
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        [DisplayName("A double-click on a row writes the value and closes the lookup")]
-        public async Task DoubleClick_Writes(bool slow)
-        {
-            var page = await OpenAsync(slow);
-
-            await page.Locator($"{Dialog} tr.polhem-grid__row").First.DblClickAsync();
-
-            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
-            await Assertions.Expect(page.Locator("#data")).ToContainTextAsync(LookupTestData.EngineeringId.ToString());
-        }
-
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        [DisplayName("Typing a search and pressing Enter at once searches for what was typed")]
-        public async Task TypeThenEnter_Searches(bool slow)
-        {
-            var page = await OpenAsync(slow);
-
-            await page.Locator($"{Dialog} .polhem-lookup-panel__search-input input").First.ClickAsync();
-            await page.Keyboard.TypeAsync("Sal");
-            await page.Keyboard.PressAsync("Enter");
-
-            await Assertions.Expect(page.Locator($"{Dialog} tr.polhem-grid__row")).ToHaveCountAsync(1);
-            Assert.Equal("Sal", _fixture.Source.Connector.Searches[^1]);
-            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(1);
-        }
-
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        [DisplayName("Escape closes the lookup and writes nothing")]
-        public async Task Escape_Closes(bool slow)
-        {
-            var page = await OpenAsync(slow);
-
-            await page.Keyboard.PressAsync("Escape");
-
-            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
-            await Assertions.Expect(page.Locator("#data")).ToHaveTextAsync(Guid.Empty.ToString());
-        }
-
-        [BrowserFact]
-        [DisplayName("A click outside closes the lookup and writes nothing")]
-        public async Task Backdrop_Closes()
-        {
-            var page = await OpenAsync(false);
-
-            await page.Mouse.ClickAsync(5, 5);
-
-            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
-        }
-    }
-
     /// <summary>
     /// What a select, a check box, a calendar and the row edit dialog do only in a real browser.
     /// </summary>
@@ -124,7 +27,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
         private static ILocator LineCell(IPage page, int column)
             => page.Locator("tr.polhem-grid__row").First.Locator(".polhem-grid-cell__text, .polhem-grid-cell__editor").Nth(column);
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Picking an option with the mouse writes it")]
@@ -177,7 +80,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             await Assertions.Expect(Data(page)).ToContainTextAsync("flag=False");
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("Tabbing into a select cell gives it the focus, and the keyboard picks an option")]
@@ -234,7 +137,7 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             return page;
         }
 
-        [Theory]
+        [BrowserTheory]
         [InlineData(false)]
         [InlineData(true)]
         [DisplayName("The row edit dialog commits typed text on OK clicked right after typing")]

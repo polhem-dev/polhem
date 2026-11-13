@@ -81,7 +81,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             editor.Text = "01.10.2026 08:05";
             Commit(editor);
 
-            Assert.Equal(new DateTime(2026, 10, 1, 8, 5, 0), Stored(dataObject));
+            Assert.Equal(new DateTime(2026, 10, 1, 8, 5, 0, DateTimeKind.Unspecified), Stored(dataObject));
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             editor.Text = "2026-10-01 20:45";
             Commit(editor);
 
-            Assert.Equal(new DateTime(2026, 10, 1, 20, 45, 0), Stored(dataObject));
+            Assert.Equal(new DateTime(2026, 10, 1, 20, 45, 0, DateTimeKind.Unspecified), Stored(dataObject));
         }
 
         [Fact]
@@ -177,7 +177,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             editor.Text = "10/1/2026 8:05 PM";
             editor.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
 
-            Assert.Equal(new DateTime(2026, 10, 1, 20, 5, 0), (DateTime)rows.Rows[0]["occurred_at"]);
+            Assert.Equal(new DateTime(2026, 10, 1, 20, 5, 0, DateTimeKind.Unspecified), (DateTime)rows.Rows[0]["occurred_at"]);
         }
     }
 }

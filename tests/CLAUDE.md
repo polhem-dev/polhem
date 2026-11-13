@@ -164,9 +164,9 @@ workload; such a test runs only where the workload is installed, which CI is not
 in the attribute's XML doc (`tests/Polhem.Templates.UnitTests/WorkloadFactAttribute.cs`). Do not use it to skip a test
 that needs no workload.
 
-### Needs a real browser: `[BrowserFact]`
+### Needs a real browser: `[BrowserFact]` / `[BrowserTheory]`
 
-`tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. The attribute skips on a machine without Chrome and fails at launch in CI. Use it only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
+`tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. Both attributes skip on a machine without Chrome and fail at launch in CI; a data-driven browser test uses `[BrowserTheory]`, not `[Theory]`, which would fail instead of skipping. Use them only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
 
 ### Repository root: `RepoRoot.Find()`
 

@@ -147,7 +147,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -166,7 +166,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -190,7 +190,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -232,7 +232,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -251,7 +251,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -270,7 +270,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -291,7 +291,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 
@@ -315,7 +315,7 @@ namespace Polhem.Hosting.UnitTests
             }
             finally
             {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* Best effort: a file still held open leaves the temporary directory behind. */ }
             }
         }
 

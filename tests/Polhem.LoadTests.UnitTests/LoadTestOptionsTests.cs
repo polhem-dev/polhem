@@ -96,7 +96,7 @@ namespace Polhem.LoadTests.UnitTests
             var options = CreateValid();
             options.Target.Mode = TargetMode.Local;
 
-            options.Validate();
+            Assert.Null(Record.Exception(options.Validate));
         }
 
         [Fact]
@@ -127,7 +127,7 @@ namespace Polhem.LoadTests.UnitTests
             var options = CreateValid();
             options.Scenarios.Add(new ScenarioOptions { Name = "Save", Enabled = false, Weight = 0 });
 
-            options.Validate();
+            Assert.Null(Record.Exception(options.Validate));
         }
 
         [Theory]
