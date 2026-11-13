@@ -17,10 +17,10 @@ namespace Polhem.Api.Core.Transformers
     /// </para>
     /// <para>
     /// WARNING: do not change <see cref="PayloadOptions.SerializerOptions"/>, <see cref="PayloadOptions.JsonCodec"/>,
-    /// <see cref="PayloadOptions.DefaultCodec"/> or <see cref="PayloadOptions.TypeResolver"/> on the result. Their setters are public in Polhem.JsonRpc.Payload, but
-    /// these values are what make the wire Polhem's: a change on one end makes it read the other end's payloads
-    /// differently, and nothing checks that the two still agree. Change the compressor, the encryptor or
-    /// <see cref="PayloadOptions.RequireFrame"/> instead, on both ends.
+    /// <see cref="PayloadOptions.DefaultCodec"/> or <see cref="PayloadOptions.TypeResolver"/> on the result. Their
+    /// setters are public in Polhem.JsonRpc.Payload, but these values are what make the wire Polhem's: a change on one
+    /// end makes it read the other end's payloads differently, and nothing checks that the two still agree. Change the
+    /// compressor, the encryptor or <see cref="PayloadOptions.RequireFrame"/> instead, on both ends.
     /// </para>
     /// </remarks>
     public static class PolhemPayload
