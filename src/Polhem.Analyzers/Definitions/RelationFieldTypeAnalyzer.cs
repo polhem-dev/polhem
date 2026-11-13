@@ -19,8 +19,15 @@ namespace Polhem.Analyzers.Definitions
     /// <para>
     /// Types are compared by how the framework holds their values, not by name: <c>Integer</c> and
     /// <c>AutoIncrement</c> are both a 32-bit integer, <c>Decimal</c> and <c>Currency</c> both a decimal, and
-    /// <c>String</c> and <c>Text</c> both text. A mapping the analyzer cannot resolve is left to the rules that report
-    /// it (POLHEM1003, POLHEM1005, POLHEM2003, POLHEM2004), and a framework-supplied schema is not a file it can read.
+    /// <c>String</c> and <c>Text</c> both text. An integer destination wider than its source (<c>Short</c> into
+    /// <c>Integer</c> or <c>Long</c>, <c>Integer</c> into <c>Long</c>) holds every source value, and the database
+    /// compares the two widths, so it is accepted; a narrower one is not.
+    /// </para>
+    /// <para>
+    /// Only the mappings the query join reads are checked. A <c>LookupOnly</c> mapping copies a value into a field of
+    /// this table while a lookup selection is edited, converting it by the destination's type, and a filter on that
+    /// field reads this table's own column. A mapping the analyzer cannot resolve is left to the rules that report it
+    /// (POLHEM1003, POLHEM1005, POLHEM2003, POLHEM2004), and a framework-supplied schema is not a file it can read.
     /// </para>
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -84,7 +91,7 @@ namespace Polhem.Analyzers.Definitions
         {
             var sourceName = mapping.Attribute("SourceField")?.Value;
             var destinationName = mapping.Attribute("DestinationField")?.Value;
-            if (string.IsNullOrEmpty(sourceName) || string.IsNullOrEmpty(destinationName))
+            if (string.IsNullOrEmpty(sourceName) || string.IsNullOrEmpty(destinationName) || IsLookupOnly(mapping))
                 return;
 
             if (!sourceFields.TryGetValue(sourceName!, out var source)
@@ -96,7 +103,7 @@ namespace Polhem.Analyzers.Definitions
             if (!FieldDbTypes.IsValid(sourceType) || !FieldDbTypes.IsValid(destinationType))
                 return;
 
-            if (string.Equals(ValueKind(sourceType), ValueKind(destinationType), StringComparison.Ordinal))
+            if (Holds(destinationType, sourceType))
                 return;
 
             var location = destination.Attribute("DbType") ?? destination.Attribute("FieldName");
@@ -138,6 +145,30 @@ namespace Polhem.Analyzers.Definitions
         // An absent attribute deserializes to the property's initial value, `FieldDbType.String`.
         private static string DbTypeOf(XElement formField)
             => formField.Attribute("DbType")?.Value ?? DefaultDbType;
+
+        // Matches how `XmlSerializer` reads an `xs:boolean`: "true" and "1" are true, case-sensitively.
+        private static bool IsLookupOnly(XElement mapping)
+            => mapping.Attribute("LookupOnly")?.Value is "true" or "1";
+
+        private static bool Holds(string destinationType, string sourceType)
+        {
+            var destination = ValueKind(destinationType);
+            var source = ValueKind(sourceType);
+            if (string.Equals(destination, source, StringComparison.Ordinal))
+                return true;
+
+            var destinationWidth = IntegerWidth(destination);
+            var sourceWidth = IntegerWidth(source);
+            return destinationWidth > 0 && sourceWidth > 0 && destinationWidth >= sourceWidth;
+        }
+
+        private static int IntegerWidth(string valueKind) => valueKind switch
+        {
+            "Short" => 16,
+            "Integer" => 32,
+            "Long" => 64,
+            _ => 0,
+        };
 
         private static string ValueKind(string dbType) => dbType switch
         {

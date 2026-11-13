@@ -23,6 +23,8 @@ namespace Polhem.Analyzers.UnitTests.Definitions
                     <FormField FieldName="sys_name" />
                     <FormField FieldName="seq" DbType="AutoIncrement" />
                     <FormField FieldName="credit" DbType="Currency" />
+                    <FormField FieldName="reorder_level" DbType="Short" />
+                    <FormField FieldName="volume" DbType="Long" />
                   </Fields>
                 </FormTable>
                 <FormTable TableName="Contact" DbTableName="ft_supplier_contact">
@@ -95,13 +97,53 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [InlineData("sys_name", "DbType=\"String\"")]
         [InlineData("seq", "DbType=\"Integer\"")]
         [InlineData("credit", "DbType=\"Decimal\"")]
-        [DisplayName("A relation field whose type holds values the same way as its source reports nothing")]
+        [InlineData("reorder_level", "DbType=\"Integer\"")]
+        [InlineData("reorder_level", "DbType=\"Long\"")]
+        [InlineData("seq", "DbType=\"Long\"")]
+        [DisplayName("A relation field whose type holds every value of its source the same way reports nothing")]
         public void MatchingType_ReportsNothing(string sourceField, string destinationDbType)
         {
             // Act
             var diagnostics = AnalyzerRunner.Run(
                 new RelationFieldTypeAnalyzer(),
                 (ProductPath, ProductMapping("Supplier", sourceField, destinationDbType)),
+                (SupplierPath, Supplier));
+
+            // Assert
+            Assert.Empty(diagnostics);
+        }
+
+        [Theory]
+        [InlineData("volume", "Integer")]
+        [InlineData("seq", "Short")]
+        [InlineData("credit", "Integer")]
+        [DisplayName("An integer destination narrower than its source, or a whole number for a decimal, reports POLHEM2008")]
+        public void NarrowerDestination_ReportsDiagnostic(string sourceField, string destinationDbType)
+        {
+            // Act
+            var diagnostics = AnalyzerRunner.Run(
+                new RelationFieldTypeAnalyzer(),
+                (ProductPath, ProductMapping("Supplier", sourceField, $"DbType=\"{destinationDbType}\"")),
+                (SupplierPath, Supplier));
+
+            // Assert
+            Assert.Equal("POLHEM2008", Assert.Single(diagnostics).Id);
+        }
+
+        [Theory]
+        [InlineData("true")]
+        [InlineData("1")]
+        [DisplayName("A LookupOnly mapping is not checked, because no join reads its source column")]
+        public void LookupOnlyMapping_ReportsNothing(string lookupOnly)
+        {
+            var product = ProductMapping("Supplier", "sys_rowid", "DbType=\"String\"")
+                .Replace("DestinationField=\"ref_supplier_value\"",
+                    $"DestinationField=\"ref_supplier_value\" LookupOnly=\"{lookupOnly}\"", StringComparison.Ordinal);
+
+            // Act
+            var diagnostics = AnalyzerRunner.Run(
+                new RelationFieldTypeAnalyzer(),
+                (ProductPath, product),
                 (SupplierPath, Supplier));
 
             // Assert
