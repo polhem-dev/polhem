@@ -1,14 +1,1 @@
 #nullable enable
-Polhem.Repository.Factories.IRepositoryTypeResolver.Resolve(string! customizeId, string! progId) -> System.Type!
-Polhem.Repository.Factories.ProgramSettingsRepositoryTypeResolver.Resolve(string! customizeId, string! progId) -> System.Type!
-Polhem.Repository.Factories.RepositoryFactory.CreateFormRepository<T>(System.Guid accessToken, string! progId, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> T!
-Polhem.Repository.Form.DataFormRepository.DataFormRepository(Polhem.Repository.IRepositoryContext! ctx, string! progId, Polhem.Definition.Forms.FormSchema! schema, string! databaseId, string! companyId) -> void
-Polhem.Repository.IRepositoryContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
-Polhem.Repository.RepositoryBase.CompanyId.get -> string!
-Polhem.Repository.RepositoryBase.CreateDbAccess(string! databaseId, string! companyId) -> Polhem.Db.DbAccess!
-Polhem.Repository.RepositoryBase.RepositoryBase(Polhem.Repository.IRepositoryContext! ctx, string! progId, string! databaseId, string! companyId) -> void
-Polhem.Repository.RepositoryContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
-Polhem.Repository.RepositoryContext.CompanyScope.init -> void
-Polhem.Repository.RepositoryContext.WithCompanyScope(Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> Polhem.Repository.RepositoryContext!
-Polhem.Repository.RepositoryDatabaseRouter.Resolve(Polhem.Definition.DbScope scope, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> string!
-virtual Polhem.Repository.Factories.RepositoryFactory.CreateFormRepositoryCore(System.Guid accessToken, string! progId, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> Polhem.Repository.Abstractions.Form.IDataFormRepository!
