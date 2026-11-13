@@ -55,9 +55,9 @@ jobs:
         fetch-depth: 0
 
     # Decides whether this job builds at all; the rules and their reasons are in the header of
-    # `.github/scripts/detect-docs-only.sh`, which the `templates` job runs too. Every later step is gated on
-    # `build == 'true'`, either directly or through "Resolve database scope", whose outputs stay empty when it is
-    # skipped.
+    # `.github/scripts/detect-docs-only.sh`, which the `templates` and `browser` jobs run too. Every later step is
+    # gated on `build == 'true'`, either directly or through "Resolve database scope", whose outputs stay empty when it
+    # is skipped.
     # The `sqlserver` service above still starts on a documentation-only pull request, because `services:` has no
     # `if:`. That costs the image pull and start, well under the cost of the build and tests.
     - name: Detect documentation-only pull request
@@ -66,10 +66,8 @@ jobs:
         EVENT_NAME: ${{ github.event_name }}
       run: .github/scripts/detect-docs-only.sh
 
-    # Decides which database tests run. The default is lite (SQL Server + SQLite).
-    # Full mode must be requested explicitly: a manual dispatch with db_scope=all, or [all-db] in the commit message.
-    # The commit message is always passed through env. It is a user-controlled string, and expanding it with
-    # ${{ }} directly inside run: would allow script injection (the S7636 reason in .claude/rules/sonarcloud.md).
+    # Decides which database tests run, lite (the default) or full; the rules are in the header of
+    # `.github/scripts/resolve-db-scope.sh`, which the `browser` job runs too.
     - name: Resolve database scope
       id: scope
       if: steps.changes.outputs.build == 'true'
@@ -78,28 +76,7 @@ jobs:
         # head_commit only exists on push events. Pull request events look at the PR title instead; otherwise [all-db] would not work on a PR.
         COMMIT_MSG: ${{ github.event.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
-      run: |
-        full=false
-        if [ "$DISPATCH_SCOPE" = "all" ]; then
-          full=true
-        elif printf '%s' "$COMMIT_MSG$PR_TITLE" | grep -qF '[all-db]'; then
-          full=true
-        fi
-        echo "full=$full" >> "$GITHUB_OUTPUT"
-        # RequiredTestDatabaseGateTests (tests/Polhem.Db.UnitTests) fails when a database listed here has no
-        # connection string under the name the tests read. Without it, a renamed variable skips every test for that
-        # database and the run stays green.
-        if [ "$full" = true ]; then
-          echo "POLHEM_TEST_REQUIRED_DATABASES=SQLServer,SQLite,PostgreSQL,MySQL,Oracle" >> "$GITHUB_ENV"
-        else
-          echo "POLHEM_TEST_REQUIRED_DATABASES=SQLServer,SQLite" >> "$GITHUB_ENV"
-        fi
-        if [ "$full" = true ]; then
-          echo "Database scope: all (SQL Server + SQLite + PostgreSQL + MySQL + Oracle), SonarCloud enabled"
-        else
-          echo "Database scope: lite (SQL Server + SQLite), SonarCloud skipped"
-          echo "  → For full mode: put [all-db] in the commit message, or run workflow_dispatch manually with db_scope=all"
-        fi
+      run: .github/scripts/resolve-db-scope.sh
 
     # Start as early as possible: the containers get ready in the background during the setup and strict build
     # steps, so "Wait for extra database containers" does not wait from zero (an Oracle cold start takes 45-90 seconds).
@@ -265,7 +242,8 @@ jobs:
     # Coverage is collected only in full mode: lite mode does not run SonarScanner, so nobody would collect it,
     # and a report without three providers would only push the SonarCloud numbers down.
     # The template tests run in the `templates` job instead; the filter leaves out only that project, so a new test
-    # project is picked up here without any list to update.
+    # project is picked up here without any list to update. In lite mode the browser tests run in the `browser` job
+    # and are left out here by namespace too; in full mode they stay here, so their coverage reaches SonarCloud.
     - name: Test with coverage
       if: steps.changes.outputs.build == 'true'
       env:
@@ -279,7 +257,7 @@ jobs:
         POLHEM_TEST_CONNSTR_SQLITE: "Data Source=file:polhem_test_{@DbName}?mode=memory&cache=shared"
       run: >-
         dotnet test Polhem.slnx --configuration Release --no-build --verbosity normal
-        --filter "FullyQualifiedName!~Polhem.Templates.UnitTests."
+        --filter "FullyQualifiedName!~Polhem.Templates.UnitTests.${{ steps.scope.outputs.full != 'true' && '&FullyQualifiedName!~.BrowserTests.' || '' }}"
         ${{ steps.scope.outputs.full == 'true' && '--collect:"XPlat Code Coverage;Format=opencover"' || '' }}
 
     - name: SonarScanner End
@@ -412,3 +390,50 @@ jobs:
     - name: Template tests
       if: steps.changes.outputs.build == 'true'
       run: dotnet test tests/Polhem.Templates.UnitTests/Polhem.Templates.UnitTests.csproj --configuration Release --verbosity normal
+
+  # The browser tests start a Blazor Server site of each UI package's test pages and drive the installed Chrome through
+  # Playwright. Each test class runs its tests one after another, and they were the slowest part of the `build` job's
+  # test step once the template tests had left it. In lite mode they run here, beside `build`. In full mode `build`
+  # runs them, because SonarCloud's coverage is collected there, and this job skips them; both jobs read the mode from
+  # `.github/scripts/resolve-db-scope.sh`.
+  # This job is a required check of the branch protection on `main`, like `build`, so it also always starts on a pull
+  # request and skips its work when only `.md` files changed.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        # The detection below compares HEAD with its first parent.
+        fetch-depth: 2
+
+    - name: Detect documentation-only pull request
+      id: changes
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: .github/scripts/detect-docs-only.sh
+
+    - name: Resolve database scope
+      id: scope
+      if: steps.changes.outputs.build == 'true'
+      env:
+        DISPATCH_SCOPE: ${{ github.event.inputs.db_scope }}
+        COMMIT_MSG: ${{ github.event.head_commit.message }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+      run: .github/scripts/resolve-db-scope.sh
+
+    - name: Setup .NET
+      if: steps.scope.outputs.full == 'false'
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: 10.0.x
+
+    # The filter keeps only the browser test namespaces, so a new browser test project is picked up without any list
+    # to update. The other test projects still start and find nothing to run, which takes under a second each.
+    - name: Browser tests
+      if: steps.scope.outputs.full == 'false'
+      run: >-
+        dotnet test Polhem.slnx --configuration Release --verbosity normal
+        --filter "FullyQualifiedName~.BrowserTests."
