@@ -2,8 +2,9 @@ using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Polhem.Web.Blazor.Shell;
+using Polhem.Web.Blazor.Wasm.Shell;
 
-namespace Polhem.Web.Blazor.Wasm.Shell
+namespace Polhem.Web.Blazor.Wasm.DependencyInjection
 {
     /// <summary>
     /// Startup extensions for the Blazor WebAssembly shell.

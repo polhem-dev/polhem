@@ -24,7 +24,6 @@ using Polhem.Web.Blazor.Fluent.DependencyInjection;
 #else
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 #endif
-using Polhem.Web.Blazor.Server.Shell;
 using PolhemApp.Web.Components;
 
 #if (database == "SqlServer")

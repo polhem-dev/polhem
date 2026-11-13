@@ -6,7 +6,7 @@ namespace Polhem.Web.Blazor.Wasm.Shell
 {
     /// <summary>
     /// Stores the viewer's language in the browser and reloads the page, which
-    /// <see cref="PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture"/> reads when it starts again. The reload
+    /// <see cref="DependencyInjection.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture"/> reads when it starts again. The reload
     /// is what loads the new language's satellite assemblies. Nobody is signed in yet, so it loses nothing.
     /// </summary>
     internal sealed class ShellLanguageSwitcher(IJSRuntime js, NavigationManager navigation) : IShellLanguageSwitcher

@@ -6,7 +6,6 @@ using Polhem.Web.Blazor.Fluent.DependencyInjection;
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 #endif
 using Polhem.Web.Blazor.Wasm.DependencyInjection;
-using Polhem.Web.Blazor.Wasm.Shell;
 using PolhemApp.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);

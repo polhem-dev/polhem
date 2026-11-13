@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Routing;
+using Polhem.Web.Blazor.Server.Shell;
 
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
     /// <summary>
     /// Endpoint-routing extensions for the Blazor Server shell.

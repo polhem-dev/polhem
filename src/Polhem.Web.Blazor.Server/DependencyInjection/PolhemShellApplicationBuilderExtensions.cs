@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Localization;
 
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
     /// <summary>
     /// Request-pipeline extensions for the Blazor Server shell.

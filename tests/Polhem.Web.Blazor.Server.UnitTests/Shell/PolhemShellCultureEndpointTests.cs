@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
-using Polhem.Web.Blazor.Server.Shell;
+using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Shell
 {

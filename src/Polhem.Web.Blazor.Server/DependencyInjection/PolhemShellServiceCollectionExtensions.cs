@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Web.Blazor.Server.Shell;
 
-namespace Polhem.Web.Blazor.Server.Shell
+namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
     /// <summary>
     /// Service-collection extensions for the Blazor Server shell.
