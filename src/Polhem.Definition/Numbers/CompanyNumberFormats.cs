@@ -1,7 +1,7 @@
 using Polhem.Core.Collections;
 using System.ComponentModel;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A company-level table of <see cref="NumberKind"/> decimal-places overrides. Carries the

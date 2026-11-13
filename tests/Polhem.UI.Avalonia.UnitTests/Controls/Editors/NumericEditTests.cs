@@ -2,13 +2,13 @@ using System.ComponentModel;
 using Avalonia.Input;
 using Avalonia.Media;
 using Polhem.Core.Data;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

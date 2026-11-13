@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Core.Collections;
 using Polhem.Definition.Collections;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Layouts
 {

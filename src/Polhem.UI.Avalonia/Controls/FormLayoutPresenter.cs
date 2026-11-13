@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.Controls
 {

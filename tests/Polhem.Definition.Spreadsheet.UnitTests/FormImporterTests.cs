@@ -6,6 +6,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Spreadsheet.UnitTests
 {

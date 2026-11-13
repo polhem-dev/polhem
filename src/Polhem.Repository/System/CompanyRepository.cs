@@ -5,6 +5,7 @@ using Polhem.Db;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.System;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Repository.System
 {

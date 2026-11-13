@@ -5,6 +5,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Business.UnitTests.Form
 {

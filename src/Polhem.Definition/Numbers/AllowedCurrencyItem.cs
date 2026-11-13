@@ -2,7 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A single entry in a company's allowed-currency whitelist, held in

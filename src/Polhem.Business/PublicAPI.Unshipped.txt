@@ -16,3 +16,7 @@ Polhem.Business.Session.SessionCompanyBinding.Capabilities.get -> System.Collect
 *REMOVED*Polhem.Business.Session.SessionCompanyBinding.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionActions>!
 *REMOVED*Polhem.Business.Form.FormPluginChain.TypesForStage(Polhem.Definition.Settings.PluginStage stage) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
 Polhem.Business.Session.SessionCompanyBinding.SessionCompanyBinding(Polhem.Definition.Identity.CompanyInfo! Company, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>! Capabilities) -> void
+Polhem.Business.Form.IFormRuleProcessor.ApplyBeforeSave(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+*REMOVED*Polhem.Business.Form.FormRuleProcessor.ApplyBeforeSave(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+Polhem.Business.Form.FormRuleProcessor.ApplyBeforeSave(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+*REMOVED*Polhem.Business.Form.IFormRuleProcessor.ApplyBeforeSave(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void

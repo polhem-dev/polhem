@@ -2,7 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using Polhem.Definition.Settings;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A company-level table of per-currency cash-rounding overrides (SAP T001R-style). Empty means

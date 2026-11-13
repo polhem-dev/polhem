@@ -63,3 +63,5 @@ Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObje
 Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
 Polhem.UI.Core.Editing.IFieldEditor.Bind(Polhem.UI.Core.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
 Polhem.UI.Core.Editing.IFieldEditor.Unbind() -> void
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.FormLiveComputationEngine(Polhem.Definition.Forms.FormSchema! schema, Polhem.Core.Expressions.IExpressionEvaluator! evaluator, System.Func<string!>! timeZoneProvider, Polhem.Definition.RoundingContext? roundingContext = null) -> void
+Polhem.UI.Core.FormLiveComputationEngine.FormLiveComputationEngine(Polhem.Definition.Forms.FormSchema! schema, Polhem.Core.Expressions.IExpressionEvaluator! evaluator, System.Func<string!>! timeZoneProvider, Polhem.Definition.Numbers.RoundingContext? roundingContext = null) -> void

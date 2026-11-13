@@ -1,6 +1,6 @@
 using Polhem.Definition.Identity;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// Resolves reference-aware decimal places, display format strings, and value rounding for a

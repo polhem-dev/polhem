@@ -3,7 +3,6 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
 using System.Data;
 using Polhem.Api.Client.Connectors;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
@@ -19,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.Components
 {

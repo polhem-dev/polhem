@@ -1,4 +1,4 @@
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// Semantic classification of a numeric field. Drives the field's rounding

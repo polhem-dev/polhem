@@ -2,7 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A company-level cash-rounding override for a single currency (SAP T001R-style), held in

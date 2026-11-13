@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// Resolves the framework defaults for each <see cref="NumberKind"/>: format letter,

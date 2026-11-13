@@ -1,5 +1,6 @@
 using Polhem.Core;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Identity
 {

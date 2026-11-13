@@ -15,7 +15,7 @@ namespace Polhem.Api.Core.MessagePack
             list.Add(new WireEnumFormatter<Polhem.Definition.Logging.AnomalyKind>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Logging.ChangeKind>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Logging.LoginEvent>());
-            list.Add(new WireEnumFormatter<Polhem.Definition.NumberKind>());
+            list.Add(new WireEnumFormatter<Polhem.Definition.Numbers.NumberKind>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Security.ApiKeyStatus>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Security.ApiKeyType>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Settings.PermissionActions>());

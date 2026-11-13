@@ -101,3 +101,11 @@ static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Aval
 *REMOVED*static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
 *REMOVED*static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
 *REMOVED*static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
+static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContextProperty -> Avalonia.StyledProperty<Polhem.Definition.Numbers.RoundingContext?>!
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Numbers.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null) -> void
+Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Numbers.RoundingContext!>!
+*REMOVED*Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.UI.Avalonia.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null) -> void
+*REMOVED*static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContextProperty -> Avalonia.StyledProperty<Polhem.Definition.RoundingContext?>!
+*REMOVED*virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!

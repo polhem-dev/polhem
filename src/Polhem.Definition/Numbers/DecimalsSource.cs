@@ -1,4 +1,4 @@
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// The source that determines the decimal places for a <see cref="NumberKind"/>.

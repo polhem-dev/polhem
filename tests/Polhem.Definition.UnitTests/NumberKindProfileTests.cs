@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests
 {

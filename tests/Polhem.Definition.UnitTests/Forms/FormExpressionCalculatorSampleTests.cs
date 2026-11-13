@@ -4,6 +4,7 @@ using Polhem.Core.Data;
 using Polhem.Core.Expressions;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests.Forms
 {

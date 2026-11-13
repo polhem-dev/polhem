@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
-using Polhem.Definition;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core.Fields;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.Controls.Editors
 {

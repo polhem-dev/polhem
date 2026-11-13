@@ -2,7 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A company-level decimal-places override for a single <see cref="NumberKind"/>.

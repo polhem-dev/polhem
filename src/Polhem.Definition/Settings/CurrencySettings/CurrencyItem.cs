@@ -2,6 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Text.Json.Serialization;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Settings
 {

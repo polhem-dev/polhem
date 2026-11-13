@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Business.Form
 {

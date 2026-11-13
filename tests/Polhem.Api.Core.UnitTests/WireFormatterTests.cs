@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Organization;
 using Polhem.Definition.Sorting;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Api.Core.UnitTests
 {

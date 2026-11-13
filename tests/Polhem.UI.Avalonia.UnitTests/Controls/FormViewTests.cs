@@ -18,6 +18,7 @@ using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {

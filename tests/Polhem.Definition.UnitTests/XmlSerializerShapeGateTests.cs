@@ -9,6 +9,7 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests
 {

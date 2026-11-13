@@ -8,7 +8,7 @@ namespace Polhem.Definition.Settings
     /// System-level currency master (SAP TCURX-style): a curated table of <see cref="CurrencyItem"/>
     /// carrying each currency's natural minor unit. Currency decimals are system-wide and independent
     /// of company; the company layer may only override the final cash-rounding unit
-    /// (<see cref="Polhem.Definition.CompanyCashRounding"/>). Persisted as a singleton define through <see cref="Polhem.Definition.Storage.IDefineStorage"/>
+    /// (<see cref="Polhem.Definition.Numbers.CompanyCashRounding"/>). Persisted as a singleton define through <see cref="Polhem.Definition.Storage.IDefineStorage"/>
     /// (file or DB) and shipped to the client so the UI can resolve amount decimals at runtime.
     /// </summary>
     /// <remarks>

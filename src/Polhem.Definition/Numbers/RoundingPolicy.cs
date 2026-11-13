@@ -1,4 +1,4 @@
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// The rounding strategy applied to a <see cref="NumberKind"/> when a value is written.

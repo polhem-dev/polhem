@@ -1,6 +1,6 @@
-using Polhem.Definition;
 using MessagePack;
 using MessagePack.Formatters;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Api.Core.MessagePack
 {

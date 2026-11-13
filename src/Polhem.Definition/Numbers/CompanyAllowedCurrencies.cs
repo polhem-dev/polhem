@@ -2,7 +2,7 @@ using Polhem.Core.Collections;
 using System.ComponentModel;
 using Polhem.Definition.Settings;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// A company-level whitelist of usable currency codes (a per-company subset stricter than the

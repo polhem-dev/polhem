@@ -10,6 +10,7 @@ using Polhem.Definition.Settings;
 using Polhem.Web.Blazor.Controls;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {

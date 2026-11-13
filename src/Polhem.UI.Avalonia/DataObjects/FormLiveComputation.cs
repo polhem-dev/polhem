@@ -1,9 +1,9 @@
 using System.Data;
 using Polhem.Core.Expressions;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
 using Polhem.UI.Core;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.DataObjects
 {

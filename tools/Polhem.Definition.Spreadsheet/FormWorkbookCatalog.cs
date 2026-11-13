@@ -2,6 +2,7 @@ using Polhem.Core.Data;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Spreadsheet;
 

@@ -1,7 +1,7 @@
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 
-namespace Polhem.Definition
+namespace Polhem.Definition.Numbers
 {
     /// <summary>
     /// Carries the session/system inputs that <see cref="NumberFormatResolver"/> needs to resolve

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests.Forms
 {

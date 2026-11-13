@@ -1,8 +1,8 @@
 using System.Data;
 using Polhem.Core;
 using Polhem.Core.Expressions;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Core
 {

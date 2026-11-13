@@ -1,10 +1,10 @@
 using System.Data;
 using System.Globalization;
 using Polhem.Core;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Core.Fields
 {

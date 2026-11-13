@@ -1,11 +1,11 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.Controls
 {

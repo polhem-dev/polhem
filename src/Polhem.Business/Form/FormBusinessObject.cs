@@ -2,6 +2,7 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Security;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Business.Form
 {

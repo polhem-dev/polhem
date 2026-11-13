@@ -216,3 +216,11 @@ Polhem.Web.Blazor.Identity.BlazorUserContext.SessionRejected -> System.EventHand
 override Polhem.Web.Blazor.Shell.ShellLayoutBase.OnInitialized() -> void
 Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose() -> void
 virtual Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose(bool disposing) -> void
+Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+Polhem.Web.Blazor.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Numbers.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null, System.Func<string!>? timeZoneProvider = null) -> void
+Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null, System.Func<string!>? timeZoneProvider = null) -> void
