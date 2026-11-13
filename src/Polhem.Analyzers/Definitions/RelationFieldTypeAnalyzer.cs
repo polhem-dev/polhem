@@ -17,11 +17,8 @@ namespace Polhem.Analyzers.Definitions
     /// relation field compares text with a uniqueidentifier, which matches nothing or is refused by the database.
     /// </para>
     /// <para>
-    /// Types are compared by how the framework holds their values, not by name: <c>Integer</c> and
-    /// <c>AutoIncrement</c> are both a 32-bit integer, <c>Decimal</c> and <c>Currency</c> both a decimal, and
-    /// <c>String</c> and <c>Text</c> both text. An integer destination wider than its source (<c>Short</c> into
-    /// <c>Integer</c> or <c>Long</c>, <c>Integer</c> into <c>Long</c>) holds every source value, and the database
-    /// compares the two widths, so it is accepted; a narrower one is not.
+    /// Which types hold which is decided by <see cref="RelationFieldTypes.Holds"/>, which DefineEditor's relation
+    /// dialog compiles as well.
     /// </para>
     /// <para>
     /// Only the mappings the query join reads are checked. A <c>LookupOnly</c> mapping copies a value into a field of
@@ -103,7 +100,7 @@ namespace Polhem.Analyzers.Definitions
             if (!FieldDbTypes.IsValid(sourceType) || !FieldDbTypes.IsValid(destinationType))
                 return;
 
-            if (Holds(destinationType, sourceType))
+            if (RelationFieldTypes.Holds(destinationType, sourceType))
                 return;
 
             var location = destination.Attribute("DbType") ?? destination.Attribute("FieldName");
@@ -149,33 +146,5 @@ namespace Polhem.Analyzers.Definitions
         // Matches how `XmlSerializer` reads an `xs:boolean`: "true" and "1" are true, case-sensitively.
         private static bool IsLookupOnly(XElement mapping)
             => mapping.Attribute("LookupOnly")?.Value is "true" or "1";
-
-        private static bool Holds(string destinationType, string sourceType)
-        {
-            var destination = ValueKind(destinationType);
-            var source = ValueKind(sourceType);
-            if (string.Equals(destination, source, StringComparison.Ordinal))
-                return true;
-
-            var destinationWidth = IntegerWidth(destination);
-            var sourceWidth = IntegerWidth(source);
-            return destinationWidth > 0 && sourceWidth > 0 && destinationWidth >= sourceWidth;
-        }
-
-        private static int IntegerWidth(string valueKind) => valueKind switch
-        {
-            "Short" => 16,
-            "Integer" => 32,
-            "Long" => 64,
-            _ => 0,
-        };
-
-        private static string ValueKind(string dbType) => dbType switch
-        {
-            "AutoIncrement" => "Integer",
-            "Currency" => "Decimal",
-            "Text" => "String",
-            _ => dbType,
-        };
     }
 }

@@ -153,15 +153,65 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("An existing destination whose type differs from the source is a warning, not an error")]
-        public void Evaluate_TypeMismatch_IsNotError()
+        [DisplayName("An existing destination whose type does not hold the source's values is an error that refuses applying")]
+        public void Evaluate_TypeMismatch_IsError()
         {
             var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
             Row(rows, "credit_limit").IsIncluded = true;
             Row(rows, "credit_limit").DestinationField = "zone_rowid";
 
-            Assert.False(RelationSetup.Evaluate(_customer, rows));
+            Assert.True(RelationSetup.Evaluate(_customer, rows));
             Assert.Equal(RelationSetupRowStatus.TypeMismatch, Row(rows, "credit_limit").Status);
+            Assert.True(Row(rows, "credit_limit").IsError);
+            Assert.Throws<InvalidOperationException>(() => RelationSetup.Apply(_customer, "Customer", rows, removeOrphans: false));
+        }
+
+        [Theory]
+        [InlineData(FieldDbType.Decimal, FieldDbType.Currency)]
+        [InlineData(FieldDbType.AutoIncrement, FieldDbType.Integer)]
+        [InlineData(FieldDbType.AutoIncrement, FieldDbType.Long)]
+        [InlineData(FieldDbType.String, FieldDbType.Text)]
+        [InlineData(FieldDbType.Short, FieldDbType.Integer)]
+        [DisplayName("An existing destination that holds the source's values the same way is accepted, as POLHEM2008 accepts it")]
+        public void Evaluate_EquivalentType_IsExisting(FieldDbType sourceType, FieldDbType destinationType)
+        {
+            CustomerMaster.Fields!.Add("measure", "Measure", sourceType);
+            _orderTable.Fields!.Add("ref_customer_measure", "Measure", destinationType);
+            var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
+            Row(rows, "measure").IsIncluded = true;
+
+            Assert.False(RelationSetup.Evaluate(_customer, rows));
+            Assert.Equal(RelationSetupRowStatus.Existing, Row(rows, "measure").Status);
+        }
+
+        [Theory]
+        [InlineData(FieldDbType.Integer, FieldDbType.Short)]
+        [InlineData(FieldDbType.Long, FieldDbType.Integer)]
+        [InlineData(FieldDbType.Guid, FieldDbType.String)]
+        [InlineData(FieldDbType.Decimal, FieldDbType.Integer)]
+        [DisplayName("An existing destination narrower than or different from its source is refused, as POLHEM2008 reports it")]
+        public void Evaluate_NarrowerOrDifferentType_IsTypeMismatch(FieldDbType sourceType, FieldDbType destinationType)
+        {
+            CustomerMaster.Fields!.Add("measure", "Measure", sourceType);
+            _orderTable.Fields!.Add("ref_customer_measure", "Measure", destinationType);
+            var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
+            Row(rows, "measure").IsIncluded = true;
+
+            Assert.True(RelationSetup.Evaluate(_customer, rows));
+            Assert.Equal(RelationSetupRowStatus.TypeMismatch, Row(rows, "measure").Status);
+        }
+
+        [Fact]
+        [DisplayName("A lookup-only row is not checked for type, as POLHEM2008 does not check lookup-only mappings")]
+        public void Evaluate_LookupOnlyTypeDifference_IsExisting()
+        {
+            var rows = RelationSetup.CreateRows(_customer, CustomerMaster, isCurrentForm: true);
+            Row(rows, "credit_limit").IsIncluded = true;
+            Row(rows, "credit_limit").LookupOnly = true;
+            Row(rows, "credit_limit").DestinationField = "zone_rowid";
+
+            Assert.False(RelationSetup.Evaluate(_customer, rows));
+            Assert.Equal(RelationSetupRowStatus.Existing, Row(rows, "credit_limit").Status);
         }
 
         [Fact]

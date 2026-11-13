@@ -139,7 +139,7 @@ public static class RelationSetup
             if (IsName(destination, field.FieldName)) return RelationSetupRowStatus.DestinationIsForeignKey;
             if (destinations.Contains(destination)) return RelationSetupRowStatus.DuplicateDestination;
             if (fields?.GetOrDefault(destination) is not { } existing) return RelationSetupRowStatus.New;
-            return row.SourceDbType is { } type && CreatedDbType(type) != existing.DbType
+            return !row.LookupOnly && row.SourceDbType is { } type && !Holds(existing.DbType, type)
                 ? RelationSetupRowStatus.TypeMismatch
                 : RelationSetupRowStatus.Existing;
         }
@@ -147,7 +147,8 @@ public static class RelationSetup
 
     /// <summary>Returns whether <paramref name="status"/> refuses applying.</summary>
     public static bool IsError(RelationSetupRowStatus status) => status is RelationSetupRowStatus.MissingDestination
-        or RelationSetupRowStatus.DestinationIsForeignKey or RelationSetupRowStatus.DuplicateDestination;
+        or RelationSetupRowStatus.DestinationIsForeignKey or RelationSetupRowStatus.DuplicateDestination
+        or RelationSetupRowStatus.TypeMismatch;
 
     /// <summary>
     /// The relation fields that applying <paramref name="rows"/> would leave without any mapping: fields a current
@@ -331,6 +332,11 @@ public static class RelationSetup
     // An auto-increment source is a plain number once copied; the destination must not number its own rows.
     private static FieldDbType CreatedDbType(FieldDbType source) =>
         source == FieldDbType.AutoIncrement ? FieldDbType.Integer : source;
+
+    // The analyzer's rule, compiled into this project, so the dialog refuses exactly what POLHEM2008 reports. A
+    // lookup-only row is not checked: no join reads its source, and the copy converts by the destination's type.
+    private static bool Holds(FieldDbType destination, FieldDbType source)
+        => Polhem.Analyzers.Definitions.RelationFieldTypes.Holds(destination.ToString(), source.ToString());
 
     private static bool IsName(string? a, string? b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 }

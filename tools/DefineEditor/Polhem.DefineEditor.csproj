@@ -80,6 +80,13 @@
     <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Fluent\Polhem.Web.Blazor.Fluent.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The relation dialog decides "this destination holds the source's values" with the same code as analyzer rule
+         POLHEM2008, so the editor never applies a mapping the build then refuses. The analyzer targets netstandard2.0
+         and cannot be referenced, so its source file is compiled here. -->
+    <Compile Include="..\..\src\Polhem.Analyzers\Definitions\RelationFieldTypes.cs" Link="Services\RelationFieldTypes.cs" />
+  </ItemGroup>
+
   <!--
     WARNING: the browser preview needs `_framework/blazor.web.js`, which Microsoft.AspNetCore.App.Internal.Assets adds in
     its `_AddBlazorFrameworkStaticWebAssets` target. That target runs only when OutputType is Exe, and this application
