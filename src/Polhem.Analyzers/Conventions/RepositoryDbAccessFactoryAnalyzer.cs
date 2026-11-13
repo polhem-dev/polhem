@@ -95,7 +95,7 @@ namespace Polhem.Analyzers.Conventions
         {
             for (var type = context.ContainingSymbol.ContainingType; type is not null; type = type.ContainingType)
             {
-                if (!DerivesFrom(type, repositoryBase)) continue;
+                if (!type.DerivesFrom(repositoryBase)) continue;
                 context.ReportDiagnostic(Diagnostic.Create(Rule, context.Operation.Syntax.GetLocation(), type.Name));
                 return;
             }
@@ -105,13 +105,5 @@ namespace Polhem.Analyzers.Conventions
             => SymbolEqualityComparer.Default.Equals(type, contract)
                || type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, contract));
 
-        private static bool DerivesFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
-        {
-            for (var current = type.BaseType; current is not null; current = current.BaseType)
-            {
-                if (SymbolEqualityComparer.Default.Equals(current, baseType)) return true;
-            }
-            return false;
-        }
     }
 }

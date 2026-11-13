@@ -14,7 +14,7 @@ namespace Polhem.Analyzers.Definitions
     /// SELECT builder, which throws. The message therefore names the consequence per attribute.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class FieldListReferenceAnalyzer : DiagnosticAnalyzer
+    public sealed class FieldListReferenceAnalyzer : DefinitionFileAnalyzer
     {
         /// <summary>
         /// The schema-level attributes holding a comma separated list of field names, paired with the
@@ -47,14 +47,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

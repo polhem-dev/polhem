@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polhem.Hosting" Version="POLHEM_PACKAGE_VERSION" />
-    <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="[1.2.0, 2.0.0)" />
+    <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="[1.2.0]" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.14" />
 <!--#if (database == "SqlServer") -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />

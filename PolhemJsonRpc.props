@@ -15,9 +15,15 @@
 
     The projects then reference its source instead of the packages. CI and the release workflow never set it, so what
     they build and publish depends on the released packages.
+
+    The version is exact, not a range. Half of the access decision (which methods an action name reaches, the payload
+    filter, replay protection) lives in those packages, so a newer one changes the framework's security behavior. With a
+    range, restore picks up a newer package silently; with the pin, an application that wants one has to reference it
+    itself, and NuGet reports NU1608. Moving to a newer version is a change to this line, reviewed like any other. The project templates and the getting-started documents write the same version,
+    and TemplateJsonRpcVersionTests (tests/Polhem.Templates.UnitTests) fails when they disagree.
   -->
   <PropertyGroup>
-    <PolhemJsonRpcVersion>[1.2.0, 2.0.0)</PolhemJsonRpcVersion>
+    <PolhemJsonRpcVersion>[1.2.0]</PolhemJsonRpcVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props"
           Condition="Exists('$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props')" />

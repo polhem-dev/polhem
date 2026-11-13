@@ -66,7 +66,7 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 ```bash
 dotnet add package Polhem.Hosting
-dotnet add package Polhem.JsonRpc.AspNetCore
+dotnet add package Polhem.JsonRpc.AspNetCore --version 1.2.0
 dotnet add package Polhem.Db
 ```
 

@@ -25,13 +25,31 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// </remarks>
     public class ConnectorSurfaceTests
     {
-        /// <summary>The constants class → connector type mapping for each axis. Add a row when adding an axis.</summary>
+        /// <summary>
+        /// The constants class → connector type mapping for each axis. <see cref="Axes_ListEveryActionsClass"/> fails when
+        /// an axis has no row.
+        /// </summary>
         private static readonly (Type Actions, Type Connector)[] s_axes =
         [
             (typeof(SystemActions), typeof(SystemApiConnector)),
             (typeof(FormActions), typeof(FormApiConnector)),
             (typeof(AuditLogActions), typeof(AuditLogApiConnector)),
         ];
+
+        [Fact]
+        [DisplayName("Every static *Actions class of Polhem.Definition is an axis of this table, so a new axis cannot pass unchecked")]
+        public void Axes_ListEveryActionsClass()
+        {
+            var declared = typeof(SystemActions).Assembly.GetExportedTypes()
+                .Where(type => type is { IsAbstract: true, IsSealed: true }
+                    && type.Name.EndsWith("Actions", StringComparison.Ordinal))
+                .ToList();
+            var listed = s_axes.Select(axis => axis.Actions).ToHashSet();
+
+            Assert.Contains(typeof(SystemActions), declared);
+            Assert.All(declared, type => Assert.True(listed.Contains(type),
+                $"{type.FullName} declares actions but has no row in s_axes, so none of its actions is checked."));
+        }
 
         /// <summary>
         /// Actions every business object inherits from its base class. Their constants live in

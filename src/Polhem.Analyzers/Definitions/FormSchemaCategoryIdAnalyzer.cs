@@ -12,7 +12,7 @@ namespace Polhem.Analyzers.Definitions
     /// routed, so the failure only ever surfaces at run time when the form is first used.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class FormSchemaCategoryIdAnalyzer : DiagnosticAnalyzer
+    public sealed class FormSchemaCategoryIdAnalyzer : DefinitionFileAnalyzer
     {
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
             id: DiagnosticIds.InvalidFormSchemaCategoryId,
@@ -34,16 +34,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
-            // Definition files are AdditionalFiles, which are only reachable from a compilation action.
-            context.RegisterCompilationAction(Analyze);
-        }
-
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

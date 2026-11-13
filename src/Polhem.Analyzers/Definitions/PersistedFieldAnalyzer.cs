@@ -14,7 +14,7 @@ namespace Polhem.Analyzers.Definitions
     /// connect it back to the schema that asked for it.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class PersistedFieldAnalyzer : DiagnosticAnalyzer
+    public sealed class PersistedFieldAnalyzer : DefinitionFileAnalyzer
     {
         /// <summary>
         /// The field type that denotes a column in the database. Relation and virtual fields are
@@ -42,14 +42,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

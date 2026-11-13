@@ -14,7 +14,7 @@ namespace Polhem.Analyzers.Definitions
     /// hard to notice, but also legitimate in some projects, hence the informational severity.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class LanguageCoverageAnalyzer : DiagnosticAnalyzer
+    public sealed class LanguageCoverageAnalyzer : DefinitionFileAnalyzer
     {
         /// <summary>
         /// How many missing keys to name before summarising the rest.
@@ -41,14 +41,8 @@ namespace Polhem.Analyzers.Definitions
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

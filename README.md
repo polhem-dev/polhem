@@ -66,7 +66,7 @@ Each assembly below ships as a NuGet package of the same name. A JSON-RPC server
 
 ```bash
 dotnet add package Polhem.Hosting
-dotnet add package Polhem.JsonRpc.AspNetCore
+dotnet add package Polhem.JsonRpc.AspNetCore --version 1.2.0
 dotnet add package Polhem.Db
 ```
 

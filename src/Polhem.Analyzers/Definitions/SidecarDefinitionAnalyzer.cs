@@ -16,7 +16,7 @@ namespace Polhem.Analyzers.Definitions
     /// such project.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class SidecarDefinitionAnalyzer : DiagnosticAnalyzer
+    public sealed class SidecarDefinitionAnalyzer : DefinitionFileAnalyzer
     {
         private static readonly DiagnosticDescriptor MissingTableSchema = new DiagnosticDescriptor(
             id: DiagnosticIds.MissingTableSchema,
@@ -53,14 +53,8 @@ namespace Polhem.Analyzers.Definitions
             ImmutableArray.Create(MissingTableSchema, MissingFormLayout);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

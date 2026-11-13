@@ -81,7 +81,7 @@ namespace Polhem.Analyzers.Conventions
             INamedTypeSymbol accessControl)
         {
             var type = (INamedTypeSymbol)context.Symbol;
-            if (type.TypeKind != TypeKind.Class || !DerivesFrom(type, businessObject))
+            if (type.TypeKind != TypeKind.Class || !type.DerivesFrom(businessObject))
                 return;
 
             // A type-level attribute, here or on a base type, covers every method, so there is nothing
@@ -180,15 +180,5 @@ namespace Polhem.Analyzers.Conventions
                 .Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType));
         }
 
-        private static bool DerivesFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
-        {
-            for (var current = type.BaseType; current is not null; current = current.BaseType)
-            {
-                if (SymbolEqualityComparer.Default.Equals(current, baseType))
-                    return true;
-            }
-
-            return false;
-        }
     }
 }

@@ -16,7 +16,7 @@ namespace Polhem.Analyzers.Definitions
     /// only the ones the query join reads, not those marked <c>LookupOnly</c>.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class RelationMappingAnalyzer : DiagnosticAnalyzer
+    public sealed class RelationMappingAnalyzer : DefinitionFileAnalyzer
     {
         private const string RelationFieldType = "RelationField";
 
@@ -55,14 +55,8 @@ namespace Polhem.Analyzers.Definitions
             ImmutableArray.Create(UnknownDestination, UnmappedRelationField);
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.RegisterCompilationAction(Analyze);
-        }
 
-        private static void Analyze(CompilationAnalysisContext context)
+        protected override void Analyze(CompilationAnalysisContext context)
         {
             var definitions = DefinitionContext.Create(context.Options.AdditionalFiles, context.CancellationToken);
 

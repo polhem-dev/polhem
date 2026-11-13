@@ -277,14 +277,14 @@ graph BT
 | Polhem.Db | *(none)* |
 | Polhem.ObjectCaching | Microsoft.Extensions.Caching.Memory 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Api.Core | MessagePack 3.x, Polhem.JsonRpc.Payload |
-| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server |
+| Polhem.Api.Server | Microsoft.Extensions.Logging.Abstractions 10.x, Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server |
 | Polhem.Business | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Logging.Abstractions 10.x |
 | Polhem.Repository | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
-| Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Hosting.Abstractions 10.x |
+| Polhem.Hosting | Microsoft.Extensions.DependencyInjection.Abstractions 10.x, Microsoft.Extensions.Hosting.Abstractions 10.x, Microsoft.Extensions.Logging.Abstractions 10.x, Polhem.JsonRpc.Server, Polhem.JsonRpc.Payload.Server, Polhem.JsonRpc.Payload |
 | Polhem.Web.Blazor | Microsoft.AspNetCore.Components.Web 10.x |
 | Polhem.Web.Blazor.Mud | MudBlazor 9.x |
 | Polhem.Web.Blazor.Fluent | Microsoft.FluentUI.AspNetCore.Components 5.x |
-| Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App` |
+| Polhem.Web.Blazor.Server | `FrameworkReference: Microsoft.AspNetCore.App`, Polhem.JsonRpc.Payload |
 | Polhem.UI.Avalonia | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x |
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
@@ -296,8 +296,8 @@ graph BT
 > `Polhem.Api.Core`'s MessagePack reference is the only transport-format package in the framework, and
 > keeping it the only one is the point of [ADR-036](../../../maintainers/adr/adr-036-wire-serialization-externalized.md).
 > The `Polhem.JsonRpc.*` packages are maintained in
-> [polhem-dev/polhem-jsonrpc](https://github.com/polhem-dev/polhem-jsonrpc); the version the framework uses is set in
-> `PolhemJsonRpc.props` at the repository root. An HTTP host adds `Polhem.JsonRpc.AspNetCore` itself.
+> [polhem-dev/polhem-jsonrpc](https://github.com/polhem-dev/polhem-jsonrpc); the exact version the framework uses is set in
+> `PolhemJsonRpc.props` at the repository root, whose header says why it is not a range. An HTTP host adds `Polhem.JsonRpc.AspNetCore` itself.
 > Build-time-only references (`PrivateAssets="all"`: SourceLink, the public API analyzers, the
 > repository's own analyzers) are omitted — they reach no consumer. `check-dependency-map.sh` compares the package
 > names in this table with the csproj files; versions are not compared.
