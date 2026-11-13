@@ -42,18 +42,18 @@ namespace Polhem.Api.Server.Validator
         }
 
         /// <summary>
-        /// Gets or sets the access token used to identify the current user or session.
+        /// Gets the access token used to identify the current user or session.
         /// </summary>
-        public Guid AccessToken { get; set; } = Guid.Empty;
+        public Guid AccessToken { get; init; } = Guid.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether the call originates from a local source (e.g., the same process or host as the server).
+        /// Gets a value indicating whether the call originates from a local source (e.g., the same process or host as the server).
         /// </summary>
-        public bool IsLocalCall { get; set; }
+        public bool IsLocalCall { get; init; }
 
         /// <summary>
-        /// Gets or sets the payload format of the call.
+        /// Gets the payload format of the call.
         /// </summary>
-        public PayloadFormat Format { get; set; }
+        public PayloadFormat Format { get; init; }
     }
 }

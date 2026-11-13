@@ -161,17 +161,6 @@ namespace Polhem.UI.ApiBridge
         }
 
         /// <summary>
-        /// Creates a form-level API connector for the specified program.
-        /// </summary>
-        /// <param name="progId">Program identifier.</param>
-        public static FormApiConnector CreateFormApiConnector(string progId) => ApiClient.Form(progId);
-
-        /// <summary>
-        /// Creates an audit-log API connector (read-only queries over the <c>st_log_*</c> tables).
-        /// </summary>
-        public static AuditLogApiConnector CreateAuditLogApiConnector() => ApiClient.AuditLog;
-
-        /// <summary>
         /// Definition-data accessor. Recreated whenever the endpoint changes or a user signs in.
         /// </summary>
         public static ClientDefineAccess DefineAccess

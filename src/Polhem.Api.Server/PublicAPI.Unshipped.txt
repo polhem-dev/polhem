@@ -1,1 +1,15 @@
 #nullable enable
+*REMOVED*Polhem.Api.Server.Validator.ApiCallContext.Format.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.IsValid.init -> void
+*REMOVED*Polhem.Api.Server.Authorization.ApiAuthorizationResult.Code.set -> void
+*REMOVED*Polhem.Api.Server.Authorization.ApiAuthorizationResult.IsValid.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.ErrorMessage.init -> void
+*REMOVED*Polhem.Api.Server.Authorization.ApiAuthorizationResult.AccessToken.set -> void
+*REMOVED*Polhem.Api.Server.Validator.ApiCallContext.IsLocalCall.set -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.Code.init -> void
+*REMOVED*Polhem.Api.Server.Validator.ApiCallContext.AccessToken.set -> void
+Polhem.Api.Server.Validator.ApiCallContext.AccessToken.init -> void
+Polhem.Api.Server.Validator.ApiCallContext.IsLocalCall.init -> void
+*REMOVED*Polhem.Api.Server.Authorization.ApiAuthorizationResult.ErrorMessage.set -> void
+Polhem.Api.Server.Validator.ApiCallContext.Format.init -> void
+Polhem.Api.Server.Authorization.ApiAuthorizationResult.AccessToken.init -> void

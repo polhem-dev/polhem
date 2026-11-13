@@ -60,9 +60,9 @@ namespace Polhem.Business.Form
         public DataSet? RefreshedDataSet { get; set; }
 
         /// <summary>
-        /// Gets or sets the affected row counts per table produced by persistence. Set by
+        /// Gets the affected row counts per table produced by persistence. Filled by
         /// <see cref="FormBusinessObject.DoSave"/>.
         /// </summary>
-        public Dictionary<string, int> AffectedRows { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, int> AffectedRows { get; } = new(StringComparer.OrdinalIgnoreCase);
     }
 }

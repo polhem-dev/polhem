@@ -83,21 +83,7 @@ namespace Polhem.UI.ApiBridge.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormApiConnector returns a connector for the form, bound to ApiClient")]
-        public void CreateFormApiConnector_ReturnsConnectorOfApiClient()
-        {
-            using var preserved = ClientInfoTestState.Preserve();
-            var client = PolhemApiClient.CreateRemote("http://remote.example.com", string.Empty);
-            ClientInfoTestState.UseClient(client);
-
-            var connector = ClientInfo.CreateFormApiConnector("TestProg");
-
-            Assert.Equal("TestProg", connector.ProgId);
-            Assert.Same(client, connector.Client);
-        }
-
-        [Fact]
-        [DisplayName("SystemApiConnector and CreateAuditLogApiConnector return the connectors of ApiClient")]
+        [DisplayName("SystemApiConnector returns the connector of ApiClient")]
         public void Connectors_AreThoseOfApiClient()
         {
             using var preserved = ClientInfoTestState.Preserve();
@@ -105,7 +91,6 @@ namespace Polhem.UI.ApiBridge.UnitTests
             ClientInfoTestState.UseClient(client);
 
             Assert.Same(client.System, ClientInfo.SystemApiConnector);
-            Assert.Same(client.AuditLog, ClientInfo.CreateAuditLogApiConnector());
         }
 
         [Fact]

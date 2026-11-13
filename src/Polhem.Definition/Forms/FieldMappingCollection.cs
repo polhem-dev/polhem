@@ -1,4 +1,3 @@
-using Polhem.Core;
 using Polhem.Core.Collections;
 
 namespace Polhem.Definition.Forms
@@ -8,14 +7,6 @@ namespace Polhem.Definition.Forms
     /// </summary>
     public sealed class FieldMappingCollection : CollectionBase<FieldMapping>
     {
-        /// <summary>
-        /// Finds a mapping by its destination field name.
-        /// </summary>
-        /// <param name="destinationField">The destination field name.</param>
-        public FieldMapping? FindByDestination(string destinationField)
-        {
-            return this.FirstOrDefault(m => StringUtilities.IsEquals(m.DestinationField, destinationField));
-        }
     }
 
     /// <summary>

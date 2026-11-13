@@ -880,7 +880,7 @@ ClientInfo.ApplyEnterCompanyResult(enterResponse);
 PingResponse ping = await ClientInfo.SystemApiConnector.PingAsync();
 
 // Form-level API (FormBO)
-var formConnector = ClientInfo.CreateFormApiConnector("Customer");
+var formConnector = ClientInfo.ApiClient.Form("Customer");
 var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
 
 // Definition data (FormSchema, TableSchema, etc.), exactly as stored

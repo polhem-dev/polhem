@@ -44,14 +44,6 @@ namespace Polhem.UI.ApiBridge.UnitTests
             var access = ClientInfo.DefineAccess;
             Assert.NotNull(access);
         }
-
-        [Fact]
-        [DisplayName("CreateFormApiConnector returns a non-null FormApiConnector instance")]
-        public void CreateFormApiConnector_LocalConnectType_ReturnsNotNull()
-        {
-            var connector = ClientInfo.CreateFormApiConnector("TestProg");
-            Assert.Equal("TestProg", connector.ProgId);
-        }
     }
 
     /// <summary>

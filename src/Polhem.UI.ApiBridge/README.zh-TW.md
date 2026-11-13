@@ -51,10 +51,10 @@ endpoint 或使用者改變時不需要重新註冊。[`Polhem.UI.Avalonia.Shell
 
 - `ClientInfo` -- 用戶端的靜態連線狀態。持有 head 唯一的 `ApiClient`（`PolhemApiClient`；per-process 身分
   模型：重新登入會清掉快取的 `DefineAccess` 與能力快照，換 endpoint 則會替換 client 並登出），公開其
-  `AccessToken`、`ConnectType` 與 `SystemApiConnector`、延遲建立 `DefineAccess`（`ClientDefineAccess`）、透過
-  `CreateFormApiConnector(progId)` 與 `CreateAuditLogApiConnector()` 產生連接器，並套用登入 / EnterCompany 結果
+  `AccessToken`、`ConnectType` 與 `SystemApiConnector`、延遲建立 `DefineAccess`（`ClientDefineAccess`），並套用登入 / EnterCompany 結果
   （`ApplyLoginResult`、`ApplyEnterCompanyResult`、`ClearCompanyContext`）。`ResetDefineCache` 在切換租戶後
-  丟棄快取的定義資料。
+  丟棄快取的定義資料。表單與稽核日誌的連接器由 client 提供：`ClientInfo.ApiClient.Form(progId)` 與
+  `ClientInfo.ApiClient.AuditLog`。
 - `ClientInfo.InitializeAsync(SupportedConnectTypes)` -- 讀取已儲存的 endpoint 與命令列後連線。endpoint 缺漏、
   格式錯誤或無法連線時回傳 `false`；host 接著顯示自己的連線設定畫面，再以使用者輸入的值呼叫
   `InitializeAsync(endpoint)`（或 `SetEndpointAsync`）。
