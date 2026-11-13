@@ -14,38 +14,18 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.13.0.md](docs/zh-TW/changelogs/1.13.0.md)
 
-- **破壞性變更：** 多家公司可以共用一個公司資料庫：每張公司資料表加上 `sys_company_id`，表單 repository 與框架的公司查詢只讀寫 session 所屬公司的資料列；既有部署以 `db add-company-column` 與 `db upgrade` 升級。
-- **破壞性變更：** repository 的手寫 SQL 經由綁定公司的 `CreateDbAccess()` 執行，並以 `{@CompanyId}` 指明公司；POLHEM3004 analyzer 會報出改用其他資料庫存取的 repository。
-- **破壞性變更：** `IDepartmentRepository`、`IEmployeeRepository`、`IRolePermissionRepository`、`IAuditRuleRepository` 與 `IEmployeeContextResolver` 中存取公司資料庫的方法改為需要公司代號，公司代號也改以小寫儲存。
-- **破壞性變更：** Avalonia 與 Blazor head 共用同一個 `FormDataObject`，移至 `Polhem.UI.Core.DataObjects`，並由建構它的程式傳入使用者時區。
-- **破壞性變更：** 兩個 head 各寫一份的 `IFieldEditor` 與 `GridEditMode` 移至 `Polhem.UI.Core.Editing`；用到它們的程式要加上這個 `using`。
-- **破壞性變更：** 一個請求只從 session 讀一次公司，並把這份快照交給授權、列範圍、路由與 repository，使同一個 token 在請求進行中進入的另一家公司，無法讓某家公司的角色作用到另一家公司的資料；相關服務新增吃快照的多載。
-- **破壞性變更：** `AddPolhemFramework` 建立的伺服器拒收 JSON-RPC 批次；需要批次的主機以 `AddJsonRpcServer` 設定 `MaxBatchSize`。
-- **破壞性變更：** 登入會在鎖定計數與密碼檢查之前，拒絕長度超過 `MaxLoginUserIdLength`（預設為 `st_user.sys_id` 的 20 個字元）的帳號或過長的密碼；驗證較長帳號的子類別請提高上限。
-- **破壞性變更：** `GridControlBase` 改為實作 `IAsyncDisposable`，讓 grid 釋放時取消對 data object 的訂閱；框架以外繼承它並自行宣告 `DisposeAsync` 的 grid，請改在 `Dispose(bool)` 釋放資源。
-- **破壞性變更：** 框架的 `Department` 與 `Employee` 表單宣告同名的權限模型（隨框架的 `PermissionModels.xml` 提供），只有獲授權的角色能維護記錄範圍所依據的部門與員工資料。
-- **破壞性變更：** `GridEditorCell` 改收 `Row` 與 `Column`，取代 `EditorParameters`、`IsNumeric` 與 `IsCheck`，並只在持有編輯器時，向它的 `GridEditorHost` 取得編輯器的參數。
-- **破壞性變更：** `DbAccess` 批次失敗時回滾並丟出原本的例外（例如 `DbException`），不再包成 `InvalidOperationException`，被取消的 `ExecuteBatchAsync` 丟出 `OperationCanceledException`，provider 把取消回報成 `DbException` 時也一樣；失敗指令的位置放在 `Data`，鍵為 `DbBatchSpec.FailedIndexDataKey`。
-- **破壞性變更：** 只有框架自己使用的 `BlazorDefinitions`、`DbConnectionScope` 與 `ApiSessionContext.NextSequence` 改為 internal；移除 `FieldEditorBase.BuildCssClass`；`FilterGroup.NodesSpecified` 與 `DepartmentNode.ChildrenSpecified` 取代原本的 `ShouldSerialize` 方法，因此 JSON 與 XML 一樣省略空的 `nodes` 或 `children`。
-- **破壞性變更：** 表單存檔時把每個時刻值寫成固定寬度的 `HH:mm`，不是時刻的值以 `-32602 InvalidParams` 拒絕，因此 API 的客戶端不再能存入 `8:30` 或非時刻的文字；清單與筆數查詢的過濾條件也以同樣格式比對時刻值。
-- **破壞性變更：** 帶存取權杖的行程內呼叫，在 session 過期時會被拒絕，與遠端呼叫相同；Local 模式的 Blazor Server 網站會在使用者的 session 結束時登出並回到登入畫面，不再因 circuit 持續運作而讓 session 一直有效。新增的 `PolhemApiClient.SessionRejected` 事件回報被伺服器結束的 session，`LogoutAsync` 遇到這種 session 視為已登出，不再丟出例外。
-- **破壞性變更：** 移除 `ClientInfo.CreateFormApiConnector`、`ClientInfo.CreateAuditLogApiConnector`、`ApiHeaders.ContentType` 與 `FieldMappingCollection.FindByDestination`，`FormPluginChain.TypesForStage` 改為 internal；`CacheInfo.NotifyVersions` 與 `SaveContext.AffectedRows` 只能讀取，`ApiAuthorizationResult` 與 `ApiCallContext` 只在建立時給值，`SessionCompanyBinding.Capabilities` 改為唯讀。
-- **破壞性變更：** 整理命名空間：數值格式與捨入型別搬到 `Polhem.Definition.Numbers`，清單狀態型別搬到 `Polhem.UI.Core.Lists`，`Polhem.Hosting` 的註冊擴充與 Blazor 主機的 shell 擴充搬到各自的 `DependencyInjection` 命名空間，Avalonia shell 的 `ShellOptions` 改名為 `PolhemShellOptions`。只需改 `using`；1.13.0 說明列出新舊名稱對照。
-- 框架套件改為相依 `Polhem.JsonRpc` 套件的單一確切版本，不再用版本範圍，因為存取判定有一半在這些套件裡；參考 `Polhem.JsonRpc.AspNetCore` 的應用程式要用同一個版本，專案範本也已改用。`Polhem.Hosting`、`Polhem.Api.Server` 與 `Polhem.Web.Blazor.Server` 補上原本只經由其他參考取得的套件宣告。因此 `Polhem.JsonRpc` 套件的修正要隨 Polhem 發版才會到達應用程式；直接參考較新的版本會覆寫釘選，NuGet 會發出 NU1608 警告。
-- `PolhemAccessTokenProvider` 標為過時，預計在 2.0 移除：頁面從 circuit 的 client 讀取登入狀態，應用程式則由 `PolhemShellLayout` 持有登入狀態。
-- 健檢的小型修正：初始化程式讀取設定、以及 repository 把自己的資料庫綁定到公司時，database id 的比對不分大小寫；在非 Development 環境開著 debug 模式時，啟動會記錄錯誤；行程內的 client 初始化時不再改寫伺服器的 payload 設定；存檔與欄位變更回應裡以欄位或資料表名稱為鍵的對照表，經過 wire 之後仍不分大小寫；ExecFunc 只會選中符合處理常式簽章的方法；Oracle 重建資料表時會跳脫表名中的引號。
-- `db seed` 與 `db upgrade` 指令改經由新的框架 repository 寫入，不再於 `Polhem.Hosting` 組 SQL；`ICompanyRepository` 新增 `GetCompanyDatabases`。
-- 超過欄寬、含 NUL 字元或孤立 UTF-16 surrogate 的稽核值，不再讓整批寫入失敗：值會截斷到欄寬，NUL 與 surrogate 也會被替換。被拒的批次改為逐筆重試，備援檔也會跳脫控制字元。
-- `DbAccess` 的每個入口都會記錄資料庫異常，不只 `Execute`：非同步執行、批次、型別化查詢與 `DataTable` 寫入也會記錄。
-- 表單欄位以不同大小寫寫同一個共用語系 namespace 時（例如 `common.Gender` 與 `Common.Status`），Avalonia 與 Blazor 前端不再讓寫成另一種大小寫的欄位維持未翻譯：前端比對語系 namespace 時不分大小寫，與伺服端的語系快取相同。
-- Avalonia 表單的明細表格最高 480 像素，自己捲動列，不再建出每一列，改到計算欄位的編輯也不再重建全部列；表格重建列時，或表單在載入、新增或存檔（包括被伺服器拒絕的存檔）之後重畫表格時，會捲回原本在畫面內的列並重新選取原本選取的列，新增的列會被選取。
-- 含 Binary 欄位的資料表又能經由 JSON body codec 與 Plain 格式讀回，因此 JSON 用戶端可以新增並儲存這類表單。
-- `DateTime` 型別的篩選值、參數值與訊息屬性經由 JSON body codec 傳遞時，會與 MessagePack 一樣以同一個 UTC 時間點送達，不再保留 Unspecified 或 Local 的 kind；JSON 回應中這類值現在帶有 `Z`。
-- 含唯讀欄位且有修改過的列的資料表，可經由 JSON body codec 與 Plain 格式讀回，與 MessagePack 原本的行為相同。
-- 表單清單與筆數查詢的過濾條件會把字串值轉成其欄位的型別，因此 Plain body 送出的日期、`Guid` 或加了引號的數字，可以在 PostgreSQL 與 Oracle 上過濾有型別的欄位，在 SQL Server 上也不再查無資料；資料庫過去會自行轉換的文字（例如數字欄位的 `""`、布林欄位的 `1`）現在會以 `-32602 InvalidParams` 拒絕，訊息會指出欄位。
-- Avalonia 綁在明細列上的編輯器，在表單替換資料集時（例如新增）不再擲出例外，改為與 Blazor 一樣保持不動。兩個 head 共用的這項規則，以及時間欄寫回、lookup 顯示欄位、選單列、勾選欄與排序標記的規則，現在只在 `Polhem.UI.Core` 寫一份。
-- 在 Blazor grid 的儲存格提交一個值時，只重繪內容有變的儲存格；選取一張卡片時，只重繪選取狀態改變的兩張卡片，兩者都不再把整個 grid 或整份卡片清單重新經由 circuit 送出。
-- MudBlazor 與 Fluent UI 的 grid 在釋放時會取消對 data object 的訂閱；原本 data object 會一直留著頁面顯示過的每個 grid。兩個 Blazor UI 套件重複的規則（欄位篩選、選單抽屜、卡片點擊、被拒的數值與時間輸入、grid 的編輯器腳本、對話框參數）現在放在 `Polhem.Web.Blazor`，欄位篩選也有了行為測試。
+- **破壞性變更：** 多家公司可以共用一個公司資料庫：每張公司資料表都有 `sys_company_id`，repository、其手寫 SQL 與框架的公司查詢都綁定 session 的公司，且每個請求只讀一次。
+- **破壞性變更：** 伺服器預設拒絕更多請求：JSON-RPC 批次、過長的登入資料、session 已過期的行程內呼叫、不是時刻的時刻值，以及未獲權限授權的部門與員工異動。
+- **破壞性變更：** 兩個 head 都用的 `FormDataObject`、`IFieldEditor` 與 `GridEditMode` 搬到 `Polhem.UI.Core`，數值格式、清單狀態與註冊相關型別也各自搬到專屬的命名空間。
+- **破壞性變更：** 公開介面收窄：只有框架使用的成員改為 internal 或移除，授權判定物件與幾個對照表不能再被替換，`ICompanyRepository` 新增 `GetCompanyDatabases`。
+- **破壞性變更：** 兩個 Blazor grid 型別改變形狀：`GridControlBase` 改為非同步釋放，`GridEditorCell` 改收資料列與欄位。
+- **破壞性變更：** `DbAccess` 批次失敗時丟出原本的例外，不再包成 `InvalidOperationException`。
+- **破壞性（wire）：** 經由 JSON body codec 時，`DateTime` 與 MessagePack 一樣以同一個 UTC 時間點送達，並帶有 `Z`。
+- JSON body codec 與 Plain 格式能讀回 MessagePack 所能讀回的內容，包括 Binary 欄與唯讀欄；字串型別的過濾值會依其欄位型別讀取。
+- 框架套件改為相依 `Polhem.JsonRpc` 套件的單一確切版本，參考 `Polhem.JsonRpc.AspNetCore` 的應用程式也要用同一版本。
+- 稽核與資料存取更穩健：過長或格式不良的稽核值不再讓整批遺失，`DbAccess` 的每個入口都會記錄異常。
+- Avalonia 與 Blazor head 重繪更少、共用更多：grid 提交一格或選取卡片只重繪有變動的部分，grid 釋放時會取消訂閱，Avalonia 明細表格自己捲動列，兩個 head 重複的規則只保留一份。
+- `PolhemAccessTokenProvider` 標為過時，預計在 2.0 移除。
 
 ## [1.12.1] - 2026-11-06
 
