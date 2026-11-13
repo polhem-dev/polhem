@@ -157,6 +157,19 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
+        [DisplayName("JSON omits the nodes of an empty group, and reading it back gives an empty group")]
+        public void FilterGroup_EmptyGroup_JsonOmitsNodesAndReadsBackEmpty()
+        {
+            var json = JsonCodec.Serialize(new FilterGroup(LogicalOperator.Or));
+
+            Assert.DoesNotContain("nodes", json, StringComparison.OrdinalIgnoreCase);
+            var back = JsonCodec.Deserialize<FilterGroup>(json);
+            Assert.NotNull(back);
+            Assert.Equal(LogicalOperator.Or, back!.Operator);
+            Assert.Empty(back.Nodes);
+        }
+
+        [Fact]
         [DisplayName("FilterGroup XML serialization of three nested levels restores the structure")]
         public void FilterGroup_DeepNested_XmlRoundtrip_PreservesStructure()
         {

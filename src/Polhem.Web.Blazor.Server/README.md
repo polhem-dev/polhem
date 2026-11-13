@@ -56,7 +56,7 @@ decides whether the form page localizes its definitions; see below.
 
 - `PolhemAccessTokenProvider` -- obsolete since 1.13.0 and planned for removal in 2.0. A page reads the signed-in
   state from the circuit's `PolhemApiClient` (`Client.Session.Credentials`), which the sign-in has signed in, and the
-  shell's `PolhemShellLayout` holds it for an application.
+  shell's `PolhemShellLayout` holds that state for an application.
 
 The controls come from a UI package such as [`Polhem.Web.Blazor.Mud`](../Polhem.Web.Blazor.Mud/README.md), and the state from the shared [`Polhem.Web.Blazor`](../Polhem.Web.Blazor/README.md). An application references one UI package and this host.
 
