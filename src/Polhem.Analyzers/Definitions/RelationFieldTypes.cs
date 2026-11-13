@@ -13,8 +13,10 @@ namespace Polhem.Analyzers.Definitions
     /// </para>
     /// <para>
     /// IMPORTANT: DefineEditor compiles this file too (a linked <c>Compile</c> item in its project), so the editor's
-    /// relation dialog and POLHEM2008 give one verdict. Keep it free of anything outside the base class library that
-    /// both a netstandard2.0 analyzer and a net10.0 application can compile.
+    /// relation dialog and POLHEM2008 give one verdict on a pair of types. Which mappings are checked at all is each
+    /// caller's decision: both skip a lookup-only mapping and one whose source field cannot be found. Keep this file
+    /// free of anything outside the base class library that both a netstandard2.0 analyzer and a net10.0 application
+    /// can compile.
     /// </para>
     /// </remarks>
     internal static class RelationFieldTypes

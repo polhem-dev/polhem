@@ -77,8 +77,8 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj -- path/to/De
 
 - **關聯。** 欄位 `RelationProgId` 旁的 **…** 按鈕開啟對話框：選擇關聯表單、勾選要帶回的欄位、指定各自的目的欄位
   （預設為 `ref_<base>_<欄位>`）。本表缺少的目的欄位會自動加入。已存在的目的欄位若型別裝不下來源欄位的值，
-  對話框會拒絕套用；判斷規則與 analyzer 規則 [POLHEM2008](../../docs/zh-TW/reference/analyzer-rules.md) 是同一份程式碼，
-  所以對話框不會寫出建置時才被擋下的對應。
+  對話框會拒絕套用。對話框編譯的是 analyzer 規則 [POLHEM2008](../../docs/zh-TW/reference/analyzer-rules.md)
+  的同一份型別規則，所以它拒絕的型別組合與該規則回報的相同。
 - **運算式。** 規則的 `When`、`Condition` 與欄位的 `ValueExpression`、`DefaultValueExpression` 會開啟運算式編輯器。
   旁邊列出本表欄位、輔助函式與運算式可用的型別，輸入時補完名稱，並在解析停下的位置畫底線。**試算** 區以範例值計算運算式，
   算法與執行階段相同。
