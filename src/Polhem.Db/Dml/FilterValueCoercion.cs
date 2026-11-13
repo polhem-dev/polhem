@@ -107,7 +107,7 @@ namespace Polhem.Db.Dml
                 FieldDbType.Boolean => bool.TryParse(text, out var b) ? b : null,
                 // The stored form is the fixed-width "HH:mm" the save writes, so "8:30" must match "08:30". An empty
                 // string is how a time of day that was not filled in is stored, and matches those rows.
-                FieldDbType.Time => text.Length == 0 ? text : NullIfEmpty(ValueUtilities.CTimeString(text)),
+                FieldDbType.Time => text.Trim().Length == 0 ? string.Empty : NullIfEmpty(ValueUtilities.CTimeString(text)),
                 _ => text,
             };
 

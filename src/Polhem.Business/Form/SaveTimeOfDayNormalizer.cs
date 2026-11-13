@@ -14,7 +14,8 @@ namespace Polhem.Business.Form
     /// <remarks>
     /// The fixed width is what makes a time-of-day column sort and range-scan in time order (ADR-033). The UI heads
     /// normalize as the user types, but a caller of the API does not have to go through them, so the save does it
-    /// again. An empty string means "not filled in" and is kept.
+    /// again. An empty string means "not filled in" and is kept, and a value of white space becomes one. A modified row
+    /// keeps a value the save does not change, even one stored before the server normalized.
     /// </remarks>
     internal static class SaveTimeOfDayNormalizer
     {
@@ -62,10 +63,19 @@ namespace Polhem.Business.Form
         {
             var value = row[column];
             if (value is DBNull) { return; }
-            var text = ValueUtilities.CStr(value);
-            if (text.Length == 0) { return; }
+            // A value this save does not change is left as stored. A value saved before the server normalized may not
+            // be a time of day, and refusing it would stop a save that only edits another field of the record.
+            if (row.RowState == DataRowState.Modified && Equals(row[column, DataRowVersion.Original], value)) { return; }
 
-            var normalized = ValueUtilities.CTimeString(text);
+            var text = ValueUtilities.CStr(value);
+            if (text.Trim().Length == 0)
+            {
+                if (text.Length > 0) row[column] = string.Empty;
+                return;
+            }
+
+            // The cell's own value, so a TimeSpan or DateTime a typed codec carried converts as such.
+            var normalized = ValueUtilities.CTimeString(value);
             if (normalized.Length == 0)
             {
                 // The message names the field the schema declares, never the value the caller sent.

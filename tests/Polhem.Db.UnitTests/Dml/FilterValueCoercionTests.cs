@@ -87,7 +87,8 @@ namespace Polhem.Db.UnitTests.Dml
         [InlineData("09:30", "09:30")]
         [InlineData("9:30", "09:30")]
         [InlineData("", "")]
-        [DisplayName("A time-of-day value is written in its fixed-width form, and an empty one matches the rows not filled in")]
+        [InlineData("  ", "")]
+        [DisplayName("A time-of-day value is written in its fixed-width form, and an empty or blank one matches the rows not filled in")]
         public void Coerce_TimeOfDay_BecomesFixedWidth(string text, string expected)
         {
             Assert.Equal(expected, CoercedValue("start_time", text));

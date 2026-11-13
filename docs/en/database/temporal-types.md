@@ -94,11 +94,18 @@ Writes that bypass a form's `Save` fall outside that guarantee and must normalis
   (`DateColumns` / `SetDateColumns` mark calendar days only). See the unmarked list in §4 for the rest.
 
 Up to 1.12, the server stored what it received, so a database written by a client that did not
-normalise may already hold values such as `"8:30"`. This finds them (SQL Server; use `LENGTH` on the
-other databases):
+normalise may already hold values such as `"8:30"` or `"25:00"`. They stay as stored: a save that does
+not change one keeps it, and a filter no longer finds `"8:30"` with `"8:30"`, because it compares
+`"08:30"`. These queries find them (on Oracle an empty string is `NULL`):
 
 ```sql
-SELECT * FROM ft_shift WHERE work_start <> '' AND LEN(work_start) <> 5
+-- SQL Server
+SELECT * FROM ft_shift
+WHERE work_start <> ''
+  AND work_start NOT LIKE '[01][0-9]:[0-5][0-9]' AND work_start NOT LIKE '2[0-3]:[0-5][0-9]'
+
+-- PostgreSQL (MySQL: NOT REGEXP; Oracle: work_start IS NOT NULL AND NOT REGEXP_LIKE(work_start, '...'))
+SELECT * FROM ft_shift WHERE work_start <> '' AND work_start !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
 ```
 
 ## 4. `DataSet` layer

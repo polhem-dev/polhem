@@ -151,7 +151,8 @@ filters a typed column on every database (`GetListFilterValueDbTests` runs this 
 - a `Guid`, numeric or `Boolean` field reads its invariant text form (`true` or `false`, a number
   with no group separators);
 - a `Time` field reads `HH:mm` or `H:mm` and compares the fixed-width `HH:mm` the save stores, so
-  `"8:30"` finds `"08:30"`; an empty string matches the rows not filled in;
+  `"8:30"` finds `"08:30"`; an empty string matches the rows not filled in, except on Oracle, which stores
+  an empty string as `NULL`;
 - `String` and `Text` fields keep the string, and so do the `Like`, `Contains`,
   `StartsWith` and `EndsWith` operators, since they match text.
 

@@ -18,6 +18,7 @@ namespace Polhem.Business.UnitTests.Form
     {
         private const string Starts = "starts";
         private const string LineStarts = "line_starts";
+        private const string Note = "note";
 
         private readonly SharedDbFixture _fx;
 
@@ -116,6 +117,52 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A value stored before the server normalized does not stop a save that edits another field")]
+        public void Save_StoredInvalidValueUnchanged_SavesOtherField()
+        {
+            var form = NewForm();
+            form.CreateTables();
+            try
+            {
+                var rowId = Guid.NewGuid();
+                NewBo(form).Save(new SaveArgs { DataSet = NewRecord(form, rowId, starts: "08:00") });
+                form.DbAccess.ExecuteNonQuery(
+                    $"UPDATE {form.Quote(form.Schema.ProgId)} SET {form.Quote(Starts)}={{0}} WHERE {form.Quote(SysFields.RowId)}={{1}}", "noon", rowId);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = rowId }).DataSet!;
+                loaded.Tables[form.Schema.ProgId]!.Rows[0][Note] = "edited";
+
+                NewBo(form).Save(new SaveArgs { DataSet = loaded });
+
+                Assert.Equal("edited", ReadText(form, form.Schema.ProgId, Note, rowId));
+                Assert.Equal("noon", ReadText(form, form.Schema.ProgId, Starts, rowId));
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A value of white space is stored as the empty string, the form for not filled in")]
+        public void Save_BlankTimeOfDay_StoresEmpty()
+        {
+            var form = NewForm();
+            form.CreateTables();
+            try
+            {
+                var rowId = Guid.NewGuid();
+
+                NewBo(form).Save(new SaveArgs { DataSet = NewRecord(form, rowId, starts: "   ") });
+
+                Assert.Equal(string.Empty, ReadText(form, form.Schema.ProgId, Starts, rowId));
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("A time of day a custom business object writes in DoBeforeSave is stored in the fixed-width form")]
         public void Save_ValueWrittenInDoBeforeSave_StoresFixedWidth()
         {
@@ -165,6 +212,7 @@ namespace Polhem.Business.UnitTests.Form
             var master = schema.Tables!.Add(progId, "Master");
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
             master.Fields!.Add(Starts, "Starts", FieldDbType.Time);
+            master.Fields!.Add(new FormField(Note, "Note", FieldDbType.String) { MaxLength = 20 });
 
             var detail = schema.Tables.Add(progId + "_d", "Lines");
             detail.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);

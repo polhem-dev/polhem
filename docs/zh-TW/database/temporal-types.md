@@ -1,4 +1,4 @@
-<!-- source: en/database/temporal-types.md blob: b1c474ca9debb590f5ed5a3968fa2d554c946dc4 -->
+<!-- source: en/database/temporal-types.md blob: 82cc7c3ec17f34f427523d193c2f148e00cf632c -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../../en/database/temporal-types.md) · [← 文件索引](../README.md)
@@ -86,11 +86,18 @@ SELECT * FROM ft_shift WHERE work_start BETWEEN '08:00' AND '17:00' ORDER BY wor
 - 沒有 `Time` 標記的欄位 —— 例如自寫 SQL 查回的時刻欄（`DateColumns` / `SetDateColumns` 只標日曆日），
   其餘情形見第 4 節的未標記清單。
 
-1.12 以前伺服器照收照存，所以由沒有正規化的客戶端寫入的資料庫，可能已經有 `"8:30"` 這類值。可用下列查詢找出
-（SQL Server；其他資料庫改用 `LENGTH`）：
+1.12 以前伺服器照收照存，所以由沒有正規化的客戶端寫入的資料庫，可能已經有 `"8:30"` 或 `"25:00"` 這類值。它們
+維持原樣：沒有改到它的存檔會保留它；而以 `"8:30"` 過濾時比對的是 `"08:30"`，因此找不到存成 `"8:30"` 的列。可用
+下列查詢找出（在 Oracle 上空字串就是 `NULL`）：
 
 ```sql
-SELECT * FROM ft_shift WHERE work_start <> '' AND LEN(work_start) <> 5
+-- SQL Server
+SELECT * FROM ft_shift
+WHERE work_start <> ''
+  AND work_start NOT LIKE '[01][0-9]:[0-5][0-9]' AND work_start NOT LIKE '2[0-3]:[0-5][0-9]'
+
+-- PostgreSQL（MySQL：NOT REGEXP；Oracle：work_start IS NOT NULL AND NOT REGEXP_LIKE(work_start, '...')）
+SELECT * FROM ft_shift WHERE work_start <> '' AND work_start !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
 ```
 
 ## 4. `DataSet` 層

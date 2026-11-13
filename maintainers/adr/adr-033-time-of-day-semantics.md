@@ -161,8 +161,9 @@ the current code:
   refuses a value that is not a time of day: from the caller with `InvalidRequestValueException`, from server code
   with `InvalidOperationException`. A filter on a form's list, count or delete converts its time-of-day values the
   same way (`FilterValueCoercion`). Writes that bypass `Save`, such as hand-written SQL or an in-process repository
-  call, still normalize themselves, and values stored before 1.13.0 are not rewritten. Covered by
-  `FormBusinessObjectTimeOfDayTests` and `GetListFilterValueDbTests`.
+  call, still normalize themselves. Values stored before 1.13.0 are not rewritten, and a save that does not change
+  one keeps it. Covered by `FormBusinessObjectTimeOfDayTests` (SQLite) and `GetListFilterValueDbTests` (SQLite and
+  SQL Server).
 
 ## Related
 

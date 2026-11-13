@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 4fee4cc8ba6dfba9feb1841a4844596973aca218 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 1acfe56cd29b88ae0fff5f59c34efe8c16618a82 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -141,7 +141,7 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
   當地午夜變成前一天；
 - `Guid`、數值與 `Boolean` 欄位讀取與文化無關的文字形式（`true` 或 `false`、不含千分位的數字）；
 - `Time` 欄位讀取 `HH:mm` 或 `H:mm`，並以存檔時的固定寬度 `HH:mm` 比對，所以 `"8:30"` 找得到 `"08:30"`；
-  空字串比對沒有填寫的列；
+  空字串比對沒有填寫的列，但 Oracle 例外，它把空字串存成 `NULL`；
 - `String` 與 `Text` 欄位保留字串，`Like`、`Contains`、`StartsWith` 與 `EndsWith` 運算子也是，
   因為它們比對的是文字。
 
