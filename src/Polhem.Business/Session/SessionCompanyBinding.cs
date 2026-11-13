@@ -13,5 +13,5 @@ namespace Polhem.Business.Session
     /// </param>
     public sealed record SessionCompanyBinding(
         CompanyInfo Company,
-        Dictionary<string, PermissionActions> Capabilities);
+        IReadOnlyDictionary<string, PermissionActions> Capabilities);
 }

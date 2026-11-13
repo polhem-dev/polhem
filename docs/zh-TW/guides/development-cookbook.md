@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 99e5c6281c8aa64af67fa4907f820a043633311d -->
+<!-- source: en/guides/development-cookbook.md blob: 200b1ee905a89a7b751562ab75cad049d3f7c07f -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -851,7 +851,7 @@ ClientInfo.ApplyEnterCompanyResult(enterResponse);
 PingResponse ping = await ClientInfo.SystemApiConnector.PingAsync();
 
 // Form-level API (FormBO)
-var formConnector = ClientInfo.CreateFormApiConnector("Customer");
+var formConnector = ClientInfo.ApiClient.Form("Customer");
 var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
 
 // Definition data (FormSchema, TableSchema, etc.), exactly as stored

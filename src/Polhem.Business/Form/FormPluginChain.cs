@@ -73,11 +73,10 @@ namespace Polhem.Business.Form
             => Array.Exists(_entries, e => e.Stage == stage);
 
         /// <summary>
-        /// Gets the plugin types that run at the given stage, in execution order. Intended for
-        /// maintenance tooling that has to show what runs where.
+        /// Gets the plugin types that run at the given stage, in execution order. Exposed for tests.
         /// </summary>
         /// <param name="stage">The pipeline stage.</param>
-        public IReadOnlyList<Type> TypesForStage(PluginStage stage)
+        internal IReadOnlyList<Type> TypesForStage(PluginStage stage)
             => _entries.Where(e => e.Stage == stage).Select(e => e.Type).ToArray();
 
         /// <summary>

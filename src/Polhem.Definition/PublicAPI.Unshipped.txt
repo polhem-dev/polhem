@@ -22,3 +22,4 @@ const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
 *REMOVED*Polhem.Definition.Organization.DepartmentNode.ShouldSerializeChildren() -> bool
 Polhem.Definition.Filters.FilterGroup.NodesSpecified.get -> bool
 Polhem.Definition.Organization.DepartmentNode.ChildrenSpecified.get -> bool
+*REMOVED*Polhem.Definition.Forms.FieldMappingCollection.FindByDestination(string! destinationField) -> Polhem.Definition.Forms.FieldMapping?

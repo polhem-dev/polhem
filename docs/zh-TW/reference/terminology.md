@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: bbcf89e56555bc793a1cc5ece202c095b503d87a -->
+<!-- source: en/reference/terminology.md blob: 1d25f60bd47e14a83d12da39ecf62547495c952a -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -336,7 +336,7 @@
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `AddPolhemUIApiBridge` | API 橋接註冊擴充方法 | `IServiceCollection` 擴充方法，註冊以 API 為後盾的 `IFormApiConnectorFactory`、`IFormDefinitionSource` 與 `IUserContext`，三者都從 `ClientInfo` 讀取。head 把建好的 provider 指定給 `UIServices.Provider` |
-| `ClientInfo` | 用戶端資訊 | Static class，管理連線狀態（head 唯一的 `PolhemApiClient`、endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`。設計給 Avalonia 各端與其他 native UI 的「一個 process = 一個使用者」模型。**不要用於 Blazor Server**，後者一個 process 服務多個 user circuit |
+| `ClientInfo` | 用戶端資訊 | Static class，管理連線狀態（head 唯一的 `PolhemApiClient`、endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `DefineAccess`，表單與稽核日誌的 connector 由其 `ApiClient` 提供。設計給 Avalonia 各端與其他 native UI 的「一個 process = 一個使用者」模型。**不要用於 Blazor Server**，後者一個 process 服務多個 user circuit |
 | `IEndpointStorage` | 端點儲存介面 | 抽象 API endpoint 的用戶端持久化機制。`ClientInfo.EndpointStorage` 的預設值為 `FileEndpointStorage` |
 | `FileEndpointStorage` | 檔案端點儲存 | 檔案後端的 `IEndpointStorage` 與 `IApiKeyStorage`：endpoint 存於 `endpoint.txt`、API key 存於 `apikey.txt`，位於 `LocalApplicationData/<appName>/` 下。它是 `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 兩者的預設值；瀏覽器（WASM）端改以瀏覽器儲存空間的實作取代兩者 |
 | `SupportedConnectTypes` | 支援連線類型 | 控制 `ClientInfo.InitializeAsync` 允許哪些連線模式（`Local` / `Remote` / `Both`）的 Flags；已儲存的 endpoint 不存在或連不上時，`InitializeAsync` 回傳 `false`，由 host 顯示自己的連線設定。宣告於 `Polhem.Api.Client` |

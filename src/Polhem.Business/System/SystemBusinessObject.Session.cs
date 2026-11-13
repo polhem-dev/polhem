@@ -123,7 +123,11 @@ namespace Polhem.Business.System
             SessionRepository.UpdateSession(CreateSeed(sessionInfo));
             SessionInfoService.Set(sessionInfo);
 
-            return new EnterCompanyResult { Company = binding.Company, Capabilities = binding.Capabilities };
+            return new EnterCompanyResult
+            {
+                Company = binding.Company,
+                Capabilities = new Dictionary<string, PermissionActions>(binding.Capabilities, StringComparer.Ordinal),
+            };
         }
 
         /// <summary>

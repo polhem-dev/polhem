@@ -8,24 +8,24 @@ namespace Polhem.Api.Server.Authorization
     public sealed class ApiAuthorizationResult
     {
         /// <summary>
-        /// Gets or sets a value indicating whether validation succeeded.
+        /// Gets a value indicating whether validation succeeded.
         /// </summary>
-        public bool IsValid { get; set; }
+        public bool IsValid { get; init; }
 
         /// <summary>
-        /// Gets or sets the error code.
+        /// Gets the error code.
         /// </summary>
-        public JsonRpcErrorCode Code { get; set; }
+        public JsonRpcErrorCode Code { get; init; }
 
         /// <summary>
-        /// Gets or sets the error message when validation fails.
+        /// Gets the error message when validation fails.
         /// </summary>
-        public string ErrorMessage { get; set; } = string.Empty;
+        public string ErrorMessage { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the access token returned upon successful validation.
+        /// Gets the access token returned upon successful validation.
         /// </summary>
-        public Guid AccessToken { get; set; } = Guid.Empty;
+        public Guid AccessToken { get; init; } = Guid.Empty;
 
         /// <summary>
         /// Creates a successful authorization result.

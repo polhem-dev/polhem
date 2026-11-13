@@ -53,10 +53,10 @@ company steps; nothing has to be re-registered when the endpoint or the user cha
 - `ClientInfo` -- static client-side connection state. Owns the head's one `ApiClient` (`PolhemApiClient`;
   per-process identity model: a new sign-in clears the cached `DefineAccess` and capability snapshot, and a new
   endpoint replaces the client and signs out), exposes its `AccessToken`, `ConnectType` and `SystemApiConnector`,
-  lazily creates `DefineAccess` (`ClientDefineAccess`), produces connectors via `CreateFormApiConnector(progId)`
-  and `CreateAuditLogApiConnector()`, and applies login / EnterCompany results (`ApplyLoginResult`,
+  lazily creates `DefineAccess` (`ClientDefineAccess`), and applies login / EnterCompany results (`ApplyLoginResult`,
   `ApplyEnterCompanyResult`, `ClearCompanyContext`). `ResetDefineCache` discards the cached definition data after a
-  tenant switch.
+  tenant switch. Form and audit-log connectors come from the client: `ClientInfo.ApiClient.Form(progId)` and
+  `ClientInfo.ApiClient.AuditLog`.
 - `ClientInfo.InitializeAsync(SupportedConnectTypes)` -- reads the stored endpoint and the command line and connects.
   It returns `false` when the endpoint is missing, malformed or unreachable; the host then shows its own connection
   setup and calls `InitializeAsync(endpoint)` (or `SetEndpointAsync`) with what the user entered.
