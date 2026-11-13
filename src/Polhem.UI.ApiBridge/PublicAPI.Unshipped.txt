@@ -1,3 +1,1 @@
 #nullable enable
-*REMOVED*static Polhem.UI.ApiBridge.ClientInfo.CreateFormApiConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
-*REMOVED*static Polhem.UI.ApiBridge.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!

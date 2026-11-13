@@ -9,6 +9,37 @@ Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SaveApiKey(string! apiKey) 
 Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SaveEndpoint(string! endpoint) -> void
 Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SetApiKey(string! apiKey) -> void
 Polhem.UI.Avalonia.Shell.Browser.BrowserLocalStorage.SetEndpoint(string! endpoint) -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.AllowLanguageSwitch.get -> bool
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.AllowLanguageSwitch.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.AppTitle.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.AppTitle.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultApiKey.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultApiKey.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultCompanyId.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultCompanyId.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultEndpoint.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultEndpoint.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultLanguage.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultLanguage.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultPassword.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultPassword.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultThemeVariant.get -> Avalonia.Styling.ThemeVariant!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultThemeVariant.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultUserId.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.DefaultUserId.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.Description.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.Description.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.PolhemShellOptions() -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.PreferenceStorage.get -> Polhem.UI.Avalonia.Shell.Preferences.IShellPreferenceStorage?
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.PreferenceStorage.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.SignInHint.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.SignInHint.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.SignInLinks.get -> System.Collections.Generic.IList<Polhem.UI.Avalonia.Shell.ShellLink!>!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.SignInLinksTitle.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.SignInLinksTitle.set -> void
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.StorageName.get -> string!
+Polhem.UI.Avalonia.Shell.PolhemShellOptions.StorageName.set -> void
 Polhem.UI.Avalonia.Shell.Preferences.FileShellPreferenceStorage
 Polhem.UI.Avalonia.Shell.Preferences.FileShellPreferenceStorage.DirectoryPath.get -> string!
 Polhem.UI.Avalonia.Shell.Preferences.FileShellPreferenceStorage.FileShellPreferenceStorage(string! appName) -> void
@@ -19,9 +50,9 @@ Polhem.UI.Avalonia.Shell.Preferences.IShellPreferenceStorage.Load(string! key) -
 Polhem.UI.Avalonia.Shell.Preferences.IShellPreferenceStorage.Save(string! key, string! value) -> void
 Polhem.UI.Avalonia.Shell.Preferences.ShellPreferenceKeys
 Polhem.UI.Avalonia.Shell.ShellApplication
-Polhem.UI.Avalonia.Shell.ShellApplication.ConfigureOptions.get -> System.Action<Polhem.UI.Avalonia.Shell.ShellOptions!>?
+Polhem.UI.Avalonia.Shell.ShellApplication.ConfigureOptions.get -> System.Action<Polhem.UI.Avalonia.Shell.PolhemShellOptions!>?
 Polhem.UI.Avalonia.Shell.ShellApplication.ConfigureOptions.set -> void
-Polhem.UI.Avalonia.Shell.ShellApplication.Options.get -> Polhem.UI.Avalonia.Shell.ShellOptions?
+Polhem.UI.Avalonia.Shell.ShellApplication.Options.get -> Polhem.UI.Avalonia.Shell.PolhemShellOptions?
 Polhem.UI.Avalonia.Shell.ShellApplication.ShellApplication() -> void
 Polhem.UI.Avalonia.Shell.ShellLink
 Polhem.UI.Avalonia.Shell.ShellLink.<Clone>$() -> Polhem.UI.Avalonia.Shell.ShellLink!
@@ -32,37 +63,6 @@ Polhem.UI.Avalonia.Shell.ShellLink.Equals(Polhem.UI.Avalonia.Shell.ShellLink? ot
 Polhem.UI.Avalonia.Shell.ShellLink.ShellLink(string! Text, System.Uri! Address) -> void
 Polhem.UI.Avalonia.Shell.ShellLink.Text.get -> string!
 Polhem.UI.Avalonia.Shell.ShellLink.Text.init -> void
-Polhem.UI.Avalonia.Shell.ShellOptions
-Polhem.UI.Avalonia.Shell.ShellOptions.AllowLanguageSwitch.get -> bool
-Polhem.UI.Avalonia.Shell.ShellOptions.AllowLanguageSwitch.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.AppTitle.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.AppTitle.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultApiKey.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultApiKey.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultCompanyId.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultCompanyId.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultEndpoint.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultEndpoint.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultLanguage.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultPassword.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultPassword.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultThemeVariant.get -> Avalonia.Styling.ThemeVariant!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultThemeVariant.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultUserId.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.DefaultUserId.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.Description.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.Description.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.PreferenceStorage.get -> Polhem.UI.Avalonia.Shell.Preferences.IShellPreferenceStorage?
-Polhem.UI.Avalonia.Shell.ShellOptions.PreferenceStorage.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.ShellOptions() -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.SignInHint.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.SignInHint.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinks.get -> System.Collections.Generic.IList<Polhem.UI.Avalonia.Shell.ShellLink!>!
-Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinksTitle.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.SignInLinksTitle.set -> void
-Polhem.UI.Avalonia.Shell.ShellOptions.StorageName.get -> string!
-Polhem.UI.Avalonia.Shell.ShellOptions.StorageName.set -> void
 const Polhem.UI.Avalonia.Shell.Preferences.ShellPreferenceKeys.CompanyId = "company" -> string!
 const Polhem.UI.Avalonia.Shell.Preferences.ShellPreferenceKeys.Language = "language" -> string!
 override Polhem.UI.Avalonia.Shell.ShellApplication.Initialize() -> void
@@ -72,4 +72,4 @@ override Polhem.UI.Avalonia.Shell.ShellLink.GetHashCode() -> int
 override Polhem.UI.Avalonia.Shell.ShellLink.ToString() -> string!
 static Polhem.UI.Avalonia.Shell.ShellLink.operator !=(Polhem.UI.Avalonia.Shell.ShellLink? left, Polhem.UI.Avalonia.Shell.ShellLink? right) -> bool
 static Polhem.UI.Avalonia.Shell.ShellLink.operator ==(Polhem.UI.Avalonia.Shell.ShellLink? left, Polhem.UI.Avalonia.Shell.ShellLink? right) -> bool
-virtual Polhem.UI.Avalonia.Shell.ShellApplication.CreateOptions() -> Polhem.UI.Avalonia.Shell.ShellOptions!
+virtual Polhem.UI.Avalonia.Shell.ShellApplication.CreateOptions() -> Polhem.UI.Avalonia.Shell.PolhemShellOptions!

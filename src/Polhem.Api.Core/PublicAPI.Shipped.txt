@@ -463,7 +463,6 @@ Polhem.Api.Core.Transformers.PayloadCodecNames
 Polhem.Api.Core.Transformers.PolhemPayload
 const Polhem.Api.Core.Messages.ApiHeaders.ApiKey = "X-Api-Key" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.Authorization = "Authorization" -> string!
-const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!
 const Polhem.Api.Core.Transformers.PayloadCodecNames.Json = "json" -> string!
 const Polhem.Api.Core.Transformers.PayloadCodecNames.MessagePack = "messagepack" -> string!
 override Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(object? obj) -> bool

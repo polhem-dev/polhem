@@ -41,6 +41,8 @@ Polhem.Db.DataTableUpdateSpec.UseTransaction.get -> bool
 Polhem.Db.DataTableUpdateSpec.UseTransaction.set -> void
 Polhem.Db.DatabaseTypeExtensions
 Polhem.Db.DbAccess
+Polhem.Db.DbAccess.BindCompany(string! companyId) -> Polhem.Db.DbAccess!
+Polhem.Db.DbAccess.BoundCompanyId.get -> string?
 Polhem.Db.DbAccess.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
 Polhem.Db.DbAccess.DbAccess(System.Data.Common.DbConnection! externalConnection, Polhem.Definition.Database.DatabaseType databaseType) -> void
 Polhem.Db.DbAccess.DbAccess(System.Data.Common.DbConnection! externalConnection, Polhem.Definition.Database.DatabaseType databaseType, int maxCommandTimeout) -> void
@@ -111,9 +113,6 @@ Polhem.Db.DbCommandSpec.Kind.set -> void
 Polhem.Db.DbCommandSpec.Parameters.get -> Polhem.Db.DbParameterSpecCollection!
 Polhem.Db.DbCommandSpecCollection
 Polhem.Db.DbCommandSpecCollection.DbCommandSpecCollection() -> void
-Polhem.Db.DbConnectionScope
-Polhem.Db.DbConnectionScope.Connection.get -> System.Data.Common.DbConnection?
-Polhem.Db.DbConnectionScope.Dispose() -> void
 Polhem.Db.DbParameterSpec
 Polhem.Db.DbParameterSpec.DbParameterSpec() -> void
 Polhem.Db.DbParameterSpec.DbParameterSpec(string! name, object! value) -> void
@@ -211,6 +210,8 @@ Polhem.Db.Dml.TableJoin.LeftField.get -> string!
 Polhem.Db.Dml.TableJoin.LeftField.set -> void
 Polhem.Db.Dml.TableJoin.LeftTable.get -> string!
 Polhem.Db.Dml.TableJoin.LeftTable.set -> void
+Polhem.Db.Dml.TableJoin.MatchCompany.get -> bool
+Polhem.Db.Dml.TableJoin.MatchCompany.set -> void
 Polhem.Db.Dml.TableJoin.RightAlias.get -> string!
 Polhem.Db.Dml.TableJoin.RightAlias.set -> void
 Polhem.Db.Dml.TableJoin.RightField.get -> string!
@@ -226,6 +227,9 @@ Polhem.Db.Dml.TableSchemaCommandBuilder.BuildInsertCommand() -> Polhem.Db.DbComm
 Polhem.Db.Dml.TableSchemaCommandBuilder.BuildUpdateCommand() -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Dml.TableSchemaCommandBuilder.BuildUpdateSpec(System.Data.DataTable! dataTable) -> Polhem.Db.DataTableUpdateSpec!
 Polhem.Db.Dml.TableSchemaCommandBuilder.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinField(string! fieldName, object! value) -> Polhem.Db.Dml.TableSchemaCommandBuilder!
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedField.get -> string!
+Polhem.Db.Dml.TableSchemaCommandBuilder.PinnedValue.get -> object?
 Polhem.Db.Dml.TableSchemaCommandBuilder.TableSchema.get -> Polhem.Definition.Database.TableSchema!
 Polhem.Db.Dml.TableSchemaCommandBuilder.TableSchemaCommandBuilder(Polhem.Definition.Database.DatabaseType databaseType, Polhem.Definition.Database.TableSchema! tableSchema) -> void
 Polhem.Db.Dml.WhereBuildResult
@@ -552,7 +556,9 @@ Polhem.Db.Storage.DbDefineStorage.SavePluginSettings(Polhem.Definition.Settings.
 Polhem.Db.Storage.DbDefineStorage.SaveProgramSettings(Polhem.Definition.Settings.ProgramSettings! settings) -> void
 Polhem.Db.Storage.DbDefineStorage.SaveTableSchema(string! categoryId, Polhem.Definition.Database.TableSchema! tableSchema) -> void
 Polhem.Db.Storage.DbDefineStorage.SaveUnitSettings(Polhem.Definition.Settings.UnitSettings! settings) -> void
+const Polhem.Db.CommandTextVariable.CompanyId = "{@CompanyId}" -> string!
 const Polhem.Db.CommandTextVariable.Parameters = "{@Parameters}" -> string!
+const Polhem.Db.DbBatchSpec.FailedIndexDataKey = "Polhem.BatchIndex" -> string!
 const Polhem.Db.Manager.DatabaseCreator.MaxDatabaseNameLength = 63 -> int
 const Polhem.Db.Storage.DbDefineStorage.DefineDatabaseId = "common" -> string!
 override Polhem.Db.CacheNotify.CacheNotifyChange.GetHashCode() -> int
@@ -578,8 +584,6 @@ static Polhem.Db.DatabaseTypeExtensions.QuoteIdentifier(this Polhem.Definition.D
 static Polhem.Db.DbCommandResult.ForRowsAffected(int rows) -> Polhem.Db.DbCommandResult!
 static Polhem.Db.DbCommandResult.ForScalar(object? value) -> Polhem.Db.DbCommandResult!
 static Polhem.Db.DbCommandResult.ForTable(System.Data.DataTable! table) -> Polhem.Db.DbCommandResult!
-static Polhem.Db.DbConnectionScope.Create(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null) -> Polhem.Db.DbConnectionScope!
-static Polhem.Db.DbConnectionScope.CreateAsync(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbConnectionScope!>!
 static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, Polhem.Definition.Database.DbField! field) -> Polhem.Db.DbParameterSpec!
 static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, Polhem.Definition.Database.DbField! field, System.Data.DataRowVersion sourceVersion) -> Polhem.Db.DbParameterSpec!
 static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, string! name, object! value) -> Polhem.Db.DbParameterSpec!

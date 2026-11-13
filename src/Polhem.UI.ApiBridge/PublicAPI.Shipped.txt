@@ -48,8 +48,6 @@ static Polhem.UI.ApiBridge.ClientInfo.Capabilities.get -> System.Collections.Gen
 static Polhem.UI.ApiBridge.ClientInfo.ClearCompanyContext() -> void
 static Polhem.UI.ApiBridge.ClientInfo.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 static Polhem.UI.ApiBridge.ClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
-static Polhem.UI.ApiBridge.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!
-static Polhem.UI.ApiBridge.ClientInfo.CreateFormApiConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
 static Polhem.UI.ApiBridge.ClientInfo.DefineAccess.get -> Polhem.Api.Client.ClientDefineAccess!
 static Polhem.UI.ApiBridge.ClientInfo.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
 static Polhem.UI.ApiBridge.ClientInfo.EndpointStorage.get -> Polhem.UI.ApiBridge.IEndpointStorage!

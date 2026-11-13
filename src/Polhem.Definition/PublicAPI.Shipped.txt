@@ -1,9 +1,4 @@
 #nullable enable
-Polhem.Definition.AllowedCurrencyItem
-Polhem.Definition.AllowedCurrencyItem.AllowedCurrencyItem() -> void
-Polhem.Definition.AllowedCurrencyItem.AllowedCurrencyItem(string! code) -> void
-Polhem.Definition.AllowedCurrencyItem.Code.get -> string!
-Polhem.Definition.AllowedCurrencyItem.Code.set -> void
 Polhem.Definition.Attributes.ApiAccessControlAttribute
 Polhem.Definition.Attributes.ApiAccessControlAttribute.AccessRequirement.get -> Polhem.Definition.Security.ApiAccessRequirement
 Polhem.Definition.Attributes.ApiAccessControlAttribute.ApiAccessControlAttribute(Polhem.Definition.Security.ApiProtectionLevel protectionLevel, Polhem.Definition.Security.ApiAccessRequirement accessRequirement = Polhem.Definition.Security.ApiAccessRequirement.Authenticated) -> void
@@ -25,6 +20,8 @@ Polhem.Definition.BusinessObjectContext
 Polhem.Definition.BusinessObjectContext.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
 Polhem.Definition.BusinessObjectContext.BoFactory.init -> void
 Polhem.Definition.BusinessObjectContext.BusinessObjectContext() -> void
+Polhem.Definition.BusinessObjectContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
+Polhem.Definition.BusinessObjectContext.CompanyScope.init -> void
 Polhem.Definition.BusinessObjectContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
 Polhem.Definition.BusinessObjectContext.DefineAccess.init -> void
 Polhem.Definition.BusinessObjectContext.LanguageService.get -> Polhem.Definition.Language.ILanguageService!
@@ -33,13 +30,6 @@ Polhem.Definition.BusinessObjectContext.Services.get -> System.IServiceProvider!
 Polhem.Definition.BusinessObjectContext.Services.init -> void
 Polhem.Definition.BusinessObjectContext.SessionInfoService.get -> Polhem.Definition.Identity.ISessionInfoService!
 Polhem.Definition.BusinessObjectContext.SessionInfoService.init -> void
-Polhem.Definition.CashRoundingItem
-Polhem.Definition.CashRoundingItem.CashRoundingItem() -> void
-Polhem.Definition.CashRoundingItem.CashRoundingItem(string! currencyCode, decimal unit) -> void
-Polhem.Definition.CashRoundingItem.CurrencyCode.get -> string!
-Polhem.Definition.CashRoundingItem.CurrencyCode.set -> void
-Polhem.Definition.CashRoundingItem.Unit.get -> decimal
-Polhem.Definition.CashRoundingItem.Unit.set -> void
 Polhem.Definition.Collections.ListItem
 Polhem.Definition.Collections.ListItem.Clone() -> Polhem.Definition.Collections.ListItem!
 Polhem.Definition.Collections.ListItem.ListItem() -> void
@@ -76,16 +66,6 @@ Polhem.Definition.Collections.PropertyCollection.GetValue(string! name, int defa
 Polhem.Definition.Collections.PropertyCollection.GetValue(string! name, string! defaultValue) -> string!
 Polhem.Definition.Collections.PropertyCollection.PropertyCollection() -> void
 Polhem.Definition.Collections.PropertyCollectionExtensions
-Polhem.Definition.CompanyAllowedCurrencies
-Polhem.Definition.CompanyAllowedCurrencies.CompanyAllowedCurrencies() -> void
-Polhem.Definition.CompanyAllowedCurrencies.GetAllowedCurrencies(Polhem.Definition.Settings.CurrencySettings! currencySettings) -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.Definition.CompanyCashRounding
-Polhem.Definition.CompanyCashRounding.CompanyCashRounding() -> void
-Polhem.Definition.CompanyCashRounding.FindUnit(string! currencyCode) -> decimal?
-Polhem.Definition.CompanyCashRounding.GetCashRounding(string! currencyCode, Polhem.Definition.Settings.CurrencySettings! currencySettings) -> decimal
-Polhem.Definition.CompanyNumberFormats
-Polhem.Definition.CompanyNumberFormats.CompanyNumberFormats() -> void
-Polhem.Definition.CompanyNumberFormats.FindDecimals(Polhem.Definition.NumberKind kind) -> int?
 Polhem.Definition.Customization.CustomizeOverlay
 Polhem.Definition.CustomizeOnlyPathOptions
 Polhem.Definition.CustomizeOnlyPathOptions.CustomizeOnlyPathOptions(string! customizePath, string! customizeId) -> void
@@ -167,6 +147,7 @@ Polhem.Definition.Database.IndexFieldCollection
 Polhem.Definition.Database.IndexFieldCollection.IndexFieldCollection() -> void
 Polhem.Definition.Database.IndexFieldCollectionExtensions
 Polhem.Definition.Database.TableSchema
+Polhem.Definition.Database.TableSchema.ApplyCompanyScope() -> bool
 Polhem.Definition.Database.TableSchema.Clone() -> Polhem.Definition.Database.TableSchema!
 Polhem.Definition.Database.TableSchema.CreateTime.get -> System.DateTime
 Polhem.Definition.Database.TableSchema.DisplayName.get -> string!
@@ -174,6 +155,7 @@ Polhem.Definition.Database.TableSchema.DisplayName.set -> void
 Polhem.Definition.Database.TableSchema.Fields.get -> Polhem.Definition.Database.DbFieldCollection?
 Polhem.Definition.Database.TableSchema.FieldsSpecified.get -> bool
 Polhem.Definition.Database.TableSchema.GetPrimaryKey() -> Polhem.Definition.Database.DbTableIndex?
+Polhem.Definition.Database.TableSchema.HasCompanyScope() -> bool
 Polhem.Definition.Database.TableSchema.Indexes.get -> Polhem.Definition.Database.DbTableIndexCollection?
 Polhem.Definition.Database.TableSchema.IndexesSpecified.get -> bool
 Polhem.Definition.Database.TableSchema.ObjectFilePath.get -> string!
@@ -186,11 +168,6 @@ Polhem.Definition.DbScope
 Polhem.Definition.DbScope.Common = 0 -> Polhem.Definition.DbScope
 Polhem.Definition.DbScope.Company = 1 -> Polhem.Definition.DbScope
 Polhem.Definition.DbScope.Log = 2 -> Polhem.Definition.DbScope
-Polhem.Definition.DecimalsSource
-Polhem.Definition.DecimalsSource.Company = 0 -> Polhem.Definition.DecimalsSource
-Polhem.Definition.DecimalsSource.Currency = 1 -> Polhem.Definition.DecimalsSource
-Polhem.Definition.DecimalsSource.SystemFixed = 3 -> Polhem.Definition.DecimalsSource
-Polhem.Definition.DecimalsSource.Unit = 2 -> Polhem.Definition.DecimalsSource
 Polhem.Definition.Defaults
 Polhem.Definition.DefineAccessDatabaseSettingsProvider
 Polhem.Definition.DefineAccessDatabaseSettingsProvider.DefineAccessDatabaseSettingsProvider(Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
@@ -243,9 +220,9 @@ Polhem.Definition.Filters.FilterGroup.FilterGroup() -> void
 Polhem.Definition.Filters.FilterGroup.FilterGroup(Polhem.Definition.Filters.LogicalOperator operator) -> void
 Polhem.Definition.Filters.FilterGroup.Nodes.get -> Polhem.Definition.Filters.FilterNodeCollection!
 Polhem.Definition.Filters.FilterGroup.Nodes.set -> void
+Polhem.Definition.Filters.FilterGroup.NodesSpecified.get -> bool
 Polhem.Definition.Filters.FilterGroup.Operator.get -> Polhem.Definition.Filters.LogicalOperator
 Polhem.Definition.Filters.FilterGroup.Operator.set -> void
-Polhem.Definition.Filters.FilterGroup.ShouldSerializeNodes() -> bool
 Polhem.Definition.Filters.FilterNode
 Polhem.Definition.Filters.FilterNode.FilterNode() -> void
 Polhem.Definition.Filters.FilterNodeCollection
@@ -274,14 +251,15 @@ Polhem.Definition.Forms.FieldMapping.SourceField.get -> string!
 Polhem.Definition.Forms.FieldMapping.SourceField.set -> void
 Polhem.Definition.Forms.FieldMappingCollection
 Polhem.Definition.Forms.FieldMappingCollection.FieldMappingCollection() -> void
-Polhem.Definition.Forms.FieldMappingCollection.FindByDestination(string! destinationField) -> Polhem.Definition.Forms.FieldMapping?
 Polhem.Definition.Forms.FieldMappingCollectionExtensions
 Polhem.Definition.Forms.FormExpressionCalculator
-Polhem.Definition.Forms.FormExpressionCalculator.ApplyComputedRow(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Forms.FormExpressionCalculator.ApplyComputedRow(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyDefaultRow(Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormExpressionCalculator.BuildDependencyMap(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> object?
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
 Polhem.Definition.Forms.FormExpressionCalculator.FormExpressionCalculator(Polhem.Core.Expressions.IExpressionEvaluator! evaluator) -> void
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpressions(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormExpressionIssue!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateRules(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Forms.FormRuleTrigger trigger, string! timeZoneId = "") -> void
@@ -325,7 +303,7 @@ Polhem.Definition.Forms.FormField.MaxLength.get -> int
 Polhem.Definition.Forms.FormField.MaxLength.set -> void
 Polhem.Definition.Forms.FormField.NumberFormat.get -> string!
 Polhem.Definition.Forms.FormField.NumberFormat.set -> void
-Polhem.Definition.Forms.FormField.NumberKind.get -> Polhem.Definition.NumberKind
+Polhem.Definition.Forms.FormField.NumberKind.get -> Polhem.Definition.Numbers.NumberKind
 Polhem.Definition.Forms.FormField.NumberKind.set -> void
 Polhem.Definition.Forms.FormField.ReadOnly.get -> bool
 Polhem.Definition.Forms.FormField.ReadOnly.set -> void
@@ -472,12 +450,14 @@ Polhem.Definition.Forms.SensitiveCategoryExtensions
 Polhem.Definition.GlobalEvents
 Polhem.Definition.IBusinessObjectContext
 Polhem.Definition.IBusinessObjectContext.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
+Polhem.Definition.IBusinessObjectContext.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope?
 Polhem.Definition.IBusinessObjectContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
 Polhem.Definition.IBusinessObjectContext.LanguageService.get -> Polhem.Definition.Language.ILanguageService!
 Polhem.Definition.IBusinessObjectContext.Services.get -> System.IServiceProvider!
 Polhem.Definition.IBusinessObjectContext.SessionInfoService.get -> Polhem.Definition.Identity.ISessionInfoService!
 Polhem.Definition.IBusinessObjectFactory
 Polhem.Definition.IBusinessObjectFactory.CreateBusinessObject(System.Guid accessToken, string! progId, bool isLocalCall) -> object!
+Polhem.Definition.IBusinessObjectFactory.CreateBusinessObject(System.Guid accessToken, string! progId, bool isLocalCall, Polhem.Definition.Identity.SessionCompanyScope! companyScope) -> object!
 Polhem.Definition.ICacheDataSourceProvider
 Polhem.Definition.ICacheDataSourceProvider.GetApiKey(string! sysId) -> Polhem.Definition.Security.ApiKeyInfo?
 Polhem.Definition.ICacheDataSourceProvider.GetApiKeyGateState() -> Polhem.Definition.Security.ApiKeyGateState!
@@ -491,9 +471,9 @@ Polhem.Definition.IDatabaseSettingsProvider.Get() -> Polhem.Definition.Settings.
 Polhem.Definition.IDatabaseSettingsProvider.GetItem(string! databaseId) -> Polhem.Definition.Settings.DatabaseItem!
 Polhem.Definition.IDatabaseSettingsProvider.ValidateRequired() -> void
 Polhem.Definition.Identity.CompanyInfo
-Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.get -> Polhem.Definition.CompanyAllowedCurrencies!
+Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.get -> Polhem.Definition.Numbers.CompanyAllowedCurrencies!
 Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.init -> void
-Polhem.Definition.Identity.CompanyInfo.CashRounding.get -> Polhem.Definition.CompanyCashRounding!
+Polhem.Definition.Identity.CompanyInfo.CashRounding.get -> Polhem.Definition.Numbers.CompanyCashRounding!
 Polhem.Definition.Identity.CompanyInfo.CashRounding.init -> void
 Polhem.Definition.Identity.CompanyInfo.CompanyDatabaseId.get -> string!
 Polhem.Definition.Identity.CompanyInfo.CompanyDatabaseId.init -> void
@@ -508,9 +488,9 @@ Polhem.Definition.Identity.CompanyInfo.DefaultCurrency.get -> string!
 Polhem.Definition.Identity.CompanyInfo.DefaultCurrency.init -> void
 Polhem.Definition.Identity.CompanyInfo.GetAllowedCurrencies(Polhem.Definition.Settings.CurrencySettings! currencySettings) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Identity.CompanyInfo.GetCashRounding(string! currencyCode, Polhem.Definition.Settings.CurrencySettings! currencySettings) -> decimal
-Polhem.Definition.Identity.CompanyInfo.GetDecimals(Polhem.Definition.NumberKind kind) -> int
+Polhem.Definition.Identity.CompanyInfo.GetDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int
 Polhem.Definition.Identity.CompanyInfo.GetKey() -> string!
-Polhem.Definition.Identity.CompanyInfo.NumberFormats.get -> Polhem.Definition.CompanyNumberFormats!
+Polhem.Definition.Identity.CompanyInfo.NumberFormats.get -> Polhem.Definition.Numbers.CompanyNumberFormats!
 Polhem.Definition.Identity.CompanyInfo.NumberFormats.init -> void
 Polhem.Definition.Identity.CompanyRolePermissions
 Polhem.Definition.Identity.CompanyRolePermissions.CompanyId.get -> string!
@@ -538,6 +518,7 @@ Polhem.Definition.Identity.EmployeeContext.Equals(Polhem.Definition.Identity.Emp
 Polhem.Definition.Identity.EmployeeContext.UserRowId.get -> System.Guid
 Polhem.Definition.Identity.EmployeeContext.UserRowId.init -> void
 Polhem.Definition.Identity.ICompanyAuthorizationService
+Polhem.Definition.Identity.ICompanyAuthorizationService.Can(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
 Polhem.Definition.Identity.ICompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
 Polhem.Definition.Identity.ICompanyInfoService
 Polhem.Definition.Identity.ICompanyInfoService.Get(string! companyId) -> Polhem.Definition.Identity.CompanyInfo?
@@ -546,11 +527,12 @@ Polhem.Definition.Identity.ICompanyInfoService.Set(Polhem.Definition.Identity.Co
 Polhem.Definition.Identity.IDeploymentAuthorizationService
 Polhem.Definition.Identity.IDeploymentAuthorizationService.Can(System.Guid accessToken, Polhem.Definition.Identity.DeploymentAction action) -> bool
 Polhem.Definition.Identity.IEmployeeContextResolver
-Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
+Polhem.Definition.Identity.IEmployeeContextResolver.Resolve(string! userId, string! databaseId, string! companyId) -> Polhem.Definition.Identity.EmployeeContext!
 Polhem.Definition.Identity.IRolePermissionService
 Polhem.Definition.Identity.IRolePermissionService.Get(string! companyId) -> Polhem.Definition.Identity.CompanyRolePermissions?
 Polhem.Definition.Identity.IRolePermissionService.Remove(string! companyId) -> void
 Polhem.Definition.Identity.IScopeResolver
+Polhem.Definition.Identity.IScopeResolver.ResolveFilter(Polhem.Definition.Identity.SessionCompanyScope! companyScope, string! modelId, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
 Polhem.Definition.Identity.IScopeResolver.ResolveFilter(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
 Polhem.Definition.Identity.ISessionInfoService
 Polhem.Definition.Identity.ISessionInfoService.Get(System.Guid accessToken) -> Polhem.Definition.Identity.SessionInfo!
@@ -837,7 +819,7 @@ Polhem.Definition.Layouts.LayoutFieldBase.FieldName.set -> void
 Polhem.Definition.Layouts.LayoutFieldBase.LayoutFieldBase() -> void
 Polhem.Definition.Layouts.LayoutFieldBase.NumberFormat.get -> string!
 Polhem.Definition.Layouts.LayoutFieldBase.NumberFormat.set -> void
-Polhem.Definition.Layouts.LayoutFieldBase.NumberKind.get -> Polhem.Definition.NumberKind
+Polhem.Definition.Layouts.LayoutFieldBase.NumberKind.get -> Polhem.Definition.Numbers.NumberKind
 Polhem.Definition.Layouts.LayoutFieldBase.NumberKind.set -> void
 Polhem.Definition.Layouts.LayoutFieldBase.ReadOnly.get -> bool
 Polhem.Definition.Layouts.LayoutFieldBase.ReadOnly.set -> void
@@ -1056,24 +1038,62 @@ Polhem.Definition.MaterializeResult.WrittenCount.get -> int
 Polhem.Definition.MaterializeResult.WrittenCount.init -> void
 Polhem.Definition.MaterializeResult.WrittenRelativePaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.MaterializeResult.WrittenRelativePaths.init -> void
-Polhem.Definition.NumberFormatItem
-Polhem.Definition.NumberFormatItem.Decimals.get -> int
-Polhem.Definition.NumberFormatItem.Decimals.set -> void
-Polhem.Definition.NumberFormatItem.Kind.get -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberFormatItem.Kind.set -> void
-Polhem.Definition.NumberFormatItem.NumberFormatItem() -> void
-Polhem.Definition.NumberFormatItem.NumberFormatItem(Polhem.Definition.NumberKind kind, int decimals) -> void
-Polhem.Definition.NumberFormatResolver
-Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.Amount = 3 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.Cost = 6 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.ExchangeRate = 7 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.None = 0 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.Percent = 4 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.Quantity = 1 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.UnitPrice = 5 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKind.Weight = 2 -> Polhem.Definition.NumberKind
-Polhem.Definition.NumberKindProfile
+Polhem.Definition.Numbers.AllowedCurrencyItem
+Polhem.Definition.Numbers.AllowedCurrencyItem.AllowedCurrencyItem() -> void
+Polhem.Definition.Numbers.AllowedCurrencyItem.AllowedCurrencyItem(string! code) -> void
+Polhem.Definition.Numbers.AllowedCurrencyItem.Code.get -> string!
+Polhem.Definition.Numbers.AllowedCurrencyItem.Code.set -> void
+Polhem.Definition.Numbers.CashRoundingItem
+Polhem.Definition.Numbers.CashRoundingItem.CashRoundingItem() -> void
+Polhem.Definition.Numbers.CashRoundingItem.CashRoundingItem(string! currencyCode, decimal unit) -> void
+Polhem.Definition.Numbers.CashRoundingItem.CurrencyCode.get -> string!
+Polhem.Definition.Numbers.CashRoundingItem.CurrencyCode.set -> void
+Polhem.Definition.Numbers.CashRoundingItem.Unit.get -> decimal
+Polhem.Definition.Numbers.CashRoundingItem.Unit.set -> void
+Polhem.Definition.Numbers.CompanyAllowedCurrencies
+Polhem.Definition.Numbers.CompanyAllowedCurrencies.CompanyAllowedCurrencies() -> void
+Polhem.Definition.Numbers.CompanyAllowedCurrencies.GetAllowedCurrencies(Polhem.Definition.Settings.CurrencySettings! currencySettings) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Numbers.CompanyCashRounding
+Polhem.Definition.Numbers.CompanyCashRounding.CompanyCashRounding() -> void
+Polhem.Definition.Numbers.CompanyCashRounding.FindUnit(string! currencyCode) -> decimal?
+Polhem.Definition.Numbers.CompanyCashRounding.GetCashRounding(string! currencyCode, Polhem.Definition.Settings.CurrencySettings! currencySettings) -> decimal
+Polhem.Definition.Numbers.CompanyNumberFormats
+Polhem.Definition.Numbers.CompanyNumberFormats.CompanyNumberFormats() -> void
+Polhem.Definition.Numbers.CompanyNumberFormats.FindDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int?
+Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.Company = 0 -> Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.Currency = 1 -> Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.SystemFixed = 3 -> Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.Unit = 2 -> Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.NumberFormatItem
+Polhem.Definition.Numbers.NumberFormatItem.Decimals.get -> int
+Polhem.Definition.Numbers.NumberFormatItem.Decimals.set -> void
+Polhem.Definition.Numbers.NumberFormatItem.Kind.get -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberFormatItem.Kind.set -> void
+Polhem.Definition.Numbers.NumberFormatItem.NumberFormatItem() -> void
+Polhem.Definition.Numbers.NumberFormatItem.NumberFormatItem(Polhem.Definition.Numbers.NumberKind kind, int decimals) -> void
+Polhem.Definition.Numbers.NumberFormatResolver
+Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.Amount = 3 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.Cost = 6 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.ExchangeRate = 7 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.None = 0 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.Percent = 4 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.Quantity = 1 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.UnitPrice = 5 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKind.Weight = 2 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.NumberKindProfile
+Polhem.Definition.Numbers.RoundingContext
+Polhem.Definition.Numbers.RoundingContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Definition.Numbers.RoundingContext.Company.init -> void
+Polhem.Definition.Numbers.RoundingContext.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Definition.Numbers.RoundingContext.CurrencySettings.init -> void
+Polhem.Definition.Numbers.RoundingContext.RoundingContext() -> void
+Polhem.Definition.Numbers.RoundingContext.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Definition.Numbers.RoundingContext.UnitSettings.init -> void
+Polhem.Definition.Numbers.RoundingPolicy
+Polhem.Definition.Numbers.RoundingPolicy.Preserve = 1 -> Polhem.Definition.Numbers.RoundingPolicy
+Polhem.Definition.Numbers.RoundingPolicy.Round = 0 -> Polhem.Definition.Numbers.RoundingPolicy
 Polhem.Definition.ObjectTree.ITreeNodeCommandProvider
 Polhem.Definition.ObjectTree.ITreeNodeCommandProvider.GetCommands(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.ObjectTree.TreeNodeCommand!>!
 Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler
@@ -1125,6 +1145,7 @@ Polhem.Definition.ObjectTree.TreeNodeDropPosition.Before = 0 -> Polhem.Definitio
 Polhem.Definition.Organization.DepartmentNode
 Polhem.Definition.Organization.DepartmentNode.Children.get -> Polhem.Definition.Organization.DepartmentNodeCollection?
 Polhem.Definition.Organization.DepartmentNode.Children.init -> void
+Polhem.Definition.Organization.DepartmentNode.ChildrenSpecified.get -> bool
 Polhem.Definition.Organization.DepartmentNode.DepartmentNode() -> void
 Polhem.Definition.Organization.DepartmentNode.DepartmentNode(System.Guid rowId, string! deptId, string! deptName, System.Guid managerRowId) -> void
 Polhem.Definition.Organization.DepartmentNode.DeptId.get -> string!
@@ -1135,7 +1156,6 @@ Polhem.Definition.Organization.DepartmentNode.ManagerRowId.get -> System.Guid
 Polhem.Definition.Organization.DepartmentNode.ManagerRowId.init -> void
 Polhem.Definition.Organization.DepartmentNode.RowId.get -> System.Guid
 Polhem.Definition.Organization.DepartmentNode.RowId.init -> void
-Polhem.Definition.Organization.DepartmentNode.ShouldSerializeChildren() -> bool
 Polhem.Definition.Organization.DepartmentNodeCollection
 Polhem.Definition.Organization.DepartmentNodeCollection.AddRange(System.Collections.Generic.IEnumerable<Polhem.Definition.Organization.DepartmentNode!>! nodes) -> void
 Polhem.Definition.Organization.DepartmentNodeCollection.DepartmentNodeCollection() -> void
@@ -1216,17 +1236,6 @@ Polhem.Definition.PathOptions.GetUnitSettingsFilePath() -> string!
 Polhem.Definition.PathOptions.PathOptions() -> void
 Polhem.Definition.PropertyCategories
 Polhem.Definition.ProtectedFields
-Polhem.Definition.RoundingContext
-Polhem.Definition.RoundingContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
-Polhem.Definition.RoundingContext.Company.init -> void
-Polhem.Definition.RoundingContext.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
-Polhem.Definition.RoundingContext.CurrencySettings.init -> void
-Polhem.Definition.RoundingContext.RoundingContext() -> void
-Polhem.Definition.RoundingContext.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
-Polhem.Definition.RoundingContext.UnitSettings.init -> void
-Polhem.Definition.RoundingPolicy
-Polhem.Definition.RoundingPolicy.Preserve = 1 -> Polhem.Definition.RoundingPolicy
-Polhem.Definition.RoundingPolicy.Round = 0 -> Polhem.Definition.RoundingPolicy
 Polhem.Definition.Security.ApiAccessRequirement
 Polhem.Definition.Security.ApiAccessRequirement.Anonymous = 0 -> Polhem.Definition.Security.ApiAccessRequirement
 Polhem.Definition.Security.ApiAccessRequirement.Authenticated = 1 -> Polhem.Definition.Security.ApiAccessRequirement
@@ -1865,6 +1874,8 @@ const Polhem.Definition.FormActions.GetList = "GetList" -> string!
 const Polhem.Definition.FormActions.GetLookup = "GetLookup" -> string!
 const Polhem.Definition.FormActions.GetNewData = "GetNewData" -> string!
 const Polhem.Definition.FormActions.Save = "Save" -> string!
+const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
+const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
 const Polhem.Definition.Language.FormSchemaLocalizer.FieldCaptionKeyFormat = "Field.{0}.Caption" -> string!
 const Polhem.Definition.Language.FormSchemaLocalizer.RuleMessageKeyFormat = "Rule.{0}.Message" -> string!
 const Polhem.Definition.Language.FormSchemaLocalizer.SchemaDisplayNameKey = "Schema.DisplayName" -> string!
@@ -1961,6 +1972,7 @@ const Polhem.Definition.PropertyCategories.Layout = "Layout" -> string!
 const Polhem.Definition.ProtectedFields.DeploymentAdmin = "deployment_admin" -> string!
 const Polhem.Definition.ProtectedFields.Password = "password" -> string!
 const Polhem.Definition.Security.ApiKeyGateState.CacheKey = "[gate]" -> string!
+const Polhem.Definition.SysFields.CompanyId = "sys_company_id" -> string!
 const Polhem.Definition.SysFields.Id = "sys_id" -> string!
 const Polhem.Definition.SysFields.InsertTime = "sys_insert_time" -> string!
 const Polhem.Definition.SysFields.InsertUserRowId = "sys_insert_user_rowid" -> string!
@@ -2121,6 +2133,8 @@ static Polhem.Definition.Filters.FilterCondition.StartsWith(string! fieldName, s
 static Polhem.Definition.Filters.FilterGroup.All(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Filters.FilterGroup.Any(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Forms.FieldMappingCollectionExtensions.Add(this Polhem.Definition.Forms.FieldMappingCollection? collection, string! sourceField, string! destinationField) -> Polhem.Definition.Forms.FieldMapping!
+static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
+static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
 static Polhem.Definition.Forms.FormFieldCollectionExtensions.Add(this Polhem.Definition.Forms.FormFieldCollection? collection, string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> Polhem.Definition.Forms.FormField!
 static Polhem.Definition.Forms.FormRowDefaults.Apply(Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, object? masterRowId = null, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> void
 static Polhem.Definition.Forms.FormRowDefaults.DefaultForDbType(Polhem.Core.Data.FieldDbType dbType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object!
@@ -2135,6 +2149,8 @@ static Polhem.Definition.Forms.RequiredFieldCheck.IsEmpty(Polhem.Definition.Form
 static Polhem.Definition.Forms.SensitiveCategoryExtensions.ToPermissionModelId(this Polhem.Definition.Forms.SensitiveCategory category) -> string!
 static Polhem.Definition.GlobalEvents.DatabaseSettingsChanged -> System.EventHandler?
 static Polhem.Definition.GlobalEvents.RaiseDatabaseSettingsChanged() -> void
+static Polhem.Definition.Identity.CompanyInfo.IsValidId(string? companyId) -> bool
+static Polhem.Definition.Identity.CompanyInfo.NormalizeId(string! companyId) -> string!
 static Polhem.Definition.Identity.EmployeeContext.Empty.get -> Polhem.Definition.Identity.EmployeeContext!
 static Polhem.Definition.Identity.EmployeeContext.operator !=(Polhem.Definition.Identity.EmployeeContext? left, Polhem.Definition.Identity.EmployeeContext? right) -> bool
 static Polhem.Definition.Identity.EmployeeContext.operator ==(Polhem.Definition.Identity.EmployeeContext? left, Polhem.Definition.Identity.EmployeeContext? right) -> bool
@@ -2165,25 +2181,25 @@ static Polhem.Definition.Logging.NullLogWriter.Instance.get -> Polhem.Definition
 static Polhem.Definition.MaterializeOptions.Default.get -> Polhem.Definition.MaterializeOptions!
 static Polhem.Definition.MaterializeResult.operator !=(Polhem.Definition.MaterializeResult? left, Polhem.Definition.MaterializeResult? right) -> bool
 static Polhem.Definition.MaterializeResult.operator ==(Polhem.Definition.MaterializeResult? left, Polhem.Definition.MaterializeResult? right) -> bool
-static Polhem.Definition.NumberFormatResolver.ResolveDecimals(Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> int
-static Polhem.Definition.NumberFormatResolver.ResolveDecimals(Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> int
-static Polhem.Definition.NumberFormatResolver.ResolveFormat(Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> string!
-static Polhem.Definition.NumberFormatResolver.ResolveFormat(Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> string!
-static Polhem.Definition.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> decimal
-static Polhem.Definition.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> decimal
-static Polhem.Definition.NumberFormatResolver.RoundCash(decimal total, string! currencyCode, Polhem.Definition.RoundingContext! ctx) -> decimal
-static Polhem.Definition.NumberKindProfile.BuildFormatString(Polhem.Definition.NumberKind kind, int decimals) -> string!
-static Polhem.Definition.NumberKindProfile.GetDecimalsSource(Polhem.Definition.NumberKind kind) -> Polhem.Definition.DecimalsSource
-static Polhem.Definition.NumberKindProfile.GetDefaultDecimals(Polhem.Definition.NumberKind kind) -> int
-static Polhem.Definition.NumberKindProfile.GetFormatLetter(Polhem.Definition.NumberKind kind) -> char
-static Polhem.Definition.NumberKindProfile.GetRoundingPolicy(Polhem.Definition.NumberKind kind) -> Polhem.Definition.RoundingPolicy
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveDecimals(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> int
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveDecimals(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> int
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveFormat(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> string!
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveFormat(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> string!
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> decimal
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> decimal
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundCash(decimal total, string! currencyCode, Polhem.Definition.Numbers.RoundingContext! ctx) -> decimal
+static Polhem.Definition.Numbers.NumberKindProfile.BuildFormatString(Polhem.Definition.Numbers.NumberKind kind, int decimals) -> string!
+static Polhem.Definition.Numbers.NumberKindProfile.GetDecimalsSource(Polhem.Definition.Numbers.NumberKind kind) -> Polhem.Definition.Numbers.DecimalsSource
+static Polhem.Definition.Numbers.NumberKindProfile.GetDefaultDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int
+static Polhem.Definition.Numbers.NumberKindProfile.GetFormatLetter(Polhem.Definition.Numbers.NumberKind kind) -> char
+static Polhem.Definition.Numbers.NumberKindProfile.GetRoundingPolicy(Polhem.Definition.Numbers.NumberKind kind) -> Polhem.Definition.Numbers.RoundingPolicy
+static Polhem.Definition.Numbers.RoundingContext.ForCompany(Polhem.Definition.Identity.CompanyInfo? company) -> Polhem.Definition.Numbers.RoundingContext!
 static Polhem.Definition.Organization.DepartmentRow.operator !=(Polhem.Definition.Organization.DepartmentRow? left, Polhem.Definition.Organization.DepartmentRow? right) -> bool
 static Polhem.Definition.Organization.DepartmentRow.operator ==(Polhem.Definition.Organization.DepartmentRow? left, Polhem.Definition.Organization.DepartmentRow? right) -> bool
 static Polhem.Definition.Organization.EmployeeRow.operator !=(Polhem.Definition.Organization.EmployeeRow? left, Polhem.Definition.Organization.EmployeeRow? right) -> bool
 static Polhem.Definition.Organization.EmployeeRow.operator ==(Polhem.Definition.Organization.EmployeeRow? left, Polhem.Definition.Organization.EmployeeRow? right) -> bool
 static Polhem.Definition.PathOptions.ValidatePathSegment(string! segment, string! paramName) -> string!
 static Polhem.Definition.ProtectedFields.IsProtected(string! tableName, string! fieldName) -> bool
-static Polhem.Definition.RoundingContext.ForCompany(Polhem.Definition.Identity.CompanyInfo? company) -> Polhem.Definition.RoundingContext!
 static Polhem.Definition.Security.EncryptionKeyProtector.DecryptEncryptedKey(byte[]! masterKey, string! base64CipherText) -> byte[]!
 static Polhem.Definition.Security.EncryptionKeyProtector.GenerateEncryptedKey(byte[]! masterKey) -> string!
 static Polhem.Definition.Security.MasterKeyProvider.GetMasterKey(Polhem.Definition.Settings.MasterKeySource! source, string! definePath, bool autoCreate = false) -> byte[]!

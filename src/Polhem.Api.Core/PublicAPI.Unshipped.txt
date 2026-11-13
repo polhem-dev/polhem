@@ -1,2 +1,1 @@
 #nullable enable
-*REMOVED*const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!

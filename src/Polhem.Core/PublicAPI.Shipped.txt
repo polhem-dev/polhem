@@ -17,6 +17,7 @@ Polhem.Core.Collections.CollectionItem.Remove() -> void
 Polhem.Core.Collections.CollectionItem.SetCollection(Polhem.Core.Collections.ICollectionBase? collection) -> void
 Polhem.Core.Collections.CollectionItem.Tag.get -> object?
 Polhem.Core.Collections.CollectionItem.Tag.set -> void
+Polhem.Core.Collections.DictionaryExtensions
 Polhem.Core.Collections.ICollectionBase
 Polhem.Core.Collections.ICollectionBase.Add(Polhem.Core.Collections.ICollectionItem! value) -> void
 Polhem.Core.Collections.ICollectionBase.Insert(int index, Polhem.Core.Collections.ICollectionItem! value) -> void
@@ -109,6 +110,9 @@ Polhem.Core.Exceptions.ForbiddenException.MessageKey.get -> string!
 Polhem.Core.Exceptions.ILocalizableMessage
 Polhem.Core.Exceptions.ILocalizableMessage.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
 Polhem.Core.Exceptions.ILocalizableMessage.MessageKey.get -> string!
+Polhem.Core.Exceptions.InvalidRequestValueException
+Polhem.Core.Exceptions.InvalidRequestValueException.InvalidRequestValueException(string! message) -> void
+Polhem.Core.Exceptions.InvalidRequestValueException.InvalidRequestValueException(string! message, System.Exception! innerException) -> void
 Polhem.Core.Exceptions.UserMessageException
 Polhem.Core.Exceptions.UserMessageException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
 Polhem.Core.Exceptions.UserMessageException.MessageKey.get -> string!
@@ -120,6 +124,8 @@ Polhem.Core.Expressions.ExpressionEvaluationException.Expression.get -> string?
 Polhem.Core.Expressions.ExpressionEvaluationException.Expression.init -> void
 Polhem.Core.Expressions.ExpressionEvaluationException.ExpressionEvaluationException(string! message) -> void
 Polhem.Core.Expressions.ExpressionEvaluationException.ExpressionEvaluationException(string! message, System.Exception! innerException) -> void
+Polhem.Core.Expressions.ExpressionEvaluationException.Position.get -> int?
+Polhem.Core.Expressions.ExpressionEvaluationException.Position.init -> void
 Polhem.Core.Expressions.ExpressionPolicy
 Polhem.Core.Expressions.IExpressionEvaluator
 Polhem.Core.Expressions.IExpressionEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object?
@@ -185,6 +191,7 @@ static Polhem.Core.AssemblyLoader.GetType(string! assemblyName, string! typeName
 static Polhem.Core.AssemblyLoader.GetType(string! fullTypeName) -> System.Type?
 static Polhem.Core.AssemblyLoader.LoadAssembly(string! assemblyName) -> System.Reflection.Assembly!
 static Polhem.Core.Collections.CollectionExtensions.GetValue<T>(this System.Data.PropertyCollection! collection, string! key, object? defaultValue) -> T?
+static Polhem.Core.Collections.DictionaryExtensions.WithIgnoreCaseKeys<TValue>(this System.Collections.Generic.Dictionary<string!, TValue>? dictionary) -> System.Collections.Generic.Dictionary<string!, TValue>!
 static Polhem.Core.Data.DataColumnExtensions.ApplyFieldDbType(this System.Data.DataColumn! column, Polhem.Core.Data.FieldDbType dbType) -> void
 static Polhem.Core.Data.DataColumnExtensions.GetDeclaredFieldDbType(this System.Data.DataColumn! column) -> Polhem.Core.Data.FieldDbType?
 static Polhem.Core.Data.DataColumnExtensions.ResolveFieldDbType(this System.Data.DataColumn! column) -> Polhem.Core.Data.FieldDbType

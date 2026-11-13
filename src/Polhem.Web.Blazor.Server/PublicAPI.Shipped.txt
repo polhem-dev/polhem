@@ -22,13 +22,13 @@ Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode.Local = 0 -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode.Remote = 1 -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions
-Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions
-Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions
-Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellApplicationBuilderExtensions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellEndpointRouteBuilderExtensions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellServiceCollectionExtensions
 Polhem.Web.Blazor.Server._Imports
 Polhem.Web.Blazor.Server._Imports.Execute() -> void
 Polhem.Web.Blazor.Server._Imports._Imports() -> void
 static Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
-static Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
-static Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
-static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

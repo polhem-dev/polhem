@@ -10,8 +10,8 @@ Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.PolhemBlazorOptio
 Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.get -> bool
 Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.set -> void
 Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorServiceCollectionExtensions
-Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions
-Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceProviderExtensions
 static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemBlazorOptions!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
-static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
-static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture(this System.IServiceProvider! services) -> void
+static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture(this System.IServiceProvider! services) -> void
