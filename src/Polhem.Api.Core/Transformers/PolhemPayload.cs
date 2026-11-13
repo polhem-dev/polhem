@@ -10,9 +10,18 @@ namespace Polhem.Api.Core.Transformers
     /// named by <see cref="ApiPayloadOptions"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A server registers the result with <c>AddPolhemPayload</c> (Polhem.Hosting); a client keeps it in
     /// <c>PolhemApiClient.PayloadOptions</c> (Polhem.Api.Client). Both ends must agree on the compressor, the encryptor and
     /// <see cref="PayloadOptions.RequireFrame"/>, which the envelope does not name.
+    /// </para>
+    /// <para>
+    /// WARNING: do not change <see cref="PayloadOptions.SerializerOptions"/>, <see cref="PayloadOptions.JsonCodec"/>,
+    /// <see cref="PayloadOptions.DefaultCodec"/> or <see cref="PayloadOptions.TypeResolver"/> on the result. Their
+    /// setters are public in Polhem.JsonRpc.Payload, but these values are what make the wire Polhem's: a change on one
+    /// end makes it read the other end's payloads differently, and nothing checks that the two still agree. Change the
+    /// compressor, the encryptor or <see cref="PayloadOptions.RequireFrame"/> instead, on both ends.
+    /// </para>
     /// </remarks>
     public static class PolhemPayload
     {

@@ -20,6 +20,11 @@ namespace Polhem.Api.Core.Wire
     /// <see cref="System.Data.DataSetDateTime.Unspecified"/> and carry the naive values ADR-032 converts in the client's
     /// connector.
     /// </para>
+    /// <para>
+    /// The <c>Plain</c> format is not covered either: its body is the envelope's own JSON, which keeps the
+    /// <see cref="DateTime.Kind"/> a value was written with, so a <c>Plain</c> client that means a UTC instant writes one
+    /// itself (text ending in <c>Z</c>).
+    /// </para>
     /// </remarks>
     internal static class WireDateTime
     {

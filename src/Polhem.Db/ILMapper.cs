@@ -161,17 +161,16 @@ namespace Polhem.Db
         /// <returns>A dictionary mapping property names to their corresponding column indexes.</returns>
         private static Dictionary<string, int> GetMatchingFieldIndexes(DbDataReader reader)
         {
-            var fieldIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase); // Case-insensitive comparison
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);  // Get all writable public properties of T
+            var fieldIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-            // Build a dictionary of DbDataReader column names to their ordinal indexes
             var readerFields = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 readerFields[reader.GetName(i)] = i;
             }
 
-            // Keep only the intersection of T's property names and the DbDataReader column names
+            // Only the writable properties that have a column of the same name, whatever its case.
             foreach (var prop in properties)
             {
                 if (prop.CanWrite && readerFields.TryGetValue(prop.Name, out int index))

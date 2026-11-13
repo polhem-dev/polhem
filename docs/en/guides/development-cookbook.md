@@ -1012,7 +1012,7 @@ var list = new ListView { Schema = schema, FormConnector = connector };
 var record = new FormView { Schema = schema, Layout = layout, FormConnector = connector };
 ```
 
-To read the definitions from a local folder instead, set the views' `DefinitionSource` to a `StorageDefinitionSource` (`Polhem.UI.Core.Definitions`) over a `FileDefineStorage`; it returns the definitions as stored, with no language resources or tenant customization. With no user context registered, the views treat the user as anonymous and unrestricted. A working example is [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/), which shows `ListView` and `FormView` over an in-memory connector.
+To read the definitions from a local folder instead, set the views' `DefinitionSource` to a `StorageDefinitionSource` (`Polhem.UI.Core.Definitions`) over a `FileDefineStorage`; it returns the definitions as stored, with no language resources or tenant customization. With no user context registered, the views treat the user as anonymous and unrestricted. [`samples/Avalonia.DemoCenter/Modules/WithoutBackend/`](../../../samples/Avalonia.DemoCenter/Modules/WithoutBackend/) runs `ListView` and `FormView` without a backend another way: it builds the schema and the layout in code, sets them on the views directly, and serves the rows from an in-memory connector.
 
 Worked examples: [`apps/Polhem.Northwind`](../../../apps/Polhem.Northwind/README.md) (full CRUD flow; desktop, browser, iOS and Android heads over one shared UI project) and [`samples/Avalonia.DemoCenter`](../../../samples/Avalonia.DemoCenter/README.md) (control demo center).
 

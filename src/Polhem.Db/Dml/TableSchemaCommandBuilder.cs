@@ -138,7 +138,6 @@ namespace Polhem.Db.Dml
             string tableName = QuoteIdentifier(this.TableSchema.TableName);
             buffer.AppendLine(CultureInfo.InvariantCulture, $"Insert Into {tableName} ");
 
-            // Build the INSERT column list
             buffer.Append('(');
             int count = 0;
             foreach (DbField field in this.TableSchema.Fields!)
@@ -153,7 +152,6 @@ namespace Polhem.Db.Dml
             }
             buffer.AppendLine(")");
 
-            // Build the INSERT values list
             buffer.AppendLine(" Values ");
             buffer.Append('(');
             count = 0;
@@ -185,16 +183,13 @@ namespace Polhem.Db.Dml
             buffer.AppendLine(CultureInfo.InvariantCulture, $"Update {tableName} Set ");
 
             string fieldName;
-            // Get the primary key field
             var keyField = this.TableSchema.Fields![SysFields.RowId];
-            // Build the SET clause with field names and parameter values
             int setCount = 0;
             foreach (DbField field in this.TableSchema.Fields)
             {
                 if (field != keyField && field.DbType != FieldDbType.AutoIncrement && !IsPinned(field))
                 {
                     fieldName = QuoteIdentifier(field.FieldName);
-                    // Add command parameter
                     command.Parameters.Add(field);
                     if (setCount > 0)
                         buffer.Append(", ");
@@ -202,7 +197,6 @@ namespace Polhem.Db.Dml
                     setCount++;
                 }
             }
-            // Add primary key condition to WHERE clause
             fieldName = QuoteIdentifier(keyField.FieldName);
             command.Parameters.Add(keyField, System.Data.DataRowVersion.Original);
             buffer.AppendLine();
@@ -223,7 +217,6 @@ namespace Polhem.Db.Dml
             string tableName = QuoteIdentifier(this.TableSchema.TableName);
             buffer.AppendLine(CultureInfo.InvariantCulture, $"Delete From {tableName} ");
 
-            // Add primary key condition to WHERE clause
             var keyField = this.TableSchema.Fields![SysFields.RowId];
             string fieldName = QuoteIdentifier(keyField.FieldName);
             command.Parameters.Add(keyField, System.Data.DataRowVersion.Original);

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 8b1ecc2d87e5c19ff7b1152f79c60cb2c6494f02 -->
+<!-- source: en/architecture/development-constraints.md blob: 5c4175e9ad17e4c4594ca4abb3d2852e4ac20a86 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -84,6 +84,10 @@ cache-notify 表（而非 `SaveX` 呼叫）—— 但它們同樣存在於 proce
   且每個欄位都以一次參考指派寫入（推理寫在 `CacheDefineAccess.GetDatabaseSettings`
   上）。這不是可以照抄的模式。`SaveDatabaseSettings` 加密的是副本，所以你傳入的
   實例不會變成密文。
+- 定義型別的集合 getter 會在第一次讀取時建立空集合（例如 `FormSchema.Tables`），
+  而這次讀取可能發生在 cached 實例上。它無害，因為集合是空的：兩個第一次讀取同時
+  發生時各建一個，保留哪一個都一樣；而往集合裡加東西正是這條規則禁止的。getter 裡
+  除了建立空集合以外的任何寫入，同樣是這條規則禁止的修改。
 
 ### 禁止樣式
 

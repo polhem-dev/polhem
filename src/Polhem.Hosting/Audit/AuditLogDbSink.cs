@@ -114,7 +114,7 @@ namespace Polhem.Hosting.Audit
         /// <param name="entries">The batch that could not reach the database.</param>
         /// <remarks>
         /// <para>
-        /// WARNING: the append is serialized, and it has to be. Three paths reach this file at once —
+        /// WARNING: the append is serialized, and it has to be. Several paths reach this file at once:
         /// the background drain, every request thread once the queue saturates, and
         /// <see cref="SynchronousAuditLogWriter"/> in deployments that run without the background writer.
         /// <see cref="File.AppendAllText(string, string)"/> opens with <c>FileShare.Read</c>, so

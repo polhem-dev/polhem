@@ -17,7 +17,7 @@ namespace Polhem.Hosting
         /// compressor and encryptor names of <paramref name="settings"/>, replacing any registered before.
         /// </summary>
         /// <param name="services">The service collection.</param>
-        /// <param name="settings">The compressor and encryptor names, usually <c>CommonConfiguration.ApiPayloadOptions</c>.</param>
+        /// <param name="settings">The compressor and encryptor names, usually <see cref="Polhem.Definition.Settings.CommonConfiguration.ApiPayloadOptions"/>.</param>
         /// <param name="isDebugMode">Whether the encryptor <c>none</c> is allowed.</param>
         /// <param name="configure">Further changes, for example <c>options.RequireFrame = true</c>.</param>
         /// <returns>The same service collection, for chaining.</returns>

@@ -94,9 +94,9 @@ namespace Polhem.Business.System
         /// </summary>
         /// <param name="args">The input arguments carrying the target company id.</param>
         /// <remarks>
-        /// Permission validation enforces three rules: (1) the target company exists,
-        /// (2) it is enabled, (3) the current user is granted access via the
-        /// <c>st_user_company</c> table. All three failure modes surface as the same
+        /// Permission validation requires that the target company exists, that it is enabled, and that
+        /// the current user is granted access via the <c>st_user_company</c> table. Every one of these
+        /// failures surfaces as the same
         /// <see cref="CompanyAccessDeniedException"/> with the message
         /// <c>"Company access denied."</c> so callers cannot enumerate companies by
         /// probing the error text. Over JSON-RPC it arrives as

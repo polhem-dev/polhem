@@ -22,7 +22,7 @@ namespace Polhem.Hosting.Database
         /// <inheritdoc/>
         /// <remarks>
         /// The deployment administrator flag is written here, in the insert that creates the user.
-        /// <c>SystemBusinessObject.SetDeploymentAdmin</c> is how an existing deployment appoints one;
+        /// <see cref="Polhem.Business.System.SystemBusinessObject.SetDeploymentAdmin"/> is how an existing deployment appoints one;
         /// a deployment with no user at all has nobody to make that call, which is what this seed is
         /// for. An existing user's flag is never changed here.
         /// </remarks>

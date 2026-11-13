@@ -53,9 +53,10 @@ namespace Polhem.Hosting
         /// <remarks>
         /// <see cref="FileDefineStorage"/> receives the registered <see cref="PathOptions"/>. The
         /// <c>(IServiceProvider)</c> constructor wins even over a longer one that DI could satisfy: a
-        /// database-backed storage such as <c>DbDefineStorage</c> also has constructors taking
-        /// <c>IDbConnectionManager</c>, and resolving it here would close the cycle
-        /// <c>IDbConnectionManager</c> → <c>IDatabaseSettingsProvider</c> → <see cref="IDefineAccess"/> →
+        /// database-backed storage such as <see cref="Polhem.Db.Storage.DbDefineStorage"/> also has constructors taking
+        /// <see cref="Polhem.Db.Manager.IDbConnectionManager"/>, and resolving it here would close the cycle
+        /// <see cref="Polhem.Db.Manager.IDbConnectionManager"/> → <see cref="IDatabaseSettingsProvider"/> →
+        /// <see cref="IDefineAccess"/> →
         /// <see cref="IDefineStorage"/>. That constructor defers resolution to the first read.
         /// </remarks>
         private static IDefineStorage CreateDefineStorage(IServiceProvider sp, string? configured, string fallback)
