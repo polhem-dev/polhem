@@ -22,6 +22,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- NOTE: the shell's views load geometry and attach to a top level, which needs a platform. The headless platform
+       provides one; keep its version on the Avalonia version the shell references. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.3" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.UI.Avalonia.Shell\Polhem.UI.Avalonia.Shell.csproj" />
   </ItemGroup>

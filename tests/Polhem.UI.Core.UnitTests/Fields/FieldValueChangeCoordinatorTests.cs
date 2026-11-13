@@ -241,6 +241,103 @@ namespace Polhem.UI.Core.UnitTests.Fields
 
         private sealed record Call(string Table, string Field, string Value, DataTable? Row);
 
+        [Fact]
+        [DisplayName("A callback the caller cancels throws instead of reporting a failure")]
+        public async Task CancelledCall_Throws()
+        {
+            var harness = new Harness();
+            using var cancellation = new CancellationTokenSource();
+            harness.Connector.RespondAsync = _ =>
+            {
+                cancellation.Cancel();
+                return Task.FromCanceled<IFieldValueChangeResponse>(cancellation.Token);
+            };
+            var failed = false;
+            harness.Coordinator.Failed += (_, _) => failed = true;
+            var row = BuildRow();
+            row["part_no"] = "P-1";
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                harness.Coordinator.OnFieldValueChangedAsync(Table, "part_no", row, FieldValueOrigin.User, cancellation.Token));
+
+            Assert.False(failed);
+        }
+
+        [Fact]
+        [DisplayName("A failure for a value the user has since changed is not reported")]
+        public async Task FailedCall_ValueChangedSince_NotReported()
+        {
+            var harness = new Harness();
+            var row = BuildRow();
+            harness.Connector.RespondAsync = _ =>
+            {
+                row["part_no"] = "P-2";
+                return Task.FromException<IFieldValueChangeResponse>(new InvalidOperationException("down"));
+            };
+            var failed = false;
+            harness.Coordinator.Failed += (_, _) => failed = true;
+            row["part_no"] = "P-1";
+
+            await harness.Coordinator.OnFieldValueChangedAsync(Table, "part_no", row, FieldValueOrigin.User);
+
+            Assert.False(failed);
+        }
+
+        [Fact]
+        [DisplayName("An answer column the row does not have is skipped, and the others are written")]
+        public async Task Answer_UnknownColumn_IsSkipped()
+        {
+            var harness = new Harness();
+            harness.Connector.Respond = _ => Values(("not_in_row", "x"), ("qty", 2m));
+            var row = BuildRow();
+            row["part_no"] = "P-1";
+
+            await harness.Coordinator.OnFieldValueChangedAsync(Table, "part_no", row, FieldValueOrigin.User);
+
+            Assert.Equal(["qty"], harness.Writes);
+        }
+
+        [Fact]
+        [DisplayName("An answer without value rows writes nothing and still reports Applied")]
+        public async Task Answer_NoValueRows_WritesNothing()
+        {
+            var harness = new Harness();
+            var empty = new DataTable("Values");
+            empty.Columns.Add("qty", typeof(decimal));
+            harness.Connector.Respond = _ => new FakeResponse { Values = empty };
+            var applied = false;
+            harness.Coordinator.Applied += (_, _) => applied = true;
+            var row = BuildRow();
+            row["part_no"] = "P-1";
+
+            await harness.Coordinator.OnFieldValueChangedAsync(Table, "part_no", row, FieldValueOrigin.User);
+
+            Assert.Empty(harness.Writes);
+            Assert.True(applied);
+        }
+
+        [Fact]
+        [DisplayName("A field of a table the schema does not declare does not call back")]
+        public void CallsBack_UnknownTable_ReturnsFalse()
+        {
+            Assert.False(new Harness().Coordinator.CallsBack("Missing", "part_no"));
+        }
+
+        [Fact]
+        [DisplayName("Reporting a change or a lookup pick rejects a missing table, field or row")]
+        public async Task ReportChange_NullArgument_Throws()
+        {
+            var coordinator = new Harness().Coordinator;
+            var row = BuildRow();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnFieldValueChangedAsync(null!, "part_no", row, FieldValueOrigin.User));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnFieldValueChangedAsync(Table, null!, row, FieldValueOrigin.User));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnFieldValueChangedAsync(Table, "part_no", null!, FieldValueOrigin.User));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnLookupSelectedAsync(null!, "cust_rowid", row));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnLookupSelectedAsync(Table, null!, row));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => coordinator.OnLookupSelectedAsync(Table, "cust_rowid", null!));
+        }
+
         private sealed class FakeConnector : IFieldValueChangeConnector
         {
             public List<Call> Calls { get; } = [];

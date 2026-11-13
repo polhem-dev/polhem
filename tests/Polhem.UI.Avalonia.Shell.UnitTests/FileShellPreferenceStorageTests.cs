@@ -75,4 +75,25 @@ public sealed class FileShellPreferenceStorageTests : IDisposable
     {
         Assert.Throws<ArgumentException>(() => new FileShellPreferenceStorage(appName, _root).Load(key));
     }
+
+    [Theory]
+    [DisplayName("An application name that is a relative directory or holds a backslash is rejected")]
+    [InlineData(".")]
+    [InlineData("..")]
+    [InlineData("a\\b")]
+    public void Constructor_NotASingleSegment_Throws(string appName)
+    {
+        Assert.Throws<ArgumentException>(() => new FileShellPreferenceStorage(appName, _root));
+    }
+
+    [Fact]
+    [DisplayName("The public constructor keeps the preferences under the user's local application data")]
+    public void Constructor_AppNameOnly_UsesLocalApplicationData()
+    {
+        var storage = new FileShellPreferenceStorage("PolhemShellTests");
+
+        var expected = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PolhemShellTests");
+        Assert.Equal(expected, storage.DirectoryPath);
+    }
 }
