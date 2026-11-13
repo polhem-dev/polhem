@@ -89,7 +89,9 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
 
 - **Relations.** The **…** button beside a field's `RelationProgId` opens a dialog: pick the related form, tick the
   fields to carry back, and name each destination (`ref_<base>_<field>` by default). Missing destination fields are
-  added to the table.
+  added to the table. An existing destination whose type does not hold the source's values is refused, by the same
+  rule as analyzer rule [POLHEM2008](../../docs/en/reference/analyzer-rules.md), so the dialog never writes a mapping
+  the build then rejects.
 - **Expressions.** A rule's `When` and `Condition` and a field's `ValueExpression` and `DefaultValueExpression` open
   an expression editor. It lists the table's fields, the helper functions and the types an expression can name,
   completes names as you type, and underlines where parsing stops. **Try it out** evaluates the expression with sample
