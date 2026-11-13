@@ -13,7 +13,7 @@ using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Views;
-using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {

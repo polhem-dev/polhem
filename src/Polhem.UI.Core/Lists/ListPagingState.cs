@@ -2,7 +2,7 @@ using Polhem.Core;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
 
-namespace Polhem.UI.Core.Connectors
+namespace Polhem.UI.Core.Lists
 {
     /// <summary>
     /// The paging position of a form list on screen, shared by the UI heads so each one pages the same way.

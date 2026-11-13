@@ -4,7 +4,7 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 
-namespace Polhem.UI.Core.Connectors
+namespace Polhem.UI.Core.Lists
 {
     /// <summary>
     /// The column filters of a form list on screen, shared by the UI heads so each one turns what the user entered into

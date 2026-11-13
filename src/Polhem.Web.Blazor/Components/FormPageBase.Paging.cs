@@ -1,7 +1,7 @@
 using System.Globalization;
 using Polhem.Definition.Language;
-using Polhem.UI.Core.Connectors;
 using Polhem.Web.Blazor.Controls;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Components
 {

@@ -1,7 +1,7 @@
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 
-namespace Polhem.UI.Core.Connectors
+namespace Polhem.UI.Core.Lists
 {
     /// <summary>
     /// The columns a form's list asks the server for.

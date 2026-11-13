@@ -1,4 +1,4 @@
-namespace Polhem.UI.Core.Connectors
+namespace Polhem.UI.Core.Lists
 {
     /// <summary>
     /// What a user can enter to filter a list column.

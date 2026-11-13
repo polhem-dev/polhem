@@ -1,4 +1,4 @@
-namespace Polhem.UI.Core.Connectors
+namespace Polhem.UI.Core.Lists
 {
     /// <summary>
     /// The rows of a list a phone shows as cards, read a page at a time as the user scrolls, shared by the UI heads so

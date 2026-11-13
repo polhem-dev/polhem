@@ -4,8 +4,8 @@ using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Core.Connectors;
 using Polhem.Web.Blazor.Controls;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.UnitTests.Controls
 {
