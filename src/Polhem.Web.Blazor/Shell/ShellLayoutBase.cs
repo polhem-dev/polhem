@@ -83,8 +83,18 @@ namespace Polhem.Web.Blazor.Shell
         /// <inheritdoc/>
         public void Dispose()
         {
-            UserContext.SessionRejected -= OnSessionRejected;
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Stops following the user context. A derived layout that holds resources of its own overrides it and calls
+        /// the base.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing) UserContext.SessionRejected -= OnSessionRejected;
         }
 
         /// <summary>Signs out and returns to the sign-in screen.</summary>

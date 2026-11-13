@@ -64,7 +64,13 @@ namespace Polhem.Api.Core.Transformers
 
             // Only what differs is written. An in-process client shares the server's own options, and applying the
             // server's settings to them again must not rewrite an object every call is reading.
-            switch (settings.Compressor)
+            ApplyCompressor(options, settings.Compressor);
+            ApplyEncryptor(options, settings.Encryptor, isDebugMode);
+        }
+
+        private static void ApplyCompressor(PayloadOptions options, string compressor)
+        {
+            switch (compressor)
             {
                 case "gzip":
                     if (options.Compressor is not GzipPayloadCompressor) options.Compressor = new GzipPayloadCompressor();
@@ -73,10 +79,13 @@ namespace Polhem.Api.Core.Transformers
                     if (options.Compressor is not NoPayloadCompressor) options.Compressor = NoPayloadCompressor.Instance;
                     break;
                 default:
-                    throw new NotSupportedException($"Unsupported compressor: {settings.Compressor}");
+                    throw new NotSupportedException($"Unsupported compressor: {compressor}");
             }
+        }
 
-            switch (settings.Encryptor)
+        private static void ApplyEncryptor(PayloadOptions options, string encryptor, bool isDebugMode)
+        {
+            switch (encryptor)
             {
                 case "aes-cbc-hmac":
                     if (options.Encryptor is not AesCbcHmacPayloadEncryptor) options.Encryptor = new AesCbcHmacPayloadEncryptor();
@@ -92,7 +101,7 @@ namespace Polhem.Api.Core.Transformers
                     if (!options.AllowNoEncryption) options.AllowNoEncryption = true;
                     break;
                 default:
-                    throw new NotSupportedException($"Unsupported encryptor: {settings.Encryptor}");
+                    throw new NotSupportedException($"Unsupported encryptor: {encryptor}");
             }
         }
     }

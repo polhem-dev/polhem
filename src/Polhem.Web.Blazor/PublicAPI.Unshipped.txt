@@ -215,3 +215,4 @@ Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.set -> void
 Polhem.Web.Blazor.Identity.BlazorUserContext.SessionRejected -> System.EventHandler?
 override Polhem.Web.Blazor.Shell.ShellLayoutBase.OnInitialized() -> void
 Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose() -> void
+virtual Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose(bool disposing) -> void
