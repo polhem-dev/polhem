@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 200b1ee905a89a7b751562ab75cad049d3f7c07f -->
+<!-- source: en/guides/development-cookbook.md blob: 8a4e9df2771e16ddd0c1a54fa9822ff33fcdd9c8 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -37,7 +37,7 @@ ctor 注入解析，無靜態入口點（service locator）。
 
 宿主套件選擇：
 
-- **ASP.NET Core web host**：引用 `Polhem.Hosting` 與 `Polhem.JsonRpc.AspNetCore`。啟動程式加上 `using Polhem.Hosting;`（取 `AddPolhemFramework` 與 `AddPolhemApiKeyGateCheck`）與 `using Polhem.JsonRpc.AspNetCore;`（取 `AddJsonRpcServer` 與 `MapJsonRpc`）。`services.AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，`app.MapJsonRpc("/api")` 發布 `POST /api` 端點；不需要撰寫 controller。
+- **ASP.NET Core web host**：引用 `Polhem.Hosting` 與 `Polhem.JsonRpc.AspNetCore`。啟動程式加上 `using Polhem.Hosting.DependencyInjection;`（取 `AddPolhemFramework` 與 `AddPolhemApiKeyGateCheck`）與 `using Polhem.JsonRpc.AspNetCore;`（取 `AddJsonRpcServer` 與 `MapJsonRpc`）。`services.AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，`app.MapJsonRpc("/api")` 發布 `POST /api` 端點；不需要撰寫 controller。
 - **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 `PolhemApiClient.CreateLocal(provider)`，或在使用 `Polhem.UI.ApiBridge` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
 
 `AddPolhemFramework` 也會註冊數個 hosted service，包括保留 progId 的啟動期註冊、跨 process 的 cache-notify poller，以及過期 session 的清理。它們只在 provider 屬於 .NET Generic Host（`WebApplication`、`Host.CreateApplicationBuilder`）時才會啟動；單純以 `BuildServiceProvider()` 建出的 provider 不會啟動它們。
@@ -876,7 +876,7 @@ Blazor Server 透過 ASP.NET Core DI 提供 API client。**每個 SignalR circui
 **1. `Program.cs` 註冊**：
 
 ```csharp
-using Polhem.Hosting;                               // AddPolhemFramework
+using Polhem.Hosting.DependencyInjection;                               // AddPolhemFramework
 using Polhem.Web.Blazor.Mud.DependencyInjection;    // AddPolhemMud
 using Polhem.Web.Blazor.Server.DependencyInjection; // AddPolhemBlazor
 

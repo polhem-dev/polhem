@@ -6,7 +6,7 @@ namespace Polhem.UI.Avalonia.Shell.UnitTests;
 
 public class LoginViewModelTests
 {
-    private static readonly ShellOptions s_options = new()
+    private static readonly PolhemShellOptions s_options = new()
     {
         DefaultCompanyId = "DEFAULT",
         DefaultUserId = "demo",
@@ -99,7 +99,7 @@ public class LoginViewModelTests
     [DisplayName("The sign-in links and their heading come from the options")]
     public void SignInLinks_FromOptions()
     {
-        var options = new ShellOptions { SignInLinksTitle = "Other front ends" };
+        var options = new PolhemShellOptions { SignInLinksTitle = "Other front ends" };
         options.SignInLinks.Add(new ShellLink("Blazor", new Uri("https://example.test/")));
 
         var vm = new LoginViewModel(options, new MemoryPreferences(), NeverCalled, () => { });

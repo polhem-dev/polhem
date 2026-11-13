@@ -5,8 +5,8 @@ namespace Polhem.Web.Blazor.Shell
     /// with, the languages it offers and the route of its form page.
     /// </summary>
     /// <remarks>
-    /// The counterpart of the Avalonia shell's <c>ShellOptions</c>. Every value is optional; the shell names no
-    /// application of its own. A host package registers them (<c>AddPolhemShell</c> on Blazor Server); they are read by
+    /// The counterpart of the Avalonia shell's options, <c>Polhem.UI.Avalonia.Shell.PolhemShellOptions</c>. Every value is
+    /// optional; the shell names no application of its own. A host package registers them (<c>AddPolhemShell</c> on Blazor Server); they are read by
     /// every component and by the request pipeline, so change them only inside that call.
     /// </remarks>
     public sealed class PolhemShellOptions

@@ -8,6 +8,7 @@ using System.Xml.Serialization;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Database;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Forms
 {
@@ -181,7 +182,7 @@ namespace Polhem.Definition.Forms
         /// <summary>
         /// Gets or sets the numeric semantic kind of this field. Propagated by the layout generator
         /// to <see cref="Layouts.LayoutFieldBase.NumberKind"/>; drives the field's rounding policy and
-        /// decimal-places source. The default <see cref="Definition.NumberKind.None"/>
+        /// decimal-places source. The default <see cref="Definition.Numbers.NumberKind.None"/>
         /// means no numeric handling is applied.
         /// </summary>
         [Category(PropertyCategories.Data)]
@@ -192,7 +193,7 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// Gets or sets the name of the field that holds this amount field's currency code (a SAP
-        /// CUKY reference). Applies to <see cref="Definition.NumberKind.Amount"/> fields: when set,
+        /// CUKY reference). Applies to <see cref="Definition.Numbers.NumberKind.Amount"/> fields: when set,
         /// the amount's decimal places resolve from that field's current currency. Empty falls back to
         /// the master document currency (<see cref="FormSchema.CurrencyField"/>), then the company
         /// default currency.
@@ -205,8 +206,8 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// Gets or sets the name of the field that holds this quantity/weight field's unit-of-measure
-        /// code (a SAP UNIT reference). Required for <see cref="Definition.NumberKind.Quantity"/> /
-        /// <see cref="Definition.NumberKind.Weight"/> fields, whose decimal places resolve only from that
+        /// code (a SAP UNIT reference). Required for <see cref="Definition.Numbers.NumberKind.Quantity"/> /
+        /// <see cref="Definition.Numbers.NumberKind.Weight"/> fields, whose decimal places resolve only from that
         /// field's current unit. A value that needs no unit should not carry either kind.
         /// </summary>
         /// <remarks>
@@ -214,7 +215,7 @@ namespace Polhem.Definition.Forms
         /// table; a name that is not found there resolves as an empty unit code.
         /// <see cref="FormExpressionCalculator"/> throws <see cref="InvalidOperationException"/> when it
         /// rounds a computed quantity or weight field that leaves this empty. How an empty or unknown unit
-        /// code resolves is described on <see cref="NumberFormatResolver"/>.
+        /// code resolves is described on <see cref="Polhem.Definition.Numbers.NumberFormatResolver"/>.
         /// </remarks>
         [Category(PropertyCategories.Data)]
         [XmlAttribute]

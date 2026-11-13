@@ -5,6 +5,7 @@ using Polhem.Definition.Identity;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

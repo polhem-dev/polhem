@@ -1,7 +1,7 @@
-using Polhem.Definition;
 using Polhem.Definition.Identity;
 using MessagePack;
 using MessagePack.Formatters;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Api.Core.MessagePack
 {

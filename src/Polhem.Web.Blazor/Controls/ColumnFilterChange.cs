@@ -1,5 +1,5 @@
 using Polhem.Definition.Forms;
-using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
 {

@@ -53,8 +53,8 @@
 - `FormLiveComputationEngine` -- 各 head 共用的計算欄位即時重算與新資料列預設值運算式評估。運算引擎
   （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
   整個 process 共用的狀態。`LiveComputationDegradation` 描述它停止計算的原因：運算式失敗的欄位，以及失敗本身。
-- `Connectors/ListFilterState` -- 表單清單的欄位篩選，各 head 都把它轉成同一個 `FilterNode`。
-- `Connectors/CardListState` -- 手機以卡片顯示的清單資料列，隨使用者捲動一次讀一頁累積。
+- `Lists/ListFilterState` -- 表單清單的欄位篩選，各 head 都把它轉成同一個 `FilterNode`。
+- `Lists/CardListState` -- 手機以卡片顯示的清單資料列，隨使用者捲動一次讀一頁累積。
 
 ### 表單資料物件
 
@@ -119,5 +119,6 @@
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `TimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`GridColumnRules`、`FieldCaptionRules`
-- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`、`ListSelectFields`、`ListPagingState`
+- `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
+- `Lists/` -- `ListFilterState`、`CardListState`、`ListPagingState`、`ListSelectFields`、`ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

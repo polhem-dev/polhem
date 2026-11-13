@@ -52,7 +52,7 @@
 ### ASP.NET Core 宿主
 
 ```csharp
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Polhem.JsonRpc.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,7 +85,7 @@ using Microsoft.Extensions.Hosting;
 using Polhem.Api.Client;
 using Polhem.Core;
 using Polhem.Definition;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 
 var paths = new PathOptions { DefinePath = definePath };
 var settings = SystemSettingsLoader.Load(paths);
@@ -125,9 +125,10 @@ if (DatabaseCommandLine.TryRun(host.Services, args) is int exitCode) return exit
 
 ## 目錄結構
 
-- `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` 與其輔助方法
-- `PolhemHostApplicationBuilderExtensions.cs`、`PolhemBackendOptions.cs` -- `AddPolhemBackend` 與其選項
-- `BackendDefaultTypes.cs` -- `BackendComponents` 項目留空時採用的型別名稱
+- `DependencyInjection/`（命名空間 `Polhem.Hosting.DependencyInjection`）：
+  - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` 與其輔助方法
+  - `PolhemHostApplicationBuilderExtensions.cs`、`PolhemBackendOptions.cs` -- `AddPolhemBackend` 與其選項
+  - `BackendDefaultTypes.cs` -- `BackendComponents` 項目留空時採用的型別名稱
 - `ApiKeys/` -- 尚未發出任何 API 金鑰時的啟動警告
 - `Audit/` -- `IAuditLogSink` 與內部的稽核寫入器
 - `CacheNotify/` -- cache-notify 輪詢器

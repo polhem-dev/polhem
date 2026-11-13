@@ -1,5 +1,6 @@
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Spreadsheet;
 

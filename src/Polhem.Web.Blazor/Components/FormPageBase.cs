@@ -3,12 +3,10 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
 using System.Data;
 using Polhem.Api.Client.Connectors;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.Definition.Settings;
@@ -19,6 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Components
 {

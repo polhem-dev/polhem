@@ -3,6 +3,7 @@ using System.Data;
 using Polhem.Core;
 using Polhem.Core.Data;
 using Polhem.Core.Expressions;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Forms
 {

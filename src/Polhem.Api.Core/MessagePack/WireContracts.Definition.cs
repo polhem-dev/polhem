@@ -53,9 +53,9 @@ namespace Polhem.Api.Core.MessagePack
 
             list.Add(new KeyCollectionBaseFormatter<Polhem.Definition.Collections.ListItemCollection, Polhem.Definition.Collections.ListItem>());
             list.Add(new KeyCollectionBaseFormatter<Polhem.Definition.Collections.PropertyCollection, Polhem.Definition.Collections.Property>());
-            list.Add(new CollectionBaseFormatter<Polhem.Definition.CompanyAllowedCurrencies, Polhem.Definition.AllowedCurrencyItem>());
-            list.Add(new CollectionBaseFormatter<Polhem.Definition.CompanyCashRounding, Polhem.Definition.CashRoundingItem>());
-            list.Add(new CollectionBaseFormatter<Polhem.Definition.CompanyNumberFormats, Polhem.Definition.NumberFormatItem>());
+            list.Add(new CollectionBaseFormatter<Polhem.Definition.Numbers.CompanyAllowedCurrencies, Polhem.Definition.Numbers.AllowedCurrencyItem>());
+            list.Add(new CollectionBaseFormatter<Polhem.Definition.Numbers.CompanyCashRounding, Polhem.Definition.Numbers.CashRoundingItem>());
+            list.Add(new CollectionBaseFormatter<Polhem.Definition.Numbers.CompanyNumberFormats, Polhem.Definition.Numbers.NumberFormatItem>());
             list.Add(new CollectionBaseFormatter<Polhem.Definition.Filters.FilterNodeCollection, Polhem.Definition.Filters.FilterNode>());
             list.Add(new CollectionBaseFormatter<Polhem.Definition.Organization.DepartmentNodeCollection, Polhem.Definition.Organization.DepartmentNode>());
             list.Add(new CollectionBaseFormatter<Polhem.Definition.Settings.CurrencySettings, Polhem.Definition.Settings.CurrencyItem>());

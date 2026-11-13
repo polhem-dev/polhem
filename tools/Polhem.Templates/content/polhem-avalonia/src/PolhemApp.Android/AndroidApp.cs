@@ -10,7 +10,7 @@ namespace PolhemApp.Android;
 public class AndroidApp : App
 {
     /// <inheritdoc/>
-    protected override ShellOptions CreateOptions()
+    protected override PolhemShellOptions CreateOptions()
     {
         var options = base.CreateOptions();
         options.DefaultEndpoint = "http://10.0.2.2:5180/api";

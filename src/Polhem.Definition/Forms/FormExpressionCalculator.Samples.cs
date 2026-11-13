@@ -1,5 +1,6 @@
 using Polhem.Core;
 using Polhem.Core.Expressions;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.Forms
 {

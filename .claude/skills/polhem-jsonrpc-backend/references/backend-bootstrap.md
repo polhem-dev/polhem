@@ -7,7 +7,7 @@ version as the framework); when this template and those files disagree, those fi
 ## Program.cs
 
 ```csharp
-using Polhem.Hosting;               // AddPolhemApiKeyGateCheck
+using Polhem.Hosting.DependencyInjection;               // AddPolhemApiKeyGateCheck
 using Polhem.JsonRpc.AspNetCore;    // AddJsonRpcServer, MapJsonRpc
 using Xxx.Server;
 
@@ -33,7 +33,7 @@ using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Microsoft.Data.Sqlite;
 
 namespace Xxx.Server;

@@ -24,10 +24,10 @@
 | Step | Screen |
 |------|--------|
 | Connect | Endpoint and API key, pinged before moving on. Both are remembered. |
-| Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. `ShellOptions.SignInLinks` are listed at the foot and open through the platform's launcher. |
+| Sign in | Company ID, user ID and password. `Login`, then `EnterCompany`. The company starts as the last one entered on this device. `PolhemShellOptions.SignInLinks` are listed at the foot and open through the platform's launcher. |
 | Forms | A menu built from the server's `MenuSettings`; each entry opens its form in a tab, as a `ListView` that swaps in a `FormView` for the selected record. On iOS and Android one form fills the screen instead: the next entry replaces it, and the menu slides over the form and closes once an entry is picked. **Sign out** returns to sign-in; signing in again fetches every definition anew, so a definition changed while the application runs shows without restarting it. |
 
-The interface language before sign-in is `ShellOptions.DefaultLanguage` when the application sets one, and otherwise
+The interface language before sign-in is `PolhemShellOptions.DefaultLanguage` when the application sets one, and otherwise
 follows the operating system (English or Traditional Chinese; anything else falls back to English). It can be switched on the connection and sign-in screens; the choice is remembered. A
 `Language=en` or `Language=zh-TW` argument on the command line sets it for one run without changing the remembered
 choice, which is what scripted runs such as smoke tests use. After sign-in the account's culture decides, as
@@ -35,7 +35,7 @@ choice, which is what scripted runs such as smoke tests use. After sign-in the a
 The Semi theme's own text, such as a date picker's year / month / day placeholders, follows the same language; for a
 language Semi does not ship it falls back to English.
 
-The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; light unless `ShellOptions.DefaultThemeVariant` says otherwise, with a light/dark switch on the forms screen) and registers the API
+The shell applies the Semi theme in DefineEditor's colours (`Polhem.UI.Avalonia`'s `VisualStudioTheme`; light unless `PolhemShellOptions.DefaultThemeVariant` says otherwise, with a light/dark switch on the forms screen) and registers the API
 bridge as `UIServices.Provider`. It adds no font: the head chooses one.
 
 ## Usage
@@ -47,7 +47,7 @@ using Polhem.UI.Avalonia.Shell;
 
 public class MyApp : ShellApplication
 {
-    protected override ShellOptions CreateOptions() => new()
+    protected override PolhemShellOptions CreateOptions() => new()
     {
         AppTitle = "My App",
         DefaultEndpoint = "http://localhost:5000/api",
@@ -67,7 +67,7 @@ AppBuilder.Configure<MyApp>().UsePlatformDetect().WithInterFont().StartWithClass
 public partial class AppDelegate : AvaloniaAppDelegate<MyApp> { }
 ```
 
-Every option is described in the XML documentation of `ShellOptions`. What differs per head goes through
+Every option is described in the XML documentation of `PolhemShellOptions`. What differs per head goes through
 `ShellApplication.ConfigureOptions`. A browser head has no persistent file system, so it keeps the endpoint, the API
 key and the shell's preferences in `localStorage` through `BrowserLocalStorage`, and turns the language switch off when
 its font cannot draw CJK text:

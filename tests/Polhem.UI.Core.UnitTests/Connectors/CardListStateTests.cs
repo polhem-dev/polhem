@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Definition.Paging;
-using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Core.UnitTests.Connectors
 {

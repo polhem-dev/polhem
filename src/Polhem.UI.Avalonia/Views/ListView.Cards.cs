@@ -8,7 +8,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Avalonia.Views
 {

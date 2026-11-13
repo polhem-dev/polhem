@@ -31,7 +31,7 @@ namespace Polhem.UI.Avalonia.Shell
     /// The shell applies the Semi theme recoloured by <see cref="VisualStudioTheme"/>, the definition editor's colours
     /// (light by default; the forms screen has a light/dark switch), registers the
     /// API bridge as <see cref="UIServices.Provider"/>, and configures <see cref="ClientInfo"/> for a remote
-    /// backend with <see cref="ShellOptions.DefaultApiKey"/> as the first-run key. Fonts are the head's choice, so the
+    /// backend with <see cref="PolhemShellOptions.DefaultApiKey"/> as the first-run key. Fonts are the head's choice, so the
     /// shell adds none.
     /// </para>
     /// </remarks>
@@ -41,17 +41,17 @@ namespace Polhem.UI.Avalonia.Shell
         /// Gets or sets a callback that adjusts the options after <see cref="CreateOptions"/>, for what differs per
         /// platform head, such as the preference storage of a browser head.
         /// </summary>
-        public Action<ShellOptions>? ConfigureOptions { get; set; }
+        public Action<PolhemShellOptions>? ConfigureOptions { get; set; }
 
         /// <summary>
         /// Gets the options in effect, available once <see cref="Initialize"/> has run.
         /// </summary>
-        protected ShellOptions? Options { get; private set; }
+        protected PolhemShellOptions? Options { get; private set; }
 
         /// <summary>
-        /// Returns the application's options. The default returns <see cref="ShellOptions"/> with its defaults.
+        /// Returns the application's options. The default returns <see cref="PolhemShellOptions"/> with its defaults.
         /// </summary>
-        protected virtual ShellOptions CreateOptions() => new();
+        protected virtual PolhemShellOptions CreateOptions() => new();
 
         /// <inheritdoc/>
         public override void Initialize()

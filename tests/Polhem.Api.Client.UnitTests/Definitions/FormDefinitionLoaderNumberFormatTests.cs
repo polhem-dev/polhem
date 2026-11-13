@@ -5,6 +5,7 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Api.Client.UnitTests.Definitions
 {

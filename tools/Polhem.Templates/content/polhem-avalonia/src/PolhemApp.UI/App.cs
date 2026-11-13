@@ -10,7 +10,7 @@ namespace PolhemApp.UI;
 public class App : ShellApplication
 {
     /// <inheritdoc/>
-    protected override ShellOptions CreateOptions() => new()
+    protected override PolhemShellOptions CreateOptions() => new()
     {
         AppTitle = "PolhemApp",
         DefaultEndpoint = "http://localhost:5180/api",

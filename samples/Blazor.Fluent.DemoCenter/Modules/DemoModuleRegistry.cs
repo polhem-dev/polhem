@@ -8,6 +8,7 @@ using Blazor.Fluent.DemoCenter.Modules.MasterDetail;
 using Blazor.Fluent.DemoCenter.Modules.Permissions;
 using Blazor.Fluent.DemoCenter.Modules.ReadOnlyRequired;
 using Blazor.Fluent.DemoCenter.Modules.WithoutBackend;
+using Polhem.Definition.Numbers;
 
 namespace Blazor.Fluent.DemoCenter.Modules;
 

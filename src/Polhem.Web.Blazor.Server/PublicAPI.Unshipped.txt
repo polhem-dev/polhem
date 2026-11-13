@@ -1,1 +1,13 @@
 #nullable enable
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellApplicationBuilderExtensions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellEndpointRouteBuilderExtensions
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions
+*REMOVED*Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellApplicationBuilderExtensions.UsePolhemShellLocalization(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellEndpointRouteBuilderExtensions.MapPolhemShellCulture(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
+*REMOVED*static Polhem.Web.Blazor.Server.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

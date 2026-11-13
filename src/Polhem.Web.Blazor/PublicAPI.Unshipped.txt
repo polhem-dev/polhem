@@ -96,7 +96,6 @@ Polhem.Web.Blazor.Controls.GridColumnFilterBase.Column.get -> Polhem.Definition.
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Column.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Field.get -> Polhem.Definition.Forms.FormField!
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Field.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.First.get -> string!
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.First.set -> void
@@ -105,7 +104,6 @@ Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsDateRange.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsFiltered.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsInvalid.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsOpen.get -> bool
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs! e) -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Second.get -> string!
@@ -216,3 +214,27 @@ Polhem.Web.Blazor.Identity.BlazorUserContext.SessionRejected -> System.EventHand
 override Polhem.Web.Blazor.Shell.ShellLayoutBase.OnInitialized() -> void
 Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose() -> void
 virtual Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose(bool disposing) -> void
+Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+Polhem.Web.Blazor.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Numbers.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null, System.Func<string!>? timeZoneProvider = null) -> void
+Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.get -> Polhem.Definition.RoundingContext?
+*REMOVED*Polhem.Web.Blazor.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null, System.Func<string!>? timeZoneProvider = null) -> void
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.get -> Polhem.UI.Core.Lists.ColumnFilterKind
+Polhem.Web.Blazor.Controls.ColumnFilterChange.Deconstruct(out Polhem.Definition.Forms.FormField! Field, out Polhem.UI.Core.Lists.ColumnFilterKind Kind, out string! First, out string! Second) -> void
+Polhem.Web.Blazor.Controls.GridControlBase.FilterKind(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Lists.ColumnFilterKind
+Polhem.Web.Blazor.Controls.ColumnFilterChange.ColumnFilterChange(Polhem.Definition.Forms.FormField! Field, Polhem.UI.Core.Lists.ColumnFilterKind Kind, string! First, string! Second) -> void
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.get -> Polhem.UI.Core.Lists.ColumnFilterKind
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
+Polhem.Web.Blazor.Controls.GridControlBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState?
+Polhem.Web.Blazor.Components.FormPageBase.Paging.get -> Polhem.UI.Core.Lists.ListPagingState!
+Polhem.Web.Blazor.Components.FormPageBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState!
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.Paging.get -> Polhem.UI.Core.Connectors.ListPagingState!
+*REMOVED*Polhem.Web.Blazor.Controls.ColumnFilterChange.ColumnFilterChange(Polhem.Definition.Forms.FormField! Field, Polhem.UI.Core.Connectors.ColumnFilterKind Kind, string! First, string! Second) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.ColumnFilterChange.Deconstruct(out Polhem.Definition.Forms.FormField! Field, out Polhem.UI.Core.Connectors.ColumnFilterKind Kind, out string! First, out string! Second) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.get -> Polhem.UI.Core.Connectors.ColumnFilterKind
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.FilterKind(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Connectors.ColumnFilterKind
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.Filters.get -> Polhem.UI.Core.Connectors.ListFilterState?

@@ -2,10 +2,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Reflection;
 using Avalonia.Controls;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {

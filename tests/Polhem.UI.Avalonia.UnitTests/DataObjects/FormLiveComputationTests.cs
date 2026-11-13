@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Core.Data;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 {

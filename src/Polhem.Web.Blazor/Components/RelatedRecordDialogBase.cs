@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Definitions;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
@@ -11,6 +10,7 @@ using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.UI.Core.Permissions;
 using Polhem.UI.Core.DataObjects;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.Components
 {

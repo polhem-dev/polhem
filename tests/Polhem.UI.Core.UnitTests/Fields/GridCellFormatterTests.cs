@@ -1,12 +1,12 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Core.Data;
-using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core.Fields;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Core.UnitTests.Fields
 {

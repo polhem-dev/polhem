@@ -1,10 +1,10 @@
 using Polhem.Api.Contracts.Form;
 using Polhem.Core.Exceptions;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Definitions;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.Views
 {

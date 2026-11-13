@@ -1,1 +1,9 @@
 #nullable enable
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceCollectionExtensions
+Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceProviderExtensions
+static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Polhem.Web.Blazor.Wasm.DependencyInjection.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture(this System.IServiceProvider! services) -> void
+*REMOVED*Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions
+*REMOVED*Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions
+*REMOVED*static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceCollectionExtensions.AddPolhemShell(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Shell.PolhemShellOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+*REMOVED*static Polhem.Web.Blazor.Wasm.Shell.PolhemShellServiceProviderExtensions.ApplyPolhemShellCulture(this System.IServiceProvider! services) -> void

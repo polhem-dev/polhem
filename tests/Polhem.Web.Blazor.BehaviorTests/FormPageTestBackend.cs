@@ -15,6 +15,7 @@ using Polhem.Definition.Settings;
 using Polhem.UI.Core;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Identity;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {

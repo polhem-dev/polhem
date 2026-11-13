@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.Components
 {

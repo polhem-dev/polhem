@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Reflection;
 using Polhem.Db;
 using Polhem.Tests.Shared;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
-using Polhem.UI.Core.Connectors;
 using Polhem.Web.Blazor.Components;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
 {

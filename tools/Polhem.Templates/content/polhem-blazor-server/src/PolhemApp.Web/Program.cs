@@ -16,7 +16,7 @@ using Polhem.Db.Providers.Sqlite;
 #endif
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
-using Polhem.Hosting;
+using Polhem.Hosting.DependencyInjection;
 using Polhem.Hosting.Database;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 #if (ui == "fluent")
@@ -24,7 +24,6 @@ using Polhem.Web.Blazor.Fluent.DependencyInjection;
 #else
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 #endif
-using Polhem.Web.Blazor.Server.Shell;
 using PolhemApp.Web.Components;
 
 #if (database == "SqlServer")

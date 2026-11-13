@@ -37,7 +37,7 @@ entry point (service locator).
 
 Host package selection:
 
-- **ASP.NET Core web host**: reference `Polhem.Hosting` and `Polhem.JsonRpc.AspNetCore`. Add `using Polhem.Hosting;` for `AddPolhemFramework` and `AddPolhemApiKeyGateCheck`, and `using Polhem.JsonRpc.AspNetCore;` for `AddJsonRpcServer` and `MapJsonRpc`. `services.AddJsonRpcServer()` builds on the JSON-RPC options `AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` publishes the `POST /api` endpoint; there is no controller to write.
+- **ASP.NET Core web host**: reference `Polhem.Hosting` and `Polhem.JsonRpc.AspNetCore`. Add `using Polhem.Hosting.DependencyInjection;` for `AddPolhemFramework` and `AddPolhemApiKeyGateCheck`, and `using Polhem.JsonRpc.AspNetCore;` for `AddJsonRpcServer` and `MapJsonRpc`. `services.AddJsonRpcServer()` builds on the JSON-RPC options `AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` publishes the `POST /api` endpoint; there is no controller to write.
 - **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to `PolhemApiClient.CreateLocal(provider)`, or, in a head that uses `Polhem.UI.ApiBridge`, assign it to `ClientInfo.LocalServiceProvider`.
 
 `AddPolhemFramework` also registers hosted services, among them the startup registration of the reserved progIds, the cross-process cache-notify poller and the expired-session cleanup. They start only when the provider belongs to a .NET Generic Host (`WebApplication`, `Host.CreateApplicationBuilder`); a provider built with `BuildServiceProvider()` alone does not start them.
@@ -905,7 +905,7 @@ Blazor Server uses ASP.NET Core DI to hand out the API client. **Each SignalR ci
 **1. Register in `Program.cs`**:
 
 ```csharp
-using Polhem.Hosting;                               // AddPolhemFramework
+using Polhem.Hosting.DependencyInjection;                               // AddPolhemFramework
 using Polhem.Web.Blazor.Mud.DependencyInjection;    // AddPolhemMud
 using Polhem.Web.Blazor.Server.DependencyInjection; // AddPolhemBlazor
 

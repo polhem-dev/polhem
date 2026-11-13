@@ -20,7 +20,6 @@
 ```csharp
 using Polhem.Web.Blazor.Mud.DependencyInjection;
 using Polhem.Web.Blazor.Wasm.DependencyInjection;
-using Polhem.Web.Blazor.Wasm.Shell;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<Routes>("#app");

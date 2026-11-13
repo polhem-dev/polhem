@@ -2,13 +2,13 @@ using Polhem.JsonRpc.Payload;
 using Polhem.Api.Core.Transformers;
 using Polhem.Core;
 using Polhem.Definition;
-using Polhem.Hosting;
 using Polhem.LoadTests.Caching;
 using Polhem.LoadTests.Configuration;
 using Polhem.ObjectCaching;
 using Polhem.ObjectCaching.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.LoadTests.Bootstrap
 {

@@ -1,9 +1,9 @@
 using System.ComponentModel;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core.Fields;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Core.UnitTests.Fields
 {

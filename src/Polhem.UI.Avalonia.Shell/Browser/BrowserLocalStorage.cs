@@ -11,7 +11,7 @@ namespace Polhem.UI.Avalonia.Shell.Browser
     /// <remarks>
     /// The browser runtime has no persistent file system, so the default file-backed storage loses its writes on
     /// reload. A browser head assigns one instance to <see cref="ClientInfo.EndpointStorage"/>,
-    /// <see cref="ClientInfo.ApiKeyStorage"/> and <see cref="ShellOptions.PreferenceStorage"/> before any code calls
+    /// <see cref="ClientInfo.ApiKeyStorage"/> and <see cref="PolhemShellOptions.PreferenceStorage"/> before any code calls
     /// <see cref="ClientInfo.InitializeAsync(string, System.Threading.CancellationToken)"/>.
     /// <para>
     /// Mirroring <see cref="FileEndpointStorage"/>, <see cref="SetEndpoint"/> and <see cref="SetApiKey"/> change an

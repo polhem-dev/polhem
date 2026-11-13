@@ -7,7 +7,7 @@ using Polhem.Definition.Sorting;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls.Editors;
-using Polhem.UI.Core.Connectors;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
 {

@@ -6,8 +6,8 @@ using Polhem.Definition;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Fields;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Components
 {

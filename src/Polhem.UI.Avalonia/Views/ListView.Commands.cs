@@ -5,8 +5,8 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
-using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Permissions;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Avalonia.Views
 {

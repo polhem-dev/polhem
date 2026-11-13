@@ -23,3 +23,157 @@ const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
 Polhem.Definition.Filters.FilterGroup.NodesSpecified.get -> bool
 Polhem.Definition.Organization.DepartmentNode.ChildrenSpecified.get -> bool
 *REMOVED*Polhem.Definition.Forms.FieldMappingCollection.FindByDestination(string! destinationField) -> Polhem.Definition.Forms.FieldMapping?
+*REMOVED*Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.get -> Polhem.Definition.CompanyAllowedCurrencies!
+*REMOVED*Polhem.Definition.RoundingContext.RoundingContext() -> void
+*REMOVED*static Polhem.Definition.NumberKindProfile.GetRoundingPolicy(Polhem.Definition.NumberKind kind) -> Polhem.Definition.RoundingPolicy
+*REMOVED*Polhem.Definition.CompanyNumberFormats
+Polhem.Definition.Numbers.RoundingContext.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+static Polhem.Definition.Numbers.NumberKindProfile.GetDecimalsSource(Polhem.Definition.Numbers.NumberKind kind) -> Polhem.Definition.Numbers.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.SystemFixed = 3 -> Polhem.Definition.Numbers.DecimalsSource
+*REMOVED*static Polhem.Definition.NumberFormatResolver.RoundCash(decimal total, string! currencyCode, Polhem.Definition.RoundingContext! ctx) -> decimal
+Polhem.Definition.Numbers.NumberFormatItem.Kind.set -> void
+Polhem.Definition.Numbers.NumberKind.Percent = 4 -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*Polhem.Definition.NumberFormatItem.NumberFormatItem(Polhem.Definition.NumberKind kind, int decimals) -> void
+*REMOVED*static Polhem.Definition.RoundingContext.ForCompany(Polhem.Definition.Identity.CompanyInfo? company) -> Polhem.Definition.RoundingContext!
+*REMOVED*Polhem.Definition.NumberKind.UnitPrice = 5 -> Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.Forms.FormField.NumberKind.get -> Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+Polhem.Definition.Numbers.RoundingPolicy.Preserve = 1 -> Polhem.Definition.Numbers.RoundingPolicy
+Polhem.Definition.Numbers.DecimalsSource.Unit = 2 -> Polhem.Definition.Numbers.DecimalsSource
+*REMOVED*Polhem.Definition.RoundingContext.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Definition.Numbers.NumberFormatItem.Decimals.get -> int
+Polhem.Definition.Numbers.RoundingContext.UnitSettings.init -> void
+*REMOVED*Polhem.Definition.RoundingContext.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Definition.Numbers.NumberKind.Amount = 3 -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*Polhem.Definition.CashRoundingItem.CurrencyCode.set -> void
+Polhem.Definition.Numbers.AllowedCurrencyItem.Code.get -> string!
+*REMOVED*Polhem.Definition.DecimalsSource.Company = 0 -> Polhem.Definition.DecimalsSource
+static Polhem.Definition.Numbers.NumberKindProfile.GetDefaultDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundCash(decimal total, string! currencyCode, Polhem.Definition.Numbers.RoundingContext! ctx) -> decimal
+*REMOVED*Polhem.Definition.AllowedCurrencyItem
+*REMOVED*Polhem.Definition.CompanyAllowedCurrencies.CompanyAllowedCurrencies() -> void
+Polhem.Definition.Numbers.CashRoundingItem.CurrencyCode.set -> void
+*REMOVED*Polhem.Definition.NumberFormatItem.NumberFormatItem() -> void
+*REMOVED*Polhem.Definition.AllowedCurrencyItem.Code.set -> void
+Polhem.Definition.Numbers.AllowedCurrencyItem
+*REMOVED*Polhem.Definition.Identity.CompanyInfo.NumberFormats.get -> Polhem.Definition.CompanyNumberFormats!
+*REMOVED*Polhem.Definition.CashRoundingItem
+Polhem.Definition.Numbers.NumberKind.UnitPrice = 5 -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*Polhem.Definition.CashRoundingItem.CashRoundingItem(string! currencyCode, decimal unit) -> void
+Polhem.Definition.Numbers.CashRoundingItem
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveDecimals(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> int
+Polhem.Definition.Numbers.NumberFormatItem.NumberFormatItem(Polhem.Definition.Numbers.NumberKind kind, int decimals) -> void
+Polhem.Definition.Numbers.CashRoundingItem.Unit.set -> void
+Polhem.Definition.Numbers.CompanyNumberFormats.FindDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int?
+*REMOVED*Polhem.Definition.CompanyCashRounding.GetCashRounding(string! currencyCode, Polhem.Definition.Settings.CurrencySettings! currencySettings) -> decimal
+Polhem.Definition.Numbers.RoundingContext.CurrencySettings.init -> void
+Polhem.Definition.Layouts.LayoutFieldBase.NumberKind.get -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.AllowedCurrencyItem.AllowedCurrencyItem() -> void
+Polhem.Definition.Numbers.RoundingContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Definition.Numbers.RoundingContext.Company.init -> void
+Polhem.Definition.Numbers.NumberKind.Quantity = 1 -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*Polhem.Definition.NumberFormatItem.Decimals.set -> void
+*REMOVED*Polhem.Definition.NumberKind.Amount = 3 -> Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.CompanyNumberFormats.FindDecimals(Polhem.Definition.NumberKind kind) -> int?
+Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> void
+*REMOVED*static Polhem.Definition.NumberFormatResolver.ResolveFormat(Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> string!
+Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.get -> Polhem.Definition.Numbers.CompanyAllowedCurrencies!
+*REMOVED*Polhem.Definition.CompanyAllowedCurrencies.GetAllowedCurrencies(Polhem.Definition.Settings.CurrencySettings! currencySettings) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.Definition.CashRoundingItem.CurrencyCode.get -> string!
+*REMOVED*Polhem.Definition.NumberKind.ExchangeRate = 7 -> Polhem.Definition.NumberKind
+*REMOVED*static Polhem.Definition.NumberKindProfile.GetDecimalsSource(Polhem.Definition.NumberKind kind) -> Polhem.Definition.DecimalsSource
+Polhem.Definition.Numbers.CompanyCashRounding.FindUnit(string! currencyCode) -> decimal?
+Polhem.Definition.Numbers.DecimalsSource.Currency = 1 -> Polhem.Definition.Numbers.DecimalsSource
+*REMOVED*Polhem.Definition.AllowedCurrencyItem.AllowedCurrencyItem() -> void
+Polhem.Definition.Numbers.NumberKind.ExchangeRate = 7 -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*Polhem.Definition.DecimalsSource.SystemFixed = 3 -> Polhem.Definition.DecimalsSource
+static Polhem.Definition.Numbers.RoundingContext.ForCompany(Polhem.Definition.Identity.CompanyInfo? company) -> Polhem.Definition.Numbers.RoundingContext!
+Polhem.Definition.Numbers.NumberFormatItem.Decimals.set -> void
+*REMOVED*static Polhem.Definition.NumberFormatResolver.ResolveDecimals(Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> int
+*REMOVED*Polhem.Definition.CompanyCashRounding
+Polhem.Definition.Numbers.NumberFormatItem.Kind.get -> Polhem.Definition.Numbers.NumberKind
+*REMOVED*static Polhem.Definition.NumberKindProfile.GetFormatLetter(Polhem.Definition.NumberKind kind) -> char
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveDecimals(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> int
+*REMOVED*Polhem.Definition.RoundingContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Definition.Numbers.CashRoundingItem.CurrencyCode.get -> string!
+Polhem.Definition.Numbers.CompanyCashRounding.GetCashRounding(string! currencyCode, Polhem.Definition.Settings.CurrencySettings! currencySettings) -> decimal
+*REMOVED*Polhem.Definition.CashRoundingItem.CashRoundingItem() -> void
+Polhem.Definition.Numbers.RoundingContext
+Polhem.Definition.Numbers.CompanyAllowedCurrencies.CompanyAllowedCurrencies() -> void
+*REMOVED*Polhem.Definition.NumberKind.Cost = 6 -> Polhem.Definition.NumberKind
+*REMOVED*static Polhem.Definition.NumberKindProfile.GetDefaultDecimals(Polhem.Definition.NumberKind kind) -> int
+Polhem.Definition.Numbers.CompanyNumberFormats
+Polhem.Definition.Forms.FormField.NumberKind.get -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.CashRoundingItem.CashRoundingItem(string! currencyCode, decimal unit) -> void
+Polhem.Definition.Numbers.NumberFormatItem.NumberFormatItem() -> void
+Polhem.Definition.Numbers.NumberFormatItem
+*REMOVED*Polhem.Definition.AllowedCurrencyItem.AllowedCurrencyItem(string! code) -> void
+*REMOVED*static Polhem.Definition.NumberKindProfile.BuildFormatString(Polhem.Definition.NumberKind kind, int decimals) -> string!
+Polhem.Definition.Numbers.NumberKind.Weight = 2 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Numbers.CompanyNumberFormats.CompanyNumberFormats() -> void
+Polhem.Definition.Numbers.CompanyCashRounding
+*REMOVED*Polhem.Definition.CompanyAllowedCurrencies
+*REMOVED*Polhem.Definition.NumberKind.None = 0 -> Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.DecimalsSource.Currency = 1 -> Polhem.Definition.DecimalsSource
+*REMOVED*Polhem.Definition.NumberFormatItem.Kind.set -> void
+Polhem.Definition.Numbers.NumberKindProfile
+*REMOVED*Polhem.Definition.NumberFormatItem.Kind.get -> Polhem.Definition.NumberKind
+Polhem.Definition.Numbers.AllowedCurrencyItem.AllowedCurrencyItem(string! code) -> void
+*REMOVED*static Polhem.Definition.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> decimal
+*REMOVED*Polhem.Definition.NumberKind.Weight = 2 -> Polhem.Definition.NumberKind
+Polhem.Definition.Numbers.CashRoundingItem.Unit.get -> decimal
+*REMOVED*Polhem.Definition.CompanyCashRounding.FindUnit(string! currencyCode) -> decimal?
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> decimal
+*REMOVED*Polhem.Definition.DecimalsSource.Unit = 2 -> Polhem.Definition.DecimalsSource
+*REMOVED*Polhem.Definition.RoundingContext.CurrencySettings.init -> void
+*REMOVED*Polhem.Definition.RoundingPolicy.Round = 0 -> Polhem.Definition.RoundingPolicy
+Polhem.Definition.Identity.CompanyInfo.CashRounding.get -> Polhem.Definition.Numbers.CompanyCashRounding!
+Polhem.Definition.Numbers.CompanyAllowedCurrencies
+static Polhem.Definition.Numbers.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> decimal
+*REMOVED*Polhem.Definition.CompanyCashRounding.CompanyCashRounding() -> void
+*REMOVED*Polhem.Definition.NumberFormatItem
+Polhem.Definition.Numbers.NumberKind
+static Polhem.Definition.Numbers.NumberKindProfile.BuildFormatString(Polhem.Definition.Numbers.NumberKind kind, int decimals) -> string!
+*REMOVED*Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.RoundingContext.UnitSettings.init -> void
+*REMOVED*Polhem.Definition.RoundingContext
+*REMOVED*Polhem.Definition.NumberFormatResolver
+*REMOVED*Polhem.Definition.RoundingPolicy.Preserve = 1 -> Polhem.Definition.RoundingPolicy
+Polhem.Definition.Numbers.NumberKind.Cost = 6 -> Polhem.Definition.Numbers.NumberKind
+Polhem.Definition.Identity.CompanyInfo.GetDecimals(Polhem.Definition.Numbers.NumberKind kind) -> int
+Polhem.Definition.Forms.FormExpressionCalculator.ApplyComputedRow(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*static Polhem.Definition.NumberFormatResolver.ResolveFormat(Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> string!
+*REMOVED*Polhem.Definition.Identity.CompanyInfo.GetDecimals(Polhem.Definition.NumberKind kind) -> int
+Polhem.Definition.Numbers.RoundingPolicy
+*REMOVED*Polhem.Definition.CompanyNumberFormats.CompanyNumberFormats() -> void
+Polhem.Definition.Numbers.DecimalsSource
+*REMOVED*Polhem.Definition.NumberKind.Quantity = 1 -> Polhem.Definition.NumberKind
+*REMOVED*static Polhem.Definition.NumberFormatResolver.RoundByKind(decimal value, Polhem.Definition.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> decimal
+static Polhem.Definition.Numbers.NumberKindProfile.GetRoundingPolicy(Polhem.Definition.Numbers.NumberKind kind) -> Polhem.Definition.Numbers.RoundingPolicy
+*REMOVED*Polhem.Definition.Identity.CompanyInfo.CashRounding.get -> Polhem.Definition.CompanyCashRounding!
+*REMOVED*Polhem.Definition.NumberKindProfile
+Polhem.Definition.Numbers.NumberKind.None = 0 -> Polhem.Definition.Numbers.NumberKind
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveFormat(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Numbers.RoundingContext! ctx, string? refCode = null) -> string!
+Polhem.Definition.Numbers.CompanyAllowedCurrencies.GetAllowedCurrencies(Polhem.Definition.Settings.CurrencySettings! currencySettings) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Numbers.NumberFormatResolver
+Polhem.Definition.Numbers.RoundingContext.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Definition.Identity.CompanyInfo.NumberFormats.get -> Polhem.Definition.Numbers.CompanyNumberFormats!
+static Polhem.Definition.Numbers.NumberFormatResolver.ResolveFormat(Polhem.Definition.Numbers.NumberKind kind, Polhem.Definition.Identity.CompanyInfo? company) -> string!
+Polhem.Definition.Numbers.CompanyCashRounding.CompanyCashRounding() -> void
+*REMOVED*Polhem.Definition.CashRoundingItem.Unit.get -> decimal
+*REMOVED*Polhem.Definition.Layouts.LayoutFieldBase.NumberKind.get -> Polhem.Definition.NumberKind
+static Polhem.Definition.Numbers.NumberKindProfile.GetFormatLetter(Polhem.Definition.Numbers.NumberKind kind) -> char
+*REMOVED*Polhem.Definition.NumberFormatItem.Decimals.get -> int
+*REMOVED*Polhem.Definition.AllowedCurrencyItem.Code.get -> string!
+Polhem.Definition.Numbers.CashRoundingItem.CashRoundingItem() -> void
+*REMOVED*Polhem.Definition.Forms.FormExpressionCalculator.ApplyComputedRow(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.Definition.RoundingContext.Company.init -> void
+Polhem.Definition.Numbers.RoundingContext.RoundingContext() -> void
+*REMOVED*Polhem.Definition.RoundingPolicy
+Polhem.Definition.Numbers.RoundingPolicy.Round = 0 -> Polhem.Definition.Numbers.RoundingPolicy
+*REMOVED*Polhem.Definition.CashRoundingItem.Unit.set -> void
+Polhem.Definition.Numbers.AllowedCurrencyItem.Code.set -> void
+*REMOVED*Polhem.Definition.NumberKind.Percent = 4 -> Polhem.Definition.NumberKind
+*REMOVED*Polhem.Definition.DecimalsSource
+Polhem.Definition.Numbers.DecimalsSource.Company = 0 -> Polhem.Definition.Numbers.DecimalsSource
+*REMOVED*static Polhem.Definition.NumberFormatResolver.ResolveDecimals(Polhem.Definition.NumberKind kind, Polhem.Definition.RoundingContext! ctx, string? refCode = null) -> int

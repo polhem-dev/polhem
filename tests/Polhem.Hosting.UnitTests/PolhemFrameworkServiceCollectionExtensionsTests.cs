@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {

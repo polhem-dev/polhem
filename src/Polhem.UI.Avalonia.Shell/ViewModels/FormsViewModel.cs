@@ -26,7 +26,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
     /// </remarks>
     internal sealed partial class FormsViewModel : ViewModelBase
     {
-        private readonly ShellOptions _options;
+        private readonly PolhemShellOptions _options;
         private readonly Func<Task> _signOut;
         private readonly Action _onSignedOut;
 
@@ -37,7 +37,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// <summary>Initializes the forms screen, signing out through <see cref="ClientInfo.ApiClient"/>.</summary>
         /// <param name="options">The application's options.</param>
         /// <param name="onSignedOut">Invoked after signing out.</param>
-        public FormsViewModel(ShellOptions options, Action onSignedOut)
+        public FormsViewModel(PolhemShellOptions options, Action onSignedOut)
             : this(options, LoadMenuAsync, SignOutOfServerAsync, onSignedOut)
         {
         }
@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// <param name="loadMenu">Loads the menu rows.</param>
         /// <param name="signOut">Ends the session.</param>
         /// <param name="onSignedOut">Invoked after signing out, whether or not the server answered.</param>
-        internal FormsViewModel(ShellOptions options, Func<Task<IReadOnlyList<NavItem>>> loadMenu, Func<Task> signOut,
+        internal FormsViewModel(PolhemShellOptions options, Func<Task<IReadOnlyList<NavItem>>> loadMenu, Func<Task> signOut,
             Action onSignedOut)
         {
             ArgumentNullException.ThrowIfNull(options);

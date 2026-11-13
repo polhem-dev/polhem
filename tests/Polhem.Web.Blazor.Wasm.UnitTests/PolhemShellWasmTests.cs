@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Polhem.Web.Blazor.Shell;
 using Polhem.Web.Blazor.Wasm.Shell;
+using Polhem.Web.Blazor.Wasm.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Wasm.UnitTests
 {

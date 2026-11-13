@@ -15,6 +15,7 @@ using Polhem.LoadTests.Scenarios;
 using Polhem.LoadTests.Serving;
 using Polhem.JsonRpc.Server;
 using Microsoft.Extensions.DependencyInjection;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.LoadTests
 {

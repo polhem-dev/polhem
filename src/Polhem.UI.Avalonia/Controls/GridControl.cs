@@ -10,6 +10,7 @@ using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.Definition.Language;
 using Polhem.UI.Core.Editing;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.Controls
 {

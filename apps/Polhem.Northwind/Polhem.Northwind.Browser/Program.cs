@@ -93,7 +93,7 @@ internal sealed partial class Program
     /// <remarks>
     /// The shell opens a link through the browser launcher, which opens a new tab.
     /// </remarks>
-    private static void AddDemoSiteLinks(ShellOptions options, Uri page)
+    private static void AddDemoSiteLinks(PolhemShellOptions options, Uri page)
     {
         options.SignInLinksTitle = NorthwindDemoSite.LinksTitle;
         foreach (var (text, href) in NorthwindDemoSite.FrontEnds)

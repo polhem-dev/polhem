@@ -9,9 +9,9 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Connectors;
 using Polhem.UI.Core.Definitions;
 using Polhem.Definition.Language;
+using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Avalonia.Views
 {

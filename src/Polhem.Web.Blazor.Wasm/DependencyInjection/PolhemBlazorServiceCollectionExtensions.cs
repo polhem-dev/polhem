@@ -14,7 +14,10 @@ namespace Polhem.Web.Blazor.Wasm.DependencyInjection
         /// <see cref="PolhemBlazorOptions"/>.
         /// </summary>
         /// <param name="services">The service collection.</param>
-        /// <param name="configure">Sets the endpoint and the other options.</param>
+        /// <param name="configure">
+        /// Sets the endpoint and the other options. Required, unlike on Blazor Server: a WebAssembly client has no backend
+        /// in its process, so it always needs the endpoint to call.
+        /// </param>
         /// <returns><paramref name="services"/>.</returns>
         /// <exception cref="ArgumentException"><see cref="PolhemBlazorOptions.Endpoint"/> was left empty.</exception>
         public static IServiceCollection AddPolhemBlazor(this IServiceCollection services,

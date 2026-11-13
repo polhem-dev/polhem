@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Serialization;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests.Identity
 {

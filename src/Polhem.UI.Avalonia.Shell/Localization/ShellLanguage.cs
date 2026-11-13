@@ -32,7 +32,7 @@ namespace Polhem.UI.Avalonia.Shell.Localization
         /// </summary>
         /// <param name="requested">The language named on the command line; empty when none was.</param>
         /// <param name="remembered">The stored choice; empty when the viewer never chose.</param>
-        /// <param name="configured">The application's <see cref="ShellOptions.DefaultLanguage"/>; empty when it has none.</param>
+        /// <param name="configured">The application's <see cref="PolhemShellOptions.DefaultLanguage"/>; empty when it has none.</param>
         /// <param name="system">The operating system's interface culture.</param>
         public static string ResolveInitial(string? requested, string? remembered, string? configured, CultureInfo system)
         {

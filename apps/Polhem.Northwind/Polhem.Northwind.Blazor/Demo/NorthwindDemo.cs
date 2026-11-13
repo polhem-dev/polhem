@@ -10,9 +10,9 @@ using Polhem.Core;
 using Polhem.Db;
 using Polhem.Definition.Database;
 using Polhem.Definition.Security;
-using Polhem.Hosting;
 using Polhem.JsonRpc.AspNetCore;
 using Polhem.Northwind.Demo;
+using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.Northwind.Blazor.Demo;
 

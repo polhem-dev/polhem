@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Core.Data;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.DataObjects;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Web.Blazor.UnitTests.DataObjects
 {

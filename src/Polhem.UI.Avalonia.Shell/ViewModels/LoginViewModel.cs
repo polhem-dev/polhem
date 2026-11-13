@@ -46,7 +46,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// <summary>
         /// Initializes a new instance that signs in through <see cref="ClientInfo.SystemApiConnector"/>.
         /// </summary>
-        public LoginViewModel(ShellOptions options, IShellPreferenceStorage preferences, Action onLoggedIn)
+        public LoginViewModel(PolhemShellOptions options, IShellPreferenceStorage preferences, Action onLoggedIn)
             : this(options, preferences, SignInAsync, onLoggedIn)
         {
         }
@@ -58,7 +58,7 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         /// <param name="preferences">Where the last company is remembered.</param>
         /// <param name="signIn">Signs in with a user id, a password and a company id.</param>
         /// <param name="onLoggedIn">Invoked after a successful sign-in.</param>
-        internal LoginViewModel(ShellOptions options, IShellPreferenceStorage preferences,
+        internal LoginViewModel(PolhemShellOptions options, IShellPreferenceStorage preferences,
             Func<string, string, string, Task<SignInResult>> signIn, Action onLoggedIn)
         {
             ArgumentNullException.ThrowIfNull(options);

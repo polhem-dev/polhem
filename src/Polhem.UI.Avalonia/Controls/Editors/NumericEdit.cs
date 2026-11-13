@@ -1,9 +1,9 @@
 using System.Globalization;
 using Avalonia.Media;
-using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Core.Fields;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {

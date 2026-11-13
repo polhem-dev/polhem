@@ -6,6 +6,7 @@ using Polhem.Core.Exceptions;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Settings;
 using Polhem.Expressions;
+using Polhem.Definition.Numbers;
 
 namespace Polhem.Definition.UnitTests.Forms
 {
