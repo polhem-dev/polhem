@@ -195,7 +195,7 @@
                 <TextBox DockPanel.Dock="Top" x:Name="SidebarFilterBox" Classes="clearButton search-box"
                          Margin="10,0,10,6" IsVisible="{Binding IsSolutionOpened}"
                          Text="{Binding SidebarFilter, Mode=TwoWay}"
-                         Watermark="{loc:Loc Sidebar_FilterWatermark}"
+                         PlaceholderText="{loc:Loc Sidebar_FilterWatermark}"
                          AutomationProperties.Name="{loc:Loc Sidebar_FilterWatermark}">
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Escape" Command="{Binding ClearSidebarFilterCommand}"/>
@@ -347,7 +347,7 @@
             <DockPanel>
                 <TextBox x:Name="QuickOpenBox" DockPanel.Dock="Top" Margin="6" Classes="search-box"
                          Text="{Binding QuickOpenText, Mode=TwoWay}"
-                         Watermark="{loc:Loc QuickOpen_Watermark}"
+                         PlaceholderText="{loc:Loc QuickOpen_Watermark}"
                          AutomationProperties.Name="{loc:Loc QuickOpen_Watermark}"
                          KeyDown="OnQuickOpenKeyDown">
                     <TextBox.InnerLeftContent>
