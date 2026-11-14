@@ -96,8 +96,15 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
             _playwright?.Dispose();
             if (_app is not null) await _app.DisposeAsync().ConfigureAwait(false);
             SqliteConnection.ClearAllPools();
-            try { Directory.Delete(_root, recursive: true); }
-            catch (IOException) { /* best effort: a file the runtime still holds is left for the temp cleaner. */ }
+            try
+            {
+                Directory.Delete(_root, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A file the runtime still holds is left for the temp cleaner; the run's result does not depend on it.
+                Trace.TraceWarning($"Could not delete {_root}: {ex.Message}");
+            }
         }
 
         // Only a publish trims, and trimming is where a browser build differs from the desktop the most. The
@@ -107,19 +114,29 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
             var configuration = typeof(WireSiteFixture).Assembly
                 .GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration ?? "Release";
             var project = Path.Combine(RepoRoot.Find(), "tests", "Polhem.Web.Blazor.Wasm.WireApp", "Polhem.Web.Blazor.Wasm.WireApp.csproj");
-            var start = new ProcessStartInfo("dotnet")
+            // The SDK that runs the tests, so a second SDK on the PATH cannot publish with other settings.
+            var start = new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } host ? host : "dotnet")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            foreach (var argument in new[] { "publish", project, "--configuration", configuration, "--output", output, "--nologo" })
+            foreach (var argument in new[] { "publish", project, "--configuration", configuration, "--output", output, "--nologo", "-nodeReuse:false" })
                 start.ArgumentList.Add(argument);
 
             using var process = Process.Start(start)!;
             var stdout = process.StandardOutput.ReadToEndAsync();
             var stderr = process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync().ConfigureAwait(false);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill(entireProcessTree: true);
+                throw new TimeoutException("Publishing the wire test page did not finish within five minutes.");
+            }
             if (process.ExitCode != 0)
             {
                 throw new InvalidOperationException(

@@ -1,6 +1,10 @@
 using System.ComponentModel;
+using System.Data;
 using System.Text.Json;
 using Polhem.Api.Client;
+using Polhem.Definition;
+using Polhem.Definition.Filters;
+using Polhem.Definition.Sorting;
 using Polhem.Web.Blazor.BrowserTests;
 
 namespace Polhem.Web.Blazor.Wasm.BrowserTests
@@ -48,7 +52,7 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
                 var read = browser.Single(step => step.Name == $"read back {row}").Values;
                 Assert.All(saved, pair => Assert.Equal(pair.Value, read[pair.Key]));
                 Assert.Equal("assigned", read[WireSample.AutoIncrementField]);
-                Assert.EndsWith(":recent", read[WireSample.ServerTimeField], StringComparison.Ordinal);
+                Assert.EndsWith(":recent", read[WireSample.ServerTimeRecent], StringComparison.Ordinal);
                 Assert.Equal(
                     $"{WireSample.Format(1)}|{WireSample.Format(1.5m)}|{WireSample.Format($"{row}1")};" +
                     $"{WireSample.Format(2)}|{WireSample.Format(3.0m)}|{WireSample.Format($"{row}2")}",
@@ -60,6 +64,35 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
                     $"{filter.Name}: {browser.Single(step => step.Name == $"list {filter.Name}").Values["rows"]}")));
 
             Assert.Equal(Describe(desktop), Describe(browser));
+            await AssertDesktopReadsTheBrowserRowsAsync(scenario, browser);
+        }
+
+        // Each comparison above reads what the same runtime wrote. A defect that the browser makes the same way in both
+        // directions, such as a wrong time zone conversion, would cancel out there. The desktop reads the rows the browser
+        // saved and must find the values the scenario sent, and the same server time the browser read back.
+        private async Task AssertDesktopReadsTheBrowserRowsAsync(string scenario, List<WireStep> browser)
+        {
+            var client = PolhemApiClient.CreateRemote($"{_site.Address}/api", WireSample.ApiKey);
+            await WireScenario.SignInAsync(client);
+            var form = client.Form(WireSample.ProgId);
+            var prefix = $"{WireSample.BrowserRuntime}-{scenario}-";
+            var list = await form.GetListAsync(
+                $"{SysFields.Id},{SysFields.RowId}",
+                FilterCondition.StartsWith(SysFields.Id, prefix),
+                [new SortField(SysFields.Id, SortDirection.Asc)]);
+            var rows = list.Table!.Rows.Cast<DataRow>().ToList();
+
+            Assert.Equal(WireSample.Rows, rows.Select(row => ((string)row[SysFields.Id])[prefix.Length..]));
+            foreach (var row in rows)
+            {
+                var suffix = ((string)row[SysFields.Id])[prefix.Length..];
+                var read = await WireScenario.ReadBackAsync(form, (Guid)row[SysFields.RowId]);
+                var browserRead = browser.Single(step => step.Name == $"read back {suffix}").Values;
+                Assert.All(WireSample.Values(suffix), pair =>
+                    Assert.True(WireSample.Format(pair.Value) == read[pair.Key], $"{suffix}.{pair.Key}: sent {WireSample.Format(pair.Value)}, the desktop read {read[pair.Key]}"));
+                Assert.Equal(browserRead[WireSample.ServerTimeField], read[WireSample.ServerTimeField]);
+                Assert.Equal(browserRead["lines"], read["lines"]);
+            }
         }
 
         private async Task<List<WireStep>> RunInBrowserAsync(string scenario)
@@ -79,9 +112,9 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
         }
 
         // Each run saves and lists only rows that start with its own runtime and scenario, so the two reports can be
-        // compared as text.
+        // compared as text. The server time differs between the two runs' rows and is compared on the same row instead.
         private static string Describe(List<WireStep> steps)
             => string.Join("\n", steps.Select(step =>
-                $"{step.Name} ok={step.Ok} {step.Error} {string.Join(" ", step.Values.Select(pair => $"{pair.Key}={pair.Value}"))}"));
+                $"{step.Name} ok={step.Ok} {step.Error} {string.Join(" ", step.Values.Where(pair => pair.Key != WireSample.ServerTimeField).Select(pair => $"{pair.Key}={pair.Value}"))}"));
     }
 }

@@ -83,6 +83,9 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
         /// </summary>
         public const string ServerTimeField = "v_datetime";
 
+        /// <summary>The report key that says whether <see cref="ServerTimeField"/> holds a recent time, and its kind.</summary>
+        public const string ServerTimeRecent = "v_datetime is recent";
+
         /// <summary>The field the database numbers.</summary>
         public const string AutoIncrementField = "v_sequence";
 

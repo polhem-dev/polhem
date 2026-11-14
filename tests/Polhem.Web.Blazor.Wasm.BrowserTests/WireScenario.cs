@@ -30,14 +30,13 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
         /// <returns>The report, one entry per step.</returns>
         public static async Task<List<WireStep>> RunAsync(PolhemApiClient client, string scenario, string runtime)
         {
-            var prefix = $"{runtime}-{scenario}-";
             ArgumentNullException.ThrowIfNull(client);
+            var prefix = $"{runtime}-{scenario}-";
             var steps = new List<WireStep>();
 
             if (!await RunStepAsync(steps, "sign in", async values =>
             {
-                await client.System.LoginAsync(WireSample.UserId, WireSample.Password).ConfigureAwait(false);
-                await client.System.EnterCompanyAsync(WireSample.CompanyId).ConfigureAwait(false);
+                await SignInAsync(client).ConfigureAwait(false);
                 values["signed in"] = WireSample.Format(client.Session.Credentials.AccessToken != Guid.Empty);
             }).ConfigureAwait(false))
             {
@@ -77,6 +76,42 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
             return steps;
         }
 
+        /// <summary>Signs <paramref name="client"/> in with the sample account and enters the sample company.</summary>
+        /// <param name="client">A client of the backend.</param>
+        public static async Task SignInAsync(PolhemApiClient client)
+        {
+            ArgumentNullException.ThrowIfNull(client);
+            await client.System.LoginAsync(WireSample.UserId, WireSample.Password).ConfigureAwait(false);
+            await client.System.EnterCompanyAsync(WireSample.CompanyId).ConfigureAwait(false);
+        }
+
+        /// <summary>Reads a saved master row back the way the page does, formatting every value it holds.</summary>
+        /// <param name="form">The connector of the sample form.</param>
+        /// <param name="rowId">The row's <c>sys_rowid</c>.</param>
+        /// <returns>The values by field name, the detail lines under <c>lines</c>.</returns>
+        public static async Task<SortedDictionary<string, string>> ReadBackAsync(FormApiConnector form, Guid rowId)
+        {
+            ArgumentNullException.ThrowIfNull(form);
+            var values = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            var dataSet = (await form.GetDataAsync(rowId).ConfigureAwait(false)).DataSet!;
+            var master = dataSet.Tables[WireSample.ProgId]!.Rows[0];
+            foreach (var (name, _) in WireSample.Fields)
+                values[name] = WireSample.Format(master[name]);
+            // The server's own time, held in the user's time zone. Another client reading the same row must see the same
+            // value; against the clock only how recent it is can be checked.
+            values[WireSample.ServerTimeRecent] = master[WireSample.ServerTimeField] is DateTime stored
+                && Math.Abs((stored - DateTime.UtcNow).TotalDays) < 2
+                ? $"datetime:{stored.Kind}:recent"
+                : WireSample.Format(master[WireSample.ServerTimeField]);
+            values[WireSample.AutoIncrementField] = master[WireSample.AutoIncrementField] is int number && number > 0
+                ? "assigned" : WireSample.Format(master[WireSample.AutoIncrementField]);
+            var lines = dataSet.Tables[WireSample.LineTable]!.Rows.Cast<DataRow>()
+                .OrderBy(line => (int)line["line_no"])
+                .Select(line => $"{WireSample.Format(line["line_no"])}|{WireSample.Format(line["qty"])}|{WireSample.Format(line["note"])}");
+            values["lines"] = string.Join(";", lines);
+            return values;
+        }
+
         private static async Task SaveAndReadBackAsync(List<WireStep> steps, FormApiConnector form, string prefix, string row)
         {
             var rowId = Guid.Empty;
@@ -111,21 +146,8 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
 
             await RunStepAsync(steps, $"read back {row}", async values =>
             {
-                var dataSet = (await form.GetDataAsync(rowId).ConfigureAwait(false)).DataSet!;
-                var master = dataSet.Tables[WireSample.ProgId]!.Rows[0];
-                foreach (var (name, _) in WireSample.Fields)
-                    values[name] = WireSample.Format(master[name]);
-                // The server's own time, held in the user's time zone: only how recent it is can be compared.
-                values[WireSample.ServerTimeField] = master[WireSample.ServerTimeField] is DateTime stored
-                    && Math.Abs((stored - DateTime.UtcNow).TotalDays) < 2
-                    ? $"datetime:{stored.Kind}:recent"
-                    : WireSample.Format(master[WireSample.ServerTimeField]);
-                values[WireSample.AutoIncrementField] = master[WireSample.AutoIncrementField] is int number && number > 0
-                    ? "assigned" : WireSample.Format(master[WireSample.AutoIncrementField]);
-                var lines = dataSet.Tables[WireSample.LineTable]!.Rows.Cast<DataRow>()
-                    .OrderBy(line => (int)line["line_no"])
-                    .Select(line => $"{WireSample.Format(line["line_no"])}|{WireSample.Format(line["qty"])}|{WireSample.Format(line["note"])}");
-                values["lines"] = string.Join(";", lines);
+                foreach (var (name, value) in await ReadBackAsync(form, rowId).ConfigureAwait(false))
+                    values[name] = value;
             }).ConfigureAwait(false);
         }
 
