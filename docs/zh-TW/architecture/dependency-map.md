@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: f658dcea41b9386b297f6ad53ad901f2ae272f93 -->
+<!-- source: en/architecture/dependency-map.md blob: 1eebd8932fa6015ec8c0c4aef79f088a593ac046 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -12,7 +12,7 @@
 
 ## 總覽
 
-每個內層方塊是一個區塊，名稱列出其中的專案，並省略 `Polhem.` 前綴。區塊再分成三邊：兩邊都參考的**共用**、**伺服端**與**用戶端**。
+每個內層方塊是一個區塊，名稱列出其中的專案，並省略 `Polhem.` 前綴。區塊再分成三邊：兩邊都參考的**共用**、**伺服端**與**用戶端**。**設計期**放的是定義工具撰寫表單時用的套件，應用程式執行期不參考它。
 
 <!-- dependency-map:overview:start -->
 ```mermaid
@@ -32,6 +32,9 @@ graph BT
     Avalonia["<b>Avalonia 前端</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
     Web["<b>Web 前端</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
   end
+  subgraph DesignSide ["設計期"]
+    Authoring["<b>定義撰寫</b><br/>Definition.Drafting"]
+  end
 
   Wire --> Foundation
   Backend --> Foundation
@@ -47,6 +50,7 @@ graph BT
   Web --> Foundation
   Web --> FrontShared
   Web --> ApiClient
+  Authoring --> Foundation
 ```
 <!-- dependency-map:overview:end -->
 
@@ -58,7 +62,7 @@ graph BT
 
 ## 各區塊的專案
 
-每個區塊一張圖，依共用、伺服端、用戶端的順序排列。實線方塊屬於該區塊，虛線方塊是它依賴的其他區塊專案。這些圖合起來就是 `src/` 中所有的專案參考。`./check-dependency-map.sh` 會在每次推送時，把這些圖和總覽與 csproj 比對。
+每個區塊一張圖，依共用、伺服端、用戶端、設計期的順序排列。實線方塊屬於該區塊，虛線方塊是它依賴的其他區塊專案。這些圖合起來就是 `src/` 中所有的專案參考。`./check-dependency-map.sh` 會在每次推送時，把這些圖和總覽與 csproj 比對。
 
 <!-- dependency-map:areas:start -->
 ### 基礎
@@ -255,6 +259,22 @@ graph BT
   classDef other stroke-dasharray: 5 4
 ```
 
+### 定義撰寫
+
+設計期。透過與 AI 模型的對話，由紙本文件產生表單草稿。它只透過 `IChatClient` 抽象接觸模型，從不參考任何廠商的 SDK。
+
+```mermaid
+graph BT
+  subgraph Authoring ["定義撰寫"]
+    Drafting["Polhem.Definition.Drafting"]
+  end
+  Definition["Polhem.Definition"]:::other
+
+  Drafting --> Definition
+
+  classDef other stroke-dasharray: 5 4
+```
+
 <!-- dependency-map:areas:end -->
 
 ## 外部相依套件
@@ -281,6 +301,7 @@ graph BT
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.UI.Avalonia.Shell | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x, Semi.Avalonia 12.x, Semi.Avalonia.DataGrid 12.x, CommunityToolkit.Mvvm 8.x, Microsoft.Extensions.DependencyInjection 10.x |
+| Polhem.Definition.Drafting | Microsoft.Extensions.AI.Abstractions 10.x, DocumentFormat.OpenXml 3.x |
 | Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core / Polhem.Web.Blazor.Wasm | *(none)* |
 
 <!-- dependency-map:packages:end -->
@@ -311,6 +332,7 @@ graph BT
 
 - **Polhem.Core** 為最底層基礎套件，無任何內部相依性。
 - **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的前端即時預覽）才引用本套件；兩端共用的即時預覽引擎 `Polhem.UI.Core` 的 `FormLiveComputationEngine` 由它們傳入運算引擎。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
+- **Polhem.Definition.Drafting** 供 DefineEditor 這類定義工具使用：透過與 AI 模型的對話，由 PDF、Word 文件或照片產生 `FormSchema` 草稿。它只依賴 `Microsoft.Extensions.AI.Abstractions`，所以模型可以替換：各廠商各有一個提供者套件提供 `IChatClient`；廠商 SDK 一旦進入它的封閉相依，`DraftingDependencyGateTests`（`tests/Polhem.Definition.Drafting.UnitTests`）就會失敗。`DocumentFormat.OpenXml` 用來把 Word 文件讀成 Markdown。
 - **Polhem.Definition** 為被依賴次數最多的專案，直接相依者為 Contracts、Db、RepoAbs、Caching、Business、Api.Core 與 UI.Avalonia。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入**基礎**，而不和 API 專案放在一起。
 - **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Server`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上自成**組合根**一區，不和 `Polhem.Api.Server` 同區：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的是**它本身不含資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
