@@ -32,6 +32,8 @@ namespace Polhem.Definition.Drafting.Session
             - A field with a fixed set of choices gets options; a computed field gets a value expression over other
               field names.
             - Put the text you read a field from in source_quote, so the user can check it.
+            - Make tool calls that do not depend on each other in the same response: create all the fields of a table at
+              once, and search for all the referenced forms at once.
             - A relation whose confidence is below the threshold must be confirmed by the user before mark_ready
               succeeds. When the user confirms it, call set_relation again with confidence 1.
             - The user may edit the draft directly; such edits are announced at the start of their next message. Call

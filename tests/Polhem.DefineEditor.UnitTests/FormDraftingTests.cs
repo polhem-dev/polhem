@@ -127,6 +127,41 @@ public sealed class FormDraftingTests : IDisposable
     }
 
     [Fact]
+    [DisplayName("The host reports a value expression the runtime cannot parse, such as a sum over another table")]
+    public void Validate_ExpressionThatDoesNotParse_ReportsAnError()
+    {
+        var host = new DefineEditorDraftHost(_solution, _define);
+        var draft = LeaveRequest();
+        draft.Tables[0].Fields.Add(new DraftField { FieldName = "days", Caption = "Days", DbType = FieldDbType.Integer });
+        draft.Tables[0].Fields.Add(new DraftField
+        {
+            FieldName = "total", Caption = "Total", DbType = FieldDbType.Decimal, ValueExpression = "SUM(LeaveRequestDetail.days)",
+        });
+
+        var issue = Assert.Single(host.Validate(FormDraftConverter.Convert(draft)), i => i.Severity == DraftIssueSeverity.Error);
+        Assert.Contains("total", issue.Location);
+        Assert.Contains("SUM(LeaveRequestDetail.days)", issue.Message);
+
+        draft.Tables[0].Fields[^1].ValueExpression = "days * 8";
+        Assert.DoesNotContain(host.Validate(FormDraftConverter.Convert(draft)), i => i.Severity == DraftIssueSeverity.Error);
+    }
+
+    [Fact]
+    [DisplayName("The host parses expressions against the fields a relation brings")]
+    public void Validate_ExpressionOverRelationField_Parses()
+    {
+        var host = new DefineEditorDraftHost(_solution, _define);
+        var draft = LeaveRequest();
+        draft.Tables[0].Fields.Add(new DraftField
+        {
+            FieldName = "employee_label", Caption = "Employee Label", DbType = FieldDbType.String, MaxLength = 100,
+            ValueExpression = "ref_employee_id + \" \" + ref_employee_name",
+        });
+
+        Assert.DoesNotContain(host.Validate(FormDraftConverter.Convert(draft)), i => i.Severity == DraftIssueSeverity.Error);
+    }
+
+    [Fact]
     [DisplayName("The preview of a new form is the FormLayout the import writes for it")]
     public void BuildPreviewLayout_NewForm_EqualsTheImportedLayout()
     {

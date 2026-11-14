@@ -105,6 +105,26 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("upsert_field keeps the field's name when renameTo is empty or the word null")]
+        public async Task UpsertField_RenameToWithoutValue_KeepsTheName()
+        {
+            var client = new ScriptedChatClient()
+                .Then(Call("1", "upsert_field", """{"table":"master","fieldName":"reason","caption":"Reason"}"""))
+                .Then(Call("2", "upsert_field", """{"table":"master","fieldName":"reason","captionZhTw":"事由","renameTo":""}"""),
+                    Call("3", "upsert_field", """{"table":"master","fieldName":"reason","dbType":"Text","renameTo":"null"}"""))
+                .Then(Text("Done."));
+            var session = new FormDraftSession(client, new FakeDraftingHost());
+
+            await session.StartAsync(s_document);
+
+            Assert.All(client.LastResults(), result => Assert.DoesNotContain("Error", result.Result?.ToString()));
+            var field = Assert.Single(session.Draft.Tables[0].Fields);
+            Assert.Equal("reason", field.FieldName);
+            Assert.Equal("事由", field.CaptionZhTw);
+            Assert.Equal(FieldDbType.Text, field.DbType);
+        }
+
+        [Fact]
         [DisplayName("mark_ready fails while the host's validation reports an error")]
         public async Task MarkReady_ValidationError_Fails()
         {

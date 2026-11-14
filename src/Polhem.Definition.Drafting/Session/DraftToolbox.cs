@@ -144,13 +144,18 @@ namespace Polhem.Definition.Drafting.Session
             [Description("The maximum length of a String field.")] int? maxLength = null,
             [Description("The editor; omit to let it follow the type.")] ControlType? controlType = null,
             [Description("The choices of a field the document shows as a set of options. An empty list removes them.")] DraftOption[]? options = null,
-            [Description("An expression that computes the field from other fields, such as quantity * unit_price. Empty removes it.")] string? valueExpression = null,
+            [Description("An expression that computes the field from other fields of the same row, such as quantity * unit_price. "
+                + "It cannot read another table or add up detail rows, so leave out totals over detail rows. Subtracting two dates "
+                + "gives a TimeSpan: write (end_date - start_date).Days + 1. Write decimal literals with m, such as amount * 1.05m. "
+                + "Empty removes it.")] string? valueExpression = null,
             [Description("Whether the field must be filled in.")] bool? required = null,
             [Description("The text of the document the field was read from.")] string? sourceQuote = null,
-            [Description("A new field name, to rename the field.")] string? renameTo = null)
+            [Description("A new field name, to rename the field. Omit it to keep the name.")] string? renameTo = null)
         {
             var name = CheckFieldName(fieldName);
-            var newName = renameTo is null ? null : CheckFieldName(renameTo);
+            // Strict tool schemas cannot mark an optional string nullable, so a model that means "no rename" sometimes
+            // sends an empty string or the word null instead of leaving the argument out.
+            var newName = IsNoValue(renameTo) ? null : CheckFieldName(renameTo!);
             var target = FindTable(table);
             if (target is null && !IsMasterKey(table))
                 throw new DraftToolException(NoSuchTable(table) + " Create it with upsert_table first.");
@@ -251,6 +256,9 @@ namespace Polhem.Definition.Drafting.Session
 
         private string NoSuchTable(string table) => $"There is no table '{table}'. Tables: "
             + string.Join(", ", _draft.Tables.Select(DescribeTable).DefaultIfEmpty("(none)")) + ".";
+
+        private static bool IsNoValue(string? value)
+            => string.IsNullOrWhiteSpace(value) || string.Equals(value.Trim(), "null", StringComparison.OrdinalIgnoreCase);
 
         private static string CheckFieldName(string fieldName)
         {
