@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/framework-capabilities.md blob: 5d6348b540828c0f1001e4e330ba49fc4df60bee -->
+<!-- source: en/getting-started/framework-capabilities.md blob: 975d8837520a545fce20d04ba69d9d4a890bfea8 -->
 # 框架機制清單
 
 [English](../../en/getting-started/framework-capabilities.md) · [← 文件索引](../README.md)
@@ -154,5 +154,6 @@
 | **AuditLog 商業物件** | 稽核流的查詢 API，同時提供明細列表與彙總 |
 | **Polhem.Analyzers** | 隨套件發佈的建置期診斷，專案建置時即回報違反慣例之處。見 [Analyzer 規則](../reference/analyzer-rules.md) |
 | **UI 控件家族** | Avalonia（schema 驅動的原生控件子類、Grid、lookup 開窗）與 Blazor；Blazor 可選 MudBlazor（`Polhem.Web.Blazor.Mud`）或 Fluent UI（`Polhem.Web.Blazor.Fluent`），由 Blazor Server（`Polhem.Web.Blazor.Server`）或 Blazor WebAssembly（`Polhem.Web.Blazor.Wasm`）承載 |
+| **從文件草擬表單** | DefineEditor 與 Claude 對話，從 PDF、Word 文件或照片草擬表單，再像 Excel 活頁簿一樣匯入（`Polhem.Definition.Drafting`、`Polhem.AI.Claude`）。見[從文件草擬表單](../guides/document-form-drafting.md) |
 | **`ClientDefineAccess`** | client 經 API 讀取定義並快取，完全不碰檔案系統 |
 | **Client 儲存接縫** | `IEndpointStorage` 與 `IApiKeyStorage` 讓各 head 以自己平台允許的方式持久化端點與金鑰 |

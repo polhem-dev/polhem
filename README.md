@@ -114,12 +114,19 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.Server.dll** | The Blazor Server host of the Blazor head: the circuit client in Local or Remote mode, and the shell's registration and culture endpoint. |
 | **Polhem.Web.Blazor.Wasm.dll** | The Blazor WebAssembly host of the Blazor head: the remote client and the shell's language switch. |
 
+### Form drafting
+
+| Assembly Name | Description |
+|---|---|
+| **Polhem.Definition.Drafting.dll** | Drafts a form from a paper document (a PDF, a Word document or photos) in a conversation with an AI model: reads the documents, runs the tools the model edits the draft with, and turns the draft into a `FormSchema` by fixed rules. Talks to any `IChatClient`; the application supplies its existing forms and its validation (`IFormDraftingHost`). See [Drafting Forms from Documents](https://github.com/polhem-dev/polhem/blob/main/docs/en/guides/document-form-drafting.md). |
+| **Polhem.AI.Claude.dll** | The Claude provider for form drafting: an `IChatClient` over the Anthropic SDK that uses the credential of `ant auth login` or `ANTHROPIC_API_KEY`, and reports which one without reading it. |
+
 ### Tooling (dotnet tools and templates)
 
 | Package | Install | Description |
 |---|---|---|
 | **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`: it materialises the framework's default define files, generates protected keys for `SystemSettings.xml` and works with form workbooks. The commands are in the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists them. |
-| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor` (local tool) | Desktop editor for the definition files, invoked as `dotnet polhem-define [DefinePath]`; imports forms from Excel workbooks. See the [DefineEditor README](https://github.com/polhem-dev/polhem/blob/main/tools/DefineEditor/README.md). |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor` (local tool) | Desktop editor for the definition files, invoked as `dotnet polhem-define [DefinePath]`; imports forms from Excel workbooks, or drafts them from documents with Claude. See the [DefineEditor README](https://github.com/polhem-dev/polhem/blob/main/tools/DefineEditor/README.md). |
 | **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | Database manager invoked as `polhem-db`: creates, checks and upgrades the databases a definition folder describes, for every supported database, without a project. DefineEditor runs it on demand. See the [DbManager README](https://github.com/polhem-dev/polhem/blob/main/tools/DbManager/README.md). |
 | **Polhem.Templates** | `dotnet new install Polhem.Templates` | `dotnet new` templates for a new Polhem application: `polhem-avalonia`, and Blazor Server and Blazor WebAssembly sites on MudBlazor or Fluent UI. See the [Polhem.Templates README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Templates/README.md). |
 
