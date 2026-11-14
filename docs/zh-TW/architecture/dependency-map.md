@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 5f421636c87240832b045e46b9fccfafb6446e37 -->
+<!-- source: en/architecture/dependency-map.md blob: 0655093281a903d811262c71f473aa65019d9f13 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -346,7 +346,7 @@ graph BT
 
 - **Polhem.Core** 為最底層基礎套件，無任何內部相依性。
 - **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的前端即時預覽）才引用本套件；兩端共用的即時預覽引擎 `Polhem.UI.Core` 的 `FormLiveComputationEngine` 由它們傳入運算引擎。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
-- **Polhem.Definition.Drafting** 供 DefineEditor 這類定義工具使用：透過與 AI 模型的對話，由 PDF、Word 文件或照片產生 `FormSchema` 草稿。它只依賴 `Microsoft.Extensions.AI.Abstractions`，所以模型可以替換：各廠商各有一個提供者套件提供 `IChatClient`；廠商 SDK 一旦進入它的封閉相依，`DraftingDependencyGateTests`（`tests/Polhem.Definition.Drafting.UnitTests`）就會失敗。`DocumentFormat.OpenXml` 用來把 Word 文件讀成 Markdown。
+- **Polhem.Definition.Drafting** 供 DefineEditor 這類定義工具使用：透過與 AI 模型的對話，由 PDF、Word 文件或照片產生 `FormSchema` 草稿。它只依賴 `Microsoft.Extensions.AI.Abstractions`，所以模型可以替換：各廠商各有一個提供者套件提供 `IChatClient`；廠商 SDK 一旦進入它的封閉相依，`DraftingDependencyGateTests`（`tests/Polhem.Definition.Drafting.UnitTests`）就會失敗。`DocumentFormat.OpenXml` 用來把 Word 文件讀成 Markdown。見 [adr-064](../../../maintainers/adr/adr-064-document-form-drafting.md)。
 - **Polhem.AI.Claude** 透過官方 `Anthropic` SDK，為 Anthropic 的 Claude 模型提供上述的 `IChatClient`，憑證由 SDK 在本機自行尋找（`ant auth login` 的設定檔或 `ANTHROPIC_API_KEY`）。它不參考任何其他 Polhem 專案，由 `ClaudeDependencyGateTests`（`tests/Polhem.AI.Claude.UnitTests`）檢查。
 - **Polhem.Definition** 為被依賴次數最多的專案，直接相依者為 Contracts、Db、RepoAbs、Caching、Business、Api.Core 與 UI.Avalonia。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入**基礎**，而不和 API 專案放在一起。

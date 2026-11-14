@@ -92,7 +92,8 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj -- path/to/De
   並可接著為新的資料表升級資料庫。見 [用 Excel 建模表單](../../docs/zh-TW/guides/excel-form-modeling.md)。
 - **文件。** **File → 從文件匯入表單** 經你同意後把紙本表單（PDF、Word 或照片）送給 Claude，以對話草擬表單：選取紀錄的欄位會對到
   既有表單、缺的資訊會提問，對話中即時預覽表單畫面。之後按 **產生定義**，以匯入活頁簿的方式匯入。編輯器不保存任何憑證：
-  以 `ant auth login` 登入，或設定 `ANTHROPIC_API_KEY`。
+  以 `ant auth login` 登入，或設定 `ANTHROPIC_API_KEY`。見
+  [從文件草擬表單](../../docs/zh-TW/guides/document-form-drafting.md)。
 
 ### FormLayout：桌面、網頁與手機的即時預覽
 
