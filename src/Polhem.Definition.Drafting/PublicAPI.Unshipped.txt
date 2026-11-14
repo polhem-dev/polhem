@@ -1,10 +1,8 @@
 #nullable enable
-const Polhem.Definition.Drafting.Documents.DocumentSource.MaxDocumentBytes = 33554432 -> long
-const Polhem.Definition.Drafting.Documents.DocumentSource.MaxImageBytes = 5242880 -> long
-const Polhem.Definition.Drafting.FormDraftConverter.PlaceholderProgId = "NewForm" -> string!
-override Polhem.Definition.Drafting.DraftIssue.ToString() -> string!
+Polhem.Definition.Drafting.AssistantMessageEventArgs
+Polhem.Definition.Drafting.AssistantMessageEventArgs.AssistantMessageEventArgs(string! text) -> void
+Polhem.Definition.Drafting.AssistantMessageEventArgs.Text.get -> string!
 Polhem.Definition.Drafting.Documents.DocumentSource
-static Polhem.Definition.Drafting.Documents.DocumentSource.FromFiles(System.Collections.Generic.IEnumerable<string!>! paths) -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>!
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.DocumentTooLargeException(string! fileName, long length, long maxLength) -> void
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.FileName.get -> string!
@@ -105,11 +103,34 @@ Polhem.Definition.Drafting.FormDraftResult.Issues.get -> System.Collections.Gene
 Polhem.Definition.Drafting.FormDraftResult.Menu.get -> Polhem.Definition.Drafting.DraftMenuPlacement!
 Polhem.Definition.Drafting.FormDraftResult.Schema.get -> Polhem.Definition.Forms.FormSchema!
 Polhem.Definition.Drafting.FormDraftResult.ZhTw.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Polhem.Definition.Drafting.FormDraftSession
+Polhem.Definition.Drafting.FormDraftSession.ApplyUserEdit(System.Action<Polhem.Definition.Drafting.FormDraft!>! edit, string! description) -> void
+Polhem.Definition.Drafting.FormDraftSession.AssistantMessage -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageEventArgs!>?
+Polhem.Definition.Drafting.FormDraftSession.Draft.get -> Polhem.Definition.Drafting.FormDraft!
+Polhem.Definition.Drafting.FormDraftSession.DraftChanged -> System.EventHandler?
+Polhem.Definition.Drafting.FormDraftSession.FormDraftSession(Microsoft.Extensions.AI.IChatClient! chatClient, Polhem.Definition.Drafting.IFormDraftingHost! host, Polhem.Definition.Drafting.FormDraftingOptions? options = null) -> void
+Polhem.Definition.Drafting.FormDraftSession.History.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.ChatMessage!>!
+Polhem.Definition.Drafting.FormDraftSession.IsReady.get -> bool
+Polhem.Definition.Drafting.FormDraftSession.SendAsync(string! userText, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Definition.Drafting.FormDraftSession.StartAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>! documents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Definition.Drafting.FormDraftingOptions
+Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.get -> Microsoft.Extensions.AI.ChatOptions?
+Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.set -> void
+Polhem.Definition.Drafting.FormDraftingOptions.FormDraftingOptions() -> void
+Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.get -> int
+Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.set -> void
+Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.get -> double
+Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.set -> void
 Polhem.Definition.Drafting.IFormDraftingHost
 Polhem.Definition.Drafting.IFormDraftingHost.GetCatalog() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogEntry!>!
 Polhem.Definition.Drafting.IFormDraftingHost.GetFields(string! progId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>!
 Polhem.Definition.Drafting.IFormDraftingHost.Validate(Polhem.Definition.Drafting.FormDraftResult! result) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftIssue!>!
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxDocumentBytes = 33554432 -> long
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxImageBytes = 5242880 -> long
+const Polhem.Definition.Drafting.FormDraftConverter.PlaceholderProgId = "NewForm" -> string!
+override Polhem.Definition.Drafting.DraftIssue.ToString() -> string!
 static Polhem.Definition.Drafting.Documents.DocumentSource.FromFile(string! path) -> Microsoft.Extensions.AI.AIContent!
+static Polhem.Definition.Drafting.Documents.DocumentSource.FromFiles(System.Collections.Generic.IEnumerable<string!>! paths) -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>!
 static Polhem.Definition.Drafting.Documents.DocumentSource.FromStream(System.IO.Stream! stream, string! fileName) -> Microsoft.Extensions.AI.AIContent!
 static Polhem.Definition.Drafting.Documents.DocumentSource.SupportedExtensions.get -> System.Collections.Generic.IReadOnlyList<string!>!
 static Polhem.Definition.Drafting.FormDraftConverter.Convert(Polhem.Definition.Drafting.FormDraft! draft) -> Polhem.Definition.Drafting.FormDraftResult!
