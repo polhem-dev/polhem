@@ -2,10 +2,11 @@
 
 ## Every change reaches `main` through a pull request
 
-`main` is protected: a pull request can only merge when the `build`, `templates` and `browser` checks of
-`.github/workflows/build-ci.yml` and the `docs` check of `.github/workflows/docs-check.yml` pass and the branch is up
-to date with `main`. The protection applies to administrators too. Nobody pushes to `main` directly, maintainers included. Pull requests are squash
-merged. The settings themselves are the polhem-dev baseline (`repo-baseline.json` in polhem-dev/.github);
+`main` is protected and merges through GitHub's merge queue: the queue builds `main` with the pull requests queued
+ahead and this one, and merges when the `build`, `templates` and `browser` checks of `.github/workflows/build-ci.yml`
+and the `docs` check of `.github/workflows/docs-check.yml` pass there. A branch does not have to be up to date with
+`main`, so another merge does not send it back to update and run CI again. The protection applies to administrators
+too. Nobody pushes to `main` directly, maintainers included. Pull requests are squash merged. The settings themselves are the polhem-dev baseline (`repo-baseline.json` in polhem-dev/.github);
 `maintainers/branch-protection-setup.md` records what is specific to this repository.
 
 1. Branch from the latest `origin/main`. Agents name their branches `claude/<topic>`.
@@ -13,7 +14,11 @@ merged. The settings themselves are the polhem-dev baseline (`repo-baseline.json
    `git push -u origin <branch>`.
 3. Open the pull request with `gh pr create`. Its title follows the commit message style (English, imperative).
 4. Watch the pull request's checks, and handle a failure as described below.
-5. Merge only when the checks pass. The user decides when to merge unless they have said otherwise.
+5. Merge only when the checks pass. The user decides when to merge unless they have said otherwise. Auto-merge
+   (`gh pr merge --squash --auto`) puts the pull request in the queue once its own checks pass; a pull request that
+   fails in the queue leaves it, and the failure is handled like any other CI failure.
+6. A workflow that runs a required check must keep its `merge_group` trigger. Without it a queued pull request waits for
+   a check that never reports and leaves the queue when the check times out.
 
 **When the user explicitly asks for something else** (for example "push this to my fork" or "don't open a PR yet"),
 follow the request. The user's instruction takes precedence over this default.
