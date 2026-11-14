@@ -1,0 +1,203 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        xmlns:controls="using:Polhem.UI.Avalonia.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760"
+        x:Class="Polhem.DefineEditor.Views.FormDraftingWindow"
+        x:DataType="vm:FormDraftingViewModel"
+        x:CompileBindings="True"
+        Width="1240" Height="780" MinWidth="820" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        Title="{loc:Loc Drafting_Title}">
+
+    <Border Padding="20,16">
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                <!-- Always shown, so an API key left in the environment cannot quietly take the place of the sign-in. -->
+                <TextBlock DockPanel.Dock="Right" Classes="muted" VerticalAlignment="Bottom" TextWrapping="Wrap"
+                           MaxWidth="460" TextAlignment="Right">
+                    <Run Text="{loc:Loc Drafting_Credential}"/>
+                    <Run Text="{Binding CredentialText}"/>
+                </TextBlock>
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="h1" Text="{loc:Loc Drafting_Title}"/>
+                    <TextBlock Classes="muted" Text="{Binding DocumentsLabel}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="tool Primary" MinWidth="120" Content="{loc:Loc Drafting_Create}"
+                            Command="{Binding CreateCommand}" ToolTip.Tip="{loc:Loc Drafting_CreateTooltip}"/>
+                    <Button Classes="tool" MinWidth="90" Content="{loc:Loc Action_Close}" Click="OnClose"/>
+                </StackPanel>
+                <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="60" Margin="0,0,8,0"
+                                 IsVisible="{Binding IsBusy}"/>
+                    <Panel>
+                        <TextBlock Classes="muted" Text="{loc:Loc Drafting_Working}" IsVisible="{Binding IsBusy}"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Classes="success" Text="{loc:Loc Drafting_ReadyHint}" VerticalAlignment="Center"
+                                   FontWeight="SemiBold" IsVisible="{Binding ShowReadyHint}"/>
+                    </Panel>
+                </DockPanel>
+            </DockPanel>
+
+            <Grid ColumnDefinitions="5*,6,7*">
+                <!-- The conversation. -->
+                <DockPanel Grid.Column="0">
+                    <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                        <StackPanel DockPanel.Dock="Right" Spacing="6" Margin="8,0,0,0" VerticalAlignment="Bottom">
+                            <Button Classes="tool Primary" MinWidth="80" Content="{loc:Loc Drafting_Send}"
+                                    Command="{Binding SendCommand}" IsVisible="{Binding !IsBusy}"/>
+                            <Button Classes="tool" MinWidth="80" Content="{loc:Loc Drafting_Stop}"
+                                    Command="{Binding StopCommand}" IsVisible="{Binding IsBusy}"/>
+                        </StackPanel>
+                        <TextBox x:Name="InputBox" Text="{Binding InputText}" AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="64" MaxHeight="160" PlaceholderText="{loc:Loc Drafting_InputWatermark}"
+/>
+                    </DockPanel>
+                    <Border Classes="surface-sunken" CornerRadius="4">
+                        <ScrollViewer x:Name="ChatScroller" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Messages}" Margin="10">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="8"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DraftChatEntry">
+                                        <Border Classes="chat" Classes.user="{Binding IsUser}" Classes.error="{Binding IsError}">
+                                            <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </DockPanel>
+
+                <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent"/>
+
+                <!-- The form as it stands. -->
+                <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedTabIndex}" Padding="0,8,0,0">
+                    <TabItem Header="{loc:Loc Drafting_TabForm}" AutomationProperties.Name="{loc:Loc Drafting_TabForm}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Right"
+                                        Margin="0,0,0,6">
+                                <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewViewMode}"
+                                              ToolTip.Tip="{loc:Loc Preview_ViewMode}"
+                                              AutomationProperties.Name="{loc:Loc Preview_ViewMode}">
+                                    <PathIcon Data="{StaticResource IconPreviewViewMode}"/>
+                                </ToggleButton>
+                                <ToggleButton Classes="toolbar-icon" IsChecked="{Binding IsPreviewCompact}"
+                                              ToolTip.Tip="{loc:Loc Preview_PhoneWidth}"
+                                              AutomationProperties.Name="{loc:Loc Preview_PhoneWidth}">
+                                    <PathIcon Data="{StaticResource IconPreviewPhone}"/>
+                                </ToggleButton>
+                            </StackPanel>
+                            <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Foreground="{DynamicResource SemiColorDanger}"
+                                       Text="{Binding PreviewError}" IsVisible="{Binding HasPreviewError}"/>
+                            <Border Classes="preview-canvas">
+                                <ScrollViewer x:Name="PreviewScroller" HorizontalScrollBarVisibility="Disabled">
+                                    <Border x:Name="PreviewSheet" Classes="preview-sheet">
+                                        <controls:FormLayoutPresenter x:Name="LayoutPresenter"/>
+                                    </Border>
+                                </ScrollViewer>
+                            </Border>
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="{loc:Loc Drafting_TabFields}" AutomationProperties.Name="{loc:Loc Drafting_TabFields}">
+                        <DataGrid x:Name="FieldsGrid" ItemsSource="{Binding Fields}" SelectedItem="{Binding SelectedField}"
+                                  AutoGenerateColumns="False" CanUserSortColumns="False" GridLinesVisibility="Horizontal"
+                                  IsReadOnly="{Binding !CanEditFields}" RowEditEnded="OnFieldRowEditEnded">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnTable}" Binding="{Binding TableLabel}" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnFieldName}" Binding="{Binding FieldName}"/>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnCaption}" Binding="{Binding Caption}"/>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnCaptionZhTw}" Binding="{Binding CaptionZhTw}"/>
+                                <DataGridTemplateColumn Header="{loc:Loc Drafting_ColumnType}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:DraftFieldRow">
+                                            <TextBlock Text="{Binding DbType}" VerticalAlignment="Center" Margin="8,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="vm:DraftFieldRow">
+                                            <ComboBox ItemsSource="{x:Static vm:DraftFieldRow.DbTypes}" SelectedItem="{Binding DbType}"
+                                                      HorizontalAlignment="Stretch"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnMaxLength}" Binding="{Binding MaxLength}"/>
+                                <DataGridCheckBoxColumn Header="{loc:Loc Drafting_ColumnRequired}" Binding="{Binding Required}"/>
+                                <DataGridTemplateColumn Header="{loc:Loc Drafting_ColumnRelation}" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:DraftFieldRow">
+                                            <TextBlock Text="{Binding RelationText}" ToolTip.Tip="{Binding RelationReason}"
+                                                       VerticalAlignment="Center" Margin="8,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{loc:Loc Drafting_ColumnSource}" Binding="{Binding SourceQuote}" IsReadOnly="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <TabItem Header="{Binding IssuesTabTitle}" AutomationProperties.Name="{Binding IssuesTabTitle}">
+                        <Panel>
+                            <TextBlock Classes="muted" Text="{loc:Loc Drafting_NoIssues}" Margin="4"
+                                       IsVisible="{Binding HasNoIssues}"/>
+                            <ScrollViewer>
+                                <ItemsControl ItemsSource="{Binding Issues}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="6"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:DraftIssueRow">
+                                            <TextBlock TextWrapping="Wrap" Classes.danger="{Binding IsError}">
+                                                <Run Text="{Binding Location}" FontWeight="SemiBold"/>
+                                                <Run Text="—"/>
+                                                <Run Text="{Binding Message}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Panel>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </DockPanel>
+    </Border>
+
+    <Window.Styles>
+        <Style Selector="Border.chat">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="MaxWidth" Value="560"/>
+            <Setter Property="Background" Value="{DynamicResource SemiColorFill0}"/>
+        </Style>
+        <Style Selector="Border.chat.user">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Background" Value="{DynamicResource SemiColorPrimaryLight}"/>
+        </Style>
+        <Style Selector="Border.chat.error">
+            <Setter Property="Background" Value="{DynamicResource SemiColorDangerLight}"/>
+        </Style>
+        <Style Selector="TextBlock.danger">
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}"/>
+        </Style>
+        <Style Selector="TextBlock.success">
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorSuccess}"/>
+        </Style>
+    </Window.Styles>
+</Window>

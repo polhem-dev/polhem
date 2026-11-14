@@ -500,4 +500,62 @@
   <data name="ExpressionTrial_ConditionPasses" xml:space="preserve"><value>通過</value></data>
   <data name="ExpressionTrial_ConditionFails" xml:space="preserve"><value>違反：{0}</value></data>
   <data name="ExpressionTrial_NoInputs" xml:space="preserve"><value>運算式沒有用到任何欄位。</value></data>
+  <data name="MenuItem_ImportFormDocument" xml:space="preserve"><value>從文件匯入表單...</value></data>
+  <data name="Dialog_PickFormDocuments" xml:space="preserve"><value>選擇紙本表單的文件</value></data>
+  <data name="Dialog_FormDocument" xml:space="preserve"><value>PDF、Word 或圖片</value></data>
+  <data name="Drafting_NoCredentialTitle" xml:space="preserve"><value>請先登入 Claude</value></data>
+  <data name="Drafting_NoCredentialMessage" xml:space="preserve"><value>從文件草擬表單會把文件送到 Anthropic API，但這台電腦上找不到任何憑證。
+
+1. 讓 API 有額度可用：Max、Ultra 或 Team 方案可把每月附送的 API 額度綁到 Claude Console 的組織（claude.ai → Settings → Billing → API credits）；其他情況請在 Claude Console 儲值。
+2. 安裝 ant 命令列工具，執行 `ant auth login` 並選擇該組織。
+3. 或在啟動編輯器前設定 ANTHROPIC_API_KEY 環境變數。
+
+編輯器本身不保存任何憑證。</value></data>
+  <data name="Status_DraftingNoCredential" xml:space="preserve"><value>找不到 Claude 憑證，請先執行 `ant auth login`</value></data>
+  <data name="Drafting_ReadFailedTitle" xml:space="preserve"><value>無法讀取文件</value></data>
+  <data name="Status_DraftingReadFailed" xml:space="preserve"><value>無法讀取文件：{0}</value></data>
+  <data name="Drafting_ConsentTitle" xml:space="preserve"><value>要把文件送給 Claude 嗎？</value></data>
+  <data name="Drafting_ConsentMessage" xml:space="preserve"><value>下列文件的內容將傳送至 Anthropic API，由 Claude 據以草擬表單：
+{0}
+
+公司文件可能含有個人資料，請確認可以提供給 Anthropic 再送出。
+
+憑證：{1}
+費用由此憑證所屬的 Claude Console 組織支付。</value></data>
+  <data name="Drafting_CredentialWarnings" xml:space="preserve"><value>請確認憑證：
+{0}</value></data>
+  <data name="Drafting_ConsentSend" xml:space="preserve"><value>送出</value></data>
+  <data name="Status_DraftingCancelled" xml:space="preserve"><value>已取消從文件草擬表單</value></data>
+  <data name="Status_DraftingStarted" xml:space="preserve"><value>正在由 {0} 草擬表單</value></data>
+  <data name="Drafting_NotAuthenticated" xml:space="preserve"><value>Claude 不接受目前的憑證：登入已過期，或 API 金鑰有誤。請重新執行 `ant auth login`，再重送訊息。</value></data>
+  <data name="Drafting_Refused" xml:space="preserve"><value>Claude 拒絕了這個要求。請換個說法，或拿掉可能造成問題的部分。</value></data>
+  <data name="Drafting_OutputLimitReached" xml:space="preserve"><value>Claude 的回答超過長度上限而被截斷。請改成較小的步驟，例如一次處理一個資料表。</value></data>
+  <data name="Drafting_Title" xml:space="preserve"><value>從文件草擬表單</value></data>
+  <data name="Drafting_Credential" xml:space="preserve"><value>憑證：</value></data>
+  <data name="Drafting_Create" xml:space="preserve"><value>產生定義</value></data>
+  <data name="Drafting_CreateTooltip" xml:space="preserve"><value>以匯入 Excel 活頁簿的方式匯入此表單：確認檔案、寫入，再升級資料庫</value></data>
+  <data name="Drafting_Working" xml:space="preserve"><value>Claude 正在處理草稿...</value></data>
+  <data name="Drafting_ReadyHint" xml:space="preserve"><value>草稿已可產生定義。</value></data>
+  <data name="Drafting_Send" xml:space="preserve"><value>送出</value></data>
+  <data name="Drafting_Stop" xml:space="preserve"><value>停止</value></data>
+  <data name="Drafting_InputWatermark" xml:space="preserve"><value>回答 Claude 的問題或要求修改。Enter 送出；Shift+Enter 換行。</value></data>
+  <data name="Drafting_TabForm" xml:space="preserve"><value>畫面</value></data>
+  <data name="Drafting_TabFields" xml:space="preserve"><value>欄位</value></data>
+  <data name="Drafting_TabIssues" xml:space="preserve"><value>問題</value></data>
+  <data name="Drafting_TabIssuesCount" xml:space="preserve"><value>問題（{0}）</value></data>
+  <data name="Drafting_NoIssues" xml:space="preserve"><value>目前沒有待處理的問題。</value></data>
+  <data name="Drafting_ColumnTable" xml:space="preserve"><value>資料表</value></data>
+  <data name="Drafting_ColumnFieldName" xml:space="preserve"><value>欄位名稱</value></data>
+  <data name="Drafting_ColumnCaption" xml:space="preserve"><value>標題</value></data>
+  <data name="Drafting_ColumnCaptionZhTw" xml:space="preserve"><value>標題（zh-TW）</value></data>
+  <data name="Drafting_ColumnType" xml:space="preserve"><value>型別</value></data>
+  <data name="Drafting_ColumnMaxLength" xml:space="preserve"><value>長度</value></data>
+  <data name="Drafting_ColumnRequired" xml:space="preserve"><value>必填</value></data>
+  <data name="Drafting_ColumnRelation" xml:space="preserve"><value>關聯</value></data>
+  <data name="Drafting_ColumnSource" xml:space="preserve"><value>文件原文</value></data>
+  <data name="Drafting_SentDocuments" xml:space="preserve"><value>已送出 {0}。</value></data>
+  <data name="Drafting_Stopped" xml:space="preserve"><value>已停止。草稿維持在這則訊息之前的狀態。</value></data>
+  <data name="Drafting_TurnFailed" xml:space="preserve"><value>要求失敗：{0}
+草稿維持在這則訊息之前的狀態，可重送訊息再試一次。</value></data>
+  <data name="Drafting_MasterTable" xml:space="preserve"><value>主檔</value></data>
 </root>

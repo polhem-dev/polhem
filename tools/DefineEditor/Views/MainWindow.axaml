@@ -84,6 +84,7 @@
                 <MenuItem x:Name="AddFrameworkDefaultsMenuItem" Header="{loc:Loc MenuItem_AddFrameworkDefaults}"/>
                 <MenuItem x:Name="ImportFormWorkbookMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbook}"/>
                 <MenuItem x:Name="ImportFormWorkbooksMenuItem" Header="{loc:Loc MenuItem_ImportFormWorkbooks}"/>
+                <MenuItem x:Name="ImportFormDocumentMenuItem" Header="{loc:Loc MenuItem_ImportFormDocument}"/>
                 <MenuItem x:Name="ExportXmlSchemasMenuItem" Header="{loc:Loc MenuItem_ExportXmlSchemas}"/>
                 <Separator/>
                 <MenuItem x:Name="CheckConnectionsMenuItem" Header="{loc:Loc MenuItem_CheckDatabaseConnections}"/>

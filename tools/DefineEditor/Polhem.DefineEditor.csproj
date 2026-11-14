@@ -27,7 +27,7 @@
     <PackageOutputPath>../../nupkgs</PackageOutputPath>
     <!-- Keep only the desktop runtimes' native libraries in the tool package (tools/Directory.Build.targets). -->
     <PolhemKeepDesktopNativeRuntimes>true</PolhemKeepDesktopNativeRuntimes>
-    <Description>Polhem DefineEditor, the desktop editor for Polhem definition files, as a dotnet tool invoked as `polhem-define [DefinePath]`. Imports forms from Excel workbooks and runs the project's database upgrade command.</Description>
+    <Description>Polhem DefineEditor, the desktop editor for Polhem definition files, as a dotnet tool invoked as `polhem-define [DefinePath]`. Imports forms from Excel workbooks or drafts them from paper documents with Claude, and runs the project's database upgrade command.</Description>
     <PackageTags>polhem;defineeditor;dotnet-tool;defines;excel;avalonia</PackageTags>
   </PropertyGroup>
 
@@ -78,6 +78,10 @@
          Avalonia head and both Blazor UI packages; none of them references another. -->
     <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Mud\Polhem.Web.Blazor.Mud.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Fluent\Polhem.Web.Blazor.Fluent.csproj" />
+    <!-- Drafting a form from documents in a conversation with a model. The feature package knows only IChatClient;
+         the provider package is chosen here (Services/DraftingChatClients.cs). -->
+    <ProjectReference Include="..\..\src\Polhem.Definition.Drafting\Polhem.Definition.Drafting.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.AI.Claude\Polhem.AI.Claude.csproj" />
   </ItemGroup>
 
   <ItemGroup>

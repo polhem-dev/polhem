@@ -513,4 +513,62 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="ExpressionTrial_ConditionPasses" xml:space="preserve"><value>Passes</value></data>
   <data name="ExpressionTrial_ConditionFails" xml:space="preserve"><value>Fails: {0}</value></data>
   <data name="ExpressionTrial_NoInputs" xml:space="preserve"><value>The expression reads no field.</value></data>
+  <data name="MenuItem_ImportFormDocument" xml:space="preserve"><value>Import Form from Documents...</value></data>
+  <data name="Dialog_PickFormDocuments" xml:space="preserve"><value>Choose the documents of a paper form</value></data>
+  <data name="Dialog_FormDocument" xml:space="preserve"><value>PDF, Word or image</value></data>
+  <data name="Drafting_NoCredentialTitle" xml:space="preserve"><value>Sign in to Claude first</value></data>
+  <data name="Drafting_NoCredentialMessage" xml:space="preserve"><value>Drafting a form from documents sends them to the Anthropic API, and no credential was found on this computer.
+
+1. Give the API access credit: on a Max, Ultra or Team plan, bind the monthly API credits to a Claude Console organization (claude.ai → Settings → Billing → API credits); otherwise add credit in the Claude Console.
+2. Install the ant command-line tool and run `ant auth login`, choosing that organization.
+3. Or set the ANTHROPIC_API_KEY environment variable before starting the editor.
+
+The editor keeps no credential of its own.</value></data>
+  <data name="Status_DraftingNoCredential" xml:space="preserve"><value>No Claude credential found; run `ant auth login` first</value></data>
+  <data name="Drafting_ReadFailedTitle" xml:space="preserve"><value>The documents cannot be read</value></data>
+  <data name="Status_DraftingReadFailed" xml:space="preserve"><value>The documents cannot be read: {0}</value></data>
+  <data name="Drafting_ConsentTitle" xml:space="preserve"><value>Send the documents to Claude?</value></data>
+  <data name="Drafting_ConsentMessage" xml:space="preserve"><value>The content of these documents will be sent to the Anthropic API, so Claude can draft the form from them:
+{0}
+
+Company documents may hold personal data. Send them only if you may share them with Anthropic.
+
+Credential: {1}
+The requests are charged to the Claude Console organization of this credential.</value></data>
+  <data name="Drafting_CredentialWarnings" xml:space="preserve"><value>Check the credential:
+{0}</value></data>
+  <data name="Drafting_ConsentSend" xml:space="preserve"><value>Send</value></data>
+  <data name="Status_DraftingCancelled" xml:space="preserve"><value>Drafting from documents cancelled</value></data>
+  <data name="Status_DraftingStarted" xml:space="preserve"><value>Drafting a form from {0}</value></data>
+  <data name="Drafting_NotAuthenticated" xml:space="preserve"><value>Claude did not accept the credential: the sign-in has expired or the API key is wrong. Run `ant auth login` again, then send your message again.</value></data>
+  <data name="Drafting_Refused" xml:space="preserve"><value>Claude declined this request. Rephrase it, or leave out the part that may have caused it.</value></data>
+  <data name="Drafting_OutputLimitReached" xml:space="preserve"><value>Claude's answer was cut off at its length limit. Ask for a smaller step, such as one table at a time.</value></data>
+  <data name="Drafting_Title" xml:space="preserve"><value>Draft a Form from Documents</value></data>
+  <data name="Drafting_Credential" xml:space="preserve"><value>Credential:</value></data>
+  <data name="Drafting_Create" xml:space="preserve"><value>Create Definitions</value></data>
+  <data name="Drafting_CreateTooltip" xml:space="preserve"><value>Import the form the way an Excel workbook is imported: review the files, write them, then upgrade the database</value></data>
+  <data name="Drafting_Working" xml:space="preserve"><value>Claude is working on the draft...</value></data>
+  <data name="Drafting_ReadyHint" xml:space="preserve"><value>The draft is ready to create.</value></data>
+  <data name="Drafting_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="Drafting_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Drafting_InputWatermark" xml:space="preserve"><value>Answer Claude's questions or ask for changes. Enter sends; Shift+Enter starts a new line.</value></data>
+  <data name="Drafting_TabForm" xml:space="preserve"><value>Form</value></data>
+  <data name="Drafting_TabFields" xml:space="preserve"><value>Fields</value></data>
+  <data name="Drafting_TabIssues" xml:space="preserve"><value>Questions</value></data>
+  <data name="Drafting_TabIssuesCount" xml:space="preserve"><value>Questions ({0})</value></data>
+  <data name="Drafting_NoIssues" xml:space="preserve"><value>Nothing is open.</value></data>
+  <data name="Drafting_ColumnTable" xml:space="preserve"><value>Table</value></data>
+  <data name="Drafting_ColumnFieldName" xml:space="preserve"><value>Field Name</value></data>
+  <data name="Drafting_ColumnCaption" xml:space="preserve"><value>Caption</value></data>
+  <data name="Drafting_ColumnCaptionZhTw" xml:space="preserve"><value>Caption (zh-TW)</value></data>
+  <data name="Drafting_ColumnType" xml:space="preserve"><value>Type</value></data>
+  <data name="Drafting_ColumnMaxLength" xml:space="preserve"><value>Length</value></data>
+  <data name="Drafting_ColumnRequired" xml:space="preserve"><value>Required</value></data>
+  <data name="Drafting_ColumnRelation" xml:space="preserve"><value>Relation</value></data>
+  <data name="Drafting_ColumnSource" xml:space="preserve"><value>From the Document</value></data>
+  <data name="Drafting_SentDocuments" xml:space="preserve"><value>Sent {0}.</value></data>
+  <data name="Drafting_Stopped" xml:space="preserve"><value>Stopped. The draft is as it was before this message.</value></data>
+  <data name="Drafting_TurnFailed" xml:space="preserve"><value>The request failed: {0}
+The draft is as it was before this message; send it again to retry.</value></data>
+  <data name="Drafting_MasterTable" xml:space="preserve"><value>Master</value></data>
 </root>

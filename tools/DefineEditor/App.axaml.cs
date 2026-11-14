@@ -49,6 +49,9 @@ public partial class App : Application
     // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
     public IRelayCommand ImportFormWorkbooksCommand { get; }
 
+    // Enabled only while a solution is open, like AddFrameworkDefaultsCommand.
+    public IRelayCommand ImportFormDocumentCommand { get; }
+
     // Always enabled: the schemas come from the definition types, not from the open solution.
     public IRelayCommand ExportXmlSchemasCommand { get; }
 
@@ -96,6 +99,7 @@ public partial class App : Application
         AddFrameworkDefaultsCommand = new AsyncRelayCommand(ExecuteAddFrameworkDefaultsAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbookCommand = new AsyncRelayCommand(ExecuteImportFormWorkbookAsync, CanExecuteAddFrameworkDefaults);
         ImportFormWorkbooksCommand = new RelayCommand(() => GetMainViewModel()?.OpenImportBatch(), CanExecuteAddFrameworkDefaults);
+        ImportFormDocumentCommand = new AsyncRelayCommand(ExecuteImportFormDocumentAsync, CanExecuteAddFrameworkDefaults);
         ExportXmlSchemasCommand = new AsyncRelayCommand(ExecuteExportXmlSchemasAsync);
         CheckDatabaseConnectionsCommand = new AsyncRelayCommand(
             () => GetMainViewModel()?.CheckDatabaseConnectionsAsync() ?? Task.CompletedTask, CanExecuteAddFrameworkDefaults);
@@ -184,6 +188,7 @@ public partial class App : Application
                     AddFrameworkDefaultsCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbookCommand.NotifyCanExecuteChanged();
                     ImportFormWorkbooksCommand.NotifyCanExecuteChanged();
+                    ImportFormDocumentCommand.NotifyCanExecuteChanged();
                     CheckDatabaseConnectionsCommand.NotifyCanExecuteChanged();
                     UpgradeDatabaseCommand.NotifyCanExecuteChanged();
                     PreviewDatabaseUpgradeCommand.NotifyCanExecuteChanged();
@@ -209,7 +214,8 @@ public partial class App : Application
             if (!OperatingSystem.IsMacOS())
             {
                 mainWindow.ShowInWindowFileMenu(
-                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, ExportXmlSchemasCommand,
+                    AddFrameworkDefaultsCommand, ImportFormWorkbookCommand, ImportFormWorkbooksCommand, ImportFormDocumentCommand,
+                    ExportXmlSchemasCommand,
                     CheckDatabaseConnectionsCommand, UpgradeDatabaseCommand,
                     PreviewDatabaseUpgradeCommand, SyncActiveFormCommand, UpgradeActiveFormTablesCommand,
                     PreviewActiveFormUpgradeCommand, SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
@@ -280,6 +286,7 @@ public partial class App : Application
         fileMenu.Menu.Add(LocItem("MenuItem_AddFrameworkDefaults", AddFrameworkDefaultsCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbook", ImportFormWorkbookCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ImportFormWorkbooks", ImportFormWorkbooksCommand, gesture: null));
+        fileMenu.Menu.Add(LocItem("MenuItem_ImportFormDocument", ImportFormDocumentCommand, gesture: null));
         fileMenu.Menu.Add(LocItem("MenuItem_ExportXmlSchemas", ExportXmlSchemasCommand, gesture: null));
         fileMenu.Menu.Add(new NativeMenuItemSeparator());
         fileMenu.Menu.Add(LocItem("MenuItem_CheckDatabaseConnections", CheckDatabaseConnectionsCommand, gesture: null));
@@ -524,6 +531,14 @@ public partial class App : Application
     private static Task ExecuteImportFormWorkbookAsync() =>
         (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow main
             ? main.PromptImportFormWorkbookAsync()
+            : Task.CompletedTask;
+
+    /// <summary>
+    /// Forwards "Import Form from Documents..." to <see cref="MainWindow"/>, whose storage provider runs the picker.
+    /// </summary>
+    private static Task ExecuteImportFormDocumentAsync() =>
+        (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow main
+            ? main.PromptImportFormDocumentAsync()
             : Task.CompletedTask;
 
     /// <summary>

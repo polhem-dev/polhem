@@ -221,6 +221,7 @@ internal static class Smoke
             RunTabCommandsSmoke,
             RunFrameworkDefaultsSmoke,
             RunFormWorkbookImportSmoke,
+            RunFormDocumentDraftingSmoke,
             RunDatabaseUpgradeSmoke,
         };
         foreach (var phase in phases)
@@ -818,6 +819,81 @@ internal static class Smoke
             return 0;
         }
         finally { TryDelete(tempDir); }
+    }
+
+    /// <summary>
+    /// Drafting a form from a document without a model: a scripted chat client drafts a ready form in its first turn,
+    /// and the import that follows writes the same files a workbook import writes. Nothing leaves the machine.
+    /// </summary>
+    private static int RunFormDocumentDraftingSmoke()
+    {
+        var tempDir = MakeTempDir("drafting");
+        try
+        {
+            var documentPath = Path.Combine(tempDir, "leave-request.png");
+            File.WriteAllBytes(documentPath, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+            var definePath = Path.Combine(tempDir, "Define");
+            Directory.CreateDirectory(definePath);
+
+            var vm = new MainWindowViewModel
+            {
+                SolutionPath = definePath,
+                DraftingCredentialProvider = () => new DraftingCredential(true, "smoke", []),
+                DraftingChatClientFactory = () => new ScriptedDraftingClient(),
+            };
+            vm.ImportFormDocumentsAsync([documentPath]).GetAwaiter().GetResult();
+
+            var schemaPath = Path.Combine(definePath, "FormSchema", "LeaveRequest.FormSchema.xml");
+            if (!File.Exists(schemaPath))
+                return Fail(153, $"Drafting from a document did not write {schemaPath}: {vm.StatusText}");
+            if (!File.Exists(Path.Combine(definePath, "FormLayout", "LeaveRequest.FormLayout.xml")))
+                return Fail(154, "Drafting from a document did not write the FormLayout");
+            if (!File.Exists(Path.Combine(definePath, "Language", "zh-TW", "LeaveRequest.Language.xml")))
+                return Fail(155, "Drafting from a document did not write the zh-TW language file");
+
+            Console.WriteLine("[smoke:form-drafting] OK");
+            return 0;
+        }
+        finally { TryDelete(tempDir); }
+    }
+
+    /// <summary>A model that drafts a ready leave request in one turn, for <see cref="RunFormDocumentDraftingSmoke"/>.</summary>
+    private sealed class ScriptedDraftingClient : Microsoft.Extensions.AI.IChatClient
+    {
+        private int _request;
+
+        public Task<Microsoft.Extensions.AI.ChatResponse> GetResponseAsync(
+            IEnumerable<Microsoft.Extensions.AI.ChatMessage> messages, Microsoft.Extensions.AI.ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            Microsoft.Extensions.AI.AIContent[] contents = _request++ switch
+            {
+                0 =>
+                [
+                    Call("1", "set_form_info", new() { ["progId"] = "LeaveRequest", ["displayName"] = "Leave Request", ["displayNameZhTw"] = "請假單" }),
+                    Call("2", "upsert_field", new() { ["table"] = "master", ["fieldName"] = "leave_no", ["caption"] = "No", ["dbType"] = "String", ["maxLength"] = 20 }),
+                    Call("3", "upsert_field", new() { ["table"] = "master", ["fieldName"] = "start_date", ["caption"] = "Start Date", ["captionZhTw"] = "開始日期", ["dbType"] = "Date" }),
+                ],
+                1 => [Call("4", "mark_ready", [])],
+                _ => [new Microsoft.Extensions.AI.TextContent("The draft is ready.")],
+            };
+            return Task.FromResult(new Microsoft.Extensions.AI.ChatResponse(
+                new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.Assistant, contents)));
+        }
+
+        private static Microsoft.Extensions.AI.FunctionCallContent Call(string id, string name, Dictionary<string, object?> arguments)
+            => new(id, name, arguments);
+
+        public IAsyncEnumerable<Microsoft.Extensions.AI.ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<Microsoft.Extensions.AI.ChatMessage> messages, Microsoft.Extensions.AI.ChatOptions? options = null,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose()
+        {
+            // Nothing to release.
+        }
     }
 
     /// <summary>
