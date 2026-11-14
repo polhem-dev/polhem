@@ -39,6 +39,7 @@ namespace Polhem.Definition.Drafting
         private readonly List<ChatMessage> _history;
         private readonly List<string> _pendingEdits = [];
         private int _turnInProgress;
+        private readonly System.Globalization.CultureInfo? _replyCulture;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FormDraftSession"/> class.
@@ -56,6 +57,7 @@ namespace Polhem.Definition.Drafting
             _chatClient = chatClient;
             _host = host;
             _maxToolRounds = options.MaxToolRoundsPerTurn;
+            _replyCulture = options.ReplyCulture;
             _toolbox = new DraftToolbox(Draft, host, options.RelationConfirmationThreshold);
             _functions = _toolbox.Functions.ToDictionary(function => function.Name, StringComparer.Ordinal);
 
@@ -111,7 +113,7 @@ namespace Polhem.Definition.Drafting
             if (_history.Count > 1)
                 throw new InvalidOperationException("The session has already started.");
 
-            var contents = new List<AIContent> { new TextContent(FormDraftingPrompt.StartMessage(_host.GetCatalog())) };
+            var contents = new List<AIContent> { new TextContent(FormDraftingPrompt.StartMessage(_host.GetCatalog(), _replyCulture)) };
             contents.AddRange(documents);
             return RunTurnAsync(contents, cancellationToken);
         }

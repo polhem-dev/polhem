@@ -1,4 +1,4 @@
-<!-- source: en/guides/document-form-drafting.md blob: a4816ed3a90ce8223c30846e11c7252343dd55a4 -->
+<!-- source: en/guides/document-form-drafting.md blob: ff34cb04df74514083eacd73e5c6a5024d9550b2 -->
 # 從文件草擬表單
 
 [English](../../en/guides/document-form-drafting.md) · [← 文件索引](../README.md)
@@ -80,6 +80,7 @@ Claude 只負責提議。DefineEditor 以框架自己的規則把草稿轉成定
 
 幾件值得知道的事：
 
+- **Claude 用編輯器的語言回覆。** 第一則回覆使用 DefineEditor 目前的介面語言（檢視選單）；你改用別的語言打字，它就跟著換。
 - **關聯會對到你的表單。** Claude 會搜尋資料夾中的表單及其欄位。沒把握時（「收件人」欄位可能是員工，也可能是自由文字），
   它會先問再建立關聯。
 - **慣例會自動補上**，與 Excel 匯入相同：系統欄位、`ft_` 資料表名稱、`company` 資料庫類別，以及顯示關聯資料的

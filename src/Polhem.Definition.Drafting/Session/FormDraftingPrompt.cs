@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace Polhem.Definition.Drafting.Session
@@ -41,14 +42,17 @@ namespace Polhem.Definition.Drafting.Session
             - The user may edit the draft directly; such edits are announced at the start of their next message. Call
               get_draft when you need to see the draft as it is.
 
-            Reply to the user in the language they write in; until they write, in the language of the document. Keep
-            replies short: say what you did and ask what you need.
+            Reply to the user in the language they write in. Until they write, reply in the language the first message
+            names, or in the language of the document when it names none. Keep replies short: say what you did and ask
+            what you need.
             """;
 
-        public static string StartMessage(IReadOnlyList<DraftCatalogEntry> catalog)
+        public static string StartMessage(IReadOnlyList<DraftCatalogEntry> catalog, CultureInfo? replyCulture = null)
         {
             var builder = new StringBuilder();
             builder.AppendLine("Draft a form from the attached documents.");
+            if (replyCulture is not null && !replyCulture.Equals(CultureInfo.InvariantCulture))
+                builder.Append("Reply in ").Append(replyCulture.EnglishName).AppendLine(" until I write in another language.");
             builder.AppendLine();
             if (catalog.Count == 0)
             {
