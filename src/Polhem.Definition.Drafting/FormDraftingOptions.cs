@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.AI;
 
 namespace Polhem.Definition.Drafting
@@ -24,5 +25,12 @@ namespace Polhem.Definition.Drafting
         /// draft can be marked ready. The default is 0.8.
         /// </summary>
         public double RelationConfirmationThreshold { get; set; } = 0.8;
+
+        /// <summary>
+        /// Gets or sets the language the model replies in until the user writes in another one, such as the language of
+        /// the application's user interface. <see langword="null"/>, the default, replies in the language of the
+        /// documents until the user writes.
+        /// </summary>
+        public CultureInfo? ReplyCulture { get; set; }
     }
 }

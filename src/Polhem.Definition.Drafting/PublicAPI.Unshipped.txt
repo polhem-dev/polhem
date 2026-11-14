@@ -122,6 +122,8 @@ Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.get -> int
 Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.set -> void
 Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.get -> double
 Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.set -> void
+Polhem.Definition.Drafting.FormDraftingOptions.ReplyCulture.get -> System.Globalization.CultureInfo?
+Polhem.Definition.Drafting.FormDraftingOptions.ReplyCulture.set -> void
 Polhem.Definition.Drafting.IFormDraftingHost
 Polhem.Definition.Drafting.IFormDraftingHost.GetCatalog() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogEntry!>!
 Polhem.Definition.Drafting.IFormDraftingHost.GetFields(string! progId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>!

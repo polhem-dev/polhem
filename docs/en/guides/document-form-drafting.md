@@ -86,6 +86,8 @@ Human Resources". When everything is settled, Claude marks the draft ready and *
 
 A few things worth knowing:
 
+- **Claude replies in the editor's language.** Its first reply is in the language DefineEditor shows (View menu);
+  write in another language and it follows you.
 - **Relations are matched to your forms.** Claude searches the folder's forms and their fields. When it is not sure (a
   "received by" box could be an employee or free text), it asks before relating the field.
 - **The conventions are filled in for you**, as in an Excel import: system fields, `ft_` table names, the `company`

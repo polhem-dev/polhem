@@ -11,6 +11,33 @@ namespace Polhem.Definition.Drafting.UnitTests
         private static readonly AIContent[] s_document = [new DataContent(new byte[] { 1, 2, 3 }, "application/pdf")];
 
         [Fact]
+        [DisplayName("ReplyCulture names the language of the replies in the first message")]
+        public async Task StartAsync_ReplyCulture_NamesLanguageInFirstMessage()
+        {
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("zh-TW");
+            var client = new ScriptedChatClient().Then(Text("好的。"));
+            var session = new FormDraftSession(client, new FakeDraftingHost(), new FormDraftingOptions { ReplyCulture = culture });
+
+            await session.StartAsync(s_document);
+
+            var first = client.Requests[0].Messages.First(message => message.Role == ChatRole.User);
+            Assert.Contains($"Reply in {culture.EnglishName} until I write in another language.", first.Text, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Without ReplyCulture the first message names no language")]
+        public async Task StartAsync_NoReplyCulture_NamesNoLanguage()
+        {
+            var client = new ScriptedChatClient().Then(Text("OK."));
+            var session = new FormDraftSession(client, new FakeDraftingHost());
+
+            await session.StartAsync(s_document);
+
+            var first = client.Requests[0].Messages.First(message => message.Role == ChatRole.User);
+            Assert.DoesNotContain("Reply in", first.Text, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("set_form_info replaces the list fields with the snake_case names it is given, without duplicates")]
         public async Task StartAsync_SetFormInfoListFields_ReplacesListFields()
         {
