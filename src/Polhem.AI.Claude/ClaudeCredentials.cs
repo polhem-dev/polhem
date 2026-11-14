@@ -149,10 +149,12 @@ namespace Polhem.AI.Claude
                 return null;
             }
 
-            var description = config.AuthenticationType == "user_oauth"
+            var signedIn = config.AuthenticationType == "user_oauth";
+            var description = signedIn
                 ? $"Signed in with ant auth login (profile: {profile})"
                 : $"Workload identity federation (profile: {profile})";
-            return new ClaudeCredentialSource(ClaudeCredentialKind.Profile, description, warnings)
+            return new ClaudeCredentialSource(
+                signedIn ? ClaudeCredentialKind.Profile : ClaudeCredentialKind.FederatedProfile, description, warnings)
             {
                 ProfileName = profile,
                 WorkspaceId = config.WorkspaceId,

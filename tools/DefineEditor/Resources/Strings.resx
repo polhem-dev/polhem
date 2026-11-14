@@ -527,6 +527,12 @@ The editor keeps no credential of its own.</value></data>
   <data name="Status_DraftingNoCredential" xml:space="preserve"><value>No Claude credential found; run `ant auth login` first</value></data>
   <data name="Drafting_ReadFailedTitle" xml:space="preserve"><value>The documents cannot be read</value></data>
   <data name="Status_DraftingReadFailed" xml:space="preserve"><value>The documents cannot be read: {0}</value></data>
+  <data name="Drafting_CredentialNone" xml:space="preserve"><value>No credential found</value></data>
+  <data name="Drafting_CredentialApiKey" xml:space="preserve"><value>API key from the ANTHROPIC_API_KEY environment variable</value></data>
+  <data name="Drafting_CredentialAuthToken" xml:space="preserve"><value>Access token from the ANTHROPIC_AUTH_TOKEN environment variable</value></data>
+  <data name="Drafting_CredentialProfile" xml:space="preserve"><value>Signed in with ant auth login (profile: {0})</value></data>
+  <data name="Drafting_CredentialFederatedProfile" xml:space="preserve"><value>Workload identity federation (profile: {0})</value></data>
+  <data name="Drafting_CredentialWorkloadIdentity" xml:space="preserve"><value>Workload identity federation from environment variables</value></data>
   <data name="Drafting_ConsentTitle" xml:space="preserve"><value>Send the documents to Claude?</value></data>
   <data name="Drafting_ConsentMessage" xml:space="preserve"><value>The content of these documents will be sent to the Anthropic API, so Claude can draft the form from them:
 {0}

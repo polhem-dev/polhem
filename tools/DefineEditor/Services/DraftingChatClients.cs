@@ -25,7 +25,31 @@ public static class DraftingChatClients
         // Every provider name maps to Claude until a second provider package exists.
         _ = provider;
         var source = ClaudeCredentials.Describe();
-        return new DraftingCredential(source.Kind != ClaudeCredentialKind.None, source.Description, source.Warnings);
+        var description = DescribeCredential(source.Kind, source.ProfileName, key => LocalizationService.Current[key]);
+        return new DraftingCredential(source.Kind != ClaudeCredentialKind.None, description, source.Warnings);
+    }
+
+    /// <summary>
+    /// The one-line description of a Claude credential in the interface language. The provider package describes it in
+    /// English only, so the editor builds its own text from the kind and the profile name.
+    /// </summary>
+    /// <param name="kind">Where the credential comes from.</param>
+    /// <param name="profileName">The profile name, for a profile.</param>
+    /// <param name="lookup">Returns the string for a resource key, such as <see cref="LocalizationService"/>'s indexer.</param>
+    /// <returns>The description.</returns>
+    public static string DescribeCredential(ClaudeCredentialKind kind, string? profileName, Func<string, string> lookup)
+    {
+        ArgumentNullException.ThrowIfNull(lookup);
+        var key = kind switch
+        {
+            ClaudeCredentialKind.ApiKey => "Drafting_CredentialApiKey",
+            ClaudeCredentialKind.AuthToken => "Drafting_CredentialAuthToken",
+            ClaudeCredentialKind.Profile => "Drafting_CredentialProfile",
+            ClaudeCredentialKind.FederatedProfile => "Drafting_CredentialFederatedProfile",
+            ClaudeCredentialKind.WorkloadIdentity => "Drafting_CredentialWorkloadIdentity",
+            _ => "Drafting_CredentialNone",
+        };
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, lookup(key), profileName ?? string.Empty);
     }
 
     /// <summary>Creates a chat client for <paramref name="provider"/>.</summary>

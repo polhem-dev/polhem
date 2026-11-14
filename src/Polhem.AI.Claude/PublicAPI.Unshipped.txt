@@ -17,6 +17,7 @@ Polhem.AI.Claude.ClaudeChatOptions.Model.set -> void
 Polhem.AI.Claude.ClaudeCredentialKind
 Polhem.AI.Claude.ClaudeCredentialKind.ApiKey = 1 -> Polhem.AI.Claude.ClaudeCredentialKind
 Polhem.AI.Claude.ClaudeCredentialKind.AuthToken = 2 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.FederatedProfile = 5 -> Polhem.AI.Claude.ClaudeCredentialKind
 Polhem.AI.Claude.ClaudeCredentialKind.None = 0 -> Polhem.AI.Claude.ClaudeCredentialKind
 Polhem.AI.Claude.ClaudeCredentialKind.Profile = 3 -> Polhem.AI.Claude.ClaudeCredentialKind
 Polhem.AI.Claude.ClaudeCredentialKind.WorkloadIdentity = 4 -> Polhem.AI.Claude.ClaudeCredentialKind

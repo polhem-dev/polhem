@@ -18,12 +18,15 @@ namespace Polhem.AI.Claude
         public ClaudeCredentialKind Kind { get; }
 
         /// <summary>
-        /// Gets a one-line English description, such as <c>Signed in with ant auth login (profile: default)</c>.
+        /// Gets a one-line English description, such as <c>Signed in with ant auth login (profile: default)</c>. An
+        /// application that shows another language builds its own text from <see cref="Kind"/> and
+        /// <see cref="ProfileName"/>.
         /// </summary>
         public string Description { get; }
 
         /// <summary>
-        /// Gets the name of the profile, when <see cref="Kind"/> is <see cref="ClaudeCredentialKind.Profile"/>.
+        /// Gets the name of the profile, when <see cref="Kind"/> is <see cref="ClaudeCredentialKind.Profile"/> or
+        /// <see cref="ClaudeCredentialKind.FederatedProfile"/>.
         /// </summary>
         public string? ProfileName { get; init; }
 
