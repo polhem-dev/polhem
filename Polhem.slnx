@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
+    <Project Path="src/Polhem.AI.Claude/Polhem.AI.Claude.csproj" />
     <Project Path="src/Polhem.Analyzers/Polhem.Analyzers.csproj" />
     <Project Path="src/Polhem.Api.Client/Polhem.Api.Client.csproj" />
     <Project Path="src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj" />
@@ -47,6 +48,7 @@
     <Project Path="tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj" />
     <Project Path="tests/Polhem.LoadTests.UnitTests/Polhem.LoadTests.UnitTests.csproj" />
     <Project Path="tests/Polhem.Definition.Drafting.UnitTests/Polhem.Definition.Drafting.UnitTests.csproj" />
+    <Project Path="tests/Polhem.AI.Claude.UnitTests/Polhem.AI.Claude.UnitTests.csproj" />
     <Project Path="tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj" />
     <Project Path="tests/Polhem.Hosting.UnitTests/Polhem.Hosting.UnitTests.csproj" />
     <Project Path="tests/Polhem.ObjectCaching.UnitTests/Polhem.ObjectCaching.UnitTests.csproj" />

@@ -1,4 +1,4 @@
-<!-- source: en/architecture/dependency-map.md blob: 1eebd8932fa6015ec8c0c4aef79f088a593ac046 -->
+<!-- source: en/architecture/dependency-map.md blob: 5f421636c87240832b045e46b9fccfafb6446e37 -->
 # 專案相依性全景圖
 
 [English](../../en/architecture/dependency-map.md) · [← 文件索引](../README.md)
@@ -34,6 +34,7 @@ graph BT
   end
   subgraph DesignSide ["設計期"]
     Authoring["<b>定義撰寫</b><br/>Definition.Drafting"]
+    AiProviders["<b>AI 提供者</b><br/>AI.Claude"]
   end
 
   Wire --> Foundation
@@ -275,6 +276,18 @@ graph BT
   classDef other stroke-dasharray: 5 4
 ```
 
+### AI 提供者
+
+設計期。每個套件為一家模型廠商提供 `IChatClient`，由應用程式把它接到「定義撰寫」這類功能上。提供者不參考任何其他 Polhem
+專案，所以功能套件永遠不會帶進廠商的 SDK。
+
+```mermaid
+graph BT
+  subgraph AiProviders ["AI 提供者"]
+    AIClaude["Polhem.AI.Claude"]
+  end
+```
+
 <!-- dependency-map:areas:end -->
 
 ## 外部相依套件
@@ -302,6 +315,7 @@ graph BT
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.UI.Avalonia.Shell | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x, Semi.Avalonia 12.x, Semi.Avalonia.DataGrid 12.x, CommunityToolkit.Mvvm 8.x, Microsoft.Extensions.DependencyInjection 10.x |
 | Polhem.Definition.Drafting | Microsoft.Extensions.AI.Abstractions 10.x, DocumentFormat.OpenXml 3.x |
+| Polhem.AI.Claude | Anthropic 13.x, Microsoft.Extensions.AI.Abstractions 10.x |
 | Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core / Polhem.Web.Blazor.Wasm | *(none)* |
 
 <!-- dependency-map:packages:end -->
@@ -333,6 +347,7 @@ graph BT
 - **Polhem.Core** 為最底層基礎套件，無任何內部相依性。
 - **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Core.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的前端即時預覽）才引用本套件；兩端共用的即時預覽引擎 `Polhem.UI.Core` 的 `FormLiveComputationEngine` 由它們傳入運算引擎。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) 與 [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
 - **Polhem.Definition.Drafting** 供 DefineEditor 這類定義工具使用：透過與 AI 模型的對話，由 PDF、Word 文件或照片產生 `FormSchema` 草稿。它只依賴 `Microsoft.Extensions.AI.Abstractions`，所以模型可以替換：各廠商各有一個提供者套件提供 `IChatClient`；廠商 SDK 一旦進入它的封閉相依，`DraftingDependencyGateTests`（`tests/Polhem.Definition.Drafting.UnitTests`）就會失敗。`DocumentFormat.OpenXml` 用來把 Word 文件讀成 Markdown。
+- **Polhem.AI.Claude** 透過官方 `Anthropic` SDK，為 Anthropic 的 Claude 模型提供上述的 `IChatClient`，憑證由 SDK 在本機自行尋找（`ant auth login` 的設定檔或 `ANTHROPIC_API_KEY`）。它不參考任何其他 Polhem 專案，由 `ClaudeDependencyGateTests`（`tests/Polhem.AI.Claude.UnitTests`）檢查。
 - **Polhem.Definition** 為被依賴次數最多的專案，直接相依者為 Contracts、Db、RepoAbs、Caching、Business、Api.Core 與 UI.Avalonia。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入**基礎**，而不和 API 專案放在一起。
 - **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Server`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上自成**組合根**一區，不和 `Polhem.Api.Server` 同區：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的是**它本身不含資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
