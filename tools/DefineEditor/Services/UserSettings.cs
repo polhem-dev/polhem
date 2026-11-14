@@ -53,6 +53,12 @@ public sealed class UserSettings
     /// </summary>
     public Dictionary<string, string> DocumentViewModes { get; set; } = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// The AI provider that drafts a form from documents, by name; see <see cref="DraftingChatClients"/>. Only the
+    /// provider is kept here: its credential stays where the provider's own tooling put it, never in this file.
+    /// </summary>
+    public string DraftingProvider { get; set; } = DraftingChatClients.Claude;
+
     public const int MaxRecentSolutions = 8;
 
     /// <summary>

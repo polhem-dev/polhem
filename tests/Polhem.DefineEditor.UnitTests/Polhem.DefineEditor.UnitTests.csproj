@@ -33,6 +33,8 @@
 
   <ItemGroup>
     <Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />
+    <!-- The drafting tests talk to the same scripted model as the Drafting package's own tests; it never calls a real one. -->
+    <Compile Include="..\Polhem.Definition.Drafting.UnitTests\ScriptedChatClient.cs" Link="ScriptedChatClient.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -159,6 +159,29 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Pops the OS file picker for the documents of a paper form (PDF, Word or images) and drafts a form from them.
+    /// </summary>
+    public async Task PromptImportFormDocumentAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = LocalizationService.Current["Dialog_PickFormDocuments"],
+            AllowMultiple = true,
+            FileTypeFilter = [FormDocumentFileType],
+        });
+
+        if (files.Count > 0 && DataContext is MainWindowViewModel vm)
+            await vm.ImportFormDocumentsAsync(files.Select(f => f.Path.LocalPath).ToList());
+    }
+
+    /// <summary>The documents a form can be drafted from, for the open picker.</summary>
+    public static FilePickerFileType FormDocumentFileType => new(LocalizationService.Current["Dialog_FormDocument"])
+    {
+        Patterns = [.. Polhem.Definition.Drafting.Documents.DocumentSource.SupportedExtensions.Select(e => "*" + e)],
+        AppleUniformTypeIdentifiers = ["com.adobe.pdf", "public.png", "public.jpeg", "org.openxmlformats.wordprocessingml.document"],
+    };
+
+    /// <summary>
     /// Asks for a folder and writes the XML schemas of the definition files into it (File → Export XML Schemas...).
     /// </summary>
     public async Task PromptExportXmlSchemasAsync()
@@ -192,6 +215,7 @@ public partial class MainWindow : Window
     /// <param name="addFrameworkDefaults">Adds the framework default files the open solution lacks.</param>
     /// <param name="importFormWorkbook">Imports a form described in an Excel workbook.</param>
     /// <param name="importFormWorkbooks">Imports several form workbooks at once.</param>
+    /// <param name="importFormDocument">Drafts a form from documents in a conversation with a model.</param>
     /// <param name="exportXmlSchemas">Writes the XML schemas of the definition files for other XML editors.</param>
     /// <param name="checkConnections">Opens a connection to each database of the open solution.</param>
     /// <param name="upgradeDatabase">Builds or upgrades the open solution's database tables.</param>
@@ -204,7 +228,8 @@ public partial class MainWindow : Window
     /// <param name="validate">Validates the active document.</param>
     /// <param name="closeTab">Closes the active tab.</param>
     public void ShowInWindowFileMenu(
-        ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand importFormWorkbooks, ICommand exportXmlSchemas,
+        ICommand addFrameworkDefaults, ICommand importFormWorkbook, ICommand importFormWorkbooks, ICommand importFormDocument,
+        ICommand exportXmlSchemas,
         ICommand checkConnections, ICommand upgradeDatabase,
         ICommand previewDatabaseUpgrade, ICommand syncForm, ICommand upgradeFormTables, ICommand previewFormUpgrade,
         ICommand save, ICommand saveAll, ICommand validate, ICommand closeTab)
@@ -212,6 +237,7 @@ public partial class MainWindow : Window
         AddFrameworkDefaultsMenuItem.Command = addFrameworkDefaults;
         ImportFormWorkbookMenuItem.Command = importFormWorkbook;
         ImportFormWorkbooksMenuItem.Command = importFormWorkbooks;
+        ImportFormDocumentMenuItem.Command = importFormDocument;
         ExportXmlSchemasMenuItem.Command = exportXmlSchemas;
         CheckConnectionsMenuItem.Command = checkConnections;
         UpgradeDatabaseMenuItem.Command = upgradeDatabase;

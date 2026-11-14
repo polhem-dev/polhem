@@ -107,6 +107,10 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
 - **Excel.** **Export to Excel** writes a form as a workbook; **File → Import Form from Excel** and **Import Forms
   from Excel (Batch)** turn workbooks into definition files and can upgrade the database for the new tables. See
   [Modeling Forms in Excel](../../docs/en/guides/excel-form-modeling.md).
+- **Documents.** **File → Import Form from Documents** sends a paper form (PDF, Word or photos) to Claude, after asking
+  you, and drafts the form in a conversation: fields that pick a record are matched to existing forms, what is missing
+  is asked, and the form is previewed as you talk. **Create Definitions** then imports it the way a workbook is
+  imported. The editor keeps no credential: sign in with `ant auth login`, or set `ANTHROPIC_API_KEY`.
 
 ### FormLayout: a live preview on desktop, web and phone
 

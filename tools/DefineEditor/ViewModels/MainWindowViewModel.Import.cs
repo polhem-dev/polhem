@@ -64,17 +64,45 @@ public partial class MainWindowViewModel
     public async Task ImportFormWorkbookAsync(string workbookPath)
     {
         if (!IsSolutionOpened) return;
+        FormWorkbookImportPreparation prepared;
+        try
+        {
+            prepared = FormWorkbookImport.Prepare(workbookPath, new FormImportOptions { DefinePath = SolutionPath });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            StatusText = L("Status_FormImportFailed", ex.Message);
+            return;
+        }
+        await ImportFormContentAsync(prepared.Read.Content, prepared.Read.Issues, prepared.Plan,
+            Path.GetFileName(workbookPath), GetOwnerWindow());
+    }
+
+    /// <summary>
+    /// The part of a form import that does not depend on where the form came from: asks how to treat the existing
+    /// TableSchema and FormLayout, shows the files the import would change (or the problems that keep it from importing),
+    /// writes them once the user confirms, rebuilds the tree and offers to upgrade the database.
+    /// </summary>
+    /// <param name="content">The form; <see langword="null"/> when reading it failed.</param>
+    /// <param name="readIssues">What reading the form found.</param>
+    /// <param name="plan">The plan made with the default modes, or <see langword="null"/> when reading the form failed.</param>
+    /// <param name="sourceLabel">What the form was read from, such as the workbook's file name.</param>
+    /// <param name="owner">The window the dialogs open over; <see langword="null"/> runs without asking.</param>
+    /// <param name="onWritten">
+    /// Runs once the files are written, before the database upgrade is offered over the main window, such as to close
+    /// the window the import started from.
+    /// </param>
+    /// <returns>Whether files were written.</returns>
+    internal async Task<bool> ImportFormContentAsync(FormWorkbookContent? content, IReadOnlyList<DefinitionIssue> readIssues,
+        FormImportPlan? plan, string sourceLabel, Avalonia.Controls.Window? owner, Action? onWritten = null)
+    {
+        if (!IsSolutionOpened) return false;
         var definePath = SolutionPath;
-        var owner = GetOwnerWindow();
         string? imported = null;
         IReadOnlyList<string> importedTables = [];
 
         try
         {
-            var prepared = FormWorkbookImport.Prepare(workbookPath, new FormImportOptions { DefinePath = definePath });
-            var read = prepared.Read;
-            var plan = prepared.Plan;
-
             // An existing TableSchema may carry what the form cannot derive (lengths, extra columns, indexes), and an
             // existing FormLayout may have been adjusted by hand, so the user picks how to treat each; the plan above
             // used the defaults, Merge and keep.
@@ -90,7 +118,7 @@ public partial class MainWindowViewModel
                     if (mode is null)
                     {
                         StatusText = L("Status_FormImportCancelled");
-                        return;
+                        return false;
                     }
                     tableSchemaMode = mode switch
                     {
@@ -110,7 +138,7 @@ public partial class MainWindowViewModel
                     if (layout is null)
                     {
                         StatusText = L("Status_FormImportCancelled");
-                        return;
+                        return false;
                     }
                     layoutMode = layout switch
                     {
@@ -123,7 +151,7 @@ public partial class MainWindowViewModel
                 if (tableSchemaMode != TableSchemaImportMode.Merge || layoutMode != FormLayoutImportMode.Keep)
                 {
                     // The conventions already ran on this content and change nothing when applied again.
-                    plan = FormImporter.Plan(read.Content!, new FormImportOptions
+                    plan = FormImporter.Plan(content!, new FormImportOptions
                     {
                         DefinePath = definePath,
                         TableSchemaMode = tableSchemaMode,
@@ -131,7 +159,7 @@ public partial class MainWindowViewModel
                     });
                 }
             }
-            var issues = read.Issues.Concat(plan?.Issues ?? []).ToList();
+            var issues = readIssues.Concat(plan?.Issues ?? []).ToList();
             if (plan is null || plan.HasErrors)
             {
                 if (owner is not null)
@@ -140,15 +168,15 @@ public partial class MainWindowViewModel
                         L("Error_ImportFormMessage", FormWorkbookImport.FormatIssues(issues)));
                 }
                 StatusText = L("Status_FormImportCancelled");
-                return;
+                return false;
             }
 
-            var progId = read.Content!.Schema.ProgId;
+            var progId = content!.Schema.ProgId;
             var written = plan.Files.Where(f => f.Writes).ToList();
             if (written.Count == 0)
             {
                 StatusText = L("Status_FormImportUnchanged", progId);
-                return;
+                return false;
             }
 
             // An open editor holds its own copy of the file; replacing the file under unsaved edits would
@@ -159,12 +187,12 @@ public partial class MainWindowViewModel
             if (dirty is not null)
             {
                 StatusText = L("Status_FormImportBlockedByDirty", Path.GetFileName(dirty.FilePath));
-                return;
+                return false;
             }
 
             if (owner is not null)
             {
-                var message = L("Confirm_ImportFormMessage", Path.GetFileName(workbookPath), definePath,
+                var message = L("Confirm_ImportFormMessage", sourceLabel, definePath,
                     string.Join("\n", plan.Files
                         .Where(f => f.Writes || f.Action == PlannedFileAction.Skip)
                         .Select(f => $"• {Path.GetRelativePath(definePath, f.Path)} ({FormWorkbookImport.ActionLabel(f.Action)})")));
@@ -174,7 +202,7 @@ public partial class MainWindowViewModel
                 if (!await ConfirmationDialog.ShowAsync(owner, L("Confirm_ImportFormTitle"), message, confirmLabel: L("Action_Import")))
                 {
                     StatusText = L("Status_FormImportCancelled");
-                    return;
+                    return false;
                 }
             }
 
@@ -197,7 +225,10 @@ public partial class MainWindowViewModel
             StatusText = L("Status_FormImportFailed", ex.Message);
         }
 
-        if (imported is not null && owner is not null)
-            await OfferDatabaseUpgradeAsync(owner, imported, importedTables);
+        if (imported is null) return false;
+        onWritten?.Invoke();
+        if (owner is not null && (GetOwnerWindow() ?? owner) is { } upgradeOwner)
+            await OfferDatabaseUpgradeAsync(upgradeOwner, imported, importedTables);
+        return true;
     }
 }
