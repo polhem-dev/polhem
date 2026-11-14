@@ -16,6 +16,7 @@
     <Project Path="src/Polhem.Business/Polhem.Business.csproj" />
     <Project Path="src/Polhem.Db/Polhem.Db.csproj" />
     <Project Path="src/Polhem.Definition/Polhem.Definition.csproj" />
+    <Project Path="src/Polhem.Definition.Drafting/Polhem.Definition.Drafting.csproj" />
     <Project Path="src/Polhem.Expressions/Polhem.Expressions.csproj" />
     <Project Path="src/Polhem.Hosting/Polhem.Hosting.csproj" />
     <Project Path="src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj" />
@@ -45,6 +46,7 @@
     <Project Path="tests/Polhem.Definition.Spreadsheet.UnitTests/Polhem.Definition.Spreadsheet.UnitTests.csproj" />
     <Project Path="tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj" />
     <Project Path="tests/Polhem.LoadTests.UnitTests/Polhem.LoadTests.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Definition.Drafting.UnitTests/Polhem.Definition.Drafting.UnitTests.csproj" />
     <Project Path="tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj" />
     <Project Path="tests/Polhem.Hosting.UnitTests/Polhem.Hosting.UnitTests.csproj" />
     <Project Path="tests/Polhem.ObjectCaching.UnitTests/Polhem.ObjectCaching.UnitTests.csproj" />

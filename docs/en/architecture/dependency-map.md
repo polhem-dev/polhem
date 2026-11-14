@@ -13,7 +13,8 @@ authority.)
 ## Overview
 
 Each inner box is an area, and its name lists the projects with `Polhem.` left out. The areas are grouped into
-three sides: **Shared**, which both sides reference, the **Server side**, and the **Client side**.
+three sides: **Shared**, which both sides reference, the **Server side**, and the **Client side**. **Design time**
+holds what definition tools use while forms are written; no application references it at run time.
 
 <!-- dependency-map:overview:start -->
 ```mermaid
@@ -33,6 +34,9 @@ graph BT
     Avalonia["<b>Avalonia front end</b><br/>UI.Avalonia,<br/>UI.Avalonia.Shell"]
     Web["<b>Web front end</b><br/>Web.Blazor, .Mud, .Fluent,<br/>.Server, .Wasm"]
   end
+  subgraph DesignSide ["Design time"]
+    Authoring["<b>Definition authoring</b><br/>Definition.Drafting"]
+  end
 
   Wire --> Foundation
   Backend --> Foundation
@@ -48,6 +52,7 @@ graph BT
   Web --> Foundation
   Web --> FrontShared
   Web --> ApiClient
+  Authoring --> Foundation
 ```
 <!-- dependency-map:overview:end -->
 
@@ -65,7 +70,7 @@ project such as `Polhem.Expressions`.
 
 ## Projects by area
 
-One diagram per area, listed by side: shared, server side, client side. A solid box belongs to the area, and a dashed box is a project of another area that it depends on. Together these diagrams are every project reference in `src/`. `./check-dependency-map.sh` compares them, and the overview, with the csproj files on every push.
+One diagram per area, listed by side: shared, server side, client side, design time. A solid box belongs to the area, and a dashed box is a project of another area that it depends on. Together these diagrams are every project reference in `src/`. `./check-dependency-map.sh` compares them, and the overview, with the csproj files on every push.
 
 <!-- dependency-map:areas:start -->
 ### Foundation
@@ -263,6 +268,23 @@ graph BT
   classDef other stroke-dasharray: 5 4
 ```
 
+### Definition authoring
+
+Design time. Drafts a form from a paper document through a conversation with an AI model. It reaches the model only
+through the `IChatClient` abstraction, never through a vendor's SDK.
+
+```mermaid
+graph BT
+  subgraph Authoring ["Definition authoring"]
+    Drafting["Polhem.Definition.Drafting"]
+  end
+  Definition["Polhem.Definition"]:::other
+
+  Drafting --> Definition
+
+  classDef other stroke-dasharray: 5 4
+```
+
 <!-- dependency-map:areas:end -->
 
 ## External Package Dependencies
@@ -289,6 +311,7 @@ graph BT
 | Polhem.Api.Client | Polhem.JsonRpc.Payload.Client |
 | Polhem.UI.ApiBridge | Microsoft.Extensions.DependencyInjection.Abstractions 10.x |
 | Polhem.UI.Avalonia.Shell | Avalonia 12.x, Avalonia.Controls.DataGrid 12.x, Semi.Avalonia 12.x, Semi.Avalonia.DataGrid 12.x, CommunityToolkit.Mvvm 8.x, Microsoft.Extensions.DependencyInjection 10.x |
+| Polhem.Definition.Drafting | Microsoft.Extensions.AI.Abstractions 10.x, DocumentFormat.OpenXml 3.x |
 | Polhem.Api.Contracts / Polhem.Repository.Abstractions / Polhem.UI.Core / Polhem.Web.Blazor.Wasm | *(none)* |
 
 <!-- dependency-map:packages:end -->
@@ -322,6 +345,7 @@ Not part of the `src/` library graph above — these ship as `dotnet tool` packa
 
 - **Polhem.Core** is the lowest-level foundation package with no internal dependencies.
 - **Polhem.Expressions** holds `DynamicExpressoEvaluator`, the DynamicExpresso-backed implementation of the expression engine. The *abstraction* — `IExpressionEvaluator`, `ExpressionPolicy`, `ExpressionEvaluationException` — lives in `Polhem.Core.Expressions`, so `Polhem.Definition` (the `FormExpressionCalculator`) and `Polhem.Business` (the rule processor) consume the engine without taking a dependency on DynamicExpresso; only the composition roots that pick an implementation (`Polhem.Hosting` for DI registration, `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` for client-side live preview) reference this package; the live preview engine they share, `FormLiveComputationEngine` in `Polhem.UI.Core`, takes the evaluator from them. That split keeps the definition layer free of third-party packages while a field computed on the client still matches what the server writes on save. See [adr-028](../../../maintainers/adr/adr-028-expression-rule-engine.md) and [adr-038](../../../maintainers/adr/adr-038-definition-dependency-boundary.md).
+- **Polhem.Definition.Drafting** drafts a `FormSchema` from a PDF, a Word document or a photo through a conversation with an AI model, for a definition tool such as DefineEditor. It depends on `Microsoft.Extensions.AI.Abstractions` only, so the model is replaceable: a provider package per vendor supplies the `IChatClient`, and `DraftingDependencyGateTests` (`tests/Polhem.Definition.Drafting.UnitTests`) fails when a vendor SDK reaches its closure. `DocumentFormat.OpenXml` reads Word documents into Markdown.
 - **Polhem.Definition** is the most depended-on project. Its direct dependents are Contracts, Db, RepoAbs, Caching, Business, Api.Core and UI.Avalonia.
 - **Polhem.Api.Contracts** is a shared contract/abstraction layer, not an application-level API project. Despite the "API" name, both `Polhem.Business` and `Polhem.Api.Core` depend on it (`Business → Contracts`, `Core → Contracts`), so it sits *below* them — the diagram puts it in **Foundation** rather than with the API projects.
 - **Polhem.Hosting** is the composition root: it consolidates the backend services (`Polhem.Api.Server`, `Polhem.Business`, `Polhem.Db`, `Polhem.Repository`, `Polhem.ObjectCaching`) behind a single `AddPolhemFramework` extension on `IServiceCollection`, with no ASP.NET Core dependency. Non-web hosts (WinForms, Console, Worker Service) reference it directly. It has its own **Composition root** area rather than sharing one with `Polhem.Api.Server`: reaching across every layer is what a composition root does, so the "API layer must not reference the Repository layer" constraint does not apply to it. What *does* apply is that it holds no data access of its own — statements live in `Polhem.Db` / `Polhem.Repository`, and Hosting keeps only the hosted-service shells and DI wiring.
