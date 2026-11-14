@@ -351,6 +351,35 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
+        #region NormalizeParameterValue (DateOnly on SQLite and Oracle)
+
+        [Theory]
+        [InlineData(DatabaseType.SQLite)]
+        [InlineData(DatabaseType.Oracle)]
+        [DisplayName("NormalizeParameterValue turns a DateOnly into the DateTime at midnight of that day on SQLite and Oracle")]
+        public void NormalizeParameterValue_DateOnly_ConvertedToMidnight(DatabaseType dbType)
+        {
+            object? result = DbCommandSpec.NormalizeParameterValue(dbType, new DateOnly(2026, 2, 3));
+
+            var value = Assert.IsType<DateTime>(result);
+            Assert.Equal(new DateTime(2026, 2, 3, 0, 0, 0, DateTimeKind.Unspecified), value);
+            Assert.Equal(DateTimeKind.Unspecified, value.Kind);
+        }
+
+        [Theory]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [InlineData(DatabaseType.MySQL)]
+        [DisplayName("NormalizeParameterValue keeps a DateOnly on the databases that bind it as a date")]
+        public void NormalizeParameterValue_DateOnly_PassThroughElsewhere(DatabaseType dbType)
+        {
+            var day = new DateOnly(2026, 2, 3);
+
+            Assert.Equal(day, DbCommandSpec.NormalizeParameterValue(dbType, day));
+        }
+
+        #endregion
+
         #region NormalizeParameterValue (Oracle Guid → byte[] conversion)
 
         [Fact]

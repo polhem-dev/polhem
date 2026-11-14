@@ -268,14 +268,15 @@ namespace Polhem.Db
             p.ParameterName = (string.IsNullOrEmpty(parameterPrefix) || spec.Name.StartsWith(parameterPrefix, StringComparison.Ordinal))
                 ? spec.Name
                 : parameterPrefix + spec.Name;
-            p.Value = NormalizeParameterValue(databaseType, spec.Value) ?? DBNull.Value;
+            var value = NormalizeParameterValue(databaseType, spec.Value);
+            p.Value = value ?? DBNull.Value;
             // An inline `{0}` parameter carries no DbType, leaving the provider to infer one from
             // the CLR value — and Npgsql infers `timestamptz` for DateTime, which rejects
             // Kind=Unspecified outright and would silently apply the server's zone to a Utc one.
             // Naming DbType.DateTime pins it to the naive column type this framework stores in
             // (ADR-032 D1), and routes SQL Server through the datetime2 upgrade below so an
             // inline value keeps the same sub-millisecond precision a schema-driven one does.
-            var dbType = spec.DbType ?? (spec.Value is DateTime ? DbType.DateTime : null);
+            var dbType = spec.DbType ?? (value is DateTime ? DbType.DateTime : null);
             if (dbType.HasValue) p.DbType = NormalizeDbType(databaseType, dbType.Value);
             if (spec.Size.HasValue && spec.Size.Value > 0) p.Size = spec.Size.Value;
             p.IsNullable = spec.IsNullable;
@@ -290,13 +291,24 @@ namespace Polhem.Db
         /// not accept a <see cref="Guid"/> instance as the value of a <c>RAW(16)</c> parameter
         /// (the framework's <see cref="Polhem.Core.Data.FieldDbType.Guid"/> mapping), and throws
         /// <c>ArgumentException : Value does not fall within the expected range</c>; convert to
-        /// <c>byte[]</c> via <see cref="Guid.ToByteArray()"/> for Oracle only. All other providers
-        /// pass the value through unchanged.
+        /// <c>byte[]</c> via <see cref="Guid.ToByteArray()"/> for Oracle only. A <see cref="DateOnly"/> becomes the
+        /// <see cref="DateTime"/> at midnight of that day on SQLite and Oracle, and a PostgreSQL
+        /// <see cref="DateTime"/> loses its <see cref="DateTimeKind"/>. Other values pass through unchanged.
         /// </summary>
+        /// <remarks>
+        /// A client filters a date column with a <see cref="DateOnly"/> (ADR-032 D4), while a saved date is a
+        /// <see cref="DateTime"/>. SQLite stores that as text, <c>2026-02-02 00:00:00</c>, and Microsoft.Data.Sqlite
+        /// binds a <see cref="DateOnly"/> as <c>2026-02-02</c>, so the two never compare equal and a range leaves out
+        /// its last day. Oracle.ManagedDataAccess refuses a <see cref="DateOnly"/> value outright. SQL Server, PostgreSQL
+        /// and MySQL bind it as a date and compare it with the stored day. <c>GetListFilterValueDbTests</c> runs the
+        /// filter against each database.
+        /// </remarks>
         internal static object? NormalizeParameterValue(DatabaseType databaseType, object? value)
         {
             if (databaseType == DatabaseType.Oracle && value is Guid guid)
                 return guid.ToByteArray();
+            if (databaseType is DatabaseType.SQLite or DatabaseType.Oracle && value is DateOnly day)
+                return day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
             // Npgsql validates DateTimeKind against the target PostgreSQL type and refuses both
             // mismatches: `timestamptz` demands Utc, `timestamp` demands anything but. Since every
             // DateTime parameter is sent as `timestamp` (see NormalizeDbType) and its value is
