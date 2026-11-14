@@ -7,7 +7,15 @@ applied with the `org-baseline` skill of the dev-workflow plugin. The
 they are what they are. The workflow they enforce is described in `.claude/rules/pull-request.md`. This page records
 only what is specific to Polhem.
 
-Show the current rules with `gh api repos/polhem-dev/polhem/branches/main/protection`.
+Show the current rules with `gh api repos/polhem-dev/polhem/branches/main/protection`, and the merge queue with
+`gh api repos/polhem-dev/polhem/rulesets`.
+
+## Merge queue
+
+Polhem merges through GitHub's merge queue, set in the baseline's `merge_queue` for polhem and applied as the ruleset
+`Baseline merge queue`. The baseline also turns `strict` off for polhem alone. Several pull requests are often open at
+once, and requiring each to be up to date made every merge send the others back to update and run CI again. The
+queue tests every merge on top of the latest `main` instead.
 
 ## Required checks
 
@@ -18,6 +26,14 @@ step took. `browser` runs the browser tests (the `*.BrowserTests` projects) besi
 reason; in full mode `build` runs them so that their coverage reaches SonarCloud, and `browser` skips them.
 
 ## Constraints on the workflows
+
+- **Every required check runs on `merge_group`.** `build-ci.yml` and `docs-check.yml` both trigger on it, so `build`,
+  `templates`, `browser` and `docs` report on the queue's commit. In the queue:
+  - `.github/scripts/resolve-db-scope.sh` reads `[all-db]` from the queued commit, whose message starts with the pull
+    request's title, and leaves SonarCloud out: the queue builds on a temporary branch with a new name each time;
+  - `.github/scripts/detect-docs-only.sh` compares with the `main` the queue starts from.
+
+  The headers of both scripts record the reasons.
 
 - **Documentation-only pull requests pass inside `build`.** The `pull_request` trigger of `build-ci.yml` has no `paths`
   filter; its `push` trigger still has one. A pull request that changes only `.md` files is recognized inside the
