@@ -63,6 +63,8 @@ jobs:
           'src/Polhem.Core/Polhem.Core.csproj'
           'src/Polhem.Expressions/Polhem.Expressions.csproj'
           'src/Polhem.Definition/Polhem.Definition.csproj'
+          'src/Polhem.Definition.Drafting/Polhem.Definition.Drafting.csproj'
+          'src/Polhem.AI.Claude/Polhem.AI.Claude.csproj'
           'src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj'
           'src/Polhem.Db/Polhem.Db.csproj'
           'src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj'
