@@ -87,6 +87,30 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("FromFiles reads several files into content in the order given")]
+        public void FromFiles_SeveralFiles_KeepsOrder()
+        {
+            var front = WriteFile("front.jpg", [1]);
+            var back = WriteFile("back.png", [2]);
+
+            var contents = DocumentSource.FromFiles([front, back]);
+
+            Assert.Equal(["front.jpg", "back.png"], contents.Cast<DataContent>().Select(content => content.Name));
+        }
+
+        [Fact]
+        [DisplayName("FromFiles refuses the whole set when one file is too large")]
+        public void FromFiles_OneOversizedFile_RefusesAll()
+        {
+            var small = WriteFile("small.png", [1]);
+            var big = WriteFile("big.jpg", new byte[DocumentSource.MaxImageBytes + 1]);
+
+            var exception = Assert.Throws<DocumentTooLargeException>(() => DocumentSource.FromFiles([small, big]));
+
+            Assert.Equal("big.jpg", exception.FileName);
+        }
+
+        [Fact]
         [DisplayName("FromStream applies the PDF limit, which is larger than the image limit")]
         public void FromStream_PdfOverImageLimit_IsAccepted()
         {

@@ -1,5 +1,10 @@
 #nullable enable
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxDocumentBytes = 33554432 -> long
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxImageBytes = 5242880 -> long
+const Polhem.Definition.Drafting.FormDraftConverter.PlaceholderProgId = "NewForm" -> string!
+override Polhem.Definition.Drafting.DraftIssue.ToString() -> string!
 Polhem.Definition.Drafting.Documents.DocumentSource
+static Polhem.Definition.Drafting.Documents.DocumentSource.FromFiles(System.Collections.Generic.IEnumerable<string!>! paths) -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>!
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.DocumentTooLargeException(string! fileName, long length, long maxLength) -> void
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.FileName.get -> string!
@@ -104,10 +109,6 @@ Polhem.Definition.Drafting.IFormDraftingHost
 Polhem.Definition.Drafting.IFormDraftingHost.GetCatalog() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogEntry!>!
 Polhem.Definition.Drafting.IFormDraftingHost.GetFields(string! progId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>!
 Polhem.Definition.Drafting.IFormDraftingHost.Validate(Polhem.Definition.Drafting.FormDraftResult! result) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftIssue!>!
-const Polhem.Definition.Drafting.Documents.DocumentSource.MaxDocumentBytes = 33554432 -> long
-const Polhem.Definition.Drafting.Documents.DocumentSource.MaxImageBytes = 5242880 -> long
-const Polhem.Definition.Drafting.FormDraftConverter.PlaceholderProgId = "NewForm" -> string!
-override Polhem.Definition.Drafting.DraftIssue.ToString() -> string!
 static Polhem.Definition.Drafting.Documents.DocumentSource.FromFile(string! path) -> Microsoft.Extensions.AI.AIContent!
 static Polhem.Definition.Drafting.Documents.DocumentSource.FromStream(System.IO.Stream! stream, string! fileName) -> Microsoft.Extensions.AI.AIContent!
 static Polhem.Definition.Drafting.Documents.DocumentSource.SupportedExtensions.get -> System.Collections.Generic.IReadOnlyList<string!>!

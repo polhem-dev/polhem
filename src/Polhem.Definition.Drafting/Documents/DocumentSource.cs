@@ -45,6 +45,29 @@ namespace Polhem.Definition.Drafting.Documents
         }
 
         /// <summary>
+        /// Reads several documents, such as the front and back of a form, into the content of one chat message.
+        /// </summary>
+        /// <param name="paths">The paths, in the order the model should see them.</param>
+        /// <returns>The content of each file, in the same order.</returns>
+        /// <remarks>
+        /// Every file's type and size are checked before any is read, so one refused file refuses the whole set.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">A file type is not one of <see cref="SupportedExtensions"/>.</exception>
+        /// <exception cref="DocumentTooLargeException">A file is larger than the limit for its type.</exception>
+        public static IReadOnlyList<AIContent> FromFiles(IEnumerable<string> paths)
+        {
+            ArgumentNullException.ThrowIfNull(paths);
+            var list = paths.ToList();
+            foreach (var path in list)
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(paths));
+                var fileName = Path.GetFileName(path);
+                EnsureWithinLimit(fileName, Classify(fileName), new FileInfo(path).Length);
+            }
+            return list.Select(FromFile).ToList();
+        }
+
+        /// <summary>
         /// Reads a document from a stream into chat message content.
         /// </summary>
         /// <param name="stream">The document's bytes. Read to the end; not disposed.</param>
