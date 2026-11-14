@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Supplies a Microsoft.Extensions.AI IChatClient backed by Anthropic's Claude models through the official Anthropic SDK, with the settings Polhem's AI features expect: adaptive thinking with an explicit effort, streaming, server-side refusal fallbacks, strict tools and prompt caching. Credentials come from the SDK's own resolution chain.</Description>
+    <PackageTags>polhem;ai;claude;anthropic;ichatclient</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The official Anthropic SDK, including its IChatClient adapter and the `ant auth login` credential chain. -->
+    <PackageReference Include="Anthropic" Version="13.8.0" />
+    <!-- Named directly so the abstraction matches the version the feature packages compile against. -->
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.AI.Claude.UnitTests" />
+  </ItemGroup>
+
+</Project>

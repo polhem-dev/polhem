@@ -1,0 +1,50 @@
+#nullable enable
+Polhem.AI.Claude.ClaudeChatClientFactory
+Polhem.AI.Claude.ClaudeChatException
+Polhem.AI.Claude.ClaudeChatException.ClaudeChatException(Polhem.AI.Claude.ClaudeFailureKind kind, string! message, string? refusalCategory = null, System.Exception? innerException = null) -> void
+Polhem.AI.Claude.ClaudeChatException.Kind.get -> Polhem.AI.Claude.ClaudeFailureKind
+Polhem.AI.Claude.ClaudeChatException.RefusalCategory.get -> string?
+Polhem.AI.Claude.ClaudeChatOptions
+Polhem.AI.Claude.ClaudeChatOptions.ClaudeChatOptions() -> void
+Polhem.AI.Claude.ClaudeChatOptions.Effort.get -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeChatOptions.Effort.set -> void
+Polhem.AI.Claude.ClaudeChatOptions.EnableFallbacks.get -> bool
+Polhem.AI.Claude.ClaudeChatOptions.EnableFallbacks.set -> void
+Polhem.AI.Claude.ClaudeChatOptions.MaxOutputTokens.get -> int
+Polhem.AI.Claude.ClaudeChatOptions.MaxOutputTokens.set -> void
+Polhem.AI.Claude.ClaudeChatOptions.Model.get -> string!
+Polhem.AI.Claude.ClaudeChatOptions.Model.set -> void
+Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.ApiKey = 1 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.AuthToken = 2 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.None = 0 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.Profile = 3 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialKind.WorkloadIdentity = 4 -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialSource
+Polhem.AI.Claude.ClaudeCredentialSource.BaseUrl.get -> string?
+Polhem.AI.Claude.ClaudeCredentialSource.BaseUrl.init -> void
+Polhem.AI.Claude.ClaudeCredentialSource.Description.get -> string!
+Polhem.AI.Claude.ClaudeCredentialSource.Kind.get -> Polhem.AI.Claude.ClaudeCredentialKind
+Polhem.AI.Claude.ClaudeCredentialSource.OrganizationId.get -> string?
+Polhem.AI.Claude.ClaudeCredentialSource.OrganizationId.init -> void
+Polhem.AI.Claude.ClaudeCredentialSource.ProfileName.get -> string?
+Polhem.AI.Claude.ClaudeCredentialSource.ProfileName.init -> void
+Polhem.AI.Claude.ClaudeCredentialSource.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.AI.Claude.ClaudeCredentialSource.WorkspaceId.get -> string?
+Polhem.AI.Claude.ClaudeCredentialSource.WorkspaceId.init -> void
+Polhem.AI.Claude.ClaudeCredentials
+Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeEffort.ExtraHigh = 3 -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeEffort.High = 2 -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeEffort.Low = 0 -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeEffort.Max = 4 -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeEffort.Medium = 1 -> Polhem.AI.Claude.ClaudeEffort
+Polhem.AI.Claude.ClaudeFailureKind
+Polhem.AI.Claude.ClaudeFailureKind.NotAuthenticated = 2 -> Polhem.AI.Claude.ClaudeFailureKind
+Polhem.AI.Claude.ClaudeFailureKind.OutputLimitReached = 1 -> Polhem.AI.Claude.ClaudeFailureKind
+Polhem.AI.Claude.ClaudeFailureKind.Refused = 0 -> Polhem.AI.Claude.ClaudeFailureKind
+const Polhem.AI.Claude.ClaudeChatOptions.DefaultModel = "claude-opus-5-5" -> string!
+override Polhem.AI.Claude.ClaudeCredentialSource.ToString() -> string!
+static Polhem.AI.Claude.ClaudeChatClientFactory.Create(Anthropic.AnthropicClient! client, Polhem.AI.Claude.ClaudeChatOptions? options) -> Microsoft.Extensions.AI.IChatClient!
+static Polhem.AI.Claude.ClaudeChatClientFactory.Create(Polhem.AI.Claude.ClaudeChatOptions? options) -> Microsoft.Extensions.AI.IChatClient!
+static Polhem.AI.Claude.ClaudeCredentials.Describe() -> Polhem.AI.Claude.ClaudeCredentialSource!
