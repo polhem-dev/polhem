@@ -441,6 +441,9 @@ Region 是業務資料，所以放在 **company** 分類（`TableSchema/company/
 
 重啟 server（它會建立 `ft_region`）與桌面前端。**Regions** 現在出現在左側選單的 Master Data 之下，具備可用的清單、新增、修改、刪除，以及來自 `uk_` 索引、依公司區分的唯一代碼檢查 —— 全部來自定義修改，不編譯你自己的任何程式碼。
 
+想在不啟動 demo 的情況下建立資料表，可執行 `dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Server -- db upgrade --table ft_region`，
+或用 DefineEditor 的 **Upgrade Database**；兩者開啟的都是執行中宿主使用的同一個 `northwind.db`。
+
 ### 或者用 Excel 描述
 
 步驟 1 到 6 也可以由活頁簿產生。`dotnet polhem forms template --out Region.xlsx` 會寫出空白活頁簿；填好 Form 工作表與

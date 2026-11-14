@@ -11,7 +11,8 @@ namespace Polhem.Hosting.UnitTests
 {
     // NOTE: AddPolhemBackend initializes the process-wide SysInfo. The materialized default SystemSettings has debug
     // mode off and no allowed type namespaces, which is the state SysInfo starts in, so other tests running in
-    // parallel see no change apart from SysInfo.Version, which none of them reads.
+    // parallel see no change apart from SysInfo.Version, which none of them reads. It also sets the process-wide
+    // DataDirectory value when nothing has set it; no test in this assembly opens a |DataDirectory| connection string.
     public sealed class PolhemHostApplicationBuilderExtensionsTests : IDisposable
     {
         private readonly string _root = Directory.CreateTempSubdirectory("polhem-backend-").FullName;

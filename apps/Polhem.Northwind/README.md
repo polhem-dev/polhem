@@ -467,6 +467,9 @@ Add it inside the `master-data` folder. `Id` is the node key and must be unique 
 
 Restart the server (it creates `ft_region`) and the desktop client. **Regions** is now in the left menu under Master Data, with working list, new, edit, delete, and a unique-code check per company from the `uk_` index — all from definition edits, no compilation of your own code.
 
+To create the table without starting the demo, run `dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Server -- db upgrade --table ft_region`,
+or DefineEditor's **Upgrade Database**; both open the same `northwind.db` as the running hosts.
+
 ### Or describe it in Excel
 
 Steps 1 to 6 can also come from a workbook. `dotnet polhem forms template --out Region.xlsx` writes an empty one;

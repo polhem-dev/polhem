@@ -12,6 +12,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
+using Polhem.Hosting.Database;
 using Polhem.Hosting.DependencyInjection;
 
 namespace Polhem.DbManager;
@@ -36,6 +37,8 @@ internal static class DbManagerHost
     /// when <paramref name="createKeyFile"/> is set (the <c>create</c> command, which sets up a new deployment), the
     /// way the framework creates one (<c>MasterKeyProvider</c>: a new key in an owner-only file); for the other
     /// commands it fails, so a mistyped path does not leave a second key behind.
+    /// <para><c>|DataDirectory|</c> is pointed at the folder that holds <paramref name="definePath"/>, as
+    /// <c>AddPolhemBackend</c> points it for the server (<see cref="DataDirectory.EnsureDefault"/>).</para>
     /// </remarks>
     /// <param name="definePath">The definition folder.</param>
     /// <param name="createKeyFile">Whether a missing master key file may be created.</param>
@@ -44,6 +47,7 @@ internal static class DbManagerHost
     public static IHost Build(string definePath, bool createKeyFile, out string? createdKeyFile)
     {
         RegisterProviders();
+        DataDirectory.EnsureDefault(definePath);
 
         var paths = new PathOptions { DefinePath = definePath };
         var settings = SystemSettingsLoader.Load(paths);

@@ -40,7 +40,9 @@ does not leave a second key behind.
 
 A SQLite item with a relative path is refused: such a path is resolved against the working directory of the process
 that opens it, which for an application is its server's directory, so the tool would use a different file. Use an
-absolute path, or run the `db` commands from the server project.
+absolute path, a path under `|DataDirectory|`, which the tool resolves to the folder that holds the definition folder
+as `AddPolhemBackend` does for the server, or run the `db` commands from the server project. See
+[SQLite File Paths](https://github.com/polhem-dev/polhem/blob/main/docs/en/database/database-settings-guide.md#27-sqlite-file-paths).
 
 The tool redistributes the database drivers; their licenses are listed in
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

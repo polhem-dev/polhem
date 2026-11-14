@@ -2,8 +2,9 @@
 <DatabaseSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
     <!-- Every item names the same file. |DataDirectory| is Microsoft.Data.Sqlite's substitution, which
-         NorthwindBackend points at the folder that holds Define/, so both hosts (the JSON-RPC server and
-         the Blazor head) open apps/Polhem.Northwind/northwind.db whatever their working directory. -->
+         AddPolhemBackend and polhem-db point at the folder that holds Define/, so both hosts (the JSON-RPC
+         server and the Blazor head) and the database tool open apps/Polhem.Northwind/northwind.db whatever
+         their working directory. -->
     <!-- common: framework / cross-company shared tables (st_session, st_cache_notify). -->
     <DatabaseItem
         Id="common"
