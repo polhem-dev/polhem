@@ -112,12 +112,19 @@ dotnet add package Polhem.Db
 | **Polhem.Web.Blazor.Server.dll** | Blazor head 的 Blazor Server 宿主：Local 或 Remote 模式的 circuit client，以及外殼的註冊與語系端點。 |
 | **Polhem.Web.Blazor.Wasm.dll** | Blazor head 的 Blazor WebAssembly 宿主：遠端 client 與外殼的語系切換。 |
 
+### 表單草擬
+
+| 組件名稱 | 說明 |
+|---|---|
+| **Polhem.Definition.Drafting.dll** | 以和 AI 模型的對話，從紙本文件（PDF、Word 文件或照片）草擬表單：讀取文件、執行模型用來修改草稿的工具，並以固定規則把草稿轉成 `FormSchema`。可接任何 `IChatClient`；應用程式提供既有表單與驗證（`IFormDraftingHost`）。見[從文件草擬表單](docs/zh-TW/guides/document-form-drafting.md)。 |
+| **Polhem.AI.Claude.dll** | 表單草擬的 Claude 提供者：以 Anthropic SDK 實作的 `IChatClient`，使用 `ant auth login` 或 `ANTHROPIC_API_KEY` 的憑證，並在不讀取憑證內容的情況下回報用的是哪一個。 |
+
 ### Tooling（dotnet tool 與範本）
 
 | 套件 | 安裝 | 說明 |
 |---|---|---|
 | **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>升版：`dotnet tool update -g Polhem.Cli` | 框架 CLI，命令名 `dotnet polhem`：materialize 框架預設的定義檔、產生 `SystemSettings.xml` 所用的受保護金鑰，以及處理表單活頁簿。各命令見 [Polhem.Cli README](tools/Polhem.Cli/README.zh-TW.md)；`dotnet polhem --help` 會列出它們。 |
-| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor`（本機工具） | 定義檔的桌面編輯器，命令名 `dotnet polhem-define [DefinePath]`；可從 Excel 活頁簿匯入表單。見 [DefineEditor README](tools/DefineEditor/README.zh-TW.md)。 |
+| **Polhem.DefineEditor** | `dotnet tool install Polhem.DefineEditor`（本機工具） | 定義檔的桌面編輯器，命令名 `dotnet polhem-define [DefinePath]`；可從 Excel 活頁簿匯入表單，或與 Claude 對話從文件草擬表單。見 [DefineEditor README](tools/DefineEditor/README.zh-TW.md)。 |
 | **Polhem.DbManager** | `dotnet tool install -g Polhem.DbManager` | 資料庫管理工具，命令名 `polhem-db`：依定義資料夾建立、檢查與升級資料庫，支援所有資料庫，不需要專案。DefineEditor 需要時會執行它。見 [DbManager README](tools/DbManager/README.zh-TW.md)。 |
 | **Polhem.Templates** | `dotnet new install Polhem.Templates` | 建立新 Polhem 應用程式的 `dotnet new` 範本：`polhem-avalonia`，以及使用 MudBlazor 或 Fluent UI 的 Blazor Server 與 Blazor WebAssembly 網站。見 [Polhem.Templates README](tools/Polhem.Templates/README.zh-TW.md)。 |
 
