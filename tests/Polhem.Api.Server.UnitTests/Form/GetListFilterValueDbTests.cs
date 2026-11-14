@@ -111,23 +111,23 @@ namespace Polhem.Api.Server.UnitTests.Form
         public Task JsonCodec_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite: a GetList filtering a date column with typed DateOnly values for Equal and Between returns the matching rows")]
+        [DisplayName("SQLite: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
         public Task JsonCodec_Sqlite_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server: a GetList filtering a date column with typed DateOnly values for Equal and Between returns the matching rows")]
+        [DisplayName("SQL Server: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
         public Task JsonCodec_SqlServer_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL: a GetList filtering a date column with typed DateOnly values for Equal and Between returns the matching rows")]
+        [DisplayName("PostgreSQL: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
         public Task JsonCodec_PostgreSql_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL: a GetList filtering a date column with typed DateOnly values for Equal and Between returns the matching rows")]
+        [DisplayName("MySQL: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
         public Task JsonCodec_MySql_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle: a GetList filtering a date column with typed DateOnly values for Equal and Between returns the matching rows")]
+        [DisplayName("Oracle: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
         public Task JsonCodec_Oracle_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLite)]
@@ -303,7 +303,7 @@ namespace Polhem.Api.Server.UnitTests.Form
         /// <summary>
         /// A <see cref="DateOnly"/> is how a client filters a date column (ADR-032 D4: a <see cref="DateTime"/> filter value
         /// is an instant and moves to UTC). The stored day and the filter's day must compare equal, so <c>Equal</c> finds
-        /// row B and <c>Between</c> includes its last day, row C.
+        /// row B, <c>Between</c> includes its last day, row C, and each value of <c>In</c> finds its row.
         /// </summary>
         private Task RunJsonCodecDateOnly(DatabaseType databaseType)
         {
@@ -313,6 +313,7 @@ namespace Polhem.Api.Server.UnitTests.Form
 
                 Assert.Equal(["B"], await ListAsync(executor, progId, FilterCondition.Equal(DueDate, day)));
                 Assert.Equal(["B", "C"], await ListAsync(executor, progId, FilterCondition.Between(DueDate, day, day.AddDays(1))));
+                Assert.Equal(["A", "C"], await ListAsync(executor, progId, FilterCondition.In(DueDate, [day.AddDays(-1), day.AddDays(1)])));
             });
         }
 
