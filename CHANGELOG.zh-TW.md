@@ -10,6 +10,16 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
+## [1.14.0] - 2026-11-14
+
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.14.0.md](docs/zh-TW/changelogs/1.14.0.md)
+
+- **破壞性變更：** 型別與來源欄位不同的關聯欄位改為建置錯誤（POLHEM2008）。
+- **破壞性變更：** 以 `AddPolhemBackend` 建立、沒有設定 `|DataDirectory|` 的 host，SQLite 檔改在定義資料夾旁開啟。
+- DefineEditor 能以和 Claude 的對話，從 PDF、Word 文件或照片草擬表單，背後是新套件 `Polhem.Definition.Drafting` 與 `Polhem.AI.Claude`。
+- `DateOnly` 篩選值在 SQLite 與 Oracle 能比對日期。
+- `polhem-db` 與 DefineEditor 的資料庫升級接受 `|DataDirectory|` 下的 SQLite 路徑。
+
 ## [1.13.0] - 2026-11-13
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.13.0.md](docs/zh-TW/changelogs/1.13.0.md)

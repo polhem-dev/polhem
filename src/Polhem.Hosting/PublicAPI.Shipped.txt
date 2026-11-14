@@ -39,6 +39,7 @@ Polhem.Hosting.Database.CompanyRowAssignment.Rows.get -> int
 Polhem.Hosting.Database.CompanyRowAssignment.Rows.init -> void
 Polhem.Hosting.Database.CompanyRowAssignment.TableName.get -> string!
 Polhem.Hosting.Database.CompanyRowAssignment.TableName.init -> void
+Polhem.Hosting.Database.DataDirectory
 Polhem.Hosting.Database.DatabaseCheckEntry
 Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseCheckEntry() -> void
 Polhem.Hosting.Database.DatabaseCheckEntry.DatabaseId.get -> string!
@@ -107,10 +108,15 @@ Polhem.Hosting.DependencyInjection.PolhemBackendOptions.MaterializeOptions.set -
 Polhem.Hosting.DependencyInjection.PolhemBackendOptions.PolhemBackendOptions() -> void
 Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions
 Polhem.Hosting.DependencyInjection.PolhemHostApplicationBuilderExtensions
+const Polhem.Hosting.Database.DataDirectory.AppDomainKey = "DataDirectory" -> string!
+const Polhem.Hosting.Database.DataDirectory.Prefix = "|DataDirectory|" -> string!
 const Polhem.Hosting.Database.DatabaseCommandLine.Failure = 1 -> int
 const Polhem.Hosting.Database.DatabaseCommandLine.PasswordVariable = "POLHEM_ADMIN_PASSWORD" -> string!
 const Polhem.Hosting.Database.DatabaseCommandLine.Success = 0 -> int
 const Polhem.Hosting.Database.DatabaseCommandLine.UsageError = 2 -> int
+static Polhem.Hosting.Database.DataDirectory.Current.get -> string?
+static Polhem.Hosting.Database.DataDirectory.DefaultFor(string! definePath) -> string!
+static Polhem.Hosting.Database.DataDirectory.EnsureDefault(string! definePath) -> string!
 static Polhem.Hosting.Database.DatabaseCommandLine.TryRun(System.IServiceProvider! services, string![]! args) -> int?
 static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Polhem.Hosting.DependencyInjection.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
