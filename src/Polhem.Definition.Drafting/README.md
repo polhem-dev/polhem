@@ -17,7 +17,7 @@ a model vendor's SDK: the application passes in an `IChatClient`, from a provide
 |------|---------|
 | `DocumentSource` | Reads PDFs, images and Word documents into the content of the first message. A Word document becomes Markdown text (paragraphs and tables); the others are sent as they are. `SupportedExtensions` lists the extensions; `MaxDocumentBytes` and `MaxImageBytes` are the limits |
 | `FormDraftSession` | The conversation: `StartAsync` sends the documents, `SendAsync` sends the person's reply, `ApplyUserEdit` records an edit the person made directly. Raises `DraftChanged` and `AssistantMessage`; `IsReady` turns true when the draft passes every check |
-| `FormDraft` | The draft the model edits: tables, fields, choices, relations and the menu placement. Each field keeps the text of the document it came from |
+| `FormDraft` | The draft the model edits: tables, fields, choices, relations, the fields the list shows and the menu placement. Each field keeps the text of the document it came from |
 | `FormDraftConverter` | Turns a draft into a `FormDraftResult`, deterministically. An unfinished draft converts too, with its open items as issues and `PlaceholderProgId` until the ProgId is set |
 | `FormDraftResult` | The `FormSchema`, the zh-TW texts keyed as `FormSchemaLocalizer` reads them, the menu placement, the source text of each field, and the issues |
 | `IFormDraftingHost` | What the application supplies: the catalog of existing forms, the fields of one form, and the validation of a result |

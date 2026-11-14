@@ -266,6 +266,54 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Null(draft.Tables[0].Fields[0].DbType);
         }
 
+        [Fact]
+        [DisplayName("The list fields the draft names become the schema's ListFields, normalized and in order")]
+        public void Convert_ListFields_AreWrittenInOrder()
+        {
+            var draft = LeaveRequest();
+            draft.ListFields.Clear();
+            draft.ListFields.Add("Start Date");
+            draft.ListFields.Add("applicant");
+            draft.ListFields.Add("start_date");
+
+            var result = FormDraftConverter.Convert(draft);
+
+            Assert.Equal("start_date,applicant", result.Schema.ListFields);
+            Assert.Empty(result.Issues);
+        }
+
+        [Fact]
+        [DisplayName("A list field that is not a master field is left out and reported as an error")]
+        public void Convert_UnknownListField_IsAnError()
+        {
+            var draft = LeaveRequest();
+            draft.ListFields.Add("quantity");
+
+            var result = FormDraftConverter.Convert(draft);
+
+            Assert.Equal("applicant,leave_type,start_date", result.Schema.ListFields);
+            var issue = Assert.Single(result.Issues);
+            Assert.Equal(DraftIssueSeverity.Error, issue.Severity);
+            Assert.Contains("quantity", issue.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Undecided list fields are previewed with the first master fields that fit a list column, with a warning")]
+        public void Convert_UndecidedListFields_DefaultToMasterFieldsWithWarning()
+        {
+            var draft = LeaveRequest();
+            draft.ListFields.Clear();
+            draft.Tables[0].Fields.Insert(1, new DraftField { FieldName = "notes", Caption = "Notes", DbType = FieldDbType.Text });
+            draft.Tables[0].Fields.Insert(2, new DraftField { FieldName = "urgent", Caption = "Urgent", DbType = FieldDbType.Boolean });
+
+            var result = FormDraftConverter.Convert(draft);
+
+            Assert.Equal("applicant,leave_type,start_date,reason", result.Schema.ListFields);
+            var issue = Assert.Single(result.Issues);
+            Assert.Equal(DraftIssueSeverity.Warning, issue.Severity);
+            Assert.Equal("Schema.ListFields", issue.Location);
+        }
+
         private static FormDraft LeaveRequest()
         {
             var draft = new FormDraft { ProgId = "LeaveRequest", DisplayName = "Leave Request", DisplayNameZhTw = "請假單" };
@@ -286,6 +334,9 @@ namespace Polhem.Definition.Drafting.UnitTests
                 ControlType = ControlType.MemoEdit, Required = true, SourceQuote = "請假事由",
             });
             draft.Tables.Add(master);
+            draft.ListFields.Add("applicant");
+            draft.ListFields.Add("leave_type");
+            draft.ListFields.Add("start_date");
             return draft;
         }
 

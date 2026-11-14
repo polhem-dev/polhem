@@ -22,5 +22,10 @@ namespace Polhem.Definition.Drafting
 
         /// <summary>Gets where the form appears in the menu.</summary>
         public DraftMenuPlacement Menu { get; } = new();
+
+        /// <summary>
+        /// Gets the names of the master table fields the form's list shows, in order. Empty while undecided.
+        /// </summary>
+        public IList<string> ListFields { get; } = [];
     }
 }

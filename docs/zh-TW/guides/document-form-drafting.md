@@ -1,4 +1,4 @@
-<!-- source: en/guides/document-form-drafting.md blob: df09c0a3fae24e99d19df6abe4c637a4f441ff84 -->
+<!-- source: en/guides/document-form-drafting.md blob: a4816ed3a90ce8223c30846e11c7252343dd55a4 -->
 # 從文件草擬表單
 
 [English](../../en/guides/document-form-drafting.md) · [← 文件索引](../README.md)
@@ -29,6 +29,7 @@
 - 欄位，含英文標題、zh-TW 標題、資料型別與長度，
 - 文件提供固定選項時的下拉選項，
 - 關聯：挑選員工、部門、客戶或其他單據的欄位，會對到定義資料夾中既有的對應表單，
+- 表單清單要顯示的欄位，關聯的記錄以名稱顯示，
 - 表單放在選單的哪個位置。
 
 文件沒寫的部分（ProgId、欄位名稱、長度、Claude 沒把握的關聯），Claude 會在對話中詢問，每次都附上建議答案。

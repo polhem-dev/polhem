@@ -28,6 +28,8 @@ namespace Polhem.Definition.Drafting
         /// <summary>The ProgId a draft is previewed under while its own ProgId is undecided.</summary>
         public const string PlaceholderProgId = "NewForm";
 
+        private const int DefaultListFieldCount = 6;
+
         private static readonly string[] s_reservedPrefixes = ["sys_", "ref_"];
 
         /// <summary>
@@ -61,6 +63,7 @@ namespace Polhem.Definition.Drafting
                 result.Schema.Tables!.Add(new FormTable(progId, displayName));
             for (var index = 0; index < draft.Tables.Count; index++)
                 AddTable(result, draft.Tables[index], index, issues);
+            SetListFields(result.Schema, draft.ListFields, issues);
 
             foreach (var issue in issues)
                 result.Issues.Add(issue);
@@ -144,6 +147,36 @@ namespace Polhem.Definition.Drafting
             var quote = draftField.SourceQuote.Trim();
             if (quote.Length > 0)
                 result.FieldSources[location] = quote;
+        }
+
+        /// <summary>
+        /// Writes the list fields the draft names, or, while it names none, the first fields of the master table that fit
+        /// in a list column. A list field that picks a record keeps its own name here; the host's conventions show the
+        /// record's name in its place.
+        /// </summary>
+        private static void SetListFields(FormSchema schema, IList<string> listFields, List<DraftIssue> issues)
+        {
+            var master = schema.MasterTable;
+            if (master?.Fields is null || master.Fields.Count == 0) return;
+
+            var names = new List<string>();
+            foreach (var name in listFields.Select(DraftNaming.ToSnakeCase).Where(name => name.Length > 0))
+            {
+                if (!master.Fields.Contains(name))
+                    issues.Add(Error("Schema.ListFields", $"The list field '{name}' is not a field of the master table and is left out."));
+                else if (!names.Contains(name, StringComparer.Ordinal))
+                    names.Add(master.Fields[name].FieldName);
+            }
+            if (listFields.Count == 0)
+            {
+                names.AddRange(master.Fields
+                    .Where(field => field.DbType is not (FieldDbType.Text or FieldDbType.Boolean or FieldDbType.Binary))
+                    .Take(DefaultListFieldCount)
+                    .Select(field => field.FieldName));
+                issues.Add(Warning("Schema.ListFields",
+                    $"The fields the list shows are not decided yet; previewed with {string.Join(", ", names)}."));
+            }
+            schema.ListFields = string.Join(",", names);
         }
 
         private static FieldDbType ResolveDbType(DraftField draftField, string location, List<DraftIssue> issues)

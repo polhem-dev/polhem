@@ -17,7 +17,9 @@ namespace Polhem.Definition.Drafting.Session
             1. Read. Build a first draft from the documents straight away: set_form_info, upsert_table for the master
                table and any detail tables (repeating rows on the document), then upsert_field for every field. For each
                field that looks like a reference to another record (an employee, a department, a customer, a product, a
-               document number), call search_progids and then set_relation with an honest confidence and reason.
+               document number), call search_progids and then set_relation with an honest confidence and reason. Then
+               choose the list fields with set_form_info: the few master fields that tell the records apart in the
+               form's list.
             2. Ask. Call validate_draft. Then ask the user about what is still undecided or uncertain: the ProgId, field
                names, types, lengths, the menu placement, low-confidence relations. Ask a few questions at a time, each
                with a suggested answer the user can accept, such as "Use the ProgId LeaveRequest?". Apply the answers
