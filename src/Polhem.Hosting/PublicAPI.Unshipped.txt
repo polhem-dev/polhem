@@ -1,7 +1,1 @@
 #nullable enable
-Polhem.Hosting.Database.DataDirectory
-const Polhem.Hosting.Database.DataDirectory.AppDomainKey = "DataDirectory" -> string!
-const Polhem.Hosting.Database.DataDirectory.Prefix = "|DataDirectory|" -> string!
-static Polhem.Hosting.Database.DataDirectory.Current.get -> string?
-static Polhem.Hosting.Database.DataDirectory.DefaultFor(string! definePath) -> string!
-static Polhem.Hosting.Database.DataDirectory.EnsureDefault(string! definePath) -> string!

@@ -37,3 +37,11 @@ POLHEM4006 | Polhem.Serialization | Error | ParameterlessConstructorAnalyzer —
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 POLHEM3004 | Polhem.Repository | Warning | RepositoryDbAccessFactoryAnalyzer — a repository must create its database access through CreateDbAccess
+
+## Release 1.14.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+POLHEM2008 | Polhem.Definition | Error | RelationFieldTypeAnalyzer — a relation field must declare the type of its source field

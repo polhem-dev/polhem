@@ -11,6 +11,16 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [1.14.0] - 2026-11-14
+
+Details and migration steps: [docs/en/changelogs/1.14.0.md](docs/en/changelogs/1.14.0.md)
+
+- **Breaking:** A relation field whose type differs from its source field is a build error (POLHEM2008).
+- **Breaking:** A host built with `AddPolhemBackend` that leaves `|DataDirectory|` unset opens its SQLite files next to its definition folder.
+- DefineEditor drafts a form from a PDF, a Word document or photos in a conversation with Claude, through the new `Polhem.Definition.Drafting` and `Polhem.AI.Claude` packages.
+- A `DateOnly` filter value matches dates on SQLite and Oracle.
+- `polhem-db` and DefineEditor's database upgrade accept SQLite paths under `|DataDirectory|`.
+
 ## [1.13.0] - 2026-11-13
 
 Details and migration steps: [docs/en/changelogs/1.13.0.md](docs/en/changelogs/1.13.0.md)
