@@ -92,6 +92,7 @@ Polhem.Definition.Drafting.FormDraft.DisplayNameZhTw.get -> string!
 Polhem.Definition.Drafting.FormDraft.DisplayNameZhTw.set -> void
 Polhem.Definition.Drafting.FormDraft.FormDraft() -> void
 Polhem.Definition.Drafting.FormDraft.Menu.get -> Polhem.Definition.Drafting.DraftMenuPlacement!
+Polhem.Definition.Drafting.FormDraft.ListFields.get -> System.Collections.Generic.IList<string!>!
 Polhem.Definition.Drafting.FormDraft.ProgId.get -> string!
 Polhem.Definition.Drafting.FormDraft.ProgId.set -> void
 Polhem.Definition.Drafting.FormDraft.Tables.get -> System.Collections.Generic.IList<Polhem.Definition.Drafting.DraftTable!>!

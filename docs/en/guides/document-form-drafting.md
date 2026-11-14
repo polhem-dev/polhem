@@ -29,6 +29,7 @@ Documents...** in DefineEditor sends such a form to Claude, an AI model, which d
 - drop-down choices where the document offers a fixed set,
 - relations: a field that picks an employee, a department, a customer or another document is matched to the form your
   definition folder already has for it,
+- the fields the form's list shows, where a related record appears by its name,
 - where the form goes in the menu.
 
 What the document does not say (the ProgId, field names, lengths, a relation Claude is unsure of), Claude asks in the

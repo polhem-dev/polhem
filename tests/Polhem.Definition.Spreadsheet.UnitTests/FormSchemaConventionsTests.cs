@@ -45,6 +45,18 @@ namespace Polhem.Definition.Spreadsheet.UnitTests
         }
 
         [Fact]
+        [DisplayName("A relation field named in ListFields is listed by the field that shows the related record's name")]
+        public void Apply_RelationInListFields_ListsRefName()
+        {
+            var content = MinimalQuote();
+            content.Schema.ListFields = "sys_id, customer_rowid ,quote_date,ref_customer_name";
+
+            FormSchemaConventions.Apply(content);
+
+            Assert.Equal("sys_id,ref_customer_name,quote_date", content.Schema.ListFields);
+        }
+
+        [Fact]
         [DisplayName("A relation field gets the ref fields and mappings of the related form, with captions in both languages")]
         public void Apply_RelationField_AddsRefFields()
         {

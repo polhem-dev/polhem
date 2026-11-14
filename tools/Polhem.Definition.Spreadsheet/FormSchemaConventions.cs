@@ -54,7 +54,28 @@ public static class FormSchemaConventions
             AddSystemFields(table, isMaster);
             AddRelationFields(table, content);
         }
+        ListRelationNames(schema);
         return issues;
+    }
+
+    /// <summary>
+    /// Replaces each relation field that <see cref="FormSchema.ListFields"/> names with the field its related record's
+    /// <c>sys_name</c> is mapped to, so the list shows a name and not a row id.
+    /// </summary>
+    private static void ListRelationNames(FormSchema schema)
+    {
+        var master = schema.MasterTable;
+        if (master?.Fields is null || string.IsNullOrWhiteSpace(schema.ListFields)) return;
+
+        var listed = schema.ListFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(name => master.Fields.Contains(name) && master.Fields[name] is { } field
+                    && !string.IsNullOrWhiteSpace(field.RelationProgId)
+                    && field.RelationFieldMappings!.FirstOrDefault(m => !m.LookupOnly
+                        && string.Equals(m.SourceField, SysFields.Name, StringComparison.OrdinalIgnoreCase)) is { } mapping
+                ? mapping.DestinationField
+                : name)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        schema.ListFields = string.Join(",", listed);
     }
 
     /// <summary>

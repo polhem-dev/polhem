@@ -11,6 +11,22 @@ namespace Polhem.Definition.Drafting.UnitTests
         private static readonly AIContent[] s_document = [new DataContent(new byte[] { 1, 2, 3 }, "application/pdf")];
 
         [Fact]
+        [DisplayName("set_form_info replaces the list fields with the snake_case names it is given, without duplicates")]
+        public async Task StartAsync_SetFormInfoListFields_ReplacesListFields()
+        {
+            var client = new ScriptedChatClient()
+                .Then(Call("1", "set_form_info", """{"listFields":["old_field"]}"""))
+                .Then(Call("2", "set_form_info", """{"listFields":["Start Date","applicant","start_date",""]}"""))
+                .Then(Text("Done."));
+            var session = new FormDraftSession(client, new FakeDraftingHost());
+
+            await session.StartAsync(s_document);
+
+            Assert.Equal(["start_date", "applicant"], session.Draft.ListFields);
+            Assert.All(client.LastResults(), result => Assert.DoesNotContain("Error", result.Result?.ToString()));
+        }
+
+        [Fact]
         [DisplayName("Tool calls build the draft, DraftChanged is raised after each change, and the reply reaches AssistantMessage")]
         public async Task StartAsync_ToolCalls_BuildDraftAndRaiseEvents()
         {

@@ -72,7 +72,10 @@ namespace Polhem.Definition.Drafting.Session
             [Description("The English caption of the menu folder, used when the folder does not exist yet.")] string? menuFolderCaption = null,
             [Description("The zh-TW caption of the menu folder.")] string? menuFolderCaptionZhTw = null,
             [Description("The English caption of the menu entry; empty uses the display name.")] string? menuEntryCaption = null,
-            [Description("The zh-TW caption of the menu entry.")] string? menuEntryCaptionZhTw = null)
+            [Description("The zh-TW caption of the menu entry.")] string? menuEntryCaptionZhTw = null,
+            [Description("The master table fields the form's list shows, in order, replacing the current choice. Pick the "
+                + "few that tell the records apart, such as the document number, the date, who and the status; a field "
+                + "that picks a record shows that record's name.")] string[]? listFields = null)
         {
             string? normalizedProgId = null;
             if (progId is not null)
@@ -82,7 +85,7 @@ namespace Polhem.Definition.Drafting.Session
                     throw new DraftToolException($"'{progId}' has no English letters or digits to make a ProgId from.");
             }
             if (new[] { progId, displayName, displayNameZhTw, menuFolderId, menuFolderCaption, menuFolderCaptionZhTw,
-                    menuEntryCaption, menuEntryCaptionZhTw }.All(value => value is null))
+                    menuEntryCaption, menuEntryCaptionZhTw }.All(value => value is null) && listFields is null)
                 throw new DraftToolException("Pass at least one value to set.");
 
             if (normalizedProgId is not null) _draft.ProgId = normalizedProgId;
@@ -93,6 +96,12 @@ namespace Polhem.Definition.Drafting.Session
             if (menuFolderCaptionZhTw is not null) _draft.Menu.FolderCaptionZhTw = menuFolderCaptionZhTw.Trim();
             if (menuEntryCaption is not null) _draft.Menu.EntryCaption = menuEntryCaption.Trim();
             if (menuEntryCaptionZhTw is not null) _draft.Menu.EntryCaptionZhTw = menuEntryCaptionZhTw.Trim();
+            if (listFields is not null)
+            {
+                _draft.ListFields.Clear();
+                foreach (var name in listFields.Select(DraftNaming.ToSnakeCase).Where(name => name.Length > 0).Distinct(StringComparer.Ordinal))
+                    _draft.ListFields.Add(name);
+            }
             DraftModified = true;
 
             var message = "Form info updated.";

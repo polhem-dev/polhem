@@ -26,6 +26,9 @@ namespace Polhem.Definition.Drafting.Session
             target.Menu.FolderCaptionZhTw = source.Menu.FolderCaptionZhTw;
             target.Menu.EntryCaption = source.Menu.EntryCaption;
             target.Menu.EntryCaptionZhTw = source.Menu.EntryCaptionZhTw;
+            target.ListFields.Clear();
+            foreach (var name in source.ListFields)
+                target.ListFields.Add(name);
             target.Tables.Clear();
             foreach (var table in source.Tables)
                 target.Tables.Add(Clone(table));
