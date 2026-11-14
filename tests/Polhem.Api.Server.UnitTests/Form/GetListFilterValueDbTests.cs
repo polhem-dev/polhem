@@ -111,6 +111,26 @@ namespace Polhem.Api.Server.UnitTests.Form
         public Task JsonCodec_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
+        public Task JsonCodec_Sqlite_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
+        public Task JsonCodec_SqlServer_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
+        public Task JsonCodec_PostgreSql_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
+        public Task JsonCodec_MySql_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a GetList filtering a date column with typed DateOnly values for Equal, Between and In returns the matching rows")]
+        public Task JsonCodec_Oracle_DateOnlyFilters_ReturnMatchingRows() => RunJsonCodecDateOnly(DatabaseType.Oracle);
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a Plain GetList whose filter value is not valid for its field answers InvalidParams and names the field")]
         public Task Plain_Sqlite_InvalidFilterValue_ReturnsInvalidParams() => WithSeededForm(DatabaseType.SQLite, async (executor, progId) =>
         {
@@ -278,6 +298,47 @@ namespace Polhem.Api.Server.UnitTests.Form
                 var result = Assert.IsType<GetListResponse>(response.Result!.Value);
                 Assert.Equal(["B", "C"], SysIds(result.Table!));
             });
+        }
+
+        /// <summary>
+        /// A <see cref="DateOnly"/> is how a client filters a date column (ADR-032 D4: a <see cref="DateTime"/> filter value
+        /// is an instant and moves to UTC). The stored day and the filter's day must compare equal, so <c>Equal</c> finds
+        /// row B, <c>Between</c> includes its last day, row C, and each value of <c>In</c> finds its row.
+        /// </summary>
+        private Task RunJsonCodecDateOnly(DatabaseType databaseType)
+        {
+            return WithSeededForm(databaseType, async (executor, progId) =>
+            {
+                var day = new DateOnly(2026, 1, 2);
+
+                Assert.Equal(["B"], await ListAsync(executor, progId, FilterCondition.Equal(DueDate, day)));
+                Assert.Equal(["B", "C"], await ListAsync(executor, progId, FilterCondition.Between(DueDate, day, day.AddDays(1))));
+                Assert.Equal(["A", "C"], await ListAsync(executor, progId, FilterCondition.In(DueDate, [day.AddDays(-1), day.AddDays(1)])));
+            });
+        }
+
+        private static async Task<string[]> ListAsync(TestDispatcher executor, string progId, FilterNode filter)
+        {
+            var request = new TestRpcRequest
+            {
+                Method = $"{progId}.{FormActions.GetList}",
+                Params = new TestPayload
+                {
+                    Format = PayloadFormat.Encoded,
+                    Codec = PayloadCodecNames.Json,
+                    Value = new GetListRequest
+                    {
+                        SelectFields = SysFields.Id,
+                        Filter = filter,
+                        SortFields = [new SortField(SysFields.Id, SortDirection.Asc)],
+                    },
+                },
+                Id = Guid.NewGuid().ToString(),
+            };
+            var response = await executor.ExecuteAsync(request);
+
+            Assert.Null(response.Error);
+            return SysIds(Assert.IsType<GetListResponse>(response.Result!.Value).Table!);
         }
 
         /// <summary>
