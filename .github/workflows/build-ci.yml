@@ -281,12 +281,15 @@ jobs:
         dotnet pack src/Polhem.Core/Polhem.Core.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Expressions/Polhem.Expressions.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Definition/Polhem.Definition.csproj --configuration Release --output ./nupkgs --no-build
+        dotnet pack src/Polhem.Definition.Drafting/Polhem.Definition.Drafting.csproj --configuration Release --output ./nupkgs --no-build
+        dotnet pack src/Polhem.AI.Claude/Polhem.AI.Claude.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Db/Polhem.Db.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Business/Polhem.Business.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Api.Client/Polhem.Api.Client.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Api.Core/Polhem.Api.Core.csproj --configuration Release --output ./nupkgs --no-build
+        dotnet pack src/Polhem.Api.Server/Polhem.Api.Server.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Hosting/Polhem.Hosting.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Repository/Polhem.Repository.csproj --configuration Release --output ./nupkgs --no-build
