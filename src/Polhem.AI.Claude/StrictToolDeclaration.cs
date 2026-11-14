@@ -9,8 +9,8 @@ namespace Polhem.AI.Claude
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The adapter reads <c>Strict</c> from <see cref="AITool.AdditionalProperties"/>; the wrapped declaration is left
-    /// as it is.
+    /// The adapter reads <c>Strict</c> from <see cref="AITool.AdditionalProperties"/>. The schema goes through
+    /// <see cref="ToolSchemaRewriter"/> first; the wrapped declaration is left as it is.
     /// </para>
     /// <para>
     /// <c>eager_input_streaming</c> is deliberately not set. It streams a tool's input as it is generated, but turns the
@@ -22,10 +22,12 @@ namespace Polhem.AI.Claude
     {
         private readonly AIFunctionDeclaration _inner;
         private readonly Dictionary<string, object?> _additionalProperties;
+        private readonly JsonElement _jsonSchema;
 
         public StrictToolDeclaration(AIFunctionDeclaration inner)
         {
             _inner = inner;
+            _jsonSchema = ToolSchemaRewriter.Rewrite(inner.JsonSchema);
             _additionalProperties = new Dictionary<string, object?>(inner.AdditionalProperties, StringComparer.Ordinal)
             {
                 [nameof(Anthropic.Models.Beta.Messages.BetaTool.Strict)] = true,
@@ -36,7 +38,7 @@ namespace Polhem.AI.Claude
 
         public override string Description => _inner.Description;
 
-        public override JsonElement JsonSchema => _inner.JsonSchema;
+        public override JsonElement JsonSchema => _jsonSchema;
 
         public override JsonElement? ReturnJsonSchema => _inner.ReturnJsonSchema;
 

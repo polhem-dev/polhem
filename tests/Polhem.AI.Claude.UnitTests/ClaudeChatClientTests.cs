@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net;
+using System.Text.Json;
 using Anthropic;
 using Anthropic.Exceptions;
 using Microsoft.Extensions.AI;
@@ -107,6 +108,65 @@ namespace Polhem.AI.Claude.UnitTests
             Assert.False(sent.GetProperty("input_schema").GetProperty("additionalProperties").GetBoolean());
             Assert.False(sent.TryGetProperty("eager_input_streaming", out _));
             Assert.Equal("auto", body.GetProperty("tool_choice").GetProperty("type").GetString());
+        }
+
+        [Fact]
+        [DisplayName("A required nullable enum parameter is sent as anyOf of the enum and null, the shape the API accepts")]
+        public async Task GetResponseAsync_RequiredNullableEnum_IsSentAsAnyOf()
+        {
+            var shade = await SendToolAndReadProperty(AIFunctionFactory.Create((Shade? shade) => "ok", "paint", "Paints."), "shade");
+
+            Assert.False(shade.TryGetProperty("enum", out _));
+            var choices = shade.GetProperty("anyOf");
+            Assert.Equal("string", choices[0].GetProperty("type").GetString());
+            Assert.Equal(["Light", "Dark"], choices[0].GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
+            Assert.Equal("null", choices[1].GetProperty("type").GetString());
+        }
+
+        [Fact]
+        [DisplayName("An optional nullable enum parameter loses its null branch, so it is not a union")]
+        public async Task GetResponseAsync_OptionalNullableEnum_IsPlainEnum()
+        {
+            var shade = await SendToolAndReadProperty(
+                AIFunctionFactory.Create((Shade? shade = null) => "ok", "paint", "Paints."), "shade");
+
+            Assert.Equal("string", shade.GetProperty("type").GetString());
+            Assert.Equal(["Light", "Dark"], shade.GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
+            Assert.False(shade.TryGetProperty("anyOf", out _));
+        }
+
+        [Fact]
+        [DisplayName("An optional nullable string parameter is sent as a plain string")]
+        public async Task GetResponseAsync_OptionalNullableString_IsPlainString()
+        {
+            var caption = await SendToolAndReadProperty(
+                AIFunctionFactory.Create((string? caption = null) => "ok", "rename", "Renames."), "caption");
+
+            Assert.Equal(JsonValueKind.String, caption.GetProperty("type").ValueKind);
+            Assert.Equal("string", caption.GetProperty("type").GetString());
+        }
+
+        [Fact]
+        [DisplayName("The elements of an array parameter are not nullable in the schema sent")]
+        public async Task GetResponseAsync_ArrayOfObjects_ItemsAreNotNullable()
+        {
+            var tags = await SendToolAndReadProperty(
+                AIFunctionFactory.Create((Tag[]? tags = null) => "ok", "tag", "Tags."), "tags");
+
+            Assert.Equal("array", tags.GetProperty("type").GetString());
+            Assert.Equal("object", tags.GetProperty("items").GetProperty("type").GetString());
+        }
+
+        private static async Task<JsonElement> SendToolAndReadProperty(AIFunction tool, string property)
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(s_endTurn);
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+
+            await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hello")],
+                new ChatOptions { Tools = [tool.AsDeclarationOnly()] });
+
+            return handler.Requests.Single().Body.GetProperty("tools")[0]
+                .GetProperty("input_schema").GetProperty("properties").GetProperty(property);
         }
 
         [Fact]
@@ -291,6 +351,17 @@ namespace Polhem.AI.Claude.UnitTests
                 () => ClaudeChatClientFactory.Create(sdkClient, new ClaudeChatOptions { MaxOutputTokens = 0 }));
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => ClaudeChatClientFactory.Create(sdkClient, new ClaudeChatOptions { Effort = (ClaudeEffort)99 }));
+        }
+
+        public sealed class Tag
+        {
+            public string Name { get; set; } = string.Empty;
+        }
+
+        public enum Shade
+        {
+            Light,
+            Dark,
         }
     }
 }
