@@ -35,6 +35,8 @@ dotnet tool exec Polhem.DbManager@<版號> -- upgrade --define ./Define
 檔案，並輸出檔案路徑（不會印出金鑰本身）。其他指令遇到缺少金鑰檔會失敗，避免路徑打錯時多留下一把金鑰。
 
 使用相對路徑的 SQLite 項目會被拒絕：相對路徑以開啟它的程序的工作目錄解析，對應用程式而言是 Server 的目錄，工具會用到
-另一個檔案。請改用絕對路徑，或在 Server 專案執行 `db` 子指令。
+另一個檔案。請改用絕對路徑、`|DataDirectory|` 底下的路徑（工具與 Server 的 `AddPolhemBackend` 一樣，把它解析為存放定義資料夾的那個資料夾），
+或在 Server 專案執行 `db` 子指令。詳見
+[SQLite 檔案路徑](https://github.com/polhem-dev/polhem/blob/main/docs/zh-TW/database/database-settings-guide.md#27-sqlite-檔案路徑)。
 
 工具會重新散佈資料庫驅動，各驅動的授權列在 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。

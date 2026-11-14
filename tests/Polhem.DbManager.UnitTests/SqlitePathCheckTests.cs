@@ -14,7 +14,7 @@ namespace Polhem.DbManager.UnitTests
         [InlineData("Data Source=file:app.db?cache=shared", "app.db")]
         public void RelativePath_Relative_IsReported(string connectionString, string expected)
         {
-            Assert.Equal(expected, SqlitePathCheck.RelativePath(connectionString));
+            Assert.Equal(expected, SqlitePathCheck.RelativePath(connectionString, dataDirectory: null));
         }
 
         [Theory]
@@ -25,7 +25,7 @@ namespace Polhem.DbManager.UnitTests
         [InlineData("Data Source=file:///var/data/app.db")]
         public void RelativePath_AbsoluteOrMemory_IsAccepted(string connectionString)
         {
-            Assert.Null(SqlitePathCheck.RelativePath(connectionString));
+            Assert.Null(SqlitePathCheck.RelativePath(connectionString, dataDirectory: null));
         }
 
         [Fact]
@@ -34,7 +34,25 @@ namespace Polhem.DbManager.UnitTests
         {
             var path = Path.Combine(Path.GetTempPath(), "app.db");
 
-            Assert.Null(SqlitePathCheck.RelativePath($"Data Source={path}"));
+            Assert.Null(SqlitePathCheck.RelativePath($"Data Source={path}", dataDirectory: null));
+        }
+
+        [Fact]
+        [DisplayName("A |DataDirectory| path is accepted when the folder is set, and reported when it is not")]
+        public void RelativePath_DataDirectory_DependsOnFolder()
+        {
+            const string ConnectionString = "Data Source=|DataDirectory|northwind.db;Cache=Shared";
+
+            Assert.Null(SqlitePathCheck.RelativePath(ConnectionString, Path.GetTempPath()));
+            Assert.Equal("|DataDirectory|northwind.db", SqlitePathCheck.RelativePath(ConnectionString, dataDirectory: null));
+        }
+
+        [Fact]
+        [DisplayName("A |DataDirectory| path set to a relative folder is still reported")]
+        public void RelativePath_DataDirectoryRelativeFolder_IsReported()
+        {
+            Assert.Equal(Path.Combine("data", "app.db"),
+                SqlitePathCheck.RelativePath("Data Source=|DataDirectory|app.db", "data"));
         }
     }
 }

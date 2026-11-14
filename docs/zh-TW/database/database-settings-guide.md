@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: 2fb387d963def5d919149e56c2a522d6bec6255e -->
+<!-- source: en/database/database-settings-guide.md blob: 58a7a8f34b86a6345ceba619800ba902618def1a -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -221,6 +221,21 @@ DatabaseSettings
 - **沒有金鑰時**：若 `ConfigEncryptionKey` 為空，跳過加解密：密碼以明文儲存，`enc:` 值也不會被解密。只要設定中有任何密碼，`CacheDefineAccess` 會在第一次載入時、以及每次存檔時記錄一筆警告。僅限開發環境使用
 
 實作位置：[`DatabaseSettingsCryptor.cs`](../../../src/Polhem.Definition/Settings/DatabaseSettings/DatabaseSettingsCryptor.cs) `EncryptInPlace` / `DecryptInPlace`。
+
+### 2.7 SQLite 檔案路徑
+
+SQLite 的相對路徑以程序的工作目錄解析，所以伺服器、第二個前端與 `polhem-db` 工具若從不同資料夾啟動，各自會開到不同的檔案。
+請使用絕對路徑，或把檔案放在 `|DataDirectory|` 底下：
+
+```xml
+<DatabaseItem Id="common" CategoryId="common" DatabaseType="SQLite"
+              ConnectionString="Data Source=|DataDirectory|app.db" />
+```
+
+Microsoft.Data.Sqlite 會把 `|DataDirectory|` 前綴換成應用程式定義域的 `DataDirectory` 值。
+`AddPolhemBackend` 與 `polhem-db` 會把這個值設為存放定義資料夾的那個資料夾（`app/Define` 對應 `app`），宿主已經設定過時則保留原值，
+因此讀取同一份定義的每個程序都會開到同一個檔案（[`DataDirectory`](../../../src/Polhem.Hosting/Database/DataDirectory.cs)）。
+沒有呼叫 `AddPolhemBackend`、也沒有自行設定的宿主，會得到提供者的預設值：它自己的建置輸出資料夾。
 
 ---
 

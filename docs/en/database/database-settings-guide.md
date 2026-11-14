@@ -222,6 +222,23 @@ Example:
 
 Implementation: [`DatabaseSettingsCryptor.cs`](../../../src/Polhem.Definition/Settings/DatabaseSettings/DatabaseSettingsCryptor.cs) — `EncryptInPlace` / `DecryptInPlace`.
 
+### 2.7 SQLite File Paths
+
+A relative SQLite path is opened relative to the working directory of the process, so a server, a second head and the
+`polhem-db` tool started from different folders would each open a different file. Use an absolute path, or put the file
+under `|DataDirectory|`:
+
+```xml
+<DatabaseItem Id="common" CategoryId="common" DatabaseType="SQLite"
+              ConnectionString="Data Source=|DataDirectory|app.db" />
+```
+
+Microsoft.Data.Sqlite replaces the `|DataDirectory|` prefix with the `DataDirectory` value of the application domain.
+`AddPolhemBackend` and `polhem-db` set that value to the folder that holds the definition folder (for `app/Define`,
+`app`), unless the host has already set it, so every process that reads the same definitions opens the same file
+([`DataDirectory`](../../../src/Polhem.Hosting/Database/DataDirectory.cs)). A host that does not call
+`AddPolhemBackend` and sets nothing gets the provider's fallback, its own build output folder.
+
 ---
 
 ## 3. DbCategorySettings

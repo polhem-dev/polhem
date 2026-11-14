@@ -169,8 +169,8 @@ both heads.** Checking needs a real browser and a real input method: the preview
   `--Northwind:Mode=Remote` makes it call a running `Polhem.Northwind.Server` instead; the endpoint and API key are in
   its `appsettings.json`, and `.claude/launch.json` has both (`northwind-blazor`, `northwind-blazor-remote`).
 - **Both hosts open the same `northwind.db`**, next to `Define/`. `DatabaseSettings.xml` names the file under
-  `|DataDirectory|` (Microsoft.Data.Sqlite's substitution), and `AddNorthwindBackend` sets the `DataDirectory` app
-  domain value to the folder that holds `Define/`. Before that the path was relative to the working directory, so each
+  `|DataDirectory|` (Microsoft.Data.Sqlite's substitution), and `AddPolhemBackend` (which `AddNorthwindBackend` calls)
+  sets the `DataDirectory` app domain value to the folder that holds `Define/`, as `polhem-db` does. Before that the path was relative to the working directory, so each
   host would have seeded its own database and an order saved in one head would not show in another.
 - **Seed data reaches each host's output through the project reference**: the JSON files are `None` items with
   `CopyToOutputDirectory` in the Backend csproj, and the seeder reads them from `AppContext.BaseDirectory`.

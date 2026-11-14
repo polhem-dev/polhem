@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
+using Polhem.Hosting.Database;
 
 namespace Polhem.DbManager;
 
@@ -12,7 +13,9 @@ namespace Polhem.DbManager;
 /// <remarks>
 /// A relative SQLite path is resolved against the working directory of the process that opens it. For an application
 /// that is the server's directory, which this tool cannot know, so it would read and write a different file while
-/// reporting success. The tool refuses such items instead of guessing.
+/// reporting success. The tool refuses such items instead of guessing. A path under <c>|DataDirectory|</c> is resolved
+/// the way the provider resolves it, against <see cref="DataDirectory.Current"/>, which the tool sets to the folder
+/// that holds the definition folder, as the server does.
 /// </remarks>
 internal static class SqlitePathCheck
 {
@@ -43,19 +46,25 @@ internal static class SqlitePathCheck
             }
             if (info.DatabaseType != DatabaseType.SQLite) continue;
 
-            var path = RelativePath(info.ConnectionString);
+            var path = RelativePath(info.ConnectionString, DataDirectory.Current);
             if (path is not null)
             {
                 problems.Add($"  {item.Id}: the SQLite path '{path}' is relative. It is resolved against the working "
                     + "directory of the process that opens it, which for an application is its server's directory. "
-                    + "Use an absolute path, or run the db commands from the server project (dotnet run -- db ...).");
+                    + $"Use an absolute path, a path under {DataDirectory.Prefix} (the folder that holds the definition "
+                    + "folder), or run the db commands from the server project (dotnet run -- db ...).");
             }
         }
         return problems;
     }
 
     /// <summary>The file path of a SQLite connection string when it is relative; otherwise <see langword="null"/>.</summary>
-    internal static string? RelativePath(string connectionString)
+    /// <param name="connectionString">The connection string.</param>
+    /// <param name="dataDirectory">
+    /// The folder <c>|DataDirectory|</c> stands for, or <see langword="null"/> when nothing has set it. Unset, the
+    /// provider falls back to the build output of the process, so a path under the prefix counts as relative.
+    /// </param>
+    internal static string? RelativePath(string connectionString, string? dataDirectory)
     {
         SqliteConnectionStringBuilder builder;
         try
@@ -69,6 +78,12 @@ internal static class SqlitePathCheck
         if (builder.Mode == SqliteOpenMode.Memory) return null;
 
         var path = builder.DataSource;
+        if (path.StartsWith(DataDirectory.Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(dataDirectory)) return path;
+            // Microsoft.Data.Sqlite combines the folder with the rest of the path in the same way.
+            path = Path.Combine(dataDirectory, path[DataDirectory.Prefix.Length..]);
+        }
         if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
         {
             if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.IsFile && !string.IsNullOrEmpty(uri.LocalPath)

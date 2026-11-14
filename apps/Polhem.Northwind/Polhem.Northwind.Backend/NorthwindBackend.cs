@@ -47,9 +47,6 @@ public static class NorthwindBackend
         }
 
         string definePath = ResolveDefinePath();
-        // Define/DatabaseSettings.xml names its SQLite file under |DataDirectory|, so every host that runs
-        // this backend opens the same database next to Define/, rather than one in its own working directory.
-        AppDomain.CurrentDomain.SetData("DataDirectory", Path.GetDirectoryName(definePath));
         // SQLite providers — keep dialect registration explicit so the framework does
         // not force every host to pull every ADO.NET driver.
         DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));

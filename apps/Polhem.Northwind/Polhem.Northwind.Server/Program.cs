@@ -1,5 +1,6 @@
 using Polhem.JsonRpc.AspNetCore;
 using Polhem.Northwind.Backend;
+using Polhem.Hosting.Database;
 using Polhem.Hosting.DependencyInjection;
 
 const string DevWasmCorsPolicy = "PolhemDevWasm";
@@ -29,6 +30,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// `dotnet run -- db <command>` (create, check, upgrade, ...) runs against the same Define/ and northwind.db, then exits
+// before the seeder or the endpoint runs.
+if (DatabaseCommandLine.TryRun(app.Services, args) is int exitCode) return exitCode;
+
 // WARNING: Must run before UseNorthwindBackend so the CORS preflight (OPTIONS) is answered
 // before any API access-control middleware can reject the unauthenticated probe.
 if (app.Environment.IsDevelopment())
@@ -37,3 +42,4 @@ if (app.Environment.IsDevelopment())
 app.UseNorthwindBackend();
 app.MapJsonRpc("/api");
 app.Run();
+return 0;

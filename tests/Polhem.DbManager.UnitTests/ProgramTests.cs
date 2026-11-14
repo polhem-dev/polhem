@@ -131,6 +131,29 @@ namespace Polhem.DbManager.UnitTests
             Assert.False(File.Exists(Path.Combine(definePath, "relative.db")));
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A |DataDirectory| SQLite path opens the file in the folder that holds the definition folder")]
+        public void Run_DataDirectorySqlitePath_UsesFolderAboveDefine()
+        {
+            var definePath = Path.Combine(_definePath, "Define");
+            Defaults.MaterializeTo(definePath);
+            var settings = new DatabaseSettings();
+            settings.Items!.Add(new DatabaseItem
+            {
+                Id = DbCategoryIds.Common, CategoryId = DbCategoryIds.Common, DatabaseType = DatabaseType.SQLite,
+                ConnectionString = "Data Source=|DataDirectory|app.db",
+            });
+            File.WriteAllText(Path.Combine(definePath, "DatabaseSettings.xml"), Polhem.Core.Serialization.XmlCodec.Serialize(settings));
+            var other = Path.Combine(_definePath, "elsewhere");
+            Directory.CreateDirectory(other);
+
+            var (exitCode, output) = RunTool(other, "check", "--define", definePath);
+
+            Assert.True(exitCode == DatabaseCommandLine.Success, output);
+            Assert.True(File.Exists(Path.Combine(_definePath, "app.db")));
+            Assert.False(File.Exists(Path.Combine(other, "app.db")));
+        }
+
         [Fact]
         [DisplayName("An unset master key variable fails with its name when SystemSettings holds an encrypted key")]
         public void Run_MissingMasterKeyWithEncryptedKey_NamesVariable()

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Polhem.Core;
 using Polhem.Definition;
+using Polhem.Hosting.Database;
 
 namespace Polhem.Hosting.DependencyInjection
 {
@@ -24,7 +25,9 @@ namespace Polhem.Hosting.DependencyInjection
         /// <remarks>
         /// <para>Register the database providers and dialects before the host runs; this method does not, so a host
         /// carries only the drivers it uses. A host that serves the API over HTTP adds the JSON-RPC endpoint itself.</para>
-        /// <para>This method initializes the process-wide <see cref="SysInfo"/> from the settings it reads.</para>
+        /// <para>This method initializes the process-wide <see cref="SysInfo"/> from the settings it reads, and points
+        /// <c>|DataDirectory|</c> at the folder that holds the definition folder unless the host has set it already
+        /// (<see cref="DataDirectory.EnsureDefault"/>).</para>
         /// </remarks>
         /// <exception cref="InvalidOperationException"><see cref="PolhemBackendOptions.DefinePath"/> is not set and no
         /// <c>Define/SystemSettings.xml</c> is found above <see cref="AppContext.BaseDirectory"/>.</exception>
@@ -40,6 +43,7 @@ namespace Polhem.Hosting.DependencyInjection
                 DefinePath = options.DefinePath ?? FindDefinePath(AppContext.BaseDirectory),
                 CustomizePath = options.CustomizePath,
             };
+            DataDirectory.EnsureDefault(paths.DefinePath);
             if (options.MaterializeDefaults)
                 Defaults.MaterializeTo(paths.DefinePath, options.MaterializeOptions);
 
