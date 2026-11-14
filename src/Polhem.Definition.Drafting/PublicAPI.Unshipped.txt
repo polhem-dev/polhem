@@ -1,0 +1,136 @@
+#nullable enable
+Polhem.Definition.Drafting.AssistantMessageEventArgs
+Polhem.Definition.Drafting.AssistantMessageEventArgs.AssistantMessageEventArgs(string! text) -> void
+Polhem.Definition.Drafting.AssistantMessageEventArgs.Text.get -> string!
+Polhem.Definition.Drafting.Documents.DocumentSource
+Polhem.Definition.Drafting.Documents.DocumentTooLargeException
+Polhem.Definition.Drafting.Documents.DocumentTooLargeException.DocumentTooLargeException(string! fileName, long length, long maxLength) -> void
+Polhem.Definition.Drafting.Documents.DocumentTooLargeException.FileName.get -> string!
+Polhem.Definition.Drafting.Documents.DocumentTooLargeException.Length.get -> long
+Polhem.Definition.Drafting.Documents.DocumentTooLargeException.MaxLength.get -> long
+Polhem.Definition.Drafting.DraftCatalogEntry
+Polhem.Definition.Drafting.DraftCatalogEntry.DisplayName.get -> string!
+Polhem.Definition.Drafting.DraftCatalogEntry.DisplayNameZhTw.get -> string!
+Polhem.Definition.Drafting.DraftCatalogEntry.DraftCatalogEntry(string! progId, string! displayName, string! displayNameZhTw, System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>! fields) -> void
+Polhem.Definition.Drafting.DraftCatalogEntry.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>!
+Polhem.Definition.Drafting.DraftCatalogEntry.ProgId.get -> string!
+Polhem.Definition.Drafting.DraftCatalogField
+Polhem.Definition.Drafting.DraftCatalogField.Caption.get -> string!
+Polhem.Definition.Drafting.DraftCatalogField.DbType.get -> Polhem.Core.Data.FieldDbType
+Polhem.Definition.Drafting.DraftCatalogField.DraftCatalogField(string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> void
+Polhem.Definition.Drafting.DraftCatalogField.FieldName.get -> string!
+Polhem.Definition.Drafting.DraftField
+Polhem.Definition.Drafting.DraftField.Caption.get -> string!
+Polhem.Definition.Drafting.DraftField.Caption.set -> void
+Polhem.Definition.Drafting.DraftField.CaptionZhTw.get -> string!
+Polhem.Definition.Drafting.DraftField.CaptionZhTw.set -> void
+Polhem.Definition.Drafting.DraftField.ControlType.get -> Polhem.Definition.Layouts.ControlType?
+Polhem.Definition.Drafting.DraftField.ControlType.set -> void
+Polhem.Definition.Drafting.DraftField.DbType.get -> Polhem.Core.Data.FieldDbType?
+Polhem.Definition.Drafting.DraftField.DbType.set -> void
+Polhem.Definition.Drafting.DraftField.DraftField() -> void
+Polhem.Definition.Drafting.DraftField.FieldName.get -> string!
+Polhem.Definition.Drafting.DraftField.FieldName.set -> void
+Polhem.Definition.Drafting.DraftField.MaxLength.get -> int?
+Polhem.Definition.Drafting.DraftField.MaxLength.set -> void
+Polhem.Definition.Drafting.DraftField.Options.get -> System.Collections.Generic.IList<Polhem.Definition.Drafting.DraftOption!>!
+Polhem.Definition.Drafting.DraftField.Relation.get -> Polhem.Definition.Drafting.DraftRelation?
+Polhem.Definition.Drafting.DraftField.Relation.set -> void
+Polhem.Definition.Drafting.DraftField.Required.get -> bool
+Polhem.Definition.Drafting.DraftField.Required.set -> void
+Polhem.Definition.Drafting.DraftField.SourceQuote.get -> string!
+Polhem.Definition.Drafting.DraftField.SourceQuote.set -> void
+Polhem.Definition.Drafting.DraftField.ValueExpression.get -> string!
+Polhem.Definition.Drafting.DraftField.ValueExpression.set -> void
+Polhem.Definition.Drafting.DraftIssue
+Polhem.Definition.Drafting.DraftIssue.DraftIssue(Polhem.Definition.Drafting.DraftIssueSeverity severity, string! location, string! message) -> void
+Polhem.Definition.Drafting.DraftIssue.Location.get -> string!
+Polhem.Definition.Drafting.DraftIssue.Message.get -> string!
+Polhem.Definition.Drafting.DraftIssue.Severity.get -> Polhem.Definition.Drafting.DraftIssueSeverity
+Polhem.Definition.Drafting.DraftIssueSeverity
+Polhem.Definition.Drafting.DraftIssueSeverity.Error = 1 -> Polhem.Definition.Drafting.DraftIssueSeverity
+Polhem.Definition.Drafting.DraftIssueSeverity.Warning = 0 -> Polhem.Definition.Drafting.DraftIssueSeverity
+Polhem.Definition.Drafting.DraftMenuPlacement
+Polhem.Definition.Drafting.DraftMenuPlacement.DraftMenuPlacement() -> void
+Polhem.Definition.Drafting.DraftMenuPlacement.EntryCaption.get -> string!
+Polhem.Definition.Drafting.DraftMenuPlacement.EntryCaption.set -> void
+Polhem.Definition.Drafting.DraftMenuPlacement.EntryCaptionZhTw.get -> string!
+Polhem.Definition.Drafting.DraftMenuPlacement.EntryCaptionZhTw.set -> void
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderCaption.get -> string!
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderCaption.set -> void
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderCaptionZhTw.get -> string!
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderCaptionZhTw.set -> void
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderId.get -> string!
+Polhem.Definition.Drafting.DraftMenuPlacement.FolderId.set -> void
+Polhem.Definition.Drafting.DraftOption
+Polhem.Definition.Drafting.DraftOption.DraftOption() -> void
+Polhem.Definition.Drafting.DraftOption.Text.get -> string!
+Polhem.Definition.Drafting.DraftOption.Text.set -> void
+Polhem.Definition.Drafting.DraftOption.Value.get -> string!
+Polhem.Definition.Drafting.DraftOption.Value.set -> void
+Polhem.Definition.Drafting.DraftRelation
+Polhem.Definition.Drafting.DraftRelation.Confidence.get -> double
+Polhem.Definition.Drafting.DraftRelation.Confidence.set -> void
+Polhem.Definition.Drafting.DraftRelation.DraftRelation() -> void
+Polhem.Definition.Drafting.DraftRelation.ProgId.get -> string!
+Polhem.Definition.Drafting.DraftRelation.ProgId.set -> void
+Polhem.Definition.Drafting.DraftRelation.Reason.get -> string!
+Polhem.Definition.Drafting.DraftRelation.Reason.set -> void
+Polhem.Definition.Drafting.DraftTable
+Polhem.Definition.Drafting.DraftTable.DisplayName.get -> string!
+Polhem.Definition.Drafting.DraftTable.DisplayName.set -> void
+Polhem.Definition.Drafting.DraftTable.DisplayNameZhTw.get -> string!
+Polhem.Definition.Drafting.DraftTable.DisplayNameZhTw.set -> void
+Polhem.Definition.Drafting.DraftTable.DraftTable() -> void
+Polhem.Definition.Drafting.DraftTable.Fields.get -> System.Collections.Generic.IList<Polhem.Definition.Drafting.DraftField!>!
+Polhem.Definition.Drafting.DraftTable.TableName.get -> string!
+Polhem.Definition.Drafting.DraftTable.TableName.set -> void
+Polhem.Definition.Drafting.FormDraft
+Polhem.Definition.Drafting.FormDraft.DisplayName.get -> string!
+Polhem.Definition.Drafting.FormDraft.DisplayName.set -> void
+Polhem.Definition.Drafting.FormDraft.DisplayNameZhTw.get -> string!
+Polhem.Definition.Drafting.FormDraft.DisplayNameZhTw.set -> void
+Polhem.Definition.Drafting.FormDraft.FormDraft() -> void
+Polhem.Definition.Drafting.FormDraft.Menu.get -> Polhem.Definition.Drafting.DraftMenuPlacement!
+Polhem.Definition.Drafting.FormDraft.ProgId.get -> string!
+Polhem.Definition.Drafting.FormDraft.ProgId.set -> void
+Polhem.Definition.Drafting.FormDraft.Tables.get -> System.Collections.Generic.IList<Polhem.Definition.Drafting.DraftTable!>!
+Polhem.Definition.Drafting.FormDraftConverter
+Polhem.Definition.Drafting.FormDraftResult
+Polhem.Definition.Drafting.FormDraftResult.FieldSources.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Polhem.Definition.Drafting.FormDraftResult.FormDraftResult(Polhem.Definition.Forms.FormSchema! schema) -> void
+Polhem.Definition.Drafting.FormDraftResult.Issues.get -> System.Collections.Generic.IList<Polhem.Definition.Drafting.DraftIssue!>!
+Polhem.Definition.Drafting.FormDraftResult.Menu.get -> Polhem.Definition.Drafting.DraftMenuPlacement!
+Polhem.Definition.Drafting.FormDraftResult.Schema.get -> Polhem.Definition.Forms.FormSchema!
+Polhem.Definition.Drafting.FormDraftResult.ZhTw.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Polhem.Definition.Drafting.FormDraftSession
+Polhem.Definition.Drafting.FormDraftSession.ApplyUserEdit(System.Action<Polhem.Definition.Drafting.FormDraft!>! edit, string! description) -> void
+Polhem.Definition.Drafting.FormDraftSession.AssistantMessage -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageEventArgs!>?
+Polhem.Definition.Drafting.FormDraftSession.Draft.get -> Polhem.Definition.Drafting.FormDraft!
+Polhem.Definition.Drafting.FormDraftSession.DraftChanged -> System.EventHandler?
+Polhem.Definition.Drafting.FormDraftSession.FormDraftSession(Microsoft.Extensions.AI.IChatClient! chatClient, Polhem.Definition.Drafting.IFormDraftingHost! host, Polhem.Definition.Drafting.FormDraftingOptions? options = null) -> void
+Polhem.Definition.Drafting.FormDraftSession.History.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.ChatMessage!>!
+Polhem.Definition.Drafting.FormDraftSession.IsReady.get -> bool
+Polhem.Definition.Drafting.FormDraftSession.SendAsync(string! userText, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Definition.Drafting.FormDraftSession.StartAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>! documents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Definition.Drafting.FormDraftingOptions
+Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.get -> Microsoft.Extensions.AI.ChatOptions?
+Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.set -> void
+Polhem.Definition.Drafting.FormDraftingOptions.FormDraftingOptions() -> void
+Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.get -> int
+Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.set -> void
+Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.get -> double
+Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.set -> void
+Polhem.Definition.Drafting.IFormDraftingHost
+Polhem.Definition.Drafting.IFormDraftingHost.GetCatalog() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogEntry!>!
+Polhem.Definition.Drafting.IFormDraftingHost.GetFields(string! progId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftCatalogField!>!
+Polhem.Definition.Drafting.IFormDraftingHost.Validate(Polhem.Definition.Drafting.FormDraftResult! result) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftIssue!>!
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxDocumentBytes = 33554432 -> long
+const Polhem.Definition.Drafting.Documents.DocumentSource.MaxImageBytes = 5242880 -> long
+const Polhem.Definition.Drafting.FormDraftConverter.PlaceholderProgId = "NewForm" -> string!
+override Polhem.Definition.Drafting.DraftIssue.ToString() -> string!
+static Polhem.Definition.Drafting.Documents.DocumentSource.FromFile(string! path) -> Microsoft.Extensions.AI.AIContent!
+static Polhem.Definition.Drafting.Documents.DocumentSource.FromFiles(System.Collections.Generic.IEnumerable<string!>! paths) -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>!
+static Polhem.Definition.Drafting.Documents.DocumentSource.FromStream(System.IO.Stream! stream, string! fileName) -> Microsoft.Extensions.AI.AIContent!
+static Polhem.Definition.Drafting.Documents.DocumentSource.SupportedExtensions.get -> System.Collections.Generic.IReadOnlyList<string!>!
+static Polhem.Definition.Drafting.FormDraftConverter.Convert(Polhem.Definition.Drafting.FormDraft! draft) -> Polhem.Definition.Drafting.FormDraftResult!

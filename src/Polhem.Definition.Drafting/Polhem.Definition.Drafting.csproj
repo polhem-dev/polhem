@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Drafts a Polhem FormSchema from a paper document (PDF, Word, photo) through a conversation with an AI model. Depends only on the IChatClient abstraction, never on a model vendor's SDK.</Description>
+    <PackageTags>polhem;definition;formschema;ai;drafting;enterprise</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The vendor-neutral chat abstraction. A provider package (one per model vendor) supplies the implementation. -->
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.11.0" />
+    <!-- Reads .docx files into Markdown, so a Word document reaches the model as text and tables. -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Definition.Drafting.UnitTests" />
+  </ItemGroup>
+
+</Project>
