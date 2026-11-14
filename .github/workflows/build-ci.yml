@@ -20,6 +20,11 @@ on:
   pull_request:
     branches:
       - main
+  # The merge queue builds `main` with the pull requests queued ahead and this one, and merges only when the required
+  # checks pass on that commit. Every required check therefore has to report on this event too.
+  merge_group:
+    types:
+      - checks_requested
   workflow_dispatch:
     inputs:
       db_scope:
@@ -64,6 +69,7 @@ jobs:
       id: changes
       env:
         EVENT_NAME: ${{ github.event_name }}
+        MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
       run: .github/scripts/detect-docs-only.sh
 
     # Decides which database tests run, lite (the default) or full; the rules are in the header of
@@ -73,8 +79,11 @@ jobs:
       if: steps.changes.outputs.build == 'true'
       env:
         DISPATCH_SCOPE: ${{ github.event.inputs.db_scope }}
-        # head_commit only exists on push events. Pull request events look at the PR title instead; otherwise [all-db] would not work on a PR.
-        COMMIT_MSG: ${{ github.event.head_commit.message }}
+        EVENT_NAME: ${{ github.event_name }}
+        # head_commit exists on push events, and the merge queue's own commit on merge_group events; its message
+        # starts with the pull request's title. Pull request events look at the title itself; otherwise [all-db]
+        # would not work on a PR.
+        COMMIT_MSG: ${{ github.event.head_commit.message || github.event.merge_group.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: .github/scripts/resolve-db-scope.sh
 
@@ -106,14 +115,14 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Setup Java (for SonarScanner)
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
       with:
         distribution: zulu
         java-version: '17'
 
     - name: Cache SonarCloud packages
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
       with:
         path: ~/.sonar/cache
@@ -121,7 +130,7 @@ jobs:
         restore-keys: ${{ runner.os }}-sonar
 
     - name: Install SonarScanner for .NET
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       run: dotnet tool install --global dotnet-sonarscanner
 
     # sqlcmd runs inside the SQL Server service container, which ships it. Installing it on the runner took apt and
@@ -219,7 +228,7 @@ jobs:
            FLUSH PRIVILEGES;"
 
     - name: SonarScanner Begin
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
@@ -234,13 +243,13 @@ jobs:
     # (analyzer gate)" already built the same Release configuration, so the outputs exist. The --no-incremental
     # here lets SonarScanner observe a complete compilation; the outputs do not need it.
     - name: Build (for Sonar coverage)
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       run: dotnet build Polhem.slnx --configuration Release --no-incremental
 
     # The PostgreSQL / MySQL / Oracle connection strings come from "Enable extra database connection strings"
     # through $GITHUB_ENV and exist only in full mode; only the two that both modes need are listed here.
-    # Coverage is collected only in full mode: lite mode does not run SonarScanner, so nobody would collect it,
-    # and a report without three providers would only push the SonarCloud numbers down.
+    # Coverage is collected only when SonarScanner runs (full mode, outside the merge queue): otherwise nobody would
+    # collect it, and a report without three providers would only push the SonarCloud numbers down.
     # The template tests run in the `templates` job instead; the filter leaves out only that project, so a new test
     # project is picked up here without any list to update. In lite mode the browser tests run in the `browser` job
     # and are left out here by namespace too; in full mode they stay here, so their coverage reaches SonarCloud.
@@ -258,10 +267,10 @@ jobs:
       run: >-
         dotnet test Polhem.slnx --configuration Release --no-build --verbosity normal
         --filter "FullyQualifiedName!~Polhem.Templates.UnitTests.${{ steps.scope.outputs.full != 'true' && '&FullyQualifiedName!~.BrowserTests.' || '' }}"
-        ${{ steps.scope.outputs.full == 'true' && '--collect:"XPlat Code Coverage;Format=opencover"' || '' }}
+        ${{ steps.scope.outputs.sonar == 'true' && '--collect:"XPlat Code Coverage;Format=opencover"' || '' }}
 
     - name: SonarScanner End
-      if: steps.scope.outputs.full == 'true'
+      if: steps.scope.outputs.sonar == 'true'
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
@@ -379,6 +388,7 @@ jobs:
       id: changes
       env:
         EVENT_NAME: ${{ github.event_name }}
+        MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
       run: .github/scripts/detect-docs-only.sh
 
     - name: Setup .NET
@@ -413,6 +423,7 @@ jobs:
       id: changes
       env:
         EVENT_NAME: ${{ github.event_name }}
+        MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
       run: .github/scripts/detect-docs-only.sh
 
     - name: Resolve database scope
@@ -420,7 +431,8 @@ jobs:
       if: steps.changes.outputs.build == 'true'
       env:
         DISPATCH_SCOPE: ${{ github.event.inputs.db_scope }}
-        COMMIT_MSG: ${{ github.event.head_commit.message }}
+        EVENT_NAME: ${{ github.event_name }}
+        COMMIT_MSG: ${{ github.event.head_commit.message || github.event.merge_group.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: .github/scripts/resolve-db-scope.sh
 
