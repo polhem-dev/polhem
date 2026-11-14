@@ -181,6 +181,18 @@ namespace Polhem.AI.Claude.UnitTests
         }
 
         [Fact]
+        [DisplayName("A profile configured for workload identity federation is reported as a federated profile")]
+        public void Describe_FederationProfile_IsFederatedProfile()
+        {
+            SaveProfile("default", signedIn: false, authenticationType: "oidc_federation");
+
+            var source = Describe();
+
+            Assert.Equal(ClaudeCredentialKind.FederatedProfile, source.Kind);
+            Assert.Equal("default", source.ProfileName);
+        }
+
+        [Fact]
         [DisplayName("ANTHROPIC_CONFIG_DIR moves where profiles are looked for")]
         public void Describe_ConfigDirVariable_IsUsed()
         {

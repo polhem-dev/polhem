@@ -19,5 +19,8 @@ namespace Polhem.AI.Claude
 
         /// <summary>Workload identity federation configured through environment variables.</summary>
         WorkloadIdentity,
+
+        /// <summary>A profile configured for workload identity federation rather than a sign-in.</summary>
+        FederatedProfile,
     }
 }

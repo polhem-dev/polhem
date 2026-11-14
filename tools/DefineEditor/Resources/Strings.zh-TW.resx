@@ -514,6 +514,12 @@
   <data name="Status_DraftingNoCredential" xml:space="preserve"><value>找不到 Claude 憑證，請先執行 `ant auth login`</value></data>
   <data name="Drafting_ReadFailedTitle" xml:space="preserve"><value>無法讀取文件</value></data>
   <data name="Status_DraftingReadFailed" xml:space="preserve"><value>無法讀取文件：{0}</value></data>
+  <data name="Drafting_CredentialNone" xml:space="preserve"><value>找不到憑證</value></data>
+  <data name="Drafting_CredentialApiKey" xml:space="preserve"><value>環境變數 ANTHROPIC_API_KEY 的 API 金鑰</value></data>
+  <data name="Drafting_CredentialAuthToken" xml:space="preserve"><value>環境變數 ANTHROPIC_AUTH_TOKEN 的存取權杖</value></data>
+  <data name="Drafting_CredentialProfile" xml:space="preserve"><value>已用 ant auth login 登入（設定檔：{0}）</value></data>
+  <data name="Drafting_CredentialFederatedProfile" xml:space="preserve"><value>工作負載身分聯合（設定檔：{0}）</value></data>
+  <data name="Drafting_CredentialWorkloadIdentity" xml:space="preserve"><value>環境變數設定的工作負載身分聯合</value></data>
   <data name="Drafting_ConsentTitle" xml:space="preserve"><value>要把文件送給 Claude 嗎？</value></data>
   <data name="Drafting_ConsentMessage" xml:space="preserve"><value>下列文件的內容將傳送至 Anthropic API，由 Claude 據以草擬表單：
 {0}
