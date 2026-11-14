@@ -84,3 +84,4 @@ understanding why the design is the way it is.
 | [061](adr-061-fluent-ui-second-ui-package.md) | Fluent UI is the second Blazor UI package | ✅ Accepted |
 | [062](adr-062-row-level-tenancy.md) | Row-level tenancy: companies sharing a company database | ✅ Accepted |
 | [063](adr-063-one-company-scope-per-request.md) | One request reads the session's company scope once and passes the snapshot down | ✅ Accepted |
+| [064](adr-064-document-form-drafting.md) | A form can be drafted from paper documents through a conversation with an AI model, behind `IChatClient` | ✅ Accepted |
