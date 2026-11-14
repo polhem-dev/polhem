@@ -13,6 +13,10 @@ on:
   pull_request:
     branches:
       - main
+  # `docs` is a required check, so it has to report on the merge queue's commit as well.
+  merge_group:
+    types:
+      - checks_requested
   workflow_dispatch:
 
 permissions:
