@@ -8,6 +8,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>false</IsTestProject>
+    <!-- Test code to SonarCloud. The scanner recognises test projects by a name containing "test", which this one
+         lacks, and would otherwise analyse the linked scenario files as product code. -->
+    <SonarQubeTestProject>true</SonarQubeTestProject>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
     <InvariantGlobalization>false</InvariantGlobalization>
