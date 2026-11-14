@@ -1,7 +1,9 @@
 using Polhem.Core.Serialization;
 using Polhem.Definition.Drafting;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Spreadsheet;
+using Polhem.Expressions;
 
 namespace Polhem.DefineEditor.Services;
 
@@ -12,6 +14,9 @@ namespace Polhem.DefineEditor.Services;
 public sealed class DefineEditorDraftHost : IFormDraftingHost
 {
     private const string ZhTw = "zh-TW";
+
+    // The evaluator the runtime parses expressions with; it is thread-safe, and building its interpreter is not free.
+    private static readonly FormExpressionCalculator s_expressionCalculator = new(new DynamicExpressoEvaluator());
 
     private readonly SolutionContext _solution;
     private readonly string _definePath;
@@ -40,15 +45,22 @@ public sealed class DefineEditorDraftHost : IFormDraftingHost
             ?.Fields ?? [];
 
     /// <summary>
-    /// Plans the import of the draft without writing anything and returns what the plan found.
+    /// Plans the import of the draft without writing anything and returns what the plan found, then parses the
+    /// draft's expressions the way the runtime does when the plan has no errors.
     /// </summary>
     public IReadOnlyList<DraftIssue> Validate(FormDraftResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
         try
         {
-            var plan = FormImporter.Plan(FormDraftImport.ToContent(result), new FormImportOptions { DefinePath = _definePath });
-            return FormDraftImport.ToDraftIssues(plan.Issues);
+            var content = FormDraftImport.ToContent(result);
+            var plan = FormImporter.Plan(content, new FormImportOptions { DefinePath = _definePath });
+            var issues = FormDraftImport.ToDraftIssues(plan.Issues).ToList();
+            // The import does not parse expressions, and an expression that does not parse fails every save of the
+            // form. Planning applied the form conventions to the content, so the fields a relation brings exist here.
+            if (!plan.HasErrors)
+                issues.AddRange(FormDraftImport.ToDraftIssues(s_expressionCalculator.ValidateExpressions(content.Schema)));
+            return issues;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
         {

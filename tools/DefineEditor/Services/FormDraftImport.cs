@@ -48,6 +48,19 @@ public static class FormDraftImport
             .ToList();
     }
 
+    /// <summary>Converts the expressions that do not parse into the issues a drafting session reports.</summary>
+    /// <param name="issues">The expressions that do not parse.</param>
+    /// <returns>One error per expression, located at its field or rule.</returns>
+    public static IReadOnlyList<DraftIssue> ToDraftIssues(IEnumerable<FormExpressionIssue> issues)
+    {
+        ArgumentNullException.ThrowIfNull(issues);
+        return issues
+            .Select(issue => new DraftIssue(DraftIssueSeverity.Error,
+                issue.FieldName is not null ? $"{issue.TableName}.{issue.FieldName}" : $"Rules.{issue.RuleId}",
+                $"The {issue.PropertyName} '{issue.Expression}' does not parse: {issue.Message}"))
+            .ToList();
+    }
+
     /// <summary>
     /// Draws the FormLayout of a converted draft: the one the import generates for a new form, or, when the solution
     /// already has a FormLayout for the ProgId, a copy of it completed with the fields it lacks, as the import's merge
