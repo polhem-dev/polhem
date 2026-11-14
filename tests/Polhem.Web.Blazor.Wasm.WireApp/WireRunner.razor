@@ -1,0 +1,26 @@
+@using System.Text.Json
+@using Polhem.Api.Client
+@using Polhem.Web.Blazor.Wasm.BrowserTests
+@inject PolhemApiClient Client
+@inject NavigationManager Navigation
+
+<pre id="result" data-done="@(_report is null ? "false" : "true")">@_report</pre>
+
+@code {
+    private string? _report;
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        var query = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
+        var scenario = query.Select(pair => pair.Split('=', 2))
+            .Where(pair => pair.Length == 2 && pair[0] == WireSample.ScenarioParameter)
+            .Select(pair => Uri.UnescapeDataString(pair[1]))
+            .FirstOrDefault() ?? WireSample.MessagePack;
+
+        var steps = await WireScenario.RunAsync(Client, scenario, WireSample.BrowserRuntime);
+        _report = JsonSerializer.Serialize(steps, WireReportJsonContext.Default.ListWireStep);
+        StateHasChanged();
+    }
+}

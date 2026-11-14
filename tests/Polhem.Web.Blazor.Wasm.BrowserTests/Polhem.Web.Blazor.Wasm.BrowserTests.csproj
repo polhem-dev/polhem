@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Runs WireScenario on the WebAssembly runtime: publishes Polhem.Web.Blazor.Wasm.WireApp, serves it beside a
+       JSON-RPC backend on SQLite, and reads the page's report in Chrome. The namespace ends in BrowserTests, so the
+       browser test filter of build-ci.yml picks it up. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <!-- The native bundle Polhem.Tests.Shared pins, for the same reason given there. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.64.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Hosting\Polhem.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+    <ProjectReference Include="..\Polhem.Web.Blazor.BrowserTests\Polhem.Web.Blazor.BrowserTests.csproj" />
+    <!-- Built before the tests run; the fixture publishes it itself, because only a publish trims. -->
+    <ProjectReference Include="..\Polhem.Web.Blazor.Wasm.WireApp\Polhem.Web.Blazor.Wasm.WireApp.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Polhem.JsonRpc.AspNetCore serves the endpoint, as in the other HTTP hosts; see PolhemJsonRpc.props. -->
+  <Import Project="..\..\PolhemJsonRpc.props" />
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.AspNetCore/Polhem.JsonRpc.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
