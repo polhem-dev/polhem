@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- The page Polhem.Web.Blazor.Wasm.BrowserTests publishes and opens in Chrome: it runs WireScenario on the
+       WebAssembly runtime and writes its report into the page. The settings below are those of the Northwind
+       WebAssembly head, so the test publishes what an application built on Polhem.Web.Blazor.Wasm publishes. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>false</IsTestProject>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantTimezone>false</InvariantTimezone>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Web.Blazor.Wasm\Polhem.Web.Blazor.Wasm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Polhem.Web.Blazor.Wasm.BrowserTests\WireSample.cs" Link="Shared\WireSample.cs" />
+    <Compile Include="..\Polhem.Web.Blazor.Wasm.BrowserTests\WireScenario.cs" Link="Shared\WireScenario.cs" />
+    <Compile Include="..\Polhem.Web.Blazor.Wasm.BrowserTests\WireStep.cs" Link="Shared\WireStep.cs" />
+  </ItemGroup>
+
+</Project>

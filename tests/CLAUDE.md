@@ -168,6 +168,13 @@ that needs no workload.
 
 `tests/Polhem.Web.Blazor.BrowserTests` holds abstract tests that drive the installed Chrome through Playwright, and `tests/Polhem.Web.Blazor.Mud.BrowserTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` run them over their test pages. They cover behavior bUnit cannot run: script, focus and whether a browser fires `change`. Both attributes skip on a machine without Chrome and fail at launch in CI; a data-driven browser test uses `[BrowserTheory]`, not `[Theory]`, which would fail instead of skipping. Use them only for that kind of behavior; everything else stays in bUnit. To add network delay use `SlowTcpProxy`, not Playwright's `RouteWebSocketAsync`, which lost Blazor's messages when tried on 2026-11-01.
 
+`tests/Polhem.Web.Blazor.Wasm.BrowserTests` is the one browser test that is not about UI: it publishes
+`tests/Polhem.Web.Blazor.Wasm.WireApp` (a publish, because only a publish trims), serves it beside a JSON-RPC backend on
+a SQLite database the fixture creates, and runs the same wire scenario in Chrome and on the desktop runtime; the two
+reports must be equal. It needs no database container. After publishing the wire app with other trim settings by hand,
+delete its `obj/`: the next publish can reuse the stale trimmed assemblies, and the page then fails in the browser with
+`TypeLoadException` (seen on 2026-11-14).
+
 ### Repository root: `RepoRoot.Find()`
 
 A test that reads a file from the working tree (a doc gate, a csproj gate, `tests/Define`) finds the root through

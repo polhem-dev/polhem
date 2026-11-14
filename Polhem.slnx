@@ -63,6 +63,8 @@
     <Project Path="tests/Polhem.Web.Blazor.Mud.BrowserTests/Polhem.Web.Blazor.Mud.BrowserTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Mud.UnitTests/Polhem.Web.Blazor.Mud.UnitTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Server.UnitTests/Polhem.Web.Blazor.Server.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Web.Blazor.Wasm.BrowserTests/Polhem.Web.Blazor.Wasm.BrowserTests.csproj" />
     <Project Path="tests/Polhem.Web.Blazor.Wasm.UnitTests/Polhem.Web.Blazor.Wasm.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Web.Blazor.Wasm.WireApp/Polhem.Web.Blazor.Wasm.WireApp.csproj" />
   </Folder>
 </Solution>
