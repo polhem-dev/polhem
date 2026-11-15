@@ -87,3 +87,17 @@ in `DbCommandSpec.NormalizeDbType` (provider-gated). Do not touch the global `Db
 Existing examples: SQL Server-only `DateTime → DateTime2` (to get datetime2(7)'s sub-millisecond precision and the
 pre-1753 range), and Oracle `Guid → Binary`. Changing `Infer` globally was tried once, and it broke the
 PostgreSQL/Oracle seed.
+
+## A table upgrade must be idempotent
+
+After the upgrade to a definition, comparing the same definition with the table read back must find no difference.
+A difference that survives its own upgrade is planned again on every start-up: an endless upgrade, which on SQLite
+rebuilds the table each time. The usual cause is a read-back that spells a value differently from the DDL that wrote
+it (a default the provider does not parse, a type the provider maps back to another `FieldDbType`, a number with
+trailing zeros).
+
+`UpgradeIdempotencyGateTests` (tests/Polhem.Db.UnitTests) enforces this on every database for the create, add-column and
+rebuild paths, over a definition that covers every `FieldDbType`, nullable columns, literal defaults, indexes and
+descriptions. **When you change what a dialect emits or reads back (`<Dialect>SchemaSyntax`, `<Dialect>TableSchemaProvider`,
+`TableSchemaComparer`) or add a column type, extend that definition**; do not fix a loop by making the comparison
+ignore the property.

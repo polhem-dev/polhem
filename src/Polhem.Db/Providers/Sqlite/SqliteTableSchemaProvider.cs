@@ -233,6 +233,10 @@ namespace Polhem.Db.Providers.Sqlite
 
             if (dbField.DbType == FieldDbType.String && length > 0)
                 dbField.Length = length;
+            // Currency is emitted as NUMERIC(19,4), and the other providers read that shape back as Currency
+            // too; read as Decimal, a Currency column differed from its definition after every upgrade.
+            if (dbField.DbType == FieldDbType.Decimal && precision == 19 && scale == 4)
+                dbField.DbType = FieldDbType.Currency;
             if (dbField.DbType == FieldDbType.Decimal)
             {
                 dbField.Precision = precision > 0 ? precision : dbField.Precision;

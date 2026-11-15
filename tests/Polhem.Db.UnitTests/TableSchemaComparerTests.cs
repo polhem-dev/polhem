@@ -12,6 +12,40 @@ namespace Polhem.Db.UnitTests
     {
         public TableSchemaComparerTests(SharedDbFixture _) { }
 
+        [Theory]
+        [InlineData("1.5", "1.50")]
+        [InlineData("", "0.0000")]
+        [InlineData("7", "7.00")]
+        [DisplayName("CompareToDiff compares a numeric default by value, however the database spells it")]
+        public void CompareToDiff_NumericDefaultSpelledDifferently_NoChange(string defined, string readBack)
+        {
+            var define = BuildBaseSchema();
+            var amount = define.Fields!.Add("amount", "Amount", FieldDbType.Decimal);
+            amount.Precision = 10;
+            amount.Scale = 2;
+            amount.DefaultValue = defined;
+            var real = define.Clone();
+            real.Fields!["amount"].DefaultValue = readBack;
+
+            var diff = new TableSchemaComparer(define, real, DatabaseType.MySQL).CompareToDiff();
+
+            Assert.Empty(diff.Changes);
+        }
+
+        [Fact]
+        [DisplayName("CompareToDiff still reports a numeric default whose value differs")]
+        public void CompareToDiff_NumericDefaultDifferentValue_ReportsChange()
+        {
+            var define = BuildBaseSchema();
+            define.Fields!.Add("amount", "Amount", FieldDbType.Integer).DefaultValue = "7";
+            var real = define.Clone();
+            real.Fields!["amount"].DefaultValue = "8";
+
+            var diff = new TableSchemaComparer(define, real, DatabaseType.MySQL).CompareToDiff();
+
+            Assert.IsType<AlterFieldChange>(Assert.Single(diff.Changes));
+        }
+
         private static TableSchema BuildBaseSchema(string tableName = "st_demo")
         {
             var schema = new TableSchema { TableName = tableName };
