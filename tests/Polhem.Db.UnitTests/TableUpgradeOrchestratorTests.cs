@@ -124,6 +124,40 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("Plan numbers rows afresh when a plain column becomes AutoIncrement, instead of copying its values")]
+        public void Plan_PlainColumnBecomesAutoIncrement_NotCopied()
+        {
+            var define = BuildDefineSchema();
+            define.Fields!.Add("seq", "Seq", FieldDbType.AutoIncrement);
+            var real = BuildRealSchema();
+            real.Fields!.Add("seq", "Seq", FieldDbType.Integer);
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            var plan = new TableUpgradeOrchestrator(s_dialect, s_stubMgr).Plan(diff);
+
+            Assert.Equal(UpgradeExecutionMode.Rebuild, plan.Mode);
+            var sql = string.Join("\n", plan.AllStatements);
+            Assert.Contains("INSERT INTO [tmp_st_demo] ([id], [name])", sql, StringComparison.Ordinal);
+            Assert.DoesNotContain("IDENTITY_INSERT", sql, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Plan refuses a rebuild that would lose an index the definition does not declare")]
+        public void Plan_RebuildWithDatabaseOnlyIndex_Throws()
+        {
+            var define = BuildDefineSchema();
+            define.Fields!["name"].DbType = FieldDbType.Integer; // A cross-family change triggers a rebuild.
+            define.Fields!["name"].Length = 0;
+            var real = BuildRealSchema();
+            real.Indexes!.Add("ix_dba_name", "name", false);
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            var ex = Assert.Throws<InvalidOperationException>(() => new TableUpgradeOrchestrator(s_dialect, s_stubMgr).Plan(diff));
+
+            Assert.Contains("'ix_dba_name'", ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("Plan warns when a rebuild replaces the expression default of a column the definition does not declare")]
         public void Plan_RebuildReplacingExtensionDefault_Warns()
         {

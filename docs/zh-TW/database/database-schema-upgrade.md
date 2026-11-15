@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: 23d2bd65f2de2ec4ad49b664f3cf3d4f8b214395 -->
+<!-- source: en/database/database-schema-upgrade.md blob: eb36ddfa9cccc88f4935a3a1a339fdf54a411c51 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -21,6 +21,15 @@ Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchem
 > **升級成功返回後，DB 至少包含 define 裡所有欄位，且型別／長度／nullable 與 define 一致**——方言無法表達定義的地方除外，例如 Oracle 的文字欄一律為 nullable（[資料庫方言差異 §3.1](database-dialect-differences.md#31-oracle-就是-null)）。
 
 這是從應用程式視角唯一重要的事。內部走 `ALTER TABLE` 或整表 rebuild 是 library 的選擇，呼叫端不需要關心。
+
+### 升級原則
+
+每一條升級路徑都遵循四條原則：
+
+1. **保存既有資料。** 升級改的是資料表，不是資料列。重建會複製每一個欄位（包括定義中沒有宣告的欄位），並保留 AutoIncrement 編號；會失去只存在於資料庫的索引的重建，則改為拒絕（§4）。
+2. **以目前的 `TableSchema` 為準。** 從資料庫讀回的 schema 與定義不同時，升級會把資料表改成與定義一致。
+3. **升級一次就夠。** 升級後，用同一份定義再與資料庫比對，不會有任何差異，所以下一次執行不會規劃任何變更。若某個差異在升級後仍然存在，每次執行都會再套用一次。
+4. **既有資料擋住升級時，就停下並回報。** 資料表與資料列維持原狀，錯誤會指出是哪張資料表、什麼原因，由你決定要修正資料還是修正定義（§7）。升級絕不會為了通過而修改或丟棄資料，唯一的例外是你自己用 `AllowColumnNarrowing` 開啟的欄位縮小（§5）。
 
 > **把既有部署升級成帶 `sys_company_id` 的公司資料表時，請用 `db upgrade`。** 下列 API 只會以空值加上這個欄位，
 > 不做其他事。`sys_company_id` 為空的資料列不屬於任何公司，所以既有的每一列都會從每家公司消失。`db upgrade` 會先檢查
@@ -155,7 +164,13 @@ foreach (var sql in plan.AllStatements)
 
 定義中沒有宣告的欄位也會連同資料一起重建。這類欄位的預設值若是單純的字面值就保留；其他預設值（例如較早版本的 Polhem 當作內建預設值使用的運算式）會換成該欄位型別的內建預設值，升級計畫的 warnings 會列出這個欄位。
 
-在 SQLite 上，重建會複製 AutoIncrement 的值並延續資料表的序號，所以 `sys_no` 保留原本的編號，被刪除而空出的號碼也不會再發出。其他方言重建時不複製 AutoIncrement 欄位，重建後的資料表會重新編號。
+重建會保留資料表原有的內容：
+
+- **AutoIncrement 編號**會原值複製，`sys_no` 保留原本的值；之後序號接續舊表的序號，被刪除而空出的號碼不會再發出（Oracle 可能跳過幾個號碼，因為序號的快取上限）。MySQL 例外：計數器接在複製進來的最大值之後，所以表尾被刪掉的號碼可能再次出現。
+- **只存在資料庫裡的索引**不會被重新建立：框架讀得回它涵蓋的欄位，讀不回過濾條件、INCLUDE 欄、前綴長度或索引種類，重建出來的索引可能和原本約束的內容不同。資料表有這種索引時，重建會在執行任何語句前就被拒絕，並指出是哪個索引；請把它寫進定義，或自行刪除，再升級一次。
+- **一般欄位改成 AutoIncrement** 時不會複製舊值，而是重新編號，因為舊值（常常全是 `0`）不能當作 identity 值。
+
+重建無法完成時，資料表維持原狀：會在刪除舊表之前停下。記錄的內容與處理方式見 §7。
 
 ### 自動判斷，不需開發者選
 
@@ -260,6 +275,23 @@ Stage 5: SyncDescriptions   同步表／欄位描述
 - comparer 是**冪等**的：修正失敗原因後重跑，已完成的 stage 會被視為「無變更」自動跳過
 
 > 這個設計刻意不做整體 transaction：DDL 在多數 DB 不支援可靠的整體回滾，per-stage + 冪等重跑是更實際的策略。
+
+### 既有資料擋住升級時
+
+有些升級無法套用到資料表現有的資料上，例如文字欄位改成數字、但有些資料列存的不是數字，或者新的唯一索引遇到重複值。升級不會嘗試修補這類資料，而是：
+
+- **資料表維持原狀。** ALTER 路徑上，失敗的 stage 會如上所述回滾。重建會在刪除舊表之前停下（§4），所以資料表保有原本的欄位與資料列。MySQL 與 Oracle 的 DDL 會逐句提交，可能留下暫存表 `tmp_<資料表>`，下一次嘗試時會先刪掉它。
+- **會失去資料表一部分的重建，會在執行任何語句前就被拒絕。** 這發生在欄位型別是框架無法對應的，或資料庫有定義中沒有宣告的索引時；錯誤會指出是哪些欄位或索引。
+- **錯誤逐表記錄，其他資料表照常升級。**
+  - `db upgrade`（polhem-db，以及透過它執行的 DefineEditor）會為每張資料表輸出一行，失敗的資料表附上錯誤，並以結束碼 `1` 結束（見[資料庫設定](database-settings-guide.md)）。
+  - 在程式中，`IDatabaseInitializer.UpgradeTables` 會回傳 `TableUpgradeReport`：每個 `Outcome` 為 `Failed` 的 `TableUpgradeEntry` 都帶有 `Error`，`Succeeded` 為 `false`。
+  - `IDatabaseRepository.UpgradeTableSchema` 與 `TableSchemaBuilder.Execute` 只升級一張資料表，錯誤會直接拋給呼叫端。
+
+處理失敗的步驟：
+
+1. 閱讀錯誤，並以 `--dry-run`（或 `TableSchemaBuilder.GetCommandText`）執行升級，查看它嘗試執行的語句（§9）。
+2. 判斷是哪一邊有問題：修正或搬移擋住變更的資料列，或是修改定義。
+3. 再次執行升級。升級是冪等的，已經成功的部分會被跳過。
 
 ## 8. 不支援的情境
 

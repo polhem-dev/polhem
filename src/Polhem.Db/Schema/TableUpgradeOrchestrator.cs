@@ -132,6 +132,7 @@ namespace Polhem.Db.Schema
             // A rebuild copies every row into the new table, so a narrowed column truncates or rejects data
             // exactly as an ALTER would; the same opt-in applies.
             var warnings = new List<string>();
+            RebuildSchemaFactory.ThrowIfRebuildWouldLoseParts(diff);
             foreach (var change in diff.Changes)
                 CheckNarrowing(change, options, warnings);
             warnings.AddRange(RebuildSchemaFactory.DescribeReplacedDefaults(diff));
