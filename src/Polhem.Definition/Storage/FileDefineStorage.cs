@@ -274,7 +274,7 @@ namespace Polhem.Definition.Storage
         /// <param name="ns">The resource namespace.</param>
         public LanguageResource? GetLanguage(string lang, string ns)
         {
-            string filePath = _paths.GetLanguageFilePath(lang, ns);
+            string filePath = DefineFileCaseResolver.Resolve(_paths.GetLanguageFilePath(lang, ns));
             if (!File.Exists(filePath))
                 return null;
             return XmlCodec.DeserializeFromFile<LanguageResource>(filePath);
@@ -286,7 +286,7 @@ namespace Polhem.Definition.Storage
         /// <param name="resource">The language resource.</param>
         public void SaveLanguage(LanguageResource resource)
         {
-            string filePath = _paths.GetLanguageFilePath(resource.Lang, resource.Namespace);
+            string filePath = DefineFileCaseResolver.Resolve(_paths.GetLanguageFilePath(resource.Lang, resource.Namespace));
             XmlCodec.SerializeToFile(resource, filePath);
         }
 
@@ -310,7 +310,7 @@ namespace Polhem.Definition.Storage
                 DefineType.FormSchema when keys.Length >= 1 => [_paths.GetFormSchemaFilePath(keys[0])],
                 DefineType.FormLayout when keys.Length >= 1 => [_paths.GetFormLayoutFilePath(keys[0])],
                 DefineType.TableSchema when keys.Length >= 2 => [_paths.GetTableSchemaFilePath(keys[0], keys[1])],
-                DefineType.Language when keys.Length >= 2 => [_paths.GetLanguageFilePath(keys[0], keys[1])],
+                DefineType.Language when keys.Length >= 2 => [DefineFileCaseResolver.Resolve(_paths.GetLanguageFilePath(keys[0], keys[1]))],
                 _ => null
             };
 
