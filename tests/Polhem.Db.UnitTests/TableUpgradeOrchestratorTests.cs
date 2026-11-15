@@ -100,8 +100,8 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan throws for a Rebuild combined with a rename")]
-        public void Plan_RebuildWithRename_Throws()
+        [DisplayName("Plan rebuilds a table whose diff also renames a column, copying the old column into the new name")]
+        public void Plan_RebuildWithRename_CopiesRenamedColumn()
         {
             var define = BuildDefineSchema();
             define.Fields!["name"].FieldName = "display_name";
@@ -113,7 +113,14 @@ namespace Polhem.Db.UnitTests
             var diff = new TableSchemaComparer(define, BuildRealSchema(), DatabaseType.SQLServer).CompareToDiff();
             var orchestrator = new TableUpgradeOrchestrator(s_dialect, s_stubMgr);
 
-            Assert.Throws<InvalidOperationException>(() => orchestrator.Plan(diff));
+            var plan = orchestrator.Plan(diff);
+
+            Assert.Equal(UpgradeExecutionMode.Rebuild, plan.Mode);
+            var sql = string.Join("\n", plan.AllStatements);
+            Assert.Contains("INSERT INTO [tmp_st_demo] ([id], [display_name])", sql, StringComparison.Ordinal);
+            Assert.Contains("SELECT [id], [name] FROM [st_demo]", sql, StringComparison.Ordinal);
+            // The old column is renamed, not kept as an extension column.
+            Assert.DoesNotContain("[name] NVARCHAR", sql, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

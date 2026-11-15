@@ -1,3 +1,5 @@
+using Polhem.Db.Providers;
+using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Schema
@@ -19,17 +21,38 @@ namespace Polhem.Db.Schema
         /// (extension field policy — columns present in the database but absent from the definition
         /// are preserved through the rebuild).
         /// </summary>
+        /// <remarks>
+        /// A column the definition renames is not an extension field: it is copied into its new name (see
+        /// <see cref="GetSourceFieldNames"/>). An extension field keeps the default read back from the database
+        /// when every dialect can emit it; any other default, an expression such as a built-in default an earlier
+        /// framework version used, becomes the framework's built-in default for the column's type.
+        /// </remarks>
         /// <param name="diff">The schema diff being rebuilt.</param>
         public static TableSchema BuildEffectiveSchema(TableSchemaDiff diff)
         {
             var cloned = diff.DefineTable.Clone();
             if (diff.RealTable != null)
             {
-                foreach (var realField in diff.RealTable.Fields!.Where(f => !cloned.Fields!.Contains(f.FieldName)))
-                    cloned.Fields!.Add(realField.Clone());
+                var sourceNames = GetSourceFieldNames(diff).Values.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var realField in diff.RealTable.Fields!.Where(f =>
+                    !cloned.Fields!.Contains(f.FieldName) && !sourceNames.Contains(f.FieldName)))
+                {
+                    var extension = realField.Clone();
+                    if (!DefaultValueLiteral.CanEmit(extension))
+                        extension.DefaultValue = string.Empty;
+                    cloned.Fields!.Add(extension);
+                }
             }
             return cloned;
         }
+
+        /// <summary>
+        /// Returns the source column of each field the diff renames, keyed by the field's new name.
+        /// </summary>
+        /// <param name="diff">The schema diff being rebuilt.</param>
+        public static Dictionary<string, string> GetSourceFieldNames(TableSchemaDiff diff)
+            => diff.Changes.OfType<RenameFieldChange>()
+                .ToDictionary(c => c.NewField.FieldName, c => c.OldFieldName, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Clones <paramref name="schema"/> under a different table name, used to create the

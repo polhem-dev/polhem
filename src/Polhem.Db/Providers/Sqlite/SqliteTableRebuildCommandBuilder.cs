@@ -53,7 +53,7 @@ namespace Polhem.Db.Providers.Sqlite
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, SqliteSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), SqliteSchemaSyntax.QuoteName));
 
             // 4) Drop the original table — this also drops every index and the autoindex backing
             //    its primary key, freeing those names for recreation in step 6.

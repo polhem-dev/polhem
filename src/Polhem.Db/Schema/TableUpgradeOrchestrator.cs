@@ -74,12 +74,7 @@ namespace Polhem.Db.Schema
             }
 
             if (needsRebuild)
-            {
-                bool hasRename = diff.Changes.OfType<RenameFieldChange>().Any();
-                if (hasRename)
-                    throw new InvalidOperationException("Rebuild combined with a field rename is not supported; split the changes across deploys or drop the OriginalFieldName hint.");
                 return BuildRebuildPlan(diff, options);
-            }
 
             return BuildAlterPlan(diff, options);
         }

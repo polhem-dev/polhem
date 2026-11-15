@@ -42,18 +42,54 @@ namespace Polhem.Db.UnitTests
         public void DateDefault_Oracle_MatchesTodayAndReadsBackUnchanged() => Run(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite: a Date column that still carries the old CURRENT_TIMESTAMP default reads back unchanged")]
-        public void LegacyDateDefault_Sqlite_ReadsBackUnchanged() => RunLegacy(DatabaseType.SQLite, "CURRENT_TIMESTAMP");
+        [DisplayName("SQLite: an upgrade moves a Date column off the old CURRENT_TIMESTAMP default and keeps the rows")]
+        public void LegacyDateDefault_Sqlite_UpgradeRefreshesDefaultAndKeepsRows()
+            => RunLegacy(DatabaseType.SQLite, "CURRENT_TIMESTAMP", tableRebuilt: true);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle: a Date column that still carries the old SYS_EXTRACT_UTC(SYSTIMESTAMP) default reads back unchanged")]
-        public void LegacyDateDefault_Oracle_ReadsBackUnchanged() => RunLegacy(DatabaseType.Oracle, "SYS_EXTRACT_UTC(SYSTIMESTAMP)");
+        [DisplayName("Oracle: an upgrade moves a Date column off the old SYS_EXTRACT_UTC(SYSTIMESTAMP) default and keeps the rows")]
+        public void LegacyDateDefault_Oracle_UpgradeRefreshesDefaultAndKeepsRows()
+            => RunLegacy(DatabaseType.Oracle, "SYS_EXTRACT_UTC(SYSTIMESTAMP)", tableRebuilt: false);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: an upgrade that renames a column and rebuilds the table copies the column into its new name")]
+        public void RenameWithRebuild_Sqlite_CopiesRenamedColumn()
+        {
+            var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
+            var dbAccess = _fx.NewDbAccess(databaseId);
+            Drop(dbAccess, DatabaseType.SQLite);
+            try
+            {
+                var before = BuildSchema(withDate: false);
+                before.Fields!.Add("name", "Name", FieldDbType.String, 20);
+                Upgrade(databaseId, before);
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                    "INSERT INTO date_default_test (id, name) VALUES ({0}, {1})", "1", "kept"));
+
+                // Adding a NOT NULL Date column to a table with rows needs a rebuild on SQLite.
+                var after = BuildSchema(withDate: true);
+                after.Fields!.Add("title", "Title", FieldDbType.String, 20);
+                after.Fields!["title"].OriginalFieldName = "name";
+                Upgrade(databaseId, after);
+
+                var title = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                    "SELECT title FROM date_default_test WHERE id = {0}", "1")).Scalar;
+                Assert.Equal("kept", Convert.ToString(title, CultureInfo.InvariantCulture));
+                Assert.True(Diff(databaseId, after).IsEmpty);
+            }
+            finally
+            {
+                Drop(dbAccess, DatabaseType.SQLite);
+            }
+        }
 
         /// <summary>
-        /// A database created before the Date default kept only the day must not plan a change for it: the change
-        /// would rebuild the table on SQLite, which an upgrade cannot do when the same plan renames a column.
+        /// A database created with an earlier built-in Date default reads back different from the definition, so
+        /// an upgrade changes the column to the current default and keeps its rows. The table also carries a Date
+        /// column the definition does not declare: a rebuild (SQLite) gives it the current default as well, while an
+        /// in-place change of the declared column (Oracle) leaves it alone.
         /// </summary>
-        private void RunLegacy(DatabaseType databaseType, string legacyDefault)
+        private void RunLegacy(DatabaseType databaseType, string legacyDefault, bool tableRebuilt)
         {
             var databaseId = TestDbConventions.GetDatabaseId(databaseType);
             var dbAccess = _fx.NewDbAccess(databaseId);
@@ -61,19 +97,48 @@ namespace Polhem.Db.UnitTests
             try
             {
                 var define = BuildSchema(withDate: true);
+                var created = BuildSchema(withDate: true);
+                created.Fields!.Add("extra_date", "Extra date", FieldDbType.Date);
                 var dialect = DbDialectRegistry.Get(databaseType);
-                string ddl = dialect.CreateCreateTableCommandBuilder().GetCommandText(define)
+                string ddl = dialect.CreateCreateTableCommandBuilder().GetCommandText(created)
                     .Replace(dialect.GetDefaultValueExpression(FieldDbType.Date), legacyDefault, StringComparison.Ordinal);
                 Assert.Contains(legacyDefault, ddl, StringComparison.Ordinal);
                 // The upgrade runs a create script as one command too.
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, ddl));
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                    "INSERT INTO date_default_test (id, order_date, extra_date) VALUES ({0}, {1}, {2})",
+                    "1", new DateOnly(2026, 1, 2), new DateOnly(2026, 1, 3)));
+
+                Assert.False(Diff(databaseId, define).IsEmpty);
+                var before = DateOnly.FromDateTime(DateTime.UtcNow);
+                Upgrade(databaseId, define);
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                    "INSERT INTO date_default_test (id) VALUES ({0})", "2"));
+                var after = DateOnly.FromDateTime(DateTime.UtcNow);
 
                 Assert.True(Diff(databaseId, define).IsEmpty);
+                Assert.Equal(1, CountWhere(dbAccess, "id = {0} AND order_date = {1}", "1", new DateOnly(2026, 1, 2)));
+                Assert.Equal(1, CountWhere(dbAccess, "id = {0} AND extra_date = {1}", "1", new DateOnly(2026, 1, 3)));
+                Assert.True(OnDay(dbAccess, "order_date", before, after));
+                if (tableRebuilt)
+                    Assert.True(OnDay(dbAccess, "extra_date", before, after));
             }
             finally
             {
                 Drop(dbAccess, databaseType);
             }
+        }
+
+        // The two days differ only when the test runs across midnight UTC; either day is then correct.
+        private static bool OnDay(DbAccess dbAccess, string column, DateOnly before, DateOnly after)
+            => CountWhere(dbAccess, $"id = {{0}} AND {column} = {{1}}", "2", before) == 1
+                || (after != before && CountWhere(dbAccess, $"id = {{0}} AND {column} = {{1}}", "2", after) == 1);
+
+        private static int CountWhere(DbAccess dbAccess, string condition, params object[] values)
+        {
+            var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT COUNT(*) FROM date_default_test WHERE " + condition, values));
+            return Convert.ToInt32(result.Scalar!, CultureInfo.InvariantCulture);
         }
 
         private void Run(DatabaseType databaseType)

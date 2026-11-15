@@ -52,23 +52,33 @@ namespace Polhem.Db.Providers
         /// <param name="addedFieldNames">
         /// Columns the rebuild adds. They do not exist in the source table, so they are left to their defaults.
         /// </param>
+        /// <param name="sourceFieldNames">
+        /// The source column of each renamed field, keyed by its new name; other fields are copied from the column of
+        /// the same name.
+        /// </param>
         /// <param name="quoteName">The dialect's identifier quoting.</param>
         /// <remarks>
         /// Auto-increment columns are not copied: the target generates its own values.
         /// </remarks>
         public static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema,
-            HashSet<string> addedFieldNames, Func<string, string> quoteName)
+            HashSet<string> addedFieldNames, IReadOnlyDictionary<string, string> sourceFieldNames,
+            Func<string, string> quoteName)
         {
-            var fieldBuilder = new StringBuilder();
+            var targetFields = new StringBuilder();
+            var sourceFields = new StringBuilder();
             foreach (DbField field in schema.Fields!)
             {
                 if (addedFieldNames.Contains(field.FieldName)) continue;
                 if (field.DbType == FieldDbType.AutoIncrement) continue;
-                if (fieldBuilder.Length > 0) fieldBuilder.Append(", ");
-                fieldBuilder.Append(quoteName(field.FieldName));
+                if (targetFields.Length > 0)
+                {
+                    targetFields.Append(", ");
+                    sourceFields.Append(", ");
+                }
+                targetFields.Append(quoteName(field.FieldName));
+                sourceFields.Append(quoteName(sourceFieldNames.TryGetValue(field.FieldName, out var source) ? source : field.FieldName));
             }
-            string fields = fieldBuilder.ToString();
-            return $"INSERT INTO {quoteName(targetTable)} ({fields}) \nSELECT {fields} FROM {quoteName(sourceTable)};";
+            return $"INSERT INTO {quoteName(targetTable)} ({targetFields}) \nSELECT {sourceFields} FROM {quoteName(sourceTable)};";
         }
     }
 }

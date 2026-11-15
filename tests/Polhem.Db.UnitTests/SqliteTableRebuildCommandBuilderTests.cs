@@ -51,6 +51,23 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("SQLite GetCommandText gives an extension column the built-in default when its default is an expression")]
+        public void GetCommandText_ExtensionFieldWithExpressionDefault_UsesBuiltInDefault()
+        {
+            var define = BuildDefineSchema();
+            var real = BuildRealSchema();
+            real.Fields!.Add(new DbField("old_date", "Old date", FieldDbType.Date) { DefaultValue = "CURRENT_TIMESTAMP" });
+            real.Fields!.Add(new DbField("old_count", "Old count", FieldDbType.Integer) { DefaultValue = "7" });
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            Assert.Contains("\"old_date\" DATE NOT NULL DEFAULT (datetime('now', 'start of day'))", sql, StringComparison.Ordinal);
+            Assert.Contains("\"old_count\" INTEGER NOT NULL DEFAULT 7", sql, StringComparison.Ordinal);
+            Assert.DoesNotContain("CURRENT_TIMESTAMP", sql, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("SQLite GetCommandText uses IF EXISTS for DROP TABLE")]
         public void GetCommandText_DropTable_UsesIfExists()
         {
