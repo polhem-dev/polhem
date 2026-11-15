@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Db;
 using Polhem.Db.Manager;
+using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
@@ -134,6 +135,51 @@ namespace Polhem.Hosting.UnitTests
             Assert.NotNull(entries.Single(e => e.DatabaseId == "orphan").Error);
             Assert.All(entries.Where(e => e.DatabaseId != "orphan"), e => Assert.True(e.Succeeded, e.Error));
             Assert.Equal(4, entries.Count);
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("Upgrading records each table it builds, and a second upgrade changes nothing")]
+        public void UpgradeTables_RecordsEachBuiltTable()
+        {
+            SaveSqliteItems();
+
+            var report = _initializer.UpgradeTables();
+
+            Assert.True(report.Succeeded);
+            var records = new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
+            var record = records.GetRecord("st_user");
+            Assert.NotNull(record);
+            Assert.Equal(TableUpgradeStatus.Succeeded, record.Status);
+            Assert.Equal(SchemaFormat.Current, record.FormatVersion);
+            Assert.Equal(SchemaFormat.Current, records.GetHighestFormatVersion());
+            Assert.All(_initializer.UpgradeTables().Tables, t => Assert.Equal(TableUpgradeOutcome.Unchanged, t.Outcome));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A database upgraded by a newer schema format is reported once and none of its tables is touched")]
+        public void UpgradeTables_NewerFormat_ReportedOncePerDatabase()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            using (var connection = _connectionManager.CreateConnection(DbCategoryIds.Log))
+            {
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE st_table_upgrade SET format_version = format_version + 1";
+                command.ExecuteNonQuery();
+            }
+
+            foreach (bool dryRun in new[] { true, false })
+            {
+                var report = _initializer.UpgradeTables(dryRun: dryRun);
+
+                var problem = Assert.Single(report.Problems);
+                Assert.Contains($"'{DbCategoryIds.Log}'", problem, StringComparison.Ordinal);
+                Assert.Contains($"schema format {SchemaFormat.Current + 1}", problem, StringComparison.Ordinal);
+                Assert.DoesNotContain(report.Tables, t => t.DatabaseId == DbCategoryIds.Log);
+                Assert.Contains(report.Tables, t => t.DatabaseId == DbCategoryIds.Common);
+                Assert.False(report.Succeeded);
+            }
         }
 
         private void SaveSqliteItems()

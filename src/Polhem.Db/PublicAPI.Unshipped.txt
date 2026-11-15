@@ -1,1 +1,35 @@
 #nullable enable
+Polhem.Db.Schema.SchemaFormat
+Polhem.Db.Schema.TableUpgradeRecord
+Polhem.Db.Schema.TableUpgradeRecord.Error.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.Error.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.FormatVersion.get -> int
+Polhem.Db.Schema.TableUpgradeRecord.FormatVersion.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.FrameworkVersion.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.FrameworkVersion.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.SchemaHash.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.SchemaHash.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.SchemaXml.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.SchemaXml.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.Status.get -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeRecord.Status.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.TableName.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.TableName.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.TableUpgradeRecord() -> void
+Polhem.Db.Schema.TableUpgradeRecord.UpdateTime.get -> System.DateTime
+Polhem.Db.Schema.TableUpgradeRecord.UpdateTime.init -> void
+Polhem.Db.Schema.TableUpgradeRecordStore
+Polhem.Db.Schema.TableUpgradeRecordStore.DescribeNewerFormat() -> string?
+Polhem.Db.Schema.TableUpgradeRecordStore.GetHighestFormatVersion() -> int
+Polhem.Db.Schema.TableUpgradeRecordStore.GetRecord(string! tableName) -> Polhem.Db.Schema.TableUpgradeRecord?
+Polhem.Db.Schema.TableUpgradeRecordStore.RecordTableName.get -> string!
+Polhem.Db.Schema.TableUpgradeRecordStore.TableUpgradeRecordStore(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Failed = 2 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Succeeded = 1 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Upgrading = 0 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.UpgradePlan.DefineTable.get -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.UpgradePlan.DefineTable.init -> void
+const Polhem.Db.Schema.TableUpgradeRecordStore.DefaultRecordTableName = "st_table_upgrade" -> string!
+static Polhem.Db.Schema.SchemaFormat.Current.get -> int
+static Polhem.Db.Schema.TableUpgradeRecordStore.ComputeHash(string! schemaXml) -> string!
