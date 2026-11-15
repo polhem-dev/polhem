@@ -47,6 +47,9 @@ namespace Polhem.Db.Providers.Oracle
                 case FieldDbType.Currency:
                     return "0";
                 case FieldDbType.Date:
+                    // An Oracle `DATE` keeps the time of day, so the UTC instant below is truncated to
+                    // midnight: a row that takes this default must match a filter on its own day.
+                    return "TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))";
                 case FieldDbType.DateTime:
                     // The framework stores every instant in UTC (ADR-032 D1), and this DEFAULT is
                     // the path that writes when a hand-written INSERT omits the column or an

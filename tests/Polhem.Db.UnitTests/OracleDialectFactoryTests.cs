@@ -63,6 +63,7 @@ namespace Polhem.Db.UnitTests
 
             Assert.Equal("SYS_GUID()", factory.GetDefaultValueExpression(FieldDbType.Guid));
             Assert.Equal("SYS_EXTRACT_UTC(SYSTIMESTAMP)", factory.GetDefaultValueExpression(FieldDbType.DateTime));
+            Assert.Equal("TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))", factory.GetDefaultValueExpression(FieldDbType.Date));
             Assert.Equal("0", factory.GetDefaultValueExpression(FieldDbType.Integer));
             Assert.Equal(string.Empty, factory.GetDefaultValueExpression(FieldDbType.String));
         }

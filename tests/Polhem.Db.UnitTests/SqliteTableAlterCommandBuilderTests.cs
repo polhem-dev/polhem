@@ -34,6 +34,33 @@ namespace Polhem.Db.UnitTests
             Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
         }
 
+        [Theory]
+        [InlineData(FieldDbType.Date)]
+        [InlineData(FieldDbType.DateTime)]
+        [InlineData(FieldDbType.Guid)]
+        [DisplayName("SQLite GetExecutionKind returns Rebuild for adding a column whose default ADD COLUMN refuses")]
+        public void GetExecutionKind_AddFieldWithExpressionDefault_ReturnsRebuild(FieldDbType dbType)
+        {
+            var change = new AddFieldChange(new DbField("v", "V", dbType));
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetExecutionKind returns Rebuild for adding a NOT NULL Binary column, which has no default")]
+        public void GetExecutionKind_AddNotNullBinaryField_ReturnsRebuild()
+        {
+            var change = new AddFieldChange(new DbField("v", "V", FieldDbType.Binary));
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetExecutionKind returns Alter for adding a nullable Date column, which needs no default")]
+        public void GetExecutionKind_AddNullableDateField_ReturnsAlter()
+        {
+            var change = new AddFieldChange(new DbField("v", "V", FieldDbType.Date) { AllowNull = true });
+            Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
+        }
+
         [Fact]
         [DisplayName("SQLite GetExecutionKind returns Alter for RenameFieldChange")]
         public void GetExecutionKind_RenameField_ReturnsAlter()

@@ -76,6 +76,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("NUMBER", "0", "", "0")]
         [InlineData("NUMBER", "42", "", "42")]
         [InlineData("DATE", "SYS_EXTRACT_UTC(SYSTIMESTAMP)", "", "SYS_EXTRACT_UTC(SYSTIMESTAMP)")]
+        [InlineData("DATE", "TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP)) ", "TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))", "")]
         [InlineData("TIMESTAMP(6)", "SYS_EXTRACT_UTC(SYSTIMESTAMP)", "", "SYS_EXTRACT_UTC(SYSTIMESTAMP)")]
         [InlineData("RAW", "SYS_GUID()", "", "SYS_GUID()")]
         [DisplayName("Oracle ParseDBDefaultValue strips the string quotes by type and trims whitespace")]

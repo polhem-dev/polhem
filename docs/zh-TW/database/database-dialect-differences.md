@@ -1,4 +1,4 @@
-<!-- source: en/database/database-dialect-differences.md blob: 76ca2f6c884beb84171aa8c9aa9ce33cfa8b21f6 -->
+<!-- source: en/database/database-dialect-differences.md blob: 0938a62fec4abf38c22dcd00ca5010714c9dae65 -->
 # 資料庫方言差異（DDL）
 
 [English](../../en/database/database-dialect-differences.md) · [← 文件索引](../README.md)
@@ -54,7 +54,7 @@ Polhem 由單一份 `TableSchema` 定義產生 DDL（CREATE TABLE / ALTER TABLE�
 | `String` / `Time` | `N''` | `''` | `''` | *（nullable — 見 §3.1）* | `''` |
 | `Text` | `N''` | `''` | *（無 — 見 §3.2）* | *（nullable — 見 §3.1）* | `''` |
 | `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0`（`Boolean` 為 `FALSE`） | `0` | `0` | `0` |
-| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
+| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))` | `(datetime('now', 'start of day'))` |
 | `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_TIMESTAMP(6))` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
 | `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
 | `Binary`、`AutoIncrement` | *（無）* | *（無）* | *（無）* | *（無）* | *（無）* |
@@ -68,6 +68,7 @@ SQL Server 會在輸出的運算式外再包一層括號（`DEFAULT (N'')`）。
   資料的路徑：呼叫端自寫 INSERT 而省略該欄，以及 `ALTER TABLE ADD COLUMN` 對既有列的回填。
   詳見 [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md) 的 D9b。
 - **MySQL** 的函式型預設值需用括號包成*運算式*形式（`(UUID())`、`(UTC_DATE())`、`(UTC_TIMESTAMP(6))`），因為 MySQL 8.0.13+ 只有 `CURRENT_TIMESTAMP` 可以不加括號當預設值；其他非字面值的預設值都必須以括號*運算式*形式呈現。
+- **`Date` 預設值只保留日期**。SQL Server 與 PostgreSQL 的 `DATE` 本身就會捨去時間；Oracle 的 `DATE` 會保留時間，所以用 `TRUNC` 截到當天零點；SQLite 沒有日期型別，預設值寫入的是儲存日期時繫結的文字（`yyyy-MM-dd 00:00:00`）。因此取用預設值的資料列，以當天篩選時能比對得到。
 - **SQLite** 無原生 UUID 產生器；`hex(randomblob(16))` 是「唯一但非嚴格 v4」的替代，對框架託管的預設值已足夠。
 - **Boolean 字面值**：框架的標準形式是 `"1"` / `"0"`。PostgreSQL 的 `BOOLEAN` 欄不接受這兩者，故 PG 方言在輸出 SQL 的邊界將其轉為 `TRUE` / `FALSE`。其他方言皆接受 `1` / `0`。
 
