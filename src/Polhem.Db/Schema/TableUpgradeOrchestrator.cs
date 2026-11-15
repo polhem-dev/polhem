@@ -80,11 +80,26 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
+        /// Gets the name of the table the upgrade records are written to; a test sets another name to keep its
+        /// records apart from the ones the other tests of the same database write.
+        /// </summary>
+        internal string RecordTableName { get; init; } = TableUpgradeRecordStore.DefaultRecordTableName;
+
+        /// <summary>
         /// Executes the plan against the specified database, running each stage in its own transaction.
         /// Returns <c>true</c> if any stage ran; <c>false</c> for an empty plan.
         /// </summary>
+        /// <remarks>
+        /// Before any statement runs, the upgrade is refused when a tool of a higher <see cref="SchemaFormat"/> has
+        /// upgraded the database, and, for a plan with <see cref="UpgradePlan.DefineTable"/>, the table's record in
+        /// <see cref="TableUpgradeRecordStore"/> is marked as upgrading. The record then gets the outcome: the applied
+        /// schema on success, the error on failure.
+        /// </remarks>
         /// <param name="plan">The plan to execute.</param>
         /// <param name="databaseId">The database identifier to open connections for.</param>
+        /// <exception cref="InvalidOperationException">
+        /// A tool of a higher schema format has upgraded the database; nothing was changed.
+        /// </exception>
         public bool Execute(UpgradePlan plan, string databaseId)
         {
             ArgumentNullException.ThrowIfNull(plan);
@@ -92,6 +107,32 @@ namespace Polhem.Db.Schema
 
             if (plan.IsEmpty) return false;
 
+            var records = new TableUpgradeRecordStore(databaseId, _connectionManager, RecordTableName);
+            records.ThrowIfNewerFormat();
+            var define = plan.DefineTable;
+            if (define is null)
+            {
+                RunStages(plan, databaseId);
+                return true;
+            }
+
+            records.MarkUpgrading(define.TableName);
+            try
+            {
+                RunStages(plan, databaseId);
+            }
+            catch (Exception ex)
+            {
+                // Record the failure, then let the upgrade's own error go on to the caller.
+                records.TryMarkFailed(define.TableName, ex.Message);
+                throw;
+            }
+            records.TryMarkSucceeded(define);
+            return true;
+        }
+
+        private void RunStages(UpgradePlan plan, string databaseId)
+        {
             var databaseType = _connectionManager.GetConnectionInfo(databaseId).DatabaseType;
 
             foreach (var stage in plan.Stages)
@@ -116,7 +157,6 @@ namespace Polhem.Db.Schema
                     throw;
                 }
             }
-            return true;
         }
 
         private UpgradePlan BuildCreatePlan(TableSchemaDiff diff)
@@ -124,7 +164,7 @@ namespace Polhem.Db.Schema
             var builder = _dialect.CreateCreateTableCommandBuilder();
             var sql = builder.GetCommandText(diff.DefineTable);
             var stage = new UpgradeStage(UpgradeStageKind.CreateTable, new[] { sql });
-            return new UpgradePlan(UpgradeExecutionMode.Create, new[] { stage });
+            return new UpgradePlan(UpgradeExecutionMode.Create, new[] { stage }) { DefineTable = diff.DefineTable };
         }
 
         private UpgradePlan BuildRebuildPlan(TableSchemaDiff diff, UpgradeOptions options)
@@ -140,7 +180,7 @@ namespace Polhem.Db.Schema
             var builder = _dialect.CreateTableRebuildCommandBuilder();
             var sql = builder.GetCommandText(diff);
             var stage = new UpgradeStage(UpgradeStageKind.Rebuild, new[] { sql });
-            return new UpgradePlan(UpgradeExecutionMode.Rebuild, new[] { stage }, warnings);
+            return new UpgradePlan(UpgradeExecutionMode.Rebuild, new[] { stage }, warnings) { DefineTable = diff.DefineTable };
         }
 
         /// <summary>
@@ -199,7 +239,7 @@ namespace Polhem.Db.Schema
 
             AppendDescriptionSyncStage(stages, diff);
 
-            return new UpgradePlan(UpgradeExecutionMode.Alter, stages, warnings);
+            return new UpgradePlan(UpgradeExecutionMode.Alter, stages, warnings) { DefineTable = diff.DefineTable };
         }
 
         /// <summary>

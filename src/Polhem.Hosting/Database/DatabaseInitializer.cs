@@ -154,6 +154,8 @@ namespace Polhem.Hosting.Database
                 ? new HashSet<string>(tableNames, StringComparer.OrdinalIgnoreCase)
                 : null;
             var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // A database id is a key of the settings, which match it without regard to case.
+            var formatChecked = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var category in categories ?? [])
             {
@@ -172,11 +174,21 @@ namespace Polhem.Hosting.Database
                     continue;
                 }
 
-                foreach (var entry in databases.SelectMany(databaseId =>
-                    UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked)))
+                foreach (var databaseId in databases)
                 {
-                    tables.Add(entry);
-                    tableCompleted?.Invoke(entry);
+                    if (!formatChecked.TryGetValue(databaseId, out var newerFormat))
+                    {
+                        newerFormat = DescribeNewerFormat(databaseId);
+                        formatChecked[databaseId] = newerFormat;
+                        if (newerFormat is not null) problems.Add(newerFormat);
+                    }
+                    if (newerFormat is not null) continue;
+
+                    foreach (var entry in UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked))
+                    {
+                        tables.Add(entry);
+                        tableCompleted?.Invoke(entry);
+                    }
                 }
             }
             if (wanted is not null)
@@ -262,6 +274,26 @@ namespace Polhem.Hosting.Database
             catch (DbException ex)
             {
                 return WithError(entry, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Describes why a database must not be upgraded by this build of the framework, or returns <c>null</c> when it
+        /// may be, so a database that a newer tool upgraded is reported once instead of once per table.
+        /// </summary>
+        /// <remarks>
+        /// A database whose records cannot be read returns <c>null</c>: each of its tables then tries its upgrade and
+        /// reports the same failure as its own error, as it did before the records existed.
+        /// </remarks>
+        private string? DescribeNewerFormat(string databaseId)
+        {
+            try
+            {
+                return new TableUpgradeRecordStore(databaseId, _connectionManager).DescribeNewerFormat();
+            }
+            catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or ArgumentException or DbException)
+            {
+                return null;
             }
         }
 

@@ -1,3 +1,5 @@
+using Polhem.Definition.Database;
+
 namespace Polhem.Db.Schema
 {
     /// <summary>
@@ -23,6 +25,15 @@ namespace Polhem.Db.Schema
         /// Gets the execution mode.
         /// </summary>
         public UpgradeExecutionMode Mode { get; }
+
+        /// <summary>
+        /// Gets the table schema the plan brings the table to; <see cref="TableUpgradeOrchestrator.Plan"/> sets it.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="TableUpgradeOrchestrator.Execute"/> records the upgrade of a plan that has it in
+        /// <see cref="TableUpgradeRecordStore"/>; a plan built by hand without it runs unrecorded.
+        /// </remarks>
+        public TableSchema? DefineTable { get; init; }
 
         /// <summary>
         /// Gets the ordered list of stages. Each stage runs in its own transaction.
