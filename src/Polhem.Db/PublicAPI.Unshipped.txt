@@ -41,3 +41,4 @@ Polhem.Db.Schema.UpgradeCompareMode.Full = 1 -> Polhem.Db.Schema.UpgradeCompareM
 Polhem.Db.Schema.UpgradeOptions.CompareMode.get -> Polhem.Db.Schema.UpgradeCompareMode
 Polhem.Db.Schema.UpgradeOptions.CompareMode.init -> void
 Polhem.Db.Schema.TableUpgradeStatus.Verified = 3 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeRecordStore.GetRecordedStatus(string! tableName) -> Polhem.Db.Schema.TableUpgradeStatus?

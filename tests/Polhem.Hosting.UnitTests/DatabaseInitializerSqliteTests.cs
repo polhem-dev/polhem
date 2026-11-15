@@ -247,6 +247,28 @@ namespace Polhem.Hosting.UnitTests
             Assert.Null(records.DescribeNewerFormat());
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("The report says which tables their records called unchanged and what state each record was in before the run")]
+        public void UpgradeTables_ReportsRecordState()
+        {
+            SaveSqliteItems();
+            var first = _initializer.UpgradeTables();
+            Assert.All(first.Tables, t => Assert.Null(t.PreviousStatus));
+            Sql(DbCategoryIds.Common, "UPDATE st_table_upgrade SET status = 'Failed' WHERE table_name = 'st_session'");
+
+            var report = _initializer.UpgradeTables();
+
+            var user = report.Tables.Single(t => t.TableName == "st_user");
+            Assert.True(user.UnchangedByRecord);
+            Assert.Equal(TableUpgradeStatus.Succeeded, user.PreviousStatus);
+            var session = report.Tables.Single(t => t.TableName == "st_session");
+            Assert.False(session.UnchangedByRecord);
+            Assert.Equal(TableUpgradeOutcome.Unchanged, session.Outcome);
+            Assert.Equal(TableUpgradeStatus.Failed, session.PreviousStatus);
+            Assert.All(_initializer.UpgradeTables(new UpgradeOptions { CompareMode = UpgradeCompareMode.Full }).Tables,
+                t => Assert.False(t.UnchangedByRecord));
+        }
+
         private static TableUpgradeOutcome Outcome(TableUpgradeReport report, string tableName)
             => report.Tables.Single(t => t.TableName == tableName).Outcome;
 

@@ -229,14 +229,20 @@ namespace Polhem.Hosting.Database
             string databaseId, string categoryId, string tableName, UpgradeOptions? options, bool dryRun,
             TableUpgradeRecordStore? records, bool mayNarrowCompanyId = false)
         {
-            var entry = new TableUpgradeEntry { DatabaseId = databaseId, CategoryId = categoryId, TableName = tableName };
+            var entry = new TableUpgradeEntry
+            {
+                DatabaseId = databaseId,
+                CategoryId = categoryId,
+                TableName = tableName,
+                PreviousStatus = records?.GetRecordedStatus(tableName),
+            };
             try
             {
                 if ((options ?? UpgradeOptions.Default).CompareMode == UpgradeCompareMode.Fast
                     && records is not null
                     && records.IsRecordedAsCurrent(_defineAccess.GetTableSchema(categoryId, tableName)))
                 {
-                    return WithOutcome(entry, TableUpgradeOutcome.Unchanged);
+                    return WithOutcome(entry, TableUpgradeOutcome.Unchanged, unchangedByRecord: true);
                 }
 
                 var builder = new TableSchemaBuilder(databaseId, _defineAccess, _connectionManager);
@@ -263,6 +269,7 @@ namespace Polhem.Hosting.Database
                         TableName = tableName,
                         Outcome = TableUpgradeOutcome.Planned,
                         CommandText = commandText,
+                        PreviousStatus = entry.PreviousStatus,
                     };
                 }
 
@@ -321,13 +328,16 @@ namespace Polhem.Hosting.Database
         /// </summary>
         private readonly record struct DatabaseRecords(TableUpgradeRecordStore? Store, string? NewerFormat);
 
-        private static TableUpgradeEntry WithOutcome(TableUpgradeEntry entry, TableUpgradeOutcome outcome)
+        private static TableUpgradeEntry WithOutcome(
+            TableUpgradeEntry entry, TableUpgradeOutcome outcome, bool unchangedByRecord = false)
             => new()
             {
                 DatabaseId = entry.DatabaseId,
                 CategoryId = entry.CategoryId,
                 TableName = entry.TableName,
                 Outcome = outcome,
+                UnchangedByRecord = unchangedByRecord,
+                PreviousStatus = entry.PreviousStatus,
             };
 
         private static TableUpgradeEntry WithError(TableUpgradeEntry entry, string error)
@@ -338,6 +348,7 @@ namespace Polhem.Hosting.Database
                 TableName = entry.TableName,
                 Outcome = TableUpgradeOutcome.Failed,
                 Error = error,
+                PreviousStatus = entry.PreviousStatus,
             };
 
         /// <summary>

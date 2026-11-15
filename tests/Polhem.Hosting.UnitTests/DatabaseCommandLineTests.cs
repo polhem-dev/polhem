@@ -129,6 +129,44 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
+        [DisplayName("db upgrade names a table its record called unchanged, and a previous upgrade that failed or did not finish")]
+        public void TryRun_Upgrade_PrintsRecordState()
+        {
+            var (services, fake) = CreateServices();
+            fake.UpgradeReport = new TableUpgradeReport
+            {
+                Tables =
+                [
+                    new TableUpgradeEntry
+                    {
+                        DatabaseId = "common", CategoryId = "common", TableName = "st_user",
+                        Outcome = TableUpgradeOutcome.Unchanged, UnchangedByRecord = true,
+                        PreviousStatus = TableUpgradeStatus.Succeeded,
+                    },
+                    new TableUpgradeEntry
+                    {
+                        DatabaseId = "common", CategoryId = "common", TableName = "st_session",
+                        Outcome = TableUpgradeOutcome.Upgraded, PreviousStatus = TableUpgradeStatus.Failed,
+                    },
+                    new TableUpgradeEntry
+                    {
+                        DatabaseId = "common", CategoryId = "common", TableName = "st_company",
+                        Outcome = TableUpgradeOutcome.Unchanged, PreviousStatus = TableUpgradeStatus.Upgrading,
+                    },
+                ],
+            };
+            var output = new StringWriter();
+
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, ["db", "upgrade"], output));
+
+            var text = output.ToString();
+            Assert.Contains("common.st_user: unchanged (upgrade record)" + Environment.NewLine, text, StringComparison.Ordinal);
+            Assert.Contains("common.st_session: upgraded (the previous upgrade failed)", text, StringComparison.Ordinal);
+            Assert.Contains("common.st_company: unchanged (the previous upgrade did not finish)", text, StringComparison.Ordinal);
+            Assert.Contains("2 unchanged (1 by upgrade record)", text, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("db upgrade passes every --table it is given, and none when it is given none")]
         public void TryRun_UpgradeTables_PassesTableNames()
         {

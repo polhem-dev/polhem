@@ -157,6 +157,28 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
+        /// Returns the state of the table's record, or <c>null</c> when it has none or the records cannot be read.
+        /// </summary>
+        /// <remarks>
+        /// Read from the same summaries as <see cref="IsRecordedAsCurrent"/>, so it costs no query of its own after the
+        /// first.
+        /// </remarks>
+        /// <param name="tableName">The table name.</param>
+        public TableUpgradeStatus? GetRecordedStatus(string tableName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            try
+            {
+                return LoadSummaries().TryGetValue(Key(tableName), out var summary) ? summary.Status : null;
+            }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException)
+            {
+                // Only the report loses the previous state; the upgrade compares with the database as usual.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Records that a comparison with the database found the table already matching <paramref name="define"/>,
         /// unless its record says so already.
         /// </summary>
