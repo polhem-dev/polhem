@@ -13,11 +13,13 @@ namespace Polhem.Definition.Storage
     {
         /// <summary>
         /// Returns the path of the existing file that matches <paramref name="path"/> ignoring the case of its file
-        /// name and of its parent folder's name, or <paramref name="path"/> itself when it exists or nothing matches.
+        /// name and of its parent folder's name. When no file matches, returns the requested file name inside the
+        /// existing folder that matches ignoring case, so a file saved there joins its siblings instead of creating a
+        /// second folder.
         /// </summary>
         /// <param name="path">The requested file path.</param>
         /// <exception cref="InvalidOperationException">
-        /// The requested file does not exist and more than one file matches it ignoring case.
+        /// The requested file does not exist and more than one file, or more than one folder, matches it ignoring case.
         /// </exception>
         public static string Resolve(string path)
         {
@@ -35,7 +37,7 @@ namespace Polhem.Definition.Storage
                 .ToList();
             return matches.Count switch
             {
-                0 => path,
+                0 => Path.Combine(folder, fileName),
                 1 => matches[0],
                 _ => throw new InvalidOperationException(
                     $"More than one definition file matches '{fileName}' ignoring case; keep only one of them."),
@@ -44,8 +46,9 @@ namespace Polhem.Definition.Storage
 
         /// <summary>
         /// Returns <paramref name="folder"/> when it exists, otherwise the one sibling folder whose name matches it
-        /// ignoring case, or <c>null</c> when there is none or more than one.
+        /// ignoring case, or <c>null</c> when there is none.
         /// </summary>
+        /// <exception cref="InvalidOperationException">More than one sibling folder matches ignoring case.</exception>
         private static string? ResolveFolder(string? folder)
         {
             if (string.IsNullOrEmpty(folder) || Directory.Exists(folder))
@@ -60,7 +63,13 @@ namespace Polhem.Definition.Storage
                 .Where(d => string.Equals(Path.GetFileName(d), name, StringComparison.OrdinalIgnoreCase))
                 .Take(2)
                 .ToList();
-            return matches.Count == 1 ? matches[0] : null;
+            return matches.Count switch
+            {
+                0 => null,
+                1 => matches[0],
+                _ => throw new InvalidOperationException(
+                    $"More than one definition folder matches '{name}' ignoring case; keep only one of them."),
+            };
         }
     }
 }

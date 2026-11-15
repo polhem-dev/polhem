@@ -132,6 +132,21 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
+        [DisplayName("FileDefineStorage SaveLanguage with the language in another case writes a new namespace into the existing language folder")]
+        public void SaveLanguage_LanguageInOtherCase_UsesExistingFolder()
+        {
+            WithStorage((paths, storage) =>
+            {
+                SaveCommon(storage, "Common", "zh-TW", "OK");
+                SaveCommon(storage, "Order", "zh-tw", "order");
+
+                var languageRoot = Path.GetDirectoryName(Path.GetDirectoryName(paths.GetLanguageFilePath("zh-TW", "Common")))!;
+                Assert.Single(Directory.GetDirectories(languageRoot));
+                Assert.Equal("order", storage.GetLanguage("zh-TW", "Order")!.GetText("Ok"));
+            });
+        }
+
+        [Fact]
         [DisplayName("FileDefineStorage GetChangeSource watches the existing file when the request names it in another case")]
         public void GetChangeSource_RequestInOtherCase_WatchesExistingFile()
         {
