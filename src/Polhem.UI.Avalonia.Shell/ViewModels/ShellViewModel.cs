@@ -18,6 +18,9 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
     {
         private readonly PolhemShellOptions _options;
         private readonly IShellPreferenceStorage _preferences;
+        private readonly ShellLocalizer _localizer;
+        private readonly Func<Action, ViewModelBase> _createLogin;
+        private readonly Func<Action, ViewModelBase> _createForms;
 
         /// <summary>Gets the view model of the step on screen.</summary>
         [ObservableProperty]
@@ -35,19 +38,45 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
 
         /// <summary>Initializes the shell on the connection step.</summary>
         public ShellViewModel(PolhemShellOptions options, IShellPreferenceStorage preferences)
+            : this(options, preferences, ShellLocalizer.Current,
+                onConnected => new ConnectionViewModel(options, onConnected),
+                onLoggedIn => new LoginViewModel(options, preferences, onLoggedIn),
+                onSignedOut => new FormsViewModel(options, onSignedOut))
+        {
+        }
+
+        /// <summary>
+        /// Initializes the shell with the steps it moves through, so tests can drive the navigation without a server.
+        /// </summary>
+        /// <param name="options">The application's options.</param>
+        /// <param name="preferences">Stores the language chosen in the switch.</param>
+        /// <param name="localizer">The text source whose language the switch sets.</param>
+        /// <param name="createConnection">Creates the connection step, given the callback that moves on to sign-in.</param>
+        /// <param name="createLogin">Creates the sign-in step, given the callback that moves on to the forms.</param>
+        /// <param name="createForms">Creates the forms step, given the callback that returns to sign-in.</param>
+        internal ShellViewModel(PolhemShellOptions options, IShellPreferenceStorage preferences, ShellLocalizer localizer,
+            Func<Action, ViewModelBase> createConnection, Func<Action, ViewModelBase> createLogin,
+            Func<Action, ViewModelBase> createForms)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(preferences);
+            ArgumentNullException.ThrowIfNull(localizer);
+            ArgumentNullException.ThrowIfNull(createConnection);
+            ArgumentNullException.ThrowIfNull(createLogin);
+            ArgumentNullException.ThrowIfNull(createForms);
             _options = options;
             _preferences = preferences;
+            _localizer = localizer;
+            _createLogin = createLogin;
+            _createForms = createForms;
 
-            var culture = ShellLocalizer.Current.Culture.Name;
+            var culture = localizer.Culture.Name;
             _selectedLanguage = Languages.FirstOrDefault(o => string.Equals(o.Code, culture, StringComparison.OrdinalIgnoreCase))
                 ?? Languages[0];
-            CurrentView = new ConnectionViewModel(options, NavigateToLogin);
+            CurrentView = createConnection(NavigateToLogin);
 
             // The shell lives as long as the application, so this subscription needs no removal.
-            ShellLocalizer.Current.CultureChanged += (_, _) => CurrentView.RefreshText();
+            localizer.CultureChanged += (_, _) => CurrentView.RefreshText();
         }
 
         /// <summary>Gets the application title.</summary>
@@ -63,21 +92,21 @@ namespace Polhem.UI.Avalonia.Shell.ViewModels
         {
             if (value is null) return;
 
-            ShellLocalizer.Current.Culture = System.Globalization.CultureInfo.GetCultureInfo(value.Code);
+            _localizer.Culture = System.Globalization.CultureInfo.GetCultureInfo(value.Code);
             _preferences.Save(ShellPreferenceKeys.Language, value.Code);
         }
 
         private void NavigateToLogin()
-            => CurrentView = new LoginViewModel(_options, _preferences, NavigateToForms);
+            => CurrentView = _createLogin(NavigateToForms);
 
         private void NavigateToForms()
-            => CurrentView = new FormsViewModel(_options, NavigateToLoginAfterSignOut);
+            => CurrentView = _createForms(NavigateToLoginAfterSignOut);
 
         private void NavigateToLoginAfterSignOut()
         {
             // Signing in made the account's culture the shell's language. Back on the sign-in screen the switch
             // decides again, so the screen shows the language the switch names.
-            ShellLocalizer.Current.Culture = System.Globalization.CultureInfo.GetCultureInfo(SelectedLanguage.Code);
+            _localizer.Culture = System.Globalization.CultureInfo.GetCultureInfo(SelectedLanguage.Code);
             NavigateToLogin();
         }
     }

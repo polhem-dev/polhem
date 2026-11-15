@@ -1,11 +1,13 @@
 using System.ComponentModel;
+using Polhem.Api.Client;
+using Polhem.UI.ApiBridge;
 using Polhem.UI.Avalonia.Shell.ViewModels;
 
 namespace Polhem.UI.Avalonia.Shell.UnitTests;
 
 /// <summary>
-/// The parts of <see cref="ConnectionViewModel"/> that do not reach the process-wide connection: connecting itself
-/// replaces the client of <see cref="Polhem.UI.ApiBridge.ClientInfo"/>, so it is not exercised here.
+/// The connection screen. A successful connection replaces the client of <see cref="ClientInfo"/> and needs a
+/// backend, so it is not exercised here; a failed one stops before the client is replaced.
 /// </summary>
 public class ConnectionViewModelTests
 {
@@ -79,5 +81,84 @@ public class ConnectionViewModelTests
         Assert.False(vm.IsError);
         Assert.True(vm.IsBusy);
         Assert.False(connected);
+    }
+
+    [Fact]
+    [DisplayName("An unreachable endpoint is reported as an error, stays on the screen and is not remembered")]
+    public async Task Connect_UnreachableEndpoint_ReportsErrorAndKeepsStoredEndpoint()
+    {
+        var storage = new MemoryConnectionStorage();
+        var originalEndpoints = ClientInfo.EndpointStorage;
+        var originalKeys = ClientInfo.ApiKeyStorage;
+        var originalTypes = ClientInfo.SupportedConnectTypes;
+        try
+        {
+            ClientInfo.EndpointStorage = storage;
+            ClientInfo.ApiKeyStorage = storage;
+            ClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+            var connected = false;
+            var vm = new ConnectionViewModel(new PolhemShellOptions(), () => connected = true)
+            {
+                // Nothing listens on this port, so the ping is refused at once.
+                Endpoint = " http://localhost:19999 ",
+                ApiKey = " key ",
+            };
+
+            await vm.ConnectCommand.ExecuteAsync(null);
+
+            Assert.True(vm.IsError);
+            Assert.False(vm.IsBusy);
+            Assert.False(connected);
+            Assert.Empty(storage.SavedEndpoints);
+            // The key is saved before the attempt, so a wrong key shows up on this screen and not on the first call.
+            Assert.Equal("key", storage.LoadApiKey());
+        }
+        finally
+        {
+            ClientInfo.EndpointStorage = originalEndpoints;
+            ClientInfo.ApiKeyStorage = originalKeys;
+            ClientInfo.SupportedConnectTypes = originalTypes;
+        }
+    }
+
+    [Fact]
+    [DisplayName("The endpoint starts as the stored one, and as the application's default when none is stored")]
+    public void Constructor_StoredEndpoint_TakesPrecedenceOverDefault()
+    {
+        var storage = new MemoryConnectionStorage();
+        var originalEndpoints = ClientInfo.EndpointStorage;
+        var options = new PolhemShellOptions { DefaultEndpoint = "http://default.test/" };
+        try
+        {
+            ClientInfo.EndpointStorage = storage;
+            Assert.Equal("http://default.test/", new ConnectionViewModel(options, () => { }).Endpoint);
+
+            storage.SaveEndpoint("http://stored.test/");
+            Assert.Equal("http://stored.test/", new ConnectionViewModel(options, () => { }).Endpoint);
+        }
+        finally
+        {
+            ClientInfo.EndpointStorage = originalEndpoints;
+        }
+    }
+
+    private sealed class MemoryConnectionStorage : IEndpointStorage, IApiKeyStorage
+    {
+        private string _endpoint = string.Empty;
+        private string _apiKey = string.Empty;
+
+        public List<string> SavedEndpoints { get; } = [];
+
+        public string LoadEndpoint() => _endpoint;
+        public void SetEndpoint(string endpoint) => _endpoint = endpoint;
+        public void SaveEndpoint(string endpoint)
+        {
+            _endpoint = endpoint;
+            SavedEndpoints.Add(endpoint);
+        }
+
+        public string LoadApiKey() => _apiKey;
+        public void SetApiKey(string apiKey) => _apiKey = apiKey;
+        public void SaveApiKey(string apiKey) => _apiKey = apiKey;
     }
 }
