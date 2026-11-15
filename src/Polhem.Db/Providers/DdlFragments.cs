@@ -74,19 +74,10 @@ namespace Polhem.Db.Providers
             HashSet<string> addedFieldNames, IReadOnlyDictionary<string, string> sourceFieldNames,
             Func<string, string> quoteName)
         {
-            var targetFields = new StringBuilder();
-            var sourceFields = new StringBuilder();
-            foreach (DbField field in schema.Fields!)
-            {
-                if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (targetFields.Length > 0)
-                {
-                    targetFields.Append(", ");
-                    sourceFields.Append(", ");
-                }
-                targetFields.Append(quoteName(field.FieldName));
-                sourceFields.Append(quoteName(sourceFieldNames.TryGetValue(field.FieldName, out var source) ? source : field.FieldName));
-            }
+            var copied = schema.Fields!.Select(f => f.FieldName).Where(name => !addedFieldNames.Contains(name)).ToList();
+            string targetFields = string.Join(", ", copied.Select(quoteName));
+            string sourceFields = string.Join(", ", copied.Select(name =>
+                quoteName(sourceFieldNames.TryGetValue(name, out var source) ? source : name)));
             return $"INSERT INTO {quoteName(targetTable)} ({targetFields}) \nSELECT {sourceFields} FROM {quoteName(sourceTable)};";
         }
     }

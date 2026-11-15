@@ -96,13 +96,13 @@ namespace Polhem.Db.Schema
             if (diff.RealTable == null)
                 return names;
             var sourceNames = GetSourceFieldNames(diff);
-            foreach (var field in diff.DefineTable.Fields!.Where(f => f.DbType == Polhem.Core.Data.FieldDbType.AutoIncrement))
-            {
-                string source = sourceNames.TryGetValue(field.FieldName, out var renamed) ? renamed : field.FieldName;
-                if (diff.RealTable.Fields!.Contains(source)
-                    && diff.RealTable.Fields[source].DbType != Polhem.Core.Data.FieldDbType.AutoIncrement)
-                    names.Add(field.FieldName);
-            }
+            var realFields = diff.RealTable.Fields!;
+            names.UnionWith(diff.DefineTable.Fields!
+                .Where(f => f.DbType == Polhem.Core.Data.FieldDbType.AutoIncrement)
+                .Select(f => (f.FieldName, Source: sourceNames.TryGetValue(f.FieldName, out var renamed) ? renamed : f.FieldName))
+                .Where(f => realFields.Contains(f.Source)
+                    && realFields[f.Source].DbType != Polhem.Core.Data.FieldDbType.AutoIncrement)
+                .Select(f => f.FieldName));
             return names;
         }
 
