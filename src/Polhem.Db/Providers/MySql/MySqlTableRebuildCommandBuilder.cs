@@ -76,8 +76,9 @@ namespace Polhem.Db.Providers.MySql
             sb.AppendLine("-- Rename temporary table");
             sb.AppendLine(BuildRenameTableStatement(tmpTableName, tableName));
 
-            // 6) Recreate each non-PK index on the renamed table with its canonical name.
-            sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema));
+            // 6) Recreate each non-PK index, the database-only ones included, on the renamed table.
+            sb.Append(BuildRecreateIndexStatements(tableName,
+                effectiveSchema.Indexes!.Concat(RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))));
 
             return sb.ToString();
         }
@@ -92,10 +93,10 @@ namespace Polhem.Db.Providers.MySql
             return $"ALTER TABLE {MySqlSchemaSyntax.QuoteName(oldTable)} RENAME TO {MySqlSchemaSyntax.QuoteName(newTable)};";
         }
 
-        private static string BuildRecreateIndexStatements(string tableName, TableSchema schema)
+        private static string BuildRecreateIndexStatements(string tableName, IEnumerable<DbTableIndex> indexes)
         {
             var sb = new StringBuilder();
-            foreach (var index in schema.Indexes!.Where(i => !i.PrimaryKey))
+            foreach (var index in indexes.Where(i => !i.PrimaryKey))
             {
                 string name = StringUtilities.Format(index.Name, tableName);
                 string fields = DdlFragments.BuildIndexFieldList(index, MySqlSchemaSyntax.QuoteName);

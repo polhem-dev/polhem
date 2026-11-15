@@ -44,6 +44,29 @@ namespace Polhem.Db.Providers
         }
 
         /// <summary>
+        /// Returns the auto-increment column the rebuild copies, or <c>null</c> when the table has none or the rebuild
+        /// adds it.
+        /// </summary>
+        /// <param name="schema">The schema of the rebuilt table.</param>
+        /// <param name="addedFieldNames">Columns the rebuild adds.</param>
+        public static DbField? FindCopiedAutoIncrement(TableSchema schema, HashSet<string> addedFieldNames)
+            => schema.Fields!.FirstOrDefault(f => f.DbType == FieldDbType.AutoIncrement && !addedFieldNames.Contains(f.FieldName));
+
+        /// <summary>
+        /// Builds the <c>CREATE INDEX</c> for <paramref name="index"/> on <paramref name="tableName"/>, the index name
+        /// formatted with the table name.
+        /// </summary>
+        /// <param name="tableName">The table the index is created on.</param>
+        /// <param name="index">The index.</param>
+        /// <param name="quoteName">The dialect's identifier quoting.</param>
+        public static string BuildCreateIndexStatement(string tableName, DbTableIndex index, Func<string, string> quoteName)
+        {
+            string name = Polhem.Core.StringUtilities.Format(index.Name, tableName);
+            string unique = index.Unique ? "UNIQUE " : string.Empty;
+            return $"CREATE {unique}INDEX {quoteName(name)} ON {quoteName(tableName)} ({BuildIndexFieldList(index, quoteName)});";
+        }
+
+        /// <summary>
         /// Builds the <c>INSERT INTO ... SELECT</c> that copies the existing rows into the rebuilt table.
         /// </summary>
         /// <param name="sourceTable">The table being rebuilt.</param>
@@ -57,24 +80,19 @@ namespace Polhem.Db.Providers
         /// the same name.
         /// </param>
         /// <param name="quoteName">The dialect's identifier quoting.</param>
-        /// <param name="copyAutoIncrement">
-        /// Whether auto-increment columns are copied. Only a dialect whose rebuild accepts explicit values for them and
-        /// carries their sequence over passes <c>true</c>.
-        /// </param>
         /// <remarks>
-        /// Auto-increment columns are otherwise not copied: the target generates its own values, which renumbers rows
-        /// after a gap.
+        /// Auto-increment columns are copied with their values, so a rebuild does not renumber the rows; each dialect
+        /// lets the copy write them (<see cref="FindCopiedAutoIncrement"/>) and moves its sequence on afterwards.
         /// </remarks>
         public static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema,
             HashSet<string> addedFieldNames, IReadOnlyDictionary<string, string> sourceFieldNames,
-            Func<string, string> quoteName, bool copyAutoIncrement = false)
+            Func<string, string> quoteName)
         {
             var targetFields = new StringBuilder();
             var sourceFields = new StringBuilder();
             foreach (DbField field in schema.Fields!)
             {
                 if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (field.DbType == FieldDbType.AutoIncrement && !copyAutoIncrement) continue;
                 if (targetFields.Length > 0)
                 {
                     targetFields.Append(", ");

@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using Polhem.Core;
-using Polhem.Core.Data;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
@@ -57,8 +56,8 @@ namespace Polhem.Db.Providers.Sqlite
             //    freed by a delete is not handed out again.
             sb.AppendLine("-- Move data");
             sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames,
-                RebuildSchemaFactory.GetSourceFieldNames(diff), SqliteSchemaSyntax.QuoteName, copyAutoIncrement: true));
-            if (effectiveSchema.Fields!.Any(f => f.DbType == FieldDbType.AutoIncrement))
+                RebuildSchemaFactory.GetSourceFieldNames(diff), SqliteSchemaSyntax.QuoteName));
+            if (DdlFragments.FindCopiedAutoIncrement(effectiveSchema, addedFieldNames) != null)
                 sb.Append(BuildCarrySequenceStatements(tableName, tmpTableName));
 
             // 4) Drop the original table — this also drops every index and the autoindex backing
@@ -71,8 +70,9 @@ namespace Polhem.Db.Providers.Sqlite
             sb.AppendLine("-- Rename temporary table");
             sb.AppendLine(BuildRenameTableStatement(tmpTableName, tableName));
 
-            // 6) Recreate each non-PK index on the renamed table with its canonical name.
-            sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema));
+            // 6) Recreate each non-PK index, the database-only ones included, on the renamed table.
+            sb.Append(BuildRecreateIndexStatements(tableName,
+                effectiveSchema.Indexes!.Concat(RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))));
 
             return sb.ToString();
         }
@@ -102,10 +102,10 @@ namespace Polhem.Db.Providers.Sqlite
             return $"ALTER TABLE {SqliteSchemaSyntax.QuoteName(oldTable)} RENAME TO {SqliteSchemaSyntax.QuoteName(newTable)};";
         }
 
-        private static string BuildRecreateIndexStatements(string tableName, TableSchema schema)
+        private static string BuildRecreateIndexStatements(string tableName, IEnumerable<DbTableIndex> indexes)
         {
             var sb = new StringBuilder();
-            foreach (var index in schema.Indexes!.Where(i => !i.PrimaryKey))
+            foreach (var index in indexes.Where(i => !i.PrimaryKey))
             {
                 string name = StringUtilities.Format(index.Name, tableName);
                 string fields = DdlFragments.BuildIndexFieldList(index, SqliteSchemaSyntax.QuoteName);

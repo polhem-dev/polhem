@@ -156,7 +156,17 @@ Every dialect starts from the same dialect-neutral rules, shown below; SQLite an
 
 Columns the definition does not declare are rebuilt too, with their rows. Such a column keeps a default that is a plain literal; any other default, such as an expression an earlier version of Polhem used as its built-in default, becomes the built-in default of the column's type, and the plan lists the column in its warnings.
 
-On SQLite the rebuild copies AutoIncrement values and carries the table's sequence over, so `sys_no` keeps its numbers and a number freed by a delete is not handed out again. The other dialects do not copy an AutoIncrement column: the rebuilt table numbers its rows again.
+The rebuild keeps what the table holds:
+
+- **AutoIncrement numbers** are copied, so `sys_no` keeps its values. The sequence then carries on after the old table's, so a number freed by a delete is not handed out again; on Oracle a few numbers may be skipped (the sequence's cached high-water mark). MySQL is the exception: its counter carries on after the highest copied number, so a number freed at the end of the table can come back.
+- **Indexes only the database has** are created again on the rebuilt table, after it has its final name.
+
+When the rebuild cannot finish, the table stays as it was:
+
+- A column of a type the framework does not map makes the plan refuse the rebuild before any statement runs, naming the column.
+- A copy that fails on the existing data (text that does not convert to the new type, for example) stops before the old table is dropped. SQL Server, PostgreSQL and SQLite roll the whole rebuild back; MySQL and Oracle commit DDL as they go and may leave the temporary table `tmp_<table>` behind, which the next attempt drops.
+
+Either way the upgrade reports the error for that table and goes on with the others, so someone can look at the data, fix it or change the definition, and upgrade again.
 
 ### Automatic decision — no developer choice
 

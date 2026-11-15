@@ -88,16 +88,24 @@ Existing examples: SQL Server-only `DateTime → DateTime2` (to get datetime2(7)
 pre-1753 range), and Oracle `Guid → Binary`. Changing `Infer` globally was tried once, and it broke the
 PostgreSQL/Oracle seed.
 
-## A table upgrade must be idempotent
+## Table upgrade principles
 
-After the upgrade to a definition, comparing the same definition with the table read back must find no difference.
-A difference that survives its own upgrade is planned again on every start-up: an endless upgrade, which on SQLite
-rebuilds the table each time. The usual cause is a read-back that spells a value differently from the DDL that wrote
-it (a default the provider does not parse, a type the provider maps back to another `FieldDbType`, a number with
-trailing zeros).
+1. **Keep the existing data.** An upgrade changes the table, never its rows: a rebuild copies every column, the ones
+   the definition does not declare included, keeps AutoIncrement numbers and recreates indexes only the database has.
+2. **The current `TableSchema` is the target.** When the schema read back differs from the definition, the upgrade
+   changes the table to match; it does not leave an old shape in place because changing it is inconvenient.
+3. **An upgrade must not need repeating.** After the upgrade to a definition, comparing the same definition with the
+   table read back must find no difference; a difference that survives its own upgrade is planned again on every
+   start-up, and on SQLite rebuilds the table each time. The usual cause is a read-back that spells a value differently
+   from the DDL that wrote it. **Do not fix a loop by making the comparison ignore the property.**
+4. **When the existing data blocks the upgrade, stop and report.** The table and its rows stay as they were, the error
+   names the table and the cause, and a person decides how to fix the data or the definition. Never make an upgrade
+   pass by changing or discarding data; the one exception is a narrowing the caller turns on explicitly with
+   `UpgradeOptions.AllowColumnNarrowing`.
 
-`UpgradeIdempotencyGateTests` (tests/Polhem.Db.UnitTests) enforces this on every database for the create, add-column and
+`UpgradeIdempotencyGateTests` (tests/Polhem.Db.UnitTests) enforces (3) on every database for the create, add-column and
 rebuild paths, over a definition that covers every `FieldDbType`, nullable columns, literal defaults, indexes and
-descriptions. **When you change what a dialect emits or reads back (`<Dialect>SchemaSyntax`, `<Dialect>TableSchemaProvider`,
-`TableSchemaComparer`) or add a column type, extend that definition**; do not fix a loop by making the comparison
-ignore the property.
+descriptions; `RebuildPreservationDbTests` covers (1) and (4) for the rebuild. **When you change what a dialect emits
+or reads back (`<Dialect>SchemaSyntax`, `<Dialect>TableSchemaProvider`, `TableSchemaComparer`, a rebuild builder) or
+add a column type, extend those definitions.** `DatabaseInitializer` (`Polhem.Hosting`) records a failing table's
+error in its report and goes on with the other tables.

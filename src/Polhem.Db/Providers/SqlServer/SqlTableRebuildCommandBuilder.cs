@@ -47,7 +47,24 @@ namespace Polhem.Db.Providers.SqlServer
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), SqlSchemaSyntax.QuoteName));
+            var sourceNames = RebuildSchemaFactory.GetSourceFieldNames(diff);
+            var identity = DdlFragments.FindCopiedAutoIncrement(effectiveSchema, addedFieldNames);
+            string insert = DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, sourceNames, SqlSchemaSyntax.QuoteName);
+            if (identity == null)
+            {
+                sb.AppendLine(insert);
+            }
+            else
+            {
+                // The identity values are copied, then the identity carries on after the old table's last value, so a
+                // number freed by a delete is not handed out again.
+                string source = sourceNames.TryGetValue(identity.FieldName, out var renamed) ? renamed : identity.FieldName;
+                sb.Append(BuildCaptureLastIdentity(tableName, source));
+                sb.AppendLine(CultureInfo.InvariantCulture, $"SET IDENTITY_INSERT {SqlSchemaSyntax.QuoteName(tmpTableName)} ON;");
+                sb.AppendLine(insert);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"SET IDENTITY_INSERT {SqlSchemaSyntax.QuoteName(tmpTableName)} OFF;");
+                sb.Append(BuildReseed(tmpTableName, identity.FieldName));
+            }
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");
@@ -57,7 +74,42 @@ namespace Polhem.Db.Providers.SqlServer
             sb.AppendLine("-- Rename temporary table");
             sb.Append(BuildRenameStatements(tmpTableName, tableName, effectiveSchema));
 
+            // Indexes only the database had are created on the renamed table.
+            foreach (var index in RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))
+                sb.AppendLine(DdlFragments.BuildCreateIndexStatement(tableName, index, SqlSchemaSyntax.QuoteName));
+
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Reads the last identity value the old table handed out; <c>NULL</c> when it handed out none.
+        /// </summary>
+        private static string BuildCaptureLastIdentity(string tableName, string columnName)
+        {
+            string table = SqlSchemaSyntax.EscapeSqlString(SqlSchemaSyntax.QuoteName(tableName));
+            string column = SqlSchemaSyntax.EscapeSqlString(columnName);
+            return "DECLARE @polhem_last_identity numeric(38, 0) = (SELECT CONVERT(numeric(38, 0), last_value) " +
+                   $"FROM sys.identity_columns WHERE object_id = OBJECT_ID(N'{table}') AND name = N'{column}');\n";
+        }
+
+        /// <summary>
+        /// Moves the temporary table's identity past the old table's last value when that is higher than what the
+        /// copy wrote.
+        /// </summary>
+        /// <remarks>
+        /// <c>DBCC CHECKIDENT</c> takes a literal, so it runs through dynamic SQL. On a table no row was inserted into,
+        /// the next value is the reseed value itself rather than the one after it.
+        /// </remarks>
+        private static string BuildReseed(string tmpTableName, string columnName)
+        {
+            string tmp = SqlSchemaSyntax.QuoteName(tmpTableName);
+            string column = SqlSchemaSyntax.QuoteName(columnName);
+            string tmpLiteral = SqlSchemaSyntax.EscapeSqlString(SqlSchemaSyntax.EscapeSqlString(tmp));
+            // `EXEC (...)` concatenates only literals and variables, so the statement is built into a variable first.
+            return $"DECLARE @polhem_reseed nvarchar(200) = N'DBCC CHECKIDENT (N''{tmpLiteral}'', RESEED, ' + CAST(@polhem_last_identity " +
+                   $"+ CASE WHEN EXISTS (SELECT 1 FROM {tmp}) THEN 0 ELSE 1 END AS nvarchar(40)) + N') WITH NO_INFOMSGS';\n" +
+                   $"IF @polhem_last_identity IS NOT NULL AND @polhem_last_identity > ISNULL((SELECT MAX({column}) FROM {tmp}), 0)\n" +
+                   "    EXEC (@polhem_reseed);\n";
         }
 
         private static string BuildDropIfExistsStatement(string tableName)

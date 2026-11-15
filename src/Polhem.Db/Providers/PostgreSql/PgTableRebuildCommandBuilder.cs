@@ -48,7 +48,14 @@ namespace Polhem.Db.Providers.PostgreSql
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), PgSchemaSyntax.QuoteName));
+            var sourceNames = RebuildSchemaFactory.GetSourceFieldNames(diff);
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, sourceNames, PgSchemaSyntax.QuoteName));
+            var identity = DdlFragments.FindCopiedAutoIncrement(effectiveSchema, addedFieldNames);
+            if (identity != null)
+            {
+                string source = sourceNames.TryGetValue(identity.FieldName, out var renamed) ? renamed : identity.FieldName;
+                sb.AppendLine(BuildCarrySequence(tableName, source, tmpTableName, identity.FieldName));
+            }
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");
@@ -58,7 +65,30 @@ namespace Polhem.Db.Providers.PostgreSql
             sb.AppendLine("-- Rename temporary table");
             sb.Append(BuildRenameStatements(tmpTableName, tableName, effectiveSchema));
 
+            // Indexes only the database had are created on the renamed table: PostgreSQL names indexes per schema,
+            // so they could not exist on the temporary table while the old table still held them.
+            foreach (var index in RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))
+                sb.AppendLine(DdlFragments.BuildCreateIndexStatement(tableName, index, PgSchemaSyntax.QuoteName));
+
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Moves the temporary table's identity sequence past both the copied values and the old sequence's last
+        /// value, so a number freed by a delete is not handed out again.
+        /// </summary>
+        /// <remarks>
+        /// <c>pg_get_serial_sequence</c> is <c>NULL</c> when the old column was not an identity, and
+        /// <c>pg_sequence_last_value</c> is <c>NULL</c> when its sequence never handed out a value.
+        /// </remarks>
+        private static string BuildCarrySequence(string tableName, string sourceColumn, string tmpTableName, string column)
+        {
+            string old = PgSchemaSyntax.EscapeSqlString(PgSchemaSyntax.QuoteName(tableName));
+            string tmp = PgSchemaSyntax.EscapeSqlString(PgSchemaSyntax.QuoteName(tmpTableName));
+            string next = $"GREATEST(COALESCE(pg_sequence_last_value(pg_get_serial_sequence('{old}', '{PgSchemaSyntax.EscapeSqlString(sourceColumn)}')::regclass), 0), " +
+                          $"COALESCE((SELECT MAX({PgSchemaSyntax.QuoteName(column)}) FROM {PgSchemaSyntax.QuoteName(tmpTableName)}), 0))";
+            return $"SELECT setval(pg_get_serial_sequence('{tmp}', '{PgSchemaSyntax.EscapeSqlString(column)}'), GREATEST(v, 1), v > 0) " +
+                   $"FROM (SELECT {next} AS v) AS last_identity;";
         }
 
         private static string BuildDropIfExistsStatement(string tableName)

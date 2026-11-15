@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: 23d2bd65f2de2ec4ad49b664f3cf3d4f8b214395 -->
+<!-- source: en/database/database-schema-upgrade.md blob: 6b2373662841a9452b8a2882904229871b262f59 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -155,7 +155,17 @@ foreach (var sql in plan.AllStatements)
 
 定義中沒有宣告的欄位也會連同資料一起重建。這類欄位的預設值若是單純的字面值就保留；其他預設值（例如較早版本的 Polhem 當作內建預設值使用的運算式）會換成該欄位型別的內建預設值，升級計畫的 warnings 會列出這個欄位。
 
-在 SQLite 上，重建會複製 AutoIncrement 的值並延續資料表的序號，所以 `sys_no` 保留原本的編號，被刪除而空出的號碼也不會再發出。其他方言重建時不複製 AutoIncrement 欄位，重建後的資料表會重新編號。
+重建會保留資料表原有的內容：
+
+- **AutoIncrement 編號**會原值複製，`sys_no` 保留原本的值；之後序號接續舊表的序號，被刪除而空出的號碼不會再發出（Oracle 可能跳過幾個號碼，因為序號的快取上限）。MySQL 例外：計數器接在複製進來的最大值之後，所以表尾被刪掉的號碼可能再次出現。
+- **只存在資料庫裡的索引**，會在重建後的資料表改回原名之後再建立回來。
+
+重建無法完成時，資料表維持原狀：
+
+- 欄位型別是框架無法對應的，升級計畫會在執行任何語句之前就拒絕重建，並指出是哪個欄位。
+- 搬移資料時因既有資料而失敗（例如文字無法轉成新的型別），會在刪除舊表之前停下。SQL Server、PostgreSQL、SQLite 會整個重建一起復原；MySQL 與 Oracle 的 DDL 會逐句提交，可能留下暫存表 `tmp_<資料表>`，下一次嘗試時會先刪掉它。
+
+不論哪一種，升級都會記錄該資料表的錯誤並繼續處理其他資料表，交由人工檢查資料、修正資料或調整定義後再升級。
 
 ### 自動判斷，不需開發者選
 
