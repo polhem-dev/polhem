@@ -12,23 +12,16 @@ namespace Polhem.UI.Avalonia.Shell.UnitTests;
 /// stand-in that hands its callback to the test, so no step needs a server.
 /// </summary>
 /// <remarks>
-/// The shell reads and writes the process-wide <see cref="ShellLocalizer.Current"/>, so each test restores its culture.
-/// The assembly runs its tests serially (see <c>AssemblyParallelization.cs</c>).
+/// Each test gives the shell a localizer of its own. Switching the process-wide <see cref="ShellLocalizer.Current"/>
+/// would update the views earlier headless tests left bound to it, from a thread that does not own them.
 /// </remarks>
-public sealed class ShellViewModelTests : IDisposable
+public sealed class ShellViewModelTests
 {
-    private readonly CultureInfo _originalCulture = ShellLocalizer.Current.Culture;
+    private readonly ShellLocalizer _localizer = new();
     private readonly MemoryPreferences _preferences = new();
     private Action? _onConnected;
     private Action? _onLoggedIn;
     private Action? _onSignedOut;
-
-    public ShellViewModelTests()
-    {
-        ShellLocalizer.Current.Culture = CultureInfo.GetCultureInfo(ShellLanguage.English);
-    }
-
-    public void Dispose() => ShellLocalizer.Current.Culture = _originalCulture;
 
     [Fact]
     [DisplayName("The shell starts on the connection step with the language switch shown")]
@@ -68,20 +61,20 @@ public sealed class ShellViewModelTests : IDisposable
         _onConnected!();
         _onLoggedIn!();
         // Signing in made the account's culture the shell's language.
-        ShellLocalizer.Current.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
+        _localizer.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
 
         _onSignedOut!();
 
         Assert.Equal("login", Assert.IsType<StepViewModel>(shell.CurrentView).Name);
         Assert.True(shell.IsLanguageSwitchVisible);
-        Assert.Equal(ShellLanguage.English, ShellLocalizer.Current.Culture.Name);
+        Assert.Equal(ShellLanguage.English, _localizer.Culture.Name);
     }
 
     [Fact]
     [DisplayName("The switch starts on the shell's current language and does not save a preference until someone chooses")]
     public void Constructor_SelectsCurrentLanguageWithoutSaving()
     {
-        ShellLocalizer.Current.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
+        _localizer.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
 
         var shell = CreateShell(new PolhemShellOptions());
 
@@ -97,7 +90,7 @@ public sealed class ShellViewModelTests : IDisposable
 
         shell.SelectedLanguage = shell.Languages.Single(o => o.Code == ShellLanguage.TraditionalChinese);
 
-        Assert.Equal(ShellLanguage.TraditionalChinese, ShellLocalizer.Current.Culture.Name);
+        Assert.Equal(ShellLanguage.TraditionalChinese, _localizer.Culture.Name);
         Assert.Equal(ShellLanguage.TraditionalChinese, _preferences.Load(ShellPreferenceKeys.Language));
     }
 
@@ -108,7 +101,7 @@ public sealed class ShellViewModelTests : IDisposable
         var shell = CreateShell(new PolhemShellOptions());
         var step = Assert.IsType<StepViewModel>(shell.CurrentView);
 
-        ShellLocalizer.Current.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
+        _localizer.Culture = CultureInfo.GetCultureInfo(ShellLanguage.TraditionalChinese);
 
         Assert.Equal(1, step.RefreshCount);
     }
@@ -123,7 +116,7 @@ public sealed class ShellViewModelTests : IDisposable
     }
 
     private ShellViewModel CreateShell(PolhemShellOptions options)
-        => new(options, _preferences,
+        => new(options, _preferences, _localizer,
             onConnected => { _onConnected = onConnected; return new StepViewModel("connection"); },
             onLoggedIn => { _onLoggedIn = onLoggedIn; return new StepViewModel("login"); },
             onSignedOut =>
