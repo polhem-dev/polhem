@@ -39,6 +39,7 @@ namespace Polhem.Db.Schema
         private readonly IDialectFactory _dialect;
         private readonly DatabaseType _databaseType;
         private bool _tableExists;
+        private Dictionary<string, RecordSummary>? _summaries;
 
         /// <summary>
         /// Initializes a new instance of <see cref="TableUpgradeRecordStore"/> for the specified database.
@@ -77,7 +78,8 @@ namespace Polhem.Db.Schema
         public int GetHighestFormatVersion()
         {
             if (!TableExists()) return 0;
-            var value = CreateDbAccess().ExecuteScalar($"SELECT MAX(format_version) FROM {RecordTableName}");
+            var value = CreateDbAccess().ExecuteScalar(
+                $"SELECT MAX(format_version) FROM {RecordTableName} WHERE status <> {{0}}", nameof(TableUpgradeStatus.Verified));
             return value is null or DBNull ? 0 : ValueUtilities.CInt(value);
         }
 
@@ -116,14 +118,95 @@ namespace Polhem.Db.Schema
                 TableName = ValueUtilities.CStr(row["table_name"]),
                 FormatVersion = ValueUtilities.CInt(row["format_version"]),
                 FrameworkVersion = ValueUtilities.CStr(row["framework_version"]),
-                Status = Enum.TryParse<TableUpgradeStatus>(ValueUtilities.CStr(row["status"]), out var status)
-                    ? status
-                    : TableUpgradeStatus.Upgrading,
+                Status = ParseStatus(ValueUtilities.CStr(row["status"])),
                 Error = ValueUtilities.CStr(row["error"]),
                 SchemaXml = ValueUtilities.CStr(row["schema_xml"]),
                 SchemaHash = ValueUtilities.CStr(row["schema_hash"]),
                 UpdateTime = ValueUtilities.CDateTime(row["sys_update_time"], DateTime.MinValue),
             };
+        }
+
+        /// <summary>
+        /// Returns whether the table's record says its last upgrade succeeded with this <see cref="SchemaFormat"/> and
+        /// with <paramref name="define"/> as it is now, so the table can be taken as unchanged without reading the
+        /// database's catalog.
+        /// </summary>
+        /// <remarks>
+        /// The first call reads the table name, status, format version and schema hash of every record in the database
+        /// in one query; the recorded schemas themselves are not read. Later calls use what that query returned, kept
+        /// current by the writes made through this instance.
+        /// </remarks>
+        /// <param name="define">The table's definition.</param>
+        public bool IsRecordedAsCurrent(TableSchema define)
+        {
+            ArgumentNullException.ThrowIfNull(define);
+            Dictionary<string, RecordSummary> summaries;
+            try
+            {
+                summaries = LoadSummaries();
+            }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException)
+            {
+                // Records that cannot be read only cost the shortcut: the caller compares with the database instead.
+                return false;
+            }
+            return summaries.TryGetValue(Key(define.TableName), out var summary)
+                && summary.Status is TableUpgradeStatus.Succeeded or TableUpgradeStatus.Verified
+                && summary.FormatVersion == SchemaFormat.Current
+                && string.Equals(summary.SchemaHash, ComputeHash(XmlCodec.Serialize(define)), StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Records that a comparison with the database found the table already matching <paramref name="define"/>,
+        /// unless its record says so already.
+        /// </summary>
+        /// <remarks>
+        /// This gives a table that needed no upgrade the record a later <see cref="UpgradeCompareMode.Fast"/> compare
+        /// relies on, and corrects a record left <see cref="TableUpgradeStatus.Upgrading"/> or
+        /// <see cref="TableUpgradeStatus.Failed"/>. The record becomes <see cref="TableUpgradeStatus.Verified"/>
+        /// unless this format wrote it, so a deployment that changed no table does not refuse a rollback to an older
+        /// tool. Nothing is written in a database a tool of a higher <see cref="SchemaFormat"/> has upgraded. The table
+        /// matches already, so a record that cannot be written does not fail the caller.
+        /// </remarks>
+        /// <returns><c>false</c> when the record could not be written.</returns>
+        /// <param name="define">The definition the table was found to match.</param>
+        public bool TryRecordUnchanged(TableSchema define)
+        {
+            ArgumentNullException.ThrowIfNull(define);
+            try
+            {
+                if (IsRecordedAsCurrent(define)) return true;
+                var summaries = LoadSummaries();
+                if (summaries.Values.Any(r => r.Status != TableUpgradeStatus.Verified && r.FormatVersion > SchemaFormat.Current))
+                    return true;
+                EnsureTable();
+                string xml = XmlCodec.Serialize(define);
+                string hash = ComputeHash(xml);
+                string key = Key(define.TableName);
+                // A record this format already wrote keeps counting as this format's upgrade; any other becomes a
+                // verification, which does not refuse an older tool for a table nobody changed.
+                var recorded = summaries.TryGetValue(key, out var existing) && existing.FormatVersion == SchemaFormat.Current
+                    && existing.Status != TableUpgradeStatus.Verified
+                    ? TableUpgradeStatus.Succeeded
+                    : TableUpgradeStatus.Verified;
+                string status = recorded.ToString();
+                var now = DateTime.UtcNow;
+                Upsert(define.TableName,
+                    () => new DbCommandSpec(DbCommandKind.NonQuery,
+                        $"UPDATE {RecordTableName} SET format_version = {{1}}, framework_version = {{2}}, status = {{3}}, " +
+                        "error = {4}, schema_xml = {5}, schema_hash = {6}, sys_update_time = {7} WHERE table_name = {0}",
+                        key, SchemaFormat.Current, FrameworkVersion, status, string.Empty, xml, hash, now),
+                    () => new DbCommandSpec(DbCommandKind.NonQuery,
+                        $"INSERT INTO {RecordTableName} (table_name, format_version, framework_version, status, error, " +
+                        "schema_xml, schema_hash, sys_update_time) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+                        key, SchemaFormat.Current, FrameworkVersion, status, string.Empty, xml, hash, now));
+                Remember(key, recorded, hash);
+                return true;
+            }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -160,6 +243,7 @@ namespace Polhem.Db.Schema
                 "schema_xml, schema_hash, sys_update_time) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
                 key, SchemaFormat.Current, FrameworkVersion, status, string.Empty, string.Empty, string.Empty, now);
             Upsert(tableName, update, insert);
+            Remember(key, TableUpgradeStatus.Upgrading, null);
         }
 
         /// <summary>
@@ -175,11 +259,14 @@ namespace Polhem.Db.Schema
         {
             ArgumentNullException.ThrowIfNull(schema);
             string xml = XmlCodec.Serialize(schema);
-            return TryWrite(
+            string hash = ComputeHash(xml);
+            bool written = TryWrite(
                 $"UPDATE {RecordTableName} SET status = {{1}}, error = {{2}}, schema_xml = {{3}}, schema_hash = {{4}}, " +
                 "sys_update_time = {5} WHERE table_name = {0}",
-                Key(schema.TableName), nameof(TableUpgradeStatus.Succeeded), string.Empty, xml, ComputeHash(xml),
+                Key(schema.TableName), nameof(TableUpgradeStatus.Succeeded), string.Empty, xml, hash,
                 DateTime.UtcNow);
+            if (written) Remember(Key(schema.TableName), TableUpgradeStatus.Succeeded, hash);
+            return written;
         }
 
         /// <summary>
@@ -193,10 +280,14 @@ namespace Polhem.Db.Schema
         /// it. The record then stays <see cref="TableUpgradeStatus.Upgrading"/>.
         /// </remarks>
         internal bool TryMarkFailed(string tableName, string error)
-            => TryWrite(
+        {
+            bool written = TryWrite(
                 $"UPDATE {RecordTableName} SET status = {{1}}, error = {{2}}, sys_update_time = {{3}} " +
                 "WHERE table_name = {0}",
                 Key(tableName), nameof(TableUpgradeStatus.Failed), error, DateTime.UtcNow);
+            if (written) Remember(Key(tableName), TableUpgradeStatus.Failed, null);
+            return written;
+        }
 
         private bool TryWrite(string sql, params object[] values)
         {
@@ -244,7 +335,8 @@ namespace Polhem.Db.Schema
         private string FrameworkVersionSuffix(int formatVersion)
         {
             var table = CreateDbAccess().ExecuteDataTable(
-                $"SELECT DISTINCT framework_version FROM {RecordTableName} WHERE format_version = {{0}}", formatVersion);
+                $"SELECT DISTINCT framework_version FROM {RecordTableName} WHERE format_version = {{0}} AND status <> {{1}}",
+                formatVersion, nameof(TableUpgradeStatus.Verified));
             // Compared as versions: as text, 1.10.0 would sort below 1.9.0.
             string text = (table?.Rows.Cast<DataRow>() ?? [])
                 .Select(row => ValueUtilities.CStr(row[0]))
@@ -313,5 +405,48 @@ namespace Polhem.Db.Schema
             => _dialect.CreateTableSchemaProvider(_databaseId, _connectionManager).GetTableSchema(RecordTableName) is not null;
 
         private DbAccess CreateDbAccess() => new(_databaseId, _connectionManager);
+
+        /// <summary>
+        /// Reads the summary of every record once per instance: the columns a fast compare needs, without the
+        /// recorded schemas, read row by row so a database with many tables does not hold a table of results.
+        /// </summary>
+        private Dictionary<string, RecordSummary> LoadSummaries()
+        {
+            if (_summaries is not null) return _summaries;
+            var summaries = new Dictionary<string, RecordSummary>(StringComparer.Ordinal);
+            if (TableExists())
+            {
+                using var connection = _connectionManager.CreateConnection(_databaseId);
+                connection.Open();
+                var spec = new DbCommandSpec(DbCommandKind.DataTable,
+                    $"SELECT table_name, status, format_version, schema_hash FROM {RecordTableName}");
+                using var command = spec.CreateCommand(_databaseType, connection);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    summaries[ValueUtilities.CStr(reader.GetValue(0))] = new RecordSummary(
+                        ParseStatus(ValueUtilities.CStr(reader.GetValue(1))),
+                        ValueUtilities.CInt(reader.GetValue(2)),
+                        ValueUtilities.CStr(reader.GetValue(3)));
+                }
+            }
+            return _summaries = summaries;
+        }
+
+        /// <summary>
+        /// Keeps the loaded summaries current with a write made through this instance; a null hash keeps the one
+        /// already known, as the write did.
+        /// </summary>
+        private void Remember(string key, TableUpgradeStatus status, string? hash)
+        {
+            if (_summaries is null) return;
+            string kept = hash ?? (_summaries.TryGetValue(key, out var old) ? old.SchemaHash : string.Empty);
+            _summaries[key] = new RecordSummary(status, SchemaFormat.Current, kept);
+        }
+
+        private static TableUpgradeStatus ParseStatus(string text)
+            => Enum.TryParse<TableUpgradeStatus>(text, out var status) ? status : TableUpgradeStatus.Upgrading;
+
+        private readonly record struct RecordSummary(TableUpgradeStatus Status, int FormatVersion, string SchemaHash);
     }
 }

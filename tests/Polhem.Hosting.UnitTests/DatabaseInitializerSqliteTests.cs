@@ -161,13 +161,7 @@ namespace Polhem.Hosting.UnitTests
         {
             SaveSqliteItems();
             Assert.True(_initializer.UpgradeTables().Succeeded);
-            using (var connection = _connectionManager.CreateConnection(DbCategoryIds.Log))
-            {
-                connection.Open();
-                using var command = connection.CreateCommand();
-                command.CommandText = "UPDATE st_table_upgrade SET format_version = format_version + 1";
-                command.ExecuteNonQuery();
-            }
+            Sql(DbCategoryIds.Log, "UPDATE st_table_upgrade SET format_version = format_version + 1");
 
             foreach (bool dryRun in new[] { true, false })
             {
@@ -181,6 +175,94 @@ namespace Polhem.Hosting.UnitTests
                 Assert.False(report.Succeeded);
             }
         }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A fast compare takes a table its record calls current as unchanged without reading the database, and a full compare finds it missing")]
+        public void UpgradeTables_FastCompare_TrustsRecordsUntilFullCompare()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Sql(DbCategoryIds.Common, "DROP TABLE st_session");
+
+            var fast = _initializer.UpgradeTables();
+
+            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(fast, "st_session"));
+            Assert.False(TableExists(DbCategoryIds.Common, "st_session"));
+
+            var full = _initializer.UpgradeTables(new UpgradeOptions { CompareMode = UpgradeCompareMode.Full });
+
+            Assert.Equal(TableUpgradeOutcome.Created, Outcome(full, "st_session"));
+            Assert.True(TableExists(DbCategoryIds.Common, "st_session"));
+        }
+
+        [DbTheory(DatabaseType.SQLite)]
+        [InlineData("status = 'Failed'")]
+        [InlineData("status = 'Upgrading'")]
+        [InlineData("format_version = 0")]
+        [InlineData("schema_hash = 'stale'")]
+        [DisplayName("A fast compare compares with the database when the record is not a success of this format and definition")]
+        public void UpgradeTables_FastCompare_FallsBackToFullCompare(string recordChange)
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Sql(DbCategoryIds.Common, $"UPDATE st_table_upgrade SET {recordChange} WHERE table_name = 'st_session'");
+            Sql(DbCategoryIds.Common, "DROP TABLE st_session");
+
+            var report = _initializer.UpgradeTables();
+
+            Assert.Equal(TableUpgradeOutcome.Created, Outcome(report, "st_session"));
+            Assert.True(TableExists(DbCategoryIds.Common, "st_session"));
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A table found to match its definition gets a record, and a dry run writes none")]
+        public void UpgradeTables_UnchangedTable_IsRecordedExceptInADryRun()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Sql(DbCategoryIds.Common, "DELETE FROM st_table_upgrade WHERE table_name = 'st_session'");
+            var records = () => new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
+
+            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(dryRun: true), "st_session"));
+            Assert.Null(records().GetRecord("st_session"));
+
+            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(), "st_session"));
+            Assert.Equal(TableUpgradeStatus.Verified, records().GetRecord("st_session")?.Status);
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("An upgrade that changes no table leaves no record that refuses an older tool")]
+        public void UpgradeTables_NothingChanged_DoesNotRefuseOlderTool()
+        {
+            SaveSqliteItems();
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+            // As if every table had been built by a tool of format 0, before the records existed.
+            Sql(DbCategoryIds.Common, "DELETE FROM st_table_upgrade");
+
+            Assert.True(_initializer.UpgradeTables().Succeeded);
+
+            var records = new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
+            Assert.Equal(TableUpgradeStatus.Verified, records.GetRecord("st_user")?.Status);
+            Assert.Equal(0, records.GetHighestFormatVersion());
+            Assert.Null(records.DescribeNewerFormat());
+        }
+
+        private static TableUpgradeOutcome Outcome(TableUpgradeReport report, string tableName)
+            => report.Tables.Single(t => t.TableName == tableName).Outcome;
+
+        private void Sql(string databaseId, string sql)
+        {
+            using var connection = _connectionManager.CreateConnection(databaseId);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.ExecuteNonQuery();
+        }
+
+        private bool TableExists(string databaseId, string tableName)
+            => DbDialectRegistry.Get(DatabaseType.SQLite)
+                .CreateTableSchemaProvider(databaseId, _connectionManager)
+                .GetTableSchema(tableName) is not null;
 
         private void SaveSqliteItems()
         {

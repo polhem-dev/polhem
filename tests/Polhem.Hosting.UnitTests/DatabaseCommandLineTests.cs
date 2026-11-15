@@ -115,6 +115,20 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
+        [DisplayName("db upgrade compares fast by default and in full with --full-compare")]
+        public void TryRun_Upgrade_PassesCompareMode()
+        {
+            var (services, fake) = CreateServices();
+
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, ["db", "upgrade"], new StringWriter()));
+            Assert.Equal(UpgradeCompareMode.Fast, fake.LastOptions?.CompareMode);
+            Assert.False(fake.LastOptions?.AllowColumnNarrowing);
+
+            Assert.Equal(DatabaseCommandLine.Success, Run(services, ["db", "upgrade", "--full-compare"], new StringWriter()));
+            Assert.Equal(UpgradeCompareMode.Full, fake.LastOptions?.CompareMode);
+        }
+
+        [Fact]
         [DisplayName("db upgrade passes every --table it is given, and none when it is given none")]
         public void TryRun_UpgradeTables_PassesTableNames()
         {

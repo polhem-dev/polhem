@@ -30,7 +30,7 @@ namespace Polhem.Db.Schema
         /// Gets the table schema the plan brings the table to; <see cref="TableUpgradeOrchestrator.Plan"/> sets it.
         /// </summary>
         /// <remarks>
-        /// <see cref="TableUpgradeOrchestrator.Execute"/> records the upgrade of a plan that has it in
+        /// <see cref="TableUpgradeOrchestrator.Execute(UpgradePlan, string)"/> records the upgrade of a plan that has it in
         /// <see cref="TableUpgradeRecordStore"/>; a plan built by hand without it runs unrecorded.
         /// </remarks>
         public TableSchema? DefineTable { get; init; }

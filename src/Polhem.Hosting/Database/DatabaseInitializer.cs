@@ -122,14 +122,15 @@ namespace Polhem.Hosting.Database
         /// Upgrades the tables of one category in one of its databases, one entry per table as each finishes.
         /// </summary>
         private IEnumerable<TableUpgradeEntry> UpgradeDatabase(string databaseId, string categoryId,
-            List<TableItem> tables, UpgradeOptions? options, bool dryRun, bool companyIdsChecked)
+            List<TableItem> tables, UpgradeOptions? options, bool dryRun, bool companyIdsChecked,
+            TableUpgradeRecordStore? records)
         {
             foreach (var tableName in tables.Select(table => table.TableName))
             {
                 bool mayNarrowCompanyId = companyIdsChecked
                     && string.Equals(categoryId, DbCategoryIds.Common, StringComparison.Ordinal)
                     && string.Equals(tableName, CompanyTable, StringComparison.OrdinalIgnoreCase);
-                yield return UpgradeTable(databaseId, categoryId, tableName, options, dryRun, mayNarrowCompanyId);
+                yield return UpgradeTable(databaseId, categoryId, tableName, options, dryRun, records, mayNarrowCompanyId);
             }
         }
 
@@ -155,7 +156,7 @@ namespace Polhem.Hosting.Database
                 : null;
             var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             // A database id is a key of the settings, which match it without regard to case.
-            var formatChecked = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            var recordStores = new Dictionary<string, DatabaseRecords>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var category in categories ?? [])
             {
@@ -176,15 +177,15 @@ namespace Polhem.Hosting.Database
 
                 foreach (var databaseId in databases)
                 {
-                    if (!formatChecked.TryGetValue(databaseId, out var newerFormat))
+                    if (!recordStores.TryGetValue(databaseId, out var records))
                     {
-                        newerFormat = DescribeNewerFormat(databaseId);
-                        formatChecked[databaseId] = newerFormat;
-                        if (newerFormat is not null) problems.Add(newerFormat);
+                        records = OpenRecords(databaseId);
+                        recordStores[databaseId] = records;
+                        if (records.NewerFormat is not null) problems.Add(records.NewerFormat);
                     }
-                    if (newerFormat is not null) continue;
+                    if (records.NewerFormat is not null) continue;
 
-                    foreach (var entry in UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked))
+                    foreach (var entry in UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked, records.Store))
                     {
                         tables.Add(entry);
                         tableCompleted?.Invoke(entry);
@@ -215,16 +216,29 @@ namespace Polhem.Hosting.Database
             var altered = diff.Changes.OfType<Polhem.Db.Schema.Changes.AlterFieldChange>().ToList();
             bool onlyCompanyId = altered.Count > 0 && altered.All(c =>
                 string.Equals(c.NewField.FieldName, Polhem.Definition.SysFields.Id, StringComparison.OrdinalIgnoreCase));
-            return onlyCompanyId ? new UpgradeOptions { AllowColumnNarrowing = true } : options;
+            return onlyCompanyId
+                ? new UpgradeOptions
+                {
+                    AllowColumnNarrowing = true,
+                    CompareMode = (options ?? UpgradeOptions.Default).CompareMode,
+                }
+                : options;
         }
 
         private TableUpgradeEntry UpgradeTable(
             string databaseId, string categoryId, string tableName, UpgradeOptions? options, bool dryRun,
-            bool mayNarrowCompanyId = false)
+            TableUpgradeRecordStore? records, bool mayNarrowCompanyId = false)
         {
             var entry = new TableUpgradeEntry { DatabaseId = databaseId, CategoryId = categoryId, TableName = tableName };
             try
             {
+                if ((options ?? UpgradeOptions.Default).CompareMode == UpgradeCompareMode.Fast
+                    && records is not null
+                    && records.IsRecordedAsCurrent(_defineAccess.GetTableSchema(categoryId, tableName)))
+                {
+                    return WithOutcome(entry, TableUpgradeOutcome.Unchanged);
+                }
+
                 var builder = new TableSchemaBuilder(databaseId, _defineAccess, _connectionManager);
                 var diff = builder.CompareToDiff(categoryId, tableName);
                 if (mayNarrowCompanyId) options = CompanyIdNarrowingOptions(diff, options);
@@ -233,7 +247,10 @@ namespace Polhem.Hosting.Database
                 var plan = orchestrator.Plan(diff, options);
 
                 if (plan.IsEmpty)
+                {
+                    if (!dryRun) records?.TryRecordUnchanged(diff.DefineTable);
                     return WithOutcome(entry, TableUpgradeOutcome.Unchanged);
+                }
 
                 if (dryRun)
                 {
@@ -278,24 +295,31 @@ namespace Polhem.Hosting.Database
         }
 
         /// <summary>
-        /// Describes why a database must not be upgraded by this build of the framework, or returns <c>null</c> when it
-        /// may be, so a database that a newer tool upgraded is reported once instead of once per table.
+        /// Opens the upgrade records of a database once for all its tables: the check that a newer tool has not
+        /// upgraded it, so such a database is reported once instead of once per table, and the records a fast compare
+        /// reads.
         /// </summary>
         /// <remarks>
-        /// A database whose records cannot be read returns <c>null</c>: each of its tables then tries its upgrade and
-        /// reports the same failure as its own error, as it did before the records existed.
+        /// A database whose records cannot be read gets no store: each of its tables then compares in full and tries
+        /// its upgrade, which reports the same failure as its own error, as it did before the records existed.
         /// </remarks>
-        private string? DescribeNewerFormat(string databaseId)
+        private DatabaseRecords OpenRecords(string databaseId)
         {
             try
             {
-                return new TableUpgradeRecordStore(databaseId, _connectionManager).DescribeNewerFormat();
+                var store = new TableUpgradeRecordStore(databaseId, _connectionManager);
+                return new DatabaseRecords(store, store.DescribeNewerFormat());
             }
             catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or ArgumentException or DbException)
             {
-                return null;
+                return new DatabaseRecords(null, null);
             }
         }
+
+        /// <summary>
+        /// The upgrade records of one database, and why it may not be upgraded when a newer tool upgraded it.
+        /// </summary>
+        private readonly record struct DatabaseRecords(TableUpgradeRecordStore? Store, string? NewerFormat);
 
         private static TableUpgradeEntry WithOutcome(TableUpgradeEntry entry, TableUpgradeOutcome outcome)
             => new()

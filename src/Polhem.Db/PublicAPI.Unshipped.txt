@@ -33,3 +33,11 @@ Polhem.Db.Schema.UpgradePlan.DefineTable.init -> void
 const Polhem.Db.Schema.TableUpgradeRecordStore.DefaultRecordTableName = "st_table_upgrade" -> string!
 static Polhem.Db.Schema.SchemaFormat.Current.get -> int
 static Polhem.Db.Schema.TableUpgradeRecordStore.ComputeHash(string! schemaXml) -> string!
+Polhem.Db.Schema.TableUpgradeRecordStore.IsRecordedAsCurrent(Polhem.Definition.Database.TableSchema! define) -> bool
+Polhem.Db.Schema.TableUpgradeRecordStore.TryRecordUnchanged(Polhem.Definition.Database.TableSchema! define) -> bool
+Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeCompareMode.Fast = 0 -> Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeCompareMode.Full = 1 -> Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeOptions.CompareMode.get -> Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeOptions.CompareMode.init -> void
+Polhem.Db.Schema.TableUpgradeStatus.Verified = 3 -> Polhem.Db.Schema.TableUpgradeStatus

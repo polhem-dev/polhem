@@ -4,6 +4,7 @@ using Polhem.Core.Serialization;
 using Polhem.Db.Manager;
 using Polhem.Db.Schema;
 using Polhem.Definition.Database;
+using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests
@@ -84,6 +85,26 @@ namespace Polhem.Db.UnitTests
         [DisplayName("SQLite: a database upgraded by a newer schema format is refused and nothing changes")]
         public void NewerFormat_Sqlite_Refused() => RunNewerFormat(DatabaseType.SQLite);
 
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a table that needed no upgrade gets a record a fast compare can rely on")]
+        public void RecordUnchanged_SqlServer_FastCompareRelies() => RunRecordUnchanged(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a table that needed no upgrade gets a record a fast compare can rely on")]
+        public void RecordUnchanged_PostgreSql_FastCompareRelies() => RunRecordUnchanged(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a table that needed no upgrade gets a record a fast compare can rely on")]
+        public void RecordUnchanged_MySql_FastCompareRelies() => RunRecordUnchanged(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a table that needed no upgrade gets a record a fast compare can rely on")]
+        public void RecordUnchanged_Oracle_FastCompareRelies() => RunRecordUnchanged(DatabaseType.Oracle);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a table that needed no upgrade gets a record a fast compare can rely on")]
+        public void RecordUnchanged_Sqlite_FastCompareRelies() => RunRecordUnchanged(DatabaseType.SQLite);
+
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("An empty plan runs nothing and does not create the record table")]
         public void EmptyPlan_DoesNotCreateRecordTable()
@@ -107,6 +128,32 @@ namespace Polhem.Db.UnitTests
 
                 Assert.NotNull(ReadSchema(databaseId, TableName));
                 Assert.Null(Records(databaseId).GetRecord(TableName));
+            });
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("TableSchemaBuilder records a table it finds current, and a fast compare then takes it as unchanged")]
+        public void Builder_CurrentTable_RecordedThenTrusted()
+            => WithTables(DatabaseType.SQLite, _ =>
+            {
+                var access = _fx.GetRequiredService<IDefineAccess>();
+                var connectionManager = _fx.GetRequiredService<IDbConnectionManager>();
+                var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite, "common");
+                TableSchemaBuilder NewBuilder() => new(databaseId, access, connectionManager) { RecordTableName = RecordTable };
+                var define = access.GetTableSchema("common", "st_user");
+                var records = new TableUpgradeRecordStore(databaseId, connectionManager, RecordTable);
+                Drop(_fx.NewDbAccess(databaseId), DatabaseType.SQLite, RecordTable);
+                try
+                {
+                    Assert.False(NewBuilder().Execute("common", "st_user", new UpgradeOptions { CompareMode = UpgradeCompareMode.Full }));
+                    Assert.True(records.IsRecordedAsCurrent(define));
+
+                    Assert.False(NewBuilder().Execute("common", "st_user"));
+                    Assert.Equal(TableUpgradeStatus.Verified, records.GetRecord("st_user")?.Status);
+                }
+                finally
+                {
+                    Drop(_fx.NewDbAccess(databaseId), DatabaseType.SQLite, RecordTable);
+                }
             });
 
         private void RunSucceeded(DatabaseType databaseType)
@@ -166,6 +213,38 @@ namespace Polhem.Db.UnitTests
                 Assert.Equal(before.Status, after.Status);
                 Assert.Equal(before.SchemaHash, after.SchemaHash);
                 Assert.Equal(before.UpdateTime, after.UpdateTime);
+            });
+
+        private void RunRecordUnchanged(DatabaseType databaseType)
+            => WithTables(databaseType, databaseId =>
+            {
+                var define = BuildSchema(codeType: FieldDbType.Integer);
+                // Built without a record, as a table built before the records existed.
+                var plan = Plan(databaseId, define);
+                Assert.True(Orchestrator().Execute(new UpgradePlan(plan.Mode, plan.Stages), databaseId));
+                Assert.False(Records(databaseId).IsRecordedAsCurrent(define));
+
+                Assert.True(Records(databaseId).TryRecordUnchanged(define));
+
+                // Nothing was changed, so the record does not refuse an older tool.
+                var verified = Records(databaseId).GetRecord(TableName)!;
+                Assert.Equal(TableUpgradeStatus.Verified, verified.Status);
+                Assert.Equal(SchemaFormat.Current, verified.FormatVersion);
+                Assert.Equal(XmlCodec.Serialize(define), verified.SchemaXml);
+                Assert.Equal(0, Records(databaseId).GetHighestFormatVersion());
+                var records = Records(databaseId);
+                Assert.True(records.IsRecordedAsCurrent(define));
+                Assert.False(records.IsRecordedAsCurrent(BuildSchema(codeType: FieldDbType.Integer, withNote: true)));
+
+                // A failed upgrade of this format is corrected once the table is found to match, and keeps counting as
+                // this format's upgrade.
+                _fx.NewDbAccess(databaseId).ExecuteNonQuery(
+                    $"UPDATE {RecordTable} SET status = {{0}} WHERE table_name = {{1}}", nameof(TableUpgradeStatus.Failed), TableName);
+                Assert.False(Records(databaseId).IsRecordedAsCurrent(define));
+                Assert.True(Records(databaseId).TryRecordUnchanged(define));
+                Assert.True(Records(databaseId).IsRecordedAsCurrent(define));
+                Assert.Equal(TableUpgradeStatus.Succeeded, Records(databaseId).GetRecord(TableName)!.Status);
+                Assert.Equal(SchemaFormat.Current, Records(databaseId).GetHighestFormatVersion());
             });
 
         private void AssertSucceeded(string databaseId, TableSchema define)
