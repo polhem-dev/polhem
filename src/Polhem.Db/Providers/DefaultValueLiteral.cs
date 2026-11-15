@@ -41,6 +41,20 @@ namespace Polhem.Db.Providers
                 "Use a plain number (or 0 / 1 for Boolean), or leave it empty for the built-in default.");
         }
 
+        /// <summary>
+        /// Returns true when every dialect can emit the field's default value: it is empty, the column's type
+        /// quotes or ignores its default, or the value is a literal of the column's type.
+        /// </summary>
+        /// <param name="field">The field whose default value is checked.</param>
+        public static bool CanEmit(DbField field)
+        {
+            ArgumentNullException.ThrowIfNull(field);
+
+            return string.IsNullOrEmpty(field.DefaultValue)
+                || field.DbType is FieldDbType.String or FieldDbType.Text or FieldDbType.Time or FieldDbType.AutoIncrement
+                || IsLiteral(field.DbType, field.DefaultValue);
+        }
+
         private static bool IsLiteral(FieldDbType dbType, string value) => dbType switch
         {
             FieldDbType.Boolean => value is "0" or "1",

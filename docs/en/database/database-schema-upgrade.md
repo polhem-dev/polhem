@@ -154,6 +154,10 @@ Every dialect starts from the same dialect-neutral rules, shown below; SQLite an
 
 **Rebuild mechanism**: create a temporary table → `INSERT INTO tmp SELECT FROM original` → drop the old table → rename. For large tables (tens of millions of rows) this can take from minutes to hours and holds a table-level lock for the duration.
 
+Columns the definition does not declare are rebuilt too, with their rows. Such a column keeps a default that is a plain literal; any other default, such as an expression an earlier version of Polhem used as its built-in default, becomes the built-in default of the column's type, and the plan lists the column in its warnings.
+
+On SQLite the rebuild copies AutoIncrement values and carries the table's sequence over, so `sys_no` keeps its numbers and a number freed by a delete is not handed out again. The other dialects do not copy an AutoIncrement column: the rebuilt table numbers its rows again.
+
 ### Automatic decision — no developer choice
 
 The orchestrator inspects every change in the `TableSchemaDiff`:
@@ -161,7 +165,7 @@ The orchestrator inspects every change in the `TableSchemaDiff`:
 - All changes ALTER-capable → ALTER path
 - Any change requires rebuild → the whole table goes through rebuild
 - Any change unsupported by the provider → throws and aborts
-- A rebuild combined with a column rename (§6) → throws; split the two across deploys
+- A rebuild combined with a column rename (§6) → the rebuild copies the old column into its new name
 
 > The design **intentionally exposes no Strategy option**: callers should not need to decide "ALTER or rebuild this time" — the choice is fully determined by the diff content.
 
@@ -219,7 +223,7 @@ The comparer detects the `emp_no → employee_no` rename intent during upgrade a
 | DB has the old name `emp_no`, no new name | Rename the column |
 | DB already has the new name `employee_no` | No rename; the column is compared as usual (idempotent, safe to re-run) |
 | DB has neither old nor new name | Adds `employee_no` as a new column, without a warning |
-| The same upgrade also needs a rebuild | Rejected with an exception (§4) |
+| The same upgrade also needs a rebuild | The rebuild copies the old column into the new name (§4) |
 | Multiple cumulative renames across versions | **Not supported**: clear `OriginalFieldName` after each release |
 
 ### When to use it

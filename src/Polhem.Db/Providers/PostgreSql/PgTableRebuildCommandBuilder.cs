@@ -48,7 +48,7 @@ namespace Polhem.Db.Providers.PostgreSql
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, PgSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), PgSchemaSyntax.QuoteName));
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");

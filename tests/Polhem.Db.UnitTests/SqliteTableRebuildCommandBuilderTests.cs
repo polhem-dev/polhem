@@ -51,6 +51,57 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("SQLite GetCommandText gives an extension column the built-in default when its default is an expression")]
+        public void GetCommandText_ExtensionFieldWithExpressionDefault_UsesBuiltInDefault()
+        {
+            var define = BuildDefineSchema();
+            var real = BuildRealSchema();
+            real.Fields!.Add(new DbField("old_date", "Old date", FieldDbType.Date) { DefaultValue = "CURRENT_TIMESTAMP" });
+            real.Fields!.Add(new DbField("old_count", "Old count", FieldDbType.Integer) { DefaultValue = "7" });
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            Assert.Contains("\"old_date\" DATE NOT NULL DEFAULT (datetime('now', 'start of day'))", sql, StringComparison.Ordinal);
+            Assert.Contains("\"old_count\" INTEGER NOT NULL DEFAULT 7", sql, StringComparison.Ordinal);
+            Assert.DoesNotContain("CURRENT_TIMESTAMP", sql, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetCommandText copies an AutoIncrement column and carries its sequence over")]
+        public void GetCommandText_AutoIncrementField_CopiedWithSequence()
+        {
+            // On SQLite an AutoIncrement column has to be the single-column primary key.
+            var define = new TableSchema { TableName = "st_demo" };
+            define.Fields!.Add("sys_no", "No", FieldDbType.AutoIncrement);
+            define.Fields!.Add("name", "Name", FieldDbType.String, 50);
+            define.Indexes!.AddPrimaryKey("sys_no");
+            var real = define.Clone();
+            real.Fields!["name"].Length = 20;
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            int insert = sql.IndexOf("INSERT INTO \"tmp_st_demo\"", StringComparison.Ordinal);
+            string copy = sql.Substring(insert, sql.IndexOf(';', insert) - insert);
+            Assert.Contains("\"sys_no\"", copy, StringComparison.Ordinal);
+            Assert.Contains("UPDATE sqlite_sequence", sql, StringComparison.Ordinal);
+            Assert.True(sql.IndexOf("UPDATE sqlite_sequence", StringComparison.Ordinal)
+                < sql.IndexOf("DROP TABLE IF EXISTS \"st_demo\"", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetCommandText touches no sequence for a table without an AutoIncrement column")]
+        public void GetCommandText_NoAutoIncrementField_NoSequenceStatements()
+        {
+            var diff = new TableSchemaComparer(BuildDefineSchema(), BuildRealSchema(), DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            Assert.DoesNotContain("sqlite_sequence", sql, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("SQLite GetCommandText uses IF EXISTS for DROP TABLE")]
         public void GetCommandText_DropTable_UsesIfExists()
         {

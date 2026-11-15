@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: 17ce419c9add0aa2fab3c80cedb4db12d24a4695 -->
+<!-- source: en/database/database-schema-upgrade.md blob: 23d2bd65f2de2ec4ad49b664f3cf3d4f8b214395 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -153,6 +153,10 @@ foreach (var sql in plan.AllStatements)
 
 **Rebuild 機制**：建臨時表 → `INSERT INTO tmp SELECT FROM original` → drop 舊表 → rename。大資料表（千萬筆）耗時可達數十分鐘到小時，期間表級鎖定。
 
+定義中沒有宣告的欄位也會連同資料一起重建。這類欄位的預設值若是單純的字面值就保留；其他預設值（例如較早版本的 Polhem 當作內建預設值使用的運算式）會換成該欄位型別的內建預設值，升級計畫的 warnings 會列出這個欄位。
+
+在 SQLite 上，重建會複製 AutoIncrement 的值並延續資料表的序號，所以 `sys_no` 保留原本的編號，被刪除而空出的號碼也不會再發出。其他方言重建時不複製 AutoIncrement 欄位，重建後的資料表會重新編號。
+
 ### 自動判斷，不需開發者選
 
 Orchestrator 會逐一檢查 `TableSchemaDiff` 內每一筆 change：
@@ -160,7 +164,7 @@ Orchestrator 會逐一檢查 `TableSchemaDiff` 內每一筆 change：
 - 全部都能走 ALTER → ALTER 路徑
 - 任一筆需要 rebuild → 整表走 rebuild
 - 任一筆 provider 不支援 → 直接拋例外中止
-- rebuild 與欄位改名（§6）同時出現 → 拋例外；請拆成兩次部署
+- rebuild 與欄位改名（§6）同時出現 → 重建時把舊欄位的資料複製到新名稱
 
 > 設計上**刻意不暴露 Strategy option**：使用者不該需要決定「我這次要走 ALTER 還是 rebuild」，這由 schema 變更內容唯一決定。
 
@@ -218,7 +222,7 @@ builder.Execute("company", "st_employee", options);
 | DB 有舊名 `emp_no`、無新名 | 將欄位改名 |
 | DB 已有新名 `employee_no` | 不改名，照常比對該欄位（冪等，可重跑） |
 | DB 無舊名也無新名 | 新增 `employee_no` 欄位，不發出警告 |
-| 同一次升級也需要 rebuild | 拋例外拒絕（§4） |
+| 同一次升級也需要 rebuild | 重建時把舊欄位的資料複製到新名稱（§4） |
 | 跨多版本連續改名 | **不支援**：每版部署完成後請清掉 `OriginalFieldName` |
 
 ### 適用情境

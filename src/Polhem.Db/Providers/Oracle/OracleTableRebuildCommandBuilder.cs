@@ -70,7 +70,7 @@ namespace Polhem.Db.Providers.Oracle
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, OracleSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), OracleSchemaSyntax.QuoteName));
 
             // 4) Drop the original table — CASCADE CONSTRAINTS removes referencing FKs and
             //    drops every index / auto-named PK constraint, freeing those names for

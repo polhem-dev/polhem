@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
@@ -51,9 +52,14 @@ namespace Polhem.Db.Providers.Sqlite
             var createBuilder = new SqliteCreateTableCommandBuilder();
             sb.AppendLine(createBuilder.GetCommandText(tmpSchema));
 
-            // 3) Copy data from the original table (excluding newly-added and identity columns).
+            // 3) Copy data from the original table (excluding newly-added columns). Auto-increment values are
+            //    copied too, and the table's sequence carried over, so `sys_no` keeps its numbers and a number
+            //    freed by a delete is not handed out again.
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, SqliteSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames,
+                RebuildSchemaFactory.GetSourceFieldNames(diff), SqliteSchemaSyntax.QuoteName, copyAutoIncrement: true));
+            if (effectiveSchema.Fields!.Any(f => f.DbType == FieldDbType.AutoIncrement))
+                sb.Append(BuildCarrySequenceStatements(tableName, tmpTableName));
 
             // 4) Drop the original table — this also drops every index and the autoindex backing
             //    its primary key, freeing those names for recreation in step 6.
@@ -69,6 +75,21 @@ namespace Polhem.Db.Providers.Sqlite
             sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema));
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Carries the source table's <c>AUTOINCREMENT</c> sequence over to the temporary table, keeping the higher
+        /// of the two. Copying the rows sets the temporary table's sequence to the highest copied value only, which
+        /// is lower than the source's when its last rows were deleted.
+        /// </summary>
+        private static string BuildCarrySequenceStatements(string tableName, string tmpTableName)
+        {
+            string source = $"'{SqliteSchemaSyntax.EscapeSqlString(tableName)}'";
+            string target = $"'{SqliteSchemaSyntax.EscapeSqlString(tmpTableName)}'";
+            return $"INSERT INTO sqlite_sequence (name, seq) SELECT {target}, seq FROM sqlite_sequence WHERE name = {source} " +
+                   $"AND NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = {target});\n" +
+                   $"UPDATE sqlite_sequence SET seq = MAX(seq, COALESCE((SELECT seq FROM sqlite_sequence WHERE name = {source}), 0)) " +
+                   $"WHERE name = {target};\n";
         }
 
         private static string BuildDropIfExistsStatement(string tableName)

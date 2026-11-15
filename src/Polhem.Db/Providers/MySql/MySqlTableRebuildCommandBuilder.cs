@@ -64,7 +64,7 @@ namespace Polhem.Db.Providers.MySql
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, MySqlSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), MySqlSchemaSyntax.QuoteName));
 
             // 4) Drop the original table — this also drops every index and the auto-generated
             //    primary-key index, freeing those names for recreation in step 6.

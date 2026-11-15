@@ -47,7 +47,7 @@ namespace Polhem.Db.Providers.SqlServer
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, SqlSchemaSyntax.QuoteName));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), SqlSchemaSyntax.QuoteName));
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");
