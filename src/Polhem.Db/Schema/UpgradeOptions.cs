@@ -20,6 +20,12 @@ namespace Polhem.Db.Schema
         public bool AllowColumnNarrowing { get; init; } = false;
 
         /// <summary>
+        /// Gets how the upgrade decides whether a table differs from its definition. Default is
+        /// <see cref="UpgradeCompareMode.Fast"/>.
+        /// </summary>
+        public UpgradeCompareMode CompareMode { get; init; } = UpgradeCompareMode.Fast;
+
+        /// <summary>
         /// Gets a shared default instance (all options at their default values).
         /// </summary>
         /// <remarks>

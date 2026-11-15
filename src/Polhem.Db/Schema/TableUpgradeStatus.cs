@@ -20,5 +20,12 @@ namespace Polhem.Db.Schema
         /// The upgrade failed; the record keeps the error and the schema of the last upgrade that succeeded.
         /// </summary>
         Failed,
+
+        /// <summary>
+        /// A comparison with the database found the table already matching the recorded schema, and no statement
+        /// ran. A tool of the recorded format compared the table but did not change it, so the record does not refuse
+        /// a tool of a lower format the way an upgrade's record does.
+        /// </summary>
+        Verified,
     }
 }

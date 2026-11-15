@@ -95,19 +95,50 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
+        /// Gets the name of the table the upgrade records are written to; a test sets another name to keep its
+        /// records apart from the ones the other tests of the same database write.
+        /// </summary>
+        internal string RecordTableName { get; init; } = TableUpgradeRecordStore.DefaultRecordTableName;
+
+        private TableUpgradeRecordStore? _records;
+
+        private TableUpgradeRecordStore Records
+            => _records ??= new TableUpgradeRecordStore(DatabaseId, _connectionManager, RecordTableName);
+
+        /// <summary>
         /// Compares the table schema and executes the upgrade if differences are found.
         /// Each stage runs in its own transaction.
         /// </summary>
         /// <param name="categoryId">The database category id.</param>
         /// <param name="tableName">The table name.</param>
         /// <param name="options">Upgrade options; null uses <see cref="UpgradeOptions.Default"/>.</param>
-        /// <remarks>Returns <c>true</c> if an upgrade was performed; otherwise <c>false</c>.</remarks>
+        /// <remarks>
+        /// Returns <c>true</c> if an upgrade was performed; otherwise <c>false</c>.
+        /// <para>
+        /// With <see cref="UpgradeCompareMode.Fast"/>, the default, a table whose record in
+        /// <see cref="TableUpgradeRecordStore"/> matches the current definition is taken as unchanged without reading
+        /// the database's catalog. A compare that finds nothing to change records that, so the next fast compare can
+        /// rely on it. The records of the database are read once per builder.
+        /// </para>
+        /// </remarks>
         public bool Execute(string categoryId, string tableName, UpgradeOptions? options = null)
         {
+            options ??= UpgradeOptions.Default;
+            if (options.CompareMode == UpgradeCompareMode.Fast
+                && Records.IsRecordedAsCurrent(_defineAccess.GetTableSchema(categoryId, tableName)))
+            {
+                return false;
+            }
+
             var diff = CompareToDiff(categoryId, tableName);
-            var orchestrator = new TableUpgradeOrchestrator(_dialect, _connectionManager);
+            var orchestrator = new TableUpgradeOrchestrator(_dialect, _connectionManager) { RecordTableName = RecordTableName };
             var plan = orchestrator.Plan(diff, options);
-            return orchestrator.Execute(plan, this.DatabaseId);
+            if (plan.IsEmpty)
+            {
+                Records.TryRecordUnchanged(diff.DefineTable);
+                return false;
+            }
+            return orchestrator.Execute(plan, this.DatabaseId, Records);
         }
     }
 }

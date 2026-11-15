@@ -16,8 +16,9 @@ internal static class Program
         "  create                       Create the databases named in DatabaseSettings that do not exist, and the\n" +
         "                               master key file SystemSettings names when it is missing.\n" +
         "  check                        Open a connection to each database in DatabaseSettings.\n" +
-        "  upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
+        "  upgrade [--dry-run] [--allow-narrowing] [--full-compare] [--table <name>]...\n" +
         "                               Build or upgrade the tables registered in DbCategorySettings.\n" +
+        "                               --full-compare also compares the tables whose upgrade record matches.\n" +
         "  add-company-column [--dry-run]\n" +
         "                               Add the company column to the company table schemas that lack it.\n" +
         "  seed-admin --company <id> [options]\n" +

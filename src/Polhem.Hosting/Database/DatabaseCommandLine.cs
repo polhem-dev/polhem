@@ -43,9 +43,11 @@ namespace Polhem.Hosting.Database
             "Usage:\n" +
             "  db create                     Create the databases named in DatabaseSettings that do not exist.\n" +
             "  db check                      Open a connection to each database in DatabaseSettings.\n" +
-            "  db upgrade [--dry-run] [--allow-narrowing] [--table <name>]...\n" +
+            "  db upgrade [--dry-run] [--allow-narrowing] [--full-compare] [--table <name>]...\n" +
             "                                Build or upgrade the tables registered in DbCategorySettings: every\n" +
-            "                                table, or only the ones named with --table.\n" +
+            "                                table, or only the ones named with --table. A table whose upgrade\n" +
+            "                                record matches its definition is not compared with the database;\n" +
+            "                                --full-compare compares every table, finding changes made by hand.\n" +
             "  db add-company-column [--dry-run]\n" +
             "                                Add the company column and company-led unique indexes to the table\n" +
             "                                schemas registered under the company category that lack them.\n" +
@@ -190,12 +192,17 @@ namespace Polhem.Hosting.Database
         {
             var dryRun = TakeFlag(ref options, "--dry-run");
             var allowNarrowing = TakeFlag(ref options, "--allow-narrowing");
+            var fullCompare = TakeFlag(ref options, "--full-compare");
             var tableNames = new List<string>();
             while (TakeValue(ref options, "--table") is { } tableName)
                 tableNames.Add(tableName);
             RejectUnknown(options);
 
-            var upgradeOptions = allowNarrowing ? new UpgradeOptions { AllowColumnNarrowing = true } : null;
+            var upgradeOptions = new UpgradeOptions
+            {
+                AllowColumnNarrowing = allowNarrowing,
+                CompareMode = fullCompare ? UpgradeCompareMode.Full : UpgradeCompareMode.Fast,
+            };
             // Each table is written as it completes, so a caller showing the output live (DefineEditor
             // runs this command as a child process) sees progress rather than one block at the end.
             var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(

@@ -106,8 +106,14 @@ namespace Polhem.Db.Schema
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
 
             if (plan.IsEmpty) return false;
+            return Execute(plan, databaseId, new TableUpgradeRecordStore(databaseId, _connectionManager, RecordTableName));
+        }
 
-            var records = new TableUpgradeRecordStore(databaseId, _connectionManager, RecordTableName);
+        /// <summary>
+        /// Executes a non-empty plan, recording it through a record store the caller already holds for the database.
+        /// </summary>
+        internal bool Execute(UpgradePlan plan, string databaseId, TableUpgradeRecordStore records)
+        {
             records.ThrowIfNewerFormat();
             var define = plan.DefineTable;
             if (define is null)
