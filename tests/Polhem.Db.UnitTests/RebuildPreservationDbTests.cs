@@ -10,9 +10,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// A table rebuild keeps what the table holds: its rows, their AutoIncrement numbers, the numbers a delete freed,
-    /// and the indexes only the database has. When it cannot finish, it leaves the table as it was, so someone can
-    /// look at the data and fix it before upgrading again.
+    /// A table rebuild keeps what the table holds: its rows, their AutoIncrement numbers and the numbers a delete freed.
+    /// When it cannot keep or finish something, it leaves the table as it was, so someone can decide what to do with
+    /// the data before upgrading again.
     /// </summary>
     public class RebuildPreservationDbTests : IClassFixture<SharedDbFixture>
     {
@@ -24,24 +24,44 @@ namespace Polhem.Db.UnitTests
         public RebuildPreservationDbTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server: a rebuild keeps the rows, their AutoIncrement numbers and a database-only index")]
-        public void Rebuild_SqlServer_KeepsRowsNumbersAndIndexes() => RunKeeps(DatabaseType.SQLServer);
+        [DisplayName("SQL Server: a rebuild keeps the rows and their AutoIncrement numbers")]
+        public void Rebuild_SqlServer_KeepsRowsAndNumbers() => RunKeeps(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL: a rebuild keeps the rows, their AutoIncrement numbers and a database-only index")]
-        public void Rebuild_PostgreSql_KeepsRowsNumbersAndIndexes() => RunKeeps(DatabaseType.PostgreSQL);
+        [DisplayName("PostgreSQL: a rebuild keeps the rows and their AutoIncrement numbers")]
+        public void Rebuild_PostgreSql_KeepsRowsAndNumbers() => RunKeeps(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL: a rebuild keeps the rows, their AutoIncrement numbers and a database-only index")]
-        public void Rebuild_MySql_KeepsRowsNumbersAndIndexes() => RunKeeps(DatabaseType.MySQL);
+        [DisplayName("MySQL: a rebuild keeps the rows and their AutoIncrement numbers")]
+        public void Rebuild_MySql_KeepsRowsAndNumbers() => RunKeeps(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle: a rebuild keeps the rows, their AutoIncrement numbers and a database-only index")]
-        public void Rebuild_Oracle_KeepsRowsNumbersAndIndexes() => RunKeeps(DatabaseType.Oracle);
+        [DisplayName("Oracle: a rebuild keeps the rows and their AutoIncrement numbers")]
+        public void Rebuild_Oracle_KeepsRowsAndNumbers() => RunKeeps(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite: a rebuild keeps the rows, their AutoIncrement numbers and a database-only index")]
-        public void Rebuild_Sqlite_KeepsRowsNumbersAndIndexes() => RunKeeps(DatabaseType.SQLite);
+        [DisplayName("SQLite: a rebuild keeps the rows and their AutoIncrement numbers")]
+        public void Rebuild_Sqlite_KeepsRowsAndNumbers() => RunKeeps(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a rebuild that would lose a database-only index is refused and the table is left as it was")]
+        public void DatabaseOnlyIndex_SqlServer_RebuildRefused() => RunDatabaseOnlyIndex(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a rebuild that would lose a database-only index is refused and the table is left as it was")]
+        public void DatabaseOnlyIndex_PostgreSql_RebuildRefused() => RunDatabaseOnlyIndex(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a rebuild that would lose a database-only index is refused and the table is left as it was")]
+        public void DatabaseOnlyIndex_MySql_RebuildRefused() => RunDatabaseOnlyIndex(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a rebuild that would lose a database-only index is refused and the table is left as it was")]
+        public void DatabaseOnlyIndex_Oracle_RebuildRefused() => RunDatabaseOnlyIndex(DatabaseType.Oracle);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a rebuild that would lose a database-only index is refused and the table is left as it was")]
+        public void DatabaseOnlyIndex_Sqlite_RebuildRefused() => RunDatabaseOnlyIndex(DatabaseType.SQLite);
 
         // SQLite stores any value in any column, so converting text to a number cannot fail there.
         [DbFact(DatabaseType.SQLServer)]
@@ -80,7 +100,6 @@ namespace Polhem.Db.UnitTests
             => WithTable(databaseType, (databaseId, dbAccess) =>
             {
                 Upgrade(databaseId, BuildSchema(codeType: FieldDbType.Integer));
-                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, "CREATE INDEX ix_keep_custom ON rebuild_keep_test (name)"));
                 for (int i = 1; i <= 4; i++)
                     Insert(dbAccess, "r" + i.ToString(CultureInfo.InvariantCulture), i);
                 // Rows 1 and 2 remain; the numbers 3 and 4 have been handed out.
@@ -94,14 +113,30 @@ namespace Polhem.Db.UnitTests
 
                 Assert.Equal([1L, 2L], Numbers(dbAccess));
                 Assert.Equal(["r1", "r2"], Names(dbAccess));
-                Assert.Contains(ReadSchema(databaseId)!.Indexes!.Cast<DbTableIndex>(),
-                    i => string.Equals(i.Name, "ix_keep_custom", StringComparison.OrdinalIgnoreCase));
 
                 Insert(dbAccess, "new", 5);
                 long next = Numbers(dbAccess).Max();
                 // MySQL continues after the highest copied number; the others also skip the numbers a delete freed.
                 Assert.True(next > (databaseType == DatabaseType.MySQL ? 2 : 4), $"The next number was {next}.");
                 Assert.True(Diff(databaseId, define).IsEmpty);
+            });
+
+        private void RunDatabaseOnlyIndex(DatabaseType databaseType)
+            => WithTable(databaseType, (databaseId, dbAccess) =>
+            {
+                Upgrade(databaseId, BuildSchema(codeType: FieldDbType.Integer));
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, "CREATE INDEX ix_keep_custom ON rebuild_keep_test (name)"));
+                Insert(dbAccess, "kept", 1);
+
+                // Number to text is a change across type families, which every database applies by a rebuild.
+                var ex = Assert.Throws<InvalidOperationException>(() => Plan(databaseId, BuildSchema(codeType: FieldDbType.String)));
+
+                Assert.Contains("ix_keep_custom", ex.Message, StringComparison.OrdinalIgnoreCase);
+                var real = ReadSchema(databaseId)!;
+                Assert.Equal(FieldDbType.Integer, real.Fields!["code"].DbType);
+                Assert.Contains(real.Indexes!.Cast<DbTableIndex>(),
+                    i => string.Equals(i.Name, "ix_keep_custom", StringComparison.OrdinalIgnoreCase));
+                Assert.Equal(["kept"], Names(dbAccess));
             });
 
         private void RunFailedRebuild(DatabaseType databaseType)

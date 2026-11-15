@@ -3,7 +3,6 @@ using System.Text;
 using Polhem.Core;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
-using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Providers.SqlServer
@@ -28,9 +27,8 @@ namespace Polhem.Db.Providers.SqlServer
             string tmpTableName = $"tmp_{tableName}";
 
             var effectiveSchema = RebuildSchemaFactory.BuildEffectiveSchema(diff);
-            var addedFieldNames = diff.Changes.OfType<AddFieldChange>()
-                .Select(c => c.Field.FieldName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Columns the rebuild adds, or numbers afresh, are left to their defaults rather than copied.
+            var addedFieldNames = RebuildSchemaFactory.GetUncopiedFieldNames(diff);
 
             var sb = new StringBuilder();
             sb.AppendLine(CultureInfo.InvariantCulture, $"-- Rebuild table {tableName}");
@@ -73,10 +71,6 @@ namespace Polhem.Db.Providers.SqlServer
             // 5) Rename indexes, then rename the table.
             sb.AppendLine("-- Rename temporary table");
             sb.Append(BuildRenameStatements(tmpTableName, tableName, effectiveSchema));
-
-            // Indexes only the database had are created on the renamed table.
-            foreach (var index in RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))
-                sb.AppendLine(DdlFragments.BuildCreateIndexStatement(tableName, index, SqlSchemaSyntax.QuoteName));
 
             return sb.ToString();
         }

@@ -66,17 +66,10 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
-        /// Returns the indexes the database has and the definition does not declare, with the columns they cover
-        /// renamed as the diff renames them, so the rebuild can create them again on the rebuilt table.
+        /// Returns the names of the indexes the database has and the definition does not declare.
         /// </summary>
-        /// <remarks>
-        /// An index that covers a column the rebuilt table does not have is left out. Each provider creates these
-        /// indexes after the rebuilt table has its final name: the database's own name of such an index carries no
-        /// table placeholder, and PostgreSQL names indexes per schema, so the index could not exist on the temporary
-        /// table while the old table still holds it.
-        /// </remarks>
         /// <param name="diff">The schema diff being rebuilt.</param>
-        public static IReadOnlyList<DbTableIndex> GetDatabaseOnlyIndexes(TableSchemaDiff diff)
+        public static IReadOnlyList<string> GetDatabaseOnlyIndexNames(TableSchemaDiff diff)
         {
             if (diff.RealTable == null)
                 return [];
@@ -84,43 +77,64 @@ namespace Polhem.Db.Schema
             var declared = diff.DefineTable.Indexes!
                 .Select(i => Polhem.Core.StringUtilities.Format(i.Name, tableName))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var columns = BuildEffectiveSchema(diff).Fields!;
-            var newNames = GetSourceFieldNames(diff)
-                .ToDictionary(p => p.Value, p => p.Key, StringComparer.OrdinalIgnoreCase);
-
-            var indexes = new List<DbTableIndex>();
-            foreach (var real in diff.RealTable.Indexes!.Where(i => !i.PrimaryKey && !declared.Contains(i.Name)))
-            {
-                var index = real.Clone();
-                foreach (IndexField field in index.IndexFields!)
-                {
-                    if (newNames.TryGetValue(field.FieldName, out var newName))
-                        field.FieldName = newName;
-                }
-                if (index.IndexFields!.All(f => columns.Contains(f.FieldName)))
-                    indexes.Add(index);
-            }
-            return indexes;
+            return diff.RealTable.Indexes!
+                .Where(i => !i.PrimaryKey && !declared.Contains(i.Name))
+                .Select(i => i.Name)
+                .ToList();
         }
 
         /// <summary>
-        /// Refuses a rebuild that cannot recreate a column of the table, before any statement runs, so the table and
-        /// its rows stay as they are for someone to look at.
+        /// Returns the columns the rebuild does not copy from the old table: the columns it adds, and an
+        /// AutoIncrement column that was a plain column before, which numbers the rows afresh.
         /// </summary>
         /// <param name="diff">The schema diff being rebuilt.</param>
-        /// <exception cref="InvalidOperationException">
-        /// A column the definition does not declare has a type the framework does not map.
-        /// </exception>
-        public static void ThrowIfColumnsCannotBeRebuilt(TableSchemaDiff diff)
+        public static HashSet<string> GetUncopiedFieldNames(TableSchemaDiff diff)
         {
+            var names = diff.Changes.OfType<AddFieldChange>()
+                .Select(c => c.Field.FieldName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (diff.RealTable == null)
+                return names;
+            var sourceNames = GetSourceFieldNames(diff);
+            foreach (var field in diff.DefineTable.Fields!.Where(f => f.DbType == Polhem.Core.Data.FieldDbType.AutoIncrement))
+            {
+                string source = sourceNames.TryGetValue(field.FieldName, out var renamed) ? renamed : field.FieldName;
+                if (diff.RealTable.Fields!.Contains(source)
+                    && diff.RealTable.Fields[source].DbType != Polhem.Core.Data.FieldDbType.AutoIncrement)
+                    names.Add(field.FieldName);
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Refuses a rebuild that would lose something the table has, before any statement runs, so the table and its
+        /// rows stay as they are for someone to decide.
+        /// </summary>
+        /// <remarks>
+        /// A column of a type the framework does not map cannot be created again. An index the definition does not
+        /// declare cannot be created again faithfully either: the providers read back its columns but not its filter,
+        /// included columns, prefix lengths or kind, so a recreated index could differ from the original (a unique
+        /// index enforcing more or less than before) or fail after the old table is gone.
+        /// </remarks>
+        /// <param name="diff">The schema diff being rebuilt.</param>
+        /// <exception cref="InvalidOperationException">
+        /// The table has a column of an unmapped type or an index the definition does not declare.
+        /// </exception>
+        public static void ThrowIfRebuildWouldLoseParts(TableSchemaDiff diff)
+        {
+            var reasons = new List<string>();
             var unmapped = GetExtensionFields(diff).Where(f => f.DbType == Polhem.Core.Data.FieldDbType.Unknown)
-                .Select(f => f.FieldName).ToList();
-            if (unmapped.Count == 0)
+                .Select(f => $"'{f.FieldName}'").ToList();
+            if (unmapped.Count > 0)
+                reasons.Add($"column(s) {string.Join(", ", unmapped)} have a type the framework does not map");
+            var indexes = GetDatabaseOnlyIndexNames(diff).Select(n => $"'{n}'").ToList();
+            if (indexes.Count > 0)
+                reasons.Add($"index(es) {string.Join(", ", indexes)} are not in the definition and cannot be recreated faithfully");
+            if (reasons.Count == 0)
                 return;
             throw new InvalidOperationException(
-                $"Table '{diff.DefineTable.TableName}' needs a rebuild, which cannot recreate column(s) " +
-                $"{string.Join(", ", unmapped.Select(n => $"'{n}'"))}: their type is not one the framework maps. " +
-                "The table was left unchanged. Change or drop those columns by hand, or declare them in the definition, " +
+                $"Table '{diff.DefineTable.TableName}' needs a rebuild, which would lose part of it: {string.Join("; ", reasons)}. " +
+                "The table was left unchanged. Declare them in the definition, or change or drop them by hand, " +
                 "and upgrade again.");
         }
 

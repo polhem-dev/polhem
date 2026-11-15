@@ -3,7 +3,6 @@ using System.Text;
 using Polhem.Core;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
-using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Providers.Oracle
@@ -48,9 +47,8 @@ namespace Polhem.Db.Providers.Oracle
             string tmpTableName = $"tmp_{tableName}";
 
             var effectiveSchema = RebuildSchemaFactory.BuildEffectiveSchema(diff);
-            var addedFieldNames = diff.Changes.OfType<AddFieldChange>()
-                .Select(c => c.Field.FieldName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Columns the rebuild adds, or numbers afresh, are left to their defaults rather than copied.
+            var addedFieldNames = RebuildSchemaFactory.GetUncopiedFieldNames(diff);
 
             // Oracle.ManagedDataAccess runs one statement per command, and the orchestrator sends the rebuild as one.
             // The whole script is therefore a single anonymous block: the drop and create blocks nest in it, and the
@@ -95,9 +93,8 @@ namespace Polhem.Db.Providers.Oracle
             sb.AppendLine("-- Rename temporary table");
             sb.AppendLine(Dynamic(BuildRenameTableStatement(tmpTableName, tableName)));
 
-            // 6) Recreate each non-PK index, the database-only ones included, on the renamed table.
-            sb.Append(BuildRecreateIndexStatements(tableName,
-                effectiveSchema.Indexes!.Concat(RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))));
+            // 6) Recreate each non-PK index on the renamed table with its canonical name.
+            sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema.Indexes!));
 
             sb.Append("END;");
             return sb.ToString();

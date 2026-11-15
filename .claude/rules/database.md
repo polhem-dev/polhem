@@ -91,7 +91,8 @@ PostgreSQL/Oracle seed.
 ## Table upgrade principles
 
 1. **Keep the existing data.** An upgrade changes the table, never its rows: a rebuild copies every column, the ones
-   the definition does not declare included, keeps AutoIncrement numbers and recreates indexes only the database has.
+   the definition does not declare included, and keeps AutoIncrement numbers. What it cannot recreate faithfully (an
+   index only the database has, a column of an unmapped type) makes the plan refuse the rebuild, under (4).
 2. **The current `TableSchema` is the target.** When the schema read back differs from the definition, the upgrade
    changes the table to match; it does not leave an old shape in place because changing it is inconvenient.
 3. **An upgrade must not need repeating.** After the upgrade to a definition, comparing the same definition with the

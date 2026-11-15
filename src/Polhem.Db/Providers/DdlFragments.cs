@@ -53,20 +53,6 @@ namespace Polhem.Db.Providers
             => schema.Fields!.FirstOrDefault(f => f.DbType == FieldDbType.AutoIncrement && !addedFieldNames.Contains(f.FieldName));
 
         /// <summary>
-        /// Builds the <c>CREATE INDEX</c> for <paramref name="index"/> on <paramref name="tableName"/>, the index name
-        /// formatted with the table name.
-        /// </summary>
-        /// <param name="tableName">The table the index is created on.</param>
-        /// <param name="index">The index.</param>
-        /// <param name="quoteName">The dialect's identifier quoting.</param>
-        public static string BuildCreateIndexStatement(string tableName, DbTableIndex index, Func<string, string> quoteName)
-        {
-            string name = Polhem.Core.StringUtilities.Format(index.Name, tableName);
-            string unique = index.Unique ? "UNIQUE " : string.Empty;
-            return $"CREATE {unique}INDEX {quoteName(name)} ON {quoteName(tableName)} ({BuildIndexFieldList(index, quoteName)});";
-        }
-
-        /// <summary>
         /// Builds the <c>INSERT INTO ... SELECT</c> that copies the existing rows into the rebuilt table.
         /// </summary>
         /// <param name="sourceTable">The table being rebuilt.</param>

@@ -25,7 +25,7 @@ This is the only thing that matters from the application's perspective. Whether 
 
 Every upgrade path follows four principles:
 
-1. **Keep the existing data.** An upgrade changes the table, not its rows. A rebuild copies every column, including the ones the definition does not declare, keeps AutoIncrement numbers, and creates indexes only the database has again (§4).
+1. **Keep the existing data.** An upgrade changes the table, not its rows. A rebuild copies every column, including the ones the definition does not declare, and keeps AutoIncrement numbers; a rebuild that would lose an index only the database has is refused instead (§4).
 2. **The current `TableSchema` is the target.** When the schema read back from the database differs from the definition, the upgrade changes the table to match the definition.
 3. **One upgrade is enough.** After an upgrade, comparing the same definition with the database again finds no difference, so the next run plans nothing. A difference that survived its own upgrade would be applied again on every run.
 4. **When the existing data blocks the upgrade, it stops and reports.** The table and its rows stay as they were, the error names the table and the cause, and you decide how to fix the data or the definition (§7). The upgrade never changes or discards data to get through. The one exception is a column narrowing you turn on yourself with `AllowColumnNarrowing` (§5).
@@ -168,7 +168,8 @@ Columns the definition does not declare are rebuilt too, with their rows. Such a
 The rebuild keeps what the table holds:
 
 - **AutoIncrement numbers** are copied, so `sys_no` keeps its values. The sequence then carries on after the old table's, so a number freed by a delete is not handed out again; on Oracle a few numbers may be skipped (the sequence's cached high-water mark). MySQL is the exception: its counter carries on after the highest copied number, so a number freed at the end of the table can come back.
-- **Indexes only the database has** are created again on the rebuilt table, after it has its final name.
+- **Indexes only the database has** are not created again, because the framework reads back their columns but not their filter, included columns, prefix lengths or kind, so a copy could enforce something other than the original. A rebuild of a table that has one is refused before anything runs, naming the index: declare it in the definition, or drop it by hand, and upgrade again.
+- **A plain column that becomes AutoIncrement** is not copied: the rows are numbered afresh, since its old values (often all `0`) cannot serve as identity values.
 
 When the rebuild cannot finish, the table stays as it was: it stops before the old table is dropped. §7 describes what is recorded and how to resolve it.
 
@@ -282,7 +283,7 @@ Stage 5: SyncDescriptions   Sync extended properties (MS_Description)
 Some upgrades cannot be applied to the data a table already holds. For example, a text column that becomes a number while some rows hold text that is not a number, or a new unique index over duplicate values. The upgrade does not try to repair such data. Instead:
 
 - **The table stays as it was.** On the ALTER path the failing stage rolls back, as described above. A rebuild stops before it drops the old table (§4), so the table keeps its columns and rows. On MySQL and Oracle, which commit DDL as they go, the temporary table `tmp_<table>` may be left behind; the next attempt drops it.
-- **A column the rebuild cannot recreate is refused before anything runs.** This happens when the column has a type the framework does not map, and the error names the column.
+- **A rebuild that would lose part of the table is refused before anything runs.** This happens when a column has a type the framework does not map, or the database has an index the definition does not declare; the error names them.
 - **The error is recorded per table, and the other tables are still upgraded.**
   - `db upgrade` (polhem-db, and DefineEditor through it) writes a line for each table, with the error for a table that failed, and exits with code `1` (see [Database Settings](database-settings-guide.md)).
   - In code, `IDatabaseInitializer.UpgradeTables` returns a `TableUpgradeReport`. Each `TableUpgradeEntry` whose `Outcome` is `Failed` carries the `Error`, and `Succeeded` is `false`.

@@ -3,7 +3,6 @@ using System.Text;
 using Polhem.Core;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
-using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Providers.MySql
@@ -42,9 +41,8 @@ namespace Polhem.Db.Providers.MySql
             string tmpTableName = $"tmp_{tableName}";
 
             var effectiveSchema = RebuildSchemaFactory.BuildEffectiveSchema(diff);
-            var addedFieldNames = diff.Changes.OfType<AddFieldChange>()
-                .Select(c => c.Field.FieldName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Columns the rebuild adds, or numbers afresh, are left to their defaults rather than copied.
+            var addedFieldNames = RebuildSchemaFactory.GetUncopiedFieldNames(diff);
 
             var sb = new StringBuilder();
             sb.AppendLine(CultureInfo.InvariantCulture, $"-- Rebuild table {tableName}");
@@ -76,9 +74,8 @@ namespace Polhem.Db.Providers.MySql
             sb.AppendLine("-- Rename temporary table");
             sb.AppendLine(BuildRenameTableStatement(tmpTableName, tableName));
 
-            // 6) Recreate each non-PK index, the database-only ones included, on the renamed table.
-            sb.Append(BuildRecreateIndexStatements(tableName,
-                effectiveSchema.Indexes!.Concat(RebuildSchemaFactory.GetDatabaseOnlyIndexes(diff))));
+            // 6) Recreate each non-PK index on the renamed table with its canonical name.
+            sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema.Indexes!));
 
             return sb.ToString();
         }
