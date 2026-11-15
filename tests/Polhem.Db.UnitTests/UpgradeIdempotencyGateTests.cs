@@ -19,7 +19,7 @@ namespace Polhem.Db.UnitTests
     /// </remarks>
     public class UpgradeIdempotencyGateTests : IClassFixture<SharedDbFixture>
     {
-        private const string TableName = "idem_gate_test";
+        internal const string TableName = "idem_gate_test";
 
         private readonly SharedDbFixture _fx;
 
@@ -95,12 +95,7 @@ namespace Polhem.Db.UnitTests
         private void RunAddColumns(DatabaseType databaseType)
             => WithTable(databaseType, databaseId =>
             {
-                var before = BuildDefinition();
-                foreach (var name in s_addedColumns)
-                    before.Fields!.Remove(before.Fields[name]);
-                before.Indexes!.Remove(before.Indexes["uk_{0}_i_def"]);
-                before.Fields!["s"].Length = 20;
-                Upgrade(databaseId, before);
+                Upgrade(databaseId, BuildAddColumnsStart());
                 _fx.NewDbAccess(databaseId).Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     "INSERT INTO idem_gate_test (s, bin) VALUES ({0}, {1})", "row", new byte[] { 1, 2 }));
 
@@ -112,11 +107,7 @@ namespace Polhem.Db.UnitTests
         private void RunRebuild(DatabaseType databaseType)
             => WithTable(databaseType, databaseId =>
             {
-                // A change across type families (number to text) rebuilds the table on every database.
-                var before = BuildDefinition();
-                before.Fields!["code"].DbType = FieldDbType.Integer;
-                before.Fields!["code"].Length = 0;
-                Upgrade(databaseId, before);
+                Upgrade(databaseId, BuildRebuildStart());
 
                 var plan = Plan(databaseId, BuildDefinition());
                 Assert.Equal(UpgradeExecutionMode.Rebuild, plan.Mode);
@@ -131,7 +122,32 @@ namespace Polhem.Db.UnitTests
             "s_def", "t", "b_def", "i_def", "d_def", "dt", "dtm", "tm", "g", "dt_null", "i_null", "g_null",
         ];
 
-        private static TableSchema BuildDefinition()
+        /// <summary>
+        /// The table before the add path: without the added columns and the unique index, and with a narrower column.
+        /// </summary>
+        internal static TableSchema BuildAddColumnsStart()
+        {
+            var before = BuildDefinition();
+            foreach (var name in s_addedColumns)
+                before.Fields!.Remove(before.Fields[name]);
+            before.Indexes!.Remove(before.Indexes["uk_{0}_i_def"]);
+            before.Fields!["s"].Length = 20;
+            return before;
+        }
+
+        /// <summary>
+        /// The table before the rebuild path: a change across type families (number to text) rebuilds the table on
+        /// every database.
+        /// </summary>
+        internal static TableSchema BuildRebuildStart()
+        {
+            var before = BuildDefinition();
+            before.Fields!["code"].DbType = FieldDbType.Integer;
+            before.Fields!["code"].Length = 0;
+            return before;
+        }
+
+        internal static TableSchema BuildDefinition()
         {
             var schema = new TableSchema { TableName = TableName, DisplayName = "Idempotency gate" };
             var f = schema.Fields!;
