@@ -1,3 +1,4 @@
+using System.Globalization;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Core;
@@ -98,7 +99,8 @@ namespace Polhem.Db.Schema
         /// <param name="realField">The field as read back from the database.</param>
         private bool CompareField(DbField defineField, DbField realField)
         {
-            return NormalizeDefault(NormalizeNullability(defineField)).Compare(NormalizeNullability(realField));
+            return NormalizeDefault(NormalizeNullability(defineField))
+                .Compare(NormalizeDefault(NormalizeNullability(realField)));
         }
 
         /// <summary>
@@ -116,11 +118,33 @@ namespace Polhem.Db.Schema
             if (StringUtilities.IsEmpty(field.DefaultValue) || !DbDialectRegistry.IsRegistered(this.DatabaseType))
                 return field;
             var builtIn = DbDialectRegistry.Get(this.DatabaseType).GetDefaultValueExpression(field.DbType);
-            if (!StringUtilities.IsEquals(field.DefaultValue, builtIn))
+            string value = CanonicalNumber(field.DbType, field.DefaultValue);
+            string canonicalBuiltIn = CanonicalNumber(field.DbType, builtIn);
+            if (StringUtilities.IsEquals(value, canonicalBuiltIn))
+                value = string.Empty;
+            if (value == field.DefaultValue)
                 return field;
             var normalized = field.Clone();
-            normalized.DefaultValue = string.Empty;
+            normalized.DefaultValue = value;
             return normalized;
+        }
+
+        /// <summary>
+        /// Writes a numeric default in one form, so a value compares equal however the database spells it.
+        /// </summary>
+        /// <remarks>
+        /// MySQL reads a decimal default back with the column's scale (`1.50`, `0.0000`) where the definition and
+        /// the built-in default say `1.5` and `0`; compared as text the column differed after every upgrade.
+        /// </remarks>
+        private static string CanonicalNumber(FieldDbType dbType, string value)
+        {
+            if (dbType is not (FieldDbType.Short or FieldDbType.Integer or FieldDbType.Long
+                or FieldDbType.Decimal or FieldDbType.Currency))
+                return value;
+            return decimal.TryParse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture, out var number)
+                ? (number / 1.0000000000000000000000000000m).ToString(CultureInfo.InvariantCulture)
+                : value;
         }
 
         /// <summary>

@@ -52,8 +52,13 @@ namespace Polhem.Db.Providers.Oracle
                 .Select(c => c.Field.FieldName)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+            // Oracle.ManagedDataAccess runs one statement per command, and the orchestrator sends the rebuild as one.
+            // The whole script is therefore a single anonymous block: the drop and create blocks nest in it, and the
+            // plain statements run through EXECUTE IMMEDIATE, since the temporary table they name does not exist
+            // when the block is compiled.
             var sb = new StringBuilder();
             sb.AppendLine(CultureInfo.InvariantCulture, $"-- Rebuild table {tableName}");
+            sb.AppendLine("BEGIN");
 
             // 1) Drop any leftover temp table from a prior failed run.
             sb.AppendLine("-- Drop temporary table");
@@ -70,7 +75,7 @@ namespace Polhem.Db.Providers.Oracle
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), OracleSchemaSyntax.QuoteName));
+            sb.AppendLine(Dynamic(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, RebuildSchemaFactory.GetSourceFieldNames(diff), OracleSchemaSyntax.QuoteName)));
 
             // 4) Drop the original table — CASCADE CONSTRAINTS removes referencing FKs and
             //    drops every index / auto-named PK constraint, freeing those names for
@@ -81,13 +86,20 @@ namespace Polhem.Db.Providers.Oracle
             // 5) Rename the temp table to the original name. Oracle preserves the PK
             //    constraint and indexes through ALTER TABLE ... RENAME TO.
             sb.AppendLine("-- Rename temporary table");
-            sb.AppendLine(BuildRenameTableStatement(tmpTableName, tableName));
+            sb.AppendLine(Dynamic(BuildRenameTableStatement(tmpTableName, tableName)));
 
             // 6) Recreate each non-PK index on the renamed table with its canonical name.
             sb.Append(BuildRecreateIndexStatements(tableName, effectiveSchema));
 
+            sb.Append("END;");
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Wraps a plain statement in <c>EXECUTE IMMEDIATE</c> for the rebuild block, dropping its terminator.
+        /// </summary>
+        private static string Dynamic(string statement)
+            => $"  EXECUTE IMMEDIATE '{OracleSchemaSyntax.EscapeSqlString(statement.TrimEnd().TrimEnd(';'))}';";
 
         /// <summary>
         /// Builds an Oracle "drop-if-exists" equivalent: a PL/SQL anonymous block that
@@ -124,7 +136,7 @@ namespace Polhem.Db.Providers.Oracle
                 string fields = DdlFragments.BuildIndexFieldList(index, OracleSchemaSyntax.QuoteName);
                 string uniqueClause = index.Unique ? "UNIQUE " : string.Empty;
                 sb.Append(CultureInfo.InvariantCulture,
-                    $"CREATE {uniqueClause}INDEX {OracleSchemaSyntax.QuoteName(name)} ON {OracleSchemaSyntax.QuoteName(tableName)} ({fields});\n");
+                    $"{Dynamic($"CREATE {uniqueClause}INDEX {OracleSchemaSyntax.QuoteName(name)} ON {OracleSchemaSyntax.QuoteName(tableName)} ({fields})")}\n");
             }
             return sb.ToString();
         }

@@ -16,8 +16,12 @@ namespace Polhem.Db.UnitTests
         [InlineData("MONEY", "((500))", "0", "500")]
         [InlineData("FLOAT", "((0))", "0", "")]
         [InlineData("FLOAT", "((3.14))", "0", "3.14")]
-        [DisplayName("SQL Server ParseDBDefaultValue strips the ((...)) wrapper for MONEY/FLOAT")]
-        public void ParseDBDefaultValue_MoneyAndFloat_StripsDoubleParens(
+        [InlineData("DECIMAL", "((10.5))", "0", "10.5")]
+        [InlineData("NUMERIC", "((0))", "0", "")]
+        [InlineData("BIGINT", "((1000))", "0", "1000")]
+        [InlineData("SMALLINT", "((5))", "0", "5")]
+        [DisplayName("SQL Server ParseDBDefaultValue strips the ((...)) wrapper for every numeric type")]
+        public void ParseDBDefaultValue_NumericTypes_StripsDoubleParens(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
             var result = SqlTableSchemaProvider.ParseDBDefaultValue(dataType, defaultValue, originalDefault);
@@ -26,8 +30,6 @@ namespace Polhem.Db.UnitTests
         }
 
         [Theory]
-        [InlineData("DECIMAL", "((10.5))", "")]
-        [InlineData("BIGINT", "((1000))", "")]
         [InlineData("VARBINARY", "0x", "")]
         [DisplayName("SQL Server ParseDBDefaultValue returns an empty string for an unsupported type")]
         public void ParseDBDefaultValue_UnsupportedTypes_ReturnsEmpty(

@@ -282,9 +282,16 @@ namespace Polhem.Db.Providers.SqlServer
                     defaultValue = defaultValue.LeftRightCut("('", "')").Replace("''", "'", StringComparison.Ordinal);
                     break;
                 case "BIT":
+                case "TINYINT":
+                case "SMALLINT":
                 case "INT":
+                case "BIGINT":
+                case "DECIMAL":
+                case "NUMERIC":
                 case "MONEY":
                 case "FLOAT":
+                    // Every numeric default reads back as `((value))`. A numeric type missing here read
+                    // back as no default, so a definition with one was altered again on every upgrade.
                     defaultValue = defaultValue.LeftRightCut("((", "))");
                     break;
                 case "DATE":
