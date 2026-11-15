@@ -154,7 +154,9 @@ Every dialect starts from the same dialect-neutral rules, shown below; SQLite an
 
 **Rebuild mechanism**: create a temporary table → `INSERT INTO tmp SELECT FROM original` → drop the old table → rename. For large tables (tens of millions of rows) this can take from minutes to hours and holds a table-level lock for the duration.
 
-Columns the definition does not declare are rebuilt too, with their rows. Such a column keeps a default that is a plain literal; any other default, such as an expression an earlier version of Polhem used as its built-in default, becomes the built-in default of the column's type.
+Columns the definition does not declare are rebuilt too, with their rows. Such a column keeps a default that is a plain literal; any other default, such as an expression an earlier version of Polhem used as its built-in default, becomes the built-in default of the column's type, and the plan lists the column in its warnings.
+
+On SQLite the rebuild copies AutoIncrement values and carries the table's sequence over, so `sys_no` keeps its numbers and a number freed by a delete is not handed out again. The other dialects do not copy an AutoIncrement column: the rebuilt table numbers its rows again.
 
 ### Automatic decision — no developer choice
 

@@ -57,19 +57,24 @@ namespace Polhem.Db.Providers
         /// the same name.
         /// </param>
         /// <param name="quoteName">The dialect's identifier quoting.</param>
+        /// <param name="copyAutoIncrement">
+        /// Whether auto-increment columns are copied. Only a dialect whose rebuild accepts explicit values for them and
+        /// carries their sequence over passes <c>true</c>.
+        /// </param>
         /// <remarks>
-        /// Auto-increment columns are not copied: the target generates its own values.
+        /// Auto-increment columns are otherwise not copied: the target generates its own values, which renumbers rows
+        /// after a gap.
         /// </remarks>
         public static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema,
             HashSet<string> addedFieldNames, IReadOnlyDictionary<string, string> sourceFieldNames,
-            Func<string, string> quoteName)
+            Func<string, string> quoteName, bool copyAutoIncrement = false)
         {
             var targetFields = new StringBuilder();
             var sourceFields = new StringBuilder();
             foreach (DbField field in schema.Fields!)
             {
                 if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (field.DbType == FieldDbType.AutoIncrement) continue;
+                if (field.DbType == FieldDbType.AutoIncrement && !copyAutoIncrement) continue;
                 if (targetFields.Length > 0)
                 {
                     targetFields.Append(", ");

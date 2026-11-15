@@ -31,28 +31,56 @@ namespace Polhem.Db.Schema
         public static TableSchema BuildEffectiveSchema(TableSchemaDiff diff)
         {
             var cloned = diff.DefineTable.Clone();
-            if (diff.RealTable != null)
+            foreach (var realField in GetExtensionFields(diff))
             {
-                var sourceNames = GetSourceFieldNames(diff).Values.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foreach (var realField in diff.RealTable.Fields!.Where(f =>
-                    !cloned.Fields!.Contains(f.FieldName) && !sourceNames.Contains(f.FieldName)))
-                {
-                    var extension = realField.Clone();
-                    if (!DefaultValueLiteral.CanEmit(extension))
-                        extension.DefaultValue = string.Empty;
-                    cloned.Fields!.Add(extension);
-                }
+                var extension = realField.Clone();
+                if (!DefaultValueLiteral.CanEmit(extension))
+                    extension.DefaultValue = string.Empty;
+                cloned.Fields!.Add(extension);
             }
             return cloned;
+        }
+
+        /// <summary>
+        /// Describes each extension field whose default the rebuild replaces with the built-in default, for the
+        /// upgrade plan's warnings.
+        /// </summary>
+        /// <param name="diff">The schema diff being rebuilt.</param>
+        public static IEnumerable<string> DescribeReplacedDefaults(TableSchemaDiff diff)
+            => GetExtensionFields(diff)
+                .Where(f => !DefaultValueLiteral.CanEmit(f))
+                .Select(f => $"Column '{f.FieldName}' is not in the definition; the rebuild replaces its default " +
+                             $"'{f.DefaultValue}' with the built-in default of {f.DbType}.");
+
+        /// <summary>
+        /// Returns the columns the database has and the definition does not declare, leaving out the columns the
+        /// definition renames.
+        /// </summary>
+        private static IEnumerable<DbField> GetExtensionFields(TableSchemaDiff diff)
+        {
+            if (diff.RealTable == null)
+                return [];
+            var sourceNames = GetSourceFieldNames(diff).Values.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return diff.RealTable.Fields!.Where(f =>
+                !diff.DefineTable.Fields!.Contains(f.FieldName) && !sourceNames.Contains(f.FieldName));
         }
 
         /// <summary>
         /// Returns the source column of each field the diff renames, keyed by the field's new name.
         /// </summary>
         /// <param name="diff">The schema diff being rebuilt.</param>
+        /// <remarks>
+        /// The source name is spelled as the database reports it, which matters where column names are compared by
+        /// case (PostgreSQL).
+        /// </remarks>
         public static Dictionary<string, string> GetSourceFieldNames(TableSchemaDiff diff)
             => diff.Changes.OfType<RenameFieldChange>()
-                .ToDictionary(c => c.NewField.FieldName, c => c.OldFieldName, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(c => c.NewField.FieldName, c => SourceName(diff, c.OldFieldName), StringComparer.OrdinalIgnoreCase);
+
+        private static string SourceName(TableSchemaDiff diff, string oldFieldName)
+            => diff.RealTable?.Fields?.Contains(oldFieldName) == true
+                ? diff.RealTable.Fields[oldFieldName].FieldName
+                : oldFieldName;
 
         /// <summary>
         /// Clones <paramref name="schema"/> under a different table name, used to create the

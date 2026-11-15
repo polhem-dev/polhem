@@ -68,6 +68,40 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("SQLite GetCommandText copies an AutoIncrement column and carries its sequence over")]
+        public void GetCommandText_AutoIncrementField_CopiedWithSequence()
+        {
+            // On SQLite an AutoIncrement column has to be the single-column primary key.
+            var define = new TableSchema { TableName = "st_demo" };
+            define.Fields!.Add("sys_no", "No", FieldDbType.AutoIncrement);
+            define.Fields!.Add("name", "Name", FieldDbType.String, 50);
+            define.Indexes!.AddPrimaryKey("sys_no");
+            var real = define.Clone();
+            real.Fields!["name"].Length = 20;
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            int insert = sql.IndexOf("INSERT INTO \"tmp_st_demo\"", StringComparison.Ordinal);
+            string copy = sql.Substring(insert, sql.IndexOf(';', insert) - insert);
+            Assert.Contains("\"sys_no\"", copy, StringComparison.Ordinal);
+            Assert.Contains("UPDATE sqlite_sequence", sql, StringComparison.Ordinal);
+            Assert.True(sql.IndexOf("UPDATE sqlite_sequence", StringComparison.Ordinal)
+                < sql.IndexOf("DROP TABLE IF EXISTS \"st_demo\"", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetCommandText touches no sequence for a table without an AutoIncrement column")]
+        public void GetCommandText_NoAutoIncrementField_NoSequenceStatements()
+        {
+            var diff = new TableSchemaComparer(BuildDefineSchema(), BuildRealSchema(), DatabaseType.SQLite).CompareToDiff();
+
+            var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
+
+            Assert.DoesNotContain("sqlite_sequence", sql, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("SQLite GetCommandText uses IF EXISTS for DROP TABLE")]
         public void GetCommandText_DropTable_UsesIfExists()
         {

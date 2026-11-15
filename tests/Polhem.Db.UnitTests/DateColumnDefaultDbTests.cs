@@ -83,6 +83,47 @@ namespace Polhem.Db.UnitTests
             }
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a rebuild keeps the AutoIncrement values and does not hand out a number freed by a delete")]
+        public void LegacyDateDefault_SqliteRebuild_KeepsAutoIncrementNumbers()
+        {
+            var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
+            var dbAccess = _fx.NewDbAccess(databaseId);
+            Drop(dbAccess, DatabaseType.SQLite);
+            try
+            {
+                var define = new TableSchema { TableName = TableName };
+                define.Fields!.Add("sys_no", "No", FieldDbType.AutoIncrement);
+                define.Fields!.Add("order_date", "Order date", FieldDbType.Date);
+                define.Indexes!.AddPrimaryKey("sys_no");
+                var dialect = DbDialectRegistry.Get(DatabaseType.SQLite);
+                string ddl = dialect.CreateCreateTableCommandBuilder().GetCommandText(define)
+                    .Replace(dialect.GetDefaultValueExpression(FieldDbType.Date), "CURRENT_TIMESTAMP", StringComparison.Ordinal);
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, ddl));
+                for (int i = 0; i < 4; i++)
+                    dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, "INSERT INTO date_default_test DEFAULT VALUES"));
+                // Rows 1, 2 and 4 remain; the sequence stands at 4.
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                    "DELETE FROM date_default_test WHERE sys_no IN ({0}, {1})", 3, 4));
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, "INSERT INTO date_default_test DEFAULT VALUES"));
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+                    "DELETE FROM date_default_test WHERE sys_no = {0}", 5));
+
+                Upgrade(databaseId, define);
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, "INSERT INTO date_default_test DEFAULT VALUES"));
+
+                var numbers = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable,
+                    "SELECT sys_no FROM date_default_test ORDER BY sys_no")).Table!.Rows.Cast<System.Data.DataRow>()
+                    .Select(r => Convert.ToInt64(r[0], CultureInfo.InvariantCulture)).ToArray();
+                Assert.Equal(new long[] { 1, 2, 6 }, numbers);
+                Assert.True(Diff(databaseId, define).IsEmpty);
+            }
+            finally
+            {
+                Drop(dbAccess, DatabaseType.SQLite);
+            }
+        }
+
         /// <summary>
         /// A database created with an earlier built-in Date default reads back different from the definition, so
         /// an upgrade changes the column to the current default and keeps its rows. The table also carries a Date

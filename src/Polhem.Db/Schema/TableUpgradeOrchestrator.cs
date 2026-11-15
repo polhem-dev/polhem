@@ -134,6 +134,7 @@ namespace Polhem.Db.Schema
             var warnings = new List<string>();
             foreach (var change in diff.Changes)
                 CheckNarrowing(change, options, warnings);
+            warnings.AddRange(RebuildSchemaFactory.DescribeReplacedDefaults(diff));
 
             var builder = _dialect.CreateTableRebuildCommandBuilder();
             var sql = builder.GetCommandText(diff);

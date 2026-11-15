@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: f965523b5679ee70bdea6d98c506599e7abaa9fc -->
+<!-- source: en/database/database-schema-upgrade.md blob: 23d2bd65f2de2ec4ad49b664f3cf3d4f8b214395 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -153,7 +153,9 @@ foreach (var sql in plan.AllStatements)
 
 **Rebuild 機制**：建臨時表 → `INSERT INTO tmp SELECT FROM original` → drop 舊表 → rename。大資料表（千萬筆）耗時可達數十分鐘到小時，期間表級鎖定。
 
-定義中沒有宣告的欄位也會連同資料一起重建。這類欄位的預設值若是單純的字面值就保留；其他預設值（例如較早版本的 Polhem 當作內建預設值使用的運算式）會換成該欄位型別的內建預設值。
+定義中沒有宣告的欄位也會連同資料一起重建。這類欄位的預設值若是單純的字面值就保留；其他預設值（例如較早版本的 Polhem 當作內建預設值使用的運算式）會換成該欄位型別的內建預設值，升級計畫的 warnings 會列出這個欄位。
+
+在 SQLite 上，重建會複製 AutoIncrement 的值並延續資料表的序號，所以 `sys_no` 保留原本的編號，被刪除而空出的號碼也不會再發出。其他方言重建時不複製 AutoIncrement 欄位，重建後的資料表會重新編號。
 
 ### 自動判斷，不需開發者選
 

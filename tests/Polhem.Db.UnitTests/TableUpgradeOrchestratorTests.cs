@@ -124,6 +124,25 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
+        [DisplayName("Plan warns when a rebuild replaces the expression default of a column the definition does not declare")]
+        public void Plan_RebuildReplacingExtensionDefault_Warns()
+        {
+            var define = BuildDefineSchema();
+            define.Fields!["name"].DbType = FieldDbType.Integer; // A cross-family change triggers a rebuild.
+            define.Fields!["name"].Length = 0;
+            var real = BuildRealSchema();
+            real.Fields!.Add(new DbField("made_at", "Made at", FieldDbType.DateTime) { DefaultValue = "getdate()" });
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            var plan = new TableUpgradeOrchestrator(s_dialect, s_stubMgr).Plan(diff);
+
+            Assert.Equal(UpgradeExecutionMode.Rebuild, plan.Mode);
+            var warning = Assert.Single(plan.Warnings);
+            Assert.Contains("made_at", warning, StringComparison.Ordinal);
+            Assert.Contains("getdate()", warning, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("Plan orders the ALTER stages DropIndexes → AlterColumns → AddColumns → CreateIndexes → SyncDescriptions")]
         public void Plan_AlterMode_StagesAreOrdered()
         {
