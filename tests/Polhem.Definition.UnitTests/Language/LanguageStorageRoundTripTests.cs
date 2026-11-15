@@ -100,5 +100,112 @@ namespace Polhem.Definition.UnitTests.Language
                 try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
             }
         }
+
+        [Fact]
+        [DisplayName("FileDefineStorage GetLanguage finds a file whose language folder and namespace differ from the request only in case")]
+        public void GetLanguage_RequestInOtherCase_FindsFile()
+        {
+            WithStorage((paths, storage) =>
+            {
+                SaveCommon(storage, "Common", "zh-TW", "OK");
+
+                var loaded = storage.GetLanguage("zh-tw", "common");
+
+                Assert.NotNull(loaded);
+                Assert.Equal("OK", loaded!.GetText("Ok"));
+            });
+        }
+
+        [Fact]
+        [DisplayName("FileDefineStorage SaveLanguage in another case overwrites the existing file instead of adding a second one")]
+        public void SaveLanguage_OtherCase_OverwritesExistingFile()
+        {
+            WithStorage((paths, storage) =>
+            {
+                SaveCommon(storage, "Common", "zh-TW", "first");
+                SaveCommon(storage, "common", "zh-TW", "second");
+
+                var folder = Path.GetDirectoryName(paths.GetLanguageFilePath("zh-TW", "Common"))!;
+                Assert.Single(Directory.GetFiles(folder));
+                Assert.Equal("second", storage.GetLanguage("zh-TW", "Common")!.GetText("Ok"));
+            });
+        }
+
+        [Fact]
+        [DisplayName("FileDefineStorage SaveLanguage with the language in another case writes a new namespace into the existing language folder")]
+        public void SaveLanguage_LanguageInOtherCase_UsesExistingFolder()
+        {
+            WithStorage((paths, storage) =>
+            {
+                SaveCommon(storage, "Common", "zh-TW", "OK");
+                SaveCommon(storage, "Order", "zh-tw", "order");
+
+                var languageRoot = Path.GetDirectoryName(Path.GetDirectoryName(paths.GetLanguageFilePath("zh-TW", "Common")))!;
+                Assert.Single(Directory.GetDirectories(languageRoot));
+                Assert.Equal("order", storage.GetLanguage("zh-TW", "Order")!.GetText("Ok"));
+            });
+        }
+
+        [Fact]
+        [DisplayName("FileDefineStorage GetChangeSource watches the existing file when the request names it in another case")]
+        public void GetChangeSource_RequestInOtherCase_WatchesExistingFile()
+        {
+            WithStorage((paths, storage) =>
+            {
+                SaveCommon(storage, "Common", "zh-TW", "OK");
+
+                var source = storage.GetChangeSource(DefineType.Language, "zh-TW", "common");
+
+                var watched = Assert.Single(source.FilePaths!);
+                // On a case-sensitive file system only the resolved path exists; elsewhere both spellings do.
+                Assert.True(File.Exists(watched), $"Watched file not found at {watched}");
+            });
+        }
+
+        [Fact]
+        [DisplayName("FileDefineStorage GetLanguage reports two files that differ only in case instead of reading either")]
+        public void GetLanguage_TwoFilesDifferingInCase_Throws()
+        {
+            WithStorage((paths, storage) =>
+            {
+                var upper = paths.GetLanguageFilePath("zh-TW", "Common");
+                var lower = paths.GetLanguageFilePath("zh-TW", "common");
+                Directory.CreateDirectory(Path.GetDirectoryName(upper)!);
+                File.WriteAllText(upper, "<LanguageResource />");
+                File.WriteAllText(lower, "<LanguageResource />");
+
+                if (Directory.GetFiles(Path.GetDirectoryName(upper)!).Length == 1)
+                {
+                    // A case-insensitive file system (the macOS and Windows defaults) cannot hold both files,
+                    // so the request that names neither spelling exactly still reads the one file there is.
+                    Assert.NotNull(storage.GetLanguage("zh-TW", "COMMON"));
+                    return;
+                }
+
+                Assert.Throws<InvalidOperationException>(() => storage.GetLanguage("zh-TW", "COMMON"));
+            });
+        }
+
+        private static void SaveCommon(FileDefineStorage storage, string ns, string lang, string text)
+        {
+            var resource = new LanguageResource { Namespace = ns, Lang = lang };
+            resource.Items.Add("Ok", text);
+            storage.SaveLanguage(resource);
+        }
+
+        private static void WithStorage(Action<PathOptions, FileDefineStorage> test)
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-lang-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var paths = new PathOptions { DefinePath = tempDir };
+                test(paths, new FileDefineStorage(paths));
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
     }
 }
