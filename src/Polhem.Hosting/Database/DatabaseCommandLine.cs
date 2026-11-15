@@ -220,6 +220,9 @@ namespace Polhem.Hosting.Database
             summary.Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Created)).Append(" created, ")
                 .Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Upgraded)).Append(" upgraded, ")
                 .Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Unchanged)).Append(" unchanged");
+            int byRecord = report.Tables.Count(t => t.UnchangedByRecord);
+            if (byRecord > 0)
+                summary.Append(" (").Append(byRecord).Append(" by upgrade record)");
             if (dryRun)
                 summary.Append(", ").Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Planned)).Append(" planned");
             summary.Append(", ").Append(report.Tables.Count(t => t.Outcome == TableUpgradeOutcome.Failed)).Append(" failed.");
@@ -252,11 +255,18 @@ namespace Polhem.Hosting.Database
             {
                 TableUpgradeOutcome.Created => CreatedText,
                 TableUpgradeOutcome.Upgraded => "upgraded",
+                TableUpgradeOutcome.Unchanged when table.UnchangedByRecord => "unchanged (upgrade record)",
                 TableUpgradeOutcome.Unchanged => "unchanged",
                 TableUpgradeOutcome.Planned => "planned",
                 _ => "FAILED: " + table.Error,
             };
-            output.WriteLine($"  {table.DatabaseId}.{table.TableName}: {status}");
+            var previous = table.PreviousStatus switch
+            {
+                TableUpgradeStatus.Failed => " (the previous upgrade failed)",
+                TableUpgradeStatus.Upgrading => " (the previous upgrade did not finish)",
+                _ => string.Empty,
+            };
+            output.WriteLine($"  {table.DatabaseId}.{table.TableName}: {status}{previous}");
             if (table.Outcome == TableUpgradeOutcome.Planned)
                 output.WriteLine(Indent(table.CommandText));
             output.Flush();

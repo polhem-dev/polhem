@@ -1,4 +1,4 @@
-<!-- source: en/database/database-settings-guide.md blob: eaf2a569c245d4a4983c83b858c1cc02b70c22be -->
+<!-- source: en/database/database-settings-guide.md blob: 7e549b8e87c233b91b0b1544cb91c388fc4b9061 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../../en/database/database-settings-guide.md) · [← 文件索引](../README.md)
@@ -593,7 +593,7 @@ dotnet run -- db seed-admin --company ACME
 |------|------|
 | `db create` | 對每個 `DatabaseItem`，連線字串所指的資料庫不存在時建立它。 |
 | `db check` | 逐一連線每個 `DatabaseItem`，回報 `ok` 或資料庫引擎的錯誤。不會建立任何東西；只有 SQLite 在連線字串允許時會建立空白檔案。 |
-| `db upgrade [--dry-run] [--allow-narrowing] [--full-compare] [--table <名稱>]...` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--table` 只處理指定的資料表，可重複；沒有任何分類登記的名稱會被列出，指令以失敗結束。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。`st_table_upgrade` 的升級紀錄顯示已是目前定義的資料表，不再和資料庫比對；`--full-compare` 會比對每一張表，找得出手動對資料表做的變更。 |
+| `db upgrade [--dry-run] [--allow-narrowing] [--full-compare] [--table <名稱>]...` | 對 `DbCategorySettings` 的每個分類，在每個 `CategoryId` 為該分類的 `DatabaseItem` 中建立或升級每張表。`--table` 只處理指定的資料表，可重複；沒有任何分類登記的名稱會被列出，指令以失敗結束。`--dry-run` 只列出陳述式、不執行；`--allow-narrowing` 允許縮短欄位的變更。`st_table_upgrade` 的升級紀錄顯示已是目前定義的資料表，不再和資料庫比對；`--full-compare` 會比對每一張表，找得出手動對資料表做的變更。依紀錄判定沒有變更的表，該行顯示 `unchanged (upgrade record)`；上一次升級失敗或沒有完成時，該行也會註明。 |
 | `db add-company-column [--dry-run]` | 對登記在 `company` 分類下、缺少 `sys_company_id` 的每個 table schema，加上這一欄與以它為首欄的唯一索引，並存回定義。`--dry-run` 只列出、不存檔。之後執行 `db upgrade` 套用到資料庫。 |
 | `db seed-admin --company <id> [選項]` | 在 common 資料庫建立第一位使用者、一家公司，以及該使用者進入公司的權限。公司代號最多 10 個 ASCII 英文字母或數字，一律以小寫儲存（`ACME` 會存成 `acme`）；進入公司時大小寫皆可。選項：`--user`（預設 `admin`）、`--name`、`--company-name`、`--company-database`、`--currency`（預設 `USD`）、`--no-deployment-admin`。 |
 

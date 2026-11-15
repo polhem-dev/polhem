@@ -1,3 +1,5 @@
+using Polhem.Db.Schema;
+
 namespace Polhem.Hosting.Database
 {
     /// <summary>
@@ -34,5 +36,17 @@ namespace Polhem.Hosting.Database
         /// Gets the reason the table failed, or <c>null</c> when it did not.
         /// </summary>
         public string? Error { get; init; }
+
+        /// <summary>
+        /// Gets whether the table was taken as unchanged from its upgrade record, without reading the database, by a
+        /// <see cref="UpgradeCompareMode.Fast"/> compare.
+        /// </summary>
+        public bool UnchangedByRecord { get; init; }
+
+        /// <summary>
+        /// Gets the state of the table's upgrade record before this run, or <c>null</c> when it had none or the records
+        /// could not be read.
+        /// </summary>
+        public TableUpgradeStatus? PreviousStatus { get; init; }
     }
 }
