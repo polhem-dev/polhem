@@ -401,6 +401,12 @@ namespace Polhem.Db.Providers.Oracle
         /// unescaped. Returns an empty string when the parsed value matches the framework's
         /// built-in default.
         /// </summary>
+        /// <remarks>
+        /// A <c>DATE</c> column created before its built-in default was truncated to the day carries
+        /// <c>SYS_EXTRACT_UTC(SYSTIMESTAMP)</c>, which also reads as built-in. Reporting it as a difference would
+        /// make every such column change on the next upgrade, and a rebuild cannot carry it for a column the
+        /// definition no longer declares; the column keeps the old default until it is recreated.
+        /// </remarks>
         public static string ParseDBDefaultValue(string dataType, string defaultValue, string originalDefaultValue)
         {
             if (StringUtilities.IsEmpty(defaultValue)) return string.Empty;
@@ -424,7 +430,10 @@ namespace Polhem.Db.Providers.Oracle
                     break;
             }
 
-            return string.Equals(originalDefaultValue, normalized, StringComparison.OrdinalIgnoreCase)
+            if (string.Equals(originalDefaultValue, normalized, StringComparison.OrdinalIgnoreCase))
+                return string.Empty;
+            return typeName == "date"
+                && string.Equals(normalized, "SYS_EXTRACT_UTC(SYSTIMESTAMP)", StringComparison.OrdinalIgnoreCase)
                 ? string.Empty
                 : normalized;
         }

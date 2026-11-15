@@ -41,6 +41,41 @@ namespace Polhem.Db.UnitTests
         [DisplayName("Oracle: a defaulted Date column stores the current UTC day and the schema reads back unchanged")]
         public void DateDefault_Oracle_MatchesTodayAndReadsBackUnchanged() => Run(DatabaseType.Oracle);
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a Date column that still carries the old CURRENT_TIMESTAMP default reads back unchanged")]
+        public void LegacyDateDefault_Sqlite_ReadsBackUnchanged() => RunLegacy(DatabaseType.SQLite, "CURRENT_TIMESTAMP");
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a Date column that still carries the old SYS_EXTRACT_UTC(SYSTIMESTAMP) default reads back unchanged")]
+        public void LegacyDateDefault_Oracle_ReadsBackUnchanged() => RunLegacy(DatabaseType.Oracle, "SYS_EXTRACT_UTC(SYSTIMESTAMP)");
+
+        /// <summary>
+        /// A database created before the Date default kept only the day must not plan a change for it: the change
+        /// would rebuild the table on SQLite, which an upgrade cannot do when the same plan renames a column.
+        /// </summary>
+        private void RunLegacy(DatabaseType databaseType, string legacyDefault)
+        {
+            var databaseId = TestDbConventions.GetDatabaseId(databaseType);
+            var dbAccess = _fx.NewDbAccess(databaseId);
+            Drop(dbAccess, databaseType);
+            try
+            {
+                var define = BuildSchema(withDate: true);
+                var dialect = DbDialectRegistry.Get(databaseType);
+                string ddl = dialect.CreateCreateTableCommandBuilder().GetCommandText(define)
+                    .Replace(dialect.GetDefaultValueExpression(FieldDbType.Date), legacyDefault, StringComparison.Ordinal);
+                Assert.Contains(legacyDefault, ddl, StringComparison.Ordinal);
+                // The upgrade runs a create script as one command too.
+                dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, ddl));
+
+                Assert.True(Diff(databaseId, define).IsEmpty);
+            }
+            finally
+            {
+                Drop(dbAccess, databaseType);
+            }
+        }
+
         private void Run(DatabaseType databaseType)
         {
             var databaseId = TestDbConventions.GetDatabaseId(databaseType);

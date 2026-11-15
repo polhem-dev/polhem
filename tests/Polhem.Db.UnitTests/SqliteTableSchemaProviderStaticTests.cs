@@ -90,7 +90,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("'world'", FieldDbType.Text, "", "world")]
         [InlineData("CURRENT_TIMESTAMP", FieldDbType.DateTime, "CURRENT_TIMESTAMP", "")]
         [InlineData("(datetime('now', 'start of day'))", FieldDbType.Date, "(datetime('now', 'start of day'))", "")]
-        [InlineData("CURRENT_TIMESTAMP", FieldDbType.Date, "(datetime('now', 'start of day'))", "CURRENT_TIMESTAMP")]
+        [InlineData("CURRENT_TIMESTAMP", FieldDbType.Date, "(datetime('now', 'start of day'))", "")]
         [InlineData("42", FieldDbType.Integer, "0", "42")]
         [DisplayName("SQLite ParseDefaultValue strips the quotes and outer parentheses by type")]
         public void ParseDefaultValue_StripsQuotesAndParens(
