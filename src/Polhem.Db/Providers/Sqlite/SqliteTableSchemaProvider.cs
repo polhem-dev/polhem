@@ -343,6 +343,12 @@ namespace Polhem.Db.Providers.Sqlite
         /// <c>(hex(randomblob(16)))</c>, but <c>PRAGMA table_info</c> reports the inner
         /// expression only. Comparing the raw forms marks every GUID column as different on
         /// every schema comparison, so the table never converges.
+        /// <para>
+        /// A <see cref="FieldDbType.Date"/> column created before its built-in default became the start of the day
+        /// carries <c>CURRENT_TIMESTAMP</c>, which also reads as built-in. Reporting it as a difference would make
+        /// the next upgrade rebuild the table only to change the default, and a rebuild cannot carry it for a column
+        /// the definition no longer declares; the column keeps the old default until the table is rebuilt.
+        /// </para>
         /// </remarks>
         public static string ParseDefaultValue(string rawDefault, FieldDbType dbType, string originalDefault)
         {
@@ -351,7 +357,11 @@ namespace Polhem.Db.Providers.Sqlite
             string actual = NormalizeDefaultText(rawDefault, dbType);
             string original = NormalizeDefaultText(originalDefault, dbType);
 
-            return StringUtilities.IsEquals(original, actual) ? string.Empty : actual;
+            if (StringUtilities.IsEquals(original, actual))
+                return string.Empty;
+            return dbType == FieldDbType.Date && StringUtilities.IsEquals(actual, "CURRENT_TIMESTAMP")
+                ? string.Empty
+                : actual;
         }
 
         /// <summary>

@@ -53,7 +53,7 @@ For a `NOT NULL` column with no explicit `DefaultValue`, each dialect emits its 
 | `String` / `Time` | `N''` | `''` | `''` | *(nullable — see §3.1)* | `''` |
 | `Text` | `N''` | `''` | *(none — see §3.2)* | *(nullable — see §3.1)* | `''` |
 | `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0` (`FALSE` for `Boolean`) | `0` | `0` | `0` |
-| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
+| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))` | `(datetime('now', 'start of day'))` |
 | `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_TIMESTAMP(6))` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
 | `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
 | `Binary`, `AutoIncrement` | *(none)* | *(none)* | *(none)* | *(none)* | *(none)* |
@@ -67,6 +67,7 @@ Notes:
   SQL does not name the column: a hand-written INSERT that omits it, and `ALTER TABLE ADD COLUMN`
   backfilling existing rows. See D9b in [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md).
 - **MySQL** wraps function-call defaults in parentheses (`(UUID())`, `(UTC_DATE())`, `(UTC_TIMESTAMP(6))`) because MySQL 8.0.13+ accepts a bare function as a default only for `CURRENT_TIMESTAMP`; every other non-literal default must use the parenthesised *expression* form.
+- **A `Date` default keeps only the day.** SQL Server's and PostgreSQL's `DATE` drop the time themselves; Oracle's `DATE` keeps it, so the instant is truncated with `TRUNC`, and SQLite, which has no date type, gets the text a saved date binds as (`yyyy-MM-dd 00:00:00`). A row that takes the default therefore matches a filter on its own day. A column that an earlier version of Polhem created on Oracle or SQLite keeps its old default, which stored the time of day as well, until the table is rebuilt: the schema comparison reads the old default as built-in and plans no change for it.
 - **SQLite** has no native UUID generator; `hex(randomblob(16))` is a unique-but-not-strictly-v4 surrogate, sufficient for framework-managed defaults.
 - **Boolean literals**: the framework's canonical form is `"1"` / `"0"`. PostgreSQL rejects those for a `BOOLEAN` column, so the PG dialect translates them to `TRUE` / `FALSE` at the SQL-emission boundary. All other dialects accept `1` / `0`.
 

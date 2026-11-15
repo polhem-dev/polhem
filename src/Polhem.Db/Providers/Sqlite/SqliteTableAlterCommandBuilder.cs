@@ -1,4 +1,5 @@
 using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
@@ -19,7 +20,8 @@ namespace Polhem.Db.Providers.Sqlite
         {
             switch (change)
             {
-                case AddFieldChange _:
+                case AddFieldChange add:
+                    return CanAddInPlace(add.Field) ? ChangeExecutionKind.Alter : ChangeExecutionKind.Rebuild;
                 case RenameFieldChange _:
                 case AddIndexChange _:
                 case DropIndexChange _:
@@ -55,6 +57,27 @@ namespace Polhem.Db.Providers.Sqlite
                 default:
                     throw new InvalidOperationException($"Unsupported change type: {change.GetType().Name}");
             }
+        }
+
+        /// <summary>
+        /// Returns true when SQLite's <c>ADD COLUMN</c> accepts the column as the framework defines it.
+        /// </summary>
+        /// <remarks>
+        /// SQLite refuses to add a column whose default is one of its current-time keywords, such as
+        /// <c>CURRENT_TIMESTAMP</c>, or an expression in parentheses, a <c>NOT NULL</c> column without a default, and a
+        /// primary key column. The built-in defaults of Date, DateTime and Guid are such expressions, so adding one of
+        /// those columns goes through the rebuild, whose copy leaves the new column to its default.
+        /// </remarks>
+        /// <param name="field">The column to add.</param>
+        private static bool CanAddInPlace(DbField field)
+        {
+            if (field.DbType == FieldDbType.AutoIncrement)
+                return false;
+            string defaultExpression = SqliteSchemaSyntax.GetDefaultExpression(field);
+            if (StringUtilities.IsEmpty(defaultExpression))
+                return field.AllowNull;
+            return !defaultExpression.StartsWith('(')
+                && !defaultExpression.StartsWith("CURRENT_", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string BuildAddFieldStatement(string tableName, DbField field)

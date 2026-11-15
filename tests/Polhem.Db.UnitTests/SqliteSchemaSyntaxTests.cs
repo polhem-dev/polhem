@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Long, "0")]
         [InlineData(FieldDbType.Decimal, "0")]
         [InlineData(FieldDbType.Currency, "0")]
-        [InlineData(FieldDbType.Date, "CURRENT_TIMESTAMP")]
+        [InlineData(FieldDbType.Date, "(datetime('now', 'start of day'))")]
         [InlineData(FieldDbType.DateTime, "CURRENT_TIMESTAMP")]
         [InlineData(FieldDbType.Guid, "(hex(randomblob(16)))")]
         [InlineData(FieldDbType.Binary, "")]

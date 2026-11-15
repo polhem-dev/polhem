@@ -51,6 +51,10 @@ namespace Polhem.Db.Providers.Sqlite
                 case FieldDbType.Currency:
                     return "0";
                 case FieldDbType.Date:
+                    // SQLite has no date type, so a date column holds the text a saved value binds as:
+                    // midnight, `yyyy-MM-dd 00:00:00`. `CURRENT_TIMESTAMP` would store the time of day as
+                    // well, and that row would not match a filter on its own day. `'now'` is UTC.
+                    return "(datetime('now', 'start of day'))";
                 case FieldDbType.DateTime:
                     return "CURRENT_TIMESTAMP";
                 case FieldDbType.Guid:
