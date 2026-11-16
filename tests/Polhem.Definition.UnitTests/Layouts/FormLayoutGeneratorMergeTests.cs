@@ -134,6 +134,22 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
+        [DisplayName("Merge spans a new MemoEdit master field across every column of the existing layout")]
+        public void Merge_NewMemoField_SpansTheLayoutColumns()
+        {
+            var schema = BuildSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "Order");
+            layout.ColumnCount = 3;
+            schema.MasterTable!.Fields!.Add("instructions", "Instructions", FieldDbType.Text);
+
+            FormLayoutGenerator.Merge(layout, schema);
+
+            var fields = layout.Sections![0].Fields!;
+            Assert.Equal(3, fields.Single(f => f.FieldName == "instructions").ColumnSpan);
+            Assert.All(fields.Where(f => f.FieldName != "instructions"), f => Assert.Equal(1, f.ColumnSpan));
+        }
+
+        [Fact]
         [DisplayName("Merge creates the Main section when the layout has no section")]
         public void Merge_NoSection_CreatesMain()
         {
