@@ -200,6 +200,28 @@ public sealed class FormDraftingTests : IDisposable
     }
 
     [Fact]
+    [DisplayName("A drafted multi-line field spans the row of the preview and of the FormLayout the import writes")]
+    public void BuildPreviewLayout_MemoEditField_SpansTheRow()
+    {
+        var draft = LeaveRequest();
+        draft.Tables[0].Fields.Add(new DraftField
+        {
+            FieldName = "reason", Caption = "Reason", DbType = FieldDbType.String, MaxLength = 500,
+            ControlType = ControlType.MemoEdit,
+        });
+        var result = FormDraftConverter.Convert(draft);
+
+        var preview = FormDraftImport.BuildPreviewLayout(result, _define, zhTw: false);
+        var plan = FormImporter.Plan(FormDraftImport.ToContent(result), new FormImportOptions { DefinePath = _define });
+
+        var reason = preview.Sections!.SelectMany(s => s.Fields!).Single(f => f.FieldName == "reason");
+        Assert.Equal(preview.ColumnCount, reason.ColumnSpan);
+        Assert.True(reason.ColumnSpan > 1);
+        var layoutFile = Assert.Single(plan.Files, f => FormWorkbookImport.IsFormLayout(f.Path));
+        Assert.Equal(layoutFile.Content, XmlCodec.Serialize(preview));
+    }
+
+    [Fact]
     [DisplayName("A draft without a ProgId and with undecided types still has a preview, in the language asked for")]
     public void BuildPreviewLayout_IncompleteDraft_DrawsUnderThePlaceholder()
     {

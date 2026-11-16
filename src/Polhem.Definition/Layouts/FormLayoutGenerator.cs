@@ -28,6 +28,10 @@ namespace Polhem.Definition.Layouts
         /// <summary>
         /// Generates a form layout from a form schema definition.
         /// </summary>
+        /// <remarks>
+        /// A master field whose editor resolves to <see cref="ControlType.MemoEdit"/> spans every column of the layout;
+        /// every other master field takes one column.
+        /// </remarks>
         /// <param name="schema">The form schema definition.</param>
         /// <param name="layoutId">The layout ID to assign.</param>
         /// <returns>The generated form layout.</returns>
@@ -60,7 +64,8 @@ namespace Polhem.Definition.Layouts
         /// added. A field is placed next to its neighbour in the schema: after the nearest earlier
         /// field the layout already shows, in that field's section, or else before the nearest later
         /// one. A field with neither goes to the end of the last section; a detail column goes before
-        /// the hidden identity columns at the end of its grid.
+        /// the hidden identity columns at the end of its grid. A master field added with a
+        /// <see cref="ControlType.MemoEdit"/> editor spans every column of <paramref name="layout"/>.
         /// </para>
         /// <para>
         /// Fields are matched by name, ignoring case. Nothing is removed or changed: a field the schema
@@ -101,6 +106,8 @@ namespace Polhem.Definition.Layouts
 
                 var (target, index) = FindAnchor(source, i, name => FindField(sections, name))
                     ?? (LastSection(layout, generated.Sections[0]).Fields!, -1);
+                if (source[i].ControlType == ControlType.MemoEdit)
+                    source[i].ColumnSpan = layout.ColumnCount;
                 if (index < 0) target.Add(source[i]);
                 else target.Insert(index, source[i]);
                 added.Add($"{tableName}.{source[i].FieldName}");
@@ -217,7 +224,13 @@ namespace Polhem.Definition.Layouts
 
             var covered = CollectCoveredDisplayFields(master);
             foreach (var field in master.Fields.Where(f => ShouldEmit(f, covered)))
-                section.Fields!.Add(LayoutColumnFactory.ToField(field));
+            {
+                var layoutField = LayoutColumnFactory.ToField(field);
+                // Multi-line text (remarks, reasons, notes) is cramped in one column, so it takes the whole row.
+                if (layoutField.ControlType == ControlType.MemoEdit)
+                    layoutField.ColumnSpan = layout.ColumnCount;
+                section.Fields!.Add(layoutField);
+            }
 
             if (section.Fields!.Count > 0)
                 layout.Sections!.Add(section);

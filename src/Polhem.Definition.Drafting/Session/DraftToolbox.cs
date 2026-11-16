@@ -151,7 +151,9 @@ namespace Polhem.Definition.Drafting.Session
             [Description("The zh-TW caption.")] string? captionZhTw = null,
             [Description("The database type.")] FieldDbType? dbType = null,
             [Description("The maximum length of a String field.")] int? maxLength = null,
-            [Description("The editor; omit to let it follow the type.")] ControlType? controlType = null,
+            [Description("The editor; omit to let it follow the type. On the master table, MemoEdit is a multi-line box that "
+                + "spans the whole row of the form: use it for long free text such as a reason or remarks, and when the user "
+                + "asks for a field to span the row or merge columns.")] ControlType? controlType = null,
             [Description("The choices of a field the document shows as a set of options. An empty list removes them.")] DraftOption[]? options = null,
             [Description("An expression that computes the field from other fields of the same row, such as quantity * unit_price. "
                 + "It cannot read another table or add up detail rows, so leave out totals over detail rows. Subtracting two dates "

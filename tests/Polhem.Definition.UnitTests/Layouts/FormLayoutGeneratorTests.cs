@@ -130,6 +130,22 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Empty(layout.Sections!);
         }
 
+        [Theory]
+        [InlineData(FieldDbType.Text, ControlType.Auto)]
+        [InlineData(FieldDbType.String, ControlType.MemoEdit)]
+        [DisplayName("FormLayoutGenerator.Generate spans a master field whose editor resolves to MemoEdit across every column")]
+        public void Generate_MemoEditMasterField_SpansEveryColumn(FieldDbType dbType, ControlType controlType)
+        {
+            var schema = BuildSchema();
+            schema.MasterTable!.Fields!.Add(new FormField("remark", "備註", dbType) { ControlType = controlType });
+
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+
+            var fields = layout.Sections![0].Fields!;
+            Assert.Equal(layout.ColumnCount, fields.Single(f => f.FieldName == "remark").ColumnSpan);
+            Assert.All(fields.Where(f => f.FieldName != "remark"), f => Assert.Equal(1, f.ColumnSpan));
+        }
+
         [Fact]
         [DisplayName("FormLayoutGenerator.Generate accepts a custom layoutId and writes it as is")]
         public void Generate_AcceptsCustomLayoutId()

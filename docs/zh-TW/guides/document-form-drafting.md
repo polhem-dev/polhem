@@ -1,4 +1,4 @@
-<!-- source: en/guides/document-form-drafting.md blob: ff34cb04df74514083eacd73e5c6a5024d9550b2 -->
+<!-- source: en/guides/document-form-drafting.md blob: 86057a4f059c8d05f41eac48540059cda1c1726b -->
 # 從文件草擬表單
 
 [English](../../en/guides/document-form-drafting.md) · [← 文件索引](../README.md)
@@ -87,6 +87,8 @@ Claude 只負責提議。DefineEditor 以框架自己的規則把草稿轉成定
   `ref_*_id` / `ref_*_name` 欄位。預覽中已經看得到它們。
 - **計算欄位會被檢查。** 值由計算得出的欄位（由數量與單價算出金額、由日期算出請假天數），在草稿就緒前會先以框架的
   運算式引擎解析，所以每次存檔都會失敗的運算式會在這裡被攔下。運算式讀取的是同一列的欄位。
+- **長文字佔滿整列。** 多行文字欄位（例如事由、備註）橫跨表單的所有欄，其他欄位各佔一欄。要加寬某個欄位就直接說：
+  「把請購理由改成整列的多行欄位」。
 
 ## 4. 產生定義
 

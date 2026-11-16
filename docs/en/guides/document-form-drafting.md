@@ -96,6 +96,9 @@ A few things worth knowing:
 - **Computed fields are checked.** A field whose value is computed (an amount from quantity and price, the days of a
   leave from its dates) is parsed by the framework's evaluator before the draft can be ready, so an expression that
   would fail on every save is caught here. An expression reads the fields of its own row.
+- **Long text takes the whole row.** A multi-line field, such as a reason or remarks, spans every column of the form;
+  the other fields take one column each. To widen a field, ask for it: "make the reason a multi-line field across the
+  row".
 
 ## 4. Creating the Definitions
 
