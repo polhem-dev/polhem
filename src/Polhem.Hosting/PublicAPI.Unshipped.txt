@@ -1,5 +1,1 @@
 #nullable enable
-Polhem.Hosting.Database.TableUpgradeEntry.PreviousStatus.get -> Polhem.Db.Schema.TableUpgradeStatus?
-Polhem.Hosting.Database.TableUpgradeEntry.PreviousStatus.init -> void
-Polhem.Hosting.Database.TableUpgradeEntry.UnchangedByRecord.get -> bool
-Polhem.Hosting.Database.TableUpgradeEntry.UnchangedByRecord.init -> void

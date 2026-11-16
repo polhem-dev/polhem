@@ -1911,6 +1911,7 @@ const Polhem.Definition.Language.PolhemMessages.PermissionSavedRecordOutOfScope 
 const Polhem.Definition.Language.PolhemMessages.SaveConcurrencyConflict = "PolhemMessages.Save.ConcurrencyConflict" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveDetailFieldRequired = "PolhemMessages.Save.DetailFieldRequired" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveFieldRequired = "PolhemMessages.Save.FieldRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveMasterRowMissing = "PolhemMessages.Save.MasterRowMissing" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenInvalid = "PolhemMessages.Session.AccessTokenInvalid" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenRequired = "PolhemMessages.Session.AccessTokenRequired" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionExpired = "PolhemMessages.Session.Expired" -> string!
@@ -2133,6 +2134,7 @@ static Polhem.Definition.Filters.FilterCondition.StartsWith(string! fieldName, s
 static Polhem.Definition.Filters.FilterGroup.All(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Filters.FilterGroup.Any(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Forms.FieldMappingCollectionExtensions.Add(this Polhem.Definition.Forms.FieldMappingCollection? collection, string! sourceField, string! destinationField) -> Polhem.Definition.Forms.FieldMapping!
+static Polhem.Definition.Forms.FormExpressionCalculator.BuildAggregateDependencyMap(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlySet<string!>!>!
 static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
 static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
 static Polhem.Definition.Forms.FormFieldCollectionExtensions.Add(this Polhem.Definition.Forms.FormFieldCollection? collection, string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> Polhem.Definition.Forms.FormField!

@@ -10,7 +10,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
-## [Unreleased]
+## [1.15.0] - 2026-11-16
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.15.0.md](docs/zh-TW/changelogs/1.15.0.md)
 
@@ -22,6 +22,8 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - `db upgrade` 會回報哪些資料表由紀錄判定，以及上一次失敗或沒有完成的升級。
 - rebuild 保留 AutoIncrement 編號與改名欄位的值；SQL Server、MySQL、Oracle 與 SQLite 上的升級不再重複發生。
 - 主表欄位的運算式可以用 `Sum`、`Count`、`Min`、`Max` 加總明細列，存檔時計算，Avalonia 與 Blazor head 也即時更新。
+- 產生的表單版面讓多行欄位獨占一整列。
+- DefineEditor 的草擬對話會顯示 Claude 執行的每個步驟，並以卡片提問，使用者點選即可回答。
 
 ## [1.14.0] - 2026-11-14
 

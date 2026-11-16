@@ -8,6 +8,18 @@ Polhem.Definition.Drafting.Documents.DocumentTooLargeException.DocumentTooLargeE
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.FileName.get -> string!
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.Length.get -> long
 Polhem.Definition.Drafting.Documents.DocumentTooLargeException.MaxLength.get -> long
+Polhem.Definition.Drafting.DraftActivityEventArgs
+Polhem.Definition.Drafting.DraftActivityEventArgs.Detail.get -> string!
+Polhem.Definition.Drafting.DraftActivityEventArgs.DraftActivityEventArgs(Polhem.Definition.Drafting.DraftActivityKind kind, string! toolName = "", string! subject = "", string! detail = "") -> void
+Polhem.Definition.Drafting.DraftActivityEventArgs.Kind.get -> Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityEventArgs.Subject.get -> string!
+Polhem.Definition.Drafting.DraftActivityEventArgs.ToolName.get -> string!
+Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityKind.Reasoning = 1 -> Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityKind.Thinking = 0 -> Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityKind.ToolCompleted = 3 -> Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityKind.ToolRefused = 4 -> Polhem.Definition.Drafting.DraftActivityKind
+Polhem.Definition.Drafting.DraftActivityKind.ToolStarted = 2 -> Polhem.Definition.Drafting.DraftActivityKind
 Polhem.Definition.Drafting.DraftCatalogEntry
 Polhem.Definition.Drafting.DraftCatalogEntry.DisplayName.get -> string!
 Polhem.Definition.Drafting.DraftCatalogEntry.DisplayNameZhTw.get -> string!
@@ -68,6 +80,18 @@ Polhem.Definition.Drafting.DraftOption.Text.get -> string!
 Polhem.Definition.Drafting.DraftOption.Text.set -> void
 Polhem.Definition.Drafting.DraftOption.Value.get -> string!
 Polhem.Definition.Drafting.DraftOption.Value.set -> void
+Polhem.Definition.Drafting.DraftQuestion
+Polhem.Definition.Drafting.DraftQuestion.DraftQuestion(string! text, System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftQuestionOption!>! options, int recommendedIndex) -> void
+Polhem.Definition.Drafting.DraftQuestion.Options.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftQuestionOption!>!
+Polhem.Definition.Drafting.DraftQuestion.RecommendedIndex.get -> int
+Polhem.Definition.Drafting.DraftQuestion.Text.get -> string!
+Polhem.Definition.Drafting.DraftQuestionOption
+Polhem.Definition.Drafting.DraftQuestionOption.Description.get -> string!
+Polhem.Definition.Drafting.DraftQuestionOption.DraftQuestionOption(string! label, string! description) -> void
+Polhem.Definition.Drafting.DraftQuestionOption.Label.get -> string!
+Polhem.Definition.Drafting.DraftQuestionsEventArgs
+Polhem.Definition.Drafting.DraftQuestionsEventArgs.DraftQuestionsEventArgs(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftQuestion!>! questions) -> void
+Polhem.Definition.Drafting.DraftQuestionsEventArgs.Questions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Drafting.DraftQuestion!>!
 Polhem.Definition.Drafting.DraftRelation
 Polhem.Definition.Drafting.DraftRelation.Confidence.get -> double
 Polhem.Definition.Drafting.DraftRelation.Confidence.set -> void
@@ -105,6 +129,7 @@ Polhem.Definition.Drafting.FormDraftResult.Menu.get -> Polhem.Definition.Draftin
 Polhem.Definition.Drafting.FormDraftResult.Schema.get -> Polhem.Definition.Forms.FormSchema!
 Polhem.Definition.Drafting.FormDraftResult.ZhTw.get -> System.Collections.Generic.IDictionary<string!, string!>!
 Polhem.Definition.Drafting.FormDraftSession
+Polhem.Definition.Drafting.FormDraftSession.Activity -> System.EventHandler<Polhem.Definition.Drafting.DraftActivityEventArgs!>?
 Polhem.Definition.Drafting.FormDraftSession.ApplyUserEdit(System.Action<Polhem.Definition.Drafting.FormDraft!>! edit, string! description) -> void
 Polhem.Definition.Drafting.FormDraftSession.AssistantMessage -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageEventArgs!>?
 Polhem.Definition.Drafting.FormDraftSession.Draft.get -> Polhem.Definition.Drafting.FormDraft!
@@ -112,12 +137,15 @@ Polhem.Definition.Drafting.FormDraftSession.DraftChanged -> System.EventHandler?
 Polhem.Definition.Drafting.FormDraftSession.FormDraftSession(Microsoft.Extensions.AI.IChatClient! chatClient, Polhem.Definition.Drafting.IFormDraftingHost! host, Polhem.Definition.Drafting.FormDraftingOptions? options = null) -> void
 Polhem.Definition.Drafting.FormDraftSession.History.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.ChatMessage!>!
 Polhem.Definition.Drafting.FormDraftSession.IsReady.get -> bool
+Polhem.Definition.Drafting.FormDraftSession.QuestionsAsked -> System.EventHandler<Polhem.Definition.Drafting.DraftQuestionsEventArgs!>?
 Polhem.Definition.Drafting.FormDraftSession.SendAsync(string! userText, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Definition.Drafting.FormDraftSession.StartAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Extensions.AI.AIContent!>! documents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Definition.Drafting.FormDraftingOptions
 Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.get -> Microsoft.Extensions.AI.ChatOptions?
 Polhem.Definition.Drafting.FormDraftingOptions.ChatOptions.set -> void
 Polhem.Definition.Drafting.FormDraftingOptions.FormDraftingOptions() -> void
+Polhem.Definition.Drafting.FormDraftingOptions.MarkdownReplies.get -> bool
+Polhem.Definition.Drafting.FormDraftingOptions.MarkdownReplies.set -> void
 Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.get -> int
 Polhem.Definition.Drafting.FormDraftingOptions.MaxToolRoundsPerTurn.set -> void
 Polhem.Definition.Drafting.FormDraftingOptions.RelationConfirmationThreshold.get -> double

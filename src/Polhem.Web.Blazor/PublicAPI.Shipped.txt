@@ -562,6 +562,7 @@ Polhem.Web.Blazor.DataObjects.FormLiveComputation.InitializeNewRow(string! table
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.IsDegraded.get -> bool
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.IsRecomputing.get -> bool
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Web.Blazor.DataObjects.FormLiveComputation.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions
 Polhem.Web.Blazor.Identity.BlazorUserContext
 Polhem.Web.Blazor.Identity.BlazorUserContext.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! response) -> void

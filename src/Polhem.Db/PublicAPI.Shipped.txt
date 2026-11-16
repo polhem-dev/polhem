@@ -471,6 +471,7 @@ Polhem.Db.Schema.DescriptionLevel.Table = 0 -> Polhem.Db.Schema.DescriptionLevel
 Polhem.Db.Schema.ITableSchemaProvider
 Polhem.Db.Schema.ITableSchemaProvider.DatabaseId.get -> string!
 Polhem.Db.Schema.ITableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.SchemaFormat
 Polhem.Db.Schema.TableSchemaBuilder
 Polhem.Db.Schema.TableSchemaBuilder.CompareToDiff(string! categoryId, string! tableName) -> Polhem.Db.Schema.TableSchemaDiff!
 Polhem.Db.Schema.TableSchemaBuilder.DatabaseId.get -> string!
@@ -496,6 +497,41 @@ Polhem.Db.Schema.TableUpgradeOrchestrator.Execute(Polhem.Db.Schema.UpgradePlan! 
 Polhem.Db.Schema.TableUpgradeOrchestrator.Plan(Polhem.Db.Schema.TableSchemaDiff! diff, Polhem.Db.Schema.UpgradeOptions? options = null) -> Polhem.Db.Schema.UpgradePlan!
 Polhem.Db.Schema.TableUpgradeOrchestrator.TableUpgradeOrchestrator(Polhem.Db.Providers.IDialectFactory! dialect, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
 Polhem.Db.Schema.TableUpgradeOrchestrator.TableUpgradeOrchestrator(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.TableUpgradeRecord
+Polhem.Db.Schema.TableUpgradeRecord.Error.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.Error.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.FormatVersion.get -> int
+Polhem.Db.Schema.TableUpgradeRecord.FormatVersion.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.FrameworkVersion.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.FrameworkVersion.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.SchemaHash.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.SchemaHash.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.SchemaXml.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.SchemaXml.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.Status.get -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeRecord.Status.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.TableName.get -> string!
+Polhem.Db.Schema.TableUpgradeRecord.TableName.init -> void
+Polhem.Db.Schema.TableUpgradeRecord.TableUpgradeRecord() -> void
+Polhem.Db.Schema.TableUpgradeRecord.UpdateTime.get -> System.DateTime
+Polhem.Db.Schema.TableUpgradeRecord.UpdateTime.init -> void
+Polhem.Db.Schema.TableUpgradeRecordStore
+Polhem.Db.Schema.TableUpgradeRecordStore.DescribeNewerFormat() -> string?
+Polhem.Db.Schema.TableUpgradeRecordStore.GetHighestFormatVersion() -> int
+Polhem.Db.Schema.TableUpgradeRecordStore.GetRecord(string! tableName) -> Polhem.Db.Schema.TableUpgradeRecord?
+Polhem.Db.Schema.TableUpgradeRecordStore.GetRecordedStatus(string! tableName) -> Polhem.Db.Schema.TableUpgradeStatus?
+Polhem.Db.Schema.TableUpgradeRecordStore.IsRecordedAsCurrent(Polhem.Definition.Database.TableSchema! define) -> bool
+Polhem.Db.Schema.TableUpgradeRecordStore.RecordTableName.get -> string!
+Polhem.Db.Schema.TableUpgradeRecordStore.TableUpgradeRecordStore(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.TableUpgradeRecordStore.TryRecordUnchanged(Polhem.Definition.Database.TableSchema! define) -> bool
+Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Failed = 2 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Succeeded = 1 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Upgrading = 0 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.TableUpgradeStatus.Verified = 3 -> Polhem.Db.Schema.TableUpgradeStatus
+Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeCompareMode.Fast = 0 -> Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeCompareMode.Full = 1 -> Polhem.Db.Schema.UpgradeCompareMode
 Polhem.Db.Schema.UpgradeExecutionMode
 Polhem.Db.Schema.UpgradeExecutionMode.Alter = 2 -> Polhem.Db.Schema.UpgradeExecutionMode
 Polhem.Db.Schema.UpgradeExecutionMode.Create = 1 -> Polhem.Db.Schema.UpgradeExecutionMode
@@ -504,9 +540,13 @@ Polhem.Db.Schema.UpgradeExecutionMode.Rebuild = 3 -> Polhem.Db.Schema.UpgradeExe
 Polhem.Db.Schema.UpgradeOptions
 Polhem.Db.Schema.UpgradeOptions.AllowColumnNarrowing.get -> bool
 Polhem.Db.Schema.UpgradeOptions.AllowColumnNarrowing.init -> void
+Polhem.Db.Schema.UpgradeOptions.CompareMode.get -> Polhem.Db.Schema.UpgradeCompareMode
+Polhem.Db.Schema.UpgradeOptions.CompareMode.init -> void
 Polhem.Db.Schema.UpgradeOptions.UpgradeOptions() -> void
 Polhem.Db.Schema.UpgradePlan
 Polhem.Db.Schema.UpgradePlan.AllStatements.get -> System.Collections.Generic.IEnumerable<string!>!
+Polhem.Db.Schema.UpgradePlan.DefineTable.get -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.UpgradePlan.DefineTable.init -> void
 Polhem.Db.Schema.UpgradePlan.IsEmpty.get -> bool
 Polhem.Db.Schema.UpgradePlan.Mode.get -> Polhem.Db.Schema.UpgradeExecutionMode
 Polhem.Db.Schema.UpgradePlan.Stages.get -> System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.UpgradeStage!>!
@@ -560,6 +600,7 @@ const Polhem.Db.CommandTextVariable.CompanyId = "{@CompanyId}" -> string!
 const Polhem.Db.CommandTextVariable.Parameters = "{@Parameters}" -> string!
 const Polhem.Db.DbBatchSpec.FailedIndexDataKey = "Polhem.BatchIndex" -> string!
 const Polhem.Db.Manager.DatabaseCreator.MaxDatabaseNameLength = 63 -> int
+const Polhem.Db.Schema.TableUpgradeRecordStore.DefaultRecordTableName = "st_table_upgrade" -> string!
 const Polhem.Db.Storage.DbDefineStorage.DefineDatabaseId = "common" -> string!
 override Polhem.Db.CacheNotify.CacheNotifyChange.GetHashCode() -> int
 override Polhem.Db.DbAccess.ToString() -> string!
@@ -611,6 +652,8 @@ static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.GetFieldDbType(strin
 static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
 static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.MapToFieldDbType(string! baseType, bool isPrimaryKey) -> Polhem.Core.Data.FieldDbType
 static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.ParseDefaultValue(string! rawDefault, Polhem.Core.Data.FieldDbType dbType, string! originalDefault) -> string!
+static Polhem.Db.Schema.SchemaFormat.Current.get -> int
+static Polhem.Db.Schema.TableUpgradeRecordStore.ComputeHash(string! schemaXml) -> string!
 static Polhem.Db.Schema.UpgradeOptions.Default.get -> Polhem.Db.Schema.UpgradeOptions!
 ~override Polhem.Db.CacheNotify.CacheNotifyChange.Equals(object obj) -> bool
 ~override Polhem.Db.CacheNotify.CacheNotifyChange.ToString() -> string

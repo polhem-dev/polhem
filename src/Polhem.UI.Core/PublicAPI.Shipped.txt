@@ -61,6 +61,7 @@ Polhem.UI.Core.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTab
 Polhem.UI.Core.DataObjects.FormDataObject.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.UI.Core.DataObjects.FormDataObject.RowAdded -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?
 Polhem.UI.Core.DataObjects.FormDataObject.RowDeleted -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?
+Polhem.UI.Core.DataObjects.FormDataObject.RowEditCanceled -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?
 Polhem.UI.Core.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.UI.Core.DataObjects.FieldValueChangedEventArgs!>?
 Polhem.UI.Core.DataObjects.FormDataObject.SaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.UI.Core.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
@@ -145,6 +146,7 @@ Polhem.UI.Core.FormLiveComputationEngine.InitializeNewRow(string! tableName, Sys
 Polhem.UI.Core.FormLiveComputationEngine.IsDegraded.get -> bool
 Polhem.UI.Core.FormLiveComputationEngine.IsRecomputing.get -> bool
 Polhem.UI.Core.FormLiveComputationEngine.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Core.FormLiveComputationEngine.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.UI.Core.FormValueBinding
 Polhem.UI.Core.IUserContext
 Polhem.UI.Core.IUserContext.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?

@@ -76,9 +76,13 @@ Polhem.Hosting.Database.TableUpgradeEntry.Error.get -> string?
 Polhem.Hosting.Database.TableUpgradeEntry.Error.init -> void
 Polhem.Hosting.Database.TableUpgradeEntry.Outcome.get -> Polhem.Hosting.Database.TableUpgradeOutcome
 Polhem.Hosting.Database.TableUpgradeEntry.Outcome.init -> void
+Polhem.Hosting.Database.TableUpgradeEntry.PreviousStatus.get -> Polhem.Db.Schema.TableUpgradeStatus?
+Polhem.Hosting.Database.TableUpgradeEntry.PreviousStatus.init -> void
 Polhem.Hosting.Database.TableUpgradeEntry.TableName.get -> string!
 Polhem.Hosting.Database.TableUpgradeEntry.TableName.init -> void
 Polhem.Hosting.Database.TableUpgradeEntry.TableUpgradeEntry() -> void
+Polhem.Hosting.Database.TableUpgradeEntry.UnchangedByRecord.get -> bool
+Polhem.Hosting.Database.TableUpgradeEntry.UnchangedByRecord.init -> void
 Polhem.Hosting.Database.TableUpgradeOutcome
 Polhem.Hosting.Database.TableUpgradeOutcome.Created = 1 -> Polhem.Hosting.Database.TableUpgradeOutcome
 Polhem.Hosting.Database.TableUpgradeOutcome.Failed = 4 -> Polhem.Hosting.Database.TableUpgradeOutcome
