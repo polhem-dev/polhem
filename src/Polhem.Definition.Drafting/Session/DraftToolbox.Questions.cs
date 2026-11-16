@@ -30,9 +30,9 @@ namespace Polhem.Definition.Drafting.Session
                 asked.Add(CheckQuestion(questions[i], i + 1));
 
             AskedQuestions = asked;
-            return $"The {(asked.Count == 1 ? "question is" : "questions are")} shown to the user with the options to choose "
-                + "from. Their answers arrive in their next message. Do not call more tools in this turn: end it with one "
-                + "short sentence, and do not repeat the questions in it.";
+            return $"The {(asked.Count == 1 ? "question is" : "questions are")} shown to the user below your reply, with the "
+                + "options to choose from. Their answers arrive in their next message. Do not call more tools in this turn: "
+                + "end it with one short sentence, and do not repeat the questions in it.";
         }
 
         private static DraftQuestion CheckQuestion(AskUserQuestion question, int number)
@@ -61,27 +61,30 @@ namespace Polhem.Definition.Drafting.Session
             return new DraftQuestion(text, options, recommendedIndex);
         }
 
+        // IMPORTANT: every property is `required`, so the schema lists it as required. Strict tool schemas limit how many
+        // optional parameters all the tools may have together; `DraftToolSchemaTests` counts them.
+
         /// <summary>A question as the model writes it in a call of <c>ask_user</c>.</summary>
         internal sealed class AskUserQuestion
         {
             [Description("The question, in the language of the conversation, such as 'Should the department field pick a record from Department?'.")]
-            public string Question { get; set; } = string.Empty;
+            public required string Question { get; set; }
 
             [Description("The likely answers, each short enough for a button.")]
-            public AskUserOption[] Options { get; set; } = [];
+            public required AskUserOption[] Options { get; set; }
 
             [Description("The label of the option you suggest, exactly as written in options; empty when you have no suggestion.")]
-            public string Recommended { get; set; } = string.Empty;
+            public required string Recommended { get; set; }
         }
 
         /// <summary>An answer offered in a call of <c>ask_user</c>.</summary>
         internal sealed class AskUserOption
         {
             [Description("The answer, a few words, such as 'Yes' or 'LeaveRequest'.")]
-            public string Label { get; set; } = string.Empty;
+            public required string Label { get; set; }
 
             [Description("What choosing it means, in one short sentence; empty when the label says it all.")]
-            public string Description { get; set; } = string.Empty;
+            public required string Description { get; set; }
         }
     }
 }
