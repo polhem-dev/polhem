@@ -14,9 +14,9 @@ namespace Polhem.AI.Claude
     /// <remarks>
     /// <para>
     /// Every request streams, even through <see cref="GetResponseAsync"/>, so a long answer never runs into a request
-    /// timeout. Each request carries adaptive thinking, the configured effort, server-side refusal fallbacks, strict
-    /// tools and automatic prompt caching, plus a cache breakpoint at the end of the first user message, which holds
-    /// the documents.
+    /// timeout. Each request carries adaptive thinking (summarized, so the response says what the model considered), the
+    /// configured effort, server-side refusal fallbacks, strict tools and automatic prompt caching, plus a cache
+    /// breakpoint at the end of the first user message, which holds the documents.
     /// </para>
     /// <para>
     /// The SDK adapter drops the <c>fallback</c> block that marks where a fallback model took over, and the API rejects
@@ -142,7 +142,7 @@ namespace Polhem.AI.Claude
             var parameters = template ?? new MessageCreateParams { Model = model, MaxTokens = maxTokens, Messages = [] };
             parameters = parameters with
             {
-                Thinking = parameters.Thinking ?? new BetaThinkingConfigAdaptive(),
+                Thinking = parameters.Thinking ?? new BetaThinkingConfigAdaptive { Display = Display.Summarized },
                 OutputConfig = (parameters.OutputConfig ?? new BetaOutputConfig()) with
                 {
                     Effort = parameters.OutputConfig?.Effort ?? ToEffort(_settings.Effort),

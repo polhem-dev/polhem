@@ -16,12 +16,13 @@ a model vendor's SDK: the application passes in an `IChatClient`, from a provide
 | Type | Purpose |
 |------|---------|
 | `DocumentSource` | Reads PDFs, images and Word documents into the content of the first message. A Word document becomes Markdown text (paragraphs and tables); the others are sent as they are. `SupportedExtensions` lists the extensions; `MaxDocumentBytes` and `MaxImageBytes` are the limits |
-| `FormDraftSession` | The conversation: `StartAsync` sends the documents, `SendAsync` sends the person's reply, `ApplyUserEdit` records an edit the person made directly. Raises `DraftChanged` and `AssistantMessage`; `IsReady` turns true when the draft passes every check |
+| `FormDraftSession` | The conversation: `StartAsync` sends the documents, `SendAsync` sends the person's reply, `ApplyUserEdit` records an edit the person made directly. Raises `DraftChanged`, `AssistantMessage`, `Activity` (each request and tool call, while a turn runs) and `QuestionsAsked`; `IsReady` turns true when the draft passes every check |
 | `FormDraft` | The draft the model edits: tables, fields, choices, relations, the fields the list shows and the menu placement. Each field keeps the text of the document it came from |
 | `FormDraftConverter` | Turns a draft into a `FormDraftResult`, deterministically. An unfinished draft converts too, with its open items as issues and `PlaceholderProgId` until the ProgId is set |
 | `FormDraftResult` | The `FormSchema`, the zh-TW texts keyed as `FormSchemaLocalizer` reads them, the menu placement, the source text of each field, and the issues |
 | `IFormDraftingHost` | What the application supplies: the catalog of existing forms, the fields of one form, and the validation of a result |
-| `FormDraftingOptions` | Chat options passed to every request, the tool rounds allowed in one turn, and the confidence below which the person must confirm a relation |
+| `FormDraftingOptions` | Chat options passed to every request, the tool rounds allowed in one turn, the confidence below which the person must confirm a relation, the language of the replies, and whether the host renders Markdown in them (`MarkdownReplies`) |
+| `DraftQuestion` | A decision the model asks the person to make, with the answers it offers (`DraftQuestionOption`) and the one it suggests |
 
 ## How a session works
 
@@ -30,6 +31,8 @@ var documents = DocumentSource.FromFiles(paths);   // checks every size before r
 var session = new FormDraftSession(chatClient, host);
 session.DraftChanged += (_, _) => Preview(FormDraftConverter.Convert(session.Draft));
 session.AssistantMessage += (_, e) => Show(e.Text);
+session.Activity += (_, e) => ShowProgress(e.Kind, e.ToolName, e.Subject);
+session.QuestionsAsked += (_, e) => ShowChoices(e.Questions);   // the answers go back with SendAsync
 
 await session.StartAsync(documents, cancellationToken);
 await session.SendAsync("Use LeaveRequest as the ProgId.", cancellationToken);
@@ -48,6 +51,9 @@ if (session.IsReady)
 - **A failed or cancelled turn leaves nothing behind.** The draft, `IsReady` and the history return to what they were
   before the turn. One turn runs at a time; calling `SendAsync` or `ApplyUserEdit` during one throws
   `InvalidOperationException`.
+- **Questions come with answers to choose from.** The model asks through the `ask_user` tool, never in the text of a
+  reply, and then ends its turn. The host shows `QuestionsAsked` as choices and sends the answers as an ordinary
+  message, so an answer typed in the person's own words works the same way.
 - **The conventions are the host's.** The draft gives a relation field only the related ProgId. System fields, `ft_`
   table names, the `company` category and the `ref_*` fields of a relation are added when the host applies the
   framework's form conventions, as the workbook import does.

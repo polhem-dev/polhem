@@ -1,11 +1,28 @@
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>One message of the drafting conversation, as the chat pane shows it.</summary>
-/// <param name="IsUser">Whether the user wrote it; otherwise the model or the editor did.</param>
-/// <param name="Text">The text of the message.</param>
-/// <param name="IsError">Whether it reports a failed turn.</param>
-public sealed record DraftChatEntry(bool IsUser, string Text, bool IsError = false)
+public sealed class DraftChatEntry : DraftChatItem
 {
+    /// <summary>Initializes a new instance of the <see cref="DraftChatEntry"/> class.</summary>
+    /// <param name="isUser">Whether the user wrote it; otherwise the model or the editor did.</param>
+    /// <param name="text">The text of the message.</param>
+    /// <param name="isError">Whether it reports a failed turn.</param>
+    public DraftChatEntry(bool isUser, string text, bool isError = false)
+    {
+        IsUser = isUser;
+        Text = text;
+        IsError = isError;
+    }
+
+    /// <summary>Gets whether the user wrote it.</summary>
+    public bool IsUser { get; }
+
+    /// <summary>Gets the text of the message.</summary>
+    public string Text { get; }
+
+    /// <summary>Gets whether it reports a failed turn.</summary>
+    public bool IsError { get; }
+
     /// <summary>Gets whether the model or the editor wrote it.</summary>
     public bool IsAssistant => !IsUser;
 }

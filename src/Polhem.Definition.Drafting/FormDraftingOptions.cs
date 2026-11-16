@@ -32,5 +32,11 @@ namespace Polhem.Definition.Drafting
         /// documents until the user writes.
         /// </summary>
         public CultureInfo? ReplyCulture { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the host renders Markdown in the model's replies. When it does not, the default, the
+        /// model is asked to write plain text, so no Markdown symbols show up in the conversation.
+        /// </summary>
+        public bool MarkdownReplies { get; set; }
     }
 }

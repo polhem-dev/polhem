@@ -12,7 +12,7 @@ namespace Polhem.AI.Claude.UnitTests
         private static readonly string s_endTurn = Sse.MessageStart() + Sse.Text(0, "Done.") + Sse.MessageEnd("end_turn");
 
         [Fact]
-        [DisplayName("A request carries the model, the effort, adaptive thinking, streaming and automatic caching")]
+        [DisplayName("A request carries the model, the effort, summarized adaptive thinking, streaming and automatic caching")]
         public async Task GetResponseAsync_DefaultOptions_SendsClaudeSettings()
         {
             var handler = new FakeAnthropicHandler().ThenStream(s_endTurn);
@@ -26,6 +26,7 @@ namespace Polhem.AI.Claude.UnitTests
             Assert.Equal(64000, body.GetProperty("max_tokens").GetInt32());
             Assert.True(body.GetProperty("stream").GetBoolean());
             Assert.Equal("adaptive", body.GetProperty("thinking").GetProperty("type").GetString());
+            Assert.Equal("summarized", body.GetProperty("thinking").GetProperty("display").GetString());
             Assert.Equal("high", body.GetProperty("output_config").GetProperty("effort").GetString());
             Assert.Equal("ephemeral", body.GetProperty("cache_control").GetProperty("type").GetString());
         }
