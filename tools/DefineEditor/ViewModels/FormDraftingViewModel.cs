@@ -24,6 +24,9 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     private readonly Func<FormDraftResult, Task<bool>> _import;
     private readonly SynchronizationContext? _context;
     private CancellationTokenSource? _cancellation;
+    private readonly List<DraftActivityCard> _turnCards = [];
+    private DraftActivityCard? _activity;
+    private DraftQuestionCard? _pendingQuestions;
 
     /// <summary>Initializes a new instance of the <see cref="FormDraftingViewModel"/> class.</summary>
     /// <param name="session">The conversation; this view-model runs every turn of it.</param>
@@ -47,6 +50,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         CredentialText = credentialText;
         _session.AssistantMessage += OnAssistantMessage;
         _session.DraftChanged += OnSessionDraftChanged;
+        _session.Activity += OnSessionActivity;
+        _session.QuestionsAsked += OnSessionQuestionsAsked;
     }
 
     /// <summary>Occurs after the draft changed; the window redraws the preview once the changes pause.</summary>
@@ -59,7 +64,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     public string CredentialText { get; }
 
     /// <summary>Gets the messages of the conversation.</summary>
-    public ObservableCollection<DraftChatEntry> Messages { get; } = [];
+    public ObservableCollection<DraftChatItem> Messages { get; } = [];
 
     /// <summary>Gets the fields of the draft, table by table.</summary>
     public ObservableCollection<DraftFieldRow> Fields { get; } = [];
@@ -120,7 +125,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <param name="documents">The documents, as <see cref="Polhem.Definition.Drafting.Documents.DocumentSource"/> read them.</param>
     public Task StartAsync(IReadOnlyList<AIContent> documents)
     {
-        Messages.Add(new DraftChatEntry(IsUser: true, L("Drafting_SentDocuments", DocumentsLabel)));
+        Messages.Add(new DraftChatEntry(isUser: true, L("Drafting_SentDocuments", DocumentsLabel)));
         RefreshDraft();
         return RunTurnAsync(token => _session.StartAsync(documents, token));
     }
@@ -130,7 +135,22 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     {
         var text = InputText.Trim();
         InputText = string.Empty;
-        Messages.Add(new DraftChatEntry(IsUser: true, text));
+        return SendTextAsync(text);
+    }
+
+    /// <summary>Sends the answers of a question card as the user's message.</summary>
+    private void SubmitAnswers(string text)
+    {
+        if (IsBusy || text.Trim().Length == 0) return;
+        _ = SendTextAsync(text);
+    }
+
+    private Task SendTextAsync(string text)
+    {
+        // A reply of any kind answers the open questions; their cards stop taking answers.
+        foreach (var card in Messages.OfType<DraftQuestionCard>())
+            card.Close();
+        Messages.Add(new DraftChatEntry(isUser: true, text));
         return RunTurnAsync(token => _session.SendAsync(text, token));
     }
 
@@ -201,6 +221,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _cancellation?.Cancel();
         _session.AssistantMessage -= OnAssistantMessage;
         _session.DraftChanged -= OnSessionDraftChanged;
+        _session.Activity -= OnSessionActivity;
+        _session.QuestionsAsked -= OnSessionQuestionsAsked;
     }
 
     private async Task RunTurnAsync(Func<CancellationToken, Task> turn)
@@ -208,31 +230,70 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         using var cancellation = new CancellationTokenSource();
         _cancellation = cancellation;
         IsBusy = true;
+        var completed = false;
         try
         {
             await turn(cancellation.Token);
+            completed = true;
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            Messages.Add(new DraftChatEntry(IsUser: false, L("Drafting_Stopped"), IsError: true));
+            Messages.Add(new DraftChatEntry(isUser: false, L("Drafting_Stopped"), isError: true));
         }
         catch (Exception ex)
         {
             // Boundary: a turn runs from a button of the window; an exception that escaped it would end the editor. The
             // session has already put the draft back as it was before the turn, so the user can simply try again.
-            Messages.Add(new DraftChatEntry(IsUser: false,
-                DraftingChatClients.DescribeFailure(ex) ?? L("Drafting_TurnFailed", ex.Message), IsError: true));
+            Messages.Add(new DraftChatEntry(isUser: false,
+                DraftingChatClients.DescribeFailure(ex) ?? L("Drafting_TurnFailed", ex.Message), isError: true));
         }
         finally
         {
             _cancellation = null;
+            // The session's events were posted before the turn's task completed, so they have all been handled here.
+            EndTurn(completed);
             IsBusy = false;
             RefreshDraft();
         }
     }
 
+    /// <summary>
+    /// Closes the turn's activity cards, drops the ones that never showed a step, and shows the questions the model
+    /// asked, last, where the user answers them. A turn that failed loses its questions: the session no longer holds them.
+    /// </summary>
+    private void EndTurn(bool completed)
+    {
+        foreach (var card in _turnCards)
+        {
+            card.Finish(completed);
+            if (!card.HasSteps)
+                Messages.Remove(card);
+        }
+        _turnCards.Clear();
+        _activity = null;
+        if (completed && _pendingQuestions is { } questions)
+            Messages.Add(questions);
+        _pendingQuestions = null;
+    }
+
     private void OnAssistantMessage(object? sender, AssistantMessageEventArgs e)
-        => Post(() => Messages.Add(new DraftChatEntry(IsUser: false, e.Text.Trim())));
+        => Post(() => Messages.Add(new DraftChatEntry(isUser: false, e.Text.Trim())));
+
+    private void OnSessionActivity(object? sender, DraftActivityEventArgs e)
+        => Post(() =>
+        {
+            // A reply the model wrote between tool calls ends the card above it; the next steps start a new one below.
+            if (_activity is null || !ReferenceEquals(Messages.LastOrDefault(), _activity))
+            {
+                _activity = new DraftActivityCard();
+                _turnCards.Add(_activity);
+                Messages.Add(_activity);
+            }
+            _activity.Apply(e);
+        });
+
+    private void OnSessionQuestionsAsked(object? sender, DraftQuestionsEventArgs e)
+        => Post(() => _pendingQuestions = new DraftQuestionCard(e.Questions, SubmitAnswers));
 
     private void OnSessionDraftChanged(object? sender, EventArgs e)
         => Post(() =>

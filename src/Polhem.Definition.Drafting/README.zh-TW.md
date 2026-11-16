@@ -15,12 +15,13 @@
 | 型別 | 用途 |
 |------|------|
 | `DocumentSource` | 把 PDF、影像與 Word 文件讀成第一則訊息的內容。Word 文件轉成 Markdown 文字（段落與表格），其他照原樣送出。`SupportedExtensions` 列出副檔名；`MaxDocumentBytes` 與 `MaxImageBytes` 是大小上限 |
-| `FormDraftSession` | 對話本身：`StartAsync` 送出文件，`SendAsync` 送出使用者的回覆，`ApplyUserEdit` 記錄使用者直接做的修改。發出 `DraftChanged` 與 `AssistantMessage`；草稿通過所有檢查時 `IsReady` 變為 true |
+| `FormDraftSession` | 對話本身：`StartAsync` 送出文件，`SendAsync` 送出使用者的回覆，`ApplyUserEdit` 記錄使用者直接做的修改。發出 `DraftChanged`、`AssistantMessage`、`Activity`（一輪進行中的每次請求與工具呼叫）與 `QuestionsAsked`；草稿通過所有檢查時 `IsReady` 變為 true |
 | `FormDraft` | 模型編輯的草稿：資料表、欄位、選項、關聯、清單顯示的欄位與選單位置。每個欄位保留它在文件中的原文 |
 | `FormDraftConverter` | 以確定性的方式把草稿轉成 `FormDraftResult`。未完成的草稿也能轉換，未定事項列為問題，ProgId 未定前使用 `PlaceholderProgId` |
 | `FormDraftResult` | `FormSchema`、依 `FormSchemaLocalizer` 讀取方式命名鍵值的 zh-TW 文字、選單位置、各欄位的原文，以及問題清單 |
 | `IFormDraftingHost` | 應用程式要提供的部分：既有表單的目錄、某張表單的欄位，以及結果的驗證 |
-| `FormDraftingOptions` | 每次請求帶的對話選項、一輪中允許的工具呼叫輪數，以及低於多少信心度的關聯必須由使用者確認 |
+| `FormDraftingOptions` | 每次請求帶的對話選項、一輪中允許的工具呼叫輪數、低於多少信心度的關聯必須由使用者確認、回覆的語言，以及宿主是否渲染回覆中的 Markdown（`MarkdownReplies`） |
+| `DraftQuestion` | 模型請使用者決定的事，附上可選的答案（`DraftQuestionOption`）與它建議的那一個 |
 
 ## 對話怎麼進行
 
@@ -29,6 +30,8 @@ var documents = DocumentSource.FromFiles(paths);   // 讀取任何檔案前先�
 var session = new FormDraftSession(chatClient, host);
 session.DraftChanged += (_, _) => Preview(FormDraftConverter.Convert(session.Draft));
 session.AssistantMessage += (_, e) => Show(e.Text);
+session.Activity += (_, e) => ShowProgress(e.Kind, e.ToolName, e.Subject);
+session.QuestionsAsked += (_, e) => ShowChoices(e.Questions);   // 答案以 SendAsync 送回
 
 await session.StartAsync(documents, cancellationToken);
 await session.SendAsync("Use LeaveRequest as the ProgId.", cancellationToken);
@@ -45,6 +48,8 @@ if (session.IsReady)
   之後任何修改都會清除 `IsReady`。
 - **失敗或取消的一輪不留痕跡。** 草稿、`IsReady` 與對話歷史都回到這一輪之前的狀態。同一時間只跑一輪；
   一輪進行中呼叫 `SendAsync` 或 `ApplyUserEdit` 會擲出 `InvalidOperationException`。
+- **問題附帶可選的答案。** 模型透過 `ask_user` 工具提問，不寫在回覆文字裡，問完就結束這一輪。
+  宿主把 `QuestionsAsked` 顯示成選項，並把答案當成一般訊息送回，所以使用者用自己的話打字回答也一樣可行。
 - **慣例由宿主負責。** 草稿只給關聯欄位相關表單的 ProgId。系統欄位、`ft_` 資料表名稱、`company` 類別，
   以及關聯的 `ref_*` 欄位，都在宿主套用框架的表單慣例時補上，與活頁簿匯入相同。
 

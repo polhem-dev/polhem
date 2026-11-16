@@ -540,7 +540,6 @@
   <data name="Drafting_Credential" xml:space="preserve"><value>憑證：</value></data>
   <data name="Drafting_Create" xml:space="preserve"><value>產生定義</value></data>
   <data name="Drafting_CreateTooltip" xml:space="preserve"><value>以匯入 Excel 活頁簿的方式匯入此表單：確認檔案、寫入，再升級資料庫</value></data>
-  <data name="Drafting_Working" xml:space="preserve"><value>Claude 正在處理草稿...</value></data>
   <data name="Drafting_ReadyHint" xml:space="preserve"><value>草稿已可產生定義。</value></data>
   <data name="Drafting_Send" xml:space="preserve"><value>送出</value></data>
   <data name="Drafting_Stop" xml:space="preserve"><value>停止</value></data>
@@ -564,4 +563,27 @@
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>要求失敗：{0}
 草稿維持在這則訊息之前的狀態，可重送訊息再試一次。</value></data>
   <data name="Drafting_MasterTable" xml:space="preserve"><value>主檔</value></data>
+  <data name="Drafting_Recommended" xml:space="preserve"><value>建議</value></data>
+  <data name="Drafting_OtherAnswer" xml:space="preserve"><value>或自行輸入答案</value></data>
+  <data name="Drafting_UseRecommendations" xml:space="preserve"><value>全部採用建議</value></data>
+  <data name="Drafting_SendAnswers" xml:space="preserve"><value>送出回答</value></data>
+  <data name="Drafting_AnswersHeader" xml:space="preserve"><value>我的回答：</value></data>
+  <data name="Drafting_NotAnswered" xml:space="preserve"><value>（未回答）</value></data>
+  <data name="DraftingStep_Thinking" xml:space="preserve"><value>正在思考</value></data>
+  <data name="DraftingStep_Reasoning" xml:space="preserve"><value>思考</value></data>
+  <data name="DraftingStep_Done" xml:space="preserve"><value>已完成 {0} 個步驟</value></data>
+  <data name="DraftingStep_Stopped" xml:space="preserve"><value>已中止（完成 {0} 個步驟）</value></data>
+  <data name="DraftingStep_Other" xml:space="preserve"><value>正在執行 {0}</value></data>
+  <data name="DraftingStep_set_form_info" xml:space="preserve"><value>設定表單名稱與選單</value></data>
+  <data name="DraftingStep_upsert_table" xml:space="preserve"><value>設定資料表 {0}</value></data>
+  <data name="DraftingStep_remove_table" xml:space="preserve"><value>移除資料表 {0}</value></data>
+  <data name="DraftingStep_upsert_field" xml:space="preserve"><value>設定欄位 {0}</value></data>
+  <data name="DraftingStep_remove_field" xml:space="preserve"><value>移除欄位 {0}</value></data>
+  <data name="DraftingStep_search_progids" xml:space="preserve"><value>搜尋表單：{0}</value></data>
+  <data name="DraftingStep_get_progid_fields" xml:space="preserve"><value>讀取 {0} 的欄位</value></data>
+  <data name="DraftingStep_set_relation" xml:space="preserve"><value>設定欄位 {0} 的關聯</value></data>
+  <data name="DraftingStep_get_draft" xml:space="preserve"><value>讀取草稿</value></data>
+  <data name="DraftingStep_validate_draft" xml:space="preserve"><value>驗證草稿</value></data>
+  <data name="DraftingStep_mark_ready" xml:space="preserve"><value>標記草稿完成</value></data>
+  <data name="DraftingStep_ask_user" xml:space="preserve"><value>整理要問你的問題</value></data>
 </root>

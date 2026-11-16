@@ -33,7 +33,7 @@ Documents...** in DefineEditor sends such a form to Claude, an AI model, which d
 - where the form goes in the menu.
 
 What the document does not say (the ProgId, field names, lengths, a relation Claude is unsure of), Claude asks in the
-conversation, suggesting an answer each time. Nothing is written until you choose **Create Definitions**, and that runs
+conversation, with answers to click and the one it suggests marked. Nothing is written until you choose **Create Definitions**, and that runs
 the same import as [an Excel workbook](excel-form-modeling.md), with the same checks and the same confirmation.
 
 Claude only proposes. DefineEditor turns the draft into definitions with the framework's own rules, and a draft can be
@@ -76,13 +76,15 @@ The conversation window opens, and Claude's first draft appears in it when Claud
 
 | Part | What it shows |
 |------|---------------|
-| Left | The conversation. Type your answer and press Enter (Shift+Enter for a new line); **Stop** cancels the current reply and leaves the draft as it was before your message |
+| Left | The conversation. While Claude works, a card shows the current step ("Setting up the field leave_type..."); click it to see every step of the turn. Type your answer and press Enter (Shift+Enter for a new line); **Stop** cancels the current reply and leaves the draft as it was before your message |
 | **Form** tab | The form as it will look, redrawn after each change. The buttons above it switch to view mode and to phone width. Clicking a field opens it in the **Fields** tab |
 | **Fields** tab | Every field of every table: name, captions, type, length, required, relation, and the text of the document it came from. Edit a cell to change the draft directly; Claude is told what you changed with your next message |
 | **Questions** tab | What is still open: missing values, relations to confirm, validation errors. An error keeps the form from being created |
 
-Answer Claude's questions in your own words: "use LeaveRequest", "the reason can be 200 characters", "put it under
-Human Resources". When everything is settled, Claude marks the draft ready and **Create Definitions** is enabled.
+Claude's questions appear as a card with an answer to click for each, the suggested one marked **Suggested**. One
+question is answered by clicking; several are answered together with **Send Answers**, and **Use the Suggestions**
+fills the ones you have not answered. You can also answer in your own words, in the box under a question or in the
+conversation: "use LeaveRequest", "the reason can be 200 characters", "put it under Human Resources". When everything is settled, Claude marks the draft ready and **Create Definitions** is enabled.
 
 A few things worth knowing:
 

@@ -48,7 +48,8 @@ An environment variable wins over a signed-in profile, so a key left in a shell 
 ## What every request carries
 
 - **Adaptive thinking and an explicit effort.** The effort is always sent, because the default differs between
-  models.
+  models. Thinking is summarized, so a response carries what the model considered (`TextReasoningContent`) for an
+  application to show.
 - **Streaming**, even through `GetResponseAsync`, so a long answer does not run into a request timeout.
 - **Strict tools.** The server checks each tool input against its schema. A few schema shapes that strict mode
   rejects (a nullable enum written as a type union, a `null` branch on an optional property) are rewritten, so a

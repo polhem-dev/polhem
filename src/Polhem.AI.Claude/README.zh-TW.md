@@ -43,7 +43,8 @@ Console 組織支付。Max、Ultra 或 Team 方案可以把每月附送的 API �
 
 ## 每個請求都帶著什麼
 
-- **Adaptive thinking 與明確的 effort。** effort 一律送出，因為各模型的預設值不同。
+- **Adaptive thinking 與明確的 effort。** effort 一律送出，因為各模型的預設值不同。thinking 以摘要形式回傳，
+  回應因此帶有模型考慮過的內容（`TextReasoningContent`），應用程式可以顯示它。
 - **串流**，即使透過 `GetResponseAsync` 也一樣，長回答不會碰上請求逾時。
 - **Strict 工具。** 伺服器依 schema 檢查每個工具輸入。strict 模式不接受的幾種 schema 形狀
   （以型別聯集表示的可為 null 列舉、選填屬性上的 `null` 分支）會被改寫，功能套件的工具 schema 因此可以維持與廠商無關。

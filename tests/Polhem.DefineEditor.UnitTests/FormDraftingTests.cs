@@ -259,7 +259,7 @@ public sealed class FormDraftingTests : IDisposable
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.Equal("The draft is ready.", viewModel.Messages[^1].Text);
+        Assert.Equal("The draft is ready.", Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).Text);
         Assert.Equal(["leave_no", "leave_type"], viewModel.Fields.Select(f => f.FieldName));
         Assert.True(viewModel.IsReady);
         Assert.False(viewModel.IsBusy);
@@ -311,7 +311,7 @@ public sealed class FormDraftingTests : IDisposable
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        var last = viewModel.Messages[^1];
+        var last = Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]);
         Assert.True(last.IsError);
         Assert.Contains("network down", last.Text);
         Assert.False(viewModel.IsBusy);

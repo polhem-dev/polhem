@@ -67,7 +67,7 @@ namespace Polhem.Definition.Drafting
             _finalOptions = _toolOptions.Clone();
             _finalOptions.ToolMode = ChatToolMode.None;
 
-            _history = [new ChatMessage(ChatRole.System, FormDraftingPrompt.SystemPrompt)];
+            _history = [new ChatMessage(ChatRole.System, FormDraftingPrompt.SystemPrompt(options.MarkdownReplies))];
             History = new ReadOnlyCollection<ChatMessage>(_history);
         }
 
@@ -81,6 +81,26 @@ namespace Polhem.Definition.Drafting
         /// Occurs when the model replies to the user with text.
         /// </summary>
         public event EventHandler<AssistantMessageEventArgs>? AssistantMessage;
+
+        /// <summary>
+        /// Occurs at each step of a turn: before each request to the model, when its response carries a reasoning summary,
+        /// and before and after each tool it calls. A host shows these while the turn runs.
+        /// </summary>
+        /// <remarks>
+        /// The steps of a turn that fails or is cancelled have been raised already; the session puts the draft back, but
+        /// the host decides what to do with the steps it showed.
+        /// </remarks>
+        public event EventHandler<DraftActivityEventArgs>? Activity;
+
+        /// <summary>
+        /// Occurs when the model asks the user to decide something, with answers to choose from. The model then ends its
+        /// turn; the host sends the answers with <see cref="SendAsync"/>.
+        /// </summary>
+        /// <remarks>
+        /// When the turn fails or is cancelled afterwards, the history no longer holds the questions, and the host should
+        /// not offer them any more.
+        /// </remarks>
+        public event EventHandler<DraftQuestionsEventArgs>? QuestionsAsked;
 
         /// <summary>
         /// Gets the draft. The session changes this instance in place; read it after <see cref="DraftChanged"/>.
@@ -203,9 +223,12 @@ namespace Polhem.Definition.Drafting
 
         private async Task RunToolLoopAsync(Action onDraftChanged, CancellationToken cancellationToken)
         {
+            var questionsAsked = false;
             for (var round = 0; ; round++)
             {
-                var lastRound = round >= _maxToolRounds;
+                // Once the model has asked the user something, it may only reply: the answers come with the next message.
+                var lastRound = round >= _maxToolRounds || questionsAsked;
+                Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.Thinking));
                 var response = await _chatClient.GetResponseAsync(_history.ToList(), lastRound ? _finalOptions : _toolOptions,
                     cancellationToken).ConfigureAwait(false);
 
@@ -213,6 +236,8 @@ namespace Polhem.Definition.Drafting
                 foreach (var message in response.Messages)
                 {
                     _history.Add(message);
+                    foreach (var reasoning in message.Contents.OfType<TextReasoningContent>().Where(r => !string.IsNullOrWhiteSpace(r.Text)))
+                        Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.Reasoning, detail: reasoning.Text.Trim()));
                     calls.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
                     if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text))
                         AssistantMessage?.Invoke(this, new AssistantMessageEventArgs(message.Text));
@@ -223,9 +248,20 @@ namespace Polhem.Definition.Drafting
                 foreach (var call in calls)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    results.Add(lastRound
-                        ? Refused(call, "Not run: this turn has used all its tool calls. Reply to the user instead.")
-                        : await InvokeToolAsync(call, onDraftChanged, cancellationToken).ConfigureAwait(false));
+                    if (lastRound)
+                    {
+                        results.Add(Refused(call, questionsAsked
+                            ? "Not run: you asked the user questions, so end the turn with a reply and wait for the answers."
+                            : "Not run: this turn has used all its tool calls. Reply to the user instead."));
+                        continue;
+                    }
+                    results.Add(await InvokeToolAsync(call, onDraftChanged, cancellationToken).ConfigureAwait(false));
+                    if (_toolbox.AskedQuestions is { } questions)
+                    {
+                        _toolbox.AskedQuestions = null;
+                        questionsAsked = true;
+                        QuestionsAsked?.Invoke(this, new DraftQuestionsEventArgs(questions));
+                    }
                 }
                 _history.Add(new ChatMessage(ChatRole.Tool, results));
                 if (lastRound) return;
@@ -235,10 +271,13 @@ namespace Polhem.Definition.Drafting
         private async Task<FunctionResultContent> InvokeToolAsync(FunctionCallContent call, Action onDraftChanged,
             CancellationToken cancellationToken)
         {
+            var subject = DescribeSubject(call);
+            Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.ToolStarted, call.Name, subject));
             if (!_functions.TryGetValue(call.Name, out var function))
-                return Refused(call, $"There is no tool named '{call.Name}'. Tools: {string.Join(", ", _functions.Keys)}.");
+                return RefusedStep(call, subject, $"There is no tool named '{call.Name}'. Tools: {string.Join(", ", _functions.Keys)}.");
 
             _toolbox.DraftModified = false;
+            _toolbox.AskedQuestions = null;
             object? result;
             try
             {
@@ -246,12 +285,12 @@ namespace Polhem.Definition.Drafting
             }
             catch (DraftToolException ex)
             {
-                return Refused(call, ex.Message);
+                return RefusedStep(call, subject, ex.Message);
             }
             catch (Exception ex) when (ex is ArgumentException or JsonException or FormatException or InvalidCastException)
             {
                 // The arguments did not bind to the tool's parameters. The model gets the reason and can call again.
-                return Refused(call, $"The arguments do not match the tool's parameters: {ex.Message}");
+                return RefusedStep(call, subject, $"The arguments do not match the tool's parameters: {ex.Message}");
             }
 
             if (_toolbox.DraftModified)
@@ -260,7 +299,39 @@ namespace Polhem.Definition.Drafting
                 onDraftChanged();
                 DraftChanged?.Invoke(this, EventArgs.Empty);
             }
+            Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.ToolCompleted, call.Name, subject));
             return new FunctionResultContent(call.CallId, result);
+        }
+
+        private FunctionResultContent RefusedStep(FunctionCallContent call, string subject, string message)
+        {
+            Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.ToolRefused, call.Name, subject, message));
+            return Refused(call, message);
+        }
+
+        /// <summary>
+        /// What a tool call works on, from its arguments: a field (with its detail table), a table, a ProgId or a search.
+        /// </summary>
+        private static string DescribeSubject(FunctionCallContent call)
+        {
+            var arguments = call.Arguments;
+            if (arguments is null) return string.Empty;
+            var table = ArgumentText(arguments, "table");
+            var field = ArgumentText(arguments, "fieldName");
+            if (field.Length > 0)
+                return table.Length == 0 || string.Equals(table, DraftToolbox.MasterTableKey, StringComparison.OrdinalIgnoreCase)
+                    ? field
+                    : $"{table}.{field}";
+            if (table.Length > 0) return table;
+            var progId = ArgumentText(arguments, "progId");
+            return progId.Length > 0 ? progId : ArgumentText(arguments, "query");
+        }
+
+        private static string ArgumentText(IDictionary<string, object?> arguments, string name)
+        {
+            if (!arguments.TryGetValue(name, out var value) || value is null) return string.Empty;
+            var text = value is JsonElement { ValueKind: JsonValueKind.String } element ? element.GetString() : value.ToString();
+            return text?.Trim() ?? string.Empty;
         }
 
         private static FunctionResultContent Refused(FunctionCallContent call, string message)

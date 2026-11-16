@@ -52,6 +52,9 @@ namespace Polhem.Definition.Drafting.Session
                 Create(ValidateDraft, "validate_draft", "Converts the draft into a form definition and returns the problems found."),
                 Create(MarkReady, "mark_ready",
                     "Marks the draft ready to import. Succeeds only when validate_draft reports no errors."),
+                Create(AskUser, "ask_user",
+                    "Asks the user to decide what is undecided or uncertain, each question with the answers to choose from "
+                    + "and the one you suggest. The user can also answer in their own words."),
             ];
         }
 

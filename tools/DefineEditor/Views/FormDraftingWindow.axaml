@@ -34,16 +34,9 @@
                             Command="{Binding CreateCommand}" ToolTip.Tip="{loc:Loc Drafting_CreateTooltip}"/>
                     <Button Classes="tool" MinWidth="90" Content="{loc:Loc Action_Close}" Click="OnClose"/>
                 </StackPanel>
-                <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="60" Margin="0,0,8,0"
-                                 IsVisible="{Binding IsBusy}"/>
-                    <Panel>
-                        <TextBlock Classes="muted" Text="{loc:Loc Drafting_Working}" IsVisible="{Binding IsBusy}"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock Classes="success" Text="{loc:Loc Drafting_ReadyHint}" VerticalAlignment="Center"
-                                   FontWeight="SemiBold" IsVisible="{Binding ShowReadyHint}"/>
-                    </Panel>
-                </DockPanel>
+                <!-- What the model is doing shows in the conversation; only the ready state is here. -->
+                <TextBlock Classes="success" Text="{loc:Loc Drafting_ReadyHint}" VerticalAlignment="Center"
+                           Margin="0,0,12,0" FontWeight="SemiBold" IsVisible="{Binding ShowReadyHint}"/>
             </DockPanel>
 
             <Grid ColumnDefinitions="5*,6,7*">
@@ -68,13 +61,111 @@
                                         <StackPanel Spacing="8"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:DraftChatEntry">
+                                <ItemsControl.DataTemplates>
+                                    <!-- NOTE: the text of a reply is shown here only, so rendering Markdown later
+                                         changes this one template. -->
+                                    <DataTemplate DataType="vm:DraftChatEntry">
                                         <Border Classes="chat" Classes.user="{Binding IsUser}" Classes.error="{Binding IsError}">
                                             <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
                                         </Border>
                                     </DataTemplate>
-                                </ItemsControl.ItemTemplate>
+
+                                    <DataTemplate DataType="vm:DraftActivityCard">
+                                        <Border Classes="activity">
+                                            <Expander IsExpanded="{Binding IsExpanded}" HorizontalAlignment="Stretch"
+                                                      IsEnabled="{Binding HasSteps}">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <ProgressBar IsIndeterminate="True" Width="28" MinWidth="28"
+                                                                     VerticalAlignment="Center" IsVisible="{Binding IsRunning}"/>
+                                                        <TextBlock Classes="muted" Text="{Binding Title}" TextWrapping="Wrap"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ItemsControl ItemsSource="{Binding Steps}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Spacing="3"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:DraftActivityStep">
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="12"
+                                                                           Classes.danger="{Binding IsError}"
+                                                                           Classes.reasoning="{Binding IsReasoning}"/>
+                                                                <SelectableTextBlock Text="{Binding Detail}" TextWrapping="Wrap" FontSize="12"
+                                                                                     Classes="muted" Margin="12,0,0,0"
+                                                                                     IsVisible="{Binding HasDetail}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Expander>
+                                        </Border>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="vm:DraftQuestionCard">
+                                        <Border Classes="questions">
+                                            <StackPanel Spacing="12">
+                                                <ItemsControl ItemsSource="{Binding Questions}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Spacing="14"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:DraftQuestionItem">
+                                                            <StackPanel Spacing="6">
+                                                                <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                                                <ItemsControl ItemsSource="{Binding Choices}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <WrapPanel ItemSpacing="6" LineSpacing="6"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate x:DataType="vm:DraftQuestionChoice">
+                                                                            <Button Classes="choice" Classes.recommended="{Binding IsRecommended}"
+                                                                                    Classes.selected="{Binding IsSelected}"
+                                                                                    Command="{Binding SelectCommand}"
+                                                                                    IsEnabled="{Binding IsOpen}"
+                                                                                    ToolTip.Tip="{Binding Description}"
+                                                                                    AutomationProperties.Name="{Binding Label}">
+                                                                                <StackPanel Spacing="2">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <TextBlock Text="{Binding Label}" TextWrapping="Wrap"/>
+                                                                                        <Border Classes="tag" IsVisible="{Binding IsRecommended}">
+                                                                                            <TextBlock Text="{loc:Loc Drafting_Recommended}" FontSize="11"/>
+                                                                                        </Border>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock Text="{Binding Description}" Classes="muted" FontSize="11"
+                                                                                               TextWrapping="Wrap" MaxWidth="320"
+                                                                                               IsVisible="{Binding HasDescription}"/>
+                                                                                </StackPanel>
+                                                                            </Button>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <TextBox Text="{Binding OtherText}" IsEnabled="{Binding IsOpen}"
+                                                                         PlaceholderText="{loc:Loc Drafting_OtherAnswer}"
+                                                                         AutomationProperties.Name="{loc:Loc Drafting_OtherAnswer}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right"
+                                                            IsVisible="{Binding IsOpen}">
+                                                    <Button Classes="tool" Content="{loc:Loc Drafting_UseRecommendations}"
+                                                            Command="{Binding UseRecommendationsCommand}"
+                                                            IsVisible="{Binding HasRecommendations}"/>
+                                                    <Button Classes="tool Primary" Content="{loc:Loc Drafting_SendAnswers}"
+                                                            Command="{Binding SubmitCommand}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.DataTemplates>
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>
@@ -192,6 +283,42 @@
         </Style>
         <Style Selector="Border.chat.error">
             <Setter Property="Background" Value="{DynamicResource SemiColorDangerLight}"/>
+        </Style>
+        <Style Selector="Border.activity">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="MaxWidth" Value="560"/>
+        </Style>
+        <Style Selector="Border.questions">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="MaxWidth" Value="560"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+            <Setter Property="Background" Value="{DynamicResource SemiColorBackground1}"/>
+        </Style>
+        <Style Selector="Button.choice">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        </Style>
+        <Style Selector="Button.choice.recommended">
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorPrimary}"/>
+        </Style>
+        <Style Selector="Button.choice.selected">
+            <Setter Property="Background" Value="{DynamicResource SemiColorPrimaryLight}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorPrimary}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Border.tag">
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource SemiColorPrimaryLight}"/>
+        </Style>
+        <Style Selector="TextBlock.reasoning">
+            <Setter Property="FontStyle" Value="Italic"/>
         </Style>
         <Style Selector="TextBlock.danger">
             <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}"/>

@@ -553,7 +553,6 @@ The requests are charged to the Claude Console organization of this credential.<
   <data name="Drafting_Credential" xml:space="preserve"><value>Credential:</value></data>
   <data name="Drafting_Create" xml:space="preserve"><value>Create Definitions</value></data>
   <data name="Drafting_CreateTooltip" xml:space="preserve"><value>Import the form the way an Excel workbook is imported: review the files, write them, then upgrade the database</value></data>
-  <data name="Drafting_Working" xml:space="preserve"><value>Claude is working on the draft...</value></data>
   <data name="Drafting_ReadyHint" xml:space="preserve"><value>The draft is ready to create.</value></data>
   <data name="Drafting_Send" xml:space="preserve"><value>Send</value></data>
   <data name="Drafting_Stop" xml:space="preserve"><value>Stop</value></data>
@@ -577,4 +576,27 @@ The requests are charged to the Claude Console organization of this credential.<
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>The request failed: {0}
 The draft is as it was before this message; send it again to retry.</value></data>
   <data name="Drafting_MasterTable" xml:space="preserve"><value>Master</value></data>
+  <data name="Drafting_Recommended" xml:space="preserve"><value>Suggested</value></data>
+  <data name="Drafting_OtherAnswer" xml:space="preserve"><value>Or answer in your own words</value></data>
+  <data name="Drafting_UseRecommendations" xml:space="preserve"><value>Use the Suggestions</value></data>
+  <data name="Drafting_SendAnswers" xml:space="preserve"><value>Send Answers</value></data>
+  <data name="Drafting_AnswersHeader" xml:space="preserve"><value>My answers:</value></data>
+  <data name="Drafting_NotAnswered" xml:space="preserve"><value>(no answer)</value></data>
+  <data name="DraftingStep_Thinking" xml:space="preserve"><value>Thinking</value></data>
+  <data name="DraftingStep_Reasoning" xml:space="preserve"><value>Thought</value></data>
+  <data name="DraftingStep_Done" xml:space="preserve"><value>Done in {0} steps</value></data>
+  <data name="DraftingStep_Stopped" xml:space="preserve"><value>Stopped after {0} steps</value></data>
+  <data name="DraftingStep_Other" xml:space="preserve"><value>Running {0}</value></data>
+  <data name="DraftingStep_set_form_info" xml:space="preserve"><value>Setting the form's name and menu</value></data>
+  <data name="DraftingStep_upsert_table" xml:space="preserve"><value>Setting up the table {0}</value></data>
+  <data name="DraftingStep_remove_table" xml:space="preserve"><value>Removing the table {0}</value></data>
+  <data name="DraftingStep_upsert_field" xml:space="preserve"><value>Setting up the field {0}</value></data>
+  <data name="DraftingStep_remove_field" xml:space="preserve"><value>Removing the field {0}</value></data>
+  <data name="DraftingStep_search_progids" xml:space="preserve"><value>Searching the forms for {0}</value></data>
+  <data name="DraftingStep_get_progid_fields" xml:space="preserve"><value>Reading the fields of {0}</value></data>
+  <data name="DraftingStep_set_relation" xml:space="preserve"><value>Linking the field {0} to another form</value></data>
+  <data name="DraftingStep_get_draft" xml:space="preserve"><value>Reading the draft</value></data>
+  <data name="DraftingStep_validate_draft" xml:space="preserve"><value>Validating the draft</value></data>
+  <data name="DraftingStep_mark_ready" xml:space="preserve"><value>Marking the draft ready</value></data>
+  <data name="DraftingStep_ask_user" xml:space="preserve"><value>Preparing questions for you</value></data>
 </root>
