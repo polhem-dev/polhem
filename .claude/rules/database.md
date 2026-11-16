@@ -110,3 +110,19 @@ descriptions; `RebuildPreservationDbTests` covers (1) and (4) for the rebuild. *
 or reads back (`<Dialect>SchemaSyntax`, `<Dialect>TableSchemaProvider`, `TableSchemaComparer`, a rebuild builder) or
 add a column type, extend those definitions.** `DatabaseInitializer` (`Polhem.Hosting`) records a failing table's
 error in its report and goes on with the other tables.
+
+## Raise `SchemaFormat.Current` with every change to the upgrade's behaviour
+
+`SchemaFormat.Current` (`src/Polhem.Db/Schema/SchemaFormat.cs`) versions what an upgrade does. Each table's upgrade is
+recorded with it in `st_table_upgrade`; a tool of a lower format refuses a database a higher one upgraded, and the fast
+compare trusts a record only under the current format (adr-065). **Raise it in the same pull request as any change to:**
+
+- the DDL a dialect emits (`<Dialect>SchemaSyntax`, a create, alter or rebuild builder, a type mapping);
+- the shape a provider reads back (`<Dialect>TableSchemaProvider`);
+- what the comparer detects (`TableSchemaComparer`, or the default of a definition property that the serialized schema
+  leaves out).
+
+`SchemaFormatDdlSnapshotTests` (tests/Polhem.Db.UnitTests) catches the first: it fails until the format is raised, and
+then writes the new snapshots with `POLHEM_UPDATE_DDL_SNAPSHOTS=1`. Nothing catches the other two; they are a review
+check. Do not raise the format for a change that leaves all three alone: every raise makes each deployment compare every
+table in full once, and refuses the previous tools.

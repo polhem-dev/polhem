@@ -198,6 +198,12 @@ public sealed class UpgradeOptions
     /// </summary>
     public bool AllowColumnNarrowing { get; init; } = false;
 
+    /// <summary>
+    /// How the upgrade decides whether a table differs from its definition (§11).
+    /// Default Fast: a table whose upgrade record says it is current is not compared.
+    /// </summary>
+    public UpgradeCompareMode CompareMode { get; init; } = UpgradeCompareMode.Fast;
+
     /// <summary>A shared instance with every option at its default.</summary>
     public static UpgradeOptions Default { get; } = new UpgradeOptions();
 }
@@ -380,13 +386,95 @@ ALTER TABLE ft_employee   RENAME TO st_employee;
 
 Indexes named after the old table (e.g. `pk_ft_employee`, `rx_ft_employee`) are left alone by the rename and keep working on the renamed table. The framework's index-name templates use `{0}` for the table name, so the definition now expects `rx_st_employee` and so on. The next schema upgrade finds the primary key regardless of its name, but matches every other index by its formatted name: it does not find `rx_st_employee`, and creates it next to the old `rx_ft_employee`. Drop the old-named indexes by hand if you do not want the duplicates.
 
-## 11. References
+## 11. Upgrade records and the schema format
+
+Every database the upgrade runs on keeps a record of each table's last upgrade in `st_table_upgrade`. The upgrade
+creates the table the first time it upgrades a table of that database, or compares one and finds it matching; a dry run
+writes nothing. The records do two things: they keep a tool of an older framework from undoing what a newer one
+did, and they let the upgrade skip the comparison of a table whose record says it is current.
+
+### The schema format
+
+`SchemaFormat.Current` is the version of the upgrade's behaviour: the statements each dialect writes, the shape each
+provider reads back, and how a rebuild works. It is raised when that behaviour changes, not with every release, and
+each record carries the format of the tool that wrote it.
+
+A tool of a lower format must not change a database that a higher one upgraded: it would read the newer shape as a
+difference and change it back, and the two would undo each other on every run. Before it runs any statement, the
+upgrade reads the highest format recorded in the database and stops when it is higher than its own:
+
+- `db upgrade`, `db upgrade --dry-run` and `IDatabaseInitializer.UpgradeTables` report the database once in
+  `TableUpgradeReport.Problems`, skip its tables and go on with the other databases.
+- `IDatabaseRepository.UpgradeTableSchema`, `TableSchemaBuilder.Execute` and `TableUpgradeOrchestrator.Execute` throw an
+  `InvalidOperationException`.
+
+The message names the database, the format and the framework version that upgraded it, and says that nothing was
+changed. Upgrade that database with a framework of that version or later. A record whose status is `Verified` does not
+count: it says that a tool compared the table and found nothing to change, so it does not keep an older tool out after
+a deployment that changed no table.
+
+The check protects a database from the first release that records upgrades on. A tool released before that keeps no
+records and reads none.
+
+### Compare modes
+
+`UpgradeOptions.CompareMode` decides how the upgrade finds out whether a table differs from its definition:
+
+| Mode | What it does |
+|------|--------------|
+| `Fast` (default) | When the table's record says that the last upgrade succeeded or found it matching, with the current schema format and the definition as it is now, the table counts as unchanged and the database's catalog is not read. Otherwise the table is compared as in `Full`. |
+| `Full` | Reads the table's schema from the database's catalog and compares it with the definition. |
+
+The records of a database are read once, before its first table, and only their small columns (not `schema_xml`), so
+the cost does not grow with the size of the recorded schemas. Reading the catalog is what makes a comparison slow on
+SQL Server and Oracle, and `Fast` avoids it for every table that has not changed.
+
+`Fast` does not see a change made to a table outside the framework, such as a column or an index dropped by hand, until
+the definition changes. Use `Full` when that matters: `db upgrade --full-compare`, or
+`new UpgradeOptions { CompareMode = UpgradeCompareMode.Full }`. A `Full` comparison that finds nothing to change writes
+the record, so the next `Fast` run can use it.
+
+`TableSchemaBuilder.GetCommandText` and `CompareToDiff` always compare in full and write no record.
+
+### The record table
+
+| Column | Content |
+|--------|---------|
+| `table_name` | The table, in lowercase (primary key). |
+| `format_version` | The schema format of the tool that wrote the record. |
+| `framework_version` | The framework version of that tool. |
+| `status` | `Upgrading`, `Succeeded`, `Failed` or `Verified` (`TableUpgradeStatus`). |
+| `error` | The error of a failed upgrade. |
+| `schema_xml` | The definition the table was last upgraded to successfully. |
+| `schema_hash` | The SHA-256 of `schema_xml`, which `Fast` compares with the current definition. |
+| `sys_update_time` | When the record was written. |
+
+The record is marked `Upgrading` before the first statement runs, and gets the outcome afterwards. A record left at
+`Upgrading` means the process stopped during the upgrade; a `Failed` record keeps the error and the schema of the last
+upgrade that succeeded. Either way the next run compares the table in full. `db upgrade` notes both on the table's line.
+
+To see the records, query the table, or read one in code with `TableUpgradeRecordStore.GetRecord`:
+
+```sql
+SELECT table_name, status, format_version, framework_version, sys_update_time, error
+FROM st_table_upgrade
+ORDER BY sys_update_time DESC;
+```
+
+Do not edit the records by hand. Deleting a table's record is safe: the next run compares that table in full and
+records it again.
+
+The reasons for the records, the format and the `Verified` status are in
+[ADR-065](../../../maintainers/adr/adr-065-table-upgrade-records-and-schema-format.md).
+
+## 12. References
 
 ### Source files
 - [TableSchemaBuilder](../../../src/Polhem.Db/Schema/TableSchemaBuilder.cs) — public entry point
 - [TableUpgradeOrchestrator](../../../src/Polhem.Db/Schema/TableUpgradeOrchestrator.cs) — Plan / Execute
 - [TableSchemaDiff](../../../src/Polhem.Db/Schema/TableSchemaDiff.cs) / [UpgradePlan](../../../src/Polhem.Db/Schema/UpgradePlan.cs)
 - [UpgradeOptions](../../../src/Polhem.Db/Schema/UpgradeOptions.cs)
+- [SchemaFormat](../../../src/Polhem.Db/Schema/SchemaFormat.cs) / [TableUpgradeRecordStore](../../../src/Polhem.Db/Schema/TableUpgradeRecordStore.cs) — the schema format and the upgrade records
 - [DbField.OriginalFieldName](../../../src/Polhem.Definition/Database/DbField.cs)
 
 ### Related documents

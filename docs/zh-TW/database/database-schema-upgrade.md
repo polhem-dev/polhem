@@ -1,4 +1,4 @@
-<!-- source: en/database/database-schema-upgrade.md blob: eb36ddfa9cccc88f4935a3a1a339fdf54a411c51 -->
+<!-- source: en/database/database-schema-upgrade.md blob: 3a39a57e827e72f307c2c1c687e0d82a119834a4 -->
 # 資料庫 Schema 升級指引
 
 [English](../../en/database/database-schema-upgrade.md) · [← 文件索引](../README.md)
@@ -197,6 +197,12 @@ public sealed class UpgradeOptions
     /// </summary>
     public bool AllowColumnNarrowing { get; init; } = false;
 
+    /// <summary>
+    /// 升級如何判斷資料表與定義是否不同（§11）。
+    /// 預設 Fast：升級紀錄顯示已是最新的資料表不比對。
+    /// </summary>
+    public UpgradeCompareMode CompareMode { get; init; } = UpgradeCompareMode.Fast;
+
     /// <summary>所有選項皆為預設值的共用執行個體。</summary>
     public static UpgradeOptions Default { get; } = new UpgradeOptions();
 }
@@ -378,13 +384,73 @@ ALTER TABLE ft_employee   RENAME TO st_employee;
 
 以舊表名命名的 index（如 `pk_ft_employee`、`rx_ft_employee`）不受改名影響，在改名後的表上照常運作。框架的 index 名稱樣板以 `{0}` 代表表名，所以定義此時預期的是 `rx_st_employee` 等名稱。下一次 schema 升級不論主鍵名稱為何都找得到主鍵，但其他 index 是以套用表名後的名稱比對：它找不到 `rx_st_employee`，於是在舊的 `rx_ft_employee` 旁再建一個。若不想留下重複的 index，請手動刪除舊名稱的 index。
 
-## 11. 參考
+## 11. 升級紀錄與格式版本
+
+升級執行過的每個資料庫，都會在 `st_table_upgrade` 記錄每張資料表最近一次的升級。第一次升級該資料庫的某張表，或比對某張表並確認已經一致時，升級會建立這張紀錄表；dry-run 不寫入任何東西。這些紀錄有兩個用途：避免舊版框架的工具復原新版做過的改動，以及讓升級略過紀錄顯示已是最新的資料表，不必逐一比對。
+
+### 格式版本
+
+`SchemaFormat.Current` 是升級行為的版本，涵蓋各方言產生的語句、各 provider 讀回的結構，以及 rebuild 的做法。只有這些行為改變時才會調高，不會隨每次發版調高；每筆紀錄都帶有寫入它的工具的格式版本。
+
+格式版本較低的工具不可以改動被較高版本升級過的資料庫：它會把新版的結構當成差異改回去，兩個版本每次執行都互相復原。執行任何語句之前，升級會讀取資料庫裡記錄的最高格式版本，比自己的高就停下來：
+
+- `db upgrade`、`db upgrade --dry-run` 與 `IDatabaseInitializer.UpgradeTables` 在 `TableUpgradeReport.Problems` 對該資料庫回報一次，略過它的資料表，繼續處理其他資料庫。
+- `IDatabaseRepository.UpgradeTableSchema`、`TableSchemaBuilder.Execute` 與 `TableUpgradeOrchestrator.Execute` 丟出 `InvalidOperationException`。
+
+錯誤訊息會說明資料庫、格式版本、升級它的框架版本，以及資料庫沒有任何改動。請用該版本或更新的框架升級那個資料庫。狀態為 `Verified` 的紀錄不列入：它只表示工具比對過資料表、沒有需要改的地方，所以一次沒改任何資料表的部署，不會擋住回到舊版工具。
+
+這項檢查從開始記錄升級的那一版起保護資料庫。在那之前發佈的工具不寫紀錄，也不讀紀錄。
+
+### 比對模式
+
+`UpgradeOptions.CompareMode` 決定升級如何判斷資料表與定義是否不同：
+
+| 模式 | 做法 |
+|------|------|
+| `Fast`（預設） | 資料表的紀錄顯示上次升級成功或比對一致，而且格式版本是目前的版本、定義與現在相同時，視為沒有變更，不讀資料庫的系統目錄。其他情況照 `Full` 比對。 |
+| `Full` | 從資料庫的系統目錄讀出資料表結構，與定義比對。 |
+
+每個資料庫的紀錄在處理第一張表之前讀取一次，而且只讀較小的欄位（不讀 `schema_xml`），所以成本不會隨記錄的結構大小增加。比對在 SQL Server 與 Oracle 上慢，主要就是慢在讀系統目錄；`Fast` 讓沒有變更的資料表都不必讀。
+
+`Fast` 看不到在框架之外對資料表做的改動，例如手動刪掉的欄位或索引，要等定義改變才會發現。在意這點時改用 `Full`：`db upgrade --full-compare`，或 `new UpgradeOptions { CompareMode = UpgradeCompareMode.Full }`。`Full` 比對沒有發現需要改的地方時會寫入紀錄，下一次 `Fast` 就能使用。
+
+`TableSchemaBuilder.GetCommandText` 與 `CompareToDiff` 一律完整比對，也不寫紀錄。
+
+### 紀錄表
+
+| 欄位 | 內容 |
+|------|------|
+| `table_name` | 資料表名稱，存成小寫（主鍵）。 |
+| `format_version` | 寫入紀錄的工具的格式版本。 |
+| `framework_version` | 該工具的框架版本。 |
+| `status` | `Upgrading`、`Succeeded`、`Failed` 或 `Verified`（`TableUpgradeStatus`）。 |
+| `error` | 升級失敗時的錯誤。 |
+| `schema_xml` | 資料表最近一次成功升級到的定義。 |
+| `schema_hash` | `schema_xml` 的 SHA-256，`Fast` 拿它與目前的定義比對。 |
+| `sys_update_time` | 紀錄寫入的時間。 |
+
+第一個語句執行前，紀錄會先標成 `Upgrading`，結束後再寫入結果。停在 `Upgrading` 的紀錄表示升級途中程序中斷；`Failed` 的紀錄保留錯誤與最近一次成功升級的結構。兩種情況下一次執行都會完整比對該表，`db upgrade` 也會在該表那一行註明。
+
+要查看紀錄，直接查詢這張表，或在程式中用 `TableUpgradeRecordStore.GetRecord` 讀取單張表的紀錄：
+
+```sql
+SELECT table_name, status, format_version, framework_version, sys_update_time, error
+FROM st_table_upgrade
+ORDER BY sys_update_time DESC;
+```
+
+不要手動修改紀錄。刪除某張表的紀錄是安全的：下一次執行會完整比對該表並重新記錄。
+
+紀錄、格式版本與 `Verified` 狀態的設計理由見 [ADR-065](../../../maintainers/adr/adr-065-table-upgrade-records-and-schema-format.md)。
+
+## 12. 參考
 
 ### 原始檔
 - [TableSchemaBuilder](../../../src/Polhem.Db/Schema/TableSchemaBuilder.cs) — 對外入口
 - [TableUpgradeOrchestrator](../../../src/Polhem.Db/Schema/TableUpgradeOrchestrator.cs) — Plan / Execute
 - [TableSchemaDiff](../../../src/Polhem.Db/Schema/TableSchemaDiff.cs) / [UpgradePlan](../../../src/Polhem.Db/Schema/UpgradePlan.cs)
 - [UpgradeOptions](../../../src/Polhem.Db/Schema/UpgradeOptions.cs)
+- [SchemaFormat](../../../src/Polhem.Db/Schema/SchemaFormat.cs) / [TableUpgradeRecordStore](../../../src/Polhem.Db/Schema/TableUpgradeRecordStore.cs) — 格式版本與升級紀錄
 - [DbField.OriginalFieldName](../../../src/Polhem.Definition/Database/DbField.cs)
 
 ### 相關文件

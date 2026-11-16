@@ -58,6 +58,12 @@ which keeps the companies of a shared database apart ([Database Settings §5.5](
 >
 > Log tables are **opt-in** (`AuditLogOptions.Enabled` is off by default) and self-sufficient: they denormalise the acting user / company so a query never joins across databases (the log database may be physically separate). Rows that refer to a session store a token fingerprint (`token_fingerprint`), never the access token. Writes go to the fixed `log` database id today; splitting the log database by year is a direction recorded in [ADR-027](../../../maintainers/adr/adr-027-audit-trail.md), not a current feature.
 
+### 1.4 Every database the upgrade runs on
+
+| Table | Purpose |
+|-------|---------|
+| `st_table_upgrade` | The record of each table's last upgrade, and the schema format of the tool that made it. The upgrade creates it in each database it runs on, whatever the category, and refuses a database a newer schema format upgraded ([Database Schema Upgrade Guide §11](../database/database-schema-upgrade.md#11-upgrade-records-and-the-schema-format)). It has no TableSchema file: the framework builds its definition in code. |
+
 ---
 
 ## 2. Reserved `progId`s
