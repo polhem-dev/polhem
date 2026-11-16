@@ -67,7 +67,13 @@ public sealed partial class DraftActivityCard : DraftChatItem
     {
         IsRunning = false;
         IsExpanded = false;
-        Title = completed ? L("DraftingStep_Done", _toolSteps) : L("DraftingStep_Stopped", _toolSteps);
+        Title = (completed, _toolSteps) switch
+        {
+            (true, 1) => L("DraftingStep_DoneOne"),
+            (true, _) => L("DraftingStep_Done", _toolSteps),
+            (false, 1) => L("DraftingStep_StoppedOne"),
+            _ => L("DraftingStep_Stopped", _toolSteps),
+        };
     }
 
     /// <summary>

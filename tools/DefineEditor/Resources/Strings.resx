@@ -586,6 +586,8 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="DraftingStep_Reasoning" xml:space="preserve"><value>Thought</value></data>
   <data name="DraftingStep_Done" xml:space="preserve"><value>Done in {0} steps</value></data>
   <data name="DraftingStep_Stopped" xml:space="preserve"><value>Stopped after {0} steps</value></data>
+  <data name="DraftingStep_DoneOne" xml:space="preserve"><value>Done in 1 step</value></data>
+  <data name="DraftingStep_StoppedOne" xml:space="preserve"><value>Stopped after 1 step</value></data>
   <data name="DraftingStep_Other" xml:space="preserve"><value>Running {0}</value></data>
   <data name="DraftingStep_set_form_info" xml:space="preserve"><value>Setting the form's name and menu</value></data>
   <data name="DraftingStep_upsert_table" xml:space="preserve"><value>Setting up the table {0}</value></data>
