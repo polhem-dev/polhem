@@ -113,9 +113,20 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Equal(0, first.RecommendedIndex);
             Assert.Equal(-1, asked.Questions[1].RecommendedIndex);
             Assert.Equal(ChatToolMode.None, client.Requests[1].Options?.ToolMode);
-            Assert.Contains("answers arrive in their next message", client.Requests[1].Messages[^1].Contents
-                .OfType<FunctionResultContent>().Single().Result?.ToString(), StringComparison.Ordinal);
+            var result = client.Requests[1].Messages[^1].Contents.OfType<FunctionResultContent>().Single().Result?.ToString();
+            Assert.Contains("answers arrive in their next message", result, StringComparison.Ordinal);
+            Assert.Contains("says what you changed in this turn", result, StringComparison.Ordinal);
             Assert.Equal(["Please answer the questions above."], replies);
+        }
+
+        [Fact]
+        [DisplayName("The instructions ask the reply that ends a turn with questions to say first what was changed")]
+        public void Instructions_AfterAskUser_ReplySaysWhatChanged()
+        {
+            var session = new FormDraftSession(new ScriptedChatClient(), new FakeDraftingHost());
+
+            Assert.Contains("first what you changed in this turn", session.History[0].Text, StringComparison.Ordinal);
+            Assert.DoesNotContain("end the turn with one short sentence", session.History[0].Text, StringComparison.Ordinal);
         }
 
         [Fact]

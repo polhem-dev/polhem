@@ -172,7 +172,7 @@ public sealed class FormDraftingChatTests
         Assert.DoesNotContain(viewModel.Messages, item => item is DraftQuestionCard);
         Assert.True(Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).IsError);
         var card = Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
-        Assert.Equal(LocalizationService.Current["DraftingStep_Stopped"].Replace("{0}", "1", StringComparison.Ordinal), card.Title);
+        Assert.Equal(LocalizationService.Current["DraftingStep_StoppedOne"], card.Title);
     }
 
     [Fact]

@@ -32,7 +32,8 @@ namespace Polhem.Definition.Drafting.Session
             AskedQuestions = asked;
             return $"The {(asked.Count == 1 ? "question is" : "questions are")} shown to the user below your reply, with the "
                 + "options to choose from. Their answers arrive in their next message. Do not call more tools in this turn: "
-                + "end it with one short sentence, and do not repeat the questions in it.";
+                + "end it with a short reply that first says what you changed in this turn, if anything, and do not repeat "
+                + "the questions in it.";
         }
 
         private static DraftQuestion CheckQuestion(AskUserQuestion question, int number)
