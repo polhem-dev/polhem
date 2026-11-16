@@ -28,9 +28,9 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 | 從文件到表單 |
 |---|
-| [![用 AI 把紙本單據變成可登打的 .NET 表單](https://img.youtube.com/vi/IvOWHbBvZlM/hqdefault.jpg)](https://youtu.be/IvOWHbBvZlM) |
+| [![用 AI 把紙本單據變成可登打的 .NET 表單](https://img.youtube.com/vi/ULkowf0RFhA/hqdefault.jpg)](https://youtu.be/ULkowf0RFhA) |
 | 把手上現有的單據（PDF、Word 或照片）匯入 DefineEditor，由 AI 模型和你一起擬出表單，包括表頭、明細、合計，以及從其他表單挑選資料的關聯欄位。用白話調整、產生定義，表單就能登打。 |
-| [觀看](https://youtu.be/IvOWHbBvZlM)（3 分鐘，中文旁白）· [英文版](https://youtu.be/pLywODN33mk)（3.5 分鐘） |
+| [觀看](https://youtu.be/ULkowf0RFhA)（3 分鐘，中文旁白）· [英文版](https://youtu.be/hkt_KAwcVro)（3.5 分鐘） |
 | 以 Polhem 1.15.0 錄製 |
 
 ## 🚀 線上試用
