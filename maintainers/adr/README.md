@@ -85,3 +85,4 @@ understanding why the design is the way it is.
 | [062](adr-062-row-level-tenancy.md) | Row-level tenancy: companies sharing a company database | ✅ Accepted |
 | [063](adr-063-one-company-scope-per-request.md) | One request reads the session's company scope once and passes the snapshot down | ✅ Accepted |
 | [064](adr-064-document-form-drafting.md) | A form can be drafted from paper documents through a conversation with an AI model, behind `IChatClient` | ✅ Accepted |
+| [065](adr-065-table-upgrade-records-and-schema-format.md) | Each table upgrade is recorded with the schema format, and an older format may not change a newer database | ✅ Accepted |

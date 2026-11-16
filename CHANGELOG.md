@@ -11,6 +11,14 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [Unreleased]
+
+Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1.15.0.md)
+
+- **Breaking:** The table upgrade takes a table its upgrade record calls current as unchanged without reading the database; `db upgrade --full-compare` compares every table.
+- The table upgrade records each table in `st_table_upgrade`, and a tool of an older schema format no longer changes a database a newer one upgraded.
+- `db upgrade` reports which tables their record decided, and a previous upgrade that failed or did not finish.
+
 ## [1.14.0] - 2026-11-14
 
 Details and migration steps: [docs/en/changelogs/1.14.0.md](docs/en/changelogs/1.14.0.md)

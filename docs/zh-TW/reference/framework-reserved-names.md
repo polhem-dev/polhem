@@ -1,4 +1,4 @@
-<!-- source: en/reference/framework-reserved-names.md blob: 86d88ba4e9c5893150532de6f094561173e74ae7 -->
+<!-- source: en/reference/framework-reserved-names.md blob: 8b22a30ab2dbb75a5b30b18b61fd83bdcfa76a87 -->
 # 框架保留命名
 
 [English](../../en/reference/framework-reserved-names.md) · [← 文件索引](../README.md)
@@ -58,6 +58,12 @@
 > 這些表是兩件不同的事共用一個資料庫。`st_log_login`、`st_log_change` 與 `st_log_access` 是**稽核軌跡** —— 誰對哪一筆做了什麼，經 `IAuditLogWriter` 寫入。兩張 `st_log_anomaly_*` 表是**執行異常** —— 哪一次執行偏離了正常，經 `IAnomalyLogWriter` 寫入；它們是維運訊號而非業務紀錄，所以 `st_log_anomaly_db` 連觸發者都沒有。見 [ADR-040](../../../maintainers/adr/adr-040-audit-trail-taxonomy.md)。
 >
 > Log 表**預設關閉（opt-in，`AuditLogOptions.Enabled` 預設為關）**且自足：去正規化觸發者的 user / company，查詢不需跨資料庫 join（log 資料庫可能實體分離）。與 session 相關的列存放 token 指紋（`token_fingerprint`），絕不存 access token 本身。目前一律寫入固定的 `log` 資料庫 id；依年份拆分 log 資料庫是 [ADR-027](../../../maintainers/adr/adr-027-audit-trail.md) 記錄的方向，並非現有功能。
+
+### 1.4 升級執行過的每個資料庫
+
+| 資料表 | 用途 |
+|--------|------|
+| `st_table_upgrade` | 每張資料表最近一次升級的紀錄，以及執行升級的工具的格式版本。升級會在它執行過的每個資料庫建立這張表，不分類別；被較新格式升級過的資料庫，升級會拒絕處理（[資料庫 Schema 升級指引 §11](../database/database-schema-upgrade.md#11-升級紀錄與格式版本)）。它沒有 TableSchema 檔，定義由框架在程式中建立。 |
 
 ---
 
