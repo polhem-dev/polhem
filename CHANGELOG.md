@@ -16,8 +16,12 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1.15.0.md)
 
 - **Breaking:** The table upgrade takes a table its upgrade record calls current as unchanged without reading the database; `db upgrade --full-compare` compares every table.
+- **Breaking:** A table rebuild that would lose an index only the database has, or a column of a type the framework does not map, is refused and leaves the table as it was.
+- **Breaking:** On SQLite and Oracle a `Date` column defaults to midnight of the UTC day, and the next upgrade moves existing columns to it, on SQLite by rebuilding their tables.
+- **Breaking:** Two language files or folders whose names differ only in case are an error; otherwise a language file is found whatever case the request names it in.
 - The table upgrade records each table in `st_table_upgrade`, and a tool of an older schema format no longer changes a database a newer one upgraded.
 - `db upgrade` reports which tables their record decided, and a previous upgrade that failed or did not finish.
+- A table rebuild keeps AutoIncrement numbers and a renamed column's values, and an upgrade no longer repeats itself on SQL Server, MySQL, Oracle and SQLite.
 
 ## [1.14.0] - 2026-11-14
 
