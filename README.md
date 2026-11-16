@@ -28,9 +28,9 @@ English narration with English and Traditional Chinese subtitles.
 
 | From a document to a form |
 |---|
-| [![From a PDF or Word form to a .NET form with AI](https://img.youtube.com/vi/pLywODN33mk/hqdefault.jpg)](https://youtu.be/pLywODN33mk) |
+| [![From a PDF or Word form to a .NET form with AI](https://img.youtube.com/vi/hkt_KAwcVro/hqdefault.jpg)](https://youtu.be/hkt_KAwcVro) |
 | Import a form you already have, as a PDF, a Word file or a photo, into DefineEditor. An AI model drafts the form with you: the header, the line items, the totals and the fields that pick records from other forms. Adjust it in plain words, create the definitions, and the form is ready for data entry. |
-| [Watch](https://youtu.be/pLywODN33mk) (3.5 minutes) · [Chinese version](https://youtu.be/IvOWHbBvZlM) (3 minutes) |
+| [Watch](https://youtu.be/hkt_KAwcVro) (3.5 minutes) · [Chinese version](https://youtu.be/ULkowf0RFhA) (3 minutes) |
 | Recorded with Polhem 1.15.0 |
 
 ## 🚀 Try it live
