@@ -75,6 +75,8 @@ namespace Polhem.UI.Avalonia.Views
             _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
             _dataObject.RowEditFieldChanged += OnLiveRowEditFieldChanged;
             _dataObject.RowAdded += OnLiveRowAdded;
+            _dataObject.RowDeleted += OnLiveRowsRemoved;
+            _dataObject.RowEditCanceled += OnLiveRowsRemoved;
             _dataObject.FieldValueChangeApplied += OnFieldValueChangeApplied;
             _dataObject.FieldValueChangeFailed += OnFieldValueChangeFailed;
             string layoutProgId = string.IsNullOrEmpty(ProgId) ? Schema.ProgId : ProgId;
@@ -237,6 +239,16 @@ namespace Polhem.UI.Avalonia.Views
             var changed = _liveComputation.InitializeNewRow(e.TableName, e.Row);
             if (changed.Count > 0)
                 RefreshDetailGrid(e.TableName);
+        }
+
+        /// <summary>
+        /// Recomputes the master totals after a detail row is deleted or its edit is cancelled. The master's field
+        /// editors re-pull the values themselves.
+        /// </summary>
+        private void OnLiveRowsRemoved(object? sender, RowChangedEventArgs e)
+        {
+            if (_liveComputation is null || _dataObject is null) { return; }
+            _liveComputation.RecomputeAggregates(e.TableName, _dataObject.DataSet);
         }
 
         /// <summary>

@@ -74,5 +74,15 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// <inheritdoc cref="FormLiveComputationEngine.InitializeNewRow"/>
         public IReadOnlyList<string> InitializeNewRow(string tableName, DataRow row)
             => _engine.InitializeNewRow(tableName, row);
+
+        /// <summary>
+        /// Recomputes the master row after rows of a detail table were deleted or a row edit was cancelled, when
+        /// the master adds up that table. See <see cref="FormLiveComputationEngine.RecomputeAggregates"/>.
+        /// </summary>
+        /// <param name="tableName">The detail table whose rows changed.</param>
+        /// <param name="dataSet">The form's data set.</param>
+        /// <returns>The master fields whose value changed.</returns>
+        public IReadOnlyList<string> RecomputeAggregates(string tableName, DataSet dataSet)
+            => _engine.RecomputeAggregates(tableName, dataSet);
     }
 }

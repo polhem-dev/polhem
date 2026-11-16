@@ -142,8 +142,9 @@ vary with their length and with how much has to be asked. The Console shows what
 - Only Claude is supported today. The drafting itself is not tied to a vendor
   ([Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.md)); another model needs a provider
   package like [Polhem.AI.Claude](../../../src/Polhem.AI.Claude/README.md).
-- A master field that totals a detail table cannot be expressed, because an expression reads its own row only; Claude
-  leaves such fields out.
+- A total that adds up a detail table becomes a read-only master field computed with `Sum(Table.field)` (see
+  [Totals Over Detail Rows](../definitions/expression-rules.md#totals-over-detail-rows)). An average, or a sum over only
+  some of the lines, cannot be expressed; Claude leaves such fields out.
 - The **Form** tab previews the desktop form. The web previews of the FormLayout editor are not available in the
   conversation window.
 - The Excel import does not parse expressions; only drafting does.

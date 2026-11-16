@@ -21,6 +21,7 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 - 資料表升級把每張表記錄在 `st_table_upgrade`，舊格式版本的工具不再改動被新版本升級過的資料庫。
 - `db upgrade` 會回報哪些資料表由紀錄判定，以及上一次失敗或沒有完成的升級。
 - rebuild 保留 AutoIncrement 編號與改名欄位的值；SQL Server、MySQL、Oracle 與 SQLite 上的升級不再重複發生。
+- 主表欄位的運算式可以用 `Sum`、`Count`、`Min`、`Max` 加總明細列，存檔時計算，Avalonia 與 Blazor head 也即時更新。
 
 ## [1.14.0] - 2026-11-14
 

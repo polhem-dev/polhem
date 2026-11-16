@@ -19,13 +19,21 @@ namespace Polhem.UI.Core.DataObjects
         /// (<see cref="BeginRowEdit"/>), in place of <see cref="FieldValueChanged"/>.
         /// </summary>
         /// <remarks>
-        /// The value is only proposed: <see cref="CancelRowEdit"/> rolls it back without further events,
+        /// The value is only proposed: <see cref="CancelRowEdit"/> rolls it back, raising only
+        /// <see cref="RowEditCanceled"/>,
         /// and <see cref="CommitRowEdit"/> re-publishes every field the session changed through
         /// <see cref="FieldValueChanged"/>. This event therefore does not mark the object dirty. It lets the
         /// surface editing the row preview the session, for example by recomputing computed fields and
         /// refreshing their editors.
         /// </remarks>
         public event EventHandler<FieldValueChangedEventArgs>? RowEditFieldChanged;
+
+        /// <summary>
+        /// Raised after <see cref="CancelRowEdit"/> puts a row back to its values from before the edit session.
+        /// The values the session proposed were announced through <see cref="RowEditFieldChanged"/>; this tells a
+        /// listener that followed them, such as the live computation of a master total, that they are gone.
+        /// </summary>
+        public event EventHandler<RowChangedEventArgs>? RowEditCanceled;
 
         /// <summary>
         /// Starts a buffered edit session on <paramref name="row"/>: subsequent writes go to the row's
@@ -84,8 +92,9 @@ namespace Polhem.UI.Core.DataObjects
         }
 
         /// <summary>
-        /// Cancels a buffered edit session, restoring every field to its pre-session value. No events
-        /// are raised, because nothing changed.
+        /// Cancels a buffered edit session, restoring every field to its pre-session value. No field change
+        /// is raised, because no value changed; <see cref="RowEditCanceled"/> tells listeners that followed the
+        /// proposed values that they are gone.
         /// </summary>
         /// <param name="row">The row whose edit session to cancel.</param>
         public void CancelRowEdit(DataRow row)
@@ -94,6 +103,7 @@ namespace Polhem.UI.Core.DataObjects
             EnsureOwnedRow(row);
             _rowsInEdit.Remove(row);
             row.CancelEdit();
+            RowEditCanceled?.Invoke(this, new RowChangedEventArgs(row.Table.TableName, row));
         }
 
         private void EnsureOwnedRow(DataRow row)

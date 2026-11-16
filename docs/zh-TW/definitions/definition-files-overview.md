@@ -1,4 +1,4 @@
-<!-- source: en/definitions/definition-files-overview.md blob: 71ff2ca8b70ebf5d74d4be10ed52fe75d572099a -->
+<!-- source: en/definitions/definition-files-overview.md blob: df8b74625a12e12496a24477a0392292789fb101 -->
 # 定義檔全景
 
 [English](../../en/definitions/definition-files-overview.md) · [← 文件索引](../README.md)
@@ -103,7 +103,7 @@ progId 就是鍵，因此全域唯一性由結構本身保證，重複項在載�
 ```
 
 - **`BusinessObject` 留空** → 該 progId 解析到框架預設的 `FormBusinessObject`，即純定義驅動的 CRUD。
-- **`BusinessObject` 有值** → 由該型別承接此 progId，用於宣告式表達不了的情況（跨列聚合、資料庫查詢）。
+- **`BusinessObject` 有值** → 由該型別承接此 progId，用於宣告式表達不了的情況（資料庫查詢、運算式引擎以外的彙總）。
 - **`Repository` 留空** → 框架預設的 `DataFormRepository`，其語句由 FormSchema 產生。
 - **`Repository` 有值** → 由該型別承接，且必須衍生自 `DataFormRepository`，CRUD 表面才完整。BO 端以自己的介面取得它：`CreateFormRepository<IOrderRepository>()`。
 

@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: d4c8a2b84d726c0a307fcf302764f6eb7abe5fe4 -->
+<!-- source: en/definitions/expression-rules.md blob: 2349688772f29caff8004104e7c1a7fb8e72b691 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -11,7 +11,7 @@
 
 | 能力 | 載體 | 時機 |
 |------|------|------|
-| 計算欄 | `FormField.ValueExpression` | 存檔前對新增/異動列重算回填 |
+| 計算欄 | `FormField.ValueExpression` | 存檔前對新增/異動列重算回填（主表列所加總的明細有變動時，主表列也重算） |
 | 欄位預設值 | `FormField.DefaultValueExpression` | 建立新列時（蓋過字面預設值）；存檔時只填新列中仍為空的欄位 |
 | 驗證 / 前置檢查 | `FormSchema` 下的 `FormRule` | `BeforeSave` / `BeforeDelete` |
 
@@ -19,7 +19,7 @@
 
 ## 運算式語法
 
-- **變數 = 欄位名**：直接寫欄位名即可，如 `unit_price * qty`。同列所有欄位都可用。
+- **變數 = 欄位名**：直接寫欄位名即可，如 `unit_price * qty`。同列所有欄位都可用。主表的運算式還能加總明細表，見[明細加總](#明細加總)。
 - **運算子**：C# 語法子集（`+ - * /`、`> >= < <= == !=`、`&& || !`、三元 `? :`、字串 `==`）。
 - **可用函式/型別**：輔助函式 `Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`；運算式可直接指名的型別，例如 `Math`（`Math.Round`、`Math.Abs`…）、`Convert`、`DateTime`、`TimeSpan`、`Guid`（如 `customer_rowid != Guid.Empty`）；以及欄位值本身的成員（`name.Length`、`Today().AddDays(1)`）。這些型別來自 DynamicExpresso 的預設集合，加上 `DynamicExpressoEvaluator` 自行加入的；[`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) 列出運算式能觸及其成員的每個型別，並由 `TrimmerDescriptorGateTests` 確保這份清單與直譯器一致。
 
@@ -58,6 +58,29 @@
 - 計算欄通常搭配 `ReadOnly="true"`。
 - 同列多個計算欄可相依：**依宣告順序**求值，後面的看得到前面剛算好的值。
 
+## 明細加總
+
+**主表**的計算欄可以彙總同一表單中某個明細表的列：
+
+```xml
+<FormField FieldName="total_amount" Caption="Total" DbType="Currency"
+           NumberKind="Amount" ReadOnly="true"
+           ValueExpression="Sum(OrderDetail.amount)" />
+```
+
+| 彙總 | 讀取 | 結果 | 沒有任何列時 |
+|------|------|------|-------------|
+| `Sum(Table.field)` | 數值欄位 | `decimal` | `0` |
+| `Count(Table)` | 列數 | `int` | `0` |
+| `Min(Table.field)`、`Max(Table.field)` | 數值、日期或時間欄位 | 該欄位的型別 | 該欄位的空值 |
+
+- `Table` 是 FormSchema 裡明細表的 `TableName`，不是資料庫表名。標記為刪除的列不計入。
+- 彙總是運算式的一部分，可以和其他部分組合：`Sum(OrderDetail.amount) * 1.05m`、`Sum(OrderDetail.amount) - discount`。
+- **先捨入再加總。** 每筆明細值先依該欄位自己的小數位數捨入（依它的 `NumberKind`，以及該列的幣別或單位），所以合計等於各列顯示金額的和；結果再照常依主表欄位的 `NumberKind` 捨入。明細欄位本身若是計算欄（`amount = quantity * unit_price`），會先算好再被主表加總。
+- **存檔時，合計涵蓋整筆記錄。** 只要主表加總的明細表有新增、異動或刪除的列，主表列就會重算。API 呼叫端若只送出有改的列，合計仍然正確：伺服端計算前會先補上 payload 沒帶的已存明細列。這種 payload 必須帶著主表列；有合計的表單若只改明細卻沒帶主表列，存檔會被拒絕。
+- **用戶端**：Avalonia 與 Blazor head 在加總的明細列被編輯、新增或刪除時重算主表列。
+- 彙總只能用在主表欄位的 `ValueExpression`，以及目標為主表的 `FormRule`。明細表的運算式與 `DefaultValueExpression` 不能用；`ValidateExpressions`（以及 DefineEditor）會指出這種情形，也會指出不存在的表或欄位，以及彙總無法讀取的欄位型別。
+
 ## 欄位預設值：`DefaultValueExpression`
 
 ```xml
@@ -95,6 +118,8 @@
 | `Order` | 同一 trigger 內的求值順序（小的先） |
 | `Enabled` | 是否啟用（預設 true） |
 
+目標為主表的規則可以使用[明細加總](#明細加總)的彙總，例如「至少一筆明細」：`Condition="Count(OrderDetail) &gt; 0"`。在規則裡，`Sum` 直接加總明細的儲存值，不先逐列捨入；要和捨入後的合計比較，請比較計算該合計的主表欄位。
+
 > **兩段式判斷**：`When` 決定「這條規則現在該不該檢查」、`Condition` 是「必須成立的驗證」。例：「訂單已核准時，總額必須 > 0」→ `When = status == "Approved"`、`Condition = total_amount > 0`。狀態非 Approved 的單據自動略過。
 >
 > XML 裡 `>` 要寫 `&gt;`、字串引號要寫 `&quot;`。
@@ -103,10 +128,10 @@
 
 運算式引擎是**逐列（per-row）**模型。以下情境還不能純宣告，需在自訂 BO 覆寫 `DoBeforeSave` / `DoBeforeDelete`：
 
-- **跨列聚合**：如「表頭合計 = 明細金額加總」「至少一筆明細」——需跨列運算。
+- **`Sum`、`Count`、`Min`、`Max` 以外的明細彙總**：如平均、只加總部分列、明細底下再一層的表。
 - **需查資料庫**：如「狀態轉移須比對資料庫既存狀態」「自動單號取序列」。
 
-`apps/Polhem.Northwind` 的 `OrderBO` 是實例：明細金額與必填檢查已宣告化，只有上述聚合/DB 相依留在 `DoBeforeSave`。
+`apps/Polhem.Northwind` 的 `OrderBO` 是實例：明細金額、訂單合計、「至少一筆明細」與必填檢查都已宣告化，只有需查資料庫的邏輯留在 `DoBeforeSave`。
 
 ### 自訂 BO 覆寫慣例
 
@@ -114,7 +139,7 @@
 protected override void DoBeforeSave(SaveContext context)
 {
     base.DoBeforeSave(context);   // 先跑規則引擎（預設值 / 計算欄 / BeforeSave 驗證）
-    // 再疊上宣告式表達不了的邏輯（聚合、DB 查詢…）
+    // 再疊上宣告式表達不了的邏輯（DB 查詢…）
 }
 ```
 

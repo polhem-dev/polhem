@@ -357,6 +357,8 @@ namespace Polhem.Web.Blazor.Components
                 _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
                 _dataObject.RowEditFieldChanged += OnLiveFieldValueChanged;
                 _dataObject.RowAdded += OnLiveRowAdded;
+                _dataObject.RowDeleted += OnLiveRowsRemoved;
+                _dataObject.RowEditCanceled += OnLiveRowsRemoved;
                 _dataObject.FieldValueChangeApplied += OnFieldValueChangeApplied;
                 _dataObject.FieldValueChangeFailed += OnFieldValueChangeFailed;
             }
@@ -380,6 +382,8 @@ namespace Polhem.Web.Blazor.Components
             _dataObject.FieldValueChanged -= OnLiveFieldValueChanged;
             _dataObject.RowEditFieldChanged -= OnLiveFieldValueChanged;
             _dataObject.RowAdded -= OnLiveRowAdded;
+            _dataObject.RowDeleted -= OnLiveRowsRemoved;
+            _dataObject.RowEditCanceled -= OnLiveRowsRemoved;
             _dataObject.FieldValueChangeApplied -= OnFieldValueChangeApplied;
             _dataObject.FieldValueChangeFailed -= OnFieldValueChangeFailed;
         }
@@ -445,5 +449,13 @@ namespace Polhem.Web.Blazor.Components
         // Fills a newly added detail row's default-value expressions and computes its computed fields.
         private void OnLiveRowAdded(object? sender, RowChangedEventArgs e)
             => _liveComputation?.InitializeNewRow(e.TableName, e.Row);
+
+        // Recomputes the master totals after a detail row is deleted or its edit is cancelled; the master's field
+        // editors hear the new values through the data object's change events.
+        private void OnLiveRowsRemoved(object? sender, RowChangedEventArgs e)
+        {
+            if (_liveComputation is null || _dataObject is null) return;
+            _liveComputation.RecomputeAggregates(e.TableName, _dataObject.DataSet);
+        }
     }
 }

@@ -37,6 +37,8 @@ namespace Polhem.Definition.Drafting.Session
             - The form shows the master fields two to a row. Long free text (a reason, remarks, special instructions) is
               a MemoEdit, which takes the whole row. When the user asks for a field to span the row or to merge columns,
               make it a MemoEdit; no other setting widens a field.
+            - A total on the document that adds up its lines is a read-only master field computed from the detail
+              table, such as Sum(PurchaseRequestItem.estimated_cost). Keep it, and do not make it a field the user types.
             - Put the text you read a field from in source_quote, so the user can check it.
             - Make tool calls that do not depend on each other in the same response: create all the fields of a table at
               once, and search for all the referenced forms at once.

@@ -33,6 +33,7 @@
     <LanguageItem Key="Field.discount.Caption" Value="折扣" />
     <LanguageItem Key="Field.amount.Caption" Value="小計" />
     <LanguageItem Key="Rule.customer_required.Message" Value="請為訂單選擇客戶。" />
+    <LanguageItem Key="Rule.detail_required.Message" Value="訂單至少要有一筆明細。" />
     <LanguageItem Key="Rule.product_required.Message" Value="每一筆明細都必須選擇產品。" />
     <LanguageItem Key="Rule.quantity_positive.Message" Value="每一筆明細的數量都必須大於零。" />
   </Items>
