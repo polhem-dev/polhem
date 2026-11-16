@@ -107,6 +107,10 @@ namespace Polhem.Business.Form
             // Likewise, so they all see a time of day in its fixed-width form.
             SaveTimeOfDayNormalizer.Normalize(schema, args.DataSet, fromCaller: true);
 
+            // Before BeforeSave computes the master totals, and after the normalizers: the stored rows it adds are
+            // already in UTC and in the stored time-of-day form.
+            CompleteAggregatedDetails(context);
+
             // One runner for the whole call: BeforeSave and AfterSave must see the same plugin
             // instances, so state computed in the first is still there in the second.
             var plugins = CreatePluginRunner();
