@@ -155,21 +155,31 @@ namespace Polhem.Definition.Forms
 
             if (schema.Tables == null) { return; }
 
+            // Detail tables first, so a master aggregate reads the detail values this pass computes.
+            var masterTable = schema.MasterTable;
             foreach (var formTable in schema.Tables)
             {
-                if (formTable.Fields == null) { continue; }
+                if (formTable.Fields == null || ReferenceEquals(formTable, masterTable)) { continue; }
                 var dataTable = FindDataTable(dataSet, formTable.TableName);
                 if (dataTable == null) { continue; }
-                ApplyTableFieldExpressions(formTable, dataTable, schema, roundingContext, timeZoneId, DateTimeBasis.Utc);
+                ApplyTableFieldExpressions(formTable, dataTable, schema, roundingContext, timeZoneId, DateTimeBasis.Utc,
+                    recomputeUnchanged: false);
             }
+
+            if (masterTable?.Fields == null) { return; }
+            var masterData = FindDataTable(dataSet, masterTable.TableName);
+            if (masterData == null) { return; }
+            ApplyTableFieldExpressions(masterTable, masterData, schema, roundingContext, timeZoneId, DateTimeBasis.Utc,
+                recomputeUnchanged: AggregatedDetailsChanged(schema, masterTable, dataSet));
         }
 
         /// <summary>
         /// Applies the default-value and value expressions of one table to its data rows: fills defaults on
-        /// added rows and recomputes value-expression fields on added/modified rows.
+        /// added rows and recomputes value-expression fields on added/modified rows, and on unchanged rows as well
+        /// when <paramref name="recomputeUnchanged"/> is set (a master whose aggregated detail rows changed).
         /// </summary>
         private void ApplyTableFieldExpressions(FormTable formTable, DataTable dataTable, FormSchema schema,
-            RoundingContext roundingContext, string timeZoneId, DateTimeBasis basis)
+            RoundingContext roundingContext, string timeZoneId, DateTimeBasis basis, bool recomputeUnchanged)
         {
             var defaultFields = formTable.Fields!
                 .Where(f => StringUtilities.IsNotEmpty(f.DefaultValueExpression)).ToList();
@@ -185,7 +195,9 @@ namespace Polhem.Definition.Forms
                 if (state == DataRowState.Added && defaultFields.Count > 0)
                     ApplyDefaults(row, formTable, defaultFields, timeZoneId, basis, overwrite: false);
 
-                if (state is DataRowState.Added or DataRowState.Modified && computedFields.Count > 0)
+                bool recompute = state is DataRowState.Added or DataRowState.Modified
+                    || (recomputeUnchanged && state == DataRowState.Unchanged);
+                if (recompute && computedFields.Count > 0)
                     ApplyComputed(row, formTable, schema, computedFields, roundingContext, timeZoneId, basis);
             }
         }
@@ -196,6 +208,11 @@ namespace Polhem.Definition.Forms
         /// Used by clients for live preview; a value equal to the current cell is not rewritten, so no
         /// spurious change is reported.
         /// </summary>
+        /// <remarks>
+        /// On the master row, an aggregate such as <c>Sum(Table.field)</c> reads the live rows of that detail table in
+        /// the row's own data set. Call it again on the master row when a detail row it aggregates changes, is added
+        /// or is deleted; <see cref="BuildAggregateDependencyMap"/> says which do.
+        /// </remarks>
         /// <param name="schema">The form schema.</param>
         /// <param name="formTable">The row's form table.</param>
         /// <param name="row">The row to recompute.</param>
@@ -339,10 +356,12 @@ namespace Polhem.Definition.Forms
             {
                 if (!row.Table.Columns.Contains(field.FieldName)) { continue; }
 
+                var expression = BindAggregates(field.ValueExpression, schema, formTable, row.Table.DataSet, variables,
+                    roundingContext);
                 // Coerced after evaluation rather than forced at parse time — see ApplyDefaults.
                 var result = ExpressionPolicy.CoerceValue(
-                    _evaluator.Evaluate<object?>(field.ValueExpression,
-                        NarrowVariables(field.ValueExpression, variables), timeZoneId, basis), field.DbType);
+                    _evaluator.Evaluate<object?>(expression,
+                        NarrowVariables(expression, variables), timeZoneId, basis), field.DbType);
 
                 if (result is decimal numeric)
                 {

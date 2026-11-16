@@ -31,6 +31,7 @@ namespace Polhem.Definition.Forms
             ArgumentNullException.ThrowIfNull(values);
 
             var variables = SampleVariables(formTable, values);
+            expression = BindSampleAggregates(expression, formTable, variables);
             return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), timeZoneId,
                 DateTimeBasis.UserZone);
         }
@@ -54,6 +55,8 @@ namespace Polhem.Definition.Forms
         /// field is left empty.
         /// </returns>
         /// <remarks>
+        /// A detail aggregate takes the value it has over no rows: zero for <c>Sum</c> and <c>Count</c>, the field's
+        /// empty value for <c>Min</c> and <c>Max</c>.
         /// A computed numeric value is not rounded: <see cref="ApplyComputedRow"/> rounds it by the company's number
         /// settings (<see cref="RoundingContext"/>), which a sample has no company to read.
         /// </remarks>
@@ -71,12 +74,26 @@ namespace Polhem.Definition.Forms
                 ?? throw new ArgumentException($"Field '{field.FieldName}' belongs to no table.", nameof(field));
 
             var variables = SampleVariables(formTable, values);
+            if (propertyName == nameof(FormField.ValueExpression))
+                expression = BindSampleAggregates(expression, formTable, variables);
             var value = _evaluator.Evaluate<object?>(expression, NarrowVariables(expression, variables), timeZoneId,
                 DateTimeBasis.UserZone);
             // The two passes treat a null result differently: a default leaves the cell empty, while a computed
             // value is coerced like any other result.
             if (value is null && propertyName == nameof(FormField.DefaultValueExpression)) { return null; }
             return ExpressionPolicy.CoerceValue(value, field.DbType);
+        }
+
+        // A sample row has no detail rows, so each aggregate takes the value it has over none: zero for Sum and
+        // Count, the field's empty value for Min and Max.
+        private string BindSampleAggregates(string expression, FormTable formTable, Dictionary<string, object?> variables)
+        {
+            var parsed = ParseAggregates(expression);
+            if (!parsed.HasAggregates) { return expression; }
+            var schema = (formTable.Collection as FormTableCollection)?.Owner as FormSchema
+                ?? throw new ExpressionEvaluationException(
+                    $"The table '{formTable.TableName}' belongs to no form, so its aggregates cannot be resolved.");
+            return BindAggregates(expression, schema, formTable, dataSet: null, variables, roundingContext: null);
         }
 
         // The variables of a sample row: every field of the table by its declared name, coerced as

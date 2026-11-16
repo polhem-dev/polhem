@@ -41,7 +41,7 @@ namespace Polhem.Definition.Forms
                 if (formTable == null) { continue; }
                 var dataTable = FindDataTable(dataSet, formTable.TableName);
                 if (dataTable == null) { continue; }
-                ValidateRuleRows(rule, schema.ProgId, formTable, dataTable, timeZoneId, DateTimeBasis.Utc);
+                ValidateRuleRows(rule, schema, formTable, dataTable, timeZoneId, DateTimeBasis.Utc);
             }
         }
 
@@ -55,21 +55,27 @@ namespace Polhem.Definition.Forms
         /// (<see cref="Language.FormSchemaLocalizer.RuleMessageKeyFormat"/>), which the server
         /// resolves in the session's culture before the message reaches the user.
         /// </exception>
-        private void ValidateRuleRows(FormRule rule, string progId, FormTable formTable, DataTable dataTable, string timeZoneId,
-            DateTimeBasis basis)
+        /// <remarks>
+        /// A rule on the master table may aggregate a detail table (<c>Count(Table) &gt; 0</c>). The aggregate adds
+        /// the detail values as they are, without rounding them first; to compare with a rounded total, compare with
+        /// the master field that computes it.
+        /// </remarks>
+        private void ValidateRuleRows(FormRule rule, FormSchema schema, FormTable formTable, DataTable dataTable,
+            string timeZoneId, DateTimeBasis basis)
         {
             foreach (DataRow row in dataTable.Rows)
             {
                 if (row.RowState is DataRowState.Deleted or DataRowState.Detached) { continue; }
 
                 var variables = BuildVariables(row, formTable);
-                if (StringUtilities.IsNotEmpty(rule.When) &&
-                    !_evaluator.Evaluate<bool>(rule.When, NarrowVariables(rule.When, variables), timeZoneId, basis))
+                if (StringUtilities.IsNotEmpty(rule.When))
                 {
-                    continue;
+                    var when = BindAggregates(rule.When, schema, formTable, row.Table.DataSet, variables, null);
+                    if (!_evaluator.Evaluate<bool>(when, NarrowVariables(when, variables), timeZoneId, basis)) { continue; }
                 }
-                if (!_evaluator.Evaluate<bool>(rule.Condition, NarrowVariables(rule.Condition, variables), timeZoneId, basis))
-                    throw CreateRuleViolation(rule, progId);
+                var condition = BindAggregates(rule.Condition, schema, formTable, row.Table.DataSet, variables, null);
+                if (!_evaluator.Evaluate<bool>(condition, NarrowVariables(condition, variables), timeZoneId, basis))
+                    throw CreateRuleViolation(rule, schema.ProgId);
             }
         }
 

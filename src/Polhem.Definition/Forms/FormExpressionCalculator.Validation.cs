@@ -21,6 +21,11 @@ namespace Polhem.Definition.Forms
         /// skipped, as it is at run time.
         /// </para>
         /// <para>
+        /// A detail aggregate (<c>Sum(Table.field)</c>, <c>Count(Table)</c>, <c>Min</c>, <c>Max</c>) is checked as
+        /// well: it is reported when it is used outside the master table's value expressions and rules, when it
+        /// names a table or field the schema does not have, or when the field's type cannot be aggregated.
+        /// </para>
+        /// <para>
         /// This is the check a definition editor runs before saving. On the client, an expression that fails
         /// to parse does not fail loudly: the live computation degrades and the computed field keeps its value.
         /// </para>
@@ -38,9 +43,9 @@ namespace Polhem.Definition.Forms
                 var variableTypes = GetVariableTypes(formTable);
                 foreach (var field in formTable.Fields)
                 {
-                    ValidateFieldExpression(issues, variableTypes, formTable, field,
+                    ValidateFieldExpression(issues, schema, variableTypes, formTable, field,
                         field.DefaultValueExpression, nameof(FormField.DefaultValueExpression));
-                    ValidateFieldExpression(issues, variableTypes, formTable, field,
+                    ValidateFieldExpression(issues, schema, variableTypes, formTable, field,
                         field.ValueExpression, nameof(FormField.ValueExpression));
                 }
             }
@@ -51,31 +56,54 @@ namespace Polhem.Definition.Forms
                 var formTable = ResolveRuleTable(rule, schema);
                 if (formTable?.Fields == null) { continue; }
                 var variableTypes = GetVariableTypes(formTable);
-                ValidateRuleExpression(issues, variableTypes, formTable, rule, rule.When, nameof(FormRule.When));
-                ValidateRuleExpression(issues, variableTypes, formTable, rule,
+                ValidateRuleExpression(issues, schema, variableTypes, formTable, rule, rule.When, nameof(FormRule.When));
+                ValidateRuleExpression(issues, schema, variableTypes, formTable, rule,
                     rule.Condition, nameof(FormRule.Condition));
             }
             return issues;
         }
 
-        private void ValidateFieldExpression(List<FormExpressionIssue> issues,
+        private void ValidateFieldExpression(List<FormExpressionIssue> issues, FormSchema schema,
             IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormField field,
             string expression, string propertyName)
         {
-            var message = FindParseError(expression, variableTypes, typeof(object));
+            var message = propertyName == nameof(FormField.DefaultValueExpression)
+                && StringUtilities.IsNotEmpty(expression) && ParseAggregates(expression).HasAggregates
+                ? "An aggregate such as Sum(Table.field) cannot be used in a default value expression; use a value expression."
+                : FindAggregateParseError(expression, schema, formTable, variableTypes, typeof(object));
             if (message is null) { return; }
             issues.Add(new FormExpressionIssue(formTable.TableName, field.FieldName, null, propertyName,
                 expression, message));
         }
 
-        private void ValidateRuleExpression(List<FormExpressionIssue> issues,
+        private void ValidateRuleExpression(List<FormExpressionIssue> issues, FormSchema schema,
             IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormRule rule,
             string expression, string propertyName)
         {
-            var message = FindParseError(expression, variableTypes, typeof(bool));
+            var message = FindAggregateParseError(expression, schema, formTable, variableTypes, typeof(bool));
             if (message is null) { return; }
             issues.Add(new FormExpressionIssue(formTable.TableName, null, rule.RuleId, propertyName,
                 expression, message));
+        }
+
+        // Checks the aggregates of an expression, then parses the rewritten expression with one variable per
+        // aggregate, typed as the aggregate is computed.
+        private string? FindAggregateParseError(string expression, FormSchema schema, FormTable formTable,
+            IReadOnlyDictionary<string, Type> variableTypes, Type returnType)
+        {
+            if (StringUtilities.IsEmpty(expression)) { return null; }
+            var parsed = ParseAggregates(expression);
+            if (!parsed.HasAggregates) { return FindParseError(expression, variableTypes, returnType); }
+            if (!IsMasterTable(schema, formTable)) { return AggregateOutsideMasterMessage(formTable); }
+
+            var types = new Dictionary<string, Type>(variableTypes, StringComparer.Ordinal);
+            foreach (var aggregate in parsed.Aggregates)
+            {
+                var (_, field, error) = ResolveAggregate(aggregate, schema);
+                if (error is not null) { return error; }
+                types[aggregate.VariableName] = AggregateType(aggregate.Function, field);
+            }
+            return FindParseError(parsed.Expression, types, returnType);
         }
 
         private string? FindParseError(string expression, IReadOnlyDictionary<string, Type> variableTypes,

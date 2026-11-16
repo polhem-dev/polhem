@@ -97,7 +97,8 @@ hence this ADR. The user guide is `docs/en/definitions/expression-rules.md`.
   to look up the stored status)" and "document number generation (needs a DB sequence)" stay in `DoBeforeSave`,
   clearly marking the current boundary of the declarative approach.
 
-- **Boundaries (separate work, not covered by this ADR)**: cross-row/detail aggregation (`SUM(detail)`), virtual
+- **Boundaries (separate work, not covered by this ADR)**: cross-row/detail aggregation (`SUM(detail)`, since added by
+  [ADR-066](adr-066-detail-aggregates-in-expressions.md)), virtual
   display computed fields, finer-grained `BeforeInsert`/`BeforeUpdate` triggers, more rounding modes (banker's /
   round down / round up, an extension of the numeric subsystem), evaluation timeouts, and exposing session variables.
 
