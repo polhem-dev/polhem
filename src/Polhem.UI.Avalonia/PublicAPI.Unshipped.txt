@@ -1,1 +1,2 @@
 #nullable enable
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!

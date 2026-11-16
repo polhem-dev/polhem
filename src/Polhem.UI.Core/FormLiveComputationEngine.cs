@@ -37,6 +37,8 @@ namespace Polhem.UI.Core
         // Dependency maps are built lazily per table (parse-once) and reused for every edit.
         private readonly Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<string>>> _dependencyByTable
             = new(StringComparer.OrdinalIgnoreCase);
+        // Built lazily, once: which detail tables and fields the master's aggregates read.
+        private IReadOnlyDictionary<string, IReadOnlySet<string>>? _aggregateMap;
         private bool _recomputing;
         private LiveComputationDegradation? _degradation;
 
@@ -100,6 +102,12 @@ namespace Polhem.UI.Core
         /// (returns empty) when a recompute is already in progress, when the changed field is itself a
         /// computed field, or when nothing depends on it.
         /// </summary>
+        /// <remarks>
+        /// When the master adds up the edited field, or a field this recompute changed, with an aggregate such as
+        /// <c>Sum(Table.field)</c>, the master row is recomputed too. Its changes are written to the master row (and
+        /// raised by the data set's change events) but are not in the returned list, which covers
+        /// <paramref name="row"/> only.
+        /// </remarks>
         /// <param name="tableName">The name of the table the row belongs to (master or detail).</param>
         /// <param name="changedField">The field the user (or a write-back) just changed.</param>
         /// <param name="row">The row to recompute.</param>
@@ -117,15 +125,25 @@ namespace Polhem.UI.Core
             var formTable = _schema.Tables?.GetOrDefault(tableName);
             if (formTable?.Fields is null) { return []; }
 
-            // A computed field changing is the result of a recompute, never a trigger for one.
-            if (IsComputedField(formTable, changedField)) { return []; }
+            // A computed field changing is the result of a recompute, never a trigger for one on its own row. A
+            // master total over it still follows, as when a field-change callback writes it.
+            if (IsComputedField(formTable, changedField))
+            {
+                if (AggregatesRead(formTable, changedField, [])) { RecomputeMaster(row.Table.DataSet); }
+                return [];
+            }
 
-            return RunGuarded(formTable, () =>
+            var changed = RunGuarded(formTable, () =>
             {
                 // Skip the whole pass when no computed field references the changed field.
                 if (!GetDependencyMap(formTable).ContainsKey(changedField)) { return []; }
                 return _calculator.ApplyComputedRow(_schema, formTable, row, _roundingContext, _timeZoneProvider());
             });
+
+            // A master total over this table follows the edit, and the values the edit recomputed.
+            if (AggregatesRead(formTable, changedField, changed))
+                RecomputeMaster(row.Table.DataSet);
+            return changed;
         }
 
         /// <summary>
@@ -152,7 +170,8 @@ namespace Polhem.UI.Core
         /// Prepares a freshly created <paramref name="row"/> for display: evaluates its default-value
         /// expressions (replacing the seeded values), then recomputes all computed fields so any default feeding a
         /// computed field is reflected at once. Returns the fields whose value changed. The whole pass runs
-        /// under the re-entrancy guard, so the write-backs raise no nested recompute.
+        /// under the re-entrancy guard, so the write-backs raise no nested recompute. When the master adds up the
+        /// row's table, the master row is recomputed as well; its changes are not in the returned list.
         /// </summary>
         /// <param name="tableName">The name of the table the row belongs to (master or detail).</param>
         /// <param name="row">The new row to initialize.</param>
@@ -166,7 +185,7 @@ namespace Polhem.UI.Core
             var formTable = _schema.Tables?.GetOrDefault(tableName);
             if (formTable?.Fields is null) { return []; }
 
-            return RunGuarded(formTable, () =>
+            var result = RunGuarded(formTable, () =>
             {
                 var changed = new List<string>();
                 changed.AddRange(_calculator.ApplyDefaultRow(formTable, row, _timeZoneProvider()));
@@ -177,6 +196,59 @@ namespace Polhem.UI.Core
                 }
                 return changed;
             });
+            // A new row counts towards the master's totals at once.
+            if (IsAggregated(formTable))
+                RecomputeMaster(row.Table.DataSet);
+            return result;
+        }
+
+        /// <summary>
+        /// Recomputes the master row after rows of a detail table were removed or put back: a row deleted, or a row
+        /// edit cancelled. Edits and added rows need no call; <see cref="Recompute"/> and
+        /// <see cref="InitializeNewRow"/> already recompute the master when the table is aggregated.
+        /// </summary>
+        /// <param name="tableName">The detail table whose rows changed.</param>
+        /// <param name="dataSet">The form's data set.</param>
+        /// <returns>
+        /// The master fields whose value changed; empty when the master adds up nothing from this table, when the
+        /// computation is degraded, or during another recompute.
+        /// </returns>
+        public IReadOnlyList<string> RecomputeAggregates(string tableName, DataSet dataSet)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentNullException.ThrowIfNull(dataSet);
+
+            if (_recomputing || IsDegraded) { return []; }
+            var formTable = _schema.Tables?.GetOrDefault(tableName);
+            if (formTable is null || !IsAggregated(formTable)) { return []; }
+            return RecomputeMaster(dataSet);
+        }
+
+        // Recomputes the computed fields of the master row, aggregates included, in a guard of its own so a
+        // failure is reported against the master table.
+        private IReadOnlyList<string> RecomputeMaster(DataSet? dataSet)
+        {
+            if (dataSet is null || IsDegraded) { return []; }
+            var masterTable = _schema.MasterTable;
+            if (masterTable?.Fields is null || !dataSet.Tables.Contains(masterTable.TableName)) { return []; }
+            var master = dataSet.Tables[masterTable.TableName]!.Rows.Cast<DataRow>()
+                .FirstOrDefault(r => r.RowState is not (DataRowState.Deleted or DataRowState.Detached));
+            if (master is null) { return []; }
+            return RunGuarded(masterTable,
+                () => _calculator.ApplyComputedRow(_schema, masterTable, master, _roundingContext, _timeZoneProvider()));
+        }
+
+        private IReadOnlyDictionary<string, IReadOnlySet<string>> AggregateMap
+            => _aggregateMap ??= FormExpressionCalculator.BuildAggregateDependencyMap(_schema);
+
+        private bool IsAggregated(FormTable formTable) => AggregateMap.ContainsKey(formTable.TableName);
+
+        // True when the master adds up a field of this table that the edit changed, directly or through the row's
+        // own recompute.
+        private bool AggregatesRead(FormTable formTable, string changedField, IReadOnlyList<string> recomputed)
+        {
+            if (IsDegraded || !AggregateMap.TryGetValue(formTable.TableName, out var fields)) { return false; }
+            return fields.Contains(changedField) || recomputed.Any(fields.Contains);
         }
 
         /// <summary>

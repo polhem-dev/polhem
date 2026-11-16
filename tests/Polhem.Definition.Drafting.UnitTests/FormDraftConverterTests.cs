@@ -96,6 +96,28 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("A master total over a detail table keeps its aggregate, is read-only and names a table of the schema")]
+        public void Convert_MasterTotal_AggregatesDetailTable()
+        {
+            var draft = Order();
+            draft.Tables[0].Fields.Add(new DraftField
+            {
+                FieldName = "total_amount",
+                Caption = "Total",
+                DbType = FieldDbType.Decimal,
+                ValueExpression = "Sum(OrderLine.amount)",
+            });
+
+            var result = FormDraftConverter.Convert(draft);
+
+            var total = result.Schema.FindField("total_amount", "Order")!;
+            Assert.Equal("Sum(OrderLine.amount)", total.ValueExpression);
+            Assert.True(total.ReadOnly);
+            var table = Assert.Single(Polhem.Definition.Forms.FormExpressionCalculator.BuildAggregateDependencyMap(result.Schema)).Key;
+            Assert.True(result.Schema.Tables!.Contains(table));
+        }
+
+        [Fact]
         [DisplayName("Detail tables follow the master table under their own PascalCase names")]
         public void Convert_DetailTable_IsAddedAfterMaster()
         {

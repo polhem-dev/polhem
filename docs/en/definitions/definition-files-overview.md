@@ -104,7 +104,7 @@ duplicate is rejected when the file loads.
 ```
 
 - **`BusinessObject` empty** → the progId resolves to the framework's default `FormBusinessObject`, i.e. pure definition-driven CRUD.
-- **`BusinessObject` set** → that type handles the progId, for the cases declarations cannot express (cross-row aggregation, database lookups).
+- **`BusinessObject` set** → that type handles the progId, for the cases declarations cannot express (database lookups, aggregates beyond the expression engine's).
 - **`Repository` empty** → the framework's `DataFormRepository`, whose statements are generated from the FormSchema.
 - **`Repository` set** → that type, which must derive from `DataFormRepository` so the CRUD surface stays intact. A business object asks for it by its own interface: `CreateFormRepository<IOrderRepository>()`.
 

@@ -66,18 +66,16 @@ public sealed class OrderBO : FormBusinessObject
     /// <inheritdoc/>
     protected override void DoBeforeSave(SaveContext context)
     {
-        // Declarative rules run first: the per-line amount (ValueExpression) and the customer /
-        // product / quantity required-field checks (FormRule) declared in Order.FormSchema.xml.
+        // Declarative rules run first: the line amount and the order total (ValueExpression), and the
+        // customer / product / quantity / at-least-one-line checks (FormRule) declared in Order.FormSchema.xml.
         base.DoBeforeSave(context);
 
         var dataSet = context.DataSet;
         var master = OrderDataSet.MasterRow(dataSet);
 
-        // The rules a per-row field expression cannot yet express stay in code:
-        OrderDataSet.RequireAtLeastOneDetail(dataSet);   // aggregate — needs a detail-line count
+        // The rules a definition cannot express, because they read the database, stay in code:
         EnforceStatusRules(dataSet, master);             // needs the stored status from the database
         AssignOrderNumber(master);                       // needs the database number sequence
-        OrderDataSet.ComputeTotal(dataSet);              // aggregate — SUM of the rounded line amounts
     }
 
     /// <inheritdoc/>

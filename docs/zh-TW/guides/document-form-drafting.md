@@ -1,4 +1,4 @@
-<!-- source: en/guides/document-form-drafting.md blob: 86057a4f059c8d05f41eac48540059cda1c1726b -->
+<!-- source: en/guides/document-form-drafting.md blob: 127694d8a997eafd1a96aeeebba69dbbd32ae908 -->
 # 從文件草擬表單
 
 [English](../../en/guides/document-form-drafting.md) · [← 文件索引](../README.md)
@@ -123,7 +123,7 @@ ProgId 已存在時，**畫面**分頁顯示的是既有版面加上新欄位的
 - 一次對話草擬一張表單。
 - 目前只支援 Claude。草擬功能本身不綁定廠商（[Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.zh-TW.md)）；
   其他模型需要一個像 [Polhem.AI.Claude](../../../src/Polhem.AI.Claude/README.zh-TW.md) 這樣的提供者套件。
-- 主表上加總明細表的欄位無法表達，因為運算式只讀同一列；Claude 不會建立這類欄位。
+- 加總明細表的合計會建成主表的唯讀計算欄，以 `Sum(Table.field)` 計算（見[明細加總](../definitions/expression-rules.md#明細加總)）。平均、或只加總部分明細的欄位無法表達；Claude 不會建立這類欄位。
 - **畫面**分頁預覽的是桌面版表單。FormLayout 編輯器的 Web 預覽在對話視窗中無法使用。
 - Excel 匯入不會解析運算式；只有草擬會。
 - 定義無法表達的商業邏輯（自訂 business object 或 repository）要寫成程式碼，與任何表單相同。

@@ -156,7 +156,9 @@ namespace Polhem.Definition.Drafting.Session
                 + "asks for a field to span the row or merge columns.")] ControlType? controlType = null,
             [Description("The choices of a field the document shows as a set of options. An empty list removes them.")] DraftOption[]? options = null,
             [Description("An expression that computes the field from other fields of the same row, such as quantity * unit_price. "
-                + "It cannot read another table or add up detail rows, so leave out totals over detail rows. Subtracting two dates "
+                + "A master field can also add up a detail table: Sum(DetailTable.field), Count(DetailTable), Min(DetailTable.field) "
+                + "and Max(DetailTable.field), with the detail table's name, such as Sum(PurchaseRequestItem.estimated_cost); "
+                + "a detail field cannot. Subtracting two dates "
                 + "gives a TimeSpan: write (end_date - start_date).Days + 1. Write decimal literals with m, such as amount * 1.05m. "
                 + "Empty removes it.")] string? valueExpression = null,
             [Description("Whether the field must be filled in.")] bool? required = null,

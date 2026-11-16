@@ -22,6 +22,7 @@ Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1
 - The table upgrade records each table in `st_table_upgrade`, and a tool of an older schema format no longer changes a database a newer one upgraded.
 - `db upgrade` reports which tables their record decided, and a previous upgrade that failed or did not finish.
 - A table rebuild keeps AutoIncrement numbers and a renamed column's values, and an upgrade no longer repeats itself on SQL Server, MySQL, Oracle and SQLite.
+- A master field's expression can add up its detail rows with `Sum`, `Count`, `Min` and `Max`, on save and live in the Avalonia and Blazor heads.
 
 ## [1.14.0] - 2026-11-14
 

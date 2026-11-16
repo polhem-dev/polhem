@@ -10,7 +10,7 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 
 | Capability | Carrier | When it runs |
 |------------|---------|--------------|
-| Computed field | `FormField.ValueExpression` | Before save, recomputed and written back for added / modified rows |
+| Computed field | `FormField.ValueExpression` | Before save, recomputed and written back for added / modified rows (and for the master row when the detail rows it adds up change) |
 | Field default | `FormField.DefaultValueExpression` | When a new row is created (over the literal default); at save, only where a new row's field is still empty |
 | Validation / precondition | `FormRule` under `FormSchema` | `BeforeSave` / `BeforeDelete` |
 
@@ -18,7 +18,7 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 
 ## Expression Syntax
 
-- **A variable is a field name.** Write the field name directly, e.g. `unit_price * qty`. Every field on the same row is available.
+- **A variable is a field name.** Write the field name directly, e.g. `unit_price * qty`. Every field on the same row is available. A master table's expressions can also add up a detail table; see [Totals Over Detail Rows](#totals-over-detail-rows).
 - **Operators**: a subset of C# syntax (`+ - * /`, `> >= < <= == !=`, `&& || !`, the ternary `? :`, and string `==`).
 - **Available functions and types**: the helper functions `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)` and `IsNullOrWhiteSpace(s)`; the types an expression can name, such as `Math` (`Math.Round`, `Math.Abs`, …), `Convert`, `DateTime`, `TimeSpan` and `Guid` (e.g. `customer_rowid != Guid.Empty`); and the members of a field's value (`name.Length`, `Today().AddDays(1)`). The types come from DynamicExpresso's default set plus the ones `DynamicExpressoEvaluator` adds; [`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) lists every type whose members an expression can reach, and `TrimmerDescriptorGateTests` keeps that list in line with the interpreter.
 
@@ -51,6 +51,29 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 - **Rounding** follows the field's `NumberKind` (framework defaults: `Amount` → 2 decimals, `Quantity` → 0, `UnitPrice` → full precision, …; the decimals come from the currency, the unit or the company — see [ADR-026](../../../maintainers/adr/adr-026-numeric-semantics-rounding.md)). A computed `Quantity` or `Weight` field must declare its `UnitField`; without one the computation throws. Each detail row is rounded first, so a total summed from the rounded rows (round-then-sum) reconciles with them.
 - Computed fields are usually paired with `ReadOnly="true"`.
 - Several computed fields on the same row may depend on each other: evaluation follows **declaration order**, so a later expression sees the values just computed by earlier ones.
+
+## Totals Over Detail Rows
+
+A computed field of the **master table** can aggregate the rows of a detail table of the same form:
+
+```xml
+<FormField FieldName="total_amount" Caption="Total" DbType="Currency"
+           NumberKind="Amount" ReadOnly="true"
+           ValueExpression="Sum(OrderDetail.amount)" />
+```
+
+| Aggregate | Reads | Result | Over no rows |
+|-----------|-------|--------|--------------|
+| `Sum(Table.field)` | A numeric field | `decimal` | `0` |
+| `Count(Table)` | The rows | `int` | `0` |
+| `Min(Table.field)`, `Max(Table.field)` | A numeric, date or time field | The field's type | The field's empty value |
+
+- `Table` is the detail table's `TableName` in the FormSchema, not the database table. Rows marked deleted are not counted.
+- An aggregate is part of the expression, so it combines with the rest: `Sum(OrderDetail.amount) * 1.05m`, `Sum(OrderDetail.amount) - discount`.
+- **Round, then sum.** Each detail value is first rounded to its own field's decimals (its `NumberKind`, with the currency or unit of its row), so the total equals the sum of the amounts the rows show. The result is then rounded by the master field's `NumberKind` as usual. A detail field that is itself computed (`amount = quantity * unit_price`) is computed before the master adds it up.
+- **On save, the total covers the whole record.** The master row is recomputed whenever a detail table it adds up has an added, modified or deleted row. A caller of the API that saves only the rows it changed still gets the right total: the server adds the stored detail rows the payload does not carry before it computes. Such a payload must carry the master row; one that changes detail rows of a form with totals without it is refused.
+- **On the client**, the Avalonia and Blazor heads recompute the master row when a detail row it adds up is edited, added or deleted.
+- Aggregates are available only in a master field's `ValueExpression` and in a `FormRule` that targets the master table. A detail table's expressions and `DefaultValueExpression` cannot use them; `ValidateExpressions` (and DefineEditor) report it, along with a table or field that does not exist and a field type the aggregate cannot read.
 
 ## Field Defaults: `DefaultValueExpression`
 
@@ -89,6 +112,8 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 | `Order` | Evaluation order within the same trigger (lower runs first) |
 | `Enabled` | Whether the rule is active (default true) |
 
+A rule on the master table can use the aggregates of [Totals Over Detail Rows](#totals-over-detail-rows), such as "at least one line": `Condition="Count(OrderDetail) &gt; 0"`. In a rule, `Sum` adds the detail values as they are stored, without rounding each one first; to compare with a rounded total, compare with the master field that computes it.
+
 > **The two-part test**: `When` decides whether this rule should be checked at all right now, and `Condition` is the validation that must hold. For example, "an approved order must have a positive total" becomes `When = status == "Approved"` with `Condition = total_amount > 0`. Orders in any other status are skipped automatically.
 >
 > Inside XML, write `>` as `&gt;` and a string quote as `&quot;`.
@@ -97,10 +122,10 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 
 The expression engine is a **per-row** model. The following cases cannot yet be expressed declaratively and require overriding `DoBeforeSave` / `DoBeforeDelete` in a custom business object:
 
-- **Cross-row aggregation**, such as "the header total is the sum of the detail amounts" or "at least one detail row is required" — both need computation across rows.
+- **Aggregates beyond `Sum`, `Count`, `Min` and `Max` of a detail table**, such as an average, a sum over only some of the rows, or a table below a detail table.
 - **Database lookups**, such as "a status transition must be checked against the state already stored" or "fetch the next number from a sequence".
 
-`OrderBO` in `apps/Polhem.Northwind` is a worked example: the detail amounts and required-field checks have been made declarative, leaving only the aggregation and database-dependent logic in `DoBeforeSave`.
+`OrderBO` in `apps/Polhem.Northwind` is a worked example: the detail amounts, the order total, "at least one line" and the required-field checks are declarative, leaving only the database-dependent logic in `DoBeforeSave`.
 
 ### Custom Business Object Override Convention
 
@@ -108,7 +133,7 @@ The expression engine is a **per-row** model. The following cases cannot yet be 
 protected override void DoBeforeSave(SaveContext context)
 {
     base.DoBeforeSave(context);   // Run the rule engine first (defaults, computed fields, BeforeSave validation).
-    // Then layer on the logic that declarations cannot express, such as aggregation or database queries.
+    // Then layer on the logic that declarations cannot express, such as database queries.
 }
 ```
 

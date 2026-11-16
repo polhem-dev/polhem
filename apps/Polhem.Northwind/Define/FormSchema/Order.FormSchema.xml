@@ -46,7 +46,7 @@
             <ListItem Value="Shipped" Text="Shipped" />
           </ListItems>
         </FormField>
-        <FormField FieldName="total_amount" Caption="Total Amount" DbType="Currency" ReadOnly="true" />
+        <FormField FieldName="total_amount" Caption="Total Amount" DbType="Currency" NumberKind="Amount" ReadOnly="true" ValueExpression="Sum(OrderDetail.amount)" />
       </Fields>
     </FormTable>
     <FormTable TableName="OrderDetail" DbTableName="ft_order_detail" DisplayName="Order Details">
@@ -75,12 +75,13 @@
     </FormTable>
   </Tables>
   <!-- Declarative validation rules evaluated before save (see docs/en/definitions/expression-rules.md).
-       The line amount above is a computed field (ValueExpression); these rules replace the
-       per-row required-field checks OrderBO used to enforce in code. Aggregate checks (at
-       least one detail line, the master total) and the status-transition guard that needs the
-       stored status stay in OrderBO.DoBeforeSave — they are not yet expressible per row. -->
+       The line amount and the master total above are computed fields (ValueExpression); these
+       rules replace the required-field checks and the "at least one detail line" check OrderBO
+       used to enforce in code. The status-transition guard and the order number need the
+       database, so they stay in OrderBO.DoBeforeSave. -->
   <Rules>
     <FormRule RuleId="customer_required" Condition="customer_rowid != Guid.Empty" Message="Please select a customer for the order." />
+    <FormRule RuleId="detail_required" Condition="Count(OrderDetail) &gt; 0" Message="The order must have at least one detail line." />
     <FormRule RuleId="product_required" TargetTable="OrderDetail" Condition="product_rowid != Guid.Empty" Message="Every detail line must select a product." />
     <FormRule RuleId="quantity_positive" TargetTable="OrderDetail" Condition="quantity &gt; 0" Message="Every detail line must have a quantity greater than zero." />
   </Rules>

@@ -97,14 +97,16 @@ namespace Polhem.UI.Core.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Cancelling an edit session restores the row and raises nothing")]
-        public void EditSession_Cancel_RestoresSilently()
+        [DisplayName("Cancelling an edit session restores the row, raises no field change, and raises RowEditCanceled once")]
+        public void EditSession_Cancel_RestoresWithoutFieldChange()
         {
             var dataObject = BuildDataObject();
             var row = AddLine(dataObject);
             row.Table.AcceptChanges();
             var published = 0;
             dataObject.FieldValueChanged += (_, _) => published++;
+            var canceled = new List<DataRow>();
+            dataObject.RowEditCanceled += (_, e) => canceled.Add(e.Row);
 
             dataObject.BeginRowEdit(row);
             dataObject.SetField(row, "item", "Nut");
@@ -112,6 +114,7 @@ namespace Polhem.UI.Core.UnitTests.DataObjects
 
             Assert.Equal("Bolt", dataObject.GetField(row, "item"));
             Assert.Equal(0, published);
+            Assert.Same(row, Assert.Single(canceled));
         }
     }
 }
