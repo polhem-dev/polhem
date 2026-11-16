@@ -1,3 +1,1 @@
 #nullable enable
-Polhem.UI.Core.FormLiveComputationEngine.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.UI.Core.DataObjects.FormDataObject.RowEditCanceled -> System.EventHandler<Polhem.UI.Core.DataObjects.RowChangedEventArgs!>?

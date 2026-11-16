@@ -11,7 +11,7 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
-## [Unreleased]
+## [1.15.0] - 2026-11-16
 
 Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1.15.0.md)
 
@@ -23,6 +23,8 @@ Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1
 - `db upgrade` reports which tables their record decided, and a previous upgrade that failed or did not finish.
 - A table rebuild keeps AutoIncrement numbers and a renamed column's values, and an upgrade no longer repeats itself on SQL Server, MySQL, Oracle and SQLite.
 - A master field's expression can add up its detail rows with `Sum`, `Count`, `Min` and `Max`, on save and live in the Avalonia and Blazor heads.
+- A generated form layout gives a multi-line field the whole row.
+- DefineEditor's drafting conversation shows each step Claude takes and asks its questions as cards the user answers with a click.
 
 ## [1.14.0] - 2026-11-14
 

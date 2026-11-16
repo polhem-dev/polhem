@@ -206,6 +206,7 @@ Polhem.UI.Avalonia.DataObjects.FormLiveComputation.InitializeNewRow(string! tabl
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsDegraded.get -> bool
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsRecomputing.get -> bool
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.UI.Avalonia.Themes.VisualStudioTheme
 Polhem.UI.Avalonia.UIText
 Polhem.UI.Avalonia.Views.FormView
