@@ -51,6 +51,7 @@
     <Project Path="tests/Polhem.AI.Claude.UnitTests/Polhem.AI.Claude.UnitTests.csproj" />
     <Project Path="tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj" />
     <Project Path="tests/Polhem.Hosting.UnitTests/Polhem.Hosting.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Northwind.Backend.UnitTests/Polhem.Northwind.Backend.UnitTests.csproj" />
     <Project Path="tests/Polhem.ObjectCaching.UnitTests/Polhem.ObjectCaching.UnitTests.csproj" />
     <Project Path="tests/Polhem.Repository.UnitTests/Polhem.Repository.UnitTests.csproj" Id="37be88f7-d67a-40a7-91a3-23583c6b85f1" />
     <Project Path="tests/Polhem.Templates.UnitTests/Polhem.Templates.UnitTests.csproj" />

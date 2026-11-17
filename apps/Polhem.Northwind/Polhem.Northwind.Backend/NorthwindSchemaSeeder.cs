@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
+using Polhem.Core.Data;
 using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Db.Manager;
@@ -25,7 +26,7 @@ namespace Polhem.Northwind.Backend;
 /// and resolved in a second pass after every table is inserted. Table / column identifiers
 /// come from in-repo definition / seed files (not user input); all values are parameters.
 /// </remarks>
-public static class NorthwindSchemaSeeder
+public static partial class NorthwindSchemaSeeder
 {
     // Three categories, three database ids: framework cross-company tables in common, business
     // data (ft_* + the app's org tables) in company, the audit trail in log. All three resolve to
@@ -165,7 +166,9 @@ public static class NorthwindSchemaSeeder
         var seedDir = Path.Combine(AppContext.BaseDirectory, "SeedData");
 
         foreach (var seed in s_seeds)
-            InsertRows(dbAccess, connectionManager, seed, seedDir);
+            InsertRows(dbAccess, connectionManager, seed, seedDir, GetFieldTypes(defineAccess, seed.Table));
+
+        ConvergeSqliteDates(dbAccess, connectionManager, defineAccess);
 
         foreach (var seed in s_seeds.Where(s => s.Deferred is not null))
             ApplyDeferredRelations(dbAccess, seed, seedDir);
@@ -458,7 +461,8 @@ public static class NorthwindSchemaSeeder
     /// </para>
     /// </remarks>
     private static void InsertRows(
-        DbAccess dbAccess, IDbConnectionManager connectionManager, SeedTable seed, string seedDir)
+        DbAccess dbAccess, IDbConnectionManager connectionManager, SeedTable seed, string seedDir,
+        Dictionary<string, FieldDbType> fieldTypes)
     {
         if (seed.Key is null)
         {
@@ -472,7 +476,7 @@ public static class NorthwindSchemaSeeder
 
         foreach (var row in ReadRows(seedDir, seed.File))
         {
-            if (seed.Key is not null && RowExists(dbAccess, seed, row, transaction)) continue;
+            if (seed.Key is not null && RowExists(dbAccess, seed, row, fieldTypes, transaction)) continue;
 
             var columns = new List<string> { "sys_rowid", SysFields.CompanyId };
             var values = new List<object> { Guid.NewGuid(), NorthwindCredentials.CompanyId };
@@ -482,11 +486,15 @@ public static class NorthwindSchemaSeeder
                 // Deferred columns are written in the second pass once their target exists.
                 if (seed.Deferred?.ContainsKey(pair.Key) == true) continue;
 
-                columns.Add(pair.Key);
+                var raw = pair.Value.GetString() ?? string.Empty;
+                object value;
                 if (seed.Forward is not null && seed.Forward.TryGetValue(pair.Key, out var target))
-                    values.Add(ResolveRowId(dbAccess, target, pair.Value.GetString(), transaction));
-                else
-                    values.Add(pair.Value.GetString() ?? string.Empty);
+                    value = ResolveRowId(dbAccess, target, raw, transaction);
+                else if (!TryConvertSeedValue(fieldTypes, pair.Key, raw, out value))
+                    continue;
+
+                columns.Add(pair.Key);
+                values.Add(value);
             }
 
             var placeholders = string.Join(",", Enumerable.Range(0, values.Count).Select(i => $"{{{i}}}"));
@@ -516,12 +524,14 @@ public static class NorthwindSchemaSeeder
     // Whether a stored row matches the seed row on every key column, read inside the insert transaction so the
     // rows this pass has already inserted count too.
     private static bool RowExists(DbAccess dbAccess, SeedTable seed, Dictionary<string, JsonElement> row,
-        DbTransaction transaction)
+        Dictionary<string, FieldDbType> fieldTypes, DbTransaction transaction)
     {
         var where = string.Join(" AND ", seed.Key!.Select((column, i) => $"{column} = {{{i}}}"));
-        var values = seed.Key!.Select(column => (object)(row.TryGetValue(column, out var value)
-            ? value.GetString() ?? string.Empty
-            : string.Empty)).ToArray();
+        var values = seed.Key!.Select(column =>
+        {
+            var raw = row.TryGetValue(column, out var element) ? element.GetString() ?? string.Empty : string.Empty;
+            return TryConvertSeedValue(fieldTypes, column, raw, out var value) ? value : raw;
+        }).ToArray();
         var spec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {seed.Table} WHERE {where}", values);
         return Convert.ToInt32(dbAccess.Execute(spec, transaction).Scalar, CultureInfo.InvariantCulture) > 0;
     }
