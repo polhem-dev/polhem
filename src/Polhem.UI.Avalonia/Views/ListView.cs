@@ -115,6 +115,8 @@ namespace Polhem.UI.Avalonia.Views
             toolbar.Children.Add(_newButton);
             toolbar.Children.Add(_editButton);
             toolbar.Children.Add(_deleteButton);
+            CreateCriteriaChrome();
+            toolbar.Children.Add(_queryButton);
 
             _grid = new GridControl();
             _grid.RowSelected += (_, rowId) => OnRowSelected(rowId);
@@ -171,12 +173,14 @@ namespace Polhem.UI.Avalonia.Views
             DockPanel.SetDock(_errorLabel, Dock.Top);
             DockPanel.SetDock(_loadingLabel, Dock.Top);
             DockPanel.SetDock(toolbar, Dock.Top);
+            DockPanel.SetDock(_criteriaPanel, Dock.Top);
             DockPanel.SetDock(_emptyListLabel, Dock.Top);
             DockPanel.SetDock(_pager, Dock.Bottom);
             DockPanel.SetDock(_cardLimitLabel, Dock.Bottom);
             host.Children.Add(_errorLabel);
             host.Children.Add(_loadingLabel);
             host.Children.Add(toolbar);
+            host.Children.Add(_criteriaPanel);
             host.Children.Add(_emptyListLabel);
             host.Children.Add(_pager);
             host.Children.Add(_cardLimitLabel);
@@ -296,7 +300,7 @@ namespace Polhem.UI.Avalonia.Views
             UpdateToolbarState();
             try
             {
-                var response = await connector.GetListAsync(ComputeSelectFields(), sortFields: _paging.CreateSort(),
+                var response = await connector.GetListAsync(ComputeSelectFields(), _activeFilter, _paging.CreateSort(),
                         paging: _paging.CreateOptions(page),
                         cancellationToken: cancellationToken)
                     .ConfigureAwait(true);

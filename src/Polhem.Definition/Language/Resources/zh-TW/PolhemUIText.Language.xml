@@ -55,6 +55,29 @@
     <LanguageItem Key="OpenRelatedRecord" Value="按兩下開啟這筆資料" />
     <LanguageItem Key="RelatedRecordDenied" Value="您沒有檢視「{0}」的權限。" />
     <LanguageItem Key="DeleteRecordPrompt" Value="確定要刪除這筆資料嗎？" />
+    <LanguageItem Key="Query" Value="查詢" />
+    <LanguageItem Key="QueryWithCount" Value="查詢（{0}）" />
+    <LanguageItem Key="AddCondition" Value="加入條件" />
+    <LanguageItem Key="RemoveCondition" Value="移除條件" />
+    <LanguageItem Key="RemoveItem" Value="移除 {0}" />
+    <LanguageItem Key="CriteriaContains" Value="包含" />
+    <LanguageItem Key="CriteriaStartsWith" Value="開頭為" />
+    <LanguageItem Key="CriteriaEqual" Value="等於" />
+    <LanguageItem Key="CriteriaRange" Value="介於" />
+    <LanguageItem Key="CriteriaIn" Value="為下列任一" />
+    <LanguageItem Key="CriteriaAny" Value="全部" />
+    <LanguageItem Key="PickValue" Value="選取…" />
+    <LanguageItem Key="DatePeriod" Value="期間" />
+    <LanguageItem Key="DateToday" Value="今天" />
+    <LanguageItem Key="DateYesterday" Value="昨天" />
+    <LanguageItem Key="DateThisWeek" Value="本週" />
+    <LanguageItem Key="DateLastWeek" Value="上週" />
+    <LanguageItem Key="DateThisMonth" Value="本月" />
+    <LanguageItem Key="DateLastMonth" Value="上月" />
+    <LanguageItem Key="DateThisQuarter" Value="本季" />
+    <LanguageItem Key="DateThisYear" Value="今年" />
+    <LanguageItem Key="DateLastDays" Value="最近 {0} 天" />
+    <LanguageItem Key="QueryRequiredMissing" Value="請填寫必要條件：{0}" />
   </Items>
   <Enums />
 </LanguageResource>

@@ -35,6 +35,7 @@ namespace Polhem.UI.Avalonia.Views
                 .Where(c => c.Visible)
                 .ToArray();
             _cardList.ItemTemplate = BuildCardTemplate(columns, _grid.FormatColumnText);
+            AttachCriteria();
         }
 
         private async Task OnSortRequestedAsync(string fieldName)
