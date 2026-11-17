@@ -698,6 +698,69 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal(createdAt.ToString("G", CultureInfo.CurrentCulture), Assert.IsType<TextBlock>(values["Created At"]).Text);
         }
 
+        [Fact]
+        [DisplayName("The query button shows once the schema offers query fields, and the panel lists them")]
+        public async Task Initialize_WithQueryFields_ShowsQueryButton()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+
+            await view.InitializeAsync();
+
+            Assert.True(view.QueryButton.IsVisible);
+            Assert.Equal(["sys_id", "sys_name"], view.CriteriaPanel.Fields.Select(f => f.FieldName));
+        }
+
+        [Fact]
+        [DisplayName("The query button stays hidden when the schema offers no query fields")]
+        public async Task Initialize_WithoutQueryFields_HidesQueryButton()
+        {
+            var schema = BuildSchema();
+            schema.ListFields = string.Empty;
+            var view = new TestListView { Schema = schema, FormConnector = PagedConnector(totalRows: 3) };
+
+            await view.InitializeAsync();
+
+            Assert.False(view.QueryButton.IsVisible);
+        }
+
+        [Fact]
+        [DisplayName("Running a query sends its filter, reads the first page with the row count, and counts the conditions")]
+        public async Task RunQuery_SendsFilterFromFirstPage()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            await InvokePrivateAsync(view, "LoadPageAsync", 3, CancellationToken.None);
+
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]).SetValue("Bev");
+            await InvokePrivateAsync(view, "RunQueryAsync");
+
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter);
+            Assert.Equal(("sys_name", Polhem.Definition.Filters.ComparisonOperator.Contains, (object?)"Bev"),
+                (condition.FieldName, condition.Operator, condition.Value));
+            Assert.Equal(1, connector.Requests[^1].Page);
+            Assert.True(connector.Requests[^1].IncludeTotalCount);
+            Assert.EndsWith("(1)", Assert.IsType<string>(view.QueryButton.Content), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("Paging after a query keeps its filter even while the conditions are being edited")]
+        public async Task LoadPage_AfterQuery_KeepsActiveFilter()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            var row = view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]);
+            row.SetValue("Bev");
+            await InvokePrivateAsync(view, "RunQueryAsync");
+
+            row.SetValue("Changed but not run");
+            await InvokePrivateAsync(view, "LoadPageAsync", 2, CancellationToken.None);
+
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter);
+            Assert.Equal("Bev", condition.Value);
+        }
+
         private sealed class TestListView : ListView
         {
             public bool ConfirmAnswer { get; set; } = true;
@@ -738,6 +801,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             public Func<Polhem.Definition.Paging.PagingOptions, GetListResponse>? PagedHandler { get; set; }
             public List<Polhem.Definition.Paging.PagingOptions> Requests { get; } = [];
             public Polhem.Definition.Sorting.SortFieldCollection? LastSort { get; private set; }
+            public Polhem.Definition.Filters.FilterNode? LastFilter { get; private set; }
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }
 
             public override Task<GetListResponse> GetListAsync(
@@ -748,6 +812,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             {
                 if (paging is not null) { Requests.Add(paging); }
                 LastSort = sortFields;
+                LastFilter = filter;
                 return Task.FromResult(PagedHandler is not null && paging is not null
                     ? PagedHandler(paging)
                     : (GetListHandler ?? (_ => new GetListResponse()))(selectFields));

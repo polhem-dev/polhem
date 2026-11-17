@@ -2,3 +2,26 @@
 Polhem.Definition.Forms.FormSchema.GetQueryFields() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormField!>!
 Polhem.Definition.Forms.FormSchema.QueryFields.get -> string!
 Polhem.Definition.Forms.FormSchema.QueryFields.set -> void
+const Polhem.Definition.Language.PolhemUIText.Query = "Query" -> string!
+const Polhem.Definition.Language.PolhemUIText.QueryWithCount = "QueryWithCount" -> string!
+const Polhem.Definition.Language.PolhemUIText.AddCondition = "AddCondition" -> string!
+const Polhem.Definition.Language.PolhemUIText.RemoveCondition = "RemoveCondition" -> string!
+const Polhem.Definition.Language.PolhemUIText.RemoveItem = "RemoveItem" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaContains = "CriteriaContains" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaStartsWith = "CriteriaStartsWith" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaEqual = "CriteriaEqual" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaRange = "CriteriaRange" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaIn = "CriteriaIn" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaAny = "CriteriaAny" -> string!
+const Polhem.Definition.Language.PolhemUIText.PickValue = "PickValue" -> string!
+const Polhem.Definition.Language.PolhemUIText.DatePeriod = "DatePeriod" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateToday = "DateToday" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateYesterday = "DateYesterday" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisWeek = "DateThisWeek" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastWeek = "DateLastWeek" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisMonth = "DateThisMonth" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastMonth = "DateLastMonth" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisQuarter = "DateThisQuarter" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisYear = "DateThisYear" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastDays = "DateLastDays" -> string!
+const Polhem.Definition.Language.PolhemUIText.QueryRequiredMissing = "QueryRequiredMissing" -> string!

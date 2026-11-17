@@ -156,6 +156,53 @@ namespace Polhem.Definition.Language
         /// <summary>Key of the question asked before a record is deleted.</summary>
         public const string DeleteRecordPrompt = "DeleteRecordPrompt";
 
+        /// <summary>Key of the toolbar button that shows or hides a list's query conditions.</summary>
+        public const string Query = "Query";
+        /// <summary>Key of that button while conditions are in effect; <c>{0}</c> is how many.</summary>
+        public const string QueryWithCount = "QueryWithCount";
+        /// <summary>Key of the button that adds a query condition row.</summary>
+        public const string AddCondition = "AddCondition";
+        /// <summary>The accessible name of the button that removes a query condition row.</summary>
+        public const string RemoveCondition = "RemoveCondition";
+        /// <summary>The accessible name of the button that removes a picked value; <c>{0}</c> is the value.</summary>
+        public const string RemoveItem = "RemoveItem";
+        /// <summary>Key of the query operator that matches text a field contains.</summary>
+        public const string CriteriaContains = "CriteriaContains";
+        /// <summary>Key of the query operator that matches text a field starts with.</summary>
+        public const string CriteriaStartsWith = "CriteriaStartsWith";
+        /// <summary>Key of the query operator that matches a field equal to the value.</summary>
+        public const string CriteriaEqual = "CriteriaEqual";
+        /// <summary>Key of the query operator that matches a field between two values.</summary>
+        public const string CriteriaRange = "CriteriaRange";
+        /// <summary>Key of the query operator that matches a field equal to any picked value.</summary>
+        public const string CriteriaIn = "CriteriaIn";
+        /// <summary>Key of the yes / no choice that leaves a condition unset.</summary>
+        public const string CriteriaAny = "CriteriaAny";
+        /// <summary>Key of the button that picks a related record for a query condition.</summary>
+        public const string PickValue = "PickValue";
+        /// <summary>Key of the button that lists the date periods named relative to today.</summary>
+        public const string DatePeriod = "DatePeriod";
+        /// <summary>Key of the date period today.</summary>
+        public const string DateToday = "DateToday";
+        /// <summary>Key of the date period yesterday.</summary>
+        public const string DateYesterday = "DateYesterday";
+        /// <summary>Key of the date period this week.</summary>
+        public const string DateThisWeek = "DateThisWeek";
+        /// <summary>Key of the date period last week.</summary>
+        public const string DateLastWeek = "DateLastWeek";
+        /// <summary>Key of the date period this month.</summary>
+        public const string DateThisMonth = "DateThisMonth";
+        /// <summary>Key of the date period last month.</summary>
+        public const string DateLastMonth = "DateLastMonth";
+        /// <summary>Key of the date period this quarter.</summary>
+        public const string DateThisQuarter = "DateThisQuarter";
+        /// <summary>Key of the date period this year.</summary>
+        public const string DateThisYear = "DateThisYear";
+        /// <summary>Key of the date period of the last days ending today; <c>{0}</c> is the number of days.</summary>
+        public const string DateLastDays = "DateLastDays";
+        /// <summary>Key of the message that required query conditions are empty; <c>{0}</c> lists them.</summary>
+        public const string QueryRequiredMissing = "QueryRequiredMissing";
+
         private PolhemUIText()
         {
         }
@@ -213,6 +260,29 @@ namespace Polhem.Definition.Language
             [OpenRelatedRecord] = "Double-click to open this record",
             [RelatedRecordDenied] = "You do not have permission to view {0}.",
             [DeleteRecordPrompt] = "Delete this record?",
+            [Query] = "Query",
+            [QueryWithCount] = "Query ({0})",
+            [AddCondition] = "Add condition",
+            [RemoveCondition] = "Remove condition",
+            [RemoveItem] = "Remove {0}",
+            [CriteriaContains] = "contains",
+            [CriteriaStartsWith] = "starts with",
+            [CriteriaEqual] = "equals",
+            [CriteriaRange] = "between",
+            [CriteriaIn] = "is any of",
+            [CriteriaAny] = "Any",
+            [PickValue] = "Pick…",
+            [DatePeriod] = "Period",
+            [DateToday] = "Today",
+            [DateYesterday] = "Yesterday",
+            [DateThisWeek] = "This week",
+            [DateLastWeek] = "Last week",
+            [DateThisMonth] = "This month",
+            [DateLastMonth] = "Last month",
+            [DateThisQuarter] = "This quarter",
+            [DateThisYear] = "This year",
+            [DateLastDays] = "Last {0} days",
+            [QueryRequiredMissing] = "Fill in the required conditions: {0}",
         };
 
         /// <summary>
