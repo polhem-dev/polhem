@@ -131,6 +131,22 @@ namespace Polhem.Definition.Forms
         public string LookupFields { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the fields a user can add query conditions for on this form's list, with multiple fields
+        /// separated by commas.
+        /// </summary>
+        /// <remarks>
+        /// When empty, the list's <see cref="ListFields"/> are offered. <see cref="GetQueryFields"/> resolves the
+        /// value: only master-table fields count, relation display fields (<c>ref_*</c>) included. The server does not
+        /// enforce this set; it checks every filter field against the table and refuses protected columns whatever the
+        /// list says.
+        /// </remarks>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Fields a user can add query conditions for on the list, with multiple fields separated by commas. Empty offers the ListFields.")]
+        [DefaultValue("")]
+        public string QueryFields { get; set; } = string.Empty;
+
+        /// <summary>
         /// Gets or sets the permission model id that this form's main aggregate maps to.
         /// References a <see cref="Polhem.Definition.Settings.PermissionModel.ModelId"/> in the permission registry; the
         /// backend method-level enforcement uses it to resolve the (model, action) to check.
@@ -276,6 +292,40 @@ namespace Polhem.Definition.Forms
         }
 
         /// <summary>
+        /// Resolves the fields a user can add query conditions for on this form's list.
+        /// Fields declared in <see cref="QueryFields"/> win; an empty declaration falls back to
+        /// <see cref="ListFields"/>, and when both are empty no field is offered. Only fields defined on the master
+        /// table are returned, in the declared order and once each; <c>sys_rowid</c> and the stored columns
+        /// <see cref="ProtectedFields"/> lists are left out.
+        /// </summary>
+        /// <remarks>
+        /// Every other field the master table declares is returned, whatever its type; a front end skips the ones it
+        /// offers no condition for. A relation field that reads a protected column of the related table is not
+        /// detected here, because that needs the query's joins; the server refuses a filter on it.
+        /// </remarks>
+        public IReadOnlyList<FormField> GetQueryFields()
+        {
+            var fields = new List<FormField>();
+            var master = MasterTable;
+            if (master?.Fields == null) { return fields; }
+
+            var declared = StringUtilities.IsNotEmpty(QueryFields) ? QueryFields : ListFields;
+            var dbTableName = string.IsNullOrWhiteSpace(master.DbTableName) ? master.TableName : master.DbTableName;
+            foreach (var name in declared.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (StringUtilities.IsEquals(name, SysFields.RowId)) { continue; }
+                if (!master.Fields.Contains(name)) { continue; }
+                var field = master.Fields[name];
+                if (field.Type == Database.FieldType.DbField && ProtectedFields.IsProtected(dbTableName, field.FieldName)) { continue; }
+                if (!fields.Any(f => StringUtilities.IsEquals(f.FieldName, field.FieldName)))
+                {
+                    fields.Add(field);
+                }
+            }
+            return fields;
+        }
+
+        /// <summary>
         /// Creates a deep copy of this instance. Use this whenever a per-session
         /// view of a cached <see cref="FormSchema"/> must be mutated (e.g. before
         /// applying language-specific localization).
@@ -295,6 +345,7 @@ namespace Polhem.Definition.Forms
                 CurrencyField = CurrencyField,
                 ListFields = ListFields,
                 LookupFields = LookupFields,
+                QueryFields = QueryFields,
                 PermissionModelId = PermissionModelId,
             };
             if (_tables != null)

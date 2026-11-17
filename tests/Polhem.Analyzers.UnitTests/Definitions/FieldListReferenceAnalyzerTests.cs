@@ -74,6 +74,35 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
+        [DisplayName("QueryFields is checked too and reported as skipped silently")]
+        public void UnknownQueryField_ReportsDiagnostic()
+        {
+            const string xml = """
+                <?xml version="1.0" encoding="utf-8"?>
+                <FormSchema ProgId="Product" CategoryId="company" QueryFields="sys_id,unit_prise">
+                  <Tables>
+                    <FormTable TableName="Product" DbTableName="ft_product">
+                      <Fields>
+                        <FormField FieldName="sys_id" DbType="String" />
+                      </Fields>
+                    </FormTable>
+                  </Tables>
+                </FormSchema>
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.Run(new FieldListReferenceAnalyzer(), (SchemaPath, xml));
+
+            // Assert
+            var message = Assert.Single(diagnostics).GetMessage(CultureInfo.InvariantCulture);
+            Assert.Contains("QueryFields", message, StringComparison.Ordinal);
+
+            // `GetQueryFields` filters with `master.Fields.Contains`, so the entry is dropped rather than failing a query.
+            Assert.Contains("skipped silently", message, StringComparison.Ordinal);
+            Assert.DoesNotContain("InvalidOperationException", message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A master-detail list may mix fields from different tables without a false report")]
         public void FieldsFromMultipleTables_ReportNothing()
         {

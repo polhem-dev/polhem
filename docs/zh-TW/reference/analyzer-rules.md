@@ -1,4 +1,4 @@
-<!-- source: en/reference/analyzer-rules.md blob: e7ce03ab0ee39aa8f0bd17d7e27e9300cd5a1096 -->
+<!-- source: en/reference/analyzer-rules.md blob: 5542a88613dac18e129823762e347d4d6a1ae6ca -->
 # Analyzer 規則
 
 [English](../../en/reference/analyzer-rules.md) · [← 文件索引](../README.md)
@@ -19,7 +19,7 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 | POLHEM1001 | Error | `FormSchema/@CategoryId` 必須是 `common`、`company` 或 `log` |
 | POLHEM1002 | Error | `DbCategory/@Id` 同樣限於上述三個 scope |
 | POLHEM1003 | Error | `FormField` 與 `DbField` 的 `@DbType` 必須是 `FieldDbType` 的成員 |
-| POLHEM1004 | Error | `ListFields` / `LookupFields` 只能引用已宣告的欄位 |
+| POLHEM1004 | Error | `ListFields` / `LookupFields` / `QueryFields` 只能引用已宣告的欄位 |
 | POLHEM1005 | Error | 關聯對應的 `DestinationField` 必須是已宣告欄位 |
 | POLHEM1006 | Warning | 標記 `Type="RelationField"` 的欄位應有查詢 JOIN 會讀的對應寫入（不含 `LookupOnly="true"` 的對應） |
 | POLHEM1007 | Error | 同一張表不得重複宣告同名欄位 |

@@ -99,6 +99,7 @@
   <data name="PropDesc_FormSchema_CurrencyField" xml:space="preserve"><value>存放單據幣別代碼的主檔欄位名稱（SAP CUKY，慣例為 sys_currency）。</value><comment>Name of the master field holding the document currency code (SAP CUKY, convention sys_currency).</comment></data>
   <data name="PropDesc_FormSchema_ListFields" xml:space="preserve"><value>清單欄位字串，多個欄位以逗號分隔。</value><comment>List field collection string, with multiple fields separated by commas.</comment></data>
   <data name="PropDesc_FormSchema_LookupFields" xml:space="preserve"><value>開放給查詢使用的欄位字串，多個欄位以逗號分隔。</value><comment>Field collection string exposed to lookup queries, with multiple fields separated by commas.</comment></data>
+  <data name="PropDesc_FormSchema_QueryFields" xml:space="preserve"><value>清單可加入查詢條件的欄位，多個欄位以逗號分隔；留空時使用 ListFields。</value><comment>Fields a user can add query conditions for on the list, with multiple fields separated by commas. Empty offers the ListFields.</comment></data>
   <data name="PropDesc_FormSchema_PermissionModelId" xml:space="preserve"><value>對應此表單主要聚合的權限模型代碼。</value><comment>Permission model id mapped to this form's main aggregate.</comment></data>
   <data name="PropDesc_FormTable_TableName" xml:space="preserve"><value>資料表名稱。</value><comment>Table name.</comment></data>
   <data name="PropDesc_FormTable_DbTableName" xml:space="preserve"><value>資料庫資料表名稱。</value><comment>Database table name.</comment></data>
