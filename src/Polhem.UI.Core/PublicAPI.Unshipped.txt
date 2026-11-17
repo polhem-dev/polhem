@@ -1,1 +1,100 @@
 #nullable enable
+Polhem.UI.Core.Criteria.CriteriaField
+Polhem.UI.Core.Criteria.CriteriaField.Caption.get -> string!
+Polhem.UI.Core.Criteria.CriteriaField.CriteriaField(string! fieldName, string! caption, Polhem.UI.Core.Criteria.CriteriaFieldKind kind, Polhem.Core.Data.FieldDbType dbType, System.Collections.Generic.IEnumerable<Polhem.UI.Core.Criteria.CriteriaOperator>? operators = null) -> void
+Polhem.UI.Core.Criteria.CriteriaField.DbType.get -> Polhem.Core.Data.FieldDbType
+Polhem.UI.Core.Criteria.CriteriaField.DefaultOperator.get -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaField.FieldName.get -> string!
+Polhem.UI.Core.Criteria.CriteriaField.Kind.get -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaField.LangEnumName.get -> string!
+Polhem.UI.Core.Criteria.CriteriaField.LangEnumName.init -> void
+Polhem.UI.Core.Criteria.CriteriaField.ListItems.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Collections.ListItem!>!
+Polhem.UI.Core.Criteria.CriteriaField.ListItems.init -> void
+Polhem.UI.Core.Criteria.CriteriaField.Operators.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaOperator>!
+Polhem.UI.Core.Criteria.CriteriaField.RelationProgId.get -> string!
+Polhem.UI.Core.Criteria.CriteriaField.RelationProgId.init -> void
+Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Boolean = 4 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Choice = 3 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Code = 1 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Date = 6 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.DateTime = 7 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Number = 5 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Relation = 2 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaFieldKind.Text = 0 -> Polhem.UI.Core.Criteria.CriteriaFieldKind
+Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaOperator.Contains = 0 -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaOperator.Equal = 2 -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaOperator.In = 4 -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaOperator.Range = 3 -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaOperator.StartsWith = 1 -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaRow
+Polhem.UI.Core.Criteria.CriteriaRow.ChangeOperator(Polhem.UI.Core.Criteria.CriteriaOperator operator) -> void
+Polhem.UI.Core.Criteria.CriteriaRow.ClearValue() -> void
+Polhem.UI.Core.Criteria.CriteriaRow.Field.get -> Polhem.UI.Core.Criteria.CriteriaField!
+Polhem.UI.Core.Criteria.CriteriaRow.From.get -> object?
+Polhem.UI.Core.Criteria.CriteriaRow.HasValue.get -> bool
+Polhem.UI.Core.Criteria.CriteriaRow.IsOperatorLocked.get -> bool
+Polhem.UI.Core.Criteria.CriteriaRow.Kind.get -> Polhem.UI.Core.Criteria.CriteriaRowKind
+Polhem.UI.Core.Criteria.CriteriaRow.Operator.get -> Polhem.UI.Core.Criteria.CriteriaOperator
+Polhem.UI.Core.Criteria.CriteriaRow.RelativeDate.get -> Polhem.UI.Core.Criteria.RelativeDate?
+Polhem.UI.Core.Criteria.CriteriaRow.RemoveValue(object! value) -> bool
+Polhem.UI.Core.Criteria.CriteriaRow.SetRange(object? from, object? to) -> void
+Polhem.UI.Core.Criteria.CriteriaRow.SetRelativeDate(Polhem.UI.Core.Criteria.RelativeDate? relativeDate) -> void
+Polhem.UI.Core.Criteria.CriteriaRow.SetValue(object? value) -> void
+Polhem.UI.Core.Criteria.CriteriaRow.To.get -> object?
+Polhem.UI.Core.Criteria.CriteriaRow.TryAddValue(object! value, string! text) -> bool
+Polhem.UI.Core.Criteria.CriteriaRow.Value.get -> object?
+Polhem.UI.Core.Criteria.CriteriaRow.Values.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaValue>!
+Polhem.UI.Core.Criteria.CriteriaRowKind
+Polhem.UI.Core.Criteria.CriteriaRowKind.Default = 1 -> Polhem.UI.Core.Criteria.CriteriaRowKind
+Polhem.UI.Core.Criteria.CriteriaRowKind.Optional = 0 -> Polhem.UI.Core.Criteria.CriteriaRowKind
+Polhem.UI.Core.Criteria.CriteriaRowKind.Required = 2 -> Polhem.UI.Core.Criteria.CriteriaRowKind
+Polhem.UI.Core.Criteria.CriteriaValue
+Polhem.UI.Core.Criteria.CriteriaValue.CriteriaValue() -> void
+Polhem.UI.Core.Criteria.CriteriaValue.CriteriaValue(object! Value, string! Text) -> void
+Polhem.UI.Core.Criteria.CriteriaValue.Deconstruct(out object! Value, out string! Text) -> void
+Polhem.UI.Core.Criteria.CriteriaValue.Equals(Polhem.UI.Core.Criteria.CriteriaValue other) -> bool
+Polhem.UI.Core.Criteria.CriteriaValue.Text.get -> string!
+Polhem.UI.Core.Criteria.CriteriaValue.Text.init -> void
+Polhem.UI.Core.Criteria.CriteriaValue.Value.get -> object!
+Polhem.UI.Core.Criteria.CriteriaValue.Value.init -> void
+Polhem.UI.Core.Criteria.GetListFilterConverter
+Polhem.UI.Core.Criteria.QueryCriteria
+Polhem.UI.Core.Criteria.QueryCriteria.ActiveCount.get -> int
+Polhem.UI.Core.Criteria.QueryCriteria.Add(Polhem.UI.Core.Criteria.CriteriaField! field, Polhem.UI.Core.Criteria.CriteriaOperator? operator = null, Polhem.UI.Core.Criteria.CriteriaRowKind kind = Polhem.UI.Core.Criteria.CriteriaRowKind.Optional, bool lockOperator = false) -> Polhem.UI.Core.Criteria.CriteriaRow!
+Polhem.UI.Core.Criteria.QueryCriteria.Clear() -> void
+Polhem.UI.Core.Criteria.QueryCriteria.IsComplete.get -> bool
+Polhem.UI.Core.Criteria.QueryCriteria.MissingRequired.get -> System.Collections.Generic.IEnumerable<Polhem.UI.Core.Criteria.CriteriaRow!>!
+Polhem.UI.Core.Criteria.QueryCriteria.QueryCriteria() -> void
+Polhem.UI.Core.Criteria.QueryCriteria.Remove(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool
+Polhem.UI.Core.Criteria.QueryCriteria.Rows.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaRow!>!
+Polhem.UI.Core.Criteria.RelativeDate
+Polhem.UI.Core.Criteria.RelativeDate.Days.get -> int
+Polhem.UI.Core.Criteria.RelativeDate.Equals(Polhem.UI.Core.Criteria.RelativeDate other) -> bool
+Polhem.UI.Core.Criteria.RelativeDate.Kind.get -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDate.RelativeDate() -> void
+Polhem.UI.Core.Criteria.RelativeDate.RelativeDate(Polhem.UI.Core.Criteria.RelativeDateKind kind, int days = 0) -> void
+Polhem.UI.Core.Criteria.RelativeDate.Resolve(System.DateOnly today, System.DayOfWeek firstDayOfWeek) -> (System.DateOnly From, System.DateOnly To)
+Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.LastDays = 8 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.LastMonth = 5 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.LastWeek = 3 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.ThisMonth = 4 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.ThisQuarter = 6 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.ThisWeek = 2 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.ThisYear = 7 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.Today = 0 -> Polhem.UI.Core.Criteria.RelativeDateKind
+Polhem.UI.Core.Criteria.RelativeDateKind.Yesterday = 1 -> Polhem.UI.Core.Criteria.RelativeDateKind
+override Polhem.UI.Core.Criteria.CriteriaValue.GetHashCode() -> int
+override Polhem.UI.Core.Criteria.RelativeDate.GetHashCode() -> int
+static Polhem.UI.Core.Criteria.CriteriaField.FromField(Polhem.Definition.Forms.FormField! field) -> Polhem.UI.Core.Criteria.CriteriaField?
+static Polhem.UI.Core.Criteria.CriteriaValue.operator !=(Polhem.UI.Core.Criteria.CriteriaValue left, Polhem.UI.Core.Criteria.CriteriaValue right) -> bool
+static Polhem.UI.Core.Criteria.CriteriaValue.operator ==(Polhem.UI.Core.Criteria.CriteriaValue left, Polhem.UI.Core.Criteria.CriteriaValue right) -> bool
+static Polhem.UI.Core.Criteria.GetListFilterConverter.ToFilter(Polhem.UI.Core.Criteria.QueryCriteria! criteria, System.DateOnly today, System.DayOfWeek firstDayOfWeek) -> Polhem.Definition.Filters.FilterNode?
+static Polhem.UI.Core.Criteria.RelativeDate.operator !=(Polhem.UI.Core.Criteria.RelativeDate left, Polhem.UI.Core.Criteria.RelativeDate right) -> bool
+static Polhem.UI.Core.Criteria.RelativeDate.operator ==(Polhem.UI.Core.Criteria.RelativeDate left, Polhem.UI.Core.Criteria.RelativeDate right) -> bool
+~override Polhem.UI.Core.Criteria.CriteriaValue.Equals(object obj) -> bool
+~override Polhem.UI.Core.Criteria.CriteriaValue.ToString() -> string
+~override Polhem.UI.Core.Criteria.RelativeDate.Equals(object obj) -> bool
+~override Polhem.UI.Core.Criteria.RelativeDate.ToString() -> string
