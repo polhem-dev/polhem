@@ -1,1 +1,4 @@
 #nullable enable
+Polhem.Definition.Forms.FormSchema.GetQueryFields() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormField!>!
+Polhem.Definition.Forms.FormSchema.QueryFields.get -> string!
+Polhem.Definition.Forms.FormSchema.QueryFields.set -> void

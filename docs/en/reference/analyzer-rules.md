@@ -21,7 +21,7 @@ build time, where the message can name both the cause and the fix.
 | POLHEM1001 | Error | `FormSchema/@CategoryId` must be `common`, `company` or `log` |
 | POLHEM1002 | Error | `DbCategory/@Id` must be one of the same three scopes |
 | POLHEM1003 | Error | `@DbType` on `FormField` and `DbField` must name a `FieldDbType` member |
-| POLHEM1004 | Error | `ListFields` / `LookupFields` may only reference declared fields |
+| POLHEM1004 | Error | `ListFields` / `LookupFields` / `QueryFields` may only reference declared fields |
 | POLHEM1005 | Error | A relation mapping's `DestinationField` must be a declared field |
 | POLHEM1006 | Warning | A field marked `Type="RelationField"` should be populated by a mapping the query join reads (one without `LookupOnly="true"`) |
 | POLHEM1007 | Error | A table must not declare the same field name twice |

@@ -8,10 +8,11 @@ namespace Polhem.Analyzers.Definitions
     /// Reports POLHEM1004: a comma separated field list names a field the schema does not declare.
     /// </summary>
     /// <remarks>
-    /// These lists drive the grid columns and the lookup picker, and the two attributes fail differently
-    /// at run time: an unknown <c>LookupFields</c> entry is skipped, so the value simply never appears,
-    /// whereas an unknown <c>ListFields</c> entry is dropped by the layout generator but still reaches the
-    /// SELECT builder, which throws. The message therefore names the consequence per attribute.
+    /// These lists drive the grid columns, the lookup picker and the query conditions a list offers, and
+    /// they fail differently at run time: an unknown <c>LookupFields</c> or <c>QueryFields</c> entry is
+    /// skipped, so the value or the condition simply never appears, whereas an unknown <c>ListFields</c>
+    /// entry is dropped by the layout generator but still reaches the SELECT builder, which throws. The
+    /// message therefore names the consequence per attribute.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class FieldListReferenceAnalyzer : DefinitionFileAnalyzer
@@ -27,6 +28,8 @@ namespace Polhem.Analyzers.Definitions
               + "throws InvalidOperationException at run time."),
             ("LookupFields",
                 "The unknown entry is skipped silently, so that lookup value never appears."),
+            ("QueryFields",
+                "The unknown entry is skipped silently, so that field is never offered as a query condition."),
         };
 
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
@@ -38,7 +41,7 @@ namespace Polhem.Analyzers.Definitions
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: "Comma separated field lists are resolved against the fields the schema declares. "
-                       + "An unknown LookupFields entry is ignored without an error, while an unknown "
+                       + "An unknown LookupFields or QueryFields entry is ignored without an error, while an unknown "
                        + "ListFields entry is dropped from the layout yet still fails the SELECT it builds.",
             helpLinkUri: null,
             customTags: WellKnownDiagnosticTags.CompilationEnd);

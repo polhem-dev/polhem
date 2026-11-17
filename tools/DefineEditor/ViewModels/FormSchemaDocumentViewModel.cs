@@ -339,7 +339,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
 
     /// <summary>
     /// The dialog beside a property: the relation dialog for a stored field's RelationProgId, the field picker for the
-    /// form's ListFields and LookupFields; no editor for any other property.
+    /// form's ListFields, LookupFields and QueryFields; no editor for any other property.
     /// </summary>
     public Func<Task<bool>>? ProvideValueEditor(PropertyDescriptor property, object component) =>
         ProvideRelationEditor(property, component) ?? ProvideFieldPicker(property, component)
@@ -417,13 +417,13 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     }
 
     /// <summary>
-    /// The field picker for the form's ListFields and LookupFields, which name master-table fields as a
+    /// The field picker for the form's ListFields, LookupFields and QueryFields, which name master-table fields as a
     /// comma-separated list; <c>null</c> for any other property or when the master table has no fields.
     /// </summary>
     public Func<Task<bool>>? ProvideFieldPicker(PropertyDescriptor property, object component)
     {
         if (component is not FormSchema schema
-            || property.Name is not (nameof(FormSchema.ListFields) or nameof(FormSchema.LookupFields))
+            || property.Name is not (nameof(FormSchema.ListFields) or nameof(FormSchema.LookupFields) or nameof(FormSchema.QueryFields))
             || schema.MasterTable?.Fields is not { Count: > 0 } fields)
         {
             return null;
