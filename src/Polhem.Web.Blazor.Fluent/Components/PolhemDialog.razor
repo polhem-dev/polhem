@@ -84,9 +84,20 @@
     public async ValueTask DisposeAsync()
     {
         if (_module is null) return;
+        if (_escapeGuarded)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("releaseEscape", _dialog?.Id).ConfigureAwait(true);
+            }
+            catch (Exception ex) when (ex is JSException or TaskCanceledException)
+            {
+                // The guard also removes itself on the next key press once its dialog has left the document.
+                _escapeGuarded = false;
+            }
+        }
         try
         {
-            if (_escapeGuarded) await _module.InvokeVoidAsync("releaseEscape", _dialog?.Id).ConfigureAwait(true);
             await _module.DisposeAsync().ConfigureAwait(true);
         }
         catch (JSDisconnectedException)

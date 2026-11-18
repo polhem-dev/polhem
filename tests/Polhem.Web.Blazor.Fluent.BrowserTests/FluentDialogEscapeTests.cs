@@ -28,15 +28,23 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
             await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
             await page.Locator("#open-sibling").ClickAsync();
             await Assertions.Expect(page.Locator("#in-sibling")).ToBeVisibleAsync();
-            await page.EvaluateAsync("() => document.activeElement?.blur()");
-            Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.body"));
+            await BlurAsync(page);
 
             await page.Keyboard.PressAsync("Escape");
 
             await Assertions.Expect(page.Locator(Sibling)).ToHaveCountAsync(0);
+            // Closing the sibling hands the focus back to the button that opened it, inside the guarded dialog.
+            await page.WaitForTimeoutAsync(100);
+            await BlurAsync(page);
             await page.Keyboard.PressAsync("Escape");
             await page.WaitForTimeoutAsync(500);
             await Assertions.Expect(page.Locator($"{Guarded} #open-sibling")).ToBeVisibleAsync();
+        }
+
+        private static async Task BlurAsync(IPage page)
+        {
+            await page.EvaluateAsync("() => document.activeElement?.blur()");
+            Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.body"));
         }
     }
 }

@@ -19,8 +19,10 @@ const isDialog = node => node instanceof Element && node.localName === 'fluent-d
 
 const isOpen = dialog => dialog.shadowRoot?.querySelector('dialog')?.open === true;
 
-// A `fluent-dialog` announces that it opened with a `toggle` event that leaves its shadow root. Every guarded dialog
-// loads this module before it opens, so a dialog opened before the module loaded is older than every guarded one.
+// A `fluent-dialog` announces that it opened with a `toggle` event that leaves its shadow root. `PolhemDialog` loads this
+// module before its first `ShowAsync`, so a dialog opened before the module loaded is older than that dialog. A dialog
+// that becomes guarded while already open has no recorded order; against another dialog without one, the only order
+// left is nesting, where the inner dialog opened later.
 document.addEventListener('toggle', e => {
     if (isDialog(e.target) && e.detail?.newState === 'open') openedAt.set(e.target, ++opened);
 }, true);
@@ -29,7 +31,11 @@ const isTopmost = dialog => {
     if (!isOpen(dialog)) return false;
     const mine = openedAt.get(dialog) ?? 0;
     return ![...document.querySelectorAll('fluent-dialog')]
-        .some(other => other !== dialog && isOpen(other) && (openedAt.get(other) ?? 0) > mine);
+        .some(other => {
+            if (other === dialog || !isOpen(other)) return false;
+            const theirs = openedAt.get(other) ?? 0;
+            return theirs > mine || (theirs === mine && dialog.contains(other));
+        });
 };
 
 export function guardEscape(id) {
