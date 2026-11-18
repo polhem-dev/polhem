@@ -392,7 +392,7 @@ namespace Polhem.Business.UnitTests.Form
 
                 var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
 
-                Assert.Equal(PolhemMessages.SaveDetailRecordMismatch, ex.MessageKey);
+                Assert.Equal(PolhemMessages.SaveConcurrencyConflict, ex.MessageKey);
             }
             finally
             {

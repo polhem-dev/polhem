@@ -114,9 +114,9 @@ namespace Polhem.Business.Form
                     && dataSet.Tables[name]!.Rows.Cast<DataRow>().Any(row => row.RowState != DataRowState.Detached));
                 if (carried is not null)
                 {
-                    throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
-                        "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
-                        carried, masterTable.TableName);
+                    // The usual cause is a record someone else deleted while it was open.
+                    throw new UserMessageException(PolhemMessages.SaveConcurrencyConflict,
+                        "The record was changed or deleted by someone else while it was open. Reload it and try again.");
                 }
             }
             var foreign = AggregatedDetailCompletion.FindForeignTable(dataSet, detailNames, rowId, stored);
