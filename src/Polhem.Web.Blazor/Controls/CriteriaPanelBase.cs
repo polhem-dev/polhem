@@ -170,33 +170,36 @@ namespace Polhem.Web.Blazor.Controls
 
         /// <summary>Adds an optional row for a field.</summary>
         /// <param name="field">The field.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task AddRowAsync(CriteriaField field)
+        protected Task AddRowAsync(CriteriaField field, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(field);
             Criteria.Add(field);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Removes a row that is not required.</summary>
         /// <param name="row">The row.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task RemoveRowAsync(CriteriaRow row)
+        protected Task RemoveRowAsync(CriteriaRow row, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
-            return Criteria.Remove(row) ? OnChangedAsync() : Task.CompletedTask;
+            return Criteria.Remove(row) ? OnChangedAsync(cancellationToken) : Task.CompletedTask;
         }
 
         /// <summary>Changes a row's operator; what was entered stays only between the single-value operators.</summary>
         /// <param name="row">The row.</param>
         /// <param name="operator">The new operator.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task ChangeOperatorAsync(CriteriaRow row, CriteriaOperator @operator)
+        protected Task ChangeOperatorAsync(CriteriaRow row, CriteriaOperator @operator, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             if (row.IsOperatorLocked || row.Operator == @operator) return Task.CompletedTask;
             row.ChangeOperator(@operator);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Returns the text a single-value row's input shows.</summary>
@@ -217,51 +220,55 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Sets a single-value row from what the user typed; blank or unreadable text clears it.</summary>
         /// <param name="row">The row.</param>
         /// <param name="text">The text.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetValueTextAsync(CriteriaRow row, string? text)
+        protected Task SetValueTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             Remember(row, ValueSlot, text);
             row.SetValue(Parse(row, text));
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Sets the start of a range from what the user typed, keeping the end shown.</summary>
         /// <param name="row">The row.</param>
         /// <param name="text">The text.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetFromTextAsync(CriteriaRow row, string? text)
+        protected Task SetFromTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             var (_, to) = ShownRange(row);
             Remember(row, FromSlot, text);
             row.SetRange(Parse(row, text), to);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Sets the end of a range from what the user typed, keeping the start shown.</summary>
         /// <param name="row">The row.</param>
         /// <param name="text">The text.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetToTextAsync(CriteriaRow row, string? text)
+        protected Task SetToTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             var (from, _) = ShownRange(row);
             Remember(row, ToSlot, text);
             row.SetRange(from, Parse(row, text));
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Sets a date range to a period named relative to today.</summary>
         /// <param name="row">The row.</param>
         /// <param name="period">The period.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetPeriodAsync(CriteriaRow row, RelativeDate period)
+        protected Task SetPeriodAsync(CriteriaRow row, RelativeDate period, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             Forget(row);
             row.SetRelativeDate(period);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>
@@ -285,12 +292,13 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Sets a yes / no row from the choice the user picked.</summary>
         /// <param name="row">The row.</param>
         /// <param name="choice">An empty string for either, or <see cref="bool.TrueString"/> or <see cref="bool.FalseString"/>.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetBooleanChoiceAsync(CriteriaRow row, string? choice)
+        protected Task SetBooleanChoiceAsync(CriteriaRow row, string? choice, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             row.SetValue(bool.TryParse(choice, out var flag) ? flag : null);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Returns whether a listed value is in a choice row.</summary>
@@ -308,8 +316,9 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="item">The listed value.</param>
         /// <param name="chosen">Whether the value is now checked.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetChosenAsync(CriteriaRow row, ListItem item, bool chosen)
+        protected Task SetChosenAsync(CriteriaRow row, ListItem item, bool chosen, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             ArgumentNullException.ThrowIfNull(item);
@@ -318,17 +327,18 @@ namespace Polhem.Web.Blazor.Controls
             else
                 foreach (var value in row.Values.Where(v => SameValue(v.Value, item.Value)).ToArray())
                     row.RemoveValue(value.Value);
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Removes a value from a relation row.</summary>
         /// <param name="row">The row.</param>
         /// <param name="value">The value.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task RemoveValueAsync(CriteriaRow row, CriteriaValue value)
+        protected Task RemoveValueAsync(CriteriaRow row, CriteriaValue value, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
-            return row.RemoveValue(value.Value) ? OnChangedAsync() : Task.CompletedTask;
+            return row.RemoveValue(value.Value) ? OnChangedAsync(cancellationToken) : Task.CompletedTask;
         }
 
         /// <summary>Opens the lookup of a relation row's program; the UI package renders it while <see cref="PickingRow"/> is set.</summary>
@@ -341,14 +351,15 @@ namespace Polhem.Web.Blazor.Controls
 
         /// <summary>Adds the picked record to the row the lookup was open for and closes the lookup.</summary>
         /// <param name="picked">The picked row.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task CommitPickAsync(DataRow picked)
+        protected Task CommitPickAsync(DataRow picked, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(picked);
             var row = PickingRow;
             PickingRow = null;
             if (row is null || !row.TryAddValue(picked[SysFields.RowId], PickedText(picked))) return Task.CompletedTask;
-            return OnChangedAsync();
+            return OnChangedAsync(cancellationToken);
         }
 
         /// <summary>Closes the lookup without picking.</summary>
@@ -364,9 +375,11 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Asks the host to run the query when every required row has a value; otherwise names the empty ones.</summary>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected async Task RequestSearchAsync()
+        protected async Task RequestSearchAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var missing = Criteria.MissingRequired.Select(r => r.Field.Caption).ToArray();
             if (missing.Length > 0)
             {
@@ -378,29 +391,40 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Removes every row that is not required, empties the required ones and searches.</summary>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected async Task ClearAndSearchAsync()
+        protected async Task ClearAndSearchAsync(CancellationToken cancellationToken = default)
         {
             Criteria.Clear();
             _typed.Clear();
-            await OnChangedAsync().ConfigureAwait(true);
-            await RequestSearchAsync().ConfigureAwait(true);
+            await OnChangedAsync(cancellationToken).ConfigureAwait(true);
+            await RequestSearchAsync(cancellationToken).ConfigureAwait(true);
         }
 
         /// <summary>Asks the host to close the pane.</summary>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task CloseAsync() => CloseRequested.InvokeAsync();
+        protected Task CloseAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return CloseRequested.InvokeAsync();
+        }
 
         /// <summary>Closes the pane on Escape, unless a lookup over it takes the key.</summary>
         /// <param name="e">The key event.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task OnKeyDownAsync(KeyboardEventArgs e)
+        protected Task OnKeyDownAsync(KeyboardEventArgs e, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(e);
-            return e.Key == "Escape" && PickingRow is null ? CloseAsync() : Task.CompletedTask;
+            return e.Key == "Escape" && PickingRow is null ? CloseAsync(cancellationToken) : Task.CompletedTask;
         }
 
-        private Task OnChangedAsync() => CriteriaChanged.InvokeAsync();
+        private Task OnChangedAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return CriteriaChanged.InvokeAsync();
+        }
 
         private DateOnly ReadToday() => Today?.Invoke() ?? DateOnly.FromDateTime(DateTime.Now);
 
