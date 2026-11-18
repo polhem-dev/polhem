@@ -1,4 +1,4 @@
-<!-- source: en/README.md blob: a5219751596eabebfa40fc1d5b56a2828ad13468 -->
+<!-- source: en/README.md blob: 9b67034402f6206cb761016ed877ec6287b12493 -->
 # Polhem 文件
 
 [English](../en/README.md)
@@ -62,6 +62,7 @@
 | [平台支援](getting-started/platform-support.md) | 指引 | 支援的 head（桌面、瀏覽器、iOS、Android、Blazor Server）、可用的裁剪與 AOT 設定，以及瀏覽器或行動裝置 head 的檢查清單 |
 | [用 Excel 建模表單](guides/excel-form-modeling.md) | 指引 | 在 Excel 活頁簿描述表單，匯入成可執行表單的定義檔：活頁簿的結構、匯入時自動補上的慣例，以及會寫入哪些檔案 |
 | [從文件草擬表單](guides/document-form-drafting.md) | 指引 | 在 DefineEditor 中與 Claude 對話，從紙本文件（PDF、Word 文件或照片）草擬表單：憑證、對話視窗、匯入及匯入之後 |
+| [清單查詢條件](guides/list-query-conditions.md) | 指引 | 讓使用者逐條加入條件來縮小表單清單：宣告 `QueryFields`、各類欄位可輸入的內容、條件如何組合與比對文字，以及在自己的畫面放入查詢面板 |
 | [從 Bee.NET 遷移](guides/migrating-from-bee-net.md) | 指引 | 從 `Bee.*` 套件升級應用程式：改名的套件、命名空間與型別，編譯器不會檢查的名稱、設定，以及切換時會發生的事 |
 
 ## 4. 查詢參考
@@ -100,7 +101,7 @@
 | **定義層** | [定義檔全景](definitions/definition-files-overview.md) · [架構總覽](architecture/architecture-overview.md) · [運算式與規則](definitions/expression-rules.md) · [保留命名](reference/framework-reserved-names.md) |
 | **多租戶** | [租戶客製化](definitions/customization.md) · [定義檔全景](definitions/definition-files-overview.md) · [開發指引](guides/development-cookbook.md) · [快取機制](guides/caching.md) |
 | **快取與效能** | [快取機制](guides/caching.md) · [開發指引](guides/development-cookbook.md) · [開發限制與反模式](architecture/development-constraints.md) |
-| **用戶端 head 與平台** | [平台支援](getting-started/platform-support.md) · [JSON-RPC 前端整合](api/jsonrpc-frontend-integration.md) · [開發指引](guides/development-cookbook.md) |
+| **用戶端 head 與平台** | [平台支援](getting-started/platform-support.md) · [清單查詢條件](guides/list-query-conditions.md) · [JSON-RPC 前端整合](api/jsonrpc-frontend-integration.md) · [開發指引](guides/development-cookbook.md) |
 | **API 與前端** | [契約設計](api/api-bo-contract-design.md) · [API 方法參考](api/api-method-reference.md) · [JSON-RPC 前端整合](api/jsonrpc-frontend-integration.md) · [權限與授權](security/permission-authorization.md) · [API 金鑰管理](security/api-key-management.md) |
 | **型別與時間** | [時間型別總覽](database/temporal-types.md) · [時區處理](database/datetime-timezone.md) |
 | **品質與規範** | [Analyzer 規則](reference/analyzer-rules.md) · [開發限制與反模式](architecture/development-constraints.md) · [命名規範](database/database-naming-conventions.md) |

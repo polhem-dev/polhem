@@ -61,6 +61,7 @@ How to actually do a thing.
 | [Platform Support](getting-started/platform-support.md) | Guide | The supported heads (desktop, browser, iOS, Android, Blazor Server), the trim and AOT configurations that work, and the checklist for a browser or mobile head |
 | [Modeling Forms in Excel](guides/excel-form-modeling.md) | Guide | Describing a form in an Excel workbook and importing it as the definition files of a runnable form: the workbook, the conventions the import fills in, and what it writes |
 | [Drafting Forms from Documents](guides/document-form-drafting.md) | Guide | Drafting a form from a paper document (a PDF, a Word document or photos) in a conversation with Claude in DefineEditor: the credential, the conversation window, the import and what follows it |
+| [List Query Conditions](guides/list-query-conditions.md) | Guide | Letting users narrow a form's list with conditions added one row at a time: declaring `QueryFields`, what each field kind accepts, how conditions combine and match text, and hosting the query panel in a view of your own |
 | [Migrating from Bee.NET](guides/migrating-from-bee-net.md) | Guide | Upgrading an application from the `Bee.*` packages: renamed packages, namespaces and types, names the compiler does not check, settings, and what changes at the switch |
 
 ## 4. Reference
@@ -99,7 +100,7 @@ The same documents, grouped by subject. A document appearing under several topic
 | **Definition layer** | [Definition Files Overview](definitions/definition-files-overview.md) · [Architecture Overview](architecture/architecture-overview.md) · [Expressions and Rules](definitions/expression-rules.md) · [Reserved Names](reference/framework-reserved-names.md) |
 | **Multi-tenancy** | [Tenant Customization](definitions/customization.md) · [Definition Files Overview](definitions/definition-files-overview.md) · [Development Cookbook](guides/development-cookbook.md) · [Caching](guides/caching.md) |
 | **Caching & performance** | [Caching](guides/caching.md) · [Development Cookbook](guides/development-cookbook.md) · [Development Constraints](architecture/development-constraints.md) |
-| **Client heads & platforms** | [Platform Support](getting-started/platform-support.md) · [JSON-RPC Frontend Integration](api/jsonrpc-frontend-integration.md) · [Development Cookbook](guides/development-cookbook.md) |
+| **Client heads & platforms** | [Platform Support](getting-started/platform-support.md) · [List Query Conditions](guides/list-query-conditions.md) · [JSON-RPC Frontend Integration](api/jsonrpc-frontend-integration.md) · [Development Cookbook](guides/development-cookbook.md) |
 | **API & frontend** | [Contract Design](api/api-bo-contract-design.md) · [API Method Reference](api/api-method-reference.md) · [JSON-RPC Frontend Integration](api/jsonrpc-frontend-integration.md) · [Permission & Authorization](security/permission-authorization.md) · [API Key Management](security/api-key-management.md) |
 | **Types & time** | [Temporal Types](database/temporal-types.md) · [Time Zones](database/datetime-timezone.md) |
 | **Quality & conventions** | [Analyzer Rules](reference/analyzer-rules.md) · [Development Constraints](architecture/development-constraints.md) · [Naming Conventions](database/database-naming-conventions.md) |

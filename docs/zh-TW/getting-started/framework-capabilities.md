@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/framework-capabilities.md blob: 975d8837520a545fce20d04ba69d9d4a890bfea8 -->
+<!-- source: en/getting-started/framework-capabilities.md blob: bdb8de3fa6360ae52f4b1e46a6d6b79ffc6b382c -->
 # 框架機制清單
 
 [English](../../en/getting-started/framework-capabilities.md) · [← 文件索引](../README.md)
@@ -26,6 +26,7 @@
 | **運算式引擎** | DynamicExpresso 求值計算欄與規則；`IExpressionEvaluator` 讓引擎可替換。見[運算式與規則](../definitions/expression-rules.md) |
 | **主從結構** | 子表以 `sys_master_rowid` 串接，單次 `Save` 一併寫入 |
 | **Lookup 關聯** | 欄位宣告關聯目標與欄位對映後，開窗查詢與帶值即自動成立 |
+| **清單查詢條件** | `QueryFields` 宣告清單可查詢的欄位；使用者在 Avalonia 清單逐條加入條件，查詢面板也能放進其他畫面。請參閱[清單查詢條件](../guides/list-query-conditions.md) |
 | **PluginSettings** | 每個 `progId` 掛哪些業務 plugin，各自宣告所掛的那一個時點，依宣告順序執行 |
 
 ## 2. 資料存取

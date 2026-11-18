@@ -1,0 +1,126 @@
+<!-- source: en/guides/list-query-conditions.md blob: 68ef36434079e8118fce6af8661587211216f292 -->
+# 清單查詢條件
+
+[English](../../en/guides/list-query-conditions.md) · [← 文件索引](../README.md)
+
+> 讓使用者逐條加入條件來縮小表單清單，以及在自己的畫面裡重用同一個查詢面板
+
+---
+
+## 目錄
+
+- [1. 使用者看到的畫面](#1-使用者看到的畫面)
+- [2. 宣告清單可查詢的欄位](#2-宣告清單可查詢的欄位)
+- [3. 各欄位可以輸入什麼](#3-各欄位可以輸入什麼)
+- [4. 條件如何組合](#4-條件如何組合)
+- [5. 文字比對](#5-文字比對)
+- [6. 在自己的畫面使用面板](#6-在自己的畫面使用面板)
+- [7. 不透過面板直接呼叫 GetList](#7-不透過面板直接呼叫-getlist)
+
+---
+
+## 1. 使用者看到的畫面
+
+表單有可查詢欄位時，Avalonia 的 `ListView` 工具列會出現**查詢**按鈕。按下後展開面板，使用者逐條加入條件：
+**加入條件**列出欄位，每一列有欄位、運算子（欄位有多種時才出現）、值和移除鈕。**搜尋**（或按 Enter）會帶著條件讀取
+清單的第一頁，按鈕隨後顯示目前生效的條件數，例如「查詢（2）」。**清除**會移除條件並重新讀取整份清單。
+
+清單一開始沒有任何條件。Blazor 版目前仍以欄頭篩選來過濾清單。
+
+## 2. 宣告清單可查詢的欄位
+
+`FormSchema.QueryFields` 列出這些欄位，以逗號分隔，寫法和 `ListFields`、`LookupFields` 相同。留空時改用清單的
+`ListFields`。
+
+```xml
+<FormSchema ProgId="Order" ... ListFields="sys_id,order_date,ref_customer_name,ref_employee_name,status,total_amount"
+            QueryFields="sys_id,order_date,customer_rowid,ref_customer_name,employee_rowid,shipper_rowid,status,freight,total_amount">
+```
+
+- 只計入主檔的欄位。關聯顯示欄位（例如 `ref_customer_name`）也可以列入，查詢時會 join 關聯的資料表來篩選。
+- 列入外鍵（`customer_rowid`），使用者就能透過開窗挑選關聯資料；列入顯示欄位（`ref_customer_name`），使用者就能輸入
+  名稱的一部分來查。
+- `sys_rowid` 和框架保護的欄位（`ProtectedFields`，例如密碼雜湊）一律不會列出。
+- 使用者沒有讀取權限的 `SensitiveCategory` 欄位不會出現在面板裡，和清單隱藏該欄的做法一致。這是前端的使用體驗，
+  不是資料邊界；請參閱[權限與授權指南](../security/permission-authorization.md)。
+- 不是表單欄位的名稱，建置時會回報 [POLHEM1004](../reference/analyzer-rules.md)；執行時則會略過。
+- 伺服器不會把篩選限制在這些欄位：資料表宣告且未受保護的欄位都可以篩選。`QueryFields` 決定的是面板提供哪些欄位。
+
+DefineEditor 用與 `ListFields` 相同的欄位挑選器編輯這個屬性，Excel 表單活頁簿也有對應的欄
+（[用 Excel 建模表單](excel-form-modeling.md)）。
+
+## 3. 各欄位可以輸入什麼
+
+欄位的類型決定編輯器和運算子，由欄位定義推導而來：
+
+| 欄位 | 類型 | 編輯器 | 運算子 |
+|------|------|--------|--------|
+| 有設定 `RelationProgId` | 關聯 | 透過開窗挑選資料，以可移除的標籤顯示 | 為下列任一 |
+| 有設定 `ListItems` 或 `LangEnumName` | 選項 | 每個值一個核取方塊 | 為下列任一 |
+| 名稱為 `sys_id` 或以 `_id` 結尾的字串 | 代碼 | 起～迄 | 介於、開頭為、包含、等於 |
+| 其他字串 | 文字 | 文字框 | 包含、開頭為、等於 |
+| Boolean | 是／否 | 全部、是、否 | 等於 |
+| 數字 | 數字 | 起～迄，或單一數字 | 介於、等於 |
+| Date | 日期 | 起～迄，或單一日期，可選期間 | 介於、等於 |
+| DateTime | 日期時間 | 以日為單位輸入，和日期相同 | 介於、等於 |
+
+長文字（`Text`）、二進位資料、時間（time of day），以及沒有指向關聯程式的 `Guid`，不提供條件。
+
+日期區間的**期間**選單提供今天、昨天、本週、上週、本月、上月、本季、今年，以及最近 7 天或 30 天。期間會保持相對：
+每次執行查詢時，才依登入使用者時區的今天換算；一週從哪天開始，依使用者的文化設定。
+
+## 4. 條件如何組合
+
+- 每一列都必須符合：條件列之間以 AND 組合。
+- 同一個欄位可以出現在多列，例如名稱包含「A」且包含「B」。
+- 同一列的多個值符合其中之一即可，所以「狀態為草稿或已確認」不需要 OR。
+- 區間的兩端都可以留空。
+- 日期時間區間包含最後一天的整天：查到隔天之前為止。
+- 生效的條件是最後一次搜尋時的條件。換頁和排序都沿用它們，即使使用者正在修改條件列；修改要到下次搜尋才生效。
+
+## 5. 文字比對
+
+文字運算子（包含、開頭為、結尾為）只把 `%` 當萬用字元：`abc%001` 會比對到 `abc-001` 和 `abc_x_001`。其他字元都只比對
+自己，包括 `_`，以及 SQL Server 上的 `[`，所以 `abc_001` 這樣的代碼不會連帶比對到 `abcd001`。
+
+文字比對是否區分大小寫取決於資料庫：SQL Server 和 MySQL 依欄位的定序（常用的定序不區分大小寫），SQLite 只對 ASCII
+英文字母不區分大小寫，PostgreSQL 和 Oracle 則區分大小寫。
+
+## 6. 在自己的畫面使用面板
+
+面板和它的模型都是公開的，所以自己的畫面（例如報表）可以照 `ListView` 的方式使用：
+
+| 型別 | 套件 | 作用 |
+|------|------|------|
+| `CriteriaField` | `Polhem.UI.Core` | 可以輸入條件的欄位；`FromQueryFields` 回傳表單的可查詢欄位 |
+| `QueryCriteria`、`CriteriaRow` | `Polhem.UI.Core` | 條件列，值已經轉成欄位的型別 |
+| `GetListFilterConverter` | `Polhem.UI.Core` | 把條件列轉成清單請求的 `FilterNode` |
+| `CriteriaPanel` | `Polhem.UI.Avalonia` | 編輯條件列的 Avalonia 控件 |
+
+```csharp
+var criteria = new QueryCriteria();
+// A report would add its required rows here; the user cannot remove them.
+var orderDate = CriteriaField.FromField(schema.FindField("order_date")!)!;
+criteria.Add(orderDate, kind: CriteriaRowKind.Required, lockOperator: true)
+        .SetRelativeDate(new RelativeDate(RelativeDateKind.ThisMonth));
+
+var panel = new CriteriaPanel { Today = () => FrameworkClock.Today(user.TimeZone) };
+panel.Bind(CriteriaField.FromQueryFields(schema, capabilities), criteria);
+panel.SearchRequested += async (_, _) =>
+{
+    var filter = GetListFilterConverter.ToFilter(criteria, FrameworkClock.Today(user.TimeZone),
+        CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek);
+    var response = await connector.GetListAsync(selectFields, filter);
+    // Show response.Table.
+};
+```
+
+只有在每一列必要條件都有值時，才會觸發 `SearchRequested`；否則面板會列出還沒填的條件。必要條件是畫面上的便利功能：
+需要某個值的後端方法要自己檢查，因為呼叫端可以略過畫面。
+
+`GetList` 以外的後端方法（例如報表）不用 `GetListFilterConverter`，而是把同樣的條件列轉成自己的參數。
+
+## 7. 不透過面板直接呼叫 GetList
+
+自己做畫面的用戶端，直接在 `GetList` 的 `filter` 送出 `FilterNode`。上述條件對應到 `FilterCondition` 和 `FilterGroup`
+節點；wire 格式請參閱 [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)，文字運算子的規則同第 5 節。
