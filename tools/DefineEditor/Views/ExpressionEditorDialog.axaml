@@ -79,7 +79,7 @@
                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                         </TreeDataTemplate>
                         <DataTemplate DataType="vm:ExpressionSymbol">
-                            <DockPanel ToolTip.Tip="{Binding Detail}">
+                            <DockPanel ToolTip.Tip="{Binding ToolTipText}">
                                 <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Margin="0,0,6,0"/>
                                 <TextBlock Text="{Binding Detail}" Classes="muted" TextTrimming="CharacterEllipsis"/>
                             </DockPanel>

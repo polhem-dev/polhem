@@ -58,7 +58,8 @@ public static class ExpressionCompletion
             new ExpressionSuggestion(ExpressionSuggestionKind.Field, v.Key, v.Key, ExpressionMembers.TypeName(v.Value))));
         names.AddRange(sources.Functions.Select(f =>
             new ExpressionSuggestion(ExpressionSuggestionKind.Function, f.Name,
-                f.Name + (f.Parameters.Count == 0 ? "()" : "("), ExpressionMembers.Signature(f))));
+                f.Name + (f.Parameters.Count == 0 ? "()" : "("),
+                FunctionLabels.Summary(f) + Environment.NewLine + FunctionLabels.Usage(f))));
         names.AddRange(ExpressionMembers.FeaturedTypes(sources.Types).Select(t =>
             new ExpressionSuggestion(ExpressionSuggestionKind.Type, t.Key, t.Key, t.Value.FullName ?? t.Value.Name)));
         names.AddRange(s_keywords.Select(k => new ExpressionSuggestion(ExpressionSuggestionKind.Keyword, k, k, string.Empty)));

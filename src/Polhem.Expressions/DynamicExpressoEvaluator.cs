@@ -130,21 +130,32 @@ namespace Polhem.Expressions
 #pragma warning restore IDE1006
 
         /// <summary>
-        /// The curated helper functions available to every expression.
+        /// The curated helper functions available to every expression, each with the description a definition editor
+        /// shows and the fields its example names.
         /// </summary>
-        private static readonly (string Name, Delegate Function)[] s_helperFunctions =
+        private static readonly HelperFunction[] s_helperFunctions =
         [
             // `Today()` yields a calendar day in the user's zone (ADR-032 D12). It is a DateOnly
             // like every other date in the framework; `ExpressionPolicy.CoerceValue` widens it when
             // the result lands in a DataSet cell, the one place a date must be a DateTime.
-            ("Today", (Func<DateOnly>)(() => FrameworkClock.Today(t_timeZoneId ?? string.Empty))),
+            new("Today", (Func<DateOnly>)(() => FrameworkClock.Today(t_timeZoneId ?? string.Empty)),
+                "Today's date in the user's time zone.",
+                "Today().AddDays(7)"),
             // `Now()` follows the basis of the data set being evaluated, not the user's zone alone, so the
             // value it writes or compares shares the basis of the cells around it: UTC in the server's
             // pre-save pass, the user's zone in a client preview (ADR-032 D12).
-            ("Now", (Func<DateTime>)(() => FrameworkClock.Now(t_timeZoneId ?? string.Empty, t_basis))),
-            ("UtcNow", (Func<DateTime>)(() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified))),
-            ("IsNullOrEmpty", (Func<string?, bool>)string.IsNullOrEmpty),
-            ("IsNullOrWhiteSpace", (Func<string?, bool>)string.IsNullOrWhiteSpace),
+            new("Now", (Func<DateTime>)(() => FrameworkClock.Now(t_timeZoneId ?? string.Empty, t_basis)),
+                "The current date and time, on the same basis as the form's date-and-time fields; use it to compare with one.",
+                "due_time > Now()", ("due_time", typeof(DateTime))),
+            new("UtcNow", (Func<DateTime>)(() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)),
+                "The current date and time in UTC, the same wherever the expression runs.",
+                "UtcNow().AddHours(1)"),
+            new("IsNullOrEmpty", (Func<string?, bool>)string.IsNullOrEmpty,
+                "Whether a text is empty.",
+                "IsNullOrEmpty(remark)", ("remark", typeof(string))),
+            new("IsNullOrWhiteSpace", (Func<string?, bool>)string.IsNullOrWhiteSpace,
+                "Whether a text is empty or contains only spaces.",
+                "!IsNullOrWhiteSpace(customer_name)", ("customer_name", typeof(string))),
         ];
 
         /// <summary>
@@ -153,8 +164,19 @@ namespace Polhem.Expressions
         public static IReadOnlyList<ExpressionFunction> HelperFunctions { get; } =
             s_helperFunctions
                 .Select(helper => new ExpressionFunction(helper.Name, helper.Function.Method.ReturnType,
-                    helper.Function.Method.GetParameters()))
+                    helper.Function.Method.GetParameters(), helper.Summary, helper.Example))
                 .ToArray();
+
+        /// <summary>
+        /// Returns the fields the example of the helper function <paramref name="name"/> names, with their types.
+        /// </summary>
+        /// <remarks>
+        /// Exposed for <c>HelperFunctionCatalogTests</c>, which parses every example with these fields as variables, so
+        /// an example that no longer parses fails a test instead of misleading a reader.
+        /// </remarks>
+        internal static IReadOnlyDictionary<string, Type> GetExampleFields(string name) =>
+            s_helperFunctions.Single(helper => helper.Name == name).ExampleFields
+                .ToDictionary(field => field.Name, field => field.Type, StringComparer.Ordinal);
 
         /// <summary>
         /// Gets the types an expression can name, keyed by the name it uses (for example <c>Math</c>, <c>Guid</c>,
@@ -178,8 +200,8 @@ namespace Polhem.Expressions
             // `customer_rowid != Guid.Empty`). Guid is a value type with no IO surface.
             interpreter.Reference(typeof(Guid));
 
-            foreach (var (name, function) in s_helperFunctions)
-                interpreter.SetFunction(name, function);
+            foreach (var helper in s_helperFunctions)
+                interpreter.SetFunction(helper.Name, helper.Function);
         }
 
         /// <inheritdoc />
@@ -386,5 +408,9 @@ namespace Polhem.Expressions
             }
             return builder.ToString();
         }
+
+        /// <summary>A registered helper function, with its description and the fields its example names.</summary>
+        private sealed record HelperFunction(string Name, Delegate Function, string Summary, string Example,
+            params (string Name, Type Type)[] ExampleFields);
     }
 }

@@ -80,7 +80,7 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj -- path/to/De
   對話框會拒絕套用。對話框編譯的是 analyzer 規則 [POLHEM2008](../../docs/zh-TW/reference/analyzer-rules.md)
   的同一份型別規則，所以它拒絕的型別組合與該規則回報的相同。
 - **運算式。** 規則的 `When`、`Condition` 與欄位的 `ValueExpression`、`DefaultValueExpression` 會開啟運算式編輯器。
-  旁邊列出本表欄位、輔助函式與運算式可用的型別，輸入時補完名稱，並在解析停下的位置畫底線。**試算** 區以範例值計算運算式，
+  旁邊列出本表欄位、輔助函式（附說明與範例）與運算式可用的型別，輸入時補完名稱，並在解析停下的位置畫底線。**試算** 區以範例值計算運算式，
   算法與執行階段相同。
 
   ![amount 欄位的運算式編輯器：quantity * unit_price * (1 - discount)，填入範例值後算出 199.80](https://github.com/polhem-dev/polhem/raw/main/tools/DefineEditor/docs/images/expression-editor.png)

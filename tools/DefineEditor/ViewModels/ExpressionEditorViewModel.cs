@@ -44,7 +44,7 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
             .ToList();
         Functions = DynamicExpressoEvaluator.HelperFunctions
             .Select(f => new ExpressionSymbol(f.Name, f.Name + "(" + (f.Parameters.Count > 0 ? "" : ")"),
-                ExpressionMembers.Signature(f)))
+                FunctionLabels.Summary(f), FunctionLabels.Usage(f)))
             .ToList();
         var referencedTypes = evaluator.ReferencedTypes;
         Types = ExpressionMembers.FeaturedTypes(referencedTypes)
