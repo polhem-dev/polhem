@@ -87,7 +87,8 @@ namespace Polhem.Expressions
         /// </remarks>
         internal IReadOnlyCollection<Type> ExposedTypes =>
             _interpreter.ReferencedTypes.Select(reference => reference.Type)
-                .Concat(s_helperFunctions.Select(helper => helper.Function.Method.ReturnType))
+                .Concat(s_helperFunctions.SelectMany(helper => helper.MoreOverloads.Prepend(helper.Function))
+                    .Select(function => function.Method.ReturnType))
                 .ToHashSet();
 
         /// <summary>
@@ -150,11 +151,40 @@ namespace Polhem.Expressions
             new("UtcNow", (Func<DateTime>)(() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)),
                 "The current date and time in UTC, the same wherever the expression runs.",
                 "UtcNow().AddHours(1)"),
+            new("IsBlank", (Func<object?, bool>)BusinessFunctions.IsBlank,
+                "Whether a value is not filled in: an empty or blank text, an empty key, zero, or no date.",
+                "IsBlank(approver_id)", ("approver_id", typeof(string))),
+            new("Between", (Func<object?, object?, object?, bool>)BusinessFunctions.Between,
+                "Whether a value lies between two others, both included; numbers, dates and texts each compare with their own kind.",
+                "Between(amount, 1, 100000)", ("amount", typeof(decimal))),
+            new("In", (BusinessFunctions.InFunction)BusinessFunctions.In,
+                "Whether a value equals one of the values listed after it.",
+                "In(status, \"Draft\", \"Rejected\")", ("status", typeof(string))),
+            new("DaysBetween", (Func<DateTime, DateTime, int>)BusinessFunctions.DaysBetween,
+                "The number of days from the first date to the second; negative when the second is earlier.",
+                "DaysBetween(order_date, Today()) <= 30", ("order_date", typeof(DateTime)))
+            {
+                MoreOverloads =
+                [
+                    (Func<DateOnly, DateOnly, int>)BusinessFunctions.DaysBetween,
+                    (Func<DateTime, DateOnly, int>)BusinessFunctions.DaysBetween,
+                    (Func<DateOnly, DateTime, int>)BusinessFunctions.DaysBetween,
+                ],
+            },
+            new("MonthEnd", (Func<DateTime, DateTime>)BusinessFunctions.MonthEnd,
+                "The last day of a date's month.",
+                "due_date <= MonthEnd(order_date)", ("due_date", typeof(DateTime)), ("order_date", typeof(DateTime)))
+            {
+                MoreOverloads = [(Func<DateOnly, DateOnly>)BusinessFunctions.MonthEnd],
+            },
+            new("RegexMatch", (Func<string?, string, bool>)BusinessFunctions.RegexMatch,
+                "Whether a text matches a regular expression pattern; an empty text never matches.",
+                "RegexMatch(phone, \"^[0-9-]+$\")", ("phone", typeof(string))),
             new("IsNullOrEmpty", (Func<string?, bool>)string.IsNullOrEmpty,
-                "Whether a text is empty.",
+                "Whether a text is empty; IsBlank does the same and also checks numbers, keys and dates.",
                 "IsNullOrEmpty(remark)", ("remark", typeof(string))),
             new("IsNullOrWhiteSpace", (Func<string?, bool>)string.IsNullOrWhiteSpace,
-                "Whether a text is empty or contains only spaces.",
+                "Whether a text is empty or contains only spaces; IsBlank does the same and also checks numbers, keys and dates.",
                 "!IsNullOrWhiteSpace(customer_name)", ("customer_name", typeof(string))),
         ];
 
@@ -201,7 +231,11 @@ namespace Polhem.Expressions
             interpreter.Reference(typeof(Guid));
 
             foreach (var helper in s_helperFunctions)
+            {
                 interpreter.SetFunction(helper.Name, helper.Function);
+                foreach (var overload in helper.MoreOverloads)
+                    interpreter.SetFunction(helper.Name, overload);
+            }
         }
 
         /// <inheritdoc />
@@ -409,8 +443,16 @@ namespace Polhem.Expressions
             return builder.ToString();
         }
 
-        /// <summary>A registered helper function, with its description and the fields its example names.</summary>
+        /// <summary>
+        /// A registered helper function, with its description and the fields its example names. The catalog lists
+        /// <see cref="Function"/>'s signature; <see cref="MoreOverloads"/> are registered under the same name, so an
+        /// expression may pass, for example, a <see cref="DateOnly"/> where the listed signature takes a
+        /// <see cref="DateTime"/>.
+        /// </summary>
         private sealed record HelperFunction(string Name, Delegate Function, string Summary, string Example,
-            params (string Name, Type Type)[] ExampleFields);
+            params (string Name, Type Type)[] ExampleFields)
+        {
+            public Delegate[] MoreOverloads { get; init; } = [];
+        }
     }
 }

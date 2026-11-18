@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 2349688772f29caff8004104e7c1a7fb8e72b691 -->
+<!-- source: en/definitions/expression-rules.md blob: 3875c434b2a44b9a55eeb0ea9788173d87d03e26 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -21,7 +21,7 @@
 
 - **變數 = 欄位名**：直接寫欄位名即可，如 `unit_price * qty`。同列所有欄位都可用。主表的運算式還能加總明細表，見[明細加總](#明細加總)。
 - **運算子**：C# 語法子集（`+ - * /`、`> >= < <= == !=`、`&& || !`、三元 `? :`、字串 `==`）。
-- **可用函式/型別**：輔助函式 `Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`；運算式可直接指名的型別，例如 `Math`（`Math.Round`、`Math.Abs`…）、`Convert`、`DateTime`、`TimeSpan`、`Guid`（如 `customer_rowid != Guid.Empty`）；以及欄位值本身的成員（`name.Length`、`Today().AddDays(1)`）。這些型別來自 DynamicExpresso 的預設集合，加上 `DynamicExpressoEvaluator` 自行加入的；[`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) 列出運算式能觸及其成員的每個型別，並由 `TrimmerDescriptorGateTests` 確保這份清單與直譯器一致。
+- **可用函式/型別**：輔助函式 `Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`，以及下方的業務函式；運算式可直接指名的型別，例如 `Math`（`Math.Round`、`Math.Abs`…）、`Convert`、`DateTime`、`TimeSpan`、`Guid`（如 `customer_rowid != Guid.Empty`）；以及欄位值本身的成員（`name.Length`、`Today().AddDays(1)`）。這些型別來自 DynamicExpresso 的預設集合，加上 `DynamicExpressoEvaluator` 自行加入的；[`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) 列出運算式能觸及其成員的每個型別，並由 `TrimmerDescriptorGateTests` 確保這份清單與直譯器一致。
 
   **時間函式的語意**（見 [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md)）：
 
@@ -44,6 +44,22 @@
 - **這不是安全沙箱。** 值的成員是以反射解析的，解析器擋不住運算式往更深處觸及。運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。絕對不要用使用者輸入組出運算式文字。
 - **經裁剪的應用程式**：運算式呼叫的成員是以反射找到的，裁剪器看不到。`Polhem.Expressions` 內附一份保留這些成員的裁剪描述檔，見[平台支援](../getting-started/platform-support.md#套件內附的裁剪描述檔)。
 - **空值**：空欄（`DBNull`）以型別預設值代入（數值 0、字串空字串、`Guid.Empty`…），所以 `unit_price * qty` 遇空值算 0 而不會出錯。
+
+### 業務函式
+
+這些函式讀起來就像它要表達的規則，而且只用傳入的值計算：不讀資料庫，也不讀表單以外的任何東西。DefineEditor 的運算式編輯器會列出每個函式的說明與範例。
+
+| 函式 | 傳回 | 範例 |
+|------|------|------|
+| `IsBlank(value)` | 值是否沒有填：空白或只有空格的文字、`Guid.Empty`、0，或沒有日期。文字與數值欄位不會是 null（見[為什麼文字與數值欄位預設 `NOT NULL`](../database/database-dialect-differences.md#1-為什麼文字與數值欄位預設-not-null)），所以沒填的金額是 `0`，算作空白 | `!IsBlank(approver_id)` |
+| `Between(value, low, high)` | 值是否介於另外兩個值之間（含兩端） | `Between(amount, 1, 100000)` |
+| `In(value, a, b, …)` | 值是否等於後面列出的其中一個值 | `In(status, "Draft", "Rejected")` |
+| `DaysBetween(start, end)` | 從 `start` 到 `end` 的天數；`end` 較早時為負數 | `DaysBetween(order_date, Today()) <= 30` |
+| `MonthEnd(date)` | 日期所在月份的最後一天 | `due_date <= MonthEnd(order_date)` |
+| `RegexMatch(text, pattern)` | 文字是否符合正規表示式；空的文字一律不符合 | `RegexMatch(phone, "^[0-9-]+$")` |
+
+- **不同型別依種類比較。** 日期欄位是 `DateTime`，`Today()` 是 `DateOnly`；數量是 `int`，金額是 `decimal`。`Between`、`In`、`DaysBetween` 兩種都接受：數字以數字比較、日期以日期比較、文字以序數比較。不同種類的值（例如文字和數字）無法比較，運算式執行時會失敗，訊息會寫出兩邊的型別。
+- **`IsBlank` 涵蓋 `IsNullOrEmpty` 與 `IsNullOrWhiteSpace`**；後兩者為既有定義檔保留。
 
 ## 計算欄：`ValueExpression`
 
