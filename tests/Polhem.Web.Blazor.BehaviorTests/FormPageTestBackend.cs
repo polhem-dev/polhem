@@ -66,6 +66,20 @@ namespace Polhem.Web.Blazor.BehaviorTests
                     DeptLoaded.Add(request.RowId);
                     return new GetDataResponse { DataSet = DeptRecord(request.RowId) };
                 })
+                .On<GetUserQueriesRequest>($"{EmpProgId}.{FormActions.GetUserQueries}", GetUserQueries)
+                .On<SaveUserQueryRequest>($"{EmpProgId}.{FormActions.SaveUserQuery}", SaveUserQuery)
+                .On<DeleteUserQueryRequest>($"{EmpProgId}.{FormActions.DeleteUserQuery}", request =>
+                {
+                    StoredQuery(request.RowId);
+                    UserQueries.RemoveAll(q => q.RowId == request.RowId);
+                    if (DefaultUserQueryRowId == request.RowId) DefaultUserQueryRowId = Guid.Empty;
+                    return new DeleteUserQueryResponse { RowsAffected = 1 };
+                })
+                .On<SetDefaultUserQueryRequest>($"{EmpProgId}.{FormActions.SetDefaultUserQuery}", request =>
+                {
+                    DefaultUserQueryRowId = request.RowId;
+                    return new SetDefaultUserQueryResponse { DefaultRowId = request.RowId };
+                })
                 .On<GetDefineRequest>($"{SysProgIds.System}.{SystemActions.GetDefine}", GetDefine)
                 .On<GetFormLayoutRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeFormLayout}", _ => new GetFormLayoutResponse())
                 .On<GetLanguageRequest>($"{SysProgIds.System}.{SystemActions.GetCustomizeLanguage}", _ => new GetLanguageResponse())
@@ -94,6 +108,16 @@ namespace Polhem.Web.Blazor.BehaviorTests
         public bool DistinctRows { get; set; }
 
         public int SaveCount { get; private set; }
+
+        /// <summary>Gets the saved queries of <c>Emp</c>, which the user query actions read and change.</summary>
+        public List<StoredUserQuery> UserQueries { get; } = [];
+
+        public Guid DefaultUserQueryRowId { get; set; }
+
+        public string? UserQueryFailure { get; set; }
+
+        /// <summary>Gets the saves of user queries, in order.</summary>
+        public List<StoredUserQuery> UserQuerySaves { get; } = [];
 
         public List<Guid> Deleted { get; } = [];
 
@@ -218,6 +242,38 @@ namespace Polhem.Web.Blazor.BehaviorTests
             };
         }
 
+        private GetUserQueriesResponse GetUserQueries(GetUserQueriesRequest request)
+        {
+            if (UserQueryFailure is not null) throw new UserMessageException(UserQueryFailure);
+            var table = new DataTable("UserQuery");
+            table.Columns.Add(SysFields.RowId, typeof(Guid));
+            table.Columns.Add(SysFields.Name, typeof(string));
+            table.Columns.Add("is_shared", typeof(bool));
+            table.Columns.Add("is_own", typeof(bool));
+            table.Columns.Add("criteria", typeof(string));
+            foreach (var query in UserQueries.OrderByDescending(q => q.IsOwn))
+                table.Rows.Add(query.RowId, query.Name, query.IsShared, query.IsOwn, query.Criteria);
+            return new GetUserQueriesResponse { Table = table, DefaultRowId = DefaultUserQueryRowId };
+        }
+
+        private SaveUserQueryResponse SaveUserQuery(SaveUserQueryRequest request)
+        {
+            var rowId = request.RowId;
+            if (rowId == Guid.Empty)
+                rowId = Guid.NewGuid();
+            else
+                UserQueries.Remove(StoredQuery(rowId));
+            var saved = new StoredUserQuery(rowId, request.Name, request.IsShared, true, request.Criteria);
+            UserQueries.Add(saved);
+            UserQuerySaves.Add(saved);
+            return new SaveUserQueryResponse { RowId = rowId };
+        }
+
+        // Only a query the user created may be changed, as the backend refuses the rest.
+        private StoredUserQuery StoredQuery(Guid rowId)
+            => UserQueries.SingleOrDefault(q => q.RowId == rowId && q.IsOwn)
+                ?? throw new UserMessageException("Only a query the user created can be changed.");
+
         private GetDataResponse GetEmp(GetDataRequest request)
         {
             if (GetDataFailure is not null) throw new UserMessageException(GetDataFailure);
@@ -302,6 +358,14 @@ namespace Polhem.Web.Blazor.BehaviorTests
             dataSet.AcceptChanges();
             return dataSet;
         }
+
+        /// <summary>A saved query as the fake backend keeps it.</summary>
+        /// <param name="RowId">The query's <c>sys_rowid</c>.</param>
+        /// <param name="Name">The name.</param>
+        /// <param name="IsShared">Whether every user may apply it.</param>
+        /// <param name="IsOwn">Whether the signed-in user created it.</param>
+        /// <param name="Criteria">The stored criteria text.</param>
+        public sealed record StoredUserQuery(Guid RowId, string Name, bool IsShared, bool IsOwn, string Criteria);
 
         private sealed class Options(bool useDefinitionLoader) : IBlazorDefinitionOptions
         {

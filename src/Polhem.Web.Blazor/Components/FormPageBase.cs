@@ -331,14 +331,18 @@ namespace Polhem.Web.Blazor.Components
                 // which still rounds authoritatively on save.
                 var roundingContext = await BlazorDefinitions
                     .LoadRoundingContextAsync(Client, loader, UserContext?.Company).ConfigureAwait(true);
+                // The user's default saved query applies before the first page is read.
+                ResetCriteria(schema);
+                await LoadUserQueriesAsync(version).ConfigureAwait(true);
+                if (version != _loadVersion) return;
                 var list = await Client.Form(ProgId)
-                    .GetListAsync(ListSelectFields.For(schema), paging: _paging.CreateOptions(1)).ConfigureAwait(true);
+                    .GetListAsync(ListSelectFields.For(schema), filter: CreateListFilter(), paging: _paging.CreateOptions(1))
+                    .ConfigureAwait(true);
                 if (version != _loadVersion) return;
 
                 _schema = schema;
                 _formLayout = formLayout;
                 _listLayout = listLayout;
-                ResetCriteria(schema);
                 _roundingContext = roundingContext;
                 _listRows = list.Table;
                 _paging.Apply(1, list.Paging);

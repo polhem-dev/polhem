@@ -58,3 +58,6 @@ body:has(.polhem-shell) { overflow: auto; }
 .polhem-criteria-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; }
 .polhem-criteria-row__caption { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
 .polhem-criteria-row__line, .polhem-criteria-row__range, .polhem-criteria-row__choices, .polhem-criteria-row__values { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.polhem-user-query-bar { display: flex; gap: 4px; align-items: center; }
+.polhem-user-query-bar__picker { flex: 1 1 auto; min-width: 0; }
+.polhem-name-prompt-dialog__form { display: flex; flex-direction: column; gap: 8px; }

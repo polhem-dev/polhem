@@ -82,3 +82,107 @@ Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetFromTextAsync(Polhem.UI.Core.Cri
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetPeriodAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.UI.Core.Criteria.RelativeDate period, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetToTextAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? text, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetValueTextAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? text, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.AcceptNamePromptAsync(Polhem.Web.Blazor.Controls.NamePromptAnswer! answer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ApplyUserQueryAsync(Polhem.Web.Blazor.Controls.UserQueryEntry! entry, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.BeginDeleteUserQuery() -> void
+Polhem.Web.Blazor.Components.FormPageBase.BeginRenameUserQuery() -> void
+Polhem.Web.Blazor.Components.FormPageBase.BeginSaveUserQueryAs() -> void
+Polhem.Web.Blazor.Components.FormPageBase.CancelDeleteUserQuery() -> void
+Polhem.Web.Blazor.Components.FormPageBase.CancelNamePrompt() -> void
+Polhem.Web.Blazor.Components.FormPageBase.ConfirmDeleteUserQueryAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.CriteriaNotice.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.CurrentUserQuery.get -> Polhem.Web.Blazor.Controls.UserQueryEntry?
+Polhem.Web.Blazor.Components.FormPageBase.DefaultUserQueryRowId.get -> System.Guid
+Polhem.Web.Blazor.Components.FormPageBase.IsNamePromptOpen.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.IsUserQueryModified.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.NamePromptName.get -> string!
+Polhem.Web.Blazor.Components.FormPageBase.NamePromptOptionText.get -> string?
+Polhem.Web.Blazor.Components.FormPageBase.NamePromptTitle.get -> string!
+Polhem.Web.Blazor.Components.FormPageBase.PendingUserQueryDelete.get -> Polhem.Web.Blazor.Controls.UserQueryEntry?
+Polhem.Web.Blazor.Components.FormPageBase.SaveUserQueryAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ShowsUserQueries.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.ToggleDefaultUserQueryAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ToggleUserQueryShareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.UserQueries.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.UserQueryEntry!>!
+Polhem.Web.Blazor.Components.FormPageBase.UserQueryDeletePrompt.get -> string!
+Polhem.Web.Blazor.Components.NamePromptDialogBase
+Polhem.Web.Blazor.Components.NamePromptDialogBase.AcceptAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.NamePromptDialogBase.AcceptText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.AcceptText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CanAccept.get -> bool
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CancelText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CancelText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.EnteredName.get -> string!
+Polhem.Web.Blazor.Components.NamePromptDialogBase.EnteredName.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.IsOptionChecked.get -> bool
+Polhem.Web.Blazor.Components.NamePromptDialogBase.IsOptionChecked.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Label.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Label.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.MaxLength.get -> int
+Polhem.Web.Blazor.Components.NamePromptDialogBase.MaxLength.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Name.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Name.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.NamePromptDialogBase() -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnAccepted.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.NamePromptAnswer!>
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnAccepted.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnCancelled.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionChecked.get -> bool
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionChecked.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Title.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Title.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.HeaderContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.HeaderContent.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Notice.get -> string?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Notice.set -> void
+Polhem.Web.Blazor.Controls.NamePromptAnswer
+Polhem.Web.Blazor.Controls.NamePromptAnswer.IsOptionChecked.get -> bool
+Polhem.Web.Blazor.Controls.NamePromptAnswer.Name.get -> string!
+Polhem.Web.Blazor.Controls.NamePromptAnswer.NamePromptAnswer(string! name, bool isOptionChecked) -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.UserQueryEntry!>
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Applied.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.CanChange.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.CanToggleDefault.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Current.get -> Polhem.Web.Blazor.Controls.UserQueryEntry?
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Current.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.CurrentRowId.get -> System.Guid
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultRowId.get -> System.Guid
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultRowId.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultText.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultToggled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultToggled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DeleteRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DeleteRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Disabled.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Disabled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Entries.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.UserQueryEntry!>!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Entries.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.EntryText(System.Guid rowId) -> string!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.IsModified.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.IsModified.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.PickAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.RenameRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.RenameRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveAsRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveAsRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.ShareText.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.ShareToggled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.ShareToggled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.UserQueryBarBase() -> void
+Polhem.Web.Blazor.Controls.UserQueryEntry
+Polhem.Web.Blazor.Controls.UserQueryEntry.Criteria.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryEntry.IsOwn.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryEntry.IsShared.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryEntry.Name.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryEntry.RowId.get -> System.Guid
+Polhem.Web.Blazor.Controls.UserQueryEntry.UserQueryEntry(System.Guid rowId, string! name, bool isShared, bool isOwn, string! criteria) -> void
+const Polhem.Web.Blazor.Components.FormPageBase.UserQueryNameMaxLength = 100 -> int
+override Polhem.Web.Blazor.Components.NamePromptDialogBase.OnParametersSet() -> void
+virtual Polhem.Web.Blazor.Components.FormPageBase.SupportsQueryPane.get -> bool
