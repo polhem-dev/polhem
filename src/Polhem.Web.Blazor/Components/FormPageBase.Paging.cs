@@ -39,7 +39,7 @@ namespace Polhem.Web.Blazor.Components
             var version = _loadVersion;
             var request = _paging.BeginRequest();
             var response = await Client.Form(ProgId)
-                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema), filter: _filters.CreateFilter(),
+                .GetListAsync(_schema is null ? string.Empty : ListSelectFields.For(_schema), filter: CreateListFilter(),
                     sortFields: _paging.CreateSort(), paging: _paging.CreateOptions(page), cancellationToken: cancellationToken)
                 .ConfigureAwait(true);
             if (version != _loadVersion || !_paging.IsCurrent(request)) return;

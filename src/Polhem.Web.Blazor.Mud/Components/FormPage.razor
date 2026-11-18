@@ -39,6 +39,10 @@
                 {
                     <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(IsListLocked || SelectedRowId is null)" OnClick="() => OnDeleteAsync()">@Text(PolhemUIText.Delete)</MudButton>
                 }
+                @if (ShowsQueryButton)
+                {
+                    <MudButton Class="polhem-form-page__query" Size="Size.Small" Variant="@(IsQueryPaneOpen ? Variant.Filled : Variant.Outlined)" Color="@(CriteriaChips.Count > 0 ? Color.Primary : Color.Default)" aria-pressed="@(IsQueryPaneOpen ? "true" : "false")" OnClick="ToggleQueryPane">@QueryButtonText</MudButton>
+                }
             }
             else if (IsEditing)
             {
@@ -77,7 +81,21 @@
             </div>
         }
 
-        @if (!IsShowingRecord && EffectiveIsCompact)
+        @if (!IsShowingRecord)
+        {
+            <CriteriaChips Chips="CriteriaChips"
+                           Disabled="IsListLocked"
+                           Opened="_ => OpenQueryPane()"
+                           Removed="chip => RemoveConditionAsync(chip.Row)"
+                           Cleared="() => ClearConditionsAsync()" />
+        }
+
+        @if (!IsShowingRecord)
+        {
+            @* The pane sits beside the list on a wide screen and covers the page in the compact layout. *@
+            <div class="@(IsQueryPaneOpen ? "polhem-query-layout polhem-query-layout--open" : "polhem-query-layout")">
+            <div class="polhem-query-layout__list">
+        @if (EffectiveIsCompact)
         {
             @if (CardRows.Count == 0)
             {
@@ -106,7 +124,7 @@
                 }
             }
         }
-        else if (!IsShowingRecord)
+        else
         {
             @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
             {
@@ -149,6 +167,19 @@
                     </MudSelect>
                 </div>
             }
+        }
+            </div>
+            @if (IsQueryPaneOpen)
+            {
+                <aside class="@(EffectiveIsCompact ? "polhem-query-pane polhem-query-pane--overlay" : "polhem-query-pane")">
+                    <CriteriaPanel Fields="CriteriaFields"
+                                   Criteria="Criteria"
+                                   Today="ResolveToday"
+                                   SearchRequested="() => RunQueryAsync()"
+                                   CloseRequested="CloseQueryPane" />
+                </aside>
+            }
+            </div>
         }
         else
         {

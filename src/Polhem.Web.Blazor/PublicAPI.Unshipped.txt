@@ -1,1 +1,84 @@
 #nullable enable
+Polhem.Web.Blazor.Components.FormPageBase.ClearConditionsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.CloseQueryPane() -> void
+Polhem.Web.Blazor.Components.FormPageBase.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.Web.Blazor.Components.FormPageBase.CriteriaChips.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.CriteriaChip!>!
+Polhem.Web.Blazor.Components.FormPageBase.CriteriaFields.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
+Polhem.Web.Blazor.Components.FormPageBase.IsQueryPaneOpen.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.OpenQueryPane() -> void
+Polhem.Web.Blazor.Components.FormPageBase.QueryButtonText.get -> string!
+Polhem.Web.Blazor.Components.FormPageBase.RemoveConditionAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ResolveToday() -> System.DateOnly
+Polhem.Web.Blazor.Components.FormPageBase.RunQueryAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Components.FormPageBase.ShowsQueryButton.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.ToggleQueryPane() -> void
+Polhem.Web.Blazor.Controls.CriteriaChip
+Polhem.Web.Blazor.Controls.CriteriaChip.CriteriaChip(Polhem.UI.Core.Criteria.CriteriaRow! row, string! text) -> void
+Polhem.Web.Blazor.Controls.CriteriaChip.IsRemovable.get -> bool
+Polhem.Web.Blazor.Controls.CriteriaChip.Row.get -> Polhem.UI.Core.Criteria.CriteriaRow!
+Polhem.Web.Blazor.Controls.CriteriaChip.Text.get -> string!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Chips.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.CriteriaChip!>!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Chips.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.ClearText.get -> string!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Cleared.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Cleared.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.CriteriaChipsBase() -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Disabled.get -> bool
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Disabled.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.HasChips.get -> bool
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Opened.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.CriteriaChip!>
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Opened.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.RemoveLabel(Polhem.Web.Blazor.Controls.CriteriaChip! chip) -> string!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Removed.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.CriteriaChip!>
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Removed.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.AddRowAsync(Polhem.UI.Core.Criteria.CriteriaField! field) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.BeginPick(Polhem.UI.Core.Criteria.CriteriaRow! row) -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.BooleanChoiceText(string? choice) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CancelPick() -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.ChangeOperatorAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.UI.Core.Criteria.CriteriaOperator operator) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.ClearAndSearchAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CloseAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CloseRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CloseRequested.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CommitPickAsync(System.Data.DataRow! picked) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Criteria.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaChanged.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaChanged.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaPanelBase() -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Fields.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.GetFromText(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.GetToText(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.GetValueText(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Message.get -> string?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.OnKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs! e) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.OnPickFailed(System.Exception! exception) -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.OperatorText(Polhem.UI.Core.Criteria.CriteriaOperator operator) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.PeriodText(Polhem.UI.Core.Criteria.RelativeDate? period) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.PickingRow.get -> Polhem.UI.Core.Criteria.CriteriaRow?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.RemoveRowAsync(Polhem.UI.Core.Criteria.CriteriaRow! row) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.RemoveValueAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.UI.Core.Criteria.CriteriaValue value) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.RequestSearchAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SearchRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SearchRequested.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetBooleanChoiceAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? choice) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetChosenAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.Definition.Collections.ListItem! item, bool chosen) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetFromTextAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? text) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetPeriodAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.UI.Core.Criteria.RelativeDate period) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetToTextAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? text) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SetValueTextAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, string? text) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Text(string! key) -> string!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Today.get -> System.Func<System.DateOnly>?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Today.set -> void
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.GetBooleanChoice(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.InputTypeOf(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.IsChosen(Polhem.UI.Core.Criteria.CriteriaRow! row, Polhem.Definition.Collections.ListItem! item) -> bool
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.IsDateRange(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.IsRemovable(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.Periods.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.RelativeDate>!
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.RowCaption(Polhem.UI.Core.Criteria.CriteriaRow! row) -> string!
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.ShowsOperator(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool

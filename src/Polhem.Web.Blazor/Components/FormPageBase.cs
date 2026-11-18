@@ -290,6 +290,7 @@ namespace Polhem.Web.Blazor.Components
             _cardRows.Clear();
             _paging = new ListPagingState();
             _filters = new ListFilterState();
+            ResetCriteria(null);
             _isListPaged = false;
             _error = null;
             _notice = null;
@@ -337,6 +338,7 @@ namespace Polhem.Web.Blazor.Components
                 _schema = schema;
                 _formLayout = formLayout;
                 _listLayout = listLayout;
+                ResetCriteria(schema);
                 _roundingContext = roundingContext;
                 _listRows = list.Table;
                 _paging.Apply(1, list.Paging);

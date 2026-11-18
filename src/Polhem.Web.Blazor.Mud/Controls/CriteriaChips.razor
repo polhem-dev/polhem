@@ -1,0 +1,22 @@
+@namespace Polhem.Web.Blazor.Mud.Controls
+@inherits CriteriaChipsBase
+
+@if (HasChips)
+{
+    <div class="polhem-criteria-chips" role="status">
+        @foreach (var chip in Chips)
+        {
+            <span class="polhem-criteria-chip" @key="chip.Row">
+                <MudButton Class="polhem-criteria-chip__open" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                           Disabled="Disabled" OnClick="() => Opened.InvokeAsync(chip)">@chip.Text</MudButton>
+                @if (chip.IsRemovable)
+                {
+                    <MudIconButton Class="polhem-criteria-chip__remove" Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                   Disabled="Disabled" aria-label="@RemoveLabel(chip)" title="@RemoveLabel(chip)"
+                                   OnClick="() => Removed.InvokeAsync(chip)" />
+                }
+            </span>
+        }
+        <MudButton Class="polhem-criteria-chips__clear" Size="Size.Small" Disabled="Disabled" OnClick="() => Cleared.InvokeAsync()">@ClearText</MudButton>
+    </div>
+}
