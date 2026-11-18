@@ -69,6 +69,9 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | **Master-Detail** | Master + detail | `FormLayoutPresenter` 渲染 master 區段 + 明細 grid，經 `FormScope` 綁定 |
 | **Permission Capability** | Interactive permission simulator (master/detail) | 勾選模擬的角色授權，主檔與明細即時降級，與 `EnterCompany` 回傳的能力快照相同 |
 | **Property Grid** | PropertyGridControl over definition objects | `PropertyGridControl` 依 `System.ComponentModel` 標註顯示 `FormField`、`DbField`、`DatabaseServer`（密碼遮蔽）、`PermissionRule`、含巢狀集合的物件或 `BackendConfiguration`，可切換顯示選項並記錄 `PropertyValueChanged`；`ListItems` 的 `...` 按鈕開啟 `CollectionEditDialog` |
+| **Query Conditions** | Condition pane on its own | `CriteriaPanel` 綁定 schema 的查詢欄位，host 另加一個必填列與一個預設列；即時顯示 `GetListFilterConverter` 產生的 `FilterNode` 與面板的事件 |
+| | ListView query pane | `ListView` 的 Query 按鈕：條件窗格、清單上方的條件 chips，以及由記憶體內連接器套用的篩選（[`Modules/QueryConditions/`](Modules/QueryConditions/)） |
+| | Saved queries | 連接器同時實作 `IUserQueryConnector` 時，條件窗格提供儲存的查詢：開啟清單時套用預設查詢、已修改標記，以及儲存、另存、重新命名、共用、刪除與設為預設；其中一筆是其他使用者共用的查詢 |
 | **Without a Backend** | List and record over your own data | 以 `FormSchema`、`FormLayout` 與記憶體內的 `IFormApiConnector` 驅動 `ListView` 與 `FormView`；`UIServices` 中什麼都不註冊，由 host 在畫面上設定 `Schema`、`Layout` 與 `FormConnector`（[`Modules/WithoutBackend/`](Modules/WithoutBackend/)） |
 
 > **Views（FormView/ListView）路線**：兩者不需要 Polhem 後端。「Without a Backend」主題讓它們跑在範例自行實作的

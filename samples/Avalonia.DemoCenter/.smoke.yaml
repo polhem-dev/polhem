@@ -24,6 +24,7 @@ flow:
       - "Data Binding"
       - "Grid"
       - "Master-Detail"
+      - "Query Conditions"
 
   - step: shell screenshot
     action: screenshot

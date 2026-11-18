@@ -15,9 +15,10 @@ namespace Avalonia.DemoCenter.Modules.WithoutBackend
     /// backend writes to put <c>FormView</c> and <c>ListView</c> on its own data (a REST API, a local database).
     /// </summary>
     /// <remarks>
-    /// Master-only for brevity. It ignores the filter, sort and paging arguments and returns every row.
+    /// Master-only for brevity. The list applies the filter with <see cref="InMemoryFilter"/>, so the list's query
+    /// pane works; it ignores the sort and paging arguments.
     /// </remarks>
-    internal sealed class InMemoryFormApiConnector : IFormApiConnector
+    internal class InMemoryFormApiConnector : IFormApiConnector
     {
         private readonly FormSchema _schema;
         private readonly DataTable _rows;
@@ -32,7 +33,7 @@ namespace Avalonia.DemoCenter.Modules.WithoutBackend
 
         public Task<IGetListResponse> GetListAsync(string selectFields = "", FilterNode? filter = null,
             SortFieldCollection? sortFields = null, PagingOptions? paging = null, CancellationToken cancellationToken = default)
-            => Task.FromResult<IGetListResponse>(new FormListResult(_rows.Copy()));
+            => Task.FromResult<IGetListResponse>(new FormListResult(InMemoryFilter.Apply(_rows, filter)));
 
         public Task<IGetLookupResponse> GetLookupAsync(string searchText = "", PagingOptions? paging = null,
             CancellationToken cancellationToken = default)
