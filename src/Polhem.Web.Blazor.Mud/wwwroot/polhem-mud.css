@@ -32,3 +32,8 @@
 .polhem-card--selected { background: var(--mud-palette-action-default-hover); }
 .polhem-card-list__limit { margin-top: 8px; font-size: 13px; color: var(--mud-palette-text-secondary); }
 .polhem-grid-filter__error { color: var(--mud-palette-error); font-size: 13px; }
+.polhem-query-pane { border: 1px solid var(--mud-palette-lines-default); border-radius: 6px; background: var(--mud-palette-surface); }
+.polhem-query-pane--overlay { border: 0; border-radius: 0; }
+.polhem-criteria-row { border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-background-gray); }
+.polhem-criteria-row__operator.mud-input-control { flex: 0 0 120px; width: 120px; }
+.polhem-criteria-row__range .mud-input-control { flex: 1 1 120px; }

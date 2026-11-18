@@ -42,3 +42,19 @@ body:has(.polhem-shell) { overflow: auto; }
 .polhem-grid-filter { display: inline-block; margin-left: 2px; vertical-align: middle; }
 .polhem-grid-filter__form { display: flex; flex-direction: column; gap: 8px; width: 220px; padding: 12px; }
 .polhem-grid-filter__buttons { display: flex; justify-content: flex-end; gap: 8px; }
+.polhem-criteria-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.polhem-criteria-chip { display: inline-flex; align-items: center; gap: 2px; }
+/* The query pane sits beside the list on a wide screen; in the compact layout it covers the page. */
+.polhem-query-layout { display: flex; gap: 12px; align-items: flex-start; }
+.polhem-query-layout__list { flex: 1 1 auto; min-width: 0; }
+.polhem-query-pane { flex: 0 0 360px; width: 360px; box-sizing: border-box; }
+.polhem-query-pane--overlay { position: fixed; inset: 0; z-index: 1300; width: auto; overflow: auto; }
+.polhem-criteria-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px; box-sizing: border-box; }
+.polhem-query-pane--overlay .polhem-criteria-panel { min-height: 100%; }
+.polhem-criteria-panel__header { display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+.polhem-criteria-panel__form { display: flex; flex-direction: column; gap: 8px; }
+.polhem-criteria-panel__body { display: flex; flex-direction: column; gap: 12px; }
+.polhem-criteria-panel__footer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.polhem-criteria-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; }
+.polhem-criteria-row__caption { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.polhem-criteria-row__line, .polhem-criteria-row__range, .polhem-criteria-row__choices, .polhem-criteria-row__values { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

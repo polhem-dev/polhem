@@ -1,4 +1,5 @@
 using System.Data;
+using Polhem.Definition.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Messages.System;
@@ -46,9 +47,12 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="permissionBound">Whether both forms check capabilities.</param>
         /// <param name="nameRequired">Whether <c>emp_name</c> is required.</param>
         /// <param name="amountExpression">The expression of a computed field <c>amount</c>, or <c>null</c> for none.</param>
-        public FormPageTestBackend(bool permissionBound = false, bool nameRequired = false, string? amountExpression = null)
+        /// <param name="queryFields">Whether <c>Emp</c> adds a listed <c>status</c> and a <c>hire_date</c>, and offers
+        /// conditions on them as well as on <c>emp_name</c>.</param>
+        public FormPageTestBackend(bool permissionBound = false, bool nameRequired = false, string? amountExpression = null,
+            bool queryFields = false)
         {
-            _emp = BuildEmpSchema(permissionBound, nameRequired, amountExpression);
+            _emp = BuildEmpSchema(permissionBound, nameRequired, amountExpression, queryFields);
             _dept = BuildDeptSchema(permissionBound);
             Server = new FakeApiServer()
                 .On<GetListRequest>($"{EmpProgId}.{FormActions.GetList}", GetList)
@@ -125,7 +129,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
             services.AddScoped<IUserContext>(sp => sp.GetRequiredService<BlazorUserContext>());
         }
 
-        private static FormSchema BuildEmpSchema(bool permissionBound, bool nameRequired, string? amountExpression)
+        private static FormSchema BuildEmpSchema(bool permissionBound, bool nameRequired, string? amountExpression, bool queryFields)
         {
             var schema = new FormSchema(EmpProgId, "Employee") { ListFields = "emp_name" };
             if (permissionBound) schema.PermissionModelId = EmpModelId;
@@ -148,6 +152,15 @@ namespace Polhem.Web.Blazor.BehaviorTests
                     ValueExpression = amountExpression,
                     ReadOnly = true,
                 });
+            }
+            if (queryFields)
+            {
+                var status = fields.Add("status", "Status", FieldDbType.String);
+                status.ControlType = ControlType.DropDownEdit;
+                status.ListItems!.Add("OPEN", "Open");
+                status.ListItems.Add("CLOSED", "Closed");
+                fields.Add("hire_date", "Hired", FieldDbType.Date);
+                schema.QueryFields = "emp_name,status,hire_date";
             }
             return schema;
         }

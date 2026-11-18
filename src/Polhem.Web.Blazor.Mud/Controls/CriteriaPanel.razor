@@ -1,0 +1,139 @@
+@namespace Polhem.Web.Blazor.Mud.Controls
+@inherits CriteriaPanelBase
+@using Polhem.Definition.Language
+@using Polhem.UI.Core.Criteria
+@using Polhem.Web.Blazor.Mud.Controls.Editors
+
+<section class="polhem-criteria-panel" aria-label="@Text(PolhemUIText.QueryConditions)" @onkeydown="e => OnKeyDownAsync(e)">
+    <div class="polhem-criteria-panel__header">
+        <span class="polhem-criteria-panel__title">@Text(PolhemUIText.QueryConditions)</span>
+        <MudIconButton Class="polhem-criteria-panel__close" Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                       aria-label="@Text(PolhemUIText.Close)" OnClick="() => CloseAsync()" />
+    </div>
+    @* A form, so Enter in a value editor runs the query the way the Search button does. *@
+    <form class="polhem-criteria-panel__form" @onsubmit="() => RequestSearchAsync()" @onsubmit:preventDefault>
+        <div class="polhem-criteria-panel__body">
+            @if (Message is not null)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="polhem-criteria-panel__message">@Message</MudAlert>
+            }
+            @foreach (var row in Criteria.Rows)
+            {
+                <div class="polhem-criteria-row" @key="row">
+                    <div class="polhem-criteria-row__caption">
+                        <span>@RowCaption(row)</span>
+                        @if (IsRemovable(row))
+                        {
+                            <MudIconButton Class="polhem-criteria-row__remove" Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                           aria-label="@Text(PolhemUIText.RemoveCondition)" OnClick="() => RemoveRowAsync(row)" />
+                        }
+                    </div>
+                    <div class="polhem-criteria-row__line">
+                        @if (ShowsOperator(row))
+                        {
+                            <MudSelect T="CriteriaOperator" Class="polhem-criteria-row__operator" Value="row.Operator"
+                                       ValueChanged="op => ChangeOperatorAsync(row, op)" Disabled="row.IsOperatorLocked"
+                                       ToStringFunc="OperatorText" aria-label="@row.Field.Caption"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense">
+                                @foreach (var op in row.Field.Operators)
+                                {
+                                    <MudSelectItem T="CriteriaOperator" Value="op">@OperatorText(op)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                        @ValueEditor(row)
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="polhem-criteria-panel__footer">
+            <MudMenu Class="polhem-criteria-panel__add" Label="@Text(PolhemUIText.AddCondition)" Size="Size.Small"
+                     Variant="Variant.Outlined" Disabled="@(Fields.Count == 0)">
+                @foreach (var field in Fields)
+                {
+                    <MudMenuItem Class="polhem-criteria-panel__field" OnClick="() => AddRowAsync(field)">@field.Caption</MudMenuItem>
+                }
+            </MudMenu>
+            <MudButton Class="polhem-criteria-panel__search" ButtonType="ButtonType.Submit" Size="Size.Small"
+                       Variant="Variant.Filled" Color="Color.Primary">@Text(PolhemUIText.Search)</MudButton>
+            <MudButton Class="polhem-criteria-panel__clear" Size="Size.Small" OnClick="() => ClearAndSearchAsync()">@Text(PolhemUIText.FilterClear)</MudButton>
+        </div>
+    </form>
+    @if (PickingRow is { } picking)
+    {
+        <LookupDialog ProgId="@picking.Field.RelationProgId"
+                      OnCommitted="row => CommitPickAsync(row)"
+                      OnCancelled="CancelPick"
+                      OnFailed="OnPickFailed" />
+    }
+</section>
+
+@code {
+    private RenderFragment ValueEditor(CriteriaRow row) => row.Operator switch
+    {
+        CriteriaOperator.In when row.Field.Kind == CriteriaFieldKind.Relation => RelationEditor(row),
+        CriteriaOperator.In => ChoiceEditor(row),
+        CriteriaOperator.Range => RangeEditor(row),
+        _ when row.Field.Kind == CriteriaFieldKind.Boolean => BooleanEditor(row),
+        _ => @<MudTextField T="string" Class="polhem-criteria-row__value" Value="@GetValueText(row)"
+                            ValueChanged="text => SetValueTextAsync(row, text)" Immediate="true"
+                            InputType="InputTypeFor(row)" aria-label="@row.Field.Caption"
+                            Variant="Variant.Outlined" Margin="Margin.Dense" />,
+    };
+
+    private RenderFragment RangeEditor(CriteriaRow row) =>
+        @<div class="polhem-criteria-row__range">
+            <MudTextField T="string" Class="polhem-criteria-row__from" Value="@GetFromText(row)"
+                          ValueChanged="text => SetFromTextAsync(row, text)" Immediate="true" InputType="InputTypeFor(row)"
+                          aria-label="@Text(PolhemUIText.FilterFrom)" Placeholder="@Text(PolhemUIText.FilterFrom)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <span class="polhem-criteria-row__to-separator">~</span>
+            <MudTextField T="string" Class="polhem-criteria-row__to" Value="@GetToText(row)"
+                          ValueChanged="text => SetToTextAsync(row, text)" Immediate="true" InputType="InputTypeFor(row)"
+                          aria-label="@Text(PolhemUIText.FilterTo)" Placeholder="@Text(PolhemUIText.FilterTo)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            @if (IsDateRange(row))
+            {
+                <MudMenu Class="polhem-criteria-row__period" Label="@PeriodText(row.RelativeDate)" Size="Size.Small" Variant="Variant.Text">
+                    @foreach (var period in Periods)
+                    {
+                        <MudMenuItem Class="polhem-criteria-row__period-item" OnClick="() => SetPeriodAsync(row, period)">@PeriodText(period)</MudMenuItem>
+                    }
+                </MudMenu>
+            }
+        </div>;
+
+    private RenderFragment BooleanEditor(CriteriaRow row) =>
+        @<MudSelect T="string" Class="polhem-criteria-row__value" Value="@GetBooleanChoice(row)"
+                    ValueChanged="choice => SetBooleanChoiceAsync(row, choice)" ToStringFunc="BooleanChoiceText"
+                    aria-label="@row.Field.Caption" Variant="Variant.Outlined" Margin="Margin.Dense">
+            <MudSelectItem T="string" Value="@string.Empty">@BooleanChoiceText(string.Empty)</MudSelectItem>
+            <MudSelectItem T="string" Value="@bool.TrueString">@BooleanChoiceText(bool.TrueString)</MudSelectItem>
+            <MudSelectItem T="string" Value="@bool.FalseString">@BooleanChoiceText(bool.FalseString)</MudSelectItem>
+        </MudSelect>;
+
+    private RenderFragment ChoiceEditor(CriteriaRow row) =>
+        @<div class="polhem-criteria-row__choices">
+            @foreach (var item in row.Field.ListItems)
+            {
+                <MudCheckBox T="bool" Class="polhem-criteria-row__choice" Value="IsChosen(row, item)"
+                             ValueChanged="chosen => SetChosenAsync(row, item, chosen)" Label="@item.Text" Dense="true" />
+            }
+        </div>;
+
+    private RenderFragment RelationEditor(CriteriaRow row) =>
+        @<div class="polhem-criteria-row__values">
+            @foreach (var value in row.Values)
+            {
+                <MudChip T="string" Class="polhem-criteria-row__picked" Size="Size.Small" Text="@value.Text"
+                         OnClose="_ => RemoveValueAsync(row, value)" />
+            }
+            <MudButton Class="polhem-criteria-row__pick" Size="Size.Small" Variant="Variant.Outlined"
+                       OnClick="() => BeginPick(row)">@Text(PolhemUIText.PickValue)</MudButton>
+        </div>;
+
+    private static InputType InputTypeFor(CriteriaRow row) => InputTypeOf(row) switch
+    {
+        "number" => InputType.Number,
+        "date" => InputType.Date,
+        _ => InputType.Text,
+    };
+}

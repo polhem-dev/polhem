@@ -1,1 +1,7 @@
 #nullable enable
+Polhem.Web.Blazor.Mud.Controls.CriteriaChips
+Polhem.Web.Blazor.Mud.Controls.CriteriaChips.CriteriaChips() -> void
+Polhem.Web.Blazor.Mud.Controls.CriteriaPanel
+Polhem.Web.Blazor.Mud.Controls.CriteriaPanel.CriteriaPanel() -> void
+~override Polhem.Web.Blazor.Mud.Controls.CriteriaChips.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Mud.Controls.CriteriaPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
