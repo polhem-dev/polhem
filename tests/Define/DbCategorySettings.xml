@@ -21,6 +21,8 @@
 				<TableItem TableName="st_role_grant" DisplayName="角色授權" />
 				<TableItem TableName="st_user_role" DisplayName="使用者角色" />
 				<TableItem TableName="st_audit_rule" DisplayName="稽核規則" />
+				<TableItem TableName="st_user_query" DisplayName="使用者查詢" />
+				<TableItem TableName="st_user_query_default" DisplayName="預設使用者查詢" />
 				<TableItem TableName="ft_category" DisplayName="產品類別" />
 				<TableItem TableName="ft_supplier" DisplayName="供應商" />
 				<TableItem TableName="ft_customer" DisplayName="客戶" />

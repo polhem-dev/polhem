@@ -41,6 +41,8 @@ which keeps the companies of a shared database apart ([Database Settings §5.5](
 | `st_department` | Organisational departments. |
 | `st_employee` | Employees (links a common-DB `st_user` to a per-company organisational position). |
 | `st_audit_rule` | Per-form audit rules (which forms record changes / views, see [ADR-027](../../../maintainers/adr/adr-027-audit-trail.md)). |
+| `st_user_query` | User queries: query criteria a user saved under a name for one form, personal or shared with the company. |
+| `st_user_query_default` | Each user's default user query per form, applied when the list opens. |
 
 > `st_department` / `st_employee` live in the company database despite their `st_` prefix — they are **framework-owned** (the record-scope and organisation tree features need them), not business data. Per-company business tables should use the `ft_` prefix.
 

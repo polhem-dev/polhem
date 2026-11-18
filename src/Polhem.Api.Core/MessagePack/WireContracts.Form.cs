@@ -17,6 +17,14 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected), static x => x.RowsAffected, static (x, v) => x.RowsAffected = v)
                 .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest.RowId), static x => x.RowId, static (x, v) => x.RowId = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse.RowsAffected), static x => x.RowsAffected, static (x, v) => x.RowsAffected = v)
+                .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.FieldValueChangeRequest>()
                 .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.FieldValueChangeRequest.TableName), static x => x.TableName, static (x, v) => x.TableName = v)
@@ -67,6 +75,14 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.Form.GetNewDataResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.GetNewDataResponse.DataSet), static x => x.DataSet, static (x, v) => x.DataSet = v)
                 .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.GetUserQueriesRequest>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.GetUserQueriesRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.GetUserQueriesResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.Table), static x => x.Table, static (x, v) => x.Table = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.DefaultRowId), static x => x.DefaultRowId, static (x, v) => x.DefaultRowId = v)
+                .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.SaveRequest>()
                 .Member(nameof(Polhem.Api.Core.Messages.Form.SaveRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.SaveRequest.DataSet), static x => x.DataSet, static (x, v) => x.DataSet = v)
@@ -75,6 +91,25 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.Form.SaveResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.SaveResponse.DataSet), static x => x.DataSet, static (x, v) => x.DataSet = v)
                 .Member(nameof(Polhem.Api.Core.Messages.Form.SaveResponse.AffectedRows), static x => x.AffectedRows, static (x, v) => x.AffectedRows = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.SaveUserQueryRequest>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.RowId), static x => x.RowId, static (x, v) => x.RowId = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Name), static x => x.Name, static (x, v) => x.Name = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.IsShared), static x => x.IsShared, static (x, v) => x.IsShared = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Criteria), static x => x.Criteria, static (x, v) => x.Criteria = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.SaveUserQueryResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SaveUserQueryResponse.RowId), static x => x.RowId, static (x, v) => x.RowId = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest.RowId), static x => x.RowId, static (x, v) => x.RowId = v)
+                .Build());
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.DefaultRowId), static x => x.DefaultRowId, static (x, v) => x.DefaultRowId = v)
                 .Build());
         }
     }

@@ -53,6 +53,7 @@ namespace Polhem.Repository.Factories
             [typeof(IAuditLogWriteRepository)] = typeof(AuditLogWriteRepository),
             [typeof(IAdministratorSeedRepository)] = typeof(AdministratorSeedRepository),
             [typeof(ICompanyRowAssignmentRepository)] = typeof(CompanyRowAssignmentRepository),
+            [typeof(IUserQueryRepository)] = typeof(UserQueryRepository),
         };
 
         /// <summary>

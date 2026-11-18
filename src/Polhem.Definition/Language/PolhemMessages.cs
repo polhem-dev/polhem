@@ -99,5 +99,16 @@ namespace Polhem.Definition.Language
 
         /// <summary>A related value names no row the caller could pick; argument 0 is the related form's display name.</summary>
         public const string FieldValueChangeRelationNotFound = Namespace + ".FieldValueChange.RelationNotFound";
+
+        /// <summary>A user query needs a name.</summary>
+        public const string UserQueryNameRequired = Namespace + ".UserQuery.NameRequired";
+        /// <summary>A user query name is too long; argument 0 is the longest name allowed.</summary>
+        public const string UserQueryNameTooLong = Namespace + ".UserQuery.NameTooLong";
+        /// <summary>A user query holds more criteria than can be stored.</summary>
+        public const string UserQueryTooLarge = Namespace + ".UserQuery.TooLarge";
+        /// <summary>The user query does not exist, or not on this form.</summary>
+        public const string UserQueryNotFound = Namespace + ".UserQuery.NotFound";
+        /// <summary>Only the user who created a user query may change or delete it.</summary>
+        public const string UserQueryNotOwner = Namespace + ".UserQuery.NotOwner";
     }
 }

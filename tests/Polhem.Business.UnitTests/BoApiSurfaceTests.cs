@@ -59,12 +59,16 @@ namespace Polhem.Business.UnitTests
 
             // Form axis — FormBusinessObject (FormSchema-driven CRUD).
             new ApiSurfaceEntry("FormBusinessObject", "Delete",     ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
+            new ApiSurfaceEntry("FormBusinessObject", "DeleteUserQuery", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "FieldValueChange", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetData",    ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetList",    ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetLookup",  ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "GetNewData", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("FormBusinessObject", "GetUserQueries", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "Save",       ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
+            new ApiSurfaceEntry("FormBusinessObject", "SaveUserQuery", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("FormBusinessObject", "SetDefaultUserQuery", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
 
             // System axis — SystemBusinessObject (system-level operations).
             // Encrypted (formerly LocalOnly): the gate is handed to `IDeploymentAuthorizationService`. A remote caller must be a

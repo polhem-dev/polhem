@@ -1,4 +1,4 @@
-<!-- source: en/reference/framework-reserved-names.md blob: 8b22a30ab2dbb75a5b30b18b61fd83bdcfa76a87 -->
+<!-- source: en/reference/framework-reserved-names.md blob: d9802617db85ba57b75bc637d234425292e11208 -->
 # 框架保留命名
 
 [English](../../en/reference/framework-reserved-names.md) · [← 文件索引](../README.md)
@@ -42,6 +42,8 @@
 | `st_department` | 組織部門。 |
 | `st_employee` | 員工（連結 common DB 的 `st_user` 至 per-company 的組織位置）。 |
 | `st_audit_rule` | per-form 稽核規則（哪些表單要記異動／檢視，見 [ADR-027](../../../maintainers/adr/adr-027-audit-trail.md)）。 |
+| `st_user_query` | 使用者查詢：使用者為某張表單以名稱儲存的查詢條件，個人或與公司共用。 |
+| `st_user_query_default` | 每位使用者在每張表單的預設使用者查詢，開啟清單時套用。 |
 
 > `st_department` / `st_employee` 雖位於公司資料庫，但仍是 **框架所有**（record-scope 與組織樹功能所需），不是業務資料。Per-company 業務表請使用 `ft_` 前綴。
 

@@ -1,1 +1,25 @@
 #nullable enable
+Polhem.Api.Contracts.Form.IDeleteUserQueryRequest
+Polhem.Api.Contracts.Form.IDeleteUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IDeleteUserQueryResponse
+Polhem.Api.Contracts.Form.IDeleteUserQueryResponse.RowsAffected.get -> int
+Polhem.Api.Contracts.Form.IGetUserQueriesRequest
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.Criteria.get -> string!
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.IsShared.get -> bool
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.Name.get -> string!
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISaveUserQueryResponse
+Polhem.Api.Contracts.Form.ISaveUserQueryResponse.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryRequest
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IUserQueryConnector
+Polhem.Api.Contracts.Form.IUserQueryConnector.DeleteUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IDeleteUserQueryResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.GetUserQueriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetUserQueriesResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.SaveUserQueryAsync(System.Guid rowId, string! name, bool isShared, string! criteria, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISaveUserQueryResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.SetDefaultUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse!>!

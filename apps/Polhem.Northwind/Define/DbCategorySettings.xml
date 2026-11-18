@@ -27,6 +27,8 @@
         <TableItem TableName="st_department" DisplayName="Department" />
         <TableItem TableName="st_employee" DisplayName="Employee" />
         <TableItem TableName="st_audit_rule" DisplayName="Audit Rule" />
+        <TableItem TableName="st_user_query" DisplayName="User Query" />
+        <TableItem TableName="st_user_query_default" DisplayName="Default User Query" />
         <!-- The permission tables. EnterCompany snapshots roles for the session it is building,
              and the repository behind that read has no "table missing" fallback, so the tables
              must be registered even where nothing is granted. The demo grants one model: Order

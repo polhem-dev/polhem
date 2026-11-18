@@ -1,4 +1,4 @@
-<!-- source: en/api/api-method-reference.md blob: 6cd5bc2f8e59a0067d33cc5655bff7ddaa8b7bae -->
+<!-- source: en/api/api-method-reference.md blob: 59635e3055a448598b1bb7ceaad8653d6d410a8f -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
@@ -124,6 +124,10 @@ per-program BO 實體，wire 上以 `<progId>.<action>` 派發（例如 `Employe
 | `Save` | Public | Authenticated | 將 `DataSet` 持久化，依每列 `RowState` dispatch INSERT / UPDATE / DELETE。 |
 | `Delete` | Public | Authenticated | 依 `RowId` 直接刪除單筆主檔列。 |
 | `FieldValueChange` | Public | Authenticated | 使用者變更標記 `FormField.ValueChangeCallback` 的欄位時呼叫；回傳要寫入同一列其他欄位的值（`Values`），以及要標在欄位上的訊息（`Errors`／`Warnings`）。需要表單權限模型的 `Create` 或 `Update` 權限。關聯欄位依對應，從被關聯表單取值，套用該表單開窗查詢的規則（`GetLookupFilter` 與 `Read` record scope）；其他需求由 BO 覆寫此方法。回傳的值不會再引發回呼。 |
+| `GetUserQueries` | Public | Authenticated | 以 `DataTable` 列出呼叫者在此表單可套用的使用者查詢（自己的在前，其後是其他使用者共用的），並回傳呼叫者的預設查詢（`DefaultRowId`）。需要 `Read` 權限。 |
+| `SaveUserQuery` | Public | Authenticated | 新增使用者查詢（`RowId` 為空）或覆寫既有的；只有建立者能覆寫、改名或設為共用。`Criteria` 文字由前端產生，原樣儲存。需要 `Read` 權限。 |
+| `DeleteUserQuery` | Public | Authenticated | 刪除建立者自己的使用者查詢，並清除指向它的所有預設設定。需要 `Read` 權限。 |
+| `SetDefaultUserQuery` | Public | Authenticated | 設定呼叫者自己在此表單的預設使用者查詢，可指向其他使用者共用的查詢；`RowId` 為空時清除。需要 `Read` 權限。 |
 
 ## 軸：Audit Log（`AuditLogBusinessObject`）
 

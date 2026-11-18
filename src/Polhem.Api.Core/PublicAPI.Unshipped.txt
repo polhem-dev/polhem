@@ -1,1 +1,39 @@
 #nullable enable
+Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest
+Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest.DeleteUserQueryRequest() -> void
+Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.DeleteUserQueryRequest.RowId.set -> void
+Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse
+Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse.DeleteUserQueryResponse() -> void
+Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse.RowsAffected.get -> int
+Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse.RowsAffected.set -> void
+Polhem.Api.Core.Messages.Form.GetUserQueriesRequest
+Polhem.Api.Core.Messages.Form.GetUserQueriesRequest.GetUserQueriesRequest() -> void
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.DefaultRowId.set -> void
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.GetUserQueriesResponse() -> void
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.Form.GetUserQueriesResponse.Table.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Criteria.get -> string!
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Criteria.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.IsShared.get -> bool
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.IsShared.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Name.get -> string!
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.Name.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.RowId.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryRequest.SaveUserQueryRequest() -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryResponse
+Polhem.Api.Core.Messages.Form.SaveUserQueryResponse.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.SaveUserQueryResponse.RowId.set -> void
+Polhem.Api.Core.Messages.Form.SaveUserQueryResponse.SaveUserQueryResponse() -> void
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest.RowId.set -> void
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryRequest.SetDefaultUserQueryRequest() -> void
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.DefaultRowId.set -> void
+Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.SetDefaultUserQueryResponse() -> void
