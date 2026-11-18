@@ -16,6 +16,11 @@ namespace Polhem.Repository.Form
     {
         private const string QueryTable = "st_user_query";
         private const string DefaultTable = "st_user_query_default";
+        private const string RowIdColumn = "sys_rowid";
+        private const string NameColumn = "sys_name";
+        private const string SharedColumn = "is_shared";
+        private const string UserColumn = "user_id";
+        private const string ProgColumn = "prog_id";
 
         private readonly DatabaseType _dbType;
 
@@ -44,26 +49,26 @@ namespace Polhem.Repository.Form
             if (schemaProvider.GetTableSchema(QueryTable) == null || schemaProvider.GetTableSchema(DefaultTable) == null)
                 return new UserQueryList(table, Guid.Empty);
 
-            string sql = $"SELECT {Q("sys_rowid")}, {Q("sys_name")}, {Q("is_shared")}, {Q("user_id")}, {Q("criteria")} \n" +
-                         $"FROM {Q(QueryTable)} \n" +
-                         $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("prog_id")} = {{0}} \n" +
-                         $"AND ({Q("user_id")} = {{1}} OR {Q("is_shared")} = {{2}}) \n" +
-                         $"ORDER BY CASE WHEN {Q("user_id")} = {{3}} THEN 0 ELSE 1 END, {Q("sys_name")}";
+            string sql = $"SELECT {Q(RowIdColumn)}, {Q(NameColumn)}, {Q(SharedColumn)}, {Q(UserColumn)}, {Q("criteria")}" +
+                         $" FROM {Q(QueryTable)}" +
+                         $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(ProgColumn)} = {{0}}" +
+                         $" AND ({Q(UserColumn)} = {{1}} OR {Q(SharedColumn)} = {{2}})" +
+                         $" ORDER BY CASE WHEN {Q(UserColumn)} = {{3}} THEN 0 ELSE 1 END, {Q(NameColumn)}";
             var dbAccess = CreateDbAccess();
             var rows = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql, progId, userId, true, userId)).Table!;
             foreach (DataRow row in rows.Rows)
             {
                 table.Rows.Add(
-                    ValueUtilities.CGuid(row["sys_rowid"]),
-                    ValueUtilities.CStr(row["sys_name"]),
-                    ValueUtilities.CBool(row["is_shared"]),
-                    string.Equals(ValueUtilities.CStr(row["user_id"]), userId, StringComparison.Ordinal),
+                    ValueUtilities.CGuid(row[RowIdColumn]),
+                    ValueUtilities.CStr(row[NameColumn]),
+                    ValueUtilities.CBool(row[SharedColumn]),
+                    string.Equals(ValueUtilities.CStr(row[UserColumn]), userId, StringComparison.Ordinal),
                     ValueUtilities.CStr(row["criteria"]));
             }
             table.AcceptChanges();
 
-            string defaultSql = $"SELECT {Q("query_rowid")} FROM {Q(DefaultTable)} \n" +
-                                $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("prog_id")} = {{0}} AND {Q("user_id")} = {{1}}";
+            string defaultSql = $"SELECT {Q("query_rowid")} FROM {Q(DefaultTable)}" +
+                                $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(ProgColumn)} = {{0}} AND {Q(UserColumn)} = {{1}}";
             var scalar = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, defaultSql, progId, userId)).Scalar;
             var defaultRowId = scalar is null or DBNull ? Guid.Empty : ValueUtilities.CGuid(scalar);
             return new UserQueryList(table, defaultRowId);
@@ -72,13 +77,13 @@ namespace Polhem.Repository.Form
         /// <inheritdoc/>
         public UserQueryOwner? GetOwner(Guid rowId)
         {
-            string sql = $"SELECT {Q("prog_id")}, {Q("user_id")}, {Q("is_shared")} FROM {Q(QueryTable)} \n" +
-                         $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("sys_rowid")} = {{0}}";
+            string sql = $"SELECT {Q(ProgColumn)}, {Q(UserColumn)}, {Q(SharedColumn)} FROM {Q(QueryTable)}" +
+                         $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(RowIdColumn)} = {{0}}";
             var table = CreateDbAccess().Execute(new DbCommandSpec(DbCommandKind.DataTable, sql, rowId)).Table!;
             if (table.Rows.Count == 0) return null;
             var row = table.Rows[0];
-            return new UserQueryOwner(ValueUtilities.CStr(row["prog_id"]), ValueUtilities.CStr(row["user_id"]),
-                ValueUtilities.CBool(row["is_shared"]));
+            return new UserQueryOwner(ValueUtilities.CStr(row[ProgColumn]), ValueUtilities.CStr(row[UserColumn]),
+                ValueUtilities.CBool(row[SharedColumn]));
         }
 
         /// <inheritdoc/>
@@ -90,10 +95,10 @@ namespace Polhem.Repository.Form
             ArgumentNullException.ThrowIfNull(criteria);
 
             var now = DateTime.UtcNow;
-            string sql = $"INSERT INTO {Q(QueryTable)} \n" +
-                         $"({Q("sys_rowid")}, {Q(SysFields.CompanyId)}, {Q("prog_id")}, {Q("user_id")}, {Q("sys_name")}, " +
-                         $"{Q("is_shared")}, {Q("criteria")}, {Q("sys_insert_time")}, {Q("sys_update_time")}) \n" +
-                         $"VALUES ({{0}}, {CommandTextVariable.CompanyId}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {{6}}, {{7}})";
+            string sql = $"INSERT INTO {Q(QueryTable)}" +
+                         $" ({Q(RowIdColumn)}, {Q(SysFields.CompanyId)}, {Q(ProgColumn)}, {Q(UserColumn)}, {Q(NameColumn)}, " +
+                         $"{Q(SharedColumn)}, {Q("criteria")}, {Q("sys_insert_time")}, {Q("sys_update_time")})" +
+                         $" VALUES ({{0}}, {CommandTextVariable.CompanyId}, {{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {{6}}, {{7}})";
             CreateDbAccess().Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql,
                 rowId, progId, userId, name, isShared, criteria, now, now));
         }
@@ -104,9 +109,9 @@ namespace Polhem.Repository.Form
             ArgumentNullException.ThrowIfNull(name);
             ArgumentNullException.ThrowIfNull(criteria);
 
-            string sql = $"UPDATE {Q(QueryTable)} \n" +
-                         $"SET {Q("sys_name")} = {{0}}, {Q("is_shared")} = {{1}}, {Q("criteria")} = {{2}}, {Q("sys_update_time")} = {{3}} \n" +
-                         $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("sys_rowid")} = {{4}}";
+            string sql = $"UPDATE {Q(QueryTable)}" +
+                         $" SET {Q(NameColumn)} = {{0}}, {Q(SharedColumn)} = {{1}}, {Q("criteria")} = {{2}}, {Q("sys_update_time")} = {{3}}" +
+                         $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(RowIdColumn)} = {{4}}";
             return CreateDbAccess().Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql,
                 name, isShared, criteria, DateTime.UtcNow, rowId)).RowsAffected;
         }
@@ -114,10 +119,10 @@ namespace Polhem.Repository.Form
         /// <inheritdoc/>
         public int Delete(Guid rowId)
         {
-            string defaults = $"DELETE FROM {Q(DefaultTable)} \n" +
-                              $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("query_rowid")} = {{0}}";
-            string query = $"DELETE FROM {Q(QueryTable)} \n" +
-                           $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("sys_rowid")} = {{0}}";
+            string defaults = $"DELETE FROM {Q(DefaultTable)}" +
+                              $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("query_rowid")} = {{0}}";
+            string query = $"DELETE FROM {Q(QueryTable)}" +
+                           $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(RowIdColumn)} = {{0}}";
 
             using var connection = Context.ConnectionManager.CreateConnection(DatabaseId);
             connection.Open();
@@ -135,11 +140,11 @@ namespace Polhem.Repository.Form
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
             ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-            string clear = $"DELETE FROM {Q(DefaultTable)} \n" +
-                           $"WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q("prog_id")} = {{0}} AND {Q("user_id")} = {{1}}";
-            string insert = $"INSERT INTO {Q(DefaultTable)} \n" +
-                            $"({Q("sys_rowid")}, {Q(SysFields.CompanyId)}, {Q("prog_id")}, {Q("user_id")}, {Q("query_rowid")}, {Q("sys_insert_time")}) \n" +
-                            $"VALUES ({{0}}, {CommandTextVariable.CompanyId}, {{1}}, {{2}}, {{3}}, {{4}})";
+            string clear = $"DELETE FROM {Q(DefaultTable)}" +
+                           $" WHERE {Q(SysFields.CompanyId)} = {CommandTextVariable.CompanyId} AND {Q(ProgColumn)} = {{0}} AND {Q(UserColumn)} = {{1}}";
+            string insert = $"INSERT INTO {Q(DefaultTable)}" +
+                            $" ({Q(RowIdColumn)}, {Q(SysFields.CompanyId)}, {Q(ProgColumn)}, {Q(UserColumn)}, {Q("query_rowid")}, {Q("sys_insert_time")})" +
+                            $" VALUES ({{0}}, {CommandTextVariable.CompanyId}, {{1}}, {{2}}, {{3}}, {{4}})";
 
             using var connection = Context.ConnectionManager.CreateConnection(DatabaseId);
             connection.Open();
@@ -159,9 +164,9 @@ namespace Polhem.Repository.Form
         private static DataTable CreateQueryTable()
         {
             var table = new DataTable("UserQuery");
-            table.Columns.Add("sys_rowid", typeof(Guid));
-            table.Columns.Add("sys_name", typeof(string));
-            table.Columns.Add("is_shared", typeof(bool));
+            table.Columns.Add(RowIdColumn, typeof(Guid));
+            table.Columns.Add(NameColumn, typeof(string));
+            table.Columns.Add(SharedColumn, typeof(bool));
             table.Columns.Add("is_own", typeof(bool));
             table.Columns.Add("criteria", typeof(string));
             return table;

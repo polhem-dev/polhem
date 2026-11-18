@@ -54,7 +54,7 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.Equal((null, (object)12.50m), (rows[2].From, rows[2].To));
             Assert.Equal(new RelativeDate(RelativeDateKind.LastDays, 7), rows[3].RelativeDate);
             Assert.Equal((new DateOnly(1996, 7, 1), new DateOnly(1996, 7, 31)), (rows[4].From, rows[4].To));
-            Assert.Equal(false, rows[5].Value);
+            Assert.False(Assert.IsType<bool>(rows[5].Value));
             Assert.Equal([new CriteriaValue(0L, "Draft"), new CriteriaValue(1L, "Confirmed")], rows[6].Values);
             Assert.Equal(new CriteriaValue(shipperId, "Federal Shipping"), Assert.Single(rows[7].Values));
         }

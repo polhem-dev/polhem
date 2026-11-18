@@ -123,32 +123,36 @@ namespace Polhem.UI.Core.Criteria
             return UserQuerySkipReason.InvalidValue;
         }
 
-        private static bool TryFill(CriteriaRow row, UserQueryCondition condition)
+        private static bool TryFill(CriteriaRow row, UserQueryCondition condition) => row.Operator switch
         {
-            switch (row.Operator)
-            {
-                case CriteriaOperator.Range when condition.Period is not null:
-                    if (row.Field.Kind is not (CriteriaFieldKind.Date or CriteriaFieldKind.DateTime)) return false;
-                    if (!Enum.TryParse<RelativeDateKind>(condition.Period, out var kind) || !Enum.IsDefined(kind)) return false;
-                    if (kind == RelativeDateKind.LastDays ? condition.Days < 1 : condition.Days != 0) return false;
-                    row.SetRelativeDate(new RelativeDate(kind, condition.Days));
-                    return true;
-                case CriteriaOperator.Range:
-                    if (!TryDecode(row.Field, condition.From, out var from) || !TryDecode(row.Field, condition.To, out var to))
-                        return false;
-                    row.SetRange(from, to);
-                    return true;
-                case CriteriaOperator.In:
-                    foreach (var value in condition.Values)
-                    {
-                        if (!row.TryAddValue(value.Value, value.Text)) return false;
-                    }
-                    return true;
-                default:
-                    if (!TryDecode(row.Field, condition.Value, out var single)) return false;
-                    row.SetValue(single);
-                    return true;
-            }
+            CriteriaOperator.Range when condition.Period is not null => TryFillPeriod(row, condition),
+            CriteriaOperator.Range => TryFillRange(row, condition),
+            CriteriaOperator.In => condition.Values.All(value => row.TryAddValue(value.Value, value.Text)),
+            _ => TryFillValue(row, condition),
+        };
+
+        private static bool TryFillPeriod(CriteriaRow row, UserQueryCondition condition)
+        {
+            if (row.Field.Kind is not (CriteriaFieldKind.Date or CriteriaFieldKind.DateTime)) return false;
+            if (!Enum.TryParse<RelativeDateKind>(condition.Period, out var kind) || !Enum.IsDefined(kind)) return false;
+            if (kind == RelativeDateKind.LastDays ? condition.Days < 1 : condition.Days != 0) return false;
+            row.SetRelativeDate(new RelativeDate(kind, condition.Days));
+            return true;
+        }
+
+        private static bool TryFillRange(CriteriaRow row, UserQueryCondition condition)
+        {
+            if (!TryDecode(row.Field, condition.From, out var from) || !TryDecode(row.Field, condition.To, out var to))
+                return false;
+            row.SetRange(from, to);
+            return true;
+        }
+
+        private static bool TryFillValue(CriteriaRow row, UserQueryCondition condition)
+        {
+            if (!TryDecode(row.Field, condition.Value, out var value)) return false;
+            row.SetValue(value);
+            return true;
         }
 
         private static string? Encode(object? value) => value switch
