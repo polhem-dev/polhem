@@ -11,11 +11,18 @@ using Polhem.UI.Core.Criteria;
 namespace Polhem.UI.Avalonia.Controls
 {
     /// <summary>
-    /// The query conditions of a list: rows the user adds one at a time, each a field, an operator and a value
-    /// editor chosen by the field's kind. It edits a <see cref="QueryCriteria"/> and raises
-    /// <see cref="SearchRequested"/>; the owner converts the criteria and runs the query.
+    /// Query conditions a user adds one row at a time, each a field, an operator and a value editor chosen by the
+    /// field's kind. It edits a <see cref="QueryCriteria"/> and raises <see cref="SearchRequested"/>; the view that
+    /// hosts it converts the criteria for the backend method it calls and runs the query.
     /// </summary>
-    internal sealed partial class CriteriaPanel : UserControl
+    /// <remarks>
+    /// <see cref="Polhem.UI.Avalonia.Views.ListView"/> hosts one behind its Query button, with the fields from
+    /// <see cref="CriteriaField.FromQueryFields"/> and <see cref="GetListFilterConverter"/>. Another view hosts it the
+    /// same way: put the starting rows (a report's required ones, say) into a <see cref="QueryCriteria"/>, call
+    /// <see cref="Bind"/>, and run the query on <see cref="SearchRequested"/>, which is raised only when every
+    /// required row has a value.
+    /// </remarks>
+    public sealed partial class CriteriaPanel : UserControl
     {
         private static readonly CriteriaOperator[] s_noOperators = [];
 

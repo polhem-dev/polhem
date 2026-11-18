@@ -1,6 +1,8 @@
 using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Settings;
+using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Core.Criteria
 {
@@ -99,6 +101,27 @@ namespace Polhem.UI.Core.Criteria
                 ListItems = kind == CriteriaFieldKind.Choice && field.ListItems is { } items ? [.. items] : [],
                 LangEnumName = kind == CriteriaFieldKind.Choice ? field.LangEnumName : string.Empty,
             };
+        }
+
+        /// <summary>
+        /// Describes the fields a form's list offers query conditions for: <see cref="FormSchema.GetQueryFields"/>,
+        /// less the fields no condition can be entered for (<see cref="FromField"/> returns <c>null</c>) and the
+        /// sensitive fields the user cannot read, which the list hides as well.
+        /// </summary>
+        /// <param name="schema">The form.</param>
+        /// <param name="capabilities">The user's capabilities per permission model; <c>null</c> treats the user as
+        /// unrestricted, as <see cref="ElementCapabilityResolver.ResolveField"/> does.</param>
+        /// <returns>The fields, in the order the schema declares them.</returns>
+        public static IReadOnlyList<CriteriaField> FromQueryFields(FormSchema schema,
+            IReadOnlyDictionary<string, PermissionActions>? capabilities = null)
+        {
+            ArgumentNullException.ThrowIfNull(schema);
+            var tableName = schema.MasterTable?.TableName ?? string.Empty;
+            return schema.GetQueryFields()
+                .Where(f => ElementCapabilityResolver.Default.ResolveField(schema, f.FieldName, tableName, capabilities).Visible)
+                .Select(FromField)
+                .OfType<CriteriaField>()
+                .ToArray();
         }
 
         private static CriteriaFieldKind? ResolveKind(FormField field)

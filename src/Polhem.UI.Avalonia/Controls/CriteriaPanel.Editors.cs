@@ -18,7 +18,7 @@ namespace Polhem.UI.Avalonia.Controls
     /// Every editor writes to its row through <see cref="AvaloniaObject.PropertyChanged"/> rather than the controls'
     /// semantic events, which do not fire for a value set from code (the Avalonia controls pitfall log, item 6).
     /// </remarks>
-    internal sealed partial class CriteriaPanel
+    public sealed partial class CriteriaPanel
     {
         private static readonly (RelativeDate Period, string Key, int Days)[] s_periods =
         [
