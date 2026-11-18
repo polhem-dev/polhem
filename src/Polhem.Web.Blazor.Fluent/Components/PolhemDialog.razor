@@ -51,11 +51,18 @@
         if (firstRender && _dialog is not null) await _dialog.ShowAsync().ConfigureAwait(true);
     }
 
-    // FluentDialog passes on only the toggles of its own element, not those of a popover inside it. Closing comes from
-    // `beforetoggle` and Closed from `toggle`; the first of them dismisses.
+    // WARNING: FluentDialog raises OnStateChange for an inline dialog only from Fluent UI 5.1.0, and it maps any toggle
+    // it does not recognise to Closed. The id check keeps a popover inside the dialog from closing it if an upgrade passes
+    // those toggles on again. Closing comes from `beforetoggle` and Closed from `toggle`; the first of them dismisses.
     private async Task OnStateChangeAsync(DialogEventArgs e)
     {
-        if (e.State is not (DialogState.Closing or DialogState.Closed) || _dismissed) return;
+        if (!string.Equals(e.Id, _dialog?.Id, StringComparison.Ordinal)
+            || e.State is not (DialogState.Closing or DialogState.Closed)
+            || _dismissed)
+        {
+            return;
+        }
+
         _dismissed = true;
         await Dismissed.InvokeAsync().ConfigureAwait(true);
     }
