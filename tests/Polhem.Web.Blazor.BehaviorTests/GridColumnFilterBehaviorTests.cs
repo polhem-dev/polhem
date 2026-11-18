@@ -7,6 +7,7 @@ using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Controls;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.BehaviorTests
@@ -22,7 +23,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private const string Error = ".polhem-grid-filter__error";
 
         private readonly FormField _field = new("qty", "Quantity", FieldDbType.Integer);
-        private readonly ListFilterState _filters = new();
+        private readonly ColumnFilterCriteria _filters = new(new QueryCriteria());
         private readonly List<ColumnFilterChange> _applied = [];
 
         /// <inheritdoc />
@@ -88,7 +89,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
                 b.AddAttribute(1, nameof(GridColumnFilterBase.Column), new LayoutColumn { FieldName = field.FieldName, Caption = field.Caption });
                 b.AddAttribute(2, nameof(GridColumnFilterBase.Field), field);
                 b.AddAttribute(3, nameof(GridColumnFilterBase.Kind), kind);
-                b.AddAttribute(4, nameof(GridColumnFilterBase.Filters), _filters);
+                b.AddAttribute(4, nameof(GridColumnFilterBase.ColumnFilters), _filters);
                 b.AddAttribute(5, nameof(GridColumnFilterBase.Applied),
                     EventCallback.Factory.Create<ColumnFilterChange>(this, change => _applied.Add(change)));
                 b.CloseComponent();

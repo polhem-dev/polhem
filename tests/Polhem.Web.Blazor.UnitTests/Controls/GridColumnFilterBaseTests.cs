@@ -5,6 +5,7 @@ using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Controls;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.UnitTests.Controls
@@ -19,7 +20,7 @@ namespace Polhem.Web.Blazor.UnitTests.Controls
                 .Add(c => c.Column, new LayoutColumn { FieldName = field.FieldName, Caption = field.Caption })
                 .Add(c => c.Field, field)
                 .Add(c => c.Kind, kind)
-                .Add(c => c.Filters, new ListFilterState())).Instance;
+                .Add(c => c.ColumnFilters, new ColumnFilterCriteria(new QueryCriteria()))).Instance;
 
         [Fact]
         [DisplayName("A Boolean filter offers no filter, true and false, and shows true for any casing of True")]

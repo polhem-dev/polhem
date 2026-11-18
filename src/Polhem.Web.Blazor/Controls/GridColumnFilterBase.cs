@@ -5,6 +5,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Components;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
@@ -13,9 +14,9 @@ namespace Polhem.Web.Blazor.Controls
     /// The state and rules of a grid column's filter panel, which every UI package renders with its own markup.
     /// </summary>
     /// <remarks>
-    /// Opening the panel fills it with what was entered before. Applying first tries the entry on a filter state of its
-    /// own and, when the filters cannot read it, shows an error and sends nothing; the real state changes only through
-    /// the host, which reads the list again. Clearing applies an empty entry. Escape closes the panel and drops what was
+    /// Opening the panel fills it with what the column's condition holds. Applying first checks the entry with
+    /// <see cref="ColumnFilterCriteria.CanRead"/> and, when it cannot be read, shows an error and sends nothing; the
+    /// conditions change only through the host, which reads the list again. Clearing applies an empty entry. Escape closes the panel and drops what was
     /// typed and not applied. <c>GridColumnFilterBehaviorTests</c> (tests/Polhem.Web.Blazor.BehaviorTests) checks these
     /// rules; the MudBlazor and Fluent UI packages each run it over their own filter.
     /// </remarks>
@@ -33,9 +34,14 @@ namespace Polhem.Web.Blazor.Controls
         [Parameter, EditorRequired]
         public ColumnFilterKind Kind { get; set; }
 
-        /// <summary>Gets or sets the list's filters, which hold what was entered before.</summary>
-        [Parameter, EditorRequired]
+        /// <summary>Gets or sets a filter state that the panel no longer reads.</summary>
+        [Parameter]
+        [Obsolete("The panel reads ColumnFilters, whose rows are conditions of the list's QueryCriteria.")]
         public ListFilterState Filters { get; set; } = default!;
+
+        /// <summary>Gets or sets the list's column filters, which hold what was entered before.</summary>
+        [Parameter, EditorRequired]
+        public ColumnFilterCriteria ColumnFilters { get; set; } = default!;
 
         /// <summary>Gets or sets the callback raised with a value the filters can read.</summary>
         [Parameter]
@@ -57,7 +63,7 @@ namespace Polhem.Web.Blazor.Controls
         protected string Second { get; set; } = string.Empty;
 
         /// <summary>Gets whether the column is filtered now.</summary>
-        protected bool IsFiltered => Filters.IsFiltered(Column.FieldName);
+        protected bool IsFiltered => ColumnFilters.IsFiltered(Column.FieldName);
 
         /// <summary>Gets the accessible name of the button that opens the panel.</summary>
         protected string ButtonLabel
@@ -106,7 +112,7 @@ namespace Polhem.Web.Blazor.Controls
         {
             IsOpen = !IsOpen;
             IsInvalid = false;
-            (First, Second) = Filters.GetEntered(Column.FieldName);
+            (First, Second) = ColumnFilters.GetEntered(Column.FieldName);
         }
 
         /// <summary>Closes the panel and drops what was typed and not applied.</summary>
@@ -129,7 +135,7 @@ namespace Polhem.Web.Blazor.Controls
         protected async Task ApplyAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!new ListFilterState().TrySet(Field, Kind, First, Second))
+            if (!ColumnFilterCriteria.CanRead(Field, Kind, First, Second))
             {
                 IsInvalid = true;
                 return;

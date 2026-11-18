@@ -7,6 +7,7 @@ using Polhem.Definition.Sorting;
 using Polhem.UI.Core;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Controls.Editors;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
@@ -124,9 +125,9 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="column">The column.</param>
         /// <returns>The kind of filter.</returns>
         protected ColumnFilterKind FilterKind(LayoutColumn column)
-            => Filters is null || !OnFilterChanged.HasDelegate
+            => ColumnFilters is null || !OnFilterChanged.HasDelegate
                 ? ColumnFilterKind.None
-                : ListFilterState.GetKind(column, ResolveFormField(column.FieldName));
+                : ColumnFilterCriteria.GetKind(column, ResolveFormField(column.FieldName));
 
         /// <summary>Returns the schema field behind a column.</summary>
         /// <param name="column">The column.</param>

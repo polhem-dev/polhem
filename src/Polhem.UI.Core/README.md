@@ -63,7 +63,8 @@ application's own data through its own implementation of `IFormApiConnector`.
 - `Criteria/QueryCriteria` -- the query conditions a user adds one row at a time (`CriteriaField`, `CriteriaRow`,
   `RelativeDate`), independent of the backend method; `GetListFilterConverter` turns them into the `FilterNode` of a
   list request. See [List Query Conditions](../../docs/en/guides/list-query-conditions.md).
-- `Lists/ListFilterState` -- the column filters of a form list, turned into the same `FilterNode` by every head.
+- `Criteria/ColumnFilterCriteria` -- the column filters of a form list, kept as rows of its `QueryCriteria`, so the
+  query pane shows them. `Lists/ListFilterState`, which kept them apart, is obsolete and no longer read.
 - `Lists/CardListState` -- the rows of a list a phone shows as cards, accumulated a page at a time as the user
   scrolls.
 
@@ -144,6 +145,6 @@ heads behave the same:
 - `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
   `TimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `GridColumnRules`, `FieldCaptionRules`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
-- `Criteria/` -- `QueryCriteria`, `CriteriaRow`, `CriteriaField`, `CriteriaOperator`, `RelativeDate`, `GetListFilterConverter`
+- `Criteria/` -- `QueryCriteria`, `CriteriaRow`, `CriteriaField`, `CriteriaOperator`, `RelativeDate`, `GetListFilterConverter`, `ColumnFilterCriteria`
 - `Lists/` -- `ListFilterState`, `CardListState`, `ListPagingState`, `ListSelectFields`, `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`

@@ -925,7 +925,11 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="text">The text.</param>
         protected abstract void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text);
 
-        private const string ClearFilters = ".polhem-form-page__clear-filters";
+        /// <summary>
+        /// Gets the selector of the button that clears the list's filters, shown only while the list is filtered. A page
+        /// that shows its conditions as chips clears them there.
+        /// </summary>
+        protected virtual string ClearFilters => ".polhem-form-page__clear-filters";
 
         [Fact]
         [DisplayName("A column filter reads the first page with the filter, and shows that the list is filtered")]

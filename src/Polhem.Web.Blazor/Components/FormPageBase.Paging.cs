@@ -1,6 +1,7 @@
 using System.Globalization;
 using Polhem.Definition.Language;
 using Polhem.Web.Blazor.Controls;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Components
@@ -14,7 +15,6 @@ namespace Polhem.Web.Blazor.Components
         protected static IReadOnlyList<int> PageSizes { get; } = [ListPagingState.DefaultPageSize, 100, 200];
 
         private ListPagingState _paging = new();
-        private ListFilterState _filters = new();
         private bool _isListPaged;
 
         /// <summary>Gets a value indicating whether the list shows its page buttons.</summary>
@@ -93,30 +93,41 @@ namespace Polhem.Web.Blazor.Components
             await GoToPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
         }
 
-        /// <summary>Gets the column filters of the list.</summary>
-        protected ListFilterState Filters => _filters;
+        /// <summary>Gets an empty filter state that the page no longer reads.</summary>
+        [Obsolete("The column filters are rows of Criteria now; pass ColumnFilters to the grid.")]
+        protected ListFilterState Filters { get; } = new();
 
-        /// <summary>Applies a column's filter and reads the first page.</summary>
-        /// <param name="change">The column and what the user entered, which <see cref="ListFilterState.TrySet"/> has accepted.</param>
+        /// <summary>
+        /// Gets the column filters of the list, which add their rows to <see cref="Criteria"/>, so the pane and the chips
+        /// show them.
+        /// </summary>
+        protected ColumnFilterCriteria ColumnFilters
+        {
+            get
+            {
+                // A saved query replaces the criteria, and with them the rows the columns set.
+                if (!ReferenceEquals(_columnFilters?.Criteria, _criteria))
+                    _columnFilters = new ColumnFilterCriteria(_criteria);
+                return _columnFilters;
+            }
+        }
+
+        /// <summary>Applies a column's filter as a condition of the list and reads the first page.</summary>
+        /// <param name="change">The column and what the user entered, which <see cref="ColumnFilterCriteria.CanRead"/> has accepted.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
         protected async Task OnFilterChangedAsync(ColumnFilterChange change, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(change);
             if (IsListLocked) return;
-            if (!_filters.TrySet(change.Field, change.Kind, change.First, change.Second)) return;
-            await ReadFilteredListAsync(cancellationToken).ConfigureAwait(true);
+            if (!ColumnFilters.TrySet(change.Field, change.Kind, change.First, change.Second)) return;
+            await RunQueryAsync(cancellationToken).ConfigureAwait(true);
         }
 
-        /// <summary>Removes every filter and reads the first page.</summary>
+        /// <summary>Removes every condition, the column filters included, and reads the first page.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ClearFiltersAsync(CancellationToken cancellationToken = default)
-        {
-            if (IsListLocked) return;
-            _filters.Clear();
-            await ReadFilteredListAsync(cancellationToken).ConfigureAwait(true);
-        }
+        protected Task ClearFiltersAsync(CancellationToken cancellationToken = default) => ClearConditionsAsync(cancellationToken);
 
         private Task ReadFilteredListAsync(CancellationToken cancellationToken)
         {
