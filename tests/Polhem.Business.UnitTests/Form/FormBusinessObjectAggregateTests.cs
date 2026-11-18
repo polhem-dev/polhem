@@ -333,9 +333,11 @@ namespace Polhem.Business.UnitTests.Form
             }
         }
 
-        [DbFact(DatabaseType.SQLite)]
-        [DisplayName("An unchanged master row the caller rewrote is read with its stored values by a rule")]
-        public void Save_ForgedUnchangedMaster_RuleReadsStoredValue()
+        [DbTheory(DatabaseType.SQLite)]
+        [DisplayName("An unchanged master row the caller rewrote is read with its stored values by a rule, even with the column marked read-only")]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Save_ForgedUnchangedMaster_RuleReadsStoredValue(bool markReadOnly)
         {
             var form = NewForm(withTotal: false);
             form.Schema.Rules!.Add(new FormRule("within_limit",
@@ -355,11 +357,42 @@ namespace Polhem.Business.UnitTests.Form
                 var master = loaded.Tables[form.Schema.ProgId]!.Rows[0];
                 master[Total] = 1000m;
                 master.AcceptChanges();
+                if (markReadOnly) { master.Table.Columns[Total]!.ReadOnly = true; }
                 loaded.Tables[DetailName(form)]!.Rows[0][Amount] = 500m;
 
                 var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
 
                 Assert.Contains("exceed the limit", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("Detail rows under a master row that claims to be stored but is not are refused")]
+        public void Save_MasterNotStored_Refused()
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = SaveRecord(form, 5m) }).DataSet!;
+                var master = loaded.Tables[form.Schema.ProgId]!.Rows[0];
+                var ghost = Guid.NewGuid();
+                master[SysFields.RowId] = ghost.ToString();
+                master.AcceptChanges();
+                var lines = loaded.Tables[DetailName(form)]!;
+                var row = lines.NewRow();
+                row[SysFields.RowId] = Guid.NewGuid().ToString();
+                row[SysFields.MasterRowId] = ghost.ToString();
+                row[Amount] = 70m;
+                lines.Rows.Add(row);
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Equal(PolhemMessages.SaveDetailRecordMismatch, ex.MessageKey);
             }
             finally
             {

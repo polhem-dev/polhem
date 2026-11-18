@@ -142,8 +142,9 @@ namespace Polhem.Business.Form
         /// <param name="tableName">The table of <paramref name="row"/>.</param>
         /// <remarks>
         /// The repository writes no unchanged row, so whatever the caller put in it is read by totals and rules but
-        /// never stored. A column the stored table does not have keeps its value. When the stored row cannot be
-        /// matched by row id, the payload's values are left as they are.
+        /// never stored. Every stored column is restored, a column the payload marks read-only included; a computed
+        /// column (one with an expression) and a column the stored table does not have keep their values. When the
+        /// stored row cannot be matched by row id, the payload's values are left as they are.
         /// </remarks>
         public static void RestoreStoredValues(DataRow row, DataSet stored, string tableName)
         {
@@ -157,8 +158,19 @@ namespace Polhem.Business.Form
             if (storedRow is null) { return; }
             foreach (DataColumn column in row.Table.Columns)
             {
-                if (column.ReadOnly || !source.Columns.Contains(column.ColumnName)) { continue; }
-                row[column] = storedRow[column.ColumnName];
+                if (column.Expression.Length > 0 || !source.Columns.Contains(column.ColumnName)) { continue; }
+                // IMPORTANT: the wire carries a column's read-only flag as the caller set it, so a read-only column
+                // is restored too; skipping it would let the caller keep a forged value by marking its column.
+                bool readOnly = column.ReadOnly;
+                column.ReadOnly = false;
+                try
+                {
+                    row[column] = storedRow[column.ColumnName];
+                }
+                finally
+                {
+                    column.ReadOnly = readOnly;
+                }
             }
             row.AcceptChanges();
         }

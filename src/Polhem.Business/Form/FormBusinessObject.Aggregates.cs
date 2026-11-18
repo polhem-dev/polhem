@@ -106,6 +106,19 @@ namespace Polhem.Business.Form
             // Without a permission model nothing else ties a detail row to the record being saved, so a row that
             // belongs to another record would be written there while this record's totals and rules never saw it.
             using var stored = isNew || rowId == Guid.Empty ? null : context.Repository.GetData(rowId);
+            // A master row that claims to be stored but is not: its update would change nothing, while its detail
+            // rows would be written for a record that does not exist, checked against values nobody stored.
+            if (!isNew && rowId != Guid.Empty && stored is null)
+            {
+                var carried = detailNames.FirstOrDefault(name => dataSet.Tables.Contains(name)
+                    && dataSet.Tables[name]!.Rows.Cast<DataRow>().Any(row => row.RowState != DataRowState.Detached));
+                if (carried is not null)
+                {
+                    throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
+                        "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
+                        carried, masterTable.TableName);
+                }
+            }
             var foreign = AggregatedDetailCompletion.FindForeignTable(dataSet, detailNames, rowId, stored);
             if (foreign is not null)
             {
