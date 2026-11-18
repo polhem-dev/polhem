@@ -28,9 +28,10 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
         /// <inheritdoc />
         protected override string DraggableColumn => ".polhem-grid thead .mud-drop-item-draggable";
 
-        // MudBlazor handles the resize on the server. The render that carries a new width also marks the resizer
-        // `mud-resizing`, and the release handler removes that class, then releases the pointer capture and clears the
-        // grid's `cursor-col-resize` as its last step. Until then a new drag on the same column is ended by it.
+        // MudBlazor handles the resize on the server. The resizer carries `mud-resizing` from the pointerdown on, so a
+        // render that brought a new width carried it too. The release handler removes that class, then releases the
+        // pointer capture and clears the grid's `cursor-col-resize` as its last step. Until then a new drag on the same
+        // column is ended by it.
         /// <inheritdoc />
         protected override async Task WaitForResizeEndAsync(IPage page)
         {
