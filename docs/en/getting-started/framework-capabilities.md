@@ -25,6 +25,7 @@ The definition files under `DefinePath` drive the whole application. See [Defini
 | **Expression engine** | DynamicExpresso evaluates computed fields and rules; `IExpressionEvaluator` keeps the engine swappable. See [Expressions and Rules](../definitions/expression-rules.md) |
 | **Master-detail** | Child tables linked through `sys_master_rowid`, written together in a single `Save` |
 | **Lookup relations** | A field declares its relation target and field mappings; the picker query and value propagation come for free |
+| **List query conditions** | `QueryFields` names the fields a list offers; users add conditions one row at a time in the Avalonia list, and the panel can be hosted in other views. See [List Query Conditions](../guides/list-query-conditions.md) |
 | **PluginSettings** | Which business plugins are attached to each `progId`, each declaring the one stage it runs at, executed in declaration order |
 
 ## 2. Data Access
