@@ -59,13 +59,25 @@
         // WARNING: Fluent UI's `PreventDismissOnEscape` also swallows Escape meant for a dialog nested in this one, so a
         // dialog that may not be dismissed uses the guard in `polhem-fluent-dialog.js` instead. It goes on before the
         // dialog opens, so no Escape reaches the dialog unguarded.
-        if (_escapeGuarded == Dismissable)
+        if (_escapeGuarded == Dismissable) await UpdateEscapeGuardAsync(_dialog.Id).ConfigureAwait(true);
+        if (firstRender) await _dialog.ShowAsync().ConfigureAwait(true);
+    }
+
+    private async Task UpdateEscapeGuardAsync(string? id)
+    {
+        var guard = !Dismissable;
+        try
         {
             _module ??= await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
-            _escapeGuarded = !Dismissable;
-            await _module.InvokeVoidAsync(_escapeGuarded ? "guardEscape" : "releaseEscape", _dialog.Id).ConfigureAwait(true);
+            await _module.InvokeVoidAsync(guard ? "guardEscape" : "releaseEscape", id).ConfigureAwait(true);
+            _escapeGuarded = guard;
         }
-        if (firstRender) await _dialog.ShowAsync().ConfigureAwait(true);
+        catch (JSException)
+        {
+            // A dialog whose guard failed to load still opens, and Escape can then close it. Recording the state anyway
+            // keeps every later render from trying, and failing, again.
+            _escapeGuarded = guard;
+        }
     }
 
     /// <inheritdoc />
