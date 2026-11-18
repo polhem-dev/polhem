@@ -282,6 +282,57 @@ namespace Polhem.Business.UnitTests.Form
             }
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A payload that deletes its master row cannot change the detail rows of another record")]
+        public void Save_DeletedMasterWithOtherRecordsRow_Refused()
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var target = SaveRecord(form, 60m, 10m);
+                var own = SaveRecord(form, 5m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = own }).DataSet!;
+                loaded.Tables[DetailName(form)]!.Rows[0].Delete();
+                loaded.Tables[form.Schema.ProgId]!.Rows[0].Delete();
+                var targetLines = NewBo(form).GetData(new GetDataArgs { RowId = target }).DataSet!.Tables[DetailName(form)]!;
+                var lines = loaded.Tables[DetailName(form)]!;
+                lines.ImportRow(LineWith(targetLines, 10m));
+                lines.Rows[lines.Rows.Count - 1][Amount] = 70m;
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Equal(PolhemMessages.SaveDetailRecordMismatch, ex.MessageKey);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A payload that deletes a record with its own detail rows is saved")]
+        public void Save_DeleteRecordWithItsRows_Succeeds()
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var own = SaveRecord(form, 5m, 7m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = own }).DataSet!;
+                foreach (var row in loaded.Tables[DetailName(form)]!.Rows.Cast<DataRow>().ToList()) { row.Delete(); }
+                loaded.Tables[form.Schema.ProgId]!.Rows[0].Delete();
+
+                var ex = Record.Exception(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Null(ex);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
         private Guid SaveRecord(TransientForm form, params decimal[] amounts)
         {
             var rowId = Guid.NewGuid();

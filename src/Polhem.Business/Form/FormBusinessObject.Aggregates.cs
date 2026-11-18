@@ -79,8 +79,23 @@ namespace Polhem.Business.Form
             // rule that read them could be given any value; the stored rows are read in their place below.
             AggregatedDetailCompletion.DropUnchangedRows(dataSet, detailNames);
 
-            // A deletion of the whole record has no rows left to aggregate.
-            if (liveMasters.Count == 0) { return; }
+            // A deletion of the whole record runs no total and no before-save rule, so the payload may only delete
+            // the record's own detail rows: anything else would change another record whose totals and rules
+            // never ran.
+            if (liveMasters.Count == 0)
+            {
+                var deleted = AggregatedDetailCompletion.FindOutsideDeletion(dataSet, detailNames,
+                    masterRows.Select(row => ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]))
+                        .Where(id => id != Guid.Empty)
+                        .Select(id => context.Repository.GetData(id)));
+                if (deleted is not null)
+                {
+                    throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
+                        "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
+                        deleted, masterTable.TableName);
+                }
+                return;
+            }
             var master = liveMasters[0];
             var rowId = master.Table.Columns.Contains(SysFields.RowId) ? ValueUtilities.CGuid(master[SysFields.RowId]) : Guid.Empty;
             bool isNew = master.RowState == DataRowState.Added;

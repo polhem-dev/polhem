@@ -134,6 +134,49 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>
+        /// For a payload that only deletes records, returns the first named table of <paramref name="payload"/> with a
+        /// row other than a deletion of one of those records' stored rows, or <c>null</c> when there is none.
+        /// </summary>
+        /// <param name="payload">The save payload, after <see cref="DropUnchangedRows"/>.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <param name="storedRecords">The deleted records as stored; each is disposed here, and a null one is skipped.</param>
+        /// <remarks>
+        /// A deleted row is judged by its original row id against the stored rows, the id the repository deletes by,
+        /// so the original values the caller sent cannot make another record's row look like this one's.
+        /// </remarks>
+        public static string? FindOutsideDeletion(DataSet payload, IEnumerable<string> tableNames,
+            IEnumerable<DataSet?> storedRecords)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            ArgumentNullException.ThrowIfNull(storedRecords);
+            var names = tableNames.ToList();
+            var storedRowIds = names.ToDictionary(name => name, _ => new HashSet<Guid>(), StringComparer.OrdinalIgnoreCase);
+            foreach (var record in storedRecords)
+            {
+                using (record)
+                {
+                    foreach (var name in names)
+                        storedRowIds[name].UnionWith(StoredRowIds(record, name));
+                }
+            }
+
+            foreach (var tableName in names)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row.RowState == DataRowState.Detached) { continue; }
+                    if (row.RowState != DataRowState.Deleted || !table.Columns.Contains(SysFields.RowId)) { return table.TableName; }
+                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]);
+                    if (!storedRowIds[tableName].Contains(rowId)) { return table.TableName; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Returns the first named table of <paramref name="payload"/> with a modified row whose row id differs between
         /// its original and current versions, or <c>null</c> when there is none.
         /// </summary>
