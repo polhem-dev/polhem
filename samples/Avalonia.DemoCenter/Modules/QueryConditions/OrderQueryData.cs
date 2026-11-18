@@ -2,6 +2,7 @@ using System.Data;
 using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
 using Polhem.UI.Core;
 
 namespace Avalonia.DemoCenter.Modules.QueryConditions
@@ -27,6 +28,8 @@ namespace Avalonia.DemoCenter.Modules.QueryConditions
             master.Fields.Add("order_id", "Order No.", FieldDbType.String);
             master.Fields.Add("customer_name", "Customer", FieldDbType.String);
             var status = master.Fields.Add("status", "Status", FieldDbType.String);
+            // Listed values need DropDownEdit for the list to show their text rather than the stored code.
+            status.ControlType = ControlType.DropDownEdit;
             status.ListItems!.Add("OPEN", "Open");
             status.ListItems.Add("SHIPPED", "Shipped");
             status.ListItems.Add("CANCELLED", "Cancelled");

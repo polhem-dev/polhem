@@ -68,6 +68,7 @@ namespace Avalonia.DemoCenter.Modules.WithoutBackend
             master.Fields.Add("emp_code", "Code", FieldDbType.String);
             master.Fields.Add("emp_name", "Name", FieldDbType.String);
             var dept = master.Fields.Add("dept", "Department", FieldDbType.String);
+            dept.ControlType = ControlType.DropDownEdit;
             dept.ListItems!.Add("HR", "Human Resources");
             dept.ListItems.Add("IT", "Information Technology");
             dept.ListItems.Add("FIN", "Finance");
