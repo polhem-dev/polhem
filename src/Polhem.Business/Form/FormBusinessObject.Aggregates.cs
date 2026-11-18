@@ -17,8 +17,8 @@ namespace Polhem.Business.Form
         /// </summary>
         /// <exception cref="UserMessageException">
         /// The payload changes rows of an aggregated detail table without carrying the master row, carries more than
-        /// one record, or carries a row of an aggregated detail table that has no row id or does not belong to the
-        /// record it carries.
+        /// one record, changes the row id of a master row or an aggregated detail row, or carries a row of an
+        /// aggregated detail table that has no row id or does not belong to the record it carries.
         /// </exception>
         /// <remarks>
         /// The framework's clients send the whole record, so for them nothing is added. A caller of the API may send
@@ -66,6 +66,13 @@ namespace Polhem.Business.Form
                 throw new UserMessageException(PolhemMessages.SaveOneRecordRequired,
                     "Save must carry one '{0}' record: its totals or rules read the rows of '{1}'.",
                     masterTable.TableName, detailNames.FirstOrDefault() ?? string.Empty);
+            }
+
+            var rekeyed = AggregatedDetailCompletion.FindRekeyedTable(dataSet, detailNames.Prepend(masterTable.TableName));
+            if (rekeyed is not null)
+            {
+                throw new UserMessageException(PolhemMessages.SaveRowKeyChanged,
+                    "A row of '{0}' changed its '{1}'; a key cannot change.", rekeyed, SysFields.RowId);
             }
 
             // IMPORTANT: an unchanged row is never written, so its values are only the caller's word. A total or a

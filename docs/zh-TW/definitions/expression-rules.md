@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 08718f23c5503c5ef59aca708812640121029e2b -->
+<!-- source: en/definitions/expression-rules.md blob: f4935ce00bf4c756979bef7b649dad51f96f5a85 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -97,7 +97,7 @@
 - 彙總是運算式的一部分，可以和其他部分組合：`Sum(OrderDetail.amount) * 1.05m`、`Sum(OrderDetail.amount) - discount`。
 - **條件讀取的是一筆明細列。** 它是以明細表欄位寫成的 `bool` 運算式，寫法和目標為該明細表的規則相同，也可以呼叫輔助函式：`All(OrderDetail, quantity > 0)`、`Count(OrderDetail, IsBlank(product_id))`。條件不能指名主表欄位，也不能再包含彙總。
 - **先捨入再加總。** 每筆明細值先依該欄位自己的小數位數捨入（依它的 `NumberKind`，以及該列的幣別或單位），所以合計等於各列顯示金額的和；結果再照常依主表欄位的 `NumberKind` 捨入。明細欄位本身若是計算欄（`amount = quantity * unit_price`），會先算好再被主表加總。
-- **存檔時，合計涵蓋整筆記錄。** 只要主表加總的明細表有新增、異動或刪除的列，主表列就會重算。API 呼叫端若只送出有改的列，合計仍然正確：伺服端計算前會先補上 payload 沒帶的已存明細列。目標為主表、彙總明細表的存檔前規則也一樣，所以 `All(OrderDetail, quantity > 0)` 會檢查整筆記錄的每一列，而不只是送來的列。這種 payload 必須帶著主表列；若只改了合計或規則會讀取的明細卻沒帶主表列，存檔會被拒絕。它也只能帶一筆記錄，而且在這些明細表中帶的每一列都必須有 `sys_rowid` 並屬於這筆記錄：屬於其他記錄的列，不論是新增或修改都會被拒絕。未變更的列不會寫入，所以以已存的值計算，而不是呼叫端送來的值。
+- **存檔時，合計涵蓋整筆記錄。** 只要主表加總的明細表有新增、異動或刪除的列，主表列就會重算。API 呼叫端若只送出有改的列，合計仍然正確：伺服端計算前會先補上 payload 沒帶的已存明細列。目標為主表、彙總明細表的存檔前規則也一樣，所以 `All(OrderDetail, quantity > 0)` 會檢查整筆記錄的每一列，而不只是送來的列。這種 payload 必須帶著主表列；若只改了合計或規則會讀取的明細卻沒帶主表列，存檔會被拒絕。它也只能帶一筆記錄，而且在這些明細表中帶的每一列都必須有 `sys_rowid` 並屬於這筆記錄：屬於其他記錄的列，不論是新增或修改都會被拒絕，`sys_rowid` 有變更的列也會被拒絕。未變更的列不會寫入，所以以已存的值計算，而不是呼叫端送來的值。
 - **用戶端**：Avalonia 與 Blazor head 在加總的明細列被編輯、新增或刪除時重算主表列。條件指名的欄位也算在加總讀取的欄位內。
 - 彙總只能用在主表欄位的 `ValueExpression`，以及目標為主表的 `FormRule`。明細表的運算式與 `DefaultValueExpression` 不能用；`ValidateExpressions`（以及 DefineEditor）會指出這種情形，也會指出不存在的表或欄位，以及彙總無法讀取的欄位型別。
 

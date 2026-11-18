@@ -81,6 +81,11 @@ namespace Polhem.Definition.Language
         /// to the record it carries; arguments are the detail table and the master table.
         /// </summary>
         public const string SaveDetailRecordMismatch = Namespace + ".Save.DetailRecordMismatch";
+        /// <summary>
+        /// A save of a form whose totals or rules aggregate a detail table changes the row id of a row; arguments are
+        /// the table and the key field.
+        /// </summary>
+        public const string SaveRowKeyChanged = Namespace + ".Save.RowKeyChanged";
 
         /// <summary>The caller may not read the audit log.</summary>
         public const string AuditLogReadDenied = Namespace + ".AuditLog.ReadDenied";

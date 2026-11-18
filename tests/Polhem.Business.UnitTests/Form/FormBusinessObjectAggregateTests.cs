@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
+using Polhem.Core;
 using Polhem.Core.Data;
 using Polhem.Core.Exceptions;
 using Polhem.Business.Form;
@@ -239,6 +240,41 @@ namespace Polhem.Business.UnitTests.Form
                 var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
 
                 Assert.Equal(PolhemMessages.SaveDetailRecordMismatch, ex.MessageKey);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbTheory(DatabaseType.SQLite)]
+        [DisplayName("A row whose row id differs between its original and current versions is refused, in the detail or the master")]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Save_RekeyedRow_Refused(bool detail)
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var target = SaveRecord(form, 60m, 10m);
+                var own = SaveRecord(form, 5m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = own }).DataSet!;
+                var table = detail ? loaded.Tables[DetailName(form)]! : loaded.Tables[form.Schema.ProgId]!;
+                var victimRowId = detail
+                    ? ValueUtilities.CGuid(LineWith(NewBo(form).GetData(new GetDataArgs { RowId = target }).DataSet!.Tables[DetailName(form)]!, 10m)[SysFields.RowId])
+                    : target;
+                var row = table.Rows[0];
+                var ownRowId = row[SysFields.RowId];
+                // Original names the victim's row, current names the caller's own: the update would hit the victim.
+                row[SysFields.RowId] = victimRowId.ToString();
+                row.AcceptChanges();
+                row[SysFields.RowId] = ownRowId;
+                if (detail) { row[Amount] = 70m; }
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Equal(PolhemMessages.SaveRowKeyChanged, ex.MessageKey);
             }
             finally
             {

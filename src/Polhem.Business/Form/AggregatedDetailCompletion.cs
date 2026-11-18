@@ -93,7 +93,10 @@ namespace Polhem.Business.Form
         /// <remarks>
         /// An added row must name the master row as its master. A modified or deleted row must be one of the stored
         /// rows of the record, judged by the stored data rather than by the original values the caller sent, and a
-        /// modified row must keep naming the master row. Every row must carry its row id.
+        /// modified row must keep naming the master row. Every row must carry its row id. A modified row whose row id
+        /// differs between its original and current versions is the caller's to explain:
+        /// <see cref="FindRekeyedTable"/> refuses it first, because the repository updates the row the original id
+        /// names while this check reads the current one.
         /// </remarks>
         public static string? FindForeignTable(DataSet payload, IEnumerable<string> tableNames, Guid masterRowId,
             DataSet? stored)
@@ -125,6 +128,38 @@ namespace Polhem.Business.Form
                         _ => true,
                     };
                     if (!belongs) { return table.TableName; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the first named table of <paramref name="payload"/> with a modified row whose row id differs between
+        /// its original and current versions, or <c>null</c> when there is none.
+        /// </summary>
+        /// <param name="payload">The save payload.</param>
+        /// <param name="tableNames">The tables to check: the master table and the detail tables it aggregates.</param>
+        /// <remarks>
+        /// IMPORTANT: the repository updates the row the original row id names, while totals, rules and
+        /// <see cref="FindForeignTable"/> read the current values. A changed row id would let a caller show them one
+        /// row and write another, possibly of another record. A form with a permission model already refuses this in
+        /// its record scope check; this covers the forms without one.
+        /// </remarks>
+        public static string? FindRekeyedTable(DataSet payload, IEnumerable<string> tableNames)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                if (!table.Columns.Contains(SysFields.RowId)) { continue; }
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row.RowState != DataRowState.Modified) { continue; }
+                    if (ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original])
+                        != ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Current]))
+                        return table.TableName;
                 }
             }
             return null;
