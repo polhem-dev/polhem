@@ -3,6 +3,8 @@
 <MudThemeProvider Theme="_theme" IsDarkMode="IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
+@* The forwarder is internal, and Razor finds only public components by tag. *@
+<DynamicComponent Type="typeof(DialogEscapeForwarder)" />
 <MudSnackbarProvider />
 
 @code {

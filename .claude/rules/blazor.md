@@ -37,7 +37,8 @@ wherever it is written; a new package with components needs its own.
 ## Before upgrading MudBlazor, verify at run time
 
 The version is pinned exactly in `src/Polhem.Web.Blazor.Mud/Polhem.Web.Blazor.Mud.csproj`. `polhem-mud.css` and some
-tests use MudBlazor's internal class names, so **a clean build does not show that an upgrade works**. Before upgrading:
+tests use MudBlazor's internal class names, and `wwwroot/polhem-mud-dialog.js` (with a `WARNING:`) hands Escape to the
+key interceptor of the topmost dialog, so **a clean build does not show that an upgrade works**. Before upgrading:
 
 1. Run `tests/Polhem.Web.Blazor.Mud.UnitTests` and `tests/Polhem.Web.Blazor.Mud.BrowserTests`.
 2. Run Northwind's Blazor head against its backend: sign-in, a list, in-cell editing, a lookup, a save, the delete
