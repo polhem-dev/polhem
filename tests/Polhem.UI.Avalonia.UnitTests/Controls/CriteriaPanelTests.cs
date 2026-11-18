@@ -24,6 +24,25 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         private static T Single<T>(CriteriaPanel panel) where T : Control
             => Assert.Single(panel.GetLogicalDescendants().OfType<T>());
 
+        private static Border[] RowBlocks(CriteriaPanel panel)
+            => panel.GetLogicalDescendants().OfType<Border>().Where(b => b.Classes.Contains(CriteriaPanel.RowClass)).ToArray();
+
+        [Fact]
+        [DisplayName("Each condition row sits in its own framed block, and removing the row removes its block")]
+        public void Rows_EachInOwnBlock()
+        {
+            var panel = BoundPanel();
+            panel.AddRow(s_name);
+            panel.AddRow(s_active);
+            var blocks = RowBlocks(panel);
+            var remove = blocks[0].GetLogicalDescendants().OfType<Button>().Single();
+
+            Assert.Equal(2, blocks.Length);
+            remove.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+
+            Assert.Single(RowBlocks(panel));
+        }
+
         [Fact]
         [DisplayName("Typing in a text row writes the trimmed text to its condition")]
         public void TextEditor_WritesValue()

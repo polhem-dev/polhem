@@ -32,6 +32,9 @@ namespace Polhem.UI.Avalonia.Controls
     /// </remarks>
     public sealed partial class CriteriaPanel : UserControl
     {
+        /// <summary>The style class of the framed block around each condition row.</summary>
+        internal const string RowClass = "criteria-row";
+
         private static readonly CriteriaOperator[] s_noOperators = [];
 
         private readonly StackPanel _rows = new() { Spacing = 12 };
@@ -209,8 +212,19 @@ namespace Polhem.UI.Avalonia.Controls
 
         private Control BuildRow(CriteriaRow row)
         {
-            // The caption on its own line, with the remove button at its end; the operator and the value below.
+            // The caption on its own line, with the remove button at its end; the operator and the value below. Each
+            // row is a framed block, so where one condition ends and the next begins is plain at a glance.
             var panel = new StackPanel { Spacing = 4 };
+            var block = new Border
+            {
+                Child = panel,
+                Padding = new Thickness(10, 8),
+                CornerRadius = new CornerRadius(6),
+                BorderThickness = new Thickness(1),
+                Classes = { RowClass },
+            };
+            block.Bind(Border.BorderBrushProperty, block.GetResourceObservable("SemiColorBorder", value => value as IBrush ?? Brushes.LightGray));
+            block.Bind(Border.BackgroundProperty, block.GetResourceObservable("SemiColorFill0"));
             var captionLine = new DockPanel();
             panel.Children.Add(captionLine);
             var line = new WrapPanel { Orientation = Orientation.Horizontal };
@@ -248,7 +262,7 @@ namespace Polhem.UI.Avalonia.Controls
                 remove.Click += (_, _) =>
                 {
                     if (!_criteria.Remove(row)) return;
-                    _rows.Children.Remove(panel);
+                    _rows.Children.Remove(block);
                     _rowControls.Remove(row);
                     OnChanged();
                 };
@@ -260,8 +274,8 @@ namespace Polhem.UI.Avalonia.Controls
                 Text = row.Kind == CriteriaRowKind.Required ? row.Field.Caption + " *" : row.Field.Caption,
                 VerticalAlignment = VerticalAlignment.Center,
             });
-            _rowControls[row] = panel;
-            return panel;
+            _rowControls[row] = block;
+            return block;
         }
 
         private static int IndexOf(IReadOnlyList<CriteriaOperator> operators, CriteriaOperator @operator)
