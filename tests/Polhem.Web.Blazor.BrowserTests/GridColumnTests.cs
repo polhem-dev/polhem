@@ -48,6 +48,14 @@ namespace Polhem.Web.Blazor.BrowserTests
         /// <returns>The operation.</returns>
         protected virtual Task WaitForColumnsReadyAsync(IPage page) => Task.CompletedTask;
 
+        /// <summary>
+        /// Waits until the grid has finished handling the last resize, once its width is seen to change. A grid that
+        /// handles the release on the server can still be doing so when the next drag starts, and then ends that drag.
+        /// </summary>
+        /// <param name="page">The page.</param>
+        /// <returns>The operation.</returns>
+        protected virtual Task WaitForResizeEndAsync(IPage page) => Task.CompletedTask;
+
         private async Task SwapColumnsAsync(IPage page)
         {
             await page.Locator(ColumnDragItem).First.DragToAsync(page.Locator(ColumnDropZone).Nth(1)).ConfigureAwait(false);
@@ -191,6 +199,7 @@ namespace Polhem.Web.Blazor.BrowserTests
             float before = await WidthAsync(page);
             await DragResizerAsync(page, 80, 300);
             await WaitForWidthAsync(page, width => width >= before + 60);
+            await WaitForResizeEndAsync(page);
             float widened = await WidthAsync(page);
 
             await DragResizerAsync(page, -620, 300);
