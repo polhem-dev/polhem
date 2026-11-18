@@ -148,6 +148,33 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("A detail aggregate in a master field's value expression is accepted, as form validation accepts it")]
+        public void Expression_MasterAggregate_NoError()
+        {
+            var document = Load();
+            var field = document.Schema.Tables!["Order"].Fields!["amount"];
+            var editor = document.CreateExpressionEditor(Property(field, nameof(FormField.ValueExpression)), field)!;
+
+            editor.Expression = "Count(OrderLine) * 10m";
+
+            Assert.False(editor.HasError);
+        }
+
+        [Fact]
+        [DisplayName("An error after a detail aggregate is underlined where it is in the text as written")]
+        public void Expression_ErrorAfterAggregate_PositionInWrittenText()
+        {
+            var document = Load();
+            var rule = document.Schema.Rules!["positive_amount"];
+            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+
+            editor.Expression = "Count(OrderLine) > limit";
+
+            Assert.True(editor.HasError);
+            Assert.Equal("Count(OrderLine) > limit".IndexOf("limit", StringComparison.Ordinal), editor.ErrorPosition);
+        }
+
+        [Fact]
         [DisplayName("Confirming writes the condition and the message edited beside it back to the rule")]
         public void ApplyExpressionEdit_ConditionAndMessage_WritesBoth()
         {

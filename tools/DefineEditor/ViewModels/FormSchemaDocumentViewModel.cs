@@ -355,9 +355,9 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
             : null;
 
     /// <summary>
-    /// Builds the editor for the expression <paramref name="property"/> holds on <paramref name="component"/>, with the
-    /// variables and result type <see cref="FormExpressionCalculator.ValidateExpressions"/> parses it with; <c>null</c>
-    /// when the property is not an expression or its table is missing.
+    /// Builds the editor for the expression <paramref name="property"/> holds on <paramref name="component"/>, checked as
+    /// <see cref="FormExpressionCalculator.ValidateExpressions"/> checks it; <c>null</c> when the property is not an
+    /// expression or its table is missing.
     /// </summary>
     public ExpressionEditorViewModel? CreateExpressionEditor(PropertyDescriptor property, object component)
     {
@@ -366,7 +366,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         {
             case FormRule rule when property.Name is nameof(FormRule.When) or nameof(FormRule.Condition):
                 return FormExpressionCalculator.ResolveRuleTable(rule, Schema) is { } ruleTable
-                    ? new ExpressionEditorViewModel($"{rule.RuleId} · {property.Name}", ruleTable, typeof(bool),
+                    ? new ExpressionEditorViewModel($"{rule.RuleId} · {property.Name}", ruleTable,
+                        text => s_expressionCalculator.ValidateExpression(Schema, ruleTable, property.Name, text),
                         expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator,
                         new ExpressionTrialViewModel(ruleTable, null, property.Name, s_expressionCalculator, s_evaluator,
                             LocalTimeZoneId()))
@@ -374,7 +375,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
             case FormField field when property.Name is nameof(FormField.ValueExpression)
                     or nameof(FormField.DefaultValueExpression):
                 return field.Table is { } fieldTable
-                    ? new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}", fieldTable, typeof(object),
+                    ? new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}", fieldTable,
+                        text => s_expressionCalculator.ValidateExpression(Schema, fieldTable, property.Name, text),
                         expression, null, s_evaluator,
                         new ExpressionTrialViewModel(fieldTable, field, property.Name, s_expressionCalculator, s_evaluator,
                             LocalTimeZoneId()))
