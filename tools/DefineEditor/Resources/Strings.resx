@@ -505,6 +505,7 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="ExpressionEditor_Fields" xml:space="preserve"><value>Fields</value></data>
   <data name="ExpressionEditor_Functions" xml:space="preserve"><value>Functions</value></data>
   <data name="ExpressionEditor_Types" xml:space="preserve"><value>Types</value></data>
+  <data name="ExpressionEditor_Example" xml:space="preserve"><value>Example: </value></data>
   <data name="ExpressionTrial_Title" xml:space="preserve"><value>Try it out</value></data>
   <data name="ExpressionTrial_Hint" xml:space="preserve"><value>Type sample values for the fields the expression reads; an empty box is an empty field. Numbers are not rounded by the company's settings, and Now() uses this computer's time zone (the server saves on a UTC basis).</value></data>
   <data name="ExpressionTrial_Empty" xml:space="preserve"><value>(left empty)</value></data>

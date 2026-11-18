@@ -93,7 +93,8 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
   compiles the type rule of analyzer rule [POLHEM2008](../../docs/en/reference/analyzer-rules.md), so it refuses the
   same type pairs that rule reports.
 - **Expressions.** A rule's `When` and `Condition` and a field's `ValueExpression` and `DefaultValueExpression` open
-  an expression editor. It lists the table's fields, the helper functions and the types an expression can name,
+  an expression editor. It lists the table's fields, the helper functions (with what each returns and an example) and
+  the types an expression can name,
   completes names as you type, and underlines where parsing stops. **Try it out** evaluates the expression with sample
   values, the way the run time does.
 

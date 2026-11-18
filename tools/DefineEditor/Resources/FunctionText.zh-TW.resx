@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!--
+    Translations of the expression helper functions' summaries. The English text is the summary the framework registers
+    with each function (ExpressionFunction.Summary), so the neutral file stays empty and only the translations hold
+    entries, each with the English text it was made from as its comment; a key missing here shows the English summary.
+    See Services/FunctionLabels.cs.
+  -->
+  <data name="FuncSummary_Today" xml:space="preserve"><value>今天的日期（使用者所在時區）。</value><comment>Today's date in the user's time zone.</comment></data>
+  <data name="FuncSummary_Now" xml:space="preserve"><value>目前的日期時間，與表單的日期時間欄位同一基準；要和這類欄位比較時使用。</value><comment>The current date and time, on the same basis as the form's date-and-time fields; use it to compare with one.</comment></data>
+  <data name="FuncSummary_UtcNow" xml:space="preserve"><value>目前的 UTC 日期時間，不論在哪一端執行都相同。</value><comment>The current date and time in UTC, the same wherever the expression runs.</comment></data>
+  <data name="FuncSummary_IsNullOrEmpty" xml:space="preserve"><value>文字是否為空。</value><comment>Whether a text is empty.</comment></data>
+  <data name="FuncSummary_IsNullOrWhiteSpace" xml:space="preserve"><value>文字是否為空，或只有空白。</value><comment>Whether a text is empty or contains only spaces.</comment></data>
+</root>
