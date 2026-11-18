@@ -33,7 +33,10 @@
     <LanguageItem Key="Save.ConcurrencyConflict" Value="記錄在開啟期間已被他人修改或刪除，請重新載入後再試。" />
     <LanguageItem Key="Save.FieldRequired" Value="「{0}」為必填欄位。" />
     <LanguageItem Key="Save.DetailFieldRequired" Value="「{1}」的「{0}」為必填欄位。" />
-    <LanguageItem Key="Save.MasterRowMissing" Value="儲存時必須包含「{0}」主檔資料列，因為它的合計由「{1}」的明細算出。" />
+    <LanguageItem Key="Save.MasterRowMissing" Value="儲存時必須包含「{0}」主檔資料列，因為它的合計或規則會讀取「{1}」的明細。" />
+    <LanguageItem Key="Save.OneRecordRequired" Value="一次只能儲存一筆「{0}」記錄，因為它的合計或規則會讀取「{1}」的明細。" />
+    <LanguageItem Key="Save.RowKeyChanged" Value="「{0}」中有資料列變更了「{1}」；鍵值不可變更。" />
+    <LanguageItem Key="Save.DetailRecordMismatch" Value="「{0}」的每一筆明細都必須帶有資料列識別碼，並屬於此次儲存的「{1}」主檔資料列，因為它的合計或規則會讀取這些明細。" />
     <LanguageItem Key="AuditLog.ReadDenied" Value="無權讀取稽核記錄。" />
     <LanguageItem Key="AuditLog.AnomalyReadDenied" Value="無權讀取資料庫異常記錄。" />
     <LanguageItem Key="AuditLog.ChangeNotFound" Value="找不到異動記錄。" />

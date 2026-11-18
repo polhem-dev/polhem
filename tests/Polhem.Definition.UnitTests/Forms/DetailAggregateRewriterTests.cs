@@ -88,5 +88,42 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.Equal([0, 19], result.Spans.Select(span => span.OriginalStart));
             Assert.Equal(0, result.OriginalStartOf(result.Aggregates[0]));
         }
+
+        [Fact]
+        [DisplayName("Count, Any and All with a condition become variables that carry the trimmed condition")]
+        public void Rewrite_ConditionalCalls_CarryCondition()
+        {
+            const string expression = "Count(Line,  qty > 0 ) + (Any(Line, Math.Abs(qty) > 5) ? 1 : 0) + (All(Line, name != \")\") ? 1 : 0)";
+
+            var result = DetailAggregateRewriter.Rewrite(expression);
+
+            Assert.Equal("__agg0 + (__agg1 ? 1 : 0) + (__agg2 ? 1 : 0)", result.Expression);
+            Assert.Equal(["qty > 0", "Math.Abs(qty) > 5", "name != \")\""], result.Aggregates.Select(a => a.Condition));
+            Assert.Equal(expression.IndexOf("qty > 0", StringComparison.Ordinal), result.ConditionStartOf(result.Aggregates[0]));
+        }
+
+        [Theory]
+        [DisplayName("A call whose shape does not fit its function is left as written")]
+        [InlineData("Any(Line)")]
+        [InlineData("All(Line.qty)")]
+        [InlineData("Sum(Line, qty > 0)")]
+        [InlineData("Count(Line, )")]
+        [InlineData("Any(Line, qty > 0")]
+        public void Rewrite_WrongShape_NotRewritten(string expression)
+        {
+            var result = DetailAggregateRewriter.Rewrite(expression);
+
+            Assert.False(result.HasAggregates);
+            Assert.Equal(expression, result.Expression);
+        }
+
+        [Fact]
+        [DisplayName("The same call with different conditions becomes different variables")]
+        public void Rewrite_DifferentConditions_SeparateAggregates()
+        {
+            var result = DetailAggregateRewriter.Rewrite("Count(Line, qty > 0) - Count(Line, qty > 0) + Count(Line, qty > 1)");
+
+            Assert.Equal(2, result.Aggregates.Count);
+        }
     }
 }

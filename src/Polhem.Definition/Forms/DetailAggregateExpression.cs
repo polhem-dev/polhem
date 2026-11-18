@@ -35,5 +35,14 @@ namespace Polhem.Definition.Forms
         /// <returns>The offset of its first call.</returns>
         public int OriginalStartOf(DetailAggregate aggregate) =>
             Spans.First(span => span.VariableName == aggregate.VariableName).OriginalStart;
+
+        /// <summary>The offset in the original expression of the condition of the first call that <paramref name="aggregate"/> replaced.</summary>
+        /// <param name="aggregate">One of <see cref="Aggregates"/>, with a condition.</param>
+        /// <returns>The offset of its condition, or of the call when it has none.</returns>
+        public int ConditionStartOf(DetailAggregate aggregate)
+        {
+            var span = Spans.First(span => span.VariableName == aggregate.VariableName);
+            return span.ConditionStart >= 0 ? span.ConditionStart : span.OriginalStart;
+        }
     }
 }

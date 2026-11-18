@@ -8,5 +8,7 @@ namespace Polhem.Definition.Forms
     /// <param name="OriginalLength">The length of the call, from its name to its closing parenthesis.</param>
     /// <param name="RewrittenStart">The offset of the variable in the rewritten expression.</param>
     /// <param name="VariableName">The variable that replaced the call.</param>
-    internal sealed record DetailAggregateSpan(int OriginalStart, int OriginalLength, int RewrittenStart, string VariableName);
+    /// <param name="ConditionStart">The offset of the call's condition in the original expression; -1 when it has none.</param>
+    internal sealed record DetailAggregateSpan(int OriginalStart, int OriginalLength, int RewrittenStart, string VariableName,
+        int ConditionStart = -1);
 }

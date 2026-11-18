@@ -59,6 +59,211 @@ namespace Polhem.Business.Form
             }
         }
 
+        /// <summary>
+        /// Removes the unchanged rows of each named table from <paramref name="payload"/>.
+        /// </summary>
+        /// <param name="payload">The save payload, changed in place.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <remarks>
+        /// The repository writes no unchanged row, so its values are whatever the caller sent, not what is stored.
+        /// Removed here, an existing record gets the stored rows back from <see cref="ImportMissingRows"/>, and a new
+        /// record has none to count.
+        /// </remarks>
+        public static void DropUnchangedRows(DataSet payload, IEnumerable<string> tableNames)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                foreach (var row in table.Rows.Cast<DataRow>().Where(row => row.RowState == DataRowState.Unchanged).ToList())
+                    table.Rows.Remove(row);
+            }
+        }
+
+        /// <summary>
+        /// Returns the first named table of <paramref name="payload"/> that has a row which does not belong to the
+        /// record being saved, or <c>null</c> when every row does.
+        /// </summary>
+        /// <param name="payload">The save payload, after <see cref="DropUnchangedRows"/>.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <param name="masterRowId">The row id of the record's master row; <see cref="Guid.Empty"/> when it has none.</param>
+        /// <param name="stored">The record as stored; <c>null</c> for a new record or one that is not stored.</param>
+        /// <remarks>
+        /// An added row must name the master row as its master. A modified or deleted row must be one of the stored
+        /// rows of the record, judged by the stored data rather than by the original values the caller sent, and a
+        /// modified row must keep naming the master row. Every row must carry its row id. A modified row whose row id
+        /// differs between its original and current versions is the caller's to explain:
+        /// <see cref="FindRekeyedTable"/> refuses it first, because the repository updates the row the original id
+        /// names while this check reads the current one.
+        /// </remarks>
+        public static string? FindForeignTable(DataSet payload, IEnumerable<string> tableNames, Guid masterRowId,
+            DataSet? stored)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                var rows = table.Rows.Cast<DataRow>().Where(row => row.RowState != DataRowState.Detached).ToList();
+                if (rows.Count == 0) { continue; }
+                if (masterRowId == Guid.Empty || !table.Columns.Contains(SysFields.RowId)
+                    || !table.Columns.Contains(SysFields.MasterRowId))
+                    return table.TableName;
+
+                var storedRowIds = StoredRowIds(stored, tableName);
+                foreach (var row in rows)
+                {
+                    var version = row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current;
+                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, version]);
+                    if (rowId == Guid.Empty) { return table.TableName; }
+                    bool belongs = row.RowState switch
+                    {
+                        DataRowState.Added => ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                        DataRowState.Modified => storedRowIds.Contains(rowId)
+                            && ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                        DataRowState.Deleted => storedRowIds.Contains(rowId),
+                        _ => true,
+                    };
+                    if (!belongs) { return table.TableName; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Overwrites the values of an unchanged <paramref name="row"/> with those of its stored row, leaving it
+        /// unchanged.
+        /// </summary>
+        /// <param name="row">An unchanged row of the payload.</param>
+        /// <param name="stored">The record as stored.</param>
+        /// <param name="tableName">The table of <paramref name="row"/>.</param>
+        /// <remarks>
+        /// The repository writes no unchanged row, so whatever the caller put in it is read by totals and rules but
+        /// never stored. Every stored column is restored, a column the payload marks read-only included; a computed
+        /// column (one with an expression) and a column the stored table does not have keep their values. When the
+        /// stored row cannot be matched by row id, the payload's values are left as they are.
+        /// </remarks>
+        public static void RestoreStoredValues(DataRow row, DataSet stored, string tableName)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(stored);
+            if (row.RowState != DataRowState.Unchanged || !stored.Tables.Contains(tableName)) { return; }
+            var source = stored.Tables[tableName]!;
+            if (!source.Columns.Contains(SysFields.RowId) || !row.Table.Columns.Contains(SysFields.RowId)) { return; }
+            var rowId = ValueUtilities.CGuid(row[SysFields.RowId]);
+            var storedRow = source.Rows.Cast<DataRow>().FirstOrDefault(candidate => ValueUtilities.CGuid(candidate[SysFields.RowId]) == rowId);
+            if (storedRow is null) { return; }
+            foreach (DataColumn column in row.Table.Columns)
+            {
+                if (column.Expression.Length > 0 || !source.Columns.Contains(column.ColumnName)) { continue; }
+                // IMPORTANT: the wire carries a column's read-only flag as the caller set it, so a read-only column
+                // is restored too; skipping it would let the caller keep a forged value by marking its column.
+                bool readOnly = column.ReadOnly;
+                column.ReadOnly = false;
+                try
+                {
+                    row[column] = storedRow[column.ColumnName];
+                }
+                finally
+                {
+                    column.ReadOnly = readOnly;
+                }
+            }
+            row.AcceptChanges();
+        }
+
+        /// <summary>
+        /// For a payload that only deletes records, returns the first named table of <paramref name="payload"/> with a
+        /// row other than a deletion of one of those records' stored rows, or <c>null</c> when there is none.
+        /// </summary>
+        /// <param name="payload">The save payload, after <see cref="DropUnchangedRows"/>.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <param name="storedRecords">The deleted records as stored; each is disposed here, and a null one is skipped.</param>
+        /// <remarks>
+        /// A deleted row is judged by its original row id against the stored rows, the id the repository deletes by,
+        /// so the original values the caller sent cannot make another record's row look like this one's.
+        /// </remarks>
+        public static string? FindOutsideDeletion(DataSet payload, IEnumerable<string> tableNames,
+            IEnumerable<DataSet?> storedRecords)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            ArgumentNullException.ThrowIfNull(storedRecords);
+            var names = tableNames.ToList();
+            var storedRowIds = names.ToDictionary(name => name, _ => new HashSet<Guid>(), StringComparer.OrdinalIgnoreCase);
+            foreach (var record in storedRecords)
+            {
+                using (record)
+                {
+                    foreach (var name in names)
+                        storedRowIds[name].UnionWith(StoredRowIds(record, name));
+                }
+            }
+
+            foreach (var tableName in names)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row.RowState == DataRowState.Detached) { continue; }
+                    if (row.RowState != DataRowState.Deleted || !table.Columns.Contains(SysFields.RowId)) { return table.TableName; }
+                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]);
+                    if (!storedRowIds[tableName].Contains(rowId)) { return table.TableName; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the first named table of <paramref name="payload"/> with a modified row whose row id differs between
+        /// its original and current versions, or <c>null</c> when there is none.
+        /// </summary>
+        /// <param name="payload">The save payload.</param>
+        /// <param name="tableNames">The tables to check: the master table and the detail tables it aggregates.</param>
+        /// <remarks>
+        /// IMPORTANT: the repository updates the row the original row id names, while totals, rules and
+        /// <see cref="FindForeignTable"/> read the current values. A changed row id would let a caller show them one
+        /// row and write another, possibly of another record. A form with a permission model already refuses this in
+        /// its record scope check; this covers the forms without one.
+        /// </remarks>
+        public static string? FindRekeyedTable(DataSet payload, IEnumerable<string> tableNames)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                if (!table.Columns.Contains(SysFields.RowId)) { continue; }
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row.RowState != DataRowState.Modified) { continue; }
+                    if (ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original])
+                        != ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Current]))
+                        return table.TableName;
+                }
+            }
+            return null;
+        }
+
+        private static HashSet<Guid> StoredRowIds(DataSet? stored, string tableName)
+        {
+            var rowIds = new HashSet<Guid>();
+            if (stored is null || !stored.Tables.Contains(tableName)) { return rowIds; }
+            var table = stored.Tables[tableName]!;
+            if (!table.Columns.Contains(SysFields.RowId)) { return rowIds; }
+            foreach (DataRow row in table.Rows)
+            {
+                var rowId = ValueUtilities.CGuid(row[SysFields.RowId]);
+                if (rowId != Guid.Empty) { rowIds.Add(rowId); }
+            }
+            return rowIds;
+        }
+
         private static HashSet<Guid> CarriedRowIds(DataTable table)
         {
             var rowIds = new HashSet<Guid>();

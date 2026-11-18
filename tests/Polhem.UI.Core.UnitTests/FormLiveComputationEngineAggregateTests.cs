@@ -26,11 +26,16 @@ namespace Polhem.UI.Core.UnitTests
                 ValueExpression = "Sum(OrderLine.amount)",
             });
             master.Add(new FormField("lines", "Lines", FieldDbType.Integer) { ValueExpression = "Count(OrderLine)" });
+            master.Add(new FormField("flagged", "Flagged", FieldDbType.Integer)
+            {
+                ValueExpression = "Count(OrderLine, remark == \"!\")",
+            });
 
             var detail = schema.Tables!.Add("OrderLine", "Lines").Fields!;
             detail.Add(new FormField("price", "Price", FieldDbType.Currency) { NumberKind = NumberKind.UnitPrice });
             detail.Add(new FormField("qty", "Qty", FieldDbType.Integer));
             detail.Add(new FormField("remark", "Remark", FieldDbType.String));
+            detail.Add(new FormField("memo", "Memo", FieldDbType.String));
             detail.Add(new FormField("amount", "Amount", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
@@ -46,15 +51,17 @@ namespace Polhem.UI.Core.UnitTests
             master.Columns.Add("note", typeof(string));
             master.Columns.Add("total", typeof(decimal));
             master.Columns.Add("lines", typeof(int));
-            master.Rows.Add("n", 0m, 0);
+            master.Columns.Add("flagged", typeof(int));
+            master.Rows.Add("n", 0m, 0, 0);
 
             var detail = dataSet.Tables.Add("OrderLine");
             detail.Columns.Add("price", typeof(decimal));
             detail.Columns.Add("qty", typeof(int));
             detail.Columns.Add("remark", typeof(string));
             detail.Columns.Add("amount", typeof(decimal));
-            detail.Rows.Add(10m, 2, "", 20m);
-            detail.Rows.Add(5m, 1, "", 5m);
+            detail.Columns.Add("memo", typeof(string));
+            detail.Rows.Add(10m, 2, "", 20m, "");
+            detail.Rows.Add(5m, 1, "", 5m, "");
             dataSet.AcceptChanges();
             return dataSet;
         }
@@ -83,11 +90,24 @@ namespace Polhem.UI.Core.UnitTests
         {
             var dataSet = BuildDataSet();
             var line = dataSet.Tables["OrderLine"]!.Rows[0];
-            line["remark"] = "x";
+            line["memo"] = "x";
+
+            NewEngine().Recompute("OrderLine", "memo", line);
+
+            Assert.Equal(DataRowState.Unchanged, Master(dataSet).RowState);
+        }
+
+        [Fact]
+        [DisplayName("Editing a detail field that only a Count condition reads recomputes the master")]
+        public void Recompute_ConditionFieldEdited_RecomputesMaster()
+        {
+            var dataSet = BuildDataSet();
+            var line = dataSet.Tables["OrderLine"]!.Rows[1];
+            line["remark"] = "!";
 
             NewEngine().Recompute("OrderLine", "remark", line);
 
-            Assert.Equal(DataRowState.Unchanged, Master(dataSet).RowState);
+            Assert.Equal(1, Master(dataSet)["flagged"]);
         }
 
         [Fact]
@@ -108,7 +128,7 @@ namespace Polhem.UI.Core.UnitTests
         public void InitializeNewRow_DetailRow_RecomputesMaster()
         {
             var dataSet = BuildDataSet();
-            var row = dataSet.Tables["OrderLine"]!.Rows.Add(3m, 3, "", 0m);
+            var row = dataSet.Tables["OrderLine"]!.Rows.Add(3m, 3, "", 0m, "");
 
             NewEngine().InitializeNewRow("OrderLine", row);
 

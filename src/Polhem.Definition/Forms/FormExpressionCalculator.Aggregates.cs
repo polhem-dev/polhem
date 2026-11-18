@@ -25,8 +25,9 @@ namespace Polhem.Definition.Forms
         /// <param name="schema">The form schema.</param>
         /// <returns>
         /// A map from detail table name to the detail fields its aggregates read, both compared case-insensitively.
-        /// A table aggregated only by <c>Count</c> maps to an empty set: adding or deleting a row matters, editing
-        /// one does not.
+        /// The fields a condition names count as read (<c>Count(Table, qty &gt; 0)</c> reads <c>qty</c>). A table
+        /// aggregated only by an unconditional <c>Count</c> maps to an empty set: adding or deleting a row matters,
+        /// editing one does not.
         /// </returns>
         public static IReadOnlyDictionary<string, IReadOnlySet<string>> BuildAggregateDependencyMap(FormSchema schema)
         {
@@ -46,6 +47,7 @@ namespace Polhem.Definition.Forms
                             map[aggregate.TableName] = detailFields;
                         }
                         if (aggregate.FieldName.Length > 0) { detailFields.Add(aggregate.FieldName); }
+                        detailFields.UnionWith(ConditionFields(aggregate, schema));
                     }
                 }
             }
@@ -54,6 +56,37 @@ namespace Polhem.Definition.Forms
             foreach (var pair in map)
                 result[pair.Key] = pair.Value;
             return result;
+        }
+
+        /// <summary>
+        /// Gets the detail tables a save of the form aggregates: those the master table's value expressions and its
+        /// enabled before-save rules read through <c>Sum</c>, <c>Count</c>, <c>Min</c>, <c>Max</c>, <c>Any</c> or
+        /// <c>All</c>.
+        /// </summary>
+        /// <param name="schema">The form schema.</param>
+        /// <returns>The table names as the expressions write them, compared case-insensitively.</returns>
+        /// <remarks>
+        /// A save must see every row of these tables, not only the rows a caller sent: a total that adds up only the
+        /// changed rows is wrong, and a rule such as <c>All(Table, qty &gt; 0)</c> that checks only them can be
+        /// passed by leaving the other rows out.
+        /// </remarks>
+        public static IReadOnlySet<string> GetSaveAggregatedTables(FormSchema schema)
+        {
+            ArgumentNullException.ThrowIfNull(schema);
+            var tables = new HashSet<string>(BuildAggregateDependencyMap(schema).Keys, StringComparer.OrdinalIgnoreCase);
+            if (schema.Rules is null || schema.MasterTable is null) { return tables; }
+            foreach (var rule in schema.Rules)
+            {
+                if (!rule.Enabled || rule.Trigger != FormRuleTrigger.BeforeSave) { continue; }
+                if (ResolveRuleTable(rule, schema) is not { } table || !IsMasterTable(schema, table)) { continue; }
+                foreach (var expression in new[] { rule.When, rule.Condition })
+                {
+                    if (StringUtilities.IsEmpty(expression)) { continue; }
+                    foreach (var aggregate in DetailAggregateRewriter.Rewrite(expression).Aggregates)
+                        tables.Add(aggregate.TableName);
+                }
+            }
+            return tables;
         }
 
         private DetailAggregateExpression ParseAggregates(string expression)
@@ -74,11 +107,14 @@ namespace Polhem.Definition.Forms
         /// Rounds each detail value to its own field's decimals before it is summed; <c>null</c> takes the values as
         /// they are.
         /// </param>
+        /// <param name="timeZoneId">The time zone the conditions of <c>Count</c>, <c>Any</c> and <c>All</c> are evaluated in.</param>
+        /// <param name="basis">The date-time basis of those conditions, the same as the expression's.</param>
         /// <exception cref="ExpressionEvaluationException">
         /// An aggregate is used outside the master table, or names a table or field the schema does not have.
         /// </exception>
         private string BindAggregates(string expression, FormSchema schema, FormTable formTable, DataSet? dataSet,
-            Dictionary<string, object?> variables, RoundingContext? roundingContext)
+            Dictionary<string, object?> variables, RoundingContext? roundingContext, string timeZoneId,
+            DateTimeBasis basis)
         {
             var parsed = ParseAggregates(expression);
             if (!parsed.HasAggregates) { return expression; }
@@ -89,16 +125,28 @@ namespace Polhem.Definition.Forms
             {
                 var (detailTable, field, error) = ResolveAggregate(aggregate, schema);
                 if (error is not null) { throw new ExpressionEvaluationException(error); }
-                variables[aggregate.VariableName] =
-                    ComputeAggregate(aggregate.Function, schema, detailTable!, field, dataSet, roundingContext);
+                variables[aggregate.VariableName] = ComputeAggregate(aggregate, schema, detailTable!, field, dataSet,
+                    roundingContext, timeZoneId, basis);
             }
             return parsed.Expression;
         }
 
-        private static object ComputeAggregate(DetailAggregateFunction function, FormSchema schema,
-            FormTable detailTable, FormField? field, DataSet? dataSet, RoundingContext? roundingContext)
+        private object ComputeAggregate(DetailAggregate aggregate, FormSchema schema, FormTable detailTable,
+            FormField? field, DataSet? dataSet, RoundingContext? roundingContext, string timeZoneId, DateTimeBasis basis)
         {
+            var function = aggregate.Function;
             var rows = LiveRows(dataSet, detailTable.TableName);
+            if (aggregate.HasCondition)
+            {
+                var holding = rows.Count(row => _evaluator.Evaluate<bool>(aggregate.Condition,
+                    NarrowVariables(aggregate.Condition, BuildVariables(row, detailTable)), timeZoneId, basis));
+                return function switch
+                {
+                    DetailAggregateFunction.Any => holding > 0,
+                    DetailAggregateFunction.All => holding == rows.Count,
+                    _ => holding,
+                };
+            }
             if (function == DetailAggregateFunction.Count) { return rows.Count; }
 
             var values = new List<object>(rows.Count);
@@ -180,7 +228,9 @@ namespace Polhem.Definition.Forms
             var table = schema.Tables[aggregate.TableName];
             if (IsMasterTable(schema, table))
                 return (null, null, $"{call}: '{aggregate.TableName}' is the master table; an aggregate reads a detail table.");
-            if (aggregate.Function == DetailAggregateFunction.Count) { return (table, null, null); }
+            if (aggregate.Function is DetailAggregateFunction.Count or DetailAggregateFunction.Any
+                or DetailAggregateFunction.All)
+                return (table, null, null);
 
             if (table.Fields is null || !table.Fields.Contains(aggregate.FieldName))
                 return (null, null, $"{call}: the table '{table.TableName}' has no field '{aggregate.FieldName}'.");
@@ -201,6 +251,7 @@ namespace Polhem.Definition.Forms
             return function switch
             {
                 DetailAggregateFunction.Count => typeof(int),
+                DetailAggregateFunction.Any or DetailAggregateFunction.All => typeof(bool),
                 DetailAggregateFunction.Sum => typeof(decimal),
                 _ => ExpressionPolicy.CoerceValue(null, field!.DbType).GetType(),
             };
@@ -220,9 +271,33 @@ namespace Polhem.Definition.Forms
 
         private static string DescribeCall(DetailAggregate aggregate)
         {
+            if (aggregate.HasCondition) { return $"{aggregate.Function}({aggregate.TableName}, {aggregate.Condition})"; }
             return aggregate.FieldName.Length == 0
                 ? $"{aggregate.Function}({aggregate.TableName})"
                 : $"{aggregate.Function}({aggregate.TableName}.{aggregate.FieldName})";
+        }
+
+        // The fields of the aggregated table that a condition names. Matched by identifier, so a field name that
+        // only appears inside a string literal counts too; that can only add a field, which costs a recomputation
+        // and never misses one.
+        private static IEnumerable<string> ConditionFields(DetailAggregate aggregate, FormSchema schema)
+        {
+            if (!aggregate.HasCondition || schema.Tables is null || !schema.Tables.Contains(aggregate.TableName)) { return []; }
+            var fields = schema.Tables[aggregate.TableName].Fields;
+            if (fields is null) { return []; }
+            var names = new List<string>();
+            var condition = aggregate.Condition;
+            int i = 0;
+            while (i < condition.Length)
+            {
+                if (!(char.IsLetter(condition[i]) || condition[i] == '_')) { i++; continue; }
+                int end = i + 1;
+                while (end < condition.Length && (char.IsLetterOrDigit(condition[end]) || condition[end] == '_')) { end++; }
+                var name = condition[i..end];
+                if (fields.Contains(name)) { names.Add(fields[name].FieldName); }
+                i = end;
+            }
+            return names;
         }
 
         private static string AggregateOutsideMasterMessage(FormTable formTable)

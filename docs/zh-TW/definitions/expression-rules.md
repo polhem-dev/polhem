@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 3875c434b2a44b9a55eeb0ea9788173d87d03e26 -->
+<!-- source: en/definitions/expression-rules.md blob: 2edc8ac5318379491971e381dfa321b1150f6ef3 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -89,12 +89,16 @@
 | `Sum(Table.field)` | 數值欄位 | `decimal` | `0` |
 | `Count(Table)` | 列數 | `int` | `0` |
 | `Min(Table.field)`、`Max(Table.field)` | 數值、日期或時間欄位 | 該欄位的型別 | 該欄位的空值 |
+| `Count(Table, condition)` | 條件成立的列數 | `int` | `0` |
+| `Any(Table, condition)` | 是否至少有一列條件成立 | `bool` | `false` |
+| `All(Table, condition)` | 是否每一列條件都成立 | `bool` | `true` |
 
 - `Table` 是 FormSchema 裡明細表的 `TableName`，不是資料庫表名。標記為刪除的列不計入。
 - 彙總是運算式的一部分，可以和其他部分組合：`Sum(OrderDetail.amount) * 1.05m`、`Sum(OrderDetail.amount) - discount`。
+- **條件讀取的是一筆明細列。** 它是以明細表欄位寫成的 `bool` 運算式，寫法和目標為該明細表的規則相同，也可以呼叫輔助函式：`All(OrderDetail, quantity > 0)`、`Count(OrderDetail, IsBlank(product_id))`。條件不能指名主表欄位，也不能再包含彙總。
 - **先捨入再加總。** 每筆明細值先依該欄位自己的小數位數捨入（依它的 `NumberKind`，以及該列的幣別或單位），所以合計等於各列顯示金額的和；結果再照常依主表欄位的 `NumberKind` 捨入。明細欄位本身若是計算欄（`amount = quantity * unit_price`），會先算好再被主表加總。
-- **存檔時，合計涵蓋整筆記錄。** 只要主表加總的明細表有新增、異動或刪除的列，主表列就會重算。API 呼叫端若只送出有改的列，合計仍然正確：伺服端計算前會先補上 payload 沒帶的已存明細列。這種 payload 必須帶著主表列；有合計的表單若只改明細卻沒帶主表列，存檔會被拒絕。
-- **用戶端**：Avalonia 與 Blazor head 在加總的明細列被編輯、新增或刪除時重算主表列。
+- **存檔時，合計涵蓋整筆記錄。** 只要主表加總的明細表有新增、異動或刪除的列，主表列就會重算。API 呼叫端若只送出有改的列，合計仍然正確：伺服端計算前會先補上 payload 沒帶的已存明細列。目標為主表、彙總明細表的存檔前規則也一樣，所以 `All(OrderDetail, quantity > 0)` 會檢查整筆記錄的每一列，而不只是送來的列。這種 payload 必須帶著主表列；若只改了合計或規則會讀取的明細卻沒帶主表列，存檔會被拒絕。它也只能帶一筆記錄，而且在這些明細表中帶的每一列都必須有 `sys_rowid` 並屬於這筆記錄：屬於其他記錄的列，不論是新增或修改都會被拒絕，`sys_rowid` 有變更的列也會被拒絕。刪除主表列的 payload 只能一併刪除這筆記錄自己的明細列。未變更的列（主表列也一樣）不會寫入，所以以已存的值計算，而不是呼叫端送來的值。
+- **用戶端**：Avalonia 與 Blazor head 在加總的明細列被編輯、新增或刪除時重算主表列。條件指名的欄位也算在加總讀取的欄位內。
 - 彙總只能用在主表欄位的 `ValueExpression`，以及目標為主表的 `FormRule`。明細表的運算式與 `DefaultValueExpression` 不能用；`ValidateExpressions`（以及 DefineEditor）會指出這種情形，也會指出不存在的表或欄位，以及彙總無法讀取的欄位型別。
 
 ## 欄位預設值：`DefaultValueExpression`
@@ -134,7 +138,7 @@
 | `Order` | 同一 trigger 內的求值順序（小的先） |
 | `Enabled` | 是否啟用（預設 true） |
 
-目標為主表的規則可以使用[明細加總](#明細加總)的彙總，例如「至少一筆明細」：`Condition="Count(OrderDetail) &gt; 0"`。在規則裡，`Sum` 直接加總明細的儲存值，不先逐列捨入；要和捨入後的合計比較，請比較計算該合計的主表欄位。
+目標為主表的規則可以使用[明細加總](#明細加總)的彙總，例如「至少一筆明細」：`Condition="Count(OrderDetail) &gt; 0"`，或「每一筆明細都有數量」：`Condition="All(OrderDetail, quantity &gt; 0)"`。若要指出是哪一筆明細不符，改把規則的目標設為明細表：`TargetTable="OrderDetail"` 搭配 `Condition="quantity &gt; 0"`，會逐列檢查。在規則裡，`Sum` 直接加總明細的儲存值，不先逐列捨入；要和捨入後的合計比較，請比較計算該合計的主表欄位。
 
 > **兩段式判斷**：`When` 決定「這條規則現在該不該檢查」、`Condition` 是「必須成立的驗證」。例：「訂單已核准時，總額必須 > 0」→ `When = status == "Approved"`、`Condition = total_amount > 0`。狀態非 Approved 的單據自動略過。
 >
