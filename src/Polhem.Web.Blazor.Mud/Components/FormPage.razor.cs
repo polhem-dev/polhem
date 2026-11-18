@@ -6,5 +6,7 @@ namespace Polhem.Web.Blazor.Mud.Components
     /// </summary>
     public partial class FormPage
     {
+        /// <inheritdoc />
+        protected override bool SupportsQueryPane => true;
     }
 }

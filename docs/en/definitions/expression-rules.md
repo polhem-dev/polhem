@@ -20,7 +20,7 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 
 - **A variable is a field name.** Write the field name directly, e.g. `unit_price * qty`. Every field on the same row is available. A master table's expressions can also add up a detail table; see [Totals Over Detail Rows](#totals-over-detail-rows).
 - **Operators**: a subset of C# syntax (`+ - * /`, `> >= < <= == !=`, `&& || !`, the ternary `? :`, and string `==`).
-- **Available functions and types**: the helper functions `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)` and `IsNullOrWhiteSpace(s)`; the types an expression can name, such as `Math` (`Math.Round`, `Math.Abs`, …), `Convert`, `DateTime`, `TimeSpan` and `Guid` (e.g. `customer_rowid != Guid.Empty`); and the members of a field's value (`name.Length`, `Today().AddDays(1)`). The types come from DynamicExpresso's default set plus the ones `DynamicExpressoEvaluator` adds; [`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) lists every type whose members an expression can reach, and `TrimmerDescriptorGateTests` keeps that list in line with the interpreter.
+- **Available functions and types**: the helper functions `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)` and `IsNullOrWhiteSpace(s)`, and the business functions below; the types an expression can name, such as `Math` (`Math.Round`, `Math.Abs`, …), `Convert`, `DateTime`, `TimeSpan` and `Guid` (e.g. `customer_rowid != Guid.Empty`); and the members of a field's value (`name.Length`, `Today().AddDays(1)`). The types come from DynamicExpresso's default set plus the ones `DynamicExpressoEvaluator` adds; [`ILLink.Descriptors.xml`](../../../src/Polhem.Expressions/ILLink.Descriptors.xml) lists every type whose members an expression can reach, and `TrimmerDescriptorGateTests` keeps that list in line with the interpreter.
 
   **Semantics of the time functions** (see [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md)):
 
@@ -38,6 +38,22 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 - **Not a security sandbox.** Members of a value are resolved by reflection, so the parser does not stop an expression from reaching further. What keeps expressions safe is where they come from: definition files, which remote callers cannot write (`SaveDefine` is `LocalOnly`). Never build expression text from user input.
 - **Trimmed apps**: the members an expression calls are found by reflection, which the trimmer cannot see. `Polhem.Expressions` ships a trimmer descriptor that keeps them; see [Platform Support](../getting-started/platform-support.md#trimmer-descriptors-shipped-in-the-packages).
 - **Null handling**: an empty field (`DBNull`) is substituted with its type default (`0` for numbers, an empty string for text, `Guid.Empty`, …), so `unit_price * qty` evaluates to `0` on empty input rather than failing.
+
+### Business Functions
+
+These read like the rule they state, and compute from their arguments alone: none reads the database or anything outside the form. DefineEditor's expression editor lists every function with what it returns and an example.
+
+| Function | Returns | Example |
+|----------|---------|---------|
+| `IsBlank(value)` | Whether the value is not filled in: an empty or blank text, `Guid.Empty`, zero, or no date. Text and number fields are never null (see [Why text and numeric columns are `NOT NULL`](../database/database-dialect-differences.md#1-why-text-and-numeric-columns-are-not-null-by-default)), so an unfilled amount is `0` and counts as blank | `!IsBlank(approver_id)` |
+| `Between(value, low, high)` | Whether the value lies between the two others, both included | `Between(amount, 1, 100000)` |
+| `In(value, a, b, …)` | Whether the value equals one of the values listed after it | `In(status, "Draft", "Rejected")` |
+| `DaysBetween(start, end)` | The number of days from `start` to `end`; negative when `end` is earlier | `DaysBetween(order_date, Today()) <= 30` |
+| `MonthEnd(date)` | The last day of the date's month | `due_date <= MonthEnd(order_date)` |
+| `RegexMatch(text, pattern)` | Whether the text matches the regular expression; an empty text never matches | `RegexMatch(phone, "^[0-9-]+$")` |
+
+- **Mixed types compare by kind.** A date field is a `DateTime` and `Today()` a `DateOnly`; a quantity is an `int` and an amount a `decimal`. `Between`, `In` and `DaysBetween` accept either, comparing numbers as numbers, dates as dates and text ordinally. Values of different kinds, such as a text and a number, cannot be compared: the expression fails when it runs, with a message naming both types.
+- **`IsBlank` covers `IsNullOrEmpty` and `IsNullOrWhiteSpace`**, which remain for existing definitions.
 
 ## Computed Fields: `ValueExpression`
 

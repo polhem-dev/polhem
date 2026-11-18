@@ -13,6 +13,12 @@
   <data name="FuncSummary_Today" xml:space="preserve"><value>今天的日期（使用者所在時區）。</value><comment>Today's date in the user's time zone.</comment></data>
   <data name="FuncSummary_Now" xml:space="preserve"><value>目前的日期時間，與表單的日期時間欄位同一基準；要和這類欄位比較時使用。</value><comment>The current date and time, on the same basis as the form's date-and-time fields; use it to compare with one.</comment></data>
   <data name="FuncSummary_UtcNow" xml:space="preserve"><value>目前的 UTC 日期時間，不論在哪一端執行都相同。</value><comment>The current date and time in UTC, the same wherever the expression runs.</comment></data>
-  <data name="FuncSummary_IsNullOrEmpty" xml:space="preserve"><value>文字是否為空。</value><comment>Whether a text is empty.</comment></data>
-  <data name="FuncSummary_IsNullOrWhiteSpace" xml:space="preserve"><value>文字是否為空，或只有空白。</value><comment>Whether a text is empty or contains only spaces.</comment></data>
+  <data name="FuncSummary_IsBlank" xml:space="preserve"><value>值是否沒有填：空白或只有空格的文字、空的關聯鍵、0，或沒有日期。</value><comment>Whether a value is not filled in: an empty or blank text, an empty key, zero, or no date.</comment></data>
+  <data name="FuncSummary_Between" xml:space="preserve"><value>值是否介於兩個值之間（含兩端）；數字、日期、文字各自與同類比較。</value><comment>Whether a value lies between two others, both included; numbers, dates and texts each compare with their own kind.</comment></data>
+  <data name="FuncSummary_In" xml:space="preserve"><value>值是否等於後面列出的其中一個值。</value><comment>Whether a value equals one of the values listed after it.</comment></data>
+  <data name="FuncSummary_DaysBetween" xml:space="preserve"><value>從第一個日期到第二個日期的天數；第二個日期較早時為負數。</value><comment>The number of days from the first date to the second; negative when the second is earlier.</comment></data>
+  <data name="FuncSummary_MonthEnd" xml:space="preserve"><value>日期所在月份的最後一天。</value><comment>The last day of a date's month.</comment></data>
+  <data name="FuncSummary_RegexMatch" xml:space="preserve"><value>文字是否符合正規表示式；空的文字一律不符合。</value><comment>Whether a text matches a regular expression pattern; an empty text never matches.</comment></data>
+  <data name="FuncSummary_IsNullOrEmpty" xml:space="preserve"><value>文字是否為空；IsBlank 也做同樣的判斷，並可檢查數字、關聯鍵與日期。</value><comment>Whether a text is empty; IsBlank does the same and also checks numbers, keys and dates.</comment></data>
+  <data name="FuncSummary_IsNullOrWhiteSpace" xml:space="preserve"><value>文字是否為空或只有空白；IsBlank 也做同樣的判斷，並可檢查數字、關聯鍵與日期。</value><comment>Whether a text is empty or contains only spaces; IsBlank does the same and also checks numbers, keys and dates.</comment></data>
 </root>
