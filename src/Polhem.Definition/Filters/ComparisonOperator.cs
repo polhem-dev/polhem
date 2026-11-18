@@ -45,14 +45,24 @@ namespace Polhem.Definition.Filters
         /// <summary>
         /// Starts-with match, equivalent to SQL "LIKE 'value%'".
         /// </summary>
+        /// <remarks>
+        /// Only <c>%</c> in the value is a wildcard; <c>_</c> and the other pattern characters match themselves.
+        /// </remarks>
         StartsWith = 9,
         /// <summary>
         /// Ends-with match, equivalent to SQL "LIKE '%value'".
         /// </summary>
+        /// <remarks>
+        /// Only <c>%</c> in the value is a wildcard; <c>_</c> and the other pattern characters match themselves.
+        /// </remarks>
         EndsWith = 10,
         /// <summary>
         /// Contains match, equivalent to SQL "LIKE '%value%'".
         /// </summary>
+        /// <remarks>
+        /// Only <c>%</c> in the value is a wildcard, so "50%" also matches "500 kg"; <c>_</c> and the other pattern
+        /// characters match themselves, so a code such as "A_01" does not match "AB01".
+        /// </remarks>
         Contains = 11
     }
 }

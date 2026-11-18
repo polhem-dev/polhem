@@ -12,8 +12,8 @@ namespace Polhem.UI.Core.Lists
     /// </summary>
     /// <remarks>
     /// The entered values stay as the user typed them, so a head can show them again. Text filters use
-    /// <see cref="ComparisonOperator.Contains"/>: <c>%</c> and <c>_</c> in the text act as wildcards, because the server
-    /// does not escape them, and whether matching ignores case depends on the database.
+    /// <see cref="ComparisonOperator.Contains"/>: <c>%</c> in the text acts as a wildcard, <c>_</c> matches itself, and
+    /// whether matching ignores case depends on the database.
     /// </remarks>
     public sealed class ListFilterState
     {

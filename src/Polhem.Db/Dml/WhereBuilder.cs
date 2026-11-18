@@ -35,7 +35,7 @@ namespace Polhem.Db.Dml
                                : root;
             var prefix = _databaseType.GetParameterPrefix();
             var parameters = new DefaultParameterCollector(prefix);
-            var core = InternalWhereBuilder.BuildNode(filter, parameters);
+            var core = InternalWhereBuilder.BuildNode(filter, parameters, _databaseType);
             var sql = includeWhereKeyword && !string.IsNullOrEmpty(core) ? "WHERE " + core : core;
 
             return new WhereBuildResult

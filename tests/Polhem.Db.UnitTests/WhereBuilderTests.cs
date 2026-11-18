@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
             var root = FilterCondition.Contains("Name", "Lee");
             var builder = new WhereBuilder(DatabaseType.SQLServer);
             var result = builder.Build(root, null, includeWhereKeyword: false);
-            Assert.Equal("Name LIKE @p0", result.WhereClause);
+            Assert.Equal("Name LIKE @p0 ESCAPE '!'", result.WhereClause);
             Assert.NotNull(result.Parameters);
             Assert.Equal("%Lee%", result.Parameters["@p0"]);
         }
@@ -155,7 +155,7 @@ namespace Polhem.Db.UnitTests
             var root = FilterCondition.StartsWith("Name", "Lee");
             var builder = new WhereBuilder(DatabaseType.SQLServer);
             var result = builder.Build(root, null, includeWhereKeyword: false);
-            Assert.Equal("Name LIKE @p0", result.WhereClause);
+            Assert.Equal("Name LIKE @p0 ESCAPE '!'", result.WhereClause);
             Assert.Equal("Lee%", result.Parameters!["@p0"]);
         }
 
@@ -166,8 +166,48 @@ namespace Polhem.Db.UnitTests
             var root = FilterCondition.EndsWith("Name", "Lee");
             var builder = new WhereBuilder(DatabaseType.SQLServer);
             var result = builder.Build(root, null, includeWhereKeyword: false);
-            Assert.Equal("Name LIKE @p0", result.WhereClause);
+            Assert.Equal("Name LIKE @p0 ESCAPE '!'", result.WhereClause);
             Assert.Equal("%Lee", result.Parameters!["@p0"]);
+        }
+
+        [Theory]
+        [DisplayName("Contains escapes the underscore and the escape character and keeps a typed percent sign a wildcard")]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [InlineData(DatabaseType.MySQL)]
+        [InlineData(DatabaseType.SQLite)]
+        [InlineData(DatabaseType.Oracle)]
+        public void Build_Contains_EscapesUnderscoreKeepsPercent(DatabaseType databaseType)
+        {
+            var root = FilterCondition.Contains("Code", "A_1!50%");
+            var result = new WhereBuilder(databaseType).Build(root, null, includeWhereKeyword: false);
+
+            Assert.EndsWith(" ESCAPE '!'", result.WhereClause, StringComparison.Ordinal);
+            Assert.Equal("%A!_1!!50%%", Assert.Single(result.Parameters!).Value);
+        }
+
+        [Theory]
+        [DisplayName("Only SQL Server escapes the opening bracket of a character set")]
+        [InlineData(DatabaseType.SQLServer, "![A]%")]
+        [InlineData(DatabaseType.PostgreSQL, "[A]%")]
+        [InlineData(DatabaseType.Oracle, "[A]%")]
+        public void Build_StartsWith_EscapesBracketOnSqlServerOnly(DatabaseType databaseType, string expected)
+        {
+            var root = FilterCondition.StartsWith("Code", "[A]");
+            var result = new WhereBuilder(databaseType).Build(root, null, includeWhereKeyword: false);
+
+            Assert.Equal(expected, Assert.Single(result.Parameters!).Value);
+        }
+
+        [Fact]
+        [DisplayName("A Like condition keeps its pattern as written and adds no escape clause")]
+        public void Build_Like_AddsNoEscape()
+        {
+            var root = new FilterCondition { FieldName = "Code", Operator = ComparisonOperator.Like, Value = "A_1%" };
+            var result = new WhereBuilder(DatabaseType.SQLServer).Build(root, null, includeWhereKeyword: false);
+
+            Assert.Equal("Code LIKE @p0", result.WhereClause);
+            Assert.Equal("A_1%", result.Parameters!["@p0"]);
         }
 
         [Fact]
