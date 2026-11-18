@@ -158,8 +158,9 @@ Desktop, iOS and Android are not affected. Root cause, in `Avalonia.Browser` its
 controls (they are `TextBox` underneath) but in each head's `wwwroot/ime-input-bridge.js`, imported by `main.js`: it
 stops `keyCode` 229 key downs in the capture phase and forwards a stray `insertText` as a synthetic `compositionend`.
 It is in `apps/Polhem.Northwind/Polhem.Northwind.Browser` and in the `PolhemApp.Browser` client of the
-`polhem-avalonia` template, so a new browser head needs it too. `Avalonia.Browser` 12.1.3 still has the bug (its
-`avalonia.js` is byte-identical to 12.1.0 and `OnKeyDown` is unchanged). **When upgrading `Avalonia.Browser`, check
+`polhem-avalonia` template, so a new browser head needs it too. `Avalonia.Browser` 12.1.6 still has the bug (checked
+on the upgrade from 12.1.3: `avalonia.js` changed but has no `keyCode` 229 or `insertText` handling, and `OnKeyDown`
+is unchanged). **When upgrading `Avalonia.Browser`, check
 whether upstream now skips `keyCode` 229 and handles `insertText`; if it does, delete the script and its import from
 both heads.** Checking needs a real browser and a real input method: the preview pane cannot drive one.
 
