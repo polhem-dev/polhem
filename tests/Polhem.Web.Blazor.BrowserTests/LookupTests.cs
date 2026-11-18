@@ -149,6 +149,8 @@ namespace Polhem.Web.Blazor.BrowserTests
             await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
             var panel = page.Locator($"{RowEditDialog} .polhem-row-edit-panel");
             await Assertions.Expect(panel).ToBeVisibleAsync();
+            // A dialog takes the focus after it opens, which would undo a blur made before that.
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", RowEditDialog);
             return (page, panel);
         }
 
@@ -176,6 +178,36 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(panel).ToBeVisibleAsync();
             await panel.Locator(LookupButton).ClickAsync();
             await Assertions.Expect(page.Locator($"{Dialog} {Row}")).ToHaveCountAsync(2);
+        }
+
+        [BrowserFact]
+        [DisplayName("Escape with the focus on the body closes a lookup opened from the row edit dialog and nothing else")]
+        public async Task EscapeOnBodyInRowEdit_ClosesOnlyTheLookup()
+        {
+            var (page, panel) = await OpenRowEditAsync();
+            await panel.Locator(LookupButton).ClickAsync();
+            await Assertions.Expect(page.Locator($"{Dialog} {Row}")).ToHaveCountAsync(2);
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", Dialog);
+            await BlurAsync(page);
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
+            await page.WaitForTimeoutAsync(500);
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+        }
+
+        [BrowserFact]
+        [DisplayName("Escape with the focus on the body closes the lookup and writes nothing")]
+        public async Task EscapeOnBody_Closes()
+        {
+            var page = await OpenAsync(false);
+            await BlurAsync(page);
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
+            await Assertions.Expect(page.Locator("#data")).ToHaveTextAsync(Guid.Empty.ToString());
         }
 
         [BrowserFact]
