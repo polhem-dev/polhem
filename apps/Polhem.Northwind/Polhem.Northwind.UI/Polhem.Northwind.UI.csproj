@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <!-- The shell adds no font; every Northwind head draws with Inter. -->
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
   </ItemGroup>
 
   <ItemGroup>

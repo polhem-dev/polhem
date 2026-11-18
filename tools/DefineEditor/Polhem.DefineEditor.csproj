@@ -42,13 +42,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
     <PackageReference Include="Semi.Avalonia" Version="12.1.0.1" />
     <!-- The layout preview draws detail grids; without a DataGrid theme they render nothing at all. -->
     <PackageReference Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
@@ -56,7 +56,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <!-- The web preview inside the FormLayout editor. Released with Avalonia itself; it brings no browser engine and uses
          the system's (WebView2, WKWebView, WPE WebKit or WebKitGTK). -->
-    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.2" />
     <!-- The XML view of a document: highlighting and find. -->
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
   </ItemGroup>
