@@ -1,0 +1,19 @@
+@page "/dialog-order"
+@using Polhem.Web.Blazor.Fluent.Components
+@using Polhem.Web.Blazor.Fluent.Theming
+
+@* A dialog that may not be dismissed, and a dismissable one opened above it that is not placed inside it. *@
+<PolhemFluentProviders />
+<PolhemDialog Class="test-guarded" Title="Guarded">
+    <button id="open-sibling" @onclick="() => _sibling = true">Open</button>
+</PolhemDialog>
+@if (_sibling)
+{
+    <PolhemDialog Class="test-sibling" Title="Sibling" Dismissable="true" Dismissed="() => _sibling = false">
+        <button id="in-sibling">Inside</button>
+    </PolhemDialog>
+}
+
+@code {
+    private bool _sibling;
+}

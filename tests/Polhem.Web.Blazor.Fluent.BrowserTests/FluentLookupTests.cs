@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Microsoft.Playwright;
 using Polhem.Web.Blazor.BrowserTests;
 
 namespace Polhem.Web.Blazor.Fluent.BrowserTests
@@ -21,5 +23,24 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
 
         /// <inheritdoc />
         protected override string RowEditDialog => "fluent-dialog.polhem-row-edit-dialog";
+
+        // The row edit dialog's Escape guard must not take Escape from a lookup on top of it. MudBlazor closes a dialog
+        // on Escape only while the focus is inside it, so this scenario is the Fluent guard's alone.
+        [BrowserFact]
+        [DisplayName("Escape with the focus on the body closes a lookup opened from the row edit dialog and nothing else")]
+        public async Task EscapeOnBodyInRowEdit_ClosesOnlyTheLookup()
+        {
+            var (page, panel) = await OpenRowEditAsync();
+            await panel.Locator(LookupButton).ClickAsync();
+            await Assertions.Expect(page.Locator($"{Dialog} tr.polhem-grid__row")).ToHaveCountAsync(2);
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", Dialog);
+            await BlurAsync(page);
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
+            await page.WaitForTimeoutAsync(500);
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+        }
     }
 }

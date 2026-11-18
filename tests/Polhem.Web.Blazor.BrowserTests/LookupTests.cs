@@ -140,6 +140,44 @@ namespace Polhem.Web.Blazor.BrowserTests
             await Assertions.Expect(panel).ToBeVisibleAsync();
         }
 
+        /// <summary>Opens the row edit page at phone width.</summary>
+        /// <returns>The page, and the row edit panel once it shows.</returns>
+        protected async Task<(IPage Page, ILocator Panel)> OpenRowEditAsync()
+        {
+            var page = await _fixture.Browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 390, Height = 800 } });
+            await page.GotoAsync(_fixture.Address + "/row-edit-lookup");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            var panel = page.Locator($"{RowEditDialog} .polhem-row-edit-panel");
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+            return (page, panel);
+        }
+
+        /// <summary>
+        /// Moves the focus to the body, where it falls back when a render removes the focused element.
+        /// </summary>
+        /// <param name="page">The page.</param>
+        /// <returns>The operation.</returns>
+        protected static async Task BlurAsync(IPage page)
+        {
+            await page.EvaluateAsync("() => document.activeElement?.blur()");
+            Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.body"));
+        }
+
+        [BrowserFact]
+        [DisplayName("Escape with the focus on the body leaves the row edit dialog open")]
+        public async Task EscapeOnBody_KeepsRowEdit()
+        {
+            var (page, panel) = await OpenRowEditAsync();
+            await BlurAsync(page);
+
+            await page.Keyboard.PressAsync("Escape");
+            await page.WaitForTimeoutAsync(500);
+
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+            await panel.Locator(LookupButton).ClickAsync();
+            await Assertions.Expect(page.Locator($"{Dialog} {Row}")).ToHaveCountAsync(2);
+        }
+
         [BrowserFact]
         [DisplayName("A click outside closes the lookup and writes nothing")]
         public async Task Backdrop_Closes()
