@@ -18,5 +18,8 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
 
         /// <inheritdoc />
         protected override string LookupButton => ".polhem-field-editor--button .mud-input-adornment button";
+
+        /// <inheritdoc />
+        protected override string RowEditDialog => ".mud-dialog.polhem-row-edit-dialog";
     }
 }

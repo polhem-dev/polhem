@@ -10,8 +10,10 @@ namespace Polhem.Web.Blazor.BrowserTests
     /// </summary>
     /// <remarks>
     /// A UI package derives from it over a test page at <c>/lookup</c> that places a <c>ButtonEdit</c> for
-    /// <see cref="LookupTestData.LookupField"/> in a form scope and shows the field's value in <c>#data</c>, on a site whose
-    /// backend is the <see cref="FakeLookupSource"/> it passes in.
+    /// <see cref="LookupTestData.LookupField"/> in a form scope and shows the field's value in <c>#data</c>, and a page at
+    /// <c>/row-edit-lookup</c> that shows its row edit dialog over the line of
+    /// <see cref="LookupTestData.BuildOrderWithLookupLine"/>, on a site whose backend is the <see cref="FakeLookupSource"/>
+    /// it passes in.
     /// </remarks>
     public abstract class LookupTests
     {
@@ -35,6 +37,9 @@ namespace Polhem.Web.Blazor.BrowserTests
 
         /// <summary>Gets the selector of the button that opens the lookup.</summary>
         protected abstract string LookupButton { get; }
+
+        /// <summary>Gets the selector of the open row edit dialog.</summary>
+        protected abstract string RowEditDialog { get; }
 
         private async Task<IPage> OpenAsync(bool slow)
         {
@@ -107,6 +112,32 @@ namespace Polhem.Web.Blazor.BrowserTests
 
             await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
             await Assertions.Expect(page.Locator("#data")).ToHaveTextAsync(Guid.Empty.ToString());
+        }
+
+        [BrowserTheory]
+        [InlineData(false)]
+        [InlineData(true)]
+        [DisplayName("Escape closes a lookup opened from the row edit dialog, and the row edit dialog stays open with the focus")]
+        public async Task EscapeInRowEdit_ClosesOnlyTheLookup(bool slow)
+        {
+            var page = await _fixture.Browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 390, Height = 800 } });
+            await page.GotoAsync((slow ? _fixture.SlowAddress : _fixture.Address) + "/row-edit-lookup");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            var panel = page.Locator($"{RowEditDialog} .polhem-row-edit-panel");
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+            await panel.Locator(LookupButton).ClickAsync();
+            await Assertions.Expect(page.Locator($"{Dialog} {Row}")).ToHaveCountAsync(2);
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", Dialog);
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", RowEditDialog);
+
+            await page.Keyboard.PressAsync("Escape");
+            await page.WaitForTimeoutAsync(500);
+            await Assertions.Expect(panel).ToBeVisibleAsync();
         }
 
         [BrowserFact]
