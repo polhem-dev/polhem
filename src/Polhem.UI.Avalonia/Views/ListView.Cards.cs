@@ -84,7 +84,6 @@ namespace Polhem.UI.Avalonia.Views
         {
             if (compact == _isCompact) return;
             _isCompact = compact;
-            _criteriaPanel.IsCompact = compact;
             UpdateContentVisibility();
             if (_initialized)
                 _ = LoadPageAsync(1, CancellationToken.None);

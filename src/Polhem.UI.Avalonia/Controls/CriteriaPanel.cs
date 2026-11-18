@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Polhem.Definition.Language;
 using Polhem.UI.Core.Criteria;
 
@@ -16,23 +17,31 @@ namespace Polhem.UI.Avalonia.Controls
     /// hosts it converts the criteria for the backend method it calls and runs the query.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// It is laid out as a pane: a heading with a close button, the rows stacked in a scrolled area (each row's caption
+    /// above its operator and value), and the buttons docked below the rows, so they stay on screen however many rows
+    /// there are and above an on-screen keyboard.
+    /// </para>
+    /// <para>
     /// <see cref="Polhem.UI.Avalonia.Views.ListView"/> hosts one behind its Query button, with the fields from
     /// <see cref="CriteriaField.FromQueryFields"/> and <see cref="GetListFilterConverter"/>. Another view hosts it the
     /// same way: put the starting rows (a report's required ones, say) into a <see cref="QueryCriteria"/>, call
     /// <see cref="Bind"/>, and run the query on <see cref="SearchRequested"/>, which is raised only when every
     /// required row has a value.
+    /// </para>
     /// </remarks>
     public sealed partial class CriteriaPanel : UserControl
     {
         private static readonly CriteriaOperator[] s_noOperators = [];
 
-        private readonly StackPanel _rows = new() { Spacing = 6 };
+        private readonly StackPanel _rows = new() { Spacing = 12 };
+        private readonly ScrollViewer _scroller;
+        private readonly Dictionary<CriteriaRow, Control> _rowControls = [];
         private readonly Button _addButton;
         private readonly MenuFlyout _addMenu = new();
         private readonly MessageBar _message = new() { Margin = new Thickness(0, 0, 0, 6) };
         private QueryCriteria _criteria = new();
         private IReadOnlyList<CriteriaField> _fields = [];
-        private bool _isCompact;
 
         /// <summary>Initializes a new instance of <see cref="CriteriaPanel"/> with no fields.</summary>
         public CriteriaPanel()
@@ -43,17 +52,37 @@ namespace Polhem.UI.Avalonia.Controls
             var clearButton = new Button { Content = UIText.Get(PolhemUIText.FilterClear) };
             clearButton.Click += (_, _) => ClearAndSearch();
 
-            var footer = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
+            var footer = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
             foreach (var button in new[] { _addButton, searchButton, clearButton })
             {
-                button.Margin = new Thickness(0, 0, 8, 0);
+                button.Margin = new Thickness(0, 0, 8, 4);
                 footer.Children.Add(button);
             }
 
-            var host = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
-            host.Children.Add(_message);
-            host.Children.Add(_rows);
+            var closeButton = new Button { Content = "✕", HorizontalAlignment = HorizontalAlignment.Right };
+            AutomationNameOf(closeButton, UIText.Get(PolhemUIText.Close));
+            closeButton.Click += (_, _) => CloseRequested?.Invoke(this, EventArgs.Empty);
+            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
+            DockPanel.SetDock(closeButton, Dock.Right);
+            header.Children.Add(closeButton);
+            header.Children.Add(new TextBlock
+            {
+                Text = UIText.Get(PolhemUIText.QueryConditions),
+                FontWeight = FontWeight.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+
+            var body = new StackPanel();
+            body.Children.Add(_message);
+            body.Children.Add(_rows);
+            _scroller = new ScrollViewer { Content = body, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+
+            var host = new DockPanel { Margin = new Thickness(12) };
+            DockPanel.SetDock(header, Dock.Top);
+            DockPanel.SetDock(footer, Dock.Bottom);
+            host.Children.Add(header);
             host.Children.Add(footer);
+            host.Children.Add(_scroller);
             Content = host;
 
             // Handled events too: a date picker handles Enter to read the date typed into it, and the query should
@@ -67,6 +96,9 @@ namespace Polhem.UI.Avalonia.Controls
         /// <summary>Raised when a row is added or removed, or what a row holds changes.</summary>
         public event EventHandler? CriteriaChanged;
 
+        /// <summary>Raised when the user closes the pane with its close button.</summary>
+        public event EventHandler? CloseRequested;
+
         /// <summary>Gets the criteria the panel edits.</summary>
         public QueryCriteria Criteria => _criteria;
 
@@ -77,18 +109,6 @@ namespace Polhem.UI.Avalonia.Controls
         /// Gets or sets how today is read for the date periods the date rows show; defaults to the machine's date.
         /// </summary>
         public Func<DateOnly> Today { get; set; } = () => DateOnly.FromDateTime(DateTime.Now);
-
-        /// <summary>Gets or sets a value indicating whether each row stacks its parts for a narrow viewport.</summary>
-        public bool IsCompact
-        {
-            get => _isCompact;
-            set
-            {
-                if (_isCompact == value) return;
-                _isCompact = value;
-                RebuildRows();
-            }
-        }
 
         /// <summary>Gets the message shown above the rows, such as the required rows left empty.</summary>
         internal string MessageText => _message.Text;
@@ -116,6 +136,21 @@ namespace Polhem.UI.Avalonia.Controls
             RebuildRows();
         }
 
+        /// <summary>
+        /// Shows the rows of <see cref="Criteria"/> again, after the host added, removed or changed rows outside the
+        /// panel.
+        /// </summary>
+        public void Refresh() => RebuildRows();
+
+        /// <summary>Scrolls the pane so <paramref name="row"/> is in view.</summary>
+        /// <param name="row">A row of <see cref="Criteria"/>; a row the panel does not show is ignored.</param>
+        public void ScrollToRow(CriteriaRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            if (_rowControls.TryGetValue(row, out var control))
+                control.BringIntoView();
+        }
+
         /// <summary>Adds an optional row for <paramref name="field"/> and shows it.</summary>
         /// <param name="field">The field.</param>
         /// <returns>The new row.</returns>
@@ -124,6 +159,7 @@ namespace Polhem.UI.Avalonia.Controls
             var row = _criteria.Add(field);
             _rows.Children.Add(BuildRow(row));
             OnChanged();
+            ScrollToRow(row);
             return row;
         }
 
@@ -166,23 +202,19 @@ namespace Polhem.UI.Avalonia.Controls
         private void RebuildRows()
         {
             _rows.Children.Clear();
+            _rowControls.Clear();
             foreach (var row in _criteria.Rows)
                 _rows.Children.Add(BuildRow(row));
         }
 
         private Control BuildRow(CriteriaRow row)
         {
-            var panel = new StackPanel
-            {
-                Orientation = _isCompact ? Orientation.Vertical : Orientation.Horizontal,
-                Spacing = 8,
-            };
-            panel.Children.Add(new TextBlock
-            {
-                Text = row.Kind == CriteriaRowKind.Required ? row.Field.Caption + " *" : row.Field.Caption,
-                MinWidth = 120,
-                VerticalAlignment = VerticalAlignment.Center,
-            });
+            // The caption on its own line, with the remove button at its end; the operator and the value below.
+            var panel = new StackPanel { Spacing = 4 };
+            var captionLine = new DockPanel();
+            panel.Children.Add(captionLine);
+            var line = new WrapPanel { Orientation = Orientation.Horizontal };
+            panel.Children.Add(line);
 
             var valueHost = new ContentControl { Content = BuildValueEditor(row) };
             var operators = row.Field.Operators.Count > 1 ? row.Field.Operators : s_noOperators;
@@ -194,6 +226,7 @@ namespace Polhem.UI.Avalonia.Controls
                     SelectedIndex = IndexOf(operators, row.Operator),
                     IsEnabled = !row.IsOperatorLocked,
                     MinWidth = 110,
+                    Margin = new Thickness(0, 0, 6, 4),
                     VerticalAlignment = VerticalAlignment.Center,
                 };
                 operatorBox.PropertyChanged += (_, e) =>
@@ -204,22 +237,30 @@ namespace Polhem.UI.Avalonia.Controls
                     valueHost.Content = BuildValueEditor(row);
                     OnChanged();
                 };
-                panel.Children.Add(operatorBox);
+                line.Children.Add(operatorBox);
             }
-            panel.Children.Add(valueHost);
+            line.Children.Add(valueHost);
 
             if (row.Kind != CriteriaRowKind.Required)
             {
-                var remove = new Button { Content = "✕", VerticalAlignment = VerticalAlignment.Center };
+                var remove = new Button { Content = "✕", Padding = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center };
                 AutomationNameOf(remove, UIText.Get(PolhemUIText.RemoveCondition));
                 remove.Click += (_, _) =>
                 {
                     if (!_criteria.Remove(row)) return;
                     _rows.Children.Remove(panel);
+                    _rowControls.Remove(row);
                     OnChanged();
                 };
-                panel.Children.Add(remove);
+                DockPanel.SetDock(remove, Dock.Right);
+                captionLine.Children.Add(remove);
             }
+            captionLine.Children.Add(new TextBlock
+            {
+                Text = row.Kind == CriteriaRowKind.Required ? row.Field.Caption + " *" : row.Field.Caption,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            _rowControls[row] = panel;
             return panel;
         }
 

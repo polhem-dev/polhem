@@ -203,6 +203,17 @@ namespace Polhem.Definition.Language
         /// <summary>Key of the message that required query conditions are empty; <c>{0}</c> lists them.</summary>
         public const string QueryRequiredMissing = "QueryRequiredMissing";
 
+        /// <summary>Key of a condition chip that names a field and its value; <c>{0}</c> is the field, <c>{1}</c> the value.</summary>
+        public const string CriteriaLabeledValue = "CriteriaLabeledValue";
+        /// <summary>Key of a range in a condition chip; <c>{0}</c> is the start, <c>{1}</c> the end.</summary>
+        public const string CriteriaRangeValue = "CriteriaRangeValue";
+        /// <summary>Key of the separator between the values listed in a condition chip.</summary>
+        public const string CriteriaValueSeparator = "CriteriaValueSeparator";
+        /// <summary>Key of a condition chip with many values; <c>{0}</c> is the first value, <c>{1}</c> how many there are, <c>{2}</c> how many more.</summary>
+        public const string CriteriaMoreValues = "CriteriaMoreValues";
+        /// <summary>Key of the heading of the query condition pane.</summary>
+        public const string QueryConditions = "QueryConditions";
+
         private PolhemUIText()
         {
         }
@@ -283,6 +294,11 @@ namespace Polhem.Definition.Language
             [DateThisYear] = "This year",
             [DateLastDays] = "Last {0} days",
             [QueryRequiredMissing] = "Fill in the required conditions: {0}",
+            [CriteriaLabeledValue] = "{0}: {1}",
+            [CriteriaRangeValue] = "{0} – {1}",
+            [CriteriaValueSeparator] = ", ",
+            [CriteriaMoreValues] = "{0} and {2} more",
+            [QueryConditions] = "Query conditions",
         };
 
         /// <summary>

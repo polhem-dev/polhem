@@ -99,3 +99,6 @@ static Polhem.UI.Core.Criteria.RelativeDate.operator ==(Polhem.UI.Core.Criteria.
 ~override Polhem.UI.Core.Criteria.RelativeDate.Equals(object obj) -> bool
 ~override Polhem.UI.Core.Criteria.RelativeDate.ToString() -> string
 static Polhem.UI.Core.Criteria.CriteriaField.FromQueryFields(Polhem.Definition.Forms.FormSchema! schema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities = null) -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
+Polhem.UI.Core.Criteria.CriteriaRowSummary
+static Polhem.UI.Core.Criteria.CriteriaRowSummary.Describe(Polhem.UI.Core.Criteria.CriteriaRow! row, System.Func<string!, string!>! text) -> string!
+static Polhem.UI.Core.Criteria.CriteriaRowSummary.PeriodText(Polhem.UI.Core.Criteria.RelativeDate period, System.Func<string!, string!>! text) -> string!
