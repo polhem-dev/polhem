@@ -20,6 +20,8 @@
 				<TableItem TableName="st_role_grant" DisplayName="Role grant" />
 				<TableItem TableName="st_user_role" DisplayName="User role" />
 				<TableItem TableName="st_audit_rule" DisplayName="Audit rule" />
+				<TableItem TableName="st_user_query" DisplayName="User query" />
+				<TableItem TableName="st_user_query_default" DisplayName="Default user query" />
 			</Tables>
 		</DbCategory>
 		<DbCategory Id="log" DisplayName="Log database">

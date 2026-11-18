@@ -13,7 +13,7 @@ namespace Polhem.Api.Client.Connectors
     /// <summary>
     /// Form-level API service connector.
     /// </summary>
-    public class FormApiConnector : ApiConnector, IFormApiConnector, IFieldValueChangeConnector
+    public partial class FormApiConnector : ApiConnector, IFormApiConnector, IFieldValueChangeConnector, IUserQueryConnector
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FormApiConnector"/> class.

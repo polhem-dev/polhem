@@ -1,1 +1,5 @@
 #nullable enable
+virtual Polhem.Api.Client.Connectors.FormApiConnector.DeleteUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse!>!
+virtual Polhem.Api.Client.Connectors.FormApiConnector.GetUserQueriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetUserQueriesResponse!>!
+virtual Polhem.Api.Client.Connectors.FormApiConnector.SaveUserQueryAsync(System.Guid rowId, string! name, bool isShared, string! criteria, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.SaveUserQueryResponse!>!
+virtual Polhem.Api.Client.Connectors.FormApiConnector.SetDefaultUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse!>!

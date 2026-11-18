@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests
         // - 1 DatabaseSettings.xml (empty stub — connection strings are deployment-specific)
         // - 1 PermissionModels.xml (registry seeded with the framework's own AuditRule model)
         // Total: 36
-        private const int ExpectedEmbeddedCount = 36;
+        private const int ExpectedEmbeddedCount = 38;
 
         [Fact]
         [DisplayName("ListEmbedded returns 36 framework default files (18 st_* + 3 FormSchema + 3 FormLayout + 6 Language + 1 DbCategorySettings + 1 CurrencySettings + 1 UnitSettings + 1 SystemSettings + 1 DatabaseSettings + 1 PermissionModels)")]
@@ -478,7 +478,7 @@ namespace Polhem.Definition.UnitTests
 
                 var result = Defaults.MaterializeTo(tempDir, options);
 
-                Assert.Equal(18, result.WrittenCount);
+                Assert.Equal(20, result.WrittenCount);
                 Assert.All(result.WrittenRelativePaths, p => Assert.StartsWith("TableSchema/", p));
             }
             finally

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  User queries: the query criteria a user saved under a name for one form, personal or shared with every user of the
+  company. `criteria` holds the text the front end writes (UserQueryCodec); the server does not read it.
+-->
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="st_user_query" DisplayName="User Query">
+  <Fields>
+    <DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+    <DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+    <DbField FieldName="sys_company_id" Caption="Company Id" DbType="String" Length="10" />
+    <DbField FieldName="prog_id" Caption="Program Id" DbType="String" Length="50" />
+    <DbField FieldName="user_id" Caption="User Id" DbType="String" Length="20" />
+    <DbField FieldName="sys_name" Caption="Query Name" DbType="String" Length="100" />
+    <DbField FieldName="is_shared" Caption="Shared" DbType="Boolean" DefaultValue="0" />
+    <DbField FieldName="criteria" Caption="Criteria" DbType="Text" />
+    <DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
+    <DbField FieldName="sys_update_time" Caption="Updated At" DbType="DateTime" />
+  </Fields>
+  <Indexes>
+    <DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">
+      <IndexFields>
+        <IndexField FieldName="sys_no" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="rx_{0}" Unique="true">
+      <IndexFields>
+        <IndexField FieldName="sys_rowid" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="ix_{0}_prog">
+      <IndexFields>
+        <IndexField FieldName="sys_company_id" />
+        <IndexField FieldName="prog_id" />
+        <IndexField FieldName="user_id" />
+      </IndexFields>
+    </DbTableIndex>
+  </Indexes>
+</TableSchema>

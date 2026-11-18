@@ -1,1 +1,38 @@
 #nullable enable
+Polhem.Repository.Abstractions.Form.IUserQueryRepository
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.Delete(System.Guid rowId) -> int
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.GetOwner(System.Guid rowId) -> Polhem.Repository.Abstractions.Form.UserQueryOwner?
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.GetQueries(string! progId, string! userId) -> Polhem.Repository.Abstractions.Form.UserQueryList!
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.Insert(System.Guid rowId, string! progId, string! userId, string! name, bool isShared, string! criteria) -> void
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.SetDefault(string! progId, string! userId, System.Guid rowId) -> void
+Polhem.Repository.Abstractions.Form.IUserQueryRepository.Update(System.Guid rowId, string! name, bool isShared, string! criteria) -> int
+Polhem.Repository.Abstractions.Form.UserQueryList
+Polhem.Repository.Abstractions.Form.UserQueryList.<Clone>$() -> Polhem.Repository.Abstractions.Form.UserQueryList!
+Polhem.Repository.Abstractions.Form.UserQueryList.Deconstruct(out System.Data.DataTable! Table, out System.Guid DefaultRowId) -> void
+Polhem.Repository.Abstractions.Form.UserQueryList.DefaultRowId.get -> System.Guid
+Polhem.Repository.Abstractions.Form.UserQueryList.DefaultRowId.init -> void
+Polhem.Repository.Abstractions.Form.UserQueryList.Equals(Polhem.Repository.Abstractions.Form.UserQueryList? other) -> bool
+Polhem.Repository.Abstractions.Form.UserQueryList.Table.get -> System.Data.DataTable!
+Polhem.Repository.Abstractions.Form.UserQueryList.Table.init -> void
+Polhem.Repository.Abstractions.Form.UserQueryList.UserQueryList(System.Data.DataTable! Table, System.Guid DefaultRowId) -> void
+Polhem.Repository.Abstractions.Form.UserQueryOwner
+Polhem.Repository.Abstractions.Form.UserQueryOwner.<Clone>$() -> Polhem.Repository.Abstractions.Form.UserQueryOwner!
+Polhem.Repository.Abstractions.Form.UserQueryOwner.Deconstruct(out string! ProgId, out string! UserId, out bool IsShared) -> void
+Polhem.Repository.Abstractions.Form.UserQueryOwner.Equals(Polhem.Repository.Abstractions.Form.UserQueryOwner? other) -> bool
+Polhem.Repository.Abstractions.Form.UserQueryOwner.IsShared.get -> bool
+Polhem.Repository.Abstractions.Form.UserQueryOwner.IsShared.init -> void
+Polhem.Repository.Abstractions.Form.UserQueryOwner.ProgId.get -> string!
+Polhem.Repository.Abstractions.Form.UserQueryOwner.ProgId.init -> void
+Polhem.Repository.Abstractions.Form.UserQueryOwner.UserId.get -> string!
+Polhem.Repository.Abstractions.Form.UserQueryOwner.UserId.init -> void
+Polhem.Repository.Abstractions.Form.UserQueryOwner.UserQueryOwner(string! ProgId, string! UserId, bool IsShared) -> void
+override Polhem.Repository.Abstractions.Form.UserQueryList.Equals(object? obj) -> bool
+override Polhem.Repository.Abstractions.Form.UserQueryList.GetHashCode() -> int
+override Polhem.Repository.Abstractions.Form.UserQueryList.ToString() -> string!
+override Polhem.Repository.Abstractions.Form.UserQueryOwner.Equals(object? obj) -> bool
+override Polhem.Repository.Abstractions.Form.UserQueryOwner.GetHashCode() -> int
+override Polhem.Repository.Abstractions.Form.UserQueryOwner.ToString() -> string!
+static Polhem.Repository.Abstractions.Form.UserQueryList.operator !=(Polhem.Repository.Abstractions.Form.UserQueryList? left, Polhem.Repository.Abstractions.Form.UserQueryList? right) -> bool
+static Polhem.Repository.Abstractions.Form.UserQueryList.operator ==(Polhem.Repository.Abstractions.Form.UserQueryList? left, Polhem.Repository.Abstractions.Form.UserQueryList? right) -> bool
+static Polhem.Repository.Abstractions.Form.UserQueryOwner.operator !=(Polhem.Repository.Abstractions.Form.UserQueryOwner? left, Polhem.Repository.Abstractions.Form.UserQueryOwner? right) -> bool
+static Polhem.Repository.Abstractions.Form.UserQueryOwner.operator ==(Polhem.Repository.Abstractions.Form.UserQueryOwner? left, Polhem.Repository.Abstractions.Form.UserQueryOwner? right) -> bool

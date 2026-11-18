@@ -48,5 +48,26 @@ namespace Polhem.Definition
         /// fields of the row and the validation messages the new value calls for.
         /// </summary>
         public const string FieldValueChange = "FieldValueChange";
+
+        /// <summary>
+        /// Lists the user queries the caller can apply on the form: their own and the shared ones, with the caller's
+        /// default.
+        /// </summary>
+        public const string GetUserQueries = "GetUserQueries";
+
+        /// <summary>
+        /// Saves a new user query, or overwrites one the caller created.
+        /// </summary>
+        public const string SaveUserQuery = "SaveUserQuery";
+
+        /// <summary>
+        /// Deletes a user query the caller created.
+        /// </summary>
+        public const string DeleteUserQuery = "DeleteUserQuery";
+
+        /// <summary>
+        /// Sets the user query the caller applies when the form's list opens.
+        /// </summary>
+        public const string SetDefaultUserQuery = "SetDefaultUserQuery";
     }
 }

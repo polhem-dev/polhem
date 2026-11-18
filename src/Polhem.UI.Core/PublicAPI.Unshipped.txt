@@ -102,3 +102,59 @@ static Polhem.UI.Core.Criteria.CriteriaField.FromQueryFields(Polhem.Definition.F
 Polhem.UI.Core.Criteria.CriteriaRowSummary
 static Polhem.UI.Core.Criteria.CriteriaRowSummary.Describe(Polhem.UI.Core.Criteria.CriteriaRow! row, System.Func<string!, string!>! text) -> string!
 static Polhem.UI.Core.Criteria.CriteriaRowSummary.PeriodText(Polhem.UI.Core.Criteria.RelativeDate period, System.Func<string!, string!>! text) -> string!
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Days.get -> int
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Days.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Field.get -> string!
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Field.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.From.get -> string?
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.From.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Operator.get -> string!
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Operator.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Period.get -> string?
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Period.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.To.get -> string?
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.To.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.UserQueryCondition() -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Value.get -> string?
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Value.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Values.get -> System.Collections.Generic.List<Polhem.UI.Core.Criteria.Storage.UserQueryValue!>!
+Polhem.UI.Core.Criteria.Storage.UserQueryCondition.Values.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument.Conditions.get -> System.Collections.Generic.List<Polhem.UI.Core.Criteria.Storage.UserQueryCondition!>!
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument.Conditions.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument.UserQueryDocument() -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument.Version.get -> int
+Polhem.UI.Core.Criteria.Storage.UserQueryDocument.Version.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryValue
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Text.get -> string!
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Text.set -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.UserQueryValue() -> void
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Value.get -> string!
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Value.set -> void
+Polhem.UI.Core.Criteria.UserQueryCodec
+Polhem.UI.Core.Criteria.UserQueryLoadResult
+Polhem.UI.Core.Criteria.UserQueryLoadResult.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.UI.Core.Criteria.UserQueryLoadResult.IsSupported.get -> bool
+Polhem.UI.Core.Criteria.UserQueryLoadResult.Skipped.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.UserQuerySkip>!
+Polhem.UI.Core.Criteria.UserQuerySkip
+Polhem.UI.Core.Criteria.UserQuerySkip.Deconstruct(out string! FieldName, out Polhem.UI.Core.Criteria.UserQuerySkipReason Reason) -> void
+Polhem.UI.Core.Criteria.UserQuerySkip.Equals(Polhem.UI.Core.Criteria.UserQuerySkip other) -> bool
+Polhem.UI.Core.Criteria.UserQuerySkip.FieldName.get -> string!
+Polhem.UI.Core.Criteria.UserQuerySkip.FieldName.init -> void
+Polhem.UI.Core.Criteria.UserQuerySkip.Reason.get -> Polhem.UI.Core.Criteria.UserQuerySkipReason
+Polhem.UI.Core.Criteria.UserQuerySkip.Reason.init -> void
+Polhem.UI.Core.Criteria.UserQuerySkip.UserQuerySkip() -> void
+Polhem.UI.Core.Criteria.UserQuerySkip.UserQuerySkip(string! FieldName, Polhem.UI.Core.Criteria.UserQuerySkipReason Reason) -> void
+Polhem.UI.Core.Criteria.UserQuerySkipReason
+Polhem.UI.Core.Criteria.UserQuerySkipReason.InvalidValue = 2 -> Polhem.UI.Core.Criteria.UserQuerySkipReason
+Polhem.UI.Core.Criteria.UserQuerySkipReason.OperatorNotOffered = 1 -> Polhem.UI.Core.Criteria.UserQuerySkipReason
+Polhem.UI.Core.Criteria.UserQuerySkipReason.UnknownField = 0 -> Polhem.UI.Core.Criteria.UserQuerySkipReason
+const Polhem.UI.Core.Criteria.UserQueryCodec.CurrentVersion = 1 -> int
+override Polhem.UI.Core.Criteria.UserQuerySkip.GetHashCode() -> int
+static Polhem.UI.Core.Criteria.UserQueryCodec.Deserialize(string! xml, System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>! fields) -> Polhem.UI.Core.Criteria.UserQueryLoadResult!
+static Polhem.UI.Core.Criteria.UserQueryCodec.Serialize(Polhem.UI.Core.Criteria.QueryCriteria! criteria) -> string!
+static Polhem.UI.Core.Criteria.UserQuerySkip.operator !=(Polhem.UI.Core.Criteria.UserQuerySkip left, Polhem.UI.Core.Criteria.UserQuerySkip right) -> bool
+static Polhem.UI.Core.Criteria.UserQuerySkip.operator ==(Polhem.UI.Core.Criteria.UserQuerySkip left, Polhem.UI.Core.Criteria.UserQuerySkip right) -> bool
+~override Polhem.UI.Core.Criteria.UserQuerySkip.Equals(object obj) -> bool
+~override Polhem.UI.Core.Criteria.UserQuerySkip.ToString() -> string

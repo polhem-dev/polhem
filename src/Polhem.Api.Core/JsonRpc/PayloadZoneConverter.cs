@@ -103,6 +103,9 @@ namespace Polhem.Api.Core.JsonRpc
                 case FieldValueChangeResponse response:
                     response.Values = DateTimeZoneConverter.UtcToUser(response.Values, timeZoneId);
                     break;
+                case GetUserQueriesResponse response:
+                    response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
+                    break;
                 case AuditLogListResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
                     break;

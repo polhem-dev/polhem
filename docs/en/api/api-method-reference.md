@@ -136,6 +136,10 @@ Per-program BO instance, accessed as `<progId>.<action>` over the wire
 | `Save` | Public | Authenticated | Persists a `DataSet` by dispatching INSERT / UPDATE / DELETE per row's `RowState`. |
 | `Delete` | Public | Authenticated | Deletes one master row directly by `RowId`. |
 | `FieldValueChange` | Public | Authenticated | Called when the user changes a field marked `FormField.ValueChangeCallback`; returns the values to write into other fields of the same row (`Values`) and the messages to show on its fields (`Errors` / `Warnings`). Requires `Create` or `Update` on the form's permission model. A relation field fills its mapping destinations from the related form, read under that form's lookup rules (`GetLookupFilter` and the `Read` record scope); a BO overrides the method for anything else. Values it returns never call back again. |
+| `GetUserQueries` | Public | Authenticated | Lists the user queries the caller can apply on the form (their own first, then the ones other users share) as a `DataTable`, with the caller's default (`DefaultRowId`). Requires `Read`. |
+| `SaveUserQuery` | Public | Authenticated | Saves a new user query (`RowId` empty) or overwrites one; only its creator may overwrite, rename or share it. The `Criteria` text is the front end's and is stored as given. Requires `Read`. |
+| `DeleteUserQuery` | Public | Authenticated | Deletes a user query its creator owns, and clears it as anyone's default. Requires `Read`. |
+| `SetDefaultUserQuery` | Public | Authenticated | Sets the caller's own default user query for the form, which may be one another user shares; an empty `RowId` clears it. Requires `Read`. |
 
 ## Axis: Audit Log (`AuditLogBusinessObject`)
 
