@@ -5,7 +5,6 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Language;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core.Criteria;
-using Polhem.UI.Core.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -39,20 +38,11 @@ namespace Polhem.UI.Avalonia.Views
             _queryButton.Click += (_, _) => _criteriaPanel.IsVisible = !_criteriaPanel.IsVisible;
         }
 
-        // The fields "add condition" offers: the schema's query fields a condition can be entered for, less the
-        // sensitive ones the user cannot read (the list hides those columns as well).
         private void AttachCriteria()
         {
-            var schema = Schema!;
-            var capabilities = ResolveUserContext()?.Capabilities;
-            var tableName = schema.MasterTable?.TableName ?? string.Empty;
-            var fields = schema.GetQueryFields()
-                .Where(f => ElementCapabilityResolver.Default.ResolveField(schema, f.FieldName, tableName, capabilities).Visible)
-                .Select(CriteriaField.FromField)
-                .OfType<CriteriaField>()
-                .ToArray();
+            var fields = CriteriaField.FromQueryFields(Schema!, ResolveUserContext()?.Capabilities);
             _criteriaPanel.Bind(fields, _criteria);
-            _queryButton.IsVisible = fields.Length > 0;
+            _queryButton.IsVisible = fields.Count > 0;
         }
 
         /// <summary>

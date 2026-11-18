@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Settings;
 using Polhem.UI.Core.Criteria;
 
 namespace Polhem.UI.Core.UnitTests.Criteria
@@ -101,6 +102,37 @@ namespace Polhem.UI.Core.UnitTests.Criteria
         public void Constructor_EmptyCaption_UsesFieldName()
         {
             Assert.Equal("qty", new CriteriaField("qty", string.Empty, CriteriaFieldKind.Number, FieldDbType.Integer).Caption);
+        }
+
+        private static FormSchema QuerySchema()
+        {
+            var schema = new FormSchema("Order", "Order") { QueryFields = "sys_id,remark,freight,order_date" };
+            var master = schema.Tables!.Add("Order", "Order");
+            master.Fields!.Add(new FormField("sys_id", "Order No", FieldDbType.String));
+            master.Fields!.Add(new FormField("remark", "Remark", FieldDbType.Text));
+            master.Fields!.Add(new FormField("freight", "Freight", FieldDbType.Currency) { SensitiveCategory = SensitiveCategory.Amount });
+            master.Fields!.Add(new FormField("order_date", "Date", FieldDbType.Date));
+            return schema;
+        }
+
+        [Fact]
+        [DisplayName("FromQueryFields keeps the declared order and skips fields no condition can be entered for")]
+        public void FromQueryFields_SkipsUnsupportedFields()
+        {
+            var names = CriteriaField.FromQueryFields(QuerySchema()).Select(f => f.FieldName);
+
+            Assert.Equal(["sys_id", "freight", "order_date"], names);
+        }
+
+        [Fact]
+        [DisplayName("FromQueryFields leaves out a sensitive field the user cannot read and keeps it when they can")]
+        public void FromQueryFields_SensitiveField_FollowsReadCapability()
+        {
+            var denied = new Dictionary<string, PermissionActions> { ["Amount"] = PermissionActions.None };
+            var allowed = new Dictionary<string, PermissionActions> { ["Amount"] = PermissionActions.Read };
+
+            Assert.DoesNotContain(CriteriaField.FromQueryFields(QuerySchema(), denied), f => f.FieldName == "freight");
+            Assert.Contains(CriteriaField.FromQueryFields(QuerySchema(), allowed), f => f.FieldName == "freight");
         }
     }
 }
