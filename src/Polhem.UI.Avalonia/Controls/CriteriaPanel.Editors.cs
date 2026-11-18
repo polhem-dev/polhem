@@ -20,18 +20,18 @@ namespace Polhem.UI.Avalonia.Controls
     /// </remarks>
     public sealed partial class CriteriaPanel
     {
-        private static readonly (RelativeDate Period, string Key, int Days)[] s_periods =
+        private static readonly RelativeDate[] s_periods =
         [
-            (new RelativeDate(RelativeDateKind.Today), PolhemUIText.DateToday, 0),
-            (new RelativeDate(RelativeDateKind.Yesterday), PolhemUIText.DateYesterday, 0),
-            (new RelativeDate(RelativeDateKind.ThisWeek), PolhemUIText.DateThisWeek, 0),
-            (new RelativeDate(RelativeDateKind.LastWeek), PolhemUIText.DateLastWeek, 0),
-            (new RelativeDate(RelativeDateKind.ThisMonth), PolhemUIText.DateThisMonth, 0),
-            (new RelativeDate(RelativeDateKind.LastMonth), PolhemUIText.DateLastMonth, 0),
-            (new RelativeDate(RelativeDateKind.ThisQuarter), PolhemUIText.DateThisQuarter, 0),
-            (new RelativeDate(RelativeDateKind.ThisYear), PolhemUIText.DateThisYear, 0),
-            (new RelativeDate(RelativeDateKind.LastDays, 7), PolhemUIText.DateLastDays, 7),
-            (new RelativeDate(RelativeDateKind.LastDays, 30), PolhemUIText.DateLastDays, 30),
+            new(RelativeDateKind.Today),
+            new(RelativeDateKind.Yesterday),
+            new(RelativeDateKind.ThisWeek),
+            new(RelativeDateKind.LastWeek),
+            new(RelativeDateKind.ThisMonth),
+            new(RelativeDateKind.LastMonth),
+            new(RelativeDateKind.ThisQuarter),
+            new(RelativeDateKind.ThisYear),
+            new(RelativeDateKind.LastDays, 7),
+            new(RelativeDateKind.LastDays, 30),
         ];
 
         private Control BuildValueEditor(CriteriaRow row)
@@ -97,9 +97,9 @@ namespace Polhem.UI.Avalonia.Controls
             PlaceholderText = watermark,
         };
 
-        private static StackPanel BuildPair(Control first, Control second)
+        private static WrapPanel BuildPair(Control first, Control second)
         {
-            var pair = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            var pair = new WrapPanel { Orientation = Orientation.Horizontal, ItemSpacing = 6, LineSpacing = 4 };
             pair.Children.Add(first);
             pair.Children.Add(new TextBlock { Text = "~", VerticalAlignment = VerticalAlignment.Center });
             pair.Children.Add(second);
@@ -132,7 +132,7 @@ namespace Polhem.UI.Avalonia.Controls
             to.PropertyChanged += (_, e) => { if (e.Property == CalendarDatePicker.SelectedDateProperty) WriteDays(); };
 
             var menu = new MenuFlyout();
-            foreach (var (period, _, _) in s_periods)
+            foreach (var period in s_periods)
             {
                 var item = new MenuItem { Header = PeriodText(period) };
                 item.Click += (_, _) =>
@@ -156,13 +156,7 @@ namespace Polhem.UI.Avalonia.Controls
         }
 
         private static string PeriodText(RelativeDate? period)
-        {
-            if (period is not { } value) return UIText.Get(PolhemUIText.DatePeriod);
-            var (_, key, days) = s_periods.First(p => p.Period == value);
-            return days > 0
-                ? string.Format(CultureInfo.CurrentCulture, UIText.Get(key), days)
-                : UIText.Get(key);
-        }
+            => period is { } value ? CriteriaRowSummary.PeriodText(value, UIText.Get) : UIText.Get(PolhemUIText.DatePeriod);
 
         private Control BuildBooleanEditor(CriteriaRow row)
         {

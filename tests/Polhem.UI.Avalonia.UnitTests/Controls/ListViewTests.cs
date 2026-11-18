@@ -761,6 +761,76 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal("Bev", condition.Value);
         }
 
+        [Fact]
+        [DisplayName("A query shows one chip per condition in effect, and removing a chip runs the query without it")]
+        public async Task RunQuery_ShowsChips_RemoveChipQueriesAgain()
+        {
+            var connector = PagedConnector(totalRows: 120);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            var code = view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[0]);
+            code.SetRange("C001", null);
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]).SetValue("Bev");
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]);
+
+            await InvokePrivateAsync(view, "RunQueryAsync");
+
+            Assert.Equal(2, view.ConditionChips.Count);
+            Assert.IsType<Polhem.Definition.Filters.FilterGroup>(connector.LastFilter);
+
+            view.RemoveChip(code);
+
+            Assert.Single(view.ConditionChips);
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter);
+            Assert.Equal("sys_name", condition.FieldName);
+        }
+
+        [Fact]
+        [DisplayName("A required condition is not removed through its chip")]
+        public async Task RemoveChip_RequiredRow_IsKept()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+            await view.InitializeAsync();
+            var required = view.Criteria.Add(view.CriteriaPanel.Fields[1], kind: Polhem.UI.Core.Criteria.CriteriaRowKind.Required);
+            required.SetValue("Bev");
+            await InvokePrivateAsync(view, "RunQueryAsync");
+
+            view.RemoveChip(required);
+
+            Assert.Contains(required, view.Criteria.Rows);
+            Assert.Single(view.ConditionChips);
+        }
+
+        [Theory]
+        [DisplayName("The query pane docks beside a wide list, lies over a narrower one and goes full screen on a phone")]
+        [InlineData(1200, "Docked")]
+        [InlineData(960, "Docked")]
+        [InlineData(800, "Overlay")]
+        [InlineData(400, "FullScreen")]
+        public void ApplyPaneMode_ByWidth_ChoosesMode(double width, string expected)
+        {
+            var view = new TestListView();
+
+            view.ApplyPaneMode(width);
+
+            Assert.Equal(expected, view.PaneMode.ToString());
+        }
+
+        [Fact]
+        [DisplayName("An open pane stays open when the view narrows from docked to over the list")]
+        public async Task ApplyPaneMode_DockedToOverlay_KeepsPaneOpen()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+            await view.InitializeAsync();
+            view.ApplyPaneMode(1200);
+            view.OpenQueryPane(null);
+
+            view.ApplyPaneMode(800);
+
+            Assert.Equal(ListView.QueryPaneMode.Overlay, view.PaneMode);
+            Assert.True(view.IsQueryPaneOpen);
+        }
+
         private sealed class TestListView : ListView
         {
             public bool ConfirmAnswer { get; set; } = true;

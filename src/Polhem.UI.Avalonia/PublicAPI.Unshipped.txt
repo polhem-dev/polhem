@@ -5,8 +5,9 @@ Polhem.UI.Avalonia.Controls.CriteriaPanel.Criteria.get -> Polhem.UI.Core.Criteri
 Polhem.UI.Avalonia.Controls.CriteriaPanel.CriteriaChanged -> System.EventHandler?
 Polhem.UI.Avalonia.Controls.CriteriaPanel.CriteriaPanel() -> void
 Polhem.UI.Avalonia.Controls.CriteriaPanel.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
-Polhem.UI.Avalonia.Controls.CriteriaPanel.IsCompact.get -> bool
-Polhem.UI.Avalonia.Controls.CriteriaPanel.IsCompact.set -> void
 Polhem.UI.Avalonia.Controls.CriteriaPanel.SearchRequested -> System.EventHandler?
 Polhem.UI.Avalonia.Controls.CriteriaPanel.Today.get -> System.Func<System.DateOnly>!
 Polhem.UI.Avalonia.Controls.CriteriaPanel.Today.set -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.CloseRequested -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Refresh() -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.ScrollToRow(Polhem.UI.Core.Criteria.CriteriaRow! row) -> void

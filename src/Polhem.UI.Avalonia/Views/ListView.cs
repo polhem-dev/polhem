@@ -169,22 +169,27 @@ namespace Polhem.UI.Avalonia.Views
                 Text = string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.ListRowsLimited), MaxCardRows),
             };
 
+            // The list area (rows, pager) sits beside the query pane, so opening the pane narrows the list rather
+            // than pushing it down; the chips of the conditions in effect stay above it.
+            var listArea = new DockPanel { LastChildFill = true };
+            DockPanel.SetDock(_emptyListLabel, Dock.Top);
+            DockPanel.SetDock(_pager, Dock.Bottom);
+            DockPanel.SetDock(_cardLimitLabel, Dock.Bottom);
+            listArea.Children.Add(_emptyListLabel);
+            listArea.Children.Add(_pager);
+            listArea.Children.Add(_cardLimitLabel);
+            listArea.Children.Add(contentArea);
+
             var host = new DockPanel { LastChildFill = true };
             DockPanel.SetDock(_errorLabel, Dock.Top);
             DockPanel.SetDock(_loadingLabel, Dock.Top);
             DockPanel.SetDock(toolbar, Dock.Top);
-            DockPanel.SetDock(_criteriaPanel, Dock.Top);
-            DockPanel.SetDock(_emptyListLabel, Dock.Top);
-            DockPanel.SetDock(_pager, Dock.Bottom);
-            DockPanel.SetDock(_cardLimitLabel, Dock.Bottom);
+            DockPanel.SetDock(_chipBar, Dock.Top);
             host.Children.Add(_errorLabel);
             host.Children.Add(_loadingLabel);
             host.Children.Add(toolbar);
-            host.Children.Add(_criteriaPanel);
-            host.Children.Add(_emptyListLabel);
-            host.Children.Add(_pager);
-            host.Children.Add(_cardLimitLabel);
-            host.Children.Add(contentArea);
+            host.Children.Add(_chipBar);
+            host.Children.Add(WrapWithCriteriaPane(listArea));
 
             Content = host;
         }
@@ -407,6 +412,7 @@ namespace Polhem.UI.Avalonia.Views
             {
                 var compact = Bounds.Width > 0 && Bounds.Width < FormView.DefaultCompactWidthThreshold;
                 ApplyCompact(compact);
+                ApplyPaneMode(Bounds.Width);
             }
         }
 

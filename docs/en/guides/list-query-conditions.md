@@ -20,11 +20,23 @@
 
 ## 1. What the user sees
 
-The Avalonia `ListView` shows a **Query** button in its toolbar when the form offers query fields. It opens a panel
-where the user adds conditions one row at a time: **Add condition** lists the fields, each row has the field, an
-operator where the field offers more than one, a value and a remove button. **Search** (or Enter) reads the first page
-of the list with the conditions; the button then shows how many are in effect, for example "Query (2)". **Clear**
-removes the conditions and reads the whole list again.
+The Avalonia `ListView` shows a **Query** button in its toolbar when the form offers query fields. It opens the query
+pane, where the user adds conditions one row at a time: **Add condition** lists the fields, and each row shows the
+field with a remove button, and below it an operator where the field offers more than one and the value. **Search** (or
+Enter) reads the first page of the list with the conditions; **Clear** removes them and reads the whole list again.
+
+The conditions of the last search stay visible above the list as chips, such as "Order date: This month" or "Shipper:
+Federal Shipping and 2 more", and the Query button shows how many there are. A chip's ✕ removes that condition and
+searches again (a required condition has none); clicking a chip opens the pane at its row; **Clear filters** at the end
+removes them all.
+
+Where the pane appears depends on the width of the list:
+
+| Width | The pane |
+|-------|----------|
+| The list keeps at least 600 pixels beside a 360-pixel pane | Docked on the right; the list narrows, and its height does not change |
+| Narrower | Over the right side of the list, closed by a click outside it or after a search |
+| Under 600 pixels (a phone) | A card over the whole view, which dims the list; closed after a search |
 
 A list starts with no conditions. The Blazor heads filter their lists by column instead, for now.
 

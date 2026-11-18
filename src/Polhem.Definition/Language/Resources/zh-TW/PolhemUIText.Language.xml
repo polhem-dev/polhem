@@ -78,6 +78,11 @@
     <LanguageItem Key="DateThisYear" Value="今年" />
     <LanguageItem Key="DateLastDays" Value="最近 {0} 天" />
     <LanguageItem Key="QueryRequiredMissing" Value="請填寫必要條件：{0}" />
+    <LanguageItem Key="CriteriaLabeledValue" Value="{0}：{1}" />
+    <LanguageItem Key="CriteriaRangeValue" Value="{0}～{1}" />
+    <LanguageItem Key="CriteriaValueSeparator" Value="、" />
+    <LanguageItem Key="CriteriaMoreValues" Value="{0} 等 {1} 筆" />
+    <LanguageItem Key="QueryConditions" Value="查詢條件" />
   </Items>
   <Enums />
 </LanguageResource>

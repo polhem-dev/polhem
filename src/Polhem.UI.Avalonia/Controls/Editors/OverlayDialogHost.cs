@@ -123,6 +123,10 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 if (inputPane is not null) inputPane.StateChanged -= OnInputPaneChanged;
                 if (insets is not null) insets.SafeAreaChanged -= OnSafeAreaChanged;
                 overlay.Children.Remove(backdrop);
+                // Hand the content back unparented, so a caller that keeps it (the list's query pane) can show it
+                // again, in another card or its own host; a control has one visual parent at a time.
+                if (content.Parent is Panel holder)
+                    holder.Children.Remove(content);
             }
         }
 
