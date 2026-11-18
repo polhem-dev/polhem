@@ -86,6 +86,7 @@
         if (_module is null) return;
         try
         {
+            if (_escapeGuarded) await _module.InvokeVoidAsync("releaseEscape", _dialog?.Id).ConfigureAwait(true);
             await _module.DisposeAsync().ConfigureAwait(true);
         }
         catch (JSDisconnectedException)
