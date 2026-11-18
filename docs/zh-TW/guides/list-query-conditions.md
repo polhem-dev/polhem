@@ -1,4 +1,4 @@
-<!-- source: en/guides/list-query-conditions.md blob: fabb0d2b05d78a8f3d243fe0d8340cb675344df0 -->
+<!-- source: en/guides/list-query-conditions.md blob: ccda53f4cce74abbf9a3a934725ff66a3bf2a653 -->
 # 清單查詢條件
 
 [English](../../en/guides/list-query-conditions.md) · [← 文件索引](../README.md)
@@ -15,7 +15,8 @@
 - [4. 條件如何組合](#4-條件如何組合)
 - [5. 文字比對](#5-文字比對)
 - [6. 在自己的畫面使用面板](#6-在自己的畫面使用面板)
-- [7. 不透過面板直接呼叫 GetList](#7-不透過面板直接呼叫-getlist)
+- [7. 儲存的查詢](#7-儲存的查詢)
+- [8. 不透過面板直接呼叫 GetList](#8-不透過面板直接呼叫-getlist)
 
 ---
 
@@ -37,7 +38,7 @@
 | 比上面窄 | 浮在清單右側，點窗格外或搜尋後收起 |
 | 小於 600 像素（手機） | 覆蓋整個畫面的卡片，清單變暗；搜尋後收起 |
 
-清單一開始沒有任何條件。Blazor 版目前仍以欄頭篩選來過濾清單。
+清單一開始沒有任何條件，或套用使用者的預設查詢（[第 7 節](#7-儲存的查詢)）。Blazor 版目前仍以欄頭篩選來過濾清單。
 
 ## 2. 宣告清單可查詢的欄位
 
@@ -132,7 +133,34 @@ panel.SearchRequested += async (_, _) =>
 
 `GetList` 以外的後端方法（例如報表）不用 `GetListFilterConverter`，而是把同樣的條件列轉成自己的參數。
 
-## 7. 不透過面板直接呼叫 GetList
+## 7. 儲存的查詢
+
+使用者可以把畫面上的條件以名稱儲存，之後再套用，每張表單各自一組。儲存的查詢在查詢窗格頂部：一個下拉選單，選一筆就套用並搜尋；
+條件改過之後旁邊會出現 `*`；**⋯** 選單有**儲存查詢**、**另存新查詢…**、**重新命名…**、**與所有人共用**／**取消共用**、
+**設為開啟清單時的預設**／**取消預設**，以及**刪除查詢**。
+
+| 規則 | 說明 |
+|------|------|
+| 個人或共用 | 查詢屬於建立者個人，直到建立者把它分享給公司所有使用者 |
+| 誰能修改 | 只有建立者能覆寫、重新命名、分享或刪除；任何人都能把別人共用的查詢另存成自己的 |
+| 預設 | 每位使用者在每張表單最多選一筆開啟清單時套用的查詢，可以是別人共用的 |
+| 權限 | 每個動作都需要表單的 `Read` 權限 |
+| 相對日期 | 「本月」這類期間照原樣儲存，每次執行時才換算 |
+
+查詢存的是使用者輸入的內容，不是轉換過的篩選條件，所以窗格能原樣顯示。表單定義改了之後，欄位已不提供、運算子已不允許，
+或值已不符合欄位型別的條件列會被略過，窗格會寫出略過了哪些；其他條件照常套用。選項值的顯示文字取自目前的定義，
+所以其他語系的使用者共用的查詢，會以讀者自己的語系顯示。
+
+查詢存在 `st_user_query`，每位使用者的預設存在 `st_user_query_default`，兩張都在公司資料庫
+（[框架保留名稱](../reference/framework-reserved-names.md)）。定義檔早於這兩張表的專案，要從框架預設把它們加進自己的
+`DbCategorySettings.xml`；加入前，清單照常開啟，只是沒有儲存的查詢。
+
+在自己的畫面裡，同樣的元件都是公開的：`UserQueryCodec`（`Polhem.UI.Core`）把條件列寫成儲存的文字，並依目前提供的欄位讀回；
+`IUserQueryConnector`（`Polhem.Api.Contracts`）透過表單的 business object 列出、儲存、刪除與設定預設（`GetUserQueries`、
+`SaveUserQuery`、`DeleteUserQuery`、`SetDefaultUserQuery`，見 [API 方法參考](../api/api-method-reference.md)）；
+`CriteriaPanel.HeaderContent` 是條件列上方的插槽，`ListView` 把下拉選單放在這裡。
+
+## 8. 不透過面板直接呼叫 GetList
 
 自己做畫面的用戶端，直接在 `GetList` 的 `filter` 送出 `FilterNode`。上述條件對應到 `FilterCondition` 和 `FilterGroup`
 節點；wire 格式請參閱 [JSON-RPC 前端整合指引](../api/jsonrpc-frontend-integration.md)，文字運算子的規則同第 5 節。

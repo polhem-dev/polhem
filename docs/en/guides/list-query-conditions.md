@@ -14,7 +14,8 @@
 - [4. How conditions combine](#4-how-conditions-combine)
 - [5. Text matching](#5-text-matching)
 - [6. Using the panel in your own view](#6-using-the-panel-in-your-own-view)
-- [7. Calling GetList without the panel](#7-calling-getlist-without-the-panel)
+- [7. Saved queries](#7-saved-queries)
+- [8. Calling GetList without the panel](#8-calling-getlist-without-the-panel)
 
 ---
 
@@ -38,7 +39,7 @@ Where the pane appears depends on the width of the list:
 | Narrower | Over the right side of the list, closed by a click outside it or after a search |
 | Under 600 pixels (a phone) | A card over the whole view, which dims the list; closed after a search |
 
-A list starts with no conditions. The Blazor heads filter their lists by column instead, for now.
+A list starts with no conditions, or with the user's default saved query ([section 7](#7-saved-queries)). The Blazor heads filter their lists by column instead, for now.
 
 ## 2. Declaring the fields a list offers
 
@@ -142,7 +143,39 @@ skip the screen.
 A backend method other than `GetList`, such as a report, converts the same rows into its own parameters instead of
 using `GetListFilterConverter`.
 
-## 7. Calling GetList without the panel
+## 7. Saved queries
+
+Users can save the conditions on screen under a name and apply them again, for one form at a time. The saved queries
+sit at the top of the query pane: a picker that applies one and searches, a `*` beside it when the conditions were
+changed since, and a **⋯** menu with **Save query**, **Save as new query…**, **Rename…**, **Share with everyone** /
+**Stop sharing**, **Open the list with this query** / **Stop opening the list with this query**, and **Delete query**.
+
+| Rule | Detail |
+|------|--------|
+| Personal or shared | A query is the user's own until they share it with every user of the company |
+| Who may change it | Only the user who created a query may save over it, rename it, share it or delete it; anyone may save another user's shared query as a new one of their own |
+| Default | Each user picks at most one query per form that the list opens with; it may be one another user shares |
+| Permission | Every action needs the form's `Read` permission |
+| Relative dates | A period such as "this month" is stored as such and resolved each time the query runs |
+
+A query stores what the user entered, not a converted filter, so the pane shows it again exactly. When the form's
+definition changes, a row whose field is no longer offered, whose operator the field no longer allows, or whose value
+no longer fits the field's type is left out, and the pane names what was left out; the other rows still apply. The text
+of a listed value comes from the current definition, so a query shared by a user of another language reads in the
+reader's.
+
+The queries are stored in `st_user_query` and each user's default in `st_user_query_default`, both in the company
+database ([Framework Reserved Names](../reference/framework-reserved-names.md)). A project whose definitions predate
+them adds the two tables to its `DbCategorySettings.xml` from the framework defaults; until then the list opens without
+saved queries.
+
+In a view of your own, the same parts are public: `UserQueryCodec` (`Polhem.UI.Core`) writes the rows as the stored text
+and reads it back against the fields offered now, `IUserQueryConnector` (`Polhem.Api.Contracts`) lists, saves, deletes
+and sets the default through the form's business object (`GetUserQueries`, `SaveUserQuery`, `DeleteUserQuery`,
+`SetDefaultUserQuery`, in the [API Method Reference](../api/api-method-reference.md)), and `CriteriaPanel.HeaderContent`
+is the slot above the rows where `ListView` puts its picker.
+
+## 8. Calling GetList without the panel
 
 A client that builds its own screen sends a `FilterNode` in the `filter` of `GetList` directly. The conditions above are
 `FilterCondition` and `FilterGroup` nodes; the wire format is in

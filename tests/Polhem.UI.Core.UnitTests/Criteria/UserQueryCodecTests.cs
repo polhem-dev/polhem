@@ -105,6 +105,28 @@ namespace Polhem.UI.Core.UnitTests.Criteria
         }
 
         [Fact]
+        [DisplayName("A listed value reads with the item's text in the current definition, so another language shows its own")]
+        public void Deserialize_ChoiceValue_TakesCurrentItemText()
+        {
+            var zh = new CriteriaField("status", "狀態", CriteriaFieldKind.Choice, FieldDbType.Integer)
+            {
+                ListItems = [new Polhem.Definition.Collections.ListItem("0", "草稿"), new Polhem.Definition.Collections.ListItem("1", "已確認")],
+            };
+            var en = new CriteriaField("status", "Status", CriteriaFieldKind.Choice, FieldDbType.Integer)
+            {
+                ListItems = [new Polhem.Definition.Collections.ListItem("0", "Draft")],
+            };
+            var criteria = new QueryCriteria();
+            var row = criteria.Add(zh);
+            row.TryAddValue(0, "草稿");
+            row.TryAddValue(1, "已確認");
+
+            var loaded = Assert.Single(RoundTrip(criteria, [en]).Criteria.Rows);
+
+            Assert.Equal(["Draft", "已確認"], loaded.Values.Select(v => v.Text));
+        }
+
+        [Fact]
         [DisplayName("Fields are matched ignoring the case of their names")]
         public void Deserialize_FieldNameCase_IsIgnored()
         {

@@ -237,6 +237,8 @@ namespace Polhem.Definition.Language
         public const string UserQueryShared = "UserQueryShared";
         /// <summary>Key of the marker of the default query in the picker.</summary>
         public const string UserQueryDefault = "UserQueryDefault";
+        /// <summary>Key of a query name with its markers in the picker; argument 0 is the name, 1 the markers.</summary>
+        public const string UserQueryWithMarkers = "UserQueryWithMarkers";
         /// <summary>Key of the tooltip of the marker shown when the applied query was changed.</summary>
         public const string UserQueryModified = "UserQueryModified";
         /// <summary>Key of the name field of the save dialog.</summary>
@@ -347,6 +349,7 @@ namespace Polhem.Definition.Language
             [UserQueryUnshare] = "Stop sharing",
             [UserQueryShared] = "shared",
             [UserQueryDefault] = "default",
+            [UserQueryWithMarkers] = "{0} ({1})",
             [UserQueryModified] = "Changed since it was saved",
             [UserQueryName] = "Query name",
             [UserQueryShareOption] = "Share with every user of the company",

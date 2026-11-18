@@ -57,3 +57,4 @@ const Polhem.Definition.Language.PolhemUIText.UserQueryShared = "UserQueryShared
 const Polhem.Definition.Language.PolhemUIText.UserQuerySkipped = "UserQuerySkipped" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserQueryUnreadable = "UserQueryUnreadable" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserQueryUnshare = "UserQueryUnshare" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryWithMarkers = "UserQueryWithMarkers" -> string!

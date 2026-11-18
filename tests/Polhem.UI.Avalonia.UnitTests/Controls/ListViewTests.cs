@@ -916,6 +916,19 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
+        [DisplayName("The actions menu has its items before it first opens, with only save as available until a query is applied")]
+        public async Task UserQueryActions_BuiltBeforeOpening()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+            await view.InitializeAsync();
+
+            var items = view.UserQueryBar!.ActionItems;
+
+            Assert.Equal(6, items.Count);
+            Assert.Equal([UIText.Get(PolhemUIText.UserQuerySaveAs)], items.Where(i => i.IsEnabled).Select(i => i.Header));
+        }
+
+        [Fact]
         [DisplayName("Save as stores the conditions on screen as a new query and applies it")]
         public async Task SaveAs_StoresConditionsAndAppliesNewQuery()
         {

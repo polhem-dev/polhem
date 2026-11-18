@@ -64,7 +64,9 @@ namespace Polhem.UI.Avalonia.Controls
             string actionsName = UIText.Get(PolhemUIText.UserQueryActions);
             global::Avalonia.Automation.AutomationProperties.SetName(_actionsButton, actionsName);
             ToolTip.SetTip(_actionsButton, actionsName);
-            _actions.Opening += (_, _) => BuildActions();
+            // NOTE: the items are built whenever the applied query changes, not on Opening. A MenuFlyout with no items
+            // does not open, so items built only when it opens would never show.
+            BuildActions();
 
             var row = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
             DockPanel.SetDock(_actionsButton, Dock.Right);
@@ -98,6 +100,10 @@ namespace Polhem.UI.Avalonia.Controls
 
         /// <summary>Gets the texts the picker lists, for tests.</summary>
         internal IReadOnlyList<string> PickerTexts => _picker.ItemsSource as IReadOnlyList<string> ?? [];
+
+        /// <summary>Gets the actions menu's items, header and whether it can be chosen, for tests.</summary>
+        internal IReadOnlyList<(string Header, bool IsEnabled)> ActionItems
+            => _actions.Items.OfType<MenuItem>().Select(i => (i.Header as string ?? string.Empty, i.IsEnabled)).ToArray();
 
         /// <summary>
         /// Reads the queries from the backend and lists them, keeping the applied one when it still exists.
@@ -142,6 +148,7 @@ namespace Polhem.UI.Avalonia.Controls
             {
                 _syncing = false;
             }
+            BuildActions();
         }
 
         private int IndexOf(Guid rowId)
@@ -158,7 +165,8 @@ namespace Polhem.UI.Avalonia.Controls
             if (entry.RowId == _defaultRowId) markers.Add(UIText.Get(PolhemUIText.UserQueryDefault));
             return markers.Count == 0
                 ? entry.Name
-                : string.Format(CultureInfo.CurrentCulture, "{0} ({1})", entry.Name, string.Join(", ", markers));
+                : string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.UserQueryWithMarkers), entry.Name,
+                    string.Join(UIText.Get(PolhemUIText.CriteriaValueSeparator), markers));
         }
 
         private static List<UserQueryEntry> ReadEntries(DataTable? table)

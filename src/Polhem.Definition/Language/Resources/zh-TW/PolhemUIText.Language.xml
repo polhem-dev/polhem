@@ -95,6 +95,7 @@
     <LanguageItem Key="UserQueryUnshare" Value="取消共用" />
     <LanguageItem Key="UserQueryShared" Value="共用" />
     <LanguageItem Key="UserQueryDefault" Value="預設" />
+    <LanguageItem Key="UserQueryWithMarkers" Value="{0}（{1}）" />
     <LanguageItem Key="UserQueryModified" Value="已變更，尚未儲存" />
     <LanguageItem Key="UserQueryName" Value="查詢名稱" />
     <LanguageItem Key="UserQueryShareOption" Value="與公司所有使用者共用" />
