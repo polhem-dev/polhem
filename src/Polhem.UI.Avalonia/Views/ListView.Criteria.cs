@@ -29,7 +29,7 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>The width of the query pane beside the list.</summary>
         internal const double QueryPaneWidth = 360;
 
-        private readonly QueryCriteria _criteria = new();
+        private QueryCriteria _criteria = new();
         private readonly StackPanel _chips = new() { Orientation = Orientation.Horizontal, Spacing = 6 };
         private ScrollViewer _chipBar = null!;
         private SplitView _splitView = null!;
@@ -192,9 +192,24 @@ namespace Polhem.UI.Avalonia.Views
         /// the next query, so paging and sorting read the same rows even while the user edits the conditions; the
         /// chips show the same conditions.
         /// </summary>
-        private async Task RunQueryAsync()
+        private Task RunQueryAsync() => SearchAsync(keepPaneOpen: false);
+
+        /// <summary>Runs the query as <see cref="RunQueryAsync"/> does.</summary>
+        /// <param name="keepPaneOpen">Leaves the pane open over the list, so a note it shows stays in view.</param>
+        private async Task SearchAsync(bool keepPaneOpen)
         {
             if (!_initialized) return;
+            ApplyActiveFilter();
+            // Over the list or as a card, the pane hides the rows the search just read.
+            if (_paneMode != QueryPaneMode.Docked && !keepPaneOpen)
+                CloseQueryPane();
+            _paging.InvalidateTotalCount();
+            await LoadPageAsync(1, CancellationToken.None).ConfigureAwait(true);
+        }
+
+        /// <summary>Makes the conditions on screen the filter the list reads with, and shows them as chips.</summary>
+        private void ApplyActiveFilter()
+        {
             _activeFilter = GetListFilterConverter.ToFilter(_criteria, ResolveToday(),
                 CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek);
             _activeConditions = _criteria.ActiveCount;
@@ -202,11 +217,6 @@ namespace Polhem.UI.Avalonia.Views
                 ? string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.QueryWithCount), _activeConditions)
                 : UIText.Get(PolhemUIText.Query);
             UpdateChips();
-            // Over the list or as a card, the pane hides the rows the search just read.
-            if (_paneMode != QueryPaneMode.Docked)
-                CloseQueryPane();
-            _paging.InvalidateTotalCount();
-            await LoadPageAsync(1, CancellationToken.None).ConfigureAwait(true);
         }
 
         private void UpdateChips()
@@ -221,6 +231,7 @@ namespace Polhem.UI.Avalonia.Views
                 _chips.Children.Add(clear);
             }
             _chipBar.IsVisible = _chips.Children.Count > 0;
+            _userQueryBar?.RefreshModified();
         }
 
         private Border BuildChip(CriteriaRow row, string text)

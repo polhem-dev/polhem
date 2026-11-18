@@ -213,6 +213,44 @@ namespace Polhem.Definition.Language
         public const string CriteriaMoreValues = "CriteriaMoreValues";
         /// <summary>Key of the heading of the query condition pane.</summary>
         public const string QueryConditions = "QueryConditions";
+        /// <summary>Key of the placeholder of the saved-query picker when no query is applied.</summary>
+        public const string UserQueryNone = "UserQueryNone";
+        /// <summary>Key of the accessible name of the saved-query actions button.</summary>
+        public const string UserQueryActions = "UserQueryActions";
+        /// <summary>Key of overwriting the applied saved query.</summary>
+        public const string UserQuerySave = "UserQuerySave";
+        /// <summary>Key of saving the conditions as a new query.</summary>
+        public const string UserQuerySaveAs = "UserQuerySaveAs";
+        /// <summary>Key of renaming the applied saved query.</summary>
+        public const string UserQueryRename = "UserQueryRename";
+        /// <summary>Key of deleting the applied saved query.</summary>
+        public const string UserQueryDelete = "UserQueryDelete";
+        /// <summary>Key of making the applied query the one the list opens with.</summary>
+        public const string UserQuerySetDefault = "UserQuerySetDefault";
+        /// <summary>Key of no longer opening the list with the applied query.</summary>
+        public const string UserQueryClearDefault = "UserQueryClearDefault";
+        /// <summary>Key of sharing the applied query with the company.</summary>
+        public const string UserQueryShare = "UserQueryShare";
+        /// <summary>Key of no longer sharing the applied query.</summary>
+        public const string UserQueryUnshare = "UserQueryUnshare";
+        /// <summary>Key of the marker of a shared query in the picker.</summary>
+        public const string UserQueryShared = "UserQueryShared";
+        /// <summary>Key of the marker of the default query in the picker.</summary>
+        public const string UserQueryDefault = "UserQueryDefault";
+        /// <summary>Key of a query name with its markers in the picker; argument 0 is the name, 1 the markers.</summary>
+        public const string UserQueryWithMarkers = "UserQueryWithMarkers";
+        /// <summary>Key of the tooltip of the marker shown when the applied query was changed.</summary>
+        public const string UserQueryModified = "UserQueryModified";
+        /// <summary>Key of the name field of the save dialog.</summary>
+        public const string UserQueryName = "UserQueryName";
+        /// <summary>Key of the share option of the save dialog.</summary>
+        public const string UserQueryShareOption = "UserQueryShareOption";
+        /// <summary>Key of the delete question; argument 0 is the query name.</summary>
+        public const string UserQueryDeletePrompt = "UserQueryDeletePrompt";
+        /// <summary>Key of the note after applying a query whose definition changed; argument 0 lists the fields left out.</summary>
+        public const string UserQuerySkipped = "UserQuerySkipped";
+        /// <summary>Key of the note when a saved query cannot be read.</summary>
+        public const string UserQueryUnreadable = "UserQueryUnreadable";
 
         private PolhemUIText()
         {
@@ -299,6 +337,25 @@ namespace Polhem.Definition.Language
             [CriteriaValueSeparator] = ", ",
             [CriteriaMoreValues] = "{0} and {2} more",
             [QueryConditions] = "Query conditions",
+            [UserQueryNone] = "No saved query",
+            [UserQueryActions] = "Saved query actions",
+            [UserQuerySave] = "Save query",
+            [UserQuerySaveAs] = "Save as new query…",
+            [UserQueryRename] = "Rename…",
+            [UserQueryDelete] = "Delete query",
+            [UserQuerySetDefault] = "Open the list with this query",
+            [UserQueryClearDefault] = "Stop opening the list with this query",
+            [UserQueryShare] = "Share with everyone",
+            [UserQueryUnshare] = "Stop sharing",
+            [UserQueryShared] = "shared",
+            [UserQueryDefault] = "default",
+            [UserQueryWithMarkers] = "{0} ({1})",
+            [UserQueryModified] = "Changed since it was saved",
+            [UserQueryName] = "Query name",
+            [UserQueryShareOption] = "Share with every user of the company",
+            [UserQueryDeletePrompt] = "Delete the query \"{0}\"?",
+            [UserQuerySkipped] = "Some conditions no longer apply and were left out: {0}",
+            [UserQueryUnreadable] = "This query was saved in a format this version cannot read.",
         };
 
         /// <summary>

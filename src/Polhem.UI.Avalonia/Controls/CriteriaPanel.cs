@@ -43,6 +43,7 @@ namespace Polhem.UI.Avalonia.Controls
         private readonly Button _addButton;
         private readonly MenuFlyout _addMenu = new();
         private readonly MessageBar _message = new() { Margin = new Thickness(0, 0, 0, 6) };
+        private readonly ContentControl _headerSlot = new() { IsVisible = false };
         private QueryCriteria _criteria = new();
         private IReadOnlyList<CriteriaField> _fields = [];
 
@@ -82,8 +83,10 @@ namespace Polhem.UI.Avalonia.Controls
 
             var host = new DockPanel { Margin = new Thickness(12) };
             DockPanel.SetDock(header, Dock.Top);
+            DockPanel.SetDock(_headerSlot, Dock.Top);
             DockPanel.SetDock(footer, Dock.Bottom);
             host.Children.Add(header);
+            host.Children.Add(_headerSlot);
             host.Children.Add(footer);
             host.Children.Add(_scroller);
             Content = host;
@@ -113,8 +116,26 @@ namespace Polhem.UI.Avalonia.Controls
         /// </summary>
         public Func<DateOnly> Today { get; set; } = () => DateOnly.FromDateTime(DateTime.Now);
 
+        /// <summary>
+        /// Gets or sets content shown under the heading, above the rows, such as the saved queries a host offers;
+        /// <c>null</c>, the default, shows nothing there.
+        /// </summary>
+        public Control? HeaderContent
+        {
+            get => _headerSlot.Content as Control;
+            set
+            {
+                _headerSlot.Content = value;
+                _headerSlot.IsVisible = value is not null;
+            }
+        }
+
         /// <summary>Gets the message shown above the rows, such as the required rows left empty.</summary>
         internal string MessageText => _message.Text;
+
+        /// <summary>Shows a warning above the rows, until the next search or binding.</summary>
+        /// <param name="text">The text.</param>
+        internal void ShowWarning(string text) => _message.ShowWarning(text);
 
         /// <summary>
         /// Shows the fields "add condition" offers and the rows of <paramref name="criteria"/>.

@@ -127,9 +127,17 @@ namespace Polhem.UI.Core.Criteria
         {
             CriteriaOperator.Range when condition.Period is not null => TryFillPeriod(row, condition),
             CriteriaOperator.Range => TryFillRange(row, condition),
-            CriteriaOperator.In => condition.Values.All(value => row.TryAddValue(value.Value, value.Text)),
+            CriteriaOperator.In => condition.Values.All(value => row.TryAddValue(value.Value, ValueText(row.Field, value))),
             _ => TryFillValue(row, condition),
         };
+
+        // A listed value shows the item's text in the current definition and language, so a query shared by a user of
+        // another language reads in the reader's; the stored text is kept for a picked record, or a value no longer listed.
+        private static string ValueText(CriteriaField field, UserQueryValue value)
+            => field.Kind == CriteriaFieldKind.Choice
+                && field.ListItems.FirstOrDefault(item => string.Equals(item.Value, value.Value, StringComparison.Ordinal)) is { } item
+                ? item.Text
+                : value.Text;
 
         private static bool TryFillPeriod(CriteriaRow row, UserQueryCondition condition)
         {
