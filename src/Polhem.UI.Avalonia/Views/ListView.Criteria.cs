@@ -20,9 +20,9 @@ namespace Polhem.UI.Avalonia.Views
     /// </summary>
     /// <remarks>
     /// The pane follows the width of the view: docked on the right when the list keeps
-    /// <see cref="FormView.DefaultCompactWidthThreshold"/> beside it, laid over the list when it does not, and a full
-    /// screen card through the overlay host on a phone-sized view, where the safe area and the on-screen keyboard are
-    /// already taken care of.
+    /// <see cref="FormView.DefaultCompactWidthThreshold"/> beside it, laid over the list when it does not, and a card
+    /// over the whole view through the overlay host on a phone-sized view, where the safe area and the on-screen
+    /// keyboard are already taken care of.
     /// </remarks>
     public partial class ListView
     {
@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.Views
             /// <summary>Over the right side of the list, closed by a click outside it.</summary>
             Overlay,
 
-            /// <summary>A full screen card on a phone-sized view.</summary>
+            /// <summary>A card over the whole view, on a phone-sized view.</summary>
             FullScreen,
         }
 
@@ -115,7 +115,7 @@ namespace Polhem.UI.Avalonia.Views
 
         /// <summary>
         /// Chooses how the pane is shown for <paramref name="width"/>: docked while the list keeps the compact
-        /// threshold beside it, over the list below that, and full screen below the compact threshold itself.
+        /// threshold beside it, over the list below that, and as a card over the whole view below the compact threshold itself.
         /// </summary>
         /// <param name="width">The width of the view.</param>
         internal void ApplyPaneMode(double width)
@@ -132,8 +132,8 @@ namespace Polhem.UI.Avalonia.Views
             _paneMode = mode;
             if (mode != QueryPaneMode.FullScreen)
                 _splitView.DisplayMode = mode == QueryPaneMode.Docked ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
-            // A pane the user had open stays open across a resize, except into the full screen card, which would
-            // cover the list the user is resizing to see.
+            // A pane the user had open stays open across a resize, except into the card over the whole view, which
+            // would cover the list the user is resizing to see.
             if (wasOpen && mode != QueryPaneMode.FullScreen)
                 _splitView.IsPaneOpen = true;
         }
@@ -176,8 +176,8 @@ namespace Polhem.UI.Avalonia.Views
             }
             catch (InvalidOperationException ex)
             {
-                // Boundary: a click handler; without an overlay layer the pane cannot open full screen, and the
-                // list stays as it was.
+                // Boundary: a click handler; without an overlay layer the pane cannot open as a card, and the list
+                // stays as it was.
                 ReportError(ex);
             }
             finally
@@ -202,7 +202,7 @@ namespace Polhem.UI.Avalonia.Views
                 ? string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.QueryWithCount), _activeConditions)
                 : UIText.Get(PolhemUIText.Query);
             UpdateChips();
-            // Over the list or full screen, the pane hides the rows the search just read.
+            // Over the list or as a card, the pane hides the rows the search just read.
             if (_paneMode != QueryPaneMode.Docked)
                 CloseQueryPane();
             _paging.InvalidateTotalCount();

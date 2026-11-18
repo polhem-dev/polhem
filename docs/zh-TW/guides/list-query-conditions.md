@@ -1,4 +1,4 @@
-<!-- source: en/guides/list-query-conditions.md blob: 8ec39abe898ac0675b484319c4e804326ac7953e -->
+<!-- source: en/guides/list-query-conditions.md blob: fabb0d2b05d78a8f3d243fe0d8340cb675344df0 -->
 # 清單查詢條件
 
 [English](../../en/guides/list-query-conditions.md) · [← 文件索引](../README.md)
@@ -35,7 +35,7 @@
 |------|------|
 | 清單在 360 像素的窗格旁還有 600 像素以上 | 固定在右側；清單變窄，高度不變 |
 | 比上面窄 | 浮在清單右側，點窗格外或搜尋後收起 |
-| 小於 600 像素（手機） | 全螢幕卡片，搜尋後收起 |
+| 小於 600 像素（手機） | 覆蓋整個畫面的卡片，清單變暗；搜尋後收起 |
 
 清單一開始沒有任何條件。Blazor 版目前仍以欄頭篩選來過濾清單。
 

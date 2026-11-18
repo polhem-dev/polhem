@@ -36,7 +36,7 @@ Where the pane appears depends on the width of the list:
 |-------|----------|
 | The list keeps at least 600 pixels beside a 360-pixel pane | Docked on the right; the list narrows, and its height does not change |
 | Narrower | Over the right side of the list, closed by a click outside it or after a search |
-| Under 600 pixels (a phone) | A full screen card, closed after a search |
+| Under 600 pixels (a phone) | A card over the whole view, which dims the list; closed after a search |
 
 A list starts with no conditions. The Blazor heads filter their lists by column instead, for now.
 

@@ -33,6 +33,25 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Dialogs
         }
 
         [Fact]
+        [DisplayName("The content is unparented when the dialog completes, so the same control can be shown again")]
+        public void ShowAsync_Completed_ReleasesContentForReuse()
+        {
+            using var scope = new InlineContinuationScope();
+            var host = new OverlayTestHost();
+            var content = new TextBlock { Text = "pane" };
+
+            for (int i = 0; i < 2; i++)
+            {
+                var completion = new TaskCompletionSource();
+                var task = OverlayDialogHost.ShowAsync(host.Host, content, null, completion.Task);
+                Assert.Same(content, host.Panel<TextBlock>());
+                completion.SetResult();
+                InlineContinuationScope.Completed(task);
+                Assert.Null(content.Parent);
+            }
+        }
+
+        [Fact]
         [DisplayName("A dialog without a title shows only its panel in the card")]
         public void ShowAsync_NoTitle_ShowsPanelOnly()
         {
