@@ -149,6 +149,8 @@ namespace Polhem.Web.Blazor.BrowserTests
             await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
             var panel = page.Locator($"{RowEditDialog} .polhem-row-edit-panel");
             await Assertions.Expect(panel).ToBeVisibleAsync();
+            // A dialog takes the focus after it opens, which would undo a blur made before that.
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", RowEditDialog);
             return (page, panel);
         }
 

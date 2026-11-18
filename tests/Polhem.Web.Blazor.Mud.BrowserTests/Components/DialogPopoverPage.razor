@@ -1,0 +1,17 @@
+@page "/dialog-popover"
+@using MudBlazor
+@using Polhem.Web.Blazor.Mud.Theming
+
+@* A dialog that closes on Escape, with an open popover, which renders outside the dialog. *@
+<PolhemMudProviders />
+<MudDialog Visible="_open" VisibleChanged="v => _open = v" Options="s_options" Class="test-dismissable">
+    <DialogContent>
+        <div>Anchor</div>
+        <MudPopover Open="true"><div class="test-popover">Popover</div></MudPopover>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions s_options = new() { CloseOnEscapeKey = true, BackdropClick = true };
+    private bool _open = true;
+}

@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Mud.Theming
                 _module = await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
                 await _module.InvokeVoidAsync("forwardEscape").ConfigureAwait(true);
             }
-            catch (JSException)
+            catch (Exception ex) when (ex is JSException or JSDisconnectedException or TaskCanceledException)
             {
                 // Without the forwarder a dialog still closes on Escape pressed inside it, as MudBlazor does by itself.
                 _module = null;
