@@ -1,0 +1,31 @@
+@page "/row-edit-lookup"
+@using System.Data
+@using Polhem.Definition.Layouts
+@using Polhem.Web.Blazor.BehaviorTests
+@using Polhem.UI.Core.DataObjects
+@using Polhem.Web.Blazor.Mud.Controls.Editors
+@using Polhem.Web.Blazor.Mud.Theming
+
+@* The row edit dialog, which Escape does not close, with a line field that opens a lookup, which Escape does close. *@
+<PolhemMudProviders />
+@if (_editing)
+{
+    <RowEditDialog DataObject="_data" Layout="_layout" Row="_row" Compact="true"
+                   EditCommitted="() => _editing = false" EditCancelled="() => _editing = false" />
+}
+<pre id="data">@_row[LookupTestData.LookupField]</pre>
+
+@code {
+    private FormDataObject _data = null!;
+    private LayoutGrid _layout = null!;
+    private DataRow _row = null!;
+    private bool _editing = true;
+
+    protected override void OnInitialized()
+    {
+        var schema = LookupTestData.BuildOrderWithLookupLineSchema();
+        _data = LookupTestData.BuildOrderWithLookupLine(schema);
+        _layout = LookupTestData.LookupLinesLayout(schema);
+        _row = _data.DataSet.Tables["OrderLine"]!.Rows[0];
+    }
+}

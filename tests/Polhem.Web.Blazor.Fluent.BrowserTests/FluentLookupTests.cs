@@ -18,5 +18,8 @@ namespace Polhem.Web.Blazor.Fluent.BrowserTests
 
         /// <inheritdoc />
         protected override string LookupButton => ".polhem-button-edit__search";
+
+        /// <inheritdoc />
+        protected override string RowEditDialog => "fluent-dialog.polhem-row-edit-dialog";
     }
 }

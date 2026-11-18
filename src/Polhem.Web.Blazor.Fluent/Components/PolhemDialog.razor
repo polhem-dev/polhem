@@ -1,9 +1,12 @@
 @namespace Polhem.Web.Blazor.Fluent.Components
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 
 @* An inline FluentDialog stays where it is placed, so removing this component removes it.
    Modal renders type="alert", which a click outside does not close, so a dialog that may be dismissed asks for "modal". *@
 <div class="polhem-dialog">
-    <FluentDialog @ref="_dialog" Class="@Class" Modal="true" PreventDismissOnEscape="@(!Dismissable)" type="@(Dismissable ? "modal" : "alert")"
+    <FluentDialog @ref="_dialog" Class="@Class" Modal="true" type="@(Dismissable ? "modal" : "alert")"
                   OnStateChange="OnStateChangeAsync">
         <FluentDialogBody>
             <TitleTemplate>@Title</TitleTemplate>
@@ -18,8 +21,12 @@
 </div>
 
 @code {
+    private const string ModulePath = "./_content/Polhem.Web.Blazor.Fluent/polhem-fluent-dialog.js";
+
     private FluentDialog? _dialog;
     private bool _dismissed;
+    private IJSObjectReference? _module;
+    private bool _escapeGuarded;
 
     /// <summary>Gets or sets the dialog's class.</summary>
     [Parameter]
@@ -48,7 +55,43 @@
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _dialog is not null) await _dialog.ShowAsync().ConfigureAwait(true);
+        if (_dialog is null) return;
+        // WARNING: Fluent UI's `PreventDismissOnEscape` also swallows Escape meant for a dialog nested in this one, so a
+        // dialog that may not be dismissed uses the guard in `polhem-fluent-dialog.js` instead. It goes on before the
+        // dialog opens, so no Escape reaches the dialog unguarded.
+        if (_escapeGuarded == Dismissable) await UpdateEscapeGuardAsync(_dialog.Id).ConfigureAwait(true);
+        if (firstRender) await _dialog.ShowAsync().ConfigureAwait(true);
+    }
+
+    private async Task UpdateEscapeGuardAsync(string? id)
+    {
+        var guard = !Dismissable;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
+            await _module.InvokeVoidAsync(guard ? "guardEscape" : "releaseEscape", id).ConfigureAwait(true);
+            _escapeGuarded = guard;
+        }
+        catch (JSException)
+        {
+            // A dialog whose guard failed to load still opens, and Escape can then close it. Recording the state anyway
+            // keeps every later render from trying, and failing, again.
+            _escapeGuarded = guard;
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) return;
+        try
+        {
+            await _module.DisposeAsync().ConfigureAwait(true);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is gone, and the module with it.
+        }
     }
 
     // WARNING: FluentDialog raises OnStateChange for an inline dialog only from Fluent UI 5.1.0, and it maps any toggle

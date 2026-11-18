@@ -1,6 +1,7 @@
 using System.Data;
 using Polhem.Api.Contracts.Form;
 using Polhem.Core.Data;
+using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Paging;
@@ -50,6 +51,45 @@ namespace Polhem.Web.Blazor.BehaviorTests
             dataObject.InitializeNewMaster();
             return dataObject;
         }
+
+        /// <summary>
+        /// Builds an order whose single line looks up <see cref="LookupField"/>, for a lookup opened from the row edit
+        /// dialog.
+        /// </summary>
+        /// <param name="schema">A schema built by <see cref="BuildOrderWithLookupLineSchema"/>.</param>
+        /// <returns>The order, with one line in <c>OrderLine</c>.</returns>
+        public static FormDataObject BuildOrderWithLookupLine(FormSchema schema)
+        {
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+            var table = dataObject.DataSet.Tables["OrderLine"]!;
+            table.Rows.Add(table.NewRow());
+            return dataObject;
+        }
+
+        /// <summary>Builds the schema of an order whose lines look up <see cref="LookupField"/>.</summary>
+        /// <returns>The schema.</returns>
+        public static FormSchema BuildOrderWithLookupLineSchema()
+        {
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add(SysFields.RowId, "Row", FieldDbType.Guid);
+            var lines = schema.Tables.Add("OrderLine", "Lines").Fields!;
+            lines.Add(new FormField(SysFields.RowId, "Row", FieldDbType.Guid) { Visible = false });
+            lines.Add(new FormField(SysFields.MasterRowId, "Order", FieldDbType.Guid) { Visible = false });
+            var dept = lines.Add(LookupField, "Department", FieldDbType.Guid);
+            dept.RelationProgId = "Dept";
+            dept.RelationFieldMappings!.Add("sys_id", "ref_dept_id");
+            dept.RelationFieldMappings.Add("sys_name", "ref_dept_name");
+            lines.Add("ref_dept_id", "Department Code", FieldDbType.String);
+            lines.Add("ref_dept_name", "Department Name", FieldDbType.String);
+            return schema;
+        }
+
+        /// <summary>Gets the line layout of a schema built by <see cref="BuildOrderWithLookupLineSchema"/>.</summary>
+        /// <param name="schema">The schema.</param>
+        /// <returns>The layout of <c>OrderLine</c>.</returns>
+        public static LayoutGrid LookupLinesLayout(FormSchema schema)
+            => FormLayoutGenerator.Generate(schema, "default").Details!.Single();
 
         public static DataTable BuildTargetRows()
         {

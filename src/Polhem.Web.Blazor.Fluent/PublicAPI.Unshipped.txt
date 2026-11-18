@@ -1,1 +1,2 @@
 #nullable enable
+Polhem.Web.Blazor.Fluent.Components.PolhemDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
