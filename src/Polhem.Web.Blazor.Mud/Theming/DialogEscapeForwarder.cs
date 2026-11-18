@@ -19,15 +19,18 @@ namespace Polhem.Web.Blazor.Mud.Theming
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (!firstRender) return;
+            IJSObjectReference? module = null;
             try
             {
-                _module = await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
-                await _module.InvokeVoidAsync("forwardEscape").ConfigureAwait(true);
+                module = await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
+                await module.InvokeVoidAsync("forwardEscape").ConfigureAwait(true);
+                _module = module;
             }
             catch (Exception ex) when (ex is JSException or JSDisconnectedException or TaskCanceledException)
             {
                 // Without the forwarder a dialog still closes on Escape pressed inside it, as MudBlazor does by itself.
-                _module = null;
+                // A module that did load is kept, so that disposing the component releases it.
+                _module = module;
             }
         }
 

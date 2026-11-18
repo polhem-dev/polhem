@@ -5,8 +5,9 @@
 // and Escape then did nothing, even on a dialog that should close. The forwarder dispatches the key again on the topmost
 // `.mud-dialog`, where the interceptor finds it, and the dialog's own options decide what happens.
 //
-// It leaves alone a key something else has handled, a key aimed at an element, and any key while a popover is open: a
-// popover renders outside its dialog, so its Escape must not close the dialog too (`MudDialogEscapeTests`).
+// It leaves alone a key something else has handled, a key aimed at an element, and any key while a popover other than a
+// tooltip is open: a popover renders outside its dialog, so its Escape must not close the dialog too. A tooltip opens
+// on hover and takes no keys (`MudDialogEscapeTests`).
 
 let installed = false;
 
@@ -15,7 +16,7 @@ export function forwardEscape() {
     installed = true;
     document.addEventListener('keydown', e => {
         if (e.key !== 'Escape' || !e.isTrusted || e.defaultPrevented || e.target !== document.body) return;
-        if (document.querySelector('.mud-popover-open')) return;
+        if (document.querySelector('.mud-popover-open:not(.mud-tooltip)')) return;
         const dialogs = document.querySelectorAll('.mud-dialog-container .mud-dialog');
         const topmost = dialogs[dialogs.length - 1];
         topmost?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true }));

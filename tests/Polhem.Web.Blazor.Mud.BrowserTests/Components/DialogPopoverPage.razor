@@ -2,16 +2,27 @@
 @using MudBlazor
 @using Polhem.Web.Blazor.Mud.Theming
 
-@* A dialog that closes on Escape, with an open popover, which renders outside the dialog. *@
+@* A dialog that closes on Escape, with an open popover, which renders outside the dialog; with ?tooltip, an open tooltip
+   instead. *@
 <PolhemMudProviders />
 <MudDialog Visible="_open" VisibleChanged="v => _open = v" Options="s_options" Class="test-dismissable">
     <DialogContent>
-        <div>Anchor</div>
-        <MudPopover Open="true"><div class="test-popover">Popover</div></MudPopover>
+        @if (Tooltip)
+        {
+            <MudTooltip Text="Tip" Visible="true" Class="test-tooltip"><span>Anchor</span></MudTooltip>
+        }
+        else
+        {
+            <div>Anchor</div>
+            <MudPopover Open="true"><div class="test-popover">Popover</div></MudPopover>
+        }
     </DialogContent>
 </MudDialog>
 
 @code {
+    [SupplyParameterFromQuery]
+    public bool Tooltip { get; set; }
+
     private static readonly DialogOptions s_options = new() { CloseOnEscapeKey = true, BackdropClick = true };
     private bool _open = true;
 }

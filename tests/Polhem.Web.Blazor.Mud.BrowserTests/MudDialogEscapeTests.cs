@@ -39,5 +39,22 @@ namespace Polhem.Web.Blazor.Mud.BrowserTests
             await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(1);
         }
 
+
+        [BrowserFact]
+        [DisplayName("Escape with the focus on the body closes a dismissable dialog while only a tooltip is open")]
+        public async Task EscapeOnBody_WithTooltipOpen_ClosesDialog()
+        {
+            var page = await _fixture.Browser.NewPageAsync();
+            await page.GotoAsync(_fixture.Address + "/dialog-popover?tooltip=true");
+            await page.Locator("body[data-interactive]").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+            await Assertions.Expect(page.Locator(".mud-popover-open.mud-tooltip")).ToBeVisibleAsync();
+            await page.WaitForFunctionAsync("selector => document.activeElement?.closest(selector) != null", Dialog);
+            await page.EvaluateAsync("() => document.activeElement?.blur()");
+            Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.body"));
+
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(page.Locator(Dialog)).ToHaveCountAsync(0);
+        }
     }
 }
