@@ -13,7 +13,7 @@
   <ItemGroup>
     <!-- Lower bounds, as in Polhem.UI.Avalonia: the heads in this repository run these versions, and a host may bring
          a newer 12.x. Semi.Avalonia is the theme the shell applies, on the version line the Avalonia core is on. -->
-    <PackageReference Include="Avalonia" Version="12.1.3" />
+    <PackageReference Include="Avalonia" Version="12.1.6" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
     <PackageReference Include="Semi.Avalonia" Version="12.1.0.1" />
     <PackageReference Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
