@@ -134,6 +134,36 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>
+        /// Overwrites the values of an unchanged <paramref name="row"/> with those of its stored row, leaving it
+        /// unchanged.
+        /// </summary>
+        /// <param name="row">An unchanged row of the payload.</param>
+        /// <param name="stored">The record as stored.</param>
+        /// <param name="tableName">The table of <paramref name="row"/>.</param>
+        /// <remarks>
+        /// The repository writes no unchanged row, so whatever the caller put in it is read by totals and rules but
+        /// never stored. A column the stored table does not have keeps its value. When the stored row cannot be
+        /// matched by row id, the payload's values are left as they are.
+        /// </remarks>
+        public static void RestoreStoredValues(DataRow row, DataSet stored, string tableName)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(stored);
+            if (row.RowState != DataRowState.Unchanged || !stored.Tables.Contains(tableName)) { return; }
+            var source = stored.Tables[tableName]!;
+            if (!source.Columns.Contains(SysFields.RowId) || !row.Table.Columns.Contains(SysFields.RowId)) { return; }
+            var rowId = ValueUtilities.CGuid(row[SysFields.RowId]);
+            var storedRow = source.Rows.Cast<DataRow>().FirstOrDefault(candidate => ValueUtilities.CGuid(candidate[SysFields.RowId]) == rowId);
+            if (storedRow is null) { return; }
+            foreach (DataColumn column in row.Table.Columns)
+            {
+                if (column.ReadOnly || !source.Columns.Contains(column.ColumnName)) { continue; }
+                row[column] = storedRow[column.ColumnName];
+            }
+            row.AcceptChanges();
+        }
+
+        /// <summary>
         /// For a payload that only deletes records, returns the first named table of <paramref name="payload"/> with a
         /// row other than a deletion of one of those records' stored rows, or <c>null</c> when there is none.
         /// </summary>

@@ -35,9 +35,12 @@ namespace Polhem.Business.Form
             var aggregated = FormExpressionCalculator.GetSaveAggregatedTables(schema);
             if (aggregated.Count == 0) { return; }
 
+            // A name that is the master table is not a detail table (validation reports it); left in, its unchanged
+            // master row would be dropped below.
             var detailNames = aggregated
                 .Where(schema.Tables.Contains)
                 .Select(name => schema.Tables[name].TableName)
+                .Where(name => !string.Equals(name, masterTable.TableName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             var dataSet = context.DataSet;
             var masterRows = dataSet.Tables.Contains(masterTable.TableName)
@@ -111,7 +114,14 @@ namespace Polhem.Business.Form
                     foreign, masterTable.TableName);
             }
 
-            if (stored is not null) { AggregatedDetailCompletion.ImportMissingRows(dataSet, stored, detailNames); }
+            if (stored is not null)
+            {
+                AggregatedDetailCompletion.ImportMissingRows(dataSet, stored, detailNames);
+                // An unchanged master row is not written either, so a rule reading its fields would read the caller's
+                // values; it takes the stored ones, as the unchanged detail rows do.
+                if (master.RowState == DataRowState.Unchanged)
+                    AggregatedDetailCompletion.RestoreStoredValues(master, stored, masterTable.TableName);
+            }
         }
 
         private static bool HasChangedRows(DataSet dataSet, string tableName)

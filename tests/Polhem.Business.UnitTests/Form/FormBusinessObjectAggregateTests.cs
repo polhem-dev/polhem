@@ -333,6 +333,40 @@ namespace Polhem.Business.UnitTests.Form
             }
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("An unchanged master row the caller rewrote is read with its stored values by a rule")]
+        public void Save_ForgedUnchangedMaster_RuleReadsStoredValue()
+        {
+            var form = NewForm(withTotal: false);
+            form.Schema.Rules!.Add(new FormRule("within_limit",
+                $"Sum({DetailName(form)}.{Amount}) <= {Total}", "The lines exceed the limit."));
+            form.CreateTables();
+            try
+            {
+                var rowId = Guid.NewGuid();
+                var dataSet = form.Repository.GetNewData();
+                var newMaster = dataSet.Tables[form.Schema.ProgId]!.Rows[0];
+                newMaster[SysFields.RowId] = rowId;
+                newMaster[Total] = 100m;
+                dataSet.Tables[DetailName(form)]!.Rows.Add(Guid.NewGuid(), rowId, 10m);
+                NewBo(form).Save(new SaveArgs { DataSet = dataSet });
+
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = rowId }).DataSet!;
+                var master = loaded.Tables[form.Schema.ProgId]!.Rows[0];
+                master[Total] = 1000m;
+                master.AcceptChanges();
+                loaded.Tables[DetailName(form)]!.Rows[0][Amount] = 500m;
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Contains("exceed the limit", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
         private Guid SaveRecord(TransientForm form, params decimal[] amounts)
         {
             var rowId = Guid.NewGuid();
