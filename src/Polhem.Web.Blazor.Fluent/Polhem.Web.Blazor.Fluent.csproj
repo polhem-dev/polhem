@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <!-- An exact version: this package works around behavior of the components that is not documented. Check it when upgrading. -->
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="[5.0.1]" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="[5.1.0]" />
   </ItemGroup>
 
   <ItemGroup>

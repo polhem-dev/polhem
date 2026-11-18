@@ -1,11 +1,10 @@
 @namespace Polhem.Web.Blazor.Fluent.Components
 
 @* An inline FluentDialog stays where it is placed, so removing this component removes it.
-   WARNING: FluentDialog raises OnStateChange only for a dialog from IDialogService, because it compares the event's id with
-   an instance that is null here, so the wrapper listens for the toggle itself. An upgrade can change this.
    Modal renders type="alert", which a click outside does not close, so a dialog that may be dismissed asks for "modal". *@
-<div class="polhem-dialog" @ondialogtoggle="OnToggleAsync">
-    <FluentDialog @ref="_dialog" Class="@Class" Modal="true" PreventDismissOnEscape="@(!Dismissable)" type="@(Dismissable ? "modal" : "alert")">
+<div class="polhem-dialog">
+    <FluentDialog @ref="_dialog" Class="@Class" Modal="true" PreventDismissOnEscape="@(!Dismissable)" type="@(Dismissable ? "modal" : "alert")"
+                  OnStateChange="OnStateChangeAsync">
         <FluentDialogBody>
             <TitleTemplate>@Title</TitleTemplate>
             <ChildContent>
@@ -52,10 +51,11 @@
         if (firstRender && _dialog is not null) await _dialog.ShowAsync().ConfigureAwait(true);
     }
 
-    private async Task OnToggleAsync(DialogToggleEventArgs e)
+    // FluentDialog passes on only the toggles of its own element, not those of a popover inside it. Closing comes from
+    // `beforetoggle` and Closed from `toggle`; the first of them dismisses.
+    private async Task OnStateChangeAsync(DialogEventArgs e)
     {
-        // A popover inside the dialog raises the same event, so only this dialog's own id counts.
-        if (!string.Equals(e.Id, _dialog?.Id, StringComparison.Ordinal) || e.NewState != "closed" || _dismissed) return;
+        if (e.State is not (DialogState.Closing or DialogState.Closed) || _dismissed) return;
         _dismissed = true;
         await Dismissed.InvokeAsync().ConfigureAwait(true);
     }

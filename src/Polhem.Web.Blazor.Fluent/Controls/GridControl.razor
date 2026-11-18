@@ -30,7 +30,7 @@
     }
     @* The resize and reorder script changes the header cells in place, and a render that passes the same widths leaves
        them alone, so without the key the next form started at the widths and the order the last one was left with. *@
-    <PolhemDataGrid @key="LayoutIdentity"
+    <FluentDataGrid @key="LayoutIdentity"
                     TGridItem="DataRow"
                     Items="_rows"
                     ItemKey="@(row => row)"
@@ -103,7 +103,7 @@
                 </ChildContent>
             </TemplateColumn>
         }
-    </PolhemDataGrid>
+    </FluentDataGrid>
 </div>
 @if (EditingRow is not null && BoundDataObject is not null && Layout is not null)
 {
