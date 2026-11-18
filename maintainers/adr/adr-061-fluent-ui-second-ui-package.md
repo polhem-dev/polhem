@@ -49,6 +49,10 @@ Fluent UI 5.0.1 needs these, each marked `WARNING:` where it is:
 | `GridControl` | A Fluent input writes its value back just after it takes the focus, so held keys replay 50 ms later. This was measured and not traced to its source: 16 ms held and 0 ms did not. |
 | `DateEdit`, `DateTimeEdit` | The picker has no callback for text it cannot parse, so leaving recreates it after a 250 ms wait for the focus to land. |
 
+> Update for Fluent UI 5.1.0: it fixes fluentui-blazor#5580, so the grid uses `FluentDataGrid` again and `PolhemDataGrid`
+> is obsolete; and an inline dialog raises `OnStateChange`, so `PolhemDialog` listens to it instead of the toggle event.
+> The other rows were checked against 5.1.0 and kept.
+
 ## Consequences
 
 - An application chooses between the two UI packages when it starts. Definition-driven pages move by changing the package

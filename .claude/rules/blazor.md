@@ -46,7 +46,7 @@ tests use MudBlazor's internal class names, so **a clean build does not show tha
 ## Before upgrading Fluent UI, verify at run time too
 
 The version is pinned exactly in `src/Polhem.Web.Blazor.Fluent/Polhem.Web.Blazor.Fluent.csproj`. The package works around
-behavior that is not documented, each with a `WARNING:` where it is: `PolhemDataGrid`, `PolhemDialog`, the popover in
+behavior that is not documented, each with a `WARNING:` where it is: `PolhemDialog`, the popover in
 `GridColumnFilter`, the replay delay in `GridControl`, and the native inputs in the sign-in, the filter and the lookup search. An upgrade can break or remove the need for any of them, so run
 `tests/Polhem.Web.Blazor.Fluent.UnitTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` first.
 DefineEditor's Fluent UI preview draws with the same package, and its `wwwroot/browser-preview.js` finds a grid's columns
