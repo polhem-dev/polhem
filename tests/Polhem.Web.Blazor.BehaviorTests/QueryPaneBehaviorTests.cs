@@ -76,6 +76,11 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="text">The period's text.</param>
         protected abstract void ChoosePeriod(IRenderedComponent<ContainerFragment> cut, int row, string text);
 
+        /// <summary>Opens the filter of the list's first column, enters text and applies it.</summary>
+        /// <param name="cut">The rendered page.</param>
+        /// <param name="text">The text.</param>
+        protected abstract void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text);
+
         /// <summary>Goes to the next page of the list.</summary>
         /// <param name="cut">The rendered page.</param>
         protected abstract void NextPage(IRenderedComponent<ContainerFragment> cut);
@@ -267,6 +272,61 @@ namespace Polhem.Web.Blazor.BehaviorTests
             cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(Chip)));
             Assert.Null(backend.LastFilter);
             Assert.Empty(cut.FindAll(Row));
+        }
+
+        [Fact]
+        [DisplayName("A column filter is a condition: it shows as a chip and as a row of the pane")]
+        public void ColumnFilter_ShowsAsChipAndRow()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+
+            ApplyFirstColumnFilter(cut, "Ali");
+
+            cut.WaitForAssertion(() => Assert.Equal(
+                $"Name {Text(PolhemUIText.CriteriaContains)} Ali", Assert.Single(cut.FindAll(Chip)).TextContent.Trim()));
+            Assert.Equal("Ali", Assert.Single(Conditions(backend.LastFilter)).Value as string);
+            OpenPane(cut);
+            Assert.Single(cut.FindAll(Row));
+        }
+
+        [Fact]
+        [DisplayName("Setting a column again replaces its condition, and a pane condition on another field adds to it")]
+        public void ColumnFilter_ReplacesItsOwnRowAndCombinesWithPane()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            ApplyFirstColumnFilter(cut, "Ali");
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Chip)));
+
+            ApplyFirstColumnFilter(cut, "Bob");
+            cut.WaitForAssertion(() => Assert.Equal("Bob", Assert.Single(Conditions(backend.LastFilter)).Value as string));
+
+            OpenPane(cut);
+            AddCondition(cut, "Status");
+            CheckChoice(cut, 1, "Open");
+            Search(cut);
+
+            cut.WaitForAssertion(() => Assert.Equal(2, Conditions(backend.LastFilter).Count));
+            Assert.Equal(2, cut.FindAll(Chip).Count);
+        }
+
+        [Fact]
+        [DisplayName("Removing a column filter's chip reads the list without it")]
+        public void ColumnFilter_RemoveChip_ReadsWithout()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            var cut = RenderList();
+            ApplyFirstColumnFilter(cut, "Ali");
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(Chip)));
+
+            cut.Find(ChipRemove).Click();
+
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(Chip)));
+            Assert.Null(backend.LastFilter);
         }
 
         [Fact]

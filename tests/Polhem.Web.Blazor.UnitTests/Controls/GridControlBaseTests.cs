@@ -11,6 +11,7 @@ using Polhem.Definition.Settings;
 using Polhem.Definition.Sorting;
 using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Editing;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Lists;
 using Polhem.Web.Blazor.Controls;
 using Polhem.Web.Blazor.Controls.Editors;
@@ -293,7 +294,7 @@ namespace Polhem.Web.Blazor.UnitTests.Controls
                 .Add(c => c.DataObject, BuildOrder())
                 .Add(c => c.Layout, BuildLayout())
                 .Add(c => c.OnSortRequested, _ => { })
-                .Add(c => c.Filters, new ListFilterState())
+                .Add(c => c.ColumnFilters, new ColumnFilterCriteria(new QueryCriteria()))
                 .Add(c => c.OnFilterChanged, _ => { }));
 
             var headers = cut.FindAll(Header);
@@ -314,7 +315,7 @@ namespace Polhem.Web.Blazor.UnitTests.Controls
                 .Add(c => c.FormTable, formTable)
                 .Add(c => c.Layout, BuildLayout())
                 .Add(c => c.OnSortRequested, _ => { })
-                .Add(c => c.Filters, new ListFilterState()));
+                .Add(c => c.ColumnFilters, new ColumnFilterCriteria(new QueryCriteria())));
 
             var headers = cut.FindAll(Header);
             Assert.Equal("false", headers[0].GetAttribute("data-sortable"));

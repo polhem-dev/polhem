@@ -68,7 +68,7 @@
             <FluentMessageBar Intent="MessageBarIntent.Warning" Class="polhem-form-page__notice">@liveComputationNotice</FluentMessageBar>
         }
 
-        @if (!IsShowingRecord && Filters.HasFilters)
+        @if (!IsShowingRecord && HasConditions)
         {
             @* Outside the grid: a filter can leave no rows, and the cards have no headers, and it must still come off. *@
             <div class="polhem-form-page__filters" role="status">
@@ -110,7 +110,7 @@
         {
             @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
             {
-                <GridControl Filters="Filters"
+                <GridControl ColumnFilters="ColumnFilters"
                              OnFilterChanged="change => OnFilterChangedAsync(change)"
                              Layout="ListLayout"
                              DataTable="ListRows"

@@ -8,6 +8,8 @@ using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Core.UnitTests.Connectors
 {
+    // The type is obsolete and stays tested until it is removed; marking the class keeps CS0618 off its own tests.
+    [Obsolete("Tests ListFilterState, which is obsolete.")]
     public class ListFilterStateTests
     {
         private static FormField Field(FieldDbType type) => new("f", "F", type);

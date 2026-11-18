@@ -25,6 +25,7 @@ namespace Polhem.Web.Blazor.Components
         private FilterNode? _criteriaFilter;
         private IReadOnlyList<CriteriaChip> _criteriaChips = [];
         private bool _isQueryPaneOpen;
+        private ColumnFilterCriteria? _columnFilters;
 
         /// <summary>Gets the conditions the pane edits; a list starts with none.</summary>
         protected QueryCriteria Criteria => _criteria;
@@ -41,6 +42,9 @@ namespace Polhem.Web.Blazor.Components
         /// saved default query the user would not see.
         /// </summary>
         protected virtual bool SupportsQueryPane => false;
+
+        /// <summary>Gets a value indicating whether any condition is in effect, a column filter included.</summary>
+        protected bool HasConditions => _criteriaChips.Count > 0;
 
         /// <summary>Gets a value indicating whether the toolbar offers the Query button: on the list, when a field can take a condition.</summary>
         protected bool ShowsQueryButton => SupportsQueryPane && !_isShowingRecord && _criteriaFields.Count > 0;
@@ -137,12 +141,6 @@ namespace Polhem.Web.Blazor.Components
                 .ToArray();
         }
 
-        // The column filters and the query conditions both narrow the list.
-        private FilterNode? CreateListFilter()
-        {
-            var columns = _filters.CreateFilter();
-            if (columns is null) return _criteriaFilter;
-            return _criteriaFilter is null ? columns : FilterGroup.All(columns, _criteriaFilter);
-        }
+        private FilterNode? CreateListFilter() => _criteriaFilter;
     }
 }

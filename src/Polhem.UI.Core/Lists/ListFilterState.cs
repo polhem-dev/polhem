@@ -14,7 +14,13 @@ namespace Polhem.UI.Core.Lists
     /// The entered values stay as the user typed them, so a head can show them again. Text filters use
     /// <see cref="ComparisonOperator.Contains"/>: <c>%</c> in the text acts as a wildcard, <c>_</c> matches itself, and
     /// whether matching ignores case depends on the database.
+    /// <para>
+    /// The framework no longer reads it: the Blazor list's column headers set rows of the list's query criteria through
+    /// <see cref="Polhem.UI.Core.Criteria.ColumnFilterCriteria"/>, so the query pane shows them. It will be removed in the
+    /// next major version.
+    /// </para>
     /// </remarks>
+    [Obsolete("Column filters are rows of the list's QueryCriteria now; use Polhem.UI.Core.Criteria.ColumnFilterCriteria.")]
     public sealed class ListFilterState
     {
         private readonly Dictionary<string, Entry> _entries = new(StringComparer.OrdinalIgnoreCase);

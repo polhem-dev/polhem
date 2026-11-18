@@ -55,7 +55,8 @@
   整個 process 共用的狀態。`LiveComputationDegradation` 描述它停止計算的原因：運算式失敗的欄位，以及失敗本身。
 - `Criteria/QueryCriteria` -- 使用者逐條加入的查詢條件（`CriteriaField`、`CriteriaRow`、`RelativeDate`），與後端方法無關；
   `GetListFilterConverter` 把它轉成清單請求的 `FilterNode`。請參閱[清單查詢條件](../../docs/zh-TW/guides/list-query-conditions.md)。
-- `Lists/ListFilterState` -- 表單清單的欄位篩選，各 head 都把它轉成同一個 `FilterNode`。
+- `Criteria/ColumnFilterCriteria` -- 表單清單的欄頭篩選，存成清單 `QueryCriteria` 的條件列，所以查詢窗格看得到。
+  原本另外存放的 `Lists/ListFilterState` 已標為過時，框架不再讀取。
 - `Lists/CardListState` -- 手機以卡片顯示的清單資料列，隨使用者捲動一次讀一頁累積。
 
 ### 表單資料物件
@@ -122,6 +123,6 @@
 - `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
   `TimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`GridColumnRules`、`FieldCaptionRules`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
-- `Criteria/` -- `QueryCriteria`、`CriteriaRow`、`CriteriaField`、`CriteriaOperator`、`RelativeDate`、`GetListFilterConverter`
+- `Criteria/` -- `QueryCriteria`、`CriteriaRow`、`CriteriaField`、`CriteriaOperator`、`RelativeDate`、`GetListFilterConverter`、`ColumnFilterCriteria`
 - `Lists/` -- `ListFilterState`、`CardListState`、`ListPagingState`、`ListSelectFields`、`ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

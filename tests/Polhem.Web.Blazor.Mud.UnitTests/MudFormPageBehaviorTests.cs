@@ -44,6 +44,9 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         protected override string SortSelector => "button.polhem-grid__sort";
 
         /// <inheritdoc />
+        protected override string ClearFilters => ".polhem-criteria-chips__clear";
+
+        /// <inheritdoc />
         protected override void DoubleClickRow(IElement row) => row.Click(new MouseEventArgs { Detail = 2 });
 
         /// <inheritdoc />

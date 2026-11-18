@@ -72,6 +72,14 @@ namespace Polhem.Web.Blazor.Mud.UnitTests
         }
 
         /// <inheritdoc />
+        protected override void ApplyFirstColumnFilter(IRenderedComponent<ContainerFragment> cut, string text)
+        {
+            cut.Find(".polhem-grid-filter__button").Click();
+            _popovers.WaitForAssertion(() => _popovers.Find(".polhem-grid-filter__first input").Input(text));
+            _popovers.Find(".polhem-grid-filter__form").Submit();
+        }
+
+        /// <inheritdoc />
         protected override void NextPage(IRenderedComponent<ContainerFragment> cut)
             => cut.FindAll(".polhem-form-page__pager button")
                 .Single(b => b.TextContent.Trim() == PolhemUIText.Get(PolhemBlazorText.GetLocalizer(null), PolhemUIText.NextPage))

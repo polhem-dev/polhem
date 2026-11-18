@@ -186,3 +186,9 @@ Polhem.Web.Blazor.Controls.UserQueryEntry.UserQueryEntry(System.Guid rowId, stri
 const Polhem.Web.Blazor.Components.FormPageBase.UserQueryNameMaxLength = 100 -> int
 override Polhem.Web.Blazor.Components.NamePromptDialogBase.OnParametersSet() -> void
 virtual Polhem.Web.Blazor.Components.FormPageBase.SupportsQueryPane.get -> bool
+Polhem.Web.Blazor.Components.FormPageBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria!
+Polhem.Web.Blazor.Components.FormPageBase.HasConditions.get -> bool
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria!
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.set -> void
+Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria?
+Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.set -> void

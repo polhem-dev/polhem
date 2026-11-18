@@ -7,6 +7,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Sorting;
+using Polhem.UI.Core.Criteria;
 using Polhem.UI.Core.Fields;
 using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
@@ -168,12 +169,17 @@ namespace Polhem.Web.Blazor.Controls
         [Parameter]
         public EventCallback<string> OnSortRequested { get; set; }
 
+        /// <summary>Gets or sets a filter state that the grid no longer reads.</summary>
+        [Parameter]
+        [Obsolete("The grid reads ColumnFilters, whose rows are conditions of the list's QueryCriteria.")]
+        public ListFilterState? Filters { get; set; }
+
         /// <summary>
-        /// Gets or sets the list's column filters. With <see cref="OnFilterChanged"/>, each column that can be filtered
-        /// offers it. The grid does not filter its rows itself; the host reads them again.
+        /// Gets or sets the list's column filters, kept as rows of its query criteria. With <see cref="OnFilterChanged"/>,
+        /// each column that can be filtered offers it. The grid does not filter its rows itself; the host reads them again.
         /// </summary>
         [Parameter]
-        public ListFilterState? Filters { get; set; }
+        public ColumnFilterCriteria? ColumnFilters { get; set; }
 
         /// <summary>Gets or sets the callback raised when the user applies or clears a column's filter.</summary>
         [Parameter]

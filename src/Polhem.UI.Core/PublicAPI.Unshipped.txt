@@ -158,3 +158,11 @@ static Polhem.UI.Core.Criteria.UserQuerySkip.operator !=(Polhem.UI.Core.Criteria
 static Polhem.UI.Core.Criteria.UserQuerySkip.operator ==(Polhem.UI.Core.Criteria.UserQuerySkip left, Polhem.UI.Core.Criteria.UserQuerySkip right) -> bool
 ~override Polhem.UI.Core.Criteria.UserQuerySkip.Equals(object obj) -> bool
 ~override Polhem.UI.Core.Criteria.UserQuerySkip.ToString() -> string
+Polhem.UI.Core.Criteria.ColumnFilterCriteria
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.ColumnFilterCriteria(Polhem.UI.Core.Criteria.QueryCriteria! criteria) -> void
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.GetEntered(string! fieldName) -> (string! First, string! Second)
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.IsFiltered(string! fieldName) -> bool
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.TrySet(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Lists.ColumnFilterKind kind, string? first, string? second) -> bool
+static Polhem.UI.Core.Criteria.ColumnFilterCriteria.CanRead(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Lists.ColumnFilterKind kind, string? first, string? second) -> bool
+static Polhem.UI.Core.Criteria.ColumnFilterCriteria.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Lists.ColumnFilterKind
