@@ -59,3 +59,4 @@ const Polhem.Definition.Language.PolhemUIText.UserQueryUnreadable = "UserQueryUn
 const Polhem.Definition.Language.PolhemUIText.UserQueryUnshare = "UserQueryUnshare" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserQueryWithMarkers = "UserQueryWithMarkers" -> string!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void
+static Polhem.Definition.Forms.FormExpressionCalculator.GetSaveAggregatedTables(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlySet<string!>!

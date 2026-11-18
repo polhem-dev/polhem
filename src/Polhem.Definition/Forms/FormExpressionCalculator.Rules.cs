@@ -70,10 +70,12 @@ namespace Polhem.Definition.Forms
                 var variables = BuildVariables(row, formTable);
                 if (StringUtilities.IsNotEmpty(rule.When))
                 {
-                    var when = BindAggregates(rule.When, schema, formTable, row.Table.DataSet, variables, null);
+                    var when = BindAggregates(rule.When, schema, formTable, row.Table.DataSet, variables, null,
+                        timeZoneId, basis);
                     if (!_evaluator.Evaluate<bool>(when, NarrowVariables(when, variables), timeZoneId, basis)) { continue; }
                 }
-                var condition = BindAggregates(rule.Condition, schema, formTable, row.Table.DataSet, variables, null);
+                var condition = BindAggregates(rule.Condition, schema, formTable, row.Table.DataSet, variables, null,
+                    timeZoneId, basis);
                 if (!_evaluator.Evaluate<bool>(condition, NarrowVariables(condition, variables), timeZoneId, basis))
                     throw CreateRuleViolation(rule, schema.ProgId);
             }

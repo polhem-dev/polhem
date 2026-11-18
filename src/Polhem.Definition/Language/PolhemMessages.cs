@@ -67,8 +67,8 @@ namespace Polhem.Definition.Language
         /// <summary>A required detail field is empty; arguments are the field caption and the table name.</summary>
         public const string SaveDetailFieldRequired = Namespace + ".Save.DetailFieldRequired";
         /// <summary>
-        /// A save changes detail rows a master total is computed from without carrying the master row; arguments are
-        /// the master table and the detail table.
+        /// A save changes detail rows a master total or rule reads without carrying the master row; arguments are the
+        /// master table and the detail table.
         /// </summary>
         public const string SaveMasterRowMissing = Namespace + ".Save.MasterRowMissing";
 

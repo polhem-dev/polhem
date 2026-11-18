@@ -22,9 +22,11 @@ namespace Polhem.Definition.Forms
         /// skipped, as it is at run time.
         /// </para>
         /// <para>
-        /// A detail aggregate (<c>Sum(Table.field)</c>, <c>Count(Table)</c>, <c>Min</c>, <c>Max</c>) is checked as
-        /// well: it is reported when it is used outside the master table's value expressions and rules, when it
-        /// names a table or field the schema does not have, or when the field's type cannot be aggregated.
+        /// A detail aggregate (<c>Sum(Table.field)</c>, <c>Count(Table)</c>, <c>Min</c>, <c>Max</c>, and the
+        /// conditional <c>Count(Table, condition)</c>, <c>Any</c> and <c>All</c>) is checked as well: it is reported
+        /// when it is used outside the master table's value expressions and rules, when it names a table or field the
+        /// schema does not have, when the field's type cannot be aggregated, or when its condition does not parse as a
+        /// bool over the aggregated table's fields.
         /// </para>
         /// <para>
         /// This is the check a definition editor runs before saving. On the client, an expression that fails
@@ -136,11 +138,38 @@ namespace Polhem.Definition.Forms
             var types = new Dictionary<string, Type>(variableTypes, StringComparer.Ordinal);
             foreach (var aggregate in parsed.Aggregates)
             {
-                var (_, field, error) = ResolveAggregate(aggregate, schema);
+                var (detailTable, field, error) = ResolveAggregate(aggregate, schema);
                 if (error is not null) { return (error, parsed.OriginalStartOf(aggregate)); }
+                if (aggregate.HasCondition
+                    && FindConditionError(aggregate, detailTable!, parsed.ConditionStartOf(aggregate)) is { } conditionError)
+                    return conditionError;
                 types[aggregate.VariableName] = AggregateType(aggregate.Function, field);
             }
             return FindParseError(parsed.Expression, types, returnType, parsed);
+        }
+
+        // A condition of `Count`, `Any` or `All` is a bool expression over the aggregated table's fields, evaluated
+        // once per detail row; it cannot aggregate again. Its errors are reported where the condition is written.
+        private (string Message, int? Position)? FindConditionError(DetailAggregate aggregate, FormTable detailTable,
+            int conditionStart)
+        {
+            if (ParseAggregates(aggregate.Condition).HasAggregates)
+                return ($"{DescribeCall(aggregate)}: a condition reads one row of '{detailTable.TableName}' and cannot hold an aggregate.",
+                    conditionStart);
+            try
+            {
+                _evaluator.Validate(aggregate.Condition, GetVariableTypes(detailTable), typeof(bool));
+                return null;
+            }
+            catch (ExpressionEvaluationException ex)
+            {
+                if (ex.Position is not int position) { return (ex.Message, conditionStart); }
+                var message = ex.Message.Replace(
+                    string.Create(CultureInfo.InvariantCulture, $"(at index {position})"),
+                    string.Create(CultureInfo.InvariantCulture, $"(at index {conditionStart + position})"),
+                    StringComparison.Ordinal);
+                return (message, conditionStart + position);
+            }
         }
 
         // The engine reports positions in the text it parsed, which for an expression with aggregates is the

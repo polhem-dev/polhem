@@ -357,7 +357,7 @@ namespace Polhem.Definition.Forms
                 if (!row.Table.Columns.Contains(field.FieldName)) { continue; }
 
                 var expression = BindAggregates(field.ValueExpression, schema, formTable, row.Table.DataSet, variables,
-                    roundingContext);
+                    roundingContext, timeZoneId, basis);
                 // Coerced after evaluation rather than forced at parse time — see ApplyDefaults.
                 var result = ExpressionPolicy.CoerceValue(
                     _evaluator.Evaluate<object?>(expression,

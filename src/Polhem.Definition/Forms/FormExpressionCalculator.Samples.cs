@@ -85,7 +85,7 @@ namespace Polhem.Definition.Forms
         }
 
         // A sample row has no detail rows, so each aggregate takes the value it has over none: zero for Sum and
-        // Count, the field's empty value for Min and Max.
+        // Count, the field's empty value for Min and Max, false for Any and true for All.
         private string BindSampleAggregates(string expression, FormTable formTable, Dictionary<string, object?> variables)
         {
             var parsed = ParseAggregates(expression);
@@ -93,7 +93,9 @@ namespace Polhem.Definition.Forms
             var schema = (formTable.Collection as FormTableCollection)?.Owner as FormSchema
                 ?? throw new ExpressionEvaluationException(
                     $"The table '{formTable.TableName}' belongs to no form, so its aggregates cannot be resolved.");
-            return BindAggregates(expression, schema, formTable, dataSet: null, variables, roundingContext: null);
+            // No rows, so no condition is evaluated and the zone does not matter.
+            return BindAggregates(expression, schema, formTable, dataSet: null, variables, roundingContext: null,
+                timeZoneId: string.Empty, DateTimeBasis.UserZone);
         }
 
         // The variables of a sample row: every field of the table by its declared name, coerced as

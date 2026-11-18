@@ -10,16 +10,18 @@ namespace Polhem.Business.Form
     public partial class FormBusinessObject
     {
         /// <summary>
-        /// Completes the payload for the master fields computed from detail rows (<c>Sum(Table.field)</c>):
-        /// when the save changes an existing record, the stored detail rows the payload does not carry are added
-        /// unchanged, so the total adds up every row of the record.
+        /// Completes the payload for the master fields computed from detail rows (<c>Sum(Table.field)</c>) and the
+        /// rules that aggregate them (<c>All(Table, qty &gt; 0)</c>): when the save changes an existing record, the
+        /// stored detail rows the payload does not carry are added unchanged, so a total adds up, and a rule checks,
+        /// every row of the record.
         /// </summary>
         /// <exception cref="UserMessageException">
         /// The payload changes rows of an aggregated detail table without carrying the master row.
         /// </exception>
         /// <remarks>
         /// The framework's clients send the whole record, so for them nothing is added. A caller of the API may send
-        /// only the rows it changed; without this step the total would add up those rows alone. The stored record is
+        /// only the rows it changed; without this step the total would add up those rows alone, and a rule would
+        /// pass by checking them alone. The stored record is
         /// read without a scope filter: the save's own scope checks have already run, and the rows read here are
         /// not returned to the caller.
         /// </remarks>
@@ -28,10 +30,10 @@ namespace Polhem.Business.Form
             var schema = context.Schema;
             var masterTable = schema.MasterTable;
             if (masterTable is null || schema.Tables is null) { return; }
-            var map = FormExpressionCalculator.BuildAggregateDependencyMap(schema);
-            if (map.Count == 0) { return; }
+            var aggregated = FormExpressionCalculator.GetSaveAggregatedTables(schema);
+            if (aggregated.Count == 0) { return; }
 
-            var detailNames = map.Keys
+            var detailNames = aggregated
                 .Where(schema.Tables.Contains)
                 .Select(name => schema.Tables[name].TableName)
                 .ToList();
@@ -47,7 +49,7 @@ namespace Polhem.Business.Form
                 if (changed is not null)
                 {
                     throw new UserMessageException(PolhemMessages.SaveMasterRowMissing,
-                        "Save must carry the '{0}' row: its totals are computed from the rows of '{1}'.",
+                        "Save must carry the '{0}' row: its totals or rules read the rows of '{1}'.",
                         masterTable.TableName, changed);
                 }
                 return;

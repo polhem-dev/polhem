@@ -67,12 +67,16 @@ A computed field of the **master table** can aggregate the rows of a detail tabl
 | `Sum(Table.field)` | A numeric field | `decimal` | `0` |
 | `Count(Table)` | The rows | `int` | `0` |
 | `Min(Table.field)`, `Max(Table.field)` | A numeric, date or time field | The field's type | The field's empty value |
+| `Count(Table, condition)` | The rows the condition holds for | `int` | `0` |
+| `Any(Table, condition)` | Whether the condition holds for at least one row | `bool` | `false` |
+| `All(Table, condition)` | Whether the condition holds for every row | `bool` | `true` |
 
 - `Table` is the detail table's `TableName` in the FormSchema, not the database table. Rows marked deleted are not counted.
 - An aggregate is part of the expression, so it combines with the rest: `Sum(OrderDetail.amount) * 1.05m`, `Sum(OrderDetail.amount) - discount`.
+- **A condition reads one detail row.** It is a `bool` expression over the detail table's fields, written the way a rule that targets that table is, and it may call the helper functions: `All(OrderDetail, quantity > 0)`, `Count(OrderDetail, IsBlank(product_id))`. It cannot name a master field or hold another aggregate.
 - **Round, then sum.** Each detail value is first rounded to its own field's decimals (its `NumberKind`, with the currency or unit of its row), so the total equals the sum of the amounts the rows show. The result is then rounded by the master field's `NumberKind` as usual. A detail field that is itself computed (`amount = quantity * unit_price`) is computed before the master adds it up.
-- **On save, the total covers the whole record.** The master row is recomputed whenever a detail table it adds up has an added, modified or deleted row. A caller of the API that saves only the rows it changed still gets the right total: the server adds the stored detail rows the payload does not carry before it computes. Such a payload must carry the master row; one that changes detail rows of a form with totals without it is refused.
-- **On the client**, the Avalonia and Blazor heads recompute the master row when a detail row it adds up is edited, added or deleted.
+- **On save, the total covers the whole record.** The master row is recomputed whenever a detail table it adds up has an added, modified or deleted row. A caller of the API that saves only the rows it changed still gets the right total: the server adds the stored detail rows the payload does not carry before it computes. The same holds for a before-save rule on the master table that aggregates a detail table, so `All(OrderDetail, quantity > 0)` checks every row of the record, not only the rows sent. Such a payload must carry the master row; one that changes detail rows a total or rule reads without it is refused.
+- **On the client**, the Avalonia and Blazor heads recompute the master row when a detail row it adds up is edited, added or deleted. A field a condition names counts as one it adds up.
 - Aggregates are available only in a master field's `ValueExpression` and in a `FormRule` that targets the master table. A detail table's expressions and `DefaultValueExpression` cannot use them; `ValidateExpressions` (and DefineEditor) report it, along with a table or field that does not exist and a field type the aggregate cannot read.
 
 ## Field Defaults: `DefaultValueExpression`
@@ -112,7 +116,7 @@ A computed field of the **master table** can aggregate the rows of a detail tabl
 | `Order` | Evaluation order within the same trigger (lower runs first) |
 | `Enabled` | Whether the rule is active (default true) |
 
-A rule on the master table can use the aggregates of [Totals Over Detail Rows](#totals-over-detail-rows), such as "at least one line": `Condition="Count(OrderDetail) &gt; 0"`. In a rule, `Sum` adds the detail values as they are stored, without rounding each one first; to compare with a rounded total, compare with the master field that computes it.
+A rule on the master table can use the aggregates of [Totals Over Detail Rows](#totals-over-detail-rows), such as "at least one line": `Condition="Count(OrderDetail) &gt; 0"`, or "every line has a quantity": `Condition="All(OrderDetail, quantity &gt; 0)"`. To say which line fails, target the detail table instead: `TargetTable="OrderDetail"` with `Condition="quantity &gt; 0"` checks each row on its own. In a rule, `Sum` adds the detail values as they are stored, without rounding each one first; to compare with a rounded total, compare with the master field that computes it.
 
 > **The two-part test**: `When` decides whether this rule should be checked at all right now, and `Condition` is the validation that must hold. For example, "an approved order must have a positive total" becomes `When = status == "Approved"` with `Condition = total_amount > 0`. Orders in any other status are skipped automatically.
 >

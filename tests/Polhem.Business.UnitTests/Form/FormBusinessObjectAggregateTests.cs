@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Data;
 using System.Globalization;
 using Polhem.Core.Data;
 using Polhem.Core.Exceptions;
@@ -116,6 +117,35 @@ namespace Polhem.Business.UnitTests.Form
             }
         }
 
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A rule that aggregates detail rows checks the stored rows a partial payload leaves out")]
+        public void Save_PartialPayload_RuleSeesStoredRows()
+        {
+            var form = NewForm(withTotal: false);
+            form.Schema.Rules!.Add(new FormRule("few_large_lines",
+                $"Count({DetailName(form)}, {Amount} > 50) < 2", "At most one line may exceed 50."));
+            form.CreateTables();
+            try
+            {
+                var rowId = SaveRecord(form, 60m, 10m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = rowId }).DataSet!;
+                var lines = loaded.Tables[DetailName(form)]!;
+                var small = lines.Rows.Cast<DataRow>()
+                    .Single(row => Convert.ToDecimal(row[Amount], CultureInfo.InvariantCulture) == 10m);
+                small[Amount] = 70m;
+                foreach (var other in lines.Rows.Cast<DataRow>().Where(row => row != small).ToList())
+                    lines.Rows.Remove(other);
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Contains("At most one line", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
         private Guid SaveRecord(TransientForm form, params decimal[] amounts)
         {
             var rowId = Guid.NewGuid();
@@ -130,7 +160,7 @@ namespace Polhem.Business.UnitTests.Form
         private FormBusinessObject NewBo(TransientForm form)
             => new(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId);
 
-        private TransientForm NewForm()
+        private TransientForm NewForm(bool withTotal = true)
         {
             string progId = TransientForm.NewTableName("tb_agg_");
             string detailName = progId + "_d";
@@ -141,8 +171,8 @@ namespace Polhem.Business.UnitTests.Form
             master.Fields!.Add(new FormField(Total, "Total", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
-                ValueExpression = $"Sum({detailName}.{Amount})",
-                ReadOnly = true,
+                ValueExpression = withTotal ? $"Sum({detailName}.{Amount})" : string.Empty,
+                ReadOnly = withTotal,
             });
 
             var detail = schema.Tables.Add(detailName, "Lines");

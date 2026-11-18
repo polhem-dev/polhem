@@ -5,8 +5,9 @@ namespace Polhem.Definition.Forms
 {
     /// <summary>
     /// Finds the detail aggregate calls of an expression (<c>Sum(Table.field)</c>, <c>Count(Table)</c>,
-    /// <c>Min(Table.field)</c>, <c>Max(Table.field)</c>) and replaces each with a variable, so the expression engine
-    /// sees an ordinary variable and the aggregate is computed by the caller.
+    /// <c>Min(Table.field)</c>, <c>Max(Table.field)</c>, and the conditional <c>Count(Table, condition)</c>,
+    /// <c>Any(Table, condition)</c> and <c>All(Table, condition)</c>) and replaces each with a variable, so the
+    /// expression engine sees an ordinary variable and the aggregate is computed by the caller.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -60,16 +61,17 @@ namespace Polhem.Definition.Forms
 
                 int nameEnd = ReadIdentifier(expression, i);
                 var name = expression[i..nameEnd];
-                if (!IsMemberAccess(expression, i) && TryReadCall(expression, name, nameEnd, out var call, out int callEnd))
+                if (!IsMemberAccess(expression, i)
+                    && TryReadCall(expression, name, nameEnd, out var call, out int callEnd, out int conditionStart))
                 {
                     var aggregate = aggregates.Find(a => a.Function == call.Function
-                        && a.TableName == call.TableName && a.FieldName == call.FieldName);
+                        && a.TableName == call.TableName && a.FieldName == call.FieldName && a.Condition == call.Condition);
                     if (aggregate is null)
                     {
                         aggregate = call with { VariableName = VariablePrefix + aggregates.Count.ToString(CultureInfo.InvariantCulture) };
                         aggregates.Add(aggregate);
                     }
-                    spans.Add(new DetailAggregateSpan(i, callEnd - i, builder.Length, aggregate.VariableName));
+                    spans.Add(new DetailAggregateSpan(i, callEnd - i, builder.Length, aggregate.VariableName, conditionStart));
                     builder.Append(aggregate.VariableName);
                     i = callEnd;
                     continue;
@@ -88,16 +90,20 @@ namespace Polhem.Definition.Forms
             return expression.Contains("Sum", StringComparison.Ordinal)
                 || expression.Contains("Count", StringComparison.Ordinal)
                 || expression.Contains("Min", StringComparison.Ordinal)
-                || expression.Contains("Max", StringComparison.Ordinal);
+                || expression.Contains("Max", StringComparison.Ordinal)
+                || expression.Contains("Any", StringComparison.Ordinal)
+                || expression.Contains("All", StringComparison.Ordinal);
         }
 
-        // Reads `(Table)` or `(Table.field)` after an aggregate name. The shape must match the function exactly:
-        // Count takes a table, the others a table and a field.
+        // Reads `(Table)`, `(Table.field)` or `(Table, condition)` after an aggregate name. The shape must match the
+        // function exactly: Sum, Min and Max take a table and a field; Count takes a table and an optional condition;
+        // Any and All take a table and a condition.
         private static bool TryReadCall(string expression, string name, int position, out DetailAggregate call,
-            out int end)
+            out int end, out int conditionStart)
         {
             call = null!;
             end = position;
+            conditionStart = -1;
             DetailAggregateFunction function;
             switch (name)
             {
@@ -105,6 +111,8 @@ namespace Polhem.Definition.Forms
                 case "Count": function = DetailAggregateFunction.Count; break;
                 case "Min": function = DetailAggregateFunction.Min; break;
                 case "Max": function = DetailAggregateFunction.Max; break;
+                case "Any": function = DetailAggregateFunction.Any; break;
+                case "All": function = DetailAggregateFunction.All; break;
                 default: return false;
             }
 
@@ -117,6 +125,7 @@ namespace Polhem.Definition.Forms
             i = SkipWhitespace(expression, tableEnd);
 
             var field = string.Empty;
+            var condition = string.Empty;
             if (i < expression.Length && expression[i] == '.')
             {
                 i = SkipWhitespace(expression, i + 1);
@@ -125,12 +134,50 @@ namespace Polhem.Definition.Forms
                 field = expression[i..fieldEnd];
                 i = SkipWhitespace(expression, fieldEnd);
             }
+            else if (i < expression.Length && expression[i] == ',')
+            {
+                int close = FindClosingParenthesis(expression, i + 1);
+                if (close < 0) { return false; }
+                var raw = expression[(i + 1)..close];
+                condition = raw.Trim();
+                if (condition.Length == 0) { return false; }
+                conditionStart = i + 1 + (raw.Length - raw.TrimStart().Length);
+                i = close;
+            }
             if (i >= expression.Length || expression[i] != ')') { return false; }
-            if ((function == DetailAggregateFunction.Count) != (field.Length == 0)) { return false; }
 
-            call = new DetailAggregate(function, table, field, string.Empty);
+            bool shapeFits = function switch
+            {
+                DetailAggregateFunction.Count => field.Length == 0,
+                DetailAggregateFunction.Any or DetailAggregateFunction.All => field.Length == 0 && condition.Length > 0,
+                _ => field.Length > 0,
+            };
+            if (!shapeFits) { conditionStart = -1; return false; }
+
+            call = new DetailAggregate(function, table, field, string.Empty) { Condition = condition };
             end = i + 1;
             return true;
+        }
+
+        // The offset of the parenthesis that closes the call, skipping nested parentheses and literals; -1 when the
+        // expression ends first.
+        private static int FindClosingParenthesis(string expression, int start)
+        {
+            int depth = 0;
+            int i = start;
+            while (i < expression.Length)
+            {
+                char c = expression[i];
+                if (c is '"' or '\'') { i = SkipLiteral(expression, i); continue; }
+                if (c == '(') { depth++; }
+                else if (c == ')')
+                {
+                    if (depth == 0) { return i; }
+                    depth--;
+                }
+                i++;
+            }
+            return -1;
         }
 
         // True when the identifier at `start` follows a `.`, as in `Math.Max`.
