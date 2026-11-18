@@ -121,9 +121,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("A rule that aggregates detail rows checks the stored rows a partial payload leaves out")]
         public void Save_PartialPayload_RuleSeesStoredRows()
         {
-            var form = NewForm(withTotal: false);
-            form.Schema.Rules!.Add(new FormRule("few_large_lines",
-                $"Count({DetailName(form)}, {Amount} > 50) < 2", "At most one line may exceed 50."));
+            var form = NewRuleForm();
             form.CreateTables();
             try
             {
@@ -139,6 +137,108 @@ namespace Polhem.Business.UnitTests.Form
                 var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
 
                 Assert.Contains("At most one line", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        private TransientForm NewRuleForm()
+        {
+            var form = NewForm(withTotal: false);
+            form.Schema.Rules!.Add(new FormRule("few_large_lines",
+                $"Count({DetailName(form)}, {Amount} > 50) < 2", "At most one line may exceed 50."));
+            return form;
+        }
+
+        private static DataRow LineWith(DataTable lines, decimal amount)
+            => lines.Rows.Cast<DataRow>().Single(row => Convert.ToDecimal(row[Amount], CultureInfo.InvariantCulture) == amount);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("An unchanged detail row the caller rewrote is replaced by the stored row before a rule reads it")]
+        public void Save_ForgedUnchangedRow_RuleReadsStoredValue()
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var rowId = SaveRecord(form, 60m, 10m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = rowId }).DataSet!;
+                var lines = loaded.Tables[DetailName(form)]!;
+                var large = LineWith(lines, 60m);
+                LineWith(lines, 10m)[Amount] = 70m;
+                large[Amount] = 0m;
+                large.AcceptChanges();
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Contains("At most one line", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("A payload carrying two records of a form with aggregate rules is refused")]
+        public void Save_TwoRecords_Refused()
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var rowId = SaveRecord(form, 60m, 10m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = rowId }).DataSet!;
+                loaded.Tables[form.Schema.ProgId]!.Rows.Add(Guid.NewGuid());
+                LineWith(loaded.Tables[DetailName(form)]!, 10m)[Amount] = 70m;
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Equal(PolhemMessages.SaveOneRecordRequired, ex.MessageKey);
+            }
+            finally
+            {
+                form.DropTables();
+            }
+        }
+
+        [DbTheory(DatabaseType.SQLite)]
+        [DisplayName("A detail row that belongs to another record is refused, whether added or modified")]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Save_RowOfAnotherRecord_Refused(bool added)
+        {
+            var form = NewRuleForm();
+            form.CreateTables();
+            try
+            {
+                var target = SaveRecord(form, 60m, 10m);
+                var other = SaveRecord(form, 5m);
+                var loaded = NewBo(form).GetData(new GetDataArgs { RowId = other }).DataSet!;
+                var lines = loaded.Tables[DetailName(form)]!;
+                if (added)
+                {
+                    var row = lines.NewRow();
+                    row[SysFields.RowId] = Guid.NewGuid();
+                    row[SysFields.MasterRowId] = target;
+                    row[Amount] = 70m;
+                    lines.Rows.Add(row);
+                }
+                else
+                {
+                    var targetLines = NewBo(form).GetData(new GetDataArgs { RowId = target }).DataSet!.Tables[DetailName(form)]!;
+                    var stolen = LineWith(targetLines, 10m);
+                    lines.ImportRow(stolen);
+                    var imported = lines.Rows[lines.Rows.Count - 1];
+                    imported[SysFields.MasterRowId] = other;
+                    imported[Amount] = 1m;
+                }
+
+                var ex = Assert.Throws<UserMessageException>(() => NewBo(form).Save(new SaveArgs { DataSet = loaded }));
+
+                Assert.Equal(PolhemMessages.SaveDetailRecordMismatch, ex.MessageKey);
             }
             finally
             {

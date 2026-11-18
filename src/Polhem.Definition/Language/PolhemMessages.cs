@@ -71,6 +71,16 @@ namespace Polhem.Definition.Language
         /// master table and the detail table.
         /// </summary>
         public const string SaveMasterRowMissing = Namespace + ".Save.MasterRowMissing";
+        /// <summary>
+        /// A save of a form whose totals or rules aggregate a detail table carries more than one record; arguments are
+        /// the master table and the detail table.
+        /// </summary>
+        public const string SaveOneRecordRequired = Namespace + ".Save.OneRecordRequired";
+        /// <summary>
+        /// A save carries a row of a detail table the totals or rules aggregate that has no row id or does not belong
+        /// to the record it carries; arguments are the detail table and the master table.
+        /// </summary>
+        public const string SaveDetailRecordMismatch = Namespace + ".Save.DetailRecordMismatch";
 
         /// <summary>The caller may not read the audit log.</summary>
         public const string AuditLogReadDenied = Namespace + ".AuditLog.ReadDenied";

@@ -16,7 +16,9 @@ namespace Polhem.Business.Form
         /// every row of the record.
         /// </summary>
         /// <exception cref="UserMessageException">
-        /// The payload changes rows of an aggregated detail table without carrying the master row.
+        /// The payload changes rows of an aggregated detail table without carrying the master row, carries more than
+        /// one record, or carries a row of an aggregated detail table that has no row id or does not belong to the
+        /// record it carries.
         /// </exception>
         /// <remarks>
         /// The framework's clients send the whole record, so for them nothing is added. A caller of the API may send
@@ -55,18 +57,39 @@ namespace Polhem.Business.Form
                 return;
             }
 
-            // A total is computed for one record; a payload of several records, a new record or a deletion has no
-            // stored rows to add.
-            if (masterRows.Count != 1) { return; }
-            var master = masterRows[0];
-            if (master.RowState is DataRowState.Added or DataRowState.Deleted) { return; }
-            if (!master.Table.Columns.Contains(SysFields.RowId)) { return; }
-            var rowId = ValueUtilities.CGuid(master[SysFields.RowId]);
-            if (rowId == Guid.Empty) { return; }
+            // An aggregate reads every row of a detail table, not only the rows of one record, so a payload that
+            // carries several records would mix them: one record's total would add up another's rows, and a rule
+            // could be passed by adding a record whose rows satisfy it.
+            var liveMasters = masterRows.Where(row => row.RowState != DataRowState.Deleted).ToList();
+            if (liveMasters.Count > 1)
+            {
+                throw new UserMessageException(PolhemMessages.SaveOneRecordRequired,
+                    "Save must carry one '{0}' record: its totals or rules read the rows of '{1}'.",
+                    masterTable.TableName, detailNames.FirstOrDefault() ?? string.Empty);
+            }
 
-            using var stored = context.Repository.GetData(rowId);
-            if (stored is null) { return; }
-            AggregatedDetailCompletion.ImportMissingRows(dataSet, stored, detailNames);
+            // IMPORTANT: an unchanged row is never written, so its values are only the caller's word. A total or a
+            // rule that read them could be given any value; the stored rows are read in their place below.
+            AggregatedDetailCompletion.DropUnchangedRows(dataSet, detailNames);
+
+            // A deletion of the whole record has no rows left to aggregate.
+            if (liveMasters.Count == 0) { return; }
+            var master = liveMasters[0];
+            var rowId = master.Table.Columns.Contains(SysFields.RowId) ? ValueUtilities.CGuid(master[SysFields.RowId]) : Guid.Empty;
+            bool isNew = master.RowState == DataRowState.Added;
+
+            // Without a permission model nothing else ties a detail row to the record being saved, so a row that
+            // belongs to another record would be written there while this record's totals and rules never saw it.
+            using var stored = isNew || rowId == Guid.Empty ? null : context.Repository.GetData(rowId);
+            var foreign = AggregatedDetailCompletion.FindForeignTable(dataSet, detailNames, rowId, stored);
+            if (foreign is not null)
+            {
+                throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
+                    "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
+                    foreign, masterTable.TableName);
+            }
+
+            if (stored is not null) { AggregatedDetailCompletion.ImportMissingRows(dataSet, stored, detailNames); }
         }
 
         private static bool HasChangedRows(DataSet dataSet, string tableName)

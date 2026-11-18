@@ -59,6 +59,91 @@ namespace Polhem.Business.Form
             }
         }
 
+        /// <summary>
+        /// Removes the unchanged rows of each named table from <paramref name="payload"/>.
+        /// </summary>
+        /// <param name="payload">The save payload, changed in place.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <remarks>
+        /// The repository writes no unchanged row, so its values are whatever the caller sent, not what is stored.
+        /// Removed here, an existing record gets the stored rows back from <see cref="ImportMissingRows"/>, and a new
+        /// record has none to count.
+        /// </remarks>
+        public static void DropUnchangedRows(DataSet payload, IEnumerable<string> tableNames)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                foreach (var row in table.Rows.Cast<DataRow>().Where(row => row.RowState == DataRowState.Unchanged).ToList())
+                    table.Rows.Remove(row);
+            }
+        }
+
+        /// <summary>
+        /// Returns the first named table of <paramref name="payload"/> that has a row which does not belong to the
+        /// record being saved, or <c>null</c> when every row does.
+        /// </summary>
+        /// <param name="payload">The save payload, after <see cref="DropUnchangedRows"/>.</param>
+        /// <param name="tableNames">The detail tables a total or a rule aggregates.</param>
+        /// <param name="masterRowId">The row id of the record's master row; <see cref="Guid.Empty"/> when it has none.</param>
+        /// <param name="stored">The record as stored; <c>null</c> for a new record or one that is not stored.</param>
+        /// <remarks>
+        /// An added row must name the master row as its master. A modified or deleted row must be one of the stored
+        /// rows of the record, judged by the stored data rather than by the original values the caller sent, and a
+        /// modified row must keep naming the master row. Every row must carry its row id.
+        /// </remarks>
+        public static string? FindForeignTable(DataSet payload, IEnumerable<string> tableNames, Guid masterRowId,
+            DataSet? stored)
+        {
+            ArgumentNullException.ThrowIfNull(payload);
+            ArgumentNullException.ThrowIfNull(tableNames);
+            foreach (var tableName in tableNames)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                var rows = table.Rows.Cast<DataRow>().Where(row => row.RowState != DataRowState.Detached).ToList();
+                if (rows.Count == 0) { continue; }
+                if (masterRowId == Guid.Empty || !table.Columns.Contains(SysFields.RowId)
+                    || !table.Columns.Contains(SysFields.MasterRowId))
+                    return table.TableName;
+
+                var storedRowIds = StoredRowIds(stored, tableName);
+                foreach (var row in rows)
+                {
+                    var version = row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current;
+                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, version]);
+                    if (rowId == Guid.Empty) { return table.TableName; }
+                    bool belongs = row.RowState switch
+                    {
+                        DataRowState.Added => ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                        DataRowState.Modified => storedRowIds.Contains(rowId)
+                            && ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                        DataRowState.Deleted => storedRowIds.Contains(rowId),
+                        _ => true,
+                    };
+                    if (!belongs) { return table.TableName; }
+                }
+            }
+            return null;
+        }
+
+        private static HashSet<Guid> StoredRowIds(DataSet? stored, string tableName)
+        {
+            var rowIds = new HashSet<Guid>();
+            if (stored is null || !stored.Tables.Contains(tableName)) { return rowIds; }
+            var table = stored.Tables[tableName]!;
+            if (!table.Columns.Contains(SysFields.RowId)) { return rowIds; }
+            foreach (DataRow row in table.Rows)
+            {
+                var rowId = ValueUtilities.CGuid(row[SysFields.RowId]);
+                if (rowId != Guid.Empty) { rowIds.Add(rowId); }
+            }
+            return rowIds;
+        }
+
         private static HashSet<Guid> CarriedRowIds(DataTable table)
         {
             var rowIds = new HashSet<Guid>();
