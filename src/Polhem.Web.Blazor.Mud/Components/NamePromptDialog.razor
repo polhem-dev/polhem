@@ -1,0 +1,45 @@
+@namespace Polhem.Web.Blazor.Mud.Components
+@inherits NamePromptDialogBase
+@implements IAsyncDisposable
+
+@* The host renders this while the question is open and removes it when either callback runs. *@
+<MudDialog @ref="_dialog" Visible="true" VisibleChanged="OnVisibleChanged" Options="s_options" Class="polhem-name-prompt-dialog">
+    <TitleContent>@Title</TitleContent>
+    <DialogContent>
+        @* A form, so Enter in the box accepts the name. *@
+        <form class="polhem-name-prompt-dialog__form" @onsubmit="() => AcceptAsync()" @onsubmit:preventDefault>
+            <MudTextField T="string" Class="polhem-name-prompt-dialog__name" @bind-Value="EnteredName" Immediate="true"
+                          AutoFocus="true" MaxLength="MaxLength" Label="@Label" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            @if (OptionText is not null)
+            {
+                <MudCheckBox T="bool" Class="polhem-name-prompt-dialog__option" @bind-Value="IsOptionChecked" Label="@OptionText" Dense="true" />
+            }
+        </form>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Class="polhem-name-prompt-dialog__cancel" Size="Size.Small" OnClick="() => CancelAsync()">@CancelText</MudButton>
+        <MudButton Class="polhem-name-prompt-dialog__accept" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!CanAccept" OnClick="() => AcceptAsync()">@AcceptText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions s_options = new()
+    {
+        BackdropClick = true,
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.ExtraSmall,
+        FullWidth = true,
+    };
+
+    private MudDialog? _dialog;
+
+    // WARNING: an inline MudDialog renders in the dialog provider and stays there when this component is removed.
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_dialog is not null) await _dialog.CloseAsync().ConfigureAwait(true);
+    }
+
+    private Task OnVisibleChanged(bool visible) => visible ? Task.CompletedTask : CancelAsync();
+}

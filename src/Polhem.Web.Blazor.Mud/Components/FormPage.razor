@@ -175,8 +175,27 @@
                     <CriteriaPanel Fields="CriteriaFields"
                                    Criteria="Criteria"
                                    Today="ResolveToday"
+                                   Notice="@CriteriaNotice"
                                    SearchRequested="() => RunQueryAsync()"
-                                   CloseRequested="CloseQueryPane" />
+                                   CloseRequested="CloseQueryPane">
+                        <HeaderContent>
+                            @if (ShowsUserQueries)
+                            {
+                                <UserQueryBar Entries="UserQueries"
+                                              Current="CurrentUserQuery"
+                                              DefaultRowId="DefaultUserQueryRowId"
+                                              IsModified="IsUserQueryModified"
+                                              Disabled="IsListLocked"
+                                              Applied="entry => ApplyUserQueryAsync(entry)"
+                                              SaveRequested="() => SaveUserQueryAsync()"
+                                              SaveAsRequested="BeginSaveUserQueryAs"
+                                              RenameRequested="BeginRenameUserQuery"
+                                              ShareToggled="() => ToggleUserQueryShareAsync()"
+                                              DefaultToggled="() => ToggleDefaultUserQueryAsync()"
+                                              DeleteRequested="BeginDeleteUserQuery" />
+                            }
+                        </HeaderContent>
+                    </CriteriaPanel>
                 </aside>
             }
             </div>
@@ -200,6 +219,27 @@
                        ConfirmText="@Text(PolhemUIText.Delete)"
                        OnCancelled="CancelDelete"
                        OnConfirmed="() => ConfirmDeleteAsync()" />
+    }
+    @if (IsNamePromptOpen)
+    {
+        <NamePromptDialog Title="@NamePromptTitle"
+                          Label="@Text(PolhemUIText.UserQueryName)"
+                          Name="@NamePromptName"
+                          MaxLength="UserQueryNameMaxLength"
+                          OptionText="@NamePromptOptionText"
+                          AcceptText="@Text(PolhemUIText.Save)"
+                          CancelText="@Text(PolhemUIText.Cancel)"
+                          OnAccepted="answer => AcceptNamePromptAsync(answer)"
+                          OnCancelled="CancelNamePrompt" />
+    }
+    @if (PendingUserQueryDelete is not null)
+    {
+        <ConfirmDialog Title="@Text(PolhemUIText.UserQueryDelete)"
+                       Message="@UserQueryDeletePrompt"
+                       CancelText="@Text(PolhemUIText.Cancel)"
+                       ConfirmText="@Text(PolhemUIText.Delete)"
+                       OnCancelled="CancelDeleteUserQuery"
+                       OnConfirmed="() => ConfirmDeleteUserQueryAsync()" />
     }
     @if (Relation is { } relation)
     {

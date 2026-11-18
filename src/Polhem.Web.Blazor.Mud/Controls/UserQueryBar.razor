@@ -1,0 +1,27 @@
+@namespace Polhem.Web.Blazor.Mud.Controls
+@inherits UserQueryBarBase
+@using Polhem.Definition.Language
+
+<div class="polhem-user-query-bar">
+    <MudSelect T="Guid" Class="polhem-user-query-bar__picker" Value="CurrentRowId" ValueChanged="rowId => PickAsync(rowId)"
+               ToStringFunc="EntryText" Disabled="Disabled" aria-label="@Text(PolhemUIText.UserQueryNone)"
+               Variant="Variant.Outlined" Margin="Margin.Dense">
+        @foreach (var entry in Entries)
+        {
+            <MudSelectItem T="Guid" Value="entry.RowId">@EntryText(entry.RowId)</MudSelectItem>
+        }
+    </MudSelect>
+    @if (IsModified)
+    {
+        <span class="polhem-user-query-bar__modified" title="@Text(PolhemUIText.UserQueryModified)">*</span>
+    }
+    <MudMenu Class="polhem-user-query-bar__actions" Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"
+             Disabled="Disabled" aria-label="@Text(PolhemUIText.UserQueryActions)">
+        <MudMenuItem Class="polhem-user-query-bar__save" Disabled="!CanChange" OnClick="() => SaveRequested.InvokeAsync()">@Text(PolhemUIText.UserQuerySave)</MudMenuItem>
+        <MudMenuItem Class="polhem-user-query-bar__save-as" OnClick="() => SaveAsRequested.InvokeAsync()">@Text(PolhemUIText.UserQuerySaveAs)</MudMenuItem>
+        <MudMenuItem Class="polhem-user-query-bar__rename" Disabled="!CanChange" OnClick="() => RenameRequested.InvokeAsync()">@Text(PolhemUIText.UserQueryRename)</MudMenuItem>
+        <MudMenuItem Class="polhem-user-query-bar__share" Disabled="!CanChange" OnClick="() => ShareToggled.InvokeAsync()">@ShareText</MudMenuItem>
+        <MudMenuItem Class="polhem-user-query-bar__default" Disabled="!CanToggleDefault" OnClick="() => DefaultToggled.InvokeAsync()">@DefaultText</MudMenuItem>
+        <MudMenuItem Class="polhem-user-query-bar__delete" Disabled="!CanChange" OnClick="() => DeleteRequested.InvokeAsync()">@Text(PolhemUIText.UserQueryDelete)</MudMenuItem>
+    </MudMenu>
+</div>

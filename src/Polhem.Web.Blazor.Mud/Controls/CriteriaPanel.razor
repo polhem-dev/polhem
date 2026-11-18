@@ -10,6 +10,7 @@
         <MudIconButton Class="polhem-criteria-panel__close" Icon="@Icons.Material.Filled.Close" Size="Size.Small"
                        aria-label="@Text(PolhemUIText.Close)" OnClick="() => CloseAsync()" />
     </div>
+    @HeaderContent
     @* A form, so Enter in a value editor runs the query the way the Search button does. *@
     <form class="polhem-criteria-panel__form" @onsubmit="() => RequestSearchAsync()" @onsubmit:preventDefault>
         <div class="polhem-criteria-panel__body">

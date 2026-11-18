@@ -35,8 +35,15 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Gets the conditions in effect, as the chips above the list show them.</summary>
         protected IReadOnlyList<CriteriaChip> CriteriaChips => _criteriaChips;
 
+        /// <summary>
+        /// Gets a value indicating whether the UI package renders the query pane, the chips and the saved queries.
+        /// Defaults to <see langword="false"/>: a page that cannot show the conditions does not read the list with a
+        /// saved default query the user would not see.
+        /// </summary>
+        protected virtual bool SupportsQueryPane => false;
+
         /// <summary>Gets a value indicating whether the toolbar offers the Query button: on the list, when a field can take a condition.</summary>
-        protected bool ShowsQueryButton => !_isShowingRecord && _criteriaFields.Count > 0;
+        protected bool ShowsQueryButton => SupportsQueryPane && !_isShowingRecord && _criteriaFields.Count > 0;
 
         /// <summary>Gets a value indicating whether the query pane is open.</summary>
         protected bool IsQueryPaneOpen => _isQueryPaneOpen && ShowsQueryButton;
@@ -64,6 +71,7 @@ namespace Polhem.Web.Blazor.Components
         protected async Task RunQueryAsync(CancellationToken cancellationToken = default)
         {
             if (IsListLocked || !_criteria.IsComplete) return;
+            _criteriaNotice = null;
             ApplyCriteriaFilter();
             // The pane covers the list in the compact layout, and would hide the rows the query just read.
             if (EffectiveIsCompact) _isQueryPaneOpen = false;
@@ -112,10 +120,11 @@ namespace Polhem.Web.Blazor.Components
         private void ResetCriteria(FormSchema? schema)
         {
             _criteria = new QueryCriteria();
-            _criteriaFields = schema is null ? [] : CriteriaField.FromQueryFields(schema, UserContext?.Capabilities);
+            _criteriaFields = schema is null || !SupportsQueryPane ? [] : CriteriaField.FromQueryFields(schema, UserContext?.Capabilities);
             _criteriaFilter = null;
             _criteriaChips = [];
             _isQueryPaneOpen = false;
+            ResetUserQueries();
         }
 
         private void ApplyCriteriaFilter()
