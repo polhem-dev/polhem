@@ -1,3 +1,4 @@
+using System.Globalization;
 using Polhem.Core;
 using Polhem.Core.Expressions;
 
@@ -63,53 +64,91 @@ namespace Polhem.Definition.Forms
             return issues;
         }
 
+        /// <summary>
+        /// Parses one expression of <paramref name="formTable"/> the way <see cref="ValidateExpressions"/> parses it,
+        /// detail aggregates included, and throws when it does not parse.
+        /// </summary>
+        /// <param name="schema">The form schema that owns the table.</param>
+        /// <param name="formTable">The table the expression is evaluated on: the field's table, or the table a rule
+        /// targets (<see cref="ResolveRuleTable"/>).</param>
+        /// <param name="propertyName">The property that holds the expression: <see cref="FormField.ValueExpression"/>,
+        /// <see cref="FormField.DefaultValueExpression"/>, <see cref="FormRule.When"/> or <see cref="FormRule.Condition"/>.
+        /// It decides the result type and whether aggregates are allowed.</param>
+        /// <param name="expression">The expression; an empty one always passes.</param>
+        /// <exception cref="ArgumentException"><paramref name="propertyName"/> names no expression property.</exception>
+        /// <exception cref="ExpressionEvaluationException">
+        /// The expression does not parse. <see cref="ExpressionEvaluationException.Position"/> is an offset in
+        /// <paramref name="expression"/> as written, also when the expression holds aggregates; an aggregate that names
+        /// no table or field, or that is not allowed where it is used, is reported at the start of the call.
+        /// </exception>
+        /// <remarks>
+        /// A definition editor checks an expression with this as it is typed, so it reports exactly what
+        /// <see cref="ValidateExpressions"/> reports when the form is validated or saved.
+        /// </remarks>
+        public void ValidateExpression(FormSchema schema, FormTable formTable, string propertyName, string expression)
+        {
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(formTable);
+            ArgumentNullException.ThrowIfNull(expression);
+            if (propertyName is not (nameof(FormField.ValueExpression) or nameof(FormField.DefaultValueExpression)
+                or nameof(FormRule.When) or nameof(FormRule.Condition)))
+                throw new ArgumentException($"'{propertyName}' is not an expression property.", nameof(propertyName));
+
+            if (FindExpressionError(schema, formTable, GetVariableTypes(formTable), propertyName, expression) is { } error)
+                throw new ExpressionEvaluationException(error.Message) { Expression = expression, Position = error.Position };
+        }
+
         private void ValidateFieldExpression(List<FormExpressionIssue> issues, FormSchema schema,
             IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormField field,
             string expression, string propertyName)
         {
-            var message = propertyName == nameof(FormField.DefaultValueExpression)
-                && StringUtilities.IsNotEmpty(expression) && ParseAggregates(expression).HasAggregates
-                ? "An aggregate such as Sum(Table.field) cannot be used in a default value expression; use a value expression."
-                : FindAggregateParseError(expression, schema, formTable, variableTypes, typeof(object));
-            if (message is null) { return; }
+            if (FindExpressionError(schema, formTable, variableTypes, propertyName, expression) is not { } error) { return; }
             issues.Add(new FormExpressionIssue(formTable.TableName, field.FieldName, null, propertyName,
-                expression, message));
+                expression, error.Message));
         }
 
         private void ValidateRuleExpression(List<FormExpressionIssue> issues, FormSchema schema,
             IReadOnlyDictionary<string, Type> variableTypes, FormTable formTable, FormRule rule,
             string expression, string propertyName)
         {
-            var message = FindAggregateParseError(expression, schema, formTable, variableTypes, typeof(bool));
-            if (message is null) { return; }
+            if (FindExpressionError(schema, formTable, variableTypes, propertyName, expression) is not { } error) { return; }
             issues.Add(new FormExpressionIssue(formTable.TableName, null, rule.RuleId, propertyName,
-                expression, message));
+                expression, error.Message));
         }
 
-        // Checks the aggregates of an expression, then parses the rewritten expression with one variable per
-        // aggregate, typed as the aggregate is computed.
-        private string? FindAggregateParseError(string expression, FormSchema schema, FormTable formTable,
-            IReadOnlyDictionary<string, Type> variableTypes, Type returnType)
+        // The one check behind both `ValidateExpressions` and `ValidateExpression`: the aggregates of an expression
+        // first, then a parse of the rewritten expression with one variable per aggregate, typed as the aggregate is
+        // computed. A rule expression must produce a bool; a field expression may produce anything.
+        private (string Message, int? Position)? FindExpressionError(FormSchema schema, FormTable formTable,
+            IReadOnlyDictionary<string, Type> variableTypes, string propertyName, string expression)
         {
             if (StringUtilities.IsEmpty(expression)) { return null; }
+            var returnType = propertyName is nameof(FormRule.When) or nameof(FormRule.Condition) ? typeof(bool) : typeof(object);
             var parsed = ParseAggregates(expression);
-            if (!parsed.HasAggregates) { return FindParseError(expression, variableTypes, returnType); }
-            if (!IsMasterTable(schema, formTable)) { return AggregateOutsideMasterMessage(formTable); }
+            if (!parsed.HasAggregates) { return FindParseError(expression, variableTypes, returnType, parsed); }
+
+            var firstCall = parsed.Spans[0].OriginalStart;
+            if (propertyName == nameof(FormField.DefaultValueExpression))
+                return ("An aggregate such as Sum(Table.field) cannot be used in a default value expression; use a value expression.",
+                    firstCall);
+            if (!IsMasterTable(schema, formTable)) { return (AggregateOutsideMasterMessage(formTable), firstCall); }
 
             var types = new Dictionary<string, Type>(variableTypes, StringComparer.Ordinal);
             foreach (var aggregate in parsed.Aggregates)
             {
                 var (_, field, error) = ResolveAggregate(aggregate, schema);
-                if (error is not null) { return error; }
+                if (error is not null) { return (error, parsed.OriginalStartOf(aggregate)); }
                 types[aggregate.VariableName] = AggregateType(aggregate.Function, field);
             }
-            return FindParseError(parsed.Expression, types, returnType);
+            return FindParseError(parsed.Expression, types, returnType, parsed);
         }
 
-        private string? FindParseError(string expression, IReadOnlyDictionary<string, Type> variableTypes,
-            Type returnType)
+        // The engine reports positions in the text it parsed, which for an expression with aggregates is the
+        // rewritten one. The position, and the index the engine writes into its message, are mapped back to the text
+        // as written.
+        private (string Message, int? Position)? FindParseError(string expression,
+            IReadOnlyDictionary<string, Type> variableTypes, Type returnType, DetailAggregateExpression parsed)
         {
-            if (StringUtilities.IsEmpty(expression)) { return null; }
             try
             {
                 _evaluator.Validate(expression, variableTypes, returnType);
@@ -117,7 +156,12 @@ namespace Polhem.Definition.Forms
             }
             catch (ExpressionEvaluationException ex)
             {
-                return ex.Message;
+                if (ex.Position is not int position || !parsed.HasAggregates) { return (ex.Message, ex.Position); }
+                var original = parsed.ToOriginalPosition(position);
+                var message = ex.Message.Replace(
+                    string.Create(CultureInfo.InvariantCulture, $"(at index {position})"),
+                    string.Create(CultureInfo.InvariantCulture, $"(at index {original})"), StringComparison.Ordinal);
+                return (message, original);
             }
         }
 

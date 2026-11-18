@@ -35,9 +35,10 @@ namespace Polhem.Definition.Forms
         public static DetailAggregateExpression Rewrite(string expression)
         {
             ArgumentNullException.ThrowIfNull(expression);
-            if (!MayHoldAggregate(expression)) { return new DetailAggregateExpression(expression, []); }
+            if (!MayHoldAggregate(expression)) { return new DetailAggregateExpression(expression, [], []); }
 
             var aggregates = new List<DetailAggregate>();
+            var spans = new List<DetailAggregateSpan>();
             var builder = new StringBuilder(expression.Length);
             int i = 0;
             while (i < expression.Length)
@@ -68,6 +69,7 @@ namespace Polhem.Definition.Forms
                         aggregate = call with { VariableName = VariablePrefix + aggregates.Count.ToString(CultureInfo.InvariantCulture) };
                         aggregates.Add(aggregate);
                     }
+                    spans.Add(new DetailAggregateSpan(i, callEnd - i, builder.Length, aggregate.VariableName));
                     builder.Append(aggregate.VariableName);
                     i = callEnd;
                     continue;
@@ -76,8 +78,8 @@ namespace Polhem.Definition.Forms
                 i = nameEnd;
             }
             return aggregates.Count == 0
-                ? new DetailAggregateExpression(expression, [])
-                : new DetailAggregateExpression(builder.ToString(), aggregates);
+                ? new DetailAggregateExpression(expression, [], [])
+                : new DetailAggregateExpression(builder.ToString(), aggregates, spans);
         }
 
         // A cheap pre-check, so an expression with no aggregate name is not scanned at all.

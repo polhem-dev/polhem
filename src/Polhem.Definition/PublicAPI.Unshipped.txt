@@ -58,3 +58,4 @@ const Polhem.Definition.Language.PolhemUIText.UserQuerySkipped = "UserQuerySkipp
 const Polhem.Definition.Language.PolhemUIText.UserQueryUnreadable = "UserQueryUnreadable" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserQueryUnshare = "UserQueryUnshare" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserQueryWithMarkers = "UserQueryWithMarkers" -> string!
+Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void

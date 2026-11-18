@@ -11,29 +11,31 @@ namespace Polhem.DefineEditor.ViewModels;
 /// DefaultValueExpression), checking it as it is typed against the variables it is evaluated with.
 /// </summary>
 /// <remarks>
-/// The variables and the result type are the ones <see cref="FormExpressionCalculator.ValidateExpressions"/> parses the
-/// expression with, so the dialog and the validation panel agree on what is an error.
+/// The expression is checked by <see cref="FormExpressionCalculator.ValidateExpression"/>, the check behind
+/// <see cref="FormExpressionCalculator.ValidateExpressions"/>, so the dialog and the validation panel agree on what is
+/// an error, detail aggregates included.
 /// </remarks>
 public sealed partial class ExpressionEditorViewModel : ObservableObject
 {
-    private readonly IExpressionEvaluator _evaluator;
+    private readonly Action<string> _validate;
     private readonly IReadOnlyDictionary<string, Type> _variableTypes;
-    private readonly Type _returnType;
 
     /// <param name="title">The window title: what is being edited.</param>
     /// <param name="table">The table whose fields are the expression's variables.</param>
-    /// <param name="returnType">The type the expression must produce: <see cref="bool"/> for a rule.</param>
+    /// <param name="validate">Checks the expression, throwing <see cref="ExpressionEvaluationException"/> when it does not
+    /// parse.</param>
     /// <param name="expression">The current expression.</param>
     /// <param name="message">The rule's message, edited beside its condition; <c>null</c> when there is none to edit.</param>
-    /// <param name="evaluator">The evaluator that parses the expression.</param>
+    /// <param name="evaluator">The evaluator whose type names the editor lists.</param>
     /// <param name="trial">The try-out area; <c>null</c> for none.</param>
-    public ExpressionEditorViewModel(string title, FormTable table, Type returnType, string expression, string? message,
+    public ExpressionEditorViewModel(string title, FormTable table, Action<string> validate, string expression, string? message,
         DynamicExpressoEvaluator evaluator, ExpressionTrialViewModel? trial = null)
     {
         ArgumentNullException.ThrowIfNull(table);
         Title = title;
-        _returnType = returnType;
-        _evaluator = evaluator;
+        ArgumentNullException.ThrowIfNull(validate);
+        ArgumentNullException.ThrowIfNull(evaluator);
+        _validate = validate;
         _variableTypes = FormExpressionCalculator.GetVariableTypes(table);
         HasMessage = message is not null;
         _message = message ?? string.Empty;
@@ -128,7 +130,7 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
         {
             try
             {
-                _evaluator.Validate(Expression, _variableTypes, _returnType);
+                _validate(Expression);
             }
             catch (ExpressionEvaluationException ex)
             {

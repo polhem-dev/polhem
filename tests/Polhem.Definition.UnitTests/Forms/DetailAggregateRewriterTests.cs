@@ -59,5 +59,34 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.False(result.HasAggregates);
             Assert.Equal(expression, result.Expression);
         }
+
+        [Theory]
+        [DisplayName("A position in the rewritten expression maps back to the expression as written")]
+        [InlineData(0, 0)]
+        [InlineData(3, 0)]
+        [InlineData(7, 17)]
+        [InlineData(9, 19)]
+        [InlineData(10, 19)]
+        [InlineData(16, 31)]
+        [InlineData(18, 33)]
+        public void ToOriginalPosition_AfterAndInsideCalls_MapsToWrittenText(int rewritten, int original)
+        {
+            // "Sum(Item.amount) + Count(Item) * qty" rewrites to "__agg0 + __agg1 * qty".
+            var result = DetailAggregateRewriter.Rewrite("Sum(Item.amount) + Count(Item) * qty");
+
+            Assert.Equal("__agg0 + __agg1 * qty", result.Expression);
+            Assert.Equal(original, result.ToOriginalPosition(rewritten));
+        }
+
+        [Fact]
+        [DisplayName("A repeated call gets a span each time it appears, and the aggregate starts at its first call")]
+        public void Rewrite_RepeatedCall_SpanEachTime()
+        {
+            var result = DetailAggregateRewriter.Rewrite("Count(Item) > 0 && Count(Item) < 10");
+
+            Assert.Single(result.Aggregates);
+            Assert.Equal([0, 19], result.Spans.Select(span => span.OriginalStart));
+            Assert.Equal(0, result.OriginalStartOf(result.Aggregates[0]));
+        }
     }
 }
