@@ -83,6 +83,24 @@
     <LanguageItem Key="CriteriaValueSeparator" Value="、" />
     <LanguageItem Key="CriteriaMoreValues" Value="{0} 等 {1} 筆" />
     <LanguageItem Key="QueryConditions" Value="查詢條件" />
+    <LanguageItem Key="UserQueryNone" Value="（未套用儲存的查詢）" />
+    <LanguageItem Key="UserQueryActions" Value="查詢動作" />
+    <LanguageItem Key="UserQuerySave" Value="儲存查詢" />
+    <LanguageItem Key="UserQuerySaveAs" Value="另存新查詢…" />
+    <LanguageItem Key="UserQueryRename" Value="重新命名…" />
+    <LanguageItem Key="UserQueryDelete" Value="刪除查詢" />
+    <LanguageItem Key="UserQuerySetDefault" Value="設為開啟清單時的預設" />
+    <LanguageItem Key="UserQueryClearDefault" Value="取消預設" />
+    <LanguageItem Key="UserQueryShare" Value="與所有人共用" />
+    <LanguageItem Key="UserQueryUnshare" Value="取消共用" />
+    <LanguageItem Key="UserQueryShared" Value="共用" />
+    <LanguageItem Key="UserQueryDefault" Value="預設" />
+    <LanguageItem Key="UserQueryModified" Value="已變更，尚未儲存" />
+    <LanguageItem Key="UserQueryName" Value="查詢名稱" />
+    <LanguageItem Key="UserQueryShareOption" Value="與公司所有使用者共用" />
+    <LanguageItem Key="UserQueryDeletePrompt" Value="要刪除查詢「{0}」嗎？" />
+    <LanguageItem Key="UserQuerySkipped" Value="部分條件已不適用，已略過：{0}" />
+    <LanguageItem Key="UserQueryUnreadable" Value="這個查詢的儲存格式無法讀取。" />
   </Items>
   <Enums />
 </LanguageResource>

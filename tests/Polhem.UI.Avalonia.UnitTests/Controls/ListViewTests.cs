@@ -11,7 +11,9 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Views;
 using Polhem.UI.Core.Lists;
 
@@ -831,6 +833,147 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.True(view.IsQueryPaneOpen);
         }
 
+        private static string NameContains(string text)
+        {
+            var criteria = new Polhem.UI.Core.Criteria.QueryCriteria();
+            criteria.Add(new Polhem.UI.Core.Criteria.CriteriaField("sys_name", "Category Name",
+                Polhem.UI.Core.Criteria.CriteriaFieldKind.Text, FieldDbType.String)).SetValue(text);
+            return Polhem.UI.Core.Criteria.UserQueryCodec.Serialize(criteria);
+        }
+
+        [Fact]
+        [DisplayName("The list opens with the user's default query applied to its first read and shown as a chip")]
+        public async Task Initialize_DefaultUserQuery_AppliedToFirstLoad()
+        {
+            var connector = PagedConnector(totalRows: 3);
+            var query = new UserQueryEntry(Guid.NewGuid(), "Beverages", false, true, NameContains("Bev"));
+            connector.UserQueries.Add(query);
+            connector.DefaultUserQuery = query.RowId;
+            var view = BuildInitializableView(connector);
+
+            await view.InitializeAsync();
+
+            Assert.Single(connector.Requests);
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter);
+            Assert.Equal(("sys_name", (object?)"Bev"), (condition.FieldName, condition.Value));
+            Assert.Single(view.ConditionChips);
+            Assert.Equal(query, view.UserQueryBar!.Current);
+            Assert.Same(view.UserQueryBar, view.CriteriaPanel.HeaderContent);
+        }
+
+        [Fact]
+        [DisplayName("Applying a saved query replaces the conditions and runs it, and an edit afterwards marks it changed")]
+        public async Task ApplyUserQuery_ReplacesConditionsAndMarksEdits()
+        {
+            var connector = PagedConnector(totalRows: 3);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[0]).SetRange("C001", "C009");
+            var query = new UserQueryEntry(Guid.NewGuid(), "Beverages", true, false, NameContains("Bev"));
+
+            Assert.True(view.ApplyUserQuery(query, search: true));
+            var bar = view.UserQueryBar!;
+            bool modifiedBeforeEdit = bar.IsModified;
+            view.Criteria.Rows[0].SetValue("Changed");
+            bar.RefreshModified();
+
+            var row = Assert.Single(view.Criteria.Rows);
+            Assert.Equal("sys_name", row.Field.FieldName);
+            Assert.Equal("Bev", Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter).Value);
+            Assert.False(modifiedBeforeEdit);
+            Assert.True(bar.IsModified);
+        }
+
+        [Fact]
+        [DisplayName("A saved query naming a field the form no longer offers applies the rest and names what was left out")]
+        public async Task ApplyUserQuery_UnknownField_NamesSkippedField()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+            await view.InitializeAsync();
+            string criteria = "<UserQuery version=\"1\"><Condition field=\"gone_field\" operator=\"Contains\" value=\"x\" />" +
+                "<Condition field=\"sys_name\" operator=\"Contains\" value=\"Bev\" /></UserQuery>";
+
+            view.ApplyUserQuery(new UserQueryEntry(Guid.NewGuid(), "Old", false, true, criteria), search: false);
+
+            Assert.Single(view.Criteria.Rows);
+            Assert.Contains("gone_field", view.CriteriaPanel.MessageText, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A saved query that cannot be read leaves the conditions as they were and says so")]
+        public async Task ApplyUserQuery_Unreadable_KeepsConditions()
+        {
+            var view = BuildInitializableView(PagedConnector(totalRows: 3));
+            await view.InitializeAsync();
+            var row = view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]);
+
+            bool applied = view.ApplyUserQuery(new UserQueryEntry(Guid.NewGuid(), "Broken", false, true, "not xml"), search: false);
+
+            Assert.False(applied);
+            Assert.Same(row, Assert.Single(view.Criteria.Rows));
+            Assert.Equal(UIText.Get(PolhemUIText.UserQueryUnreadable), view.CriteriaPanel.MessageText);
+            Assert.Null(view.UserQueryBar!.Current);
+        }
+
+        [Fact]
+        [DisplayName("Save as stores the conditions on screen as a new query and applies it")]
+        public async Task SaveAs_StoresConditionsAndAppliesNewQuery()
+        {
+            var connector = PagedConnector(totalRows: 3);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]).SetValue("Bev");
+
+            await view.UserQueryBar!.SaveAsAsync("Beverages", isShared: true);
+
+            var saved = Assert.Single(connector.SavedUserQueries);
+            Assert.Equal((Guid.Empty, "Beverages", true, NameContains("Bev")), saved);
+            Assert.Equal("Beverages", view.UserQueryBar.Current!.Name);
+            Assert.False(view.UserQueryBar.IsModified);
+        }
+
+        [Fact]
+        [DisplayName("Saving, renaming, sharing and deleting do nothing on a query another user shares")]
+        public async Task OthersSharedQuery_ChangesAreNotSent()
+        {
+            var connector = PagedConnector(totalRows: 3);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            var theirs = new UserQueryEntry(Guid.NewGuid(), "Theirs", true, false, NameContains("Bev"));
+            connector.UserQueries.Add(theirs);
+            await view.UserQueryBar!.LoadAsync();
+            view.ApplyUserQuery(view.UserQueryBar.Entries[0], search: false);
+
+            await view.UserQueryBar.SaveAsync();
+            await view.UserQueryBar.RenameAsync("Mine now");
+            await view.UserQueryBar.ToggleShareAsync();
+            await view.UserQueryBar.DeleteAsync();
+
+            Assert.Empty(connector.SavedUserQueries);
+            Assert.Contains(connector.UserQueries, q => q.RowId == theirs.RowId);
+        }
+
+        [Fact]
+        [DisplayName("Making the applied query the default marks it in the picker, and deleting it leaves no query applied")]
+        public async Task DefaultAndDelete_UpdatePicker()
+        {
+            var connector = PagedConnector(totalRows: 3);
+            var view = BuildInitializableView(connector);
+            await view.InitializeAsync();
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields[1]).SetValue("Bev");
+            var bar = view.UserQueryBar!;
+            await bar.SaveAsAsync("Beverages", isShared: false);
+
+            await bar.ToggleDefaultAsync();
+            string defaultText = Assert.Single(bar.PickerTexts);
+            await bar.DeleteAsync();
+
+            Assert.Equal(bar.Entries.Count, connector.UserQueries.Count);
+            Assert.Contains(UIText.Get(PolhemUIText.UserQueryDefault), defaultText, StringComparison.Ordinal);
+            Assert.Null(bar.Current);
+            Assert.Empty(bar.PickerTexts);
+        }
+
         private sealed class TestListView : ListView
         {
             public bool ConfirmAnswer { get; set; } = true;
@@ -890,6 +1033,45 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             public override Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
                 => Task.FromResult((DeleteHandler ?? (_ => new DeleteResponse()))(rowId));
+
+            /// <summary>The saved queries the fake answers with, in order.</summary>
+            public List<UserQueryEntry> UserQueries { get; } = [];
+
+            public Guid DefaultUserQuery { get; set; }
+
+            public List<(Guid RowId, string Name, bool IsShared, string Criteria)> SavedUserQueries { get; } = [];
+
+            public override Task<GetUserQueriesResponse> GetUserQueriesAsync(CancellationToken cancellationToken = default)
+            {
+                var table = new DataTable("UserQuery");
+                table.Columns.Add("sys_rowid", typeof(Guid));
+                table.Columns.Add("sys_name", typeof(string));
+                table.Columns.Add("is_shared", typeof(bool));
+                table.Columns.Add("is_own", typeof(bool));
+                table.Columns.Add("criteria", typeof(string));
+                foreach (var query in UserQueries)
+                    table.Rows.Add(query.RowId, query.Name, query.IsShared, query.IsOwn, query.Criteria);
+                return Task.FromResult(new GetUserQueriesResponse { Table = table, DefaultRowId = DefaultUserQuery });
+            }
+
+            public override Task<SaveUserQueryResponse> SaveUserQueryAsync(Guid rowId, string name, bool isShared,
+                string criteria, CancellationToken cancellationToken = default)
+            {
+                SavedUserQueries.Add((rowId, name, isShared, criteria));
+                var id = rowId == Guid.Empty ? Guid.NewGuid() : rowId;
+                UserQueries.RemoveAll(q => q.RowId == id);
+                UserQueries.Add(new UserQueryEntry(id, name, isShared, true, criteria));
+                return Task.FromResult(new SaveUserQueryResponse { RowId = id });
+            }
+
+            public override Task<DeleteUserQueryResponse> DeleteUserQueryAsync(Guid rowId, CancellationToken cancellationToken = default)
+                => Task.FromResult(new DeleteUserQueryResponse { RowsAffected = UserQueries.RemoveAll(q => q.RowId == rowId) });
+
+            public override Task<SetDefaultUserQueryResponse> SetDefaultUserQueryAsync(Guid rowId, CancellationToken cancellationToken = default)
+            {
+                DefaultUserQuery = rowId;
+                return Task.FromResult(new SetDefaultUserQueryResponse { DefaultRowId = rowId });
+            }
         }
     }
 }

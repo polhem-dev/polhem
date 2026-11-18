@@ -269,6 +269,7 @@ namespace Polhem.UI.Avalonia.Views
 
                 if (Schema is null || FormConnector is null) return;
                 AttachGrid();
+                await AttachUserQueriesAsync(cancellationToken).ConfigureAwait(true);
 
                 _initialized = true;
                 await ReloadAsync(cancellationToken).ConfigureAwait(true);

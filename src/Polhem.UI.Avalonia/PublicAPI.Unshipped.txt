@@ -11,3 +11,5 @@ Polhem.UI.Avalonia.Controls.CriteriaPanel.Today.set -> void
 Polhem.UI.Avalonia.Controls.CriteriaPanel.CloseRequested -> System.EventHandler?
 Polhem.UI.Avalonia.Controls.CriteriaPanel.Refresh() -> void
 Polhem.UI.Avalonia.Controls.CriteriaPanel.ScrollToRow(Polhem.UI.Core.Criteria.CriteriaRow! row) -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.HeaderContent.get -> Avalonia.Controls.Control?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.HeaderContent.set -> void
