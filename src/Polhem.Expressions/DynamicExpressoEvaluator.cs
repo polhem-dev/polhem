@@ -320,6 +320,10 @@ namespace Polhem.Expressions
             {
                 throw ToEvaluationException(ex, expression);
             }
+            catch (InvalidOperationException ex)
+            {
+                throw ToEvaluationException(ex, expression);
+            }
         }
 
         /// <inheritdoc />
@@ -345,6 +349,10 @@ namespace Polhem.Expressions
             {
                 throw ToEvaluationException(ex, expression);
             }
+            catch (InvalidOperationException ex)
+            {
+                throw ToEvaluationException(ex, expression);
+            }
         }
 
         /// <summary>
@@ -355,6 +363,12 @@ namespace Polhem.Expressions
         /// <see cref="Expression"/>, which it reports only as "Invalid Operation" with a position. The inner message
         /// is the one that names the operator and the operand types, so it is appended.
         /// </remarks>
+        // DynamicExpresso throws InvalidOperationException rather than ParseException for some text it cannot build,
+        // such as a helper function's name used as a value ("Extension node must override the property Expression.Type").
+        // It is still text that does not parse, so it surfaces as the exception the contract declares.
+        private static ExpressionEvaluationException ToEvaluationException(InvalidOperationException ex, string expression) =>
+            new($"Failed to parse expression: {ex.Message}", ex) { Expression = expression };
+
         private static ExpressionEvaluationException ToEvaluationException(ParseException ex, string expression)
         {
             var message = ex.InnerException is { } inner
@@ -388,6 +402,10 @@ namespace Polhem.Expressions
                     }
                 }
                 catch (ParseException ex)
+                {
+                    throw ToEvaluationException(ex, expression);
+                }
+                catch (InvalidOperationException ex)
                 {
                     throw ToEvaluationException(ex, expression);
                 }

@@ -102,6 +102,8 @@ namespace Polhem.Expressions
             }
             if (member is MethodInfo { IsSpecialName: true } method && method.Name.StartsWith("op_", StringComparison.Ordinal))
                 return ValueTypes.Contains(type);
+            // Every value type declares its own ToString; it formats the value and nothing more.
+            if (member is MethodInfo { Name: nameof(ToString) } && ValueTypes.Contains(type)) { return true; }
             if (s_members.TryGetValue(type, out var names) && names.Contains(member.Name)) { return true; }
             return s_scalarTypes.Contains(type) && s_scalarMembers.Contains(member.Name);
         }

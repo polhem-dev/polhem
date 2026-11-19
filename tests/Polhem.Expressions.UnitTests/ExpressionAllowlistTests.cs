@@ -52,6 +52,7 @@ namespace Polhem.Expressions.UnitTests
         [InlineData("Convert.ToDecimal(quantity) * 2m")]
         [InlineData("name + \"x\" + quantity")]
         [InlineData("quantity.ToString() == amount.ToString()")]
+        [InlineData("name.ToString() + Today().ToString() + d.ToString(\"yyyy\")")]
         [InlineData("!flag && quantity > 0")]
         [InlineData("__agg0 > 0")]
         [InlineData("photo == null")]
@@ -136,6 +137,27 @@ namespace Polhem.Expressions.UnitTests
         public void FindViolations_DoesNotParse_None()
         {
             Assert.Empty(Check("amount +"));
+        }
+
+        [Fact]
+        [DisplayName("A helper function's name used as a value yields no finding and fails Validate with the contract's exception")]
+        public void HelperNameAsValue_NoFindingAndValidateThrowsExpressionError()
+        {
+            Assert.Empty(Check("IsBlank"));
+            Assert.Throws<Core.Expressions.ExpressionEvaluationException>(() =>
+                _evaluator.Validate("IsBlank", s_variables, typeof(object)));
+        }
+
+        [Fact]
+        [DisplayName("A field named like a type is reported, since the run would read the name as the type")]
+        public void FindViolations_FieldNamedLikeType_Reported()
+        {
+            var variables = new Dictionary<string, Type>(StringComparer.Ordinal) { ["Math"] = typeof(string) };
+
+            var violation = Assert.Single(_evaluator.FindViolations("Math.Length > 0", variables, typeof(bool)));
+
+            Assert.Contains("'Math'", violation.Message, StringComparison.Ordinal);
+            Assert.Equal(0, violation.Position);
         }
 
         [Fact]

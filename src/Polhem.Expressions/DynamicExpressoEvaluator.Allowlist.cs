@@ -40,12 +40,33 @@ namespace Polhem.Expressions
                     lambda = _interpreter.Parse(expression, returnType, parameters);
                 }
             }
-            catch (ParseException)
+            catch (Exception ex) when (ex is ParseException or InvalidOperationException)
             {
                 // Not a violation: Validate reports an expression that does not parse.
                 return [];
             }
-            return AllowlistVisitor.Find(lambda.Expression, expression, HelperDelegates);
+            var violations = AllowlistVisitor.Find(lambda.Expression, expression, HelperDelegates).ToList();
+            violations.AddRange(FindShadowedNames(expression, variableTypes));
+            return violations;
+        }
+
+        // A variable named like a type or a helper function is read as a variable here, but at run time only the names
+        // the expression is found to reference are passed in, and that search reads such a name as the type or the
+        // function. The check and the run would then parse different expressions, so the name is refused.
+        private List<ExpressionViolation> FindShadowedNames(string expression, IReadOnlyDictionary<string, Type> variableTypes)
+        {
+            var reserved = ReferencedTypes.Keys.Concat(s_helperFunctions.Select(helper => helper.Name))
+                .ToHashSet(StringComparer.Ordinal);
+            var violations = new List<ExpressionViolation>();
+            foreach (var name in variableTypes.Keys.Where(reserved.Contains))
+            {
+                if (ExpressionAllowlist.FindWord(expression, name) is int position)
+                {
+                    violations.Add(new ExpressionViolation(
+                        $"The field '{name}' has the name of a type or a function, so an expression cannot use it.", position));
+                }
+            }
+            return violations;
         }
 
         /// <summary>

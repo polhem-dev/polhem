@@ -133,6 +133,23 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
+        [DisplayName("RegexMatch matches without backtracking, so a pattern that backtracks exponentially finishes at once")]
+        public void RegexMatch_CatastrophicPattern_NoTimeout()
+        {
+            var text = new string('a', 40) + "!";
+
+            Assert.False(Evaluate<bool>(false, "RegexMatch(n, \"^(a|aa)+$\")", ("n", text)));
+        }
+
+        [Fact]
+        [DisplayName("RegexMatch rejects a backreference, which matching without backtracking does not support")]
+        public void RegexMatch_Backreference_ThrowsExpressionError()
+        {
+            Assert.Throws<ExpressionEvaluationException>(() =>
+                Evaluate<bool>(false, "RegexMatch(n, \"(a)\\\\1\")", ("n", "aa")));
+        }
+
+        [Fact]
         [DisplayName("RegexMatch with an invalid pattern raises an expression error")]
         public void RegexMatch_InvalidPattern_ThrowsExpressionError()
         {
