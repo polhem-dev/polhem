@@ -218,11 +218,14 @@ namespace Polhem.Definition.Drafting.Rules
                     problems.Add($"{label} cannot be computed: {ex.Message}");
                     continue;
                 }
-                catch (Exception ex) when (ex is ArithmeticException or ArgumentOutOfRangeException or InvalidCastException
-                    or FormatException or IndexOutOfRangeException)
+                catch (Exception ex) when (ex is ArithmeticException or ArgumentException or InvalidCastException
+                    or FormatException or IndexOutOfRangeException or NullReferenceException or InvalidOperationException
+                    or KeyNotFoundException)
                 {
                     // A save with these values would fail with an error instead of the rule's message, so the rule
-                    // must handle them (for example by testing a divisor before dividing).
+                    // must handle them (for example by testing a divisor before dividing). The calculator's own
+                    // preconditions (a non-empty expression, a known detail table) are checked before this point, so what
+                    // arrives here is raised by the rule itself.
                     problems.Add($"{label} makes the rule fail when it runs ({ex.GetType().Name}: {ex.Message}). A record "
                         + "with these values could not be saved at all; change the expression so it handles them.");
                     continue;

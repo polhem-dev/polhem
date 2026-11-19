@@ -200,7 +200,8 @@ namespace Polhem.Definition.Drafting.Rules
             CancellationToken cancellationToken)
         {
             if (call.Name != tool.Name)
-                return new FunctionResultContent(call.CallId, $"There is no tool named '{call.Name}'. The tool is {tool.Name}.");
+                return new FunctionResultContent(call.CallId,
+                    $"There is no tool named '{(call.Name.Length <= 60 ? call.Name : call.Name[..60] + "…")}'. The tool is {tool.Name}.");
             try
             {
                 var result = await tool.InvokeAsync(new AIFunctionArguments(call.Arguments), cancellationToken).ConfigureAwait(false);

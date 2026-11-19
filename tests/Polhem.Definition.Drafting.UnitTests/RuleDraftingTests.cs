@@ -154,6 +154,23 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Contains("only a rule on the master table", Result(client), StringComparison.Ordinal);
         }
 
+        [Theory]
+        [DisplayName("A rule that throws when it runs is refused as such, whatever the error, and the request goes on")]
+        [InlineData("Convert.ToInt32(approver_id, 3) > 0", "ArgumentException")]
+        [InlineData("((string)null).Length > 0", "NullReferenceException")]
+        [InlineData("((int?)null).Value > 0", "InvalidOperationException")]
+        public async Task DraftAsync_RuleThrowsAtRunTime_RefusedAsRuntimeFailure(string condition, string error)
+        {
+            var rule = ValidRule.Replace("!IsBlank(approver_id)", condition.Replace("\"", "\\\"", StringComparison.Ordinal), StringComparison.Ordinal);
+            var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", rule)).Then(Text("…"));
+
+            var result = await Create(client).DraftAsync("x");
+
+            Assert.Null(result.Draft);
+            Assert.Contains(error, Result(client), StringComparison.Ordinal);
+            Assert.Contains("could not be saved", Result(client), StringComparison.Ordinal);
+        }
+
         [Fact]
         [DisplayName("A sample that makes the rule fail when it runs is refused, since such a record could not be saved")]
         public async Task DraftAsync_RuleFailsOnSample_Refused()
