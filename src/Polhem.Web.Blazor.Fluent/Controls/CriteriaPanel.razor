@@ -7,7 +7,10 @@
 @* WARNING: what the user types goes into native inputs, as in the column filter: a Fluent input can overwrite what is
    typed just after it takes the focus, and Enter submits the form only from a native input.
    WARNING: a FluentPopover opens only when `Opened` turns true on an element that is already there, so each menu's
-   popover stays in the markup and only its content comes and goes. *@
+   popover stays in the markup and only its content comes and goes.
+   NOTE: a FluentPopover does not hand the focus back to its button when it closes, and the chosen item disappears with
+   it, so the period menu moves the focus to its button first. A field chosen from "add condition" needs nothing: the
+   added row takes the focus. *@
 <section @ref="PaneElement" class="polhem-criteria-panel" aria-label="@Text(PolhemUIText.QueryConditions)" @onkeydown="e => OnKeyDownAsync(e)">
     <div class="polhem-criteria-panel__header">
         <span class="polhem-criteria-panel__title">@Text(PolhemUIText.QueryConditions)</span>
@@ -56,10 +59,12 @@
             <FluentPopover AnchorId="@AddMenuId" Opened="_isAddMenuOpen" OpenedChanged="open => _isAddMenuOpen = open" Class="polhem-menu">
                 @if (_isAddMenuOpen)
                 {
-                    @foreach (var field in Fields)
-                    {
-                        <button type="button" class="polhem-menu__item polhem-criteria-panel__field" @onclick="() => AddAsync(field)">@field.Caption</button>
-                    }
+                    <div class="polhem-menu__list">
+                        @foreach (var field in Fields)
+                        {
+                            <button type="button" class="polhem-menu__item polhem-criteria-panel__field" @onclick="() => AddAsync(field)">@field.Caption</button>
+                        }
+                    </div>
                 }
             </FluentPopover>
             <button type="submit" class="polhem-native-button polhem-criteria-panel__search">@Text(PolhemUIText.Search)</button>
@@ -79,6 +84,7 @@
     private readonly string _idPrefix = $"polhem-criteria-{Guid.NewGuid():N}";
     private bool _isAddMenuOpen;
     private CriteriaRow? _periodRow;
+    private readonly Dictionary<CriteriaRow, ElementReference> _periodButtons = [];
 
     private string AddMenuId => _idPrefix + "-add";
 
@@ -90,10 +96,11 @@
         return AddRowAsync(field);
     }
 
-    private Task ChoosePeriodAsync(CriteriaRow row, RelativeDate period)
+    private async Task ChoosePeriodAsync(CriteriaRow row, RelativeDate period)
     {
         _periodRow = null;
-        return SetPeriodAsync(row, period);
+        if (_periodButtons.TryGetValue(row, out var button)) await button.FocusAsync();
+        await SetPeriodAsync(row, period);
     }
 
     private RenderFragment ValueEditor(CriteriaRow row, int rowIndex) => row.Operator switch
@@ -125,17 +132,19 @@
             {
                 <span class="polhem-criteria-row__period">
                     <button type="button" id="@PeriodMenuId(rowIndex)" class="polhem-native-button polhem-native-button--plain"
-                            @onclick="() => _periodRow = ReferenceEquals(_periodRow, row) ? null : row">@PeriodText(row.RelativeDate)</button>
+                            @ref="_periodButtons[row]" @onclick="() => _periodRow = ReferenceEquals(_periodRow, row) ? null : row">@PeriodText(row.RelativeDate)</button>
                 </span>
                 <FluentPopover AnchorId="@PeriodMenuId(rowIndex)" Opened="ReferenceEquals(_periodRow, row)"
                                OpenedChanged="open => { if (!open && ReferenceEquals(_periodRow, row)) _periodRow = null; }" Class="polhem-menu">
                     @if (ReferenceEquals(_periodRow, row))
                     {
-                        @foreach (var period in Periods)
-                        {
-                            <button type="button" class="polhem-menu__item polhem-criteria-row__period-item"
-                                    @onclick="() => ChoosePeriodAsync(row, period)">@PeriodText(period)</button>
-                        }
+                        <div class="polhem-menu__list">
+                            @foreach (var period in Periods)
+                            {
+                                <button type="button" class="polhem-menu__item polhem-criteria-row__period-item"
+                                        @onclick="() => ChoosePeriodAsync(row, period)">@PeriodText(period)</button>
+                            }
+                        </div>
                     }
                 </FluentPopover>
             }

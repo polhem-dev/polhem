@@ -79,7 +79,9 @@ fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) {
 .polhem-shell-nav__loading, .polhem-shell-nav__empty { padding: 8px 16px; font-size: 13px; color: var(--colorNeutralForeground3); }
 .polhem-native-button--plain { color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1); border: 1px solid var(--colorNeutralStroke1); }
 .polhem-native-button:disabled { opacity: 0.5; cursor: default; }
-.polhem-menu { display: flex; flex-direction: column; padding: 4px 0; min-width: 180px; }
+/* WARNING: the layout goes on the list inside the popover, never on the popover itself. A `display` on the popover
+   overrides the way it hides while closed, and the empty popover then lies over its button and takes its clicks. */
+.polhem-menu__list { display: flex; flex-direction: column; padding: 4px 0; min-width: 180px; }
 .polhem-menu__item { padding: 6px 12px; font: inherit; text-align: left; color: var(--colorNeutralForeground1); background: none; border: 0; cursor: pointer; }
 .polhem-menu__item:hover:not(:disabled), .polhem-menu__item:focus-visible { background: var(--colorNeutralBackground1Hover); }
 .polhem-menu__item:disabled { color: var(--colorNeutralForegroundDisabled); cursor: default; }
@@ -90,8 +92,11 @@ fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) {
 }
 .polhem-criteria-row { border: 1px solid var(--colorNeutralStroke2); background: var(--colorNeutralBackground2); }
 .polhem-criteria-row__operator { flex: 0 0 120px; min-width: 120px; }
+/* A Fluent dropdown keeps a minimum width of its own and otherwise spills out of its field over the value beside it. */
+.polhem-criteria-panel fluent-dropdown { min-width: 0; width: 100%; }
 .polhem-criteria-row__value, .polhem-criteria-row__from, .polhem-criteria-row__to { flex: 1 1 120px; min-width: 0; }
 .polhem-criteria-row__choice { display: inline-flex; align-items: center; gap: 4px; }
 .polhem-criteria-row__picked { display: inline-flex; align-items: center; gap: 2px; padding: 0 6px; border: 1px solid var(--colorNeutralStroke1); border-radius: 12px; }
 .polhem-criteria-row__unpick { padding: 0 2px; font: inherit; background: none; border: 0; cursor: pointer; }
+.polhem-criteria-chip__remove, .polhem-criteria-row__remove, .polhem-criteria-panel__close { min-width: 0; }
 .polhem-user-query-bar__picker { flex: 1 1 auto; min-width: 0; }

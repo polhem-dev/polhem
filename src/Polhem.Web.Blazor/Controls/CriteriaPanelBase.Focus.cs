@@ -7,6 +7,7 @@ namespace Polhem.Web.Blazor.Controls
     /// Where <see cref="CriteriaPanelBase"/> puts the focus: on the first row's value when the pane opens, or on "add
     /// condition" when it has no rows, and on a row's value when the row is added. The UI package marks the pane's root
     /// with <see cref="PaneElement"/> and the rows with the shared class names; the module in this package finds them.
+    /// The module also keeps an Escape that closes an open drop-down in the pane from closing the pane.
     /// </summary>
     public abstract partial class CriteriaPanelBase : IAsyncDisposable
     {

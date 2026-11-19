@@ -49,7 +49,9 @@ key interceptor of the topmost dialog, so **a clean build does not show that an 
 The version is pinned exactly in `src/Polhem.Web.Blazor.Fluent/Polhem.Web.Blazor.Fluent.csproj`. The package works around
 behavior that is not documented, each with a `WARNING:` where it is: `PolhemDialog` and the Escape guard it loads
 (`wwwroot/polhem-fluent-dialog.js`), the popover in
-`GridColumnFilter`, the replay delay in `GridControl`, and the native inputs in the sign-in, the filter and the lookup search. An upgrade can break or remove the need for any of them, so run
+`GridColumnFilter` and the menu popovers of the query pane (`CriteriaPanel`, `UserQueryBar`, and the `.polhem-menu__list`
+rule in `polhem-fluent.css`), the replay delay in `GridControl`, and the native inputs in the sign-in, the filter, the query
+pane and the lookup search. An upgrade can break or remove the need for any of them, so run
 `tests/Polhem.Web.Blazor.Fluent.UnitTests` and `tests/Polhem.Web.Blazor.Fluent.BrowserTests` first.
 DefineEditor's Fluent UI preview draws with the same package, and its `wwwroot/browser-preview.js` finds a grid's columns
 by where the package puts the header class, so open a layout with a detail grid in that preview and click a column

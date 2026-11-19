@@ -26,7 +26,8 @@ The package pins an exact Fluent UI version, so do not reference a different one
 
 ## Differences from the MudBlazor package
 
-- The sign-in, the column filter and the lookup search use native inputs, styled to match. See the ADR for why.
+- The sign-in, the column filter, the values of the query pane and the lookup search use native inputs, styled to match. See the ADR for why.
+- The query pane's menus (**Add condition**, a date row's period, the saved query actions) are lists of buttons in a popover rather than menu components.
 - Dialogs render where they are placed, not in a provider. They do not see the surrounding `FormScope`.
 - A date shows in its storage format, `yyyy-MM-dd`, and a year and month as `yyyy-MM`.
 - A column can be moved only after the grid's script has loaded, a moment after the page.
