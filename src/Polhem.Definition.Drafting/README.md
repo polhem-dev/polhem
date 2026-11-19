@@ -107,6 +107,9 @@ and sends nothing except through the client it is given.
 writing XML, why the feature knows only `IChatClient`, and how the result reaches the workbook import of
 [ADR-056](../../maintainers/adr/adr-056-form-workbooks.md). Using it from DefineEditor is described in
 [Drafting Forms from Documents](../../docs/en/guides/document-form-drafting.md).
+[ADR-067](../../maintainers/adr/adr-067-form-rules-from-plain-language.md) records the decisions behind `RuleDrafting`,
+which DefineEditor's expression editor uses as described in
+[Writing a Rule in Plain Words](../../docs/en/definitions/expression-rules.md#writing-a-rule-in-plain-words).
 
 ## Dependencies
 

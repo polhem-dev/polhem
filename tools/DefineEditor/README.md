@@ -102,6 +102,11 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
 
   Save and Validate parse every expression of the form with the framework's evaluator, and list the ones that would
   fail at run time.
+
+  For a rule, the editor's **AI Assistant** tab writes the rule from your own words with Claude, explains an existing
+  one, and shows sample rows whose outcome the expression engine computed. **Apply Rule** replaces the rule and writes
+  its message translations into the form's Language files. See
+  [Writing a Rule in Plain Words](../../docs/en/definitions/expression-rules.md#writing-a-rule-in-plain-words).
 - **Derived files.** A FormSchema's context menu offers **Generate FormLayout** and **Sync TableSchema and
   FormLayout**, which adds the fields the form gained to its table schemas and layout after showing the files it
   changes.
