@@ -98,5 +98,8 @@ languages a solution supports, and what a customer overrides, are not the model'
 - Rules a customer configures in the application, kept apart from the packaged FormSchema and checked alongside its
   rules, are expected to reuse `RuleDrafting` and the allowlist; they are not built yet. The evaluator caches every
   parsed expression, so admitting expressions from many authors will need a bound on that cache.
-- Rules can read values a save does not write (a `ref_*` field, detail tables an aggregate does not read). That trust
-  boundary predates this work and is tracked in [#577](https://github.com/polhem-dev/polhem/issues/577).
+- Rules can read values a save does not write: a row the caller marks unchanged, a `ref_*` field, and, on a form
+  without a permission model, detail rows of another record. This was accepted rather than fixed
+  ([#577](https://github.com/polhem-dev/polhem/issues/577)): forging it takes a signed-in user writing their own
+  payload, and a rule is meant to catch mistakes made through the clients. A check that must hold against such a caller
+  belongs in the business object.

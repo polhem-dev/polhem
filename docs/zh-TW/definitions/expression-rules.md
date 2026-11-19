@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 94a67c2dd93317087fc8bbb0cbb2f4c06798c099 -->
+<!-- source: en/definitions/expression-rules.md blob: 1df961944d3f5cf84aabf85b66fb07d5f9e5ff7c -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -144,6 +144,16 @@
 > **兩段式判斷**：`When` 決定「這條規則現在該不該檢查」、`Condition` 是「必須成立的驗證」。例：「訂單已核准時，總額必須 > 0」→ `When = status == "Approved"`、`Condition = total_amount > 0`。狀態非 Approved 的單據自動略過。
 >
 > XML 裡 `>` 要寫 `&gt;`、字串引號要寫 `&quot;`。
+
+### 規則可以信任什麼
+
+存檔前規則依據存檔 payload 裡的值判斷。框架的前端送出的是使用者編輯後的記錄，所以對它們而言，規則看到的就是將要存入的值。能儲存這張表單的 API 呼叫端則可以送出別的值，規則便會依那些值判斷：
+
+- **標成「未變更」的列**不會寫入，但規則仍會讀它。呼叫端標成未變更的主檔列，可以帶著資料庫裡並不存在的值。
+- **關聯欄位**（`ref_*`）在選取紀錄時由前端填入，不會儲存，所以規則讀到的是呼叫端送來的值。
+- **沒有權限模型的表單**，沒有任何檢查把明細列綁定到正在儲存的記錄：payload 可以改動別筆記錄的明細列，而那筆記錄自己的規則不會執行。
+
+例外是彙總讀取的明細表：伺服端會以儲存的記錄補齊（見[明細加總](#明細加總)）。除此之外，規則防的是經由前端操作的失誤，不是能儲存這張表單的呼叫端。必須對這類呼叫端成立的檢查（例如允許的狀態變更），請寫在 BO 的 `DoBeforeSave`，讀取儲存的記錄判斷。payload 加密保護的是傳輸途中，擋不了持有 session 金鑰的已登入使用者。理由記錄在 [#577](https://github.com/polhem-dev/polhem/issues/577)。
 
 ## 用白話撰寫規則
 
