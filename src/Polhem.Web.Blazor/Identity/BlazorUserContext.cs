@@ -67,6 +67,9 @@ namespace Polhem.Web.Blazor.Identity
         /// <inheritdoc/>
         public string DefaultLanguage => _defaultLanguage;
 
+        /// <inheritdoc/>
+        public UserIdentity? Identity { get; private set; }
+
         /// <summary>
         /// Records the user a sign-in returned. A new sign-in drops the company and the capabilities of the previous
         /// one until <see cref="EnterCompanyAsync"/> runs again.
@@ -84,11 +87,12 @@ namespace Polhem.Web.Blazor.Identity
             };
             Company = null;
             Capabilities = null;
+            Identity = null;
         }
 
         /// <summary>
         /// Enters <paramref name="companyId"/> through the circuit's client and records the company and the
-        /// capabilities the server returned.
+        /// capabilities the server returned, and the row ids that stand for the user there.
         /// </summary>
         /// <param name="companyId">The company to enter.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
@@ -99,6 +103,7 @@ namespace Polhem.Web.Blazor.Identity
             var response = await _client.System.EnterCompanyAsync(companyId, cancellationToken).ConfigureAwait(true);
             Company = response.Company;
             Capabilities = new Dictionary<string, PermissionActions>(response.Capabilities, StringComparer.Ordinal);
+            Identity = new UserIdentity(response.UserRowId, response.EmployeeRowId);
             return response;
         }
 
@@ -111,6 +116,7 @@ namespace Polhem.Web.Blazor.Identity
             User = null;
             Company = null;
             Capabilities = null;
+            Identity = null;
         }
     }
 }

@@ -66,7 +66,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 | `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
 | `demo-ro` | `demo` | `en-US` | 同一份資料，但全部唯讀（New、Save、Delete 都隱藏），也不能開啟產品與稽核規則 |
 
-每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。[Blazor Server](#網頁前端blazor-server) 與 [Blazor WebAssembly](#網頁前端blazor-webassembly) head 是例外：它們的畫面跟隨登入畫面的語言切換。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。
+每個帳號都進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。[Blazor Server](#網頁前端blazor-server) 與 [Blazor WebAssembly](#網頁前端blazor-webassembly) head 是例外：它們的畫面跟隨登入畫面的語言切換。`demo` 與 `demo-tw` 擁有 `OrderClerk` 角色，可對每張表單做任何操作；`demo-ro` 擁有 `OrderViewer`，只能讀取訂單、類別、供應商、客戶、貨運商、部門與員工，其他都不行（`Define/PermissionModels.xml`，種子寫入 `st_role`、`st_role_grant`、`st_user_role`）。這三張表每次啟動都會補上缺少的資料列，所以後續版本新增的授權也會寫進既有的 `northwind.db`。每個帳號也各自連到一位員工（`st_employee.user_rowid`）：`demo` 連到 Nancy Davolio、`demo-tw` 連到 Andrew Fuller、`demo-ro` 連到 Janet Leverling，所以在查詢窗格對訂單的業務員選**我**，會列出該帳號自己的訂單。種子只在帳號還沒有連結、而且該員工沒有連到既有使用者時才寫入。
 
 ### 網頁前端（Avalonia WASM）
 

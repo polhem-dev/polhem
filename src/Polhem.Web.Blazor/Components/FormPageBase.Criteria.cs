@@ -134,7 +134,7 @@ namespace Polhem.Web.Blazor.Components
         private void ApplyCriteriaFilter()
         {
             _criteriaFilter = GetListFilterConverter.ToFilter(_criteria, ResolveToday(),
-                CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek);
+                CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek, UserContext?.Identity);
             _criteriaChips = _criteria.Rows
                 .Where(r => r.HasValue)
                 .Select(r => new CriteriaChip(r, CriteriaRowSummary.Describe(r, Text)))

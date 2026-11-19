@@ -160,6 +160,34 @@ namespace Polhem.Web.Blazor.Controls
             return row.RemoveValue(value.Value) ? OnChangedAsync(cancellationToken) : Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the row offers "me" (<see cref="CriteriaValue.CurrentUser"/>) and does not
+        /// hold it yet, so the pane shows the button that adds it.
+        /// </summary>
+        /// <param name="row">The row.</param>
+        /// <returns><see langword="true"/> when the button is shown.</returns>
+        protected static bool CanAddCurrentUser(CriteriaRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            return row.Operator == CriteriaOperator.In && row.Field.OffersCurrentUser && !row.Values.Any(v => v.IsCurrentUser);
+        }
+
+        /// <summary>Adds "me" (<see cref="CriteriaValue.CurrentUser"/>) to a relation row that offers it.</summary>
+        /// <param name="row">The row.</param>
+        /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
+        /// <returns>The operation.</returns>
+        protected Task AddCurrentUserAsync(CriteriaRow row, CancellationToken cancellationToken = default)
+        {
+            if (!CanAddCurrentUser(row)) return Task.CompletedTask;
+            row.AddCurrentUser();
+            return OnChangedAsync(cancellationToken);
+        }
+
+        /// <summary>Returns the text a value of a relation or choice row shows, "me" in the reader's language.</summary>
+        /// <param name="value">The value.</param>
+        /// <returns>The text.</returns>
+        protected string ValueText(CriteriaValue value) => CriteriaRowSummary.ValueText(value, Text);
+
         private DateOnly ReadToday() => Today?.Invoke() ?? DateOnly.FromDateTime(DateTime.Now);
 
         // A relative period shows its days, so editing one end keeps the other.

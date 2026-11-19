@@ -173,13 +173,18 @@
             @foreach (var value in row.Values)
             {
                 <span class="polhem-criteria-row__picked">
-                    <span>@value.Text</span>
-                    <button type="button" class="polhem-criteria-row__unpick" title="@value.Text"
+                    <span>@ValueText(value)</span>
+                    <button type="button" class="polhem-criteria-row__unpick" title="@ValueText(value)"
                             @onclick="() => RemoveValueAsync(row, value)">✕</button>
                 </span>
             }
             <button type="button" class="polhem-native-button polhem-native-button--plain polhem-criteria-row__pick"
                     @onclick="() => BeginPick(row)">@Text(PolhemUIText.PickValue)</button>
+            @if (CanAddCurrentUser(row))
+            {
+                <button type="button" class="polhem-native-button polhem-native-button--plain polhem-criteria-row__me"
+                        @onclick="() => AddCurrentUserAsync(row)">@Text(PolhemUIText.CurrentUser)</button>
+            }
         </div>;
 
     private static readonly string[] s_booleanChoices = [string.Empty, bool.TrueString, bool.FalseString];

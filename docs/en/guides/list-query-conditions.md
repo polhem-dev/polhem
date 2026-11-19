@@ -93,6 +93,13 @@ The **Period** menu of a date range offers today, yesterday, this week, last wee
 this year and the last 7 or 30 days. A period stays relative: it is resolved each time the query runs, against today in
 the signed-in user's time zone, and the week starts on the day the user's culture starts it.
 
+A relation to employees (`RelationProgId="Employee"`, the framework's `st_employee` form) and a field marked as the
+owner column (`ScopeRole="Owner"`) also offer **Me**, beside **Pick…**: the signed-in user, alone or with picked
+records. Me stays relative as well. Each time the query runs it becomes the user's row id and the row id of the employee
+linked to the user in the entered company (`st_employee.user_rowid`), the same pair the `Own` record scope compares an
+owner column with, so "my orders" means the orders of whoever applies the query. A user with neither id known matches
+no record. The front end gets the two ids from the `EnterCompany` response (`IUserContext.Identity`).
+
 ## 4. How conditions combine
 
 - Every row must match: rows are combined with AND.
@@ -163,7 +170,7 @@ changed since, and a **⋯** menu with **Save query**, **Save as new query…**,
 | Who may change it | Only the user who created a query may save over it, rename it, share it or delete it; anyone may save another user's shared query as a new one of their own |
 | Default | Each user picks at most one query per form that the list opens with; it may be one another user shares |
 | Permission | Every action needs the form's `Read` permission |
-| Relative dates | A period such as "this month" is stored as such and resolved each time the query runs |
+| Relative values | A period such as "this month", and Me, are stored as such and resolved each time the query runs; a version that predates Me leaves its row out |
 
 A query stores what the user entered, not a converted filter, so the pane shows it again exactly. When the form's
 definition changes, a row whose field is no longer offered, whose operator the field no longer allows, or whose value
