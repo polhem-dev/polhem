@@ -22,6 +22,17 @@ namespace Polhem.Api.Core.Messages.System
         /// </summary>
         public Dictionary<string, PermissionActions> Capabilities { get; set; } = [];
 
+        /// <summary>
+        /// Gets or sets the signed-in user's row id (<c>st_user.sys_rowid</c>).
+        /// </summary>
+        public Guid UserRowId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the row id of the employee linked to the signed-in user in the entered company;
+        /// <see cref="Guid.Empty"/> when the user has none there.
+        /// </summary>
+        public Guid EmployeeRowId { get; set; }
+
         /// <inheritdoc />
         IReadOnlyDictionary<string, PermissionActions> IEnterCompanyResponse.Capabilities => Capabilities;
     }

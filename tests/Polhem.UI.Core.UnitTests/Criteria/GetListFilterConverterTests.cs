@@ -178,5 +178,54 @@ namespace Polhem.UI.Core.UnitTests.Criteria
 
             Assert.Throws<InvalidOperationException>(() => Convert(criteria));
         }
+
+        private static CriteriaField Salesperson()
+            => new("employee_rowid", "Salesperson", CriteriaFieldKind.Relation, FieldDbType.Guid) { OffersCurrentUser = true };
+
+        [Fact]
+        [DisplayName("Me resolves to the user's and the employee's row ids, as the Own scope compares an owner column")]
+        public void ToFilter_CurrentUser_ResolvesToBothIds()
+        {
+            var identity = new UserIdentity(Guid.NewGuid(), Guid.NewGuid());
+            var criteria = new QueryCriteria();
+            criteria.Add(Salesperson()).AddCurrentUser();
+
+            var condition = Assert.IsType<FilterCondition>(GetListFilterConverter.ToFilter(criteria, s_today, DayOfWeek.Monday, identity));
+
+            Assert.Equal(ComparisonOperator.In, condition.Operator);
+            Assert.Equal(new object[] { identity.UserRowId, identity.EmployeeRowId }, Assert.IsType<object[]>(condition.Value));
+        }
+
+        [Fact]
+        [DisplayName("Me beside a picked person adds the user's known ids to the picked one")]
+        public void ToFilter_CurrentUserAndPicked_CombinesIds()
+        {
+            var identity = new UserIdentity(Guid.NewGuid(), Guid.Empty);
+            var nancy = Guid.NewGuid();
+            var criteria = new QueryCriteria();
+            var row = criteria.Add(Salesperson());
+            row.TryAddValue(nancy, "Nancy");
+            row.AddCurrentUser();
+
+            var condition = Assert.IsType<FilterCondition>(GetListFilterConverter.ToFilter(criteria, s_today, DayOfWeek.Monday, identity));
+
+            Assert.Equal(new object[] { nancy, identity.UserRowId }, Assert.IsType<object[]>(condition.Value));
+        }
+
+        [Fact]
+        [DisplayName("Me with no known identity matches nothing rather than every record")]
+        public void ToFilter_CurrentUserUnknown_IsEmptyIn()
+        {
+            var criteria = new QueryCriteria();
+            criteria.Add(Salesperson()).AddCurrentUser();
+
+            var unknown = Assert.IsType<FilterCondition>(Convert(criteria));
+            var empty = Assert.IsType<FilterCondition>(
+                GetListFilterConverter.ToFilter(criteria, s_today, DayOfWeek.Monday, new UserIdentity(Guid.Empty, Guid.Empty)));
+
+            Assert.Equal(ComparisonOperator.In, unknown.Operator);
+            Assert.Empty(Assert.IsType<object[]>(unknown.Value));
+            Assert.Empty(Assert.IsType<object[]>(empty.Value));
+        }
     }
 }

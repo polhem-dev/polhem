@@ -83,9 +83,19 @@ namespace Polhem.UI.Core.Criteria
         {
             var values = row.Values;
             if (values.Count <= 2)
-                return string.Join(text(PolhemUIText.CriteriaValueSeparator), values.Select(v => v.Text));
+                return string.Join(text(PolhemUIText.CriteriaValueSeparator), values.Select(v => ValueText(v, text)));
             return string.Format(CultureInfo.CurrentCulture, text(PolhemUIText.CriteriaMoreValues),
-                values[0].Text, values.Count, values.Count - 1);
+                ValueText(values[0], text), values.Count, values.Count - 1);
+        }
+
+        /// <summary>Returns the text a value of an <see cref="CriteriaOperator.In"/> row shows, in the reader's language.</summary>
+        /// <param name="value">The value.</param>
+        /// <param name="text">Looks up a <see cref="PolhemUIText"/> key in the reader's language.</param>
+        /// <returns>The text.</returns>
+        public static string ValueText(CriteriaValue value, Func<string, string> text)
+        {
+            ArgumentNullException.ThrowIfNull(text);
+            return value.IsCurrentUser ? text(PolhemUIText.CurrentUser) : value.Text;
         }
 
         private static string Format(object? value) => value switch

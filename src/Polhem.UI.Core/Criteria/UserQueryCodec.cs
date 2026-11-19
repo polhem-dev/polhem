@@ -21,6 +21,7 @@ namespace Polhem.UI.Core.Criteria
         public const int CurrentVersion = 1;
 
         private const string DateFormat = "yyyy-MM-dd";
+        private const string CurrentUserName = "me";
 
         /// <summary>
         /// Writes the rows of <paramref name="criteria"/>, including the ones with nothing entered, in their order.
@@ -98,7 +99,9 @@ namespace Polhem.UI.Core.Criteria
                     break;
                 case CriteriaOperator.In:
                     foreach (var value in row.Values)
-                        condition.Values.Add(new UserQueryValue { Value = Encode(value.Value) ?? string.Empty, Text = value.Text });
+                        condition.Values.Add(value.IsCurrentUser
+                            ? new UserQueryValue { Relative = CurrentUserName }
+                            : new UserQueryValue { Value = Encode(value.Value) ?? string.Empty, Text = value.Text });
                     break;
                 default:
                     condition.Value = Encode(row.Value);
@@ -127,9 +130,18 @@ namespace Polhem.UI.Core.Criteria
         {
             CriteriaOperator.Range when condition.Period is not null => TryFillPeriod(row, condition),
             CriteriaOperator.Range => TryFillRange(row, condition),
-            CriteriaOperator.In => condition.Values.All(value => row.TryAddValue(value.Value, ValueText(row.Field, value))),
+            CriteriaOperator.In => condition.Values.All(value => TryAddValue(row, value)),
             _ => TryFillValue(row, condition),
         };
+
+        private static bool TryAddValue(CriteriaRow row, UserQueryValue value)
+        {
+            if (value.Relative is null) return row.TryAddValue(value.Value, ValueText(row.Field, value));
+            if (!string.Equals(value.Relative, CurrentUserName, StringComparison.Ordinal) || !row.Field.OffersCurrentUser)
+                return false;
+            row.AddCurrentUser();
+            return true;
+        }
 
         // A listed value shows the item's text in the current definition and language, so a query shared by a user of
         // another language reads in the reader's; the stored text is kept for a picked record, or a value no longer listed.

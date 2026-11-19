@@ -137,6 +137,20 @@ namespace Polhem.UI.Core.Criteria
         }
 
         /// <summary>
+        /// Adds <see cref="CriteriaValue.CurrentUser"/> to an <see cref="CriteriaOperator.In"/> row whose field offers it.
+        /// It is not added again when the row has it.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The operator is not <see cref="CriteriaOperator.In"/>, or the
+        /// field does not offer the signed-in user (<see cref="CriteriaField.OffersCurrentUser"/>).</exception>
+        public void AddCurrentUser()
+        {
+            RequireOperator(CriteriaOperator.In);
+            if (!Field.OffersCurrentUser)
+                throw new InvalidOperationException($"The field {Field.FieldName} does not offer the signed-in user.");
+            if (!_values.Exists(v => v.IsCurrentUser)) _values.Add(CriteriaValue.CurrentUser);
+        }
+
+        /// <summary>
         /// Adds a value to an <see cref="CriteriaOperator.In"/> row. A value already in the row is not added again.
         /// </summary>
         /// <param name="value">For a choice field, the list item's value, converted to the field's stored type;

@@ -34,5 +34,26 @@ namespace Polhem.UI.ApiBridge.UnitTests
                 ClientInfo.ClearCompanyContext();
             }
         }
+
+        [Fact]
+        [DisplayName("ApplyEnterCompanyResult keeps the user's row ids for the user context, and ClearCompanyContext clears them")]
+        public void ApplyEnterCompanyResult_KeepsIdentity_ClearResets()
+        {
+            try
+            {
+                var userRowId = Guid.NewGuid();
+                var employeeRowId = Guid.NewGuid();
+                ClientInfo.ApplyEnterCompanyResult(new EnterCompanyResponse { UserRowId = userRowId, EmployeeRowId = employeeRowId });
+
+                Assert.Equal(new UI.Core.UserIdentity(userRowId, employeeRowId), new ClientUserContext().Identity);
+
+                ClientInfo.ClearCompanyContext();
+                Assert.Null(new ClientUserContext().Identity);
+            }
+            finally
+            {
+                ClientInfo.ClearCompanyContext();
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 using Polhem.Core.Data;
+using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Settings;
@@ -80,6 +81,13 @@ namespace Polhem.UI.Core.Criteria
         public string LangEnumName { get; init; } = string.Empty;
 
         /// <summary>
+        /// Gets a value indicating whether the field offers <see cref="CriteriaValue.CurrentUser"/>: a
+        /// <see cref="CriteriaFieldKind.Relation"/> to employees (<see cref="SysProgIds.Employee"/>), or one marked as
+        /// the owner column (<see cref="ScopeRole.Owner"/>).
+        /// </summary>
+        public bool OffersCurrentUser { get; init; }
+
+        /// <summary>
         /// Describes a form field, or returns <c>null</c> for a field no condition can be entered for
         /// (long text, binary data, a time of day, or a <see cref="Guid"/> that names no related program).
         /// </summary>
@@ -100,6 +108,9 @@ namespace Polhem.UI.Core.Criteria
                 RelationProgId = kind == CriteriaFieldKind.Relation ? field.RelationProgId : string.Empty,
                 ListItems = kind == CriteriaFieldKind.Choice && field.ListItems is { } items ? [.. items] : [],
                 LangEnumName = kind == CriteriaFieldKind.Choice ? field.LangEnumName : string.Empty,
+                OffersCurrentUser = kind == CriteriaFieldKind.Relation && field.DbType == FieldDbType.Guid
+                    && (string.Equals(field.RelationProgId, SysProgIds.Employee, StringComparison.OrdinalIgnoreCase)
+                        || field.ScopeRole == ScopeRole.Owner),
             };
         }
 

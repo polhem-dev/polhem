@@ -15,6 +15,7 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             [PolhemUIText.CriteriaValueSeparator] = "、",
             [PolhemUIText.CriteriaMoreValues] = "{0} 等 {1} 筆",
             [PolhemUIText.DateThisMonth] = "本月",
+            [PolhemUIText.CurrentUser] = "我",
         };
 
         private static string English(string key) => PolhemUIText.DefaultTexts[key];
@@ -123,6 +124,19 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.Equal("貨運商：Federal Shipping 等 3 筆", Describe(values, Chinese));
             Assert.Equal("訂單日期：本月", Describe(period, Chinese));
             Assert.Equal("訂單編號：10248～10300", Describe(range, Chinese));
+        }
+
+        [Fact]
+        [DisplayName("Me shows in the reader's language beside a picked name")]
+        public void Describe_CurrentUser_ShowsInReadersLanguage()
+        {
+            var row = new QueryCriteria().Add(
+                new CriteriaField("f", "Salesperson", CriteriaFieldKind.Relation, FieldDbType.Guid) { OffersCurrentUser = true });
+            row.TryAddValue(Guid.NewGuid(), "Nancy");
+            row.AddCurrentUser();
+
+            Assert.Equal("Salesperson: Nancy, Me", Describe(row, English));
+            Assert.Equal("Salesperson：Nancy、我", Describe(row, Chinese));
         }
     }
 }

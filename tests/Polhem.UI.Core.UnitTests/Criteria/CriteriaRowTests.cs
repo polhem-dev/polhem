@@ -167,5 +167,22 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.False(row.RemoveValue("A"));
             Assert.Equal(["C"], row.Values.Select(v => v.Value));
         }
+
+        [Fact]
+        [DisplayName("Me is added once, and only to a field that offers it")]
+        public void AddCurrentUser_OnceAndOnlyWhereOffered()
+        {
+            var offered = new QueryCriteria().Add(
+                new CriteriaField("employee_rowid", "Salesperson", CriteriaFieldKind.Relation, FieldDbType.Guid) { OffersCurrentUser = true });
+            var other = new QueryCriteria().Add(new CriteriaField("shipper_rowid", "Shipper", CriteriaFieldKind.Relation, FieldDbType.Guid));
+
+            offered.AddCurrentUser();
+            offered.AddCurrentUser();
+
+            Assert.True(Assert.Single(offered.Values).IsCurrentUser);
+            Assert.True(offered.HasValue);
+            Assert.True(offered.RemoveValue(CriteriaValue.CurrentUser.Value));
+            Assert.Throws<InvalidOperationException>(other.AddCurrentUser);
+        }
     }
 }

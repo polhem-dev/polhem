@@ -53,6 +53,19 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.Equal([CriteriaOperator.In], field.Operators);
         }
 
+        [Theory]
+        [InlineData("Employee", ScopeRole.None, true)]
+        [InlineData("employee", ScopeRole.None, true)]
+        [InlineData("Customer", ScopeRole.Owner, true)]
+        [InlineData("Customer", ScopeRole.None, false)]
+        [DisplayName("A relation to employees, or one marked as the owner column, offers the signed-in user")]
+        public void FromField_EmployeeOrOwner_OffersCurrentUser(string relationProgId, ScopeRole role, bool expected)
+        {
+            var field = CriteriaField.FromField(new FormField("x_rowid", "X", FieldDbType.Guid) { RelationProgId = relationProgId, ScopeRole = role });
+
+            Assert.Equal(expected, field!.OffersCurrentUser);
+        }
+
         [Fact]
         [DisplayName("A field with list items or a language enum is a choice field carrying them")]
         public void FromField_ListItemsOrLangEnum_IsChoice()

@@ -236,6 +236,37 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("EnterCompany returns the user and employee rowids, which a front end resolves a me condition to")]
+        public void EnterCompany_ReturnsUserAndEmployeeRowIds()
+        {
+            var userRowId = LookupUserRowId(SeedUserId);
+            var empRowId = Guid.NewGuid();
+            InsertEmployee(empRowId, "EMP_" + Guid.NewGuid().ToString("N")[..6], Guid.NewGuid(), userRowId);
+            try
+            {
+                var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+                var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);
+                var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
+
+                try
+                {
+                    var result = bo.EnterCompany(new EnterCompanyArgs { CompanyId = SeedCompanyId });
+
+                    Assert.Equal(userRowId, result.UserRowId);
+                    Assert.Equal(empRowId, result.EmployeeRowId);
+                }
+                finally
+                {
+                    sessionService.Remove(accessToken);
+                }
+            }
+            finally
+            {
+                DeleteEmployee(empRowId);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany without a matching employee still snapshots the user rowid and leaves employee/dept empty")]
         public void EnterCompany_NoEmployee_SnapshotsUserRowIdOnly()
         {

@@ -31,5 +31,14 @@ namespace Polhem.UI.Core
         /// Gets the deployment's default language, the last step of the UI text fall-back chain; empty when unknown.
         /// </summary>
         string DefaultLanguage { get; }
+
+        /// <summary>
+        /// Gets the row ids that stand for the user in the entered company, or <c>null</c> when no company is entered.
+        /// </summary>
+        /// <remarks>
+        /// Has a default body, <c>null</c>, so an implementation written before the member existed keeps compiling;
+        /// a "me" query condition then matches nothing.
+        /// </remarks>
+        UserIdentity? Identity => null;
     }
 }

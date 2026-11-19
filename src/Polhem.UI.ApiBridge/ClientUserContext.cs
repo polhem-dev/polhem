@@ -24,5 +24,8 @@ namespace Polhem.UI.ApiBridge
 
         /// <inheritdoc/>
         public string DefaultLanguage => ClientInfo.ApiClient.DefaultLanguage;
+
+        /// <inheritdoc/>
+        public UserIdentity? Identity => ClientInfo.Identity;
     }
 }

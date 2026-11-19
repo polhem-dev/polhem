@@ -127,6 +127,8 @@ namespace Polhem.Business.System
             {
                 Company = binding.Company,
                 Capabilities = new Dictionary<string, PermissionActions>(binding.Capabilities, StringComparer.Ordinal),
+                UserRowId = binding.UserRowId,
+                EmployeeRowId = binding.EmployeeRowId,
             };
         }
 
