@@ -83,6 +83,24 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
+        [DisplayName("Escape in an open operator drop-down closes the drop-down and leaves the pane open")]
+        public async Task Escape_InOpenDropDown_KeepsPane()
+        {
+            var page = await OpenPaneAsync(_fixture.Address);
+            await AddNameAsync(page);
+            // The drop-down's options are not something both packages expose to a role query (Fluent UI sets the role
+            // through element internals), but both mark the open drop-down as expanded.
+            var expanded = page.Locator(".polhem-criteria-row [aria-expanded='true']");
+
+            await page.Locator(".polhem-criteria-row__operator").ClickAsync();
+            await Assertions.Expect(expanded).ToHaveCountAsync(1);
+            await page.Keyboard.PressAsync("Escape");
+
+            await Assertions.Expect(expanded).ToHaveCountAsync(0);
+            await Assertions.Expect(page.Locator(Pane)).ToBeVisibleAsync();
+        }
+
+        [BrowserFact]
         [DisplayName("Days entered into a date range stay in the boxes and filter the list")]
         public async Task DateRange_Entered_Filters()
         {
@@ -107,6 +125,22 @@ namespace Polhem.Web.Blazor.BrowserTests
             var conditions = Assert.IsType<FilterGroup>(_fixture.Backend.LastFilter).Nodes!.Cast<FilterCondition>().ToList();
             Assert.Equal(new DateOnly(2026, 3, 1), conditions[0].Value);
             Assert.Equal(new DateOnly(2026, 3, 31), conditions[1].Value);
+        }
+
+        [BrowserFact]
+        [DisplayName("Choosing a period fills the range and leaves the focus on the period button")]
+        public async Task Period_Chosen_KeepsFocusOnButton()
+        {
+            var page = await OpenPaneAsync(_fixture.Address);
+            await page.Locator(AddButton).ClickAsync();
+            await page.Locator(".polhem-criteria-panel__field", new PageLocatorOptions { HasText = "Hired" }).ClickAsync();
+            var period = page.Locator(".polhem-criteria-row__period button");
+
+            await period.ClickAsync();
+            await page.Locator(".polhem-criteria-row__period-item").First.ClickAsync();
+
+            await Assertions.Expect(period).ToBeFocusedAsync();
+            await Assertions.Expect(page.Locator(".polhem-criteria-row__from input")).Not.ToHaveValueAsync(string.Empty);
         }
 
         [BrowserFact]

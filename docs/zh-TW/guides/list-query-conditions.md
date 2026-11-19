@@ -1,4 +1,4 @@
-<!-- source: en/guides/list-query-conditions.md blob: 96846dd649afed7b4846fb1cfeb94b5ebcc86b33 -->
+<!-- source: en/guides/list-query-conditions.md blob: 33565f48069dfe51ffa19e1a89f045efb3646594 -->
 # 清單查詢條件
 
 [English](../../en/guides/list-query-conditions.md) · [← 文件索引](../README.md)
@@ -22,7 +22,7 @@
 
 ## 1. 使用者看到的畫面
 
-表單有可查詢欄位時，Avalonia 的 `ListView` 與 MudBlazor 的 `FormPage` 工具列會出現**查詢**按鈕。按下後開啟查詢窗格，使用者逐條加入條件：
+表單有可查詢欄位時，Avalonia 的 `ListView` 與 Blazor 的 `FormPage`（MudBlazor 與 Fluent UI）工具列會出現**查詢**按鈕。按下後開啟查詢窗格，使用者逐條加入條件：
 **加入條件**列出欄位；每一列上方是欄位和移除鈕，下方是運算子（欄位有多種時才出現）和值。**搜尋**（或按 Enter）會帶著
 條件讀取清單的第一頁；**清除**會移除條件並重新讀取整份清單。
 
@@ -40,9 +40,9 @@
 
 清單一開始沒有任何條件，或套用使用者的預設查詢（[第 7 節](#7-儲存的查詢)）。
 
-MudBlazor 的 `FormPage` 依同樣的寬度決定窗格位置，有兩點不同：蓋在清單上的窗格搜尋後不會自動關閉，要按 ✕ 或 Escape
+Blazor 的 `FormPage` 依同樣的寬度決定窗格位置，有兩點不同：蓋在清單上的窗格搜尋後不會自動關閉，要按 ✕ 或 Escape
 關閉；手機寬度時窗格蓋住整頁，而不是讓清單變暗。欄頭篩選也是一個條件：會顯示成 chip、出現在窗格的條件列裡，同一欄再設定
-時取代那一列，清除條件時也一併清除。Fluent UI 的 `FormPage` 有欄頭篩選，但還沒有查詢窗格。
+時取代那一列，清除條件時也一併清除。
 
 ## 2. 宣告清單可查詢的欄位
 
@@ -113,7 +113,7 @@ DefineEditor 用與 `ListFields` 相同的欄位挑選器編輯這個屬性，Ex
 | `QueryCriteria`、`CriteriaRow` | `Polhem.UI.Core` | 條件列，值已經轉成欄位的型別 |
 | `GetListFilterConverter` | `Polhem.UI.Core` | 把條件列轉成清單請求的 `FilterNode` |
 | `CriteriaPanel` | `Polhem.UI.Avalonia` | 編輯條件列的 Avalonia 控件 |
-| `CriteriaPanelBase` | `Polhem.Web.Blazor` | Blazor 查詢窗格的規則；`Polhem.Web.Blazor.Mud` 的 `CriteriaPanel` 用 MudBlazor 畫出來 |
+| `CriteriaPanelBase` | `Polhem.Web.Blazor` | Blazor 查詢窗格的規則；`Polhem.Web.Blazor.Mud` 與 `Polhem.Web.Blazor.Fluent` 的 `CriteriaPanel` 分別用 MudBlazor 與 Fluent UI 畫出來 |
 | `ColumnFilterCriteria` | `Polhem.UI.Core` | 把清單的欄頭篩選存成 `QueryCriteria` 的條件列 |
 
 ```csharp

@@ -2,7 +2,9 @@
 @inherits UserQueryBarBase
 @using Polhem.Definition.Language
 
-@* WARNING: the actions menu's popover stays in the markup and only its content comes and goes, as in CriteriaPanel. *@
+@* WARNING: the actions menu's popover stays in the markup and only its content comes and goes, as in CriteriaPanel.
+   NOTE: the popover does not hand the focus back to its button when it closes, so an action moves it there first; an
+   action that opens a dialog moves it on into the dialog. *@
 <div class="polhem-user-query-bar">
     <FluentSelect TOption="Guid" TValue="Guid" Class="polhem-user-query-bar__picker"
                   Items="PickerItems" OptionText="@(rowId => EntryText(rowId))" OptionValue="@(rowId => rowId)"
@@ -13,19 +15,21 @@
         <span class="polhem-user-query-bar__modified" title="@Text(PolhemUIText.UserQueryModified)">*</span>
     }
     <span class="polhem-user-query-bar__actions">
-        <button type="button" id="@_menuId" class="polhem-native-button polhem-native-button--plain" disabled="@Disabled"
+        <button type="button" id="@_menuId" class="polhem-native-button polhem-native-button--plain" disabled="@Disabled" @ref="_menuButton"
                 aria-label="@Text(PolhemUIText.UserQueryActions)" title="@Text(PolhemUIText.UserQueryActions)"
                 @onclick="() => _isMenuOpen = !_isMenuOpen">⋯</button>
     </span>
     <FluentPopover AnchorId="@_menuId" Opened="_isMenuOpen" OpenedChanged="open => _isMenuOpen = open" Class="polhem-menu">
         @if (_isMenuOpen)
         {
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__save" disabled="@(!CanChange)" @onclick="() => RunAsync(SaveRequested)">@Text(PolhemUIText.UserQuerySave)</button>
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__save-as" @onclick="() => RunAsync(SaveAsRequested)">@Text(PolhemUIText.UserQuerySaveAs)</button>
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__rename" disabled="@(!CanChange)" @onclick="() => RunAsync(RenameRequested)">@Text(PolhemUIText.UserQueryRename)</button>
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__share" disabled="@(!CanChange)" @onclick="() => RunAsync(ShareToggled)">@ShareText</button>
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__default" disabled="@(!CanToggleDefault)" @onclick="() => RunAsync(DefaultToggled)">@DefaultText</button>
-            <button type="button" class="polhem-menu__item polhem-user-query-bar__delete" disabled="@(!CanChange)" @onclick="() => RunAsync(DeleteRequested)">@Text(PolhemUIText.UserQueryDelete)</button>
+            <div class="polhem-menu__list">
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__save" disabled="@(!CanChange)" @onclick="() => RunAsync(SaveRequested)">@Text(PolhemUIText.UserQuerySave)</button>
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__save-as" @onclick="() => RunAsync(SaveAsRequested)">@Text(PolhemUIText.UserQuerySaveAs)</button>
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__rename" disabled="@(!CanChange)" @onclick="() => RunAsync(RenameRequested)">@Text(PolhemUIText.UserQueryRename)</button>
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__share" disabled="@(!CanChange)" @onclick="() => RunAsync(ShareToggled)">@ShareText</button>
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__default" disabled="@(!CanToggleDefault)" @onclick="() => RunAsync(DefaultToggled)">@DefaultText</button>
+                <button type="button" class="polhem-menu__item polhem-user-query-bar__delete" disabled="@(!CanChange)" @onclick="() => RunAsync(DeleteRequested)">@Text(PolhemUIText.UserQueryDelete)</button>
+            </div>
         }
     </FluentPopover>
 </div>
@@ -33,13 +37,15 @@
 @code {
     private readonly string _menuId = $"polhem-user-query-{Guid.NewGuid():N}";
     private bool _isMenuOpen;
+    private ElementReference _menuButton;
 
     // The picker lists "no saved query" first, so it can show that none is applied.
     private IEnumerable<Guid> PickerItems => Entries.Select(e => e.RowId).Prepend(Guid.Empty);
 
-    private Task RunAsync(EventCallback action)
+    private async Task RunAsync(EventCallback action)
     {
         _isMenuOpen = false;
-        return action.InvokeAsync();
+        await _menuButton.FocusAsync();
+        await action.InvokeAsync();
     }
 }
