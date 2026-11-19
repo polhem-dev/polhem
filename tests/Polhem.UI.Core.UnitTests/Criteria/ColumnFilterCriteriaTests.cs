@@ -57,6 +57,7 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             var filters = new ColumnFilterCriteria(new QueryCriteria());
 
             Assert.True(filters.TrySet(Field(FieldDbType.String), ColumnFilterKind.Text, " Ali ", null));
+            filters.MarkApplied();
 
             var condition = Assert.Single(Conditions(filters.Criteria));
             Assert.Equal(ComparisonOperator.Contains, condition.Operator);
@@ -165,6 +166,7 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.Equal("b", Assert.Single(filters.Criteria.Rows).Value);
 
             filters.TrySet(field, ColumnFilterKind.Text, " ", null);
+            filters.MarkApplied();
 
             Assert.Empty(filters.Criteria.Rows);
             Assert.False(filters.IsFiltered("f"));
@@ -195,9 +197,31 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             filters.TrySet(Field(FieldDbType.String), ColumnFilterKind.Text, "a", null);
 
             filters.Criteria.Remove(filters.Criteria.Rows[0]);
+            filters.MarkApplied();
 
             Assert.Equal((string.Empty, string.Empty), filters.GetEntered("f"));
             Assert.False(filters.IsFiltered("f"));
+        }
+
+        [Fact]
+        [DisplayName("A condition entered but not yet applied does not mark its column, and applying it does")]
+        public void IsFiltered_FollowsAppliedCriteria()
+        {
+            var criteria = new QueryCriteria();
+            var filters = new ColumnFilterCriteria(criteria);
+            var row = criteria.Add(new CriteriaField("f", "F", CriteriaFieldKind.Text, FieldDbType.String));
+            row.SetValue("pane");
+
+            Assert.False(filters.IsFiltered("F"));
+
+            filters.MarkApplied();
+            Assert.True(filters.IsFiltered("F"));
+
+            criteria.Remove(row);
+            Assert.True(filters.IsFiltered("F"));
+
+            filters.MarkApplied();
+            Assert.False(filters.IsFiltered("F"));
         }
     }
 }

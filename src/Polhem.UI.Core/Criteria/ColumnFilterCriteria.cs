@@ -14,7 +14,12 @@ namespace Polhem.UI.Core.Criteria
     /// <para>
     /// Each column filters through one row of its own: setting the column again replaces that row, and an empty entry
     /// removes it. Rows the user added in the pane are left alone, so a column filter and a pane condition on the same
-    /// field both apply. A column counts as filtered while any row on its field has a value.
+    /// field both apply.
+    /// </para>
+    /// <para>
+    /// A column counts as filtered when a row on its field had a value the last time the criteria were applied
+    /// (<see cref="MarkApplied"/>), not while the user is still editing them in the pane: the header then agrees with the
+    /// rows under it and with the chips, which show the same applied conditions.
     /// </para>
     /// <para>
     /// What a user enters follows the rules of the header's inputs: text the value contains, a range of numbers in the
@@ -26,6 +31,7 @@ namespace Polhem.UI.Core.Criteria
     {
         private const string DayFormat = "yyyy-MM-dd";
         private readonly Dictionary<string, CriteriaRow> _rows = new(StringComparer.OrdinalIgnoreCase);
+        private HashSet<string> _applied = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Initializes a new instance of <see cref="ColumnFilterCriteria"/> over a list's criteria.</summary>
         /// <param name="criteria">The criteria the column filters add their rows to.</param>
@@ -33,6 +39,7 @@ namespace Polhem.UI.Core.Criteria
         {
             ArgumentNullException.ThrowIfNull(criteria);
             Criteria = criteria;
+            MarkApplied();
         }
 
         /// <summary>Gets the criteria the column filters add their rows to.</summary>
@@ -75,11 +82,25 @@ namespace Polhem.UI.Core.Criteria
             return IsEmpty(first, second) || TryAddRow(new QueryCriteria(), field, kind, first?.Trim() ?? string.Empty, second?.Trim() ?? string.Empty) is not null;
         }
 
-        /// <summary>Determines whether a column is filtered: a row on its field has a value.</summary>
+        /// <summary>
+        /// Determines whether a column is filtered: a row on its field had a value when the criteria were last applied
+        /// (<see cref="MarkApplied"/>, or when this instance was created).
+        /// </summary>
         /// <param name="fieldName">The field.</param>
         /// <returns>Whether it is filtered.</returns>
         public bool IsFiltered(string fieldName)
-            => Criteria.Rows.Any(r => r.HasValue && string.Equals(r.Field.FieldName, fieldName, StringComparison.OrdinalIgnoreCase));
+        {
+            ArgumentNullException.ThrowIfNull(fieldName);
+            return _applied.Contains(fieldName);
+        }
+
+        /// <summary>
+        /// Records the criteria as applied: the list now reads with them, so <see cref="IsFiltered"/> follows the rows that
+        /// have a value now. The list calls this whenever it makes the criteria its filter.
+        /// </summary>
+        public void MarkApplied()
+            => _applied = new HashSet<string>(
+                Criteria.Rows.Where(r => r.HasValue).Select(r => r.Field.FieldName), StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Returns what the column's own row holds, written the way its header takes it.</summary>
         /// <param name="fieldName">The field.</param>
