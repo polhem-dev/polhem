@@ -66,8 +66,8 @@ CREATE TABLE "tmp_idem_gate_test" (
   "bin" BLOB NOT NULL
 );
 -- Move data
-INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "sys_rowid", "bin")
-SELECT "sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "sys_rowid", "bin" FROM "idem_gate_test";
+INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "bin")
+SELECT "sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "bin" FROM "idem_gate_test";
 INSERT INTO sqlite_sequence (name, seq) SELECT 'tmp_idem_gate_test', seq FROM sqlite_sequence WHERE name = 'idem_gate_test' AND NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'tmp_idem_gate_test');
 UPDATE sqlite_sequence SET seq = MAX(seq, COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'idem_gate_test'), 0)) WHERE name = 'tmp_idem_gate_test';
 -- Drop old table

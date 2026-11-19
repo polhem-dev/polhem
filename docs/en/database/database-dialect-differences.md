@@ -152,7 +152,7 @@ When a schema upgrade changes a column, some changes can be done with `ALTER`, o
 - **SQLite** cannot change a column in place at all (its `ALTER TABLE` only adds, renames and drops columns), so every column change is a rebuild.
 - **Oracle** also rebuilds when a text column crosses the LOB boundary (`VARCHAR2` ↔ `CLOB`), which `ALTER ... MODIFY` rejects.
 - **Oracle** `ALTER TABLE ... MODIFY` must be **diff-based** for nullability: re-issuing `NOT NULL` on an already-`NOT NULL` column raises `ORA-01442`, so the adapter only emits the `NULL` / `NOT NULL` hint when it actually changes.
-- **MySQL** `ALTER ADD` of `sys_rowid`, whose default `UUID()` is non-deterministic, is split into two statements to stay replication-safe under statement-based binlog.
+- **MySQL** `ALTER ADD` of `sys_rowid`, whose default `UUID()` is non-deterministic, takes three statements, because MySQL rejects that default in `ADD COLUMN` on an existing table when binary logging is on: the column is added with the empty GUID, an `UPDATE` gives every existing row its own `UUID()`, and the default is then restored.
 - The rebuild's table rename differs too: `sp_rename` (SQL Server) vs `ALTER TABLE ... RENAME TO` (the others).
 
 ---

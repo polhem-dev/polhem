@@ -83,6 +83,8 @@ ALTER TABLE "idem_gate_test" ADD COLUMN "dtm" timestamp NOT NULL DEFAULT (NOW() 
 
 ALTER TABLE "idem_gate_test" ADD COLUMN "tm" char(5) NOT NULL DEFAULT '';
 
+ALTER TABLE "idem_gate_test" ADD COLUMN "sys_rowid" uuid NOT NULL DEFAULT gen_random_uuid();
+
 ALTER TABLE "idem_gate_test" ADD COLUMN "g" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
 
 ALTER TABLE "idem_gate_test" ADD COLUMN "g_null" uuid NULL;
@@ -110,6 +112,8 @@ COMMENT ON COLUMN "idem_gate_test"."dt_null" IS 'Nullable date';
 COMMENT ON COLUMN "idem_gate_test"."dtm" IS 'Date and time';
 
 COMMENT ON COLUMN "idem_gate_test"."tm" IS 'Time of day';
+
+COMMENT ON COLUMN "idem_gate_test"."sys_rowid" IS 'Row id';
 
 COMMENT ON COLUMN "idem_gate_test"."g" IS 'Guid';
 

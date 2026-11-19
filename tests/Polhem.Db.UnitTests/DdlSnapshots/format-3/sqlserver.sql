@@ -196,6 +196,8 @@ ALTER TABLE [idem_gate_test] ADD [dtm] [datetime2](7) NOT NULL DEFAULT (getutcda
 
 ALTER TABLE [idem_gate_test] ADD [tm] [nchar](5) NOT NULL DEFAULT (N'');
 
+ALTER TABLE [idem_gate_test] ADD [sys_rowid] [uniqueidentifier] NOT NULL DEFAULT (newid());
+
 ALTER TABLE [idem_gate_test] ADD [g] [uniqueidentifier] NOT NULL DEFAULT ('00000000-0000-0000-0000-000000000000');
 
 ALTER TABLE [idem_gate_test] ADD [g_null] [uniqueidentifier] NULL;
@@ -255,6 +257,11 @@ EXEC sp_addextendedproperty
   @level0type=N'SCHEMA', @level0name=N'dbo',
   @level1type=N'TABLE', @level1name=N'idem_gate_test',
   @level2type=N'COLUMN', @level2name=N'tm';
+EXEC sp_addextendedproperty
+  @name=N'MS_Description', @value=N'Row id',
+  @level0type=N'SCHEMA', @level0name=N'dbo',
+  @level1type=N'TABLE', @level1name=N'idem_gate_test',
+  @level2type=N'COLUMN', @level2name=N'sys_rowid';
 EXEC sp_addextendedproperty
   @name=N'MS_Description', @value=N'Guid',
   @level0type=N'SCHEMA', @level0name=N'dbo',

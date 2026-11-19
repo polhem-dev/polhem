@@ -92,10 +92,19 @@ CREATE TABLE with `DEFAULT (UUID())` is safe** → CI (a brand-new container eve
 persistent local container hits it.
 
 **Fixed (commit [`eeea3aad`](https://github.com/jeff377/bee-library/commit/eeea3aad))**: `MySqlTableAlterCommandBuilder` splits the ADD of "a NOT NULL column whose default is a
-non-deterministic function" into two steps: ① first `ADD COLUMN ... NOT NULL DEFAULT '00000000-...'` with a constant
-empty Guid default (safe; existing rows get `Guid.Empty`), ② then `ALTER COLUMN ... SET DEFAULT (UUID())`
-(metadata-only, does not touch existing rows, and matches the fresh CREATE schema → the comparer does not drift).
-Detection condition = the parsed default contains `UUID()`.
+non-deterministic function" into steps: ① first `ADD COLUMN ... NOT NULL DEFAULT '00000000-...'` with a constant
+empty Guid default, ② then `ALTER COLUMN ... SET DEFAULT (UUID())` (metadata-only, and matches the fresh CREATE
+schema → the comparer does not drift). Detection condition = the parsed default contains `UUID()`.
+
+**Follow-up (#597)**: with only those two steps every existing row kept the empty GUID, which for `sys_rowid` meant all
+rows shared one row id. An `UPDATE ... SET sys_rowid = UUID()` now runs between them. It is DML, so it is not rejected:
+row-based and mixed logging record the values, and statement-based logging accepts it with note 1592. Measured on
+MySQL 8.0.46. The test is `GuidDefaultUpgradeDbTests.AddRowId_*`.
+
+A rebuild was considered and not taken. Its `INSERT ... SELECT` fills the new column from the same `UUID()` default and
+gets the same note 1592 under statement-based logging, so it is no safer for a replica; it also copies every column,
+rebuilds every index, and can be refused by the rebuild's preservation rules, which the three ALTER statements never
+meet.
 
 **Remaining**: nothing at the framework level. But the **pattern** "cross-dialect default value / nullability
 differences in ALTER ADD, where local and CI take different paths" will recur; see the Oracle entry above.

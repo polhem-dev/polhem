@@ -101,20 +101,21 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements splits AddField of the NOT NULL row id in two (constant default, then SET DEFAULT (UUID())) to stay replication-safe")]
-        public void GetStatements_AddRowIdNotNull_SplitsIntoSafeTwoStep()
+        [DisplayName("MySQL GetStatements adds the NOT NULL row id with a constant default, fills the existing rows, then restores SET DEFAULT (UUID())")]
+        public void GetStatements_AddRowIdNotNull_AddsFillsThenRestoresDefault()
         {
             var field = new DbField("sys_rowid", "Row id", FieldDbType.Guid) { AllowNull = false };
             var statements = _builder.GetStatements("st_employee", new AddFieldChange(field));
 
-            Assert.Equal(2, statements.Count);
-            // Statement 1: ADD with a constant empty Guid default, which
-            // is replication-safe and must not contain (UUID()).
+            Assert.Equal(3, statements.Count);
+            // Statement 1: ADD with a constant empty Guid default, which MySQL accepts with binary logging on.
             Assert.Contains("ALTER TABLE `st_employee` ADD COLUMN `sys_rowid`", statements[0]);
             Assert.Contains("NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'", statements[0]);
             Assert.DoesNotContain("UUID()", statements[0]);
-            // Statement 2: a metadata-only restore of the real default (only new rows get UUID()).
-            Assert.Contains("ALTER TABLE `st_employee` ALTER COLUMN `sys_rowid` SET DEFAULT (UUID())", statements[1]);
+            // Statement 2: each existing row gets its own row id.
+            Assert.Equal("UPDATE `st_employee` SET `sys_rowid` = UUID();", statements[1]);
+            // Statement 3: a metadata-only restore of the real default (new rows get UUID()).
+            Assert.Contains("ALTER TABLE `st_employee` ALTER COLUMN `sys_rowid` SET DEFAULT (UUID())", statements[2]);
         }
 
         [Fact]

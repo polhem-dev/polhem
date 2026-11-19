@@ -23,6 +23,6 @@ namespace Polhem.Db.Schema
         /// <summary>
         /// Gets the version of the table upgrade's behaviour in this build of the framework.
         /// </summary>
-        public static int Current { get; } = 2;
+        public static int Current { get; } = 3;
     }
 }
