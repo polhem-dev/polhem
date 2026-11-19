@@ -56,6 +56,12 @@ ALTER TABLE `idem_gate_test` ADD COLUMN `dtm` DATETIME(6) NOT NULL DEFAULT (UTC_
 
 ALTER TABLE `idem_gate_test` ADD COLUMN `tm` CHAR(5) NOT NULL DEFAULT '' COMMENT 'Time of day';
 
+ALTER TABLE `idem_gate_test` ADD COLUMN `sys_rowid` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' COMMENT 'Row id';
+
+UPDATE `idem_gate_test` SET `sys_rowid` = UUID();
+
+ALTER TABLE `idem_gate_test` ALTER COLUMN `sys_rowid` SET DEFAULT (UUID());
+
 ALTER TABLE `idem_gate_test` ADD COLUMN `g` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' COMMENT 'Guid';
 
 ALTER TABLE `idem_gate_test` ADD COLUMN `g_null` CHAR(36) NULL COMMENT 'Nullable guid';

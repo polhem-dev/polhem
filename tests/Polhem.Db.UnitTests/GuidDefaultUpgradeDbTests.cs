@@ -12,7 +12,7 @@ namespace Polhem.Db.UnitTests
     /// <summary>
     /// A table created before schema format 2 gave every GUID column a generated default. The upgrade must move a
     /// reference column to the empty GUID, keep the generated default of the row id, keep the values already stored,
-    /// and converge.
+    /// and converge. Adding the row id to a table that already has rows must give each row its own id.
     /// </summary>
     public class GuidDefaultUpgradeDbTests : IClassFixture<SharedDbFixture>
     {
@@ -42,6 +42,63 @@ namespace Polhem.Db.UnitTests
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a reference column's generated default is upgraded to the empty GUID")]
         public void LegacyDefault_Sqlite_UpgradesToEmptyGuid() => Run(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: adding the row id to a table with rows gives each row its own id")]
+        public void AddRowId_SqlServer_GivesEachRowItsOwnId() => RunAddRowId(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: adding the row id to a table with rows gives each row its own id")]
+        public void AddRowId_PostgreSql_GivesEachRowItsOwnId() => RunAddRowId(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: adding the row id to a table with rows gives each row its own id")]
+        public void AddRowId_MySql_GivesEachRowItsOwnId() => RunAddRowId(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: adding the row id to a table with rows gives each row its own id")]
+        public void AddRowId_Oracle_GivesEachRowItsOwnId() => RunAddRowId(DatabaseType.Oracle);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: adding the row id to a table with rows gives each row its own id")]
+        public void AddRowId_Sqlite_GivesEachRowItsOwnId() => RunAddRowId(DatabaseType.SQLite);
+
+        private static readonly string[] s_rows = ["a", "b", "c"];
+
+        private void RunAddRowId(DatabaseType databaseType)
+        {
+            _databaseType = databaseType;
+            var databaseId = TestDbConventions.GetDatabaseId(databaseType);
+            var dbAccess = _fx.NewDbAccess(databaseId);
+            Drop(dbAccess, databaseType);
+            try
+            {
+                var withoutRowId = BuildDefinition();
+                withoutRowId.Fields!.Remove(withoutRowId.Fields["sys_rowid"]);
+                Upgrade(databaseId, withoutRowId);
+                foreach (var row in s_rows) { Insert(dbAccess, row); }
+
+                Upgrade(databaseId, BuildDefinition());
+
+                var rowIds = s_rows.Select(row => ReadRowId(dbAccess, row)).ToList();
+                Assert.DoesNotContain(Guid.Empty, rowIds);
+                Assert.Equal(s_rows.Length, rowIds.Distinct().Count());
+                Assert.Empty(Diff(databaseId).Changes);
+            }
+            finally
+            {
+                Drop(dbAccess, databaseType);
+            }
+        }
+
+        private void Upgrade(string databaseId, TableSchema define)
+        {
+            var real = DbDialectRegistry.Get(_databaseType)
+                .CreateTableSchemaProvider(databaseId, _fx.GetRequiredService<IDbConnectionManager>())
+                .GetTableSchema(TableName);
+            var diff = new TableSchemaComparer(define, real, _databaseType).CompareToDiff();
+            Orchestrator().Execute(Orchestrator().Plan(diff), databaseId);
+        }
 
         private void Run(DatabaseType databaseType)
         {

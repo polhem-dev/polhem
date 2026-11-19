@@ -1,4 +1,4 @@
-<!-- source: en/database/database-dialect-differences.md blob: badef6082a42fd21d81be24f78d6f6c79f268654 -->
+<!-- source: en/database/database-dialect-differences.md blob: 2f460db4af507ce0ade1336e8b8ddb793eddc81d -->
 # 資料庫方言差異（DDL）
 
 [English](../../en/database/database-dialect-differences.md) · [← 文件索引](../README.md)
@@ -153,7 +153,7 @@ Field 'x' doesn't have a default value
 - **SQLite** 完全無法就地變更欄位（它的 `ALTER TABLE` 只能新增、改名與刪除欄位），所以任何欄位變更都是重建。
 - **Oracle** 在文字欄跨越 LOB 邊界（`VARCHAR2` ↔ `CLOB`）時也會重建，因為 `ALTER ... MODIFY` 不接受這種變更。
 - **Oracle** 的 `ALTER TABLE ... MODIFY` 對 nullability 必須**基於差異**：對已經 `NOT NULL` 的欄再次下 `NOT NULL` 會觸發 `ORA-01442`，故 adapter 只在實際變化時才帶 `NULL` / `NOT NULL` 提示。
-- **MySQL** 對 `sys_rowid`（預設值 `UUID()` 是非確定性的）做 `ALTER ADD` 時，會拆成兩段語句以在 statement-based binlog 下維持 replication-safe。
+- **MySQL** 對 `sys_rowid`（預設值 `UUID()` 是非確定性的）做 `ALTER ADD` 時分成三段語句，因為開啟 binary log 時，MySQL 不接受在既有資料表的 `ADD COLUMN` 使用這個預設值：先以空 GUID 新增欄位，再以 `UPDATE` 給每一筆既有資料列各自的 `UUID()`，最後還原預設值。
 - 重建時的資料表改名也不同：`sp_rename`（SQL Server）vs `ALTER TABLE ... RENAME TO`（其他方言）。
 
 ---

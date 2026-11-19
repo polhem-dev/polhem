@@ -53,13 +53,18 @@ namespace Polhem.Db.Providers.MySql
 
         /// <summary>
         /// Builds the <c>ADD COLUMN</c> statement(s). A NOT NULL column whose default is a
-        /// non-deterministic function (<c>UUID()</c> for Guid) is split into two: MySQL rejects
-        /// <c>ADD COLUMN ... NOT NULL DEFAULT (UUID())</c> on an existing table under statement-based
-        /// binlog (it evaluates the function per existing row → replication-unsafe). The column is
-        /// first added with a constant empty-Guid default (safe; existing rows become "no link"),
-        /// then the real default is restored as a metadata-only change so new rows still get a UUID
-        /// and the column definition matches the fresh-CREATE schema (no comparer drift).
+        /// non-deterministic function (<c>UUID()</c>, which only the row id has) takes three statements.
         /// </summary>
+        /// <remarks>
+        /// With binary logging on, MySQL rejects <c>ADD COLUMN ... NOT NULL DEFAULT (UUID())</c> on an
+        /// existing table: a DDL statement is always logged as a statement, and the function gives each
+        /// row a different value. So the column is added with a constant empty-GUID default, every
+        /// existing row is then given its own value by an <c>UPDATE</c>, and the real default is restored
+        /// as a metadata-only change, so new rows get a UUID and the column matches a fresh CREATE.
+        /// The <c>UPDATE</c> is DML: row-based and mixed logging record the values it wrote; statement-based
+        /// logging accepts it with note 1592, and a replica then generates values of its own.
+        /// Without it every existing row shared the empty GUID as its row id.
+        /// </remarks>
         private static string[] BuildAddFieldStatements(string tableName, DbField field)
         {
             string tbl = MySqlSchemaSyntax.QuoteName(tableName);
@@ -72,6 +77,7 @@ namespace Polhem.Db.Providers.MySql
                 return new[]
                 {
                     $"ALTER TABLE {tbl} ADD COLUMN {seeded};",
+                    $"UPDATE {tbl} SET {col} = UUID();",
                     $"ALTER TABLE {tbl} ALTER COLUMN {col} SET DEFAULT {realDefault};",
                 };
             }

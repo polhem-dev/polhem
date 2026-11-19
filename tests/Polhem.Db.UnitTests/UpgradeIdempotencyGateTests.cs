@@ -119,7 +119,7 @@ namespace Polhem.Db.UnitTests
         // Columns the add path brings to a table that already has a row; the others exist from the start.
         private static readonly string[] s_addedColumns =
         [
-            "s_def", "t", "b_def", "i_def", "d_def", "dt", "dtm", "tm", "g", "dt_null", "i_null", "g_null",
+            "s_def", "t", "b_def", "i_def", "d_def", "dt", "dtm", "tm", "sys_rowid", "g", "dt_null", "i_null", "g_null",
         ];
 
         /// <summary>
