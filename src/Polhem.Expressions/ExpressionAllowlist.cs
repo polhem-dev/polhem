@@ -187,42 +187,48 @@ namespace Polhem.Expressions
         public static string? CheckRegexPattern(string pattern)
         {
             ArgumentNullException.ThrowIfNull(pattern);
+            // Ignoring whitespace (`(?x)`) and comments (`(?#...)`) change which atom a quantifier belongs to, so the
+            // scan would read the pattern differently from .NET.
+            if (Regex.IsMatch(pattern, @"\(\?[a-zA-Z-]*x|\(\?#", RegexOptions.None, TimeSpan.FromSeconds(1)))
+                return "A RegexMatch pattern cannot use the x option or (?#...) comments.";
+
             // One flag per open group: whether something inside it repeats.
             var groups = new Stack<bool>();
-            bool lastAtomRepeats = false;
             int i = 0;
             while (i < pattern.Length)
             {
-                char c = pattern[i];
-                switch (c)
+                // Read one atom. A quantifier may follow any atom (a character, an escape, a class or a group), so
+                // every kind goes through the same check below.
+                bool atomRepeats = false;
+                switch (pattern[i])
                 {
                     case '\\':
                         i += 2;
-                        lastAtomRepeats = false;
-                        continue;
+                        break;
                     case '[':
                         i = SkipCharacterClass(pattern, i);
-                        lastAtomRepeats = false;
-                        continue;
+                        break;
                     case '(':
                         groups.Push(false);
                         i++;
                         continue;
+                    case '|':
+                        i++;
+                        continue;
                     case ')':
                         if (groups.Count == 0) { return "The RegexMatch pattern has an unmatched parenthesis."; }
-                        lastAtomRepeats = groups.Pop();
+                        atomRepeats = groups.Pop();
                         // A group with a repetition inside makes its parent hold one too.
-                        if (lastAtomRepeats) { MarkRepeats(groups); }
+                        if (atomRepeats) { MarkRepeats(groups); }
                         i++;
                         break;
                     default:
                         i++;
-                        lastAtomRepeats = false;
                         break;
                 }
                 if (i < pattern.Length && IsQuantifierStart(pattern, i, out int end, out int? count))
                 {
-                    if (lastAtomRepeats)
+                    if (atomRepeats)
                         return "A RegexMatch pattern cannot repeat a group that itself repeats.";
                     if (count > MaxRegexRepetition)
                     {
