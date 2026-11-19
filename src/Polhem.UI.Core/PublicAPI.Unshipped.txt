@@ -166,3 +166,28 @@ Polhem.UI.Core.Criteria.ColumnFilterCriteria.IsFiltered(string! fieldName) -> bo
 Polhem.UI.Core.Criteria.ColumnFilterCriteria.TrySet(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Lists.ColumnFilterKind kind, string? first, string? second) -> bool
 static Polhem.UI.Core.Criteria.ColumnFilterCriteria.CanRead(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Lists.ColumnFilterKind kind, string? first, string? second) -> bool
 static Polhem.UI.Core.Criteria.ColumnFilterCriteria.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Lists.ColumnFilterKind
+Polhem.UI.Core.Criteria.CriteriaField.OffersCurrentUser.get -> bool
+Polhem.UI.Core.Criteria.CriteriaField.OffersCurrentUser.init -> void
+Polhem.UI.Core.Criteria.CriteriaRow.AddCurrentUser() -> void
+Polhem.UI.Core.Criteria.CriteriaValue.IsCurrentUser.get -> bool
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Relative.get -> string?
+Polhem.UI.Core.Criteria.Storage.UserQueryValue.Relative.set -> void
+Polhem.UI.Core.IUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
+Polhem.UI.Core.UserIdentity
+Polhem.UI.Core.UserIdentity.<Clone>$() -> Polhem.UI.Core.UserIdentity!
+Polhem.UI.Core.UserIdentity.Deconstruct(out System.Guid UserRowId, out System.Guid EmployeeRowId) -> void
+Polhem.UI.Core.UserIdentity.EmployeeRowId.get -> System.Guid
+Polhem.UI.Core.UserIdentity.EmployeeRowId.init -> void
+Polhem.UI.Core.UserIdentity.Equals(Polhem.UI.Core.UserIdentity? other) -> bool
+Polhem.UI.Core.UserIdentity.RowIds.get -> System.Collections.Generic.IReadOnlyList<System.Guid>!
+Polhem.UI.Core.UserIdentity.UserIdentity(System.Guid UserRowId, System.Guid EmployeeRowId) -> void
+Polhem.UI.Core.UserIdentity.UserRowId.get -> System.Guid
+Polhem.UI.Core.UserIdentity.UserRowId.init -> void
+override Polhem.UI.Core.UserIdentity.Equals(object? obj) -> bool
+override Polhem.UI.Core.UserIdentity.GetHashCode() -> int
+override Polhem.UI.Core.UserIdentity.ToString() -> string!
+static Polhem.UI.Core.Criteria.CriteriaRowSummary.ValueText(Polhem.UI.Core.Criteria.CriteriaValue value, System.Func<string!, string!>! text) -> string!
+static Polhem.UI.Core.Criteria.CriteriaValue.CurrentUser.get -> Polhem.UI.Core.Criteria.CriteriaValue
+static Polhem.UI.Core.Criteria.GetListFilterConverter.ToFilter(Polhem.UI.Core.Criteria.QueryCriteria! criteria, System.DateOnly today, System.DayOfWeek firstDayOfWeek, Polhem.UI.Core.UserIdentity? identity) -> Polhem.Definition.Filters.FilterNode?
+static Polhem.UI.Core.UserIdentity.operator !=(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool
+static Polhem.UI.Core.UserIdentity.operator ==(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool

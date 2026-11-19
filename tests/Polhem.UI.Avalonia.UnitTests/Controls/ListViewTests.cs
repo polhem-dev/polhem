@@ -11,10 +11,13 @@ using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Views;
+using Polhem.UI.Core;
 using Polhem.UI.Core.Lists;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -987,9 +990,46 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Empty(bar.PickerTexts);
         }
 
+        [Fact]
+        [DisplayName("Running a query with Me sends the signed-in user's row ids from the user context")]
+        public async Task RunQuery_CurrentUser_SendsUserIds()
+        {
+            var identity = new UserIdentity(Guid.NewGuid(), Guid.NewGuid());
+            var schema = BuildSchema();
+            schema.MasterTable!.Fields!.Add(new FormField("employee_rowid", "Salesperson", FieldDbType.Guid) { RelationProgId = "Employee" });
+            schema.QueryFields = "sys_name,employee_rowid";
+            var connector = PagedConnector(totalRows: 3);
+            var view = new TestListView { Schema = schema, FormConnector = connector, UserContext = new IdentityUserContext(identity) };
+            await view.InitializeAsync();
+
+            view.CriteriaPanel.AddRow(view.CriteriaPanel.Fields.Single(f => f.FieldName == "employee_rowid")).AddCurrentUser();
+            await InvokePrivateAsync(view, "RunQueryAsync");
+
+            var condition = Assert.IsType<Polhem.Definition.Filters.FilterCondition>(connector.LastFilter);
+            Assert.Equal(Polhem.Definition.Filters.ComparisonOperator.In, condition.Operator);
+            Assert.Equal(new object[] { identity.UserRowId, identity.EmployeeRowId }, Assert.IsType<object[]>(condition.Value));
+        }
+
+        private sealed class IdentityUserContext(UserIdentity identity) : IUserContext
+        {
+            public UserInfo? User => null;
+
+            public IReadOnlyDictionary<string, PermissionActions>? Capabilities => null;
+
+            public CompanyInfo? Company => null;
+
+            public string DefaultLanguage => string.Empty;
+
+            public UserIdentity? Identity => identity;
+        }
+
         private sealed class TestListView : ListView
         {
             public bool ConfirmAnswer { get; set; } = true;
+
+            public IUserContext? UserContext { get; set; }
+
+            protected override IUserContext? ResolveUserContext() => UserContext;
 
             public List<Guid> ConfirmedRowIds { get; } = [];
 

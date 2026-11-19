@@ -40,6 +40,8 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.System.EnterCompanyResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.EnterCompanyResponse.Company), static x => x.Company, static (x, v) => x.Company = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities), static x => x.Capabilities, static (x, v) => x.Capabilities = v)
+                .Member(nameof(Polhem.Api.Core.Messages.System.EnterCompanyResponse.UserRowId), static x => x.UserRowId, static (x, v) => x.UserRowId = v)
+                .Member(nameof(Polhem.Api.Core.Messages.System.EnterCompanyResponse.EmployeeRowId), static x => x.EmployeeRowId, static (x, v) => x.EmployeeRowId = v)
                 .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.System.GetCommonConfigurationRequest>()
                 .Member(nameof(Polhem.Api.Core.Messages.System.GetCommonConfigurationRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)

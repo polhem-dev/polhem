@@ -67,6 +67,7 @@
     <LanguageItem Key="CriteriaIn" Value="為下列任一" />
     <LanguageItem Key="CriteriaAny" Value="全部" />
     <LanguageItem Key="PickValue" Value="選取…" />
+    <LanguageItem Key="CurrentUser" Value="我" />
     <LanguageItem Key="DatePeriod" Value="期間" />
     <LanguageItem Key="DateToday" Value="今天" />
     <LanguageItem Key="DateYesterday" Value="昨天" />

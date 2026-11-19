@@ -211,7 +211,7 @@ namespace Polhem.UI.Avalonia.Views
         private void ApplyActiveFilter()
         {
             _activeFilter = GetListFilterConverter.ToFilter(_criteria, ResolveToday(),
-                CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek);
+                CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek, ResolveUserContext()?.Identity);
             _activeConditions = _criteria.ActiveCount;
             _queryButton.Content = _activeConditions > 0
                 ? string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.QueryWithCount), _activeConditions)

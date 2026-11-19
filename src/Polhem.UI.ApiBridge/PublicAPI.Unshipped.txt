@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.UI.ApiBridge.ClientUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
+static Polhem.UI.ApiBridge.ClientInfo.Identity.get -> Polhem.UI.Core.UserIdentity?

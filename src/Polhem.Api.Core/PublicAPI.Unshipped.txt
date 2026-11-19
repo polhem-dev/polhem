@@ -37,3 +37,7 @@ Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse
 Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.DefaultRowId.get -> System.Guid
 Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.DefaultRowId.set -> void
 Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse.SetDefaultUserQueryResponse() -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.EmployeeRowId.get -> System.Guid
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.EmployeeRowId.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.UserRowId.get -> System.Guid
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.UserRowId.set -> void

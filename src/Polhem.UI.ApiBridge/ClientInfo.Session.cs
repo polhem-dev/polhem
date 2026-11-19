@@ -5,6 +5,7 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Core;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core;
 
 namespace Polhem.UI.ApiBridge
 {
@@ -36,6 +37,12 @@ namespace Polhem.UI.ApiBridge
         public static CompanyInfo? Company => s_company;
 
         /// <summary>
+        /// Gets the row ids that stand for the signed-in user in the entered company, from the <c>EnterCompany</c>
+        /// response, or <c>null</c> when no company context is active. A "me" query condition resolves to them.
+        /// </summary>
+        public static UserIdentity? Identity => s_identity;
+
+        /// <summary>
         /// Caches the capability snapshot and company info from an <c>EnterCompany</c> response, and
         /// discards definitions cached for the previous tenant. The host calls this after
         /// <see cref="SystemApiConnector.EnterCompanyAsync"/>.
@@ -52,6 +59,7 @@ namespace Polhem.UI.ApiBridge
             ArgumentNullException.ThrowIfNull(response);
             s_capabilities = response.Capabilities;
             s_company = response.Company;
+            s_identity = new UserIdentity(response.UserRowId, response.EmployeeRowId);
             ResetDefineCache();
         }
 
@@ -67,6 +75,7 @@ namespace Polhem.UI.ApiBridge
         {
             s_capabilities = null;
             s_company = null;
+            s_identity = null;
             ResetDefineCache();
         }
 
@@ -78,6 +87,7 @@ namespace Polhem.UI.ApiBridge
             // A new identity, or none: the cached capability snapshot no longer applies. Null disables degradation
             // until the next EnterCompany populates it.
             s_capabilities = null;
+            s_identity = null;
         }
 
         /// <summary>

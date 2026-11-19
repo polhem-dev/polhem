@@ -43,3 +43,11 @@ Polhem.Business.Form.FormBusinessObject.SaveUserQuery(Polhem.Business.Form.SaveU
 Polhem.Business.Form.FormBusinessObject.SetDefaultUserQuery(Polhem.Business.Form.SetDefaultUserQueryArgs! args) -> Polhem.Business.Form.SetDefaultUserQueryResult!
 const Polhem.Business.Form.FormBusinessObject.UserQueryCriteriaMaxLength = 65536 -> int
 const Polhem.Business.Form.FormBusinessObject.UserQueryNameMaxLength = 100 -> int
+Polhem.Business.System.EnterCompanyResult.EmployeeRowId.get -> System.Guid
+Polhem.Business.System.EnterCompanyResult.EmployeeRowId.set -> void
+Polhem.Business.System.EnterCompanyResult.UserRowId.get -> System.Guid
+Polhem.Business.System.EnterCompanyResult.UserRowId.set -> void
+Polhem.Business.Session.SessionCompanyBinding.EmployeeRowId.get -> System.Guid
+Polhem.Business.Session.SessionCompanyBinding.EmployeeRowId.init -> void
+Polhem.Business.Session.SessionCompanyBinding.UserRowId.get -> System.Guid
+Polhem.Business.Session.SessionCompanyBinding.UserRowId.init -> void

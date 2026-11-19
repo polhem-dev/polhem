@@ -67,3 +67,5 @@ Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.
 Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateUntrustedExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void
 Polhem.Definition.Forms.FormExpressionCalculator.EvaluateMasterRuleSample(string! expression, Polhem.Definition.Forms.FormSchema! schema, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>! detailRows, string! timeZoneId) -> bool
+const Polhem.Definition.Language.PolhemUIText.CurrentUser = "CurrentUser" -> string!
+const Polhem.Definition.SysProgIds.Employee = "Employee" -> string!

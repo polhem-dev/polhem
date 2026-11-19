@@ -92,7 +92,11 @@ namespace Polhem.Business.Session
                 employeeContext.EmployeeRowId,
                 employeeContext.DeptRowId);
 
-            return new SessionCompanyBinding(companyInfo, capabilities);
+            return new SessionCompanyBinding(companyInfo, capabilities)
+            {
+                UserRowId = employeeContext.UserRowId,
+                EmployeeRowId = employeeContext.EmployeeRowId,
+            };
         }
     }
 }

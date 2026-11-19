@@ -25,5 +25,11 @@ namespace Polhem.Definition
         /// what was recorded, this one decides what gets recorded.
         /// </remarks>
         public const string AuditRule = "AuditRule";
+
+        /// <summary>
+        /// Employee maintenance (the <c>st_employee</c> form), which links a user to a position in a company. A query
+        /// condition on a field related to it offers the signed-in user's own employee.
+        /// </summary>
+        public const string Employee = "Employee";
     }
 }

@@ -270,6 +270,55 @@ namespace Polhem.UI.Core.UnitTests.Criteria
             Assert.True(violations.Count == 0, string.Join(Environment.NewLine, violations));
         }
 
+        private static readonly CriteriaField s_salesperson =
+            new("employee_rowid", "Salesperson", CriteriaFieldKind.Relation, FieldDbType.Guid) { OffersCurrentUser = true };
+
+        [Fact]
+        [DisplayName("Me is stored by name beside a picked person and comes back as the signed-in user")]
+        public void RoundTrip_CurrentUser_StaysRelative()
+        {
+            var nancy = Guid.NewGuid();
+            var criteria = new QueryCriteria();
+            var row = criteria.Add(s_salesperson);
+            row.TryAddValue(nancy, "Nancy");
+            row.AddCurrentUser();
+
+            string xml = UserQueryCodec.Serialize(criteria);
+            var result = UserQueryCodec.Deserialize(xml, [s_salesperson]);
+
+            Assert.Contains("relative=\"me\"", xml, StringComparison.Ordinal);
+            var values = Assert.Single(result.Criteria.Rows).Values;
+            Assert.Equal(nancy, values[0].Value);
+            Assert.True(values[1].IsCurrentUser);
+            Assert.Empty(result.Skipped);
+        }
+
+        [Fact]
+        [DisplayName("A stored me with its relative name ignored, as an older version reads it, leaves the row out")]
+        public void Deserialize_CurrentUserWithoutName_IsSkipped()
+        {
+            // The empty value is what a version that does not know the `relative` attribute is left with.
+            var result = UserQueryCodec.Deserialize(
+                Document("<Condition field=\"employee_rowid\" operator=\"In\"><Value /></Condition>"), [s_salesperson]);
+
+            Assert.Empty(result.Criteria.Rows);
+            Assert.Equal(new UserQuerySkip("employee_rowid", UserQuerySkipReason.InvalidValue), Assert.Single(result.Skipped));
+        }
+
+        [Theory]
+        [InlineData("someone")]
+        [InlineData("me")]
+        [DisplayName("An unknown relative value, or me on a field that no longer offers it, leaves the row out")]
+        public void Deserialize_RelativeNotOffered_IsSkipped(string relative)
+        {
+            var field = relative == "me" ? s_shipper : s_salesperson;
+            var result = UserQueryCodec.Deserialize(
+                Document($"<Condition field=\"{field.FieldName}\" operator=\"In\"><Value relative=\"{relative}\" /></Condition>"), [field]);
+
+            Assert.Empty(result.Criteria.Rows);
+            Assert.Equal(UserQuerySkipReason.InvalidValue, Assert.Single(result.Skipped).Reason);
+        }
+
         private static string Document(string conditions)
             => $"<UserQuery version=\"{UserQueryCodec.CurrentVersion}\">{conditions}</UserQuery>";
 

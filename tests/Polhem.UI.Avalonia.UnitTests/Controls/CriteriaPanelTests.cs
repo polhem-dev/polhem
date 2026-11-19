@@ -176,5 +176,27 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             Assert.Equal(1, closed);
         }
+
+        [Fact]
+        [DisplayName("A relation row that offers the signed-in user adds Me with its own button, shown as a removable value")]
+        public void RelationEditor_Me_AddsCurrentUser()
+        {
+            var salesperson = new CriteriaField("employee_rowid", "Salesperson", CriteriaFieldKind.Relation, FieldDbType.Guid)
+            {
+                RelationProgId = "Employee",
+                OffersCurrentUser = true,
+            };
+            var panel = new CriteriaPanel();
+            panel.Bind([salesperson], new QueryCriteria());
+            var row = panel.AddRow(salesperson);
+            static Button[] Buttons(CriteriaPanel p, string text)
+                => [.. p.GetLogicalDescendants().OfType<Button>().Where(b => b.Content as string == text)];
+
+            Assert.Single(Buttons(panel, "Me")).RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+
+            Assert.True(Assert.Single(row.Values).IsCurrentUser);
+            Assert.Contains(panel.GetLogicalDescendants().OfType<TextBlock>(), t => t.Text == "Me");
+            Assert.Empty(Buttons(panel, "Me"));
+        }
     }
 }

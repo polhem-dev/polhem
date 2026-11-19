@@ -3,6 +3,7 @@ using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Definitions;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core;
 
 namespace Polhem.UI.ApiBridge
 {
@@ -58,6 +59,7 @@ namespace Polhem.UI.ApiBridge
         private static FormDefinitionLoader? s_definitionLoader;
         private static IReadOnlyDictionary<string, PermissionActions>? s_capabilities;
         private static CompanyInfo? s_company;
+        private static UserIdentity? s_identity;
 
         /// <summary>
         /// Command-line arguments parsed at <see cref="InitializeAsync(SupportedConnectTypes, CancellationToken)"/>.

@@ -200,7 +200,9 @@ export interface EnterCompanyRequest {
 export interface EnterCompanyResponse {
   capabilities?: Record<string, PermissionActions>;
   company?: CompanyInfo;
+  employeeRowId?: string;
   parameters?: Parameter[];
+  userRowId?: string;
 }
 
 export interface ExecFuncRequest {

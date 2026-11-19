@@ -205,7 +205,8 @@ namespace Polhem.UI.Avalonia.Controls
         private static bool SameValue(object value, string listItemValue)
             => string.Equals(Convert.ToString(value, CultureInfo.InvariantCulture), listItemValue, StringComparison.Ordinal);
 
-        // A relation field: the picked records as removable chips, and a button that opens the lookup.
+        // A relation field: the picked records as removable chips, a button that opens the lookup, and one that adds the
+        // signed-in user when the field offers it.
         private Control BuildRelationEditor(CriteriaRow row)
         {
             var panel = new WrapPanel { Orientation = Orientation.Horizontal, MaxWidth = 520 };
@@ -216,9 +217,10 @@ namespace Polhem.UI.Avalonia.Controls
                 foreach (var value in row.Values)
                 {
                     var chip = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(0, 0, 8, 4) };
-                    chip.Children.Add(new TextBlock { Text = value.Text, VerticalAlignment = VerticalAlignment.Center });
+                    var text = CriteriaRowSummary.ValueText(value, UIText.Get);
+                    chip.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
                     var remove = new Button { Content = "✕", Padding = new Thickness(4, 0) };
-                    AutomationNameOf(remove, string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.RemoveItem), value.Text));
+                    AutomationNameOf(remove, string.Format(CultureInfo.CurrentCulture, UIText.Get(PolhemUIText.RemoveItem), text));
                     remove.Click += (_, _) =>
                     {
                         row.RemoveValue(value.Value);
@@ -231,6 +233,17 @@ namespace Polhem.UI.Avalonia.Controls
                 var pick = new Button { Content = UIText.Get(PolhemUIText.PickValue), Margin = new Thickness(0, 0, 0, 4) };
                 pick.Click += async (_, _) => await PickRelationAsync(row, Refresh).ConfigureAwait(true);
                 panel.Children.Add(pick);
+                if (row.Field.OffersCurrentUser && !row.Values.Any(v => v.IsCurrentUser))
+                {
+                    var me = new Button { Content = UIText.Get(PolhemUIText.CurrentUser), Margin = new Thickness(4, 0, 0, 4) };
+                    me.Click += (_, _) =>
+                    {
+                        row.AddCurrentUser();
+                        Refresh();
+                        OnChanged();
+                    };
+                    panel.Children.Add(me);
+                }
             }
 
             Refresh();

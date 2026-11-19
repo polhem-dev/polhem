@@ -23,3 +23,5 @@ Polhem.Api.Contracts.Form.IUserQueryConnector.DeleteUserQueryAsync(System.Guid r
 Polhem.Api.Contracts.Form.IUserQueryConnector.GetUserQueriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetUserQueriesResponse!>!
 Polhem.Api.Contracts.Form.IUserQueryConnector.SaveUserQueryAsync(System.Guid rowId, string! name, bool isShared, string! criteria, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISaveUserQueryResponse!>!
 Polhem.Api.Contracts.Form.IUserQueryConnector.SetDefaultUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse!>!
+Polhem.Api.Contracts.System.IEnterCompanyResponse.EmployeeRowId.get -> System.Guid
+Polhem.Api.Contracts.System.IEnterCompanyResponse.UserRowId.get -> System.Guid

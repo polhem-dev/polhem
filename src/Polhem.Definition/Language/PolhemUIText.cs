@@ -180,6 +180,8 @@ namespace Polhem.Definition.Language
         public const string CriteriaAny = "CriteriaAny";
         /// <summary>Key of the button that picks a related record for a query condition.</summary>
         public const string PickValue = "PickValue";
+        /// <summary>Key of the value of a query condition that stands for the signed-in user, and of the button that adds it.</summary>
+        public const string CurrentUser = "CurrentUser";
         /// <summary>Key of the button that lists the date periods named relative to today.</summary>
         public const string DatePeriod = "DatePeriod";
         /// <summary>Key of the date period today.</summary>
@@ -321,6 +323,7 @@ namespace Polhem.Definition.Language
             [CriteriaIn] = "is any of",
             [CriteriaAny] = "Any",
             [PickValue] = "Pick…",
+            [CurrentUser] = "Me",
             [DatePeriod] = "Period",
             [DateToday] = "Today",
             [DateYesterday] = "Yesterday",
