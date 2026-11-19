@@ -1,4 +1,5 @@
-// Keeps Escape from closing a Fluent UI dialog that may not be dismissed, and lets it through to a dialog above it.
+// Keeps Escape from closing a Fluent UI dialog that may not be dismissed, and lets it through to a dialog above it. Also
+// gives the focus back to what had it before a dialog opened, once the dialog leaves the page.
 //
 // WARNING: this replaces the `PreventDismissOnEscape` of `FluentDialog`. Fluent UI 5.1.0 implements that with a
 // capture-phase `keydown` listener on the dialog element that swallows every Escape inside it, so a dismissable dialog
@@ -62,4 +63,36 @@ export function releaseEscape(id) {
     if (!guard) return;
     document.removeEventListener('keydown', guard, true);
     guards.delete(id);
+}
+
+// NOTE: `PolhemDialog` leaves the page by being removed rather than closed, and a browser gives the focus back only when a
+// modal dialog closes, so the focus would otherwise fall to the page body. It goes back only while the body has it: a
+// dialog opened on top, or a control that took the focus on purpose, keeps it.
+const returnTo = new Map();
+
+export function rememberFocus(id) {
+    const active = document.activeElement;
+    if (active && active !== document.body) returnTo.set(id, active);
+}
+
+// WARNING: the component is disposed while the server builds the render that removes it, so this call can arrive before
+// the browser has removed the dialog, with the focus still inside it. It waits for the dialog to leave the page, for as
+// long as a slow link may take to deliver that render.
+const RESTORE_WAIT_MS = 3000;
+
+export function restoreFocus(id) {
+    const target = returnTo.get(id);
+    returnTo.delete(id);
+    if (!target) return;
+    const started = performance.now();
+    const attempt = () => {
+        if (document.getElementById(id)?.isConnected && performance.now() - started < RESTORE_WAIT_MS) {
+            requestAnimationFrame(attempt);
+            return;
+        }
+        const active = document.activeElement;
+        if (!target.isConnected || (active && active !== document.body)) return;
+        target.focus();
+    };
+    attempt();
 }

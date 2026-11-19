@@ -47,7 +47,7 @@ key interceptor of the topmost dialog, so **a clean build does not show that an 
 ## Before upgrading Fluent UI, verify at run time too
 
 The version is pinned exactly in `src/Polhem.Web.Blazor.Fluent/Polhem.Web.Blazor.Fluent.csproj`. The package works around
-behavior that is not documented, each with a `WARNING:` where it is: `PolhemDialog` and the Escape guard it loads
+behavior that is not documented, each with a `WARNING:` where it is: `PolhemDialog` and the Escape guard and the focus return it loads
 (`wwwroot/polhem-fluent-dialog.js`), the popover in
 `GridColumnFilter` and the menu popovers of the query pane (`CriteriaPanel`, `UserQueryBar`, and the `.polhem-menu__list`
 rule in `polhem-fluent.css`), the replay delay in `GridControl`, and the native inputs in the sign-in, the filter, the query
