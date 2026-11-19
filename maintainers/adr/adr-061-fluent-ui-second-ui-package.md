@@ -50,7 +50,7 @@ Fluent UI 5.0.1 needs these, each marked `WARNING:` where it is:
 | `DateEdit`, `DateTimeEdit` | The picker has no callback for text it cannot parse, so leaving recreates it after a 250 ms wait for the focus to land. |
 
 > Update for Fluent UI 5.1.0: it fixes fluentui-blazor#5580, so the grid uses `FluentDataGrid` again and `PolhemDataGrid`
-> is obsolete; and an inline dialog raises `OnStateChange`, so `PolhemDialog` listens to it instead of the toggle event.
+> is obsolete (removed 2026-11-20, issue #442); and an inline dialog raises `OnStateChange`, so `PolhemDialog` listens to it instead of the toggle event.
 > The other rows were checked against 5.1.0 and kept.
 
 ## Consequences

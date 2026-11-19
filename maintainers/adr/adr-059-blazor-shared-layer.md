@@ -44,8 +44,12 @@ the same engine in WebAssembly under the rules in `rules/serialization.md`.
 
 Added 2026-11-19 (issue #442). Building a third-party UI package on `Polhem.Web.Blazor` is not a supported scenario.
 Its types serve `.Mud` and `.Fluent`, so a type that only they use is `internal`, and `Polhem.Web.Blazor` exposes it
-to them through `InternalsVisibleTo`. The packages ship together under the version in `Version.props`, so the friend
-coupling costs nothing. Making a type public later is not a breaking change; taking one back is.
+to them through `InternalsVisibleTo`. The packages are released together under the version in `Version.props`, but
+NuGet does not make a consumer update them together: a package reference packs as a minimum version. An application
+that updates `Polhem.Web.Blazor` without `.Mud` or `.Fluent` can fail at run time with `MissingMethodException` when an
+internal member changed, and no build warns about it. This is the version coupling ADR-055 weighs for the same choice;
+it is accepted here because the alternative freezes every such type in the 1.x API. Making a type public later is not a
+breaking change; taking one back is.
 
 Two language rules limit how far this goes:
 

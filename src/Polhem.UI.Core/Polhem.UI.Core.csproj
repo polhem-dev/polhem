@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <!-- The rules every head shares are internal and reach the framework's own UI packages through these.
-       The packages ship together under one version, so the friend coupling is safe. -->
+       They are released under one version, but NuGet does not make a consumer update them together;
+       ADR-059 decision 4 describes the cost. -->
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.UI.Avalonia" />
     <InternalsVisibleTo Include="Polhem.Web.Blazor" />
