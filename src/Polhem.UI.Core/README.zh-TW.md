@@ -49,15 +49,13 @@
 ### 各 head 共用的表單值規則
 
 - `FormValueBinding` -- 在表單 `DataSet` 中的值與 UI 繫結交換的字串之間轉換，並建立表單起始用的空 `DataSet`。
-- `FormDataGuard` -- 表單的 CRUD 呼叫送到連接器前檢查的前置條件；每種失敗在所有 head 都只有一種措辭。
-- `FormLiveComputationEngine` -- 各 head 共用的計算欄位即時重算與新資料列預設值運算式評估。運算引擎
-  （`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區都由呼叫端提供，因此本套件既不帶運算引擎，也不持有
-  整個 process 共用的狀態。`LiveComputationDegradation` 描述它停止計算的原因：運算式失敗的欄位，以及失敗本身。
+- `LiveComputationDegradation` -- 計算欄位的即時重算為何停止：運算式失敗的欄位，以及失敗本身。各 head 的
+  `FormLiveComputation` 會提供它。重算本身的運算引擎（`Polhem.Core.Expressions.IExpressionEvaluator`）與使用者時區
+  都由呼叫端提供，因此本套件既不帶運算引擎，也不持有整個 process 共用的狀態。
 - `Criteria/QueryCriteria` -- 使用者逐條加入的查詢條件（`CriteriaField`、`CriteriaRow`、`RelativeDate`），與後端方法無關；
   `GetListFilterConverter` 把它轉成清單請求的 `FilterNode`。請參閱[清單查詢條件](../../docs/zh-TW/guides/list-query-conditions.md)。
 - `Criteria/ColumnFilterCriteria` -- 表單清單的欄頭篩選，存成清單 `QueryCriteria` 的條件列，所以查詢窗格看得到。
   原本另外存放的 `Lists/ListFilterState` 已標為過時，框架不再讀取。
-- `Lists/CardListState` -- 手機以卡片顯示的清單資料列，隨使用者捲動一次讀一頁累積。
 
 ### 表單資料物件
 
@@ -78,19 +76,12 @@
 
 ### 各 head 共用的欄位編輯器規則
 
-`Fields/` 收納 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的欄位編輯器共用的規則，讓各 head 行為一致：
+`Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的欄位編輯器與 grid 共用同一套規則，讓各 head 行為一致：欄位可否輸入、
+數值與日期如何格式化與剖析、grid 儲存格顯示什麼、查詢選取結果如何寫回，以及關聯欄位何時提供開啟所指記錄。這些規則
+（下方的 `TimeFieldFormat` 除外）、表單 CRUD 的前置條件、即時重算引擎與卡片清單狀態，都是框架 UI 套件之間的 internal
+型別（見專案檔的 `InternalsVisibleTo`）；應用程式透過各 head 的編輯器、grid 與表單檢視使用它們。
 
-- `FieldEditRules` -- 依表單模式、版面唯讀旗標與 `AllowEditModes` 判斷欄位可否輸入。
-- `FieldValueFormatter` -- 依使用者 culture 顯示值，表單欄位與 grid 儲存格共用。
-- `NumericFieldFormat` -- 數值格式解析（含幣別與單位的小數位數）、顯示、輸入剖析，以及寫回的值。
-- `DateTimeFieldFormat` -- 日期時間欄位的顯示、輸入與綁定字串規則。
 - `TimeFieldFormat` -- 時間欄位編輯器寫回的值。
-- `GridCellFormatter` -- grid 儲存格顯示的文字：清單項目文字、日期時間、布林值、依各列幣別與單位決定的小數位數，以及查詢
-  欄位串接後的顯示欄位；勾選欄是否勾選，以及已排序欄位的標記。
-- `GridColumnRules` -- grid 欄位的最小寬度。
-- `FieldCaptionRules` -- 標題慣例：唯讀的 grid 表頭加括號、必填的標題加上醒目標示，兩者同時成立時以唯讀為準。
-- `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
-- `RelationOpenRules` -- 唯讀表單上的關聯欄位何時提供開啟所指記錄、開啟哪一筆，以及使用者能否看到它。
 
 ### 權限能力
 
@@ -115,14 +106,14 @@
 
 ## 目錄結構
 
-- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`FormDataGuard`、`FormLiveComputationEngine`
+- 專案根目錄 -- `UIServices`、`IUserContext`、`FormValueBinding`、`LiveComputationDegradation`
 - `DataObjects/` -- `FormDataObject`、`FieldValueChangedEventArgs`、`FieldValueChangeFilter`、`RowChangedEventArgs`
 - `Navigation/` -- `MenuRows`
 - `Editing/` -- `IFieldEditor`、`GridEditMode`
 - `Definitions/` -- `IFormDefinitionSource`、`StorageDefinitionSource`
-- `Fields/` -- `FieldEditRules`、`FieldValueFormatter`、`NumericFieldFormat`、`DateTimeFieldFormat`、
-  `TimeFieldFormat`、`LookupFieldRules`、`LookupDisplay`、`GridCellFormatter`、`GridColumnRules`、`FieldCaptionRules`
+- `Fields/` -- `TimeFieldFormat`、`RelationTarget`、`FieldValueOrigin`、`FieldValueChangeAppliedEventArgs`、
+  `FieldValueChangeFailedEventArgs`
 - `Connectors/` -- `FormListResult`、`FormDataResult`、`FormDeleteResult`
 - `Criteria/` -- `QueryCriteria`、`CriteriaRow`、`CriteriaField`、`CriteriaOperator`、`RelativeDate`、`GetListFilterConverter`、`ColumnFilterCriteria`
-- `Lists/` -- `ListFilterState`、`CardListState`、`ListPagingState`、`ListSelectFields`、`ColumnFilterKind`
+- `Lists/` -- `ListFilterState`、`ListPagingState`、`ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`

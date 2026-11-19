@@ -35,7 +35,7 @@ An application does not use this package alone. It references one host package, 
   client and the circuit's time zone (`Client.Session.Credentials.UserTimeZoneId`), which a new row's dates default
   to. A page of its own does the same; never pass a process-wide time zone.
 - `FormLiveComputation` -- recomputes a form's computed fields and evaluates new-row default expressions, with the
-  same rules as the Avalonia head (`FormLiveComputationEngine` in `Polhem.UI.Core`). A page of its own subscribes
+  same rules as the Avalonia head (the engine both heads share in `Polhem.UI.Core`). A page of its own subscribes
   `FieldValueChanged` and calls `Recompute`; pass the circuit's time zone, never a process-wide one.
 
 ## Dependency Constraints
@@ -43,7 +43,7 @@ An application does not use this package alone. It references one host package, 
 This package references no UI framework and no ASP.NET Core host, so it can load in WebAssembly. `POLHEM9001` enforces it.
 
 It references `Polhem.Api.Client`, `Polhem.Expressions` and [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), which
-supplies the form value rules every head shares (`FormValueBinding`, `FormDataGuard`, the element capability
+supplies the form value rules every head shares (`FormValueBinding`, the element capability
 resolver) among the rest of its contracts and rules. Its process-wide parts are off limits: a Blazor Server site serves
 several users from one process, so the Blazor packages must not use `UIServices` or reference `Polhem.UI.ApiBridge`,
 both of which hold one user per process. `UIServicesUsageGateTests` (`tests/Polhem.Web.Blazor.Server.UnitTests`)

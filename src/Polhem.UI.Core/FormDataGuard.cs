@@ -11,7 +11,7 @@ namespace Polhem.UI.Core
     /// hosted. The message text is the point: it is what a developer reads when a form is wired
     /// up wrongly, and two copies of it drift into two different explanations of one mistake.
     /// </remarks>
-    public static class FormDataGuard
+    internal static class FormDataGuard
     {
         /// <summary>
         /// Returns the connector, or explains that the form was constructed without one.

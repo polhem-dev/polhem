@@ -109,7 +109,7 @@ dotnet add package Polhem.Db
 | 組件名稱 | 說明 |
 |---|---|
 | **Polhem.Api.Client.dll** | 提供 API client，支援以同程序或 HTTP 呼叫後端 Business Object（`PolhemApiClient.CreateLocal` / `CreateRemote`）。 |
-| **Polhem.UI.Core.dll** | 所有前端（含 Blazor head）共用的前端層：UI 服務合約（`UIServices` / `IUserContext` / `IFormDefinitionSource`）、表單值規則（`FormValueBinding` / `FormDataGuard`）、各 head 綁定的 `FormDataObject` 與權限能力解析器。不含傳輸，只透過 `Polhem.Api.Contracts` 接觸後端。 |
+| **Polhem.UI.Core.dll** | 所有前端（含 Blazor head）共用的前端層：UI 服務合約（`UIServices` / `IUserContext` / `IFormDefinitionSource`）、表單值規則（`FormValueBinding`）、各 head 綁定的 `FormDataObject` 與權限能力解析器。不含傳輸，只透過 `Polhem.Api.Contracts` 接觸後端。 |
 | **Polhem.UI.ApiBridge.dll** | 把單一使用者的前端接上 Polhem 後端：用戶端連線狀態（`ClientInfo`）、endpoint 與 API 金鑰持久化（`IEndpointStorage` / `FileEndpointStorage`），以及以 `AddPolhemUIApiBridge()` 註冊、以 API 實作的 `Polhem.UI.Core` 服務。不適用多使用者 host。 |
 | **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
 | **Polhem.UI.Avalonia.Shell.dll** | 現成的 Avalonia 前端：連線、登入公司，並開啟伺服器選單上的每張表單。桌面、瀏覽器、iOS 與 Android head 共用；應用程式繼承 `ShellApplication` 即可。 |

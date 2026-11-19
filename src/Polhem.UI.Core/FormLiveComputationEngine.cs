@@ -28,7 +28,7 @@ namespace Polhem.UI.Core
     /// the server corrects it on save.
     /// </para>
     /// </remarks>
-    public sealed class FormLiveComputationEngine
+    internal sealed class FormLiveComputationEngine
     {
         private readonly FormSchema _schema;
         private readonly Func<string> _timeZoneProvider;

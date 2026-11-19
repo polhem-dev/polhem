@@ -5,7 +5,7 @@ namespace Polhem.UI.Core.Fields
     /// detail grid headers: a required field's caption is highlighted, and a read-only grid header is
     /// parenthesised. Read-only wins when a field is both: a read-only field cannot be filled in.
     /// </summary>
-    public static class FieldCaptionRules
+    internal static class FieldCaptionRules
     {
         /// <summary>
         /// Marks a read-only field's caption by wrapping it in parentheses (e.g. <c>Amount</c> →

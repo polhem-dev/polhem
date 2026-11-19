@@ -5,7 +5,7 @@ namespace Polhem.UI.Core.Fields
     /// <summary>
     /// Decides whether a field editor accepts input, the same way in every UI head.
     /// </summary>
-    public static class FieldEditRules
+    internal static class FieldEditRules
     {
         /// <summary>
         /// Determines whether a field is editable in <paramref name="formMode"/>, combining the mode, the

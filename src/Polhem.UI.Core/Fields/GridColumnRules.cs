@@ -7,7 +7,7 @@ namespace Polhem.UI.Core.Fields
     /// than its minimum width, so its header and an editor opened in its cell stay whole. When the grid is too
     /// narrow for every column (a phone-sized form), it scrolls horizontally instead of squeezing the columns.
     /// </summary>
-    public static class GridColumnRules
+    internal static class GridColumnRules
     {
         /// <summary>
         /// The minimum width, in device-independent units (CSS pixels on the web), of a column whose layout gives

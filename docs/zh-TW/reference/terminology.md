@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 1d25f60bd47e14a83d12da39ecf62547495c952a -->
+<!-- source: en/reference/terminology.md blob: 7fa2f5445b5da93248ca42c4502bc05b27dedd12 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -326,7 +326,7 @@
 | `UIServices` | UI 服務 | Static 類別，持有由 markup 建立的控制項用來解析服務（`IFormApiConnectorFactory`、`IFormDefinitionSource`、`IUserContext`）的 `IServiceProvider`。單一使用者的 head 在啟動時設定一次 `Provider`；未設定時，控制項依 host 設在它們身上的值運作。屬整個 process 共用的狀態：**不要用於 Blazor Server** |
 | `IUserContext` | 使用者情境介面 | 前端所見的已登入使用者：`User`、`Capabilities`、`Company` 與 `DefaultLanguage`。未註冊時，畫面把使用者視為匿名且不受限制 |
 | `IFormDefinitionSource` | 表單定義來源介面 | 依目前 UI 語系提供畫面所需的 `FormSchema`、`FormLayout`、幣別與單位主檔（命名空間 `Polhem.UI.Core.Definitions`）。`StorageDefinitionSource` 從 `IDefineStorage` 照原樣讀取；bridge 的實作從後端讀取 |
-| `FormValueBinding` / `FormDataGuard` | 表單值綁定／表單資料防護 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式、CRUD 前置條件），由 `FormDataObject` 使用 |
+| `FormValueBinding` | 表單值綁定 | 各端共用的表單值規則（DataSet 初始化、值轉換、顯示格式），由 `FormDataObject` 使用 |
 | `FormDataObject` | 表單資料物件 | 各端表單檢視與欄位編輯器綁定的資料物件（命名空間 `Polhem.UI.Core.DataObjects`）：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤、透過 `IFormApiConnector` 執行 CRUD 往返，並提供暫存列編輯協定。使用者時區由建構它的 head 傳入；它不讀取 `UIServices` |
 
 ### API 橋接（`Polhem.UI.ApiBridge`）

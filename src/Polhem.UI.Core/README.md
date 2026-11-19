@@ -54,19 +54,15 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 - `FormValueBinding` -- converts between the values in a form's `DataSet` and the strings UI bindings exchange, and
   builds the empty `DataSet` a form starts from.
-- `FormDataGuard` -- the preconditions a form's CRUD calls check before they reach the connector, with one wording of
-  each failure for every head.
-- `FormLiveComputationEngine` -- the live recomputation of computed fields and new-row default expressions that
-  every head drives. It takes the expression evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the
-  user's time zone from its caller, so this package carries neither an expression engine nor process-wide state.
-  `LiveComputationDegradation` describes why it stopped computing: the field whose expression failed, and the failure.
+- `LiveComputationDegradation` -- why the live recomputation of computed fields stopped: the field whose expression
+  failed, and the failure. Each head's `FormLiveComputation` exposes it. The recomputation itself takes the expression
+  evaluator (`Polhem.Core.Expressions.IExpressionEvaluator`) and the user's time zone from its caller, so this package
+  carries neither an expression engine nor process-wide state.
 - `Criteria/QueryCriteria` -- the query conditions a user adds one row at a time (`CriteriaField`, `CriteriaRow`,
   `RelativeDate`), independent of the backend method; `GetListFilterConverter` turns them into the `FilterNode` of a
   list request. See [List Query Conditions](../../docs/en/guides/list-query-conditions.md).
 - `Criteria/ColumnFilterCriteria` -- the column filters of a form list, kept as rows of its `QueryCriteria`, so the
   query pane shows them. `Lists/ListFilterState`, which kept them apart, is obsolete and no longer read.
-- `Lists/CardListState` -- the rows of a list a phone shows as cards, accumulated a page at a time as the user
-  scrolls.
 
 ### The Form Data Object
 
@@ -91,26 +87,14 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 ### Field Editor Rules Shared by Every Head
 
-`Fields/` holds the rules the field editors of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` both use, so the
-heads behave the same:
+The field editors and grids of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` share one set of rules, so the heads
+behave the same: whether a field accepts input, how numbers and dates are formatted and parsed, what a grid cell
+shows, how a lookup selection is written back, and when a relation field offers to open its record. These rules
+(except `TimeFieldFormat`, below), the CRUD preconditions of a form, the live recomputation engine and the card list
+state are internal to the framework's UI packages (the `InternalsVisibleTo` items in the project file); an application
+reaches them through the heads' editors, grids and form views.
 
-- `FieldEditRules` -- whether a field accepts input, from the form mode, the layout read-only flag and
-  `AllowEditModes`.
-- `FieldValueFormatter` -- the display of a value in the user's culture, for form fields and grid cells.
-- `NumericFieldFormat` -- number format resolution (currency and unit decimals included), display, input parsing and
-  the value written back.
-- `DateTimeFieldFormat` -- the display, input and binding-string rules of a date-and-time field.
 - `TimeFieldFormat` -- the value a time-of-day editor writes back.
-- `GridCellFormatter` -- the text a grid cell shows: list item text, instants, Booleans, per-row currency and unit
-  decimals, and the composed display fields of a lookup column; whether a check-box cell is checked and the mark of
-  a sorted column.
-- `GridColumnRules` -- a grid column's minimum width.
-- `FieldCaptionRules` -- the caption convention: a read-only grid header is parenthesised, a required caption is
-  highlighted, and read-only wins.
-- `LookupFieldRules`, `LookupDisplay` -- whether a field looks up, which program it opens, which fields it shows and
-  how they are joined, and how a selection is written back or cleared.
-- `RelationOpenRules` -- when a relation field on a read-only form offers to open the record it points at, which
-  record that is, and whether the user may see it.
 
 ### Permission Capabilities
 
@@ -137,14 +121,14 @@ heads behave the same:
 
 ## Directory Structure
 
-- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `FormDataGuard`, `FormLiveComputationEngine`
+- project root -- `UIServices`, `IUserContext`, `FormValueBinding`, `LiveComputationDegradation`
 - `DataObjects/` -- `FormDataObject`, `FieldValueChangedEventArgs`, `FieldValueChangeFilter`, `RowChangedEventArgs`
 - `Navigation/` -- `MenuRows`
 - `Editing/` -- `IFieldEditor`, `GridEditMode`
 - `Definitions/` -- `IFormDefinitionSource`, `StorageDefinitionSource`
-- `Fields/` -- `FieldEditRules`, `FieldValueFormatter`, `NumericFieldFormat`, `DateTimeFieldFormat`,
-  `TimeFieldFormat`, `LookupFieldRules`, `LookupDisplay`, `GridCellFormatter`, `GridColumnRules`, `FieldCaptionRules`
+- `Fields/` -- `TimeFieldFormat`, `RelationTarget`, `FieldValueOrigin`, `FieldValueChangeAppliedEventArgs`,
+  `FieldValueChangeFailedEventArgs`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
 - `Criteria/` -- `QueryCriteria`, `CriteriaRow`, `CriteriaField`, `CriteriaOperator`, `RelativeDate`, `GetListFilterConverter`, `ColumnFilterCriteria`
-- `Lists/` -- `ListFilterState`, `CardListState`, `ListPagingState`, `ListSelectFields`, `ColumnFilterKind`
+- `Lists/` -- `ListFilterState`, `ListPagingState`, `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`

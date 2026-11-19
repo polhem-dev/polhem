@@ -64,7 +64,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 
 ### 本套件不持有的部分
 
-- 各 head 共用的 UI 輔助（`FormValueBinding`、`FormDataGuard` 與元素能力解析器）位於
+- 各 head 共用的 UI 輔助（`FormValueBinding` 與元素能力解析器）位於
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md)，單一使用者 head 的連線狀態（`ClientInfo`）位於
   [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.zh-TW.md)。本套件不參考 UI；見
   [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md)。
