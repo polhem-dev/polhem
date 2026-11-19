@@ -65,8 +65,9 @@ namespace Polhem.Db.Providers.Sqlite
         /// <remarks>
         /// SQLite refuses to add a column whose default is one of its current-time keywords, such as
         /// <c>CURRENT_TIMESTAMP</c>, or an expression in parentheses, a <c>NOT NULL</c> column without a default, and a
-        /// primary key column. The built-in defaults of Date, DateTime and Guid are such expressions, so adding one of
-        /// those columns goes through the rebuild, whose copy leaves the new column to its default.
+        /// primary key column. The built-in defaults of Date, DateTime and the row id are such expressions, so adding one
+        /// of those columns goes through the rebuild, whose copy leaves the new column to its default. Any other Guid
+        /// column defaults to the empty GUID literal and is added in place.
         /// </remarks>
         /// <param name="field">The column to add.</param>
         private static bool CanAddInPlace(DbField field)

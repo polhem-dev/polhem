@@ -30,9 +30,8 @@ namespace Polhem.Db.Providers.Sqlite
         }
 
         /// <summary>
-        /// Gets the SQLite built-in default value expression for the specified field type.
-        /// SQLite has no native UUID generator; a hex-of-randomblob expression is used as a
-        /// unique-but-not-strictly-v4 surrogate (sufficient for framework-managed defaults).
+        /// Gets the SQLite built-in default value expression for the specified field type
+        /// (the empty GUID for Guid; the row id's generated default is <see cref="GetBuiltInDefault(DbField)"/>).
         /// </summary>
         /// <param name="dbType">The field data type.</param>
         public static string GetDefaultValueExpression(FieldDbType dbType)
@@ -58,10 +57,26 @@ namespace Polhem.Db.Providers.Sqlite
                 case FieldDbType.DateTime:
                     return "CURRENT_TIMESTAMP";
                 case FieldDbType.Guid:
-                    return "(hex(randomblob(16)))";
+                    return GuidColumnDefault.EmptyGuidLiteral;
                 default:
                     return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// The default that generates a new GUID, used only for the row id column. SQLite has no native UUID
+        /// generator; a hex-of-randomblob expression is a unique-but-not-strictly-v4 surrogate.
+        /// </summary>
+        internal const string NewGuidExpression = "(hex(randomblob(16)))";
+
+        /// <summary>
+        /// Gets the built-in default of a field: <see cref="NewGuidExpression"/> for the row id column, otherwise
+        /// <see cref="GetDefaultValueExpression(FieldDbType)"/> for its type.
+        /// </summary>
+        /// <param name="field">The field definition.</param>
+        public static string GetBuiltInDefault(DbField field)
+        {
+            return GuidColumnDefault.GeneratesNewGuid(field) ? NewGuidExpression : GetDefaultValueExpression(field.DbType);
         }
 
         /// <summary>
@@ -73,7 +88,7 @@ namespace Polhem.Db.Providers.Sqlite
         {
             if (field.AllowNull)
                 return string.Empty;
-            string originalDefaultValue = GetDefaultValueExpression(field.DbType);
+            string originalDefaultValue = GetBuiltInDefault(field);
             switch (field.DbType)
             {
                 case FieldDbType.String:

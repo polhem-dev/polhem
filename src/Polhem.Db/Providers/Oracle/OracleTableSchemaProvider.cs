@@ -301,7 +301,7 @@ namespace Polhem.Db.Providers.Oracle
                 return dbField;
             }
 
-            string originalDefaultValue = OracleSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
+            string originalDefaultValue = OracleSchemaSyntax.GetBuiltInDefault(dbField);
             // A column without a default reads DBNull, which means the same thing as an empty string.
             string rawDefault = row.IsNull("DefaultValue") ? string.Empty : row.GetFieldValue<string>("DefaultValue");
             dbField.DefaultValue = ParseDBDefaultValue(dataType, rawDefault, originalDefaultValue);

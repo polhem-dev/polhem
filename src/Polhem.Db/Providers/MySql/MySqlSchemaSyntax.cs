@@ -27,9 +27,8 @@ namespace Polhem.Db.Providers.MySql
         }
 
         /// <summary>
-        /// Gets the MySQL built-in default value expression for the specified field type.
-        /// <c>UUID()</c> is wrapped in parentheses because MySQL only allows
-        /// function-call default values inside an expression default (parenthesized form).
+        /// Gets the MySQL built-in default value expression for the specified field type
+        /// (the empty GUID for Guid; the row id's generated default is <see cref="GetBuiltInDefault(DbField)"/>).
         /// </summary>
         /// <param name="dbType">The field data type.</param>
         public static string GetDefaultValueExpression(FieldDbType dbType)
@@ -68,7 +67,7 @@ namespace Polhem.Db.Providers.MySql
                     // syntax error unless wrapped, the same rule the `DATE` case above already hits.
                     return "(UTC_TIMESTAMP(6))";
                 case FieldDbType.Guid:
-                    return "(UUID())";
+                    return GuidColumnDefault.EmptyGuidLiteral;
                 default:
                     return string.Empty;
             }
@@ -111,6 +110,22 @@ namespace Polhem.Db.Providers.MySql
         }
 
         /// <summary>
+        /// The default that generates a new GUID, used only for the row id column. <c>UUID()</c> is wrapped in
+        /// parentheses because MySQL only allows a function-call default inside an expression default.
+        /// </summary>
+        internal const string NewGuidExpression = "(UUID())";
+
+        /// <summary>
+        /// Gets the built-in default of a field: <see cref="NewGuidExpression"/> for the row id column, otherwise
+        /// <see cref="GetDefaultValueExpression(FieldDbType)"/> for its type.
+        /// </summary>
+        /// <param name="field">The field definition.</param>
+        public static string GetBuiltInDefault(DbField field)
+        {
+            return GuidColumnDefault.GeneratesNewGuid(field) ? NewGuidExpression : GetDefaultValueExpression(field.DbType);
+        }
+
+        /// <summary>
         /// Gets the default value expression for a field, honoring <see cref="DbField.AllowNull"/>
         /// (nullable fields have no default). Returns an empty string when no default should be applied.
         /// </summary>
@@ -127,7 +142,7 @@ namespace Polhem.Db.Providers.MySql
             if (field.DbType == FieldDbType.Text)
                 return string.Empty;
 
-            string originalDefaultValue = GetDefaultValueExpression(field.DbType);
+            string originalDefaultValue = GetBuiltInDefault(field);
             switch (field.DbType)
             {
                 case FieldDbType.String:

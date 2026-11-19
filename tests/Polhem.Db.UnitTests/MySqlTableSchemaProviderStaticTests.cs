@@ -105,6 +105,9 @@ namespace Polhem.Db.UnitTests
         [InlineData("date", "utc_date()", "(UTC_DATE())", "")]
         [InlineData("char", "uuid()", "(UUID())", "")]
         [InlineData("char", "UUID()", "(UUID())", "")]
+        // A literal built-in (the empty GUID) is emitted quoted and read back unquoted.
+        [InlineData("char", "00000000-0000-0000-0000-000000000000", "'00000000-0000-0000-0000-000000000000'", "")]
+        [InlineData("char", "uuid()", "'00000000-0000-0000-0000-000000000000'", "uuid()")]
         [InlineData("bigint", "100", "0", "100")]
         [InlineData("tinyint", "1", "0", "1")]
         [DisplayName("MySQL ParseDBDefaultValue trims whitespace and compares with the built-in default")]

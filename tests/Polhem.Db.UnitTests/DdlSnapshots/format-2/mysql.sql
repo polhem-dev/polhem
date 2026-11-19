@@ -23,7 +23,8 @@ CREATE TABLE `idem_gate_test` (
   `dt_null` DATE NULL COMMENT 'Nullable date',
   `dtm` DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)) COMMENT 'Date and time',
   `tm` CHAR(5) NOT NULL DEFAULT '' COMMENT 'Time of day',
-  `g` CHAR(36) NOT NULL DEFAULT (UUID()) COMMENT 'Guid',
+  `sys_rowid` CHAR(36) NOT NULL DEFAULT (UUID()) COMMENT 'Row id',
+  `g` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' COMMENT 'Guid',
   `g_null` CHAR(36) NULL COMMENT 'Nullable guid',
   `bin` LONGBLOB NOT NULL COMMENT 'Bytes'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Idempotency gate';
@@ -56,8 +57,6 @@ ALTER TABLE `idem_gate_test` ADD COLUMN `dtm` DATETIME(6) NOT NULL DEFAULT (UTC_
 ALTER TABLE `idem_gate_test` ADD COLUMN `tm` CHAR(5) NOT NULL DEFAULT '' COMMENT 'Time of day';
 
 ALTER TABLE `idem_gate_test` ADD COLUMN `g` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' COMMENT 'Guid';
-
-ALTER TABLE `idem_gate_test` ALTER COLUMN `g` SET DEFAULT (UUID());
 
 ALTER TABLE `idem_gate_test` ADD COLUMN `g_null` CHAR(36) NULL COMMENT 'Nullable guid';
 
@@ -93,13 +92,14 @@ CREATE TABLE `tmp_idem_gate_test` (
   `dt_null` DATE NULL COMMENT 'Nullable date',
   `dtm` DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)) COMMENT 'Date and time',
   `tm` CHAR(5) NOT NULL DEFAULT '' COMMENT 'Time of day',
-  `g` CHAR(36) NOT NULL DEFAULT (UUID()) COMMENT 'Guid',
+  `sys_rowid` CHAR(36) NOT NULL DEFAULT (UUID()) COMMENT 'Row id',
+  `g` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' COMMENT 'Guid',
   `g_null` CHAR(36) NULL COMMENT 'Nullable guid',
   `bin` LONGBLOB NOT NULL COMMENT 'Bytes'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Idempotency gate';
 -- Move data
-INSERT INTO `tmp_idem_gate_test` (`sys_no`, `s`, `s_def`, `s_null`, `code`, `t`, `t_null`, `b`, `b_def`, `sh`, `i`, `i_def`, `i_null`, `l`, `d`, `d_def`, `c`, `dt`, `dt_null`, `dtm`, `tm`, `g`, `g_null`, `bin`)
-SELECT `sys_no`, `s`, `s_def`, `s_null`, `code`, `t`, `t_null`, `b`, `b_def`, `sh`, `i`, `i_def`, `i_null`, `l`, `d`, `d_def`, `c`, `dt`, `dt_null`, `dtm`, `tm`, `g`, `g_null`, `bin` FROM `idem_gate_test`;
+INSERT INTO `tmp_idem_gate_test` (`sys_no`, `s`, `s_def`, `s_null`, `code`, `t`, `t_null`, `b`, `b_def`, `sh`, `i`, `i_def`, `i_null`, `l`, `d`, `d_def`, `c`, `dt`, `dt_null`, `dtm`, `tm`, `sys_rowid`, `g`, `g_null`, `bin`)
+SELECT `sys_no`, `s`, `s_def`, `s_null`, `code`, `t`, `t_null`, `b`, `b_def`, `sh`, `i`, `i_def`, `i_null`, `l`, `d`, `d_def`, `c`, `dt`, `dt_null`, `dtm`, `tm`, `sys_rowid`, `g`, `g_null`, `bin` FROM `idem_gate_test`;
 -- Drop old table
 DROP TABLE IF EXISTS `idem_gate_test`;
 -- Rename temporary table

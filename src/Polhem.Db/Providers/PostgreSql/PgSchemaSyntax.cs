@@ -31,7 +31,8 @@ namespace Polhem.Db.Providers.PostgreSql
 
         /// <summary>
         /// Gets the PostgreSQL built-in default value expression for the specified field type
-        /// (e.g. <c>CURRENT_TIMESTAMP</c> for DateTime, <c>gen_random_uuid()</c> for Guid,
+        /// (e.g. <c>CURRENT_TIMESTAMP</c> for DateTime, the empty GUID for Guid (the row id's generated default is
+        /// <see cref="GetBuiltInDefault(DbField)"/>),
         /// <c>0</c> for numeric).
         /// </summary>
         /// <param name="dbType">The field data type.</param>
@@ -61,10 +62,25 @@ namespace Polhem.Db.Providers.PostgreSql
                     // from `FormRowDefaults`, see D12.)
                     return "(NOW() AT TIME ZONE 'UTC')";
                 case FieldDbType.Guid:
-                    return "gen_random_uuid()";
+                    return GuidColumnDefault.EmptyGuidLiteral;
                 default:
                     return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// The default that generates a new GUID, used only for the row id column.
+        /// </summary>
+        internal const string NewGuidExpression = "gen_random_uuid()";
+
+        /// <summary>
+        /// Gets the built-in default of a field: <see cref="NewGuidExpression"/> for the row id column, otherwise
+        /// <see cref="GetDefaultValueExpression(FieldDbType)"/> for its type.
+        /// </summary>
+        /// <param name="field">The field definition.</param>
+        public static string GetBuiltInDefault(DbField field)
+        {
+            return GuidColumnDefault.GeneratesNewGuid(field) ? NewGuidExpression : GetDefaultValueExpression(field.DbType);
         }
 
         /// <summary>
@@ -76,7 +92,7 @@ namespace Polhem.Db.Providers.PostgreSql
         {
             if (field.AllowNull)
                 return string.Empty;
-            string originalDefaultValue = GetDefaultValueExpression(field.DbType);
+            string originalDefaultValue = GetBuiltInDefault(field);
             switch (field.DbType)
             {
                 case FieldDbType.String:

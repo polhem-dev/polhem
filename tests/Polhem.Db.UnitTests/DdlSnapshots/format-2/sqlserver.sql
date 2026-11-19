@@ -23,7 +23,8 @@ CREATE TABLE [idem_gate_test] (
   [dt_null] [date] NULL,
   [dtm] [datetime2](7) NOT NULL DEFAULT (getutcdate()),
   [tm] [nchar](5) NOT NULL DEFAULT (N''),
-  [g] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [sys_rowid] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [g] [uniqueidentifier] NOT NULL DEFAULT ('00000000-0000-0000-0000-000000000000'),
   [g_null] [uniqueidentifier] NULL,
   [bin] [varbinary](max) NOT NULL,
   CONSTRAINT [pk_idem_gate_test] PRIMARY KEY ([sys_no] ASC)
@@ -140,6 +141,11 @@ EXEC sp_addextendedproperty
   @level1type=N'TABLE', @level1name=N'idem_gate_test',
   @level2type=N'COLUMN', @level2name=N'tm';
 EXEC sp_addextendedproperty
+  @name=N'MS_Description', @value=N'Row id',
+  @level0type=N'SCHEMA', @level0name=N'dbo',
+  @level1type=N'TABLE', @level1name=N'idem_gate_test',
+  @level2type=N'COLUMN', @level2name=N'sys_rowid';
+EXEC sp_addextendedproperty
   @name=N'MS_Description', @value=N'Guid',
   @level0type=N'SCHEMA', @level0name=N'dbo',
   @level1type=N'TABLE', @level1name=N'idem_gate_test',
@@ -190,7 +196,7 @@ ALTER TABLE [idem_gate_test] ADD [dtm] [datetime2](7) NOT NULL DEFAULT (getutcda
 
 ALTER TABLE [idem_gate_test] ADD [tm] [nchar](5) NOT NULL DEFAULT (N'');
 
-ALTER TABLE [idem_gate_test] ADD [g] [uniqueidentifier] NOT NULL DEFAULT (newid());
+ALTER TABLE [idem_gate_test] ADD [g] [uniqueidentifier] NOT NULL DEFAULT ('00000000-0000-0000-0000-000000000000');
 
 ALTER TABLE [idem_gate_test] ADD [g_null] [uniqueidentifier] NULL;
 
@@ -290,7 +296,8 @@ CREATE TABLE [tmp_idem_gate_test] (
   [dt_null] [date] NULL,
   [dtm] [datetime2](7) NOT NULL DEFAULT (getutcdate()),
   [tm] [nchar](5) NOT NULL DEFAULT (N''),
-  [g] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [sys_rowid] [uniqueidentifier] NOT NULL DEFAULT (newid()),
+  [g] [uniqueidentifier] NOT NULL DEFAULT ('00000000-0000-0000-0000-000000000000'),
   [g_null] [uniqueidentifier] NULL,
   [bin] [varbinary](max) NOT NULL,
   CONSTRAINT [pk_tmp_idem_gate_test] PRIMARY KEY ([sys_no] ASC)
@@ -407,6 +414,11 @@ EXEC sp_addextendedproperty
   @level1type=N'TABLE', @level1name=N'tmp_idem_gate_test',
   @level2type=N'COLUMN', @level2name=N'tm';
 EXEC sp_addextendedproperty
+  @name=N'MS_Description', @value=N'Row id',
+  @level0type=N'SCHEMA', @level0name=N'dbo',
+  @level1type=N'TABLE', @level1name=N'tmp_idem_gate_test',
+  @level2type=N'COLUMN', @level2name=N'sys_rowid';
+EXEC sp_addextendedproperty
   @name=N'MS_Description', @value=N'Guid',
   @level0type=N'SCHEMA', @level0name=N'dbo',
   @level1type=N'TABLE', @level1name=N'tmp_idem_gate_test',
@@ -424,8 +436,8 @@ EXEC sp_addextendedproperty
 -- Move data
 DECLARE @polhem_last_identity numeric(38, 0) = (SELECT CONVERT(numeric(38, 0), last_value) FROM sys.identity_columns WHERE object_id = OBJECT_ID(N'[idem_gate_test]') AND name = N'sys_no');
 SET IDENTITY_INSERT [tmp_idem_gate_test] ON;
-INSERT INTO [tmp_idem_gate_test] ([sys_no], [s], [s_def], [s_null], [code], [t], [t_null], [b], [b_def], [sh], [i], [i_def], [i_null], [l], [d], [d_def], [c], [dt], [dt_null], [dtm], [tm], [g], [g_null], [bin])
-SELECT [sys_no], [s], [s_def], [s_null], [code], [t], [t_null], [b], [b_def], [sh], [i], [i_def], [i_null], [l], [d], [d_def], [c], [dt], [dt_null], [dtm], [tm], [g], [g_null], [bin] FROM [idem_gate_test];
+INSERT INTO [tmp_idem_gate_test] ([sys_no], [s], [s_def], [s_null], [code], [t], [t_null], [b], [b_def], [sh], [i], [i_def], [i_null], [l], [d], [d_def], [c], [dt], [dt_null], [dtm], [tm], [sys_rowid], [g], [g_null], [bin])
+SELECT [sys_no], [s], [s_def], [s_null], [code], [t], [t_null], [b], [b_def], [sh], [i], [i_def], [i_null], [l], [d], [d_def], [c], [dt], [dt_null], [dtm], [tm], [sys_rowid], [g], [g_null], [bin] FROM [idem_gate_test];
 SET IDENTITY_INSERT [tmp_idem_gate_test] OFF;
 DECLARE @polhem_reseed nvarchar(200) = N'DBCC CHECKIDENT (N''[tmp_idem_gate_test]'', RESEED, ' + CAST(@polhem_last_identity + CASE WHEN EXISTS (SELECT 1 FROM [tmp_idem_gate_test]) THEN 0 ELSE 1 END AS nvarchar(40)) + N') WITH NO_INFOMSGS';
 IF @polhem_last_identity IS NOT NULL AND @polhem_last_identity > ISNULL((SELECT MAX([sys_no]) FROM [tmp_idem_gate_test]), 0)

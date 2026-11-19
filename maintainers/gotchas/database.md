@@ -84,7 +84,8 @@ To reproduce the CI behavior locally: run `ALTER ... MODIFY <col> LONGTEXT NOT N
 skipped (`{dbType} setup skipped`), so the table's new column is never applied and later INSERTs report
 `Unknown column`. **The visible symptom is two layers away from the root cause.**
 
-**Root cause**: the framework generates `char(36) NOT NULL DEFAULT (UUID())` for a MySQL Guid column. Running
+**Root cause**: the framework generates `char(36) NOT NULL DEFAULT (UUID())` for a MySQL Guid column (since schema
+format 2, only for `sys_rowid`; every other Guid column defaults to the empty GUID constant). Running
 `ALTER TABLE ... ADD COLUMN <guid> NOT NULL DEFAULT (UUID())` on an **existing table** is considered
 replication-unsafe under statement-based binlog (the system function gives a different value per row). **A fresh
 CREATE TABLE with `DEFAULT (UUID())` is safe** → CI (a brand-new container every time) is unaffected; only the

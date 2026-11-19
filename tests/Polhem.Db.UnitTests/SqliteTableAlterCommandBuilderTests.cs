@@ -35,14 +35,22 @@ namespace Polhem.Db.UnitTests
         }
 
         [Theory]
-        [InlineData(FieldDbType.Date)]
-        [InlineData(FieldDbType.DateTime)]
-        [InlineData(FieldDbType.Guid)]
+        [InlineData("v", FieldDbType.Date)]
+        [InlineData("v", FieldDbType.DateTime)]
+        [InlineData("sys_rowid", FieldDbType.Guid)]
         [DisplayName("SQLite GetExecutionKind returns Rebuild for adding a column whose default ADD COLUMN refuses")]
-        public void GetExecutionKind_AddFieldWithExpressionDefault_ReturnsRebuild(FieldDbType dbType)
+        public void GetExecutionKind_AddFieldWithExpressionDefault_ReturnsRebuild(string fieldName, FieldDbType dbType)
         {
-            var change = new AddFieldChange(new DbField("v", "V", dbType));
+            var change = new AddFieldChange(new DbField(fieldName, "V", dbType));
             Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("SQLite GetExecutionKind returns Alter for adding a reference Guid column, whose default is the empty GUID literal")]
+        public void GetExecutionKind_AddReferenceGuidField_ReturnsAlter()
+        {
+            var change = new AddFieldChange(new DbField("user_rowid", "User", FieldDbType.Guid));
+            Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
         }
 
         [Fact]

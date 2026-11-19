@@ -178,6 +178,8 @@ namespace Polhem.Db.UnitTests
             f.Add("dt_null", "Nullable date", FieldDbType.Date).AllowNull = true;
             f.Add("dtm", "Date and time", FieldDbType.DateTime);
             f.Add("tm", "Time of day", FieldDbType.Time);
+            // The row id is the one GUID column whose default generates a value; `g` takes the empty GUID.
+            f.Add("sys_rowid", "Row id", FieldDbType.Guid);
             f.Add("g", "Guid", FieldDbType.Guid);
             f.Add("g_null", "Nullable guid", FieldDbType.Guid).AllowNull = true;
             f.Add("bin", "Bytes", FieldDbType.Binary);

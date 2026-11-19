@@ -1,4 +1,4 @@
-<!-- source: en/database/database-dialect-differences.md blob: 6d09ca05b7a72cd915520c6a105e1ce509821a9f -->
+<!-- source: en/database/database-dialect-differences.md blob: badef6082a42fd21d81be24f78d6f6c79f268654 -->
 # 資料庫方言差異（DDL）
 
 [English](../../en/database/database-dialect-differences.md) · [← 文件索引](../README.md)
@@ -25,7 +25,7 @@ Polhem 由單一份 `TableSchema` 定義產生 DDL（CREATE TABLE / ALTER TABLE�
 | **文字**（`String`、`Text`、`Time`） | `NOT NULL` | 空字串 `''` |
 | **數值**（`Short`、`Integer`、`Long`、`Decimal`、`Currency`、`Boolean`） | `NOT NULL` | `0` |
 | **Date / DateTime** | 未特別標示則 `NOT NULL` | 當下的 UTC 日期／時間 |
-| **Guid** | 未特別標示則 `NOT NULL` | 新產生的 GUID |
+| **Guid** | 未特別標示則 `NOT NULL` | 空 GUID；`sys_rowid` 為新產生的 GUID |
 | **Binary** | 未特別標示則 `NOT NULL` | 無：每個 `INSERT` 都必須提供值 |
 | 真正需要 null 的欄位（例如「失效／到期時間」、選填的二進位） | **明確**設 `AllowNull="true"` | 無 |
 
@@ -56,7 +56,8 @@ Polhem 由單一份 `TableSchema` 定義產生 DDL（CREATE TABLE / ALTER TABLE�
 | `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0`（`Boolean` 為 `FALSE`） | `0` | `0` | `0` |
 | `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))` | `(datetime('now', 'start of day'))` |
 | `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_TIMESTAMP(6))` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
-| `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
+| `Guid` | `'00000000-0000-0000-0000-000000000000'` | `'00000000-0000-0000-0000-000000000000'` | `'00000000-0000-0000-0000-000000000000'` | `HEXTORAW('00000000000000000000000000000000')` | `'00000000-0000-0000-0000-000000000000'` |
+| 名為 `sys_rowid` 的 `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
 | `Binary`、`AutoIncrement` | *（無）* | *（無）* | *（無）* | *（無）* | *（無）* |
 
 SQL Server 會在輸出的運算式外再包一層括號（`DEFAULT (N'')`）。
@@ -69,7 +70,9 @@ SQL Server 會在輸出的運算式外再包一層括號（`DEFAULT (N'')`）。
   詳見 [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md) 的 D9b。
 - **MySQL** 的函式型預設值需用括號包成*運算式*形式（`(UUID())`、`(UTC_DATE())`、`(UTC_TIMESTAMP(6))`），因為 MySQL 8.0.13+ 只有 `CURRENT_TIMESTAMP` 可以不加括號當預設值；其他非字面值的預設值都必須以括號*運算式*形式呈現。
 - **`Date` 預設值只保留日期**。SQL Server 與 PostgreSQL 的 `DATE` 本身就會捨去時間；Oracle 的 `DATE` 會保留時間，所以用 `TRUNC` 截到當天零點；SQLite 沒有日期型別，預設值寫入的是儲存日期時繫結的文字（`yyyy-MM-dd 00:00:00`）。因此取用預設值的資料列，以當天篩選時能比對得到。較早版本的 Polhem 在 Oracle 或 SQLite 建立的欄位帶著舊預設值（同時存入時間）；讀回時會被視為差異，所以下一次升級會把它換成目前的預設值：Oracle 就地修改，SQLite 則重建資料表。資料列的值都會保留，包括舊預設值存入的時間。
-- **SQLite** 無原生 UUID 產生器；`hex(randomblob(16))` 是「唯一但非嚴格 v4」的替代，對框架託管的預設值已足夠。
+- **只有 `sys_rowid` 會產生 GUID**。其他 `Guid` 欄都是關聯（`user_rowid`、`dept_rowid`、`sys_master_rowid`）或由呼叫端提供的值，而框架把 `Guid.Empty` 視為「沒有關聯」。所以寫入資料時沒有列出這類欄位（種子、自寫的 INSERT，或 `ALTER TABLE ADD COLUMN` 回填的既有資料列），得到的是空 GUID，而不是指向不存在資料的關聯。
+- **Polhem 1.16 以前建立的 Guid 欄**帶著產生 GUID 的預設值。下一次升級會把它換成空 GUID：SQL Server、PostgreSQL、MySQL 與 Oracle 就地修改，SQLite 則重建資料表。資料列的值都會保留，所以曾經取用舊預設值的資料列，仍存著一個不指向任何資料的 GUID；框架無法得知欄位關聯到哪張表，找出並清除這些值須由應用程式自行處理。
+- **SQLite** 無原生 UUID 產生器；`hex(randomblob(16))` 是「唯一但非嚴格 v4」的替代，對 row id 已足夠。
 - **Boolean 字面值**：框架的標準形式是 `"1"` / `"0"`。PostgreSQL 的 `BOOLEAN` 欄不接受這兩者，故 PG 方言在輸出 SQL 的邊界將其轉為 `TRUE` / `FALSE`。其他方言皆接受 `1` / `0`。
 
 ### 明確的 `DefaultValue`
@@ -150,7 +153,7 @@ Field 'x' doesn't have a default value
 - **SQLite** 完全無法就地變更欄位（它的 `ALTER TABLE` 只能新增、改名與刪除欄位），所以任何欄位變更都是重建。
 - **Oracle** 在文字欄跨越 LOB 邊界（`VARCHAR2` ↔ `CLOB`）時也會重建，因為 `ALTER ... MODIFY` 不接受這種變更。
 - **Oracle** 的 `ALTER TABLE ... MODIFY` 對 nullability 必須**基於差異**：對已經 `NOT NULL` 的欄再次下 `NOT NULL` 會觸發 `ORA-01442`，故 adapter 只在實際變化時才帶 `NULL` / `NOT NULL` 提示。
-- **MySQL** 對帶非確定性預設值（`UUID()`）的 `Guid` 欄做 `ALTER ADD` 時，會拆成兩段語句以在 statement-based binlog 下維持 replication-safe。
+- **MySQL** 對 `sys_rowid`（預設值 `UUID()` 是非確定性的）做 `ALTER ADD` 時，會拆成兩段語句以在 statement-based binlog 下維持 replication-safe。
 - 重建時的資料表改名也不同：`sp_rename`（SQL Server）vs `ALTER TABLE ... RENAME TO`（其他方言）。
 
 ---

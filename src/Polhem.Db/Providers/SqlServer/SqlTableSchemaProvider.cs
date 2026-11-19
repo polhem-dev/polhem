@@ -207,7 +207,7 @@ namespace Polhem.Db.Providers.SqlServer
             if (dbField.DbType == FieldDbType.DateTime)
                 dbField.Scale = row.GetFieldValue<int>("Decimals");
 
-            string originalDefaultValue = SqlSchemaSyntax.GetDefaultValueExpression(dbField.DbType);  // Get the built-in default value
+            string originalDefaultValue = SqlSchemaSyntax.GetBuiltInDefault(dbField);  // Get the built-in default value
             dbField.DefaultValue = ParseDBDefaultValue(row.GetFieldValue<string>("DbType"), row.GetFieldValue<string>("DefaultValue"), originalDefaultValue);
             return dbField;
         }

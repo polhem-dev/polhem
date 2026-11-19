@@ -204,7 +204,7 @@ namespace Polhem.Db.Providers.MySql
                 dbField.Scale = scale;
             }
 
-            string originalDefaultValue = MySqlSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
+            string originalDefaultValue = MySqlSchemaSyntax.GetBuiltInDefault(dbField);
             dbField.DefaultValue = ParseDBDefaultValue(dataType, row.GetFieldValue<string>("DefaultValue"), originalDefaultValue);
             return dbField;
         }
@@ -287,9 +287,9 @@ namespace Polhem.Db.Providers.MySql
             // outer parentheses are stripped (DEFAULT (UUID()) → 'uuid()') and function names
             // are returned in lower case. Normalise the framework's expected default the same
             // way (strip outer parens) and compare case-insensitively so "(UUID())" matches
-            // the stored "uuid()". String literals are returned unquoted, so direct equality
-            // works for them.
-            string normalizedOriginal = StripOuterParens(originalDefaultValue.Trim());
+            // the stored "uuid()". String literals are returned unquoted, so the quotes of a literal
+            // built-in (the empty GUID of a Guid column) are stripped before comparing.
+            string normalizedOriginal = SqlLiteralParser.StripStringLiteral(StripOuterParens(originalDefaultValue.Trim()));
             return string.Equals(normalizedOriginal, trimmed, StringComparison.OrdinalIgnoreCase)
                 ? string.Empty
                 : trimmed;

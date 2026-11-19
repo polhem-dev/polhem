@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.String, "")]
         [InlineData(FieldDbType.Integer, "0")]
         [InlineData(FieldDbType.DateTime, "CURRENT_TIMESTAMP")]
-        [InlineData(FieldDbType.Guid, "(hex(randomblob(16)))")]
+        [InlineData(FieldDbType.Guid, "'00000000-0000-0000-0000-000000000000'")]
         [DisplayName("SqliteDialectFactory GetDefaultValueExpression delegates to SqliteSchemaSyntax")]
         public void GetDefaultValueExpression_DelegatesToHelper(FieldDbType dbType, string expected)
         {
