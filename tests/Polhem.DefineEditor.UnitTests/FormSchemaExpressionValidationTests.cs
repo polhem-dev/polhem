@@ -69,6 +69,20 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Validate lists an expression outside the allowlist as a warning on its field, which does not block a save")]
+        public void Validate_OutsideAllowlist_ListsFieldWarning()
+        {
+            var document = Load("amount * 1.05m + sys_id.GetHashCode()", "amount > 0");
+
+            document.ValidateCommand.Execute(null);
+
+            var issue = Assert.Single(document.Issues);
+            Assert.Equal(ValidationSeverity.Warning, issue.Severity);
+            Assert.Equal("Order.tax.ValueExpression", issue.Path);
+            Assert.Contains("GetHashCode", issue.Message);
+        }
+
+        [Fact]
         [DisplayName("Validate lists no expression issue when every expression parses")]
         public void Validate_ValidExpressions_ListsNoIssues()
         {

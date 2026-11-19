@@ -100,6 +100,7 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
                 issue.Severity == IssueSeverity.Error ? ValidationSeverity.Error : ValidationSeverity.Warning,
                 issue.Location, issue.Message))
             .Concat(s_expressionCalculator.ValidateExpressions(Schema).Select(ToValidationIssue))
+            .Concat(s_expressionCalculator.FindAllowlistViolations(Schema).Select(ToAllowlistWarning))
             .ToList();
 
     /// <summary>
@@ -116,6 +117,18 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         var local = TimeZoneInfo.Local;
         if (local.HasIanaId) return local.Id;
         return TimeZoneInfo.TryConvertWindowsIdToIanaId(local.Id, out var iana) ? iana : string.Empty;
+    }
+
+    // A developer wrote the definition file, so an expression outside the allowlist still works: it is only one an
+    // untrusted author would be refused. A warning, not an error.
+    private static ValidationIssue ToAllowlistWarning(FormExpressionIssue issue)
+    {
+        var owner = issue.FieldName is not null
+            ? $"{issue.TableName}.{issue.FieldName}"
+            : $"Rules.{issue.RuleId}";
+        return new ValidationIssue(ValidationSeverity.Warning, $"{owner}.{issue.PropertyName}",
+            string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                LocalizationService.Current["Validation_ExpressionOutsideAllowlist"], issue.Message));
     }
 
     private static ValidationIssue ToValidationIssue(FormExpressionIssue issue)
@@ -370,7 +383,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
                         text => s_expressionCalculator.ValidateExpression(Schema, ruleTable, property.Name, text),
                         expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator,
                         new ExpressionTrialViewModel(ruleTable, null, property.Name, s_expressionCalculator, s_evaluator,
-                            LocalTimeZoneId()))
+                            LocalTimeZoneId()),
+                        text => s_expressionCalculator.FindAllowlistViolations(Schema, ruleTable, property.Name, text))
                     : null;
             case FormField field when property.Name is nameof(FormField.ValueExpression)
                     or nameof(FormField.DefaultValueExpression):
@@ -379,7 +393,8 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
                         text => s_expressionCalculator.ValidateExpression(Schema, fieldTable, property.Name, text),
                         expression, null, s_evaluator,
                         new ExpressionTrialViewModel(fieldTable, field, property.Name, s_expressionCalculator, s_evaluator,
-                            LocalTimeZoneId()))
+                            LocalTimeZoneId()),
+                        text => s_expressionCalculator.FindAllowlistViolations(Schema, fieldTable, property.Name, text))
                     : null;
             default:
                 return null;

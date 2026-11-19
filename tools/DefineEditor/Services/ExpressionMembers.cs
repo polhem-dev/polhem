@@ -13,15 +13,6 @@ public static class ExpressionMembers
     private static readonly HashSet<string> s_objectNoise =
         new(StringComparer.Ordinal) { "GetType", "Equals", "GetHashCode", "ReferenceEquals", "MemberwiseClone", "Finalize" };
 
-    // `DateTime.Now`, `Today` and `UtcNow` read the server's clock and zone. The helper functions `Now()`, `Today()` and
-    // `UtcNow()` follow the user's zone and the data set's basis (ADR-032 D12), so the editor offers those instead.
-    private static readonly HashSet<(Type, string)> s_steeredAway =
-    [
-        (typeof(DateTime), nameof(DateTime.Now)),
-        (typeof(DateTime), nameof(DateTime.Today)),
-        (typeof(DateTime), nameof(DateTime.UtcNow)),
-    ];
-
     /// <summary>
     /// The type names of <paramref name="referencedTypes"/> worth offering: the ones with static members a formula uses,
     /// such as <c>Math</c> and <c>Convert</c>, and <c>string</c> rather than <c>String</c>.
@@ -35,7 +26,7 @@ public static class ExpressionMembers
     {
         ArgumentNullException.ThrowIfNull(referencedTypes);
         return referencedTypes
-            .Where(pair => IsFeatured(pair.Key, pair.Value))
+            .Where(pair => IsFeatured(pair.Key, pair.Value) && Of(pair.Value, isStatic: true).Count > 0)
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
             .ToList();
     }
@@ -158,9 +149,11 @@ public static class ExpressionMembers
         && method.GetParameters().All(p => !p.ParameterType.IsByRef && !p.ParameterType.IsPointer
                                            && !p.ParameterType.IsByRefLike && !p.IsOut);
 
+    // A member outside the expression allowlist works in a definition file but is refused from an untrusted author,
+    // so the editor does not suggest it.
     private static bool IsHidden(Type type, MemberInfo member) =>
-        s_objectNoise.Contains(member.Name)
-        || s_steeredAway.Contains((type, member.Name))
+        !DynamicExpressoEvaluator.IsAllowedMember(member)
+        || s_objectNoise.Contains(member.Name)
         || member.IsDefined(typeof(ObsoleteAttribute), inherit: true)
         || member.GetCustomAttribute<System.ComponentModel.EditorBrowsableAttribute>()?.State
             == System.ComponentModel.EditorBrowsableState.Never;

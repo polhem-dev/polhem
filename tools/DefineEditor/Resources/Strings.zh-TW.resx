@@ -492,6 +492,7 @@
   <data name="ExpressionEditor_Fields" xml:space="preserve"><value>欄位</value></data>
   <data name="ExpressionEditor_Functions" xml:space="preserve"><value>函式</value></data>
   <data name="ExpressionEditor_Types" xml:space="preserve"><value>型別</value></data>
+  <data name="Validation_ExpressionOutsideAllowlist" xml:space="preserve"><value>超出運算式允許清單：{0} 這個運算式在定義檔中仍可正常運作，但若出自不受信任的來源（例如 AI 模型）會被拒絕。</value></data>
   <data name="ExpressionEditor_Example" xml:space="preserve"><value>範例：</value></data>
   <data name="ExpressionTrial_Title" xml:space="preserve"><value>試算</value></data>
   <data name="ExpressionTrial_Hint" xml:space="preserve"><value>輸入運算式用到的欄位範例值，空白代表欄位為空值。數值不會依公司設定進位；Now() 使用本機時區（伺服器存檔時以 UTC 為基準）。</value></data>

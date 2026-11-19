@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 2edc8ac5318379491971e381dfa321b1150f6ef3 -->
+<!-- source: en/definitions/expression-rules.md blob: 6b2e1b2a9e176bd40745ef63fe528178f7340fed -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -41,7 +41,7 @@
   > 錯的是存檔前畫面上的值。
 - **數值型別不會隱含混算**：變數的型別是其欄位 `DbType` 對應的 CLR 型別（對照見 [`DbTypeConverter.ToType`](../../../src/Polhem.Core/Data/DbTypeConverter.cs)），運算子規則與 C# 相同：`decimal` 不能與 `double` 一起運算。帶小數點的字面值是 `double`，所以當 `amount` 是 `Currency` 或 `Decimal` 欄位時，`amount * 1.05` 會解析失敗。請把字面值寫成 decimal：`amount * 1.05m`，或只用整數：`amount * 105 / 100`。
 - **運算式解析失敗時**：未開放的型別名（`File`、`Process`…）、拼錯的欄位名，或無法一起運算的運算元型別（見上一點）。在伺服端，該次存檔或刪除隨之失敗。在用戶端，該表單在開啟期間停止即時運算：head 會顯示一則訊息，指出欄位與原因，計算欄位則在存檔時由伺服端計算。Avalonia 的 `FormView` 會觸發 `LiveComputationDegraded`，Blazor 的 `FormPage` 會寫一筆 warning 到它的 `ILogger`，兩者都帶著運算式，讓 host 記錄需要修正的地方。DefineEditor 會在它們到達任一端之前先擋下：驗證或存檔 FormSchema 時，它以同樣的方式解析每個欄位與規則運算式（`FormExpressionCalculator.ValidateExpressions`），列出失敗的那些。
-- **這不是安全沙箱。** 值的成員是以反射解析的，解析器擋不住運算式往更深處觸及。運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。絕對不要用使用者輸入組出運算式文字。
+- **解析不是安全沙箱，不受信任的文字要靠允許清單把關。** 值的成員是以反射解析的，光靠解析擋不住運算式往更深處觸及。定義檔裡的運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。其他來源的運算式（例如由 AI 模型撰寫的）必須通過 `FormExpressionCalculator.ValidateUntrustedExpression`：它會先檢查長度與巢狀深度上限再解析，然後只接受表單欄位、輔助函式與業務函式、彙總、運算子、字面值，以及一份固定的成員清單（文字、日期與數字的成員，`Math`、`Convert` 等；不含 `GetType`、`typeof`、`DateTime.Now`、LINQ，也不含像 `PadLeft` 這種依參數配置記憶體的成員）。在定義檔中，同樣的檢查只會警告：DefineEditor 會把超出允許清單的運算式列為警告，運算式照常執行。沒有經過這項檢查，絕對不要用使用者輸入組出運算式文字。
 - **經裁剪的應用程式**：運算式呼叫的成員是以反射找到的，裁剪器看不到。`Polhem.Expressions` 內附一份保留這些成員的裁剪描述檔，見[平台支援](../getting-started/platform-support.md#套件內附的裁剪描述檔)。
 - **空值**：空欄（`DBNull`）以型別預設值代入（數值 0、字串空字串、`Guid.Empty`…），所以 `unit_price * qty` 遇空值算 0 而不會出錯。
 

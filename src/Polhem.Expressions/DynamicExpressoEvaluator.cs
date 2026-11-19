@@ -46,7 +46,7 @@ namespace Polhem.Expressions
     /// the server, so that boundary is the control — keep it intact.
     /// </para>
     /// </remarks>
-    public sealed class DynamicExpressoEvaluator : IExpressionEvaluator
+    public sealed partial class DynamicExpressoEvaluator : IExpressionEvaluator, IExpressionAllowlist
     {
         private readonly Interpreter _interpreter;
         private readonly ConcurrentDictionary<string, Func<object?[], object?>> _cache = new(StringComparer.Ordinal);

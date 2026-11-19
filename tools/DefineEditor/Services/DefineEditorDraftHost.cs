@@ -59,7 +59,14 @@ public sealed class DefineEditorDraftHost : IFormDraftingHost
             // The import does not parse expressions, and an expression that does not parse fails every save of the
             // form. Planning applied the form conventions to the content, so the fields a relation brings exist here.
             if (!plan.HasErrors)
-                issues.AddRange(FormDraftImport.ToDraftIssues(s_expressionCalculator.ValidateExpressions(content.Schema)));
+            {
+                // IMPORTANT: the model wrote these expressions, so they must stay within the allowlist, and that check
+                // comes first: it rejects a text nested deep enough to overflow the parser before anything parses it.
+                var outside = s_expressionCalculator.FindAllowlistViolations(content.Schema);
+                issues.AddRange(outside.Count > 0
+                    ? FormDraftImport.ToAllowlistDraftIssues(outside)
+                    : FormDraftImport.ToDraftIssues(s_expressionCalculator.ValidateExpressions(content.Schema)));
+            }
             return issues;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)

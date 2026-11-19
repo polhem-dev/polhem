@@ -147,6 +147,40 @@ public sealed class FormDraftingTests : IDisposable
     }
 
     [Fact]
+    [DisplayName("The host reports an expression the model wrote outside the allowlist as an error")]
+    public void Validate_ExpressionOutsideAllowlist_ReportsAnError()
+    {
+        var host = new DefineEditorDraftHost(_solution, _define);
+        var draft = LeaveRequest();
+        draft.Tables[0].Fields.Add(new DraftField { FieldName = "days", Caption = "Days", DbType = FieldDbType.Integer });
+        draft.Tables[0].Fields.Add(new DraftField
+        {
+            FieldName = "total", Caption = "Total", DbType = FieldDbType.Integer, ValueExpression = "days.GetHashCode()",
+        });
+
+        var issue = Assert.Single(host.Validate(FormDraftConverter.Convert(draft)), i => i.Severity == DraftIssueSeverity.Error);
+        Assert.Contains("total", issue.Location);
+        Assert.Contains("GetHashCode", issue.Message);
+    }
+
+    [Fact]
+    [DisplayName("The host rejects an expression nested too deep before it is parsed")]
+    public void Validate_ExpressionTooDeep_ReportsAnErrorWithoutParsing()
+    {
+        var host = new DefineEditorDraftHost(_solution, _define);
+        var draft = LeaveRequest();
+        draft.Tables[0].Fields.Add(new DraftField { FieldName = "days", Caption = "Days", DbType = FieldDbType.Integer });
+        draft.Tables[0].Fields.Add(new DraftField
+        {
+            FieldName = "total", Caption = "Total", DbType = FieldDbType.Integer,
+            ValueExpression = new string('(', 40) + "days" + new string(')', 40),
+        });
+
+        var issue = Assert.Single(host.Validate(FormDraftConverter.Convert(draft)), i => i.Severity == DraftIssueSeverity.Error);
+        Assert.Contains("nests deeper", issue.Message);
+    }
+
+    [Fact]
     [DisplayName("The host parses expressions against the fields a relation brings")]
     public void Validate_ExpressionOverRelationField_Parses()
     {

@@ -2,3 +2,5 @@
 Polhem.Expressions.ExpressionFunction.Example.get -> string!
 Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Type! returnType, System.Collections.Generic.IReadOnlyList<System.Reflection.ParameterInfo!>! parameters, string! summary, string! example) -> void
 Polhem.Expressions.ExpressionFunction.Summary.get -> string!
+Polhem.Expressions.DynamicExpressoEvaluator.FindViolations(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
+static Polhem.Expressions.DynamicExpressoEvaluator.IsAllowedMember(System.Reflection.MemberInfo! member) -> bool

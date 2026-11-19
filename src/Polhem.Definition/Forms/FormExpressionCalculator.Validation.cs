@@ -92,9 +92,7 @@ namespace Polhem.Definition.Forms
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(formTable);
             ArgumentNullException.ThrowIfNull(expression);
-            if (propertyName is not (nameof(FormField.ValueExpression) or nameof(FormField.DefaultValueExpression)
-                or nameof(FormRule.When) or nameof(FormRule.Condition)))
-                throw new ArgumentException($"'{propertyName}' is not an expression property.", nameof(propertyName));
+            EnsureExpressionProperty(propertyName);
 
             if (FindExpressionError(schema, formTable, GetVariableTypes(formTable), propertyName, expression) is { } error)
                 throw new ExpressionEvaluationException(error.Message) { Expression = expression, Position = error.Position };
@@ -125,7 +123,7 @@ namespace Polhem.Definition.Forms
             IReadOnlyDictionary<string, Type> variableTypes, string propertyName, string expression)
         {
             if (StringUtilities.IsEmpty(expression)) { return null; }
-            var returnType = propertyName is nameof(FormRule.When) or nameof(FormRule.Condition) ? typeof(bool) : typeof(object);
+            var returnType = ReturnTypeOf(propertyName);
             var parsed = ParseAggregates(expression);
             if (!parsed.HasAggregates) { return FindParseError(expression, variableTypes, returnType, parsed); }
 
