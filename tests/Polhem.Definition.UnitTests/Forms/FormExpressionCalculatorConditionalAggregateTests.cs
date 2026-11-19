@@ -138,6 +138,29 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
+        [DisplayName("A master rule sample reads the detail rows it is given through its aggregates")]
+        public void EvaluateMasterRuleSample_DetailRows_Aggregated()
+        {
+            var schema = BuildSchema();
+            var lines = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>>
+            {
+                ["OrderLine"] =
+                [
+                    new Dictionary<string, object?> { ["qty"] = 20, ["product"] = "A" },
+                    new Dictionary<string, object?> { ["qty"] = 0, ["product"] = "B" },
+                ],
+            };
+            var none = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>>();
+            var master = new Dictionary<string, object?>();
+
+            Assert.True(_calculator.EvaluateMasterRuleSample("Count(OrderLine) == 2 && Count(OrderLine, qty > 10) == 1", schema, master, lines, ""));
+            Assert.False(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0)", schema, master, lines, ""));
+            Assert.True(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0) && Count(OrderLine) == 0", schema, master, none, ""));
+            Assert.Throws<ArgumentException>(() => _calculator.EvaluateMasterRuleSample("true", schema, master,
+                new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> { ["Missing"] = [] }, ""));
+        }
+
+        [Fact]
         [DisplayName("Well-formed conditional aggregates validate without issues")]
         public void ValidateExpressions_ConditionalAggregates_NoIssues()
         {

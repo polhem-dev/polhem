@@ -37,6 +37,63 @@ namespace Polhem.Definition.Forms
         }
 
         /// <summary>
+        /// Evaluates a rule expression of the master table against one row of sample values and sample rows of its detail
+        /// tables, so its aggregates (<c>Count(Table)</c>, <c>All(Table, condition)</c>, …) read those rows.
+        /// </summary>
+        /// <param name="expression">The expression, which need not be the one the schema holds yet.</param>
+        /// <param name="schema">The form the expression belongs to.</param>
+        /// <param name="values">The master row's sample values by field name; a field without one is empty.</param>
+        /// <param name="detailRows">Sample rows by detail table name, each row its values by field name.</param>
+        /// <param name="timeZoneId">
+        /// The IANA time zone id the <c>Today()</c> and <c>Now()</c> helpers see, in the expression and in the
+        /// aggregates' conditions; blank means UTC.
+        /// </param>
+        /// <returns>The value of the expression.</returns>
+        /// <remarks>
+        /// Each value is coerced to its field's type as a cell read from the database is. A detail value is aggregated
+        /// as it is, without rounding, as <see cref="ValidateRules"/> aggregates it.
+        /// </remarks>
+        /// <exception cref="ArgumentException">A detail table name is not a table of <paramref name="schema"/>.</exception>
+        /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
+        public bool EvaluateMasterRuleSample(string expression, FormSchema schema, IReadOnlyDictionary<string, object?> values,
+            IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> detailRows, string timeZoneId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(expression);
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(values);
+            ArgumentNullException.ThrowIfNull(detailRows);
+            var master = schema.MasterTable
+                ?? throw new ArgumentException("The form has no master table.", nameof(schema));
+
+            var dataSet = new System.Data.DataSet();
+            foreach (var (tableName, rows) in detailRows)
+            {
+                if (schema.Tables is null || !schema.Tables.Contains(tableName))
+                    throw new ArgumentException($"'{tableName}' is not a table of the form.", nameof(detailRows));
+                var formTable = schema.Tables[tableName];
+                var table = dataSet.Tables.Add(formTable.TableName);
+                foreach (var field in formTable.Fields ?? [])
+                {
+                    if (StringUtilities.IsEmpty(field.FieldName)) { continue; }
+                    table.Columns.Add(field.FieldName, Polhem.Core.Data.DbTypeConverter.ToType(field.DbType));
+                }
+                foreach (var row in rows)
+                {
+                    var dataRow = table.NewRow();
+                    foreach (var (name, value) in SampleVariables(formTable, row))
+                        dataRow[name] = value ?? DBNull.Value;
+                    table.Rows.Add(dataRow);
+                }
+            }
+
+            var variables = SampleVariables(master, values);
+            expression = BindAggregates(expression, schema, master, dataSet, variables, roundingContext: null, timeZoneId,
+                DateTimeBasis.UserZone);
+            return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), timeZoneId,
+                DateTimeBasis.UserZone);
+        }
+
+        /// <summary>
         /// Evaluates a field expression against one row of sample values and returns what would be written to the
         /// field, the way <see cref="ApplyComputedRow"/> (for <see cref="FormField.ValueExpression"/>) and
         /// <see cref="ApplyDefaultRow"/> (for <see cref="FormField.DefaultValueExpression"/>) write it.

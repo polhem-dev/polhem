@@ -24,6 +24,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Definition.Drafting\Polhem.Definition.Drafting.csproj" />
+    <!-- The rule drafting tests check expressions and compute samples with the real evaluator. -->
+    <ProjectReference Include="..\..\src\Polhem.Expressions\Polhem.Expressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
