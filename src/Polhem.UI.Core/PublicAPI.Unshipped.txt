@@ -192,3 +192,10 @@ static Polhem.UI.Core.Criteria.GetListFilterConverter.ToFilter(Polhem.UI.Core.Cr
 static Polhem.UI.Core.UserIdentity.operator !=(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool
 static Polhem.UI.Core.UserIdentity.operator ==(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool
 Polhem.UI.Core.Criteria.ColumnFilterCriteria.MarkApplied() -> void
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Applied -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeAppliedEventArgs!>?
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.CallsBack(string! tableName, string! fieldName) -> bool
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.Failed -> System.EventHandler<Polhem.UI.Core.Fields.FieldValueChangeFailedEventArgs!>?
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.FieldValueChangeCoordinator(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Contracts.Form.IFieldValueChangeConnector! connector, System.Action<System.Data.DataRow!, string!, string?>! writeValue) -> void
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnFieldValueChangedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnLookupSelectedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

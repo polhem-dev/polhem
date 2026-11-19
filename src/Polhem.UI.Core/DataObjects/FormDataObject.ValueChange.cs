@@ -6,8 +6,8 @@ using Polhem.UI.Core.Fields;
 namespace Polhem.UI.Core.DataObjects
 {
     /// <summary>
-    /// Server callback half of <see cref="FormDataObject"/>: hands every field change to the shared
-    /// <see cref="FieldValueChangeCoordinator"/> with where it came from, and writes what the server returns.
+    /// Server callback half of <see cref="FormDataObject"/>: hands every field change to the shared field value change
+    /// coordinator with where it came from, and writes what the server returns.
     /// </summary>
     /// <remarks>
     /// The rules (which changes call back, which answers are stale, how an answer is applied) live in the coordinator;
