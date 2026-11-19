@@ -69,12 +69,14 @@ if (result.Draft is { } rule) { /* 顯示 rule.Explanation 與 rule.Samples，�
 ```
 
 模型只負責提案。它透過工具提交規則，只有在運算式通過 `FormExpressionCalculator.ValidateUntrustedExpression`（大小上限、解析與運算式允許清單），而且運算式引擎對每一筆測試資料算出的結果都和模型宣稱的一致時，才會被接受；否則原因會退回給模型，在 `MaxToolRounds` 內重試。規則會讀取明細表時，測試資料可以附帶明細列。結果裡的測試資料是引擎實算的：看不懂運算式的人，就靠它們確認規則。`ReviseAsync` 在同一段對話裡修正；`ExplainAsync` 是獨立的對話。
+提交一被接受，請求就結束，所以此時 `Reply` 是空字串；模型的話只保留在它提問、或說明為何無法完成的時候。每個結果都帶有 `Usage`（呼叫模型的次數、模型回報的 token 數與耗時），`Progress` 事件則在每次呼叫前後回報，供需要在請求進行中顯示進度的宿主使用。
 
 | 型別 | 用途 |
 |------|------|
 | `RuleDrafting` | `DraftAsync`、`ReviseAsync`、`ExplainAsync` |
 | `RuleDraft` | 被接受的規則、訊息與翻譯、白話說明與實算的測試資料；`ToFormRule()` |
 | `RuleDraftSample` | 一筆測試資料（含明細列）與引擎算出的 `RuleSampleOutcome`：`Passes`、`Blocked` 或 `Skipped` |
+| `RuleDraftingUsage`、`RuleDraftingProgress` | 請求到目前為止的用量，出現在結果與 `Progress` 事件中 |
 | `RuleDraftingOptions` | 對話選項、允許的回合數、回覆語言、訊息語系、函式目錄與測試資料的時區 |
 
 ## 宿主

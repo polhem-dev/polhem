@@ -602,7 +602,6 @@
   <data name="RuleAssistant_Explain" xml:space="preserve"><value>說明這條規則</value></data>
   <data name="RuleAssistant_ExplainTip" xml:space="preserve"><value>說明編輯器中目前的規則，並附上測試資料。</value></data>
   <data name="RuleAssistant_Stop" xml:space="preserve"><value>停止</value></data>
-  <data name="RuleAssistant_Working" xml:space="preserve"><value>處理中…</value></data>
   <data name="RuleAssistant_Stopped" xml:space="preserve"><value>已停止。</value></data>
   <data name="RuleAssistant_Failed" xml:space="preserve"><value>要求失敗：{0}</value></data>
   <data name="RuleAssistant_Samples" xml:space="preserve"><value>測試資料（由運算式引擎實算）</value></data>
@@ -620,4 +619,10 @@
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>
   <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>規則 {0}：{1}</value></data>
   <data name="RuleAssistant_NoResult" xml:space="preserve"><value>助手沒有完成。請重新描述規則，或再試一次。</value></data>
+  <data name="RuleAssistant_ProgressCalling" xml:space="preserve"><value>等待模型回應（第 {0} 次呼叫）・已 {1} 秒</value></data>
+  <data name="RuleAssistant_ProgressChecking" xml:space="preserve"><value>檢查提交的規則（第 {0} 次呼叫後）・已 {1} 秒</value></data>
+  <data name="RuleAssistant_Usage" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens・輸出 {2} tokens・{3} 秒</value></data>
+  <data name="RuleAssistant_UsageNoTokens" xml:space="preserve"><value>呼叫 {0} 次・未提供 token 用量・{1} 秒</value></data>
+  <data name="RuleAssistant_UsageNoCalls" xml:space="preserve"><value>沒有呼叫模型・{0} 秒</value></data>
+  <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>（所有欄位空白）</value></data>
 </root>

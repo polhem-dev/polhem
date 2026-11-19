@@ -36,13 +36,11 @@ Polhem.Definition.Drafting.Rules.RuleDraftFunction.Summary.get -> string!
 Polhem.Definition.Drafting.Rules.RuleDraftFunction.Summary.init -> void
 Polhem.Definition.Drafting.Rules.RuleDraftResult
 Polhem.Definition.Drafting.Rules.RuleDraftResult.<Clone>$() -> Polhem.Definition.Drafting.Rules.RuleDraftResult!
-Polhem.Definition.Drafting.Rules.RuleDraftResult.Deconstruct(out Polhem.Definition.Drafting.Rules.RuleDraft? Draft, out string! Reply) -> void
 Polhem.Definition.Drafting.Rules.RuleDraftResult.Draft.get -> Polhem.Definition.Drafting.Rules.RuleDraft?
 Polhem.Definition.Drafting.Rules.RuleDraftResult.Draft.init -> void
 Polhem.Definition.Drafting.Rules.RuleDraftResult.Equals(Polhem.Definition.Drafting.Rules.RuleDraftResult? other) -> bool
 Polhem.Definition.Drafting.Rules.RuleDraftResult.Reply.get -> string!
 Polhem.Definition.Drafting.Rules.RuleDraftResult.Reply.init -> void
-Polhem.Definition.Drafting.Rules.RuleDraftResult.RuleDraftResult(Polhem.Definition.Drafting.Rules.RuleDraft? Draft, string! Reply) -> void
 Polhem.Definition.Drafting.Rules.RuleDraftSample
 Polhem.Definition.Drafting.Rules.RuleDraftSample.<Clone>$() -> Polhem.Definition.Drafting.Rules.RuleDraftSample!
 Polhem.Definition.Drafting.Rules.RuleDraftSample.Description.get -> string!
@@ -82,13 +80,11 @@ Polhem.Definition.Drafting.Rules.RuleExplanation.Samples.get -> System.Collectio
 Polhem.Definition.Drafting.Rules.RuleExplanation.Samples.init -> void
 Polhem.Definition.Drafting.Rules.RuleExplanationResult
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.<Clone>$() -> Polhem.Definition.Drafting.Rules.RuleExplanationResult!
-Polhem.Definition.Drafting.Rules.RuleExplanationResult.Deconstruct(out Polhem.Definition.Drafting.Rules.RuleExplanation? Explanation, out string! Reply) -> void
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.Equals(Polhem.Definition.Drafting.Rules.RuleExplanationResult? other) -> bool
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.Explanation.get -> Polhem.Definition.Drafting.Rules.RuleExplanation?
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.Explanation.init -> void
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.Reply.get -> string!
 Polhem.Definition.Drafting.Rules.RuleExplanationResult.Reply.init -> void
-Polhem.Definition.Drafting.Rules.RuleExplanationResult.RuleExplanationResult(Polhem.Definition.Drafting.Rules.RuleExplanation? Explanation, string! Reply) -> void
 Polhem.Definition.Drafting.Rules.RuleSampleOutcome
 Polhem.Definition.Drafting.Rules.RuleSampleOutcome.Blocked = 1 -> Polhem.Definition.Drafting.Rules.RuleSampleOutcome
 Polhem.Definition.Drafting.Rules.RuleSampleOutcome.Passes = 0 -> Polhem.Definition.Drafting.Rules.RuleSampleOutcome
@@ -127,3 +123,45 @@ Polhem.Definition.Drafting.Rules.RuleDraftSample.Deconstruct(out string! Descrip
 Polhem.Definition.Drafting.Rules.RuleDraftSample.DetailRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>!
 Polhem.Definition.Drafting.Rules.RuleDraftSample.DetailRows.init -> void
 Polhem.Definition.Drafting.Rules.RuleDraftSample.RuleDraftSample(string! Description, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! Values, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>! DetailRows, Polhem.Definition.Drafting.Rules.RuleSampleOutcome Outcome) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftResult.Deconstruct(out Polhem.Definition.Drafting.Rules.RuleDraft? Draft, out string! Reply, out Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftResult.RuleDraftResult(Polhem.Definition.Drafting.Rules.RuleDraft? Draft, string! Reply, Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftResult.Usage.get -> Polhem.Definition.Drafting.Rules.RuleDraftingUsage!
+Polhem.Definition.Drafting.Rules.RuleDraftResult.Usage.init -> void
+Polhem.Definition.Drafting.Rules.RuleDrafting.Progress -> System.EventHandler<Polhem.Definition.Drafting.Rules.RuleDraftingProgress!>?
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.<Clone>$() -> Polhem.Definition.Drafting.Rules.RuleDraftingProgress!
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.Deconstruct(out Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage, out bool WaitingForModel) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.Equals(Polhem.Definition.Drafting.Rules.RuleDraftingProgress? other) -> bool
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.RuleDraftingProgress(Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage, bool WaitingForModel) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.Usage.get -> Polhem.Definition.Drafting.Rules.RuleDraftingUsage!
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.Usage.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.WaitingForModel.get -> bool
+Polhem.Definition.Drafting.Rules.RuleDraftingProgress.WaitingForModel.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.<Clone>$() -> Polhem.Definition.Drafting.Rules.RuleDraftingUsage!
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Calls.get -> int
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Calls.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Deconstruct(out int Calls, out long InputTokens, out long OutputTokens, out System.TimeSpan Elapsed) -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Elapsed.get -> System.TimeSpan
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Elapsed.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Equals(Polhem.Definition.Drafting.Rules.RuleDraftingUsage? other) -> bool
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.InputTokens.get -> long
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.InputTokens.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.OutputTokens.get -> long
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.OutputTokens.init -> void
+Polhem.Definition.Drafting.Rules.RuleDraftingUsage.RuleDraftingUsage(int Calls, long InputTokens, long OutputTokens, System.TimeSpan Elapsed) -> void
+Polhem.Definition.Drafting.Rules.RuleExplanationResult.Deconstruct(out Polhem.Definition.Drafting.Rules.RuleExplanation? Explanation, out string! Reply, out Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage) -> void
+Polhem.Definition.Drafting.Rules.RuleExplanationResult.RuleExplanationResult(Polhem.Definition.Drafting.Rules.RuleExplanation? Explanation, string! Reply, Polhem.Definition.Drafting.Rules.RuleDraftingUsage! Usage) -> void
+Polhem.Definition.Drafting.Rules.RuleExplanationResult.Usage.get -> Polhem.Definition.Drafting.Rules.RuleDraftingUsage!
+Polhem.Definition.Drafting.Rules.RuleExplanationResult.Usage.init -> void
+override Polhem.Definition.Drafting.Rules.RuleDraftingProgress.Equals(object? obj) -> bool
+override Polhem.Definition.Drafting.Rules.RuleDraftingProgress.GetHashCode() -> int
+override Polhem.Definition.Drafting.Rules.RuleDraftingProgress.ToString() -> string!
+override Polhem.Definition.Drafting.Rules.RuleDraftingUsage.Equals(object? obj) -> bool
+override Polhem.Definition.Drafting.Rules.RuleDraftingUsage.GetHashCode() -> int
+override Polhem.Definition.Drafting.Rules.RuleDraftingUsage.ToString() -> string!
+static Polhem.Definition.Drafting.Rules.RuleDraftingProgress.operator !=(Polhem.Definition.Drafting.Rules.RuleDraftingProgress? left, Polhem.Definition.Drafting.Rules.RuleDraftingProgress? right) -> bool
+static Polhem.Definition.Drafting.Rules.RuleDraftingProgress.operator ==(Polhem.Definition.Drafting.Rules.RuleDraftingProgress? left, Polhem.Definition.Drafting.Rules.RuleDraftingProgress? right) -> bool
+static Polhem.Definition.Drafting.Rules.RuleDraftingUsage.None.get -> Polhem.Definition.Drafting.Rules.RuleDraftingUsage!
+static Polhem.Definition.Drafting.Rules.RuleDraftingUsage.operator !=(Polhem.Definition.Drafting.Rules.RuleDraftingUsage? left, Polhem.Definition.Drafting.Rules.RuleDraftingUsage? right) -> bool
+static Polhem.Definition.Drafting.Rules.RuleDraftingUsage.operator ==(Polhem.Definition.Drafting.Rules.RuleDraftingUsage? left, Polhem.Definition.Drafting.Rules.RuleDraftingUsage? right) -> bool

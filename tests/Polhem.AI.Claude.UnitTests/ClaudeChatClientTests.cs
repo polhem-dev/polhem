@@ -27,7 +27,7 @@ namespace Polhem.AI.Claude.UnitTests
             Assert.True(body.GetProperty("stream").GetBoolean());
             Assert.Equal("adaptive", body.GetProperty("thinking").GetProperty("type").GetString());
             Assert.Equal("summarized", body.GetProperty("thinking").GetProperty("display").GetString());
-            Assert.Equal("high", body.GetProperty("output_config").GetProperty("effort").GetString());
+            Assert.Equal("medium", body.GetProperty("output_config").GetProperty("effort").GetString());
             Assert.Equal("ephemeral", body.GetProperty("cache_control").GetProperty("type").GetString());
         }
 
@@ -62,7 +62,7 @@ namespace Polhem.AI.Claude.UnitTests
 
         [Theory]
         [InlineData(ClaudeEffort.Low, "low")]
-        [InlineData(ClaudeEffort.Medium, "medium")]
+        [InlineData(ClaudeEffort.High, "high")]
         [InlineData(ClaudeEffort.ExtraHigh, "xhigh")]
         [InlineData(ClaudeEffort.Max, "max")]
         [DisplayName("Each effort reaches the request as its API value")]

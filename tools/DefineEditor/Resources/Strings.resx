@@ -615,7 +615,6 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="RuleAssistant_Explain" xml:space="preserve"><value>Explain This Rule</value></data>
   <data name="RuleAssistant_ExplainTip" xml:space="preserve"><value>Explains the rule as it is in the editor now, with sample rows.</value></data>
   <data name="RuleAssistant_Stop" xml:space="preserve"><value>Stop</value></data>
-  <data name="RuleAssistant_Working" xml:space="preserve"><value>Working…</value></data>
   <data name="RuleAssistant_Stopped" xml:space="preserve"><value>Stopped.</value></data>
   <data name="RuleAssistant_Failed" xml:space="preserve"><value>The request failed: {0}</value></data>
   <data name="RuleAssistant_Samples" xml:space="preserve"><value>Samples (computed by the expression engine)</value></data>
@@ -633,4 +632,10 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>Rule {0}: translations written to {1}.</value></data>
   <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>Rule {0}: {1}</value></data>
   <data name="RuleAssistant_NoResult" xml:space="preserve"><value>The assistant did not finish. Describe the rule again, or try once more.</value></data>
+  <data name="RuleAssistant_ProgressCalling" xml:space="preserve"><value>Waiting for the model (call {0}) · {1} s</value></data>
+  <data name="RuleAssistant_ProgressChecking" xml:space="preserve"><value>Checking the submission (after call {0}) · {1} s</value></data>
+  <data name="RuleAssistant_Usage" xml:space="preserve"><value>{0} calls · {1} input tokens · {2} output tokens · {3} s</value></data>
+  <data name="RuleAssistant_UsageNoTokens" xml:space="preserve"><value>{0} calls · tokens not reported · {1} s</value></data>
+  <data name="RuleAssistant_UsageNoCalls" xml:space="preserve"><value>No call to the model · {0} s</value></data>
+  <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>(every field blank)</value></data>
 </root>

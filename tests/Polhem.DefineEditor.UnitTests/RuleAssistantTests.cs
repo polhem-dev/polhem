@@ -157,6 +157,8 @@ public sealed class RuleAssistantTests : IDisposable
 
         Assert.True(assistant.HasDraft);
         Assert.Empty(assistant.Reply);
+        Assert.StartsWith(RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(1, 0, 0, TimeSpan.Zero), TimeSpan.Zero)[..4],
+            assistant.UsageText, StringComparison.Ordinal);
         Assert.Equal([RuleSampleOutcome.Blocked, RuleSampleOutcome.Passes, RuleSampleOutcome.Skipped],
             assistant.Samples.Select(s => s.Outcome));
         Assert.Contains("amount = 200000", assistant.Samples[0].Values, StringComparison.Ordinal);
@@ -285,5 +287,20 @@ public sealed class RuleAssistantTests : IDisposable
         window.WriteRuleMessages(new RuleMessagesAppliedEventArgs(RuleId, [translation]));
         Assert.Equal("必須填核准人。", RuleMessageFiles.Read(file, RuleId));
         Assert.DoesNotContain(open, window.OpenDocuments);
+    }
+
+    [Fact]
+    [DisplayName("The usage line names the calls, the tokens with thousands separators and the seconds, or says no tokens were reported")]
+    public void DescribeUsage_TokensOrNone()
+    {
+        var withTokens = RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(2, 18240, 2105, TimeSpan.FromSeconds(30)),
+            TimeSpan.FromSeconds(31.6));
+        var withoutTokens = RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(3, 0, 0, TimeSpan.Zero), TimeSpan.FromSeconds(5));
+
+        Assert.Contains("18,240", withTokens, StringComparison.Ordinal);
+        Assert.Contains("2,105", withTokens, StringComparison.Ordinal);
+        Assert.Contains("32", withTokens, StringComparison.Ordinal);
+        Assert.Contains("3", withoutTokens, StringComparison.Ordinal);
+        Assert.DoesNotContain("18,240", withoutTokens, StringComparison.Ordinal);
     }
 }

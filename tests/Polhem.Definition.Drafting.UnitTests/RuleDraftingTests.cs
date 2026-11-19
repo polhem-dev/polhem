@@ -51,12 +51,11 @@ namespace Polhem.Definition.Drafting.UnitTests
         private static string Result(ScriptedChatClient client) => client.LastResults().Single().Result?.ToString() ?? string.Empty;
 
         [Fact]
-        [DisplayName("A rule whose samples the engine confirms is accepted, with the engine's outcomes and the model's reply")]
+        [DisplayName("A rule whose samples the engine confirms is accepted with the engine's outcomes, and the request ends there")]
         public async Task DraftAsync_ValidRule_Accepted()
         {
             var client = new ScriptedChatClient()
-                .Then(Call("c1", "submit_rule", ValidRule))
-                .Then(Text("已建立規則。"));
+                .Then(Call("c1", "submit_rule", ValidRule));
 
             var result = await Create(client).DraftAsync("金額超過 10 萬要有核准人");
 
@@ -65,10 +64,10 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Equal("amount > 100000", draft.When);
             Assert.Equal("金額超過 10 萬時必須填核准人。", draft.MessageTranslations["zh-TW"]);
             Assert.Equal([RuleSampleOutcome.Blocked, RuleSampleOutcome.Passes, RuleSampleOutcome.Skipped], draft.Samples.Select(s => s.Outcome));
-            Assert.Equal("已建立規則。", result.Reply);
-            Assert.Equal(ChatToolMode.None, client.Requests[^1].Options!.ToolMode);
-            // The reply request keeps the tool list: Claude binds the model's reasoning to the tools it saw.
-            Assert.Equal(client.Requests[0].Options!.Tools!.Select(t => t.Name), client.Requests[^1].Options!.Tools!.Select(t => t.Name));
+            // No call for a closing sentence: the model is not asked again once the rule is accepted.
+            Assert.Single(client.Requests);
+            Assert.Empty(result.Reply);
+            Assert.Equal(1, result.Usage.Calls);
         }
 
         [Fact]
@@ -306,8 +305,8 @@ namespace Polhem.Definition.Drafting.UnitTests
             var revised = ValidRule.Replace("amount > 100000", "amount > 50000", StringComparison.Ordinal)
                 .Replace("{\"field\":\"amount\",\"value\":\"50000\"}", "{\"field\":\"amount\",\"value\":\"10000\"}", StringComparison.Ordinal);
             var client = new ScriptedChatClient()
-                .Then(Call("c1", "submit_rule", ValidRule)).Then(Text("好了。"))
-                .Then(Call("c2", "submit_rule", revised)).Then(Text("已改為 5 萬。"));
+                .Then(Call("c1", "submit_rule", ValidRule))
+                .Then(Call("c2", "submit_rule", revised));
             var drafting = Create(client);
 
             await drafting.DraftAsync("金額超過 10 萬要有核准人");
@@ -323,18 +322,19 @@ namespace Polhem.Definition.Drafting.UnitTests
         public async Task ReviseAsync_Failure_RestoresConversation()
         {
             var client = new ScriptedChatClient()
-                .Then(Call("c1", "submit_rule", ValidRule)).Then(Text("好了。"))
+                .Then(Call("c1", "submit_rule", ValidRule))
                 .Then((_, _) => throw new HttpRequestException("network down"))
                 .Then(Text("請再說一次。"));
             var drafting = Create(client);
             await drafting.DraftAsync("金額超過 10 萬要有核准人");
-            var countBefore = client.Requests[^1].Messages.Count;
 
             await Assert.ThrowsAsync<HttpRequestException>(() => drafting.ReviseAsync("改成 5 萬"));
             await drafting.ReviseAsync("改成 5 萬");
 
-            // The retry sees the earlier conversation, the reply to it, and one copy of the new message.
-            Assert.Equal(countBefore + 2, client.Requests[^1].Messages.Count);
+            // The retry sees the earlier conversation (the system prompt, the request, the submission and its result)
+            // and one copy of the new message.
+            var retry = client.Requests[^1].Messages;
+            Assert.Equal([ChatRole.System, ChatRole.User, ChatRole.Assistant, ChatRole.Tool, ChatRole.User], retry.Select(m => m.Role));
         }
 
         [Fact]
@@ -351,6 +351,8 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Null(result.Draft);
             Assert.Equal(2, client.Requests.Count);
             Assert.Equal(ChatToolMode.None, client.Requests[^1].Options!.ToolMode);
+            // The reply request keeps the tool list: Claude binds the model's reasoning to the tools it saw.
+            Assert.Equal(client.Requests[0].Options!.Tools!.Select(t => t.Name), client.Requests[^1].Options!.Tools!.Select(t => t.Name));
             Assert.Equal("我寫不出符合限制的規則。", result.Reply);
         }
 
@@ -411,5 +413,80 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Null(result.Draft);
             Assert.Equal("請問門檻是多少？", result.Reply);
         }
+
+        [Fact]
+        [DisplayName("A field a sample leaves out is empty, so a sample may give no values at all")]
+        public async Task DraftAsync_SampleWithoutValues_FieldsAreEmpty()
+        {
+            const string rule = """
+                {"ruleId":"lines_need_approver","targetTable":"","when":"Count(OrderLine) > 0","condition":"!IsBlank(approver_id)",
+                 "message":"An order with lines needs an approver.","messageTranslations":[{"language":"zh-TW","text":"有明細的訂單必須填核准人。"}],
+                 "explanation":"有明細就要填核准人。",
+                 "samples":[
+                   {"description":"有明細、沒有核准人","values":[],"detailRows":[{"table":"OrderLine","values":[{"field":"qty","value":"1"}]}],"expected":"Blocked"},
+                   {"description":"有明細、有核准人","values":[{"field":"approver_id","value":"E01"}],"detailRows":[{"table":"OrderLine","values":[{"field":"qty","value":"1"}]}],"expected":"Passes"},
+                   {"description":"什麼都沒填","values":[],"detailRows":[],"expected":"Skipped"}]}
+                """;
+            var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", rule));
+
+            var result = await Create(client).DraftAsync("有明細就要填核准人");
+
+            var draft = Assert.IsType<RuleDraft>(result.Draft);
+            Assert.Empty(draft.Samples[2].Values);
+            Assert.Equal(RuleSampleOutcome.Skipped, draft.Samples[2].Outcome);
+        }
+
+        [Fact]
+        [DisplayName("A sample that leaves out a value the rule needs is refused by the outcome the engine computes")]
+        public async Task DraftAsync_SampleMissingNeededValue_RefusedByOutcome()
+        {
+            var missing = ValidRule.Replace(",{\"field\":\"approver_id\",\"value\":\"E01\"}", "", StringComparison.Ordinal);
+            var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", missing)).Then(Text("我無法完成。"));
+
+            var result = await Create(client, maxRounds: 1).DraftAsync("金額超過 10 萬要有核准人");
+
+            Assert.Null(result.Draft);
+            Assert.Contains("the engine computes Blocked, not Passes", Result(client), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A request adds up the calls and the tokens the model reports, and reports progress around every call")]
+        public async Task DraftAsync_Usage_AddsUpCallsAndTokens()
+        {
+            var wrong = ValidRule.Replace("\"expected\":\"Skipped\"", "\"expected\":\"Blocked\"", StringComparison.Ordinal);
+            var client = new ScriptedChatClient()
+                .Then((_, _) => WithUsage(Call("c1", "submit_rule", wrong), 1000, 200))
+                .Then((_, _) => WithUsage(Call("c2", "submit_rule", ValidRule), 1500, 300));
+            var drafting = Create(client);
+            var progress = new List<RuleDraftingProgress>();
+            drafting.Progress += (_, e) => progress.Add(e);
+
+            var result = await drafting.DraftAsync("金額超過 10 萬要有核准人");
+
+            Assert.NotNull(result.Draft);
+            Assert.Equal(2, result.Usage.Calls);
+            Assert.Equal(2500, result.Usage.InputTokens);
+            Assert.Equal(500, result.Usage.OutputTokens);
+            Assert.Equal([true, false, true, false], progress.Select(p => p.WaitingForModel));
+            Assert.Equal([1, 1, 2, 2], progress.Select(p => p.Usage.Calls));
+            Assert.Equal(1000, progress[1].Usage.InputTokens);
+        }
+
+        [Fact]
+        [DisplayName("A model that reports no usage still counts its calls, with no tokens")]
+        public async Task ExplainAsync_NoUsageReported_CountsCalls()
+        {
+            var client = new ScriptedChatClient().Then(Text("這條規則無法說明。"));
+
+            var result = await Create(client).ExplainAsync(new FormRule("r", "amount > 0", "Amount must be positive."));
+
+            Assert.Equal(new RuleDraftingUsage(1, 0, 0, result.Usage.Elapsed), result.Usage);
+        }
+
+        private static ChatResponse WithUsage(AIContent content, long input, long output) =>
+            new(new ChatMessage(ChatRole.Assistant, [content]))
+            {
+                Usage = new UsageDetails { InputTokenCount = input, OutputTokenCount = output },
+            };
     }
 }
