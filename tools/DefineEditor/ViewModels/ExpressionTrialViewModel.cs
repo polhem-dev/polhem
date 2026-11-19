@@ -28,6 +28,8 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
     private string _expression = string.Empty;
     private string _message = string.Empty;
     private bool _parses;
+    // A whole rule: When decides whether Condition is checked. Null for one expression.
+    private string? _when;
 
     /// <param name="table">The table whose fields the expression reads.</param>
     /// <param name="field">The field a field expression computes; <c>null</c> for a rule.</param>
@@ -62,6 +64,9 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
     /// <summary>Whether the result is a value or a rule that holds.</summary>
     public bool IsFine => Outcome is ExpressionTrialOutcome.Value or ExpressionTrialOutcome.Passed;
 
+    /// <summary>Whether the result is a rule that does not apply to the sample.</summary>
+    public bool IsSkipped => Outcome == ExpressionTrialOutcome.Skipped;
+
     /// <summary>Whether the expression reads no field, so there is nothing to type.</summary>
     public bool HasNoInputs => _parses && Inputs.Count == 0;
 
@@ -70,6 +75,7 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
         OnPropertyChanged(nameof(HasResult));
         OnPropertyChanged(nameof(IsProblem));
         OnPropertyChanged(nameof(IsFine));
+        OnPropertyChanged(nameof(IsSkipped));
     }
 
     /// <summary>The result in words; empty when <see cref="Outcome"/> is <see cref="ExpressionTrialOutcome.None"/>.</summary>
@@ -93,12 +99,34 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
         Evaluate();
     }
 
+    /// <summary>
+    /// Takes a whole rule as it now stands: the sample is checked against <paramref name="when"/> first, and against
+    /// <paramref name="condition"/> only when it applies. The inputs follow the fields both read.
+    /// </summary>
+    /// <param name="when">The rule's When; empty when the rule always applies.</param>
+    /// <param name="whenParses">Whether <paramref name="when"/> parses.</param>
+    /// <param name="condition">The rule's Condition.</param>
+    /// <param name="conditionParses">Whether <paramref name="condition"/> parses.</param>
+    /// <param name="message">The rule's message, shown when its condition fails.</param>
+    public void UpdateRule(string when, bool whenParses, string condition, bool conditionParses, string message)
+    {
+        ArgumentNullException.ThrowIfNull(when);
+        _when = when;
+        _expression = condition;
+        _parses = conditionParses && whenParses && !string.IsNullOrWhiteSpace(condition);
+        _message = message;
+        if (_parses) SyncInputs();
+        OnPropertyChanged(nameof(HasNoInputs));
+        Evaluate();
+    }
+
     private void SyncInputs()
     {
-        IReadOnlyList<string> referenced;
+        var referenced = new List<string>();
         try
         {
-            referenced = _evaluator.GetReferencedVariables(_expression);
+            referenced.AddRange(_evaluator.GetReferencedVariables(_expression));
+            if (!string.IsNullOrWhiteSpace(_when)) referenced.AddRange(_evaluator.GetReferencedVariables(_when));
         }
         catch (ExpressionEvaluationException)
         {
@@ -138,7 +166,12 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
         }
         try
         {
-            if (_field is null)
+            if (_field is null && !string.IsNullOrWhiteSpace(_when)
+                && !_calculator.EvaluateRuleSample(_when, _table, values, _timeZoneId))
+            {
+                Show(ExpressionTrialOutcome.Skipped, L("ExpressionTrial_WhenSkips"));
+            }
+            else if (_field is null)
             {
                 var holds = _calculator.EvaluateRuleSample(_expression, _table, values, _timeZoneId);
                 Show(holds ? ExpressionTrialOutcome.Passed : ExpressionTrialOutcome.Failed, RuleResult(holds));
@@ -181,12 +214,9 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
         return readable;
     }
 
-    private string RuleResult(bool holds) => _propertyName switch
-    {
-        nameof(FormRule.When) => L(holds ? "ExpressionTrial_WhenApplies" : "ExpressionTrial_WhenSkips"),
-        _ when holds => L("ExpressionTrial_ConditionPasses"),
-        _ => string.Format(CultureInfo.CurrentCulture, L("ExpressionTrial_ConditionFails"), _message),
-    };
+    private string RuleResult(bool holds) => holds
+        ? L("ExpressionTrial_ConditionPasses")
+        : string.Format(CultureInfo.CurrentCulture, L("ExpressionTrial_ConditionFails"), _message);
 
     private void Show(ExpressionTrialOutcome outcome, string result)
     {

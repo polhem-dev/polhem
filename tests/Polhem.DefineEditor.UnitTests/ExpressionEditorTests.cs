@@ -74,26 +74,32 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("A rule whose target table is missing gets no expression editor, as validation skips it")]
-        public void CreateExpressionEditor_RuleWithMissingTable_ReturnsNull()
+        [DisplayName("A rule whose target table is missing opens with that table named as missing, and cannot be confirmed")]
+        public void CreateRuleDialog_RuleWithMissingTable_CannotConfirm()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["orphan"];
+            using var dialog = document.CreateRuleDialog(document.Schema.Rules!["orphan"]);
 
-            Assert.Null(document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule));
+            Assert.Null(dialog.SelectedTable.Table);
+            Assert.Equal("Missing", dialog.SelectedTable.TargetTable);
+            Assert.False(dialog.CanConfirm);
         }
 
         [Fact]
-        [DisplayName("The editor of a detail-table rule lists that table's fields, not the master's")]
-        public void CreateExpressionEditor_DetailRule_ListsDetailFields()
+        [DisplayName("The dialog of a detail-table rule lists that table's fields, and a new table checks the expressions again")]
+        public void CreateRuleDialog_DetailRule_ListsDetailFieldsAndFollowsTable()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_quantity"];
+            using var dialog = document.CreateRuleDialog(document.Schema.Rules!["positive_quantity"]);
 
-            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+            Assert.Equal(["quantity"], dialog.Symbols.Fields.Select(f => f.Name));
+            Assert.False(dialog.Condition.HasError);
 
-            Assert.Equal(["quantity"], editor.Fields.Select(f => f.Name));
-            Assert.False(editor.HasError);
+            dialog.SelectedTable = dialog.Tables.Single(t => t.TargetTable.Length == 0);
+
+            Assert.Contains("amount", dialog.Symbols.Fields.Select(f => f.Name));
+            Assert.True(dialog.Condition.HasError);
+            Assert.False(dialog.CanConfirm);
         }
 
         [Fact]
@@ -133,8 +139,8 @@ namespace Polhem.DefineEditor.UnitTests
         public void Expression_UnknownIdentifier_ReportsErrorAndPosition()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_amount"];
-            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+            using var dialog = document.CreateRuleDialog(document.Schema.Rules!["positive_amount"]);
+            var editor = dialog.Condition;
 
             editor.Expression = "amount > limit";
 
@@ -152,8 +158,8 @@ namespace Polhem.DefineEditor.UnitTests
         public void Expression_OutsideAllowlist_ShowsWarning()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_amount"];
-            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+            using var dialog = document.CreateRuleDialog(document.Schema.Rules!["positive_amount"]);
+            var editor = dialog.Condition;
 
             editor.Expression = "sys_id.GetHashCode() > 0";
 
@@ -171,9 +177,9 @@ namespace Polhem.DefineEditor.UnitTests
         public void CreateExpressionEditor_Types_ListOnlyAllowedMembers()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_amount"];
+            var field = document.Schema.Tables!["Order"].Fields!["tax"];
 
-            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+            var editor = document.CreateExpressionEditor(Property(field, nameof(FormField.ValueExpression)), field)!;
 
             var names = editor.Types.SelectMany(group => group.Items.OfType<ExpressionSymbol>()).Select(s => s.InsertText).ToList();
             Assert.Contains("Math.Round(", names);
@@ -199,8 +205,8 @@ namespace Polhem.DefineEditor.UnitTests
         public void Expression_ErrorAfterAggregate_PositionInWrittenText()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_amount"];
-            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+            using var dialog = document.CreateRuleDialog(document.Schema.Rules!["positive_amount"]);
+            var editor = dialog.Condition;
 
             editor.Expression = "Count(OrderLine) > limit";
 
@@ -209,35 +215,67 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("Confirming writes the condition and the message edited beside it back to the rule")]
-        public void ApplyExpressionEdit_ConditionAndMessage_WritesBoth()
+        [DisplayName("Confirming the rule dialog writes the whole rule back, and reports whether anything changed")]
+        public void RuleDialog_ApplyTo_WritesRule()
         {
             var document = Load();
             var rule = document.Schema.Rules!["positive_amount"];
-            var property = Property(rule, nameof(FormRule.Condition));
-            var editor = document.CreateExpressionEditor(property, rule)!;
-            Assert.True(editor.HasMessage);
+            using var dialog = document.CreateRuleDialog(rule);
 
-            editor.Expression = "amount >= 0";
-            editor.Message = "Amount cannot be negative.";
+            Assert.False(dialog.ApplyTo(rule));
 
-            Assert.True(FormSchemaDocumentViewModel.ApplyExpressionEdit(editor, property, rule));
-            Assert.Equal("amount >= 0", rule.Condition);
-            Assert.Equal("Amount cannot be negative.", rule.Message);
+            dialog.When.Expression = "amount > 100m";
+            dialog.Condition.Expression = "tax > 0";
+            dialog.Message = "Tax is required above 100.";
+            dialog.Trigger = FormRuleTrigger.BeforeDelete;
+
+            Assert.True(dialog.ApplyTo(rule));
+            Assert.Equal("amount > 100m", rule.When);
+            Assert.Equal("tax > 0", rule.Condition);
+            Assert.Equal("Tax is required above 100.", rule.Message);
+            Assert.Equal(FormRuleTrigger.BeforeDelete, rule.Trigger);
+            Assert.Equal("positive_amount", rule.RuleId);
         }
 
         [Fact]
-        [DisplayName("Confirming without a change reports nothing changed, and the When editor leaves the message alone")]
-        public void ApplyExpressionEdit_Unchanged_ReturnsFalse()
+        [DisplayName("A new rule needs a RuleId no other rule has and a Condition before it can be confirmed")]
+        public void RuleDialog_NewRule_NeedsUniqueIdAndCondition()
         {
             var document = Load();
-            var rule = document.Schema.Rules!["positive_amount"];
-            var property = Property(rule, nameof(FormRule.When));
-            var editor = document.CreateExpressionEditor(property, rule)!;
+            using var dialog = document.CreateRuleDialog(null, "new_rule");
 
-            Assert.False(editor.HasMessage);
-            Assert.False(FormSchemaDocumentViewModel.ApplyExpressionEdit(editor, property, rule));
-            Assert.Equal("Amount must be positive.", rule.Message);
+            Assert.True(dialog.IsNew);
+            Assert.False(dialog.CanConfirm);
+
+            dialog.Condition.Expression = "amount > 0";
+            Assert.True(dialog.CanConfirm);
+
+            dialog.RuleId = "POSITIVE_AMOUNT";
+            Assert.False(dialog.CanConfirm);
+            Assert.Contains("POSITIVE_AMOUNT", dialog.Problem, StringComparison.Ordinal);
+
+            dialog.RuleId = "amount_positive";
+            var rule = dialog.BuildRule();
+            Assert.Equal("amount_positive", rule.RuleId);
+            Assert.Equal(string.Empty, rule.TargetTable);
+            Assert.Equal("amount > 0", rule.Condition);
+        }
+
+        [Fact]
+        [DisplayName("A field editor leaves an unchanged expression alone and writes a changed one")]
+        public void ApplyExpressionEdit_FieldExpression_WritesOnlyChanges()
+        {
+            var document = Load();
+            var field = document.Schema.Tables!["Order"].Fields!["tax"];
+            var property = Property(field, nameof(FormField.ValueExpression));
+            var editor = document.CreateExpressionEditor(property, field)!;
+
+            Assert.False(FormSchemaDocumentViewModel.ApplyExpressionEdit(editor, property, field));
+
+            editor.Expression = "amount * 0.1m";
+
+            Assert.True(FormSchemaDocumentViewModel.ApplyExpressionEdit(editor, property, field));
+            Assert.Equal("amount * 0.1m", field.ValueExpression);
         }
     }
 }

@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             x:Class="Polhem.DefineEditor.Views.RuleAssistantPanel"
+             x:DataType="vm:RuleAssistantViewModel"
+             x:CompileBindings="True">
+    <Border BorderThickness="1" CornerRadius="4" Padding="10,8" BorderBrush="{DynamicResource SemiColorBorder}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Spacing="6">
+                <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
+                <TextBox Text="{Binding Request, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"
+                         MinHeight="56" MaxHeight="110" IsEnabled="{Binding IsAvailable}"
+                         PlaceholderText="{loc:Loc RuleAssistant_RequestWatermark}"
+                         AutomationProperties.Name="{loc:Loc RuleAssistant_RequestWatermark}"/>
+                <WrapPanel>
+                    <Button Classes="tool Primary" Margin="0,0,6,4" Command="{Binding DraftCommand}"
+                            Content="{loc:Loc RuleAssistant_Draft}" ToolTip.Tip="{loc:Loc RuleAssistant_DraftTip}"/>
+                    <Button Classes="tool" Margin="0,0,6,4" Command="{Binding ReviseCommand}"
+                            Content="{loc:Loc RuleAssistant_Revise}" ToolTip.Tip="{loc:Loc RuleAssistant_ReviseTip}"/>
+                    <Button Classes="tool" Margin="0,0,6,4" Command="{Binding ExplainCommand}"
+                            Content="{loc:Loc RuleAssistant_Explain}" ToolTip.Tip="{loc:Loc RuleAssistant_ExplainTip}"/>
+                    <Button Classes="tool" Margin="0,0,6,4" Command="{Binding StopCommand}"
+                            Content="{loc:Loc RuleAssistant_Stop}" IsVisible="{Binding IsBusy}"/>
+                </WrapPanel>
+                <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
+                           IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap"
+                                     IsVisible="{Binding !IsReplyError}" Classes="muted"/>
+                <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap" IsVisible="{Binding IsReplyError}"
+                                     Foreground="{DynamicResource SemiColorDanger}"/>
+            </StackPanel>
+            <Button DockPanel.Dock="Bottom" Classes="tool Primary" HorizontalAlignment="Right" Margin="0,8,0,0"
+                    Command="{Binding ApplyCommand}" IsVisible="{Binding HasDraft}"
+                    Content="{loc:Loc RuleAssistant_Apply}" ToolTip.Tip="{loc:Loc RuleAssistant_ApplyTip}"/>
+            <ScrollViewer Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasResult}">
+                <StackPanel Spacing="8">
+                    <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap"/>
+                    <Border Padding="8,6" CornerRadius="4" Background="{DynamicResource SemiColorFill0}"
+                            IsVisible="{Binding HasDraft}">
+                        <SelectableTextBlock Text="{Binding RuleText}" TextWrapping="Wrap" FontSize="12"
+                                             FontFamily="ui-monospace, Menlo, Consolas, monospace"/>
+                    </Border>
+                    <TextBlock FontWeight="SemiBold" Text="{loc:Loc RuleAssistant_Samples}"/>
+                    <ItemsControl ItemsSource="{Binding Samples}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RuleAssistantSample">
+                                <Grid ColumnDefinitions="56,*" Margin="0,3">
+                                    <Border Grid.Column="0" VerticalAlignment="Top" CornerRadius="3" Padding="4,1"
+                                            HorizontalAlignment="Left" Classes.passes="{Binding Passes}"
+                                            Classes.blocked="{Binding IsBlocked}" Classes.skipped="{Binding IsSkipped}">
+                                        <TextBlock Text="{Binding OutcomeText}" FontSize="11" Foreground="White"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Values}" TextWrapping="Wrap" Classes="muted" FontSize="11"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Spacing="4" IsVisible="{Binding HasDraft}">
+                        <TextBlock FontWeight="SemiBold" Text="{loc:Loc RuleAssistant_Message}"/>
+                        <TextBox Text="{Binding Message, Mode=TwoWay}" TextWrapping="Wrap"
+                                 AutomationProperties.Name="{loc:Loc RuleAssistant_Message}"/>
+                        <ItemsControl ItemsSource="{Binding Translations}" IsVisible="{Binding HasTranslations}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RuleMessageTranslation">
+                                    <Grid ColumnDefinitions="56,*" Margin="0,2">
+                                        <TextBlock Text="{Binding Language}" VerticalAlignment="Center" Classes="muted"/>
+                                        <TextBox Grid.Column="1" Text="{Binding Text, Mode=TwoWay}" TextWrapping="Wrap"
+                                                 AutomationProperties.Name="{Binding Language}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap"
+                                   Text="{loc:Loc RuleAssistant_TranslationsHint}" IsVisible="{Binding HasTranslations}"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 1df961944d3f5cf84aabf85b66fb07d5f9e5ff7c -->
+<!-- source: en/definitions/expression-rules.md blob: 69c7ad63674701c8e329fc6623d46b0878b9b8f8 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -157,12 +157,12 @@
 
 ## 用白話撰寫規則
 
-DefineEditor 的運算式編輯器在規則的 `When` 與 `Condition` 旁有 **AI 助手** 分頁。用自己的話描述規則，例如「已出貨的訂單，貨運商一定要填，而且運費不能是 0」，助手會透過 Claude 寫出規則：檢查的資料表、`When`、`Condition`、訊息與訊息的翻譯，並以白話說明規則做什麼，附上測試資料。
+DefineEditor 新增與編輯規則用的規則對話框有 **AI 助手** 分頁。用自己的話描述規則，例如「已出貨的訂單，貨運商一定要填，而且運費不能是 0」，助手會透過 Claude 寫出規則：檢查的資料表、`When`、`Condition`、訊息與訊息的翻譯，並以白話說明規則做什麼，附上測試資料。
 
 - **測試資料由引擎計算，不是模型說了算。** 每一筆都由存檔時執行的同一個計算器求值，標示規則讓該列通過、擋下或不適用。引擎算出的結果與模型宣稱不符時，草稿會退回給模型重寫，所以畫面上的測試資料就是規則實際的行為。
 - **草擬的運算式必須通過允許清單。** 以 `FormExpressionCalculator.ValidateUntrustedExpression` 檢查，定義檔的運算式不受此限：在長度與巢狀上限內，只能用欄位、`RegexMatch` 以外的函式、彙總、運算子、字面值與列入清單的成員。
-- **修改** 以修正的話延續同一段對話，也用來回答助手的提問。**說明這條規則** 說明編輯器中目前的規則並附上測試資料，讓不會讀運算式的人也能檢查既有規則。
-- **套用規則** 取代規則的資料表、`When`、`Condition` 與訊息，保留原本的 `RuleId`。訊息的翻譯寫入表單語系檔的 `Rule.{RuleId}.Message`：只寫表單已有的英文以外語系，不新增檔案，也不寫客製目錄。
+- **修改** 以修正的話延續同一段對話，也用來回答助手的提問。**說明這條規則** 說明對話框中目前的規則並附上測試資料，讓不會讀運算式的人也能檢查既有規則。
+- **填入規則** 以草稿填入對話框的資料表、`When`、`Condition` 與訊息；規則使用對話框中的 `RuleId`。按確定之前不會寫入任何東西：按確定後規則存入表單，訊息的翻譯寫入表單語系檔的 `Rule.{RuleId}.Message`：只寫表單已有的英文以外語系，不新增檔案，也不寫客製目錄。
 - 你輸入的文字，以及表單的欄位名稱、標題與清單值，會以分頁上顯示的憑證送給 Claude：`ant auth login` 或 `ANTHROPIC_API_KEY`。沒有憑證時，分頁不會送出任何東西。
 
 背後的服務是 [Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.zh-TW.md#用白話產生規則) 的 `RuleDrafting`。

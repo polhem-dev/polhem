@@ -13,7 +13,7 @@ using static Polhem.Definition.Drafting.UnitTests.ScriptedChatClient;
 namespace Polhem.DefineEditor.UnitTests;
 
 /// <summary>
-/// The rule assistant of the expression editor: drafting and explaining a rule over a scripted model, applying the
+/// The rule assistant of the rule dialog: drafting and explaining a rule over a scripted model, applying the
 /// draft to the rule, and writing the message translations into the form's Language files. Everything is written to an
 /// isolated temporary folder; no real model is called.
 /// </summary>
@@ -97,17 +97,10 @@ public sealed class RuleAssistantTests : IDisposable
         return document;
     }
 
-    private static PropertyDescriptor Property(object component, string name) => TypeDescriptor.GetProperties(component)[name]!;
-
-    private static (ExpressionEditorViewModel Editor, RuleAssistantViewModel Assistant, PropertyDescriptor Property) Open(
-        FormSchemaDocumentViewModel document)
+    private static (RuleDialogViewModel Dialog, RuleAssistantViewModel Assistant) Open(FormSchemaDocumentViewModel document)
     {
-        var rule = document.Schema.Rules![RuleId];
-        var property = Property(rule, nameof(FormRule.Condition));
-        var editor = document.CreateExpressionEditor(property, rule)!;
-        var assistant = document.CreateRuleAssistant(editor, rule, property);
-        editor.RuleAssistant = assistant;
-        return (editor, assistant, property);
+        var dialog = document.CreateRuleDialog(document.Schema.Rules![RuleId]);
+        return (dialog, dialog.Assistant!);
     }
 
     [Fact]
@@ -143,12 +136,12 @@ public sealed class RuleAssistantTests : IDisposable
     }
 
     [Fact]
-    [DisplayName("A draft shows the engine's samples and its translations, and applying it rewrites the rule under its own id")]
+    [DisplayName("A draft shows the engine's samples and its translations, and using it fills the dialog without touching the rule")]
     public async Task Draft_Apply_RewritesRule()
     {
         var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", Draft)).Then(Text("好了。"));
         var document = Load(client);
-        var (editor, assistant, property) = Open(document);
+        var (dialog, assistant) = Open(document);
         var applied = 0;
         assistant.Applied += (_, _) => applied++;
 
@@ -168,15 +161,22 @@ public sealed class RuleAssistantTests : IDisposable
         assistant.Message = "Needs an approver.";
         assistant.ApplyCommand.Execute(null);
         var rule = document.Schema.Rules![RuleId];
-        var changed = FormSchemaDocumentViewModel.ApplyExpressionEdit(editor, property, rule);
 
         Assert.Equal(1, applied);
-        Assert.True(changed);
-        Assert.Equal(RuleId, assistant.AppliedRule!.RuleId);
+        Assert.Equal("amount > 100000", dialog.When.Expression);
+        Assert.Equal("!IsBlank(approver_id)", dialog.Condition.Expression);
+        Assert.Equal("Needs an approver.", dialog.Message);
+        Assert.Equal("金額超過 10 萬時必須填核准人。", Assert.Single(dialog.Translations).Text);
+        // Nothing reaches the form until the dialog is confirmed.
+        Assert.Equal("true", rule.Condition);
+
+        Assert.True(dialog.ApplyTo(rule));
+        Assert.Equal(RuleId, rule.RuleId);
         Assert.Equal("amount > 100000", rule.When);
         Assert.Equal("!IsBlank(approver_id)", rule.Condition);
         Assert.Equal("Needs an approver.", rule.Message);
         Assert.Null(document.Schema.Rules!.GetOrDefault("amount_needs_approver"));
+        dialog.Dispose();
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public sealed class RuleAssistantTests : IDisposable
         var client = new ScriptedChatClient()
             .Then(Call("c1", "submit_rule", Draft.Replace("amount_needs_approver", RuleId, StringComparison.Ordinal)))
             .Then(Text("好了。"));
-        var (_, assistant, _) = Open(Load(client));
+        var (_, assistant) = Open(Load(client));
 
         assistant.Request = "金額超過 10 萬要有核准人";
         await assistant.DraftCommand.ExecuteAsync(null);
@@ -195,13 +195,13 @@ public sealed class RuleAssistantTests : IDisposable
     }
 
     [Fact]
-    [DisplayName("An explanation reads the condition as it is typed in the editor, and offers nothing to apply")]
+    [DisplayName("An explanation reads the condition as it is typed in the dialog, and offers nothing to use")]
     public async Task Explain_UsesEditorText()
     {
         var client = new ScriptedChatClient().Then(Call("c1", "submit_explanation", Explanation)).Then(Text("說明好了。"));
-        var (editor, assistant, _) = Open(Load(client));
+        var (dialog, assistant) = Open(Load(client));
 
-        editor.Expression = "!IsBlank(approver_id)";
+        dialog.Condition.Expression = "!IsBlank(approver_id)";
         await assistant.ExplainCommand.ExecuteAsync(null);
 
         Assert.Contains("condition: !IsBlank(approver_id)", client.Requests[0].Messages[^1].Text, StringComparison.Ordinal);
@@ -216,7 +216,7 @@ public sealed class RuleAssistantTests : IDisposable
     public async Task Draft_Failure_Reported()
     {
         var client = new ScriptedChatClient().Then((_, _) => throw new HttpRequestException("network down"));
-        var (_, assistant, _) = Open(Load(client));
+        var (_, assistant) = Open(Load(client));
 
         assistant.Request = "金額超過 10 萬要有核准人";
         await assistant.DraftCommand.ExecuteAsync(null);
@@ -240,7 +240,7 @@ public sealed class RuleAssistantTests : IDisposable
             return new ScriptedChatClient();
         };
         document.RuleDraftingCredentialProvider = () => new DraftingCredential(false, "none", []);
-        var (_, assistant, _) = Open(document);
+        var (_, assistant) = Open(document);
 
         assistant.Request = "金額超過 10 萬要有核准人";
 
@@ -254,7 +254,7 @@ public sealed class RuleAssistantTests : IDisposable
     public async Task Draft_FunctionsWithinAllowlist()
     {
         var client = new ScriptedChatClient().Then(Text("請問核准人是哪個欄位？"));
-        var (_, assistant, _) = Open(Load(client));
+        var (_, assistant) = Open(Load(client));
 
         assistant.Request = "要有核准人";
         await assistant.DraftCommand.ExecuteAsync(null);

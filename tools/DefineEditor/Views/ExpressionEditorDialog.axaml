@@ -1,32 +1,18 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:views="using:Polhem.DefineEditor.Views"
         xmlns:loc="using:Polhem.DefineEditor.Markup"
-        xmlns:ae="using:AvaloniaEdit"
         x:Class="Polhem.DefineEditor.Views.ExpressionEditorDialog"
         x:DataType="vm:ExpressionEditorViewModel"
         x:CompileBindings="True"
-        Width="1060" Height="740" MinWidth="640" MinHeight="400"
+        Width="980" Height="680" MinWidth="640" MinHeight="400"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Title="{Binding Title}">
 
     <Window.Styles>
-        <!-- The theme draws a text box as a plain fill; beside the outlined expression area it needs an outline to read as
-             an input. -->
-        <Style Selector="TextBox">
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
-        </Style>
-        <Style Selector="Border.passes">
-            <Setter Property="Background" Value="{DynamicResource SemiColorSuccess}"/>
-        </Style>
-        <Style Selector="Border.blocked">
-            <Setter Property="Background" Value="{DynamicResource SemiColorDanger}"/>
-        </Style>
-        <Style Selector="Border.skipped">
-            <Setter Property="Background" Value="{DynamicResource SemiColorTertiary}"/>
-        </Style>
+        <StyleInclude Source="/Styles/ExpressionDialogStyles.axaml"/>
     </Window.Styles>
 
     <Border Padding="18,16">
@@ -40,168 +26,15 @@
                 <Button Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnOk" MinWidth="90"/>
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,10,0,0" IsVisible="{Binding HasMessage}">
-                <TextBlock Text="{loc:Loc ExpressionEditor_Message}"/>
-                <TextBox Text="{Binding Message, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc ExpressionEditor_Message}"/>
-            </StackPanel>
-
             <Expander DockPanel.Dock="Bottom" Margin="0,10,0,0" HorizontalAlignment="Stretch"
                       Header="{loc:Loc ExpressionTrial_Title}" IsVisible="{Binding Trial, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <StackPanel Spacing="6" DataContext="{Binding Trial}" x:DataType="vm:ExpressionTrialViewModel">
-                    <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{loc:Loc ExpressionTrial_Hint}"/>
-                    <TextBlock Classes="muted" IsVisible="{Binding HasNoInputs}" Text="{loc:Loc ExpressionTrial_NoInputs}"/>
-                    <ScrollViewer MaxHeight="130" HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl ItemsSource="{Binding Inputs}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:ExpressionTrialInput">
-                                    <Grid ColumnDefinitions="160,80,*" Margin="0,2">
-                                        <TextBlock Grid.Column="0" Text="{Binding FieldName}" VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TypeName}" Classes="muted" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="2">
-                                            <TextBox Text="{Binding Text, Mode=TwoWay}" AutomationProperties.Name="{Binding FieldName}"/>
-                                            <TextBlock Text="{Binding Error}" IsVisible="{Binding HasError}" FontSize="11"
-                                                       TextWrapping="Wrap" Foreground="{DynamicResource SemiColorDanger}"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                    <SelectableTextBlock Text="{Binding Result}" IsVisible="{Binding IsFine}" TextWrapping="Wrap"
-                                         FontWeight="SemiBold" Foreground="{DynamicResource SemiColorSuccess}"/>
-                    <SelectableTextBlock Text="{Binding Result}" IsVisible="{Binding IsProblem}" TextWrapping="Wrap"
-                                         FontWeight="SemiBold" Foreground="{DynamicResource SemiColorDanger}"/>
-                </StackPanel>
+                <views:ExpressionTrialPanel DataContext="{Binding Trial}"/>
             </Expander>
 
-            <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,6" CornerRadius="4"
-                    Background="{DynamicResource SemiColorDangerLight}" IsVisible="{Binding HasError}">
-                <SelectableTextBlock Text="{Binding Error}" TextWrapping="Wrap"
-                                     Foreground="{DynamicResource SemiColorDanger}"/>
-            </Border>
+            <views:ExpressionSymbolTree x:Name="Symbols" DockPanel.Dock="Right" Width="400" Margin="10,0,0,0"
+                                        Groups="{Binding SymbolGroups}"/>
 
-            <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,6" CornerRadius="4"
-                    Background="{DynamicResource SemiColorWarningLight}" IsVisible="{Binding HasWarning}">
-                <SelectableTextBlock Text="{Binding Warning}" TextWrapping="Wrap"
-                                     Foreground="{DynamicResource SemiColorWarning}"/>
-            </Border>
-
-            <TabControl DockPanel.Dock="Right" Width="470" Margin="10,0,0,0" Padding="0,6,0,0">
-                <TabItem Header="{loc:Loc ExpressionEditor_SymbolsTab}">
-                <Border BorderThickness="1" CornerRadius="4" BorderBrush="{DynamicResource SemiColorBorder}">
-                <TreeView x:Name="SymbolTree" ItemsSource="{Binding SymbolGroups}"
-                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                          DoubleTapped="OnSymbolDoubleTapped" KeyDown="OnSymbolKeyDown">
-                    <TreeView.Styles>
-                        <!-- The headings say whether they start open; a name has no IsExpanded and stays closed. -->
-                        <Style Selector="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=OneTime, FallbackValue=False}"/>
-                        </Style>
-                    </TreeView.Styles>
-                    <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="vm:ExpressionSymbolGroup" ItemsSource="{Binding Items}">
-                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
-                        </TreeDataTemplate>
-                        <DataTemplate DataType="vm:ExpressionSymbol">
-                            <DockPanel ToolTip.Tip="{Binding ToolTipText}">
-                                <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Margin="0,0,6,0"/>
-                                <TextBlock Text="{Binding Detail}" Classes="muted" TextTrimming="CharacterEllipsis"/>
-                            </DockPanel>
-                        </DataTemplate>
-                    </TreeView.DataTemplates>
-                </TreeView>
-                </Border>
-                </TabItem>
-                <TabItem x:Name="AssistantTab" Header="{loc:Loc RuleAssistant_Tab}"
-                         IsVisible="{Binding RuleAssistant, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Border BorderThickness="1" CornerRadius="4" Padding="10,8"
-                            BorderBrush="{DynamicResource SemiColorBorder}">
-                    <DockPanel DataContext="{Binding RuleAssistant}" x:DataType="vm:RuleAssistantViewModel">
-                        <StackPanel DockPanel.Dock="Top" Spacing="6">
-                            <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
-                            <TextBox Text="{Binding Request, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"
-                                     MinHeight="56" MaxHeight="110" IsEnabled="{Binding IsAvailable}"
-                                     PlaceholderText="{loc:Loc RuleAssistant_RequestWatermark}"
-                                     AutomationProperties.Name="{loc:Loc RuleAssistant_RequestWatermark}"/>
-                            <WrapPanel>
-                                <Button Classes="tool Primary" Margin="0,0,6,4" Command="{Binding DraftCommand}"
-                                        Content="{loc:Loc RuleAssistant_Draft}" ToolTip.Tip="{loc:Loc RuleAssistant_DraftTip}"/>
-                                <Button Classes="tool" Margin="0,0,6,4" Command="{Binding ReviseCommand}"
-                                        Content="{loc:Loc RuleAssistant_Revise}" ToolTip.Tip="{loc:Loc RuleAssistant_ReviseTip}"/>
-                                <Button Classes="tool" Margin="0,0,6,4" Command="{Binding ExplainCommand}"
-                                        Content="{loc:Loc RuleAssistant_Explain}" ToolTip.Tip="{loc:Loc RuleAssistant_ExplainTip}"/>
-                                <Button Classes="tool" Margin="0,0,6,4" Command="{Binding StopCommand}"
-                                        Content="{loc:Loc RuleAssistant_Stop}" IsVisible="{Binding IsBusy}"/>
-                            </WrapPanel>
-                            <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
-                                       IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                            <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap"
-                                                 IsVisible="{Binding !IsReplyError}" Classes="muted"/>
-                            <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap" IsVisible="{Binding IsReplyError}"
-                                                 Foreground="{DynamicResource SemiColorDanger}"/>
-                        </StackPanel>
-                        <Button DockPanel.Dock="Bottom" Classes="tool Primary" HorizontalAlignment="Right" Margin="0,8,0,0"
-                                Command="{Binding ApplyCommand}" IsVisible="{Binding HasDraft}"
-                                Content="{loc:Loc RuleAssistant_Apply}" ToolTip.Tip="{loc:Loc RuleAssistant_ApplyTip}"/>
-                        <ScrollViewer Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasResult}">
-                            <StackPanel Spacing="8">
-                                <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap"/>
-                                <Border Padding="8,6" CornerRadius="4" Background="{DynamicResource SemiColorFill0}"
-                                        IsVisible="{Binding HasDraft}">
-                                    <SelectableTextBlock Text="{Binding RuleText}" TextWrapping="Wrap" FontSize="12"
-                                                         FontFamily="ui-monospace, Menlo, Consolas, monospace"/>
-                                </Border>
-                                <TextBlock FontWeight="SemiBold" Text="{loc:Loc RuleAssistant_Samples}"/>
-                                <ItemsControl ItemsSource="{Binding Samples}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:RuleAssistantSample">
-                                            <Grid ColumnDefinitions="56,*" Margin="0,3">
-                                                <Border Grid.Column="0" VerticalAlignment="Top" CornerRadius="3" Padding="4,1"
-                                                        HorizontalAlignment="Left" Classes.passes="{Binding Passes}"
-                                                        Classes.blocked="{Binding IsBlocked}" Classes.skipped="{Binding IsSkipped}">
-                                                    <TextBlock Text="{Binding OutcomeText}" FontSize="11" Foreground="White"/>
-                                                </Border>
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding Values}" TextWrapping="Wrap" Classes="muted" FontSize="11"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <StackPanel Spacing="4" IsVisible="{Binding HasDraft}">
-                                    <TextBlock FontWeight="SemiBold" Text="{loc:Loc RuleAssistant_Message}"/>
-                                    <TextBox Text="{Binding Message, Mode=TwoWay}" TextWrapping="Wrap"
-                                             AutomationProperties.Name="{loc:Loc RuleAssistant_Message}"/>
-                                    <ItemsControl ItemsSource="{Binding Translations}" IsVisible="{Binding HasTranslations}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:RuleMessageTranslation">
-                                                <Grid ColumnDefinitions="56,*" Margin="0,2">
-                                                    <TextBlock Text="{Binding Language}" VerticalAlignment="Center" Classes="muted"/>
-                                                    <TextBox Grid.Column="1" Text="{Binding Text, Mode=TwoWay}" TextWrapping="Wrap"
-                                                             AutomationProperties.Name="{Binding Language}"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap"
-                                               Text="{loc:Loc RuleAssistant_TranslationsHint}" IsVisible="{Binding HasTranslations}"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </DockPanel>
-                    </Border>
-                </TabItem>
-            </TabControl>
-
-            <Border BorderThickness="1" CornerRadius="4" BorderBrush="{DynamicResource SemiColorBorder}">
-                <ae:TextEditor x:Name="Editor" ShowLineNumbers="False" WordWrap="True"
-                               FontFamily="ui-monospace, Menlo, Consolas, monospace" FontSize="14"
-                               Padding="6,4" Background="Transparent"
-                               Foreground="{DynamicResource SemiColorText0}"
-                               HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"/>
-            </Border>
+            <views:ExpressionBox x:Name="Editor"/>
         </DockPanel>
     </Border>
 </Window>

@@ -1,79 +1,36 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using Polhem.Core.Expressions;
-using Polhem.DefineEditor.Services;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
 
 namespace Polhem.DefineEditor.ViewModels;
 
 /// <summary>
-/// Edits one expression of a form schema (a rule's When or Condition, a field's ValueExpression or
-/// DefaultValueExpression), checking it as it is typed against the variables it is evaluated with.
+/// Edits a field's ValueExpression or DefaultValueExpression, checking it as it is typed against the variables it is
+/// evaluated with. A rule's When and Condition are edited together in <see cref="RuleDialogViewModel"/>.
 /// </summary>
 /// <remarks>
 /// The expression is checked by <see cref="FormExpressionCalculator.ValidateExpression"/>, the check behind
 /// <see cref="FormExpressionCalculator.ValidateExpressions"/>, so the dialog and the validation panel agree on what is
 /// an error, detail aggregates included.
 /// </remarks>
-public sealed partial class ExpressionEditorViewModel : ObservableObject
+public sealed class ExpressionEditorViewModel : ExpressionFieldViewModel
 {
-    private readonly Action<string> _validate;
-    private readonly Func<string, IReadOnlyList<ExpressionViolation>>? _findViolations;
-    private readonly IReadOnlyDictionary<string, Type> _variableTypes;
-
     /// <param name="title">The window title: what is being edited.</param>
-    /// <param name="table">The table whose fields are the expression's variables.</param>
+    /// <param name="symbols">What the expression can name.</param>
     /// <param name="validate">Checks the expression, throwing <see cref="ExpressionEvaluationException"/> when it does not
     /// parse.</param>
     /// <param name="expression">The current expression.</param>
-    /// <param name="message">The rule's message, edited beside its condition; <c>null</c> when there is none to edit.</param>
-    /// <param name="evaluator">The evaluator whose type names the editor lists.</param>
     /// <param name="trial">The try-out area; <c>null</c> for none.</param>
     /// <param name="findViolations">Lists what the expression uses outside the expression allowlist, shown as a warning;
     /// <c>null</c> for no such check.</param>
-    public ExpressionEditorViewModel(string title, FormTable table, Action<string> validate, string expression, string? message,
-        DynamicExpressoEvaluator evaluator, ExpressionTrialViewModel? trial = null,
-        Func<string, IReadOnlyList<ExpressionViolation>>? findViolations = null)
+    public ExpressionEditorViewModel(string title, ExpressionSymbolSet symbols, Action<string> validate, string expression,
+        ExpressionTrialViewModel? trial = null, Func<string, IReadOnlyList<ExpressionViolation>>? findViolations = null)
+        : base(expression, validate, findViolations, (symbols ?? throw new ArgumentNullException(nameof(symbols))).CompletionSources)
     {
-        ArgumentNullException.ThrowIfNull(table);
         Title = title;
-        ArgumentNullException.ThrowIfNull(validate);
-        ArgumentNullException.ThrowIfNull(evaluator);
-        _validate = validate;
-        _findViolations = findViolations;
-        _variableTypes = FormExpressionCalculator.GetVariableTypes(table);
-        HasMessage = message is not null;
-        _message = message ?? string.Empty;
-        Fields = (table.Fields ?? [])
-            .Where(f => _variableTypes.ContainsKey(f.FieldName))
-            .Select(f => new ExpressionSymbol(f.FieldName, f.FieldName,
-                $"{ExpressionMembers.TypeName(_variableTypes[f.FieldName])} · {f.Caption}"))
-            .ToList();
-        Functions = DynamicExpressoEvaluator.HelperFunctions
-            .Select(f => new ExpressionSymbol(f.Name, f.Name + "(" + (f.Parameters.Count > 0 ? "" : ")"),
-                FunctionLabels.Summary(f), FunctionLabels.Usage(f)))
-            .ToList();
-        var referencedTypes = evaluator.ReferencedTypes;
-        Types = ExpressionMembers.FeaturedTypes(referencedTypes)
-            .Select(t => new ExpressionSymbolGroup(t.Key, ExpressionMembers.Of(t.Value, isStatic: true, t.Key + ".")
-                .Select(m => new ExpressionSymbol(m.Label, m.InsertText, m.Detail))
-                .ToList()))
-            .ToList();
-        SymbolGroups =
-        [
-            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Fields"], Fields, IsExpanded: true),
-            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Functions"], Functions, IsExpanded: true),
-            new ExpressionSymbolGroup(LocalizationService.Current["ExpressionEditor_Types"], Types, IsExpanded: true),
-        ];
-        var listValues = (table.Fields ?? [])
-            .Where(f => f.ListItems is { Count: > 0 })
-            .ToDictionary(f => f.FieldName, f => (IReadOnlyList<string>)f.ListItems!.Select(i => i.Value).ToList(),
-                StringComparer.Ordinal);
-        CompletionSources = new ExpressionCompletionSources(_variableTypes, DynamicExpressoEvaluator.HelperFunctions,
-            referencedTypes, name => listValues.GetValueOrDefault(name));
+        Symbols = symbols;
         Trial = trial;
-        _expression = expression;
-        Validate();
+        Trial?.Update(Expression, !HasError, string.Empty);
     }
 
     /// <summary>The try-out area, where sample values give the expression's result; <c>null</c> when there is none.</summary>
@@ -82,96 +39,21 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <summary>The window title: what is being edited.</summary>
     public string Title { get; }
 
-    /// <summary>
-    /// Writes the rule from plain words and explains it; <c>null</c> for an expression that is not a rule's, or when
-    /// the editor runs without a window.
-    /// </summary>
-    public RuleAssistantViewModel? RuleAssistant { get; set; }
+    /// <summary>What the expression can name.</summary>
+    public ExpressionSymbolSet Symbols { get; }
 
     /// <summary>The fields of the table, which the expression names as variables.</summary>
-    public IReadOnlyList<ExpressionSymbol> Fields { get; }
+    public IReadOnlyList<ExpressionSymbol> Fields => Symbols.Fields;
 
     /// <summary>The helper functions every expression can call.</summary>
-    public IReadOnlyList<ExpressionSymbol> Functions { get; }
+    public IReadOnlyList<ExpressionSymbol> Functions => Symbols.Functions;
 
     /// <summary>The types an expression can name, each with its static members.</summary>
-    public IReadOnlyList<ExpressionSymbolGroup> Types { get; }
-
-    /// <summary>What the completion offers names from.</summary>
-    public ExpressionCompletionSources CompletionSources { get; }
+    public IReadOnlyList<ExpressionSymbolGroup> Types => Symbols.Types;
 
     /// <summary>The fields, the functions and the types, as the headings of the symbol tree.</summary>
-    public IReadOnlyList<ExpressionSymbolGroup> SymbolGroups { get; }
+    public IReadOnlyList<ExpressionSymbolGroup> SymbolGroups => Symbols.Groups;
 
-    /// <summary>Whether the rule's message is edited beside the expression.</summary>
-    public bool HasMessage { get; }
-
-    /// <summary>The expression being edited.</summary>
-    [ObservableProperty]
-    private string _expression;
-
-    /// <summary>The rule's message; empty when <see cref="HasMessage"/> is <c>false</c>.</summary>
-    [ObservableProperty]
-    private string _message;
-
-    /// <summary>Why the expression does not parse; empty when it does.</summary>
-    [ObservableProperty]
-    private string _error = string.Empty;
-
-    /// <summary>The offset in <see cref="Expression"/> where parsing failed, when the parser reports one.</summary>
-    [ObservableProperty]
-    private int? _errorPosition;
-
-    /// <summary>Whether <see cref="Error"/> has a message to show.</summary>
-    public bool HasError => Error.Length > 0;
-
-    /// <summary>
-    /// What the expression uses outside the expression allowlist; empty when nothing, or when it does not parse. The
-    /// expression still works in a definition file, but an untrusted author would be refused it.
-    /// </summary>
-    [ObservableProperty]
-    private string _warning = string.Empty;
-
-    /// <summary>Whether <see cref="Warning"/> has a message to show.</summary>
-    public bool HasWarning => Warning.Length > 0;
-
-    partial void OnWarningChanged(string value) => OnPropertyChanged(nameof(HasWarning));
-
-    partial void OnExpressionChanged(string value) => Validate();
-
-    partial void OnMessageChanged(string value) => Trial?.Update(Expression, !HasError, Message);
-
-    partial void OnErrorChanged(string value) => OnPropertyChanged(nameof(HasError));
-
-    // An empty expression is valid: an empty When means the rule always applies, and an empty field expression means
-    // the field has none.
-    private void Validate()
-    {
-        ErrorPosition = null;
-        Error = string.Empty;
-        Warning = string.Empty;
-        if (!string.IsNullOrWhiteSpace(Expression))
-        {
-            try
-            {
-                _validate(Expression);
-            }
-            catch (ExpressionEvaluationException ex)
-            {
-                ErrorPosition = ex.Position;
-                Error = ex.Message;
-            }
-        }
-        if (!HasError && _findViolations is not null && !string.IsNullOrWhiteSpace(Expression))
-        {
-            var violations = _findViolations(Expression);
-            if (violations.Count > 0)
-            {
-                Warning = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    LocalizationService.Current["Validation_ExpressionOutsideAllowlist"],
-                    string.Join(" ", violations.Select(v => v.Message)));
-            }
-        }
-        Trial?.Update(Expression, !HasError, Message);
-    }
+    /// <inheritdoc/>
+    protected override void OnValidated() => Trial?.Update(Expression, !HasError, string.Empty);
 }
