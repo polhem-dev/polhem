@@ -32,6 +32,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private const string ChipsClear = ".polhem-criteria-chips__clear";
         private const string Overlay = ".polhem-query-pane--overlay";
         private const string MeButton = ".polhem-criteria-row__me";
+        private const string ActiveColumnFilter = ".polhem-grid-filter__button--active";
 
         /// <inheritdoc />
         Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
@@ -336,6 +337,26 @@ namespace Polhem.Web.Blazor.BehaviorTests
 
             cut.WaitForAssertion(() => Assert.Equal(2, Conditions(backend.LastFilter).Count));
             Assert.Equal(2, cut.FindAll(Chip).Count);
+        }
+
+        [Fact]
+        [DisplayName("A condition typed in the pane marks its column header only once Search applies it")]
+        public void PaneCondition_MarksColumnOnlyWhenApplied()
+        {
+            using var culture = new CultureScope("en-US");
+            Register();
+            var cut = OpenPane(RenderList());
+
+            AddCondition(cut, "Name");
+            TypeValue(cut, 0, "Ali");
+            // Closing the pane renders the page, and with it the headers, while the condition is still not applied.
+            cut.Find(Pane).KeyDown(new KeyboardEventArgs { Key = "Escape" });
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(Pane)));
+
+            Assert.Empty(cut.FindAll(ActiveColumnFilter));
+            OpenPane(cut);
+            Search(cut);
+            cut.WaitForAssertion(() => Assert.Single(cut.FindAll(ActiveColumnFilter)));
         }
 
         [Fact]

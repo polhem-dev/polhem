@@ -139,6 +139,7 @@ namespace Polhem.Web.Blazor.Components
                 .Where(r => r.HasValue)
                 .Select(r => new CriteriaChip(r, CriteriaRowSummary.Describe(r, Text)))
                 .ToArray();
+            ColumnFilters.MarkApplied();
         }
 
         private FilterNode? CreateListFilter() => _criteriaFilter;

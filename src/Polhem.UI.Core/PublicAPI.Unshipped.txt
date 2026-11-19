@@ -191,3 +191,4 @@ static Polhem.UI.Core.Criteria.CriteriaValue.CurrentUser.get -> Polhem.UI.Core.C
 static Polhem.UI.Core.Criteria.GetListFilterConverter.ToFilter(Polhem.UI.Core.Criteria.QueryCriteria! criteria, System.DateOnly today, System.DayOfWeek firstDayOfWeek, Polhem.UI.Core.UserIdentity? identity) -> Polhem.Definition.Filters.FilterNode?
 static Polhem.UI.Core.UserIdentity.operator !=(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool
 static Polhem.UI.Core.UserIdentity.operator ==(Polhem.UI.Core.UserIdentity? left, Polhem.UI.Core.UserIdentity? right) -> bool
+Polhem.UI.Core.Criteria.ColumnFilterCriteria.MarkApplied() -> void
