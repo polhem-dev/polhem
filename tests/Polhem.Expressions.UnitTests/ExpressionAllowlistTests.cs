@@ -40,11 +40,8 @@ namespace Polhem.Expressions.UnitTests
         [InlineData("In(status, \"Draft\", \"Rejected\")")]
         [InlineData("DaysBetween(d, Today()) <= 30")]
         [InlineData("MonthEnd(d) >= d2")]
-        [InlineData("RegexMatch(name, \"^[0-9]+$\")")]
         [InlineData("name.Length > 3 && name.Trim().ToUpper() == \"X\"")]
         [InlineData("name.Contains(\"a\") || name.StartsWith(\"b\") || name.Substring(1) == \"c\"")]
-        [InlineData("RegexMatch(name, \"^[0-9]{2,4}-[0-9]{6,8}$\") || RegexMatch(name, \"^(ab|cd)+x?$\")")]
-        [InlineData("RegexMatch(name, \"^\\\\d{3}-\\\\d{4}$\") || RegexMatch(name, \"^(?i)[a-z]+@[a-z]+\\\\.com$\")")]
         [InlineData("name + name + name + name + name + name + name + name")]
         [InlineData("Math.Round(amount, 2) + Math.Abs(amount) + Math.Max(amount, 1m)")]
         [InlineData("amount * 1.05m")]
@@ -87,23 +84,15 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Theory]
-        [DisplayName("A RegexMatch pattern that nests repetition, counts too high or is not a literal is reported")]
-        [InlineData("RegexMatch(name, \"((a|b){0,20}){0,20}c\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"^(a+)+$\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"((a)*b)*\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"a{0,21}\")", "more than 20")]
-        [InlineData("RegexMatch(name, \"([ab]{0,20}){0,20}c\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"(\\\\w{0,20}){0,20}c\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"(?i)([a-z]{0,20}){0,20}c\")", "itself repeats")]
-        [InlineData("RegexMatch(name, \"[ab]{9000}c\")", "more than 20")]
-        [InlineData("RegexMatch(name, \"\\\\d{21}\")", "more than 20")]
-        [InlineData("RegexMatch(name, \"(?x)(a{0,20}|b{0,20}) {0,20}c\")", "x option")]
-        [InlineData("RegexMatch(name, \"(?#c)a\")", "comments")]
-        [InlineData("RegexMatch(name, \"a{1000000}\")", "more than 20")]
-        [InlineData("RegexMatch(name, status)", "text literal")]
-        public void FindViolations_RegexPattern_Reported(string expression, string expected)
+        [DisplayName("RegexMatch is reported, whatever its pattern, since a pattern's cost cannot be bounded")]
+        [InlineData("RegexMatch(name, \"^[0-9]+$\")")]
+        [InlineData("RegexMatch(name, \"([ab]{0,20}){0,20}c\")")]
+        [InlineData("RegexMatch(name, status)")]
+        public void FindViolations_RegexMatch_Reported(string expression)
         {
-            Assert.Contains(Check(expression), violation => violation.Message.Contains(expected, StringComparison.Ordinal));
+            var violation = Assert.Single(Check(expression));
+
+            Assert.Equal(0, violation.Position);
         }
 
         [Fact]

@@ -116,7 +116,7 @@ namespace Polhem.Expressions
             if (node.Object is ConstantExpression { Value: Delegate helper } && _helpers.Contains(helper)
                 && node.Method.Name == nameof(Action.Invoke))
             {
-                CheckHelperCall(helper, node.Arguments);
+                CheckHelperCall(helper);
                 Visit(node.Arguments);
                 return node;
             }
@@ -130,7 +130,7 @@ namespace Polhem.Expressions
         {
             if (node.Expression is ConstantExpression { Value: Delegate helper } && _helpers.Contains(helper))
             {
-                CheckHelperCall(helper, node.Arguments);
+                CheckHelperCall(helper);
                 Visit(node.Arguments);
                 return node;
             }
@@ -167,21 +167,17 @@ namespace Polhem.Expressions
             return base.VisitBinary(node);
         }
 
-        // RegexMatch takes its pattern as a text literal the allowlist can read, and only a simple one.
-        private void CheckHelperCall(Delegate helper, IReadOnlyList<Expression> arguments)
+        // IMPORTANT: RegexMatch is refused. Matching without backtracking is linear in the input, but building the
+        // automaton costs what the pattern decides: patterns with no nesting and no count above 20 still allocated
+        // gigabytes in one call, past the timeout, and two hand-written rules to tell cheap patterns from costly ones
+        // were both bypassed. A definition file may still use it; a dedicated function (such as one that checks a text
+        // holds only digits) is the way to offer a common check to an untrusted author.
+        private void CheckHelperCall(Delegate helper)
         {
             if (helper.Method.Name != nameof(BusinessFunctions.RegexMatch)) { return; }
-            var position = ExpressionAllowlist.FindWord(_text, nameof(BusinessFunctions.RegexMatch));
-            if (arguments.Count < 2 || Unwrap(arguments[1]) is not ConstantExpression { Value: string pattern })
-            {
-                Report("The pattern of RegexMatch must be a text literal.", position);
-                return;
-            }
-            if (ExpressionAllowlist.CheckRegexPattern(pattern) is { } problem) { Report(problem, position); }
+            Report("RegexMatch is not allowed in an expression from an untrusted author.",
+                ExpressionAllowlist.FindWord(_text, nameof(BusinessFunctions.RegexMatch)));
         }
-
-        private static Expression Unwrap(Expression node) =>
-            node is UnaryExpression { NodeType: ExpressionType.Convert } convert ? Unwrap(convert.Operand) : node;
 
         private void CountConcatenation()
         {
