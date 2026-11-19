@@ -174,6 +174,8 @@ public static partial class NorthwindSchemaSeeder
         foreach (var seed in s_seeds.Where(s => s.Deferred is not null))
             ApplyDeferredRelations(dbAccess, seed, seedDir);
 
+        ClearDanglingParents(dbAccess);
+
         foreach (var seed in s_seeds)
             StampCompany(dbAccess, seed.Table);
 
@@ -396,6 +398,24 @@ public static partial class NorthwindSchemaSeeder
 
         companyDbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
             "UPDATE st_employee SET user_rowid = {0} WHERE sys_id = {1}", userRowId, account.EmployeeId));
+    }
+
+    /// <summary>
+    /// Sets a department's <c>parent_rowid</c> to the empty GUID when it names no department, so every top-level
+    /// department reads as having no parent.
+    /// </summary>
+    /// <remarks>
+    /// The seed gives no department a parent and leaves the column out. On a database created before schema format 2
+    /// the column's SQLite default was a random id, so each department pointed at a parent that does not exist.
+    /// The department tree already treats such a row as a root, but the form shows an empty parent that saves the
+    /// random id back, and a filter on "no parent" misses it. A parent that names a real department is kept.
+    /// </remarks>
+    /// <param name="dbAccess">The company database, which holds the departments.</param>
+    private static void ClearDanglingParents(DbAccess dbAccess)
+    {
+        dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+            "UPDATE st_department SET parent_rowid = {0} WHERE parent_rowid <> {0} AND NOT EXISTS " +
+            "(SELECT 1 FROM st_department p WHERE p.sys_rowid = st_department.parent_rowid)", Guid.Empty));
     }
 
     private static int Count(DbAccess dbAccess, string sql, Guid rowId)
