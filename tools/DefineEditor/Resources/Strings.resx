@@ -603,4 +603,34 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="DraftingStep_validate_draft" xml:space="preserve"><value>Validating the draft</value></data>
   <data name="DraftingStep_mark_ready" xml:space="preserve"><value>Marking the draft ready</value></data>
   <data name="DraftingStep_ask_user" xml:space="preserve"><value>Preparing questions for you</value></data>
+  <data name="ExpressionEditor_SymbolsTab" xml:space="preserve"><value>Names</value></data>
+  <data name="RuleAssistant_Tab" xml:space="preserve"><value>AI Assistant</value></data>
+  <data name="RuleAssistant_Sends" xml:space="preserve"><value>Your words and the form's field names, captions and list values are sent to Claude. Credential: {0}.</value></data>
+  <data name="RuleAssistant_NoCredential" xml:space="preserve"><value>Writing a rule from plain words uses Claude, and no credential was found on this computer. Sign in with ant auth login, or set the ANTHROPIC_API_KEY environment variable, then open this editor again.</value></data>
+  <data name="RuleAssistant_RequestWatermark" xml:space="preserve"><value>Describe the rule in your own words, such as: an order over 100,000 needs an approver</value></data>
+  <data name="RuleAssistant_Draft" xml:space="preserve"><value>Write Rule</value></data>
+  <data name="RuleAssistant_DraftTip" xml:space="preserve"><value>Starts over and writes a rule from what you describe.</value></data>
+  <data name="RuleAssistant_Revise" xml:space="preserve"><value>Revise</value></data>
+  <data name="RuleAssistant_ReviseTip" xml:space="preserve"><value>Changes the last rule, or answers the assistant's question, with what you write.</value></data>
+  <data name="RuleAssistant_Explain" xml:space="preserve"><value>Explain This Rule</value></data>
+  <data name="RuleAssistant_ExplainTip" xml:space="preserve"><value>Explains the rule as it is in the editor now, with sample rows.</value></data>
+  <data name="RuleAssistant_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="RuleAssistant_Working" xml:space="preserve"><value>Working…</value></data>
+  <data name="RuleAssistant_Stopped" xml:space="preserve"><value>Stopped.</value></data>
+  <data name="RuleAssistant_Failed" xml:space="preserve"><value>The request failed: {0}</value></data>
+  <data name="RuleAssistant_Samples" xml:space="preserve"><value>Samples (computed by the expression engine)</value></data>
+  <data name="RuleAssistant_Passes" xml:space="preserve"><value>Passes</value></data>
+  <data name="RuleAssistant_Blocked" xml:space="preserve"><value>Blocked</value></data>
+  <data name="RuleAssistant_Skipped" xml:space="preserve"><value>N/A</value></data>
+  <data name="RuleAssistant_Blank" xml:space="preserve"><value>(blank)</value></data>
+  <data name="RuleAssistant_DetailRows" xml:space="preserve"><value>{0}: {1} rows</value></data>
+  <data name="RuleAssistant_Message" xml:space="preserve"><value>Message shown when the rule fails</value></data>
+  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>Applying the rule writes these translations into the form's Language files.</value></data>
+  <data name="RuleAssistant_Apply" xml:space="preserve"><value>Apply Rule</value></data>
+  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>Replaces this rule's table, When, Condition and message with the draft, and closes the editor.</value></data>
+  <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} has unsaved changes and was not written.</value></data>
+  <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} could not be written: {1}</value></data>
+  <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>Rule {0}: translations written to {1}.</value></data>
+  <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>Rule {0}: {1}</value></data>
+  <data name="RuleAssistant_NoResult" xml:space="preserve"><value>The assistant did not finish. Describe the rule again, or try once more.</value></data>
 </root>

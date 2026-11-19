@@ -44,9 +44,14 @@ public partial class ExpressionEditorDialog : Window
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
-        if (_viewModel is not null) _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        if (_viewModel is not null)
+        {
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            if (_viewModel.RuleAssistant is { } previous) previous.Applied -= OnDraftApplied;
+        }
         _viewModel = DataContext as ExpressionEditorViewModel;
         if (_viewModel is null) return;
+        if (_viewModel.RuleAssistant is { } assistant) assistant.Applied += OnDraftApplied;
         Editor.Document = new TextDocument(_viewModel.Expression);
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         ShowError();
@@ -81,6 +86,9 @@ public partial class ExpressionEditorDialog : Window
         Editor.Document.Insert(Editor.CaretOffset, symbol.InsertText);
         Editor.Focus();
     }
+
+    // An applied draft replaces the whole rule, so the dialog closes as if confirmed and the document writes the rule.
+    private void OnDraftApplied(object? sender, EventArgs e) => Close(true);
 
     private void OnOk(object? sender, RoutedEventArgs e) => Close(true);
 

@@ -406,18 +406,33 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         var owner = GetOwnerWindow();
         if (owner is null) return false; // smoke / headless
         var editor = CreateExpressionEditor(property, component);
-        if (editor is null || !await ExpressionEditorDialog.ShowAsync(owner, editor)) return false;
-        return ApplyExpressionEdit(editor, property, component);
+        if (editor is null) return false;
+        if (component is FormRule rule) editor.RuleAssistant = CreateRuleAssistant(editor, rule, property);
+        try
+        {
+            if (!await ExpressionEditorDialog.ShowAsync(owner, editor)) return false;
+            var changed = ApplyExpressionEdit(editor, property, component);
+            if (editor.RuleAssistant?.AppliedRule is { } applied)
+                RuleMessagesApplied?.Invoke(this, new RuleMessagesAppliedEventArgs(applied.RuleId, editor.RuleAssistant.AppliedTranslations));
+            return changed;
+        }
+        finally
+        {
+            editor.RuleAssistant?.Dispose();
+        }
     }
 
     /// <summary>
     /// Writes what <paramref name="editor"/> holds back to <paramref name="component"/>: the expression, and a rule's
-    /// message when it was edited beside the condition. Returns whether anything changed.
+    /// message when it was edited beside the condition; or, when the user applied a drafted rule, the rule's table,
+    /// When, Condition and message. Returns whether anything changed.
     /// </summary>
     public static bool ApplyExpressionEdit(ExpressionEditorViewModel editor, PropertyDescriptor property, object component)
     {
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(property);
+        if (editor.RuleAssistant?.AppliedRule is { } applied && component is FormRule appliedTo)
+            return ApplyRule(applied, appliedTo);
         var changed = false;
         if (!string.Equals(property.GetValue(component) as string ?? string.Empty, editor.Expression, StringComparison.Ordinal))
         {

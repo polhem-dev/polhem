@@ -590,4 +590,34 @@
   <data name="DraftingStep_validate_draft" xml:space="preserve"><value>驗證草稿</value></data>
   <data name="DraftingStep_mark_ready" xml:space="preserve"><value>標記草稿完成</value></data>
   <data name="DraftingStep_ask_user" xml:space="preserve"><value>整理要問你的問題</value></data>
+  <data name="ExpressionEditor_SymbolsTab" xml:space="preserve"><value>可用名稱</value></data>
+  <data name="RuleAssistant_Tab" xml:space="preserve"><value>AI 助手</value></data>
+  <data name="RuleAssistant_Sends" xml:space="preserve"><value>您的描述，以及表單的欄位名稱、標題與清單值，會送給 Claude。憑證：{0}。</value></data>
+  <data name="RuleAssistant_NoCredential" xml:space="preserve"><value>用白話撰寫規則需要使用 Claude，但這台電腦上找不到任何憑證。請以 ant auth login 登入，或設定環境變數 ANTHROPIC_API_KEY，再重新開啟這個編輯器。</value></data>
+  <data name="RuleAssistant_RequestWatermark" xml:space="preserve"><value>用自己的話描述規則，例如：訂單金額超過 10 萬要有核准人</value></data>
+  <data name="RuleAssistant_Draft" xml:space="preserve"><value>產生規則</value></data>
+  <data name="RuleAssistant_DraftTip" xml:space="preserve"><value>重新開始，依您的描述產生規則。</value></data>
+  <data name="RuleAssistant_Revise" xml:space="preserve"><value>修改</value></data>
+  <data name="RuleAssistant_ReviseTip" xml:space="preserve"><value>依您輸入的內容修改上一條規則，或回答助手的提問。</value></data>
+  <data name="RuleAssistant_Explain" xml:space="preserve"><value>說明這條規則</value></data>
+  <data name="RuleAssistant_ExplainTip" xml:space="preserve"><value>說明編輯器中目前的規則，並附上測試資料。</value></data>
+  <data name="RuleAssistant_Stop" xml:space="preserve"><value>停止</value></data>
+  <data name="RuleAssistant_Working" xml:space="preserve"><value>處理中…</value></data>
+  <data name="RuleAssistant_Stopped" xml:space="preserve"><value>已停止。</value></data>
+  <data name="RuleAssistant_Failed" xml:space="preserve"><value>要求失敗：{0}</value></data>
+  <data name="RuleAssistant_Samples" xml:space="preserve"><value>測試資料（由運算式引擎實算）</value></data>
+  <data name="RuleAssistant_Passes" xml:space="preserve"><value>通過</value></data>
+  <data name="RuleAssistant_Blocked" xml:space="preserve"><value>擋下</value></data>
+  <data name="RuleAssistant_Skipped" xml:space="preserve"><value>不適用</value></data>
+  <data name="RuleAssistant_Blank" xml:space="preserve"><value>（空白）</value></data>
+  <data name="RuleAssistant_DetailRows" xml:space="preserve"><value>{0}：{1} 筆</value></data>
+  <data name="RuleAssistant_Message" xml:space="preserve"><value>規則不成立時顯示的訊息</value></data>
+  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>套用規則時，這些翻譯會寫入表單的語系檔。</value></data>
+  <data name="RuleAssistant_Apply" xml:space="preserve"><value>套用規則</value></data>
+  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>以草稿取代這條規則的資料表、When、Condition 與訊息，並關閉編輯器。</value></data>
+  <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} 有未儲存的變更，沒有寫入。</value></data>
+  <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} 無法寫入：{1}</value></data>
+  <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>
+  <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>規則 {0}：{1}</value></data>
+  <data name="RuleAssistant_NoResult" xml:space="preserve"><value>助手沒有完成。請重新描述規則，或再試一次。</value></data>
 </root>

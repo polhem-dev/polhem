@@ -76,5 +76,17 @@ namespace Polhem.Expressions
         /// <param name="member">A field, property, method or constructor.</param>
         /// <returns><see langword="true"/> when the member is on the allowlist.</returns>
         public static bool IsAllowedMember(MemberInfo member) => ExpressionAllowlist.IsAllowed(member);
+
+        /// <summary>
+        /// Whether an expression from an untrusted author may call <paramref name="function"/>, so an editor or a model
+        /// is offered only the helpers <see cref="FindViolations"/> accepts.
+        /// </summary>
+        /// <param name="function">A function of <see cref="HelperFunctions"/>.</param>
+        /// <returns><see langword="true"/> when the function is on the allowlist.</returns>
+        public static bool IsAllowedFunction(ExpressionFunction function)
+        {
+            ArgumentNullException.ThrowIfNull(function);
+            return ExpressionAllowlist.IsAllowedFunction(function.Name);
+        }
     }
 }

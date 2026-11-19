@@ -119,6 +119,17 @@ namespace Polhem.Expressions
             return s_scalarTypes.Contains(type) && s_scalarMembers.Contains(member.Name);
         }
 
+        /// <summary>Whether an expression from an untrusted author may call the helper function named <paramref name="name"/>.</summary>
+        /// <remarks>
+        /// IMPORTANT: RegexMatch is refused. Matching without backtracking is linear in the input, but building the
+        /// automaton costs what the pattern decides: patterns with no nesting and no count above 20 still allocated
+        /// gigabytes in one call, past the timeout, and two hand-written rules to tell cheap patterns from costly ones
+        /// were both bypassed. A definition file may still use it; a dedicated function (such as one that checks a text
+        /// holds only digits) is the way to offer a common check to an untrusted author.
+        /// </remarks>
+        public static bool IsAllowedFunction(string name) =>
+            !string.Equals(name, nameof(BusinessFunctions.RegexMatch), StringComparison.Ordinal);
+
         /// <summary>Whether a value of <paramref name="type"/> may appear in an allowed expression.</summary>
         public static bool IsValueType(Type type)
         {
