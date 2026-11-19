@@ -19,7 +19,7 @@ namespace Polhem.Web.Blazor.Fluent.Controls
     /// <typeparam name="TGridItem">The type of a row.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Obsolete("Use FluentDataGrid<TGridItem>. Fluent UI 5.1.0 fixes what PolhemDataGrid worked around. PolhemDataGrid is planned for removal in 2.0.")]
-    public sealed class PolhemDataGrid<TGridItem> : FluentDataGrid<TGridItem>
+    internal sealed class PolhemDataGrid<TGridItem> : FluentDataGrid<TGridItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="PolhemDataGrid{TGridItem}"/>.

@@ -12,7 +12,7 @@ namespace Polhem.UI.Core.Lists
     /// leaves the state on the page still showing. A head wraps each request in <see cref="BeginRequest"/> and
     /// <see cref="IsCurrent"/> so a slow response cannot overwrite a newer one.
     /// </remarks>
-    public sealed class ListPagingState
+    internal sealed class ListPagingState
     {
         /// <summary>The rows per page of a new state.</summary>
         public const int DefaultPageSize = 50;

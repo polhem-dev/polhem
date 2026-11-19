@@ -10,7 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Mud" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Fluent" />
     <InternalsVisibleTo Include="Polhem.Web.Blazor.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.BehaviorTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Mud.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Fluent.UnitTests" />
   </ItemGroup>
 
   <ItemGroup>

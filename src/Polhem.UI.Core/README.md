@@ -62,7 +62,7 @@ application's own data through its own implementation of `IFormApiConnector`.
   `RelativeDate`), independent of the backend method; `GetListFilterConverter` turns them into the `FilterNode` of a
   list request. See [List Query Conditions](../../docs/en/guides/list-query-conditions.md).
 - `Criteria/ColumnFilterCriteria` -- the column filters of a form list, kept as rows of its `QueryCriteria`, so the
-  query pane shows them. `Lists/ListFilterState`, which kept them apart, is obsolete and no longer read.
+  query pane shows them.
 
 ### The Form Data Object
 
@@ -90,9 +90,9 @@ application's own data through its own implementation of `IFormApiConnector`.
 The field editors and grids of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` share one set of rules, so the heads
 behave the same: whether a field accepts input, how numbers and dates are formatted and parsed, what a grid cell
 shows, how a lookup selection is written back, and when a relation field offers to open its record. These rules
-(except `TimeFieldFormat`, below), the CRUD preconditions of a form, the live recomputation engine and the card list
-state are internal to the framework's UI packages (the `InternalsVisibleTo` items in the project file); an application
-reaches them through the heads' editors, grids and form views.
+(except `TimeFieldFormat`, below), the CRUD preconditions of a form, the live recomputation engine and the paging and card
+list state are internal to the framework's UI packages (the `InternalsVisibleTo` items in the project file); an
+application reaches them through the heads' editors, grids and form views.
 
 - `TimeFieldFormat` -- the value a time-of-day editor writes back.
 
@@ -130,5 +130,5 @@ reaches them through the heads' editors, grids and form views.
   `FieldValueChangeFailedEventArgs`
 - `Connectors/` -- `FormListResult`, `FormDataResult`, `FormDeleteResult`
 - `Criteria/` -- `QueryCriteria`, `CriteriaRow`, `CriteriaField`, `CriteriaOperator`, `RelativeDate`, `GetListFilterConverter`, `ColumnFilterCriteria`
-- `Lists/` -- `ListFilterState`, `ListPagingState`, `ColumnFilterKind`
+- `Lists/` -- `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`

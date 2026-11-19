@@ -136,7 +136,7 @@ namespace Polhem.Web.Blazor.Components
         protected Guid? PendingDeleteRowId => _pendingDeleteRowId;
 
         /// <summary>Gets the paging position and the sort of the list.</summary>
-        protected ListPagingState Paging => _paging;
+        internal ListPagingState Paging => _paging;
 
         /// <summary>
         /// Gets or sets the program identifier (e.g. "Employee"). Drives the

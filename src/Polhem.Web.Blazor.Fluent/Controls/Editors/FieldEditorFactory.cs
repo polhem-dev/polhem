@@ -5,7 +5,7 @@ namespace Polhem.Web.Blazor.Fluent.Controls.Editors
     /// <summary>
     /// Maps a <see cref="ControlType"/> to the Fluent UI field editor that renders it.
     /// </summary>
-    public static class FieldEditorFactory
+    internal static class FieldEditorFactory
     {
         /// <summary>
         /// Gets the field editor component type for <paramref name="controlType"/>. <see cref="ControlType.Auto"/> and

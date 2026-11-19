@@ -22,6 +22,10 @@ and `PolhemVerifyBrowserFramework` for the shared framework). The closure tests 
 framework and no reference marked `PrivateAssets="all"`; the targets cover the first, and the tests also check each
 assembly's compiled references for the second.
 
+**A new type or member that only the UI packages use is `internal`**; `Polhem.Web.Blazor` exposes it to `.Mud` and
+`.Fluent` through `InternalsVisibleTo`, since a third-party UI package is not supported. Razor components, component
+bases and component parameter types cannot be internal; ADR-059 decision 4 says why.
+
 **Put a rule in the shared base and only markup in the UI package.** A new behavior gets a test in
 `tests/Polhem.Web.Blazor.BehaviorTests`, which every UI package derives from, not a test against one package's markup.
 Do not add a generic control interface such as `IGrid`.

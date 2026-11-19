@@ -13,7 +13,7 @@ namespace Polhem.Web.Blazor.Components
     /// or a host that composes its own container — falls back to one over the framework's shipped
     /// translations, so the components never fail for want of a localizer.
     /// </remarks>
-    public static class PolhemBlazorText
+    internal static class PolhemBlazorText
     {
         private static readonly IStringLocalizer s_fallback =
             new LanguageResourceStringLocalizer<PolhemUIText>(

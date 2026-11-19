@@ -200,3 +200,34 @@ Polhem.Web.Blazor.Controls.CriteriaPanelBase.AddCurrentUserAsync(Polhem.UI.Core.
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.ValueText(Polhem.UI.Core.Criteria.CriteriaValue value) -> string!
 Polhem.Web.Blazor.Identity.BlazorUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
 static Polhem.Web.Blazor.Controls.CriteriaPanelBase.CanAddCurrentUser(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool
+*REMOVED*Polhem.Web.Blazor.Components.PolhemBlazorText
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.Editors.FormScopeContext.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorHost.Activate(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorHost.Active.get -> Polhem.Web.Blazor.Controls.IGridEditorSlot?
+*REMOVED*Polhem.Web.Blazor.Controls.GridEditorHost.Release(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
+*REMOVED*Polhem.Web.Blazor.Controls.IGridEditorSlot
+*REMOVED*Polhem.Web.Blazor.Controls.IGridEditorSlot.RefreshEditorState() -> void
+*REMOVED*Polhem.Web.Blazor.Shell.PolhemShellText
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.CompanyEmpty = "CompanyEmpty" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.CompanyId = "CompanyId" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.EnterCompanyFailed = "EnterCompanyFailed" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.Language = "Language" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.LanguageHint = "LanguageHint" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.MenuEmpty = "MenuEmpty" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.MenuLoadFailed = "MenuLoadFailed" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.SignOut = "SignOut" -> string!
+*REMOVED*const Polhem.Web.Blazor.Shell.PolhemShellText.ToggleMenu = "ToggleMenu" -> string!
+*REMOVED*static Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(System.IServiceProvider? services) -> Microsoft.Extensions.Localization.IStringLocalizer!
+*REMOVED*static Polhem.Web.Blazor.Shell.PolhemShellText.Format(string! key, params object?[]! args) -> string!
+*REMOVED*static Polhem.Web.Blazor.Shell.PolhemShellText.Get(string! key) -> string!
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
+*REMOVED*Polhem.Web.Blazor.Components.FormPageBase.Paging.get -> Polhem.UI.Core.Lists.ListPagingState!
+*REMOVED*Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
+*REMOVED*Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.set -> void
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState?
+*REMOVED*Polhem.Web.Blazor.Controls.GridControlBase.Filters.set -> void

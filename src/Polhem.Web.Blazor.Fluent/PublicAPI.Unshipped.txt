@@ -13,3 +13,7 @@ override Polhem.Web.Blazor.Fluent.Components.FormPage.SupportsQueryPane.get -> b
 ~override Polhem.Web.Blazor.Fluent.Controls.CriteriaChips.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Fluent.Controls.UserQueryBar.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+*REMOVED*Polhem.Web.Blazor.Fluent.Controls.Editors.FieldEditorFactory
+*REMOVED*Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>
+*REMOVED*Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>.PolhemDataGrid(Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration! configuration) -> void
+*REMOVED*static Polhem.Web.Blazor.Fluent.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!

@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>
         /// Gets the cell showing the editor, or <c>null</c>.
         /// </summary>
-        public IGridEditorSlot? Active { get; private set; }
+        internal IGridEditorSlot? Active { get; private set; }
 
         /// <summary>
         /// Gets or sets what builds the parameters of the editor a cell opens, from the cell's column and row. The grid
@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Controls
         /// Gives the editor to <paramref name="slot"/>, closing the one open elsewhere.
         /// </summary>
         /// <param name="slot">The cell that takes the editor.</param>
-        public void Activate(IGridEditorSlot slot)
+        internal void Activate(IGridEditorSlot slot)
         {
             ArgumentNullException.ThrowIfNull(slot);
             if (ReferenceEquals(Active, slot)) return;
@@ -48,7 +48,7 @@ namespace Polhem.Web.Blazor.Controls
         /// Forgets <paramref name="slot"/> without rendering it, for a cell that is being disposed.
         /// </summary>
         /// <param name="slot">The cell that goes away.</param>
-        public void Release(IGridEditorSlot slot)
+        internal void Release(IGridEditorSlot slot)
         {
             if (ReferenceEquals(Active, slot)) Active = null;
         }

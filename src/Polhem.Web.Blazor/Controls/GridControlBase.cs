@@ -13,7 +13,6 @@ using Polhem.Web.Blazor.Components;
 using Polhem.Web.Blazor.Controls.Editors;
 using Polhem.UI.Core.DataObjects;
 using Polhem.UI.Core.Editing;
-using Polhem.UI.Core.Lists;
 
 namespace Polhem.Web.Blazor.Controls
 {
@@ -168,11 +167,6 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         [Parameter]
         public EventCallback<string> OnSortRequested { get; set; }
-
-        /// <summary>Gets or sets a filter state that the grid no longer reads.</summary>
-        [Parameter]
-        [Obsolete("The grid reads ColumnFilters, whose rows are conditions of the list's QueryCriteria.")]
-        public ListFilterState? Filters { get; set; }
 
         /// <summary>
         /// Gets or sets the list's column filters, kept as rows of its query criteria. With <see cref="OnFilterChanged"/>,

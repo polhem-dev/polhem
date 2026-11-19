@@ -8,7 +8,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
     /// <summary>
     /// The ambient binding scope a <see cref="FormScope"/> cascades to the field editors inside it.
     /// </summary>
-    public sealed class FormScopeContext
+    internal sealed class FormScopeContext
     {
         /// <summary>
         /// Initializes a new instance of <see cref="FormScopeContext"/>.
