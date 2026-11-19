@@ -12,6 +12,12 @@
         Title="{Binding Title}">
 
     <Window.Styles>
+        <!-- The theme draws a text box as a plain fill; beside the outlined expression area it needs an outline to read as
+             an input. -->
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        </Style>
         <Style Selector="Border.passes">
             <Setter Property="Background" Value="{DynamicResource SemiColorSuccess}"/>
         </Style>
@@ -111,13 +117,6 @@
                          IsVisible="{Binding RuleAssistant, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Border BorderThickness="1" CornerRadius="4" Padding="10,8"
                             BorderBrush="{DynamicResource SemiColorBorder}">
-                    <Border.Styles>
-                        <!-- The theme's text box has a fill and no outline; inside this bordered panel it needs one to read as an input. -->
-                        <Style Selector="TextBox">
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
-                        </Style>
-                    </Border.Styles>
                     <DockPanel DataContext="{Binding RuleAssistant}" x:DataType="vm:RuleAssistantViewModel">
                         <StackPanel DockPanel.Dock="Top" Spacing="6">
                             <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
