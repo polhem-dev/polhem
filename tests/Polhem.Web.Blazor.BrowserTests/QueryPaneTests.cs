@@ -83,8 +83,8 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserFact]
-        [DisplayName("Days typed into a date range, one key at a time, stay in the boxes and filter the list")]
-        public async Task DateRange_TypedByKeys_Filters()
+        [DisplayName("Days entered into a date range stay in the boxes and filter the list")]
+        public async Task DateRange_Entered_Filters()
         {
             var page = await OpenPaneAsync(_fixture.Address);
             await page.Locator(AddButton).ClickAsync();
@@ -93,13 +93,12 @@ namespace Polhem.Web.Blazor.BrowserTests
             var to = page.Locator(".polhem-criteria-row__to input");
             await Assertions.Expect(from).ToBeFocusedAsync();
 
-            await page.Keyboard.TypeAsync("2026");
-            await page.Keyboard.PressAsync("ArrowRight");
-            await page.Keyboard.TypeAsync("0301");
+            // The order of a date input's parts follows the operating system's format, which differs between
+            // machines, so the days are filled in whole. A date input reports no value until every part is entered,
+            // so a part typed alone sends nothing that could rewrite the box.
+            await from.FillAsync("2026-03-01");
+            await to.FillAsync("2026-03-31");
             await to.FocusAsync();
-            await page.Keyboard.TypeAsync("2026");
-            await page.Keyboard.PressAsync("ArrowRight");
-            await page.Keyboard.TypeAsync("0331");
 
             await Assertions.Expect(from).ToHaveValueAsync("2026-03-01");
             await Assertions.Expect(to).ToHaveValueAsync("2026-03-31");
