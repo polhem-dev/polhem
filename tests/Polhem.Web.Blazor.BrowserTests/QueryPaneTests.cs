@@ -178,6 +178,27 @@ namespace Polhem.Web.Blazor.BrowserTests
         }
 
         [BrowserTheory]
+        [InlineData(false)]
+        [InlineData(true)]
+        [DisplayName("After the name dialog of Save as closes, the focus is back on the saved query actions button")]
+        public async Task SaveAs_Closed_ReturnsFocusToActions(bool slowLink)
+        {
+            var page = await OpenPaneAsync(slowLink ? _fixture.SlowAddress : _fixture.Address);
+            await AddNameAsync(page);
+            await page.Keyboard.TypeAsync("Ali");
+            var actions = page.Locator(".polhem-user-query-bar__actions button");
+
+            await actions.ClickAsync();
+            await page.Locator(".polhem-user-query-bar__save-as").ClickAsync();
+            await Assertions.Expect(page.Locator(".polhem-name-prompt-dialog__name input")).ToBeFocusedAsync();
+            await page.Keyboard.TypeAsync("Back");
+            await page.Keyboard.PressAsync("Enter");
+
+            await Assertions.Expect(page.Locator(".polhem-name-prompt-dialog__name")).ToHaveCountAsync(0);
+            await Assertions.Expect(actions).ToBeFocusedAsync();
+        }
+
+        [BrowserTheory]
         [InlineData(1400, false)]
         [InlineData(900, true)]
         [DisplayName("The pane sits beside a wide list, and lies over the list when beside it the list would be too narrow")]

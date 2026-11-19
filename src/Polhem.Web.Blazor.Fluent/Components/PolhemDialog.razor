@@ -60,7 +60,24 @@
         // dialog that may not be dismissed uses the guard in `polhem-fluent-dialog.js` instead. It goes on before the
         // dialog opens, so no Escape reaches the dialog unguarded.
         if (_escapeGuarded == Dismissable) await UpdateEscapeGuardAsync(_dialog.Id).ConfigureAwait(true);
-        if (firstRender) await _dialog.ShowAsync().ConfigureAwait(true);
+        if (!firstRender) return;
+        await CallModuleAsync("rememberFocus", _dialog.Id).ConfigureAwait(true);
+        await _dialog.ShowAsync().ConfigureAwait(true);
+    }
+
+    // The focus calls only help, so a failure leaves the dialog working: an older copy of the module that a browser kept
+    // after an update has no such function, and the circuit may already be gone when the dialog leaves.
+    private async Task CallModuleAsync(string identifier, string? id)
+    {
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", ModulePath).ConfigureAwait(true);
+            await _module.InvokeVoidAsync(identifier, id).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or TaskCanceledException)
+        {
+            // The dialog does not depend on the result; see the note above the method.
+        }
     }
 
     private async Task UpdateEscapeGuardAsync(string? id)
@@ -84,6 +101,7 @@
     public async ValueTask DisposeAsync()
     {
         if (_module is null) return;
+        await CallModuleAsync("restoreFocus", _dialog?.Id).ConfigureAwait(true);
         if (_escapeGuarded)
         {
             try
