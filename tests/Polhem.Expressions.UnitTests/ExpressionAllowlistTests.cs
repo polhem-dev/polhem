@@ -84,6 +84,15 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Theory]
+        [DisplayName("A number formatted with a format string is reported, since its precision has no upper bound")]
+        [InlineData("amount.ToString(\"F99999999\").Length > 0")]
+        [InlineData("quantity.ToString(\"D9\") == \"x\"")]
+        public void FindViolations_NumberFormat_Reported(string expression)
+        {
+            Assert.NotEmpty(Check(expression));
+        }
+
+        [Theory]
         [DisplayName("A type test or cast to a type outside the value types is reported")]
         [InlineData("name is string")]
         [InlineData("name as object == null")]

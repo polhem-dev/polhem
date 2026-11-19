@@ -75,7 +75,7 @@ namespace Polhem.Expressions
         };
 
         // The numeric, Boolean and character types share their small surface.
-        private static readonly HashSet<string> s_scalarMembers = ["ToString", "Equals", "CompareTo", "MaxValue", "MinValue"];
+        private static readonly HashSet<string> s_scalarMembers = ["Equals", "CompareTo", "MaxValue", "MinValue"];
 
         private static readonly HashSet<Type> s_scalarTypes =
         [
@@ -102,8 +102,12 @@ namespace Polhem.Expressions
             }
             if (member is MethodInfo { IsSpecialName: true } method && method.Name.StartsWith("op_", StringComparison.Ordinal))
                 return ValueTypes.Contains(type);
-            // Every value type declares its own ToString; it formats the value and nothing more.
-            if (member is MethodInfo { Name: nameof(ToString) } && ValueTypes.Contains(type)) { return true; }
+            // Every value type declares its own ToString. A date, a time span, a key or a text formats to a length its
+            // format string bounds, so their overloads are allowed. IMPORTANT: a number's format sets a precision
+            // with no upper bound (`amount.ToString("F99999999")` allocates hundreds of megabytes), so a number may
+            // only use the parameterless overload.
+            if (member is MethodInfo { Name: nameof(ToString) } toString && ValueTypes.Contains(type))
+                return !s_scalarTypes.Contains(type) || toString.GetParameters().Length == 0;
             if (s_members.TryGetValue(type, out var names) && names.Contains(member.Name)) { return true; }
             return s_scalarTypes.Contains(type) && s_scalarMembers.Contains(member.Name);
         }
