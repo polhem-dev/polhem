@@ -57,6 +57,13 @@ namespace Polhem.Definition.Drafting.Rules
         }
 
         /// <summary>
+        /// Raised before each call to the model and after it returns, with what the request has cost so far, so a host
+        /// can show progress during a request that takes several calls.
+        /// </summary>
+        /// <remarks>Raised on the thread the request runs on, which is not necessarily the thread that started it.</remarks>
+        public event EventHandler<RuleDraftingProgress>? Progress;
+
+        /// <summary>
         /// Starts a new conversation and asks the model for a rule that checks what <paramref name="request"/> says.
         /// </summary>
         /// <param name="request">What the rule should check, in the user's words, such as "an amount over 100,000 needs an approver".</param>
@@ -99,7 +106,7 @@ namespace Polhem.Definition.Drafting.Rules
                 // The rule is evaluated for every sample, so it is checked as untrusted text first: a rule from
                 // anywhere but a developer's definition file could otherwise reach the parser before its size is checked.
                 if (_toolbox.CheckRule(rule) is { } problem)
-                    return new RuleExplanationResult(null, $"The rule cannot be explained: {problem}");
+                    return new RuleExplanationResult(null, $"The rule cannot be explained: {problem}", RuleDraftingUsage.None);
                 _toolbox.AcceptedExplanation = null;
                 _toolbox.ExplainedRule = rule;
                 var history = new List<ChatMessage>
@@ -107,9 +114,9 @@ namespace Polhem.Definition.Drafting.Rules
                     new(ChatRole.System, RuleDraftingPrompt.ExplainSystemPrompt(_schema, _options)),
                     new(ChatRole.User, RuleDraftingPrompt.ExplainRequest(rule, _options)),
                 };
-                var reply = await RunToolLoopAsync(history, _explainOptions, _toolbox.SubmitExplanation,
+                var (reply, usage) = await RunToolLoopAsync(history, _explainOptions, _toolbox.SubmitExplanation,
                     () => _toolbox.AcceptedExplanation is not null, cancellationToken).ConfigureAwait(false);
-                return new RuleExplanationResult(_toolbox.AcceptedExplanation, reply);
+                return new RuleExplanationResult(_toolbox.AcceptedExplanation, reply, usage);
             }
             finally
             {
@@ -139,11 +146,11 @@ namespace Polhem.Definition.Drafting.Rules
                 }
                 _toolbox.AcceptedRule = null;
                 _history.Add(new ChatMessage(ChatRole.User, reset ? RuleDraftingPrompt.FirstMessage(text, _options) : text));
-                var reply = await RunToolLoopAsync(_history, _draftOptions, _toolbox.SubmitRule,
+                var (reply, usage) = await RunToolLoopAsync(_history, _draftOptions, _toolbox.SubmitRule,
                     () => _toolbox.AcceptedRule is not null, cancellationToken).ConfigureAwait(false);
                 if (_toolbox.AcceptedRule is { } accepted) { _toolbox.RevisedRuleId = accepted.RuleId; }
                 completed = true;
-                return new RuleDraftResult(_toolbox.AcceptedRule, reply);
+                return new RuleDraftResult(_toolbox.AcceptedRule, reply, usage);
             }
             finally
             {
@@ -157,34 +164,47 @@ namespace Polhem.Definition.Drafting.Rules
             }
         }
 
-        // Asks, runs the one tool the model may call, and stops once a submission is accepted or the rounds run out. The
-        // last request after an acceptance, or when the rounds run out, lets the model call no tool, so it replies.
-        private async Task<string> RunToolLoopAsync(List<ChatMessage> history, ChatOptions toolOptions, AIFunction tool,
-            Func<bool> accepted, CancellationToken cancellationToken)
+        // Asks, runs the one tool the model may call, and stops as soon as a submission is accepted: the model would only
+        // close with a sentence the result does not need. When the rounds run out, the last request lets the model call
+        // no tool, so it replies with why it could not finish.
+        private async Task<(string Reply, RuleDraftingUsage Usage)> RunToolLoopAsync(List<ChatMessage> history,
+            ChatOptions toolOptions, AIFunction tool, Func<bool> accepted, CancellationToken cancellationToken)
         {
             // IMPORTANT: the reply request keeps the same tool list and only forbids calling it. A provider that binds the
             // model's reasoning to the tools it was produced with (Claude does) refuses a request whose tool list changed.
             var replyOptions = toolOptions.Clone();
             replyOptions.ToolMode = ChatToolMode.None;
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            int calls = 0;
+            long inputTokens = 0;
+            long outputTokens = 0;
+            RuleDraftingUsage Usage() => new(calls, inputTokens, outputTokens, clock.Elapsed);
+
             var reply = string.Empty;
             for (var round = 0; ; round++)
             {
-                var lastRound = accepted() || round >= _options.MaxToolRounds;
+                if (accepted()) { return (string.Empty, Usage()); }
+                var lastRound = round >= _options.MaxToolRounds;
+                calls++;
+                Progress?.Invoke(this, new RuleDraftingProgress(Usage(), WaitingForModel: true));
                 var response = await _chatClient.GetResponseAsync(history.ToList(), lastRound ? replyOptions : toolOptions,
                     cancellationToken).ConfigureAwait(false);
-                var calls = new List<FunctionCallContent>();
+                inputTokens += response.Usage?.InputTokenCount ?? 0;
+                outputTokens += response.Usage?.OutputTokenCount ?? 0;
+                Progress?.Invoke(this, new RuleDraftingProgress(Usage(), WaitingForModel: false));
+                var requested = new List<FunctionCallContent>();
                 foreach (var message in response.Messages)
                 {
                     history.Add(message);
-                    calls.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
+                    requested.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
                     if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text)) { reply = message.Text.Trim(); }
                 }
-                if (calls.Count == 0) { return reply; }
+                if (requested.Count == 0) { return (reply, Usage()); }
 
                 var results = new List<AIContent>();
-                for (int i = 0; i < calls.Count; i++)
+                for (int i = 0; i < requested.Count; i++)
                 {
-                    var call = calls[i];
+                    var call = requested[i];
                     cancellationToken.ThrowIfCancellationRequested();
                     // One submission per response: each costs the samples' evaluation, so a response may not multiply it.
                     results.Add(lastRound ? new FunctionResultContent(call.CallId, "Not run: reply to the user instead.")
@@ -192,7 +212,7 @@ namespace Polhem.Definition.Drafting.Rules
                         : await InvokeAsync(tool, call, cancellationToken).ConfigureAwait(false));
                 }
                 history.Add(new ChatMessage(ChatRole.Tool, results));
-                if (lastRound) { return reply; }
+                if (lastRound) { return (reply, Usage()); }
             }
         }
 

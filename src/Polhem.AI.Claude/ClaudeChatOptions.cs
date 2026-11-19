@@ -18,13 +18,13 @@ namespace Polhem.AI.Claude
         public string Model { get; set; } = DefaultModel;
 
         /// <summary>
-        /// Gets or sets the effort sent with every request. The default is <see cref="ClaudeEffort.High"/>.
+        /// Gets or sets the effort sent with every request. The default is <see cref="ClaudeEffort.Medium"/>.
         /// </summary>
         /// <remarks>
         /// The effort is always sent, because the default of a model changes between models: it is medium on Claude Opus
         /// 5.5 and high on Claude Opus 5.
         /// </remarks>
-        public ClaudeEffort Effort { get; set; } = ClaudeEffort.High;
+        public ClaudeEffort Effort { get; set; } = ClaudeEffort.Medium;
 
         /// <summary>
         /// Gets or sets the most tokens one response may produce, thinking included. The default is 64000.

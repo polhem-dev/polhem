@@ -53,7 +53,7 @@ namespace Polhem.Definition.Drafting.Rules
             2. Call submit_rule with the rule, the explanation in {{ReplyLanguage(options)}}, and three to six samples:
                rows of values with what the rule should do with each (Passes, Blocked, or Skipped when it does not
                apply), at least one that passes and one that is blocked. A sample holds the fields the rule reads from
-               its table; a master rule that reads a detail table also gives the sample's detail rows (a rule on a detail
+               its table, and a field it leaves out is empty; a master rule that reads a detail table also gives the sample's detail rows (a rule on a detail
                table, and a rule that reads none, gives an empty list).
             3. If the result is not accepted, fix what it names and call submit_rule again.
             4. When it is accepted, reply in one short sentence in {{ReplyLanguage(options)}}.
@@ -77,8 +77,8 @@ namespace Polhem.Definition.Drafting.Rules
 
             Call submit_explanation with two or three plain sentences in {{ReplyLanguage(options)}}, with no code, and
             three to six samples: rows of values with what the rule does with each (Passes, Blocked, or Skipped when it
-            does not apply). A sample holds the fields the rule reads from its table, and, for a master rule that reads a
-            detail table, the sample's detail rows. If the result is not
+            does not apply). A sample holds the fields the rule reads from its table (a field it leaves out is empty),
+            and, for a master rule that reads a detail table, the sample's detail rows. If the result is not
             accepted, fix what it names and call again. When it is accepted, reply in one short sentence.
             """;
 

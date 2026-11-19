@@ -196,11 +196,8 @@ namespace Polhem.Definition.Drafting.Rules
                     problems.Add(TooLong($"{label}'s description", MaxDescriptionLength));
                     continue;
                 }
-                if (sample.Values is not { Count: > 0 })
-                {
-                    problems.Add($"{label} gives no values: list each field the rule reads with its value, or the rule sees empty fields.");
-                    continue;
-                }
+                // A field a sample leaves out is empty, so a sample may give no values at all: every field is empty. A
+                // value the model left out by mistake changes the computed outcome, which the comparison below refuses.
                 var values = ReadValues(table, sample.Values, label, problems);
                 var detailRows = ReadDetailRows(table, sample.DetailRows, label, problems);
                 if (values is null || detailRows is null) { continue; }

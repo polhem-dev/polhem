@@ -31,6 +31,9 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private RuleDrafting? _drafting;
     private CancellationTokenSource? _cancellation;
     private bool _hasConversation;
+    // Written by the drafting session's progress event, which may run on any thread, and read by the timer that updates
+    // the progress line on the UI thread.
+    private RuleDraftingProgress? _progress;
 
     /// <param name="schema">The form; it is read, never changed.</param>
     /// <param name="ruleId">The rule being edited. The model drafts against the form without it, so its id is free.</param>
@@ -96,6 +99,13 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     /// <summary>What the model said last, or why the request failed.</summary>
     [ObservableProperty]
     private string _reply = string.Empty;
+
+    /// <summary>
+    /// While a request runs, which call to the model it is waiting for and for how long; after it, the calls, the tokens
+    /// and the time it took. Empty before the first request.
+    /// </summary>
+    [ObservableProperty]
+    private string _usageText = string.Empty;
 
     /// <summary>Whether <see cref="Reply"/> reports a failure.</summary>
     [ObservableProperty]
@@ -231,13 +241,22 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private async Task RunAsync(Func<RuleDrafting, CancellationToken, Task> request)
     {
         _cancellation = new CancellationTokenSource();
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        Volatile.Write(ref _progress, null);
         IsBusy = true;
         IsReplyError = false;
-        Reply = L("RuleAssistant_Working");
+        Reply = string.Empty;
+        UsageText = DescribeProgress(clock.Elapsed);
+        using var ticking = new CancellationTokenSource();
+        var ticker = TickAsync(clock, ticking.Token);
         try
         {
             _client ??= _createClient();
-            _drafting ??= new RuleDrafting(_client, _schema, _calculator, _options);
+            if (_drafting is null)
+            {
+                _drafting = new RuleDrafting(_client, _schema, _calculator, _options);
+                _drafting.Progress += (_, e) => Volatile.Write(ref _progress, e);
+            }
             await request(_drafting, _cancellation.Token);
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
@@ -254,12 +273,52 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         }
         finally
         {
+            await ticking.CancelAsync();
+            await ticker;
+            UsageText = DescribeUsage(Volatile.Read(ref _progress)?.Usage, clock.Elapsed);
             _cancellation.Dispose();
             _cancellation = null;
             IsBusy = false;
             DraftCommand.NotifyCanExecuteChanged();
             ReviseCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    // Runs on the UI thread, as the request does, so the progress line changes there.
+    private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500, cancellationToken);
+                UsageText = DescribeProgress(clock.Elapsed);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The request ended; the caller writes the final usage.
+        }
+    }
+
+    private string DescribeProgress(TimeSpan elapsed)
+    {
+        var progress = Volatile.Read(ref _progress);
+        var seconds = (int)elapsed.TotalSeconds;
+        return progress is null || progress.WaitingForModel
+            ? L("RuleAssistant_ProgressCalling", Math.Max(progress?.Usage.Calls ?? 1, 1), seconds)
+            : L("RuleAssistant_ProgressChecking", progress.Usage.Calls, seconds);
+    }
+
+    /// <summary>The calls, the tokens and the time a finished request took, in one line.</summary>
+    public static string DescribeUsage(RuleDraftingUsage? usage, TimeSpan elapsed)
+    {
+        var seconds = (int)Math.Round(elapsed.TotalSeconds);
+        if (usage is null || usage.Calls == 0) return L("RuleAssistant_UsageNoCalls", seconds);
+        return usage.InputTokens == 0 && usage.OutputTokens == 0
+            ? L("RuleAssistant_UsageNoTokens", usage.Calls, seconds)
+            : L("RuleAssistant_Usage", usage.Calls, usage.InputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture),
+                usage.OutputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), seconds);
     }
 
     /// <summary>The drafted rule's table, When and Condition, one per line.</summary>
@@ -278,7 +337,7 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         ArgumentNullException.ThrowIfNull(sample);
         var parts = sample.Values.Select(pair => $"{pair.Key} = {FormatValue(pair.Value)}").ToList();
         parts.AddRange(sample.DetailRows.Select(pair => L("RuleAssistant_DetailRows", pair.Key, pair.Value.Count)));
-        return string.Join(", ", parts);
+        return parts.Count == 0 ? L("RuleAssistant_AllBlank") : string.Join(", ", parts);
     }
 
     private static string FormatValue(object? value) => value switch

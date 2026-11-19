@@ -80,12 +80,17 @@ expression engine computes, for every sample row, the outcome the model claimed.
 model, which tries again within `MaxToolRounds`. A sample may carry detail rows for a rule that reads a detail table.
 The samples in the result are the engine's: a person who cannot read an expression checks the rule by them.
 `ReviseAsync` continues the conversation with a correction; `ExplainAsync` is a conversation of its own.
+A request ends as soon as a submission is accepted, so its `Reply` is then empty; the model's words are kept for a
+question it asks or for why it could not finish. Each result carries its `Usage` (the calls to the model, the tokens the
+model reported and the time), and the `Progress` event reports it before and after every call, for a host that shows
+progress during a request.
 
 | Type | Purpose |
 |------|---------|
 | `RuleDrafting` | `DraftAsync`, `ReviseAsync`, `ExplainAsync` |
 | `RuleDraft` | The accepted rule, its message and translations, the explanation and the computed samples; `ToFormRule()` |
 | `RuleDraftSample` | One sample row (and its detail rows) with the engine's `RuleSampleOutcome`: `Passes`, `Blocked` or `Skipped` |
+| `RuleDraftingUsage`, `RuleDraftingProgress` | What a request has cost so far, in the results and the `Progress` event |
 | `RuleDraftingOptions` | Chat options, the rounds allowed, the reply language, the message languages, the function catalog and the samples' time zone |
 
 ## The host

@@ -126,6 +126,8 @@
                                 <Button Classes="tool" Margin="0,0,6,4" Command="{Binding StopCommand}"
                                         Content="{loc:Loc RuleAssistant_Stop}" IsVisible="{Binding IsBusy}"/>
                             </WrapPanel>
+                            <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
+                                       IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                             <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap"
                                                  IsVisible="{Binding !IsReplyError}" Classes="muted"/>
                             <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap" IsVisible="{Binding IsReplyError}"
