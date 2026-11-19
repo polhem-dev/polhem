@@ -53,6 +53,30 @@ if (session.IsReady)
 - **慣例由宿主負責。** 草稿只給關聯欄位相關表單的 ProgId。系統欄位、`ft_` 資料表名稱、`company` 類別，
   以及關聯的 `ref_*` 欄位，都在宿主套用框架的表單慣例時補上，與活頁簿匯入相同。
 
+## 用白話產生規則
+
+`RuleDrafting` 依使用者描述「要檢查什麼」，為表單寫出一條驗證規則（`FormRule`），例如「已核准的訂單至少要有一筆明細」；也能用白話說明既有的規則。
+
+```csharp
+var drafting = new RuleDrafting(chatClient, schema, new FormExpressionCalculator(evaluator), new RuleDraftingOptions
+{
+    MessageLanguages = ["zh-TW"],                       // 應用程式已有的語系
+    ReplyCulture = CultureInfo.GetCultureInfo("zh-TW"),
+    Functions = functions,                              // 取自運算式引擎的函式目錄
+});
+var result = await drafting.DraftAsync("已核准的訂單至少要有一筆明細");
+if (result.Draft is { } rule) { /* 顯示 rule.Explanation 與 rule.Samples，再加入 rule.ToFormRule() */ }
+```
+
+模型只負責提案。它透過工具提交規則，只有在運算式通過 `FormExpressionCalculator.ValidateUntrustedExpression`（大小上限、解析與運算式允許清單），而且運算式引擎對每一筆測試資料算出的結果都和模型宣稱的一致時，才會被接受；否則原因會退回給模型，在 `MaxToolRounds` 內重試。規則會讀取明細表時，測試資料可以附帶明細列。結果裡的測試資料是引擎實算的：看不懂運算式的人，就靠它們確認規則。`ReviseAsync` 在同一段對話裡修正；`ExplainAsync` 是獨立的對話。
+
+| 型別 | 用途 |
+|------|------|
+| `RuleDrafting` | `DraftAsync`、`ReviseAsync`、`ExplainAsync` |
+| `RuleDraft` | 被接受的規則、訊息與翻譯、白話說明與實算的測試資料；`ToFormRule()` |
+| `RuleDraftSample` | 一筆測試資料（含明細列）與引擎算出的 `RuleSampleOutcome`：`Passes`、`Blocked` 或 `Skipped` |
+| `RuleDraftingOptions` | 對話選項、允許的回合數、回覆語言、訊息語系、函式目錄與測試資料的時區 |
+
 ## 宿主
 
 之所以有 `IFormDraftingHost`，是因為匯入時的檢查放在工具裡，不在套件裡。宿主回傳它定義資料夾中的表單

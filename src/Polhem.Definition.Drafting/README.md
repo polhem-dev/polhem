@@ -58,6 +58,36 @@ if (session.IsReady)
   table names, the `company` category and the `ref_*` fields of a relation are added when the host applies the
   framework's form conventions, as the workbook import does.
 
+## Drafting a rule from plain language
+
+`RuleDrafting` writes one validation rule (`FormRule`) for a form from what a person says it should check, such as
+"an approved order needs at least one line", and explains an existing rule in plain words.
+
+```csharp
+var drafting = new RuleDrafting(chatClient, schema, new FormExpressionCalculator(evaluator), new RuleDraftingOptions
+{
+    MessageLanguages = ["zh-TW"],                       // the languages the application already has
+    ReplyCulture = CultureInfo.GetCultureInfo("zh-TW"),
+    Functions = functions,                              // from the expression engine's catalog
+});
+var result = await drafting.DraftAsync("已核准的訂單至少要有一筆明細");
+if (result.Draft is { } rule) { /* show rule.Explanation and rule.Samples, then add rule.ToFormRule() */ }
+```
+
+The model only proposes. It submits the rule through a tool, and the submission is accepted only when its expressions
+pass `FormExpressionCalculator.ValidateUntrustedExpression` (size limits, parse and the expression allowlist) and the
+expression engine computes, for every sample row, the outcome the model claimed. Otherwise the reasons go back to the
+model, which tries again within `MaxToolRounds`. A sample may carry detail rows for a rule that reads a detail table.
+The samples in the result are the engine's: a person who cannot read an expression checks the rule by them.
+`ReviseAsync` continues the conversation with a correction; `ExplainAsync` is a conversation of its own.
+
+| Type | Purpose |
+|------|---------|
+| `RuleDrafting` | `DraftAsync`, `ReviseAsync`, `ExplainAsync` |
+| `RuleDraft` | The accepted rule, its message and translations, the explanation and the computed samples; `ToFormRule()` |
+| `RuleDraftSample` | One sample row (and its detail rows) with the engine's `RuleSampleOutcome`: `Passes`, `Blocked` or `Skipped` |
+| `RuleDraftingOptions` | Chat options, the rounds allowed, the reply language, the message languages, the function catalog and the samples' time zone |
+
 ## The host
 
 `IFormDraftingHost` exists because the checks an import applies live in the tool, not in a package. A host returns
