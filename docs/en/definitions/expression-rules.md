@@ -139,6 +139,16 @@ A rule on the master table can use the aggregates of [Totals Over Detail Rows](#
 >
 > Inside XML, write `>` as `&gt;` and a string quote as `&quot;`.
 
+### What a Rule Can Trust
+
+A before-save rule judges the values in the save payload. The framework's clients send the record as the user edited it, so for them a rule sees what will be stored. A caller of the API who can save the form can send other values, and a rule then judges those:
+
+- **A row marked unchanged** is not written, but a rule still reads it. A master row the caller marks unchanged can carry values the database does not hold.
+- **A relation field** (`ref_*`) is filled by the client when a record is picked and is not stored, so a rule reads whatever the caller sent.
+- **On a form without a permission model**, nothing ties a detail row to the record being saved: a payload can change detail rows of another record, whose own rules do not run.
+
+The exception is the detail tables an aggregate reads, which the server completes from the stored record (see [Totals Over Detail Rows](#totals-over-detail-rows)). Otherwise a rule guards against mistakes made through the clients, not against a caller who can save the form. A check that must hold against such a caller, such as an allowed status change, belongs in the business object's `DoBeforeSave`, reading the stored record. Encrypting the payload protects it in transit, not from the signed-in user who holds the session's key. The reasons are recorded in [#577](https://github.com/polhem-dev/polhem/issues/577).
+
 ## Writing a Rule in Plain Words
 
 DefineEditor's expression editor has an **AI Assistant** tab for a rule's `When` and `Condition`. Describe the rule in your own words, such as "a shipped order must have a shipper, and its freight cannot be 0", and the assistant writes the rule with Claude: the table it checks, `When`, `Condition`, the message and its translations. It shows what the rule does in plain words, with sample rows.
