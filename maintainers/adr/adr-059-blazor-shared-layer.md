@@ -40,7 +40,29 @@ out of `Polhem.UI.Core` protects front ends that may have no backend, which does
 `Polhem.Expressions` is here as well, because both hosts need live computation. The Avalonia browser head already runs
 the same engine in WebAssembly under the rules in `rules/serialization.md`.
 
-### 4. Names
+### 4. The shared layer serves the framework's own UI packages
+
+Added 2026-11-19 (issue #442). Building a third-party UI package on `Polhem.Web.Blazor` is not a supported scenario.
+Its types serve `.Mud` and `.Fluent`, so a type that only they use is `internal`, and `Polhem.Web.Blazor` exposes it
+to them through `InternalsVisibleTo`. The packages are released together under the version in `Version.props`, but
+NuGet does not make a consumer update them together: a package reference packs as a minimum version. An application
+that updates `Polhem.Web.Blazor` without `.Mud` or `.Fluent` can fail at run time with `MissingMethodException` when an
+internal member changed, and no build warns about it. This is the version coupling ADR-055 weighs for the same choice;
+it is accepted here because the alternative freezes every such type in the 1.x API. Making a type public later is not a
+breaking change; taking one back is.
+
+Two language rules limit how far this goes:
+
+- **A Razor component cannot be internal.** The Razor compiler declares the generated class `public partial`, and a
+  code-behind that declares it `internal` fails with `CS0262`.
+- **A public class cannot derive from an internal one (`CS0060`), and a component parameter must be a public
+  property.** So the base of every Mud and Fluent component stays public, and so does every type one of its parameters
+  or public members carries.
+
+What is left to make internal is the plain C# types no public signature carries, and the members of public bases that
+only markup reads.
+
+### 5. Names
 
 A UI package's last namespace segment differs from the framework's root namespace: `.Mud` rather than `.MudBlazor`.
 Inside a namespace ending in `MudBlazor`, the name `MudBlazor.X` resolves to that namespace.

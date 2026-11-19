@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Polhem.Web.Blazor\Polhem.Web.Blazor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Fluent.UnitTests" />
+  </ItemGroup>
+
 </Project>

@@ -13,3 +13,5 @@ Polhem.Web.Blazor.Mud.Controls.UserQueryBar.UserQueryBar() -> void
 override Polhem.Web.Blazor.Mud.Components.FormPage.SupportsQueryPane.get -> bool
 ~override Polhem.Web.Blazor.Mud.Components.NamePromptDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Mud.Controls.UserQueryBar.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+*REMOVED*Polhem.Web.Blazor.Mud.Controls.Editors.FieldEditorFactory
+*REMOVED*static Polhem.Web.Blazor.Mud.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!

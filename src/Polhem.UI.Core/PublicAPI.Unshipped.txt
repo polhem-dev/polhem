@@ -263,3 +263,33 @@ Polhem.UI.Core.Criteria.ColumnFilterCriteria.MarkApplied() -> void
 *REMOVED*static Polhem.UI.Core.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
 *REMOVED*static Polhem.UI.Core.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
 *REMOVED*static Polhem.UI.Core.Lists.ListSelectFields.For(Polhem.Definition.Forms.FormSchema! schema) -> string!
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.Clear() -> void
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.CreateFilter() -> Polhem.Definition.Filters.FilterNode?
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.GetEntered(string! fieldName) -> (string! First, string! Second)
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.HasFilters.get -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.IsFiltered(string! fieldName) -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.ListFilterState() -> void
+*REMOVED*Polhem.UI.Core.Lists.ListFilterState.TrySet(Polhem.Definition.Forms.FormField! field, Polhem.UI.Core.Lists.ColumnFilterKind kind, string? first, string? second) -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.Apply(int page, Polhem.Definition.Paging.PagingInfo? paging) -> void
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.BeginRequest() -> int
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.CanGoNext.get -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.CanGoPrevious.get -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.CreateOptions(int page) -> Polhem.Definition.Paging.PagingOptions!
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.CreateSort() -> Polhem.Definition.Sorting.SortFieldCollection?
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.HasMore.get -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.InvalidateTotalCount() -> void
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.IsCurrent(int requestId) -> bool
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.ListPagingState() -> void
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.Page.get -> int
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.PageSize.get -> int
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.SetPageSize(int pageSize) -> void
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.SortFieldName.get -> string?
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.ToggleSort(string! fieldName) -> void
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.TotalCount.get -> int?
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.TotalPages.get -> int?
+*REMOVED*Polhem.UI.Core.Lists.ListPagingState.TryStepBackFromEmptyPage(int rowCount) -> bool
+*REMOVED*const Polhem.UI.Core.Lists.ListPagingState.DefaultPageSize = 50 -> int
+*REMOVED*static Polhem.UI.Core.Lists.ListFilterState.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Lists.ColumnFilterKind

@@ -8,7 +8,7 @@
 
 ## 內容
 
-- `FieldEditorFactory` 與各欄位編輯器（`Polhem.Web.Blazor.Mud.Controls.Editors`），建立在 `Polhem.Web.Blazor` 的編輯器基底上。
+- 各欄位編輯器（`Polhem.Web.Blazor.Mud.Controls.Editors`），建立在 `Polhem.Web.Blazor` 的編輯器基底上。
 - 同一命名空間的 `ButtonEdit`、`LookupPanel` 與 `LookupDialog`，查詢編輯器與它的選取對話框。
 - `GridControl`（`Polhem.Web.Blazor.Mud.Controls`），依版面定義繪製的 `MudDataGrid`。`InCell` 模式下，格子平時顯示文字，取得焦點才開編輯器，一張 Grid 同時只開一個。在單行編輯器按 Enter 會寫回內容、格子回到文字；按 Esc 會放棄輸入的內容，格子回到文字。列表 Grid 接受 `OnSortRequested` 與 `SortFieldName`：它請宿主依新順序讀取資料，自己不排序。
 - `RowEditPanel` 與 `RowEditDialog`，`EditForm` 模式的編輯表單。
@@ -43,7 +43,7 @@
   直接使用 `FormLayoutPresenter` 的頁面在旁邊放一個，把值傳給 `IsCompact`。它透過套件內附的一支小型 JavaScript module
   量測 viewport，以 JavaScript isolation 載入，host 頁面不必加 `<script>`；host 必須提供 static web assets
   （`UseStaticFiles` 或 `MapStaticAssets`）。prerender 的頁面先以寬版呈現，circuit 連上後才切換。
-- `FormLayoutPresenter` -- 渲染 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器，由 `FieldEditorFactory` 依
+- `FormLayoutPresenter` -- 渲染 `FormLayout` 的主檔 section，每個欄位一個欄位編輯器，依
   `ControlType` 選擇。`FormMode` 參數決定哪些編輯器可輸入，並依各欄位的 `ReadOnly` 與 `AllowEditModes`。
   版面的每個明細資料表接著以 `GridControl` 呈現，編輯模式依 `DetailEditMode`。`IsCompact` 為手機寬度呈現：主檔欄位
   不論版面的 `ColumnCount` 都排成一欄，明細 grid 改用編輯表單。

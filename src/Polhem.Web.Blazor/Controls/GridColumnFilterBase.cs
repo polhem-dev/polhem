@@ -34,11 +34,6 @@ namespace Polhem.Web.Blazor.Controls
         [Parameter, EditorRequired]
         public ColumnFilterKind Kind { get; set; }
 
-        /// <summary>Gets or sets a filter state that the panel no longer reads.</summary>
-        [Parameter]
-        [Obsolete("The panel reads ColumnFilters, whose rows are conditions of the list's QueryCriteria.")]
-        public ListFilterState Filters { get; set; } = default!;
-
         /// <summary>Gets or sets the list's column filters, which hold what was entered before.</summary>
         [Parameter, EditorRequired]
         public ColumnFilterCriteria ColumnFilters { get; set; } = default!;

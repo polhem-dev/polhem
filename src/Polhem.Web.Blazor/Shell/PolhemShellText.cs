@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Shell
     /// A key with no translation falls back to English; a key missing everywhere shows the key itself, so the gap is
     /// visible. The components and the definitions keep their own text sources.
     /// </remarks>
-    public static class PolhemShellText
+    internal static class PolhemShellText
     {
         /// <summary>The caption of the company input.</summary>
         public const string CompanyId = nameof(CompanyId);

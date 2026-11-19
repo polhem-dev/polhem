@@ -8,7 +8,7 @@ The layering is in [ADR-059](../../maintainers/adr/adr-059-blazor-shared-layer.m
 
 ## Contents
 
-- `FieldEditorFactory` and the field editors (`Polhem.Web.Blazor.Mud.Controls.Editors`), over the editor bases of `Polhem.Web.Blazor`.
+- The field editors (`Polhem.Web.Blazor.Mud.Controls.Editors`), over the editor bases of `Polhem.Web.Blazor`.
 - `ButtonEdit`, `LookupPanel` and `LookupDialog` in the same namespace, the lookup editor and its picker.
 - `GridControl` (`Polhem.Web.Blazor.Mud.Controls`), a `MudDataGrid` over a layout. In `InCell` mode a cell shows text and opens its editor when it takes the focus, with one editor open in a grid. Enter in an open single-line editor writes the value and returns the cell to text; Escape drops what was typed and returns the cell to text. A list grid takes `OnSortRequested` and `SortFieldName`; it asks its host to read the rows in a new order and does not sort them itself.
 - `RowEditPanel` and `RowEditDialog`, the edit form of `EditForm` mode.
@@ -52,7 +52,7 @@ An editor, a grid or a page here is the same on every UI package: the rules are 
   through JavaScript isolation, so the host page adds no `<script>`; the host must serve static web assets
   (`UseStaticFiles` or `MapStaticAssets`). A prerendered page starts wide and switches once the circuit connects.
 - `FormLayoutPresenter` -- renders the master section(s) of a `FormLayout`, one field editor per field, chosen from
-  its `ControlType` by `FieldEditorFactory`. Its `FormMode` parameter decides which editors accept input, following
+  its `ControlType`. Its `FormMode` parameter decides which editors accept input, following
   each field's `ReadOnly` and `AllowEditModes`. Each detail table of the layout follows as a `GridControl`, in
   `DetailEditMode`. `IsCompact` renders for a phone-sized screen: the master fields in one column whatever the
   layout's `ColumnCount`, and the detail grids in the edit form.

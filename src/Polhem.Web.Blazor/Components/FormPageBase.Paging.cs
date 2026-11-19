@@ -93,10 +93,6 @@ namespace Polhem.Web.Blazor.Components
             await GoToPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);
         }
 
-        /// <summary>Gets an empty filter state that the page no longer reads.</summary>
-        [Obsolete("The column filters are rows of Criteria now; pass ColumnFilters to the grid.")]
-        protected ListFilterState Filters { get; } = new();
-
         /// <summary>
         /// Gets the column filters of the list, which add their rows to <see cref="Criteria"/>, so the pane and the chips
         /// show them.
