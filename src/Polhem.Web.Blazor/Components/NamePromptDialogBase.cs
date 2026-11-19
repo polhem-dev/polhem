@@ -57,13 +57,13 @@ namespace Polhem.Web.Blazor.Components
         public EventCallback OnCancelled { get; set; }
 
         /// <summary>Gets or sets the name in the box.</summary>
-        protected string EnteredName { get; set; } = string.Empty;
+        internal string EnteredName { get; set; } = string.Empty;
 
         /// <summary>Gets or sets whether the check box is checked.</summary>
-        protected bool IsOptionChecked { get; set; }
+        internal bool IsOptionChecked { get; set; }
 
         /// <summary>Gets a value indicating whether the name can be accepted: it is not empty once trimmed.</summary>
-        protected bool CanAccept => EnteredName.Trim().Length > 0;
+        internal bool CanAccept => EnteredName.Trim().Length > 0;
 
         /// <inheritdoc />
         protected override void OnParametersSet()
@@ -78,7 +78,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Accepts the name when it is not empty.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before the answer is sent.</param>
         /// <returns>The operation.</returns>
-        protected Task AcceptAsync(CancellationToken cancellationToken = default)
+        internal Task AcceptAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!CanAccept) return Task.CompletedTask;
@@ -88,7 +88,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Cancels the question.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before the answer is sent.</param>
         /// <returns>The operation.</returns>
-        protected Task CancelAsync(CancellationToken cancellationToken = default)
+        internal Task CancelAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return OnCancelled.InvokeAsync();

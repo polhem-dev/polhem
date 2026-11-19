@@ -56,18 +56,18 @@ namespace Polhem.Web.Blazor.Controls
         private bool _editingNewRow;
 
         /// <summary>Gets the row open in the edit form, or <c>null</c>.</summary>
-        protected DataRow? EditingRow => _editingRow;
+        internal DataRow? EditingRow => _editingRow;
 
         /// <summary>
         /// Gets the host that keeps one editor open in the grid, for a UI package that renders editors on demand. The
         /// grid closes its editor when it stops editing in cells, as when the form enters View mode.
         /// </summary>
-        protected GridEditorHost EditorHost { get; }
+        internal GridEditorHost EditorHost { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GridControlBase"/> class.
         /// </summary>
-        protected GridControlBase() => EditorHost = new GridEditorHost { EditorParametersBuilder = BuildEditorParameters };
+        internal GridControlBase() => EditorHost = new GridEditorHost { EditorParametersBuilder = BuildEditorParameters };
 
         /// <summary>
         /// Gets or sets the grid layout that defines the columns and the allowed actions.
@@ -211,25 +211,25 @@ namespace Polhem.Web.Blazor.Controls
         /// that uses no editor script; <c>null</c> by default.
         /// </summary>
         /// <remarks>The editor script lets a key through to an open popup instead of the grid.</remarks>
-        protected virtual string? OpenPopupSelector => null;
+        internal virtual string? OpenPopupSelector => null;
 
         /// <summary>
         /// Gets how long the editor script waits before it replays keys typed ahead into a new editor; zero by default.
         /// </summary>
-        protected virtual int ReplayDelayMilliseconds => 0;
+        internal virtual int ReplayDelayMilliseconds => 0;
 
         /// <summary>Gets the script that holds keys typed before a cell's editor arrives and focuses the editor.</summary>
         /// <exception cref="InvalidOperationException">
         /// The grid has no <see cref="OpenPopupSelector"/>, or it was created outside a renderer.
         /// </exception>
-        protected GridEditorScript Script
+        internal GridEditorScript Script
             => _script ??= new GridEditorScript(
                 JS ?? throw new InvalidOperationException("The grid's editor script needs a renderer's JavaScript runtime."),
                 OpenPopupSelector ?? throw new InvalidOperationException("The grid declares no OpenPopupSelector, so it has no editor script."),
                 ReplayDelayMilliseconds);
 
         /// <summary>Gets the data object the grid is bound to, or <c>null</c>.</summary>
-        protected FormDataObject? BoundDataObject => DataObject ?? Scope?.DataObject;
+        internal FormDataObject? BoundDataObject => DataObject ?? Scope?.DataObject;
 
         private string EffectiveTableName => TableName.Length > 0 ? TableName : Layout?.TableName ?? string.Empty;
 
@@ -248,7 +248,7 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Gets a value indicating whether the grid is bound to a data object.</summary>
-        protected bool HasData => BoundDataObject is not null;
+        internal bool HasData => BoundDataObject is not null;
 
         // A form detail grid rendered from its layout alone (a layout preview): it shows the toolbar the
         // layout and the form mode allow, with its buttons disabled.
@@ -267,18 +267,18 @@ namespace Polhem.Web.Blazor.Controls
         /// one layout. A form page keeps its grid when the route opens another form, and a lookup builds an equal copy of
         /// its layout on every render, so neither the grid instance nor the layout instance tells the two apart.
         /// </remarks>
-        protected string LayoutIdentity
+        internal string LayoutIdentity
             => Layout is null
                 ? string.Empty
                 : $"{Layout.TableName}|{string.Join(",", Layout.Columns?.Select(c => c.FieldName) ?? [])}";
 
         /// <summary>Gets the toolbar actions the layout allows.</summary>
-        protected GridControlAllowActions Actions => Layout?.AllowActions ?? GridControlAllowActions.None;
+        internal GridControlAllowActions Actions => Layout?.AllowActions ?? GridControlAllowActions.None;
 
         private bool CanEdit => EffectiveAllowEdit && (HasData || IsLayoutOnly);
 
         /// <summary>Gets a value indicating whether the toolbar shows.</summary>
-        protected bool ShowToolbar => CanEdit && Actions != GridControlAllowActions.None;
+        internal bool ShowToolbar => CanEdit && Actions != GridControlAllowActions.None;
 
         private bool InCellEdit
             => CanEdit && HasData && EditMode == GridEditMode.InCell && Actions.HasFlag(GridControlAllowActions.Edit);
@@ -287,11 +287,11 @@ namespace Polhem.Web.Blazor.Controls
             => CanEdit && HasData && EditMode == GridEditMode.EditForm && Actions.HasFlag(GridControlAllowActions.Edit);
 
         /// <summary>Gets the columns to render.</summary>
-        protected IEnumerable<LayoutColumn> VisibleColumns
+        internal IEnumerable<LayoutColumn> VisibleColumns
             => Layout?.Columns?.Where(c => c.Visible) ?? Enumerable.Empty<LayoutColumn>();
 
         /// <summary>Gets the rows to render, without deleted ones.</summary>
-        protected IEnumerable<DataRow> VisibleRows
+        internal IEnumerable<DataRow> VisibleRows
             => Table?.Rows.Cast<DataRow>().Where(r => r.RowState is not (DataRowState.Deleted or DataRowState.Detached))
                 ?? Enumerable.Empty<DataRow>();
 
@@ -328,7 +328,7 @@ namespace Polhem.Web.Blazor.Controls
         /// Takes <see cref="VisibleRows"/> into the list the UI framework's grid reads. Called before every render, so a UI
         /// package keeps the list in whatever shape its grid needs. Does nothing by default.
         /// </summary>
-        protected virtual void RefreshRowList()
+        internal virtual void RefreshRowList()
         {
         }
 
@@ -340,18 +340,18 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Gets the CSS class of a row, which marks the selected one.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The class.</returns>
-        protected string RowClass(DataRow row)
+        internal string RowClass(DataRow row)
             => IsSelected(row) ? "polhem-grid__row polhem-grid__row--selected" : "polhem-grid__row";
 
         /// <summary>Gets the CSS class of a column's header, which marks a required column.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The class.</returns>
-        protected string HeaderClass(LayoutColumn column)
+        internal string HeaderClass(LayoutColumn column)
             => ShowsRequiredCue(column) ? "polhem-grid__header polhem-grid__header--required" : "polhem-grid__header";
 
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
     }
 }

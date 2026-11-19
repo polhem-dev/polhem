@@ -91,25 +91,25 @@ namespace Polhem.Web.Blazor.Controls
         public EventCallback<RelationTarget> OpenRelation { get; set; }
 
         /// <summary>Gets the detail grids' editing model after <see cref="IsCompact"/> applies.</summary>
-        protected GridEditMode EffectiveDetailEditMode => IsCompact ? GridEditMode.EditForm : DetailEditMode;
+        internal GridEditMode EffectiveDetailEditMode => IsCompact ? GridEditMode.EditForm : DetailEditMode;
 
         /// <summary>Gets the number of columns the master fields lay out in.</summary>
-        protected int EffectiveColumnCount => IsCompact ? 1 : Math.Max(1, Layout?.ColumnCount ?? 1);
+        internal int EffectiveColumnCount => IsCompact ? 1 : Math.Max(1, Layout?.ColumnCount ?? 1);
 
         /// <summary>Returns the layout's master sections.</summary>
         /// <returns>The sections, empty without a layout.</returns>
-        protected IEnumerable<LayoutSection> EnumerateSections()
+        internal IEnumerable<LayoutSection> EnumerateSections()
             => Layout?.Sections ?? Enumerable.Empty<LayoutSection>();
 
         /// <summary>Returns the layout's detail grids.</summary>
         /// <returns>The grids, empty without a layout.</returns>
-        protected IEnumerable<LayoutGrid> EnumerateDetails()
+        internal IEnumerable<LayoutGrid> EnumerateDetails()
             => Layout?.Details ?? Enumerable.Empty<LayoutGrid>();
 
         /// <summary>Returns the visible fields of <paramref name="section"/>.</summary>
         /// <param name="section">A master section.</param>
         /// <returns>The fields.</returns>
-        protected static IEnumerable<LayoutField> EnumerateFields(LayoutSection section)
+        internal static IEnumerable<LayoutField> EnumerateFields(LayoutSection section)
             => section.Fields?.Where(f => f.Visible) ?? Enumerable.Empty<LayoutField>();
 
         /// <summary>Returns whether the caption of <paramref name="field"/> carries the required cue.</summary>
@@ -119,7 +119,7 @@ namespace Polhem.Web.Blazor.Controls
         /// </remarks>
         /// <param name="field">A master field.</param>
         /// <returns><see langword="true"/> when the caption shows the cue.</returns>
-        protected bool ShowsRequiredCue(LayoutField field)
+        internal bool ShowsRequiredCue(LayoutField field)
         {
             var required = field.Required || DataObject?.GetFormField(field.FieldName)?.Required == true;
             return FieldCaptionRules.ShowsRequiredCue(field.ReadOnly, required);
@@ -128,13 +128,13 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the id of the input of <paramref name="field"/>.</summary>
         /// <param name="field">A master field.</param>
         /// <returns>The id.</returns>
-        protected string FieldInputId(LayoutField field)
+        internal string FieldInputId(LayoutField field)
             => string.Create(CultureInfo.InvariantCulture, $"{IdPrefix}-{field.FieldName}");
 
         /// <summary>Returns the parameters of the editor of <paramref name="field"/>.</summary>
         /// <param name="field">A master field.</param>
         /// <returns>The parameters, for a <see cref="DynamicComponent"/>.</returns>
-        protected Dictionary<string, object?> BuildEditorParameters(LayoutField field)
+        internal Dictionary<string, object?> BuildEditorParameters(LayoutField field)
         {
             var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
             {
@@ -153,7 +153,7 @@ namespace Polhem.Web.Blazor.Controls
 
         /// <summary>Returns the CSS grid of a master section.</summary>
         /// <returns>The inline style.</returns>
-        protected string BuildGridStyle()
+        internal string BuildGridStyle()
             => string.Create(
                 CultureInfo.InvariantCulture,
                 $"display:grid;grid-template-columns:repeat({EffectiveColumnCount},minmax(0,1fr));gap:8px");
@@ -166,7 +166,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="field">A master field.</param>
         /// <param name="columnCount">The number of columns laid out.</param>
         /// <returns>The inline style.</returns>
-        protected static string BuildFieldStyle(LayoutField field, int columnCount)
+        internal static string BuildFieldStyle(LayoutField field, int columnCount)
         {
             var rowSpan = field.RowSpan < 1 ? 1 : field.RowSpan;
             var colSpan = Math.Clamp(field.ColumnSpan, 1, columnCount);

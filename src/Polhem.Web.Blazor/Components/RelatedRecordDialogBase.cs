@@ -84,39 +84,39 @@ namespace Polhem.Web.Blazor.Components
         private IUserContext? UserContext => Services?.GetService<IUserContext>();
 
         /// <summary>Gets the related form's layout once it has loaded.</summary>
-        protected FormLayout? FormLayout { get; private set; }
+        internal FormLayout? FormLayout { get; private set; }
 
         /// <summary>Gets the record once it has loaded.</summary>
-        protected FormDataObject? DataObject { get; private set; }
+        internal FormDataObject? DataObject { get; private set; }
 
         /// <summary>Gets the masters that decide numeric decimals once they have loaded.</summary>
-        protected RoundingContext? RoundingContext { get; private set; }
+        internal RoundingContext? RoundingContext { get; private set; }
 
         /// <summary>Gets why the dialog could not load.</summary>
-        protected string? Error { get; private set; }
+        internal string? Error { get; private set; }
 
         /// <summary>Gets the message naming a form a field of this dialog may not open for the user.</summary>
-        protected string? Notice { get; private set; }
+        internal string? Notice { get; private set; }
 
         /// <summary>Gets whether the user may read the related form.</summary>
-        protected bool IsPermitted { get; private set; }
+        internal bool IsPermitted { get; private set; }
 
         /// <summary>Gets the record a field of this dialog opened, drawn in a dialog stacked on top.</summary>
-        protected RelationTarget? Relation { get; private set; }
+        internal RelationTarget? Relation { get; private set; }
 
         /// <summary>Gets the dialog's title.</summary>
-        protected string? Title => _schema?.DisplayName;
+        internal string? Title => _schema?.DisplayName;
 
         /// <summary>
         /// Gets the prefix of the record's input ids, unique per dialog so labels still point at the right input when
         /// dialogs stack.
         /// </summary>
-        protected string IdPrefix => "polhem-related-" + Target.RowId.ToString("N", CultureInfo.InvariantCulture);
+        internal string IdPrefix => "polhem-related-" + Target.RowId.ToString("N", CultureInfo.InvariantCulture);
 
         /// <summary>Returns the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
@@ -180,18 +180,18 @@ namespace Polhem.Web.Blazor.Components
 
         /// <summary>Opens <paramref name="target"/> in a dialog stacked on this one.</summary>
         /// <param name="target">The record a field of this dialog points at.</param>
-        protected void OpenRelation(RelationTarget target)
+        internal void OpenRelation(RelationTarget target)
         {
             Notice = null;
             Relation = target;
         }
 
         /// <summary>Closes the stacked dialog.</summary>
-        protected void CloseRelation() => Relation = null;
+        internal void CloseRelation() => Relation = null;
 
         /// <summary>Closes the stacked dialog and shows why it could not open.</summary>
         /// <param name="message">The message to show.</param>
-        protected void OnRelationRefused(string message)
+        internal void OnRelationRefused(string message)
         {
             Relation = null;
             Notice = message;

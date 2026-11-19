@@ -41,13 +41,13 @@ namespace Polhem.Web.Blazor.Controls.Editors
         private (string ProgId, FormSchema? Schema, IFormApiConnector? Connector)? _resolvedFrom;
 
         /// <summary>Gets the schema the picker lists from, or <c>null</c> while it loads or after a failure.</summary>
-        protected FormSchema? ResolvedSchema => _schema;
+        internal FormSchema? ResolvedSchema => _schema;
 
         /// <summary>Gets the connector the picker reads rows through, or <c>null</c> while it loads or after a failure.</summary>
-        protected IFormApiConnector? ResolvedConnector => _connector;
+        internal IFormApiConnector? ResolvedConnector => _connector;
 
         /// <summary>Gets the message of a failed load, or <c>null</c>.</summary>
-        protected string? Error => _error;
+        internal string? Error => _error;
 
         /// <summary>
         /// Gets or sets the target program identifier (the lookup source form).
@@ -97,13 +97,13 @@ namespace Polhem.Web.Blazor.Controls.Editors
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets the dialog's title.</summary>
-        protected string Title => _schema?.DisplayName ?? ProgId;
+        internal string Title => _schema?.DisplayName ?? ProgId;
 
         /// <summary>Gets the localized text of Cancel.</summary>
-        protected string CancelText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Cancel);
+        internal string CancelText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Cancel);
 
         /// <summary>Gets the localized text shown while the schema loads.</summary>
-        protected string LoadingText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Loading);
+        internal string LoadingText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Loading);
 
         /// <inheritdoc />
         protected override async Task OnParametersSetAsync()
@@ -159,11 +159,11 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <param name="row">The row.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task CommitAsync(DataRow row, CancellationToken cancellationToken = default) => OnCommitted.InvokeAsync(row);
+        internal Task CommitAsync(DataRow row, CancellationToken cancellationToken = default) => OnCommitted.InvokeAsync(row);
 
         /// <summary>Reports the cancellation.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task CancelAsync(CancellationToken cancellationToken = default) => OnCancelled.InvokeAsync();
+        internal Task CancelAsync(CancellationToken cancellationToken = default) => OnCancelled.InvokeAsync();
     }
 }

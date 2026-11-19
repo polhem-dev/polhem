@@ -28,7 +28,7 @@ namespace Polhem.Web.Blazor.Components
     public abstract partial class FormPageBase
     {
         /// <summary>The longest name a saved query may have; the backend refuses a longer one.</summary>
-        protected const int UserQueryNameMaxLength = 100;
+        internal const int UserQueryNameMaxLength = 100;
 
         private bool _hasUserQueries;
         private IReadOnlyList<UserQueryEntry> _userQueries = [];
@@ -41,41 +41,41 @@ namespace Polhem.Web.Blazor.Components
         private UserQueryEntry? _pendingUserQueryDelete;
 
         /// <summary>Gets a value indicating whether the pane offers saved queries: they were read when the list opened.</summary>
-        protected bool ShowsUserQueries => _hasUserQueries;
+        internal bool ShowsUserQueries => _hasUserQueries;
 
         /// <summary>Gets the saved queries the user can apply, their own first.</summary>
-        protected IReadOnlyList<UserQueryEntry> UserQueries => _userQueries;
+        internal IReadOnlyList<UserQueryEntry> UserQueries => _userQueries;
 
         /// <summary>Gets the applied saved query, or <c>null</c>.</summary>
-        protected UserQueryEntry? CurrentUserQuery => _currentUserQuery;
+        internal UserQueryEntry? CurrentUserQuery => _currentUserQuery;
 
         /// <summary>Gets the <c>sys_rowid</c> of the user's default query, or <see cref="Guid.Empty"/>.</summary>
-        protected Guid DefaultUserQueryRowId => _defaultUserQueryRowId;
+        internal Guid DefaultUserQueryRowId => _defaultUserQueryRowId;
 
         /// <summary>Gets a value indicating whether the conditions differ from the applied query as it was applied.</summary>
-        protected bool IsUserQueryModified
+        internal bool IsUserQueryModified
             => _currentUserQuery is not null && !string.Equals(UserQueryCodec.Serialize(_criteria), _userQueryBaseline, StringComparison.Ordinal);
 
         /// <summary>Gets what the pane should tell the user about the last applied query, or <c>null</c>.</summary>
-        protected string? CriteriaNotice => _criteriaNotice;
+        internal string? CriteriaNotice => _criteriaNotice;
 
         /// <summary>Gets a value indicating whether the name prompt of Save as or Rename is open.</summary>
-        protected bool IsNamePromptOpen => _isNamePromptOpen;
+        internal bool IsNamePromptOpen => _isNamePromptOpen;
 
         /// <summary>Gets the localized title of the open name prompt.</summary>
-        protected string NamePromptTitle => Text(_isRenamingUserQuery ? PolhemUIText.UserQueryRename : PolhemUIText.UserQuerySaveAs);
+        internal string NamePromptTitle => Text(_isRenamingUserQuery ? PolhemUIText.UserQueryRename : PolhemUIText.UserQuerySaveAs);
 
         /// <summary>Gets the name the open name prompt starts with.</summary>
-        protected string NamePromptName => _currentUserQuery?.Name ?? string.Empty;
+        internal string NamePromptName => _currentUserQuery?.Name ?? string.Empty;
 
         /// <summary>Gets the caption of the share option of the open name prompt, or <c>null</c> when it offers none.</summary>
-        protected string? NamePromptOptionText => _isRenamingUserQuery ? null : Text(PolhemUIText.UserQueryShareOption);
+        internal string? NamePromptOptionText => _isRenamingUserQuery ? null : Text(PolhemUIText.UserQueryShareOption);
 
         /// <summary>Gets the saved query the delete question is open for, or <c>null</c>.</summary>
-        protected UserQueryEntry? PendingUserQueryDelete => _pendingUserQueryDelete;
+        internal UserQueryEntry? PendingUserQueryDelete => _pendingUserQueryDelete;
 
         /// <summary>Gets the localized delete question for <see cref="PendingUserQueryDelete"/>.</summary>
-        protected string UserQueryDeletePrompt => string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.UserQueryDeletePrompt),
+        internal string UserQueryDeletePrompt => string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.UserQueryDeletePrompt),
             _pendingUserQueryDelete?.Name ?? string.Empty);
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="entry">The saved query.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ApplyUserQueryAsync(UserQueryEntry entry, CancellationToken cancellationToken = default)
+        internal async Task ApplyUserQueryAsync(UserQueryEntry entry, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(entry);
             if (IsListLocked) return;
@@ -100,7 +100,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Overwrites the applied query, which the user created, with the conditions on screen.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task SaveUserQueryAsync(CancellationToken cancellationToken = default)
+        internal Task SaveUserQueryAsync(CancellationToken cancellationToken = default)
         {
             if (_currentUserQuery is not { IsOwn: true } current) return Task.CompletedTask;
             return RunGuardedAsync(async () =>
@@ -114,14 +114,14 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>Opens the name prompt that saves the conditions as a new query.</summary>
-        protected void BeginSaveUserQueryAs()
+        internal void BeginSaveUserQueryAs()
         {
             _isRenamingUserQuery = false;
             _isNamePromptOpen = true;
         }
 
         /// <summary>Opens the name prompt that renames the applied query, which the user created.</summary>
-        protected void BeginRenameUserQuery()
+        internal void BeginRenameUserQuery()
         {
             if (_currentUserQuery is not { IsOwn: true }) return;
             _isRenamingUserQuery = true;
@@ -129,13 +129,13 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>Closes the name prompt without saving.</summary>
-        protected void CancelNamePrompt() => _isNamePromptOpen = false;
+        internal void CancelNamePrompt() => _isNamePromptOpen = false;
 
         /// <summary>Saves under the name the user accepted: a new query after Save as, or the new name after Rename.</summary>
         /// <param name="answer">The accepted name, and whether to share a new query.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task AcceptNamePromptAsync(NamePromptAnswer answer, CancellationToken cancellationToken = default)
+        internal Task AcceptNamePromptAsync(NamePromptAnswer answer, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(answer);
             if (!_isNamePromptOpen) return Task.CompletedTask;
@@ -165,7 +165,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Shares the applied query, which the user created, with the company, or stops sharing it.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task ToggleUserQueryShareAsync(CancellationToken cancellationToken = default)
+        internal Task ToggleUserQueryShareAsync(CancellationToken cancellationToken = default)
         {
             if (_currentUserQuery is not { IsOwn: true } current) return Task.CompletedTask;
             return RunGuardedAsync(async () =>
@@ -179,7 +179,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Makes the applied query the one the list opens with, or stops it being so.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task ToggleDefaultUserQueryAsync(CancellationToken cancellationToken = default)
+        internal Task ToggleDefaultUserQueryAsync(CancellationToken cancellationToken = default)
         {
             if (_currentUserQuery is not { } current) return Task.CompletedTask;
             var rowId = current.RowId == _defaultUserQueryRowId ? Guid.Empty : current.RowId;
@@ -191,18 +191,18 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>Opens the question before the applied query, which the user created, is deleted.</summary>
-        protected void BeginDeleteUserQuery()
+        internal void BeginDeleteUserQuery()
         {
             if (_currentUserQuery is { IsOwn: true } current) _pendingUserQueryDelete = current;
         }
 
         /// <summary>Closes the delete question and keeps the query.</summary>
-        protected void CancelDeleteUserQuery() => _pendingUserQueryDelete = null;
+        internal void CancelDeleteUserQuery() => _pendingUserQueryDelete = null;
 
         /// <summary>Deletes the query the question was asked about; the conditions stay, applied to no query.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task ConfirmDeleteUserQueryAsync(CancellationToken cancellationToken = default)
+        internal Task ConfirmDeleteUserQueryAsync(CancellationToken cancellationToken = default)
         {
             if (_pendingUserQueryDelete is not { } query) return Task.CompletedTask;
             _pendingUserQueryDelete = null;

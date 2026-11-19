@@ -8,7 +8,6 @@ Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel
 Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel.CriteriaPanel() -> void
 Polhem.Web.Blazor.Fluent.Controls.UserQueryBar
 Polhem.Web.Blazor.Fluent.Controls.UserQueryBar.UserQueryBar() -> void
-override Polhem.Web.Blazor.Fluent.Components.FormPage.SupportsQueryPane.get -> bool
 ~override Polhem.Web.Blazor.Fluent.Components.NamePromptDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Fluent.Controls.CriteriaChips.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
@@ -17,3 +16,7 @@ override Polhem.Web.Blazor.Fluent.Components.FormPage.SupportsQueryPane.get -> b
 *REMOVED*Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>
 *REMOVED*Polhem.Web.Blazor.Fluent.Controls.PolhemDataGrid<TGridItem>.PolhemDataGrid(Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration! configuration) -> void
 *REMOVED*static Polhem.Web.Blazor.Fluent.Controls.Editors.FieldEditorFactory.GetEditorType(Polhem.Definition.Layouts.ControlType controlType) -> System.Type!
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridColumnFilter.Toggle() -> void
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.OpenPopupSelector.get -> string!
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.RefreshRowList() -> void
+*REMOVED*override Polhem.Web.Blazor.Fluent.Controls.GridControl.ReplayDelayMilliseconds.get -> int

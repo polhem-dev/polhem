@@ -24,24 +24,24 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the text a single-value row's input shows.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The text.</returns>
-        protected string GetValueText(CriteriaRow row) => Shown(row, ValueSlot, row.Value);
+        internal string GetValueText(CriteriaRow row) => Shown(row, ValueSlot, row.Value);
 
         /// <summary>Returns the text the input of the start of a range shows; a relative period shows its first day.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The text.</returns>
-        protected string GetFromText(CriteriaRow row) => Shown(row, FromSlot, ShownRange(row).From);
+        internal string GetFromText(CriteriaRow row) => Shown(row, FromSlot, ShownRange(row).From);
 
         /// <summary>Returns the text the input of the end of a range shows; a relative period shows its last day.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The text.</returns>
-        protected string GetToText(CriteriaRow row) => Shown(row, ToSlot, ShownRange(row).To);
+        internal string GetToText(CriteriaRow row) => Shown(row, ToSlot, ShownRange(row).To);
 
         /// <summary>Sets a single-value row from what the user typed; blank or unreadable text clears it.</summary>
         /// <param name="row">The row.</param>
         /// <param name="text">The text.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetValueTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
+        internal Task SetValueTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             Remember(row, ValueSlot, text);
@@ -54,7 +54,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="text">The text.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetFromTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
+        internal Task SetFromTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             var (_, to) = ShownRange(row);
@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="text">The text.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetToTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
+        internal Task SetToTextAsync(CriteriaRow row, string? text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             var (from, _) = ShownRange(row);
@@ -82,7 +82,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="period">The period.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetPeriodAsync(CriteriaRow row, RelativeDate period, CancellationToken cancellationToken = default)
+        internal Task SetPeriodAsync(CriteriaRow row, RelativeDate period, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             Forget(row);
@@ -96,7 +96,7 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         /// <param name="row">The row.</param>
         /// <returns>The choice.</returns>
-        protected static string GetBooleanChoice(CriteriaRow row)
+        internal static string GetBooleanChoice(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Value switch { true => bool.TrueString, false => bool.FalseString, _ => string.Empty };
@@ -105,7 +105,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the text of a yes / no choice.</summary>
         /// <param name="choice">An empty string, <see cref="bool.TrueString"/> or <see cref="bool.FalseString"/>.</param>
         /// <returns>The text.</returns>
-        protected string BooleanChoiceText(string? choice)
+        internal string BooleanChoiceText(string? choice)
             => bool.TryParse(choice, out var flag) ? Text(flag ? PolhemUIText.True : PolhemUIText.False) : Text(PolhemUIText.CriteriaAny);
 
         /// <summary>Sets a yes / no row from the choice the user picked.</summary>
@@ -113,7 +113,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="choice">An empty string for either, or <see cref="bool.TrueString"/> or <see cref="bool.FalseString"/>.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetBooleanChoiceAsync(CriteriaRow row, string? choice, CancellationToken cancellationToken = default)
+        internal Task SetBooleanChoiceAsync(CriteriaRow row, string? choice, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             row.SetValue(bool.TryParse(choice, out var flag) ? flag : null);
@@ -124,7 +124,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="item">The listed value.</param>
         /// <returns>Whether it is checked.</returns>
-        protected static bool IsChosen(CriteriaRow row, ListItem item)
+        internal static bool IsChosen(CriteriaRow row, ListItem item)
         {
             ArgumentNullException.ThrowIfNull(row);
             ArgumentNullException.ThrowIfNull(item);
@@ -137,7 +137,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="chosen">Whether the value is now checked.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task SetChosenAsync(CriteriaRow row, ListItem item, bool chosen, CancellationToken cancellationToken = default)
+        internal Task SetChosenAsync(CriteriaRow row, ListItem item, bool chosen, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             ArgumentNullException.ThrowIfNull(item);
@@ -154,7 +154,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task RemoveValueAsync(CriteriaRow row, CriteriaValue value, CancellationToken cancellationToken = default)
+        internal Task RemoveValueAsync(CriteriaRow row, CriteriaValue value, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.RemoveValue(value.Value) ? OnChangedAsync(cancellationToken) : Task.CompletedTask;
@@ -166,7 +166,7 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         /// <param name="row">The row.</param>
         /// <returns><see langword="true"/> when the button is shown.</returns>
-        protected static bool CanAddCurrentUser(CriteriaRow row)
+        internal static bool CanAddCurrentUser(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Operator == CriteriaOperator.In && row.Field.OffersCurrentUser && !row.Values.Any(v => v.IsCurrentUser);
@@ -176,7 +176,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task AddCurrentUserAsync(CriteriaRow row, CancellationToken cancellationToken = default)
+        internal Task AddCurrentUserAsync(CriteriaRow row, CancellationToken cancellationToken = default)
         {
             if (!CanAddCurrentUser(row)) return Task.CompletedTask;
             row.AddCurrentUser();
@@ -186,7 +186,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the text a value of a relation or choice row shows, "me" in the reader's language.</summary>
         /// <param name="value">The value.</param>
         /// <returns>The text.</returns>
-        protected string ValueText(CriteriaValue value) => CriteriaRowSummary.ValueText(value, Text);
+        internal string ValueText(CriteriaValue value) => CriteriaRowSummary.ValueText(value, Text);
 
         private DateOnly ReadToday() => Today?.Invoke() ?? DateOnly.FromDateTime(DateTime.Now);
 

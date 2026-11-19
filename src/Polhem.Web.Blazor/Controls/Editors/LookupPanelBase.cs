@@ -34,19 +34,19 @@ namespace Polhem.Web.Blazor.Controls.Editors
         private IFormApiConnector? _loadedConnector;
 
         /// <summary>Gets the layout of the list, or <c>null</c> without a schema.</summary>
-        protected LayoutGrid? Layout => _layout;
+        internal LayoutGrid? Layout => _layout;
 
         /// <summary>Gets the rows of the list, or <c>null</c> before they load.</summary>
-        protected DataTable? Rows => _rows;
+        internal DataTable? Rows => _rows;
 
         /// <summary>Gets the id of the selected row, or <c>null</c>.</summary>
-        protected Guid? SelectedRowId => _selectedRowId;
+        internal Guid? SelectedRowId => _selectedRowId;
 
         /// <summary>Gets the message of a failed load, or <c>null</c>.</summary>
-        protected string? Error => _error;
+        internal string? Error => _error;
 
         /// <summary>Gets the notice that the server returned only part of the matches, or <c>null</c>.</summary>
-        protected string? TruncationNotice => _truncationNotice;
+        internal string? TruncationNotice => _truncationNotice;
 
         /// <summary>
         /// Gets or sets the target form's schema, which supplies the columns.
@@ -75,12 +75,12 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>
         /// Gets or sets the search text submitted to the server on reload.
         /// </summary>
-        public string SearchText { get; set; } = string.Empty;
+        internal string SearchText { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets the currently selected lookup row, or <c>null</c>.
         /// </summary>
-        public DataRow? SelectedRow => _selectedRowId is { } id ? FindRow(id) : null;
+        internal DataRow? SelectedRow => _selectedRowId is { } id ? FindRow(id) : null;
 
         private string? _truncationNotice;
         private int _requestId;
@@ -92,7 +92,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>
         /// Reloads the lookup rows from the server using the current <see cref="SearchText"/>.
@@ -102,7 +102,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// caller instead of being shown on the panel.
         /// </param>
         /// <returns>A task that completes when the rows are loaded or the failure is shown.</returns>
-        public async Task ReloadAsync(CancellationToken cancellationToken = default)
+        internal async Task ReloadAsync(CancellationToken cancellationToken = default)
         {
             var connector = Connector;
             if (connector is null) return;
@@ -138,7 +138,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>Commits the selected row; a no-op without a selection.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task CommitAsync(CancellationToken cancellationToken = default)
+        internal async Task CommitAsync(CancellationToken cancellationToken = default)
         {
             if (SelectedRow is { } row)
                 await OnCommitted.InvokeAsync(row).ConfigureAwait(true);
@@ -147,12 +147,12 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>Reports the cancellation.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task CancelAsync(CancellationToken cancellationToken = default) => OnCancelled.InvokeAsync();
+        internal Task CancelAsync(CancellationToken cancellationToken = default) => OnCancelled.InvokeAsync();
 
         /// <summary>Reads the rows matching <see cref="SearchText"/>.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task SearchAsync(CancellationToken cancellationToken = default) => ReloadAsync(cancellationToken);
+        internal Task SearchAsync(CancellationToken cancellationToken = default) => ReloadAsync(cancellationToken);
 
         /// <inheritdoc />
         protected override async Task OnParametersSetAsync()
@@ -168,13 +168,13 @@ namespace Polhem.Web.Blazor.Controls.Editors
 
         /// <summary>Selects a row.</summary>
         /// <param name="rowId">The row's id.</param>
-        protected void Select(Guid rowId) => _selectedRowId = rowId;
+        internal void Select(Guid rowId) => _selectedRowId = rowId;
 
         /// <summary>Selects a row and commits it, as a double-click does.</summary>
         /// <param name="rowId">The row's id.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ActivateAsync(Guid rowId, CancellationToken cancellationToken = default)
+        internal async Task ActivateAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             _selectedRowId = rowId;
             await CommitAsync(cancellationToken).ConfigureAwait(true);

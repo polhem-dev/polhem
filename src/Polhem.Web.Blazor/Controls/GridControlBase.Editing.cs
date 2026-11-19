@@ -65,7 +65,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task SelectRowAsync(DataRow row, CancellationToken cancellationToken = default)
+        internal async Task SelectRowAsync(DataRow row, CancellationToken cancellationToken = default)
         {
             _selectedRow = row;
             if (RowSelected.HasDelegate && FormDataGuard.TryGetRowId(row, out var rowId))
@@ -79,7 +79,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ActivateRowAsync(DataRow row, CancellationToken cancellationToken = default)
+        internal async Task ActivateRowAsync(DataRow row, CancellationToken cancellationToken = default)
         {
             _selectedRow = row;
             if (CanUseEditForm) OpenEditForm(row, isNew: false);
@@ -88,7 +88,7 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Runs the toolbar's Add.</summary>
-        protected void OnAddClicked()
+        internal void OnAddClicked()
         {
             if (!HasData) return;
             var row = AddRow();
@@ -97,7 +97,7 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Runs the toolbar's Edit.</summary>
-        protected void EditSelectedRow()
+        internal void EditSelectedRow()
         {
             if (SelectedRow is { } row && CanUseEditForm)
                 OpenEditForm(row, isNew: false);
@@ -110,14 +110,14 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Closes the edit form after its row was committed.</summary>
-        protected void OnEditCommitted()
+        internal void OnEditCommitted()
         {
             _selectedRow = _editingRow;
             _editingRow = null;
         }
 
         /// <summary>Closes the edit form without committing. A cancelled Add removes the blank row again instead of leaving an empty line in the table.</summary>
-        protected void OnEditCancelled()
+        internal void OnEditCancelled()
         {
             if (_editingNewRow && _editingRow is { } row && row.Table is { } table)
             {

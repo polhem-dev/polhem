@@ -46,32 +46,32 @@ namespace Polhem.Web.Blazor.Controls
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets whether the panel is open.</summary>
-        protected bool IsOpen { get; private set; }
+        internal bool IsOpen { get; private set; }
 
         /// <summary>Gets whether the last entry was refused.</summary>
-        protected bool IsInvalid { get; private set; }
+        internal bool IsInvalid { get; private set; }
 
         /// <summary>Gets or sets the value, or the start of a range.</summary>
-        protected string First { get; set; } = string.Empty;
+        internal string First { get; set; } = string.Empty;
 
         /// <summary>Gets or sets the end of a range.</summary>
-        protected string Second { get; set; } = string.Empty;
+        internal string Second { get; set; } = string.Empty;
 
         /// <summary>Gets whether the column is filtered now.</summary>
-        protected bool IsFiltered => ColumnFilters.IsFiltered(Column.FieldName);
+        internal bool IsFiltered => ColumnFilters.IsFiltered(Column.FieldName);
 
         /// <summary>Gets the accessible name of the button that opens the panel.</summary>
-        protected string ButtonLabel
+        internal string ButtonLabel
             => string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.FilterColumn), Column.Caption);
 
         /// <summary>Gets whether a range is of dates.</summary>
-        protected bool IsDateRange => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime;
+        internal bool IsDateRange => Kind is ColumnFilterKind.Date or ColumnFilterKind.DateTime;
 
         /// <summary>
         /// Gets the choices of a Boolean or list filter as value and text, starting with an empty choice that means no
         /// filter.
         /// </summary>
-        protected IEnumerable<KeyValuePair<string, string>> Choices
+        internal IEnumerable<KeyValuePair<string, string>> Choices
         {
             get
             {
@@ -89,7 +89,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the text a choice shows for its value.</summary>
         /// <param name="value">The choice's value.</param>
         /// <returns>The text, or the value itself when no choice has it.</returns>
-        protected string ChoiceText(string? value)
+        internal string ChoiceText(string? value)
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
             if (Kind == ColumnFilterKind.Boolean)
@@ -100,10 +100,10 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns a framework text in the user's language.</summary>
         /// <param name="key">The text's key in <see cref="PolhemUIText"/>.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>Opens the panel, filled with what was entered before, or closes it.</summary>
-        protected virtual void Toggle()
+        internal virtual void Toggle()
         {
             IsOpen = !IsOpen;
             IsInvalid = false;
@@ -111,11 +111,11 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Closes the panel and drops what was typed and not applied.</summary>
-        protected void Close() => IsOpen = false;
+        internal void Close() => IsOpen = false;
 
         /// <summary>Closes the panel on Escape.</summary>
         /// <param name="e">The key event.</param>
-        protected void OnKeyDown(KeyboardEventArgs e)
+        internal void OnKeyDown(KeyboardEventArgs e)
         {
             ArgumentNullException.ThrowIfNull(e);
             if (e.Key == "Escape") Close();
@@ -127,7 +127,7 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the operation before the entry is sent.</param>
         /// <returns>The operation.</returns>
-        protected async Task ApplyAsync(CancellationToken cancellationToken = default)
+        internal async Task ApplyAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!ColumnFilterCriteria.CanRead(Field, Kind, First, Second))
@@ -142,7 +142,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Applies an empty entry, which removes the column's filter.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before the entry is sent.</param>
         /// <returns>The operation.</returns>
-        protected Task ClearAsync(CancellationToken cancellationToken = default)
+        internal Task ClearAsync(CancellationToken cancellationToken = default)
         {
             First = string.Empty;
             Second = string.Empty;

@@ -126,10 +126,10 @@
     private List<DataRow> _rows = [];
 
     /// <inheritdoc />
-    protected override string OpenPopupSelector => ".mud-popover-open";
+    internal override string OpenPopupSelector => ".mud-popover-open";
 
     /// <inheritdoc />
-    protected override void RefreshRowList()
+    internal override void RefreshRowList()
     {
         // The same rows keep the same list, so MudDataGrid does not take a new Items list on every render.
         var rows = VisibleRows.ToList();

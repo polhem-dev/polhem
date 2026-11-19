@@ -12,16 +12,16 @@ namespace Polhem.Web.Blazor.Components
     public abstract partial class FormPageBase
     {
         /// <summary>Gets the page sizes a list offers.</summary>
-        protected static IReadOnlyList<int> PageSizes { get; } = [ListPagingState.DefaultPageSize, 100, 200];
+        internal static IReadOnlyList<int> PageSizes { get; } = [ListPagingState.DefaultPageSize, 100, 200];
 
         private ListPagingState _paging = new();
         private bool _isListPaged;
 
         /// <summary>Gets a value indicating whether the list shows its page buttons.</summary>
-        protected bool ShowsPager => !_isShowingRecord && !EffectiveIsCompact && _isListPaged && _listRows is { Rows.Count: > 0 };
+        internal bool ShowsPager => !_isShowingRecord && !EffectiveIsCompact && _isListPaged && _listRows is { Rows.Count: > 0 };
 
         /// <summary>Gets the localized text that says which page is on screen.</summary>
-        protected string PagePosition => _paging.TotalPages is { } totalPages
+        internal string PagePosition => _paging.TotalPages is { } totalPages
             ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.PageNumberOfTotal),
                 _paging.Page, totalPages, _paging.TotalCount)
             : string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.PageNumber), _paging.Page);
@@ -72,7 +72,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="page">The 1-based page.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task GoToPageAsync(int page, CancellationToken cancellationToken = default)
+        internal async Task GoToPageAsync(int page, CancellationToken cancellationToken = default)
         {
             await RunGuardedAsync(async () =>
             {
@@ -85,7 +85,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="fieldName">The field the user chose.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnSortRequestedAsync(string fieldName, CancellationToken cancellationToken = default)
+        internal async Task OnSortRequestedAsync(string fieldName, CancellationToken cancellationToken = default)
         {
             if (IsListLocked) return;
 
@@ -97,7 +97,7 @@ namespace Polhem.Web.Blazor.Components
         /// Gets the column filters of the list, which add their rows to <see cref="Criteria"/>, so the pane and the chips
         /// show them.
         /// </summary>
-        protected ColumnFilterCriteria ColumnFilters
+        internal ColumnFilterCriteria ColumnFilters
         {
             get
             {
@@ -112,7 +112,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="change">The column and what the user entered, which <see cref="ColumnFilterCriteria.CanRead"/> has accepted.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnFilterChangedAsync(ColumnFilterChange change, CancellationToken cancellationToken = default)
+        internal async Task OnFilterChangedAsync(ColumnFilterChange change, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(change);
             if (IsListLocked) return;
@@ -123,7 +123,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Removes every condition, the column filters included, and reads the first page.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task ClearFiltersAsync(CancellationToken cancellationToken = default) => ClearConditionsAsync(cancellationToken);
+        internal Task ClearFiltersAsync(CancellationToken cancellationToken = default) => ClearConditionsAsync(cancellationToken);
 
         private Task ReadFilteredListAsync(CancellationToken cancellationToken)
         {
@@ -139,7 +139,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="pageSize">The rows per page.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task SetPageSizeAsync(int pageSize, CancellationToken cancellationToken = default)
+        internal async Task SetPageSizeAsync(int pageSize, CancellationToken cancellationToken = default)
         {
             _paging.SetPageSize(pageSize);
             await GoToPageAsync(_paging.Page, cancellationToken).ConfigureAwait(true);

@@ -20,13 +20,13 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Determines whether a column's cells show their editor.</summary>
         /// <param name="column">The column.</param>
         /// <returns>Whether they do.</returns>
-        protected bool IsInCellEditor(LayoutColumn column) => InCellEdit && !column.ReadOnly;
+        internal bool IsInCellEditor(LayoutColumn column) => InCellEdit && !column.ReadOnly;
 
         /// <summary>Builds the parameters of a cell's editor.</summary>
         /// <param name="column">The column.</param>
         /// <param name="row">The row.</param>
         /// <returns>The parameters by name.</returns>
-        protected Dictionary<string, object?> BuildEditorParameters(LayoutColumn column, DataRow row)
+        internal Dictionary<string, object?> BuildEditorParameters(LayoutColumn column, DataRow row)
         {
             var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
             {
@@ -48,7 +48,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
         /// <returns>The record, or <c>null</c>.</returns>
-        protected RelationTarget? OpenTarget(DataRow row, LayoutColumn column)
+        internal RelationTarget? OpenTarget(DataRow row, LayoutColumn column)
         {
             if (Scope?.OpenRelation.HasDelegate != true || !row.Table.Columns.Contains(column.FieldName)) return null;
             var field = ResolveFormField(column.FieldName);
@@ -62,13 +62,13 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="target">The record.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task OpenRelationAsync(RelationTarget target, CancellationToken cancellationToken = default) => Scope?.OpenRelation.InvokeAsync(target) ?? Task.CompletedTask;
+        internal Task OpenRelationAsync(RelationTarget target, CancellationToken cancellationToken = default) => Scope?.OpenRelation.InvokeAsync(target) ?? Task.CompletedTask;
 
         /// <summary>Formats a cell for display.</summary>
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
         /// <returns>The text.</returns>
-        protected string FormatCell(DataRow row, LayoutColumn column)
+        internal string FormatCell(DataRow row, LayoutColumn column)
             => GridCellFormatter.FormatColumnText(row, column, ResolveFormField(column.FieldName),
                 CurrencySettings, DefaultCurrencyCode, UnitSettings,
                 flag => Text(flag ? PolhemUIText.True : PolhemUIText.False));
@@ -77,7 +77,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
         /// <returns>Whether it is checked.</returns>
-        protected static bool IsChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
+        internal static bool IsChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
 
         // The schema field behind a column: through the data object for a bound grid, through the supplied
         // table for a list-mode grid; null when neither knows the field.
@@ -96,7 +96,7 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         /// <param name="column">The column.</param>
         /// <returns>Whether to show the cue.</returns>
-        protected bool ShowsRequiredCue(LayoutColumn column)
+        internal bool ShowsRequiredCue(LayoutColumn column)
         {
             var required = column.Required
                 || (BoundDataObject is { } dataObject && dataObject.GetFormField(EffectiveTableName, column.FieldName)?.Required == true);
@@ -106,7 +106,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Determines whether <paramref name="row"/> is the selected one.</summary>
         /// <param name="row">The row.</param>
         /// <returns>Whether it is selected.</returns>
-        protected bool IsSelected(DataRow row)
+        internal bool IsSelected(DataRow row)
             => SelectedRowId is { } selected
                 ? FormDataGuard.TryGetRowId(row, out var rowId) && rowId == selected
                 : ReferenceEquals(row, _selectedRow);
@@ -117,14 +117,14 @@ namespace Polhem.Web.Blazor.Controls
         /// </summary>
         /// <param name="column">The column.</param>
         /// <returns>Whether it offers sorting.</returns>
-        protected bool IsSortable(LayoutColumn column)
+        internal bool IsSortable(LayoutColumn column)
             => OnSortRequested.HasDelegate
                 && ResolveFormField(column.FieldName) is { DbType: not (FieldDbType.Text or FieldDbType.Binary) };
 
         /// <summary>Returns what a column's filter takes, or <see cref="ColumnFilterKind.None"/> when it offers none.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The kind of filter.</returns>
-        protected ColumnFilterKind FilterKind(LayoutColumn column)
+        internal ColumnFilterKind FilterKind(LayoutColumn column)
             => ColumnFilters is null || !OnFilterChanged.HasDelegate
                 ? ColumnFilterKind.None
                 : ColumnFilterCriteria.GetKind(column, ResolveFormField(column.FieldName));
@@ -132,17 +132,17 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the schema field behind a column.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The field, or <c>null</c>.</returns>
-        protected FormField? ColumnField(LayoutColumn column) => ResolveFormField(column.FieldName);
+        internal FormField? ColumnField(LayoutColumn column) => ResolveFormField(column.FieldName);
 
         /// <summary>Gets the mark a sorted column's caption ends with, or an empty string.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The mark.</returns>
-        protected string SortMark(LayoutColumn column) => GridCellFormatter.SortMark(IsSorted(column) ? SortDirection : null);
+        internal string SortMark(LayoutColumn column) => GridCellFormatter.SortMark(IsSorted(column) ? SortDirection : null);
 
         /// <summary>Gets the <c>aria-sort</c> value of a column's header, or <c>null</c> when it is not sorted.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The value.</returns>
-        protected string? AriaSort(LayoutColumn column)
+        internal string? AriaSort(LayoutColumn column)
         {
             if (!IsSorted(column)) return null;
             return SortDirection == SortDirection.Desc ? "descending" : "ascending";

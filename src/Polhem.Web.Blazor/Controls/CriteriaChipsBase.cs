@@ -36,15 +36,15 @@ namespace Polhem.Web.Blazor.Controls
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets a value indicating whether any chip is shown.</summary>
-        protected bool HasChips => Chips.Count > 0;
+        internal bool HasChips => Chips.Count > 0;
 
         /// <summary>Gets the localized caption of the button that clears every condition.</summary>
-        protected string ClearText => Text(PolhemUIText.ClearFilters);
+        internal string ClearText => Text(PolhemUIText.ClearFilters);
 
         /// <summary>Returns the accessible name of a chip's remove button.</summary>
         /// <param name="chip">The chip.</param>
         /// <returns>The name.</returns>
-        protected string RemoveLabel(CriteriaChip chip)
+        internal string RemoveLabel(CriteriaChip chip)
         {
             ArgumentNullException.ThrowIfNull(chip);
             return string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.RemoveItem), chip.Text);
@@ -53,6 +53,6 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns a framework text in the user's language.</summary>
         /// <param name="key">The text's key in <see cref="PolhemUIText"/>.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
     }
 }

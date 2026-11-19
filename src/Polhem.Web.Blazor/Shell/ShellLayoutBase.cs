@@ -29,22 +29,22 @@ namespace Polhem.Web.Blazor.Shell
         /// toggled, a narrow one hides it until it is toggled. Picking a form clears it, which closes the narrow overlay
         /// and changes nothing on a wide screen, where a collapsed menu has nothing to pick.
         /// </summary>
-        protected bool IsMenuToggled { get; private set; }
+        internal bool IsMenuToggled { get; private set; }
 
         /// <summary>
         /// Gets whether the screen is narrow, as the compact viewport observer last reported. The threshold is the form
         /// page's, so the menu and the page switch together.
         /// </summary>
-        protected bool IsNarrow { get; private set; }
+        internal bool IsNarrow { get; private set; }
 
         /// <summary>
         /// Gets whether the menu is shown: on a wide screen unless it is toggled, on a narrow one only while it is toggled.
         /// </summary>
-        protected bool IsDrawerOpen => IsNarrow ? IsMenuToggled : !IsMenuToggled;
+        internal bool IsDrawerOpen => IsNarrow ? IsMenuToggled : !IsMenuToggled;
 
         /// <summary>Follows a change of width and clears the toggle, so the menu starts in its default state.</summary>
         /// <param name="compact">Whether the screen is now narrow.</param>
-        protected void OnCompactChanged(bool compact)
+        internal void OnCompactChanged(bool compact)
         {
             IsNarrow = compact;
             CloseMenu();
@@ -52,16 +52,16 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Follows a menu that opened or closed itself, such as a drawer closed by a click outside it.</summary>
         /// <param name="open">Whether the menu is now shown.</param>
-        protected void OnDrawerOpenChanged(bool open)
+        internal void OnDrawerOpenChanged(bool open)
         {
             if (open != IsDrawerOpen) ToggleMenu();
         }
 
         /// <summary>Toggles the menu.</summary>
-        protected void ToggleMenu() => IsMenuToggled = !IsMenuToggled;
+        internal void ToggleMenu() => IsMenuToggled = !IsMenuToggled;
 
         /// <summary>Clears the toggle.</summary>
-        protected void CloseMenu() => IsMenuToggled = false;
+        internal void CloseMenu() => IsMenuToggled = false;
 
         /// <inheritdoc/>
         protected override void OnInitialized()
@@ -99,7 +99,7 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Signs out and returns to the sign-in screen.</summary>
         /// <remarks>The client and the context are the circuit's, so signing out is local to this browser tab.</remarks>
-        protected void SignOut()
+        internal void SignOut()
         {
             UserContext.SignOut();
             IsMenuToggled = false;

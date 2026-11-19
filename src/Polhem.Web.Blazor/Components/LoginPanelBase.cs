@@ -81,25 +81,25 @@ namespace Polhem.Web.Blazor.Components
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets or sets the user id in the input.</summary>
-        protected string UserId { get; set; } = string.Empty;
+        internal string UserId { get; set; } = string.Empty;
 
         /// <summary>Gets or sets the password in the input.</summary>
-        protected string Password { get; set; } = string.Empty;
+        internal string Password { get; set; } = string.Empty;
 
         /// <summary>Gets whether a sign-in is running.</summary>
-        protected bool IsBusy => _isBusy;
+        internal bool IsBusy => _isBusy;
 
         /// <summary>Gets the message of a failed sign-in.</summary>
-        protected string? Error => _error;
+        internal string? Error => _error;
 
         /// <summary>Gets the user-id label to show.</summary>
-        protected string DisplayedUserIdLabel => UserIdLabel ?? Text(PolhemUIText.UserId);
+        internal string DisplayedUserIdLabel => UserIdLabel ?? Text(PolhemUIText.UserId);
 
         /// <summary>Gets the password label to show.</summary>
-        protected string DisplayedPasswordLabel => PasswordLabel ?? Text(PolhemUIText.Password);
+        internal string DisplayedPasswordLabel => PasswordLabel ?? Text(PolhemUIText.Password);
 
         /// <summary>Gets the submit caption to show.</summary>
-        protected string DisplayedSubmitLabel => SubmitLabel ?? Text(PolhemUIText.SignIn);
+        internal string DisplayedSubmitLabel => SubmitLabel ?? Text(PolhemUIText.SignIn);
 
         private string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
@@ -113,7 +113,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Signs in with the values in the inputs.</summary>
         /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>A task that completes when the sign-in has succeeded or its failure is recorded.</returns>
-        protected async Task OnSubmitAsync(CancellationToken cancellationToken = default)
+        internal async Task OnSubmitAsync(CancellationToken cancellationToken = default)
         {
             if (_isBusy) return;
             _isBusy = true;

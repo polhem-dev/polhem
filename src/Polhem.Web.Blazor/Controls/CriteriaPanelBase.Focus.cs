@@ -23,7 +23,7 @@ namespace Polhem.Web.Blazor.Controls
         private IJSRuntime? JS { get; set; }
 
         /// <summary>Gets or sets the pane's root element, which the UI package's markup captures.</summary>
-        protected ElementReference PaneElement { get; set; }
+        internal ElementReference PaneElement { get; set; }
 
         /// <inheritdoc />
         protected override async Task OnAfterRenderAsync(bool firstRender)
