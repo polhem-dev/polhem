@@ -18,6 +18,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
     public class BlazorUserContextTests
     {
         private static readonly Guid s_token = new("bbbbbbbb-0000-0000-0000-000000000001");
+        private static readonly Guid s_userRowId = new("bbbbbbbb-0000-0000-0000-000000000002");
+        private static readonly Guid s_employeeRowId = new("bbbbbbbb-0000-0000-0000-000000000003");
 
         private static FakeApiServer CreateServer() => new FakeApiServer()
             .On<LoginRequest>($"{SysProgIds.System}.{SystemActions.Login}", request => new LoginResponse
@@ -32,6 +34,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             {
                 Company = new CompanyInfo { CompanyId = request.CompanyId },
                 Capabilities = new Dictionary<string, PermissionActions>(StringComparer.Ordinal) { ["Orders"] = PermissionActions.Read },
+                UserRowId = s_userRowId,
+                EmployeeRowId = s_employeeRowId,
             });
 
         private static (BlazorUserContext Context, PolhemApiClient Client) Create()
@@ -54,6 +58,18 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             Assert.Equal("zh-TW", context.User?.Culture);
             Assert.Null(context.Company);
             Assert.Null(context.Capabilities);
+            Assert.Null(context.Identity);
+        }
+
+        [Fact]
+        [DisplayName("EnterCompanyAsync records the row ids that stand for the user, which a me condition resolves to")]
+        public async Task EnterCompanyAsync_RecordsIdentity()
+        {
+            var (context, _) = Create();
+
+            await context.EnterCompanyAsync("ACME");
+
+            Assert.Equal(new UserIdentity(s_userRowId, s_employeeRowId), context.Identity);
         }
 
         [Fact]
@@ -82,6 +98,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Identity
             Assert.Null(context.User);
             Assert.Null(context.Company);
             Assert.Null(context.Capabilities);
+            Assert.Null(context.Identity);
             Assert.Equal(Guid.Empty, client.Session.Credentials.AccessToken);
         }
 

@@ -4,12 +4,14 @@ using Bunit;
 using Bunit.Rendering;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Polhem.Core.Data;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Language;
 using Polhem.Tests.Shared;
 using Polhem.UI.Core.Criteria;
 using Polhem.Web.Blazor.Components;
+using Polhem.Web.Blazor.Identity;
 
 namespace Polhem.Web.Blazor.BehaviorTests
 {
@@ -29,6 +31,7 @@ namespace Polhem.Web.Blazor.BehaviorTests
         private const string ChipRemove = ".polhem-criteria-chip__remove";
         private const string ChipsClear = ".polhem-criteria-chips__clear";
         private const string Overlay = ".polhem-query-pane--overlay";
+        private const string MeButton = ".polhem-criteria-row__me";
 
         /// <inheritdoc />
         Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
@@ -229,6 +232,28 @@ namespace Polhem.Web.Blazor.BehaviorTests
             Assert.Equal(first.AddMonths(1).AddDays(-1), conditions[1].Value);
             cut.WaitForAssertion(() => Assert.Contains(Text(PolhemUIText.DateThisMonth), Assert.Single(cut.FindAll(Chip)).TextContent,
                 StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("Me on a relation to employees is sent as the signed-in user's row ids, and its button goes once added")]
+        public async Task Search_CurrentUser_SendsUserIds()
+        {
+            using var culture = new CultureScope("en-US");
+            var backend = Register();
+            await Services.GetRequiredService<BlazorUserContext>().EnterCompanyAsync("C1");
+            var cut = OpenPane(RenderList());
+
+            AddCondition(cut, "Manager");
+            cut.Find(MeButton).Click();
+            cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(MeButton)));
+            Search(cut);
+
+            cut.WaitForAssertion(() => Assert.Equal(
+                $"Manager: {Text(PolhemUIText.CurrentUser)}", Assert.Single(cut.FindAll(Chip)).TextContent.Trim()));
+            var condition = Assert.Single(Conditions(backend.LastFilter));
+            Assert.Equal(("manager_rowid", ComparisonOperator.In), (condition.FieldName, condition.Operator));
+            Assert.Equal(new object[] { FormPageTestBackend.SignedInUserRowId, FormPageTestBackend.SignedInEmployeeRowId },
+                Assert.IsType<object[]>(condition.Value));
         }
 
         [Fact]

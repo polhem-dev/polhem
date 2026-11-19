@@ -37,6 +37,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
         public static readonly Guid BobId = new("aaaaaaaa-0000-0000-0000-000000000002");
         public static readonly Guid DeptId = new("dddddddd-0000-0000-0000-000000000001");
         public static readonly Guid ParentDeptId = new("dddddddd-0000-0000-0000-000000000002");
+        public static readonly Guid SignedInUserRowId = new("eeeeeeee-0000-0000-0000-000000000001");
+        public static readonly Guid SignedInEmployeeRowId = new("eeeeeeee-0000-0000-0000-000000000002");
 
         private readonly FormSchema _emp;
         private readonly FormSchema _dept;
@@ -47,8 +49,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
         /// <param name="permissionBound">Whether both forms check capabilities.</param>
         /// <param name="nameRequired">Whether <c>emp_name</c> is required.</param>
         /// <param name="amountExpression">The expression of a computed field <c>amount</c>, or <c>null</c> for none.</param>
-        /// <param name="queryFields">Whether <c>Emp</c> adds a listed <c>status</c> and a <c>hire_date</c>, and offers
-        /// conditions on them as well as on <c>emp_name</c>.</param>
+        /// <param name="queryFields">Whether <c>Emp</c> adds a listed <c>status</c>, a <c>hire_date</c> and a
+        /// <c>manager_rowid</c> related to employees, and offers conditions on them as well as on <c>emp_name</c>.</param>
         public FormPageTestBackend(bool permissionBound = false, bool nameRequired = false, string? amountExpression = null,
             bool queryFields = false)
         {
@@ -87,6 +89,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
                 {
                     Company = new CompanyInfo { CompanyId = request.CompanyId },
                     Capabilities = new Dictionary<string, PermissionActions>(Capabilities, StringComparer.Ordinal),
+                    UserRowId = SignedInUserRowId,
+                    EmployeeRowId = SignedInEmployeeRowId,
                 });
         }
 
@@ -184,7 +188,8 @@ namespace Polhem.Web.Blazor.BehaviorTests
                 status.ListItems!.Add("OPEN", "Open");
                 status.ListItems.Add("CLOSED", "Closed");
                 fields.Add("hire_date", "Hired", FieldDbType.Date);
-                schema.QueryFields = "emp_name,status,hire_date";
+                fields.Add("manager_rowid", "Manager", FieldDbType.Guid).RelationProgId = SysProgIds.Employee;
+                schema.QueryFields = "emp_name,status,hire_date,manager_rowid";
             }
             return schema;
         }

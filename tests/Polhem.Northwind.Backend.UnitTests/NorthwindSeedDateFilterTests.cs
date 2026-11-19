@@ -20,7 +20,8 @@ namespace Polhem.Northwind.Backend.UnitTests
     /// orders of the first day of a range were left out. Each test runs <see cref="NorthwindSchemaSeeder"/> over a
     /// copy of the demo's <c>Define</c> folder against a SQLite file of its own, so no database container is involved.
     /// </remarks>
-    public sealed class NorthwindSeedDateFilterTests : IClassFixture<NorthwindSeedFixture>
+    [Collection(NorthwindSeedCollection.Name)]
+    public sealed class NorthwindSeedDateFilterTests
     {
         private const string OrderProgId = "Order";
 

@@ -135,7 +135,7 @@ public static partial class NorthwindSchemaSeeder
         new("st_user_role", "UserRole.json", Key: ["user_id", "role_id"]),
     };
 
-    private sealed record DemoAccount(string UserId, string Password, string DisplayName, string Culture);
+    private sealed record DemoAccount(string UserId, string Password, string DisplayName, string Culture, string EmployeeId);
 
     // Every account sees the same company and data. The second exists so the zh-TW captions and
     // formats can be seen without editing the database, the third so the order commands it may not run
@@ -143,11 +143,11 @@ public static partial class NorthwindSchemaSeeder
     private static readonly DemoAccount[] s_accounts =
     {
         new(NorthwindCredentials.UserId, NorthwindCredentials.Password,
-            NorthwindCredentials.DisplayName, NorthwindCredentials.Culture),
+            NorthwindCredentials.DisplayName, NorthwindCredentials.Culture, "E001"),
         new(NorthwindCredentials.ZhTwUserId, NorthwindCredentials.ZhTwPassword,
-            NorthwindCredentials.ZhTwDisplayName, NorthwindCredentials.ZhTwCulture),
+            NorthwindCredentials.ZhTwDisplayName, NorthwindCredentials.ZhTwCulture, "E002"),
         new(NorthwindCredentials.ReadOnlyUserId, NorthwindCredentials.ReadOnlyPassword,
-            NorthwindCredentials.ReadOnlyDisplayName, NorthwindCredentials.Culture),
+            NorthwindCredentials.ReadOnlyDisplayName, NorthwindCredentials.Culture, "E003"),
     };
 
     public static void EnsureSchemaAndSeed(
@@ -159,7 +159,8 @@ public static partial class NorthwindSchemaSeeder
 
         VerifyCommonRegistration(defineAccess);
         EnsureSchema(defineAccess, connectionManager);
-        SeedCommon(dbAccessFactory.Create(CommonDatabaseId));
+        var commonDbAccess = dbAccessFactory.Create(CommonDatabaseId);
+        SeedCommon(commonDbAccess);
 
         // The rest of the seed data is business data, so it lands in the company database.
         var dbAccess = dbAccessFactory.Create(CompanyDatabaseId);
@@ -175,6 +176,9 @@ public static partial class NorthwindSchemaSeeder
 
         foreach (var seed in s_seeds)
             StampCompany(dbAccess, seed.Table);
+
+        foreach (var account in s_accounts)
+            LinkEmployee(commonDbAccess, dbAccess, account);
 
         VerifyTablesExist(defineAccess, connectionManager);
     }
@@ -364,6 +368,38 @@ public static partial class NorthwindSchemaSeeder
         dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql,
             Guid.NewGuid(), userRowId, companyRowId));
     }
+
+    /// <summary>
+    /// Links a demo account to its employee (<c>st_employee.user_rowid</c>), so a query condition of "me" on an
+    /// order's salesperson finds the account's own orders.
+    /// </summary>
+    /// <remarks>
+    /// Each account has a different employee. The link is written only when the account has no employee yet and the
+    /// employee's <c>user_rowid</c> names no existing user, so a link someone changed in the demo database stays as
+    /// they left it, and an existing <c>northwind.db</c> picks the links up without being deleted. An employee without
+    /// a user does not hold an empty id: the column is <c>NOT NULL</c>, and its SQLite default is a random id. Every
+    /// demo grant has the <c>All</c> record scope, so the link changes what "me" means and nothing the accounts can see.
+    /// </remarks>
+    /// <param name="commonDbAccess">The common database, which holds the accounts.</param>
+    /// <param name="companyDbAccess">The company database, which holds the employees.</param>
+    /// <param name="account">The demo account.</param>
+    private static void LinkEmployee(DbAccess commonDbAccess, DbAccess companyDbAccess, DemoAccount account)
+    {
+        var userRowId = ResolveRowId(commonDbAccess, "st_user", account.UserId);
+        if (userRowId == Guid.Empty) { return; }
+        if (Count(companyDbAccess, "SELECT COUNT(*) FROM st_employee WHERE user_rowid = {0}", userRowId) > 0) { return; }
+
+        var current = ToGuid(companyDbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+            "SELECT user_rowid FROM st_employee WHERE sys_id = {0}", account.EmployeeId)).Scalar);
+        if (current != Guid.Empty && Count(commonDbAccess, "SELECT COUNT(*) FROM st_user WHERE sys_rowid = {0}", current) > 0)
+            return;
+
+        companyDbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
+            "UPDATE st_employee SET user_rowid = {0} WHERE sys_id = {1}", userRowId, account.EmployeeId));
+    }
+
+    private static int Count(DbAccess dbAccess, string sql, Guid rowId)
+        => Convert.ToInt32(dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, sql, rowId)).Scalar, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Fails startup when any table this seeder was meant to create is absent, naming the ones

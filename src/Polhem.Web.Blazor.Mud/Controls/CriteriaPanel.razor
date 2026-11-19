@@ -124,11 +124,16 @@
         @<div class="polhem-criteria-row__values">
             @foreach (var value in row.Values)
             {
-                <MudChip T="string" Class="polhem-criteria-row__picked" Size="Size.Small" Text="@value.Text"
+                <MudChip T="string" Class="polhem-criteria-row__picked" Size="Size.Small" Text="@ValueText(value)"
                          OnClose="_ => RemoveValueAsync(row, value)" />
             }
             <MudButton Class="polhem-criteria-row__pick" Size="Size.Small" Variant="Variant.Outlined"
                        OnClick="() => BeginPick(row)">@Text(PolhemUIText.PickValue)</MudButton>
+            @if (CanAddCurrentUser(row))
+            {
+                <MudButton Class="polhem-criteria-row__me" Size="Size.Small" Variant="Variant.Outlined"
+                           OnClick="() => AddCurrentUserAsync(row)">@Text(PolhemUIText.CurrentUser)</MudButton>
+            }
         </div>;
 
     private static InputType InputTypeFor(CriteriaRow row) => InputTypeOf(row) switch

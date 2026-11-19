@@ -196,3 +196,7 @@ Polhem.Web.Blazor.Controls.CriteriaPanelBase.DisposeAsync() -> System.Threading.
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.PaneElement.get -> Microsoft.AspNetCore.Components.ElementReference
 Polhem.Web.Blazor.Controls.CriteriaPanelBase.PaneElement.set -> void
 override Polhem.Web.Blazor.Controls.CriteriaPanelBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.AddCurrentUserAsync(Polhem.UI.Core.Criteria.CriteriaRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.ValueText(Polhem.UI.Core.Criteria.CriteriaValue value) -> string!
+Polhem.Web.Blazor.Identity.BlazorUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
+static Polhem.Web.Blazor.Controls.CriteriaPanelBase.CanAddCurrentUser(Polhem.UI.Core.Criteria.CriteriaRow! row) -> bool
