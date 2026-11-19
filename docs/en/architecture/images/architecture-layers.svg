@@ -172,7 +172,7 @@
     <rect class="accent" x="24" y="722" width="5" height="60" rx="2"/>
     <text class="name" x="44" y="757">Database</text>
     <path class="cyl" d="M196,738 a14,5 0 0 0 28,0 a14,5 0 0 0 -28,0 v20 a14,5 0 0 0 28,0 v-20"/>
-    <text class="chip-text" x="238" y="757">SQL Server · PostgreSQL · SQLite · MySQL · …</text>
+    <text class="chip-text" x="238" y="757">SQL Server · PostgreSQL · MySQL · Oracle · SQLite</text>
   </g>
     </g>
   </g>
