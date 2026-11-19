@@ -46,7 +46,7 @@ namespace Polhem.Expressions
     /// the server, so that boundary is the control — keep it intact.
     /// </para>
     /// </remarks>
-    public sealed class DynamicExpressoEvaluator : IExpressionEvaluator
+    public sealed partial class DynamicExpressoEvaluator : IExpressionEvaluator, IExpressionAllowlist
     {
         private readonly Interpreter _interpreter;
         private readonly ConcurrentDictionary<string, Func<object?[], object?>> _cache = new(StringComparer.Ordinal);
@@ -320,6 +320,10 @@ namespace Polhem.Expressions
             {
                 throw ToEvaluationException(ex, expression);
             }
+            catch (InvalidOperationException ex)
+            {
+                throw ToEvaluationException(ex, expression);
+            }
         }
 
         /// <inheritdoc />
@@ -345,6 +349,10 @@ namespace Polhem.Expressions
             {
                 throw ToEvaluationException(ex, expression);
             }
+            catch (InvalidOperationException ex)
+            {
+                throw ToEvaluationException(ex, expression);
+            }
         }
 
         /// <summary>
@@ -355,6 +363,12 @@ namespace Polhem.Expressions
         /// <see cref="Expression"/>, which it reports only as "Invalid Operation" with a position. The inner message
         /// is the one that names the operator and the operand types, so it is appended.
         /// </remarks>
+        // DynamicExpresso throws InvalidOperationException rather than ParseException for some text it cannot build,
+        // such as a helper function's name used as a value ("Extension node must override the property Expression.Type").
+        // It is still text that does not parse, so it surfaces as the exception the contract declares.
+        private static ExpressionEvaluationException ToEvaluationException(InvalidOperationException ex, string expression) =>
+            new($"Failed to parse expression: {ex.Message}", ex) { Expression = expression };
+
         private static ExpressionEvaluationException ToEvaluationException(ParseException ex, string expression)
         {
             var message = ex.InnerException is { } inner
@@ -388,6 +402,10 @@ namespace Polhem.Expressions
                     }
                 }
                 catch (ParseException ex)
+                {
+                    throw ToEvaluationException(ex, expression);
+                }
+                catch (InvalidOperationException ex)
                 {
                     throw ToEvaluationException(ex, expression);
                 }

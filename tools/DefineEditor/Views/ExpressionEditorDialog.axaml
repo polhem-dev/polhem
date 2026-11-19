@@ -63,6 +63,12 @@
                                      Foreground="{DynamicResource SemiColorDanger}"/>
             </Border>
 
+            <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,6" CornerRadius="4"
+                    Background="{DynamicResource SemiColorWarningLight}" IsVisible="{Binding HasWarning}">
+                <SelectableTextBlock Text="{Binding Warning}" TextWrapping="Wrap"
+                                     Foreground="{DynamicResource SemiColorWarning}"/>
+            </Border>
+
             <Border DockPanel.Dock="Right" Width="320" Margin="10,0,0,0" BorderThickness="1" CornerRadius="4"
                     BorderBrush="{DynamicResource SemiColorBorder}">
                 <TreeView x:Name="SymbolTree" ItemsSource="{Binding SymbolGroups}"

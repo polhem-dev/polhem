@@ -18,6 +18,7 @@ namespace Polhem.DefineEditor.ViewModels;
 public sealed partial class ExpressionEditorViewModel : ObservableObject
 {
     private readonly Action<string> _validate;
+    private readonly Func<string, IReadOnlyList<ExpressionViolation>>? _findViolations;
     private readonly IReadOnlyDictionary<string, Type> _variableTypes;
 
     /// <param name="title">The window title: what is being edited.</param>
@@ -28,14 +29,18 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <param name="message">The rule's message, edited beside its condition; <c>null</c> when there is none to edit.</param>
     /// <param name="evaluator">The evaluator whose type names the editor lists.</param>
     /// <param name="trial">The try-out area; <c>null</c> for none.</param>
+    /// <param name="findViolations">Lists what the expression uses outside the expression allowlist, shown as a warning;
+    /// <c>null</c> for no such check.</param>
     public ExpressionEditorViewModel(string title, FormTable table, Action<string> validate, string expression, string? message,
-        DynamicExpressoEvaluator evaluator, ExpressionTrialViewModel? trial = null)
+        DynamicExpressoEvaluator evaluator, ExpressionTrialViewModel? trial = null,
+        Func<string, IReadOnlyList<ExpressionViolation>>? findViolations = null)
     {
         ArgumentNullException.ThrowIfNull(table);
         Title = title;
         ArgumentNullException.ThrowIfNull(validate);
         ArgumentNullException.ThrowIfNull(evaluator);
         _validate = validate;
+        _findViolations = findViolations;
         _variableTypes = FormExpressionCalculator.GetVariableTypes(table);
         HasMessage = message is not null;
         _message = message ?? string.Empty;
@@ -114,6 +119,18 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <summary>Whether <see cref="Error"/> has a message to show.</summary>
     public bool HasError => Error.Length > 0;
 
+    /// <summary>
+    /// What the expression uses outside the expression allowlist; empty when nothing, or when it does not parse. The
+    /// expression still works in a definition file, but an untrusted author would be refused it.
+    /// </summary>
+    [ObservableProperty]
+    private string _warning = string.Empty;
+
+    /// <summary>Whether <see cref="Warning"/> has a message to show.</summary>
+    public bool HasWarning => Warning.Length > 0;
+
+    partial void OnWarningChanged(string value) => OnPropertyChanged(nameof(HasWarning));
+
     partial void OnExpressionChanged(string value) => Validate();
 
     partial void OnMessageChanged(string value) => Trial?.Update(Expression, !HasError, Message);
@@ -126,6 +143,7 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     {
         ErrorPosition = null;
         Error = string.Empty;
+        Warning = string.Empty;
         if (!string.IsNullOrWhiteSpace(Expression))
         {
             try
@@ -136,6 +154,16 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
             {
                 ErrorPosition = ex.Position;
                 Error = ex.Message;
+            }
+        }
+        if (!HasError && _findViolations is not null && !string.IsNullOrWhiteSpace(Expression))
+        {
+            var violations = _findViolations(Expression);
+            if (violations.Count > 0)
+            {
+                Warning = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    LocalizationService.Current["Validation_ExpressionOutsideAllowlist"],
+                    string.Join(" ", violations.Select(v => v.Message)));
             }
         }
         Trial?.Update(Expression, !HasError, Message);

@@ -1,1 +1,7 @@
 #nullable enable
+Polhem.Core.Expressions.ExpressionViolation
+Polhem.Core.Expressions.ExpressionViolation.ExpressionViolation(string! message, int? position) -> void
+Polhem.Core.Expressions.ExpressionViolation.Message.get -> string!
+Polhem.Core.Expressions.ExpressionViolation.Position.get -> int?
+Polhem.Core.Expressions.IExpressionAllowlist
+Polhem.Core.Expressions.IExpressionAllowlist.FindViolations(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!

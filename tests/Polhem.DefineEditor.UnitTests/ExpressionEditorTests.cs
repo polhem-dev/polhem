@@ -148,6 +148,40 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("An expression outside the allowlist shows a warning, not an error, and an allowed one shows neither")]
+        public void Expression_OutsideAllowlist_ShowsWarning()
+        {
+            var document = Load();
+            var rule = document.Schema.Rules!["positive_amount"];
+            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+
+            editor.Expression = "sys_id.GetHashCode() > 0";
+
+            Assert.False(editor.HasError);
+            Assert.True(editor.HasWarning);
+            Assert.Contains("GetHashCode", editor.Warning, StringComparison.Ordinal);
+
+            editor.Expression = "sys_id.Length > 0";
+
+            Assert.False(editor.HasWarning);
+        }
+
+        [Fact]
+        [DisplayName("The editor lists no member outside the allowlist under a type")]
+        public void CreateExpressionEditor_Types_ListOnlyAllowedMembers()
+        {
+            var document = Load();
+            var rule = document.Schema.Rules!["positive_amount"];
+
+            var editor = document.CreateExpressionEditor(Property(rule, nameof(FormRule.Condition)), rule)!;
+
+            var names = editor.Types.SelectMany(group => group.Items.OfType<ExpressionSymbol>()).Select(s => s.InsertText).ToList();
+            Assert.Contains("Math.Round(", names);
+            Assert.DoesNotContain(names, name => name.StartsWith("Guid.NewGuid", StringComparison.Ordinal));
+            Assert.DoesNotContain(names, name => name.StartsWith("DateTime.Now", StringComparison.Ordinal));
+        }
+
+        [Fact]
         [DisplayName("A detail aggregate in a master field's value expression is accepted, as form validation accepts it")]
         public void Expression_MasterAggregate_NoError()
         {

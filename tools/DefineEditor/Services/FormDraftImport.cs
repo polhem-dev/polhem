@@ -61,6 +61,20 @@ public static class FormDraftImport
             .ToList();
     }
 
+    /// <summary>Converts the expressions that use something outside the allowlist into the issues a drafting session reports.</summary>
+    /// <param name="issues">The allowlist findings.</param>
+    /// <returns>One error per finding, located at its field or rule.</returns>
+    /// <remarks>An expression a model wrote is untrusted, so a finding is an error here, not the warning it is in a definition file.</remarks>
+    public static IReadOnlyList<DraftIssue> ToAllowlistDraftIssues(IEnumerable<FormExpressionIssue> issues)
+    {
+        ArgumentNullException.ThrowIfNull(issues);
+        return issues
+            .Select(issue => new DraftIssue(DraftIssueSeverity.Error,
+                issue.FieldName is not null ? $"{issue.TableName}.{issue.FieldName}" : $"Rules.{issue.RuleId}",
+                $"The {issue.PropertyName} '{issue.Expression}' uses something an expression may not: {issue.Message}"))
+            .ToList();
+    }
+
     /// <summary>
     /// Draws the FormLayout of a converted draft: the one the import generates for a new form, or, when the solution
     /// already has a FormLayout for the ProgId, a copy of it completed with the fields it lacks, as the import's merge

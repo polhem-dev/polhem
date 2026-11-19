@@ -84,17 +84,28 @@ namespace Polhem.Expressions
         public static DateOnly MonthEnd(DateOnly date) => new(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
 
         /// <summary>Whether <paramref name="text"/> matches the regular expression <paramref name="pattern"/>; an empty text never matches.</summary>
-        /// <exception cref="ExpressionEvaluationException">The pattern is not a valid regular expression, or matching takes too long.</exception>
+        /// <remarks>The pattern is matched without backtracking, so backreferences and lookarounds are not supported.</remarks>
+        /// <exception cref="ExpressionEvaluationException">The pattern is not a valid regular expression, uses a backreference or a lookaround, or matching takes too long.</exception>
         public static bool RegexMatch(string? text, string pattern)
         {
             if (string.IsNullOrEmpty(text)) { return false; }
             try
             {
-                return Regex.IsMatch(text, pattern, RegexOptions.CultureInvariant, s_regexTimeout);
+                // IMPORTANT: NonBacktracking matches in time linear in the input, so a pattern such as `^(a|aa)+$`
+                // cannot spend its whole timeout on every call; the timeout alone bounds one call, not an expression
+                // that calls RegexMatch many times, or once per detail row. It rejects backreferences and lookarounds,
+                // which surface as an invalid pattern.
+                return Regex.IsMatch(text, pattern, RegexOptions.CultureInvariant | RegexOptions.NonBacktracking,
+                    s_regexTimeout);
             }
             catch (ArgumentException ex)
             {
                 throw new ExpressionEvaluationException($"RegexMatch has an invalid pattern: {ex.Message}", ex);
+            }
+            catch (NotSupportedException ex)
+            {
+                // A backreference or a lookaround, which matching without backtracking cannot do.
+                throw new ExpressionEvaluationException($"RegexMatch does not support this pattern: {ex.Message}", ex);
             }
             catch (RegexMatchTimeoutException ex)
             {

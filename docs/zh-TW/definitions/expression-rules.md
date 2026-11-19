@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 2edc8ac5318379491971e381dfa321b1150f6ef3 -->
+<!-- source: en/definitions/expression-rules.md blob: 6e835d8843f2a3aae9d81237c00f6fd7f67e553b -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -41,7 +41,7 @@
   > 錯的是存檔前畫面上的值。
 - **數值型別不會隱含混算**：變數的型別是其欄位 `DbType` 對應的 CLR 型別（對照見 [`DbTypeConverter.ToType`](../../../src/Polhem.Core/Data/DbTypeConverter.cs)），運算子規則與 C# 相同：`decimal` 不能與 `double` 一起運算。帶小數點的字面值是 `double`，所以當 `amount` 是 `Currency` 或 `Decimal` 欄位時，`amount * 1.05` 會解析失敗。請把字面值寫成 decimal：`amount * 1.05m`，或只用整數：`amount * 105 / 100`。
 - **運算式解析失敗時**：未開放的型別名（`File`、`Process`…）、拼錯的欄位名，或無法一起運算的運算元型別（見上一點）。在伺服端，該次存檔或刪除隨之失敗。在用戶端，該表單在開啟期間停止即時運算：head 會顯示一則訊息，指出欄位與原因，計算欄位則在存檔時由伺服端計算。Avalonia 的 `FormView` 會觸發 `LiveComputationDegraded`，Blazor 的 `FormPage` 會寫一筆 warning 到它的 `ILogger`，兩者都帶著運算式，讓 host 記錄需要修正的地方。DefineEditor 會在它們到達任一端之前先擋下：驗證或存檔 FormSchema 時，它以同樣的方式解析每個欄位與規則運算式（`FormExpressionCalculator.ValidateExpressions`），列出失敗的那些。
-- **這不是安全沙箱。** 值的成員是以反射解析的，解析器擋不住運算式往更深處觸及。運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。絕對不要用使用者輸入組出運算式文字。
+- **解析不是安全沙箱，不受信任的文字要靠允許清單把關。** 值的成員是以反射解析的，光靠解析擋不住運算式往更深處觸及。定義檔裡的運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。其他來源的運算式（例如由 AI 模型撰寫的）必須通過 `FormExpressionCalculator.ValidateUntrustedExpression`：它會先檢查長度與巢狀深度上限再解析，然後只接受表單欄位、輔助函式與業務函式、彙總、運算子、字面值，以及一份固定的成員清單（文字、日期與數字的成員，`Math`、`Convert` 等；不含 `GetType`、`typeof`、`DateTime.Now`、LINQ，也不含像 `PadLeft` 這種依參數配置記憶體的成員；數字只能用 `ToString()` 格式化，文字最多串接 8 次；`RegexMatch` 完全不允許，因為 pattern 的比對成本無法事先限制）。在定義檔中，同樣的檢查只會警告：DefineEditor 會把超出允許清單的運算式列為警告，運算式照常執行。沒有經過這項檢查，絕對不要用使用者輸入組出運算式文字。
 - **經裁剪的應用程式**：運算式呼叫的成員是以反射找到的，裁剪器看不到。`Polhem.Expressions` 內附一份保留這些成員的裁剪描述檔，見[平台支援](../getting-started/platform-support.md#套件內附的裁剪描述檔)。
 - **空值**：空欄（`DBNull`）以型別預設值代入（數值 0、字串空字串、`Guid.Empty`…），所以 `unit_price * qty` 遇空值算 0 而不會出錯。
 
@@ -56,7 +56,7 @@
 | `In(value, a, b, …)` | 值是否等於後面列出的其中一個值 | `In(status, "Draft", "Rejected")` |
 | `DaysBetween(start, end)` | 從 `start` 到 `end` 的天數；`end` 較早時為負數 | `DaysBetween(order_date, Today()) <= 30` |
 | `MonthEnd(date)` | 日期所在月份的最後一天 | `due_date <= MonthEnd(order_date)` |
-| `RegexMatch(text, pattern)` | 文字是否符合正規表示式；空的文字一律不符合 | `RegexMatch(phone, "^[0-9-]+$")` |
+| `RegexMatch(text, pattern)` | 文字是否符合正規表示式；空的文字一律不符合。比對不使用回溯，所以不支援反向參照與環視 | `RegexMatch(phone, "^[0-9-]+$")` |
 
 - **不同型別依種類比較。** 日期欄位是 `DateTime`，`Today()` 是 `DateOnly`；數量是 `int`，金額是 `decimal`。`Between`、`In`、`DaysBetween` 兩種都接受：數字以數字比較、日期以日期比較、文字以序數比較。不同種類的值（例如文字和數字）無法比較，運算式執行時會失敗，訊息會寫出兩邊的型別。
 - **`IsBlank` 涵蓋 `IsNullOrEmpty` 與 `IsNullOrWhiteSpace`**；後兩者為既有定義檔保留。
