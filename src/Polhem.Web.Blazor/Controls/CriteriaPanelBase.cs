@@ -183,6 +183,7 @@ namespace Polhem.Web.Blazor.Controls
         {
             ArgumentNullException.ThrowIfNull(field);
             Criteria.Add(field);
+            FocusAddedRow();
             return OnChangedAsync(cancellationToken);
         }
 

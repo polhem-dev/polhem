@@ -192,3 +192,7 @@ Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.get -> Polhem.UI.C
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria?
 Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.PaneElement.get -> Microsoft.AspNetCore.Components.ElementReference
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.PaneElement.set -> void
+override Polhem.Web.Blazor.Controls.CriteriaPanelBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!

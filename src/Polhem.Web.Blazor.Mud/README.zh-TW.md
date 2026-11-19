@@ -15,6 +15,7 @@
 - `FormLayoutPresenter`（`Polhem.Web.Blazor.Mud.Controls`），依 `FormLayout` 排列紀錄。欄位維持 CSS Grid，因為 `MudGrid` 做不到 `RowSpan`，也處理不了除不盡 12 的 `ColumnCount`。
 - `FormPage` 與 `RelatedRecordDialog`（`Polhem.Web.Blazor.Mud.Components`），建立在 `Polhem.Web.Blazor` 的基底上；`ConfirmDialog` 在刪除前詢問，焦點預設在取消鈕。
 - `FormPage` 把 `ColumnFilterCriteria` 傳給清單的 `GridControl`，每個欄位的篩選由 `GridColumnFilter` 提供；欄頭篩選是清單的一個條件，會顯示成 chip，也出現在查詢窗格。自行使用 `GridControl` 時，設定 `ColumnFilters` 與 `OnFilterChanged`，並自行重新讀取資料。舊的 `Filters` 參數已標為過時，不再讀取。
+- 表單有可查詢欄位時，`FormPage` 提供**查詢**按鈕：`CriteriaPanel` 編輯條件，`CriteriaChips` 在清單上方顯示生效中的條件，`UserQueryBar` 與 `NamePromptDialog` 負責儲存與套用查詢。見[清單查詢條件](../../docs/zh-TW/guides/list-query-conditions.md)。
 - 在寬螢幕上，`GridControl` 的欄位可以用滑鼠調整寬度與順序，調整結果不會被記住。
 - 在窄 viewport 或設定 `IsCompact` 時，`FormPage` 以卡片顯示清單，捲動時讀取下一頁，最多 1000 筆。每張卡片都會保持渲染，所以捲得越長，circuit 的記憶體與傳輸量越高。
 - `PolhemLoginPanel`（`Polhem.Web.Blazor.Mud.Components`），登入表單。

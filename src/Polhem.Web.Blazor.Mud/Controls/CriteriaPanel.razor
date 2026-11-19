@@ -4,7 +4,7 @@
 @using Polhem.UI.Core.Criteria
 @using Polhem.Web.Blazor.Mud.Controls.Editors
 
-<section class="polhem-criteria-panel" aria-label="@Text(PolhemUIText.QueryConditions)" @onkeydown="e => OnKeyDownAsync(e)">
+<section @ref="PaneElement" class="polhem-criteria-panel" aria-label="@Text(PolhemUIText.QueryConditions)" @onkeydown="e => OnKeyDownAsync(e)">
     <div class="polhem-criteria-panel__header">
         <span class="polhem-criteria-panel__title">@Text(PolhemUIText.QueryConditions)</span>
         <MudIconButton Class="polhem-criteria-panel__close" Icon="@Icons.Material.Filled.Close" Size="Size.Small"
