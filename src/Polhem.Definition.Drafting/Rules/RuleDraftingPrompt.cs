@@ -114,8 +114,19 @@ namespace Polhem.Definition.Drafting.Rules
         // escaped, so it cannot pose as an instruction of its own.
         private static string Quote(string? text)
         {
-            var line = string.Join(' ', (text ?? string.Empty).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)).Replace("\"", "\\\"", StringComparison.Ordinal);
-            return line.Length <= 80 ? line : line[..80] + "…";
+            var builder = new StringBuilder();
+            foreach (var c in text ?? string.Empty)
+            {
+                // Every line break or control character (U+2028 and U+2029 included) becomes a space.
+                if (char.IsControl(c) || c is '\u2028' or '\u2029') { builder.Append(' '); }
+                else if (c is '"' or '\\') { builder.Append('\\').Append(c); }
+                else { builder.Append(c); }
+            }
+            var line = builder.ToString();
+            if (line.Length <= 80) { return line; }
+            var cut = char.IsHighSurrogate(line[79]) ? 79 : 80;
+            if (cut > 0 && line[cut - 1] == '\\') { cut--; }
+            return line[..cut] + "…";
         }
 
         private static string Fields(FormSchema schema)

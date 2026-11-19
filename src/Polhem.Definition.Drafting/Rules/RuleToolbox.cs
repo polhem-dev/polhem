@@ -24,6 +24,8 @@ namespace Polhem.Definition.Drafting.Rules
         public const int MaxExplanationLength = 2000;
         public const int MaxDescriptionLength = 300;
         public const int MaxValueLength = 200;
+        public const int MaxValuesPerRow = 30;
+        public const int MaxProblemsShown = 20;
 
         private static readonly Regex s_ruleId = new("^[a-z][a-z0-9_]{0,49}$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         private static readonly JsonSerializerOptions s_serializerOptions = CreateSerializerOptions();
@@ -141,6 +143,7 @@ namespace Polhem.Definition.Drafting.Rules
         {
             var table = FormExpressionCalculator.ResolveRuleTable(rule, _schema);
             if (table is null) { return $"its table '{Echo(rule.TargetTable)}' is not a table of the form."; }
+            if (string.IsNullOrWhiteSpace(rule.Condition)) { return "it has no condition."; }
             var problems = new List<string>();
             CheckExpression(table, nameof(FormRule.When), rule.When?.Trim() ?? string.Empty, problems);
             CheckExpression(table, nameof(FormRule.Condition), rule.Condition?.Trim() ?? string.Empty, problems);
@@ -188,7 +191,11 @@ namespace Polhem.Definition.Drafting.Rules
                 var sample = samples[i];
                 var label = string.Create(CultureInfo.InvariantCulture, $"Sample {i + 1}");
                 if (string.IsNullOrWhiteSpace(sample.Description)) { problems.Add($"{label} needs a description."); }
-                else if (sample.Description.Length > MaxDescriptionLength) { problems.Add(TooLong($"{label}'s description", MaxDescriptionLength)); }
+                else if (sample.Description.Length > MaxDescriptionLength)
+                {
+                    problems.Add(TooLong($"{label}'s description", MaxDescriptionLength));
+                    continue;
+                }
                 if (sample.Values is not { Count: > 0 })
                 {
                     problems.Add($"{label} gives no values: list each field the rule reads with its value, or the rule sees empty fields.");
@@ -211,7 +218,7 @@ namespace Polhem.Definition.Drafting.Rules
                     problems.Add($"{label} cannot be computed: {ex.Message}");
                     continue;
                 }
-                catch (Exception ex) when (ex is ArithmeticException or ArgumentException or InvalidCastException
+                catch (Exception ex) when (ex is ArithmeticException or ArgumentOutOfRangeException or InvalidCastException
                     or FormatException or IndexOutOfRangeException)
                 {
                     // A save with these values would fail with an error instead of the rule's message, so the rule
@@ -221,7 +228,7 @@ namespace Polhem.Definition.Drafting.Rules
                     continue;
                 }
                 if (outcome != sample.Expected)
-                    problems.Add($"{label} ({sample.Description}): the engine computes {outcome}, not {sample.Expected}. Fix the rule or the sample.");
+                    problems.Add($"{label} ({Echo(sample.Description)}): the engine computes {outcome}, not {sample.Expected}. Fix the rule or the sample.");
                 computed.Add(new RuleDraftSample(sample.Description?.Trim() ?? string.Empty, values, detailRows, outcome));
             }
             if (problems.Count == 0 && requireBothOutcomes
@@ -287,6 +294,11 @@ namespace Polhem.Definition.Drafting.Rules
         {
             var values = new Dictionary<string, object?>(StringComparer.Ordinal);
             if (input is null) { return values; }
+            if (input.Count > MaxValuesPerRow)
+            {
+                problems.Add(string.Create(CultureInfo.InvariantCulture, $"{label} gives more than {MaxValuesPerRow} values in one row."));
+                return null;
+            }
             var ok = true;
             foreach (var item in input)
             {
@@ -328,8 +340,15 @@ namespace Polhem.Definition.Drafting.Rules
         private static string Echo(string? text) =>
             text is null ? string.Empty : text.Length <= 60 ? text : text[..60] + "…";
 
-        private static DraftToolException Refuse(IEnumerable<string> problems) =>
-            new("Not accepted:\n- " + string.Join("\n- ", problems));
+        // At most MaxProblemsShown lines, so a submission with thousands of faults cannot grow the history without bound.
+        private static DraftToolException Refuse(IEnumerable<string> problems)
+        {
+            var list = problems.ToList();
+            var shown = list.Take(MaxProblemsShown).ToList();
+            if (list.Count > shown.Count)
+                shown.Add(string.Create(CultureInfo.InvariantCulture, $"…and {list.Count - shown.Count} more."));
+            return new("Not accepted:\n- " + string.Join("\n- ", shown));
+        }
 
         private static AIFunction Create(Delegate method, string name, string description)
             => AIFunctionFactory.Create(method, new AIFunctionFactoryOptions
