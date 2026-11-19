@@ -21,7 +21,7 @@
 
 ## 1. What the user sees
 
-The Avalonia `ListView` shows a **Query** button in its toolbar when the form offers query fields. It opens the query
+The Avalonia `ListView` and the MudBlazor `FormPage` show a **Query** button in its toolbar when the form offers query fields. It opens the query
 pane, where the user adds conditions one row at a time: **Add condition** lists the fields, and each row shows the
 field with a remove button, and below it an operator where the field offers more than one and the value. **Search** (or
 Enter) reads the first page of the list with the conditions; **Clear** removes them and reads the whole list again.
@@ -39,7 +39,12 @@ Where the pane appears depends on the width of the list:
 | Narrower | Over the right side of the list, closed by a click outside it or after a search |
 | Under 600 pixels (a phone) | A card over the whole view, which dims the list; closed after a search |
 
-A list starts with no conditions, or with the user's default saved query ([section 7](#7-saved-queries)). The Blazor heads filter their lists by column instead, for now.
+A list starts with no conditions, or with the user's default saved query ([section 7](#7-saved-queries)).
+
+On the MudBlazor `FormPage` the pane follows the same widths, with two differences: the pane over the list stays open
+after a search, and closes with ✕ or Escape; and on a phone it covers the page instead of dimming it. A column header's
+filter is a condition too: it shows as a chip and as a row of the pane, setting the column again replaces that row, and
+clearing the conditions clears it. The Fluent UI `FormPage` has the column filters but no query pane yet.
 
 ## 2. Declaring the fields a list offers
 
@@ -117,6 +122,8 @@ The panel and its model are public, so a view of your own, such as a report, hos
 | `QueryCriteria`, `CriteriaRow` | `Polhem.UI.Core` | The rows, with values already converted to the field's type |
 | `GetListFilterConverter` | `Polhem.UI.Core` | Turns the rows into the `FilterNode` of a list request |
 | `CriteriaPanel` | `Polhem.UI.Avalonia` | The Avalonia control that edits the rows |
+| `CriteriaPanelBase` | `Polhem.Web.Blazor` | The rules of the Blazor pane; `CriteriaPanel` in `Polhem.Web.Blazor.Mud` draws it with MudBlazor |
+| `ColumnFilterCriteria` | `Polhem.UI.Core` | Keeps a list's column filters as rows of its `QueryCriteria` |
 
 ```csharp
 var criteria = new QueryCriteria();
@@ -173,7 +180,8 @@ In a view of your own, the same parts are public: `UserQueryCodec` (`Polhem.UI.C
 and reads it back against the fields offered now, `IUserQueryConnector` (`Polhem.Api.Contracts`) lists, saves, deletes
 and sets the default through the form's business object (`GetUserQueries`, `SaveUserQuery`, `DeleteUserQuery`,
 `SetDefaultUserQuery`, in the [API Method Reference](../api/api-method-reference.md)), and `CriteriaPanel.HeaderContent`
-is the slot above the rows where `ListView` puts its picker.
+is the slot above the rows where `ListView` puts its picker. The Blazor pane has the same slot,
+`CriteriaPanelBase.HeaderContent`, where `FormPage` puts `UserQueryBar`.
 
 ## 8. Calling GetList without the panel
 

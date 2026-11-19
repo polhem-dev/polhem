@@ -1,4 +1,4 @@
-<!-- source: en/guides/list-query-conditions.md blob: ccda53f4cce74abbf9a3a934725ff66a3bf2a653 -->
+<!-- source: en/guides/list-query-conditions.md blob: 96846dd649afed7b4846fb1cfeb94b5ebcc86b33 -->
 # 清單查詢條件
 
 [English](../../en/guides/list-query-conditions.md) · [← 文件索引](../README.md)
@@ -22,7 +22,7 @@
 
 ## 1. 使用者看到的畫面
 
-表單有可查詢欄位時，Avalonia 的 `ListView` 工具列會出現**查詢**按鈕。按下後開啟查詢窗格，使用者逐條加入條件：
+表單有可查詢欄位時，Avalonia 的 `ListView` 與 MudBlazor 的 `FormPage` 工具列會出現**查詢**按鈕。按下後開啟查詢窗格，使用者逐條加入條件：
 **加入條件**列出欄位；每一列上方是欄位和移除鈕，下方是運算子（欄位有多種時才出現）和值。**搜尋**（或按 Enter）會帶著
 條件讀取清單的第一頁；**清除**會移除條件並重新讀取整份清單。
 
@@ -38,7 +38,11 @@
 | 比上面窄 | 浮在清單右側，點窗格外或搜尋後收起 |
 | 小於 600 像素（手機） | 覆蓋整個畫面的卡片，清單變暗；搜尋後收起 |
 
-清單一開始沒有任何條件，或套用使用者的預設查詢（[第 7 節](#7-儲存的查詢)）。Blazor 版目前仍以欄頭篩選來過濾清單。
+清單一開始沒有任何條件，或套用使用者的預設查詢（[第 7 節](#7-儲存的查詢)）。
+
+MudBlazor 的 `FormPage` 依同樣的寬度決定窗格位置，有兩點不同：蓋在清單上的窗格搜尋後不會自動關閉，要按 ✕ 或 Escape
+關閉；手機寬度時窗格蓋住整頁，而不是讓清單變暗。欄頭篩選也是一個條件：會顯示成 chip、出現在窗格的條件列裡，同一欄再設定
+時取代那一列，清除條件時也一併清除。Fluent UI 的 `FormPage` 有欄頭篩選，但還沒有查詢窗格。
 
 ## 2. 宣告清單可查詢的欄位
 
@@ -109,6 +113,8 @@ DefineEditor 用與 `ListFields` 相同的欄位挑選器編輯這個屬性，Ex
 | `QueryCriteria`、`CriteriaRow` | `Polhem.UI.Core` | 條件列，值已經轉成欄位的型別 |
 | `GetListFilterConverter` | `Polhem.UI.Core` | 把條件列轉成清單請求的 `FilterNode` |
 | `CriteriaPanel` | `Polhem.UI.Avalonia` | 編輯條件列的 Avalonia 控件 |
+| `CriteriaPanelBase` | `Polhem.Web.Blazor` | Blazor 查詢窗格的規則；`Polhem.Web.Blazor.Mud` 的 `CriteriaPanel` 用 MudBlazor 畫出來 |
+| `ColumnFilterCriteria` | `Polhem.UI.Core` | 把清單的欄頭篩選存成 `QueryCriteria` 的條件列 |
 
 ```csharp
 var criteria = new QueryCriteria();
@@ -158,7 +164,8 @@ panel.SearchRequested += async (_, _) =>
 在自己的畫面裡，同樣的元件都是公開的：`UserQueryCodec`（`Polhem.UI.Core`）把條件列寫成儲存的文字，並依目前提供的欄位讀回；
 `IUserQueryConnector`（`Polhem.Api.Contracts`）透過表單的 business object 列出、儲存、刪除與設定預設（`GetUserQueries`、
 `SaveUserQuery`、`DeleteUserQuery`、`SetDefaultUserQuery`，見 [API 方法參考](../api/api-method-reference.md)）；
-`CriteriaPanel.HeaderContent` 是條件列上方的插槽，`ListView` 把下拉選單放在這裡。
+`CriteriaPanel.HeaderContent` 是條件列上方的插槽，`ListView` 把下拉選單放在這裡。Blazor 窗格有同樣的插槽
+`CriteriaPanelBase.HeaderContent`，`FormPage` 把 `UserQueryBar` 放在這裡。
 
 ## 8. 不透過面板直接呼叫 GetList
 
