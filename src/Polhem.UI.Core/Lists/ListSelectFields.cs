@@ -11,7 +11,7 @@ namespace Polhem.UI.Core.Lists
     /// and a list without it cannot open the row the user picks. Every head that lists a form asks with this value,
     /// so the rule lives once.
     /// </remarks>
-    public static class ListSelectFields
+    internal static class ListSelectFields
     {
         /// <summary>
         /// Returns <see cref="SysFields.RowId"/> followed by the form's list fields, comma separated and without

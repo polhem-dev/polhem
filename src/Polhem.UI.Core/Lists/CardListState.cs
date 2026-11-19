@@ -9,7 +9,7 @@ namespace Polhem.UI.Core.Lists
     /// user's insert pushed onto the next page arrives twice, so the row id decides.
     /// </remarks>
     /// <typeparam name="TRow">The head's row type.</typeparam>
-    public sealed class CardListState<TRow>
+    internal sealed class CardListState<TRow>
     {
         private readonly HashSet<string> _rowIds = new(StringComparer.OrdinalIgnoreCase);
         private readonly IList<TRow> _rows;

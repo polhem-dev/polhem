@@ -25,7 +25,7 @@ namespace Polhem.UI.Core.Fields
     /// valid value instead of silently writing a different number.
     /// </para>
     /// </remarks>
-    public static class NumericFieldFormat
+    internal static class NumericFieldFormat
     {
         private const NumberStyles InputStyles =
             NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite

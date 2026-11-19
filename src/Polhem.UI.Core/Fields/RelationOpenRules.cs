@@ -16,7 +16,7 @@ namespace Polhem.UI.Core.Fields
     /// record scope. Picking a value is a different permission from viewing it, because the lookup does not require
     /// <see cref="PermissionActions.Read"/> on the related form, so a user may hold a value they may not open.
     /// </remarks>
-    public static class RelationOpenRules
+    internal static class RelationOpenRules
     {
         /// <summary>
         /// Determines whether <paramref name="field"/> offers to open its related record in <paramref name="formMode"/>:

@@ -199,3 +199,67 @@ Polhem.UI.Core.Criteria.ColumnFilterCriteria.MarkApplied() -> void
 *REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.FieldValueChangeCoordinator(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Contracts.Form.IFieldValueChangeConnector! connector, System.Action<System.Data.DataRow!, string!, string?>! writeValue) -> void
 *REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnFieldValueChangedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, Polhem.UI.Core.Fields.FieldValueOrigin origin, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 *REMOVED*Polhem.UI.Core.Fields.FieldValueChangeCoordinator.OnLookupSelectedAsync(string! tableName, string! fieldName, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Polhem.UI.Core.Fields.DateTimeFieldFormat
+*REMOVED*Polhem.UI.Core.Fields.FieldCaptionRules
+*REMOVED*Polhem.UI.Core.Fields.FieldEditRules
+*REMOVED*Polhem.UI.Core.Fields.FieldValueFormatter
+*REMOVED*Polhem.UI.Core.Fields.GridCellFormatter
+*REMOVED*Polhem.UI.Core.Fields.GridColumnRules
+*REMOVED*Polhem.UI.Core.Fields.LookupDisplay
+*REMOVED*Polhem.UI.Core.Fields.LookupFieldRules
+*REMOVED*Polhem.UI.Core.Fields.NumericFieldFormat
+*REMOVED*Polhem.UI.Core.Fields.RelationOpenRules
+*REMOVED*Polhem.UI.Core.FormDataGuard
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.Degraded -> System.EventHandler?
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.FormLiveComputationEngine(Polhem.Definition.Forms.FormSchema! schema, Polhem.Core.Expressions.IExpressionEvaluator! evaluator, System.Func<string!>! timeZoneProvider, Polhem.Definition.Numbers.RoundingContext? roundingContext = null) -> void
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.IsDegraded.get -> bool
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.IsRecomputing.get -> bool
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.UI.Core.FormLiveComputationEngine.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>.CanLoadMore(Polhem.UI.Core.Lists.ListPagingState! paging) -> bool
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>.CardListState(System.Collections.Generic.IList<TRow>! rows, System.Func<TRow, string!>! getRowId, int maxRows) -> void
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>.IsAtLimit.get -> bool
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>.MaxRows.get -> int
+*REMOVED*Polhem.UI.Core.Lists.CardListState<TRow>.ShowPage(int page, System.Collections.Generic.IEnumerable<TRow>! rows) -> void
+*REMOVED*Polhem.UI.Core.Lists.ListSelectFields
+*REMOVED*const Polhem.UI.Core.Fields.GridColumnRules.DefaultMinWidth = 120 -> int
+*REMOVED*const Polhem.UI.Core.Fields.LookupDisplay.Separator = " - " -> string!
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatBindingValue(string? bindingValue) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.FormatDisplay(System.DateTime value) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.GetInputPattern(System.Globalization.CultureInfo! culture) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.ToBindingValue(System.DateTime value) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseBindingValue(string? bindingValue, out System.DateTime value) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.DateTimeFieldFormat.TryParseInput(string? input, out System.DateTime value) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.FieldCaptionRules.FormatCaption(string! caption, bool readOnly) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.FieldCaptionRules.ShowsRequiredCue(bool readOnly, bool required) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.FieldEditRules.AllowsEdit(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Layouts.LayoutFieldBase? layoutField) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.FieldValueFormatter.Format(object? raw, string! displayFormat, string! numberFormat) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.GridCellFormatter.ComposeDisplayText(System.Data.DataRow? row, System.Collections.Generic.IReadOnlyList<string!>! displayFields, string! displayFormat, string! numberFormat) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.GridCellFormatter.FormatCell(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.GridCellFormatter.FormatColumnText(System.Data.DataRow? row, Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? formField, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, System.Func<bool, string!>! booleanText) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.GridCellFormatter.IsChecked(System.Data.DataRow? row, string! fieldName) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.GridCellFormatter.SortMark(Polhem.Definition.Sorting.SortDirection? direction) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.GridColumnRules.GetMinWidth(Polhem.Definition.Layouts.LayoutColumn! column) -> int
+*REMOVED*static Polhem.UI.Core.Fields.LookupDisplay.Compose(System.Collections.Generic.IEnumerable<string!>! values) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.LookupFieldRules.ApplySelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Action<string!, string?>! setField) -> void
+*REMOVED*static Polhem.UI.Core.Fields.LookupFieldRules.ClearSelection(Polhem.Definition.Forms.FormField! field, System.Action<string!, string?>! setField) -> void
+*REMOVED*static Polhem.UI.Core.Fields.LookupFieldRules.HasLookup(Polhem.Definition.Forms.FormField? field) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.LookupFieldRules.ResolveDisplayFieldNames(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField) -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForDisplay(string! raw, string! numberFormat) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.FormatForEditing(string! raw) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.ResolveFormat(Polhem.Definition.Layouts.LayoutFieldBase? layoutField, Polhem.Definition.Forms.FormField? formField, System.Data.DataRow? row, Polhem.Definition.Settings.CurrencySettings? currencySettings, string! defaultCurrencyCode, Polhem.Definition.Settings.UnitSettings? unitSettings, string! defaultUnitCode) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.ToWriteBackValue(string? text, string! lastRaw) -> string!
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseInput(string? text, out decimal value) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.NumericFieldFormat.TryParseRaw(string? raw, out decimal value) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.RelationOpenRules.CanOpen(Polhem.Definition.Forms.FormSchema! relationSchema, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.RelationOpenRules.IsAvailable(Polhem.Definition.Layouts.SingleFormMode formMode, Polhem.Definition.Forms.FormField? field) -> bool
+*REMOVED*static Polhem.UI.Core.Fields.RelationOpenRules.TryGetTarget(Polhem.Definition.Forms.FormField? field, object? value, out Polhem.UI.Core.Fields.RelationTarget target) -> bool
+*REMOVED*static Polhem.UI.Core.FormDataGuard.RequireConnector<TConnector>(TConnector? connector, string! operation) -> TConnector!
+*REMOVED*static Polhem.UI.Core.FormDataGuard.RequireMasterRowId(System.Data.DataRow? masterRow) -> System.Guid
+*REMOVED*static Polhem.UI.Core.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
+*REMOVED*static Polhem.UI.Core.Lists.ListSelectFields.For(Polhem.Definition.Forms.FormSchema! schema) -> string!

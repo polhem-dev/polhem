@@ -11,7 +11,7 @@ namespace Polhem.UI.Core.Fields
     /// which fields it shows, and how a selection is written back. The program a lookup opens is the field's
     /// <see cref="FormField.RelationProgId"/>.
     /// </summary>
-    public static class LookupFieldRules
+    internal static class LookupFieldRules
     {
         /// <summary>
         /// Determines whether <paramref name="field"/> is a lookup field, that is, whether it declares a

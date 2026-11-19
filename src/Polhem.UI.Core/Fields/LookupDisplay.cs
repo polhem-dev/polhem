@@ -4,7 +4,7 @@ namespace Polhem.UI.Core.Fields
     /// Composes the text a lookup field shows: the values of its display fields, the same in a form
     /// editor and a grid cell, in every UI head.
     /// </summary>
-    public static class LookupDisplay
+    internal static class LookupDisplay
     {
         /// <summary>
         /// Separator between the display-field values. A plain space would be ambiguous because names

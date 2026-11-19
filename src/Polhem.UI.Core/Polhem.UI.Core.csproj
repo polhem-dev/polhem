@@ -11,8 +11,15 @@
     <ProjectReference Include="..\Polhem.Api.Contracts\Polhem.Api.Contracts.csproj" />
   </ItemGroup>
 
+  <!-- The rules every head shares are internal and reach the framework's own UI packages through these.
+       The packages ship together under one version, so the friend coupling is safe. -->
   <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.UI.Avalonia" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Mud" />
+    <InternalsVisibleTo Include="Polhem.Web.Blazor.Fluent" />
     <InternalsVisibleTo Include="Polhem.UI.Core.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.UI.Avalonia.UnitTests" />
   </ItemGroup>
 
 </Project>

@@ -12,7 +12,7 @@ namespace Polhem.UI.Core.Fields
     /// Display only. The values themselves travel in the invariant culture, so the display culture
     /// never reaches the wire or a stored value.
     /// </remarks>
-    public static class FieldValueFormatter
+    internal static class FieldValueFormatter
     {
         /// <summary>
         /// Formats <paramref name="raw"/> using <paramref name="displayFormat"/> when set, otherwise

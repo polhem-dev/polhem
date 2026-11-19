@@ -10,7 +10,7 @@ namespace Polhem.UI.Core.Fields
     /// The value handled here is the one the client holds, already in the user's time zone: the
     /// connector is the only place that converts time zones (ADR-032), so nothing here converts.
     /// </remarks>
-    public static class DateTimeFieldFormat
+    internal static class DateTimeFieldFormat
     {
         // The binding string format written back: the invariant round-trip shape the data objects
         // parse, with the time kept even at midnight.

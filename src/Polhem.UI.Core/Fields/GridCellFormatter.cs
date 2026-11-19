@@ -11,7 +11,7 @@ namespace Polhem.UI.Core.Fields
     /// with per-row currency and unit decimals, the composed display fields of a lookup column, and
     /// drop-down codes, Booleans and instants turned into what a person reads.
     /// </summary>
-    public static class GridCellFormatter
+    internal static class GridCellFormatter
     {
         /// <summary>
         /// Formats the text a plain (non-editor) cell of <paramref name="column"/> shows for
