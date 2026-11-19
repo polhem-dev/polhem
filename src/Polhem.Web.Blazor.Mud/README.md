@@ -15,6 +15,7 @@ The layering is in [ADR-059](../../maintainers/adr/adr-059-blazor-shared-layer.m
 - `FormLayoutPresenter` (`Polhem.Web.Blazor.Mud.Controls`), a record laid out from a `FormLayout`. The fields stay on a CSS grid, because `MudGrid` cannot do a `RowSpan` or a `ColumnCount` that does not divide twelve.
 - `FormPage` and `RelatedRecordDialog` (`Polhem.Web.Blazor.Mud.Components`), over the bases of `Polhem.Web.Blazor`; `ConfirmDialog` asks before a delete with the focus on Cancel.
 - `FormPage` passes a `ColumnFilterCriteria` to its list `GridControl`, which offers each column's filter in `GridColumnFilter`; a column filter is a condition of the list, shown as a chip and in the query pane. A `GridControl` of your own takes `ColumnFilters` and `OnFilterChanged`, and reads its rows again. The old `Filters` parameter is obsolete and no longer read.
+- `FormPage` offers a **Query** button when the form has query fields: `CriteriaPanel` edits the conditions, `CriteriaChips` shows the ones in effect above the list, and `UserQueryBar` with `NamePromptDialog` saves and applies queries. See [List Query Conditions](../../docs/en/guides/list-query-conditions.md).
 - On a wide screen, `GridControl` lets a mouse resize and reorder its columns. The change is not remembered.
 - On a narrow viewport, or with `IsCompact`, `FormPage` shows the list as cards and reads the next page as the user scrolls, up to 1000 rows. Every card stays rendered, so a long scroll costs circuit memory and traffic.
 - `PolhemLoginPanel` (`Polhem.Web.Blazor.Mud.Components`), the sign-in form.

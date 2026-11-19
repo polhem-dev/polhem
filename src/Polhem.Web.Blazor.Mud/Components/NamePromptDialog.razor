@@ -30,6 +30,8 @@
         CloseOnEscapeKey = true,
         MaxWidth = MaxWidth.ExtraSmall,
         FullWidth = true,
+        // The name box is the first thing in the dialog; without this the dialog's focus trap keeps the focus.
+        DefaultFocus = DefaultFocus.FirstChild,
     };
 
     private MudDialog? _dialog;
