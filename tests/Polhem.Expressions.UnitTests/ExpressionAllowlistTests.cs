@@ -43,6 +43,8 @@ namespace Polhem.Expressions.UnitTests
         [InlineData("RegexMatch(name, \"^[0-9]+$\")")]
         [InlineData("name.Length > 3 && name.Trim().ToUpper() == \"X\"")]
         [InlineData("name.Contains(\"a\") || name.StartsWith(\"b\") || name.Substring(1) == \"c\"")]
+        [InlineData("RegexMatch(name, \"^[0-9]{2,4}-[0-9]{6,8}$\") || RegexMatch(name, \"^(ab|cd)+x?$\")")]
+        [InlineData("name + name + name + name + name + name + name + name")]
         [InlineData("Math.Round(amount, 2) + Math.Abs(amount) + Math.Max(amount, 1m)")]
         [InlineData("amount * 1.05m")]
         [InlineData("d.Year == 2026 && d.AddMonths(1).Month > 1 && d.Date <= d2")]
@@ -81,6 +83,35 @@ namespace Polhem.Expressions.UnitTests
             var violations = Check(expression);
 
             Assert.Contains(violations, violation => violation.Position == expression.IndexOf(word, StringComparison.Ordinal));
+        }
+
+        [Theory]
+        [DisplayName("A RegexMatch pattern that nests repetition, counts too high or is not a literal is reported")]
+        [InlineData("RegexMatch(name, \"((a|b){0,20}){0,20}c\")", "itself repeats")]
+        [InlineData("RegexMatch(name, \"^(a+)+$\")", "itself repeats")]
+        [InlineData("RegexMatch(name, \"((a)*b)*\")", "itself repeats")]
+        [InlineData("RegexMatch(name, \"a{0,21}\")", "more than 20")]
+        [InlineData("RegexMatch(name, \"a{1000000}\")", "more than 20")]
+        [InlineData("RegexMatch(name, status)", "text literal")]
+        public void FindViolations_RegexPattern_Reported(string expression, string expected)
+        {
+            Assert.Contains(Check(expression), violation => violation.Message.Contains(expected, StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("Joining text more than the limit is reported, since the cost grows with the square of the joins")]
+        public void FindViolations_TooManyConcatenations_Reported()
+        {
+            var expression = string.Join(" + ", Enumerable.Repeat("name", 10));
+
+            Assert.Contains(Check(expression), violation => violation.Message.Contains("joins text", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("IndexOf is reported: it compares by culture, in time that grows with both texts")]
+        public void FindViolations_IndexOf_Reported()
+        {
+            Assert.NotEmpty(Check("name.IndexOf(status) >= 0"));
         }
 
         [Theory]

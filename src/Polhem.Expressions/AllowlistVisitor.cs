@@ -16,6 +16,7 @@ namespace Polhem.Expressions
         private readonly string _text;
         private readonly IReadOnlySet<Delegate> _helpers;
         private readonly List<ExpressionViolation> _violations = [];
+        private int _concatenations;
 
         private AllowlistVisitor(string text, IReadOnlySet<Delegate> helpers)
         {
@@ -115,9 +116,12 @@ namespace Polhem.Expressions
             if (node.Object is ConstantExpression { Value: Delegate helper } && _helpers.Contains(helper)
                 && node.Method.Name == nameof(Action.Invoke))
             {
+                CheckHelperCall(helper, node.Arguments);
                 Visit(node.Arguments);
                 return node;
             }
+            if (node.Method.DeclaringType == typeof(string) && node.Method.Name == nameof(string.Concat))
+                CountConcatenation();
             CheckMember(node.Method);
             return base.VisitMethodCall(node);
         }
@@ -126,6 +130,7 @@ namespace Polhem.Expressions
         {
             if (node.Expression is ConstantExpression { Value: Delegate helper } && _helpers.Contains(helper))
             {
+                CheckHelperCall(helper, node.Arguments);
                 Visit(node.Arguments);
                 return node;
             }
@@ -156,8 +161,36 @@ namespace Polhem.Expressions
 
         protected override Expression VisitBinary(BinaryExpression node)
         {
+            if (node.Method is { } method && method.DeclaringType == typeof(string) && method.Name == nameof(string.Concat))
+                CountConcatenation();
             if (node.Method is not null) { CheckMember(node.Method); }
             return base.VisitBinary(node);
+        }
+
+        // RegexMatch takes its pattern as a text literal the allowlist can read, and only a simple one.
+        private void CheckHelperCall(Delegate helper, IReadOnlyList<Expression> arguments)
+        {
+            if (helper.Method.Name != nameof(BusinessFunctions.RegexMatch)) { return; }
+            var position = ExpressionAllowlist.FindWord(_text, nameof(BusinessFunctions.RegexMatch));
+            if (arguments.Count < 2 || Unwrap(arguments[1]) is not ConstantExpression { Value: string pattern })
+            {
+                Report("The pattern of RegexMatch must be a text literal.", position);
+                return;
+            }
+            if (ExpressionAllowlist.CheckRegexPattern(pattern) is { } problem) { Report(problem, position); }
+        }
+
+        private static Expression Unwrap(Expression node) =>
+            node is UnaryExpression { NodeType: ExpressionType.Convert } convert ? Unwrap(convert.Operand) : node;
+
+        private void CountConcatenation()
+        {
+            _concatenations++;
+            if (_concatenations > ExpressionAllowlist.MaxConcatenations)
+            {
+                Report(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"The expression joins text more than {ExpressionAllowlist.MaxConcatenations} times."), null);
+            }
         }
 
         private void CheckMember(MemberInfo member)

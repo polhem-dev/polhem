@@ -34,6 +34,15 @@ namespace Polhem.Expressions
         /// <summary>The longest string literal accepted.</summary>
         public const int MaxStringLiteralLength = 200;
 
+        /// <summary>
+        /// The most text concatenations accepted. Each one copies the text built so far, so their cost grows with the
+        /// square of their number times a field's length, which the data, not the expression, decides.
+        /// </summary>
+        public const int MaxConcatenations = 8;
+
+        /// <summary>The largest count a <c>RegexMatch</c> pattern may repeat by, as in <c>{0,20}</c>.</summary>
+        public const int MaxRegexRepetition = 20;
+
         /// <summary>The types a value in an allowed expression may have: variables, literals, results and conversions.</summary>
         public static readonly IReadOnlySet<Type> ValueTypes = new HashSet<Type>
         {
@@ -50,7 +59,7 @@ namespace Polhem.Expressions
             [typeof(string)] =
             [
                 "Length", "Contains", "StartsWith", "EndsWith", "Trim", "TrimStart", "TrimEnd", "ToUpper", "ToLower",
-                "ToUpperInvariant", "ToLowerInvariant", "Substring", "IndexOf", "IsNullOrEmpty", "IsNullOrWhiteSpace",
+                "ToUpperInvariant", "ToLowerInvariant", "Substring", "IsNullOrEmpty", "IsNullOrWhiteSpace",
                 "Concat", "Equals", "CompareOrdinal", "Empty",
             ],
             [typeof(DateTime)] =
@@ -163,6 +172,119 @@ namespace Polhem.Expressions
                 i++;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Checks a <c>RegexMatch</c> pattern from an untrusted author; <c>null</c> when it is simple enough.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: matching without backtracking is linear in the input, but its constant grows with the automaton
+        /// the pattern builds. A nested repetition such as <c>((a|b){0,20}){0,20}c</c> made one call allocate over a
+        /// gigabyte on a 1,000-character value, and the one-second timeout did not always stop it. So a repetition may
+        /// not apply to a group that itself repeats, and a counted repetition may not exceed
+        /// <see cref="MaxRegexRepetition"/>. The scan is conservative: what it cannot read as simple, it refuses.
+        /// </remarks>
+        public static string? CheckRegexPattern(string pattern)
+        {
+            ArgumentNullException.ThrowIfNull(pattern);
+            // One flag per open group: whether something inside it repeats.
+            var groups = new Stack<bool>();
+            bool lastAtomRepeats = false;
+            int i = 0;
+            while (i < pattern.Length)
+            {
+                char c = pattern[i];
+                switch (c)
+                {
+                    case '\\':
+                        i += 2;
+                        lastAtomRepeats = false;
+                        continue;
+                    case '[':
+                        i = SkipCharacterClass(pattern, i);
+                        lastAtomRepeats = false;
+                        continue;
+                    case '(':
+                        groups.Push(false);
+                        i++;
+                        continue;
+                    case ')':
+                        if (groups.Count == 0) { return "The RegexMatch pattern has an unmatched parenthesis."; }
+                        lastAtomRepeats = groups.Pop();
+                        // A group with a repetition inside makes its parent hold one too.
+                        if (lastAtomRepeats) { MarkRepeats(groups); }
+                        i++;
+                        break;
+                    default:
+                        i++;
+                        lastAtomRepeats = false;
+                        break;
+                }
+                if (i < pattern.Length && IsQuantifierStart(pattern, i, out int end, out int? count))
+                {
+                    if (lastAtomRepeats)
+                        return "A RegexMatch pattern cannot repeat a group that itself repeats.";
+                    if (count > MaxRegexRepetition)
+                    {
+                        return string.Create(CultureInfo.InvariantCulture,
+                            $"A RegexMatch pattern cannot repeat more than {MaxRegexRepetition} times by count.");
+                    }
+                    MarkRepeats(groups);
+                    i = end;
+                }
+            }
+            return groups.Count == 0 ? null : "The RegexMatch pattern has an unmatched parenthesis.";
+        }
+
+        // Records that the innermost open group holds a repetition; outside any group there is nothing to record.
+        private static void MarkRepeats(Stack<bool> groups)
+        {
+            if (groups.Count == 0) { return; }
+            groups.Pop();
+            groups.Push(true);
+        }
+
+        // A quantifier at `i`: `*`, `+`, `?` or `{m}`, `{m,}`, `{m,n}`, each optionally lazy. `count` is the largest
+        // number in a counted one.
+        private static bool IsQuantifierStart(string pattern, int i, out int end, out int? count)
+        {
+            count = null;
+            end = i;
+            char c = pattern[i];
+            if (c is '*' or '+' or '?')
+            {
+                end = i + 1;
+            }
+            else if (c == '{')
+            {
+                int close = pattern.IndexOf('}', i);
+                if (close < 0) { return false; }
+                var parts = pattern[(i + 1)..close].Split(',');
+                if (parts.Length > 2 || parts.Any(part => part.Length > 0 && !part.All(char.IsAsciiDigit)) || parts[0].Length == 0)
+                    return false;
+                count = parts.Where(part => part.Length > 0)
+                    .Select(part => part.Length > 6 ? int.MaxValue : int.Parse(part, CultureInfo.InvariantCulture))
+                    .Max();
+                end = close + 1;
+            }
+            else
+            {
+                return false;
+            }
+            if (end < pattern.Length && pattern[end] == '?') { end++; }
+            return true;
+        }
+
+        private static int SkipCharacterClass(string pattern, int start)
+        {
+            int i = start + 1;
+            if (i < pattern.Length && pattern[i] == '^') { i++; }
+            if (i < pattern.Length && pattern[i] == ']') { i++; }
+            while (i < pattern.Length && pattern[i] != ']')
+            {
+                i += pattern[i] == '\\' ? 2 : 1;
+            }
+            return Math.Min(i + 1, pattern.Length);
         }
 
         /// <summary>The offset of the first occurrence of <paramref name="name"/> as a whole word; <c>null</c> when it does not occur.</summary>
