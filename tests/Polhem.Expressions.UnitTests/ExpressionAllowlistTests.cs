@@ -204,5 +204,18 @@ namespace Polhem.Expressions.UnitTests
             Assert.True(DynamicExpressoEvaluator.IsAllowedMember(typeof(string).GetProperty(nameof(string.Length))!));
             Assert.False(DynamicExpressoEvaluator.IsAllowedMember(typeof(object).GetMethod(nameof(GetType))!));
         }
+
+        [Fact]
+        [DisplayName("IsAllowedFunction refuses RegexMatch, which FindViolations reports, and accepts IsBlank, which it does not")]
+        public void IsAllowedFunction_AgreesWithFindViolations()
+        {
+            var evaluator = new DynamicExpressoEvaluator();
+            var variables = new Dictionary<string, Type> { ["phone"] = typeof(string) };
+
+            Assert.NotEmpty(evaluator.FindViolations("RegexMatch(phone, \"x\")", variables, typeof(bool)));
+            Assert.Empty(evaluator.FindViolations("IsBlank(phone)", variables, typeof(bool)));
+            Assert.False(DynamicExpressoEvaluator.IsAllowedFunction(DynamicExpressoEvaluator.HelperFunctions.Single(f => f.Name == "RegexMatch")));
+            Assert.True(DynamicExpressoEvaluator.IsAllowedFunction(DynamicExpressoEvaluator.HelperFunctions.Single(f => f.Name == "IsBlank")));
+        }
     }
 }

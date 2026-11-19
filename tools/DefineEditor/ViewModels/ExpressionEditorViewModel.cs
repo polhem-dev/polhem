@@ -82,6 +82,12 @@ public sealed partial class ExpressionEditorViewModel : ObservableObject
     /// <summary>The window title: what is being edited.</summary>
     public string Title { get; }
 
+    /// <summary>
+    /// Writes the rule from plain words and explains it; <c>null</c> for an expression that is not a rule's, or when
+    /// the editor runs without a window.
+    /// </summary>
+    public RuleAssistantViewModel? RuleAssistant { get; set; }
+
     /// <summary>The fields of the table, which the expression names as variables.</summary>
     public IReadOnlyList<ExpressionSymbol> Fields { get; }
 

@@ -167,14 +167,9 @@ namespace Polhem.Expressions
             return base.VisitBinary(node);
         }
 
-        // IMPORTANT: RegexMatch is refused. Matching without backtracking is linear in the input, but building the
-        // automaton costs what the pattern decides: patterns with no nesting and no count above 20 still allocated
-        // gigabytes in one call, past the timeout, and two hand-written rules to tell cheap patterns from costly ones
-        // were both bypassed. A definition file may still use it; a dedicated function (such as one that checks a text
-        // holds only digits) is the way to offer a common check to an untrusted author.
         private void CheckHelperCall(Delegate helper)
         {
-            if (helper.Method.Name != nameof(BusinessFunctions.RegexMatch)) { return; }
+            if (ExpressionAllowlist.IsAllowedFunction(helper.Method.Name)) { return; }
             Report("RegexMatch is not allowed in an expression from an untrusted author.",
                 ExpressionAllowlist.FindWord(_text, nameof(BusinessFunctions.RegexMatch)));
         }

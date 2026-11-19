@@ -4,3 +4,4 @@ Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Ty
 Polhem.Expressions.ExpressionFunction.Summary.get -> string!
 Polhem.Expressions.DynamicExpressoEvaluator.FindViolations(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 static Polhem.Expressions.DynamicExpressoEvaluator.IsAllowedMember(System.Reflection.MemberInfo! member) -> bool
+static Polhem.Expressions.DynamicExpressoEvaluator.IsAllowedFunction(Polhem.Expressions.ExpressionFunction! function) -> bool

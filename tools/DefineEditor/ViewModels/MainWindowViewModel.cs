@@ -262,14 +262,24 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             doc.PropertyChanged -= OnDocumentPropertyChanged;
             doc.DefineFileGenerated -= OnDefineFileGenerated;
-            if (doc is FormSchemaDocumentViewModel form) form.ActionRequested -= OnFormSchemaActionRequested;
+            if (doc is FormSchemaDocumentViewModel form)
+            {
+                form.ActionRequested -= OnFormSchemaActionRequested;
+                form.RuleMessagesApplied -= OnRuleMessagesApplied;
+            }
         }
         _dirtySubscriptions.Clear();
         foreach (var doc in OpenDocuments)
         {
             doc.PropertyChanged += OnDocumentPropertyChanged;
             doc.DefineFileGenerated += OnDefineFileGenerated;
-            if (doc is FormSchemaDocumentViewModel form) form.ActionRequested += OnFormSchemaActionRequested;
+            if (doc is FormSchemaDocumentViewModel form)
+            {
+                form.ActionRequested += OnFormSchemaActionRequested;
+                form.RuleMessagesApplied += OnRuleMessagesApplied;
+                form.RuleDraftingChatClientFactory = DraftingChatClientFactory;
+                form.RuleDraftingCredentialProvider = DraftingCredentialProvider;
+            }
             _dirtySubscriptions.Add(doc);
         }
         OnPropertyChanged(nameof(HasDirtyDocuments));
