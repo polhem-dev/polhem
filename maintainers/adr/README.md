@@ -87,3 +87,4 @@ understanding why the design is the way it is.
 | [064](adr-064-document-form-drafting.md) | A form can be drafted from paper documents through a conversation with an AI model, behind `IChatClient` | ✅ Accepted |
 | [065](adr-065-table-upgrade-records-and-schema-format.md) | Each table upgrade is recorded with the schema format, and an older format may not change a newer database | ✅ Accepted |
 | [066](adr-066-detail-aggregates-in-expressions.md) | A master field's expression can add up its detail rows (`Sum`, `Count`, `Min`, `Max`) | ✅ Accepted |
+| [067](adr-067-form-rules-from-plain-language.md) | A form rule can be written from plain language; the engine computes its samples and the allowlist holds the model's expressions | ✅ Accepted |

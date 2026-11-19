@@ -41,7 +41,7 @@ For the background and the decision itself, see [ADR-028](../../../maintainers/a
 
 ### Business Functions
 
-These read like the rule they state, and compute from their arguments alone: none reads the database or anything outside the form. DefineEditor's expression editor lists every function with what it returns and an example.
+These read like the rule they state, and compute from their arguments alone: none reads the database or anything outside the form, and none compares a value with the one stored before the edit ([ADR-067](../../../maintainers/adr/adr-067-form-rules-from-plain-language.md) says why). DefineEditor's expression editor lists every function with what it returns and an example. This table and the time functions above list every function an expression can call: `HelperFunctionDocsTests` (`tests/Polhem.Expressions.UnitTests`) fails when the catalog has a function they leave out, or they list one it does not have.
 
 | Function | Returns | Example |
 |----------|---------|---------|
@@ -50,10 +50,11 @@ These read like the rule they state, and compute from their arguments alone: non
 | `In(value, a, b, …)` | Whether the value equals one of the values listed after it | `In(status, "Draft", "Rejected")` |
 | `DaysBetween(start, end)` | The number of days from `start` to `end`; negative when `end` is earlier | `DaysBetween(order_date, Today()) <= 30` |
 | `MonthEnd(date)` | The last day of the date's month | `due_date <= MonthEnd(order_date)` |
-| `RegexMatch(text, pattern)` | Whether the text matches the regular expression; an empty text never matches. The pattern is matched without backtracking, so backreferences and lookarounds are not supported | `RegexMatch(phone, "^[0-9-]+$")` |
+| `RegexMatch(text, pattern)` | Whether the text matches the regular expression; an empty text never matches. The pattern is matched without backtracking, so backreferences and lookarounds are not supported. Not available to an untrusted author, such as the AI assistant below | `RegexMatch(phone, "^[0-9-]+$")` |
+| `IsNullOrEmpty(text)` | Whether the text is empty. Kept for existing definitions; `IsBlank` covers it | `!IsNullOrEmpty(remark)` |
+| `IsNullOrWhiteSpace(text)` | Whether the text is empty or only spaces. Kept for existing definitions; `IsBlank` covers it | `!IsNullOrWhiteSpace(remark)` |
 
 - **Mixed types compare by kind.** A date field is a `DateTime` and `Today()` a `DateOnly`; a quantity is an `int` and an amount a `decimal`. `Between`, `In` and `DaysBetween` accept either, comparing numbers as numbers, dates as dates and text ordinally. Values of different kinds, such as a text and a number, cannot be compared: the expression fails when it runs, with a message naming both types.
-- **`IsBlank` covers `IsNullOrEmpty` and `IsNullOrWhiteSpace`**, which remain for existing definitions.
 
 ## Computed Fields: `ValueExpression`
 
@@ -138,11 +139,23 @@ A rule on the master table can use the aggregates of [Totals Over Detail Rows](#
 >
 > Inside XML, write `>` as `&gt;` and a string quote as `&quot;`.
 
+## Writing a Rule in Plain Words
+
+DefineEditor's expression editor has an **AI Assistant** tab for a rule's `When` and `Condition`. Describe the rule in your own words, such as "a shipped order must have a shipper, and its freight cannot be 0", and the assistant writes the rule with Claude: the table it checks, `When`, `Condition`, the message and its translations. It shows what the rule does in plain words, with sample rows.
+
+- **The engine computes the samples, not the model.** Each sample is evaluated by the same calculator the save runs, and shows whether the rule lets the row pass, blocks it, or does not apply. A draft whose samples the engine does not confirm is sent back to the model, so the samples on screen are the rule's actual behavior.
+- **A drafted expression must pass the allowlist.** It is checked with `FormExpressionCalculator.ValidateUntrustedExpression`, which a definition file's expressions are not held to: within the size limits, only fields, functions other than `RegexMatch`, aggregates, operators, literals and the listed members.
+- **Revise** continues the conversation with a correction, or answers the assistant's question. **Explain This Rule** explains the rule as it is in the editor, with samples, so an existing rule can be checked by someone who does not read expressions.
+- **Apply Rule** replaces the rule's table, `When`, `Condition` and message, and keeps its `RuleId`. The message translations go into the form's Language files under `Rule.{RuleId}.Message`: only languages other than English that the form already has, never a new file and never a customization folder.
+- The words you type and the form's field names, captions and list values are sent to Claude, under the credential the tab names: `ant auth login`, or `ANTHROPIC_API_KEY`. Without one, the tab sends nothing.
+
+The service behind it is `RuleDrafting` in [Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.md#drafting-a-rule-from-plain-language).
+
 ## When a Business Object Is Still Required (Current Boundary)
 
 The expression engine is a **per-row** model. The following cases cannot yet be expressed declaratively and require overriding `DoBeforeSave` / `DoBeforeDelete` in a custom business object:
 
-- **Aggregates beyond `Sum`, `Count`, `Min` and `Max` of a detail table**, such as an average, a sum over only some of the rows, or a table below a detail table.
+- **Aggregates the [Totals Over Detail Rows](#totals-over-detail-rows) table does not list**, such as an average, a sum over only some of the rows, or a table below a detail table.
 - **Database lookups**, such as "a status transition must be checked against the state already stored" or "fetch the next number from a sequence".
 
 `OrderBO` in `apps/Polhem.Northwind` is a worked example: the detail amounts, the order total, "at least one line" and the required-field checks are declarative, leaving only the database-dependent logic in `DoBeforeSave`.

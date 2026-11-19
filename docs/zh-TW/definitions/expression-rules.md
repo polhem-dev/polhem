@@ -1,4 +1,4 @@
-<!-- source: en/definitions/expression-rules.md blob: 6e835d8843f2a3aae9d81237c00f6fd7f67e553b -->
+<!-- source: en/definitions/expression-rules.md blob: 94a67c2dd93317087fc8bbb0cbb2f4c06798c099 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../../en/definitions/expression-rules.md) · [← 文件索引](../README.md)
@@ -47,7 +47,7 @@
 
 ### 業務函式
 
-這些函式讀起來就像它要表達的規則，而且只用傳入的值計算：不讀資料庫，也不讀表單以外的任何東西。DefineEditor 的運算式編輯器會列出每個函式的說明與範例。
+這些函式讀起來就像它要表達的規則，而且只用傳入的值計算：不讀資料庫，也不讀表單以外的任何東西，也不拿值和編輯前存的值比較（原因見 [ADR-067](../../../maintainers/adr/adr-067-form-rules-from-plain-language.md)）。DefineEditor 的運算式編輯器會列出每個函式的說明與範例。這張表加上前面的時間函式，就是運算式能呼叫的全部函式：函式目錄有它們沒列的函式，或它們列了目錄沒有的函式時，`HelperFunctionDocsTests`（`tests/Polhem.Expressions.UnitTests`）會失敗。
 
 | 函式 | 傳回 | 範例 |
 |------|------|------|
@@ -56,10 +56,11 @@
 | `In(value, a, b, …)` | 值是否等於後面列出的其中一個值 | `In(status, "Draft", "Rejected")` |
 | `DaysBetween(start, end)` | 從 `start` 到 `end` 的天數；`end` 較早時為負數 | `DaysBetween(order_date, Today()) <= 30` |
 | `MonthEnd(date)` | 日期所在月份的最後一天 | `due_date <= MonthEnd(order_date)` |
-| `RegexMatch(text, pattern)` | 文字是否符合正規表示式；空的文字一律不符合。比對不使用回溯，所以不支援反向參照與環視 | `RegexMatch(phone, "^[0-9-]+$")` |
+| `RegexMatch(text, pattern)` | 文字是否符合正規表示式；空的文字一律不符合。比對不使用回溯，所以不支援反向參照與環視。不受信任的作者（例如下方的 AI 助手）不能使用 | `RegexMatch(phone, "^[0-9-]+$")` |
+| `IsNullOrEmpty(text)` | 文字是否為空。為既有定義檔保留；`IsBlank` 已涵蓋 | `!IsNullOrEmpty(remark)` |
+| `IsNullOrWhiteSpace(text)` | 文字是否為空或只有空格。為既有定義檔保留；`IsBlank` 已涵蓋 | `!IsNullOrWhiteSpace(remark)` |
 
 - **不同型別依種類比較。** 日期欄位是 `DateTime`，`Today()` 是 `DateOnly`；數量是 `int`，金額是 `decimal`。`Between`、`In`、`DaysBetween` 兩種都接受：數字以數字比較、日期以日期比較、文字以序數比較。不同種類的值（例如文字和數字）無法比較，運算式執行時會失敗，訊息會寫出兩邊的型別。
-- **`IsBlank` 涵蓋 `IsNullOrEmpty` 與 `IsNullOrWhiteSpace`**；後兩者為既有定義檔保留。
 
 ## 計算欄：`ValueExpression`
 
@@ -144,11 +145,23 @@
 >
 > XML 裡 `>` 要寫 `&gt;`、字串引號要寫 `&quot;`。
 
+## 用白話撰寫規則
+
+DefineEditor 的運算式編輯器在規則的 `When` 與 `Condition` 旁有 **AI 助手** 分頁。用自己的話描述規則，例如「已出貨的訂單，貨運商一定要填，而且運費不能是 0」，助手會透過 Claude 寫出規則：檢查的資料表、`When`、`Condition`、訊息與訊息的翻譯，並以白話說明規則做什麼，附上測試資料。
+
+- **測試資料由引擎計算，不是模型說了算。** 每一筆都由存檔時執行的同一個計算器求值，標示規則讓該列通過、擋下或不適用。引擎算出的結果與模型宣稱不符時，草稿會退回給模型重寫，所以畫面上的測試資料就是規則實際的行為。
+- **草擬的運算式必須通過允許清單。** 以 `FormExpressionCalculator.ValidateUntrustedExpression` 檢查，定義檔的運算式不受此限：在長度與巢狀上限內，只能用欄位、`RegexMatch` 以外的函式、彙總、運算子、字面值與列入清單的成員。
+- **修改** 以修正的話延續同一段對話，也用來回答助手的提問。**說明這條規則** 說明編輯器中目前的規則並附上測試資料，讓不會讀運算式的人也能檢查既有規則。
+- **套用規則** 取代規則的資料表、`When`、`Condition` 與訊息，保留原本的 `RuleId`。訊息的翻譯寫入表單語系檔的 `Rule.{RuleId}.Message`：只寫表單已有的英文以外語系，不新增檔案，也不寫客製目錄。
+- 你輸入的文字，以及表單的欄位名稱、標題與清單值，會以分頁上顯示的憑證送給 Claude：`ant auth login` 或 `ANTHROPIC_API_KEY`。沒有憑證時，分頁不會送出任何東西。
+
+背後的服務是 [Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.zh-TW.md#用白話產生規則) 的 `RuleDrafting`。
+
 ## 何時仍需寫 BO（當前邊界）
 
 運算式引擎是**逐列（per-row）**模型。以下情境還不能純宣告，需在自訂 BO 覆寫 `DoBeforeSave` / `DoBeforeDelete`：
 
-- **`Sum`、`Count`、`Min`、`Max` 以外的明細彙總**：如平均、只加總部分列、明細底下再一層的表。
+- **[明細加總](#明細加總)表格沒有列出的彙總**：如平均、只加總部分列、明細底下再一層的表。
 - **需查資料庫**：如「狀態轉移須比對資料庫既存狀態」「自動單號取序列」。
 
 `apps/Polhem.Northwind` 的 `OrderBO` 是實例：明細金額、訂單合計、「至少一筆明細」與必填檢查都已宣告化，只有需查資料庫的邏輯留在 `DoBeforeSave`。

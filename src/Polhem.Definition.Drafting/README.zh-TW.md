@@ -94,6 +94,8 @@ DefineEditor 的宿主會套用慣例、跑一次匯入的試算（dry run），
 [ADR-064](../../maintainers/adr/adr-064-document-form-drafting.md) 記錄為何讓模型編輯草稿而不是撰寫 XML、
 為何功能只認 `IChatClient`，以及結果如何接上 [ADR-056](../../maintainers/adr/adr-056-form-workbooks.md)
 的活頁簿匯入（ADR 只有英文版）。在 DefineEditor 中使用的方式見[從文件草擬表單](../../docs/zh-TW/guides/document-form-drafting.md)。
+`RuleDrafting` 背後的決策記錄在 [ADR-067](../../maintainers/adr/adr-067-form-rules-from-plain-language.md)；
+DefineEditor 的運算式編輯器如何使用它，見[用白話撰寫規則](../../docs/zh-TW/definitions/expression-rules.md#用白話撰寫規則)。
 
 ## 相依性
 
