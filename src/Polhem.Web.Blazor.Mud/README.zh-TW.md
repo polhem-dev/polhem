@@ -50,7 +50,7 @@
 - `GridControl` -- 呈現 `FormDataObject` 的明細資料表，或 list 模式下由呼叫端提供的 `DataTable`，編輯規則與 Avalonia 的
   `GridControl` 相同：表單模式與版面的 `AllowEditModes`、`AllowActions` 允許時顯示 Add / Edit / Delete 工具列；
   `EditMode` 為 `InCell`（每個可編輯的儲存格顯示欄位編輯器）或 `EditForm`（在 `RowEditDialog` 編輯資料列，它是包著
-  `RowEditPanel` 的強制回應視窗，按 OK 前都只暫存編輯）。儲存格文字依共用的 `GridCellFormatter`；唯讀欄位的表頭加括號，
+  `RowEditPanel` 的強制回應視窗，按 OK 前都只暫存編輯）。儲存格文字依各 head 共用的規則；唯讀欄位的表頭加括號，
   必填欄位的表頭會顯示必填標示。
 - 欄位編輯器（`Polhem.Web.Blazor.Mud.Controls.Editors`）-- `TextEdit`、`MemoEdit`、`NumericEdit`、`TimeEdit`、
   `DateTimeEdit`、`DateEdit`、`YearMonthEdit`、`CheckEdit`、`DropDownEdit`、`ButtonEdit`，名稱、契約（`IFieldEditor`）與行為
@@ -64,8 +64,8 @@
   `PolhemApiClient` 取得目標 schema 與連接器；有 Polhem 後端的應用程式不需註冊任何東西。
 - 關聯資料 -- 唯讀表單上有值的 `ButtonEdit` 不顯示按鈕，改顯示手形游標與提示；雙擊時把它指向的資料傳給
   `FormLayoutPresenter.OpenRelation`；明細 `GridControl` 的關聯儲存格也一樣。`FormPage` 以 `RelatedRecordDialog` 處理：使用者對關聯表單的權限模型有 `Read`
-  權限時以唯讀顯示那筆資料，否則由頁面在提示中指出該表單；伺服器端由關聯表單的 `GetData` 再檢查一次。共用規則是
-  `Polhem.UI.Core` 的 `RelationOpenRules`。
+  權限時以唯讀顯示那筆資料，否則由頁面在提示中指出該表單；伺服器端由關聯表單的 `GetData` 再檢查一次。各 head 透過
+  `Polhem.UI.Core` 共用這些規則。
 - `PolhemLoginPanel` -- 精簡的登入表單；`OnLoggedIn` 收到 `LoginResponse`。登入成功時也會記錄到 circuit 的
   `BlazorUserContext`。`InitialUserId` 與 `InitialPassword` 在面板初始化時填入輸入框一次。
 

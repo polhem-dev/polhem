@@ -66,7 +66,7 @@ var data = await client.Form("Employee").GetDataAsync(rowId);
 
 ### What This Package Does Not Hold
 
-- The UI helpers every head shares (`FormValueBinding`, `FormDataGuard` and the element capability resolver) are in
+- The UI helpers every head shares (`FormValueBinding` and the element capability resolver) are in
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), and the connection state of a single-user head (`ClientInfo`) is in
   [`Polhem.UI.ApiBridge`](../Polhem.UI.ApiBridge/README.md). This package does not reference the UI; see
   [ADR-054](../../maintainers/adr/adr-054-front-end-decoupled-from-api-client.md).

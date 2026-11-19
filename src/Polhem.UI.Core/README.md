@@ -89,10 +89,10 @@ application's own data through its own implementation of `IFormApiConnector`.
 
 The field editors and grids of `Polhem.UI.Avalonia` and `Polhem.Web.Blazor` share one set of rules, so the heads
 behave the same: whether a field accepts input, how numbers and dates are formatted and parsed, what a grid cell
-shows, how a lookup selection is written back, and when a relation field offers to open its record. These rules, the
-CRUD preconditions of a form, the live recomputation engine and the card list state are internal to the framework's
-UI packages (the `InternalsVisibleTo` items in the project file); an application reaches them through the heads'
-editors, grids and form views.
+shows, how a lookup selection is written back, and when a relation field offers to open its record. These rules
+(except `TimeFieldFormat`, below), the CRUD preconditions of a form, the live recomputation engine and the card list
+state are internal to the framework's UI packages (the `InternalsVisibleTo` items in the project file); an application
+reaches them through the heads' editors, grids and form views.
 
 - `TimeFieldFormat` -- the value a time-of-day editor writes back.
 

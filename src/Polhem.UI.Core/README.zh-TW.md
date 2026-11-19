@@ -77,9 +77,9 @@
 ### 各 head 共用的欄位編輯器規則
 
 `Polhem.UI.Avalonia` 與 `Polhem.Web.Blazor` 的欄位編輯器與 grid 共用同一套規則，讓各 head 行為一致：欄位可否輸入、
-數值與日期如何格式化與剖析、grid 儲存格顯示什麼、查詢選取結果如何寫回，以及關聯欄位何時提供開啟所指記錄。這些規則、
-表單 CRUD 的前置條件、即時重算引擎與卡片清單狀態，都是框架 UI 套件之間的 internal 型別（見專案檔的
-`InternalsVisibleTo`）；應用程式透過各 head 的編輯器、grid 與表單檢視使用它們。
+數值與日期如何格式化與剖析、grid 儲存格顯示什麼、查詢選取結果如何寫回，以及關聯欄位何時提供開啟所指記錄。這些規則
+（下方的 `TimeFieldFormat` 除外）、表單 CRUD 的前置條件、即時重算引擎與卡片清單狀態，都是框架 UI 套件之間的 internal
+型別（見專案檔的 `InternalsVisibleTo`）；應用程式透過各 head 的編輯器、grid 與表單檢視使用它們。
 
 - `TimeFieldFormat` -- 時間欄位編輯器寫回的值。
 

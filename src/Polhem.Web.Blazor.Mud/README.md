@@ -60,7 +60,7 @@ An editor, a grid or a page here is the same on every UI package: the rules are 
   mode, with the editing rules of the Avalonia `GridControl`: an Add / Edit / Delete toolbar while the form mode
   and the layout's `AllowEditModes` and `AllowActions` allow it, and `EditMode` `InCell` (each editable cell shows
   its field editor) or `EditForm` (a row is edited in `RowEditDialog`, a modal over `RowEditPanel`, which buffers
-  the edits until OK). Cell text follows the shared `GridCellFormatter`; a read-only header is parenthesised, and a required one shows the required cue.
+  the edits until OK). Cell text follows the rules every head shares; a read-only header is parenthesised, and a required one shows the required cue.
 - Field editors (`Polhem.Web.Blazor.Mud.Controls.Editors`) -- `TextEdit`, `MemoEdit`, `NumericEdit`, `TimeEdit`,
   `DateTimeEdit`, `DateEdit`, `YearMonthEdit`, `CheckEdit`, `DropDownEdit` and `ButtonEdit`, with the same names, contract
   (`IFieldEditor`) and behavior as the field editors of `Polhem.UI.Avalonia`. An editor binds to a
@@ -78,7 +78,7 @@ An editor, a grid or a page here is the same on every UI package: the rules are 
   `GridControl`'s relation cell does the same. `FormPage` handles
   it with `RelatedRecordDialog`, which shows that record read-only when the user holds `Read` on the related form's
   permission model and otherwise lets the page name the form in a notice; the related form's `GetData` checks again on
-  the server. The shared rules are `RelationOpenRules` in `Polhem.UI.Core`.
+  the server. Every head shares these rules through `Polhem.UI.Core`.
 - `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`. A successful sign-in is
   also recorded on the circuit's `BlazorUserContext`. `InitialUserId` and `InitialPassword` fill the inputs once, when
   the panel is initialized.

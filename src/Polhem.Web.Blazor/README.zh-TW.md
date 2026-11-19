@@ -30,8 +30,8 @@
 - `FormDataObject`（`Polhem.UI.Core.DataObjects`）-- 頁面以 circuit 的 client 所建立的連接器，以及 circuit 自己的時區
   （`Client.Session.Credentials.UserTimeZoneId`）建構它，新資料列的日期預設值依此決定。自訂頁面也照做；不可傳整個
   process 共用的時區。
-- `FormLiveComputation` -- 重算表單的計算欄位並評估新資料列的預設值運算式，規則與 Avalonia 端相同（`Polhem.UI.Core`
-  的 `FormLiveComputationEngine`）。自訂頁面訂閱 `FieldValueChanged` 並呼叫 `Recompute`；時區要傳 circuit 自己的，
+- `FormLiveComputation` -- 重算表單的計算欄位並評估新資料列的預設值運算式，規則與 Avalonia 端相同（兩端共用
+  `Polhem.UI.Core` 的引擎）。自訂頁面訂閱 `FieldValueChanged` 並呼叫 `Recompute`；時區要傳 circuit 自己的，
   不可用整個 process 共用的。
 
 ## 相依限制
@@ -39,7 +39,7 @@
 本套件不參考任何 UI 框架或 ASP.NET Core 宿主，因此可以在 WebAssembly 載入。由 `POLHEM9001` 把關。
 
 它參考 `Polhem.Api.Client`、`Polhem.Expressions` 與 [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md)；後者提供各 head
-共用的表單值規則（`FormValueBinding`、`FormDataGuard`、元素能力解析器）以及其他合約與規則。它的行程層級部分不可使用：Blazor
+共用的表單值規則（`FormValueBinding`、元素能力解析器）以及其他合約與規則。它的行程層級部分不可使用：Blazor
 Server 網站在同一行程服務多位使用者，因此 Blazor 套件不得使用 `UIServices`，也不得參考 `Polhem.UI.ApiBridge`，兩者都在
 每個行程只持有一位使用者。`UIServicesUsageGateTests`（`tests/Polhem.Web.Blazor.Server.UnitTests`）會讀取本套件、Server 宿主與
 兩個 UI 套件的參考，違反時測試失敗。WebAssembly 宿主不在這項掃描內：`POLHEM9001` 讓它無法參考 `Polhem.UI.ApiBridge`，但沒有任何
