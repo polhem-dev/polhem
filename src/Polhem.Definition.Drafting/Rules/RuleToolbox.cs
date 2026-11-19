@@ -20,6 +20,10 @@ namespace Polhem.Definition.Drafting.Rules
         public const int MinSamples = 2;
         public const int MaxSamples = 10;
         public const int MaxDetailRows = 10;
+        public const int MaxMessageLength = 500;
+        public const int MaxExplanationLength = 2000;
+        public const int MaxDescriptionLength = 300;
+        public const int MaxValueLength = 200;
 
         private static readonly Regex s_ruleId = new("^[a-z][a-z0-9_]{0,49}$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         private static readonly JsonSerializerOptions s_serializerOptions = CreateSerializerOptions();
@@ -85,21 +89,28 @@ namespace Polhem.Definition.Drafting.Rules
             }
 
             if (string.IsNullOrWhiteSpace(message)) { problems.Add("message is required."); }
+            else if (message.Length > MaxMessageLength) { problems.Add(TooLong("message", MaxMessageLength)); }
             var translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var language in _options.MessageLanguages)
             {
-                if (messageTranslations?.FirstOrDefault(t => string.Equals(t.Language, language, StringComparison.OrdinalIgnoreCase))
+                if (messageTranslations?.FirstOrDefault(t => t is not null && string.Equals(t.Language, language, StringComparison.OrdinalIgnoreCase))
                         is { Text: { } text } && !string.IsNullOrWhiteSpace(text))
-                    translations[language] = text.Trim();
+                {
+                    if (text.Length > MaxMessageLength) { problems.Add(TooLong($"The {language} message", MaxMessageLength)); }
+                    else { translations[language] = text.Trim(); }
+                }
                 else
                     problems.Add($"messageTranslations needs the message in {language}.");
             }
             if (string.IsNullOrWhiteSpace(explanation)) { problems.Add("explanation is required."); }
+            else if (explanation.Length > MaxExplanationLength) { problems.Add(TooLong("explanation", MaxExplanationLength)); }
 
             if (problems.Count > 0) { throw Refuse(problems); }
 
             var computed = ComputeSamples(table!, when, condition, samples, requireBothOutcomes: true);
-            AcceptedRule = new RuleDraft(ruleId, targetTable?.Trim() ?? string.Empty, when, condition, message.Trim(),
+            // The table as the form names it, and empty for the master table, whatever spelling the model used.
+            var canonicalTable = ReferenceEquals(table, _schema.MasterTable) ? string.Empty : table!.TableName;
+            AcceptedRule = new RuleDraft(ruleId, canonicalTable, when, condition, message.Trim(),
                 translations, explanation.Trim(), computed);
             return "Accepted. Reply to the user in one short sentence; do not repeat the rule.";
         }
@@ -111,13 +122,29 @@ namespace Polhem.Definition.Drafting.Rules
             var rule = ExplainedRule ?? throw new DraftToolException("There is no rule to explain in this request.");
             var problems = new List<string>();
             if (string.IsNullOrWhiteSpace(explanation)) { problems.Add("explanation is required."); }
+            else if (explanation.Length > MaxExplanationLength) { problems.Add(TooLong("explanation", MaxExplanationLength)); }
             var table = FormExpressionCalculator.ResolveRuleTable(rule, _schema);
             if (table is null) { problems.Add($"The rule's table '{rule.TargetTable}' does not exist."); }
             if (problems.Count > 0) { throw Refuse(problems); }
 
-            var computed = ComputeSamples(table!, rule.When, rule.Condition, samples, requireBothOutcomes: false);
+            // The same trimmed text CheckRule checked before the request.
+            var computed = ComputeSamples(table!, rule.When?.Trim() ?? string.Empty, rule.Condition?.Trim() ?? string.Empty,
+                samples, requireBothOutcomes: false);
             AcceptedExplanation = new RuleExplanation(explanation.Trim(), computed);
             return "Accepted. Reply to the user in one short sentence.";
+        }
+
+        /// <summary>
+        /// Checks an existing rule's expressions as untrusted text; <see langword="null"/> when they pass.
+        /// </summary>
+        public string? CheckRule(FormRule rule)
+        {
+            var table = FormExpressionCalculator.ResolveRuleTable(rule, _schema);
+            if (table is null) { return $"its table '{Echo(rule.TargetTable)}' is not a table of the form."; }
+            var problems = new List<string>();
+            CheckExpression(table, nameof(FormRule.When), rule.When?.Trim() ?? string.Empty, problems);
+            CheckExpression(table, nameof(FormRule.Condition), rule.Condition?.Trim() ?? string.Empty, problems);
+            return problems.Count == 0 ? null : string.Join(" ", problems);
         }
 
         private FormTable? ResolveTable(string targetTable, List<string> problems)
@@ -130,7 +157,7 @@ namespace Polhem.Definition.Drafting.Rules
                 return null;
             }
             if (_schema.Tables is { } tables && tables.Contains(targetTable)) { return tables[targetTable]; }
-            problems.Add($"targetTable '{targetTable}' is not a table of the form. Tables: {string.Join(", ", (_schema.Tables ?? []).Select(t => t.TableName))}.");
+            problems.Add($"targetTable '{Echo(targetTable)}' is not a table of the form. Tables: {string.Join(", ", (_schema.Tables ?? []).Select(t => t.TableName))}.");
             return null;
         }
 
@@ -150,6 +177,7 @@ namespace Polhem.Definition.Drafting.Rules
         private List<RuleDraftSample> ComputeSamples(FormTable table, string when, string condition,
             List<SampleInput>? samples, bool requireBothOutcomes)
         {
+            samples = samples?.Where(sample => sample is not null).ToList();
             if (samples is null || samples.Count < MinSamples || samples.Count > MaxSamples)
                 throw Refuse([$"Give between {MinSamples} and {MaxSamples} samples."]);
 
@@ -160,6 +188,7 @@ namespace Polhem.Definition.Drafting.Rules
                 var sample = samples[i];
                 var label = string.Create(CultureInfo.InvariantCulture, $"Sample {i + 1}");
                 if (string.IsNullOrWhiteSpace(sample.Description)) { problems.Add($"{label} needs a description."); }
+                else if (sample.Description.Length > MaxDescriptionLength) { problems.Add(TooLong($"{label}'s description", MaxDescriptionLength)); }
                 if (sample.Values is not { Count: > 0 })
                 {
                     problems.Add($"{label} gives no values: list each field the rule reads with its value, or the rule sees empty fields.");
@@ -180,6 +209,15 @@ namespace Polhem.Definition.Drafting.Rules
                 catch (ExpressionEvaluationException ex)
                 {
                     problems.Add($"{label} cannot be computed: {ex.Message}");
+                    continue;
+                }
+                catch (Exception ex) when (ex is ArithmeticException or ArgumentException or InvalidCastException
+                    or FormatException or IndexOutOfRangeException)
+                {
+                    // A save with these values would fail with an error instead of the rule's message, so the rule
+                    // must handle them (for example by testing a divisor before dividing).
+                    problems.Add($"{label} makes the rule fail when it runs ({ex.GetType().Name}: {ex.Message}). A record "
+                        + "with these values could not be saved at all; change the expression so it handles them.");
                     continue;
                 }
                 if (outcome != sample.Expected)
@@ -219,15 +257,17 @@ namespace Polhem.Definition.Drafting.Rules
             var ok = true;
             foreach (var row in input)
             {
+                if (row is null) { continue; }
                 if (_schema.Tables is not { } tables || !tables.Contains(row.Table ?? string.Empty)
                     || ReferenceEquals(tables[row.Table!], _schema.MasterTable))
                 {
-                    problems.Add($"{label} has a detail row of '{row.Table}', which is not a detail table of the form.");
+                    problems.Add($"{label} has a detail row of '{Echo(row.Table)}', which is not a detail table of the form.");
                     ok = false;
                     continue;
                 }
                 var detailTable = tables[row.Table!];
-                var values = ReadValues(detailTable, row.Values.Select(v => new SampleValue { Field = v.Field, Value = v.Value }).ToList(),
+                var values = ReadValues(detailTable,
+                    (row.Values ?? []).Where(v => v is not null).Select(v => new SampleValue { Field = v.Field, Value = v.Value }).ToList(),
                     label, problems);
                 if (values is null) { ok = false; continue; }
                 if (!lists.TryGetValue(detailTable.TableName, out var list))
@@ -250,10 +290,17 @@ namespace Polhem.Definition.Drafting.Rules
             var ok = true;
             foreach (var item in input)
             {
+                if (item is null) { continue; }
                 var name = item.Field ?? string.Empty;
+                if (item.Value is { Length: > MaxValueLength })
+                {
+                    problems.Add(TooLong($"{label}'s value for {Echo(name)}", MaxValueLength));
+                    ok = false;
+                    continue;
+                }
                 if (table.Fields is null || !table.Fields.Contains(name))
                 {
-                    problems.Add($"{label} names '{name}', which is not a field of {table.TableName}.");
+                    problems.Add($"{label} names '{Echo(name)}', which is not a field of {table.TableName}.");
                     ok = false;
                     continue;
                 }
@@ -267,12 +314,19 @@ namespace Polhem.Definition.Drafting.Rules
                 }
                 catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
                 {
-                    problems.Add($"{label}: '{item.Value}' is not a value for {name} ({field.DbType}).");
+                    problems.Add($"{label}: '{Echo(item.Value)}' is not a value for {Echo(name)} ({field.DbType}).");
                     ok = false;
                 }
             }
             return ok ? values : null;
         }
+
+        private static string TooLong(string what, int max) =>
+            string.Create(CultureInfo.InvariantCulture, $"{what} is longer than {max} characters.");
+
+        // What the model sent, echoed in a refusal at a bounded length, so a huge argument does not grow the history.
+        private static string Echo(string? text) =>
+            text is null ? string.Empty : text.Length <= 60 ? text : text[..60] + "…";
 
         private static DraftToolException Refuse(IEnumerable<string> problems) =>
             new("Not accepted:\n- " + string.Join("\n- ", problems));

@@ -79,7 +79,6 @@ namespace Polhem.Definition.Drafting.Rules
         public Task<RuleDraftResult> ReviseAsync(string feedback, CancellationToken cancellationToken = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(feedback);
-            if (_history.Count == 0) { throw new InvalidOperationException($"Call {nameof(DraftAsync)} first."); }
             return RunDraftAsync(feedback, reset: false, cancellationToken);
         }
 
@@ -97,6 +96,10 @@ namespace Polhem.Definition.Drafting.Rules
             Enter();
             try
             {
+                // The rule is evaluated for every sample, so it is checked as untrusted text first: a rule from
+                // anywhere but a developer's definition file could otherwise reach the parser before its size is checked.
+                if (_toolbox.CheckRule(rule) is { } problem)
+                    return new RuleExplanationResult(null, $"The rule cannot be explained: {problem}");
                 _toolbox.AcceptedExplanation = null;
                 _toolbox.ExplainedRule = rule;
                 var history = new List<ChatMessage>
@@ -118,6 +121,11 @@ namespace Polhem.Definition.Drafting.Rules
         private async Task<RuleDraftResult> RunDraftAsync(string text, bool reset, CancellationToken cancellationToken)
         {
             Enter();
+            if (!reset && _history.Count == 0)
+            {
+                Volatile.Write(ref _requestInProgress, 0);
+                throw new InvalidOperationException($"Call {nameof(DraftAsync)} first.");
+            }
             var before = _history.ToList();
             var revisedBefore = _toolbox.RevisedRuleId;
             var completed = false;
@@ -174,11 +182,13 @@ namespace Polhem.Definition.Drafting.Rules
                 if (calls.Count == 0) { return reply; }
 
                 var results = new List<AIContent>();
-                foreach (var call in calls)
+                for (int i = 0; i < calls.Count; i++)
                 {
+                    var call = calls[i];
                     cancellationToken.ThrowIfCancellationRequested();
-                    results.Add(lastRound
-                        ? new FunctionResultContent(call.CallId, "Not run: reply to the user instead.")
+                    // One submission per response: each costs the samples' evaluation, so a response may not multiply it.
+                    results.Add(lastRound ? new FunctionResultContent(call.CallId, "Not run: reply to the user instead.")
+                        : i > 0 ? new FunctionResultContent(call.CallId, "Not run: submit one at a time.")
                         : await InvokeAsync(tool, call, cancellationToken).ConfigureAwait(false));
                 }
                 history.Add(new ChatMessage(ChatRole.Tool, results));

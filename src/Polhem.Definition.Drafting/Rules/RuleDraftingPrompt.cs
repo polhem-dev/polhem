@@ -110,6 +110,14 @@ namespace Polhem.Definition.Drafting.Rules
             return builder.Length == 0 ? "(none)" : builder.ToString().TrimEnd();
         }
 
+        // A caption or a list value is the form author's text inside the instructions: one line, bounded, with its quotes
+        // escaped, so it cannot pose as an instruction of its own.
+        private static string Quote(string? text)
+        {
+            var line = string.Join(' ', (text ?? string.Empty).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)).Replace("\"", "\\\"", StringComparison.Ordinal);
+            return line.Length <= 80 ? line : line[..80] + "…";
+        }
+
         private static string Fields(FormSchema schema)
         {
             var builder = new StringBuilder();
@@ -120,9 +128,9 @@ namespace Polhem.Definition.Drafting.Rules
                 foreach (var field in table.Fields ?? [])
                 {
                     if (field.FieldName.StartsWith("sys_", StringComparison.Ordinal)) { continue; }
-                    builder.Append(CultureInfo.InvariantCulture, $"- {field.FieldName}: {field.DbType}, \"{field.Caption}\"");
+                    builder.Append(CultureInfo.InvariantCulture, $"- {field.FieldName}: {field.DbType}, \"{Quote(field.Caption)}\"");
                     if (field.ListItems is { Count: > 0 } items)
-                        builder.Append(CultureInfo.InvariantCulture, $", one of {string.Join(", ", items.Select(i => $"\"{i.Value}\""))}");
+                        builder.Append(CultureInfo.InvariantCulture, $", one of {string.Join(", ", items.Select(i => $"\"{Quote(i.Value)}\""))}");
                     builder.Append('\n');
                 }
             }

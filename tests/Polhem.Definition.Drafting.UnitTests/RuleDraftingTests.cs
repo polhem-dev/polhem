@@ -155,6 +155,72 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("A sample that makes the rule fail when it runs is refused, since such a record could not be saved")]
+        public async Task DraftAsync_RuleFailsOnSample_Refused()
+        {
+            var rule = ValidRule.Replace("\"when\":\"amount > 100000\"", "\"when\":\"100 / amount < 1\"", StringComparison.Ordinal)
+                .Replace("{\"field\":\"amount\",\"value\":\"50000\"}", "{\"field\":\"amount\",\"value\":\"0\"}", StringComparison.Ordinal);
+            var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", rule)).Then(Text("…"));
+
+            var result = await Create(client).DraftAsync("x");
+
+            Assert.Null(result.Draft);
+            Assert.Contains("DivideByZeroException", Result(client), StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [DisplayName("The target table is stored as the form names it, and empty for the master table")]
+        [InlineData("\"targetTable\":\"order\"", "")]
+        [InlineData("\"targetTable\":\" Order \"", "")]
+        public async Task DraftAsync_TargetTableSpelling_StoredCanonical(string targetTable, string expected)
+        {
+            var client = new ScriptedChatClient()
+                .Then(Call("c1", "submit_rule", ValidRule.Replace("\"targetTable\":\"\"", targetTable, StringComparison.Ordinal)))
+                .Then(Text("好了。"));
+
+            var result = await Create(client).DraftAsync("x");
+
+            Assert.Equal(expected, result.Draft!.TargetTable);
+        }
+
+        [Fact]
+        [DisplayName("A null sample is ignored, a message over the length limit is refused, and only one submission per response runs")]
+        public async Task DraftAsync_NullSampleLongMessageAndSecondCall()
+        {
+            var withNull = ValidRule.Replace("\"samples\":[", "\"samples\":[null,", StringComparison.Ordinal);
+            var longMessage = ValidRule.Replace("An amount over 100,000 needs an approver.", new string('x', 501), StringComparison.Ordinal);
+            var client = new ScriptedChatClient()
+                .Then(Call("c1", "submit_rule", longMessage), Call("c2", "submit_rule", withNull))
+                .Then((messages, _) =>
+                {
+                    var results = messages[^1].Contents.OfType<FunctionResultContent>().ToList();
+                    Assert.Contains("longer than 500", results[0].Result?.ToString(), StringComparison.Ordinal);
+                    Assert.Equal("Not run: submit one at a time.", results[1].Result?.ToString());
+                    return new ChatResponse(new ChatMessage(ChatRole.Assistant, [Call("c3", "submit_rule", withNull)]));
+                })
+                .Then(Text("好了。"));
+
+            var result = await Create(client).DraftAsync("x");
+
+            Assert.Equal(3, result.Draft!.Samples.Count);
+        }
+
+        [Fact]
+        [DisplayName("A rule outside the allowlist is not explained, and the model is not asked")]
+        public async Task ExplainAsync_RuleOutsideAllowlist_NotSent()
+        {
+            var client = new ScriptedChatClient();
+            var schema = BuildSchema();
+            var rule = new FormRule("bad", new string('(', 20) + "amount" + new string(')', 20) + " > 0", "Bad.");
+
+            var result = await Create(client, schema).ExplainAsync(rule);
+
+            Assert.Null(result.Explanation);
+            Assert.Contains("nests deeper", result.Reply, StringComparison.Ordinal);
+            Assert.Empty(client.Requests);
+        }
+
+        [Fact]
         [DisplayName("Samples that only pass are refused: the user must see one the rule blocks")]
         public async Task DraftAsync_NoBlockedSample_Refused()
         {
