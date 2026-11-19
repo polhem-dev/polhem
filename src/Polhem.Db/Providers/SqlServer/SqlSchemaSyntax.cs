@@ -76,7 +76,8 @@ namespace Polhem.Db.Providers.SqlServer
 
         /// <summary>
         /// Gets the SQL Server built-in default value expression for the specified field type
-        /// (e.g. <c>getdate()</c> for DateTime, <c>newid()</c> for Guid, <c>0</c> for numeric).
+        /// (e.g. <c>getutcdate()</c> for DateTime, the empty GUID for Guid, <c>0</c> for numeric; the row id's
+        /// generated default is <see cref="GetBuiltInDefault(DbField)"/>).
         /// </summary>
         /// <param name="dbType">The field data type.</param>
         public static string GetDefaultValueExpression(FieldDbType dbType)
@@ -105,10 +106,25 @@ namespace Polhem.Db.Providers.SqlServer
                     // from `FormRowDefaults`, see D12.)
                     return "getutcdate()";
                 case FieldDbType.Guid:
-                    return "newid()";
+                    return GuidColumnDefault.EmptyGuidLiteral;
                 default:
                     return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// The default that generates a new GUID, used only for the row id column.
+        /// </summary>
+        internal const string NewGuidExpression = "newid()";
+
+        /// <summary>
+        /// Gets the built-in default of a field: <see cref="NewGuidExpression"/> for the row id column, otherwise
+        /// <see cref="GetDefaultValueExpression(FieldDbType)"/> for its type.
+        /// </summary>
+        /// <param name="field">The field definition.</param>
+        public static string GetBuiltInDefault(DbField field)
+        {
+            return GuidColumnDefault.GeneratesNewGuid(field) ? NewGuidExpression : GetDefaultValueExpression(field.DbType);
         }
 
         /// <summary>
@@ -120,7 +136,7 @@ namespace Polhem.Db.Providers.SqlServer
         {
             if (field.AllowNull)
                 return string.Empty;
-            string originalDefaultValue = GetDefaultValueExpression(field.DbType);
+            string originalDefaultValue = GetBuiltInDefault(field);
             switch (field.DbType)
             {
                 case FieldDbType.String:

@@ -23,7 +23,8 @@ CREATE TABLE "idem_gate_test" (
   "dt_null" DATE NULL,
   "dtm" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "tm" VARCHAR(5) NOT NULL DEFAULT '',
-  "g" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "sys_rowid" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "g" UUID COLLATE NOCASE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   "g_null" UUID COLLATE NOCASE NULL,
   "bin" BLOB NOT NULL
 );
@@ -59,13 +60,14 @@ CREATE TABLE "tmp_idem_gate_test" (
   "dt_null" DATE NULL,
   "dtm" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "tm" VARCHAR(5) NOT NULL DEFAULT '',
-  "g" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "sys_rowid" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "g" UUID COLLATE NOCASE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   "g_null" UUID COLLATE NOCASE NULL,
   "bin" BLOB NOT NULL
 );
 -- Move data
-INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "bin")
-SELECT "sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "bin" FROM "idem_gate_test";
+INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "sys_rowid", "bin")
+SELECT "sys_no", "s", "s_null", "code", "t_null", "b", "sh", "i", "l", "d", "c", "sys_rowid", "bin" FROM "idem_gate_test";
 INSERT INTO sqlite_sequence (name, seq) SELECT 'tmp_idem_gate_test', seq FROM sqlite_sequence WHERE name = 'idem_gate_test' AND NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'tmp_idem_gate_test');
 UPDATE sqlite_sequence SET seq = MAX(seq, COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'idem_gate_test'), 0)) WHERE name = 'tmp_idem_gate_test';
 -- Drop old table
@@ -104,13 +106,14 @@ CREATE TABLE "tmp_idem_gate_test" (
   "dt_null" DATE NULL,
   "dtm" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "tm" VARCHAR(5) NOT NULL DEFAULT '',
-  "g" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "sys_rowid" UUID COLLATE NOCASE NOT NULL DEFAULT (hex(randomblob(16))),
+  "g" UUID COLLATE NOCASE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   "g_null" UUID COLLATE NOCASE NULL,
   "bin" BLOB NOT NULL
 );
 -- Move data
-INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "g", "g_null", "bin")
-SELECT "sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "g", "g_null", "bin" FROM "idem_gate_test";
+INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "sys_rowid", "g", "g_null", "bin")
+SELECT "sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "sys_rowid", "g", "g_null", "bin" FROM "idem_gate_test";
 INSERT INTO sqlite_sequence (name, seq) SELECT 'tmp_idem_gate_test', seq FROM sqlite_sequence WHERE name = 'idem_gate_test' AND NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'tmp_idem_gate_test');
 UPDATE sqlite_sequence SET seq = MAX(seq, COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'idem_gate_test'), 0)) WHERE name = 'tmp_idem_gate_test';
 -- Drop old table

@@ -28,7 +28,8 @@ namespace Polhem.Db.Providers.Oracle
         }
 
         /// <summary>
-        /// Gets the Oracle built-in default value expression for the specified field type.
+        /// Gets the Oracle built-in default value expression for the specified field type
+        /// (the empty GUID for Guid; the row id's generated default is <see cref="GetBuiltInDefault(DbField)"/>).
         /// </summary>
         /// <param name="dbType">The field data type.</param>
         public static string GetDefaultValueExpression(FieldDbType dbType)
@@ -60,7 +61,7 @@ namespace Polhem.Db.Providers.Oracle
                     // from `FormRowDefaults`, see D12.)
                     return "SYS_EXTRACT_UTC(SYSTIMESTAMP)";
                 case FieldDbType.Guid:
-                    return "SYS_GUID()";
+                    return EmptyGuidExpression;
                 default:
                     return string.Empty;
             }
@@ -73,6 +74,27 @@ namespace Polhem.Db.Providers.Oracle
         public static string EscapeSqlString(string value)
         {
             return value.Replace("'", "''");
+        }
+
+        /// <summary>
+        /// The built-in default of a <see cref="FieldDbType.Guid"/> column other than the row id: the empty GUID as
+        /// <c>RAW(16)</c>.
+        /// </summary>
+        internal const string EmptyGuidExpression = "HEXTORAW('00000000000000000000000000000000')";
+
+        /// <summary>
+        /// The default that generates a new GUID, used only for the row id column.
+        /// </summary>
+        internal const string NewGuidExpression = "SYS_GUID()";
+
+        /// <summary>
+        /// Gets the built-in default of a field: <see cref="NewGuidExpression"/> for the row id column, otherwise
+        /// <see cref="GetDefaultValueExpression(FieldDbType)"/> for its type.
+        /// </summary>
+        /// <param name="field">The field definition.</param>
+        public static string GetBuiltInDefault(DbField field)
+        {
+            return GuidColumnDefault.GeneratesNewGuid(field) ? NewGuidExpression : GetDefaultValueExpression(field.DbType);
         }
 
         /// <summary>
@@ -107,7 +129,7 @@ namespace Polhem.Db.Providers.Oracle
             if (field.DbType == FieldDbType.Text || field.DbType == FieldDbType.Binary)
                 return string.Empty;
 
-            string originalDefaultValue = GetDefaultValueExpression(field.DbType);
+            string originalDefaultValue = GetBuiltInDefault(field);
             switch (field.DbType)
             {
                 case FieldDbType.AutoIncrement:

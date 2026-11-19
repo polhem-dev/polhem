@@ -110,7 +110,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Currency, "0")]
         [InlineData(FieldDbType.Date, "getutcdate()")]
         [InlineData(FieldDbType.DateTime, "getutcdate()")]
-        [InlineData(FieldDbType.Guid, "newid()")]
+        [InlineData(FieldDbType.Guid, "'00000000-0000-0000-0000-000000000000'")]
         [InlineData(FieldDbType.AutoIncrement, "")]
         [InlineData(FieldDbType.Binary, "")]
         [InlineData(FieldDbType.Unknown, "")]
@@ -181,11 +181,19 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQL Server GetDefaultExpression returns newid() for a Guid without a custom default")]
-        public void GetDefaultExpression_GuidNoCustom_ReturnsNewId()
+        [DisplayName("SQL Server GetDefaultExpression returns newid() for the row id")]
+        public void GetDefaultExpression_RowId_ReturnsNewId()
         {
             var field = new DbField("sys_rowid", "Row ID", FieldDbType.Guid);
             Assert.Equal("newid()", SqlSchemaSyntax.GetDefaultExpression(field));
+        }
+
+        [Fact]
+        [DisplayName("SQL Server GetDefaultExpression returns the empty GUID for a reference Guid column")]
+        public void GetDefaultExpression_ReferenceGuid_ReturnsEmptyGuid()
+        {
+            var field = new DbField("user_rowid", "User", FieldDbType.Guid);
+            Assert.Equal("'00000000-0000-0000-0000-000000000000'", SqlSchemaSyntax.GetDefaultExpression(field));
         }
 
         [Fact]

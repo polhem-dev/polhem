@@ -45,7 +45,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = new PgDialectFactory();
 
-            Assert.Equal("gen_random_uuid()", factory.GetDefaultValueExpression(FieldDbType.Guid));
+            Assert.Equal("'00000000-0000-0000-0000-000000000000'", factory.GetDefaultValueExpression(FieldDbType.Guid));
             Assert.Equal("(NOW() AT TIME ZONE 'UTC')", factory.GetDefaultValueExpression(FieldDbType.DateTime));
             Assert.Equal("(NOW() AT TIME ZONE 'UTC')", factory.GetDefaultValueExpression(FieldDbType.Date));
             Assert.Equal("0", factory.GetDefaultValueExpression(FieldDbType.Integer));

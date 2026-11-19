@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = new MySqlDialectFactory();
 
-            Assert.Equal("(UUID())", factory.GetDefaultValueExpression(FieldDbType.Guid));
+            Assert.Equal("'00000000-0000-0000-0000-000000000000'", factory.GetDefaultValueExpression(FieldDbType.Guid));
             Assert.Equal("(UTC_TIMESTAMP(6))", factory.GetDefaultValueExpression(FieldDbType.DateTime));
             Assert.Equal("0", factory.GetDefaultValueExpression(FieldDbType.Integer));
             Assert.Equal(string.Empty, factory.GetDefaultValueExpression(FieldDbType.String));

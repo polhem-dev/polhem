@@ -17,7 +17,7 @@ namespace Polhem.Db.Providers.MySql
     /// <item><see cref="FieldDbType.Decimal"/> → <c>DECIMAL(p,s)</c></item>
     /// <item><see cref="FieldDbType.Currency"/> → <c>DECIMAL(19,4)</c></item>
     /// <item><see cref="FieldDbType.DateTime"/> → <c>DATETIME(6)</c> (microsecond precision; avoids TIMESTAMP timezone surprises)</item>
-    /// <item><see cref="FieldDbType.Guid"/> → <c>CHAR(36)</c> (readable; aligns with <c>UUID()</c> default)</item>
+    /// <item><see cref="FieldDbType.Guid"/> → <c>CHAR(36)</c> (readable; aligns with the row id's <c>UUID()</c> default)</item>
     /// <item><see cref="FieldDbType.Binary"/> → <c>LONGBLOB</c></item>
     /// </list>
     /// </remarks>

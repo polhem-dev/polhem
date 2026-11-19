@@ -61,7 +61,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = new OracleDialectFactory();
 
-            Assert.Equal("SYS_GUID()", factory.GetDefaultValueExpression(FieldDbType.Guid));
+            Assert.Equal("HEXTORAW('00000000000000000000000000000000')", factory.GetDefaultValueExpression(FieldDbType.Guid));
             Assert.Equal("SYS_EXTRACT_UTC(SYSTIMESTAMP)", factory.GetDefaultValueExpression(FieldDbType.DateTime));
             Assert.Equal("TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))", factory.GetDefaultValueExpression(FieldDbType.Date));
             Assert.Equal("0", factory.GetDefaultValueExpression(FieldDbType.Integer));

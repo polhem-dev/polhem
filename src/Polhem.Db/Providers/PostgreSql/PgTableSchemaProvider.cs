@@ -208,7 +208,7 @@ namespace Polhem.Db.Providers.PostgreSql
                 dbField.Scale = scale;
             }
 
-            string originalDefaultValue = PgSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
+            string originalDefaultValue = PgSchemaSyntax.GetBuiltInDefault(dbField);
             dbField.DefaultValue = ParseDBDefaultValue(dataType, row.GetFieldValue<string>("DefaultValue"), originalDefaultValue);
             return dbField;
         }

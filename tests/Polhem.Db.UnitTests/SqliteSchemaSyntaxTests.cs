@@ -53,7 +53,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Currency, "0")]
         [InlineData(FieldDbType.Date, "(datetime('now', 'start of day'))")]
         [InlineData(FieldDbType.DateTime, "CURRENT_TIMESTAMP")]
-        [InlineData(FieldDbType.Guid, "(hex(randomblob(16)))")]
+        [InlineData(FieldDbType.Guid, "'00000000-0000-0000-0000-000000000000'")]
         [InlineData(FieldDbType.Binary, "")]
         [InlineData(FieldDbType.AutoIncrement, "")]
         [DisplayName("SQLite GetDefaultValueExpression returns the SQLite default expression of each type")]

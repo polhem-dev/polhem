@@ -101,20 +101,32 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements splits AddField of a NOT NULL Guid in two (constant default, then SET DEFAULT (UUID())) to stay replication-safe")]
-        public void GetStatements_AddGuidNotNull_SplitsIntoSafeTwoStep()
+        [DisplayName("MySQL GetStatements splits AddField of the NOT NULL row id in two (constant default, then SET DEFAULT (UUID())) to stay replication-safe")]
+        public void GetStatements_AddRowIdNotNull_SplitsIntoSafeTwoStep()
         {
-            var field = new DbField("user_rowid", "User", FieldDbType.Guid) { AllowNull = false };
+            var field = new DbField("sys_rowid", "Row id", FieldDbType.Guid) { AllowNull = false };
             var statements = _builder.GetStatements("st_employee", new AddFieldChange(field));
 
             Assert.Equal(2, statements.Count);
             // Statement 1: ADD with a constant empty Guid default, which
             // is replication-safe and must not contain (UUID()).
-            Assert.Contains("ALTER TABLE `st_employee` ADD COLUMN `user_rowid`", statements[0]);
+            Assert.Contains("ALTER TABLE `st_employee` ADD COLUMN `sys_rowid`", statements[0]);
             Assert.Contains("NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'", statements[0]);
             Assert.DoesNotContain("UUID()", statements[0]);
             // Statement 2: a metadata-only restore of the real default (only new rows get UUID()).
-            Assert.Contains("ALTER TABLE `st_employee` ALTER COLUMN `user_rowid` SET DEFAULT (UUID())", statements[1]);
+            Assert.Contains("ALTER TABLE `st_employee` ALTER COLUMN `sys_rowid` SET DEFAULT (UUID())", statements[1]);
+        }
+
+        [Fact]
+        [DisplayName("MySQL GetStatements keeps AddField of a NOT NULL reference Guid as one statement with the empty GUID default")]
+        public void GetStatements_AddReferenceGuidNotNull_SingleStatement()
+        {
+            var field = new DbField("user_rowid", "User", FieldDbType.Guid) { AllowNull = false };
+            var statements = _builder.GetStatements("st_employee", new AddFieldChange(field));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("`user_rowid` CHAR(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'", sql);
+            Assert.DoesNotContain("UUID()", sql);
         }
 
         [Fact]

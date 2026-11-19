@@ -243,7 +243,7 @@ namespace Polhem.Db.Providers.Sqlite
                 dbField.Scale = scale > 0 ? scale : dbField.Scale;
             }
 
-            string originalDefault = SqliteSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
+            string originalDefault = SqliteSchemaSyntax.GetBuiltInDefault(dbField);
             string raw = ValueUtilities.CStr(row["dflt_value"]);
             dbField.DefaultValue = ParseDefaultValue(raw, dbField.DbType, originalDefault);
             return dbField;
@@ -343,7 +343,7 @@ namespace Polhem.Db.Providers.Sqlite
         /// <remarks>
         /// WARNING: both sides must go through <see cref="NormalizeDefaultText"/> before being
         /// compared. SQLite requires an expression default to be parenthesised in the DDL, so
-        /// the framework built-in for <see cref="FieldDbType.Guid"/> is written as
+        /// the framework built-in for the row id column is written as
         /// <c>(hex(randomblob(16)))</c>, but <c>PRAGMA table_info</c> reports the inner
         /// expression only. Comparing the raw forms marks every GUID column as different on
         /// every schema comparison, so the table never converges.

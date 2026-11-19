@@ -97,11 +97,11 @@ namespace Polhem.Db.UnitTests
         }
 
 [Fact]
-        [DisplayName("GetDefaultValueExpression returns SQL Server specific defaults (such as getdate and newid)")]
+        [DisplayName("GetDefaultValueExpression returns SQL Server specific defaults (such as getutcdate and the empty GUID)")]
         public void GetDefaultValueExpression_SqlServerDefaults()
         {
             Assert.Equal("getutcdate()", _factory.GetDefaultValueExpression(FieldDbType.DateTime));
-            Assert.Equal("newid()", _factory.GetDefaultValueExpression(FieldDbType.Guid));
+            Assert.Equal("'00000000-0000-0000-0000-000000000000'", _factory.GetDefaultValueExpression(FieldDbType.Guid));
             Assert.Equal("0", _factory.GetDefaultValueExpression(FieldDbType.Integer));
             Assert.Equal(string.Empty, _factory.GetDefaultValueExpression(FieldDbType.String));
         }

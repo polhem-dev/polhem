@@ -24,7 +24,7 @@ This is a deliberate framework design decision, so it is stated first because it
 | **Text** (`String`, `Text`, `Time`) | `NOT NULL` | empty string `''` |
 | **Numeric** (`Short`, `Integer`, `Long`, `Decimal`, `Currency`, `Boolean`) | `NOT NULL` | `0` |
 | **Date / DateTime** | `NOT NULL` unless marked otherwise | current UTC date / timestamp |
-| **Guid** | `NOT NULL` unless marked otherwise | a new GUID |
+| **Guid** | `NOT NULL` unless marked otherwise | the empty GUID; a new GUID for `sys_rowid` |
 | **Binary** | `NOT NULL` unless marked otherwise | none: every `INSERT` must supply the value |
 | Columns that genuinely need null (e.g. an "invalid/expiry time", optional binary) | set `AllowNull="true"` **explicitly** | none |
 
@@ -55,7 +55,8 @@ For a `NOT NULL` column with no explicit `DefaultValue`, each dialect emits its 
 | `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0` (`FALSE` for `Boolean`) | `0` | `0` | `0` |
 | `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `TRUNC(SYS_EXTRACT_UTC(SYSTIMESTAMP))` | `(datetime('now', 'start of day'))` |
 | `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_TIMESTAMP(6))` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
-| `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
+| `Guid` | `'00000000-0000-0000-0000-000000000000'` | `'00000000-0000-0000-0000-000000000000'` | `'00000000-0000-0000-0000-000000000000'` | `HEXTORAW('00000000000000000000000000000000')` | `'00000000-0000-0000-0000-000000000000'` |
+| `Guid` named `sys_rowid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
 | `Binary`, `AutoIncrement` | *(none)* | *(none)* | *(none)* | *(none)* | *(none)* |
 
 SQL Server wraps whatever expression it emits in one more pair of parentheses (`DEFAULT (N'')`).
@@ -68,7 +69,9 @@ Notes:
   backfilling existing rows. See D9b in [ADR-032](../../../maintainers/adr/adr-032-datetime-timezone.md).
 - **MySQL** wraps function-call defaults in parentheses (`(UUID())`, `(UTC_DATE())`, `(UTC_TIMESTAMP(6))`) because MySQL 8.0.13+ accepts a bare function as a default only for `CURRENT_TIMESTAMP`; every other non-literal default must use the parenthesised *expression* form.
 - **A `Date` default keeps only the day.** SQL Server's and PostgreSQL's `DATE` drop the time themselves; Oracle's `DATE` keeps it, so the instant is truncated with `TRUNC`, and SQLite, which has no date type, gets the text a saved date binds as (`yyyy-MM-dd 00:00:00`). A row that takes the default therefore matches a filter on its own day. A column that an earlier version of Polhem created on Oracle or SQLite carries the old default, which stored the time of day as well; it reads back as a difference, so the next upgrade changes it to the current default, in place on Oracle and by rebuilding the table on SQLite. The rows keep their values, including any time of day the old default stored.
-- **SQLite** has no native UUID generator; `hex(randomblob(16))` is a unique-but-not-strictly-v4 surrogate, sufficient for framework-managed defaults.
+- **Only `sys_rowid` generates a GUID.** Every other `Guid` column is a reference (`user_rowid`, `dept_rowid`, `sys_master_rowid`) or a value the caller supplies, and the framework reads `Guid.Empty` as "no link". A row written without such a column (a seed, a hand-written INSERT, or an existing row that `ALTER TABLE ADD COLUMN` backfills) therefore gets the empty GUID, not a link to a row that does not exist.
+- **Guid columns created before Polhem 1.16** carry the generated default. The next upgrade moves them to the empty GUID: in place on SQL Server, PostgreSQL, MySQL and Oracle, by rebuilding the table on SQLite. The rows keep their values, so a row that took the old default still holds a GUID that points to nothing; the framework cannot tell which table a column refers to, so finding and clearing those values is left to the application.
+- **SQLite** has no native UUID generator; `hex(randomblob(16))` is a unique-but-not-strictly-v4 surrogate, sufficient for the row id.
 - **Boolean literals**: the framework's canonical form is `"1"` / `"0"`. PostgreSQL rejects those for a `BOOLEAN` column, so the PG dialect translates them to `TRUE` / `FALSE` at the SQL-emission boundary. All other dialects accept `1` / `0`.
 
 ### Explicit `DefaultValue`
@@ -149,7 +152,7 @@ When a schema upgrade changes a column, some changes can be done with `ALTER`, o
 - **SQLite** cannot change a column in place at all (its `ALTER TABLE` only adds, renames and drops columns), so every column change is a rebuild.
 - **Oracle** also rebuilds when a text column crosses the LOB boundary (`VARCHAR2` ↔ `CLOB`), which `ALTER ... MODIFY` rejects.
 - **Oracle** `ALTER TABLE ... MODIFY` must be **diff-based** for nullability: re-issuing `NOT NULL` on an already-`NOT NULL` column raises `ORA-01442`, so the adapter only emits the `NULL` / `NOT NULL` hint when it actually changes.
-- **MySQL** `ALTER ADD` of a `Guid` column with a non-deterministic default (`UUID()`) is split into two statements to stay replication-safe under statement-based binlog.
+- **MySQL** `ALTER ADD` of `sys_rowid`, whose default `UUID()` is non-deterministic, is split into two statements to stay replication-safe under statement-based binlog.
 - The rebuild's table rename differs too: `sp_rename` (SQL Server) vs `ALTER TABLE ... RENAME TO` (the others).
 
 ---

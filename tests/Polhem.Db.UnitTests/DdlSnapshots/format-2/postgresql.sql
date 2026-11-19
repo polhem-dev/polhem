@@ -23,7 +23,8 @@ CREATE TABLE "idem_gate_test" (
   "dt_null" date NULL,
   "dtm" timestamp NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
   "tm" char(5) NOT NULL DEFAULT '',
-  "g" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "sys_rowid" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "g" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   "g_null" uuid NULL,
   "bin" bytea NOT NULL,
   CONSTRAINT "pk_idem_gate_test" PRIMARY KEY ("sys_no")
@@ -52,6 +53,7 @@ COMMENT ON COLUMN "idem_gate_test"."dt" IS 'Date';
 COMMENT ON COLUMN "idem_gate_test"."dt_null" IS 'Nullable date';
 COMMENT ON COLUMN "idem_gate_test"."dtm" IS 'Date and time';
 COMMENT ON COLUMN "idem_gate_test"."tm" IS 'Time of day';
+COMMENT ON COLUMN "idem_gate_test"."sys_rowid" IS 'Row id';
 COMMENT ON COLUMN "idem_gate_test"."g" IS 'Guid';
 COMMENT ON COLUMN "idem_gate_test"."g_null" IS 'Nullable guid';
 COMMENT ON COLUMN "idem_gate_test"."bin" IS 'Bytes';
@@ -81,7 +83,7 @@ ALTER TABLE "idem_gate_test" ADD COLUMN "dtm" timestamp NOT NULL DEFAULT (NOW() 
 
 ALTER TABLE "idem_gate_test" ADD COLUMN "tm" char(5) NOT NULL DEFAULT '';
 
-ALTER TABLE "idem_gate_test" ADD COLUMN "g" uuid NOT NULL DEFAULT gen_random_uuid();
+ALTER TABLE "idem_gate_test" ADD COLUMN "g" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
 
 ALTER TABLE "idem_gate_test" ADD COLUMN "g_null" uuid NULL;
 
@@ -142,7 +144,8 @@ CREATE TABLE "tmp_idem_gate_test" (
   "dt_null" date NULL,
   "dtm" timestamp NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
   "tm" char(5) NOT NULL DEFAULT '',
-  "g" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "sys_rowid" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "g" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   "g_null" uuid NULL,
   "bin" bytea NOT NULL,
   CONSTRAINT "pk_tmp_idem_gate_test" PRIMARY KEY ("sys_no")
@@ -171,12 +174,13 @@ COMMENT ON COLUMN "tmp_idem_gate_test"."dt" IS 'Date';
 COMMENT ON COLUMN "tmp_idem_gate_test"."dt_null" IS 'Nullable date';
 COMMENT ON COLUMN "tmp_idem_gate_test"."dtm" IS 'Date and time';
 COMMENT ON COLUMN "tmp_idem_gate_test"."tm" IS 'Time of day';
+COMMENT ON COLUMN "tmp_idem_gate_test"."sys_rowid" IS 'Row id';
 COMMENT ON COLUMN "tmp_idem_gate_test"."g" IS 'Guid';
 COMMENT ON COLUMN "tmp_idem_gate_test"."g_null" IS 'Nullable guid';
 COMMENT ON COLUMN "tmp_idem_gate_test"."bin" IS 'Bytes';
 -- Move data
-INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "g", "g_null", "bin")
-SELECT "sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "g", "g_null", "bin" FROM "idem_gate_test";
+INSERT INTO "tmp_idem_gate_test" ("sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "sys_rowid", "g", "g_null", "bin")
+SELECT "sys_no", "s", "s_def", "s_null", "code", "t", "t_null", "b", "b_def", "sh", "i", "i_def", "i_null", "l", "d", "d_def", "c", "dt", "dt_null", "dtm", "tm", "sys_rowid", "g", "g_null", "bin" FROM "idem_gate_test";
 SELECT setval(pg_get_serial_sequence('"tmp_idem_gate_test"', 'sys_no'), GREATEST(v, 1), v > 0) FROM (SELECT GREATEST(COALESCE(pg_sequence_last_value(pg_get_serial_sequence('"idem_gate_test"', 'sys_no')::regclass), 0), COALESCE((SELECT MAX("sys_no") FROM "tmp_idem_gate_test"), 0)) AS v) AS last_identity;
 -- Drop old table
 DROP TABLE IF EXISTS "idem_gate_test";
