@@ -4,7 +4,7 @@ using Polhem.Definition.Forms;
 namespace Polhem.UI.Core.Fields
 {
     /// <summary>
-    /// Event data for <see cref="FieldValueChangeCoordinator.Applied"/>: a server callback answered and its values have
+    /// Event data for <see cref="Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChangeApplied"/>: a server callback answered and its values have
     /// been written into the row.
     /// </summary>
     public sealed class FieldValueChangeAppliedEventArgs : EventArgs

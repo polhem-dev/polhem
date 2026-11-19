@@ -46,8 +46,7 @@ namespace Polhem.UI.Core.Fields
         /// destination field, <see cref="FieldMapping.LookupOnly"/> entries included.
         /// </summary>
         /// <remarks>
-        /// A field marked <see cref="FormField.ValueChangeCallback"/> is filled by the server after the pick
-        /// (<see cref="FieldValueChangeCoordinator"/>), so its sources need not be in the target form's lookup
+        /// A field marked <see cref="FormField.ValueChangeCallback"/> is filled by the server after the pick, so its sources need not be in the target form's lookup
         /// field set: those the selection has are written at once for display, the others are left to the callback.
         /// </remarks>
         /// <param name="field">The lookup field.</param>

@@ -66,7 +66,8 @@
   `FieldValueChanged` 與 `DataSetReplaced`，並透過 `IFormApiConnector` 執行 `LoadAsync` / `SaveAsync` /
   `DeleteAsync` / `NewAsync`。新資料列會依 schema 填入預設值（新的 `sys_rowid`、與主檔的連結、依型別的非 null 值）
   並觸發 `RowAdded`；`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` 暫存單一資料列的編輯，提交前只觸發
-  `RowEditFieldChanged`，提交時才發布。
+  `RowEditFieldChanged`，提交時才發布。使用者修改標示 `ValueChangeCallback` 的欄位時，會回呼 business object，把伺服端
+  傳回的值寫入同一列，並觸發 `FieldValueChangeApplied` 或 `FieldValueChangeFailed`。
 - `DataObjects/FieldValueChangeFilter` -- 綁定的欄位編輯器要對哪些變更做出反應，以及資料集被替換時，綁在單一列上的
   編輯器不重讀該列。
 - `Navigation/MenuRows` -- 把選單定義展平成 shell 選單顯示的標題列與表單列。
@@ -90,7 +91,6 @@
 - `FieldCaptionRules` -- 標題慣例：唯讀的 grid 表頭加括號、必填的標題加上醒目標示，兩者同時成立時以唯讀為準。
 - `LookupFieldRules`、`LookupDisplay` -- 欄位是否為查詢欄位、開啟哪個程式、顯示哪些欄位及如何串接，以及選取結果如何寫回或清除。
 - `RelationOpenRules` -- 唯讀表單上的關聯欄位何時提供開啟所指記錄、開啟哪一筆，以及使用者能否看到它。
-- `FieldValueChangeCoordinator` -- 使用者修改標示 `ValueChangeCallback` 的欄位時回呼 business object，並把伺服端傳回的值寫入同一列。
 
 ### 權限能力
 

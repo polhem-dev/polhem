@@ -76,7 +76,9 @@ application's own data through its own implementation of `IFormApiConnector`.
   values change, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync` through an `IFormApiConnector`. A new
   row is seeded with the schema's defaults (a fresh `sys_rowid`, the link to the master, non-null values by type) and
   raises `RowAdded`; `BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit` buffer the edits of one row, which raise
-  `RowEditFieldChanged` until the commit publishes them.
+  `RowEditFieldChanged` until the commit publishes them. When the user changes a field marked `ValueChangeCallback`,
+  it calls the business object back, writes what the server returns into the same row, and raises
+  `FieldValueChangeApplied` or `FieldValueChangeFailed`.
 - `DataObjects/FieldValueChangeFilter` -- which of those changes a bound field editor reacts to, and that an editor
   bound to one row does not reread it when the dataset is replaced.
 - `Navigation/MenuRows` -- flattens a menu definition into the header and form rows a shell's menu shows.
@@ -109,8 +111,6 @@ heads behave the same:
   how they are joined, and how a selection is written back or cleared.
 - `RelationOpenRules` -- when a relation field on a read-only form offers to open the record it points at, which
   record that is, and whether the user may see it.
-- `FieldValueChangeCoordinator` -- calls the business object back when the user changes a field marked
-  `ValueChangeCallback`, and writes what the server returns into the same row.
 
 ### Permission Capabilities
 

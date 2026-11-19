@@ -3,7 +3,7 @@ using System.Data;
 namespace Polhem.UI.Core.Fields
 {
     /// <summary>
-    /// Event data for <see cref="FieldValueChangeCoordinator.Failed"/>: a server callback could not be completed.
+    /// Event data for <see cref="Polhem.UI.Core.DataObjects.FormDataObject.FieldValueChangeFailed"/>: a server callback could not be completed.
     /// </summary>
     public sealed class FieldValueChangeFailedEventArgs : EventArgs
     {
