@@ -1,2 +1,15 @@
 #nullable enable
 Polhem.Web.Blazor.Fluent.Components.PolhemDialog.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Fluent.Components.NamePromptDialog
+Polhem.Web.Blazor.Fluent.Components.NamePromptDialog.NamePromptDialog() -> void
+Polhem.Web.Blazor.Fluent.Controls.CriteriaChips
+Polhem.Web.Blazor.Fluent.Controls.CriteriaChips.CriteriaChips() -> void
+Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel
+Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel.CriteriaPanel() -> void
+Polhem.Web.Blazor.Fluent.Controls.UserQueryBar
+Polhem.Web.Blazor.Fluent.Controls.UserQueryBar.UserQueryBar() -> void
+override Polhem.Web.Blazor.Fluent.Components.FormPage.SupportsQueryPane.get -> bool
+~override Polhem.Web.Blazor.Fluent.Components.NamePromptDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Fluent.Controls.CriteriaChips.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Fluent.Controls.CriteriaPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Fluent.Controls.UserQueryBar.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

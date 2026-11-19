@@ -38,7 +38,6 @@ body:has(.polhem-shell) { overflow: auto; }
 .polhem-card__caption { flex: 0 0 92px; font-weight: 600; opacity: 0.7; }
 .polhem-card__value { min-width: 0; overflow-wrap: anywhere; }
 .polhem-card-list__end { height: 1px; }
-.polhem-form-page__filters { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 13px; }
 .polhem-grid-filter { display: inline-block; margin-left: 2px; vertical-align: middle; }
 .polhem-grid-filter__form { display: flex; flex-direction: column; gap: 8px; width: 220px; padding: 12px; }
 .polhem-grid-filter__buttons { display: flex; justify-content: flex-end; gap: 8px; }

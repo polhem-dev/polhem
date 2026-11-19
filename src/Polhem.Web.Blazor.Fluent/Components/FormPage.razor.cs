@@ -6,5 +6,7 @@ namespace Polhem.Web.Blazor.Fluent.Components
     /// </summary>
     public partial class FormPage
     {
+        /// <inheritdoc />
+        protected override bool SupportsQueryPane => true;
     }
 }

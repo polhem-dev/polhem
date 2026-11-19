@@ -42,6 +42,9 @@ namespace Polhem.Web.Blazor.Fluent.UnitTests
         protected override string SortSelector => "button.polhem-grid__sort";
 
         /// <inheritdoc />
+        protected override string ClearFilters => ".polhem-criteria-chips__clear";
+
+        /// <inheritdoc />
         protected override void DoubleClickRow(IElement row)
         {
             // A grid row has a double-click event, and a card reads the browser's click count.

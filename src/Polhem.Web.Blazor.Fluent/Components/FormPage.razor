@@ -39,6 +39,11 @@
                 {
                     <FluentButton Disabled="@(IsListLocked || SelectedRowId is null)" OnClick="() => OnDeleteAsync()">@Text(PolhemUIText.Delete)</FluentButton>
                 }
+                @if (ShowsQueryButton)
+                {
+                    <FluentButton Class="polhem-form-page__query" Appearance="@(IsQueryPaneOpen || CriteriaChips.Count > 0 ? ButtonAppearance.Primary : ButtonAppearance.Default)"
+                                  aria-pressed="@(IsQueryPaneOpen ? "true" : "false")" OnClick="ToggleQueryPane">@QueryButtonText</FluentButton>
+                }
             }
             else if (IsEditing)
             {
@@ -68,16 +73,23 @@
             <FluentMessageBar Intent="MessageBarIntent.Warning" Class="polhem-form-page__notice">@liveComputationNotice</FluentMessageBar>
         }
 
-        @if (!IsShowingRecord && HasConditions)
+        @if (!IsShowingRecord)
         {
-            @* Outside the grid: a filter can leave no rows, and the cards have no headers, and it must still come off. *@
-            <div class="polhem-form-page__filters" role="status">
-                <span>@Text(PolhemUIText.ListFiltered)</span>
-                <FluentButton Class="polhem-form-page__clear-filters" Disabled="@IsListLocked" OnClick="() => ClearFiltersAsync()">@Text(PolhemUIText.ClearFilters)</FluentButton>
-            </div>
+            @* Outside the grid: the column filters are conditions too, a filter can leave no rows, and the cards have no
+               headers, and it must still come off. *@
+            <CriteriaChips Chips="CriteriaChips"
+                           Disabled="IsListLocked"
+                           Opened="_ => OpenQueryPane()"
+                           Removed="chip => RemoveConditionAsync(chip.Row)"
+                           Cleared="() => ClearConditionsAsync()" />
         }
 
-        @if (!IsShowingRecord && EffectiveIsCompact)
+        @if (!IsShowingRecord)
+        {
+            @* The pane sits beside the list on a wide screen and covers the page in the compact layout. *@
+            <div class="@(IsQueryPaneOpen ? "polhem-query-layout polhem-query-layout--open" : "polhem-query-layout")">
+            <div class="polhem-query-layout__list">
+        @if (EffectiveIsCompact)
         {
             @if (CardRows.Count == 0)
             {
@@ -106,7 +118,7 @@
                 }
             }
         }
-        else if (!IsShowingRecord)
+        else
         {
             @if (ListLayout is not null && ListRows is { Rows.Count: > 0 })
             {
@@ -147,6 +159,38 @@
                 </div>
             }
         }
+            </div>
+            @if (IsQueryPaneOpen)
+            {
+                <aside class="@(EffectiveIsCompact ? "polhem-query-pane polhem-query-pane--overlay" : "polhem-query-pane")">
+                    <CriteriaPanel Fields="CriteriaFields"
+                                   Criteria="Criteria"
+                                   Today="ResolveToday"
+                                   Notice="@CriteriaNotice"
+                                   SearchRequested="() => RunQueryAsync()"
+                                   CloseRequested="CloseQueryPane">
+                        <HeaderContent>
+                            @if (ShowsUserQueries)
+                            {
+                                <UserQueryBar Entries="UserQueries"
+                                              Current="CurrentUserQuery"
+                                              DefaultRowId="DefaultUserQueryRowId"
+                                              IsModified="IsUserQueryModified"
+                                              Disabled="IsListLocked"
+                                              Applied="entry => ApplyUserQueryAsync(entry)"
+                                              SaveRequested="() => SaveUserQueryAsync()"
+                                              SaveAsRequested="BeginSaveUserQueryAs"
+                                              RenameRequested="BeginRenameUserQuery"
+                                              ShareToggled="() => ToggleUserQueryShareAsync()"
+                                              DefaultToggled="() => ToggleDefaultUserQueryAsync()"
+                                              DeleteRequested="BeginDeleteUserQuery" />
+                            }
+                        </HeaderContent>
+                    </CriteriaPanel>
+                </aside>
+            }
+            </div>
+        }
         else
         {
             <FormLayoutPresenter Layout="RecordLayout"
@@ -166,6 +210,27 @@
                        ConfirmText="@Text(PolhemUIText.Delete)"
                        OnCancelled="CancelDelete"
                        OnConfirmed="() => ConfirmDeleteAsync()" />
+    }
+    @if (IsNamePromptOpen)
+    {
+        <NamePromptDialog Title="@NamePromptTitle"
+                          Label="@Text(PolhemUIText.UserQueryName)"
+                          Name="@NamePromptName"
+                          MaxLength="UserQueryNameMaxLength"
+                          OptionText="@NamePromptOptionText"
+                          AcceptText="@Text(PolhemUIText.Save)"
+                          CancelText="@Text(PolhemUIText.Cancel)"
+                          OnAccepted="answer => AcceptNamePromptAsync(answer)"
+                          OnCancelled="CancelNamePrompt" />
+    }
+    @if (PendingUserQueryDelete is not null)
+    {
+        <ConfirmDialog Title="@Text(PolhemUIText.UserQueryDelete)"
+                       Message="@UserQueryDeletePrompt"
+                       CancelText="@Text(PolhemUIText.Cancel)"
+                       ConfirmText="@Text(PolhemUIText.Delete)"
+                       OnCancelled="CancelDeleteUserQuery"
+                       OnConfirmed="() => ConfirmDeleteUserQueryAsync()" />
     }
     @if (Relation is { } relation)
     {

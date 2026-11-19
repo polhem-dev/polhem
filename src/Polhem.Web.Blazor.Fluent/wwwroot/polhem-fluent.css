@@ -77,3 +77,21 @@ fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) {
 .polhem-shell-nav__link:hover { background: var(--colorNeutralBackground1Hover); }
 .polhem-shell-nav__link.active { border-left-color: var(--colorBrandStroke1); background: var(--colorNeutralBackground1Selected); font-weight: 600; }
 .polhem-shell-nav__loading, .polhem-shell-nav__empty { padding: 8px 16px; font-size: 13px; color: var(--colorNeutralForeground3); }
+.polhem-native-button--plain { color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1); border: 1px solid var(--colorNeutralStroke1); }
+.polhem-native-button:disabled { opacity: 0.5; cursor: default; }
+.polhem-menu { display: flex; flex-direction: column; padding: 4px 0; min-width: 180px; }
+.polhem-menu__item { padding: 6px 12px; font: inherit; text-align: left; color: var(--colorNeutralForeground1); background: none; border: 0; cursor: pointer; }
+.polhem-menu__item:hover:not(:disabled), .polhem-menu__item:focus-visible { background: var(--colorNeutralBackground1Hover); }
+.polhem-menu__item:disabled { color: var(--colorNeutralForegroundDisabled); cursor: default; }
+.polhem-query-pane { border: 1px solid var(--colorNeutralStroke1); border-radius: 6px; background: var(--colorNeutralBackground1); }
+.polhem-query-pane--overlay { border: 0; border-radius: 0; }
+@container (max-width: 960px) {
+    .polhem-query-pane:not(.polhem-query-pane--overlay) { box-shadow: var(--shadow16); }
+}
+.polhem-criteria-row { border: 1px solid var(--colorNeutralStroke2); background: var(--colorNeutralBackground2); }
+.polhem-criteria-row__operator { flex: 0 0 120px; min-width: 120px; }
+.polhem-criteria-row__value, .polhem-criteria-row__from, .polhem-criteria-row__to { flex: 1 1 120px; min-width: 0; }
+.polhem-criteria-row__choice { display: inline-flex; align-items: center; gap: 4px; }
+.polhem-criteria-row__picked { display: inline-flex; align-items: center; gap: 2px; padding: 0 6px; border: 1px solid var(--colorNeutralStroke1); border-radius: 12px; }
+.polhem-criteria-row__unpick { padding: 0 2px; font: inherit; background: none; border: 0; cursor: pointer; }
+.polhem-user-query-bar__picker { flex: 1 1 auto; min-width: 0; }
