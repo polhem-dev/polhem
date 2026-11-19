@@ -12,6 +12,12 @@
         Title="{Binding Title}">
 
     <Window.Styles>
+        <!-- The theme draws a text box as a plain fill; beside the outlined expression area it needs an outline to read as
+             an input. -->
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+        </Style>
         <Style Selector="Border.passes">
             <Setter Property="Background" Value="{DynamicResource SemiColorSuccess}"/>
         </Style>
@@ -109,6 +115,8 @@
                 </TabItem>
                 <TabItem x:Name="AssistantTab" Header="{loc:Loc RuleAssistant_Tab}"
                          IsVisible="{Binding RuleAssistant, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Border BorderThickness="1" CornerRadius="4" Padding="10,8"
+                            BorderBrush="{DynamicResource SemiColorBorder}">
                     <DockPanel DataContext="{Binding RuleAssistant}" x:DataType="vm:RuleAssistantViewModel">
                         <StackPanel DockPanel.Dock="Top" Spacing="6">
                             <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
@@ -183,6 +191,7 @@
                             </StackPanel>
                         </ScrollViewer>
                     </DockPanel>
+                    </Border>
                 </TabItem>
             </TabControl>
 
