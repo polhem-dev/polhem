@@ -1,0 +1,28 @@
+@namespace Polhem.Web.Blazor.Fluent.Components
+@inherits NamePromptDialogBase
+
+@* The host renders this while the question is open and removes it when either callback runs. The name box is a native
+   input, as the column filter's are: a Fluent input can overwrite what is typed just after it takes the focus. *@
+<PolhemDialog Class="polhem-name-prompt-dialog" Title="@Title" Dismissable="true" Dismissed="() => CancelAsync()">
+    <ChildContent>
+        @* A form, so Enter in the box accepts the name. *@
+        <form class="polhem-name-prompt-dialog__form" @onsubmit="() => AcceptAsync()" @onsubmit:preventDefault>
+            <label class="polhem-name-prompt-dialog__name">
+                <span class="polhem-native-input__label">@Label</span>
+                <input class="polhem-native-input" maxlength="@MaxLength" autofocus @bind="EnteredName" @bind:event="oninput" />
+            </label>
+            @if (OptionText is not null)
+            {
+                <label class="polhem-name-prompt-dialog__option">
+                    <input type="checkbox" @bind="IsOptionChecked" />
+                    <span>@OptionText</span>
+                </label>
+            }
+        </form>
+    </ChildContent>
+    <Actions>
+        <FluentButton Class="polhem-name-prompt-dialog__cancel" OnClick="() => CancelAsync()">@CancelText</FluentButton>
+        <FluentButton Class="polhem-name-prompt-dialog__accept" Appearance="ButtonAppearance.Primary" Disabled="!CanAccept"
+                      OnClick="() => AcceptAsync()">@AcceptText</FluentButton>
+    </Actions>
+</PolhemDialog>

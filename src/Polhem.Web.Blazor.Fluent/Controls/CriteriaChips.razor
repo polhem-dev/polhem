@@ -1,0 +1,22 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls
+@inherits CriteriaChipsBase
+
+@if (HasChips)
+{
+    <div class="polhem-criteria-chips" role="status">
+        @foreach (var chip in Chips)
+        {
+            <span class="polhem-criteria-chip" @key="chip.Row">
+                <FluentButton Class="polhem-criteria-chip__open" Appearance="ButtonAppearance.Outline" Disabled="Disabled"
+                              OnClick="() => Opened.InvokeAsync(chip)">@chip.Text</FluentButton>
+                @if (chip.IsRemovable)
+                {
+                    <FluentButton Class="polhem-criteria-chip__remove" Appearance="ButtonAppearance.Transparent" Disabled="Disabled"
+                                  Title="@RemoveLabel(chip)" OnClick="() => Removed.InvokeAsync(chip)">✕</FluentButton>
+                }
+            </span>
+        }
+        <FluentButton Class="polhem-criteria-chips__clear" Appearance="ButtonAppearance.Transparent" Disabled="Disabled"
+                      OnClick="() => Cleared.InvokeAsync()">@ClearText</FluentButton>
+    </div>
+}

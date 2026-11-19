@@ -1,0 +1,177 @@
+@namespace Polhem.Web.Blazor.Fluent.Controls
+@inherits CriteriaPanelBase
+@using Polhem.Definition.Language
+@using Polhem.UI.Core.Criteria
+@using Polhem.Web.Blazor.Fluent.Controls.Editors
+
+@* WARNING: what the user types goes into native inputs, as in the column filter: a Fluent input can overwrite what is
+   typed just after it takes the focus, and Enter submits the form only from a native input.
+   WARNING: a FluentPopover opens only when `Opened` turns true on an element that is already there, so each menu's
+   popover stays in the markup and only its content comes and goes. *@
+<section @ref="PaneElement" class="polhem-criteria-panel" aria-label="@Text(PolhemUIText.QueryConditions)" @onkeydown="e => OnKeyDownAsync(e)">
+    <div class="polhem-criteria-panel__header">
+        <span class="polhem-criteria-panel__title">@Text(PolhemUIText.QueryConditions)</span>
+        <FluentButton Class="polhem-criteria-panel__close" Appearance="ButtonAppearance.Transparent" Title="@Text(PolhemUIText.Close)"
+                      OnClick="() => CloseAsync()">✕</FluentButton>
+    </div>
+    @HeaderContent
+    @* A form, so Enter in a value runs the query the way the Search button does. *@
+    <form class="polhem-criteria-panel__form" @onsubmit="() => RequestSearchAsync()" @onsubmit:preventDefault>
+        <div class="polhem-criteria-panel__body">
+            @if (Message is not null)
+            {
+                <FluentMessageBar Intent="MessageBarIntent.Warning" Class="polhem-criteria-panel__message">@Message</FluentMessageBar>
+            }
+            @for (var index = 0; index < Criteria.Rows.Count; index++)
+            {
+                var row = Criteria.Rows[index];
+                var rowIndex = index;
+                <div class="polhem-criteria-row" @key="row">
+                    <div class="polhem-criteria-row__caption">
+                        <span>@RowCaption(row)</span>
+                        @if (IsRemovable(row))
+                        {
+                            <FluentButton Class="polhem-criteria-row__remove" Appearance="ButtonAppearance.Transparent"
+                                          Title="@Text(PolhemUIText.RemoveCondition)" OnClick="() => RemoveRowAsync(row)">✕</FluentButton>
+                        }
+                    </div>
+                    <div class="polhem-criteria-row__line">
+                        @if (ShowsOperator(row))
+                        {
+                            <FluentSelect TOption="CriteriaOperator" TValue="CriteriaOperator" Class="polhem-criteria-row__operator"
+                                          Items="row.Field.Operators" OptionText="@(op => OperatorText(op))" OptionValue="@(op => op)"
+                                          Value="row.Operator" ValueChanged="op => ChangeOperatorAsync(row, op)"
+                                          Disabled="row.IsOperatorLocked" AriaLabel="@row.Field.Caption" />
+                        }
+                        @ValueEditor(row, rowIndex)
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="polhem-criteria-panel__footer">
+            <span class="polhem-criteria-panel__add">
+                <button type="button" id="@AddMenuId" class="polhem-native-button polhem-native-button--plain"
+                        disabled="@(Fields.Count == 0)" @onclick="() => _isAddMenuOpen = !_isAddMenuOpen">@Text(PolhemUIText.AddCondition)</button>
+            </span>
+            <FluentPopover AnchorId="@AddMenuId" Opened="_isAddMenuOpen" OpenedChanged="open => _isAddMenuOpen = open" Class="polhem-menu">
+                @if (_isAddMenuOpen)
+                {
+                    @foreach (var field in Fields)
+                    {
+                        <button type="button" class="polhem-menu__item polhem-criteria-panel__field" @onclick="() => AddAsync(field)">@field.Caption</button>
+                    }
+                }
+            </FluentPopover>
+            <button type="submit" class="polhem-native-button polhem-criteria-panel__search">@Text(PolhemUIText.Search)</button>
+            <FluentButton Class="polhem-criteria-panel__clear" OnClick="() => ClearAndSearchAsync()">@Text(PolhemUIText.FilterClear)</FluentButton>
+        </div>
+    </form>
+    @if (PickingRow is { } picking)
+    {
+        <LookupDialog ProgId="@picking.Field.RelationProgId"
+                      OnCommitted="picked => CommitPickAsync(picked)"
+                      OnCancelled="CancelPick"
+                      OnFailed="OnPickFailed" />
+    }
+</section>
+
+@code {
+    private readonly string _idPrefix = $"polhem-criteria-{Guid.NewGuid():N}";
+    private bool _isAddMenuOpen;
+    private CriteriaRow? _periodRow;
+
+    private string AddMenuId => _idPrefix + "-add";
+
+    private string PeriodMenuId(int rowIndex) => FormattableString.Invariant($"{_idPrefix}-period-{rowIndex}");
+
+    private Task AddAsync(CriteriaField field)
+    {
+        _isAddMenuOpen = false;
+        return AddRowAsync(field);
+    }
+
+    private Task ChoosePeriodAsync(CriteriaRow row, RelativeDate period)
+    {
+        _periodRow = null;
+        return SetPeriodAsync(row, period);
+    }
+
+    private RenderFragment ValueEditor(CriteriaRow row, int rowIndex) => row.Operator switch
+    {
+        CriteriaOperator.In when row.Field.Kind == CriteriaFieldKind.Relation => RelationEditor(row),
+        CriteriaOperator.In => ChoiceEditor(row),
+        CriteriaOperator.Range => RangeEditor(row, rowIndex),
+        _ when row.Field.Kind == CriteriaFieldKind.Boolean => BooleanEditor(row),
+        _ => @<label class="polhem-criteria-row__value">
+                <input class="polhem-native-input" type="@InputTypeOf(row)" value="@GetValueText(row)"
+                       @onchange="e => SetValueTextAsync(row, e.Value as string)" aria-label="@row.Field.Caption" />
+            </label>,
+    };
+
+    private RenderFragment RangeEditor(CriteriaRow row, int rowIndex) =>
+        @<div class="polhem-criteria-row__range">
+            <label class="polhem-criteria-row__from">
+                <input class="polhem-native-input" type="@InputTypeOf(row)" value="@GetFromText(row)"
+                       @onchange="e => SetFromTextAsync(row, e.Value as string)"
+                       aria-label="@Text(PolhemUIText.FilterFrom)" placeholder="@Text(PolhemUIText.FilterFrom)" />
+            </label>
+            <span class="polhem-criteria-row__to-separator">~</span>
+            <label class="polhem-criteria-row__to">
+                <input class="polhem-native-input" type="@InputTypeOf(row)" value="@GetToText(row)"
+                       @onchange="e => SetToTextAsync(row, e.Value as string)"
+                       aria-label="@Text(PolhemUIText.FilterTo)" placeholder="@Text(PolhemUIText.FilterTo)" />
+            </label>
+            @if (IsDateRange(row))
+            {
+                <span class="polhem-criteria-row__period">
+                    <button type="button" id="@PeriodMenuId(rowIndex)" class="polhem-native-button polhem-native-button--plain"
+                            @onclick="() => _periodRow = ReferenceEquals(_periodRow, row) ? null : row">@PeriodText(row.RelativeDate)</button>
+                </span>
+                <FluentPopover AnchorId="@PeriodMenuId(rowIndex)" Opened="ReferenceEquals(_periodRow, row)"
+                               OpenedChanged="open => { if (!open && ReferenceEquals(_periodRow, row)) _periodRow = null; }" Class="polhem-menu">
+                    @if (ReferenceEquals(_periodRow, row))
+                    {
+                        @foreach (var period in Periods)
+                        {
+                            <button type="button" class="polhem-menu__item polhem-criteria-row__period-item"
+                                    @onclick="() => ChoosePeriodAsync(row, period)">@PeriodText(period)</button>
+                        }
+                    }
+                </FluentPopover>
+            }
+        </div>;
+
+    private RenderFragment BooleanEditor(CriteriaRow row) =>
+        @<FluentSelect TOption="string" TValue="string" Class="polhem-criteria-row__value"
+                       Items="s_booleanChoices" OptionText="@(choice => BooleanChoiceText(choice))" OptionValue="@(choice => choice)"
+                       Value="@GetBooleanChoice(row)" ValueChanged="choice => SetBooleanChoiceAsync(row, choice)"
+                       AriaLabel="@row.Field.Caption" />;
+
+    private RenderFragment ChoiceEditor(CriteriaRow row) =>
+        @<div class="polhem-criteria-row__choices">
+            @foreach (var item in row.Field.ListItems)
+            {
+                <label class="polhem-criteria-row__choice">
+                    <input type="checkbox" checked="@IsChosen(row, item)"
+                           @onchange="e => SetChosenAsync(row, item, e.Value is true)" />
+                    <span>@item.Text</span>
+                </label>
+            }
+        </div>;
+
+    private RenderFragment RelationEditor(CriteriaRow row) =>
+        @<div class="polhem-criteria-row__values">
+            @foreach (var value in row.Values)
+            {
+                <span class="polhem-criteria-row__picked">
+                    <span>@value.Text</span>
+                    <button type="button" class="polhem-criteria-row__unpick" title="@value.Text"
+                            @onclick="() => RemoveValueAsync(row, value)">✕</button>
+                </span>
+            }
+            <button type="button" class="polhem-native-button polhem-native-button--plain polhem-criteria-row__pick"
+                    @onclick="() => BeginPick(row)">@Text(PolhemUIText.PickValue)</button>
+        </div>;
+
+    private static readonly string[] s_booleanChoices = [string.Empty, bool.TrueString, bool.FalseString];
+}
