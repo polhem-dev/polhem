@@ -17,4 +17,7 @@ public enum ExpressionTrialOutcome
 
     /// <summary>The expression fails while it is evaluated, for example by dividing by zero.</summary>
     Error,
+
+    /// <summary>A rule's When does not hold, so its Condition is not checked.</summary>
+    Skipped,
 }

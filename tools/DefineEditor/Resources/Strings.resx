@@ -510,7 +510,6 @@ The import stops at the first workbook that has an error or whose database upgra
   <data name="ExpressionTrial_Title" xml:space="preserve"><value>Try it out</value></data>
   <data name="ExpressionTrial_Hint" xml:space="preserve"><value>Type sample values for the fields the expression reads; an empty box is an empty field. Numbers are not rounded by the company's settings, and Now() uses this computer's time zone (the server saves on a UTC basis).</value></data>
   <data name="ExpressionTrial_Empty" xml:space="preserve"><value>(left empty)</value></data>
-  <data name="ExpressionTrial_WhenApplies" xml:space="preserve"><value>Applies: the condition is checked</value></data>
   <data name="ExpressionTrial_WhenSkips" xml:space="preserve"><value>Skipped: the rule does not apply to this row</value></data>
   <data name="ExpressionTrial_ConditionPasses" xml:space="preserve"><value>Passes</value></data>
   <data name="ExpressionTrial_ConditionFails" xml:space="preserve"><value>Fails: {0}</value></data>
@@ -624,9 +623,9 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="RuleAssistant_Blank" xml:space="preserve"><value>(blank)</value></data>
   <data name="RuleAssistant_DetailRows" xml:space="preserve"><value>{0}: {1} rows</value></data>
   <data name="RuleAssistant_Message" xml:space="preserve"><value>Message shown when the rule fails</value></data>
-  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>Applying the rule writes these translations into the form's Language files.</value></data>
-  <data name="RuleAssistant_Apply" xml:space="preserve"><value>Apply Rule</value></data>
-  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>Replaces this rule's table, When, Condition and message with the draft, and closes the editor.</value></data>
+  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>When you confirm the dialog, these translations are written into the form's Language files.</value></data>
+  <data name="RuleAssistant_Apply" xml:space="preserve"><value>Use This Rule</value></data>
+  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>Fills the dialog with the draft's table, When, Condition and message. Nothing is saved until you confirm the dialog.</value></data>
   <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} has unsaved changes and was not written.</value></data>
   <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} could not be written: {1}</value></data>
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>Rule {0}: translations written to {1}.</value></data>
@@ -638,4 +637,18 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="RuleAssistant_UsageNoTokens" xml:space="preserve"><value>{0} calls · tokens not reported · {1} s</value></data>
   <data name="RuleAssistant_UsageNoCalls" xml:space="preserve"><value>No call to the model · {0} s</value></data>
   <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>(every field blank)</value></data>
+  <data name="RuleDialog_AddTitle" xml:space="preserve"><value>Add Rule</value></data>
+  <data name="RuleDialog_EditTitle" xml:space="preserve"><value>Rule {0}</value></data>
+  <data name="RuleDialog_Table" xml:space="preserve"><value>Checks</value></data>
+  <data name="RuleDialog_MasterTable" xml:space="preserve"><value>Master table: {0} · {1}</value></data>
+  <data name="RuleDialog_DetailTable" xml:space="preserve"><value>Each row of {0} · {1}</value></data>
+  <data name="RuleDialog_MissingTable" xml:space="preserve"><value>Table '{0}' does not exist in this form</value></data>
+  <data name="RuleDialog_Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="RuleDialog_WhenHint" xml:space="preserve"><value>(optional) the rule applies only when this holds; empty applies it always</value></data>
+  <data name="RuleDialog_ConditionHint" xml:space="preserve"><value>must hold, or the save stops and shows the message</value></data>
+  <data name="RuleDialog_Trial" xml:space="preserve"><value>Try the rule</value></data>
+  <data name="RuleDialog_NoRuleId" xml:space="preserve"><value>Enter a RuleId.</value></data>
+  <data name="RuleDialog_DuplicateRuleId" xml:space="preserve"><value>The form already has a rule named '{0}'.</value></data>
+  <data name="RuleDialog_NoCondition" xml:space="preserve"><value>Enter the Condition.</value></data>
+  <data name="RuleDialog_ExpressionError" xml:space="preserve"><value>Fix the expression errors first.</value></data>
 </root>

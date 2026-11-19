@@ -151,12 +151,12 @@ The exception is the detail tables an aggregate reads, which the server complete
 
 ## Writing a Rule in Plain Words
 
-DefineEditor's expression editor has an **AI Assistant** tab for a rule's `When` and `Condition`. Describe the rule in your own words, such as "a shipped order must have a shipper, and its freight cannot be 0", and the assistant writes the rule with Claude: the table it checks, `When`, `Condition`, the message and its translations. It shows what the rule does in plain words, with sample rows.
+DefineEditor's rule dialog, which adds a rule and edits one, has an **AI Assistant** tab. Describe the rule in your own words, such as "a shipped order must have a shipper, and its freight cannot be 0", and the assistant writes the rule with Claude: the table it checks, `When`, `Condition`, the message and its translations. It shows what the rule does in plain words, with sample rows.
 
 - **The engine computes the samples, not the model.** Each sample is evaluated by the same calculator the save runs, and shows whether the rule lets the row pass, blocks it, or does not apply. A draft whose samples the engine does not confirm is sent back to the model, so the samples on screen are the rule's actual behavior.
 - **A drafted expression must pass the allowlist.** It is checked with `FormExpressionCalculator.ValidateUntrustedExpression`, which a definition file's expressions are not held to: within the size limits, only fields, functions other than `RegexMatch`, aggregates, operators, literals and the listed members.
-- **Revise** continues the conversation with a correction, or answers the assistant's question. **Explain This Rule** explains the rule as it is in the editor, with samples, so an existing rule can be checked by someone who does not read expressions.
-- **Apply Rule** replaces the rule's table, `When`, `Condition` and message, and keeps its `RuleId`. The message translations go into the form's Language files under `Rule.{RuleId}.Message`: only languages other than English that the form already has, never a new file and never a customization folder.
+- **Revise** continues the conversation with a correction, or answers the assistant's question. **Explain This Rule** explains the rule as it is in the dialog, with samples, so an existing rule can be checked by someone who does not read expressions.
+- **Use This Rule** fills the dialog with the draft's table, `When`, `Condition` and message; the rule keeps the `RuleId` the dialog has. Nothing is written until you confirm the dialog: then the rule is saved in the form, and the message translations go into the form's Language files under `Rule.{RuleId}.Message`: only languages other than English that the form already has, never a new file and never a customization folder.
 - The words you type and the form's field names, captions and list values are sent to Claude, under the credential the tab names: `ant auth login`, or `ANTHROPIC_API_KEY`. Without one, the tab sends nothing.
 
 The service behind it is `RuleDrafting` in [Polhem.Definition.Drafting](../../../src/Polhem.Definition.Drafting/README.md#drafting-a-rule-from-plain-language).

@@ -497,7 +497,6 @@
   <data name="ExpressionTrial_Title" xml:space="preserve"><value>試算</value></data>
   <data name="ExpressionTrial_Hint" xml:space="preserve"><value>輸入運算式用到的欄位範例值，空白代表欄位為空值。數值不會依公司設定進位；Now() 使用本機時區（伺服器存檔時以 UTC 為基準）。</value></data>
   <data name="ExpressionTrial_Empty" xml:space="preserve"><value>（留空）</value></data>
-  <data name="ExpressionTrial_WhenApplies" xml:space="preserve"><value>套用：會接著檢查條件</value></data>
   <data name="ExpressionTrial_WhenSkips" xml:space="preserve"><value>略過：這筆資料不套用此規則</value></data>
   <data name="ExpressionTrial_ConditionPasses" xml:space="preserve"><value>通過</value></data>
   <data name="ExpressionTrial_ConditionFails" xml:space="preserve"><value>違反：{0}</value></data>
@@ -611,9 +610,9 @@
   <data name="RuleAssistant_Blank" xml:space="preserve"><value>（空白）</value></data>
   <data name="RuleAssistant_DetailRows" xml:space="preserve"><value>{0}：{1} 筆</value></data>
   <data name="RuleAssistant_Message" xml:space="preserve"><value>規則不成立時顯示的訊息</value></data>
-  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>套用規則時，這些翻譯會寫入表單的語系檔。</value></data>
-  <data name="RuleAssistant_Apply" xml:space="preserve"><value>套用規則</value></data>
-  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>以草稿取代這條規則的資料表、When、Condition 與訊息，並關閉編輯器。</value></data>
+  <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>按確定時，這些翻譯會寫入表單的語系檔。</value></data>
+  <data name="RuleAssistant_Apply" xml:space="preserve"><value>填入規則</value></data>
+  <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>以草稿填入對話框的資料表、When、Condition 與訊息；按確定才會儲存。</value></data>
   <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} 有未儲存的變更，沒有寫入。</value></data>
   <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} 無法寫入：{1}</value></data>
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>
@@ -625,4 +624,18 @@
   <data name="RuleAssistant_UsageNoTokens" xml:space="preserve"><value>呼叫 {0} 次・未提供 token 用量・{1} 秒</value></data>
   <data name="RuleAssistant_UsageNoCalls" xml:space="preserve"><value>沒有呼叫模型・{0} 秒</value></data>
   <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>（所有欄位空白）</value></data>
+  <data name="RuleDialog_AddTitle" xml:space="preserve"><value>新增規則</value></data>
+  <data name="RuleDialog_EditTitle" xml:space="preserve"><value>規則 {0}</value></data>
+  <data name="RuleDialog_Table" xml:space="preserve"><value>檢查對象</value></data>
+  <data name="RuleDialog_MasterTable" xml:space="preserve"><value>主檔：{0} · {1}</value></data>
+  <data name="RuleDialog_DetailTable" xml:space="preserve"><value>{0} 的每一筆 · {1}</value></data>
+  <data name="RuleDialog_MissingTable" xml:space="preserve"><value>表單中沒有資料表「{0}」</value></data>
+  <data name="RuleDialog_Enabled" xml:space="preserve"><value>啟用</value></data>
+  <data name="RuleDialog_WhenHint" xml:space="preserve"><value>（選填）成立時才套用此規則；空白表示一律套用</value></data>
+  <data name="RuleDialog_ConditionHint" xml:space="preserve"><value>必須成立，否則中止存檔並顯示訊息</value></data>
+  <data name="RuleDialog_Trial" xml:space="preserve"><value>試算規則</value></data>
+  <data name="RuleDialog_NoRuleId" xml:space="preserve"><value>請輸入 RuleId。</value></data>
+  <data name="RuleDialog_DuplicateRuleId" xml:space="preserve"><value>表單中已有名為「{0}」的規則。</value></data>
+  <data name="RuleDialog_NoCondition" xml:space="preserve"><value>請輸入 Condition。</value></data>
+  <data name="RuleDialog_ExpressionError" xml:space="preserve"><value>請先修正運算式的錯誤。</value></data>
 </root>

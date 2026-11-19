@@ -79,17 +79,18 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj -- path/to/De
   （預設為 `ref_<base>_<欄位>`）。本表缺少的目的欄位會自動加入。已存在的目的欄位若型別裝不下來源欄位的值，
   對話框會拒絕套用。對話框編譯的是 analyzer 規則 [POLHEM2008](../../docs/zh-TW/reference/analyzer-rules.md)
   的同一份型別規則，所以它拒絕的型別組合與該規則回報的相同。
-- **運算式。** 規則的 `When`、`Condition` 與欄位的 `ValueExpression`、`DefaultValueExpression` 會開啟運算式編輯器。
+- **規則。** **新增 FormRule** 會開啟規則對話框，按確定才加入規則；在規則上按兩下，或按 `When`、`Condition` 旁的 **…**，
+  也會以同一個對話框編輯它。對話框設定規則檢查的資料表、`When`、`Condition`、Trigger 與訊息，輸入時即時檢查兩個運算式；
+  **試算規則** 以範例值先檢查 `When`、再檢查 `Condition`。**AI 助手** 分頁透過 Claude 依你的描述寫出規則、說明對話框中的規則，
+  並附上由運算式引擎實算結果的測試資料。**填入規則** 把草稿填進對話框；按確定才寫入規則，並把訊息翻譯寫入表單的語系檔。見
+  [用白話撰寫規則](../../docs/zh-TW/definitions/expression-rules.md#用白話撰寫規則)。
+- **運算式。** 欄位的 `ValueExpression`、`DefaultValueExpression` 會開啟運算式編輯器。
   旁邊列出本表欄位、輔助函式（附說明與範例）與運算式可用的型別，輸入時補完名稱，並在解析停下的位置畫底線。**試算** 區以範例值計算運算式，
   算法與執行階段相同。
 
   ![amount 欄位的運算式編輯器：quantity * unit_price * (1 - discount)，填入範例值後算出 199.80](https://github.com/polhem-dev/polhem/raw/main/tools/DefineEditor/docs/images/expression-editor.png)
 
   存檔與驗證時，會以框架的 evaluator 解析表單的每個運算式，列出執行時會失敗的那些。
-
-  編輯規則時，編輯器的 **AI 助手** 分頁會透過 Claude，依你的描述寫出規則、說明既有的規則，並附上由運算式引擎實算結果的測試資料。
-  **套用規則** 取代整條規則，並把訊息翻譯寫入表單的語系檔。見
-  [用白話撰寫規則](../../docs/zh-TW/definitions/expression-rules.md#用白話撰寫規則)。
 - **衍生檔。** FormSchema 的右鍵選單有 **產生 FormLayout** 與 **同步 TableSchema 與 FormLayout**；後者先列出要變更的檔案，
   再把表單新增的欄位補進資料表結構與版面。
 - **Excel。** **匯出成 Excel** 把表單寫成活頁簿；**File → 從 Excel 匯入表單** 與 **從 Excel 批次匯入表單** 把活頁簿轉成定義檔，

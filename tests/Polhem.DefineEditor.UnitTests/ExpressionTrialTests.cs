@@ -43,11 +43,8 @@ namespace Polhem.DefineEditor.UnitTests
         private static PropertyDescriptor Property(object component, string name) =>
             TypeDescriptor.GetProperties(component)[name]!;
 
-        private static ExpressionEditorViewModel RuleEditor(FormSchemaDocumentViewModel document, string propertyName)
-        {
-            var rule = document.Schema.Rules!["positive_qty"];
-            return document.CreateExpressionEditor(Property(rule, propertyName), rule)!;
-        }
+        private static RuleDialogViewModel RuleDialog(FormSchemaDocumentViewModel document) =>
+            document.CreateRuleDialog(document.Schema.Rules!["positive_qty"]);
 
         private static ExpressionEditorViewModel AmountEditor(FormSchemaDocumentViewModel document)
         {
@@ -92,11 +89,11 @@ namespace Polhem.DefineEditor.UnitTests
         [DisplayName("A condition that fails shows the rule's message as it is being edited")]
         public void Condition_Fails_ShowsMessage()
         {
-            var editor = RuleEditor(Load(), nameof(FormRule.Condition));
-            var trial = editor.Trial!;
+            using var dialog = RuleDialog(Load());
+            var trial = dialog.Trial;
 
             Type(trial, "qty", "0");
-            editor.Message = "Enter a quantity.";
+            dialog.Message = "Enter a quantity.";
 
             Assert.Equal(ExpressionTrialOutcome.Failed, trial.Outcome);
             Assert.Contains("Enter a quantity.", trial.Result, StringComparison.Ordinal);
@@ -110,23 +107,30 @@ namespace Polhem.DefineEditor.UnitTests
         [DisplayName("An empty box is an empty field, so an empty quantity fails the condition")]
         public void EmptyInput_IsEmptyField()
         {
-            var trial = RuleEditor(Load(), nameof(FormRule.Condition)).Trial!;
+            using var dialog = RuleDialog(Load());
 
-            Assert.Equal(ExpressionTrialOutcome.Failed, trial.Outcome);
+            Assert.Equal(ExpressionTrialOutcome.Failed, dialog.Trial.Outcome);
         }
 
         [Fact]
-        [DisplayName("A When expression says whether the rule applies, not whether it passes")]
-        public void When_ShowsWhetherRuleApplies()
+        [DisplayName("A rule tries When first: a sample it does not apply to is skipped, and the inputs cover both expressions")]
+        public void When_SkipsOrChecksCondition()
         {
-            var editor = RuleEditor(Load(), nameof(FormRule.When));
-            editor.Expression = "price > 100m";
-            var trial = editor.Trial!;
+            using var dialog = RuleDialog(Load());
+            dialog.When.Expression = "price > 100m";
+            var trial = dialog.Trial;
 
+            Assert.Equal(["price", "qty"], trial.Inputs.Select(i => i.FieldName));
             Type(trial, "price", "50");
+            Type(trial, "qty", "0");
+
+            Assert.Equal(ExpressionTrialOutcome.Skipped, trial.Outcome);
+            Assert.True(trial.IsSkipped);
+            Assert.Equal(LocalizationService.Current["ExpressionTrial_WhenSkips"], trial.Result);
+
+            Type(trial, "price", "500");
 
             Assert.Equal(ExpressionTrialOutcome.Failed, trial.Outcome);
-            Assert.Equal(LocalizationService.Current["ExpressionTrial_WhenSkips"], trial.Result);
         }
 
         [Fact]

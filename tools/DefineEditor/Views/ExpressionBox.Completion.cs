@@ -7,10 +7,10 @@ using Polhem.DefineEditor.Services;
 
 namespace Polhem.DefineEditor.Views;
 
-// Completion in the expression editor, as in the XML view: the first letter of a name offers the fields, functions and
+// Completion in an expression box, as in the XML view: the first letter of a name offers the fields, functions and
 // types, a dot the members of what is before it, a quote after `==` a drop-down field's values, and Ctrl+Space (or Cmd+I
 // on macOS) whatever fits the caret. What is offered comes from ExpressionCompletion.
-public partial class ExpressionEditorDialog
+public partial class ExpressionBox
 {
     private CompletionWindow? _completionWindow;
 

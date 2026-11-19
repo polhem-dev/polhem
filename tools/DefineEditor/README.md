@@ -92,8 +92,14 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
   added to the table. An existing destination whose type does not hold the source's values is refused. The dialog
   compiles the type rule of analyzer rule [POLHEM2008](../../docs/en/reference/analyzer-rules.md), so it refuses the
   same type pairs that rule reports.
-- **Expressions.** A rule's `When` and `Condition` and a field's `ValueExpression` and `DefaultValueExpression` open
-  an expression editor. It lists the table's fields, the helper functions (with what each returns and an example) and
+- **Rules.** **Add FormRule** opens the rule dialog, and the rule is added only when you confirm it; double-clicking a
+  rule, or the **…** beside its `When` or `Condition`, opens the same dialog on it. It sets the table the rule checks,
+  `When`, `Condition`, the trigger and the message, checks both expressions as you type, and **Try the rule** checks
+  sample values against `When` first and `Condition` next. Its **AI Assistant** tab writes the rule from your own words
+  with Claude, explains the rule in the dialog, and shows sample rows whose outcome the expression engine computed.
+  **Use This Rule** fills the dialog; confirming writes the rule and its message translations into the form's Language
+  files. See [Writing a Rule in Plain Words](../../docs/en/definitions/expression-rules.md#writing-a-rule-in-plain-words).
+- **Expressions.** A field's `ValueExpression` and `DefaultValueExpression` open an expression editor. It lists the table's fields, the helper functions (with what each returns and an example) and
   the types an expression can name,
   completes names as you type, and underlines where parsing stops. **Try it out** evaluates the expression with sample
   values, the way the run time does.
@@ -102,11 +108,6 @@ Selecting a file opens it in a tab: a tree of the document on the left and a pro
 
   Save and Validate parse every expression of the form with the framework's evaluator, and list the ones that would
   fail at run time.
-
-  For a rule, the editor's **AI Assistant** tab writes the rule from your own words with Claude, explains an existing
-  one, and shows sample rows whose outcome the expression engine computed. **Apply Rule** replaces the rule and writes
-  its message translations into the form's Language files. See
-  [Writing a Rule in Plain Words](../../docs/en/definitions/expression-rules.md#writing-a-rule-in-plain-words).
 - **Derived files.** A FormSchema's context menu offers **Generate FormLayout** and **Sync TableSchema and
   FormLayout**, which adds the fields the form gained to its table schemas and layout after showing the files it
   changes.

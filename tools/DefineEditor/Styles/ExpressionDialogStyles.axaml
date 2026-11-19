@@ -1,0 +1,20 @@
+<!-- What the expression editor and the rule dialog draw alike. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The theme draws a text box as a plain fill; beside the outlined expression areas it needs an outline to read as
+         an input. -->
+    <Style Selector="TextBox">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}"/>
+    </Style>
+    <!-- The badges of the assistant's samples. -->
+    <Style Selector="Border.passes">
+        <Setter Property="Background" Value="{DynamicResource SemiColorSuccess}"/>
+    </Style>
+    <Style Selector="Border.blocked">
+        <Setter Property="Background" Value="{DynamicResource SemiColorDanger}"/>
+    </Style>
+    <Style Selector="Border.skipped">
+        <Setter Property="Background" Value="{DynamicResource SemiColorTertiary}"/>
+    </Style>
+</Styles>

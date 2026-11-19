@@ -1,0 +1,77 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:views="using:Polhem.DefineEditor.Views"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        x:Class="Polhem.DefineEditor.Views.RuleDialog"
+        x:DataType="vm:RuleDialogViewModel"
+        x:CompileBindings="True"
+        Width="1100" Height="760" MinWidth="720" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Title="{Binding Title}">
+
+    <Window.Styles>
+        <StyleInclude Source="/Styles/ExpressionDialogStyles.axaml"/>
+    </Window.Styles>
+
+    <Border Padding="18,16">
+        <DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,220,24,Auto,*,24,Auto,150,24,Auto" Margin="0,0,0,10">
+                <TextBlock Grid.Column="0" Text="RuleId" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBox Grid.Column="1" Text="{Binding RuleId, Mode=TwoWay}" IsEnabled="{Binding IsNew}"
+                         AutomationProperties.Name="RuleId"/>
+                <TextBlock Grid.Column="3" Text="{loc:Loc RuleDialog_Table}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="4" ItemsSource="{Binding Tables}" SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch" AutomationProperties.Name="{loc:Loc RuleDialog_Table}"/>
+                <TextBlock Grid.Column="6" Text="Trigger" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="7" ItemsSource="{Binding Triggers}" SelectedItem="{Binding Trigger, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch" AutomationProperties.Name="Trigger"/>
+                <CheckBox Grid.Column="9" IsChecked="{Binding Enabled, Mode=TwoWay}" Content="{loc:Loc RuleDialog_Enabled}"/>
+            </Grid>
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="tool" Content="{loc:Loc Action_Cancel}" Click="OnCancel" MinWidth="90" IsCancel="True"/>
+                    <Button Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnOk" MinWidth="90"
+                            IsEnabled="{Binding CanConfirm}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Problem}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0"
+                           Foreground="{DynamicResource SemiColorDanger}"/>
+            </DockPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,10,0,0">
+                <TextBlock Text="{loc:Loc ExpressionEditor_Message}"/>
+                <TextBox Text="{Binding Message, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc ExpressionEditor_Message}"/>
+            </StackPanel>
+
+            <Expander DockPanel.Dock="Bottom" Margin="0,10,0,0" HorizontalAlignment="Stretch"
+                      Header="{loc:Loc RuleDialog_Trial}">
+                <views:ExpressionTrialPanel DataContext="{Binding Trial}"/>
+            </Expander>
+
+            <TabControl DockPanel.Dock="Right" Width="470" Margin="10,0,0,0" Padding="0,6,0,0">
+                <TabItem Header="{loc:Loc ExpressionEditor_SymbolsTab}">
+                    <views:ExpressionSymbolTree x:Name="Symbols" Groups="{Binding Symbols.Groups}"/>
+                </TabItem>
+                <TabItem Header="{loc:Loc RuleAssistant_Tab}"
+                         IsVisible="{Binding Assistant, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <views:RuleAssistantPanel DataContext="{Binding Assistant}"/>
+                </TabItem>
+            </TabControl>
+
+            <Grid RowDefinitions="Auto,2*,Auto,3*">
+                <TextBlock Grid.Row="0" Margin="0,0,0,4" TextWrapping="Wrap">
+                    <Run Text="When" FontWeight="SemiBold"/>
+                    <Run Text="{loc:Loc RuleDialog_WhenHint}" Classes="muted"/>
+                </TextBlock>
+                <views:ExpressionBox x:Name="WhenBox" Grid.Row="1" DataContext="{Binding When}"/>
+                <TextBlock Grid.Row="2" Margin="0,10,0,4" TextWrapping="Wrap">
+                    <Run Text="Condition" FontWeight="SemiBold"/>
+                    <Run Text="{loc:Loc RuleDialog_ConditionHint}" Classes="muted"/>
+                </TextBlock>
+                <views:ExpressionBox x:Name="ConditionBox" Grid.Row="3" DataContext="{Binding Condition}"/>
+            </Grid>
+        </DockPanel>
+    </Border>
+</Window>

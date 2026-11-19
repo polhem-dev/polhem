@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             x:Class="Polhem.DefineEditor.Views.ExpressionBox"
+             x:DataType="vm:ExpressionFieldViewModel"
+             x:CompileBindings="True">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Margin="0,6,0,0" Padding="8,6" CornerRadius="4"
+                Background="{DynamicResource SemiColorWarningLight}" IsVisible="{Binding HasWarning}">
+            <SelectableTextBlock Text="{Binding Warning}" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource SemiColorWarning}"/>
+        </Border>
+        <Border DockPanel.Dock="Bottom" Margin="0,6,0,0" Padding="8,6" CornerRadius="4"
+                Background="{DynamicResource SemiColorDangerLight}" IsVisible="{Binding HasError}">
+            <SelectableTextBlock Text="{Binding Error}" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource SemiColorDanger}"/>
+        </Border>
+        <Border x:Name="Frame" BorderThickness="1" CornerRadius="4" BorderBrush="{DynamicResource SemiColorBorder}">
+            <ae:TextEditor x:Name="Editor" ShowLineNumbers="False" WordWrap="True"
+                           FontFamily="ui-monospace, Menlo, Consolas, monospace" FontSize="14"
+                           Padding="6,4" Background="Transparent"
+                           Foreground="{DynamicResource SemiColorText0}"
+                           HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"/>
+        </Border>
+    </DockPanel>
+</UserControl>

@@ -211,17 +211,30 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
     private bool CanAddField() => FindAncestor<FormTable>(SelectedTreeNode) is not null;
 
     [RelayCommand(CanExecute = nameof(CanAddRule))]
-    private void AddRule()
+    private async Task AddRuleAsync()
     {
         var folder = FindAncestor<FormRuleCollection>(SelectedTreeNode) ?? FolderOf<FormRuleCollection>();
         if (folder is null) return;
 
         var name = UniqueKey(Schema.Rules!.Select(r => r.RuleId), "new_rule");
-        // `true` holds for every record, so the new rule refuses nothing until its condition is written.
-        var rule = new FormRule(name, "true", "New rule");
+        var owner = GetOwnerWindow();
+        FormRule rule;
+        if (owner is null)
+        {
+            // Headless (the smoke run and the tests): no dialog to fill in. `true` holds for every record, so the new
+            // rule refuses nothing until its condition is written.
+            rule = new FormRule(name, "true", "New rule");
+        }
+        else
+        {
+            using var dialog = CreateRuleDialog(null, name);
+            if (!await RuleDialog.ShowAsync(owner, dialog)) return;
+            rule = dialog.BuildRule();
+            RaiseRuleMessages(dialog, rule.RuleId);
+        }
         Schema.Rules!.Add(rule);
         AddNode(folder, rule);
-        StatusText = L("Status_AddedNamed", "FormRule", name);
+        StatusText = L("Status_AddedNamed", "FormRule", rule.RuleId);
     }
 
     private bool CanAddRule() => SelectedTreeNode is not null;
@@ -359,46 +372,40 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         ?? ProvideExpressionEditor(property, component);
 
     /// <summary>
-    /// The expression editor beside a rule's When and Condition and a field's ValueExpression and
-    /// DefaultValueExpression; <c>null</c> for any other property, or when the table the expression reads is missing.
+    /// The dialog beside an expression: the rule dialog for a rule's When and Condition, the expression editor for a
+    /// field's ValueExpression and DefaultValueExpression; <c>null</c> for any other property, or when the table the
+    /// field expression reads is missing.
     /// </summary>
-    public Func<Task<bool>>? ProvideExpressionEditor(PropertyDescriptor property, object component) =>
-        CreateExpressionEditor(property, component) is not null
+    public Func<Task<bool>>? ProvideExpressionEditor(PropertyDescriptor property, object component)
+    {
+        if (component is FormRule rule && property.Name is nameof(FormRule.When) or nameof(FormRule.Condition))
+            return () => EditRuleAsync(rule, property.Name);
+        return CreateExpressionEditor(property, component) is not null
             ? () => EditExpressionAsync(property, component)
             : null;
+    }
 
     /// <summary>
-    /// Builds the editor for the expression <paramref name="property"/> holds on <paramref name="component"/>, checked as
-    /// <see cref="FormExpressionCalculator.ValidateExpressions"/> checks it; <c>null</c> when the property is not an
-    /// expression or its table is missing.
+    /// Builds the editor for the field expression <paramref name="property"/> holds on <paramref name="component"/>,
+    /// checked as <see cref="FormExpressionCalculator.ValidateExpressions"/> checks it; <c>null</c> when the property is
+    /// not a field expression or the field's table is missing.
     /// </summary>
     public ExpressionEditorViewModel? CreateExpressionEditor(PropertyDescriptor property, object component)
     {
-        var expression = property.GetValue(component) as string ?? string.Empty;
-        switch (component)
+        if (component is not FormField field
+            || property.Name is not (nameof(FormField.ValueExpression) or nameof(FormField.DefaultValueExpression))
+            || field.Table is not { } fieldTable)
         {
-            case FormRule rule when property.Name is nameof(FormRule.When) or nameof(FormRule.Condition):
-                return FormExpressionCalculator.ResolveRuleTable(rule, Schema) is { } ruleTable
-                    ? new ExpressionEditorViewModel($"{rule.RuleId} · {property.Name}", ruleTable,
-                        text => s_expressionCalculator.ValidateExpression(Schema, ruleTable, property.Name, text),
-                        expression, property.Name == nameof(FormRule.Condition) ? rule.Message : null, s_evaluator,
-                        new ExpressionTrialViewModel(ruleTable, null, property.Name, s_expressionCalculator, s_evaluator,
-                            LocalTimeZoneId()),
-                        text => s_expressionCalculator.FindAllowlistViolations(Schema, ruleTable, property.Name, text))
-                    : null;
-            case FormField field when property.Name is nameof(FormField.ValueExpression)
-                    or nameof(FormField.DefaultValueExpression):
-                return field.Table is { } fieldTable
-                    ? new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}", fieldTable,
-                        text => s_expressionCalculator.ValidateExpression(Schema, fieldTable, property.Name, text),
-                        expression, null, s_evaluator,
-                        new ExpressionTrialViewModel(fieldTable, field, property.Name, s_expressionCalculator, s_evaluator,
-                            LocalTimeZoneId()),
-                        text => s_expressionCalculator.FindAllowlistViolations(Schema, fieldTable, property.Name, text))
-                    : null;
-            default:
-                return null;
+            return null;
         }
+        var expression = property.GetValue(component) as string ?? string.Empty;
+        return new ExpressionEditorViewModel($"{field.FieldName} · {property.Name}",
+            new ExpressionSymbolSet(fieldTable, s_evaluator),
+            text => s_expressionCalculator.ValidateExpression(Schema, fieldTable, property.Name, text),
+            expression,
+            new ExpressionTrialViewModel(fieldTable, field, property.Name, s_expressionCalculator, s_evaluator,
+                LocalTimeZoneId()),
+            text => s_expressionCalculator.FindAllowlistViolations(Schema, fieldTable, property.Name, text));
     }
 
     private async Task<bool> EditExpressionAsync(PropertyDescriptor property, object component)
@@ -406,46 +413,22 @@ public sealed partial class FormSchemaDocumentViewModel : ObjectTreeDocumentView
         var owner = GetOwnerWindow();
         if (owner is null) return false; // smoke / headless
         var editor = CreateExpressionEditor(property, component);
-        if (editor is null) return false;
-        if (component is FormRule rule) editor.RuleAssistant = CreateRuleAssistant(editor, rule, property);
-        try
-        {
-            if (!await ExpressionEditorDialog.ShowAsync(owner, editor)) return false;
-            var changed = ApplyExpressionEdit(editor, property, component);
-            if (editor.RuleAssistant?.AppliedRule is { } applied)
-                RuleMessagesApplied?.Invoke(this, new RuleMessagesAppliedEventArgs(applied.RuleId, editor.RuleAssistant.AppliedTranslations));
-            return changed;
-        }
-        finally
-        {
-            editor.RuleAssistant?.Dispose();
-        }
+        if (editor is null || !await ExpressionEditorDialog.ShowAsync(owner, editor)) return false;
+        return ApplyExpressionEdit(editor, property, component);
     }
 
     /// <summary>
-    /// Writes what <paramref name="editor"/> holds back to <paramref name="component"/>: the expression, and a rule's
-    /// message when it was edited beside the condition; or, when the user applied a drafted rule, the rule's table,
-    /// When, Condition and message. Returns whether anything changed.
+    /// Writes the expression <paramref name="editor"/> holds back to <paramref name="component"/>. Returns whether it
+    /// changed.
     /// </summary>
     public static bool ApplyExpressionEdit(ExpressionEditorViewModel editor, PropertyDescriptor property, object component)
     {
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(property);
-        if (editor.RuleAssistant?.AppliedRule is { } applied && component is FormRule appliedTo)
-            return ApplyRule(applied, appliedTo);
-        var changed = false;
-        if (!string.Equals(property.GetValue(component) as string ?? string.Empty, editor.Expression, StringComparison.Ordinal))
-        {
-            property.SetValue(component, editor.Expression);
-            changed = true;
-        }
-        if (editor.HasMessage && component is FormRule rule
-            && !string.Equals(rule.Message, editor.Message, StringComparison.Ordinal))
-        {
-            rule.Message = editor.Message;
-            changed = true;
-        }
-        return changed;
+        if (string.Equals(property.GetValue(component) as string ?? string.Empty, editor.Expression, StringComparison.Ordinal))
+            return false;
+        property.SetValue(component, editor.Expression);
+        return true;
     }
 
     /// <summary>
