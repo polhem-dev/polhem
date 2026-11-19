@@ -5,7 +5,8 @@ namespace Polhem.UI.Core.Fields
     /// one the framework wrote as a consequence.
     /// </summary>
     /// <remarks>
-    /// Only <see cref="User"/> starts a <see cref="FieldValueChangeCoordinator"/> callback: a value the framework
+    /// Only <see cref="User"/> starts a server callback for a field marked
+    /// <see cref="Polhem.Definition.Forms.FormField.ValueChangeCallback"/>: a value the framework
     /// writes in answer to a change never calls back again, which is what keeps one edit to one call.
     /// </remarks>
     public enum FieldValueOrigin

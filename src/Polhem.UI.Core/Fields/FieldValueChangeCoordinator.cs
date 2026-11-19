@@ -27,7 +27,7 @@ namespace Polhem.UI.Core.Fields
     /// head starts it from its UI thread or its renderer, the same way it starts a save.
     /// </para>
     /// </remarks>
-    public sealed class FieldValueChangeCoordinator
+    internal sealed class FieldValueChangeCoordinator
     {
         private readonly FormSchema _schema;
         private readonly IFieldValueChangeConnector _connector;
