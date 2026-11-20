@@ -61,21 +61,26 @@ namespace Polhem.Analyzers.Definitions
                 context.CancellationToken.ThrowIfCancellationRequested();
 
                 foreach (var declaration in schema.Fields)
-                {
-                    var relationProgId = declaration.Attribute("RelationProgId")?.Value;
-                    if (string.IsNullOrEmpty(relationProgId) || FrameworkProgIds.IsFrameworkSupplied(relationProgId!))
-                        continue;
-
-                    var referenced = definitions.FindByProgId(relationProgId!);
-                    var sourceFields = referenced is null ? null : MasterTableFields(referenced);
-                    var destinationFields = FieldsOf(declaration.Ancestors("FormTable").FirstOrDefault());
-                    if (sourceFields is null || destinationFields is null)
-                        continue;
-
-                    foreach (var mapping in declaration.Elements("RelationFieldMappings").Elements("FieldMapping"))
-                        Check(context, schema, referenced!, mapping, sourceFields, destinationFields);
-                }
+                    CheckRelationField(context, definitions, schema, declaration);
             }
+        }
+
+        // Checks each mapping of one relation field against the referenced form's master table.
+        private static void CheckRelationField(CompilationAnalysisContext context, DefinitionContext definitions,
+            FormSchemaModel schema, XElement declaration)
+        {
+            var relationProgId = declaration.Attribute("RelationProgId")?.Value;
+            if (string.IsNullOrEmpty(relationProgId) || FrameworkProgIds.IsFrameworkSupplied(relationProgId!))
+                return;
+
+            var referenced = definitions.FindByProgId(relationProgId!);
+            var sourceFields = referenced is null ? null : MasterTableFields(referenced);
+            var destinationFields = FieldsOf(declaration.Ancestors("FormTable").FirstOrDefault());
+            if (sourceFields is null || destinationFields is null)
+                return;
+
+            foreach (var mapping in declaration.Elements("RelationFieldMappings").Elements("FieldMapping"))
+                Check(context, schema, referenced!, mapping, sourceFields, destinationFields);
         }
 
         private static void Check(

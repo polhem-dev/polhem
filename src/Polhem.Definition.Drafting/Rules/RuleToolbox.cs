@@ -304,35 +304,41 @@ namespace Polhem.Definition.Drafting.Rules
             var ok = true;
             foreach (var item in input)
             {
-                if (item is null) { continue; }
-                var name = item.Field ?? string.Empty;
-                if (item.Value is { Length: > MaxValueLength })
-                {
-                    problems.Add(TooLong($"{label}'s value for {Echo(name)}", MaxValueLength));
-                    ok = false;
-                    continue;
-                }
-                if (table.Fields is null || !table.Fields.Contains(name))
-                {
-                    problems.Add($"{label} names '{Echo(name)}', which is not a field of {table.TableName}.");
-                    ok = false;
-                    continue;
-                }
-                var field = table.Fields[name];
-                try
-                {
-                    // The value arrives as text, read as a cell is: invariant culture, ISO dates. Empty text is an empty field,
-                    // whatever its type, so a sample can show a date or a number left blank.
-                    values[field.FieldName] = ExpressionPolicy.CoerceValue(
-                        string.IsNullOrEmpty(item.Value) ? null : item.Value, field.DbType);
-                }
-                catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
-                {
-                    problems.Add($"{label}: '{Echo(item.Value)}' is not a value for {Echo(name)} ({field.DbType}).");
-                    ok = false;
-                }
+                if (item is not null && !TryReadValue(table, item, label, problems, values)) { ok = false; }
             }
             return ok ? values : null;
+        }
+
+        // Reads one sample value into `values`; false, with the problem added, when it is too long, names no field of the
+        // table, or cannot be read as the field's type.
+        private static bool TryReadValue(FormTable table, SampleValue item, string label, List<string> problems,
+            Dictionary<string, object?> values)
+        {
+            var name = item.Field ?? string.Empty;
+            if (item.Value is { Length: > MaxValueLength })
+            {
+                problems.Add(TooLong($"{label}'s value for {Echo(name)}", MaxValueLength));
+                return false;
+            }
+            if (table.Fields is null || !table.Fields.Contains(name))
+            {
+                problems.Add($"{label} names '{Echo(name)}', which is not a field of {table.TableName}.");
+                return false;
+            }
+            var field = table.Fields[name];
+            try
+            {
+                // The value arrives as text, read as a cell is: invariant culture, ISO dates. Empty text is an empty field,
+                // whatever its type, so a sample can show a date or a number left blank.
+                values[field.FieldName] = ExpressionPolicy.CoerceValue(
+                    string.IsNullOrEmpty(item.Value) ? null : item.Value, field.DbType);
+                return true;
+            }
+            catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+            {
+                problems.Add($"{label}: '{Echo(item.Value)}' is not a value for {Echo(name)} ({field.DbType}).");
+                return false;
+            }
         }
 
         private static string TooLong(string what, int max) =>

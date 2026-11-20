@@ -156,13 +156,7 @@ namespace Polhem.Expressions
                 char c = expression[i];
                 if (c is '"' or '\'')
                 {
-                    int start = i;
-                    i = SkipLiteral(expression, i);
-                    if (c == '"' && i - start - 2 > MaxStringLiteralLength)
-                    {
-                        return new ExpressionViolation(string.Create(CultureInfo.InvariantCulture,
-                            $"A text literal is longer than {MaxStringLiteralLength} characters."), start);
-                    }
+                    if (ScanLiteral(expression, ref i) is { } literalViolation) { return literalViolation; }
                     continue;
                 }
                 if (c is '(' or '[')
@@ -189,6 +183,17 @@ namespace Polhem.Expressions
             var match = Regex.Match(expression, $@"(?<![\w]){Regex.Escape(name)}(?![\w])", RegexOptions.None,
                 TimeSpan.FromSeconds(1));
             return match.Success ? match.Index : null;
+        }
+
+        // Moves `i` past the literal that starts there; a violation when it is a text literal over the length limit.
+        private static ExpressionViolation? ScanLiteral(string expression, ref int i)
+        {
+            int start = i;
+            i = SkipLiteral(expression, i);
+            return expression[start] == '"' && i - start - 2 > MaxStringLiteralLength
+                ? new ExpressionViolation(string.Create(CultureInfo.InvariantCulture,
+                    $"A text literal is longer than {MaxStringLiteralLength} characters."), start)
+                : null;
         }
 
         private static int SkipLiteral(string expression, int start)

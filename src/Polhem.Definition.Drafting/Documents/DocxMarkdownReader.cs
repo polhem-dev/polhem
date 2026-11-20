@@ -94,22 +94,7 @@ namespace Polhem.Definition.Drafting.Documents
 
         private static void AppendTable(StringBuilder builder, Table table)
         {
-            var rows = new List<List<string>>();
-            foreach (var row in table.Elements<TableRow>())
-            {
-                var cells = new List<string>();
-                foreach (var cell in row.Elements<TableCell>())
-                {
-                    var properties = cell.TableCellProperties;
-                    var continuesMerge = properties?.VerticalMerge is { } merge
-                        && (merge.Val is null || merge.Val.Value == MergedCellValues.Continue);
-                    cells.Add(continuesMerge ? string.Empty : CellText(cell));
-                    var span = properties?.GridSpan?.Val?.Value ?? 1;
-                    for (var covered = 1; covered < span; covered++)
-                        cells.Add(string.Empty);
-                }
-                rows.Add(cells);
-            }
+            var rows = table.Elements<TableRow>().Select(RowCells).ToList();
             if (rows.Count == 0) return;
 
             var columns = rows.Max(row => row.Count);
@@ -121,6 +106,24 @@ namespace Polhem.Definition.Drafting.Documents
                     builder.Append('|').Append(string.Concat(Enumerable.Repeat(" --- |", columns))).Append('\n');
             }
             builder.Append('\n');
+        }
+
+        // A row's cells as the grid lays them out: a cell that continues a vertical merge is empty, and a cell that spans
+        // several columns is followed by an empty cell for each column it covers.
+        private static List<string> RowCells(TableRow row)
+        {
+            var cells = new List<string>();
+            foreach (var cell in row.Elements<TableCell>())
+            {
+                var properties = cell.TableCellProperties;
+                var continuesMerge = properties?.VerticalMerge is { } merge
+                    && (merge.Val is null || merge.Val.Value == MergedCellValues.Continue);
+                cells.Add(continuesMerge ? string.Empty : CellText(cell));
+                var span = properties?.GridSpan?.Val?.Value ?? 1;
+                for (var covered = 1; covered < span; covered++)
+                    cells.Add(string.Empty);
+            }
+            return cells;
         }
 
         private static void AppendRow(StringBuilder builder, List<string> cells, int columns)
