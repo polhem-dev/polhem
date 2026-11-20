@@ -36,19 +36,10 @@ namespace Polhem.Definition.Forms
             var map = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
             if (schema.MasterTable?.Fields is { } fields)
             {
-                foreach (var field in fields)
+                foreach (var expression in fields.Select(field => field.ValueExpression).Where(e => !StringUtilities.IsEmpty(e)))
                 {
-                    if (StringUtilities.IsEmpty(field.ValueExpression)) { continue; }
-                    foreach (var aggregate in DetailAggregateRewriter.Rewrite(field.ValueExpression).Aggregates)
-                    {
-                        if (!map.TryGetValue(aggregate.TableName, out var detailFields))
-                        {
-                            detailFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                            map[aggregate.TableName] = detailFields;
-                        }
-                        if (aggregate.FieldName.Length > 0) { detailFields.Add(aggregate.FieldName); }
-                        detailFields.UnionWith(ConditionFields(aggregate, schema));
-                    }
+                    foreach (var aggregate in DetailAggregateRewriter.Rewrite(expression).Aggregates)
+                        AddDependency(map, aggregate, schema);
                 }
             }
 
@@ -56,6 +47,18 @@ namespace Polhem.Definition.Forms
             foreach (var pair in map)
                 result[pair.Key] = pair.Value;
             return result;
+        }
+
+        // Records the detail fields one aggregate reads: its field, and the fields its condition names.
+        private static void AddDependency(Dictionary<string, HashSet<string>> map, DetailAggregate aggregate, FormSchema schema)
+        {
+            if (!map.TryGetValue(aggregate.TableName, out var detailFields))
+            {
+                detailFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                map[aggregate.TableName] = detailFields;
+            }
+            if (aggregate.FieldName.Length > 0) { detailFields.Add(aggregate.FieldName); }
+            detailFields.UnionWith(ConditionFields(aggregate, schema));
         }
 
         /// <summary>
@@ -74,19 +77,25 @@ namespace Polhem.Definition.Forms
         {
             ArgumentNullException.ThrowIfNull(schema);
             var tables = new HashSet<string>(BuildAggregateDependencyMap(schema).Keys, StringComparer.OrdinalIgnoreCase);
-            if (schema.Rules is null || schema.MasterTable is null) { return tables; }
+            foreach (var expression in SaveRuleExpressions(schema))
+            {
+                foreach (var aggregate in DetailAggregateRewriter.Rewrite(expression).Aggregates)
+                    tables.Add(aggregate.TableName);
+            }
+            return tables;
+        }
+
+        // The non-empty When and Condition expressions of the enabled before-save rules that target the master table.
+        private static IEnumerable<string> SaveRuleExpressions(FormSchema schema)
+        {
+            if (schema.Rules is null || schema.MasterTable is null) { yield break; }
             foreach (var rule in schema.Rules)
             {
                 if (!rule.Enabled || rule.Trigger != FormRuleTrigger.BeforeSave) { continue; }
                 if (ResolveRuleTable(rule, schema) is not { } table || !IsMasterTable(schema, table)) { continue; }
-                foreach (var expression in new[] { rule.When, rule.Condition })
-                {
-                    if (StringUtilities.IsEmpty(expression)) { continue; }
-                    foreach (var aggregate in DetailAggregateRewriter.Rewrite(expression).Aggregates)
-                        tables.Add(aggregate.TableName);
-                }
+                if (!StringUtilities.IsEmpty(rule.When)) { yield return rule.When; }
+                if (!StringUtilities.IsEmpty(rule.Condition)) { yield return rule.Condition; }
             }
-            return tables;
         }
 
         private DetailAggregateExpression ParseAggregates(string expression)
@@ -309,23 +318,18 @@ namespace Polhem.Definition.Forms
         // unchanged master row must be recomputed as well.
         private bool AggregatedDetailsChanged(FormSchema schema, FormTable masterTable, DataSet dataSet)
         {
-            if (masterTable.Fields is null) { return false; }
-            foreach (var field in masterTable.Fields)
-            {
-                if (StringUtilities.IsEmpty(field.ValueExpression)) { continue; }
-                foreach (var aggregate in ParseAggregates(field.ValueExpression).Aggregates)
-                {
-                    if (schema.Tables is null || !schema.Tables.Contains(aggregate.TableName)) { continue; }
-                    var tableName = schema.Tables[aggregate.TableName].TableName;
-                    if (!dataSet.Tables.Contains(tableName)) { continue; }
-                    foreach (DataRow row in dataSet.Tables[tableName]!.Rows)
-                    {
-                        if (row.RowState is DataRowState.Added or DataRowState.Modified or DataRowState.Deleted)
-                            return true;
-                    }
-                }
-            }
-            return false;
+            if (masterTable.Fields is null || schema.Tables is not { } formTables) { return false; }
+            var aggregatedTables = masterTable.Fields
+                .Select(field => field.ValueExpression)
+                .Where(expression => !StringUtilities.IsEmpty(expression))
+                .SelectMany(expression => ParseAggregates(expression).Aggregates)
+                .Select(aggregate => aggregate.TableName)
+                .Where(formTables.Contains)
+                .Select(name => formTables[name].TableName);
+            return aggregatedTables.Any(tableName => dataSet.Tables.Contains(tableName) && HasChangedRow(dataSet.Tables[tableName]!));
         }
+
+        private static bool HasChangedRow(DataTable table) =>
+            table.Rows.Cast<DataRow>().Any(row => row.RowState is DataRowState.Added or DataRowState.Modified or DataRowState.Deleted);
     }
 }

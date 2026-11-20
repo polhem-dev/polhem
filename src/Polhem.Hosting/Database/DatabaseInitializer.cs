@@ -181,12 +181,7 @@ namespace Polhem.Hosting.Database
 
                 foreach (var databaseId in databases)
                 {
-                    if (!recordStores.TryGetValue(databaseId, out var records))
-                    {
-                        records = OpenRecords(databaseId);
-                        recordStores[databaseId] = records;
-                        if (records.NewerFormat is not null) problems.Add(records.NewerFormat);
-                    }
+                    var records = RecordsFor(databaseId, recordStores, problems);
                     if (records.NewerFormat is not null) continue;
 
                     foreach (var entry in UpgradeDatabase(databaseId, category.Id, categoryTables, options, dryRun, companyIdsChecked, records.Store))
@@ -196,14 +191,26 @@ namespace Polhem.Hosting.Database
                     }
                 }
             }
-            if (wanted is not null)
-            {
-                problems.AddRange(wanted.Where(name => !found.Contains(name)).Order(StringComparer.OrdinalIgnoreCase)
-                    .Select(name => $"Table '{name}' is not registered in the database category settings, so it was not built."));
-            }
+            if (wanted is not null) problems.AddRange(UnregisteredTableProblems(wanted, found));
             var assignments = AssignCompanyRows(databaseSettings, tableNames, dryRun, problems);
             return new TableUpgradeReport { Tables = tables, Problems = problems, CompanyAssignments = assignments };
         }
+
+        // The upgrade records of a database, opened once per call. A database whose records a newer schema format wrote
+        // is reported once, and its tables are left alone.
+        private DatabaseRecords RecordsFor(string databaseId, Dictionary<string, DatabaseRecords> recordStores,
+            List<string> problems)
+        {
+            if (recordStores.TryGetValue(databaseId, out var records)) return records;
+            records = OpenRecords(databaseId);
+            recordStores[databaseId] = records;
+            if (records.NewerFormat is not null) problems.Add(records.NewerFormat);
+            return records;
+        }
+
+        private static IEnumerable<string> UnregisteredTableProblems(HashSet<string> wanted, HashSet<string> found) =>
+            wanted.Where(name => !found.Contains(name)).Order(StringComparer.OrdinalIgnoreCase)
+                .Select(name => $"Table '{name}' is not registered in the database category settings, so it was not built.");
 
         /// <summary>
         /// Returns the options <c>st_company</c> is upgraded with: it may narrow when the only column it changes
