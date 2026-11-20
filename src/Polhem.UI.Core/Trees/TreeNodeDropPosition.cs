@@ -1,4 +1,4 @@
-namespace Polhem.Definition.ObjectTree
+namespace Polhem.UI.Core.Trees
 {
     /// <summary>
     /// Where a dragged tree node lands relative to the node it is dropped on.

@@ -1,4 +1,4 @@
-namespace Polhem.Definition.ObjectTree
+namespace Polhem.UI.Core.Trees
 {
     /// <summary>
     /// A UI-independent command offered for a tree node, as returned by <see cref="ITreeNodeCommandProvider"/>.

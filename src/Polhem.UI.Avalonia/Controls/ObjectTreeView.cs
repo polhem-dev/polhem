@@ -1,17 +1,18 @@
 using System.ComponentModel;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
+using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Avalonia.VisualTree;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Avalonia;
 using Polhem.Definition.ObjectTree;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.UI.Avalonia.Controls
 {

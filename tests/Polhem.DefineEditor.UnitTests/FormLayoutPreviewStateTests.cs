@@ -1,10 +1,11 @@
 using System.ComponentModel;
 using System.Globalization;
 using Polhem.Core.Serialization;
-using Polhem.Definition.Layouts;
-using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.BrowserPreview;
 using Polhem.DefineEditor.ViewModels;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.ObjectTree;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.UnitTests
 {

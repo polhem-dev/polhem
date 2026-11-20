@@ -91,6 +91,15 @@
 
 > 用戶端能力解析**僅為 UX 降級**。後端仍是權威的安全邊界。
 
+### 樹狀命令與拖放
+
+- `Trees/ITreeNodeCommandProvider`、`TreeNodeCommand` -- 樹狀控制項為節點提供的命令（例如右鍵選單），與 UI 框架無關。
+- `Trees/ITreeNodeDragDropHandler`、`TreeNodeDropPosition` -- 哪些節點可以拖曳、可以放到哪裡，以及把放下的結果套用到節點
+  代表的物件上。
+
+節點是 `Polhem.Definition.ObjectTree` 的 `ObjectTreeNode`，可以由 `ObjectTreeBuilder` 從定義建出，也可以從其他階層資料手動組成。
+Avalonia 的 `ObjectTreeView` 兩者都接受。
+
 ## 設計慣例
 
 - **不含傳輸** -- 套件只參考 `Polhem.Api.Contracts`。參考 `Polhem.Api.Client`、`Polhem.Api.Core`、
@@ -116,3 +125,4 @@
 - `Criteria/` -- `QueryCriteria`、`CriteriaRow`、`CriteriaField`、`CriteriaOperator`、`RelativeDate`、`GetListFilterConverter`、`ColumnFilterCriteria`
 - `Lists/` -- `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`、`LayoutCapabilityApplier`
+- `Trees/` -- `ITreeNodeCommandProvider`、`TreeNodeCommand`、`ITreeNodeDragDropHandler`、`TreeNodeDropPosition`

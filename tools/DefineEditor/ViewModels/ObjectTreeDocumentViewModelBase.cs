@@ -1,13 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using Polhem.Core;
-using Polhem.Core.Serialization;
-using Polhem.Definition.ObjectTree;
-using Polhem.DefineEditor.Models;
-using Polhem.DefineEditor.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.Core.Serialization;
+using Polhem.Core;
+using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
+using Polhem.Definition.ObjectTree;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.ViewModels;
 

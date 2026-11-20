@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Polhem.Definition.ObjectTree;
+using Polhem.UI.Core.Trees;
 
-namespace Polhem.Definition.UnitTests.ObjectTree
+namespace Polhem.UI.Core.UnitTests.Trees
 {
     public class TreeNodeCommandTests
     {

@@ -106,6 +106,16 @@ application reaches them through the heads' editors, grids and form views.
 > Client-side capability resolution is **UX degradation only**. The backend remains the
 > authoritative security boundary.
 
+### Tree Commands and Drag and Drop
+
+- `Trees/ITreeNodeCommandProvider`, `TreeNodeCommand` -- the commands a tree control offers for a node, such as in
+  its context menu, independent of the UI framework.
+- `Trees/ITreeNodeDragDropHandler`, `TreeNodeDropPosition` -- which nodes the user may drag, where they may be
+  dropped, and applying a drop to the objects the nodes stand for.
+
+The nodes are `ObjectTreeNode` from `Polhem.Definition.ObjectTree`, built by `ObjectTreeBuilder` from a definition or
+by hand from any other hierarchy. The Avalonia `ObjectTreeView` takes both.
+
 ## Design Conventions
 
 - **No transport** -- the package references `Polhem.Api.Contracts` only. `POLHEM9001` (`src/Directory.Build.targets`)
@@ -132,3 +142,4 @@ application reaches them through the heads' editors, grids and form views.
 - `Criteria/` -- `QueryCriteria`, `CriteriaRow`, `CriteriaField`, `CriteriaOperator`, `RelativeDate`, `GetListFilterConverter`, `ColumnFilterCriteria`
 - `Lists/` -- `ColumnFilterKind`
 - `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`, `LayoutCapabilityApplier`
+- `Trees/` -- `ITreeNodeCommandProvider`, `TreeNodeCommand`, `ITreeNodeDragDropHandler`, `TreeNodeDropPosition`

@@ -1,14 +1,15 @@
 using System.ComponentModel;
-using Polhem.Core.Serialization;
 using Polhem.Core.Data;
+using Polhem.Core.Serialization;
+using Polhem.DefineEditor.Services;
+using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Database;
 using Polhem.Definition.Language;
 using Polhem.Definition.ObjectTree;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Sorting;
-using Polhem.DefineEditor.Services;
-using Polhem.DefineEditor.ViewModels;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.UnitTests
 {

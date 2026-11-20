@@ -1,6 +1,7 @@
 using System.Windows.Input;
-using Polhem.Definition.ObjectTree;
 using Polhem.DefineEditor.Services;
+using Polhem.Definition.ObjectTree;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.ViewModels;
 
