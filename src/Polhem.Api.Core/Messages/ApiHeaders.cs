@@ -14,5 +14,11 @@ namespace Polhem.Api.Core.Messages
         /// The Authorization header, used for authentication or authorization.
         /// </summary>
         public const string Authorization = "Authorization";
+        /// <summary>
+        /// The standard <c>Accept-Language</c> header. The server translates the messages of a call that has no
+        /// session, such as a failed sign-in, into its first language; a call with a session uses the account's
+        /// culture.
+        /// </summary>
+        public const string AcceptLanguage = "Accept-Language";
     }
 }

@@ -1,1 +1,2 @@
 #nullable enable
+static Polhem.UI.ApiBridge.ClientInfo.ApplyCulture(string! culture) -> bool

@@ -50,6 +50,26 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
         }
 
         [Fact]
+        [DisplayName("A call without a session resolves in the language the caller asked for before the default")]
+        public void LocalizeMessage_NoSessionWithRequestCulture_UsesRequestCulture()
+        {
+            var executor = CreateExecutor(sessionCulture: null, defaultLanguage: "zh-TW");
+            var ex = new UserMessageException(PolhemMessages.LoginInvalidCredentials, "Invalid username or password.");
+
+            Assert.Equal("Invalid username or password.", executor.LocalizeMessage(ex, ex.Message, requestCulture: "en-US"));
+        }
+
+        [Fact]
+        [DisplayName("A signed-in caller gets the account's culture whatever language the request asks for")]
+        public void LocalizeMessage_SessionWithRequestCulture_UsesSessionCulture()
+        {
+            var executor = CreateExecutor(sessionCulture: "zh-TW");
+            var ex = new UserMessageException(PolhemMessages.LoginInvalidCredentials, "Invalid username or password.");
+
+            Assert.Equal("帳號或密碼錯誤。", executor.LocalizeMessage(ex, ex.Message, requestCulture: "en-US"));
+        }
+
+        [Fact]
         [DisplayName("An authentication failure does not look the session up again and resolves in the default language")]
         public void LocalizeMessage_AuthenticationFailure_SkipsSessionLookup()
         {
@@ -153,8 +173,8 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
         /// </summary>
         private sealed class Localizer(IServiceProvider services)
         {
-            public string LocalizeMessage(Exception ex, string message)
-                => PolhemExceptionMapper.Localize(ex, message, services, s_token);
+            public string LocalizeMessage(Exception ex, string message, string requestCulture = "")
+                => PolhemExceptionMapper.Localize(ex, message, services, s_token, requestCulture);
         }
 
         private sealed class StubSessionInfoService(string? culture) : ISessionInfoService

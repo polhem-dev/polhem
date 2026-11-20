@@ -1,1 +1,2 @@
 #nullable enable
+const Polhem.Api.Core.Messages.ApiHeaders.AcceptLanguage = "Accept-Language" -> string!

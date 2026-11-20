@@ -1,3 +1,4 @@
+using System.Globalization;
 using Polhem.Api.Core.Messages;
 using Polhem.JsonRpc;
 using Polhem.JsonRpc.Client;
@@ -8,9 +9,9 @@ namespace Polhem.Api.Client.Providers
     /// Remote API service provider that accesses backend business logic over the network.
     /// </summary>
     /// <remarks>
-    /// Requests travel through an <see cref="HttpTransport"/>. The <c>X-Api-Key</c> and <c>Authorization</c> headers
-    /// are added by a handler in front of a connection pool the process shares, so every provider has its own
-    /// headers without opening connections of its own.
+    /// Requests travel through an <see cref="HttpTransport"/>. The <c>X-Api-Key</c>, <c>Accept-Language</c> and
+    /// <c>Authorization</c> headers are added by a handler in front of a connection pool the process shares, so every
+    /// provider has its own headers without opening connections of its own.
     /// </remarks>
     internal sealed class RemoteApiProvider : IJsonRpcTransport
     {
@@ -79,7 +80,7 @@ namespace Polhem.Api.Client.Providers
             => _transport.SendBatchAsync(requests, cancellationToken);
 
         /// <summary>
-        /// Adds the API key and the access token to every request.
+        /// Adds the API key, the caller's UI language and the access token to every request.
         /// </summary>
         /// <remarks>
         /// The API key is read per request, because <see cref="PolhemApiClient.ApiKey"/> can be set after the provider
@@ -93,6 +94,13 @@ namespace Polhem.Api.Client.Providers
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 request.Headers.TryAddWithoutValidation(ApiHeaders.ApiKey, apiKey());
+                // Read per request: the language can change on the sign-in screen after the client is created.
+                var culture = CultureInfo.CurrentUICulture.Name;
+                if (culture.Length > 0)
+                {
+                    request.Headers.Remove(ApiHeaders.AcceptLanguage);
+                    request.Headers.TryAddWithoutValidation(ApiHeaders.AcceptLanguage, culture);
+                }
                 if (accessToken != Guid.Empty)
                 {
                     request.Headers.TryAddWithoutValidation(ApiHeaders.Authorization, $"Bearer {accessToken}");

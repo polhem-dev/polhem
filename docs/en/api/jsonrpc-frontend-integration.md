@@ -185,6 +185,7 @@ See [Temporal Types](../database/temporal-types.md) and [Time Zones](../database
 | `Content-Type` | Yes | `application/json` | JSON-RPC envelope |
 | `X-Api-Key` | Yes, except for `System.Ping` | The application's API key | Until the deployment issues its first enabled key (`st_api_key`), any non-empty value passes; after that, only an issued, enabled, unexpired key does. See [API Key Management](../security/api-key-management.md). |
 | `Authorization` | For methods declared `Authenticated` | `Bearer <accessToken>` | The GUID from `System.Login`'s response. A request without the header is an anonymous call, which only methods declared `Anonymous` accept. |
+| `Accept-Language` | No | A language tag, such as `en-US` | The language of the error messages of a call without a session, such as a failed `System.Login`. The first tag is used; one the server does not know, or none, leaves the deployment's default language. A signed-in call uses the account's culture instead. A browser sends its own languages; set the header to the language your sign-in screen shows. |
 
 A rejected API key, or an `Authorization` header that is not a well-formed `Bearer <guid>`, is refused
 before the method runs, with **HTTP 200** and a JSON-RPC error `-32600` in the body. A missing, unknown or

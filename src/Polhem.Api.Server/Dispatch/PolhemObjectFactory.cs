@@ -1,5 +1,6 @@
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polhem.Api.Server.Authorization;
@@ -45,9 +46,15 @@ namespace Polhem.Api.Server.Dispatch
                 state.AccessToken = context.Transport.Items.TryGetValue(PolhemJsonRpc.AccessTokenItem, out var token) && token is Guid guid
                     ? guid
                     : Guid.Empty;
+                // An in-process call runs in the caller's execution context, so its UI culture is the one the caller
+                // shows, such as the language a Blazor Server circuit picked on its sign-in screen.
+                state.RequestCulture = RequestCultureParser.Normalize(CultureInfo.CurrentUICulture.Name);
             }
             else
             {
+                // Before the authorization check, which may refuse the call with a message of its own.
+                context.Transport.Headers.TryGetValue(ApiHeaders.AcceptLanguage, out var acceptLanguage);
+                state.RequestCulture = RequestCultureParser.FromAcceptLanguage(acceptLanguage);
                 Authorize(context, state, services);
             }
 

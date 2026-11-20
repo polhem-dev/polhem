@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using Polhem.Api.Client.Providers;
@@ -97,6 +98,29 @@ namespace Polhem.Api.Client.UnitTests
             key = "second.key";
             await provider.SendAsync(PingRequest());
             Assert.Equal("second.key", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.ApiKey)));
+        }
+
+        [Fact]
+        [DisplayName("RemoteApiProvider sends the UI culture of each request as Accept-Language, so a language picked later applies to the next one")]
+        public async Task SendAsync_UICultureChanged_SendsCurrentAcceptLanguage()
+        {
+            var handler = new CapturingHandler();
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, NoKey, handler);
+            var original = CultureInfo.CurrentUICulture;
+            try
+            {
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+                await provider.SendAsync(PingRequest());
+                Assert.Equal("en-US", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.AcceptLanguage)));
+
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-TW");
+                await provider.SendAsync(PingRequest());
+                Assert.Equal("zh-TW", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.AcceptLanguage)));
+            }
+            finally
+            {
+                CultureInfo.CurrentUICulture = original;
+            }
         }
 
         [Fact]
