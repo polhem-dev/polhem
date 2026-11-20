@@ -8,6 +8,9 @@
 
 ## 內容
 
+元件基底（名稱以 `Base` 結尾的型別）之所以公開，是因為 `.Mud` 與 `.Fluent` 的元件繼承它們。除了參數之外，它們的成員只供這兩個
+套件使用（ADR-059 決策 4）：應用程式使用的是元件，不是基底。新的欄位編輯器是例外，繼承 `FieldEditorBase`。
+
 - `FormLiveComputation`（`Polhem.Web.Blazor.DataObjects`）。元件綁定的是各 head 共用、位於
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.zh-TW.md) 的 `FormDataObject`。
 - `FieldEditorBase` 與 `FormScope`（`Polhem.Web.Blazor.Controls.Editors`），所有欄位編輯器的基底，實作 `Polhem.UI.Core.Editing`

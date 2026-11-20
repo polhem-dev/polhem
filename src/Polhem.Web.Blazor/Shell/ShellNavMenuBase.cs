@@ -22,7 +22,7 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Gets the shell's options.</summary>
         [Inject]
-        protected PolhemShellOptions Options { get; private set; } = default!;
+        internal PolhemShellOptions Options { get; private set; } = default!;
 
         [Inject]
         private PolhemApiClient Client { get; set; } = default!;

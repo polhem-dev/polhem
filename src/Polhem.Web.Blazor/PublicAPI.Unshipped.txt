@@ -328,3 +328,7 @@ Polhem.Web.Blazor.Identity.BlazorUserContext.Identity.get -> Polhem.UI.Core.User
 *REMOVED*virtual Polhem.Web.Blazor.Controls.GridControlBase.OpenPopupSelector.get -> string?
 *REMOVED*virtual Polhem.Web.Blazor.Controls.GridControlBase.RefreshRowList() -> void
 *REMOVED*virtual Polhem.Web.Blazor.Controls.GridControlBase.ReplayDelayMilliseconds.get -> int
+*REMOVED*Polhem.Web.Blazor.Shell.ShellLayoutBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
+*REMOVED*Polhem.Web.Blazor.Shell.ShellLayoutBase.UserContext.get -> Polhem.Web.Blazor.Identity.BlazorUserContext!
+*REMOVED*Polhem.Web.Blazor.Shell.ShellNavMenuBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
+*REMOVED*Polhem.Web.Blazor.Shell.ShellSignInBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!

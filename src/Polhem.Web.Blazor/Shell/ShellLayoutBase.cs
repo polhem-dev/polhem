@@ -15,11 +15,11 @@ namespace Polhem.Web.Blazor.Shell
     {
         /// <summary>Gets the user context the layout follows.</summary>
         [Inject]
-        protected BlazorUserContext UserContext { get; private set; } = default!;
+        internal BlazorUserContext UserContext { get; private set; } = default!;
 
         /// <summary>Gets the shell's options.</summary>
         [Inject]
-        protected PolhemShellOptions Options { get; private set; } = default!;
+        internal PolhemShellOptions Options { get; private set; } = default!;
 
         [Inject]
         private NavigationManager Navigation { get; set; } = default!;
