@@ -271,8 +271,12 @@ temporary directory first, prints one line per check, and ends with `[smoke] OK`
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
-    -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
+    -- --smoke ../../tests/Define/FormSchema/Employee.FormSchema.xml
 ```
+
+`dotnet run --project` starts the tool in the project folder, so a relative fixture path is resolved from
+`tools/DefineEditor/`, not from the folder the command runs in. Pass an absolute path to avoid that, for example
+`"$PWD/tests/Define/FormSchema/Employee.FormSchema.xml"` from the repository root.
 
 The editor's unit tests are in `tests/Polhem.DefineEditor.UnitTests`, which is part of `Polhem.slnx`.
 
