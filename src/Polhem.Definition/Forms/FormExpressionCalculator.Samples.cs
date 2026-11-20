@@ -12,19 +12,20 @@ namespace Polhem.Definition.Forms
         /// </summary>
         /// <param name="expression">The expression, which need not be the one the schema holds yet.</param>
         /// <param name="formTable">The table the rule targets (<see cref="ResolveRuleTable"/>).</param>
-        /// <param name="sample">The row's values and the time zone; <see cref="ExpressionSample.DetailRows"/> is not read.</param>
+        /// <param name="sample">The row's values and the time zone, with no <see cref="ExpressionSample.DetailRows"/>.</param>
         /// <returns>The value of the expression.</returns>
         /// <remarks>
         /// Each value is coerced to its field's type as a cell read from the database is
         /// (<see cref="ExpressionPolicy.CoerceValue"/>). <c>Now()</c> uses the user's zone, as a client preview does;
         /// the server's pass uses UTC.
         /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="sample"/> carries detail rows.</exception>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
         public bool EvaluateRuleSample(string expression, FormTable formTable, ExpressionSample sample)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
             ArgumentNullException.ThrowIfNull(formTable);
-            ArgumentNullException.ThrowIfNull(sample);
+            RequireOneRowSample(sample);
 
             var variables = SampleVariables(formTable, sample.Values);
             expression = BindSampleAggregates(expression, formTable, variables);
@@ -53,6 +54,8 @@ namespace Polhem.Definition.Forms
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
             ArgumentNullException.ThrowIfNull(schema);
             ArgumentNullException.ThrowIfNull(sample);
+            ArgumentNullException.ThrowIfNull(sample.Values, nameof(sample));
+            ArgumentNullException.ThrowIfNull(sample.DetailRows, nameof(sample));
             var master = schema.MasterTable
                 ?? throw new ArgumentException("The form has no master table.", nameof(schema));
 
@@ -94,7 +97,7 @@ namespace Polhem.Definition.Forms
         /// <see cref="FormField.ValueExpression"/> or <see cref="FormField.DefaultValueExpression"/>, by name.
         /// </param>
         /// <param name="expression">The expression, which need not be the one the field holds yet.</param>
-        /// <param name="sample">The row's values and the time zone; <see cref="ExpressionSample.DetailRows"/> is not read.</param>
+        /// <param name="sample">The row's values and the time zone, with no <see cref="ExpressionSample.DetailRows"/>.</param>
         /// <returns>
         /// The value coerced to the field's type; <c>null</c> when a default-value expression yields nothing and the
         /// field is left empty.
@@ -105,13 +108,15 @@ namespace Polhem.Definition.Forms
         /// A computed numeric value is not rounded: <see cref="ApplyComputedRow"/> rounds it by the company's number
         /// settings (<see cref="RoundingContext"/>), which a sample has no company to read.
         /// </remarks>
-        /// <exception cref="ArgumentException"><paramref name="propertyName"/> names no field expression.</exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="propertyName"/> names no field expression, or <paramref name="sample"/> carries detail rows.
+        /// </exception>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
         public object? EvaluateFieldSample(FormField field, string propertyName, string expression, ExpressionSample sample)
         {
             ArgumentNullException.ThrowIfNull(field);
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
-            ArgumentNullException.ThrowIfNull(sample);
+            RequireOneRowSample(sample);
             if (propertyName is not (nameof(FormField.ValueExpression) or nameof(FormField.DefaultValueExpression)))
                 throw new ArgumentException($"'{propertyName}' is not a field expression property.", nameof(propertyName));
             var formTable = field.Table
@@ -126,6 +131,17 @@ namespace Polhem.Definition.Forms
             // value is coerced like any other result.
             if (value is null && propertyName == nameof(FormField.DefaultValueExpression)) { return null; }
             return ExpressionPolicy.CoerceValue(value, field.DbType);
+        }
+
+        // The one-row sample methods evaluate a detail aggregate over no rows. Detail rows passed to them would be
+        // ignored and the aggregates would still answer, so they are refused rather than read as if there were none.
+        private static void RequireOneRowSample(ExpressionSample sample)
+        {
+            ArgumentNullException.ThrowIfNull(sample);
+            ArgumentNullException.ThrowIfNull(sample.Values, nameof(sample));
+            if (sample.DetailRows is { Count: > 0 })
+                throw new ArgumentException(
+                    "This sample method evaluates one row; pass detail rows to EvaluateMasterRuleSample.", nameof(sample));
         }
 
         // A sample row has no detail rows, so each aggregate takes the value it has over none: zero for Sum and

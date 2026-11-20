@@ -22,7 +22,8 @@ namespace Polhem.Definition.Forms
         /// </summary>
         /// <remarks>
         /// Only <see cref="FormExpressionCalculator.EvaluateMasterRuleSample"/> reads them. The other sample methods
-        /// evaluate one row of a table, where a detail aggregate takes the value it has over no rows.
+        /// evaluate one row of a table, where a detail aggregate takes the value it has over no rows, and they throw
+        /// <see cref="ArgumentException"/> when given detail rows rather than ignore them.
         /// </remarks>
         public IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> DetailRows { get; init; } =
             new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>>();

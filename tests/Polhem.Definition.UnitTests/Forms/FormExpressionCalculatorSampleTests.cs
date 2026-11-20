@@ -137,5 +137,33 @@ namespace Polhem.Definition.UnitTests.Forms
 
             Assert.Throws<ExpressionEvaluationException>(() => _calculator.EvaluateRuleSample("qty >", table, Values("1", "1")));
         }
+
+        [Fact]
+        [DisplayName("The one-row sample methods refuse detail rows instead of ignoring them")]
+        public void OneRowSamples_WithDetailRows_Throw()
+        {
+            var schema = BuildSchema();
+            var amount = schema.MasterTable!.Fields!["amount"];
+            var withRows = new ExpressionSample
+            {
+                Values = Values("1", "1").Values,
+                DetailRows = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> { ["Lines"] = [] },
+            };
+
+            Assert.Throws<ArgumentException>(() => _calculator.EvaluateRuleSample("qty > 0", schema.MasterTable!, withRows));
+            Assert.Throws<ArgumentException>(() =>
+                _calculator.EvaluateFieldSample(amount, nameof(FormField.ValueExpression), "1", withRows));
+        }
+
+        [Fact]
+        [DisplayName("A sample without values is rejected at the call, not deep inside the evaluation")]
+        public void Samples_NullValues_ThrowArgumentNullException()
+        {
+            var schema = BuildSchema();
+            var noValues = new ExpressionSample { Values = null! };
+
+            Assert.Throws<ArgumentNullException>(() => _calculator.EvaluateRuleSample("qty > 0", schema.MasterTable!, noValues));
+            Assert.Throws<ArgumentNullException>(() => _calculator.EvaluateMasterRuleSample("qty > 0", schema, noValues));
+        }
     }
 }
