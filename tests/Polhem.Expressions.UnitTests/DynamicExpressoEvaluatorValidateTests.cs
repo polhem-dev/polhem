@@ -90,7 +90,7 @@ namespace Polhem.Expressions.UnitTests
             foreach (var function in DynamicExpressoEvaluator.HelperFunctions)
             {
                 var types = function.Parameters
-                    .Select((parameter, index) => ($"p{index}", parameter.ParameterType))
+                    .Select((parameter, index) => ($"p{index}", parameter.Type))
                     .ToArray();
                 var call = $"{function.Name}({string.Join(", ", types.Select(t => t.Item1))})";
 

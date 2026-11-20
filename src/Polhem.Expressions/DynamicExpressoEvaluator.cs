@@ -194,7 +194,10 @@ namespace Polhem.Expressions
         public static IReadOnlyList<ExpressionFunction> HelperFunctions { get; } =
             s_helperFunctions
                 .Select(helper => new ExpressionFunction(helper.Name, helper.Function.Method.ReturnType,
-                    helper.Function.Method.GetParameters(), helper.Summary, helper.Example))
+                    helper.Function.Method.GetParameters()
+                        .Select(parameter => new ExpressionParameter(parameter.Name ?? string.Empty, parameter.ParameterType))
+                        .ToArray(),
+                    helper.Summary, helper.Example))
                 .ToArray();
 
         /// <summary>

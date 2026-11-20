@@ -66,7 +66,6 @@ const Polhem.Definition.Language.PolhemMessages.SaveRowKeyChanged = "PolhemMessa
 Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormExpressionIssue!>!
 Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateUntrustedExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void
-Polhem.Definition.Forms.FormExpressionCalculator.EvaluateMasterRuleSample(string! expression, Polhem.Definition.Forms.FormSchema! schema, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>! detailRows, string! timeZoneId) -> bool
 const Polhem.Definition.Language.PolhemUIText.CurrentUser = "CurrentUser" -> string!
 const Polhem.Definition.SysProgIds.Employee = "Employee" -> string!
 *REMOVED*Polhem.Definition.ObjectTree.ITreeNodeCommandProvider
@@ -88,3 +87,16 @@ const Polhem.Definition.SysProgIds.Employee = "Employee" -> string!
 *REMOVED*Polhem.Definition.ObjectTree.TreeNodeDropPosition
 *REMOVED*Polhem.Definition.ObjectTree.TreeNodeDropPosition.After = 1 -> Polhem.Definition.ObjectTree.TreeNodeDropPosition
 *REMOVED*Polhem.Definition.ObjectTree.TreeNodeDropPosition.Before = 0 -> Polhem.Definition.ObjectTree.TreeNodeDropPosition
+*REMOVED*Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> object?
+*REMOVED*Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
+Polhem.Definition.Forms.ExpressionSample
+Polhem.Definition.Forms.ExpressionSample.DetailRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>!
+Polhem.Definition.Forms.ExpressionSample.DetailRows.init -> void
+Polhem.Definition.Forms.ExpressionSample.ExpressionSample() -> void
+Polhem.Definition.Forms.ExpressionSample.TimeZoneId.get -> string!
+Polhem.Definition.Forms.ExpressionSample.TimeZoneId.init -> void
+Polhem.Definition.Forms.ExpressionSample.Values.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>!
+Polhem.Definition.Forms.ExpressionSample.Values.init -> void
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, Polhem.Definition.Forms.ExpressionSample! sample) -> object?
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateMasterRuleSample(string! expression, Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.ExpressionSample! sample) -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, Polhem.Definition.Forms.ExpressionSample! sample) -> bool

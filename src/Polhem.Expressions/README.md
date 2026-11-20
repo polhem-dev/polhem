@@ -21,7 +21,7 @@ with each field typed as the runtime types it, and DefineEditor shows the result
 The exception's `Position` is the offset where parsing stopped. `HelperFunctions` and `ReferencedTypes` list the
 functions and type names an expression can use, so an editor can offer them without keeping its own copy. Each
 helper function carries a one-sentence `Summary` and an `Example`, for an editor to show and for a tool that writes
-expressions to choose by.
+expressions to choose by, and its parameters as `ExpressionParameter` values (a name and a type).
 
 The check matters most for numeric literals: a literal with a decimal point is a `double`, and there is no operator
 between `decimal` and `double`, so `amount * 1.05` on a decimal field does not parse. Write `amount * 1.05m`. On the

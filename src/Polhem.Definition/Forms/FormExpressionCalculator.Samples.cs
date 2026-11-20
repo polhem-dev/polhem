@@ -12,10 +12,7 @@ namespace Polhem.Definition.Forms
         /// </summary>
         /// <param name="expression">The expression, which need not be the one the schema holds yet.</param>
         /// <param name="formTable">The table the rule targets (<see cref="ResolveRuleTable"/>).</param>
-        /// <param name="values">The sample values by field name; a field without one is empty.</param>
-        /// <param name="timeZoneId">
-        /// The IANA time zone id the <c>Today()</c> and <c>Now()</c> helpers see; blank means UTC.
-        /// </param>
+        /// <param name="sample">The row's values and the time zone; <see cref="ExpressionSample.DetailRows"/> is not read.</param>
         /// <returns>The value of the expression.</returns>
         /// <remarks>
         /// Each value is coerced to its field's type as a cell read from the database is
@@ -23,16 +20,15 @@ namespace Polhem.Definition.Forms
         /// the server's pass uses UTC.
         /// </remarks>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
-        public bool EvaluateRuleSample(string expression, FormTable formTable, IReadOnlyDictionary<string, object?> values,
-            string timeZoneId = "")
+        public bool EvaluateRuleSample(string expression, FormTable formTable, ExpressionSample sample)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
             ArgumentNullException.ThrowIfNull(formTable);
-            ArgumentNullException.ThrowIfNull(values);
+            ArgumentNullException.ThrowIfNull(sample);
 
-            var variables = SampleVariables(formTable, values);
+            var variables = SampleVariables(formTable, sample.Values);
             expression = BindSampleAggregates(expression, formTable, variables);
-            return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), timeZoneId,
+            return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), sample.TimeZoneId,
                 DateTimeBasis.UserZone);
         }
 
@@ -42,11 +38,8 @@ namespace Polhem.Definition.Forms
         /// </summary>
         /// <param name="expression">The expression, which need not be the one the schema holds yet.</param>
         /// <param name="schema">The form the expression belongs to.</param>
-        /// <param name="values">The master row's sample values by field name; a field without one is empty.</param>
-        /// <param name="detailRows">Sample rows by detail table name, each row its values by field name.</param>
-        /// <param name="timeZoneId">
-        /// The IANA time zone id the <c>Today()</c> and <c>Now()</c> helpers see, in the expression and in the
-        /// aggregates' conditions; blank means UTC.
+        /// <param name="sample">
+        /// The master row's values, the sample rows of the detail tables, and the time zone.
         /// </param>
         /// <returns>The value of the expression.</returns>
         /// <remarks>
@@ -55,21 +48,19 @@ namespace Polhem.Definition.Forms
         /// </remarks>
         /// <exception cref="ArgumentException">A detail table name is not a table of <paramref name="schema"/>.</exception>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
-        public bool EvaluateMasterRuleSample(string expression, FormSchema schema, IReadOnlyDictionary<string, object?> values,
-            IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> detailRows, string timeZoneId)
+        public bool EvaluateMasterRuleSample(string expression, FormSchema schema, ExpressionSample sample)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
             ArgumentNullException.ThrowIfNull(schema);
-            ArgumentNullException.ThrowIfNull(values);
-            ArgumentNullException.ThrowIfNull(detailRows);
+            ArgumentNullException.ThrowIfNull(sample);
             var master = schema.MasterTable
                 ?? throw new ArgumentException("The form has no master table.", nameof(schema));
 
             var dataSet = new System.Data.DataSet();
-            foreach (var (tableName, rows) in detailRows)
+            foreach (var (tableName, rows) in sample.DetailRows)
             {
                 if (schema.Tables is null || !schema.Tables.Contains(tableName))
-                    throw new ArgumentException($"'{tableName}' is not a table of the form.", nameof(detailRows));
+                    throw new ArgumentException($"'{tableName}' is not a table of the form.", nameof(sample));
                 var formTable = schema.Tables[tableName];
                 var table = dataSet.Tables.Add(formTable.TableName);
                 foreach (var field in formTable.Fields ?? [])
@@ -86,10 +77,10 @@ namespace Polhem.Definition.Forms
                 }
             }
 
-            var variables = SampleVariables(master, values);
-            expression = BindAggregates(expression, schema, master, dataSet, variables, roundingContext: null, timeZoneId,
-                DateTimeBasis.UserZone);
-            return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), timeZoneId,
+            var variables = SampleVariables(master, sample.Values);
+            expression = BindAggregates(expression, schema, master, dataSet, variables, roundingContext: null,
+                sample.TimeZoneId, DateTimeBasis.UserZone);
+            return _evaluator.Evaluate<bool>(expression, NarrowVariables(expression, variables), sample.TimeZoneId,
                 DateTimeBasis.UserZone);
         }
 
@@ -103,10 +94,7 @@ namespace Polhem.Definition.Forms
         /// <see cref="FormField.ValueExpression"/> or <see cref="FormField.DefaultValueExpression"/>, by name.
         /// </param>
         /// <param name="expression">The expression, which need not be the one the field holds yet.</param>
-        /// <param name="values">The sample values by field name; a field without one is empty.</param>
-        /// <param name="timeZoneId">
-        /// The IANA time zone id the <c>Today()</c> and <c>Now()</c> helpers see; blank means UTC.
-        /// </param>
+        /// <param name="sample">The row's values and the time zone; <see cref="ExpressionSample.DetailRows"/> is not read.</param>
         /// <returns>
         /// The value coerced to the field's type; <c>null</c> when a default-value expression yields nothing and the
         /// field is left empty.
@@ -119,21 +107,20 @@ namespace Polhem.Definition.Forms
         /// </remarks>
         /// <exception cref="ArgumentException"><paramref name="propertyName"/> names no field expression.</exception>
         /// <exception cref="ExpressionEvaluationException">The expression cannot be parsed or evaluated.</exception>
-        public object? EvaluateFieldSample(FormField field, string propertyName, string expression,
-            IReadOnlyDictionary<string, object?> values, string timeZoneId = "")
+        public object? EvaluateFieldSample(FormField field, string propertyName, string expression, ExpressionSample sample)
         {
             ArgumentNullException.ThrowIfNull(field);
             ArgumentException.ThrowIfNullOrWhiteSpace(expression);
-            ArgumentNullException.ThrowIfNull(values);
+            ArgumentNullException.ThrowIfNull(sample);
             if (propertyName is not (nameof(FormField.ValueExpression) or nameof(FormField.DefaultValueExpression)))
                 throw new ArgumentException($"'{propertyName}' is not a field expression property.", nameof(propertyName));
             var formTable = field.Table
                 ?? throw new ArgumentException($"Field '{field.FieldName}' belongs to no table.", nameof(field));
 
-            var variables = SampleVariables(formTable, values);
+            var variables = SampleVariables(formTable, sample.Values);
             if (propertyName == nameof(FormField.ValueExpression))
                 expression = BindSampleAggregates(expression, formTable, variables);
-            var value = _evaluator.Evaluate<object?>(expression, NarrowVariables(expression, variables), timeZoneId,
+            var value = _evaluator.Evaluate<object?>(expression, NarrowVariables(expression, variables), sample.TimeZoneId,
                 DateTimeBasis.UserZone);
             // The two passes treat a null result differently: a default leaves the cell empty, while a computed
             // value is coerced like any other result.

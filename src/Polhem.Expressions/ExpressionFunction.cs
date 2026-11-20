@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace Polhem.Expressions
 {
     /// <summary>
@@ -17,7 +15,7 @@ namespace Polhem.Expressions
         /// <param name="name">The name an expression calls the function by.</param>
         /// <param name="returnType">The type the function returns.</param>
         /// <param name="parameters">The parameters of the function, in order.</param>
-        public ExpressionFunction(string name, Type returnType, IReadOnlyList<ParameterInfo> parameters)
+        public ExpressionFunction(string name, Type returnType, IReadOnlyList<ExpressionParameter> parameters)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentNullException.ThrowIfNull(returnType);
@@ -35,7 +33,7 @@ namespace Polhem.Expressions
         /// <param name="parameters">The parameters of the function, in order.</param>
         /// <param name="summary">What the function returns, in one English sentence.</param>
         /// <param name="example">An expression that calls the function.</param>
-        public ExpressionFunction(string name, Type returnType, IReadOnlyList<ParameterInfo> parameters, string summary,
+        public ExpressionFunction(string name, Type returnType, IReadOnlyList<ExpressionParameter> parameters, string summary,
             string example)
             : this(name, returnType, parameters)
         {
@@ -58,7 +56,7 @@ namespace Polhem.Expressions
         /// <summary>
         /// Gets the parameters of the function, in order.
         /// </summary>
-        public IReadOnlyList<ParameterInfo> Parameters { get; }
+        public IReadOnlyList<ExpressionParameter> Parameters { get; }
 
         /// <summary>
         /// Gets what the function returns, in one English sentence; empty when the function was described without one.

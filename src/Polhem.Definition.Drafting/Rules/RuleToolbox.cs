@@ -242,8 +242,10 @@ namespace Polhem.Definition.Drafting.Rules
         private bool Evaluate(string expression, FormTable table,
             Dictionary<string, object?> values, Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> detailRows)
             => ReferenceEquals(table, _schema.MasterTable)
-                ? _calculator.EvaluateMasterRuleSample(expression, _schema, values, detailRows, _options.TimeZoneId)
-                : _calculator.EvaluateRuleSample(expression, table, values, _options.TimeZoneId);
+                ? _calculator.EvaluateMasterRuleSample(expression, _schema,
+                    new ExpressionSample { Values = values, DetailRows = detailRows, TimeZoneId = _options.TimeZoneId })
+                : _calculator.EvaluateRuleSample(expression, table,
+                    new ExpressionSample { Values = values, TimeZoneId = _options.TimeZoneId });
 
         private Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>>? ReadDetailRows(FormTable table,
             List<SampleDetailRow>? input, string label, List<string> problems)

@@ -45,8 +45,11 @@ namespace Polhem.Definition.UnitTests.Forms
             return table;
         }
 
-        private static Dictionary<string, object?> Values(object? price, object? qty) =>
-            new(StringComparer.Ordinal) { ["price"] = price, ["qty"] = qty };
+        private static ExpressionSample Values(object? price, object? qty, string timeZoneId = "") => new()
+        {
+            Values = new Dictionary<string, object?>(StringComparer.Ordinal) { ["price"] = price, ["qty"] = qty },
+            TimeZoneId = timeZoneId,
+        };
 
         [Fact]
         [DisplayName("A ValueExpression sample gives the value ApplyComputedRow writes for the same row")]
@@ -73,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Forms
             _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0], "Asia/Taipei");
 
             var sample = _calculator.EvaluateFieldSample(dueDate, nameof(FormField.DefaultValueExpression),
-                dueDate.DefaultValueExpression, Values(null, null), "Asia/Taipei");
+                dueDate.DefaultValueExpression, Values(null, null, "Asia/Taipei"));
 
             Assert.IsType<DateTime>(sample);
             Assert.Equal(table.Rows[0]["due_date"], sample);

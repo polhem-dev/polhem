@@ -274,7 +274,7 @@ namespace Polhem.Definition.UnitTests.Forms
             var field = schema.MasterTable!.Fields!["total"];
 
             var value = _calculator.EvaluateFieldSample(field, nameof(FormField.ValueExpression), field.ValueExpression,
-                new Dictionary<string, object?>());
+                new ExpressionSample { Values = new Dictionary<string, object?>() });
 
             Assert.Equal(5m, value);
         }

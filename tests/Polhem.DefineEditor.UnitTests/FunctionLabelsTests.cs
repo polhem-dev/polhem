@@ -36,6 +36,19 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
+        [DisplayName("Signature lists each parameter of a helper function by its type and name, then the return type")]
+        public void Signature_FunctionWithParameters_ListsTypeAndNameOfEach()
+        {
+            var function = DynamicExpressoEvaluator.HelperFunctions.First(f => f.Parameters.Count > 0);
+            var parameters = string.Join(", ",
+                function.Parameters.Select(p => $"{ExpressionMembers.TypeName(p.Type)} {p.Name}"));
+
+            Assert.Equal($"({parameters}) → {ExpressionMembers.TypeName(function.ReturnType)}",
+                ExpressionMembers.Signature(function));
+            Assert.All(function.Parameters, p => Assert.False(string.IsNullOrEmpty(p.Name)));
+        }
+
+        [Fact]
         [DisplayName("Every helper function has a zh-TW summary made from its current English summary")]
         public void ZhTwResources_CoverEveryHelperFunction()
         {

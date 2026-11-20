@@ -134,7 +134,7 @@ namespace Polhem.Definition.UnitTests.Forms
             var schema = BuildSchema();
 
             Assert.True(_calculator.EvaluateRuleSample("All(OrderLine, qty > 0) && !Any(OrderLine, qty > 0)",
-                schema.MasterTable!, new Dictionary<string, object?>()));
+                schema.MasterTable!, new ExpressionSample { Values = new Dictionary<string, object?>() }));
         }
 
         [Fact]
@@ -150,14 +150,19 @@ namespace Polhem.Definition.UnitTests.Forms
                     new Dictionary<string, object?> { ["qty"] = 0, ["product"] = "B" },
                 ],
             };
-            var none = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>>();
             var master = new Dictionary<string, object?>();
+            var withLines = new ExpressionSample { Values = master, DetailRows = lines };
+            var withNone = new ExpressionSample { Values = master };
+            var missing = new ExpressionSample
+            {
+                Values = master,
+                DetailRows = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> { ["Missing"] = [] },
+            };
 
-            Assert.True(_calculator.EvaluateMasterRuleSample("Count(OrderLine) == 2 && Count(OrderLine, qty > 10) == 1", schema, master, lines, ""));
-            Assert.False(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0)", schema, master, lines, ""));
-            Assert.True(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0) && Count(OrderLine) == 0", schema, master, none, ""));
-            Assert.Throws<ArgumentException>(() => _calculator.EvaluateMasterRuleSample("true", schema, master,
-                new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> { ["Missing"] = [] }, ""));
+            Assert.True(_calculator.EvaluateMasterRuleSample("Count(OrderLine) == 2 && Count(OrderLine, qty > 10) == 1", schema, withLines));
+            Assert.False(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0)", schema, withLines));
+            Assert.True(_calculator.EvaluateMasterRuleSample("All(OrderLine, qty > 0) && Count(OrderLine) == 0", schema, withNone));
+            Assert.Throws<ArgumentException>(() => _calculator.EvaluateMasterRuleSample("true", schema, missing));
         }
 
         [Fact]
