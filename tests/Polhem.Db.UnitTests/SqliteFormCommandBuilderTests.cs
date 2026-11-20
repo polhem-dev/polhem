@@ -2,10 +2,10 @@ using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Db.Dml;
 using Polhem.Db.Providers.Sqlite;
+using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Storage;
-using Polhem.Definition;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests

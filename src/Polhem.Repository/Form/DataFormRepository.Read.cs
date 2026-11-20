@@ -2,11 +2,11 @@ using System.Data;
 using System.Globalization;
 using Polhem.Core;
 using Polhem.Db.Dml;
+using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
-using Polhem.Definition;
 using Polhem.Repository.Abstractions.Form;
 
 namespace Polhem.Repository.Form
