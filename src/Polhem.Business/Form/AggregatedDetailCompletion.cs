@@ -34,20 +34,7 @@ namespace Polhem.Business.Form
                 if (!stored.Tables.Contains(tableName)) { continue; }
                 var source = stored.Tables[tableName]!;
                 if (!source.Columns.Contains(SysFields.RowId)) { continue; }
-
-                DataTable target;
-                if (payload.Tables.Contains(tableName))
-                {
-                    target = payload.Tables[tableName]!;
-                    // Without a row id the carried rows cannot be told apart from the stored ones, and importing
-                    // them all would count a carried row twice.
-                    if (target.Rows.Count > 0 && !target.Columns.Contains(SysFields.RowId)) { continue; }
-                }
-                else
-                {
-                    target = source.Clone();
-                    payload.Tables.Add(target);
-                }
+                if (ImportTarget(payload, source, tableName) is not { } target) { continue; }
 
                 var carried = CarriedRowIds(target);
                 foreach (DataRow row in source.Rows)
@@ -57,6 +44,21 @@ namespace Polhem.Business.Form
                     target.ImportRow(row);
                 }
             }
+        }
+
+        // The payload's table the stored rows go into, added as an empty copy of the stored one when the payload does
+        // not carry it; null when the payload's rows carry no row id, because they could not be told apart from the
+        // stored ones and importing them all would count a carried row twice.
+        private static DataTable? ImportTarget(DataSet payload, DataTable source, string tableName)
+        {
+            if (payload.Tables.Contains(tableName))
+            {
+                var target = payload.Tables[tableName]!;
+                return target.Rows.Count > 0 && !target.Columns.Contains(SysFields.RowId) ? null : target;
+            }
+            var copy = source.Clone();
+            payload.Tables.Add(copy);
+            return copy;
         }
 
         /// <summary>
@@ -114,23 +116,27 @@ namespace Polhem.Business.Form
                     return table.TableName;
 
                 var storedRowIds = StoredRowIds(stored, tableName);
-                foreach (var row in rows)
-                {
-                    var version = row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current;
-                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, version]);
-                    if (rowId == Guid.Empty) { return table.TableName; }
-                    bool belongs = row.RowState switch
-                    {
-                        DataRowState.Added => ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
-                        DataRowState.Modified => storedRowIds.Contains(rowId)
-                            && ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
-                        DataRowState.Deleted => storedRowIds.Contains(rowId),
-                        _ => true,
-                    };
-                    if (!belongs) { return table.TableName; }
-                }
+                if (!rows.TrueForAll(row => BelongsToRecord(row, masterRowId, storedRowIds))) { return table.TableName; }
             }
             return null;
+        }
+
+        // Whether one carried row of an aggregated detail table belongs to the record: it carries its row id, an added
+        // row names the master row, a modified row is a stored row that still names the master row, and a deleted row
+        // is a stored row.
+        private static bool BelongsToRecord(DataRow row, Guid masterRowId, HashSet<Guid> storedRowIds)
+        {
+            var version = row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current;
+            var rowId = ValueUtilities.CGuid(row[SysFields.RowId, version]);
+            if (rowId == Guid.Empty) { return false; }
+            return row.RowState switch
+            {
+                DataRowState.Added => ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                DataRowState.Modified => storedRowIds.Contains(rowId)
+                    && ValueUtilities.CGuid(row[SysFields.MasterRowId]) == masterRowId,
+                DataRowState.Deleted => storedRowIds.Contains(rowId),
+                _ => true,
+            };
         }
 
         /// <summary>
@@ -193,6 +199,21 @@ namespace Polhem.Business.Form
             ArgumentNullException.ThrowIfNull(tableNames);
             ArgumentNullException.ThrowIfNull(storedRecords);
             var names = tableNames.ToList();
+            var storedRowIds = CollectStoredRowIds(names, storedRecords);
+
+            foreach (var tableName in names)
+            {
+                if (!payload.Tables.Contains(tableName)) { continue; }
+                var table = payload.Tables[tableName]!;
+                if (!OnlyDeletesStoredRows(table, storedRowIds[tableName])) { return table.TableName; }
+            }
+            return null;
+        }
+
+        // The stored row ids of each named table across the deleted records, disposing each record once read.
+        private static Dictionary<string, HashSet<Guid>> CollectStoredRowIds(List<string> names,
+            IEnumerable<DataSet?> storedRecords)
+        {
             var storedRowIds = names.ToDictionary(name => name, _ => new HashSet<Guid>(), StringComparer.OrdinalIgnoreCase);
             foreach (var record in storedRecords)
             {
@@ -202,20 +223,20 @@ namespace Polhem.Business.Form
                         storedRowIds[name].UnionWith(StoredRowIds(record, name));
                 }
             }
+            return storedRowIds;
+        }
 
-            foreach (var tableName in names)
+        // Whether every live row of the table is a deletion, by its original row id, of one of the stored rows.
+        private static bool OnlyDeletesStoredRows(DataTable table, HashSet<Guid> storedRowIds)
+        {
+            foreach (DataRow row in table.Rows)
             {
-                if (!payload.Tables.Contains(tableName)) { continue; }
-                var table = payload.Tables[tableName]!;
-                foreach (DataRow row in table.Rows)
-                {
-                    if (row.RowState == DataRowState.Detached) { continue; }
-                    if (row.RowState != DataRowState.Deleted || !table.Columns.Contains(SysFields.RowId)) { return table.TableName; }
-                    var rowId = ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]);
-                    if (!storedRowIds[tableName].Contains(rowId)) { return table.TableName; }
-                }
+                if (row.RowState == DataRowState.Detached) { continue; }
+                if (row.RowState != DataRowState.Deleted || !table.Columns.Contains(SysFields.RowId)) { return false; }
+                var rowId = ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]);
+                if (!storedRowIds.Contains(rowId)) { return false; }
             }
-            return null;
+            return true;
         }
 
         /// <summary>

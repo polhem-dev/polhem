@@ -50,13 +50,7 @@ namespace Polhem.Business.Form
 
             if (masterRows.Count == 0)
             {
-                var changed = detailNames.FirstOrDefault(name => HasChangedRows(dataSet, name));
-                if (changed is not null)
-                {
-                    throw new UserMessageException(PolhemMessages.SaveMasterRowMissing,
-                        "Save must carry the '{0}' row: its totals or rules read the rows of '{1}'.",
-                        masterTable.TableName, changed);
-                }
+                ThrowIfDetailsChangeWithoutMaster(dataSet, detailNames, masterTable);
                 return;
             }
 
@@ -87,16 +81,7 @@ namespace Polhem.Business.Form
             // never ran.
             if (liveMasters.Count == 0)
             {
-                var deleted = AggregatedDetailCompletion.FindOutsideDeletion(dataSet, detailNames,
-                    masterRows.Select(row => ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]))
-                        .Where(id => id != Guid.Empty)
-                        .Select(id => context.Repository.GetData(id)));
-                if (deleted is not null)
-                {
-                    throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
-                        "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
-                        deleted, masterTable.TableName);
-                }
+                ThrowIfDeletionReachesOtherRecords(context, detailNames, masterRows, masterTable);
                 return;
             }
             var master = liveMasters[0];
@@ -109,16 +94,7 @@ namespace Polhem.Business.Form
             // A master row that claims to be stored but is not: its update would change nothing, while its detail
             // rows would be written for a record that does not exist, checked against values nobody stored.
             if (!isNew && rowId != Guid.Empty && stored is null)
-            {
-                var carried = detailNames.FirstOrDefault(name => dataSet.Tables.Contains(name)
-                    && dataSet.Tables[name]!.Rows.Cast<DataRow>().Any(row => row.RowState != DataRowState.Detached));
-                if (carried is not null)
-                {
-                    // The usual cause is a record someone else deleted while it was open.
-                    throw new UserMessageException(PolhemMessages.SaveConcurrencyConflict,
-                        "The record was changed or deleted by someone else while it was open. Reload it and try again.");
-                }
-            }
+                ThrowIfDetailsOfMissingRecord(dataSet, detailNames);
             var foreign = AggregatedDetailCompletion.FindForeignTable(dataSet, detailNames, rowId, stored);
             if (foreign is not null)
             {
@@ -134,6 +110,44 @@ namespace Polhem.Business.Form
                 // values; it takes the stored ones, as the unchanged detail rows do.
                 if (master.RowState == DataRowState.Unchanged)
                     AggregatedDetailCompletion.RestoreStoredValues(master, stored, masterTable.TableName);
+            }
+        }
+
+        private static void ThrowIfDetailsChangeWithoutMaster(DataSet dataSet, List<string> detailNames, FormTable masterTable)
+        {
+            var changed = detailNames.FirstOrDefault(name => HasChangedRows(dataSet, name));
+            if (changed is not null)
+            {
+                throw new UserMessageException(PolhemMessages.SaveMasterRowMissing,
+                    "Save must carry the '{0}' row: its totals or rules read the rows of '{1}'.",
+                    masterTable.TableName, changed);
+            }
+        }
+
+        private static void ThrowIfDeletionReachesOtherRecords(SaveContext context, List<string> detailNames,
+            List<DataRow> masterRows, FormTable masterTable)
+        {
+            var deleted = AggregatedDetailCompletion.FindOutsideDeletion(context.DataSet, detailNames,
+                masterRows.Select(row => ValueUtilities.CGuid(row[SysFields.RowId, DataRowVersion.Original]))
+                    .Where(id => id != Guid.Empty)
+                    .Select(id => context.Repository.GetData(id)));
+            if (deleted is not null)
+            {
+                throw new UserMessageException(PolhemMessages.SaveDetailRecordMismatch,
+                    "Every row of '{0}' must carry its row id and belong to the '{1}' row the save carries: its totals or rules read them.",
+                    deleted, masterTable.TableName);
+            }
+        }
+
+        private static void ThrowIfDetailsOfMissingRecord(DataSet dataSet, List<string> detailNames)
+        {
+            var carried = detailNames.FirstOrDefault(name => dataSet.Tables.Contains(name)
+                && dataSet.Tables[name]!.Rows.Cast<DataRow>().Any(row => row.RowState != DataRowState.Detached));
+            if (carried is not null)
+            {
+                // The usual cause is a record someone else deleted while it was open.
+                throw new UserMessageException(PolhemMessages.SaveConcurrencyConflict,
+                    "The record was changed or deleted by someone else while it was open. Reload it and try again.");
             }
         }
 
