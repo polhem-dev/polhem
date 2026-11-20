@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>Polhem.Web.Blazor.Wasm</c> calls the backend through <see cref="PolhemApiClient.CreateRemote"/>, and nothing
+    /// <c>Polhem.Web.Blazor.Wasm</c> calls the backend through <see cref="PolhemApiClient.CreateRemote(string, string)"/>, and nothing
     /// else runs that path on the browser's runtime: the AOT gate in CI covers the desktop and Apple runtimes only. The
     /// browser interprets with dynamic code, so it is expected to behave like the desktop. The iOS wire broke once on
     /// that same kind of expectation, so this test measures it.

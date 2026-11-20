@@ -1,5 +1,3 @@
-using Polhem.Db.Schema;
-
 namespace Polhem.Hosting.Database
 {
     /// <summary>
@@ -33,24 +31,15 @@ namespace Polhem.Hosting.Database
 
         /// <summary>
         /// Builds or upgrades the tables registered in the database category settings, in every
-        /// database item whose category they belong to: every table, or only those named in
-        /// <paramref name="tableNames"/>.
+        /// database item whose category they belong to: every table, or only those
+        /// <see cref="TableUpgradeRequest.TableNames"/> names.
         /// </summary>
-        /// <param name="options">Upgrade options; <c>null</c> uses <see cref="UpgradeOptions.Default"/>.</param>
-        /// <param name="dryRun">When <c>true</c>, plan the statements and do not run them.</param>
-        /// <param name="tableCompleted">
-        /// Called with each table's entry as soon as the table is done, so a caller can report progress
-        /// while the remaining tables are still being processed.
-        /// </param>
-        /// <param name="tableNames">
-        /// The tables to process, matched by name without regard to case; <c>null</c> or empty processes every
-        /// registered table. A deployment can hold thousands of tables, so a caller that changed a few names them.
-        /// A name that no category registers is reported in <see cref="TableUpgradeReport.Problems"/>.
+        /// <param name="request">
+        /// The tables, the options, whether to run the statements, and the progress callback; a new
+        /// <see cref="TableUpgradeRequest"/> runs every table with the default options.
         /// </param>
         /// <returns>The outcome of each table. A failed table does not stop the others.</returns>
-        TableUpgradeReport UpgradeTables(
-            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
-            IReadOnlyCollection<string>? tableNames = null);
+        TableUpgradeReport UpgradeTables(TableUpgradeRequest request);
 
         /// <summary>
         /// Creates the first administrator, a company, and the administrator's access to it, in the

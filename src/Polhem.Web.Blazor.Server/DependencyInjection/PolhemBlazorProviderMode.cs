@@ -7,7 +7,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     {
         /// <summary>
         /// In-process: the host is also the API backend; each circuit's client is created by
-        /// <see cref="Polhem.Api.Client.PolhemApiClient.CreateLocal"/>.
+        /// <see cref="Polhem.Api.Client.PolhemApiClient.CreateLocal(IServiceProvider)"/>.
         /// </summary>
         /// <remarks>
         /// WARNING: every call made in this mode is a trusted local call, whichever browser user caused
@@ -23,7 +23,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         Local = 0,
 
         /// <summary>
-        /// Over HTTP: each circuit's client is created by <see cref="Polhem.Api.Client.PolhemApiClient.CreateRemote"/>
+        /// Over HTTP: each circuit's client is created by <see cref="Polhem.Api.Client.PolhemApiClient.CreateRemote(string, string)"/>
         /// against <see cref="PolhemBlazorOptions.Endpoint"/>.
         /// </summary>
         Remote = 1,

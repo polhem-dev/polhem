@@ -12,8 +12,8 @@ namespace Polhem.Api.Client
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The client decides once whether calls run in process (<see cref="CreateLocal"/>) or over HTTP
-    /// (<see cref="CreateRemote"/>), and every connector it hands out follows that choice. Signing in
+    /// The client decides once whether calls run in process (<see cref="CreateLocal(IServiceProvider)"/>) or over HTTP
+    /// (<see cref="CreateRemote(string, string)"/>), and every connector it hands out follows that choice. Signing in
     /// through <see cref="System"/> stores the access token, the transmission key and the user's time
     /// zone in <see cref="Session"/>, and every connector of the client calls with them from then on.
     /// </para>
@@ -46,41 +46,80 @@ namespace Polhem.Api.Client
         }
 
         /// <summary>
-        /// Creates a client that dispatches every call to a backend running in this process.
+        /// Creates a client that dispatches every call to a backend running in this process, with the framework's
+        /// default payload options.
+        /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
+        /// <returns>The client.</returns>
+        /// <remarks>
+        /// The provider must register <see cref="Polhem.Api.Core.JsonRpc.IInProcessTransportFactory"/>, as
+        /// <c>AddPolhemFramework</c> does. Without it the first call throws <see cref="InvalidOperationException"/>.
+        /// </remarks>
+        public static PolhemApiClient CreateLocal(IServiceProvider services)
+        {
+            ArgumentNullException.ThrowIfNull(services);
+            return Local(services, payloadOptions: null);
+        }
+
+        /// <summary>
+        /// Creates a client that dispatches every call to a backend running in this process, reading and writing the
+        /// envelope with <paramref name="payloadOptions"/>.
         /// </summary>
         /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="payloadOptions">
-        /// The payload options to read and write the envelope with; <c>null</c> creates the framework's defaults.
+        /// The payload options to read and write the envelope with. Passing the instance the backend registered lets
+        /// the client share it (<see cref="SharesServerPayloadOptions"/>).
         /// </param>
         /// <returns>The client.</returns>
         /// <remarks>
         /// The provider must register <see cref="Polhem.Api.Core.JsonRpc.IInProcessTransportFactory"/>, as
         /// <c>AddPolhemFramework</c> does. Without it the first call throws <see cref="InvalidOperationException"/>.
         /// </remarks>
-        public static PolhemApiClient CreateLocal(IServiceProvider services, PayloadOptions? payloadOptions = null)
+        public static PolhemApiClient CreateLocal(IServiceProvider services, PayloadOptions payloadOptions)
         {
             ArgumentNullException.ThrowIfNull(services);
-            return new PolhemApiClient(token => new LocalApiProvider(services, token), isLocal: true,
-                string.Empty, string.Empty, payloadOptions)
+            ArgumentNullException.ThrowIfNull(payloadOptions);
+            return Local(services, payloadOptions);
+        }
+
+        private static PolhemApiClient Local(IServiceProvider services, PayloadOptions? payloadOptions) =>
+            new(token => new LocalApiProvider(services, token), isLocal: true, string.Empty, string.Empty, payloadOptions)
             {
                 SharesServerPayloadOptions = payloadOptions is not null
                     && ReferenceEquals(payloadOptions, services.GetService(typeof(PayloadOptions))),
             };
-        }
 
         /// <summary>
-        /// Creates a client that sends every call over HTTP to <paramref name="endpoint"/>.
+        /// Creates a client that sends every call over HTTP to <paramref name="endpoint"/>, with the framework's
+        /// default payload options.
         /// </summary>
         /// <param name="endpoint">The API service endpoint.</param>
         /// <param name="apiKey">
         /// The key the server issued for this application, sent as the <c>X-Api-Key</c> header. The server's default
         /// authorization refuses every method except <c>System.Ping</c> without an accepted key.
         /// </param>
-        /// <param name="payloadOptions">
-        /// The payload options to read and write the envelope with; <c>null</c> creates the framework's defaults.
-        /// </param>
         /// <returns>The client.</returns>
-        public static PolhemApiClient CreateRemote(string endpoint, string apiKey, PayloadOptions? payloadOptions = null)
+        public static PolhemApiClient CreateRemote(string endpoint, string apiKey) =>
+            Remote(endpoint, apiKey, payloadOptions: null);
+
+        /// <summary>
+        /// Creates a client that sends every call over HTTP to <paramref name="endpoint"/>, reading and writing the
+        /// envelope with <paramref name="payloadOptions"/>.
+        /// </summary>
+        /// <param name="endpoint">The API service endpoint.</param>
+        /// <param name="apiKey">
+        /// The key the server issued for this application, sent as the <c>X-Api-Key</c> header. The server's default
+        /// authorization refuses every method except <c>System.Ping</c> without an accepted key.
+        /// </param>
+        /// <param name="payloadOptions">The payload options to read and write the envelope with.</param>
+        /// <returns>The client.</returns>
+        public static PolhemApiClient CreateRemote(string endpoint, string apiKey, PayloadOptions payloadOptions)
+        {
+            ArgumentNullException.ThrowIfNull(payloadOptions);
+            return Remote(endpoint, apiKey, payloadOptions);
+        }
+
+        private static PolhemApiClient Remote(string endpoint, string apiKey, PayloadOptions? payloadOptions)
         {
             if (string.IsNullOrWhiteSpace(endpoint))
                 throw new ArgumentException("Endpoint cannot be null or empty.", nameof(endpoint));

@@ -91,7 +91,7 @@ namespace Polhem.Hosting.UnitTests
             settings.Items.Add(UnopenableItem("log_unopenable", DbCategoryIds.Log));
             _access.SaveDatabaseSettings(settings);
 
-            var report = _initializer.UpgradeTables(tableNames: [LogTable, "st_user"]);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { TableNames = [LogTable, "st_user"] });
 
             Assert.Equal(TableUpgradeOutcome.Failed, report.Tables.Single(t => t.DatabaseId == "log_malformed").Outcome);
             var unopenable = report.Tables.Single(t => t.DatabaseId == "log_unopenable");
@@ -112,7 +112,7 @@ namespace Polhem.Hosting.UnitTests
             settings.Items.Add(SqliteItem(DbCategoryIds.Company));
             _access.SaveDatabaseSettings(settings);
 
-            var report = _initializer.UpgradeTables(tableNames: ["st_user"]);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { TableNames = ["st_user"] });
 
             var entry = Assert.Single(report.Tables);
             Assert.Equal(TableUpgradeOutcome.Failed, entry.Outcome);
@@ -128,7 +128,7 @@ namespace Polhem.Hosting.UnitTests
             settings.Items.Add(SqliteItem(DbCategoryIds.Company));
             _access.SaveDatabaseSettings(settings);
 
-            var report = _initializer.UpgradeTables(tableNames: ["st_user"]);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { TableNames = ["st_user"] });
 
             Assert.Equal(TableUpgradeOutcome.Failed, Assert.Single(report.Tables).Outcome);
         }
@@ -145,7 +145,7 @@ namespace Polhem.Hosting.UnitTests
             });
             _access.SaveDatabaseSettings(settings);
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.Contains(report.Problems, p => p.Contains("orphan_company their company", StringComparison.Ordinal));
         }
@@ -159,7 +159,7 @@ namespace Polhem.Hosting.UnitTests
             settings.Items!.Add(UnopenableItem("dead_company", DbCategoryIds.Company));
             _access.SaveDatabaseSettings(settings);
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.Contains(report.Problems, p => p.Contains("dead_company their company", StringComparison.Ordinal));
         }
@@ -172,7 +172,7 @@ namespace Polhem.Hosting.UnitTests
                 settings.Items!.Add(SqliteItem(category));
             _access.SaveDatabaseSettings(settings);
             _initializer.CreateDatabases();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
 
             new DbAccessFactory(_connectionManager).Create(DbCategoryIds.Common).ExecuteNonQuery(
                 "INSERT INTO st_company (sys_rowid, sys_id, sys_name, company_database_id, default_currency) " +

@@ -52,7 +52,7 @@ namespace Polhem.Hosting.UnitTests
             SaveSqliteItems();
             RemoveCompanyColumn(DepartmentTable);
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             var problem = Assert.Single(report.Problems);
             Assert.Contains(DepartmentTable, problem, StringComparison.Ordinal);
@@ -74,7 +74,7 @@ namespace Polhem.Hosting.UnitTests
             Assert.Equal(DatabaseCommandLine.Success, exitCode);
             Assert.Contains($"company.{DepartmentTable}: added", output.ToString(), StringComparison.Ordinal);
             Assert.True(_access.GetTableSchema(DbCategoryIds.Company, DepartmentTable).HasCompanyScope());
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
         }
 
         [DbFact(DatabaseType.SQLite)]
@@ -82,10 +82,10 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_UppercaseCompanyId_Stops()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             InsertCompany("ACME", DbCategoryIds.Company);
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             var problem = Assert.Single(report.Problems);
             Assert.Contains("ACME", problem, StringComparison.Ordinal);
@@ -97,11 +97,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_OneCompanyPerDatabase_AssignsRows()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             InsertCompany("acme", DbCategoryIds.Company);
             var rowId = InsertDepartmentWithoutCompany();
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.True(report.Succeeded, string.Join("; ", report.Problems));
             var assignment = Assert.Single(report.CompanyAssignments);
@@ -116,11 +116,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_DryRun_ReportsWithoutAssigning()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             InsertCompany("acme", DbCategoryIds.Company);
             var rowId = InsertDepartmentWithoutCompany();
 
-            var report = _initializer.UpgradeTables(dryRun: true);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true });
 
             Assert.Equal(1, Assert.Single(report.CompanyAssignments).Rows);
             Assert.Equal(string.Empty, StoredCompany(rowId));
@@ -131,12 +131,12 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_SharedDatabase_ReportsRowsWithoutCompany()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             InsertCompany("acme", DbCategoryIds.Company);
             InsertCompany("globex", DbCategoryIds.Company);
             var rowId = InsertDepartmentWithoutCompany();
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.Contains(report.Problems, p => p.Contains(DepartmentTable, StringComparison.Ordinal)
                 && p.Contains("acme", StringComparison.Ordinal) && p.Contains("globex", StringComparison.Ordinal));
@@ -149,11 +149,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_DatabaseIdInAnotherCase_AssignsRows()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             InsertCompany("acme", "COMPANY");
             var rowId = InsertDepartmentWithoutCompany();
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.True(report.Succeeded, string.Join("; ", report.Problems));
             Assert.Equal("acme", StoredCompany(rowId));
@@ -164,7 +164,7 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_DryRunBeforeColumnExists_CountsEveryRow()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             var scoped = _access.GetTableSchema(DbCategoryIds.Company, DepartmentTable).Clone();
             RemoveCompanyColumn(DepartmentTable);
             new TableSchemaBuilder(DbCategoryIds.Company, _access, _connectionManager)
@@ -175,7 +175,7 @@ namespace Polhem.Hosting.UnitTests
                 $"INSERT INTO {DepartmentTable} (sys_rowid, sys_id, sys_name) VALUES ({{0}}, {{1}}, {{2}})",
                 Guid.NewGuid(), "D01", "Sales");
 
-            var report = _initializer.UpgradeTables(dryRun: true);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true });
 
             Assert.True(report.Succeeded, string.Join("; ", report.Problems));
             Assert.Equal(1, Assert.Single(report.CompanyAssignments).Rows);
@@ -190,10 +190,10 @@ namespace Polhem.Hosting.UnitTests
             var wide = narrow.Clone();
             wide.Fields![SysFields.Id].Length = 20;
             _access.SaveTableSchema(DbCategoryIds.Common, wide);
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             _access.SaveTableSchema(DbCategoryIds.Common, narrow);
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.True(report.Succeeded, string.Join("; ", report.Problems.Concat(report.Tables.Select(t => t.Error ?? string.Empty))));
             Assert.Equal(TableUpgradeOutcome.Upgraded, report.Tables.Single(t => t.TableName == "st_company").Outcome);

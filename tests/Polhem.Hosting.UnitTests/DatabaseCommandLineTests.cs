@@ -434,15 +434,13 @@ namespace Polhem.Hosting.UnitTests
 
             public IReadOnlyCollection<string>? LastTableNames { get; private set; }
 
-            public TableUpgradeReport UpgradeTables(
-                UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
-                IReadOnlyCollection<string>? tableNames = null)
+            public TableUpgradeReport UpgradeTables(TableUpgradeRequest request)
             {
-                LastOptions = options;
-                LastDryRun = dryRun;
-                LastTableNames = tableNames;
+                LastOptions = request.Options;
+                LastDryRun = request.DryRun;
+                LastTableNames = request.TableNames;
                 foreach (var table in UpgradeReport.Tables)
-                    tableCompleted?.Invoke(table);
+                    request.TableCompleted?.Invoke(table);
                 return UpgradeReport;
             }
 

@@ -1,1 +1,13 @@
 #nullable enable
+*REMOVED*Polhem.Hosting.Database.IDatabaseInitializer.UpgradeTables(Polhem.Db.Schema.UpgradeOptions? options = null, bool dryRun = false, System.Action<Polhem.Hosting.Database.TableUpgradeEntry!>? tableCompleted = null, System.Collections.Generic.IReadOnlyCollection<string!>? tableNames = null) -> Polhem.Hosting.Database.TableUpgradeReport!
+Polhem.Hosting.Database.IDatabaseInitializer.UpgradeTables(Polhem.Hosting.Database.TableUpgradeRequest! request) -> Polhem.Hosting.Database.TableUpgradeReport!
+Polhem.Hosting.Database.TableUpgradeRequest
+Polhem.Hosting.Database.TableUpgradeRequest.DryRun.get -> bool
+Polhem.Hosting.Database.TableUpgradeRequest.DryRun.init -> void
+Polhem.Hosting.Database.TableUpgradeRequest.Options.get -> Polhem.Db.Schema.UpgradeOptions?
+Polhem.Hosting.Database.TableUpgradeRequest.Options.init -> void
+Polhem.Hosting.Database.TableUpgradeRequest.TableCompleted.get -> System.Action<Polhem.Hosting.Database.TableUpgradeEntry!>?
+Polhem.Hosting.Database.TableUpgradeRequest.TableCompleted.init -> void
+Polhem.Hosting.Database.TableUpgradeRequest.TableNames.get -> System.Collections.Generic.IReadOnlyCollection<string!>?
+Polhem.Hosting.Database.TableUpgradeRequest.TableNames.init -> void
+Polhem.Hosting.Database.TableUpgradeRequest.TableUpgradeRequest() -> void

@@ -39,6 +39,13 @@ namespace Polhem.Hosting.UnitTests
             try { Directory.Delete(_definePath, recursive: true); } catch (IOException) { /* best effort */ }
         }
 
+        [Fact]
+        [DisplayName("UpgradeTables refuses a null request")]
+        public void UpgradeTables_NullRequest_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => _initializer.UpgradeTables(null!));
+        }
+
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("A dry run plans every missing table with its statements and creates nothing")]
         public void UpgradeTables_DryRun_PlansWithoutCreating()
@@ -46,13 +53,13 @@ namespace Polhem.Hosting.UnitTests
             SaveSqliteItems();
             var completed = new List<TableUpgradeEntry>();
 
-            var report = _initializer.UpgradeTables(dryRun: true, tableCompleted: completed.Add);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true, TableCompleted = completed.Add });
 
             Assert.True(report.Succeeded);
             Assert.All(report.Tables, t => Assert.Equal(TableUpgradeOutcome.Planned, t.Outcome));
             Assert.Contains("CREATE TABLE", report.Tables.First(t => t.TableName == "st_user").CommandText, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(report.Tables.Count, completed.Count);
-            Assert.All(_initializer.UpgradeTables(dryRun: true).Tables, t => Assert.Equal(TableUpgradeOutcome.Planned, t.Outcome));
+            Assert.All(_initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true }).Tables, t => Assert.Equal(TableUpgradeOutcome.Planned, t.Outcome));
         }
 
         [DbFact(DatabaseType.SQLite)]
@@ -61,7 +68,7 @@ namespace Polhem.Hosting.UnitTests
         {
             SaveSqliteItems();
 
-            var report = _initializer.UpgradeTables(dryRun: true, tableNames: ["ST_USER", "st_company", "ft_missing"]);
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true, TableNames = ["ST_USER", "st_company", "ft_missing"] });
 
             Assert.Equal(["st_company", "st_user"], report.Tables.Select(t => t.TableName).Order(StringComparer.Ordinal));
             var problem = Assert.Single(report.Problems);
@@ -76,7 +83,7 @@ namespace Polhem.Hosting.UnitTests
             SaveSqliteItems();
             File.Delete(Path.Combine(_definePath, "TableSchema", "log", "st_log_login.TableSchema.xml"));
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.False(report.Succeeded);
             var failed = Assert.Single(report.Tables, t => t.Outcome == TableUpgradeOutcome.Failed);
@@ -90,7 +97,7 @@ namespace Polhem.Hosting.UnitTests
         public void SeedAdministrator_ExplicitCompanyDatabase_Seeds()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
 
             var result = _initializer.SeedAdministrator(new AdministratorSeed
             {
@@ -143,7 +150,7 @@ namespace Polhem.Hosting.UnitTests
         {
             SaveSqliteItems();
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.True(report.Succeeded);
             var records = new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
@@ -152,7 +159,7 @@ namespace Polhem.Hosting.UnitTests
             Assert.Equal(TableUpgradeStatus.Succeeded, record.Status);
             Assert.Equal(SchemaFormat.Current, record.FormatVersion);
             Assert.Equal(SchemaFormat.Current, records.GetHighestFormatVersion());
-            Assert.All(_initializer.UpgradeTables().Tables, t => Assert.Equal(TableUpgradeOutcome.Unchanged, t.Outcome));
+            Assert.All(_initializer.UpgradeTables(new TableUpgradeRequest()).Tables, t => Assert.Equal(TableUpgradeOutcome.Unchanged, t.Outcome));
         }
 
         [DbFact(DatabaseType.SQLite)]
@@ -160,12 +167,12 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_NewerFormat_ReportedOncePerDatabase()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             Sql(DbCategoryIds.Log, "UPDATE st_table_upgrade SET format_version = format_version + 1");
 
             foreach (bool dryRun in new[] { true, false })
             {
-                var report = _initializer.UpgradeTables(dryRun: dryRun);
+                var report = _initializer.UpgradeTables(new TableUpgradeRequest { DryRun = dryRun });
 
                 var problem = Assert.Single(report.Problems);
                 Assert.Contains($"'{DbCategoryIds.Log}'", problem, StringComparison.Ordinal);
@@ -181,15 +188,15 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_FastCompare_TrustsRecordsUntilFullCompare()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             Sql(DbCategoryIds.Common, "DROP TABLE st_session");
 
-            var fast = _initializer.UpgradeTables();
+            var fast = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(fast, "st_session"));
             Assert.False(TableExists(DbCategoryIds.Common, "st_session"));
 
-            var full = _initializer.UpgradeTables(new UpgradeOptions { CompareMode = UpgradeCompareMode.Full });
+            var full = _initializer.UpgradeTables(new TableUpgradeRequest { Options = new UpgradeOptions { CompareMode = UpgradeCompareMode.Full } });
 
             Assert.Equal(TableUpgradeOutcome.Created, Outcome(full, "st_session"));
             Assert.True(TableExists(DbCategoryIds.Common, "st_session"));
@@ -204,11 +211,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_FastCompare_FallsBackToFullCompare(string recordChange)
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             Sql(DbCategoryIds.Common, $"UPDATE st_table_upgrade SET {recordChange} WHERE table_name = 'st_session'");
             Sql(DbCategoryIds.Common, "DROP TABLE st_session");
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.Equal(TableUpgradeOutcome.Created, Outcome(report, "st_session"));
             Assert.True(TableExists(DbCategoryIds.Common, "st_session"));
@@ -219,14 +226,14 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_UnchangedTable_IsRecordedExceptInADryRun()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             Sql(DbCategoryIds.Common, "DELETE FROM st_table_upgrade WHERE table_name = 'st_session'");
             var records = () => new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
 
-            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(dryRun: true), "st_session"));
+            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true }), "st_session"));
             Assert.Null(records().GetRecord("st_session"));
 
-            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(), "st_session"));
+            Assert.Equal(TableUpgradeOutcome.Unchanged, Outcome(_initializer.UpgradeTables(new TableUpgradeRequest()), "st_session"));
             Assert.Equal(TableUpgradeStatus.Verified, records().GetRecord("st_session")?.Status);
         }
 
@@ -235,11 +242,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_NothingChanged_DoesNotRefuseOlderTool()
         {
             SaveSqliteItems();
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
             // As if every table had been built by a tool of format 0, before the records existed.
             Sql(DbCategoryIds.Common, "DELETE FROM st_table_upgrade");
 
-            Assert.True(_initializer.UpgradeTables().Succeeded);
+            Assert.True(_initializer.UpgradeTables(new TableUpgradeRequest()).Succeeded);
 
             var records = new TableUpgradeRecordStore(DbCategoryIds.Common, _connectionManager);
             Assert.Equal(TableUpgradeStatus.Verified, records.GetRecord("st_user")?.Status);
@@ -252,11 +259,11 @@ namespace Polhem.Hosting.UnitTests
         public void UpgradeTables_ReportsRecordState()
         {
             SaveSqliteItems();
-            var first = _initializer.UpgradeTables();
+            var first = _initializer.UpgradeTables(new TableUpgradeRequest());
             Assert.All(first.Tables, t => Assert.Null(t.PreviousStatus));
             Sql(DbCategoryIds.Common, "UPDATE st_table_upgrade SET status = 'Failed' WHERE table_name = 'st_session'");
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             var user = report.Tables.Single(t => t.TableName == "st_user");
             Assert.True(user.UnchangedByRecord);
@@ -265,7 +272,7 @@ namespace Polhem.Hosting.UnitTests
             Assert.False(session.UnchangedByRecord);
             Assert.Equal(TableUpgradeOutcome.Unchanged, session.Outcome);
             Assert.Equal(TableUpgradeStatus.Failed, session.PreviousStatus);
-            Assert.All(_initializer.UpgradeTables(new UpgradeOptions { CompareMode = UpgradeCompareMode.Full }).Tables,
+            Assert.All(_initializer.UpgradeTables(new TableUpgradeRequest { Options = new UpgradeOptions { CompareMode = UpgradeCompareMode.Full } }).Tables,
                 t => Assert.False(t.UnchangedByRecord));
         }
 
