@@ -8,7 +8,7 @@ namespace Polhem.Web.Blazor.Shell
     /// endpoint. WebAssembly stores the choice in the browser and reloads the page. A host that registers none gets no
     /// language switch.
     /// </remarks>
-    public interface IShellLanguageSwitcher
+    internal interface IShellLanguageSwitcher
     {
         /// <summary>Switches to <paramref name="language"/>.</summary>
         /// <param name="language">One of <see cref="PolhemShellOptions.Languages"/>.</param>

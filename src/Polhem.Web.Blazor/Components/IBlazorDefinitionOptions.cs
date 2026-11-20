@@ -4,7 +4,7 @@ namespace Polhem.Web.Blazor.Components
     /// The host's settings for how components assemble definitions, so a UI package can read them without referencing
     /// a host package.
     /// </summary>
-    public interface IBlazorDefinitionOptions
+    internal interface IBlazorDefinitionOptions
     {
         /// <summary>
         /// Gets the deployment's default language, the last hop of the language fall-back chain. Blank drops the hop.

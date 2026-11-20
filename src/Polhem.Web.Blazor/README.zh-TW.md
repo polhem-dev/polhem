@@ -18,10 +18,10 @@
 - `TextEditorBase`、`NumericEditorBase`、`CheckEditorBase`、`DropDownEditorBase`、`DateEditorBase`、`TimeEditorBase` 與 `DateTimeEditorBase`，各類編輯器的取值與提交規則；markup 由 UI 套件提供。
 - `ButtonEditorBase`、`LookupPanelBase` 與 `LookupDialogBase`（`Polhem.Web.Blazor.Controls.Editors`），查詢流程。
 - `RowEditPanelBase`，編輯表單的工作階段。
-- `FormPageBase`（`Polhem.Web.Blazor.Components`），表單頁的狀態與命令；`IBlazorDefinitionOptions`，UI 套件透過它取得定義選項。
+- `FormPageBase`（`Polhem.Web.Blazor.Components`），表單頁的狀態與命令。
 - `FormLayoutPresenterBase`（`Polhem.Web.Blazor.Controls`），依 `FormLayout` 呈現紀錄的規則。
 - `RelatedRecordDialogBase`、`LoginPanelBase` 與 `CompactViewportObserver`（`Polhem.Web.Blazor.Components`）。
-- `PolhemShellOptions`、`PolhemShellHome`、`PolhemShellSignInLinks`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `IShellLanguageSwitcher`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。
+- `PolhemShellOptions`、`PolhemShellHome`、`PolhemShellSignInLinks`、`ShellLayoutBase`、`ShellNavMenuBase`、`ShellSignInBase` 與 `PolhemShellLanguage`（`Polhem.Web.Blazor.Shell`），外殼的狀態；語系切換由宿主套件提供。
 - `GridControlBase` 與 `GridEditorHost`（`Polhem.Web.Blazor.Controls`），Grid 的狀態與命令，以及讓 Grid 只開一個編輯器；
   編輯模型是 `Polhem.UI.Core.Editing` 的 `GridEditMode`。
 - `BlazorUserContext`（`Polhem.Web.Blazor.Identity`），單一 scope 內已登入使用者的內容。

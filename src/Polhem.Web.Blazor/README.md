@@ -21,12 +21,12 @@ uses the components, not the bases. New field editors are the exception and deri
 - `TextEditorBase`, `NumericEditorBase`, `CheckEditorBase`, `DropDownEditorBase`, `DateEditorBase`, `TimeEditorBase` and `DateTimeEditorBase`, the value and commit rules of each editor kind. A UI package supplies the markup.
 - `ButtonEditorBase`, `LookupPanelBase` and `LookupDialogBase` (`Polhem.Web.Blazor.Controls.Editors`), the lookup flow.
 - `RowEditPanelBase`, the edit form's session.
-- `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page; `IBlazorDefinitionOptions`, which a UI package reads definition options through.
+- `FormPageBase` (`Polhem.Web.Blazor.Components`), the state and commands of a form page.
 - `GridControlBase` and `GridEditorHost` (`Polhem.Web.Blazor.Controls`), the state and commands of a grid, and keeping one
   editor open in it; its editing model is `GridEditMode` from `Polhem.UI.Core.Editing`.
 - `FormLayoutPresenterBase` (`Polhem.Web.Blazor.Controls`), the rules of a record rendered from a `FormLayout`.
 - `RelatedRecordDialogBase`, `LoginPanelBase` and `CompactViewportObserver` (`Polhem.Web.Blazor.Components`).
-- `PolhemShellOptions`, `PolhemShellHome`, `PolhemShellSignInLinks`, `ShellLayoutBase`, `ShellNavMenuBase`, `ShellSignInBase` and `IShellLanguageSwitcher` (`Polhem.Web.Blazor.Shell`), the shell's state; a host package supplies the language switch.
+- `PolhemShellOptions`, `PolhemShellHome`, `PolhemShellSignInLinks`, `ShellLayoutBase`, `ShellNavMenuBase`, `ShellSignInBase` and `PolhemShellLanguage` (`Polhem.Web.Blazor.Shell`), the shell's state; a host package supplies the language switch.
 - `BlazorUserContext` (`Polhem.Web.Blazor.Identity`), the signed-in user's context for one scope.
 
 ## Data objects and the user context

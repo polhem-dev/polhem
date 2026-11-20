@@ -12,7 +12,7 @@ namespace Polhem.Web.Blazor.DependencyInjection
     /// <summary>
     /// The registrations every Blazor host package shares.
     /// </summary>
-    public static class PolhemBlazorClientServiceCollectionExtensions
+    internal static class PolhemBlazorClientServiceCollectionExtensions
     {
         /// <summary>
         /// Registers <paramref name="options"/>, a scoped <see cref="PolhemApiClient"/>, a scoped
