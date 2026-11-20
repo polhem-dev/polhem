@@ -39,7 +39,7 @@ namespace Polhem.Api.Server.Dispatch
             var method = context.Request.Method;
 
             var (code, message) = MapCode(rootEx);
-            message = Localize(rootEx, message, services, state?.AccessToken ?? Guid.Empty);
+            message = Localize(rootEx, message, services, state?.AccessToken ?? Guid.Empty, state?.RequestCulture ?? string.Empty);
             if (services != null)
             {
                 LogMaskedFailure(services, method, rootEx, code);
@@ -55,7 +55,8 @@ namespace Polhem.Api.Server.Dispatch
             return (JsonRpcErrorCode.InternalError, SysInfo.IsDebugMode ? ex.Message : "Internal server error");
         }
 
-        internal static string Localize(Exception ex, string message, IServiceProvider? services, Guid accessToken)
+        internal static string Localize(Exception ex, string message, IServiceProvider? services, Guid accessToken,
+            string requestCulture)
         {
             var languageService = services?.GetService<ILanguageService>();
             if (languageService is null
@@ -68,8 +69,11 @@ namespace Polhem.Api.Server.Dispatch
             }
 
             var session = FindSession(ex, services!, accessToken);
+            // The account's culture decides for a signed-in caller. Without a session, such as on a failed sign-in,
+            // the language the caller asked for decides, before the deployment's default.
+            var culture = session?.Culture ?? requestCulture;
             (string @namespace, string subKey) = LanguageKey.Split(localizable.MessageKey);
-            if (!languageService.TryResolveLangText(session?.CustomizeId ?? string.Empty, session?.Culture ?? string.Empty,
+            if (!languageService.TryResolveLangText(session?.CustomizeId ?? string.Empty, culture,
                     @namespace, subKey, out string template))
             {
                 return message;

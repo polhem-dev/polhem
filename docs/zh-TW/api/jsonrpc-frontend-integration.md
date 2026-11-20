@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 1acfe56cd29b88ae0fff5f59c34efe8c16618a82 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 391780eb487febcf3f7abb1af932e5a2719e279e -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -169,6 +169,7 @@ client 改用 JSON body codec（`"codec": "json"` 搭配 `Encoded` 或 `Encrypte
 | `Content-Type` | 是 | `application/json` | JSON-RPC 信封 |
 | `X-Api-Key` | 是，`System.Ping` 除外 | 應用程式的 API 金鑰 | 部署發出第一把啟用中的金鑰（`st_api_key`）之前，任何非空值都會通過；之後只有已發出、啟用中且未到期的金鑰才會通過。見 [API 金鑰管理](../security/api-key-management.md)。 |
 | `Authorization` | 宣告為 `Authenticated` 的方法 | `Bearer <accessToken>` | 從 `System.Login` 回應拿到的 GUID。不帶此 header 的請求即為匿名呼叫，只有宣告為 `Anonymous` 的方法會接受。 |
+| `Accept-Language` | 否 | 語言標籤，例如 `en-US` | 沒有 session 的呼叫（例如登入失敗的 `System.Login`）的錯誤訊息語言。取第一個標籤；伺服器不認得或沒帶時，使用部署的預設語言。已登入的呼叫改用帳號的 culture。瀏覽器會自動送出它自己的語言；請設成登入畫面顯示的語言。 |
 
 金鑰被拒，或 `Authorization` header 不是格式正確的 `Bearer <guid>`，會在方法執行前被拒，以 **HTTP 200**
 回應，body 帶 JSON-RPC 錯誤 `-32600`。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，

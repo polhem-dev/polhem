@@ -150,7 +150,12 @@ namespace Polhem.UI.ApiBridge
         /// </summary>
         /// <param name="culture">A BCP-47 culture name; empty or unknown leaves the culture unchanged.</param>
         /// <returns><c>true</c> when the culture was applied.</returns>
-        internal static bool ApplyCulture(string culture)
+        /// <remarks>
+        /// <see cref="ApplyLoginResult"/> calls it with the account's culture. A head calls it when the user picks a
+        /// language before signing in, so the remote calls ask for their messages in that language
+        /// (<c>Accept-Language</c>) and numbers and dates follow it.
+        /// </remarks>
+        public static bool ApplyCulture(string culture)
         {
             if (StringUtilities.IsEmpty(culture)) { return false; }
 

@@ -60,6 +60,9 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
         /// <summary>Gets the API key an HTTP call carries.</summary>
         public string ApiKey { get; init; } = "unit-test";
 
+        /// <summary>Gets the <c>Accept-Language</c> header an HTTP call carries, or <c>null</c> for none.</summary>
+        public string? AcceptLanguage { get; init; }
+
         /// <summary>
         /// Gets the validator an HTTP call's API key goes through, or <c>null</c> for none, which accepts any
         /// non-empty key.
@@ -121,6 +124,10 @@ namespace Polhem.Api.Server.UnitTests.Dispatch
             if (AccessToken != Guid.Empty)
             {
                 headers[ApiHeaders.Authorization] = $"Bearer {AccessToken}";
+            }
+            if (AcceptLanguage != null)
+            {
+                headers[ApiHeaders.AcceptLanguage] = AcceptLanguage;
             }
             var services = new TestOverrideServiceProvider(_services, (typeof(IApiKeyValidator), ApiKeyValidator));
             return new JsonRpcTransportInfo(JsonRpcTransportKind.Http, services, headers, "127.0.0.1");

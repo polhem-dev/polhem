@@ -16,6 +16,11 @@ namespace Polhem.Api.Server.Dispatch
 
         public bool IsLocalCall { get; set; }
 
+        /// <summary>
+        /// The language the caller asks its messages in, or empty; used only when the call has no session.
+        /// </summary>
+        public string RequestCulture { get; set; } = string.Empty;
+
         public ApiKeyValidationResult ApiKeyValidation { get; set; } = ApiKeyValidationResult.NotChecked;
 
         public Stopwatch? Stopwatch { get; set; }
