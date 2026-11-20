@@ -88,9 +88,11 @@ a parameter object whose properties carry the defaults (`TableUpgradeRequest`, `
 the parameter itself is required. A public class's static factory takes overloads instead of optional parameters
 (`PolhemApiClient.CreateLocal`).
 
-`InterfaceOptionalParameterGateTests` (tests/Polhem.Definition.UnitTests) fails on a new interface member with an
-optional parameter. Its allowlist holds the members that predate the rule and only shrinks: an entry that no longer
-matches fails the test, so fixing a member removes it from the list in the same change.
+`InterfaceOptionalParameterGateTests` (tests/Polhem.Analyzers.UnitTests) parses `src/` and fails on a new method or
+indexer with an optional parameter on an interface declared `public` or `protected` (with every type around it). Its
+allowlist names each member that predates the rule with its namespace and parameter types, so a new overload cannot pass
+as an old one, and it only shrinks: an entry that no longer matches fails the test, so fixing a member removes it from
+the list in the same change. The rule on static factories is a review check; no gate enforces it.
 
 ## File organization
 
