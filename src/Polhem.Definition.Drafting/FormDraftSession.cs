@@ -232,40 +232,59 @@ namespace Polhem.Definition.Drafting
                 var response = await _chatClient.GetResponseAsync(_history.ToList(), lastRound ? _finalOptions : _toolOptions,
                     cancellationToken).ConfigureAwait(false);
 
-                var calls = new List<FunctionCallContent>();
-                foreach (var message in response.Messages)
-                {
-                    _history.Add(message);
-                    foreach (var reasoning in message.Contents.OfType<TextReasoningContent>().Where(r => !string.IsNullOrWhiteSpace(r.Text)))
-                        Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.Reasoning, detail: reasoning.Text.Trim()));
-                    calls.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
-                    if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text))
-                        AssistantMessage?.Invoke(this, new AssistantMessageEventArgs(message.Text));
-                }
+                var calls = RecordResponse(response);
                 if (calls.Count == 0) return;
 
-                var results = new List<AIContent>();
-                foreach (var call in calls)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (lastRound)
-                    {
-                        results.Add(Refused(call, questionsAsked
-                            ? "Not run: you asked the user questions, so end the turn with a reply and wait for the answers."
-                            : "Not run: this turn has used all its tool calls. Reply to the user instead."));
-                        continue;
-                    }
-                    results.Add(await InvokeToolAsync(call, onDraftChanged, cancellationToken).ConfigureAwait(false));
-                    if (_toolbox.AskedQuestions is { } questions)
-                    {
-                        _toolbox.AskedQuestions = null;
-                        questionsAsked = true;
-                        QuestionsAsked?.Invoke(this, new DraftQuestionsEventArgs(questions));
-                    }
-                }
+                var (results, asked) = await AnswerCallsAsync(calls, lastRound, questionsAsked, onDraftChanged, cancellationToken)
+                    .ConfigureAwait(false);
+                questionsAsked |= asked;
                 _history.Add(new ChatMessage(ChatRole.Tool, results));
                 if (lastRound) return;
             }
+        }
+
+        // Adds the response to the history, reports its reasoning and its reply, and returns the tool calls it makes.
+        private List<FunctionCallContent> RecordResponse(ChatResponse response)
+        {
+            var calls = new List<FunctionCallContent>();
+            foreach (var message in response.Messages)
+            {
+                _history.Add(message);
+                foreach (var reasoning in message.Contents.OfType<TextReasoningContent>().Where(r => !string.IsNullOrWhiteSpace(r.Text)))
+                    Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.Reasoning, detail: reasoning.Text.Trim()));
+                calls.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
+                if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text))
+                    AssistantMessage?.Invoke(this, new AssistantMessageEventArgs(message.Text));
+            }
+            return calls;
+        }
+
+        // Runs the round's tool calls, or refuses each of them in the last round, and reports whether one of them asked
+        // the user questions.
+        private async Task<(List<AIContent> Results, bool QuestionsAsked)> AnswerCallsAsync(List<FunctionCallContent> calls,
+            bool lastRound, bool questionsAsked, Action onDraftChanged, CancellationToken cancellationToken)
+        {
+            var results = new List<AIContent>();
+            var asked = false;
+            foreach (var call in calls)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (lastRound)
+                {
+                    results.Add(Refused(call, questionsAsked
+                        ? "Not run: you asked the user questions, so end the turn with a reply and wait for the answers."
+                        : "Not run: this turn has used all its tool calls. Reply to the user instead."));
+                    continue;
+                }
+                results.Add(await InvokeToolAsync(call, onDraftChanged, cancellationToken).ConfigureAwait(false));
+                if (_toolbox.AskedQuestions is { } questions)
+                {
+                    _toolbox.AskedQuestions = null;
+                    asked = true;
+                    QuestionsAsked?.Invoke(this, new DraftQuestionsEventArgs(questions));
+                }
+            }
+            return (results, asked);
         }
 
         private async Task<FunctionResultContent> InvokeToolAsync(FunctionCallContent call, Action onDraftChanged,

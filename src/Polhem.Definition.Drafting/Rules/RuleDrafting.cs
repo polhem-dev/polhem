@@ -192,28 +192,41 @@ namespace Polhem.Definition.Drafting.Rules
                 inputTokens += response.Usage?.InputTokenCount ?? 0;
                 outputTokens += response.Usage?.OutputTokenCount ?? 0;
                 Progress?.Invoke(this, new RuleDraftingProgress(Usage(), WaitingForModel: false));
-                var requested = new List<FunctionCallContent>();
-                foreach (var message in response.Messages)
-                {
-                    history.Add(message);
-                    requested.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
-                    if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text)) { reply = message.Text.Trim(); }
-                }
+                var requested = RecordResponse(history, response, ref reply);
                 if (requested.Count == 0) { return (reply, Usage()); }
 
                 var results = new List<AIContent>();
                 for (int i = 0; i < requested.Count; i++)
                 {
-                    var call = requested[i];
                     cancellationToken.ThrowIfCancellationRequested();
-                    // One submission per response: each costs the samples' evaluation, so a response may not multiply it.
-                    results.Add(lastRound ? new FunctionResultContent(call.CallId, "Not run: reply to the user instead.")
-                        : i > 0 ? new FunctionResultContent(call.CallId, "Not run: submit one at a time.")
-                        : await InvokeAsync(tool, call, cancellationToken).ConfigureAwait(false));
+                    results.Add(await AnswerCallAsync(requested[i], i, lastRound, tool, cancellationToken).ConfigureAwait(false));
                 }
                 history.Add(new ChatMessage(ChatRole.Tool, results));
                 if (lastRound) { return (reply, Usage()); }
             }
+        }
+
+        // Adds the response to the history, keeps its last non-blank reply in `reply`, and returns the tool calls it makes.
+        private static List<FunctionCallContent> RecordResponse(List<ChatMessage> history, ChatResponse response, ref string reply)
+        {
+            var requested = new List<FunctionCallContent>();
+            foreach (var message in response.Messages)
+            {
+                history.Add(message);
+                requested.AddRange(message.Contents.OfType<FunctionCallContent>().Where(call => !call.InformationalOnly));
+                if (message.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(message.Text)) { reply = message.Text.Trim(); }
+            }
+            return requested;
+        }
+
+        // One submission per response: each costs the samples' evaluation, so a response may not multiply it. The last
+        // round runs no tool at all.
+        private static async Task<FunctionResultContent> AnswerCallAsync(FunctionCallContent call, int index, bool lastRound,
+            AIFunction tool, CancellationToken cancellationToken)
+        {
+            if (lastRound) { return new FunctionResultContent(call.CallId, "Not run: reply to the user instead."); }
+            if (index > 0) { return new FunctionResultContent(call.CallId, "Not run: submit one at a time."); }
+            return await InvokeAsync(tool, call, cancellationToken).ConfigureAwait(false);
         }
 
         private static async Task<FunctionResultContent> InvokeAsync(AIFunction tool, FunctionCallContent call,
