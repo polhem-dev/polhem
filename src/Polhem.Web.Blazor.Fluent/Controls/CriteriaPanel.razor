@@ -130,25 +130,31 @@
             </label>
             @if (IsDateRange(row))
             {
-                <span class="polhem-criteria-row__period">
-                    <button type="button" id="@PeriodMenuId(rowIndex)" class="polhem-native-button polhem-native-button--plain"
-                            @ref="_periodButtons[row]" @onclick="() => _periodRow = ReferenceEquals(_periodRow, row) ? null : row">@PeriodText(row.RelativeDate)</button>
-                </span>
-                <FluentPopover AnchorId="@PeriodMenuId(rowIndex)" Opened="ReferenceEquals(_periodRow, row)"
-                               OpenedChanged="open => { if (!open && ReferenceEquals(_periodRow, row)) _periodRow = null; }" Class="polhem-menu">
-                    @if (ReferenceEquals(_periodRow, row))
-                    {
-                        <div class="polhem-menu__list">
-                            @foreach (var period in Periods)
-                            {
-                                <button type="button" class="polhem-menu__item polhem-criteria-row__period-item"
-                                        @onclick="() => ChoosePeriodAsync(row, period)">@PeriodText(period)</button>
-                            }
-                        </div>
-                    }
-                </FluentPopover>
+                @PeriodMenu(row, rowIndex)
             }
         </div>;
+
+    // The relative period of a date range: a button that opens a menu of the periods.
+    private RenderFragment PeriodMenu(CriteriaRow row, int rowIndex) =>
+        @<text>
+            <span class="polhem-criteria-row__period">
+                <button type="button" id="@PeriodMenuId(rowIndex)" class="polhem-native-button polhem-native-button--plain"
+                        @ref="_periodButtons[row]" @onclick="() => _periodRow = ReferenceEquals(_periodRow, row) ? null : row">@PeriodText(row.RelativeDate)</button>
+            </span>
+            <FluentPopover AnchorId="@PeriodMenuId(rowIndex)" Opened="ReferenceEquals(_periodRow, row)"
+                           OpenedChanged="open => { if (!open && ReferenceEquals(_periodRow, row)) _periodRow = null; }" Class="polhem-menu">
+                @if (ReferenceEquals(_periodRow, row))
+                {
+                    <div class="polhem-menu__list">
+                        @foreach (var period in Periods)
+                        {
+                            <button type="button" class="polhem-menu__item polhem-criteria-row__period-item"
+                                    @onclick="() => ChoosePeriodAsync(row, period)">@PeriodText(period)</button>
+                        }
+                    </div>
+                }
+            </FluentPopover>
+        </text>;
 
     private RenderFragment BooleanEditor(CriteriaRow row) =>
         @<FluentSelect TOption="string" TValue="string" Class="polhem-criteria-row__value"
