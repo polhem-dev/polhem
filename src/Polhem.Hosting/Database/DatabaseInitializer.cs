@@ -138,10 +138,14 @@ namespace Polhem.Hosting.Database
             => new() { DatabaseId = databaseId, DatabaseName = databaseName, Error = error };
 
         /// <inheritdoc/>
-        public TableUpgradeReport UpgradeTables(
-            UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
-            IReadOnlyCollection<string>? tableNames = null)
+        public TableUpgradeReport UpgradeTables(TableUpgradeRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+            var options = request.Options;
+            var dryRun = request.DryRun;
+            var tableCompleted = request.TableCompleted;
+            var tableNames = request.TableNames;
+
             var databaseSettings = _defineAccess.GetDatabaseSettings();
             var categories = _defineAccess.GetDbCategorySettings().Categories;
 

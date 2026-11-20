@@ -221,7 +221,7 @@ namespace Polhem.Web.Blazor.Wasm.BrowserTests
 
         private static void Seed(IDatabaseInitializer initializer)
         {
-            var report = initializer.UpgradeTables();
+            var report = initializer.UpgradeTables(new TableUpgradeRequest());
             if (!report.Succeeded)
             {
                 var failed = report.Tables.Where(t => t.Outcome == TableUpgradeOutcome.Failed).Select(t => $"{t.TableName}: {t.Error}");

@@ -109,7 +109,7 @@ namespace Polhem.Hosting.UnitTests
 
         private static void AssertUpgrade(DatabaseType databaseType, DatabaseInitializer initializer)
         {
-            var first = initializer.UpgradeTables();
+            var first = initializer.UpgradeTables(new TableUpgradeRequest());
             Assert.True(first.Succeeded, string.Join(Environment.NewLine,
                 first.Problems.Concat(first.Tables.Where(t => t.Error is not null).Select(t => $"{t.TableName}: {t.Error}"))));
             Assert.Contains(first.Tables, t => t.DatabaseId == DbCategoryIds.Common && t.TableName == "st_user");
@@ -118,11 +118,11 @@ namespace Polhem.Hosting.UnitTests
             if (databaseType != DatabaseType.Oracle)
                 Assert.All(first.Tables, t => Assert.Equal(TableUpgradeOutcome.Created, t.Outcome));
 
-            var second = initializer.UpgradeTables();
+            var second = initializer.UpgradeTables(new TableUpgradeRequest());
             Assert.Empty(second.Tables.Where(t => t.Outcome != TableUpgradeOutcome.Unchanged)
                 .Select(t => $"{t.DatabaseId}.{t.TableName}: {t.Outcome}"));
 
-            var dryRun = initializer.UpgradeTables(dryRun: true);
+            var dryRun = initializer.UpgradeTables(new TableUpgradeRequest { DryRun = true });
             Assert.All(dryRun.Tables, t => Assert.Equal(TableUpgradeOutcome.Unchanged, t.Outcome));
         }
 

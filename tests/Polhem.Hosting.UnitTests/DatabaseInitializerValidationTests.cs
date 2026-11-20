@@ -94,7 +94,7 @@ namespace Polhem.Hosting.UnitTests
         {
             SaveItems();
 
-            var report = _initializer.UpgradeTables();
+            var report = _initializer.UpgradeTables(new TableUpgradeRequest());
 
             Assert.False(report.Succeeded);
             Assert.Empty(report.Tables);

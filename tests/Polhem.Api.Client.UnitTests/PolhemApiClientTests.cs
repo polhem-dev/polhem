@@ -67,6 +67,16 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
+        [DisplayName("The factory overloads that take payload options refuse null instead of falling back to the defaults")]
+        public void CreateWithPayloadOptions_Null_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                PolhemApiClient.CreateLocal(Polhem.Tests.Shared.EmptyServiceProvider.Instance, null!));
+            Assert.Throws<ArgumentNullException>(() =>
+                PolhemApiClient.CreateRemote("http://example.com/api", string.Empty, null!));
+        }
+
+        [Fact]
         [DisplayName("CreateRemote throws ArgumentNullException for a null API key")]
         public void CreateRemote_NullApiKey_ThrowsArgumentNullException()
         {

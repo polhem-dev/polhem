@@ -43,7 +43,9 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
             services.AddPolhemBlazorClient(options, sp => options.Mode == PolhemBlazorProviderMode.Local
                 // In process the client speaks the payload options the backend registered, so a debug host that
                 // encodes its calls uses the same compressor and encryptor on both ends.
-                ? PolhemApiClient.CreateLocal(sp, sp.GetService<PayloadOptions>())
+                ? sp.GetService<PayloadOptions>() is { } payloadOptions
+                    ? PolhemApiClient.CreateLocal(sp, payloadOptions)
+                    : PolhemApiClient.CreateLocal(sp)
                 : PolhemApiClient.CreateRemote(options.Endpoint, options.ApiKey));
             return services;
         }

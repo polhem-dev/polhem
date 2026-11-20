@@ -205,8 +205,13 @@ namespace Polhem.Hosting.Database
             };
             // Each table is written as it completes, so a caller showing the output live (DefineEditor
             // runs this command as a child process) sees progress rather than one block at the end.
-            var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(
-                upgradeOptions, dryRun, table => WriteTable(output, table), tableNames);
+            var report = services.GetRequiredService<IDatabaseInitializer>().UpgradeTables(new TableUpgradeRequest
+            {
+                Options = upgradeOptions,
+                DryRun = dryRun,
+                TableCompleted = table => WriteTable(output, table),
+                TableNames = tableNames,
+            });
 
             foreach (var assignment in report.CompanyAssignments)
             {

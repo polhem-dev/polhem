@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
-using Polhem.Db.Schema;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
@@ -202,9 +201,7 @@ namespace Polhem.Hosting.UnitTests
 
             public IReadOnlyList<DatabaseCheckEntry> CheckConnections() => [];
 
-            public TableUpgradeReport UpgradeTables(
-                UpgradeOptions? options = null, bool dryRun = false, Action<TableUpgradeEntry>? tableCompleted = null,
-                IReadOnlyCollection<string>? tableNames = null)
+            public TableUpgradeReport UpgradeTables(TableUpgradeRequest request)
             {
                 UpgradeCalled = true;
                 return UpgradeReport;
