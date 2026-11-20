@@ -1,11 +1,12 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.SqlServer;
-using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Storage;
+using Polhem.Definition;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests
@@ -46,7 +47,7 @@ namespace Polhem.Db.UnitTests
         [DisplayName("BuildSelect selects a field three relations away under the outer form's field name")]
         public void BuildSelect_ThreeRelationsDeep_SelectsUnderOuterFieldName()
         {
-            var spec = NewBuilder().BuildSelect("Ticket", "sys_id,ref_owner_supervisor_name", null, null);
+            var spec = NewBuilder().BuildSelect("Ticket", new FormSelectQuery { SelectFields = "sys_id,ref_owner_supervisor_name" });
 
             Assert.Contains("AS [ref_owner_supervisor_name]", spec.CommandText);
             Assert.DoesNotContain("AS [ref_supervisor_name]", spec.CommandText);
@@ -56,7 +57,7 @@ namespace Polhem.Db.UnitTests
         [DisplayName("BuildSelect joins Employee, Department and Employee again for a field three relations away")]
         public void BuildSelect_ThreeRelationsDeep_JoinsEachRelationOnce()
         {
-            var spec = NewBuilder().BuildSelect("Ticket", "sys_id,ref_owner_supervisor_name", null, null);
+            var spec = NewBuilder().BuildSelect("Ticket", new FormSelectQuery { SelectFields = "sys_id,ref_owner_supervisor_name" });
 
             var lines = spec.CommandText.Split('\n');
             Assert.Equal(3, lines.Count(l => l.Contains("JOIN", StringComparison.OrdinalIgnoreCase)));
@@ -68,7 +69,7 @@ namespace Polhem.Db.UnitTests
         [DisplayName("BuildSelect of every field reads both the near and the three-relation field")]
         public void BuildSelect_AllFields_ReadsNearAndDeepRelationFields()
         {
-            var spec = NewBuilder().BuildSelect("Ticket", string.Empty, null, null);
+            var spec = NewBuilder().BuildSelect("Ticket", new FormSelectQuery());
 
             Assert.Contains("AS [ref_owner_name]", spec.CommandText);
             Assert.Contains("AS [ref_owner_supervisor_name]", spec.CommandText);
@@ -80,7 +81,7 @@ namespace Polhem.Db.UnitTests
         {
             var filter = FilterCondition.StartsWith("ref_owner_supervisor_name", "A");
 
-            var spec = NewBuilder().BuildSelect("Ticket", "sys_id", filter, null);
+            var spec = NewBuilder().BuildSelect("Ticket", new FormSelectQuery { SelectFields = "sys_id", Filter = filter });
 
             Assert.Contains("WHERE", spec.CommandText, StringComparison.OrdinalIgnoreCase);
             Assert.Single(spec.Parameters);

@@ -122,8 +122,7 @@ namespace Polhem.Db.UnitTests
                 Assert.Equal(1, inserted);
 
                 // SELECT confirms that the INSERT landed (including the equality WHERE on rowId).
-                var selectByRowId = formBuilder.BuildSelect("Foo", "name,qty",
-                    FilterCondition.Equal(SysFields.RowId, rowId), null);
+                var selectByRowId = formBuilder.BuildSelect("Foo", new FormSelectQuery { SelectFields = "name,qty", Filter = FilterCondition.Equal(SysFields.RowId, rowId) });
                 var selectResult = dbAccess.Execute(selectByRowId);
                 Assert.NotNull(selectResult.Table);
                 Assert.Single(selectResult.Table!.Rows);
@@ -254,8 +253,7 @@ namespace Polhem.Db.UnitTests
                 insertRow["order"] = 7;
                 dbAccess.Execute(new InsertCommandBuilder(formSchema, DatabaseType.Oracle).Build("Foo", insertRow));
 
-                var selected = dbAccess.Execute(formBuilder.BuildSelect("Foo", "comment,order",
-                    FilterCondition.Equal("order", 7), null));
+                var selected = dbAccess.Execute(formBuilder.BuildSelect("Foo", new FormSelectQuery { SelectFields = "comment,order", Filter = FilterCondition.Equal("order", 7) }));
                 Assert.NotNull(selected.Table);
                 Assert.Single(selected.Table!.Rows);
                 Assert.Equal("hello", selected.Table.Rows[0]["comment"]);

@@ -2,7 +2,6 @@ using Polhem.Db;
 using Polhem.Db.Dml;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
-using Polhem.Definition.Sorting;
 
 namespace Polhem.Repository.Form
 {
@@ -32,12 +31,14 @@ namespace Polhem.Repository.Form
         }
 
         /// <inheritdoc/>
-        public DbCommandSpec BuildSelect(string tableName, string selectFields, FilterNode? filter = null,
-            SortFieldCollection? sortFields = null, int? skip = null, int? take = null)
-            => _inner.BuildSelect(tableName, selectFields, Confine(filter), sortFields, skip, take);
+        public DbCommandSpec BuildSelect(string tableName, FormSelectQuery query)
+        {
+            ArgumentNullException.ThrowIfNull(query);
+            return _inner.BuildSelect(tableName, query with { Filter = Confine(query.Filter) });
+        }
 
         /// <inheritdoc/>
-        public DbCommandSpec BuildCount(string tableName, FilterNode? filter = null)
+        public DbCommandSpec BuildCount(string tableName, FilterNode? filter)
             => _inner.BuildCount(tableName, Confine(filter));
 
         /// <inheritdoc/>

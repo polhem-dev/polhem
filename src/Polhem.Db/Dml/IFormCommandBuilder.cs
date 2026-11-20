@@ -1,5 +1,4 @@
 using Polhem.Definition.Filters;
-using Polhem.Definition.Sorting;
 
 namespace Polhem.Db.Dml
 {
@@ -12,20 +11,15 @@ namespace Polhem.Db.Dml
         /// Builds the SELECT command specification.
         /// </summary>
         /// <param name="tableName">The table name.</param>
-        /// <param name="selectFields">A comma-separated list of field names to retrieve; empty string retrieves all fields.</param>
-        /// <param name="filter">The filter condition.</param>
-        /// <param name="sortFields">The sort field collection.</param>
-        /// <param name="skip">Rows to skip; null means no offset.</param>
-        /// <param name="take">Rows to take; null means no row limit.</param>
-        DbCommandSpec BuildSelect(string tableName, string selectFields, FilterNode? filter = null, SortFieldCollection? sortFields = null,
-            int? skip = null, int? take = null);
+        /// <param name="query">The fields, the filter, the order and the page to select.</param>
+        DbCommandSpec BuildSelect(string tableName, FormSelectQuery query);
 
         /// <summary>
         /// Builds the SELECT COUNT(*) command specification for the specified table using the supplied filter.
         /// </summary>
         /// <param name="tableName">The form table name.</param>
-        /// <param name="filter">The filter condition.</param>
-        DbCommandSpec BuildCount(string tableName, FilterNode? filter = null);
+        /// <param name="filter">The filter condition; <c>null</c> counts every row.</param>
+        DbCommandSpec BuildCount(string tableName, FilterNode? filter);
 
         /// <summary>
         /// Builds the DELETE command specification for the specified table using the supplied filter.

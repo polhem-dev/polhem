@@ -3,7 +3,6 @@ using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
-using Polhem.Definition.Sorting;
 
 namespace Polhem.Db.Providers.Sqlite
 {
@@ -37,16 +36,12 @@ namespace Polhem.Db.Providers.Sqlite
         /// Builds the SELECT command specification.
         /// </summary>
         /// <param name="tableName">The table name.</param>
-        /// <param name="selectFields">A comma-separated list of field names; empty string retrieves all fields.</param>
-        /// <param name="filter">The filter condition.</param>
-        /// <param name="sortFields">The sort field collection.</param>
-        /// <param name="skip">Rows to skip; null means no offset.</param>
-        /// <param name="take">Rows to take; null means no row limit.</param>
-        public DbCommandSpec BuildSelect(string tableName, string selectFields, FilterNode? filter = null, SortFieldCollection? sortFields = null,
-            int? skip = null, int? take = null)
+        /// <param name="query">The fields, the filter, the order and the page to select.</param>
+        public DbCommandSpec BuildSelect(string tableName, FormSelectQuery query)
         {
+            ArgumentNullException.ThrowIfNull(query);
             var builder = new SelectCommandBuilder(FormSchema, DatabaseType.SQLite, _defineAccess);
-            return builder.Build(tableName, selectFields, filter, sortFields, skip, take);
+            return builder.Build(tableName, query.SelectFields, query.Filter, query.SortFields, query.Skip, query.Take);
         }
 
         /// <summary>
@@ -54,7 +49,7 @@ namespace Polhem.Db.Providers.Sqlite
         /// </summary>
         /// <param name="tableName">The form table name.</param>
         /// <param name="filter">The filter condition.</param>
-        public DbCommandSpec BuildCount(string tableName, FilterNode? filter = null)
+        public DbCommandSpec BuildCount(string tableName, FilterNode? filter)
         {
             var builder = new SelectCommandBuilder(FormSchema, DatabaseType.SQLite, _defineAccess);
             return builder.BuildCount(tableName, filter);

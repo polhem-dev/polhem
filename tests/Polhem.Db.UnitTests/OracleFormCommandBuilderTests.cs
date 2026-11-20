@@ -1,10 +1,11 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.Oracle;
-using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Storage;
+using Polhem.Definition;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests
@@ -56,7 +57,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder();
 
-            var spec = builder.BuildSelect("Foo", "name", null, null);
+            var spec = builder.BuildSelect("Foo", new FormSelectQuery { SelectFields = "name" });
 
             Assert.Contains("\"TB_FOO\"", spec.CommandText);
             Assert.Contains("\"NAME\"", spec.CommandText);
@@ -78,7 +79,7 @@ namespace Polhem.Db.UnitTests
         public void BuildCount_DelegatesToOracleDialect()
         {
             var builder = NewBuilder();
-            var spec = builder.BuildCount("Foo");
+            var spec = builder.BuildCount("Foo", null);
 
             Assert.Contains("COUNT", spec.CommandText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"TB_FOO\"", spec.CommandText);

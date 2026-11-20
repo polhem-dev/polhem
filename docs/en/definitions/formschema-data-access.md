@@ -182,7 +182,7 @@ also shifts the numbering of the other parameters). SQL you write by hand has to
 // Resolve defineAccess via DI (e.g. inject in BO / Service ctor)
 var projectSchema = defineAccess.GetFormSchema("Project");
 var builder = new SqlFormCommandBuilder(projectSchema, defineAccess);
-var command = builder.BuildSelect("Project", "sys_id,sys_name");
+var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name" });
 ```
 
 **Generated SQL:**
@@ -197,7 +197,8 @@ No reference fields are used — no JOIN is produced.
 
 ```csharp
 var filter = new FilterCondition("ref_pm_name", ComparisonOperator.StartsWith, "Chang");
-var command = builder.BuildSelect("Project", "sys_id,sys_name", filter);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 ```
 
 **Generated SQL:**
@@ -218,7 +219,8 @@ var sortFields = new SortFieldCollection
 {
     new SortField("ref_pm_dept_name", SortDirection.Asc)
 };
-var command = builder.BuildSelect("Project", "sys_id,sys_name", null, sortFields);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", SortFields = sortFields });
 ```
 
 **Generated SQL:**
@@ -238,7 +240,7 @@ ORDER BY C.[sys_name] ASC
 
 ```csharp
 var command = builder.BuildSelect("Project",
-    "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name");
+    new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name" });
 ```
 
 **Generated SQL:**
@@ -267,7 +269,8 @@ var sortFields = new SortFieldCollection
 {
     new SortField("sys_id", SortDirection.Asc)
 };
-var command = builder.BuildSelect("Project", "sys_id,sys_name", filterGroup, sortFields);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filterGroup, SortFields = sortFields });
 ```
 
 **Generated SQL:**

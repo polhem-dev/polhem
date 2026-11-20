@@ -661,7 +661,7 @@ FormApiConnector.GetListAsync(...)
   → DataFormRepository (bound to the progId) runs the query
     → IFormCommandBuilder, created for the connection's database type by
       DbDialectRegistry.Get(databaseType).CreateFormCommandBuilder(formSchema, defineAccess)
-    → BuildSelect(tableName, selectFields, filter, sortFields, ...)
+    → BuildSelect(tableName, FormSelectQuery { SelectFields, Filter, SortFields, Skip, Take })
       → SelectCommandBuilder.Build(...)
         → SelectBuilder: produce SELECT field list
         → FromBuilder: produce FROM clause (with JOINs for relation fields)

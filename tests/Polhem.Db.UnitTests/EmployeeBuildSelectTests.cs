@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.SqlServer;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Sorting;
@@ -41,7 +42,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder();
 
-            var spec = builder.BuildSelect("Employee", string.Empty, null, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery());
 
             Assert.NotNull(spec);
             Assert.Equal(DbCommandKind.DataTable, spec.Kind);
@@ -56,7 +57,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder();
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", null, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name" });
 
             Assert.NotNull(spec);
             Assert.DoesNotContain("JOIN", spec.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -71,7 +72,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
 
             // `ref_dept_name` comes from the mapping dept_rowid → Department.sys_name.
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name,ref_dept_name", null, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_dept_name" });
 
             Assert.NotNull(spec);
             Assert.Contains("JOIN", spec.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -86,7 +87,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
 
             // `ref_supervisor_name` comes through dept_rowid → Department → manager_rowid → Employee.
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name,ref_supervisor_name", null, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_supervisor_name" });
 
             Assert.NotNull(spec);
             int joins = CountJoins(spec.CommandText);
@@ -102,7 +103,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
             var filter = FilterCondition.Equal("sys_id", "E001");
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", filter, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 
             Assert.NotNull(spec);
             Assert.DoesNotContain("JOIN", spec.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -117,7 +118,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
             var filter = FilterCondition.Equal("ref_dept_id", "D001");
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", filter, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 
             Assert.NotNull(spec);
             Assert.Contains("JOIN", spec.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -135,7 +136,7 @@ namespace Polhem.Db.UnitTests
                 new SortField("ref_dept_name", SortDirection.Asc)
             };
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", null, sortFields);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", SortFields = sortFields });
 
             Assert.NotNull(spec);
             Assert.Contains("JOIN", spec.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -154,7 +155,7 @@ namespace Polhem.Db.UnitTests
                 FilterCondition.Equal("ref_dept_id", "D001")
             );
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", filterGroup, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filterGroup });
 
             Assert.NotNull(spec);
             Assert.Equal(2, spec.Parameters.Count);
@@ -168,7 +169,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
             var filter = FilterCondition.StartsWith("ref_supervisor_name", "王");
 
-            var spec = builder.BuildSelect("Employee", "sys_id,sys_name", filter, null);
+            var spec = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 
             Assert.NotNull(spec);
             int joins = CountJoins(spec.CommandText);
@@ -183,7 +184,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder();
 
             Assert.Throws<InvalidOperationException>(
-                () => builder.BuildSelect("DoesNotExist", string.Empty, null, null));
+                () => builder.BuildSelect("DoesNotExist", new FormSelectQuery()));
         }
     }
 }

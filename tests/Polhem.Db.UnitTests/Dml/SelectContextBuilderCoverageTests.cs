@@ -250,7 +250,7 @@ namespace Polhem.Db.UnitTests.Dml
             var builder = new SqliteFormCommandBuilder(BuildLeaveSchema(), LeaveDefineAccess());
             var sort = new SortFieldCollection { new SortField("dept_rowid", SortDirection.Asc) };
 
-            var sql = builder.BuildSelect("Leave", string.Empty, FilterCondition.Equal("dept_rowid", Guid.NewGuid()), sort).CommandText;
+            var sql = builder.BuildSelect("Leave", new FormSelectQuery { Filter = FilterCondition.Equal("dept_rowid", Guid.NewGuid()), SortFields = sort }).CommandText;
 
             Assert.Contains("WHERE A.\"dept_rowid\"", sql);
             Assert.Contains("ORDER BY A.\"dept_rowid\"", sql);
