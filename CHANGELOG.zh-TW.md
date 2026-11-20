@@ -10,6 +10,21 @@ Polhem 套件的重要變更，每個版本只列幾項重點。每個版本都�
 > 版號自 2.0.0 起依循[語意化版本](https://semver.org/lang/zh-TW/)。引用套件時請使用不跨 minor 版的範圍，例如
 > `[1.6,1.7)`，不要用 `1.*`。這項政策與理由見 [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md)。
 
+## [Unreleased]
+
+詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.16.0.md](docs/zh-TW/changelogs/1.16.0.md)
+
+- **破壞性：** 參照用的 `Guid` 欄位預設為空 GUID，不再產生 GUID；下一次升級會修改既有欄位，之後 1.15.0 的工具會拒絕該資料庫。
+- **破壞性：** `Contains`、`StartsWith`、`EndsWith` 只把 `%` 當萬用字元，`_` 只比對自己。
+- **破壞性：** 總計或存檔前規則會讀取的存檔，只能含一筆記錄與該記錄自己的資料列，並須帶主表列、不得改動列 id。
+- **破壞性：** 只有框架 UI 套件使用的 UI 型別改為 internal 或移除，物件樹的命令與拖放型別移到 `Polhem.UI.Core.Trees`。
+- **破壞性：** 以選用參數結尾的公開成員改用參數物件或多載，運算式函式改以 `ExpressionParameter` 描述參數。
+- **破壞性：** `Polhem.AI.Claude` 預設送出中等 effort。
+- 表單清單可在側邊窗格下查詢條件，支援標籤、儲存的查詢與「我」，適用 Avalonia、MudBlazor 與 Fluent UI。
+- 運算式新增業務函式與帶條件的明細彙總，並以允許清單檢查不受信任作者的運算式。
+- `Polhem.Definition.Drafting` 可依白話撰寫表單規則，DefineEditor 以附 AI 助理的對話框編輯規則。
+- Avalonia 12.1.6、MudBlazor 9.14.0 與 Fluent UI Blazor 5.1.0。
+
 ## [1.15.0] - 2026-11-16
 
 詳細內容與遷移步驟：[docs/zh-TW/changelogs/1.15.0.md](docs/zh-TW/changelogs/1.15.0.md)

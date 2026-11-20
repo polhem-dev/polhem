@@ -11,6 +11,21 @@ it affects and how to migrate. The format follows [Keep a Changelog](https://kee
 > from 2.0.0. Reference the packages with a range that stays within one minor version, for example `[1.6,1.7)`, rather
 > than `1.*`. The policy and its reasons are in [ADR-052](maintainers/adr/adr-052-breaking-changes-in-1-x-minors.md).
 
+## [Unreleased]
+
+Details and migration steps: [docs/en/changelogs/1.16.0.md](docs/en/changelogs/1.16.0.md)
+
+- **Breaking:** Reference `Guid` columns default to the empty GUID instead of a generated one; the next upgrade changes existing columns, and the 1.15.0 tools then refuse the database.
+- **Breaking:** Only `%` is a wildcard in `Contains`, `StartsWith` and `EndsWith`; `_` matches itself.
+- **Breaking:** A save that totals or before-save rules read must hold one record and only that record's rows, with the master row and unchanged row ids.
+- **Breaking:** UI types only the framework's UI packages use are internal or removed, and the object tree command and drag-and-drop types move to `Polhem.UI.Core.Trees`.
+- **Breaking:** Public members that ended in optional parameters take a parameter object or overloads, and an expression function describes its parameters with `ExpressionParameter`.
+- **Breaking:** `Polhem.AI.Claude` sends medium effort by default.
+- A form's list takes query conditions in a side pane, with chips, saved queries and "Me", on Avalonia, MudBlazor and Fluent UI.
+- Expressions gain business helper functions and conditional detail aggregates, and an allowlist checks expressions from untrusted authors.
+- `Polhem.Definition.Drafting` writes form rules from plain language, and DefineEditor edits rules in a dialog with an AI assistant.
+- Avalonia 12.1.6, MudBlazor 9.14.0 and Fluent UI Blazor 5.1.0.
+
 ## [1.15.0] - 2026-11-16
 
 Details and migration steps: [docs/en/changelogs/1.15.0.md](docs/en/changelogs/1.15.0.md)
