@@ -14,7 +14,7 @@ namespace Polhem.Web.Blazor.Shell
     /// Signing in is two calls: the panel signs in and records the user on the <see cref="BlazorUserContext"/>, then
     /// this screen enters the company through that context, which records the capabilities the pages degrade by. When
     /// entering the company fails, the user is signed out again and the error is shown. A language switch shows only
-    /// when the host registers an <see cref="IShellLanguageSwitcher"/>.
+    /// when the host package supplies one; the Server and Wasm host packages do.
     /// </remarks>
     public abstract class ShellSignInBase : ComponentBase
     {

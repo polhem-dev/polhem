@@ -332,3 +332,10 @@ Polhem.Web.Blazor.Identity.BlazorUserContext.Identity.get -> Polhem.UI.Core.User
 *REMOVED*Polhem.Web.Blazor.Shell.ShellLayoutBase.UserContext.get -> Polhem.Web.Blazor.Identity.BlazorUserContext!
 *REMOVED*Polhem.Web.Blazor.Shell.ShellNavMenuBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
 *REMOVED*Polhem.Web.Blazor.Shell.ShellSignInBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
+*REMOVED*Polhem.Web.Blazor.Components.IBlazorDefinitionOptions
+*REMOVED*Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.DefaultLanguage.get -> string!
+*REMOVED*Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.UseDefinitionLoader.get -> bool
+*REMOVED*Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions
+*REMOVED*Polhem.Web.Blazor.Shell.IShellLanguageSwitcher
+*REMOVED*Polhem.Web.Blazor.Shell.IShellLanguageSwitcher.Switch(Polhem.Web.Blazor.Shell.PolhemShellLanguage! language) -> void
+*REMOVED*static Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions.AddPolhemBlazorClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, System.Func<System.IServiceProvider!, Polhem.Api.Client.PolhemApiClient!>! clientFactory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
