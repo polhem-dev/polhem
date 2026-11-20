@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.PostgreSql;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
@@ -60,7 +61,7 @@ namespace Polhem.Db.UnitTests
             table.Fields!.Add(new FormField("name", "Name", FieldDbType.String) { MaxLength = 50 });
 
             var builder = NewBuilder(schema);
-            var spec = builder.BuildSelect("Foo", "");
+            var spec = builder.BuildSelect("Foo", new FormSelectQuery());
 
             Assert.Contains("\"tb_foo\"", spec.CommandText);
         }

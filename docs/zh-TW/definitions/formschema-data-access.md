@@ -1,4 +1,4 @@
-<!-- source: en/definitions/formschema-data-access.md blob: 657615633891ec8368534ba64c182dbe7a9dd254 -->
+<!-- source: en/definitions/formschema-data-access.md blob: 293906af82aad5a5f8968f324d55a5eb25a9aff6 -->
 # FormSchema 驅動的資料庫存取
 
 [English](../../en/definitions/formschema-data-access.md) · [← 文件索引](../README.md)
@@ -182,7 +182,7 @@ Definition-Driven Architecture（整體架構）
 // 透過 DI 取得 defineAccess（例如在 BO / Service ctor 注入）
 var projectSchema = defineAccess.GetFormSchema("Project");
 var builder = new SqlFormCommandBuilder(projectSchema, defineAccess);
-var command = builder.BuildSelect("Project", "sys_id,sys_name");
+var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name" });
 ```
 
 **產出 SQL：**
@@ -197,7 +197,8 @@ FROM [ft_project] A
 
 ```csharp
 var filter = new FilterCondition("ref_pm_name", ComparisonOperator.StartsWith, "張");
-var command = builder.BuildSelect("Project", "sys_id,sys_name", filter);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 ```
 
 **產出 SQL：**
@@ -218,7 +219,8 @@ var sortFields = new SortFieldCollection
 {
     new SortField("ref_pm_dept_name", SortDirection.Asc)
 };
-var command = builder.BuildSelect("Project", "sys_id,sys_name", null, sortFields);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", SortFields = sortFields });
 ```
 
 **產出 SQL：**
@@ -238,7 +240,7 @@ ORDER BY C.[sys_name] ASC
 
 ```csharp
 var command = builder.BuildSelect("Project",
-    "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name");
+    new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name" });
 ```
 
 **產出 SQL：**
@@ -267,7 +269,8 @@ var sortFields = new SortFieldCollection
 {
     new SortField("sys_id", SortDirection.Asc)
 };
-var command = builder.BuildSelect("Project", "sys_id,sys_name", filterGroup, sortFields);
+var command = builder.BuildSelect("Project",
+    new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filterGroup, SortFields = sortFields });
 ```
 
 **產出 SQL：**

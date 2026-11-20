@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
         public void BuildCount_DelegatesToPostgreSqlDialect()
         {
             var builder = NewBuilder();
-            var spec = builder.BuildCount("Foo");
+            var spec = builder.BuildCount("Foo", null);
 
             Assert.Contains("COUNT(*)", spec.CommandText);
             Assert.Contains("\"tb_foo\"", spec.CommandText);

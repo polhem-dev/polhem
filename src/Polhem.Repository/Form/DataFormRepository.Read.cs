@@ -1,6 +1,7 @@
 using System.Data;
 using System.Globalization;
 using Polhem.Core;
+using Polhem.Db.Dml;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
@@ -35,7 +36,7 @@ namespace Polhem.Repository.Form
 
             if (paging == null)
             {
-                var spec = builder.BuildSelect(ProgId, resolvedSelectFields, filter, sortFields);
+                var spec = builder.BuildSelect(ProgId, new FormSelectQuery { SelectFields = resolvedSelectFields, Filter = filter, SortFields = sortFields });
                 return new DataFormListResult { Table = ReadFormTable(dbAccess, spec, _schema.MasterTable) };
             }
 
@@ -62,7 +63,7 @@ namespace Polhem.Repository.Form
             }
 
             int take = paging.IncludeTotalCount ? pageSize : pageSize + 1;
-            var pagedSpec = builder.BuildSelect(ProgId, resolvedSelectFields, filter, effectiveSort, skip, take);
+            var pagedSpec = builder.BuildSelect(ProgId, new FormSelectQuery { SelectFields = resolvedSelectFields, Filter = filter, SortFields = effectiveSort, Skip = skip, Take = take });
             var table = ReadFormTable(dbAccess, pagedSpec, _schema.MasterTable)!;
 
             bool hasMore;
@@ -183,7 +184,7 @@ namespace Polhem.Repository.Form
             // Master row by sys_rowid, AND-combined with the record-scope filter when supplied so
             // an out-of-scope row reads as "not found" (null).
             var masterFilter = CombineWithScope(FilterCondition.Equal(SysFields.RowId, rowId), scopeFilter);
-            var masterSpec = builder.BuildSelect(ProgId, string.Empty, masterFilter);
+            var masterSpec = builder.BuildSelect(ProgId, new FormSelectQuery { Filter = masterFilter });
             var masterDataTable = ReadFormTable(dbAccess, masterSpec, _schema.MasterTable);
             if (masterDataTable == null || masterDataTable.Rows.Count == 0)
                 return null;
@@ -199,7 +200,7 @@ namespace Polhem.Repository.Form
             foreach (var detail in EnumerateDetailTables())
             {
                 var detailTableName = detail.TableName;
-                var detailSpec = builder.BuildSelect(detailTableName, string.Empty, detailFilter);
+                var detailSpec = builder.BuildSelect(detailTableName, new FormSelectQuery { Filter = detailFilter });
                 var detailDataTable = ReadFormTable(dbAccess, detailSpec, detail)
                     ?? new DataTable(detailTableName);
                 detailDataTable.TableName = detailTableName;
@@ -240,7 +241,7 @@ namespace Polhem.Repository.Form
             foreach (var chunk in rowIds.Distinct().Chunk(RowIdBatchSize))
             {
                 var filter = FilterCondition.In(SysFields.RowId, chunk.Cast<object>());
-                var spec = builder.BuildSelect(tableName, fields, filter);
+                var spec = builder.BuildSelect(tableName, new FormSelectQuery { SelectFields = fields, Filter = filter });
                 var table = ReadFormTable(dbAccess, spec, formTable);
                 if (table != null) { result.Merge(table); }
             }

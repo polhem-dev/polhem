@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 8a4e9df2771e16ddd0c1a54fa9822ff33fcdd9c8 -->
+<!-- source: en/guides/development-cookbook.md blob: 176a733ea2d6a5b531350879bc22fc14f3e0ed0b -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -632,7 +632,7 @@ FormApiConnector.GetListAsync(...)
   → 綁定到該 progId 的 DataFormRepository 執行查詢
     → IFormCommandBuilder，依連線的資料庫類型由
       DbDialectRegistry.Get(databaseType).CreateFormCommandBuilder(formSchema, defineAccess) 建立
-    → BuildSelect(tableName, selectFields, filter, sortFields, ...)
+    → BuildSelect(tableName, FormSelectQuery { SelectFields, Filter, SortFields, Skip, Take })
       → SelectCommandBuilder.Build(...)
         → SelectBuilder: 產生 SELECT 欄位清單
         → FromBuilder: 產生 FROM 子句（為關聯欄位加上 JOIN）

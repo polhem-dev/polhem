@@ -1,9 +1,10 @@
 using System.ComponentModel;
-using Polhem.Definition.Filters;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.SqlServer;
-using Polhem.Tests.Shared;
+using Polhem.Definition.Filters;
 using Polhem.Definition.Sorting;
 using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Db.UnitTests
 {
@@ -26,7 +27,7 @@ namespace Polhem.Db.UnitTests
         public void BuildSelect_SelectOnlyMasterFields_NoJoin()
         {
             var builder = NewBuilder("Project");
-            var command = builder.BuildSelect("Project", "sys_id,sys_name", null, null);
+            var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name" });
 
             Assert.NotNull(command);
             Assert.NotNull(command.CommandText);
@@ -39,7 +40,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder("Project");
             var filter = new FilterCondition("ref_pm_name", ComparisonOperator.StartsWith, "張");
-            var command = builder.BuildSelect("Project", "sys_id,sys_name", filter, null);
+            var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter });
 
             Assert.NotNull(command);
             Assert.NotNull(command.CommandText);
@@ -56,7 +57,7 @@ namespace Polhem.Db.UnitTests
                 new SortField("ref_pm_dept_name", SortDirection.Asc)
             };
 
-            var command = builder.BuildSelect("Project", "sys_id,sys_name", null, sortFields);
+            var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name", SortFields = sortFields });
 
             Assert.NotNull(command);
             Assert.NotNull(command.CommandText);
@@ -70,7 +71,7 @@ namespace Polhem.Db.UnitTests
             var builder = NewBuilder("Project");
 
             // Assumes `ref_owner_dept_name` and `ref_pm_dept_name` come from different reference tables.
-            var command = builder.BuildSelect("Project", "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name", null, null);
+            var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_owner_dept_name,ref_pm_dept_name" });
 
             Assert.NotNull(command);
             Assert.NotNull(command.CommandText);
@@ -108,12 +109,7 @@ namespace Polhem.Db.UnitTests
                 new SortField("sys_id", SortDirection.Asc)
             };
 
-            var command = builder.BuildSelect(
-                "Project",
-                "sys_id,sys_name",
-                filterGroup,
-                sortFields
-            );
+            var command = builder.BuildSelect("Project", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filterGroup, SortFields = sortFields });
 
             Assert.NotNull(command);
             Assert.NotNull(command.CommandText);
@@ -127,8 +123,8 @@ namespace Polhem.Db.UnitTests
         public void BuildSelect_WithAndWithoutFields_ReturnsCommands()
         {
             var builder = NewBuilder("Employee");
-            var command = builder.BuildSelect("Employee", string.Empty, null, null);
-            var command2 = builder.BuildSelect("Employee", "sys_id,sys_name,ref_dept_name,ref_supervisor_name", null, null);
+            var command = builder.BuildSelect("Employee", new FormSelectQuery());
+            var command2 = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_dept_name,ref_supervisor_name" });
 
             Assert.NotNull(command);
             Assert.False(string.IsNullOrWhiteSpace(command.CommandText));
@@ -154,12 +150,12 @@ namespace Polhem.Db.UnitTests
                 new SortField("sys_id", SortDirection.Asc)
             };
 
-            var command = builder.BuildSelect("Employee", string.Empty, filter, sortFields);
+            var command = builder.BuildSelect("Employee", new FormSelectQuery { Filter = filter, SortFields = sortFields });
             Assert.Contains("WHERE", command.CommandText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("ORDER BY", command.CommandText, StringComparison.OrdinalIgnoreCase);
             Assert.Equal("001", Assert.Single(command.Parameters).Value);
 
-            var command2 = builder.BuildSelect("Employee", "sys_id,sys_name,ref_dept_name,ref_supervisor_name", filter, sortFields);
+            var command2 = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name,ref_dept_name,ref_supervisor_name", Filter = filter, SortFields = sortFields });
             Assert.True(CountJoins(command2.CommandText) >= 2,
                 $"Selecting two reference fields from different relations must join both: {command2.CommandText}");
             Assert.Contains("ORDER BY", command2.CommandText, StringComparison.OrdinalIgnoreCase);
@@ -171,7 +167,7 @@ namespace Polhem.Db.UnitTests
                 Operator = ComparisonOperator.Equal,
                 Value = "U001"
             };
-            var command3 = builder.BuildSelect("Employee", "sys_id,sys_name", filter, sortFields);
+            var command3 = builder.BuildSelect("Employee", new FormSelectQuery { SelectFields = "sys_id,sys_name", Filter = filter, SortFields = sortFields });
             // The select list has no reference field, so every JOIN comes from the filter. `ref_supervisor_id` is the
             // department's `ref_manager_id`, a relation of a relation, so reaching it takes two JOINs.
             Assert.Equal(2, CountJoins(command3.CommandText));

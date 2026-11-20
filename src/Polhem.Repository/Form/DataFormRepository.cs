@@ -1,5 +1,6 @@
 using System.Data;
 using Polhem.Db;
+using Polhem.Db.Dml;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
@@ -181,7 +182,7 @@ namespace Polhem.Repository.Form
             var dbAccess = Context.DbAccessFactory.Create(DatabaseId);
 
             var filter = CombineWithScope(FilterCondition.Equal(SysFields.RowId, rowId), scopeFilter);
-            var spec = builder.BuildSelect(ProgId, SysFields.RowId, filter);
+            var spec = builder.BuildSelect(ProgId, new FormSelectQuery { SelectFields = SysFields.RowId, Filter = filter });
             var table = dbAccess.Execute(spec).Table;
             return table != null && table.Rows.Count > 0;
         }

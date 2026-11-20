@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.MySql;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
@@ -55,7 +56,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder();
 
-            var spec = builder.BuildSelect("Foo", "name", null, null);
+            var spec = builder.BuildSelect("Foo", new FormSelectQuery { SelectFields = "name" });
 
             Assert.Contains("`tb_foo`", spec.CommandText);
             Assert.Contains("`name`", spec.CommandText);
@@ -77,7 +78,7 @@ namespace Polhem.Db.UnitTests
         public void BuildCount_DelegatesToMySqlDialect()
         {
             var builder = NewBuilder();
-            var spec = builder.BuildCount("Foo");
+            var spec = builder.BuildCount("Foo", null);
 
             Assert.Contains("COUNT(*)", spec.CommandText);
             Assert.Contains("`tb_foo`", spec.CommandText);

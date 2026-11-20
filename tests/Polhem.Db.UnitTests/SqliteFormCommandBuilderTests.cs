@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
+using Polhem.Db.Dml;
 using Polhem.Db.Providers.Sqlite;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
@@ -48,7 +49,7 @@ namespace Polhem.Db.UnitTests
         {
             var builder = NewBuilder(BuildFooSchema());
 
-            var spec = builder.BuildSelect("Foo", "name", null, null);
+            var spec = builder.BuildSelect("Foo", new FormSelectQuery { SelectFields = "name" });
 
             Assert.Contains("\"tb_foo\"", spec.CommandText);
             Assert.Contains("\"name\"", spec.CommandText);
