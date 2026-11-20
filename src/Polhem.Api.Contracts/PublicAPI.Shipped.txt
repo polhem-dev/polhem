@@ -80,6 +80,10 @@ Polhem.Api.Contracts.Form.IDeleteRequest
 Polhem.Api.Contracts.Form.IDeleteRequest.RowId.get -> System.Guid
 Polhem.Api.Contracts.Form.IDeleteResponse
 Polhem.Api.Contracts.Form.IDeleteResponse.RowsAffected.get -> int
+Polhem.Api.Contracts.Form.IDeleteUserQueryRequest
+Polhem.Api.Contracts.Form.IDeleteUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IDeleteUserQueryResponse
+Polhem.Api.Contracts.Form.IDeleteUserQueryResponse.RowsAffected.get -> int
 Polhem.Api.Contracts.Form.IFieldValueChangeConnector
 Polhem.Api.Contracts.Form.IFieldValueChangeConnector.FieldValueChangeAsync(string! tableName, string! fieldName, string! value, System.Data.DataTable? row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IFieldValueChangeResponse!>!
 Polhem.Api.Contracts.Form.IFieldValueChangeRequest
@@ -122,11 +126,31 @@ Polhem.Api.Contracts.Form.IGetLookupResponse.Table.get -> System.Data.DataTable?
 Polhem.Api.Contracts.Form.IGetNewDataRequest
 Polhem.Api.Contracts.Form.IGetNewDataResponse
 Polhem.Api.Contracts.Form.IGetNewDataResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.Form.IGetUserQueriesRequest
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IGetUserQueriesResponse.Table.get -> System.Data.DataTable?
 Polhem.Api.Contracts.Form.ISaveRequest
 Polhem.Api.Contracts.Form.ISaveRequest.DataSet.get -> System.Data.DataSet?
 Polhem.Api.Contracts.Form.ISaveResponse
 Polhem.Api.Contracts.Form.ISaveResponse.AffectedRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, int>!
 Polhem.Api.Contracts.Form.ISaveResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.Criteria.get -> string!
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.IsShared.get -> bool
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.Name.get -> string!
+Polhem.Api.Contracts.Form.ISaveUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISaveUserQueryResponse
+Polhem.Api.Contracts.Form.ISaveUserQueryResponse.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryRequest
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse
+Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse.DefaultRowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IUserQueryConnector
+Polhem.Api.Contracts.Form.IUserQueryConnector.DeleteUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IDeleteUserQueryResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.GetUserQueriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.IGetUserQueriesResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.SaveUserQueryAsync(System.Guid rowId, string! name, bool isShared, string! criteria, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISaveUserQueryResponse!>!
+Polhem.Api.Contracts.Form.IUserQueryConnector.SetDefaultUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Contracts.Form.ISetDefaultUserQueryResponse!>!
 Polhem.Api.Contracts.IExecFuncRequest
 Polhem.Api.Contracts.IExecFuncRequest.FuncId.get -> string!
 Polhem.Api.Contracts.IExecFuncResponse
@@ -150,6 +174,8 @@ Polhem.Api.Contracts.System.IEnterCompanyRequest.CompanyId.get -> string!
 Polhem.Api.Contracts.System.IEnterCompanyResponse
 Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>!
 Polhem.Api.Contracts.System.IEnterCompanyResponse.Company.get -> Polhem.Definition.Identity.CompanyInfo!
+Polhem.Api.Contracts.System.IEnterCompanyResponse.EmployeeRowId.get -> System.Guid
+Polhem.Api.Contracts.System.IEnterCompanyResponse.UserRowId.get -> System.Guid
 Polhem.Api.Contracts.System.IGetCommonConfigurationRequest
 Polhem.Api.Contracts.System.IGetCommonConfigurationResponse
 Polhem.Api.Contracts.System.IGetCommonConfigurationResponse.CommonConfiguration.get -> string!

@@ -3,12 +3,32 @@ Polhem.Expressions.DynamicExpressoEvaluator
 Polhem.Expressions.DynamicExpressoEvaluator.DynamicExpressoEvaluator() -> void
 Polhem.Expressions.DynamicExpressoEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object?
 Polhem.Expressions.DynamicExpressoEvaluator.Evaluate<T>(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> T
+Polhem.Expressions.DynamicExpressoEvaluator.FindViolations(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 Polhem.Expressions.DynamicExpressoEvaluator.GetReferencedVariables(string! expression) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Expressions.DynamicExpressoEvaluator.ReferencedTypes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
 Polhem.Expressions.DynamicExpressoEvaluator.Validate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> void
 Polhem.Expressions.ExpressionFunction
-Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Type! returnType, System.Collections.Generic.IReadOnlyList<System.Reflection.ParameterInfo!>! parameters) -> void
+Polhem.Expressions.ExpressionFunction.Example.get -> string!
+Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Type! returnType, System.Collections.Generic.IReadOnlyList<Polhem.Expressions.ExpressionParameter!>! parameters) -> void
+Polhem.Expressions.ExpressionFunction.ExpressionFunction(string! name, System.Type! returnType, System.Collections.Generic.IReadOnlyList<Polhem.Expressions.ExpressionParameter!>! parameters, string! summary, string! example) -> void
 Polhem.Expressions.ExpressionFunction.Name.get -> string!
-Polhem.Expressions.ExpressionFunction.Parameters.get -> System.Collections.Generic.IReadOnlyList<System.Reflection.ParameterInfo!>!
+Polhem.Expressions.ExpressionFunction.Parameters.get -> System.Collections.Generic.IReadOnlyList<Polhem.Expressions.ExpressionParameter!>!
 Polhem.Expressions.ExpressionFunction.ReturnType.get -> System.Type!
+Polhem.Expressions.ExpressionFunction.Summary.get -> string!
+Polhem.Expressions.ExpressionParameter
+Polhem.Expressions.ExpressionParameter.<Clone>$() -> Polhem.Expressions.ExpressionParameter!
+Polhem.Expressions.ExpressionParameter.Deconstruct(out string! Name, out System.Type! Type) -> void
+Polhem.Expressions.ExpressionParameter.Equals(Polhem.Expressions.ExpressionParameter? other) -> bool
+Polhem.Expressions.ExpressionParameter.ExpressionParameter(string! Name, System.Type! Type) -> void
+Polhem.Expressions.ExpressionParameter.Name.get -> string!
+Polhem.Expressions.ExpressionParameter.Name.init -> void
+Polhem.Expressions.ExpressionParameter.Type.get -> System.Type!
+Polhem.Expressions.ExpressionParameter.Type.init -> void
+override Polhem.Expressions.ExpressionParameter.Equals(object? obj) -> bool
+override Polhem.Expressions.ExpressionParameter.GetHashCode() -> int
+override Polhem.Expressions.ExpressionParameter.ToString() -> string!
 static Polhem.Expressions.DynamicExpressoEvaluator.HelperFunctions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Expressions.ExpressionFunction!>!
+static Polhem.Expressions.DynamicExpressoEvaluator.IsAllowedFunction(Polhem.Expressions.ExpressionFunction! function) -> bool
+static Polhem.Expressions.DynamicExpressoEvaluator.IsAllowedMember(System.Reflection.MemberInfo! member) -> bool
+static Polhem.Expressions.ExpressionParameter.operator !=(Polhem.Expressions.ExpressionParameter? left, Polhem.Expressions.ExpressionParameter? right) -> bool
+static Polhem.Expressions.ExpressionParameter.operator ==(Polhem.Expressions.ExpressionParameter? left, Polhem.Expressions.ExpressionParameter? right) -> bool

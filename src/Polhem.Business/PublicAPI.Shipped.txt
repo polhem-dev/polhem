@@ -198,6 +198,14 @@ Polhem.Business.Form.DeleteResult
 Polhem.Business.Form.DeleteResult.DeleteResult() -> void
 Polhem.Business.Form.DeleteResult.RowsAffected.get -> int
 Polhem.Business.Form.DeleteResult.RowsAffected.set -> void
+Polhem.Business.Form.DeleteUserQueryArgs
+Polhem.Business.Form.DeleteUserQueryArgs.DeleteUserQueryArgs() -> void
+Polhem.Business.Form.DeleteUserQueryArgs.RowId.get -> System.Guid
+Polhem.Business.Form.DeleteUserQueryArgs.RowId.set -> void
+Polhem.Business.Form.DeleteUserQueryResult
+Polhem.Business.Form.DeleteUserQueryResult.DeleteUserQueryResult() -> void
+Polhem.Business.Form.DeleteUserQueryResult.RowsAffected.get -> int
+Polhem.Business.Form.DeleteUserQueryResult.RowsAffected.set -> void
 Polhem.Business.Form.FieldValueChangeArgs
 Polhem.Business.Form.FieldValueChangeArgs.FieldName.get -> string!
 Polhem.Business.Form.FieldValueChangeArgs.FieldName.set -> void
@@ -218,7 +226,11 @@ Polhem.Business.Form.FieldValueChangeResult.Values.set -> void
 Polhem.Business.Form.FieldValueChangeResult.Warnings.get -> System.Collections.Generic.Dictionary<string!, string!>!
 Polhem.Business.Form.FieldValueChangeResult.Warnings.set -> void
 Polhem.Business.Form.FormBusinessObject
+Polhem.Business.Form.FormBusinessObject.DeleteUserQuery(Polhem.Business.Form.DeleteUserQueryArgs! args) -> Polhem.Business.Form.DeleteUserQueryResult!
 Polhem.Business.Form.FormBusinessObject.FormBusinessObject(Polhem.Definition.IBusinessObjectContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
+Polhem.Business.Form.FormBusinessObject.GetUserQueries(Polhem.Business.Form.GetUserQueriesArgs! args) -> Polhem.Business.Form.GetUserQueriesResult!
+Polhem.Business.Form.FormBusinessObject.SaveUserQuery(Polhem.Business.Form.SaveUserQueryArgs! args) -> Polhem.Business.Form.SaveUserQueryResult!
+Polhem.Business.Form.FormBusinessObject.SetDefaultUserQuery(Polhem.Business.Form.SetDefaultUserQueryArgs! args) -> Polhem.Business.Form.SetDefaultUserQueryResult!
 Polhem.Business.Form.FormBusinessPlugin
 Polhem.Business.Form.FormBusinessPlugin.AccessToken.get -> System.Guid
 Polhem.Business.Form.FormBusinessPlugin.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope!
@@ -292,6 +304,14 @@ Polhem.Business.Form.GetNewDataResult
 Polhem.Business.Form.GetNewDataResult.DataSet.get -> System.Data.DataSet?
 Polhem.Business.Form.GetNewDataResult.DataSet.set -> void
 Polhem.Business.Form.GetNewDataResult.GetNewDataResult() -> void
+Polhem.Business.Form.GetUserQueriesArgs
+Polhem.Business.Form.GetUserQueriesArgs.GetUserQueriesArgs() -> void
+Polhem.Business.Form.GetUserQueriesResult
+Polhem.Business.Form.GetUserQueriesResult.DefaultRowId.get -> System.Guid
+Polhem.Business.Form.GetUserQueriesResult.DefaultRowId.set -> void
+Polhem.Business.Form.GetUserQueriesResult.GetUserQueriesResult() -> void
+Polhem.Business.Form.GetUserQueriesResult.Table.get -> System.Data.DataTable?
+Polhem.Business.Form.GetUserQueriesResult.Table.set -> void
 Polhem.Business.Form.IFormBusinessObject
 Polhem.Business.Form.IFormBusinessObject.Delete(Polhem.Business.Form.DeleteArgs! args) -> Polhem.Business.Form.DeleteResult!
 Polhem.Business.Form.IFormBusinessObject.GetData(Polhem.Business.Form.GetDataArgs! args) -> Polhem.Business.Form.GetDataResult!
@@ -328,6 +348,28 @@ Polhem.Business.Form.SaveResult.AffectedRows.set -> void
 Polhem.Business.Form.SaveResult.DataSet.get -> System.Data.DataSet?
 Polhem.Business.Form.SaveResult.DataSet.set -> void
 Polhem.Business.Form.SaveResult.SaveResult() -> void
+Polhem.Business.Form.SaveUserQueryArgs
+Polhem.Business.Form.SaveUserQueryArgs.Criteria.get -> string!
+Polhem.Business.Form.SaveUserQueryArgs.Criteria.set -> void
+Polhem.Business.Form.SaveUserQueryArgs.IsShared.get -> bool
+Polhem.Business.Form.SaveUserQueryArgs.IsShared.set -> void
+Polhem.Business.Form.SaveUserQueryArgs.Name.get -> string!
+Polhem.Business.Form.SaveUserQueryArgs.Name.set -> void
+Polhem.Business.Form.SaveUserQueryArgs.RowId.get -> System.Guid
+Polhem.Business.Form.SaveUserQueryArgs.RowId.set -> void
+Polhem.Business.Form.SaveUserQueryArgs.SaveUserQueryArgs() -> void
+Polhem.Business.Form.SaveUserQueryResult
+Polhem.Business.Form.SaveUserQueryResult.RowId.get -> System.Guid
+Polhem.Business.Form.SaveUserQueryResult.RowId.set -> void
+Polhem.Business.Form.SaveUserQueryResult.SaveUserQueryResult() -> void
+Polhem.Business.Form.SetDefaultUserQueryArgs
+Polhem.Business.Form.SetDefaultUserQueryArgs.RowId.get -> System.Guid
+Polhem.Business.Form.SetDefaultUserQueryArgs.RowId.set -> void
+Polhem.Business.Form.SetDefaultUserQueryArgs.SetDefaultUserQueryArgs() -> void
+Polhem.Business.Form.SetDefaultUserQueryResult
+Polhem.Business.Form.SetDefaultUserQueryResult.DefaultRowId.get -> System.Guid
+Polhem.Business.Form.SetDefaultUserQueryResult.DefaultRowId.set -> void
+Polhem.Business.Form.SetDefaultUserQueryResult.SetDefaultUserQueryResult() -> void
 Polhem.Business.IBoTypeResolver
 Polhem.Business.IBoTypeResolver.Resolve(string! customizeId, string! progId) -> System.Type!
 Polhem.Business.IBoTypeResolver.Resolve(string! progId) -> System.Type!
@@ -408,8 +450,12 @@ Polhem.Business.Session.SessionCompanyBinding.Capabilities.init -> void
 Polhem.Business.Session.SessionCompanyBinding.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Business.Session.SessionCompanyBinding.Company.init -> void
 Polhem.Business.Session.SessionCompanyBinding.Deconstruct(out Polhem.Definition.Identity.CompanyInfo! Company, out System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>! Capabilities) -> void
+Polhem.Business.Session.SessionCompanyBinding.EmployeeRowId.get -> System.Guid
+Polhem.Business.Session.SessionCompanyBinding.EmployeeRowId.init -> void
 Polhem.Business.Session.SessionCompanyBinding.Equals(Polhem.Business.Session.SessionCompanyBinding? other) -> bool
 Polhem.Business.Session.SessionCompanyBinding.SessionCompanyBinding(Polhem.Definition.Identity.CompanyInfo! Company, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>! Capabilities) -> void
+Polhem.Business.Session.SessionCompanyBinding.UserRowId.get -> System.Guid
+Polhem.Business.Session.SessionCompanyBinding.UserRowId.init -> void
 Polhem.Business.System.CreateApiKeyArgs
 Polhem.Business.System.CreateApiKeyArgs.Contact.get -> string?
 Polhem.Business.System.CreateApiKeyArgs.Contact.set -> void
@@ -449,7 +495,11 @@ Polhem.Business.System.EnterCompanyResult.Capabilities.get -> System.Collections
 Polhem.Business.System.EnterCompanyResult.Capabilities.set -> void
 Polhem.Business.System.EnterCompanyResult.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Business.System.EnterCompanyResult.Company.set -> void
+Polhem.Business.System.EnterCompanyResult.EmployeeRowId.get -> System.Guid
+Polhem.Business.System.EnterCompanyResult.EmployeeRowId.set -> void
 Polhem.Business.System.EnterCompanyResult.EnterCompanyResult() -> void
+Polhem.Business.System.EnterCompanyResult.UserRowId.get -> System.Guid
+Polhem.Business.System.EnterCompanyResult.UserRowId.set -> void
 Polhem.Business.System.GetCommonConfigurationArgs
 Polhem.Business.System.GetCommonConfigurationArgs.GetCommonConfigurationArgs() -> void
 Polhem.Business.System.GetCommonConfigurationResult
@@ -631,6 +681,8 @@ Polhem.Business.System.SystemBusinessObject.SystemBusinessObject(Polhem.Definiti
 Polhem.Business.Validator.AccessTokenValidator
 Polhem.Business.Validator.AccessTokenValidator.AccessTokenValidator(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService) -> void
 Polhem.Business.Validator.AccessTokenValidator.Validate(System.Guid accessToken) -> bool
+const Polhem.Business.Form.FormBusinessObject.UserQueryCriteriaMaxLength = 65536 -> int
+const Polhem.Business.Form.FormBusinessObject.UserQueryNameMaxLength = 100 -> int
 override Polhem.Business.AuditLog.AuditRuleBusinessObject.DoAfterDelete(Polhem.Business.Form.DeleteContext! context) -> void
 override Polhem.Business.AuditLog.AuditRuleBusinessObject.DoAfterSave(Polhem.Business.Form.SaveContext! context) -> void
 override Polhem.Business.Form.FormBusinessObject.DoExecFunc(Polhem.Business.ExecFuncArgs! args, Polhem.Business.ExecFuncResult! result) -> void

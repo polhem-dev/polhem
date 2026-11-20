@@ -7,6 +7,20 @@ Polhem.UI.Avalonia.Controls.CollectionEditContext.Component.get -> object!
 Polhem.UI.Avalonia.Controls.CollectionEditContext.ItemType.get -> System.Type!
 Polhem.UI.Avalonia.Controls.CollectionEditContext.Property.get -> System.ComponentModel.PropertyDescriptor!
 Polhem.UI.Avalonia.Controls.CollectionEditDialog
+Polhem.UI.Avalonia.Controls.CriteriaPanel
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Bind(System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>! fields, Polhem.UI.Core.Criteria.QueryCriteria! criteria) -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.CloseRequested -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.UI.Avalonia.Controls.CriteriaPanel.CriteriaChanged -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.CriteriaPanel() -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
+Polhem.UI.Avalonia.Controls.CriteriaPanel.HeaderContent.get -> Avalonia.Controls.Control?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.HeaderContent.set -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Refresh() -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.ScrollToRow(Polhem.UI.Core.Criteria.CriteriaRow! row) -> void
+Polhem.UI.Avalonia.Controls.CriteriaPanel.SearchRequested -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Today.get -> System.Func<System.DateOnly>!
+Polhem.UI.Avalonia.Controls.CriteriaPanel.Today.set -> void
 Polhem.UI.Avalonia.Controls.Editors.ButtonEdit
 Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ButtonClick -> System.EventHandler?
 Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ButtonEdit() -> void
@@ -147,9 +161,9 @@ Polhem.UI.Avalonia.Controls.GridControl.Unbind() -> void
 Polhem.UI.Avalonia.Controls.GridControl.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.UI.Avalonia.Controls.GridControl.UnitSettings.set -> void
 Polhem.UI.Avalonia.Controls.ObjectTreeView
-Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.get -> Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.get -> Polhem.UI.Core.Trees.ITreeNodeCommandProvider?
 Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProvider.set -> void
-Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.get -> Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?
+Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.get -> Polhem.UI.Core.Trees.ITreeNodeDragDropHandler?
 Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandler.set -> void
 Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelector.get -> System.Func<Polhem.Definition.ObjectTree.ObjectTreeNode!, Avalonia.Media.Geometry?>?
 Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelector.set -> void
@@ -300,8 +314,8 @@ static readonly Polhem.UI.Avalonia.Controls.FormLayoutPresenter.RoundingContextP
 static readonly Polhem.UI.Avalonia.Controls.GridControl.AllowEditProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Editing.GridEditMode>!
 static readonly Polhem.UI.Avalonia.Controls.GridControl.TableNameProperty -> Avalonia.StyledProperty<string!>!
-static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProviderProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeCommandProvider?>!
-static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandlerProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler?>!
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.CommandProviderProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Trees.ITreeNodeCommandProvider?>!
+static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.DragDropHandlerProperty -> Avalonia.StyledProperty<Polhem.UI.Core.Trees.ITreeNodeDragDropHandler?>!
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.IconSelectorProperty -> Avalonia.StyledProperty<System.Func<Polhem.Definition.ObjectTree.ObjectTreeNode!, Avalonia.Media.Geometry?>?>!
 static readonly Polhem.UI.Avalonia.Controls.ObjectTreeView.RootNodeProperty -> Avalonia.StyledProperty<Polhem.Definition.ObjectTree.ObjectTreeNode?>!
 static readonly Polhem.UI.Avalonia.Controls.PermissionScope.ActionProperty -> Avalonia.AttachedProperty<Polhem.Definition.Settings.PermissionActions>!
