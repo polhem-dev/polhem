@@ -173,15 +173,8 @@ namespace Polhem.Definition.Drafting.Session
             // sends an empty string or the word null instead of leaving the argument out.
             var newName = IsNoValue(renameTo) ? null : CheckFieldName(renameTo!);
             var target = FindTable(table);
-            if (target is null && !IsMasterKey(table))
-                throw new DraftToolException(NoSuchTable(table) + " Create it with upsert_table first.");
+            CheckUpsert(target, table, name, newName, dbType, maxLength);
             var field = target?.Fields.FirstOrDefault(f => f.FieldName == name);
-            if (newName is not null && newName != name && target is not null && target.Fields.Any(f => f.FieldName == newName))
-                throw new DraftToolException($"The table already has a field '{newName}'.");
-            if (dbType == FieldDbType.Unknown)
-                throw new DraftToolException($"'{FieldDbType.Unknown}' is not a type a field can have.");
-            if (maxLength is <= 0)
-                throw new DraftToolException($"The maximum length must be a positive number, not {maxLength}.");
             var optionList = options is null ? null : CheckOptions(options);
 
             target ??= AddMasterTable();
@@ -197,17 +190,34 @@ namespace Polhem.Definition.Drafting.Session
             if (dbType is not null) field.DbType = dbType;
             if (maxLength is not null) field.MaxLength = maxLength;
             if (controlType is not null) field.ControlType = controlType;
-            if (optionList is not null)
-            {
-                field.Options.Clear();
-                foreach (var option in optionList)
-                    field.Options.Add(option);
-            }
+            if (optionList is not null) ReplaceOptions(field, optionList);
             if (valueExpression is not null) field.ValueExpression = valueExpression.Trim();
             if (required is not null) field.Required = required.Value;
             if (sourceQuote is not null) field.SourceQuote = sourceQuote.Trim();
             DraftModified = true;
             return $"{(created ? "Created" : "Updated")} the field '{DescribeTable(target)}.{field.FieldName}'.";
+        }
+
+        // Refuses the upsert before anything changes: an unknown table, a rename onto an existing field, the Unknown type
+        // or a length that is not positive.
+        private void CheckUpsert(DraftTable? target, string table, string name, string? newName, FieldDbType? dbType,
+            int? maxLength)
+        {
+            if (target is null && !IsMasterKey(table))
+                throw new DraftToolException(NoSuchTable(table) + " Create it with upsert_table first.");
+            if (newName is not null && newName != name && target is not null && target.Fields.Any(f => f.FieldName == newName))
+                throw new DraftToolException($"The table already has a field '{newName}'.");
+            if (dbType == FieldDbType.Unknown)
+                throw new DraftToolException($"'{FieldDbType.Unknown}' is not a type a field can have.");
+            if (maxLength is <= 0)
+                throw new DraftToolException($"The maximum length must be a positive number, not {maxLength}.");
+        }
+
+        private static void ReplaceOptions(DraftField field, IEnumerable<DraftOption> options)
+        {
+            field.Options.Clear();
+            foreach (var option in options)
+                field.Options.Add(option);
         }
 
         private string RemoveField(

@@ -75,10 +75,7 @@ namespace Polhem.Definition.Drafting.Rules
         {
             var problems = new List<string>();
             ruleId = (ruleId ?? string.Empty).Trim();
-            if (!s_ruleId.IsMatch(ruleId))
-                problems.Add("ruleId must be snake_case English: lowercase letters, digits and underscores, starting with a letter, at most 50 characters.");
-            else if (_schema.Rules is { } rules && rules.Contains(ruleId) && ruleId != RevisedRuleId)
-                problems.Add($"The form already has a rule '{ruleId}'; choose another id.");
+            CheckRuleId(ruleId, problems);
 
             var table = ResolveTable(targetTable ?? string.Empty, problems);
             when = (when ?? string.Empty).Trim();
@@ -92,6 +89,31 @@ namespace Polhem.Definition.Drafting.Rules
 
             if (string.IsNullOrWhiteSpace(message)) { problems.Add("message is required."); }
             else if (message.Length > MaxMessageLength) { problems.Add(TooLong("message", MaxMessageLength)); }
+            var translations = ReadTranslations(messageTranslations, problems);
+            if (string.IsNullOrWhiteSpace(explanation)) { problems.Add("explanation is required."); }
+            else if (explanation.Length > MaxExplanationLength) { problems.Add(TooLong("explanation", MaxExplanationLength)); }
+
+            if (problems.Count > 0) { throw Refuse(problems); }
+
+            var computed = ComputeSamples(table!, when, condition, samples, requireBothOutcomes: true);
+            // The table as the form names it, and empty for the master table, whatever spelling the model used.
+            var canonicalTable = ReferenceEquals(table, _schema.MasterTable) ? string.Empty : table!.TableName;
+            AcceptedRule = new RuleDraft(ruleId, canonicalTable, when, condition, message.Trim(),
+                translations, explanation.Trim(), computed);
+            return "Accepted. Reply to the user in one short sentence; do not repeat the rule.";
+        }
+
+        private void CheckRuleId(string ruleId, List<string> problems)
+        {
+            if (!s_ruleId.IsMatch(ruleId))
+                problems.Add("ruleId must be snake_case English: lowercase letters, digits and underscores, starting with a letter, at most 50 characters.");
+            else if (_schema.Rules is { } rules && rules.Contains(ruleId) && ruleId != RevisedRuleId)
+                problems.Add($"The form already has a rule '{ruleId}'; choose another id.");
+        }
+
+        // The message in each requested language, trimmed; a missing or overlong one adds a problem instead.
+        private Dictionary<string, string> ReadTranslations(List<MessageTranslation>? messageTranslations, List<string> problems)
+        {
             var translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var language in _options.MessageLanguages)
             {
@@ -104,17 +126,7 @@ namespace Polhem.Definition.Drafting.Rules
                 else
                     problems.Add($"messageTranslations needs the message in {language}.");
             }
-            if (string.IsNullOrWhiteSpace(explanation)) { problems.Add("explanation is required."); }
-            else if (explanation.Length > MaxExplanationLength) { problems.Add(TooLong("explanation", MaxExplanationLength)); }
-
-            if (problems.Count > 0) { throw Refuse(problems); }
-
-            var computed = ComputeSamples(table!, when, condition, samples, requireBothOutcomes: true);
-            // The table as the form names it, and empty for the master table, whatever spelling the model used.
-            var canonicalTable = ReferenceEquals(table, _schema.MasterTable) ? string.Empty : table!.TableName;
-            AcceptedRule = new RuleDraft(ruleId, canonicalTable, when, condition, message.Trim(),
-                translations, explanation.Trim(), computed);
-            return "Accepted. Reply to the user in one short sentence; do not repeat the rule.";
+            return translations;
         }
 
         private string SubmitExplanationCore(
@@ -188,54 +200,64 @@ namespace Polhem.Definition.Drafting.Rules
             var problems = new List<string>();
             for (int i = 0; i < samples.Count; i++)
             {
-                var sample = samples[i];
                 var label = string.Create(CultureInfo.InvariantCulture, $"Sample {i + 1}");
-                if (string.IsNullOrWhiteSpace(sample.Description)) { problems.Add($"{label} needs a description."); }
-                else if (sample.Description.Length > MaxDescriptionLength)
-                {
-                    problems.Add(TooLong($"{label}'s description", MaxDescriptionLength));
-                    continue;
-                }
-                // A field a sample leaves out is empty, so a sample may give no values at all: every field is empty. A
-                // value the model left out by mistake changes the computed outcome, which the comparison below refuses.
-                var values = ReadValues(table, sample.Values, label, problems);
-                var detailRows = ReadDetailRows(table, sample.DetailRows, label, problems);
-                if (values is null || detailRows is null) { continue; }
-                RuleSampleOutcome outcome;
-                try
-                {
-                    outcome = when.Length > 0 && !Evaluate(when, table, values, detailRows)
-                        ? RuleSampleOutcome.Skipped
-                        : Evaluate(condition, table, values, detailRows)
-                            ? RuleSampleOutcome.Passes
-                            : RuleSampleOutcome.Blocked;
-                }
-                catch (ExpressionEvaluationException ex)
-                {
-                    problems.Add($"{label} cannot be computed: {ex.Message}");
-                    continue;
-                }
-                catch (Exception ex) when (ex is ArithmeticException or ArgumentException or InvalidCastException
-                    or FormatException or IndexOutOfRangeException or NullReferenceException or InvalidOperationException
-                    or KeyNotFoundException)
-                {
-                    // A save with these values would fail with an error instead of the rule's message, so the rule
-                    // must handle them (for example by testing a divisor before dividing). The calculator's own
-                    // preconditions (a non-empty expression, a known detail table) are checked before this point, so what
-                    // arrives here is raised by the rule itself.
-                    problems.Add($"{label} makes the rule fail when it runs ({ex.GetType().Name}: {ex.Message}). A record "
-                        + "with these values could not be saved at all; change the expression so it handles them.");
-                    continue;
-                }
-                if (outcome != sample.Expected)
-                    problems.Add($"{label} ({Echo(sample.Description)}): the engine computes {outcome}, not {sample.Expected}. Fix the rule or the sample.");
-                computed.Add(new RuleDraftSample(sample.Description?.Trim() ?? string.Empty, values, detailRows, outcome));
+                if (ComputeSample(table, when, condition, samples[i], label, problems) is { } sample) { computed.Add(sample); }
             }
             if (problems.Count == 0 && requireBothOutcomes
                 && (!computed.Exists(s => s.Outcome == RuleSampleOutcome.Passes) || !computed.Exists(s => s.Outcome == RuleSampleOutcome.Blocked)))
                 problems.Add("Include at least one sample that passes and one that is blocked.");
             if (problems.Count > 0) { throw Refuse(problems); }
             return computed;
+        }
+
+        // Reads one sample and computes what the rule does with it; null, with the problem added, when the sample cannot
+        // be read or computed. A sample whose computed outcome differs from the expected one adds a problem and is kept.
+        private RuleDraftSample? ComputeSample(FormTable table, string when, string condition, SampleInput sample,
+            string label, List<string> problems)
+        {
+            if (string.IsNullOrWhiteSpace(sample.Description)) { problems.Add($"{label} needs a description."); }
+            else if (sample.Description.Length > MaxDescriptionLength)
+            {
+                problems.Add(TooLong($"{label}'s description", MaxDescriptionLength));
+                return null;
+            }
+            // A field a sample leaves out is empty, so a sample may give no values at all: every field is empty. A
+            // value the model left out by mistake changes the computed outcome, which the comparison below refuses.
+            var values = ReadValues(table, sample.Values, label, problems);
+            var detailRows = ReadDetailRows(table, sample.DetailRows, label, problems);
+            if (values is null || detailRows is null) { return null; }
+            RuleSampleOutcome outcome;
+            try
+            {
+                outcome = OutcomeOf(when, condition, table, values, detailRows);
+            }
+            catch (ExpressionEvaluationException ex)
+            {
+                problems.Add($"{label} cannot be computed: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex) when (ex is ArithmeticException or ArgumentException or InvalidCastException
+                or FormatException or IndexOutOfRangeException or NullReferenceException or InvalidOperationException
+                or KeyNotFoundException)
+            {
+                // A save with these values would fail with an error instead of the rule's message, so the rule
+                // must handle them (for example by testing a divisor before dividing). The calculator's own
+                // preconditions (a non-empty expression, a known detail table) are checked before this point, so what
+                // arrives here is raised by the rule itself.
+                problems.Add($"{label} makes the rule fail when it runs ({ex.GetType().Name}: {ex.Message}). A record "
+                    + "with these values could not be saved at all; change the expression so it handles them.");
+                return null;
+            }
+            if (outcome != sample.Expected)
+                problems.Add($"{label} ({Echo(sample.Description)}): the engine computes {outcome}, not {sample.Expected}. Fix the rule or the sample.");
+            return new RuleDraftSample(sample.Description?.Trim() ?? string.Empty, values, detailRows, outcome);
+        }
+
+        private RuleSampleOutcome OutcomeOf(string when, string condition, FormTable table,
+            Dictionary<string, object?> values, Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> detailRows)
+        {
+            if (when.Length > 0 && !Evaluate(when, table, values, detailRows)) { return RuleSampleOutcome.Skipped; }
+            return Evaluate(condition, table, values, detailRows) ? RuleSampleOutcome.Passes : RuleSampleOutcome.Blocked;
         }
 
         // A master rule reads the sample's detail rows through its aggregates; a detail table's rule reads one row.
