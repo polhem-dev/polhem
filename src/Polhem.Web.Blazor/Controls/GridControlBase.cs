@@ -67,7 +67,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>
         /// Initializes a new instance of the <see cref="GridControlBase"/> class.
         /// </summary>
-        internal GridControlBase() => EditorHost = new GridEditorHost { EditorParametersBuilder = BuildEditorParameters };
+        private protected GridControlBase() => EditorHost = new GridEditorHost { EditorParametersBuilder = BuildEditorParameters };
 
         /// <summary>
         /// Gets or sets the grid layout that defines the columns and the allowed actions.
