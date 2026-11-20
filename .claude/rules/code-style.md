@@ -79,6 +79,19 @@ collides with a type name the method body uses (C# member lookup: members of the
 over types in the namespace). On a collision **take path C instead**; a collision is often the sign that path D does
 not apply.
 
+### No optional parameters on interface members
+
+A member of a public interface takes no optional parameter, except a trailing `CancellationToken`. Adding a parameter
+later breaks every implementer, and an overload next to optional parameters is blocked by RS0026 and RS0027, so such a
+member cannot take another input without a breaking change. When a member has more than one optional input, it takes
+a parameter object whose properties carry the defaults (`TableUpgradeRequest`, `FormSelectQuery`, `ExpressionSample`);
+the parameter itself is required. A public class's static factory takes overloads instead of optional parameters
+(`PolhemApiClient.CreateLocal`).
+
+`InterfaceOptionalParameterGateTests` (tests/Polhem.Definition.UnitTests) fails on a new interface member with an
+optional parameter. Its allowlist holds the members that predate the rule and only shrinks: an entry that no longer
+matches fails the test, so fixing a member removes it from the list in the same change.
+
 ## File organization
 
 Each package is split into folders by feature (`Attributes/`, `Exception/`, `<Feature>/`). Interfaces may sit next
