@@ -94,46 +94,46 @@ namespace Polhem.Web.Blazor.Components
         private int _loadVersion;
 
         /// <summary>Gets the program's schema, or <c>null</c> until it loads.</summary>
-        protected FormSchema? Schema => _schema;
+        internal FormSchema? Schema => _schema;
 
         /// <summary>Gets the layout a record renders from, or <c>null</c> until it loads.</summary>
-        protected FormLayout? RecordLayout => _formLayout;
+        internal FormLayout? RecordLayout => _formLayout;
 
         /// <summary>Gets the layout of the list, or <c>null</c> until it loads.</summary>
-        protected LayoutGrid? ListLayout => _listLayout;
+        internal LayoutGrid? ListLayout => _listLayout;
 
         /// <summary>Gets the data object of the record, or <c>null</c> until the form loads.</summary>
-        protected FormDataObject? DataObject => _dataObject;
+        internal FormDataObject? DataObject => _dataObject;
 
         /// <summary>Gets the rounding context numbers preview with, or <c>null</c> until it loads.</summary>
-        protected RoundingContext? RoundingContext => _roundingContext;
+        internal RoundingContext? RoundingContext => _roundingContext;
 
         /// <summary>Gets the rows of the list page on screen, or <c>null</c>.</summary>
-        protected DataTable? ListRows => _listRows;
+        internal DataTable? ListRows => _listRows;
 
         /// <summary>Gets the message of a page that could not load, which replaces the form, or <c>null</c>.</summary>
-        protected string? Error => _error;
+        internal string? Error => _error;
 
         /// <summary>Gets a message for the user that leaves the form on screen, or <c>null</c>.</summary>
-        protected string? Notice => _notice;
+        internal string? Notice => _notice;
 
         /// <summary>Gets a value indicating whether the form is still loading.</summary>
-        protected bool IsInitializing => _isInitializing;
+        internal bool IsInitializing => _isInitializing;
 
         /// <summary>Gets a value indicating whether a call to the backend is running.</summary>
-        protected bool IsBusy => _isBusy;
+        internal bool IsBusy => _isBusy;
 
         /// <summary>Gets a value indicating whether the record is on screen instead of the list.</summary>
-        protected bool IsShowingRecord => _isShowingRecord;
+        internal bool IsShowingRecord => _isShowingRecord;
 
         /// <summary>Gets the list row the toolbar acts on, or <c>null</c>.</summary>
-        protected Guid? SelectedRowId => _selectedRowId;
+        internal Guid? SelectedRowId => _selectedRowId;
 
         /// <summary>Gets the related record open in a dialog over the viewed one, or <c>null</c>.</summary>
-        protected RelationTarget? Relation => _relation;
+        internal RelationTarget? Relation => _relation;
 
         /// <summary>Gets the row the delete question is open for, or <c>null</c>.</summary>
-        protected Guid? PendingDeleteRowId => _pendingDeleteRowId;
+        internal Guid? PendingDeleteRowId => _pendingDeleteRowId;
 
         /// <summary>Gets the paging position and the sort of the list.</summary>
         internal ListPagingState Paging => _paging;
@@ -162,7 +162,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>
         /// Gets or sets the assembler that turns raw definitions into a localized schema and a
@@ -211,10 +211,10 @@ namespace Polhem.Web.Blazor.Components
 
         // The list's commands wait while a call runs or the delete question is open.
         /// <summary>Gets a value indicating whether the list's commands wait, because a call runs or the delete question is open.</summary>
-        protected bool IsListLocked => _isBusy || _pendingDeleteRowId is not null;
+        internal bool IsListLocked => _isBusy || _pendingDeleteRowId is not null;
 
         /// <summary>Gets a value indicating whether the form renders in its compact layout.</summary>
-        protected bool EffectiveIsCompact => IsCompact ?? _isViewportCompact;
+        internal bool EffectiveIsCompact => IsCompact ?? _isViewportCompact;
 
         /// <inheritdoc/>
         /// <remarks>
@@ -254,7 +254,7 @@ namespace Polhem.Web.Blazor.Components
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected virtual Task FocusDeleteCancelAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        internal virtual Task FocusDeleteCancelAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         /// <inheritdoc />
         public void Dispose()
@@ -400,15 +400,15 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Determines whether the user may run a toolbar command. The backend still checks the call itself.</summary>
         /// <param name="action">The command's action.</param>
         /// <returns>Whether to offer the command.</returns>
-        protected bool Can(PermissionActions action)
+        internal bool Can(PermissionActions action)
             => _schema is null || ElementCapabilityResolver.Default.Can(_schema, action, UserContext?.Capabilities);
 
         /// <summary>Gets the mode the form renders in.</summary>
-        protected SingleFormMode FormMode
+        internal SingleFormMode FormMode
             => _isShowingRecord && _dataObject?.MasterRow is not null ? _recordMode : SingleFormMode.View;
 
         /// <summary>Gets a value indicating whether the record is open for editing.</summary>
-        protected bool IsEditing => FormMode != SingleFormMode.View;
+        internal bool IsEditing => FormMode != SingleFormMode.View;
 
         // Recomputes the edited row's computed fields. The write-backs re-raise the change event; the
         // engine's guard makes this handler a no-op for those echoes, so one edit yields one pass. A row
@@ -448,7 +448,7 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>Gets the message that live computation stopped, or <c>null</c>. It stays for the rest of the page's life, because computation stays off until then.</summary>
-        protected string? LiveComputationNotice
+        internal string? LiveComputationNotice
             => _liveComputation?.Degradation?.FormatMessage(PolhemBlazorText.GetLocalizer(Services));
 
         // Fills a newly added detail row's default-value expressions and computes its computed fields.

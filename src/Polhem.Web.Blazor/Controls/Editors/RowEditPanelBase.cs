@@ -34,7 +34,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         private DataRow? _row;
 
         /// <summary>Gets the row of the session, or <c>null</c> without one.</summary>
-        protected DataRow? SessionRow => _row;
+        internal DataRow? SessionRow => _row;
 
         /// <summary>
         /// Gets or sets the data object that owns the row.
@@ -97,14 +97,14 @@ namespace Polhem.Web.Blazor.Controls.Editors
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets the style that lays the fields out in one or two columns.</summary>
-        protected string FieldsStyle => Compact
+        internal string FieldsStyle => Compact
             ? "display:grid;grid-template-columns:minmax(0,1fr);gap:8px"
             : "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px";
 
         /// <summary>Gets the localized text of <paramref name="key"/>.</summary>
         /// <param name="key">A <see cref="PolhemUIText"/> key.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <inheritdoc />
         protected override void OnParametersSet()
@@ -139,7 +139,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>Commits the session and reports it.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task CommitAsync(CancellationToken cancellationToken = default)
+        internal async Task CommitAsync(CancellationToken cancellationToken = default)
         {
             if (!EndSession(commit: true)) return;
             await EditCommitted.InvokeAsync().ConfigureAwait(true);
@@ -148,7 +148,7 @@ namespace Polhem.Web.Blazor.Controls.Editors
         /// <summary>Rolls the session back and reports it.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task CancelAsync(CancellationToken cancellationToken = default)
+        internal async Task CancelAsync(CancellationToken cancellationToken = default)
         {
             if (!EndSession(commit: false)) return;
             await EditCancelled.InvokeAsync().ConfigureAwait(true);
@@ -169,19 +169,19 @@ namespace Polhem.Web.Blazor.Controls.Editors
 
         /// <summary>Gets the columns to edit.</summary>
         /// <returns>The visible columns.</returns>
-        protected IEnumerable<LayoutColumn> EnumerateVisibleColumns()
+        internal IEnumerable<LayoutColumn> EnumerateVisibleColumns()
             => Layout?.Columns?.Where(c => c.Visible) ?? Enumerable.Empty<LayoutColumn>();
 
         /// <summary>Gets the id of a column's input, for its label.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The id.</returns>
-        protected static string InputId(LayoutColumn column)
+        internal static string InputId(LayoutColumn column)
             => string.Create(CultureInfo.InvariantCulture, $"polhem-row-edit-{column.FieldName}");
 
         /// <summary>Builds the parameters of a column's editor.</summary>
         /// <param name="column">The column.</param>
         /// <returns>The parameters by name.</returns>
-        protected Dictionary<string, object?> BuildEditorParameters(LayoutColumn column)
+        internal Dictionary<string, object?> BuildEditorParameters(LayoutColumn column)
         {
             var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
             {

@@ -94,23 +94,23 @@ namespace Polhem.Web.Blazor.Controls
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets the periods a date range offers.</summary>
-        protected static IReadOnlyList<RelativeDate> Periods => s_periods;
+        internal static IReadOnlyList<RelativeDate> Periods => s_periods;
 
         /// <summary>Gets the message above the rows, such as the required rows left empty, or <c>null</c>.</summary>
-        protected string? Message => _message ?? Notice;
+        internal string? Message => _message ?? Notice;
 
         /// <summary>Gets the relation row a lookup is open for, or <c>null</c>.</summary>
-        protected CriteriaRow? PickingRow { get; private set; }
+        internal CriteriaRow? PickingRow { get; private set; }
 
         /// <summary>Returns a framework text in the user's language.</summary>
         /// <param name="key">The text's key in <see cref="PolhemUIText"/>.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>Returns the caption of a row, marked when the row is required.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The caption.</returns>
-        protected static string RowCaption(CriteriaRow row)
+        internal static string RowCaption(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Kind == CriteriaRowKind.Required ? row.Field.Caption + " *" : row.Field.Caption;
@@ -119,7 +119,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns whether a row offers a choice of operator; a field with one operator shows none.</summary>
         /// <param name="row">The row.</param>
         /// <returns>Whether to show the operator.</returns>
-        protected static bool ShowsOperator(CriteriaRow row)
+        internal static bool ShowsOperator(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Field.Operators.Count > 1;
@@ -128,7 +128,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns whether a row can be removed; a required one cannot.</summary>
         /// <param name="row">The row.</param>
         /// <returns>Whether to offer removing it.</returns>
-        protected static bool IsRemovable(CriteriaRow row)
+        internal static bool IsRemovable(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Kind != CriteriaRowKind.Required;
@@ -137,7 +137,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns whether a row is a range of days, which offers the relative periods.</summary>
         /// <param name="row">The row.</param>
         /// <returns>Whether the row is a date range.</returns>
-        protected static bool IsDateRange(CriteriaRow row)
+        internal static bool IsDateRange(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Operator == CriteriaOperator.Range && row.Field.Kind is CriteriaFieldKind.Date or CriteriaFieldKind.DateTime;
@@ -146,7 +146,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the type of the native input a row's value is typed into: <c>number</c>, <c>date</c> or <c>text</c>.</summary>
         /// <param name="row">The row.</param>
         /// <returns>The input type.</returns>
-        protected static string InputTypeOf(CriteriaRow row)
+        internal static string InputTypeOf(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             return row.Field.Kind switch
@@ -160,7 +160,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the localized name of an operator.</summary>
         /// <param name="operator">The operator.</param>
         /// <returns>The name.</returns>
-        protected string OperatorText(CriteriaOperator @operator) => Text(@operator switch
+        internal string OperatorText(CriteriaOperator @operator) => Text(@operator switch
         {
             CriteriaOperator.Contains => PolhemUIText.CriteriaContains,
             CriteriaOperator.StartsWith => PolhemUIText.CriteriaStartsWith,
@@ -172,14 +172,14 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Returns the name of a period, or the caption of the period menu for <c>null</c>.</summary>
         /// <param name="period">The period, or <c>null</c>.</param>
         /// <returns>The text.</returns>
-        protected string PeriodText(RelativeDate? period)
+        internal string PeriodText(RelativeDate? period)
             => period is { } value ? CriteriaRowSummary.PeriodText(value, Text) : Text(PolhemUIText.DatePeriod);
 
         /// <summary>Adds an optional row for a field.</summary>
         /// <param name="field">The field.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task AddRowAsync(CriteriaField field, CancellationToken cancellationToken = default)
+        internal Task AddRowAsync(CriteriaField field, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(field);
             Criteria.Add(field);
@@ -191,7 +191,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="row">The row.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task RemoveRowAsync(CriteriaRow row, CancellationToken cancellationToken = default)
+        internal Task RemoveRowAsync(CriteriaRow row, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             return Criteria.Remove(row) ? OnChangedAsync(cancellationToken) : Task.CompletedTask;
@@ -202,7 +202,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="operator">The new operator.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task ChangeOperatorAsync(CriteriaRow row, CriteriaOperator @operator, CancellationToken cancellationToken = default)
+        internal Task ChangeOperatorAsync(CriteriaRow row, CriteriaOperator @operator, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             if (row.IsOperatorLocked || row.Operator == @operator) return Task.CompletedTask;
@@ -212,7 +212,7 @@ namespace Polhem.Web.Blazor.Controls
 
         /// <summary>Opens the lookup of a relation row's program; the UI package renders it while <see cref="PickingRow"/> is set.</summary>
         /// <param name="row">The row.</param>
-        protected void BeginPick(CriteriaRow row)
+        internal void BeginPick(CriteriaRow row)
         {
             ArgumentNullException.ThrowIfNull(row);
             PickingRow = row;
@@ -222,7 +222,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="picked">The picked row.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task CommitPickAsync(DataRow picked, CancellationToken cancellationToken = default)
+        internal Task CommitPickAsync(DataRow picked, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(picked);
             var row = PickingRow;
@@ -232,11 +232,11 @@ namespace Polhem.Web.Blazor.Controls
         }
 
         /// <summary>Closes the lookup without picking.</summary>
-        protected void CancelPick() => PickingRow = null;
+        internal void CancelPick() => PickingRow = null;
 
         /// <summary>Closes a lookup that could not open and names why above the rows.</summary>
         /// <param name="exception">What went wrong.</param>
-        protected void OnPickFailed(Exception exception)
+        internal void OnPickFailed(Exception exception)
         {
             ArgumentNullException.ThrowIfNull(exception);
             PickingRow = null;
@@ -246,7 +246,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Asks the host to run the query when every required row has a value; otherwise names the empty ones.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected async Task RequestSearchAsync(CancellationToken cancellationToken = default)
+        internal async Task RequestSearchAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var missing = Criteria.MissingRequired.Select(r => r.Field.Caption).ToArray();
@@ -262,7 +262,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Removes every row that is not required, empties the required ones and searches.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected async Task ClearAndSearchAsync(CancellationToken cancellationToken = default)
+        internal async Task ClearAndSearchAsync(CancellationToken cancellationToken = default)
         {
             Criteria.Clear();
             _typed.Clear();
@@ -273,7 +273,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <summary>Asks the host to close the pane.</summary>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task CloseAsync(CancellationToken cancellationToken = default)
+        internal Task CloseAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return CloseRequested.InvokeAsync();
@@ -283,7 +283,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="e">The key event.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it starts.</param>
         /// <returns>The operation.</returns>
-        protected Task OnKeyDownAsync(KeyboardEventArgs e, CancellationToken cancellationToken = default)
+        internal Task OnKeyDownAsync(KeyboardEventArgs e, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(e);
             return e.Key == "Escape" && PickingRow is null ? CloseAsync(cancellationToken) : Task.CompletedTask;

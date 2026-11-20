@@ -70,31 +70,31 @@ namespace Polhem.Web.Blazor.Controls
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets the <c>sys_rowid</c> of the applied query, or <see cref="Guid.Empty"/> for none.</summary>
-        protected Guid CurrentRowId => Current?.RowId ?? Guid.Empty;
+        internal Guid CurrentRowId => Current?.RowId ?? Guid.Empty;
 
         /// <summary>Gets a value indicating whether the applied query can be changed: the user created it.</summary>
-        protected bool CanChange => Current is { IsOwn: true };
+        internal bool CanChange => Current is { IsOwn: true };
 
         /// <summary>Gets a value indicating whether the applied query can be made the default or stop being it.</summary>
-        protected bool CanToggleDefault => Current is not null;
+        internal bool CanToggleDefault => Current is not null;
 
         /// <summary>Gets the localized caption of the share action for the applied query.</summary>
-        protected string ShareText => Text(Current is { IsShared: true } ? PolhemUIText.UserQueryUnshare : PolhemUIText.UserQueryShare);
+        internal string ShareText => Text(Current is { IsShared: true } ? PolhemUIText.UserQueryUnshare : PolhemUIText.UserQueryShare);
 
         /// <summary>Gets the localized caption of the default action for the applied query.</summary>
-        protected string DefaultText => Text(Current is not null && Current.RowId == DefaultRowId
+        internal string DefaultText => Text(Current is not null && Current.RowId == DefaultRowId
             ? PolhemUIText.UserQueryClearDefault
             : PolhemUIText.UserQuerySetDefault);
 
         /// <summary>Returns a framework text in the user's language.</summary>
         /// <param name="key">The text's key in <see cref="PolhemUIText"/>.</param>
         /// <returns>The text.</returns>
-        protected string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+        internal string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>Returns the text a query is listed under, marked when it is shared or the default.</summary>
         /// <param name="rowId">The query's <c>sys_rowid</c>; <see cref="Guid.Empty"/> names no query.</param>
         /// <returns>The text.</returns>
-        protected string EntryText(Guid rowId)
+        internal string EntryText(Guid rowId)
         {
             var entry = Entries.FirstOrDefault(e => e.RowId == rowId);
             if (entry is null) return rowId == Guid.Empty ? Text(PolhemUIText.UserQueryNone) : string.Empty;
@@ -111,7 +111,7 @@ namespace Polhem.Web.Blazor.Controls
         /// <param name="rowId">The picked query's <c>sys_rowid</c>.</param>
         /// <param name="cancellationToken">A token that cancels the operation before it is sent.</param>
         /// <returns>The operation.</returns>
-        protected Task PickAsync(Guid rowId, CancellationToken cancellationToken = default)
+        internal Task PickAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var entry = Entries.FirstOrDefault(e => e.RowId == rowId);

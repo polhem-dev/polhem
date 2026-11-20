@@ -29,16 +29,16 @@ namespace Polhem.Web.Blazor.Components
             row => Convert.ToString(row[SysFields.RowId], CultureInfo.InvariantCulture) ?? string.Empty, MaxCardRows);
 
         /// <summary>Gets the rows the cards hold.</summary>
-        protected IReadOnlyList<DataRow> CardRows => _cardRows;
+        internal IReadOnlyList<DataRow> CardRows => _cardRows;
 
         /// <summary>Gets the columns a card shows.</summary>
-        protected IEnumerable<LayoutColumn> CardColumns => _listLayout?.Columns?.Where(c => c.Visible) ?? [];
+        internal IEnumerable<LayoutColumn> CardColumns => _listLayout?.Columns?.Where(c => c.Visible) ?? [];
 
         /// <summary>Gets a value indicating whether the next page of the cards can be read.</summary>
-        protected bool CanLoadMoreCards => CardState.CanLoadMore(_paging);
+        internal bool CanLoadMoreCards => CardState.CanLoadMore(_paging);
 
         /// <summary>Gets the note that the cards stopped at their limit, or <c>null</c>.</summary>
-        protected string? CardLimitNotice => CardState.IsAtLimit
+        internal string? CardLimitNotice => CardState.IsAtLimit
             ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.ListRowsLimited), MaxCardRows)
             : null;
 
@@ -61,7 +61,7 @@ namespace Polhem.Web.Blazor.Components
         /// </remarks>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected virtual async Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default)
+        internal virtual async Task ScrollCardsToTopAsync(CancellationToken cancellationToken = default)
         {
             if (JS is null) return;
             await JS.InvokeVoidAsync("scrollTo", cancellationToken, 0, 0).ConfigureAwait(true);
@@ -75,7 +75,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="e">The click.</param>
         /// <param name="cancellationToken">A token that cancels opening the record.</param>
         /// <returns>The operation.</returns>
-        protected Task OnCardClick(DataRow row, MouseEventArgs e, CancellationToken cancellationToken = default)
+        internal Task OnCardClick(DataRow row, MouseEventArgs e, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(e);
             if (e.Detail >= 2) return ActivateCardAsync(row, cancellationToken);
@@ -86,7 +86,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Reads the next page of the cards, unless a call runs or there is nothing more to read.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task LoadMoreCardsAsync(CancellationToken cancellationToken = default)
+        internal async Task LoadMoreCardsAsync(CancellationToken cancellationToken = default)
         {
             if (!EffectiveIsCompact || IsListLocked || _isShowingRecord || !CanLoadMoreCards) return;
             await RunGuardedAsync(() => LoadListPageAsync(_paging.Page + 1, cancellationToken)).ConfigureAwait(true);
@@ -99,7 +99,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="compact">Whether the viewport is narrower than the threshold.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnCompactChangedAsync(bool compact, CancellationToken cancellationToken = default)
+        internal async Task OnCompactChangedAsync(bool compact, CancellationToken cancellationToken = default)
         {
             if (compact == _isViewportCompact) return;
             _isViewportCompact = compact;
@@ -123,7 +123,7 @@ namespace Polhem.Web.Blazor.Components
 
         /// <summary>Selects a card.</summary>
         /// <param name="row">The card's row.</param>
-        protected void SelectCard(DataRow row)
+        internal void SelectCard(DataRow row)
         {
             if (FormDataGuard.TryGetRowId(row, out var rowId)) _selectedRowId = rowId;
         }
@@ -132,20 +132,20 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="row">The card's row.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task ActivateCardAsync(DataRow row, CancellationToken cancellationToken = default)
+        internal Task ActivateCardAsync(DataRow row, CancellationToken cancellationToken = default)
             => FormDataGuard.TryGetRowId(row, out var rowId) ? OnRowActivatedAsync(rowId, cancellationToken) : Task.CompletedTask;
 
         /// <summary>Determines whether a card is the selected one.</summary>
         /// <param name="row">The card's row.</param>
         /// <returns>Whether it is selected.</returns>
-        protected bool IsCardSelected(DataRow row)
+        internal bool IsCardSelected(DataRow row)
             => FormDataGuard.TryGetRowId(row, out var rowId) && rowId == _selectedRowId;
 
         /// <summary>Formats a card's value the way the grid formats its cell.</summary>
         /// <param name="row">The card's row.</param>
         /// <param name="column">The column.</param>
         /// <returns>The text.</returns>
-        protected string FormatCardValue(DataRow row, LayoutColumn column)
+        internal string FormatCardValue(DataRow row, LayoutColumn column)
             => GridCellFormatter.FormatColumnText(row, column, _schema?.MasterTable?.Fields is { } fields && fields.Contains(column.FieldName) ? fields[column.FieldName] : null,
                 _roundingContext?.CurrencySettings, _roundingContext?.Company?.DefaultCurrency ?? string.Empty, _roundingContext?.UnitSettings,
                 flag => Text(flag ? PolhemUIText.True : PolhemUIText.False));
@@ -154,6 +154,6 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="row">The card's row.</param>
         /// <param name="column">The column.</param>
         /// <returns>Whether it is checked.</returns>
-        protected static bool IsCardChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
+        internal static bool IsCardChecked(DataRow row, LayoutColumn column) => GridCellFormatter.IsChecked(row, column.FieldName);
     }
 }

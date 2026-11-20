@@ -10,6 +10,10 @@ An application does not use this package alone. It references one host package, 
 
 ## Contents
 
+The component bases (the types ending in `Base`) are public because the components of `.Mud` and `.Fluent` derive
+from them. Apart from their parameters, their members serve those packages only (ADR-059 decision 4): an application
+uses the components, not the bases. New field editors are the exception and derive from `FieldEditorBase`.
+
 - `FormLiveComputation` (`Polhem.Web.Blazor.DataObjects`). The components bind the `FormDataObject` of
   [`Polhem.UI.Core`](../Polhem.UI.Core/README.md), which every head shares.
 - `FieldEditorBase` and `FormScope` (`Polhem.Web.Blazor.Controls.Editors`), the base of every field editor, which implements

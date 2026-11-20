@@ -28,43 +28,43 @@ namespace Polhem.Web.Blazor.Components
         private ColumnFilterCriteria? _columnFilters;
 
         /// <summary>Gets the conditions the pane edits; a list starts with none.</summary>
-        protected QueryCriteria Criteria => _criteria;
+        internal QueryCriteria Criteria => _criteria;
 
         /// <summary>Gets the fields a condition can be added for, which the user may read.</summary>
-        protected IReadOnlyList<CriteriaField> CriteriaFields => _criteriaFields;
+        internal IReadOnlyList<CriteriaField> CriteriaFields => _criteriaFields;
 
         /// <summary>Gets the conditions in effect, as the chips above the list show them.</summary>
-        protected IReadOnlyList<CriteriaChip> CriteriaChips => _criteriaChips;
+        internal IReadOnlyList<CriteriaChip> CriteriaChips => _criteriaChips;
 
         /// <summary>
         /// Gets a value indicating whether the UI package renders the query pane, the chips and the saved queries.
         /// Defaults to <see langword="false"/>: a page that cannot show the conditions does not read the list with a
         /// saved default query the user would not see.
         /// </summary>
-        protected virtual bool SupportsQueryPane => false;
+        internal virtual bool SupportsQueryPane => false;
 
         /// <summary>Gets a value indicating whether any condition is in effect, a column filter included.</summary>
-        protected bool HasConditions => _criteriaChips.Count > 0;
+        internal bool HasConditions => _criteriaChips.Count > 0;
 
         /// <summary>Gets a value indicating whether the toolbar offers the Query button: on the list, when a field can take a condition.</summary>
-        protected bool ShowsQueryButton => SupportsQueryPane && !_isShowingRecord && _criteriaFields.Count > 0;
+        internal bool ShowsQueryButton => SupportsQueryPane && !_isShowingRecord && _criteriaFields.Count > 0;
 
         /// <summary>Gets a value indicating whether the query pane is open.</summary>
-        protected bool IsQueryPaneOpen => _isQueryPaneOpen && ShowsQueryButton;
+        internal bool IsQueryPaneOpen => _isQueryPaneOpen && ShowsQueryButton;
 
         /// <summary>Gets the localized caption of the Query button, with the number of conditions in effect.</summary>
-        protected string QueryButtonText => _criteriaChips.Count > 0
+        internal string QueryButtonText => _criteriaChips.Count > 0
             ? string.Format(CultureInfo.CurrentCulture, Text(PolhemUIText.QueryWithCount), _criteriaChips.Count)
             : Text(PolhemUIText.Query);
 
         /// <summary>Opens the query pane, or closes it when it is open.</summary>
-        protected void ToggleQueryPane() => _isQueryPaneOpen = !_isQueryPaneOpen;
+        internal void ToggleQueryPane() => _isQueryPaneOpen = !_isQueryPaneOpen;
 
         /// <summary>Opens the query pane.</summary>
-        protected void OpenQueryPane() => _isQueryPaneOpen = true;
+        internal void OpenQueryPane() => _isQueryPaneOpen = true;
 
         /// <summary>Closes the query pane; the conditions stay as they were edited.</summary>
-        protected void CloseQueryPane() => _isQueryPaneOpen = false;
+        internal void CloseQueryPane() => _isQueryPaneOpen = false;
 
         /// <summary>
         /// Makes the conditions the list's filter and reads the first page. Every required row must have a value; the
@@ -72,7 +72,7 @@ namespace Polhem.Web.Blazor.Components
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task RunQueryAsync(CancellationToken cancellationToken = default)
+        internal async Task RunQueryAsync(CancellationToken cancellationToken = default)
         {
             if (IsListLocked || !_criteria.IsComplete) return;
             _criteriaNotice = null;
@@ -86,7 +86,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="row">The row the chip shows.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task RemoveConditionAsync(CriteriaRow row, CancellationToken cancellationToken = default)
+        internal async Task RemoveConditionAsync(CriteriaRow row, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(row);
             if (IsListLocked || !_criteria.Remove(row)) return;
@@ -99,7 +99,7 @@ namespace Polhem.Web.Blazor.Components
         /// </summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ClearConditionsAsync(CancellationToken cancellationToken = default)
+        internal async Task ClearConditionsAsync(CancellationToken cancellationToken = default)
         {
             if (IsListLocked) return;
             _criteria.Clear();
@@ -116,7 +116,7 @@ namespace Polhem.Web.Blazor.Components
         /// dates are read in that zone; the server's date when no zone is known.
         /// </summary>
         /// <returns>Today.</returns>
-        protected DateOnly ResolveToday()
+        internal DateOnly ResolveToday()
             => UserContext?.User?.TimeZone is { Length: > 0 } zone
                 ? FrameworkClock.Today(zone)
                 : DateOnly.FromDateTime(DateTime.Now);

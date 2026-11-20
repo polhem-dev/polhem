@@ -22,7 +22,7 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Gets the shell's options.</summary>
         [Inject]
-        protected PolhemShellOptions Options { get; private set; } = default!;
+        internal PolhemShellOptions Options { get; private set; } = default!;
 
         [Inject]
         private PolhemApiClient Client { get; set; } = default!;
@@ -34,13 +34,13 @@ namespace Polhem.Web.Blazor.Shell
         private IServiceProvider? Services { get; set; }
 
         /// <summary>Gets the menu's rows, or <see langword="null"/> until they load or when they could not.</summary>
-        protected IReadOnlyList<ShellMenuRow>? Rows { get; private set; }
+        internal IReadOnlyList<ShellMenuRow>? Rows { get; private set; }
 
         /// <summary>Gets the message of a failed load.</summary>
-        protected string? Error { get; private set; }
+        internal string? Error { get; private set; }
 
         /// <summary>Gets the text shown while the menu loads.</summary>
-        protected string LoadingText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Loading);
+        internal string LoadingText => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), PolhemUIText.Loading);
 
         /// <inheritdoc/>
         protected override async Task OnInitializedAsync()

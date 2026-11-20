@@ -125,15 +125,15 @@
 
     // What `fluent-listbox` and the calendar use while they are open.
     /// <inheritdoc />
-    protected override string OpenPopupSelector => ":popover-open";
+    internal override string OpenPopupSelector => ":popover-open";
 
     // WARNING: a Fluent input writes its value back just after it takes the focus. 16 ms was the least that held when measured.
     /// <inheritdoc />
-    protected override int ReplayDelayMilliseconds => 50;
+    internal override int ReplayDelayMilliseconds => 50;
 
     // A new IQueryable makes the grid read its items again, so it is replaced only when the rows changed.
     /// <inheritdoc />
-    protected override void RefreshRowList()
+    internal override void RefreshRowList()
     {
         var rows = VisibleRows.ToList();
         if (rows.SequenceEqual(_lastRows)) return;

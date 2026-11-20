@@ -9,7 +9,7 @@ namespace Polhem.Web.Blazor.Components
     {
         /// <summary>Selects a list row.</summary>
         /// <param name="rowId">The row's id.</param>
-        protected void OnRowSelected(Guid rowId) => _selectedRowId = rowId;
+        internal void OnRowSelected(Guid rowId) => _selectedRowId = rowId;
 
         // Opening a row from the list is a read-only View; editing is the explicit Edit command, so clicking
         // through the list never changes a record by accident.
@@ -17,7 +17,7 @@ namespace Polhem.Web.Blazor.Components
         /// <param name="rowId">The row's id.</param>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task OnRowActivatedAsync(Guid rowId, CancellationToken cancellationToken = default)
+        internal Task OnRowActivatedAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             _selectedRowId = rowId;
             return OpenRecordAsync(rowId, SingleFormMode.View, cancellationToken);
@@ -26,13 +26,13 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Opens the selected row read-only.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task OnViewAsync(CancellationToken cancellationToken = default)
+        internal Task OnViewAsync(CancellationToken cancellationToken = default)
             => _selectedRowId is { } rowId ? OpenRecordAsync(rowId, SingleFormMode.View, cancellationToken) : Task.CompletedTask;
 
         /// <summary>Opens the selected row for editing.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected Task OnEditAsync(CancellationToken cancellationToken = default)
+        internal Task OnEditAsync(CancellationToken cancellationToken = default)
             => _selectedRowId is { } rowId ? OpenRecordAsync(rowId, SingleFormMode.Edit, cancellationToken) : Task.CompletedTask;
 
         private async Task OpenRecordAsync(Guid rowId, SingleFormMode mode, CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Opens a new record.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnNewAsync(CancellationToken cancellationToken = default)
+        internal async Task OnNewAsync(CancellationToken cancellationToken = default)
         {
             if (_dataObject is null) return;
             await RunGuardedAsync(async () =>
@@ -66,7 +66,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Checks the required fields and saves the record, returning to the list when the save succeeds.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnSaveAsync(CancellationToken cancellationToken = default)
+        internal async Task OnSaveAsync(CancellationToken cancellationToken = default)
         {
             if (_dataObject is null || _isBusy) return;
 
@@ -94,7 +94,7 @@ namespace Polhem.Web.Blazor.Components
         // Cancel (Add / Edit) and Back (View) leave the record without saving; the next View, Edit or New reloads
         // the data object, so the edits are dropped with it.
         /// <summary>Leaves the record without saving. The next View, Edit or New reloads the data object, so the edits are dropped with it.</summary>
-        protected void OnClose()
+        internal void OnClose()
         {
             if (_isBusy) return;
             _notice = null;
@@ -104,7 +104,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Deletes the selected row, after asking when <see cref="ConfirmDelete"/> is on.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task OnDeleteAsync(CancellationToken cancellationToken = default)
+        internal async Task OnDeleteAsync(CancellationToken cancellationToken = default)
         {
             if (_selectedRowId is not { } rowId || IsListLocked) return;
             if (ConfirmDelete)
@@ -120,7 +120,7 @@ namespace Polhem.Web.Blazor.Components
         /// <summary>Answers the delete question with yes.</summary>
         /// <param name="cancellationToken">A token that cancels the operation.</param>
         /// <returns>The operation.</returns>
-        protected async Task ConfirmDeleteAsync(CancellationToken cancellationToken = default)
+        internal async Task ConfirmDeleteAsync(CancellationToken cancellationToken = default)
         {
             if (_pendingDeleteRowId is not { } rowId) return;
             _pendingDeleteRowId = null;
@@ -128,7 +128,7 @@ namespace Polhem.Web.Blazor.Components
         }
 
         /// <summary>Answers the delete question with no.</summary>
-        protected void CancelDelete() => _pendingDeleteRowId = null;
+        internal void CancelDelete() => _pendingDeleteRowId = null;
 
         private async Task DeleteAsync(Guid rowId, CancellationToken cancellationToken)
         {
@@ -155,18 +155,18 @@ namespace Polhem.Web.Blazor.Components
 
         /// <summary>Opens a related record over the viewed one.</summary>
         /// <param name="target">The record to open.</param>
-        protected void OpenRelation(RelationTarget target)
+        internal void OpenRelation(RelationTarget target)
         {
             _notice = null;
             _relation = target;
         }
 
         /// <summary>Closes the related record.</summary>
-        protected void CloseRelation() => _relation = null;
+        internal void CloseRelation() => _relation = null;
 
         /// <summary>Closes the related record and tells the user why it cannot open.</summary>
         /// <param name="message">The reason.</param>
-        protected void OnRelationRefused(string message)
+        internal void OnRelationRefused(string message)
         {
             _relation = null;
             _notice = message;

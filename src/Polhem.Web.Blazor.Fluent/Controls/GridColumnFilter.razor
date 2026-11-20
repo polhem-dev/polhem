@@ -74,7 +74,7 @@
     private string? RangePlaceholder => IsDateRange ? "yyyy-MM-dd" : null;
 
     /// <inheritdoc />
-    protected override void Toggle()
+    internal override void Toggle()
     {
         base.Toggle();
         _focusFirst = IsOpen;

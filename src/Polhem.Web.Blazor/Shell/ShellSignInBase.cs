@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>Gets the shell's options.</summary>
         [Inject]
-        protected PolhemShellOptions Options { get; private set; } = default!;
+        internal PolhemShellOptions Options { get; private set; } = default!;
 
         [Inject]
         private BlazorUserContext UserContext { get; set; } = default!;
@@ -33,16 +33,16 @@ namespace Polhem.Web.Blazor.Shell
         private IServiceProvider Services { get; set; } = default!;
 
         /// <summary>Gets the id of the company input.</summary>
-        protected string CompanyInputId { get; } = $"polhem-shell-company-{Guid.NewGuid():N}";
+        internal string CompanyInputId { get; } = $"polhem-shell-company-{Guid.NewGuid():N}";
 
         /// <summary>Gets or sets the company id in the input.</summary>
-        protected string CompanyId { get; set; } = string.Empty;
+        internal string CompanyId { get; set; } = string.Empty;
 
         /// <summary>Gets the message of a failed sign-in.</summary>
-        protected string? Error { get; private set; }
+        internal string? Error { get; private set; }
 
         /// <summary>Gets whether the screen offers a language switch.</summary>
-        protected bool OffersLanguages => Options.Languages.Count > 1 && Switcher is not null;
+        internal bool OffersLanguages => Options.Languages.Count > 1 && Switcher is not null;
 
         private IShellLanguageSwitcher? Switcher => Services.GetService<IShellLanguageSwitcher>();
 
@@ -53,7 +53,7 @@ namespace Polhem.Web.Blazor.Shell
         /// <param name="response">The panel's sign-in result.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>A task that completes when the company is entered or the failure is recorded.</returns>
-        protected async Task OnLoggedInAsync(LoginResponse response, CancellationToken cancellationToken = default)
+        internal async Task OnLoggedInAsync(LoginResponse response, CancellationToken cancellationToken = default)
         {
             Error = null;
             string companyId = CompanyId.Trim();
@@ -86,11 +86,11 @@ namespace Polhem.Web.Blazor.Shell
         /// <summary>Returns whether <paramref name="language"/> is the current UI culture.</summary>
         /// <param name="language">An offered language.</param>
         /// <returns><see langword="true"/> when it is current.</returns>
-        protected static bool IsCurrent(PolhemShellLanguage language)
+        internal static bool IsCurrent(PolhemShellLanguage language)
             => string.Equals(CultureInfo.CurrentUICulture.Name, language.Culture, StringComparison.OrdinalIgnoreCase);
 
         /// <summary>Switches to <paramref name="language"/> through the host.</summary>
         /// <param name="language">An offered language.</param>
-        protected void SwitchLanguage(PolhemShellLanguage language) => Switcher?.Switch(language);
+        internal void SwitchLanguage(PolhemShellLanguage language) => Switcher?.Switch(language);
     }
 }
