@@ -31,7 +31,7 @@ Master-data forms, master-detail orders with three lookups, framework organizati
 | Blazor WebAssembly, Fluent UI | <https://polhem-northwind.onrender.com/fluent-wasm/> |
 | Avalonia (WebAssembly) | <https://polhem-northwind.onrender.com/web/> |
 
-Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. Each sign-in screen links to the other front ends. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
+Sign in with `demo` / `demo`, or `demo-ro` / `demo` for the read-only account. Each sign-in screen links to the other front ends, and on the Blazor heads a line under it links to this repository. It runs on a free host, so the first visit after a quiet spell can take about a minute, and the data resets when the service restarts.
 
 ## Running the demo
 
@@ -500,7 +500,7 @@ apps/Polhem.Northwind/
 ├── Polhem.Northwind.BlazorFluent/   the same application on Polhem.Web.Blazor.Fluent, mounted by Polhem.Northwind.Blazor under its own path
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head (Polhem.Web.Blazor.Mud), a JSON-RPC client of the server
 ├── Polhem.Northwind.BlazorFluentWasm/  the same Blazor WebAssembly head on Polhem.Web.Blazor.Fluent
-├── Shared/                          the paths of the front ends on the public demo site, and the links between them
+├── Shared/                          the paths of the front ends on the public demo site and the links between them, and the Blazor heads' layout with its "Built with Polhem" line
 ├── Polhem.Northwind.UI/             NorthwindApp: the demo's options for the shared shell (Polhem.UI.Avalonia.Shell)
 ├── Polhem.Northwind.Desktop/        desktop entry point (Avalonia.Desktop)
 ├── Polhem.Northwind.Browser/        web entry point (Avalonia WASM)

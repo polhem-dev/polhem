@@ -26,6 +26,9 @@ internal static class NorthwindDemoSite
     /// <summary>Where the Avalonia browser head is served.</summary>
     public const string BrowserPath = "/web";
 
+    /// <summary>The address of the framework's source repository, which the Blazor heads link to under their sign-in screens.</summary>
+    public const string SourceRepositoryUrl = "https://github.com/polhem-dev/polhem";
+
     /// <summary>The heading over the links.</summary>
     public const string LinksTitle = "Try the same application on another front end:";
 

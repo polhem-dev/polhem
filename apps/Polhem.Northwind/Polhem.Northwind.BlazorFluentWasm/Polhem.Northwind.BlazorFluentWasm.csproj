@@ -31,6 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\NorthwindBuiltWith.cs" Link="Shell\NorthwindBuiltWith.cs" />
+    <Compile Include="..\Shared\NorthwindFluentShellLayout.cs" Link="Shell\NorthwindFluentShellLayout.cs" />
     <Compile Include="..\Shared\NorthwindDemoSite.cs" Link="Demo\NorthwindDemoSite.cs" />
   </ItemGroup>
 

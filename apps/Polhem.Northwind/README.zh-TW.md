@@ -31,7 +31,7 @@
 | Blazor WebAssembly，Fluent UI | <https://polhem-northwind.onrender.com/fluent-wasm/> |
 | Avalonia（WebAssembly） | <https://polhem-northwind.onrender.com/web/> |
 
-帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。每個前端的登入畫面都有連結通往其他前端。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
+帳號密碼都是 `demo`（唯讀帳號是 `demo-ro`，密碼一樣是 `demo`）。每個前端的登入畫面都有連結通往其他前端；Blazor head 的登入畫面下方還有一行連到這個 repo。網站放在免費主機上，閒置一段時間後第一次開啟要等大約一分鐘，服務重啟後資料會回到初始狀態。
 
 ## 執行 demo
 
@@ -473,7 +473,7 @@ apps/Polhem.Northwind/
 ├── Polhem.Northwind.BlazorFluent/   改用 Polhem.Web.Blazor.Fluent 的同一個應用程式，由 Polhem.Northwind.Blazor 掛在自己的路徑下
 ├── Polhem.Northwind.BlazorWasm/     Blazor WebAssembly head（Polhem.Web.Blazor.Mud），是 server 的 JSON-RPC client
 ├── Polhem.Northwind.BlazorFluentWasm/  同一個 Blazor WebAssembly head，改用 Polhem.Web.Blazor.Fluent
-├── Shared/                          公開示範網站上各前端的路徑，以及它們之間的連結
+├── Shared/                          公開示範網站上各前端的路徑與它們之間的連結，以及 Blazor head 加上「由 Polhem 打造」那行的版面
 ├── Polhem.Northwind.UI/             NorthwindApp：demo 給共用殼（Polhem.UI.Avalonia.Shell）的選項
 ├── Polhem.Northwind.Desktop/        桌面進入點（Avalonia.Desktop）
 ├── Polhem.Northwind.Browser/        網頁進入點（Avalonia WASM）
