@@ -127,6 +127,12 @@ Polhem.Core.Expressions.ExpressionEvaluationException.ExpressionEvaluationExcept
 Polhem.Core.Expressions.ExpressionEvaluationException.Position.get -> int?
 Polhem.Core.Expressions.ExpressionEvaluationException.Position.init -> void
 Polhem.Core.Expressions.ExpressionPolicy
+Polhem.Core.Expressions.ExpressionViolation
+Polhem.Core.Expressions.ExpressionViolation.ExpressionViolation(string! message, int? position) -> void
+Polhem.Core.Expressions.ExpressionViolation.Message.get -> string!
+Polhem.Core.Expressions.ExpressionViolation.Position.get -> int?
+Polhem.Core.Expressions.IExpressionAllowlist
+Polhem.Core.Expressions.IExpressionAllowlist.FindViolations(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! variableTypes, System.Type! returnType) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 Polhem.Core.Expressions.IExpressionEvaluator
 Polhem.Core.Expressions.IExpressionEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object?
 Polhem.Core.Expressions.IExpressionEvaluator.Evaluate<T>(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> T

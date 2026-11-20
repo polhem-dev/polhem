@@ -152,13 +152,27 @@ Polhem.Db.Dml.DefaultParameterCollector.Prefix.get -> string!
 Polhem.Db.Dml.DeleteCommandBuilder
 Polhem.Db.Dml.DeleteCommandBuilder.Build(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Dml.DeleteCommandBuilder.DeleteCommandBuilder(Polhem.Definition.Forms.FormSchema! formSchema, Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.FormSelectQuery
+Polhem.Db.Dml.FormSelectQuery.<Clone>$() -> Polhem.Db.Dml.FormSelectQuery!
+Polhem.Db.Dml.FormSelectQuery.Equals(Polhem.Db.Dml.FormSelectQuery? other) -> bool
+Polhem.Db.Dml.FormSelectQuery.Filter.get -> Polhem.Definition.Filters.FilterNode?
+Polhem.Db.Dml.FormSelectQuery.Filter.init -> void
+Polhem.Db.Dml.FormSelectQuery.FormSelectQuery() -> void
+Polhem.Db.Dml.FormSelectQuery.SelectFields.get -> string!
+Polhem.Db.Dml.FormSelectQuery.SelectFields.init -> void
+Polhem.Db.Dml.FormSelectQuery.Skip.get -> int?
+Polhem.Db.Dml.FormSelectQuery.Skip.init -> void
+Polhem.Db.Dml.FormSelectQuery.SortFields.get -> Polhem.Definition.Sorting.SortFieldCollection?
+Polhem.Db.Dml.FormSelectQuery.SortFields.init -> void
+Polhem.Db.Dml.FormSelectQuery.Take.get -> int?
+Polhem.Db.Dml.FormSelectQuery.Take.init -> void
 Polhem.Db.Dml.FromBuilder
 Polhem.Db.Dml.FromBuilder.Build(string! mainTableName, Polhem.Db.Dml.TableJoinCollection! joins) -> string!
 Polhem.Db.Dml.FromBuilder.FromBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
 Polhem.Db.Dml.IFormCommandBuilder
-Polhem.Db.Dml.IFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.IFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Dml.IFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Dml.IFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.IFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Dml.IParameterCollector
 Polhem.Db.Dml.IParameterCollector.Add(object! value) -> string!
 Polhem.Db.Dml.IParameterCollector.GetAll() -> System.Collections.Generic.IDictionary<string!, object!>!
@@ -295,9 +309,9 @@ Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableSchemaProvider(string! 
 Polhem.Db.Providers.MySql.MySqlDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.MySql.MySqlDialectFactory.MySqlDialectFactory() -> void
 Polhem.Db.Providers.MySql.MySqlFormCommandBuilder
-Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.MySqlFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder
 Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
@@ -324,9 +338,9 @@ Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableSchemaProvider(string
 Polhem.Db.Providers.Oracle.OracleDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.Oracle.OracleDialectFactory.OracleDialectFactory() -> void
 Polhem.Db.Providers.Oracle.OracleFormCommandBuilder
-Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.OracleFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder
 Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
@@ -353,9 +367,9 @@ Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableSchemaProvider(string
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.PgDialectFactory() -> void
 Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder
-Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.PgFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder
 Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
@@ -383,9 +397,9 @@ Polhem.Db.Providers.SqlServer.SqlDialectFactory.GetDefaultValueExpression(Polhem
 Polhem.Db.Providers.SqlServer.SqlDialectFactory.SqlDialectFactory() -> void
 Polhem.Db.Providers.SqlServer.SqlExtendedPropertyCommandBuilder
 Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder
-Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.SqlFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder
 Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
@@ -412,9 +426,9 @@ Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableSchemaProvider(string
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.SqliteDialectFactory() -> void
 Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder
-Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
-Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildSelect(string! tableName, Polhem.Db.Dml.FormSelectQuery! query) -> Polhem.Db.DbCommandSpec!
 Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.SqliteFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Db.Providers.Sqlite.SqliteProviderFactory
 Polhem.Db.Providers.Sqlite.SqliteProviderFactory.SqliteProviderFactory(System.Data.Common.DbProviderFactory! inner) -> void
@@ -606,6 +620,9 @@ override Polhem.Db.CacheNotify.CacheNotifyChange.GetHashCode() -> int
 override Polhem.Db.DbAccess.ToString() -> string!
 override Polhem.Db.DbCommandSpec.ToString() -> string!
 override Polhem.Db.DbParameterSpec.ToString() -> string!
+override Polhem.Db.Dml.FormSelectQuery.Equals(object? obj) -> bool
+override Polhem.Db.Dml.FormSelectQuery.GetHashCode() -> int
+override Polhem.Db.Dml.FormSelectQuery.ToString() -> string!
 override Polhem.Db.Dml.QueryFieldMapping.ToString() -> string!
 override Polhem.Db.Dml.TableJoin.Key.get -> string!
 override Polhem.Db.Dml.TableJoin.Key.set -> void
@@ -629,6 +646,8 @@ static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParame
 static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, Polhem.Definition.Database.DbField! field, System.Data.DataRowVersion sourceVersion) -> Polhem.Db.DbParameterSpec!
 static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, string! name, object! value) -> Polhem.Db.DbParameterSpec!
 static Polhem.Db.DbTypeMapper.Infer(object! value) -> System.Data.DbType?
+static Polhem.Db.Dml.FormSelectQuery.operator !=(Polhem.Db.Dml.FormSelectQuery? left, Polhem.Db.Dml.FormSelectQuery? right) -> bool
+static Polhem.Db.Dml.FormSelectQuery.operator ==(Polhem.Db.Dml.FormSelectQuery? left, Polhem.Db.Dml.FormSelectQuery? right) -> bool
 static Polhem.Db.Manager.ConnectionStringTemplate.Resolve(string! template, string! dbName, string! userId, string! password) -> string!
 static Polhem.Db.Manager.DatabaseCreator.EnsureExists(Polhem.Definition.Database.DatabaseType databaseType, System.Data.Common.DbProviderFactory! provider, string! connectionString) -> Polhem.Db.Manager.DatabaseCreateResult
 static Polhem.Db.Manager.DatabaseCreator.GetDatabaseName(Polhem.Definition.Database.DatabaseType databaseType, System.Data.Common.DbProviderFactory! provider, string! connectionString) -> string!

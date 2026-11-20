@@ -5,6 +5,7 @@ Polhem.UI.ApiBridge.ClientUserContext.Capabilities.get -> System.Collections.Gen
 Polhem.UI.ApiBridge.ClientUserContext.ClientUserContext() -> void
 Polhem.UI.ApiBridge.ClientUserContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 Polhem.UI.ApiBridge.ClientUserContext.DefaultLanguage.get -> string!
+Polhem.UI.ApiBridge.ClientUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
 Polhem.UI.ApiBridge.ClientUserContext.User.get -> Polhem.Definition.Identity.UserInfo?
 Polhem.UI.ApiBridge.Connectors.FormApiConnectorFactory
 Polhem.UI.ApiBridge.Connectors.FormApiConnectorFactory.Create(string! progId) -> Polhem.Api.Contracts.Form.IFormApiConnector!
@@ -54,6 +55,7 @@ static Polhem.UI.ApiBridge.ClientInfo.EndpointStorage.get -> Polhem.UI.ApiBridge
 static Polhem.UI.ApiBridge.ClientInfo.EndpointStorage.set -> void
 static Polhem.UI.ApiBridge.ClientInfo.GetApiKey() -> string!
 static Polhem.UI.ApiBridge.ClientInfo.GetEndpoint() -> string!
+static Polhem.UI.ApiBridge.ClientInfo.Identity.get -> Polhem.UI.Core.UserIdentity?
 static Polhem.UI.ApiBridge.ClientInfo.InitializeAsync(Polhem.Api.Client.SupportedConnectTypes connectTypes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Polhem.UI.ApiBridge.ClientInfo.InitializeAsync(string! endpoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Polhem.UI.ApiBridge.ClientInfo.LocalServiceProvider.get -> System.IServiceProvider?

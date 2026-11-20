@@ -28,77 +28,20 @@ Polhem.Web.Blazor.Components.ConfirmDialogBase.OnConfirmed.set -> void
 Polhem.Web.Blazor.Components.ConfirmDialogBase.Title.get -> string?
 Polhem.Web.Blazor.Components.ConfirmDialogBase.Title.set -> void
 Polhem.Web.Blazor.Components.FormPageBase
-Polhem.Web.Blazor.Components.FormPageBase.ActivateCardAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.Can(Polhem.Definition.Settings.PermissionActions action) -> bool
-Polhem.Web.Blazor.Components.FormPageBase.CanLoadMoreCards.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.CancelDelete() -> void
-Polhem.Web.Blazor.Components.FormPageBase.CardColumns.get -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
-Polhem.Web.Blazor.Components.FormPageBase.CardLimitNotice.get -> string?
-Polhem.Web.Blazor.Components.FormPageBase.CardRows.get -> System.Collections.Generic.IReadOnlyList<System.Data.DataRow!>!
-Polhem.Web.Blazor.Components.FormPageBase.ClearFiltersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.CloseRelation() -> void
 Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.get -> double
 Polhem.Web.Blazor.Components.FormPageBase.CompactWidthThreshold.set -> void
 Polhem.Web.Blazor.Components.FormPageBase.ConfirmDelete.get -> bool
 Polhem.Web.Blazor.Components.FormPageBase.ConfirmDelete.set -> void
-Polhem.Web.Blazor.Components.FormPageBase.ConfirmDeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Components.FormPageBase.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
 Polhem.Web.Blazor.Components.FormPageBase.DefinitionLoader.set -> void
 Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
 Polhem.Web.Blazor.Components.FormPageBase.DetailEditMode.set -> void
 Polhem.Web.Blazor.Components.FormPageBase.Dispose() -> void
-Polhem.Web.Blazor.Components.FormPageBase.EffectiveIsCompact.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.Error.get -> string?
-Polhem.Web.Blazor.Components.FormPageBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
-Polhem.Web.Blazor.Components.FormPageBase.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
 Polhem.Web.Blazor.Components.FormPageBase.FormPageBase() -> void
-Polhem.Web.Blazor.Components.FormPageBase.FormatCardValue(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> string!
-Polhem.Web.Blazor.Components.FormPageBase.GoToPageAsync(int page, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.IsBusy.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.IsCardSelected(System.Data.DataRow! row) -> bool
 Polhem.Web.Blazor.Components.FormPageBase.IsCompact.get -> bool?
 Polhem.Web.Blazor.Components.FormPageBase.IsCompact.set -> void
-Polhem.Web.Blazor.Components.FormPageBase.IsEditing.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.IsInitializing.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.IsListLocked.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.IsShowingRecord.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.ListLayout.get -> Polhem.Definition.Layouts.LayoutGrid?
-Polhem.Web.Blazor.Components.FormPageBase.ListRows.get -> System.Data.DataTable?
-Polhem.Web.Blazor.Components.FormPageBase.LiveComputationNotice.get -> string?
-Polhem.Web.Blazor.Components.FormPageBase.LoadMoreCardsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.Notice.get -> string?
-Polhem.Web.Blazor.Components.FormPageBase.OnCardClick(System.Data.DataRow! row, Microsoft.AspNetCore.Components.Web.MouseEventArgs! e, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnClose() -> void
-Polhem.Web.Blazor.Components.FormPageBase.OnCompactChangedAsync(bool compact, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnDeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnEditAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnFilterChangedAsync(Polhem.Web.Blazor.Controls.ColumnFilterChange! change, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnNewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnRelationRefused(string! message) -> void
-Polhem.Web.Blazor.Components.FormPageBase.OnRowActivatedAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnRowSelected(System.Guid rowId) -> void
-Polhem.Web.Blazor.Components.FormPageBase.OnSaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnSortRequestedAsync(string! fieldName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OnViewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.OpenRelation(Polhem.UI.Core.Fields.RelationTarget target) -> void
-Polhem.Web.Blazor.Components.FormPageBase.PagePosition.get -> string!
-Polhem.Web.Blazor.Components.FormPageBase.Paging.get -> Polhem.UI.Core.Lists.ListPagingState!
-Polhem.Web.Blazor.Components.FormPageBase.PendingDeleteRowId.get -> System.Guid?
 Polhem.Web.Blazor.Components.FormPageBase.ProgId.get -> string!
 Polhem.Web.Blazor.Components.FormPageBase.ProgId.set -> void
-Polhem.Web.Blazor.Components.FormPageBase.RecordLayout.get -> Polhem.Definition.Layouts.FormLayout?
-Polhem.Web.Blazor.Components.FormPageBase.Relation.get -> Polhem.UI.Core.Fields.RelationTarget?
-Polhem.Web.Blazor.Components.FormPageBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
-Polhem.Web.Blazor.Components.FormPageBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
-Polhem.Web.Blazor.Components.FormPageBase.SelectCard(System.Data.DataRow! row) -> void
-Polhem.Web.Blazor.Components.FormPageBase.SelectedRowId.get -> System.Guid?
-Polhem.Web.Blazor.Components.FormPageBase.SetPageSizeAsync(int pageSize, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.FormPageBase.ShowsPager.get -> bool
-Polhem.Web.Blazor.Components.FormPageBase.Text(string! key) -> string!
-Polhem.Web.Blazor.Components.IBlazorDefinitionOptions
-Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.DefaultLanguage.get -> string!
-Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.UseDefinitionLoader.get -> bool
 Polhem.Web.Blazor.Components.ListCard
 Polhem.Web.Blazor.Components.ListCard.FormatValue.get -> System.Func<System.Data.DataRow!, Polhem.Definition.Layouts.LayoutColumn!, string!>!
 Polhem.Web.Blazor.Components.ListCard.FormatValue.set -> void
@@ -112,55 +55,53 @@ Polhem.Web.Blazor.Components.ListCard.OnClick.set -> void
 Polhem.Web.Blazor.Components.ListCard.Row.get -> System.Data.DataRow!
 Polhem.Web.Blazor.Components.ListCard.Row.set -> void
 Polhem.Web.Blazor.Components.LoginPanelBase
-Polhem.Web.Blazor.Components.LoginPanelBase.DisplayedPasswordLabel.get -> string!
-Polhem.Web.Blazor.Components.LoginPanelBase.DisplayedSubmitLabel.get -> string!
-Polhem.Web.Blazor.Components.LoginPanelBase.DisplayedUserIdLabel.get -> string!
-Polhem.Web.Blazor.Components.LoginPanelBase.Error.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.InitialPassword.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.InitialPassword.set -> void
 Polhem.Web.Blazor.Components.LoginPanelBase.InitialUserId.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.InitialUserId.set -> void
-Polhem.Web.Blazor.Components.LoginPanelBase.IsBusy.get -> bool
 Polhem.Web.Blazor.Components.LoginPanelBase.LoginPanelBase() -> void
 Polhem.Web.Blazor.Components.LoginPanelBase.OnLoggedIn.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Api.Core.Messages.System.LoginResponse!>
 Polhem.Web.Blazor.Components.LoginPanelBase.OnLoggedIn.set -> void
-Polhem.Web.Blazor.Components.LoginPanelBase.OnSubmitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Components.LoginPanelBase.Password.get -> string!
-Polhem.Web.Blazor.Components.LoginPanelBase.Password.set -> void
 Polhem.Web.Blazor.Components.LoginPanelBase.PasswordLabel.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.PasswordLabel.set -> void
 Polhem.Web.Blazor.Components.LoginPanelBase.SubmitLabel.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.SubmitLabel.set -> void
-Polhem.Web.Blazor.Components.LoginPanelBase.UserId.get -> string!
-Polhem.Web.Blazor.Components.LoginPanelBase.UserId.set -> void
 Polhem.Web.Blazor.Components.LoginPanelBase.UserIdLabel.get -> string?
 Polhem.Web.Blazor.Components.LoginPanelBase.UserIdLabel.set -> void
-Polhem.Web.Blazor.Components.PolhemBlazorText
+Polhem.Web.Blazor.Components.NamePromptDialogBase
+Polhem.Web.Blazor.Components.NamePromptDialogBase.AcceptText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.AcceptText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CancelText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.CancelText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Label.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Label.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.MaxLength.get -> int
+Polhem.Web.Blazor.Components.NamePromptDialogBase.MaxLength.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Name.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Name.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.NamePromptDialogBase() -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnAccepted.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.NamePromptAnswer!>
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnAccepted.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OnCancelled.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionChecked.get -> bool
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionChecked.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionText.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.OptionText.set -> void
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Title.get -> string?
+Polhem.Web.Blazor.Components.NamePromptDialogBase.Title.set -> void
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.CloseRelation() -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.DefinitionLoader.set -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Error.get -> string?
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.FormLayout.get -> Polhem.Definition.Layouts.FormLayout?
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.IdPrefix.get -> string!
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.IsCompact.get -> bool
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.IsCompact.set -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.IsPermitted.get -> bool
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Notice.get -> string?
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnClosed.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnClosed.set -> void
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnRefused.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnRefused.set -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnRelationRefused(string! message) -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OpenRelation(Polhem.UI.Core.Fields.RelationTarget target) -> void
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RelatedRecordDialogBase() -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Relation.get -> Polhem.UI.Core.Fields.RelationTarget?
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Target.get -> Polhem.UI.Core.Fields.RelationTarget
 Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Target.set -> void
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Text(string! key) -> string!
-Polhem.Web.Blazor.Components.RelatedRecordDialogBase.Title.get -> string?
 Polhem.Web.Blazor.Controls.ColumnFilterChange
 Polhem.Web.Blazor.Controls.ColumnFilterChange.<Clone>$() -> Polhem.Web.Blazor.Controls.ColumnFilterChange!
 Polhem.Web.Blazor.Controls.ColumnFilterChange.ColumnFilterChange(Polhem.Definition.Forms.FormField! Field, Polhem.UI.Core.Lists.ColumnFilterKind Kind, string! First, string! Second) -> void
@@ -174,6 +115,42 @@ Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.get -> Polhem.UI.Core.Lists.C
 Polhem.Web.Blazor.Controls.ColumnFilterChange.Kind.init -> void
 Polhem.Web.Blazor.Controls.ColumnFilterChange.Second.get -> string!
 Polhem.Web.Blazor.Controls.ColumnFilterChange.Second.init -> void
+Polhem.Web.Blazor.Controls.CriteriaChip
+Polhem.Web.Blazor.Controls.CriteriaChip.CriteriaChip(Polhem.UI.Core.Criteria.CriteriaRow! row, string! text) -> void
+Polhem.Web.Blazor.Controls.CriteriaChip.IsRemovable.get -> bool
+Polhem.Web.Blazor.Controls.CriteriaChip.Row.get -> Polhem.UI.Core.Criteria.CriteriaRow!
+Polhem.Web.Blazor.Controls.CriteriaChip.Text.get -> string!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Chips.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.CriteriaChip!>!
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Chips.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Cleared.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Cleared.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.CriteriaChipsBase() -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Disabled.get -> bool
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Disabled.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Opened.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.CriteriaChip!>
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Opened.set -> void
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Removed.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.CriteriaChip!>
+Polhem.Web.Blazor.Controls.CriteriaChipsBase.Removed.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CloseRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CloseRequested.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Criteria.get -> Polhem.UI.Core.Criteria.QueryCriteria!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Criteria.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaChanged.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaChanged.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.CriteriaPanelBase() -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Criteria.CriteriaField!>!
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Fields.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.HeaderContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.HeaderContent.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Notice.get -> string?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Notice.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SearchRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.SearchRequested.set -> void
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Today.get -> System.Func<System.DateOnly>?
+Polhem.Web.Blazor.Controls.CriteriaPanelBase.Today.set -> void
 Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase
 Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ApplySelectionAsync(System.Data.DataRow! selected, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ButtonClick.get -> Microsoft.AspNetCore.Components.EventCallback
@@ -261,22 +238,11 @@ Polhem.Web.Blazor.Controls.Editors.FormScope.FormMode.set -> void
 Polhem.Web.Blazor.Controls.Editors.FormScope.FormScope() -> void
 Polhem.Web.Blazor.Controls.Editors.FormScope.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
 Polhem.Web.Blazor.Controls.Editors.FormScope.OpenRelation.set -> void
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode) -> void
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext.FormScopeContext(Polhem.UI.Core.DataObjects.FormDataObject? dataObject, Polhem.Definition.Layouts.SingleFormMode formMode, Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget> openRelation) -> void
-Polhem.Web.Blazor.Controls.Editors.FormScopeContext.OpenRelation.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.UI.Core.Fields.RelationTarget>
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CancelText.get -> string!
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.CommitAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Connector.set -> void
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.DefinitionLoader.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Error.get -> string?
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.LoadingText.get -> string!
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.LookupDialogBase() -> void
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnCancelled.set -> void
@@ -286,36 +252,18 @@ Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnFailed.get -> Microsoft.As
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.OnFailed.set -> void
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ProgId.get -> string!
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ProgId.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ResolvedConnector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.ResolvedSchema.get -> Polhem.Definition.Forms.FormSchema?
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
 Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Schema.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupDialogBase.Title.get -> string!
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.ActivateAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.CommitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Connector.get -> Polhem.Api.Contracts.Form.IFormApiConnector?
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Connector.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Error.get -> string?
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.LookupPanelBase() -> void
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCancelled.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCancelled.set -> void
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCommitted.get -> Microsoft.AspNetCore.Components.EventCallback<System.Data.DataRow!>
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.OnCommitted.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.ReloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Rows.get -> System.Data.DataTable?
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Schema.get -> Polhem.Definition.Forms.FormSchema?
 Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Schema.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchText.get -> string!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SearchText.set -> void
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Select(System.Guid rowId) -> void
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SelectedRow.get -> System.Data.DataRow?
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.SelectedRowId.get -> System.Guid?
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.Text(string! key) -> string!
-Polhem.Web.Blazor.Controls.Editors.LookupPanelBase.TruncationNotice.get -> string?
 Polhem.Web.Blazor.Controls.Editors.NumericEditorBase
 Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.BeginEditing() -> void
 Polhem.Web.Blazor.Controls.Editors.NumericEditorBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
@@ -349,9 +297,6 @@ Polhem.Web.Blazor.Controls.Editors.RowEditDialogBase.RowEditDialogBase() -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditDialogBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Controls.Editors.RowEditDialogBase.UnitSettings.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.BuildEditorParameters(Polhem.Definition.Layouts.LayoutColumn! column) -> System.Collections.Generic.Dictionary<string!, object?>!
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CommitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Compact.get -> bool
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Compact.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
@@ -365,15 +310,11 @@ Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCancelled.get -> Microso
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCancelled.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCommitted.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EditCommitted.set -> void
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.EnumerateVisibleColumns() -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.FieldsStyle.get -> string!
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Layout.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Row.get -> System.Data.DataRow?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Row.set -> void
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.RowEditPanelBase() -> void
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.SessionRow.get -> System.Data.DataRow?
-Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Text(string! key) -> string!
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.UnitSettings.set -> void
 Polhem.Web.Blazor.Controls.Editors.TextEditorBase
@@ -387,17 +328,10 @@ Polhem.Web.Blazor.Controls.Editors.TextEditorBase.TryCommitText(string? text) ->
 Polhem.Web.Blazor.Controls.Editors.TimeEditorBase
 Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.TimeEditorBase() -> void
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.BuildEditorParameters(Polhem.Definition.Layouts.LayoutField! field) -> System.Collections.Generic.Dictionary<string!, object?>!
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.BuildGridStyle() -> string!
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DataObject.set -> void
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.DetailEditMode.set -> void
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EffectiveColumnCount.get -> int
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EffectiveDetailEditMode.get -> Polhem.UI.Core.Editing.GridEditMode
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EnumerateDetails() -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutGrid!>!
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EnumerateSections() -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutSection!>!
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.FieldInputId(Polhem.Definition.Layouts.LayoutField! field) -> string!
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.FormLayoutPresenterBase() -> void
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.FormMode.set -> void
@@ -411,45 +345,24 @@ Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.OpenRelation.get -> Microsoft
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.OpenRelation.set -> void
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.get -> Polhem.Definition.Numbers.RoundingContext?
 Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.RoundingContext.set -> void
-Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.ShowsRequiredCue(Polhem.Definition.Layouts.LayoutField! field) -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Applied.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.ApplyAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.ButtonLabel.get -> string!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.ChoiceText(string? value) -> string!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Choices.get -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.ClearAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Close() -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Column.set -> void
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria!
+Polhem.Web.Blazor.Controls.GridColumnFilterBase.ColumnFilters.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Field.get -> Polhem.Definition.Forms.FormField!
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Field.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Filters.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.First.get -> string!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.First.set -> void
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.GridColumnFilterBase() -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsDateRange.get -> bool
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsFiltered.get -> bool
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsInvalid.get -> bool
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.IsOpen.get -> bool
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.get -> Polhem.UI.Core.Lists.ColumnFilterKind
 Polhem.Web.Blazor.Controls.GridColumnFilterBase.Kind.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs! e) -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Second.get -> string!
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Second.set -> void
-Polhem.Web.Blazor.Controls.GridColumnFilterBase.Text(string! key) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase
-Polhem.Web.Blazor.Controls.GridControlBase.Actions.get -> Polhem.Definition.Layouts.GridControlAllowActions
-Polhem.Web.Blazor.Controls.GridControlBase.ActivateRowAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.GridControlBase.AddRow() -> System.Data.DataRow?
 Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.get -> bool?
 Polhem.Web.Blazor.Controls.GridControlBase.AllowEdit.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.AriaSort(Polhem.Definition.Layouts.LayoutColumn! column) -> string?
-Polhem.Web.Blazor.Controls.GridControlBase.BoundDataObject.get -> Polhem.UI.Core.DataObjects.FormDataObject?
-Polhem.Web.Blazor.Controls.GridControlBase.BuildEditorParameters(Polhem.Definition.Layouts.LayoutColumn! column, System.Data.DataRow! row) -> System.Collections.Generic.Dictionary<string!, object?>!
-Polhem.Web.Blazor.Controls.GridControlBase.ColumnField(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.Definition.Forms.FormField?
+Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.get -> Polhem.UI.Core.Criteria.ColumnFilterCriteria?
+Polhem.Web.Blazor.Controls.GridControlBase.ColumnFilters.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.Compact.get -> bool
 Polhem.Web.Blazor.Controls.GridControlBase.Compact.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
@@ -465,60 +378,32 @@ Polhem.Web.Blazor.Controls.GridControlBase.Dispose() -> void
 Polhem.Web.Blazor.Controls.GridControlBase.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Polhem.Web.Blazor.Controls.GridControlBase.EditMode.get -> Polhem.UI.Core.Editing.GridEditMode
 Polhem.Web.Blazor.Controls.GridControlBase.EditMode.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.EditSelectedRow() -> void
-Polhem.Web.Blazor.Controls.GridControlBase.EditingRow.get -> System.Data.DataRow?
-Polhem.Web.Blazor.Controls.GridControlBase.EditorHost.get -> Polhem.Web.Blazor.Controls.GridEditorHost!
 Polhem.Web.Blazor.Controls.GridControlBase.EndEdit() -> void
-Polhem.Web.Blazor.Controls.GridControlBase.FilterKind(Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Lists.ColumnFilterKind
-Polhem.Web.Blazor.Controls.GridControlBase.Filters.get -> Polhem.UI.Core.Lists.ListFilterState?
-Polhem.Web.Blazor.Controls.GridControlBase.Filters.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.FormTable.get -> Polhem.Definition.Forms.FormTable?
 Polhem.Web.Blazor.Controls.GridControlBase.FormTable.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.FormatCell(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> string!
-Polhem.Web.Blazor.Controls.GridControlBase.GridControlBase() -> void
-Polhem.Web.Blazor.Controls.GridControlBase.HasData.get -> bool
-Polhem.Web.Blazor.Controls.GridControlBase.HeaderClass(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
-Polhem.Web.Blazor.Controls.GridControlBase.IsInCellEditor(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
-Polhem.Web.Blazor.Controls.GridControlBase.IsSelected(System.Data.DataRow! row) -> bool
-Polhem.Web.Blazor.Controls.GridControlBase.IsSortable(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
 Polhem.Web.Blazor.Controls.GridControlBase.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
 Polhem.Web.Blazor.Controls.GridControlBase.Layout.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.LayoutIdentity.get -> string!
-Polhem.Web.Blazor.Controls.GridControlBase.OnAddClicked() -> void
-Polhem.Web.Blazor.Controls.GridControlBase.OnEditCancelled() -> void
-Polhem.Web.Blazor.Controls.GridControlBase.OnEditCommitted() -> void
 Polhem.Web.Blazor.Controls.GridControlBase.OnFilterChanged.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.ColumnFilterChange!>
 Polhem.Web.Blazor.Controls.GridControlBase.OnFilterChanged.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.OnSortRequested.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
 Polhem.Web.Blazor.Controls.GridControlBase.OnSortRequested.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.OpenRelationAsync(Polhem.UI.Core.Fields.RelationTarget target, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.GridControlBase.OpenTarget(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> Polhem.UI.Core.Fields.RelationTarget?
 Polhem.Web.Blazor.Controls.GridControlBase.RefreshRows() -> void
 Polhem.Web.Blazor.Controls.GridControlBase.RowActivated.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
 Polhem.Web.Blazor.Controls.GridControlBase.RowActivated.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.RowClass(System.Data.DataRow! row) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.RowSelected.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
 Polhem.Web.Blazor.Controls.GridControlBase.RowSelected.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.Script.get -> Polhem.Web.Blazor.Controls.GridEditorScript!
-Polhem.Web.Blazor.Controls.GridControlBase.SelectRowAsync(System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.GridControlBase.SelectedRow.get -> System.Data.DataRow?
 Polhem.Web.Blazor.Controls.GridControlBase.SelectedRowId.get -> System.Guid?
 Polhem.Web.Blazor.Controls.GridControlBase.SelectedRowId.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
-Polhem.Web.Blazor.Controls.GridControlBase.ShowToolbar.get -> bool
-Polhem.Web.Blazor.Controls.GridControlBase.ShowsRequiredCue(Polhem.Definition.Layouts.LayoutColumn! column) -> bool
 Polhem.Web.Blazor.Controls.GridControlBase.SortDirection.get -> Polhem.Definition.Sorting.SortDirection
 Polhem.Web.Blazor.Controls.GridControlBase.SortDirection.set -> void
 Polhem.Web.Blazor.Controls.GridControlBase.SortFieldName.get -> string?
 Polhem.Web.Blazor.Controls.GridControlBase.SortFieldName.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.SortMark(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.TableName.get -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.TableName.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.Text(string! key) -> string!
 Polhem.Web.Blazor.Controls.GridControlBase.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
 Polhem.Web.Blazor.Controls.GridControlBase.UnitSettings.set -> void
-Polhem.Web.Blazor.Controls.GridControlBase.VisibleColumns.get -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutColumn!>!
-Polhem.Web.Blazor.Controls.GridControlBase.VisibleRows.get -> System.Collections.Generic.IEnumerable<System.Data.DataRow!>!
 Polhem.Web.Blazor.Controls.GridEditorCell
 Polhem.Web.Blazor.Controls.GridEditorCell.CloseEditor() -> void
 Polhem.Web.Blazor.Controls.GridEditorCell.Column.get -> Polhem.Definition.Layouts.LayoutColumn!
@@ -539,20 +424,52 @@ Polhem.Web.Blazor.Controls.GridEditorCell.Script.set -> void
 Polhem.Web.Blazor.Controls.GridEditorCell.Text.get -> string!
 Polhem.Web.Blazor.Controls.GridEditorCell.Text.set -> void
 Polhem.Web.Blazor.Controls.GridEditorHost
-Polhem.Web.Blazor.Controls.GridEditorHost.Activate(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
-Polhem.Web.Blazor.Controls.GridEditorHost.Active.get -> Polhem.Web.Blazor.Controls.IGridEditorSlot?
 Polhem.Web.Blazor.Controls.GridEditorHost.Close() -> void
 Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.get -> System.Func<Polhem.Definition.Layouts.LayoutColumn!, System.Data.DataRow!, System.Collections.Generic.Dictionary<string!, object?>!>?
 Polhem.Web.Blazor.Controls.GridEditorHost.EditorParametersBuilder.set -> void
 Polhem.Web.Blazor.Controls.GridEditorHost.GridEditorHost() -> void
-Polhem.Web.Blazor.Controls.GridEditorHost.Release(Polhem.Web.Blazor.Controls.IGridEditorSlot! slot) -> void
 Polhem.Web.Blazor.Controls.GridEditorScript
 Polhem.Web.Blazor.Controls.GridEditorScript.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Polhem.Web.Blazor.Controls.GridEditorScript.FocusEditorAsync(Microsoft.AspNetCore.Components.ElementReference editor, Microsoft.JSInterop.DotNetObjectReference<Polhem.Web.Blazor.Controls.GridEditorCell!>! cell, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Controls.GridEditorScript.GridEditorScript(Microsoft.JSInterop.IJSRuntime! js, string! openPopupSelector, int replayDelayMilliseconds = 0) -> void
 Polhem.Web.Blazor.Controls.GridEditorScript.LoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Controls.IGridEditorSlot
-Polhem.Web.Blazor.Controls.IGridEditorSlot.RefreshEditorState() -> void
+Polhem.Web.Blazor.Controls.NamePromptAnswer
+Polhem.Web.Blazor.Controls.NamePromptAnswer.IsOptionChecked.get -> bool
+Polhem.Web.Blazor.Controls.NamePromptAnswer.Name.get -> string!
+Polhem.Web.Blazor.Controls.NamePromptAnswer.NamePromptAnswer(string! name, bool isOptionChecked) -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Applied.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Web.Blazor.Controls.UserQueryEntry!>
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Applied.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Current.get -> Polhem.Web.Blazor.Controls.UserQueryEntry?
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Current.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultRowId.get -> System.Guid
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultRowId.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultToggled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DefaultToggled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DeleteRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.DeleteRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Disabled.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Disabled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Entries.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Controls.UserQueryEntry!>!
+Polhem.Web.Blazor.Controls.UserQueryBarBase.Entries.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.IsModified.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryBarBase.IsModified.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.RenameRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.RenameRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveAsRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveAsRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveRequested.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.SaveRequested.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.ShareToggled.get -> Microsoft.AspNetCore.Components.EventCallback
+Polhem.Web.Blazor.Controls.UserQueryBarBase.ShareToggled.set -> void
+Polhem.Web.Blazor.Controls.UserQueryBarBase.UserQueryBarBase() -> void
+Polhem.Web.Blazor.Controls.UserQueryEntry
+Polhem.Web.Blazor.Controls.UserQueryEntry.Criteria.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryEntry.IsOwn.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryEntry.IsShared.get -> bool
+Polhem.Web.Blazor.Controls.UserQueryEntry.Name.get -> string!
+Polhem.Web.Blazor.Controls.UserQueryEntry.RowId.get -> System.Guid
+Polhem.Web.Blazor.Controls.UserQueryEntry.UserQueryEntry(System.Guid rowId, string! name, bool isShared, bool isOwn, string! criteria) -> void
 Polhem.Web.Blazor.DataObjects.FormLiveComputation
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.Degradation.get -> Polhem.UI.Core.LiveComputationDegradation?
@@ -563,7 +480,6 @@ Polhem.Web.Blazor.DataObjects.FormLiveComputation.IsDegraded.get -> bool
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.IsRecomputing.get -> bool
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Web.Blazor.DataObjects.FormLiveComputation.RecomputeAggregates(string! tableName, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions
 Polhem.Web.Blazor.Identity.BlazorUserContext
 Polhem.Web.Blazor.Identity.BlazorUserContext.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! response) -> void
 Polhem.Web.Blazor.Identity.BlazorUserContext.BlazorUserContext(Polhem.Api.Client.PolhemApiClient! client, string! defaultLanguage) -> void
@@ -571,11 +487,10 @@ Polhem.Web.Blazor.Identity.BlazorUserContext.Capabilities.get -> System.Collecti
 Polhem.Web.Blazor.Identity.BlazorUserContext.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 Polhem.Web.Blazor.Identity.BlazorUserContext.DefaultLanguage.get -> string!
 Polhem.Web.Blazor.Identity.BlazorUserContext.EnterCompanyAsync(string! companyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.EnterCompanyResponse!>!
+Polhem.Web.Blazor.Identity.BlazorUserContext.Identity.get -> Polhem.UI.Core.UserIdentity?
 Polhem.Web.Blazor.Identity.BlazorUserContext.SessionRejected -> System.EventHandler?
 Polhem.Web.Blazor.Identity.BlazorUserContext.SignOut() -> void
 Polhem.Web.Blazor.Identity.BlazorUserContext.User.get -> Polhem.Definition.Identity.UserInfo?
-Polhem.Web.Blazor.Shell.IShellLanguageSwitcher
-Polhem.Web.Blazor.Shell.IShellLanguageSwitcher.Switch(Polhem.Web.Blazor.Shell.PolhemShellLanguage! language) -> void
 Polhem.Web.Blazor.Shell.PolhemShellHome
 Polhem.Web.Blazor.Shell.PolhemShellHome.PolhemShellHome() -> void
 Polhem.Web.Blazor.Shell.PolhemShellLanguage
@@ -621,20 +536,9 @@ Polhem.Web.Blazor.Shell.PolhemShellOptions.SignInLinksTitle.get -> string!
 Polhem.Web.Blazor.Shell.PolhemShellOptions.SignInLinksTitle.set -> void
 Polhem.Web.Blazor.Shell.PolhemShellSignInLinks
 Polhem.Web.Blazor.Shell.PolhemShellSignInLinks.PolhemShellSignInLinks() -> void
-Polhem.Web.Blazor.Shell.PolhemShellText
 Polhem.Web.Blazor.Shell.ShellLayoutBase
-Polhem.Web.Blazor.Shell.ShellLayoutBase.CloseMenu() -> void
 Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose() -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.IsDrawerOpen.get -> bool
-Polhem.Web.Blazor.Shell.ShellLayoutBase.IsMenuToggled.get -> bool
-Polhem.Web.Blazor.Shell.ShellLayoutBase.IsNarrow.get -> bool
-Polhem.Web.Blazor.Shell.ShellLayoutBase.OnCompactChanged(bool compact) -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.OnDrawerOpenChanged(bool open) -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
 Polhem.Web.Blazor.Shell.ShellLayoutBase.ShellLayoutBase() -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.SignOut() -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.ToggleMenu() -> void
-Polhem.Web.Blazor.Shell.ShellLayoutBase.UserContext.get -> Polhem.Web.Blazor.Identity.BlazorUserContext!
 Polhem.Web.Blazor.Shell.ShellMenuRow
 Polhem.Web.Blazor.Shell.ShellMenuRow.<Clone>$() -> Polhem.Web.Blazor.Shell.ShellMenuRow!
 Polhem.Web.Blazor.Shell.ShellMenuRow.Caption.get -> string!
@@ -645,49 +549,30 @@ Polhem.Web.Blazor.Shell.ShellMenuRow.ProgId.get -> string?
 Polhem.Web.Blazor.Shell.ShellMenuRow.ProgId.init -> void
 Polhem.Web.Blazor.Shell.ShellMenuRow.ShellMenuRow(string! Caption, string? ProgId) -> void
 Polhem.Web.Blazor.Shell.ShellNavMenuBase
-Polhem.Web.Blazor.Shell.ShellNavMenuBase.Error.get -> string?
-Polhem.Web.Blazor.Shell.ShellNavMenuBase.LoadingText.get -> string!
 Polhem.Web.Blazor.Shell.ShellNavMenuBase.OnNavigated.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Shell.ShellNavMenuBase.OnNavigated.set -> void
-Polhem.Web.Blazor.Shell.ShellNavMenuBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
-Polhem.Web.Blazor.Shell.ShellNavMenuBase.Rows.get -> System.Collections.Generic.IReadOnlyList<Polhem.Web.Blazor.Shell.ShellMenuRow!>?
 Polhem.Web.Blazor.Shell.ShellNavMenuBase.ShellNavMenuBase() -> void
 Polhem.Web.Blazor.Shell.ShellSignInBase
-Polhem.Web.Blazor.Shell.ShellSignInBase.CompanyId.get -> string!
-Polhem.Web.Blazor.Shell.ShellSignInBase.CompanyId.set -> void
-Polhem.Web.Blazor.Shell.ShellSignInBase.CompanyInputId.get -> string!
-Polhem.Web.Blazor.Shell.ShellSignInBase.Error.get -> string?
-Polhem.Web.Blazor.Shell.ShellSignInBase.OffersLanguages.get -> bool
-Polhem.Web.Blazor.Shell.ShellSignInBase.OnLoggedInAsync(Polhem.Api.Core.Messages.System.LoginResponse! response, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Shell.ShellSignInBase.OnSignedIn.get -> Microsoft.AspNetCore.Components.EventCallback
 Polhem.Web.Blazor.Shell.ShellSignInBase.OnSignedIn.set -> void
-Polhem.Web.Blazor.Shell.ShellSignInBase.Options.get -> Polhem.Web.Blazor.Shell.PolhemShellOptions!
 Polhem.Web.Blazor.Shell.ShellSignInBase.ShellSignInBase() -> void
-Polhem.Web.Blazor.Shell.ShellSignInBase.SwitchLanguage(Polhem.Web.Blazor.Shell.PolhemShellLanguage! language) -> void
 Polhem.Web.Blazor._Imports
 Polhem.Web.Blazor._Imports.Execute() -> void
 Polhem.Web.Blazor._Imports._Imports() -> void
 abstract Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.RefreshFromSource() -> void
 const Polhem.Web.Blazor.Components.CompactViewportObserver.DefaultCompactWidthThreshold = 600 -> double
-const Polhem.Web.Blazor.Shell.PolhemShellText.CompanyEmpty = "CompanyEmpty" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.CompanyId = "CompanyId" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.EnterCompanyFailed = "EnterCompanyFailed" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.Language = "Language" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.LanguageHint = "LanguageHint" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.MenuEmpty = "MenuEmpty" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.MenuLoadFailed = "MenuLoadFailed" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.SignOut = "SignOut" -> string!
-const Polhem.Web.Blazor.Shell.PolhemShellText.ToggleMenu = "ToggleMenu" -> string!
 override Polhem.Web.Blazor.Components.CardListEnd.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Components.FormPageBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Components.FormPageBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Components.ListCard.OnInitialized() -> void
 override Polhem.Web.Blazor.Components.ListCard.ShouldRender() -> bool
 override Polhem.Web.Blazor.Components.LoginPanelBase.OnInitialized() -> void
+override Polhem.Web.Blazor.Components.NamePromptDialogBase.OnParametersSet() -> void
 override Polhem.Web.Blazor.Components.RelatedRecordDialogBase.OnParametersSetAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Controls.ColumnFilterChange.Equals(object? obj) -> bool
 override Polhem.Web.Blazor.Controls.ColumnFilterChange.GetHashCode() -> int
 override Polhem.Web.Blazor.Controls.ColumnFilterChange.ToString() -> string!
+override Polhem.Web.Blazor.Controls.CriteriaPanelBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ApplyMetadata() -> void
 override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.RefreshFromSource() -> void
 override Polhem.Web.Blazor.Controls.Editors.ButtonEditorBase.ShouldWriteBackText.get -> bool
@@ -708,9 +593,6 @@ override Polhem.Web.Blazor.Controls.Editors.TextEditorBase.ApplyMetadata() -> vo
 override Polhem.Web.Blazor.Controls.Editors.TextEditorBase.RefreshFromSource() -> void
 override Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.GetWriteBackValue() -> string?
 override Polhem.Web.Blazor.Controls.Editors.TimeEditorBase.RefreshFromSource() -> void
-override Polhem.Web.Blazor.Controls.GridControlBase.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
-override Polhem.Web.Blazor.Controls.GridControlBase.OnParametersSet() -> void
-override Polhem.Web.Blazor.Controls.GridControlBase.ShouldRender() -> bool
 override Polhem.Web.Blazor.Controls.GridEditorCell.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Controls.GridEditorCell.OnInitialized() -> void
 override Polhem.Web.Blazor.Controls.GridEditorCell.ShouldRender() -> bool
@@ -726,28 +608,15 @@ override Polhem.Web.Blazor.Shell.ShellMenuRow.GetHashCode() -> int
 override Polhem.Web.Blazor.Shell.ShellMenuRow.ToString() -> string!
 override Polhem.Web.Blazor.Shell.ShellNavMenuBase.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Polhem.Web.Blazor.Shell.ShellSignInBase.OnInitialized() -> void
-static Polhem.Web.Blazor.Components.FormPageBase.IsCardChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool
-static Polhem.Web.Blazor.Components.FormPageBase.PageSizes.get -> System.Collections.Generic.IReadOnlyList<int>!
-static Polhem.Web.Blazor.Components.PolhemBlazorText.GetLocalizer(System.IServiceProvider? services) -> Microsoft.Extensions.Localization.IStringLocalizer!
 static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator !=(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
 static Polhem.Web.Blazor.Controls.ColumnFilterChange.operator ==(Polhem.Web.Blazor.Controls.ColumnFilterChange? left, Polhem.Web.Blazor.Controls.ColumnFilterChange? right) -> bool
-static Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.InputId(Polhem.Definition.Layouts.LayoutColumn! column) -> string!
-static Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.BuildFieldStyle(Polhem.Definition.Layouts.LayoutField! field, int columnCount) -> string!
-static Polhem.Web.Blazor.Controls.FormLayoutPresenterBase.EnumerateFields(Polhem.Definition.Layouts.LayoutSection! section) -> System.Collections.Generic.IEnumerable<Polhem.Definition.Layouts.LayoutField!>!
-static Polhem.Web.Blazor.Controls.GridControlBase.IsChecked(System.Data.DataRow! row, Polhem.Definition.Layouts.LayoutColumn! column) -> bool
-static Polhem.Web.Blazor.DependencyInjection.PolhemBlazorClientServiceCollectionExtensions.AddPolhemBlazorClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Web.Blazor.Components.IBlazorDefinitionOptions! options, System.Func<System.IServiceProvider!, Polhem.Api.Client.PolhemApiClient!>! clientFactory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Polhem.Web.Blazor.Shell.PolhemShellLanguage.operator !=(Polhem.Web.Blazor.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Shell.PolhemShellLanguage? right) -> bool
 static Polhem.Web.Blazor.Shell.PolhemShellLanguage.operator ==(Polhem.Web.Blazor.Shell.PolhemShellLanguage? left, Polhem.Web.Blazor.Shell.PolhemShellLanguage? right) -> bool
 static Polhem.Web.Blazor.Shell.PolhemShellLink.operator !=(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool
 static Polhem.Web.Blazor.Shell.PolhemShellLink.operator ==(Polhem.Web.Blazor.Shell.PolhemShellLink? left, Polhem.Web.Blazor.Shell.PolhemShellLink? right) -> bool
-static Polhem.Web.Blazor.Shell.PolhemShellText.Format(string! key, params object?[]! args) -> string!
-static Polhem.Web.Blazor.Shell.PolhemShellText.Get(string! key) -> string!
 static Polhem.Web.Blazor.Shell.ShellMenuRow.operator !=(Polhem.Web.Blazor.Shell.ShellMenuRow? left, Polhem.Web.Blazor.Shell.ShellMenuRow? right) -> bool
 static Polhem.Web.Blazor.Shell.ShellMenuRow.operator ==(Polhem.Web.Blazor.Shell.ShellMenuRow? left, Polhem.Web.Blazor.Shell.ShellMenuRow? right) -> bool
-static Polhem.Web.Blazor.Shell.ShellSignInBase.IsCurrent(Polhem.Web.Blazor.Shell.PolhemShellLanguage! language) -> bool
 virtual Polhem.Web.Blazor.Components.FormPageBase.Dispose(bool disposing) -> void
-virtual Polhem.Web.Blazor.Components.FormPageBase.FocusDeleteCancelAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-virtual Polhem.Web.Blazor.Components.FormPageBase.ScrollCardsToTopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.DisplayFormat.get -> string!
 virtual Polhem.Web.Blazor.Controls.Editors.DateEditorBase.ValueFormat.get -> string!
 virtual Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.ApplyMetadata() -> void
@@ -756,11 +625,6 @@ virtual Polhem.Web.Blazor.Controls.Editors.FieldEditorBase.SetControlState(Polhe
 virtual Polhem.Web.Blazor.Controls.Editors.RowEditPanelBase.Dispose(bool disposing) -> void
 virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.GetWriteBackValue() -> string?
 virtual Polhem.Web.Blazor.Controls.Editors.TextEditorBase.ShouldWriteBackText.get -> bool
-virtual Polhem.Web.Blazor.Controls.GridColumnFilterBase.Toggle() -> void
-virtual Polhem.Web.Blazor.Controls.GridControlBase.Dispose(bool disposing) -> void
-virtual Polhem.Web.Blazor.Controls.GridControlBase.OpenPopupSelector.get -> string?
-virtual Polhem.Web.Blazor.Controls.GridControlBase.RefreshRowList() -> void
-virtual Polhem.Web.Blazor.Controls.GridControlBase.ReplayDelayMilliseconds.get -> int
 virtual Polhem.Web.Blazor.Shell.ShellLayoutBase.Dispose(bool disposing) -> void
 ~override Polhem.Web.Blazor.Components.CardListEnd.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Polhem.Web.Blazor.Components.ListCard.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

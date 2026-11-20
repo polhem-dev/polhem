@@ -1,11 +1,1 @@
 #nullable enable
-virtual Polhem.Api.Client.Connectors.FormApiConnector.DeleteUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.DeleteUserQueryResponse!>!
-virtual Polhem.Api.Client.Connectors.FormApiConnector.GetUserQueriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetUserQueriesResponse!>!
-virtual Polhem.Api.Client.Connectors.FormApiConnector.SaveUserQueryAsync(System.Guid rowId, string! name, bool isShared, string! criteria, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.SaveUserQueryResponse!>!
-virtual Polhem.Api.Client.Connectors.FormApiConnector.SetDefaultUserQueryAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.SetDefaultUserQueryResponse!>!
-*REMOVED*static Polhem.Api.Client.PolhemApiClient.CreateLocal(System.IServiceProvider! services, Polhem.JsonRpc.Payload.PayloadOptions? payloadOptions = null) -> Polhem.Api.Client.PolhemApiClient!
-*REMOVED*static Polhem.Api.Client.PolhemApiClient.CreateRemote(string! endpoint, string! apiKey, Polhem.JsonRpc.Payload.PayloadOptions? payloadOptions = null) -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.Api.Client.PolhemApiClient.CreateLocal(System.IServiceProvider! services) -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.Api.Client.PolhemApiClient.CreateLocal(System.IServiceProvider! services, Polhem.JsonRpc.Payload.PayloadOptions! payloadOptions) -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.Api.Client.PolhemApiClient.CreateRemote(string! endpoint, string! apiKey) -> Polhem.Api.Client.PolhemApiClient!
-static Polhem.Api.Client.PolhemApiClient.CreateRemote(string! endpoint, string! apiKey, Polhem.JsonRpc.Payload.PayloadOptions! payloadOptions) -> Polhem.Api.Client.PolhemApiClient!

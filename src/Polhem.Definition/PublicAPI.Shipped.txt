@@ -239,6 +239,14 @@ Polhem.Definition.Filters.LogicalOperator
 Polhem.Definition.Filters.LogicalOperator.And = 0 -> Polhem.Definition.Filters.LogicalOperator
 Polhem.Definition.Filters.LogicalOperator.Or = 1 -> Polhem.Definition.Filters.LogicalOperator
 Polhem.Definition.FormActions
+Polhem.Definition.Forms.ExpressionSample
+Polhem.Definition.Forms.ExpressionSample.DetailRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<string!, object?>!>!>!
+Polhem.Definition.Forms.ExpressionSample.DetailRows.init -> void
+Polhem.Definition.Forms.ExpressionSample.ExpressionSample() -> void
+Polhem.Definition.Forms.ExpressionSample.TimeZoneId.get -> string!
+Polhem.Definition.Forms.ExpressionSample.TimeZoneId.init -> void
+Polhem.Definition.Forms.ExpressionSample.Values.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>!
+Polhem.Definition.Forms.ExpressionSample.Values.init -> void
 Polhem.Definition.Forms.FieldMapping
 Polhem.Definition.Forms.FieldMapping.Clone() -> Polhem.Definition.Forms.FieldMapping!
 Polhem.Definition.Forms.FieldMapping.DestinationField.get -> string!
@@ -258,11 +266,16 @@ Polhem.Definition.Forms.FormExpressionCalculator.ApplyDefaultRow(Polhem.Definiti
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Numbers.RoundingContext! roundingContext, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormExpressionCalculator.BuildDependencyMap(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
-Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> object?
-Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! values, string! timeZoneId = "") -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateFieldSample(Polhem.Definition.Forms.FormField! field, string! propertyName, string! expression, Polhem.Definition.Forms.ExpressionSample! sample) -> object?
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateMasterRuleSample(string! expression, Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.ExpressionSample! sample) -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.EvaluateRuleSample(string! expression, Polhem.Definition.Forms.FormTable! formTable, Polhem.Definition.Forms.ExpressionSample! sample) -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormExpressionIssue!>!
+Polhem.Definition.Forms.FormExpressionCalculator.FindAllowlistViolations(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> System.Collections.Generic.IReadOnlyList<Polhem.Core.Expressions.ExpressionViolation!>!
 Polhem.Definition.Forms.FormExpressionCalculator.FormExpressionCalculator(Polhem.Core.Expressions.IExpressionEvaluator! evaluator) -> void
+Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateExpressions(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormExpressionIssue!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateRules(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Forms.FormRuleTrigger trigger, string! timeZoneId = "") -> void
+Polhem.Definition.Forms.FormExpressionCalculator.ValidateUntrustedExpression(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Forms.FormTable! formTable, string! propertyName, string! expression) -> void
 Polhem.Definition.Forms.FormExpressionIssue
 Polhem.Definition.Forms.FormExpressionIssue.Expression.get -> string!
 Polhem.Definition.Forms.FormExpressionIssue.FieldName.get -> string?
@@ -378,6 +391,7 @@ Polhem.Definition.Forms.FormSchema.FormSchema(string! progId, string! displayNam
 Polhem.Definition.Forms.FormSchema.GetListLayout() -> Polhem.Definition.Layouts.LayoutGrid!
 Polhem.Definition.Forms.FormSchema.GetLookupFields() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormField!>!
 Polhem.Definition.Forms.FormSchema.GetLookupLayout() -> Polhem.Definition.Layouts.LayoutGrid!
+Polhem.Definition.Forms.FormSchema.GetQueryFields() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.FormField!>!
 Polhem.Definition.Forms.FormSchema.ListFields.get -> string!
 Polhem.Definition.Forms.FormSchema.ListFields.set -> void
 Polhem.Definition.Forms.FormSchema.LookupFields.get -> string!
@@ -388,6 +402,8 @@ Polhem.Definition.Forms.FormSchema.PermissionModelId.get -> string!
 Polhem.Definition.Forms.FormSchema.PermissionModelId.set -> void
 Polhem.Definition.Forms.FormSchema.ProgId.get -> string!
 Polhem.Definition.Forms.FormSchema.ProgId.set -> void
+Polhem.Definition.Forms.FormSchema.QueryFields.get -> string!
+Polhem.Definition.Forms.FormSchema.QueryFields.set -> void
 Polhem.Definition.Forms.FormSchema.Rules.get -> Polhem.Definition.Forms.FormRuleCollection?
 Polhem.Definition.Forms.FormSchema.RulesSpecified.get -> bool
 Polhem.Definition.Forms.FormSchema.SetObjectFilePath(string! filePath) -> void
@@ -1094,12 +1110,6 @@ Polhem.Definition.Numbers.RoundingContext.UnitSettings.init -> void
 Polhem.Definition.Numbers.RoundingPolicy
 Polhem.Definition.Numbers.RoundingPolicy.Preserve = 1 -> Polhem.Definition.Numbers.RoundingPolicy
 Polhem.Definition.Numbers.RoundingPolicy.Round = 0 -> Polhem.Definition.Numbers.RoundingPolicy
-Polhem.Definition.ObjectTree.ITreeNodeCommandProvider
-Polhem.Definition.ObjectTree.ITreeNodeCommandProvider.GetCommands(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.ObjectTree.TreeNodeCommand!>!
-Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler
-Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler.CanDrag(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> bool
-Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler.CanDrop(Polhem.Definition.ObjectTree.ObjectTreeNode! node, Polhem.Definition.ObjectTree.ObjectTreeNode! target, Polhem.Definition.ObjectTree.TreeNodeDropPosition position) -> bool
-Polhem.Definition.ObjectTree.ITreeNodeDragDropHandler.Drop(Polhem.Definition.ObjectTree.ObjectTreeNode! node, Polhem.Definition.ObjectTree.ObjectTreeNode! target, Polhem.Definition.ObjectTree.TreeNodeDropPosition position) -> void
 Polhem.Definition.ObjectTree.ObjectTreeBuilder
 Polhem.Definition.ObjectTree.ObjectTreeBuilder.Build(object! root) -> Polhem.Definition.ObjectTree.ObjectTreeNode!
 Polhem.Definition.ObjectTree.ObjectTreeBuilder.ObjectTreeBuilder(Polhem.Definition.ObjectTree.ObjectTreeOptions? options = null) -> void
@@ -1129,19 +1139,6 @@ Polhem.Definition.ObjectTree.ObjectTreeOptions.NodeBuilt.set -> void
 Polhem.Definition.ObjectTree.ObjectTreeOptions.ObjectTreeOptions() -> void
 Polhem.Definition.ObjectTree.ObjectTreeOptions.PropertyFilter.get -> System.Func<object!, System.ComponentModel.PropertyDescriptor!, bool>?
 Polhem.Definition.ObjectTree.ObjectTreeOptions.PropertyFilter.set -> void
-Polhem.Definition.ObjectTree.TreeNodeCommand
-Polhem.Definition.ObjectTree.TreeNodeCommand.BeginsGroup.get -> bool
-Polhem.Definition.ObjectTree.TreeNodeCommand.BeginsGroup.init -> void
-Polhem.Definition.ObjectTree.TreeNodeCommand.Execute() -> void
-Polhem.Definition.ObjectTree.TreeNodeCommand.IconKey.get -> string?
-Polhem.Definition.ObjectTree.TreeNodeCommand.IconKey.init -> void
-Polhem.Definition.ObjectTree.TreeNodeCommand.IsEnabled.get -> bool
-Polhem.Definition.ObjectTree.TreeNodeCommand.IsEnabled.init -> void
-Polhem.Definition.ObjectTree.TreeNodeCommand.Label.get -> string!
-Polhem.Definition.ObjectTree.TreeNodeCommand.TreeNodeCommand(string! label, System.Action! execute) -> void
-Polhem.Definition.ObjectTree.TreeNodeDropPosition
-Polhem.Definition.ObjectTree.TreeNodeDropPosition.After = 1 -> Polhem.Definition.ObjectTree.TreeNodeDropPosition
-Polhem.Definition.ObjectTree.TreeNodeDropPosition.Before = 0 -> Polhem.Definition.ObjectTree.TreeNodeDropPosition
 Polhem.Definition.Organization.DepartmentNode
 Polhem.Definition.Organization.DepartmentNode.Children.get -> Polhem.Definition.Organization.DepartmentNodeCollection?
 Polhem.Definition.Organization.DepartmentNode.Children.init -> void
@@ -1868,12 +1865,16 @@ const Polhem.Definition.Database.DbCategoryIds.Common = "common" -> string!
 const Polhem.Definition.Database.DbCategoryIds.Company = "company" -> string!
 const Polhem.Definition.Database.DbCategoryIds.Log = "log" -> string!
 const Polhem.Definition.FormActions.Delete = "Delete" -> string!
+const Polhem.Definition.FormActions.DeleteUserQuery = "DeleteUserQuery" -> string!
 const Polhem.Definition.FormActions.FieldValueChange = "FieldValueChange" -> string!
 const Polhem.Definition.FormActions.GetData = "GetData" -> string!
 const Polhem.Definition.FormActions.GetList = "GetList" -> string!
 const Polhem.Definition.FormActions.GetLookup = "GetLookup" -> string!
 const Polhem.Definition.FormActions.GetNewData = "GetNewData" -> string!
+const Polhem.Definition.FormActions.GetUserQueries = "GetUserQueries" -> string!
 const Polhem.Definition.FormActions.Save = "Save" -> string!
+const Polhem.Definition.FormActions.SaveUserQuery = "SaveUserQuery" -> string!
+const Polhem.Definition.FormActions.SetDefaultUserQuery = "SetDefaultUserQuery" -> string!
 const Polhem.Definition.Identity.CompanyInfo.CompanyIdMaxLength = 10 -> int
 const Polhem.Definition.Identity.UserInfo.UserIdMaxLength = 20 -> int
 const Polhem.Definition.Language.FormSchemaLocalizer.FieldCaptionKeyFormat = "Field.{0}.Caption" -> string!
@@ -1910,13 +1911,22 @@ const Polhem.Definition.Language.PolhemMessages.PermissionRowKeyChanged = "Polhe
 const Polhem.Definition.Language.PolhemMessages.PermissionSavedRecordOutOfScope = "PolhemMessages.Permission.SavedRecordOutOfScope" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveConcurrencyConflict = "PolhemMessages.Save.ConcurrencyConflict" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveDetailFieldRequired = "PolhemMessages.Save.DetailFieldRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveDetailRecordMismatch = "PolhemMessages.Save.DetailRecordMismatch" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveFieldRequired = "PolhemMessages.Save.FieldRequired" -> string!
 const Polhem.Definition.Language.PolhemMessages.SaveMasterRowMissing = "PolhemMessages.Save.MasterRowMissing" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveOneRecordRequired = "PolhemMessages.Save.OneRecordRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveRowKeyChanged = "PolhemMessages.Save.RowKeyChanged" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenInvalid = "PolhemMessages.Session.AccessTokenInvalid" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenRequired = "PolhemMessages.Session.AccessTokenRequired" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionExpired = "PolhemMessages.Session.Expired" -> string!
 const Polhem.Definition.Language.PolhemMessages.SessionNotFound = "PolhemMessages.Session.NotFound" -> string!
+const Polhem.Definition.Language.PolhemMessages.UserQueryNameRequired = "PolhemMessages.UserQuery.NameRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.UserQueryNameTooLong = "PolhemMessages.UserQuery.NameTooLong" -> string!
+const Polhem.Definition.Language.PolhemMessages.UserQueryNotFound = "PolhemMessages.UserQuery.NotFound" -> string!
+const Polhem.Definition.Language.PolhemMessages.UserQueryNotOwner = "PolhemMessages.UserQuery.NotOwner" -> string!
+const Polhem.Definition.Language.PolhemMessages.UserQueryTooLarge = "PolhemMessages.UserQuery.TooLarge" -> string!
 const Polhem.Definition.Language.PolhemUIText.Add = "Add" -> string!
+const Polhem.Definition.Language.PolhemUIText.AddCondition = "AddCondition" -> string!
 const Polhem.Definition.Language.PolhemUIText.Back = "Back" -> string!
 const Polhem.Definition.Language.PolhemUIText.Cancel = "Cancel" -> string!
 const Polhem.Definition.Language.PolhemUIText.ClearFilters = "ClearFilters" -> string!
@@ -1925,6 +1935,27 @@ const Polhem.Definition.Language.PolhemUIText.CollectionKeyDuplicate = "Collecti
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyMissing = "CollectionKeyMissing" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionKeyTaken = "CollectionKeyTaken" -> string!
 const Polhem.Definition.Language.PolhemUIText.CollectionSummary = "CollectionSummary" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaAny = "CriteriaAny" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaContains = "CriteriaContains" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaEqual = "CriteriaEqual" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaIn = "CriteriaIn" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaLabeledValue = "CriteriaLabeledValue" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaMoreValues = "CriteriaMoreValues" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaRange = "CriteriaRange" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaRangeValue = "CriteriaRangeValue" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaStartsWith = "CriteriaStartsWith" -> string!
+const Polhem.Definition.Language.PolhemUIText.CriteriaValueSeparator = "CriteriaValueSeparator" -> string!
+const Polhem.Definition.Language.PolhemUIText.CurrentUser = "CurrentUser" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastDays = "DateLastDays" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastMonth = "DateLastMonth" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateLastWeek = "DateLastWeek" -> string!
+const Polhem.Definition.Language.PolhemUIText.DatePeriod = "DatePeriod" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisMonth = "DateThisMonth" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisQuarter = "DateThisQuarter" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisWeek = "DateThisWeek" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateThisYear = "DateThisYear" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateToday = "DateToday" -> string!
+const Polhem.Definition.Language.PolhemUIText.DateYesterday = "DateYesterday" -> string!
 const Polhem.Definition.Language.PolhemUIText.Delete = "Delete" -> string!
 const Polhem.Definition.Language.PolhemUIText.DeleteRecordPrompt = "DeleteRecordPrompt" -> string!
 const Polhem.Definition.Language.PolhemUIText.Dismiss = "Dismiss" -> string!
@@ -1952,8 +1983,15 @@ const Polhem.Definition.Language.PolhemUIText.OpenRelatedRecord = "OpenRelatedRe
 const Polhem.Definition.Language.PolhemUIText.PageNumber = "PageNumber" -> string!
 const Polhem.Definition.Language.PolhemUIText.PageNumberOfTotal = "PageNumberOfTotal" -> string!
 const Polhem.Definition.Language.PolhemUIText.Password = "Password" -> string!
+const Polhem.Definition.Language.PolhemUIText.PickValue = "PickValue" -> string!
 const Polhem.Definition.Language.PolhemUIText.PreviousPage = "PreviousPage" -> string!
+const Polhem.Definition.Language.PolhemUIText.Query = "Query" -> string!
+const Polhem.Definition.Language.PolhemUIText.QueryConditions = "QueryConditions" -> string!
+const Polhem.Definition.Language.PolhemUIText.QueryRequiredMissing = "QueryRequiredMissing" -> string!
+const Polhem.Definition.Language.PolhemUIText.QueryWithCount = "QueryWithCount" -> string!
 const Polhem.Definition.Language.PolhemUIText.RelatedRecordDenied = "RelatedRecordDenied" -> string!
+const Polhem.Definition.Language.PolhemUIText.RemoveCondition = "RemoveCondition" -> string!
+const Polhem.Definition.Language.PolhemUIText.RemoveItem = "RemoveItem" -> string!
 const Polhem.Definition.Language.PolhemUIText.RequiredFieldsEmpty = "RequiredFieldsEmpty" -> string!
 const Polhem.Definition.Language.PolhemUIText.ResetValue = "ResetValue" -> string!
 const Polhem.Definition.Language.PolhemUIText.RowsPerPage = "RowsPerPage" -> string!
@@ -1964,6 +2002,25 @@ const Polhem.Definition.Language.PolhemUIText.SignInEmptyToken = "SignInEmptyTok
 const Polhem.Definition.Language.PolhemUIText.True = "True" -> string!
 const Polhem.Definition.Language.PolhemUIText.Unsaved = "Unsaved" -> string!
 const Polhem.Definition.Language.PolhemUIText.UserId = "UserId" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryActions = "UserQueryActions" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryClearDefault = "UserQueryClearDefault" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryDefault = "UserQueryDefault" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryDelete = "UserQueryDelete" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryDeletePrompt = "UserQueryDeletePrompt" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryModified = "UserQueryModified" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryName = "UserQueryName" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryNone = "UserQueryNone" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryRename = "UserQueryRename" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQuerySave = "UserQuerySave" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQuerySaveAs = "UserQuerySaveAs" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQuerySetDefault = "UserQuerySetDefault" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryShare = "UserQueryShare" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryShareOption = "UserQueryShareOption" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryShared = "UserQueryShared" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQuerySkipped = "UserQuerySkipped" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryUnreadable = "UserQueryUnreadable" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryUnshare = "UserQueryUnshare" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserQueryWithMarkers = "UserQueryWithMarkers" -> string!
 const Polhem.Definition.Language.PolhemUIText.View = "View" -> string!
 const Polhem.Definition.PropertyCategories.Action = "Action" -> string!
 const Polhem.Definition.PropertyCategories.Appearance = "Appearance" -> string!
@@ -1987,6 +2044,7 @@ const Polhem.Definition.SysFields.UpdateUserRowId = "sys_update_user_rowid" -> s
 const Polhem.Definition.SysFields.ValidDate = "sys_valid_date" -> string!
 const Polhem.Definition.SysProgIds.AuditLog = "AuditLog" -> string!
 const Polhem.Definition.SysProgIds.AuditRule = "AuditRule" -> string!
+const Polhem.Definition.SysProgIds.Employee = "Employee" -> string!
 const Polhem.Definition.SysProgIds.System = "System" -> string!
 const Polhem.Definition.SystemActions.CreateApiKey = "CreateApiKey" -> string!
 const Polhem.Definition.SystemActions.CreateSession = "CreateSession" -> string!
@@ -2135,6 +2193,7 @@ static Polhem.Definition.Filters.FilterGroup.All(params Polhem.Definition.Filter
 static Polhem.Definition.Filters.FilterGroup.Any(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Forms.FieldMappingCollectionExtensions.Add(this Polhem.Definition.Forms.FieldMappingCollection? collection, string! sourceField, string! destinationField) -> Polhem.Definition.Forms.FieldMapping!
 static Polhem.Definition.Forms.FormExpressionCalculator.BuildAggregateDependencyMap(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlySet<string!>!>!
+static Polhem.Definition.Forms.FormExpressionCalculator.GetSaveAggregatedTables(Polhem.Definition.Forms.FormSchema! schema) -> System.Collections.Generic.IReadOnlySet<string!>!
 static Polhem.Definition.Forms.FormExpressionCalculator.GetVariableTypes(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
 static Polhem.Definition.Forms.FormExpressionCalculator.ResolveRuleTable(Polhem.Definition.Forms.FormRule! rule, Polhem.Definition.Forms.FormSchema! schema) -> Polhem.Definition.Forms.FormTable?
 static Polhem.Definition.Forms.FormFieldCollectionExtensions.Add(this Polhem.Definition.Forms.FormFieldCollection? collection, string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> Polhem.Definition.Forms.FormField!
