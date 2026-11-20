@@ -1,5 +1,390 @@
 {
-  "issues": {},
+  "issues": {
+    "AaH3SCStMiwtDd3Znf0N": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Samples.cs",
+      "line": 57,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH3SCStMiwtDd3Znf0O": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Samples.cs",
+      "line": 58,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH3SCStMiwtDd3Znf0P": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Samples.cs",
+      "line": 141,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxcjN1SI7xa-rusP": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleDrafting.cs",
+      "line": 49,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxcjN1SI7xa-rusS": {
+      "rule": "csharpsquid:S1994",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleDrafting.cs",
+      "line": 184,
+      "attempts": 0,
+      "reason": "Rule S1994 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxcjN1SI7xa-rusR": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleDrafting.cs",
+      "line": 211,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxY9N1SI7xa-rusI": {
+      "rule": "csharpsquid:S2589",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleDraftingPrompt.cs",
+      "line": 128,
+      "attempts": 0,
+      "reason": "Rule S2589 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxccN1SI7xa-rusK": {
+      "rule": "csharpsquid:S107",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleToolbox.cs",
+      "line": 66,
+      "attempts": 0,
+      "reason": "Rule S107 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxccN1SI7xa-rusN": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleToolbox.cs",
+      "line": 209,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxccN1SI7xa-rusO": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.Definition.Drafting/Rules/RuleToolbox.cs",
+      "line": 343,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxjgN1SI7xa-rusq": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.Expressions/AllowlistVisitor.cs",
+      "line": 198,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxjbN1SI7xa-ruso": {
+      "rule": "csharpsquid:S1192",
+      "component": "src/Polhem.Expressions/ExpressionAllowlist.cs",
+      "line": 61,
+      "attempts": 0,
+      "reason": "Rule S1192 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxitN1SI7xa-rusm": {
+      "rule": "csharpsquid:S6618",
+      "component": "src/Polhem.Web.Blazor.Fluent/Controls/CriteriaPanel.razor",
+      "line": 91,
+      "attempts": 0,
+      "reason": "Rule S6618 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxdxN1SI7xa-rusV": {
+      "rule": "csharpsquid:S107",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Aggregates.cs",
+      "line": 115,
+      "attempts": 0,
+      "reason": "Rule S107 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxdxN1SI7xa-rusW": {
+      "rule": "csharpsquid:S107",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Aggregates.cs",
+      "line": 134,
+      "attempts": 0,
+      "reason": "Rule S107 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxdxN1SI7xa-rusX": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.Definition/Forms/FormExpressionCalculator.Aggregates.cs",
+      "line": 283,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxfxN1SI7xa-rusc": {
+      "rule": "csharpsquid:S6966",
+      "component": "src/Polhem.Web.Blazor/Components/FormPageBase.UserQueries.cs",
+      "line": 246,
+      "attempts": 0,
+      "reason": "Rule S6966 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxgRN1SI7xa-rusf": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.Web.Blazor/Controls/CriteriaPanelBase.Values.cs",
+      "line": 109,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxfqN1SI7xa-rusb": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.Web.Blazor/Components/FormPageBase.Criteria.cs",
+      "line": 26,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxhTN1SI7xa-rush": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/UserQueryBar.cs",
+      "line": 29,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaH0OxhTN1SI7xa-rusg": {
+      "rule": "csharpsquid:S2365",
+      "component": "src/Polhem.UI.Avalonia/Controls/UserQueryBar.cs",
+      "line": 106,
+      "attempts": 0,
+      "reason": "Rule S2365 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHtW2hfC9cZUl-GlMXL": {
+      "rule": "csharpsquid:S2365",
+      "component": "src/Polhem.UI.Avalonia/Views/ListView.Criteria.cs",
+      "line": 67,
+      "attempts": 0,
+      "reason": "Rule S2365 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHtW2hfC9cZUl-GlMXM": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.UI.Avalonia/Views/ListView.Criteria.cs",
+      "line": 126,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHtW2dSC9cZUl-GlMXK": {
+      "rule": "csharpsquid:S3358",
+      "component": "src/Polhem.UI.Core/Criteria/CriteriaRowSummary.cs",
+      "line": 36,
+      "attempts": 0,
+      "reason": "Rule S3358 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEf6IV21sDarC2Co": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/CriteriaPanel.Editors.cs",
+      "line": 111,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEf6IV21sDarC2Cm": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/CriteriaPanel.Editors.cs",
+      "line": 161,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEf6IV21sDarC2Cl": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/CriteriaPanel.Editors.cs",
+      "line": 179,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEf6IV21sDarC2Cn": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/CriteriaPanel.Editors.cs",
+      "line": 210,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEfwIV21sDarC2Ck": {
+      "rule": "external_roslyn:CA1859",
+      "component": "src/Polhem.UI.Avalonia/Controls/CriteriaPanel.cs",
+      "line": 234,
+      "attempts": 0,
+      "reason": "Rule CA1859 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHscEbMIV21sDarC2Cj": {
+      "rule": "csharpsquid:S8969",
+      "component": "src/Polhem.UI.Core/Criteria/GetListFilterConverter.cs",
+      "line": 80,
+      "attempts": 0,
+      "reason": "Rule S8969 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHeRsGi0ECbJLo-ZVxK": {
+      "rule": "csharpsquid:S1121",
+      "component": "src/Polhem.Db/Schema/TableUpgradeRecordStore.cs",
+      "line": 424,
+      "attempts": 0,
+      "reason": "Rule S1121 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHanvFR0ECbJLo-ttkY": {
+      "rule": "csharpsquid:S4456",
+      "component": "src/Polhem.AI.Claude/ClaudeChatClient.cs",
+      "line": 78,
+      "attempts": 0,
+      "reason": "Rule S4456 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHanvFO0ECbJLo-ttkW": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.AI.Claude/ClaudeChatClientFactory.cs",
+      "line": 38,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHanvFO0ECbJLo-ttkX": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.AI.Claude/ClaudeChatClientFactory.cs",
+      "line": 39,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHanvFU0ECbJLo-ttkZ": {
+      "rule": "csharpsquid:S9415",
+      "component": "src/Polhem.AI.Claude/ClaudeCredentials.cs",
+      "line": 206,
+      "attempts": 0,
+      "reason": "Rule S9415 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHanvFX0ECbJLo-ttka": {
+      "rule": "csharpsquid:S1192",
+      "component": "src/Polhem.AI.Claude/ToolSchemaRewriter.cs",
+      "line": 86,
+      "attempts": 0,
+      "reason": "Rule S1192 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjubFGhjC-EaUDS8R": {
+      "rule": "shell:S7688",
+      "component": ".github/scripts/resolve-db-scope.sh",
+      "line": 36,
+      "attempts": 0,
+      "reason": "Rule S7688 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjubFGhjC-EaUDS8S": {
+      "rule": "shell:S7688",
+      "component": ".github/scripts/resolve-db-scope.sh",
+      "line": 43,
+      "attempts": 0,
+      "reason": "Rule S7688 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuREGhjC-EaUDS8N": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition.Drafting/FormDraftSession.cs",
+      "line": 55,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuREGhjC-EaUDS8P": {
+      "rule": "csharpsquid:S1994",
+      "component": "src/Polhem.Definition.Drafting/FormDraftSession.cs",
+      "line": 227,
+      "attempts": 0,
+      "reason": "Rule S1994 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuPbGhjC-EaUDS8H": {
+      "rule": "csharpsquid:S3871",
+      "component": "src/Polhem.Definition.Drafting/Session/DraftToolException.cs",
+      "line": 7,
+      "attempts": 0,
+      "reason": "Making the exception public would change the public API visibility, which /sonar-fix may not do.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuQ3GhjC-EaUDS8J": {
+      "rule": "csharpsquid:S107",
+      "component": "src/Polhem.Definition.Drafting/Session/DraftToolbox.cs",
+      "line": 70,
+      "attempts": 0,
+      "reason": "Rule S107 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuQ3GhjC-EaUDS8K": {
+      "rule": "csharpsquid:S107",
+      "component": "src/Polhem.Definition.Drafting/Session/DraftToolbox.cs",
+      "line": 150,
+      "attempts": 0,
+      "reason": "Rule S107 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuaxGhjC-EaUDS8Q": {
+      "rule": "external_roslyn:xUnit2032",
+      "component": "tests/Polhem.Definition.Drafting.UnitTests/FormDraftSessionTests.cs",
+      "line": 120,
+      "attempts": 0,
+      "reason": "Rule xUnit2032 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYjuQ7GhjC-EaUDS8L": {
+      "rule": "csharpsquid:S3236",
+      "component": "src/Polhem.Definition.Drafting/Documents/DocumentSource.cs",
+      "line": 63,
+      "attempts": 0,
+      "reason": "Rule S3236 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHYHAYjqBQ9YJIvTBXx": {
+      "rule": "csharpsquid:S1192",
+      "component": "src/Polhem.Analyzers/Definitions/RelationFieldTypeAnalyzer.cs",
+      "line": 106,
+      "attempts": 0,
+      "reason": "Rule S1192 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHVSw5U9jDFiQ8EzTRZ": {
+      "rule": "shell:S7688",
+      "component": ".github/scripts/resolve-db-scope.sh",
+      "line": 26,
+      "attempts": 0,
+      "reason": "Rule S7688 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    },
+    "AaHVSw5U9jDFiQ8EzTRa": {
+      "rule": "shell:S7688",
+      "component": ".github/scripts/resolve-db-scope.sh",
+      "line": 41,
+      "attempts": 0,
+      "reason": "Rule S7688 is not in .claude/rules/sonarcloud.md, so /sonar-fix does not fix it automatically.",
+      "lastAttempt": "2026-11-20"
+    }
+  },
   "files": {},
   "humanReview": {}
 }

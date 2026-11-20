@@ -94,7 +94,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal(0, box.SelectedIndex);
             box.SelectedIndex = 2;
 
-            Assert.Equal(false, row.Value);
+            Assert.False(Assert.IsType<bool>(row.Value));
         }
 
         [Fact]

@@ -6,9 +6,9 @@
     <MudSelect T="Guid" Class="polhem-user-query-bar__picker" Value="CurrentRowId" ValueChanged="rowId => PickAsync(rowId)"
                ToStringFunc="EntryText" Disabled="Disabled" aria-label="@Text(PolhemUIText.UserQueryNone)"
                Variant="Variant.Outlined" Margin="Margin.Dense">
-        @foreach (var entry in Entries)
+        @foreach (var rowId in Entries.Select(entry => entry.RowId))
         {
-            <MudSelectItem T="Guid" Value="entry.RowId">@EntryText(entry.RowId)</MudSelectItem>
+            <MudSelectItem T="Guid" Value="rowId">@EntryText(rowId)</MudSelectItem>
         }
     </MudSelect>
     @if (IsModified)

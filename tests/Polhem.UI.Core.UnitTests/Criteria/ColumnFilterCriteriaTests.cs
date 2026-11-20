@@ -133,7 +133,7 @@ namespace Polhem.UI.Core.UnitTests.Criteria
 
             var conditions = Conditions(filters.Criteria);
             Assert.Equal(2L, conditions[0].Value);
-            Assert.Equal(true, conditions[1].Value);
+            Assert.True(Assert.IsType<bool>(conditions[1].Value));
             Assert.Equal(("2", string.Empty), filters.GetEntered("level"));
             Assert.Equal((bool.TrueString, string.Empty), filters.GetEntered("active"));
         }
