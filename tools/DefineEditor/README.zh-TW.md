@@ -231,8 +231,11 @@ dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
-    -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
+    -- --smoke ../../tests/Define/FormSchema/Employee.FormSchema.xml
 ```
+
+`dotnet run --project` 會在專案資料夾啟動工具，所以相對的測試檔路徑是從 `tools/DefineEditor/` 解析，而不是從執行指令的資料夾。
+要避開這點可改傳絕對路徑，例如在 repository 根目錄用 `"$PWD/tests/Define/FormSchema/Employee.FormSchema.xml"`。
 
 編輯器的單元測試在 `tests/Polhem.DefineEditor.UnitTests`，屬於 `Polhem.slnx`。
 
