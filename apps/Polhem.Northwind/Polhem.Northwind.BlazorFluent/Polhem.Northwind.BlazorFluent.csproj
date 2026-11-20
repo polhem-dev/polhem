@@ -20,4 +20,10 @@
     <ProjectReference Include="..\..\..\src\Polhem.Web.Blazor.Fluent\Polhem.Web.Blazor.Fluent.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\NorthwindDemoSite.cs" Link="Demo\NorthwindDemoSite.cs" />
+    <Compile Include="..\Shared\NorthwindBuiltWith.cs" Link="Shell\NorthwindBuiltWith.cs" />
+    <Compile Include="..\Shared\NorthwindFluentShellLayout.cs" Link="Shell\NorthwindFluentShellLayout.cs" />
+  </ItemGroup>
+
 </Project>
