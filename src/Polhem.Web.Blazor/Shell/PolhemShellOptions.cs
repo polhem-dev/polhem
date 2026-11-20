@@ -44,7 +44,7 @@ namespace Polhem.Web.Blazor.Shell
 
         /// <summary>
         /// Gets the languages the site serves. The sign-in screen offers a switch between them when there is more
-        /// than one and the host offers a switch (<see cref="IShellLanguageSwitcher"/>), and a host accepts only these
+        /// than one and the host package offers a switch (the Server and Wasm host packages do), and a host accepts only these
         /// cultures from a request (<c>UsePolhemShellLocalization</c> on Blazor Server).
         /// </summary>
         /// <remarks>
@@ -62,9 +62,8 @@ namespace Polhem.Web.Blazor.Shell
         /// uses the first of <see cref="Languages"/>.
         /// </summary>
         /// <remarks>
-        /// This is the language of the user interface before the viewer picks one. It is not
-        /// <see cref="Polhem.Web.Blazor.Components.IBlazorDefinitionOptions.DefaultLanguage"/>, the last
-        /// hop of the definitions' language fall-back chain.
+        /// This is the language of the user interface before the viewer picks one. It is not the host package's
+        /// <c>PolhemBlazorOptions.DefaultLanguage</c>, the last hop of the definitions' language fall-back chain.
         /// </remarks>
         public string DefaultCulture { get; set; } = string.Empty;
 
