@@ -1,4 +1,6 @@
-namespace Polhem.Definition.ObjectTree
+using Polhem.Definition.ObjectTree;
+
+namespace Polhem.UI.Core.Trees
 {
     /// <summary>
     /// Supplies the commands a UI head offers for a tree node, for example in its context menu.

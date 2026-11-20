@@ -1,4 +1,6 @@
-namespace Polhem.Definition.ObjectTree
+using Polhem.Definition.ObjectTree;
+
+namespace Polhem.UI.Core.Trees
 {
     /// <summary>
     /// Decides which tree nodes a UI head lets the user drag, where they may be dropped, and applies a drop to the

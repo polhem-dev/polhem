@@ -1,10 +1,11 @@
 using System.ComponentModel;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Data;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Polhem.Definition.ObjectTree;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {

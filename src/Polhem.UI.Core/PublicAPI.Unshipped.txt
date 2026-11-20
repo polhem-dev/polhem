@@ -293,3 +293,22 @@ Polhem.UI.Core.Criteria.ColumnFilterCriteria.MarkApplied() -> void
 *REMOVED*Polhem.UI.Core.Lists.ListPagingState.TryStepBackFromEmptyPage(int rowCount) -> bool
 *REMOVED*const Polhem.UI.Core.Lists.ListPagingState.DefaultPageSize = 50 -> int
 *REMOVED*static Polhem.UI.Core.Lists.ListFilterState.GetKind(Polhem.Definition.Layouts.LayoutColumn! column, Polhem.Definition.Forms.FormField? field) -> Polhem.UI.Core.Lists.ColumnFilterKind
+Polhem.UI.Core.Trees.ITreeNodeCommandProvider
+Polhem.UI.Core.Trees.ITreeNodeCommandProvider.GetCommands(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> System.Collections.Generic.IReadOnlyList<Polhem.UI.Core.Trees.TreeNodeCommand!>!
+Polhem.UI.Core.Trees.ITreeNodeDragDropHandler
+Polhem.UI.Core.Trees.ITreeNodeDragDropHandler.CanDrag(Polhem.Definition.ObjectTree.ObjectTreeNode! node) -> bool
+Polhem.UI.Core.Trees.ITreeNodeDragDropHandler.CanDrop(Polhem.Definition.ObjectTree.ObjectTreeNode! node, Polhem.Definition.ObjectTree.ObjectTreeNode! target, Polhem.UI.Core.Trees.TreeNodeDropPosition position) -> bool
+Polhem.UI.Core.Trees.ITreeNodeDragDropHandler.Drop(Polhem.Definition.ObjectTree.ObjectTreeNode! node, Polhem.Definition.ObjectTree.ObjectTreeNode! target, Polhem.UI.Core.Trees.TreeNodeDropPosition position) -> void
+Polhem.UI.Core.Trees.TreeNodeCommand
+Polhem.UI.Core.Trees.TreeNodeCommand.BeginsGroup.get -> bool
+Polhem.UI.Core.Trees.TreeNodeCommand.BeginsGroup.init -> void
+Polhem.UI.Core.Trees.TreeNodeCommand.Execute() -> void
+Polhem.UI.Core.Trees.TreeNodeCommand.IconKey.get -> string?
+Polhem.UI.Core.Trees.TreeNodeCommand.IconKey.init -> void
+Polhem.UI.Core.Trees.TreeNodeCommand.IsEnabled.get -> bool
+Polhem.UI.Core.Trees.TreeNodeCommand.IsEnabled.init -> void
+Polhem.UI.Core.Trees.TreeNodeCommand.Label.get -> string!
+Polhem.UI.Core.Trees.TreeNodeCommand.TreeNodeCommand(string! label, System.Action! execute) -> void
+Polhem.UI.Core.Trees.TreeNodeDropPosition
+Polhem.UI.Core.Trees.TreeNodeDropPosition.After = 1 -> Polhem.UI.Core.Trees.TreeNodeDropPosition
+Polhem.UI.Core.Trees.TreeNodeDropPosition.Before = 0 -> Polhem.UI.Core.Trees.TreeNodeDropPosition

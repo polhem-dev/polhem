@@ -1,6 +1,7 @@
 using Polhem.Definition.Collections;
 using Polhem.Definition.ObjectTree;
 using Polhem.Definition.Settings;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.ViewModels;
 

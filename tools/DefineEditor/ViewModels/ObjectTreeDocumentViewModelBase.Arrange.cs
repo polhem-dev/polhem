@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Polhem.Core.Collections;
 using Polhem.Core.Serialization;
 using Polhem.Definition.ObjectTree;
+using Polhem.UI.Core.Trees;
 
 namespace Polhem.DefineEditor.ViewModels;
 
