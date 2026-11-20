@@ -164,21 +164,22 @@ public sealed partial class ExpressionTrialViewModel : ObservableObject
             Show(ExpressionTrialOutcome.None, string.Empty);
             return;
         }
+        var sample = new ExpressionSample { Values = values, TimeZoneId = _timeZoneId };
         try
         {
             if (_field is null && !string.IsNullOrWhiteSpace(_when)
-                && !_calculator.EvaluateRuleSample(_when, _table, values, _timeZoneId))
+                && !_calculator.EvaluateRuleSample(_when, _table, sample))
             {
                 Show(ExpressionTrialOutcome.Skipped, L("ExpressionTrial_WhenSkips"));
             }
             else if (_field is null)
             {
-                var holds = _calculator.EvaluateRuleSample(_expression, _table, values, _timeZoneId);
+                var holds = _calculator.EvaluateRuleSample(_expression, _table, sample);
                 Show(holds ? ExpressionTrialOutcome.Passed : ExpressionTrialOutcome.Failed, RuleResult(holds));
             }
             else
             {
-                var value = _calculator.EvaluateFieldSample(_field, _propertyName, _expression, values, _timeZoneId);
+                var value = _calculator.EvaluateFieldSample(_field, _propertyName, _expression, sample);
                 Show(ExpressionTrialOutcome.Value, value is null ? L("ExpressionTrial_Empty") : $"{Format(value)}  ({ExpressionMembers.TypeName(value.GetType())})");
             }
         }

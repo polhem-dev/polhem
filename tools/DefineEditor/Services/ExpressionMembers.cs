@@ -107,13 +107,14 @@ public static class ExpressionMembers
     public static string Signature(ExpressionFunction function)
     {
         ArgumentNullException.ThrowIfNull(function);
-        return Signature(function.Parameters, function.ReturnType);
+        return Signature(function.Parameters.Select(p => (p.Type, p.Name)), function.ReturnType);
     }
 
-    private static string Signature(MethodInfo method) => Signature(method.GetParameters(), method.ReturnType);
+    private static string Signature(MethodInfo method) =>
+        Signature(method.GetParameters().Select(p => (p.ParameterType, p.Name ?? string.Empty)), method.ReturnType);
 
-    private static string Signature(IEnumerable<ParameterInfo> parameters, Type returnType) =>
-        $"({string.Join(", ", parameters.Select(p => $"{TypeName(p.ParameterType)} {p.Name}"))}) → {TypeName(returnType)}";
+    private static string Signature(IEnumerable<(Type Type, string Name)> parameters, Type returnType) =>
+        $"({string.Join(", ", parameters.Select(p => $"{TypeName(p.Type)} {p.Name}"))}) → {TypeName(returnType)}";
 
     /// <summary>The name an expression writes a type with, so the list reads like the expressions themselves.</summary>
     public static string TypeName(Type type)

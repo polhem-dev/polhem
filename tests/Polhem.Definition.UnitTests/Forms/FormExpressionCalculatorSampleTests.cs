@@ -45,8 +45,11 @@ namespace Polhem.Definition.UnitTests.Forms
             return table;
         }
 
-        private static Dictionary<string, object?> Values(object? price, object? qty) =>
-            new(StringComparer.Ordinal) { ["price"] = price, ["qty"] = qty };
+        private static ExpressionSample Values(object? price, object? qty, string timeZoneId = "") => new()
+        {
+            Values = new Dictionary<string, object?>(StringComparer.Ordinal) { ["price"] = price, ["qty"] = qty },
+            TimeZoneId = timeZoneId,
+        };
 
         [Fact]
         [DisplayName("A ValueExpression sample gives the value ApplyComputedRow writes for the same row")]
@@ -73,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Forms
             _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0], "Asia/Taipei");
 
             var sample = _calculator.EvaluateFieldSample(dueDate, nameof(FormField.DefaultValueExpression),
-                dueDate.DefaultValueExpression, Values(null, null), "Asia/Taipei");
+                dueDate.DefaultValueExpression, Values(null, null, "Asia/Taipei"));
 
             Assert.IsType<DateTime>(sample);
             Assert.Equal(table.Rows[0]["due_date"], sample);
@@ -133,6 +136,34 @@ namespace Polhem.Definition.UnitTests.Forms
             var table = BuildSchema().MasterTable!;
 
             Assert.Throws<ExpressionEvaluationException>(() => _calculator.EvaluateRuleSample("qty >", table, Values("1", "1")));
+        }
+
+        [Fact]
+        [DisplayName("The one-row sample methods refuse detail rows instead of ignoring them")]
+        public void OneRowSamples_WithDetailRows_Throw()
+        {
+            var schema = BuildSchema();
+            var amount = schema.MasterTable!.Fields!["amount"];
+            var withRows = new ExpressionSample
+            {
+                Values = Values("1", "1").Values,
+                DetailRows = new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, object?>>> { ["Lines"] = [] },
+            };
+
+            Assert.Throws<ArgumentException>(() => _calculator.EvaluateRuleSample("qty > 0", schema.MasterTable!, withRows));
+            Assert.Throws<ArgumentException>(() =>
+                _calculator.EvaluateFieldSample(amount, nameof(FormField.ValueExpression), "1", withRows));
+        }
+
+        [Fact]
+        [DisplayName("A sample without values is rejected at the call, not deep inside the evaluation")]
+        public void Samples_NullValues_ThrowArgumentNullException()
+        {
+            var schema = BuildSchema();
+            var noValues = new ExpressionSample { Values = null! };
+
+            Assert.Throws<ArgumentNullException>(() => _calculator.EvaluateRuleSample("qty > 0", schema.MasterTable!, noValues));
+            Assert.Throws<ArgumentNullException>(() => _calculator.EvaluateMasterRuleSample("qty > 0", schema, noValues));
         }
     }
 }
