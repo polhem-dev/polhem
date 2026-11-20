@@ -104,17 +104,7 @@ namespace Polhem.Definition.Forms
             call = null!;
             end = position;
             conditionStart = -1;
-            DetailAggregateFunction function;
-            switch (name)
-            {
-                case "Sum": function = DetailAggregateFunction.Sum; break;
-                case "Count": function = DetailAggregateFunction.Count; break;
-                case "Min": function = DetailAggregateFunction.Min; break;
-                case "Max": function = DetailAggregateFunction.Max; break;
-                case "Any": function = DetailAggregateFunction.Any; break;
-                case "All": function = DetailAggregateFunction.All; break;
-                default: return false;
-            }
+            if (FunctionNamed(name) is not { } function) { return false; }
 
             int i = SkipWhitespace(expression, position);
             if (i >= expression.Length || expression[i] != '(') { return false; }
@@ -124,8 +114,41 @@ namespace Polhem.Definition.Forms
             var table = expression[i..tableEnd];
             i = SkipWhitespace(expression, tableEnd);
 
-            var field = string.Empty;
-            var condition = string.Empty;
+            if (!TryReadFieldOrCondition(expression, ref i, out var field, out var condition, out conditionStart)) { return false; }
+            if (i >= expression.Length || expression[i] != ')') { return false; }
+
+            bool shapeFits = function switch
+            {
+                DetailAggregateFunction.Count => field.Length == 0,
+                DetailAggregateFunction.Any or DetailAggregateFunction.All => field.Length == 0 && condition.Length > 0,
+                _ => field.Length > 0,
+            };
+            if (!shapeFits) { conditionStart = -1; return false; }
+
+            call = new DetailAggregate(function, table, field, string.Empty) { Condition = condition };
+            end = i + 1;
+            return true;
+        }
+
+        private static DetailAggregateFunction? FunctionNamed(string name) => name switch
+        {
+            "Sum" => DetailAggregateFunction.Sum,
+            "Count" => DetailAggregateFunction.Count,
+            "Min" => DetailAggregateFunction.Min,
+            "Max" => DetailAggregateFunction.Max,
+            "Any" => DetailAggregateFunction.Any,
+            "All" => DetailAggregateFunction.All,
+            _ => null,
+        };
+
+        // Reads what follows the table name at `i`: `.field`, `, condition` up to the closing parenthesis, or nothing.
+        // Leaves `i` on the character after it; false when the field or the condition is malformed.
+        private static bool TryReadFieldOrCondition(string expression, ref int i, out string field, out string condition,
+            out int conditionStart)
+        {
+            field = string.Empty;
+            condition = string.Empty;
+            conditionStart = -1;
             if (i < expression.Length && expression[i] == '.')
             {
                 i = SkipWhitespace(expression, i + 1);
@@ -144,18 +167,6 @@ namespace Polhem.Definition.Forms
                 conditionStart = i + 1 + (raw.Length - raw.TrimStart().Length);
                 i = close;
             }
-            if (i >= expression.Length || expression[i] != ')') { return false; }
-
-            bool shapeFits = function switch
-            {
-                DetailAggregateFunction.Count => field.Length == 0,
-                DetailAggregateFunction.Any or DetailAggregateFunction.All => field.Length == 0 && condition.Length > 0,
-                _ => field.Length > 0,
-            };
-            if (!shapeFits) { conditionStart = -1; return false; }
-
-            call = new DetailAggregate(function, table, field, string.Empty) { Condition = condition };
-            end = i + 1;
             return true;
         }
 
