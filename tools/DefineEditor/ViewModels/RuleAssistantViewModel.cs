@@ -67,6 +67,7 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         _options = new RuleDraftingOptions
         {
             ReplyCulture = LocalizationService.Current.Culture,
+            MarkdownReplies = true,
             MessageLanguages = files.Select(f => f.Language).ToList(),
             Functions = DynamicExpressoEvaluator.HelperFunctions
                 .Where(DynamicExpressoEvaluator.IsAllowedFunction)
