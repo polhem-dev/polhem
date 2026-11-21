@@ -76,7 +76,7 @@ public partial class MainWindowViewModel
         var chatClient = DraftingChatClientFactory?.Invoke() ?? DraftingChatClients.Create(provider);
         // The conversation starts in the language of the editor's user interface; the user can still write in another.
         var session = new FormDraftSession(chatClient, host,
-            new FormDraftingOptions { ReplyCulture = LocalizationService.Current.Culture });
+            new FormDraftingOptions { ReplyCulture = LocalizationService.Current.Culture, MarkdownReplies = true });
         var documentsLabel = string.Join(", ", documentPaths.Select(Path.GetFileName));
         var viewModel = new FormDraftingViewModel(session, host, SolutionPath, documentsLabel, credential.Description,
             result => ImportDraftedFormAsync(result, documentsLabel));

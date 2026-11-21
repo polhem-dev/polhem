@@ -65,6 +65,20 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
+    [DisplayName("A reply of the model renders as Markdown; the user's message and an error show as written")]
+    public async Task StartAsync_Reply_RendersAsMarkdown()
+    {
+        var viewModel = CreateViewModel(new ScriptedChatClient().Then(Text("Drafted **three** fields.")), out _);
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        var entries = viewModel.Messages.OfType<DraftChatEntry>().ToList();
+        Assert.False(entries[0].RendersMarkdown);
+        Assert.True(entries[1].RendersMarkdown);
+        Assert.False(new DraftChatEntry(isUser: false, "The request failed.", isError: true).RendersMarkdown);
+    }
+
+    [Fact]
     [DisplayName("A turn without tool calls leaves no activity card behind")]
     public async Task StartAsync_ReplyOnly_LeavesNoActivityCard()
     {

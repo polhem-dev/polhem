@@ -556,6 +556,7 @@ The requests are charged to the Claude Console organization of this credential.<
   <data name="Drafting_CreateTooltip" xml:space="preserve"><value>Import the form the way an Excel workbook is imported: review the files, write them, then upgrade the database</value></data>
   <data name="Drafting_ReadyHint" xml:space="preserve"><value>The draft is ready to create.</value></data>
   <data name="Drafting_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="Drafting_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Drafting_Stop" xml:space="preserve"><value>Stop</value></data>
   <data name="Drafting_InputWatermark" xml:space="preserve"><value>Answer Claude's questions or ask for changes. Enter sends; Shift+Enter starts a new line.</value></data>
   <data name="Drafting_TabForm" xml:space="preserve"><value>Form</value></data>
