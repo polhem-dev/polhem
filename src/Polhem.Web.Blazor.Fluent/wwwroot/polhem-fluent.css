@@ -100,3 +100,12 @@ fluent-text-input[readonly]::part(root), fluent-textarea[readonly]::part(root) {
 .polhem-criteria-row__unpick { padding: 0 2px; font: inherit; background: none; border: 0; cursor: pointer; }
 .polhem-criteria-chip__remove, .polhem-criteria-row__remove, .polhem-criteria-panel__close { min-width: 0; }
 .polhem-user-query-bar__picker { flex: 1 1 auto; min-width: 0; }
+
+/* The Markdown viewer of Polhem.Markdown.Blazor (polhem-dev/polhem-markdown) reads its colors from these variables, so
+   a reply follows the Fluent UI design tokens and their dark theme. The viewer's own defaults apply where a page has no
+   theme. */
+.pmd {
+  --pmd-link: var(--colorBrandForeground1);
+  --pmd-rule: var(--colorNeutralStroke2);
+  --pmd-code-bg: var(--colorNeutralBackground3);
+}

@@ -25,4 +25,10 @@ public sealed class DraftChatEntry : DraftChatItem
 
     /// <summary>Gets whether the model or the editor wrote it.</summary>
     public bool IsAssistant => !IsUser;
+
+    /// <summary>
+    /// Gets whether the text is rendered as Markdown: a reply of the model. What the user typed and the editor's own
+    /// error messages show as written.
+    /// </summary>
+    public bool RendersMarkdown => !IsUser && !IsError;
 }

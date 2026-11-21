@@ -3,6 +3,7 @@
         xmlns:vm="using:Polhem.DefineEditor.ViewModels"
         xmlns:loc="using:Polhem.DefineEditor.Markup"
         xmlns:controls="using:Polhem.UI.Avalonia.Controls"
+        xmlns:md="using:Polhem.Markdown.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760"
@@ -62,11 +63,26 @@
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.DataTemplates>
-                                    <!-- NOTE: the text of a reply is shown here only, so rendering Markdown later
-                                         changes this one template. -->
+                                    <!-- A reply of the model renders as Markdown, as the drafting prompt asks it to write
+                                         (FormDraftingOptions.MarkdownReplies); what the user typed and the editor's error
+                                         messages show as written. The copy button copies a reply's Markdown source. -->
                                     <DataTemplate DataType="vm:DraftChatEntry">
                                         <Border Classes="chat" Classes.user="{Binding IsUser}" Classes.error="{Binding IsError}">
-                                            <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+                                            <StackPanel Spacing="2">
+                                                <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                                                                     IsVisible="{Binding !RendersMarkdown}"/>
+                                                <md:MarkdownViewer Markdown="{Binding Text}" IsVisible="{Binding RendersMarkdown}"
+                                                                   LinkForeground="{DynamicResource SemiColorLink}"
+                                                                   RuleBrush="{DynamicResource SemiColorBorder}"
+                                                                   CopyCodeLabel="{loc:Loc Drafting_Copy}"/>
+                                                <Button Classes="copyMessage" IsVisible="{Binding RendersMarkdown}"
+                                                        ToolTip.Tip="{loc:Loc Drafting_Copy}"
+                                                        AutomationProperties.Name="{loc:Loc Drafting_Copy}"
+                                                        Click="OnCopyMessage">
+                                                    <PathIcon Width="13" Height="13"
+                                                              Data="M8 2h9a2 2 0 0 1 2 2v11h-2V4H8V2zM5 6h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm0 2v12h9V8H5z"/>
+                                                </Button>
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
 
@@ -283,6 +299,17 @@
         </Style>
         <Style Selector="Border.chat.error">
             <Setter Property="Background" Value="{DynamicResource SemiColorDangerLight}"/>
+        </Style>
+        <!-- The copy button shows while the pointer is over its reply, as in a chat application, but keeps its space so
+             the conversation does not move. -->
+        <Style Selector="Button.copyMessage">
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Border.chat:pointerover Button.copyMessage, Button.copyMessage:focus-visible">
+            <Setter Property="Opacity" Value="0.7"/>
         </Style>
         <Style Selector="Border.activity">
             <Setter Property="HorizontalAlignment" Value="Stretch"/>

@@ -59,6 +59,9 @@
     <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.2" />
     <!-- The XML view of a document: highlighting and find. -->
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+    <!-- Renders the model's replies in the drafting conversation (polhem-dev/polhem-markdown). An exact version, so a
+         newer viewer arrives only through a change to this line. -->
+    <PackageReference Include="Polhem.Markdown.Avalonia" Version="[0.1.0]" />
   </ItemGroup>
 
   <ItemGroup>

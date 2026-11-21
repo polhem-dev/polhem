@@ -40,3 +40,11 @@
 .polhem-criteria-row { border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-background-gray); }
 .polhem-criteria-row__operator.mud-input-control { flex: 0 0 120px; width: 120px; }
 .polhem-criteria-row__range .mud-input-control { flex: 1 1 120px; }
+
+/* The Markdown viewer of Polhem.Markdown.Blazor (polhem-dev/polhem-markdown) reads its colors from these variables, so
+   a reply follows the MudBlazor palette and its dark mode. The viewer's own defaults apply where a page has no theme. */
+.pmd {
+  --pmd-link: var(--mud-palette-primary);
+  --pmd-rule: var(--mud-palette-lines-default);
+  --pmd-code-bg: var(--mud-palette-background-gray);
+}

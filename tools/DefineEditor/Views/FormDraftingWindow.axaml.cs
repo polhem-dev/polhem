@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
@@ -158,4 +159,12 @@ public partial class FormDraftingWindow : Window
     }
 
     private void OnClose(object? sender, RoutedEventArgs e) => Close();
+
+    private async void OnCopyMessage(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { DataContext: DraftChatEntry entry } && Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(entry.Text);
+        }
+    }
 }
