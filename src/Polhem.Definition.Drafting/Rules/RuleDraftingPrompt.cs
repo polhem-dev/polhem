@@ -57,7 +57,7 @@ namespace Polhem.Definition.Drafting.Rules
                table, and a rule that reads none, gives an empty list).
             3. If the result is not accepted, fix what it names and call submit_rule again.
             4. When it is accepted, reply in one short sentence in {{ReplyLanguage(options)}}.
-            Write descriptions and replies in {{ReplyLanguage(options)}}, with no code and no Markdown.
+            {{ReplyFormat(options)}}
             """;
 
         public static string ExplainSystemPrompt(FormSchema schema, RuleDraftingOptions options) => $$"""
@@ -75,7 +75,7 @@ namespace Polhem.Definition.Drafting.Rules
             The form:
             {{Fields(schema)}}
 
-            Call submit_explanation with two or three plain sentences in {{ReplyLanguage(options)}}, with no code, and
+            Call submit_explanation with two or three {{ExplanationStyle(options)}} in {{ReplyLanguage(options)}}, with no code, and
             three to six samples: rows of values with what the rule does with each (Passes, Blocked, or Skipped when it
             does not apply). A sample holds the fields the rule reads from its table (a field it leaves out is empty),
             and, for a master rule that reads a detail table, the sample's detail rows. If the result is not
@@ -95,6 +95,16 @@ namespace Polhem.Definition.Drafting.Rules
             condition: {rule.Condition}
             message: {rule.Message}
             """);
+
+        // NOTE: the rule message is stored in the definition and shown to the application's users, and the sample
+        // descriptions are shown in a list of their own, so both stay plain text even when the host renders Markdown.
+        private static string ReplyFormat(RuleDraftingOptions options) => options.MarkdownReplies
+            ? $"Write descriptions and replies in {ReplyLanguage(options)}, with no code. The user's window renders Markdown in your replies and the explanation: you may use bold there and put field names in backticks. Write the message and the sample descriptions as plain text, with no Markdown."
+            : $"Write descriptions and replies in {ReplyLanguage(options)}, with no code and no Markdown.";
+
+        private static string ExplanationStyle(RuleDraftingOptions options) => options.MarkdownReplies
+            ? "sentences (the user's window renders Markdown: you may use bold and put field names in backticks)"
+            : "plain sentences";
 
         private static string Languages(RuleDraftingOptions options) =>
             options.MessageLanguages.Count == 0 ? "no other language" : string.Join(", ", options.MessageLanguages);

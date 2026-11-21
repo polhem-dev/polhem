@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Polhem.DefineEditor.ViewModels"
              xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:md="using:Polhem.Markdown.Avalonia"
              x:Class="Polhem.DefineEditor.Views.RuleAssistantPanel"
              x:DataType="vm:RuleAssistantViewModel"
              x:CompileBindings="True">
@@ -25,8 +26,12 @@
                 </WrapPanel>
                 <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
                            IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap"
-                                     IsVisible="{Binding !IsReplyError}" Classes="muted"/>
+                <!-- The reply and the explanation render as Markdown (RuleDraftingOptions.MarkdownReplies); an error shows
+                     as written. -->
+                <md:MarkdownViewer Markdown="{Binding Reply}" IsVisible="{Binding !IsReplyError}"
+                                   LinkForeground="{DynamicResource SemiColorLink}"
+                                   RuleBrush="{DynamicResource SemiColorBorder}"
+                                   CopyCodeLabel="{loc:Loc Drafting_Copy}"/>
                 <SelectableTextBlock Text="{Binding Reply}" TextWrapping="Wrap" IsVisible="{Binding IsReplyError}"
                                      Foreground="{DynamicResource SemiColorDanger}"/>
             </StackPanel>
@@ -35,7 +40,10 @@
                     Content="{loc:Loc RuleAssistant_Apply}" ToolTip.Tip="{loc:Loc RuleAssistant_ApplyTip}"/>
             <ScrollViewer Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasResult}">
                 <StackPanel Spacing="8">
-                    <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap"/>
+                    <md:MarkdownViewer Markdown="{Binding Explanation}"
+                                       LinkForeground="{DynamicResource SemiColorLink}"
+                                       RuleBrush="{DynamicResource SemiColorBorder}"
+                                       CopyCodeLabel="{loc:Loc Drafting_Copy}"/>
                     <Border Padding="8,6" CornerRadius="4" Background="{DynamicResource SemiColorFill0}"
                             IsVisible="{Binding HasDraft}">
                         <SelectableTextBlock Text="{Binding RuleText}" TextWrapping="Wrap" FontSize="12"

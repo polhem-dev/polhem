@@ -51,6 +51,24 @@ namespace Polhem.Definition.Drafting.UnitTests
         private static string Result(ScriptedChatClient client) => client.LastResults().Single().Result?.ToString() ?? string.Empty;
 
         [Fact]
+        [DisplayName("The rule prompts ask for plain replies unless the host renders Markdown, and the message stays plain either way")]
+        public void Prompts_MarkdownReplies_ChangeTheReplyFormat()
+        {
+            var schema = BuildSchema();
+            var plain = new RuleDraftingOptions();
+            var markdown = new RuleDraftingOptions { MarkdownReplies = true };
+
+            Assert.Contains("with no code and no Markdown.", RuleDraftingPrompt.DraftSystemPrompt(schema, plain), StringComparison.Ordinal);
+            Assert.Contains("plain sentences", RuleDraftingPrompt.ExplainSystemPrompt(schema, plain), StringComparison.Ordinal);
+
+            var draft = RuleDraftingPrompt.DraftSystemPrompt(schema, markdown);
+            Assert.Contains("renders Markdown", draft, StringComparison.Ordinal);
+            Assert.Contains("Write the message and the sample descriptions as plain text, with no Markdown.", draft, StringComparison.Ordinal);
+            Assert.DoesNotContain("with no code and no Markdown.", draft, StringComparison.Ordinal);
+            Assert.Contains("renders Markdown", RuleDraftingPrompt.ExplainSystemPrompt(schema, markdown), StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A rule whose samples the engine confirms is accepted with the engine's outcomes, and the request ends there")]
         public async Task DraftAsync_ValidRule_Accepted()
         {
