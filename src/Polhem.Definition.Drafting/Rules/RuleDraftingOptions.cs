@@ -28,5 +28,12 @@ namespace Polhem.Definition.Drafting.Rules
 
         /// <summary>Gets or sets the IANA time zone id the samples' <c>Today()</c> and <c>Now()</c> see; empty for UTC.</summary>
         public string TimeZoneId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets whether the host renders Markdown in the model's replies and in the explanation. When it does not,
+        /// the default, the model is asked to write plain text. The rule message and the sample descriptions are plain
+        /// text either way.
+        /// </summary>
+        public bool MarkdownReplies { get; set; }
     }
 }

@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Definition.Drafting.Rules.RuleDraftingOptions.MarkdownReplies.get -> bool
+Polhem.Definition.Drafting.Rules.RuleDraftingOptions.MarkdownReplies.set -> void
