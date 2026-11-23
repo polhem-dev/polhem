@@ -561,6 +561,10 @@
   <data name="Drafting_ColumnRelation" xml:space="preserve"><value>關聯</value></data>
   <data name="Drafting_ColumnSource" xml:space="preserve"><value>文件原文</value></data>
   <data name="Drafting_SentDocuments" xml:space="preserve"><value>已送出 {0}。</value></data>
+  <data name="Drafting_UsageRunning" xml:space="preserve"><value>第 {0} 次呼叫・已 {1} 秒</value></data>
+  <data name="Drafting_Usage" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens・輸出 {2} tokens・{3} 秒</value></data>
+  <data name="Drafting_UsageCached" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens（快取 {2}）・輸出 {3} tokens・{4} 秒</value></data>
+  <data name="Drafting_UsageNoTokens" xml:space="preserve"><value>呼叫 {0} 次・未提供 token 用量・{1} 秒</value></data>
   <data name="Drafting_Stopped" xml:space="preserve"><value>已停止。草稿維持在這則訊息之前的狀態。</value></data>
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>要求失敗：{0}
 草稿維持在這則訊息之前的狀態，可重送訊息再試一次。</value></data>

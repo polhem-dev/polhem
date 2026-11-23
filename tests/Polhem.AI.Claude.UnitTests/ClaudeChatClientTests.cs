@@ -328,6 +328,144 @@ namespace Polhem.AI.Claude.UnitTests
         }
 
         [Fact]
+        [DisplayName("A stream yields the text before any tool call, and the tool calls only after the answer ended")]
+        public async Task GetStreamingResponseAsync_ToolCall_ComesAfterTheText()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(Sse.MessageStart()
+                + Sse.Thinking(0, "Look at the fields.", "sig-1")
+                + Sse.Text(1, "Adding a field.")
+                + Sse.ToolUse(2, "toolu_1", "get_draft", "{\"table\":\"master\"}")
+                + Sse.MessageEnd("tool_use"));
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+
+            var updates = await Collect(client, [new ChatMessage(ChatRole.User, "Hello")]);
+
+            var callUpdate = updates.FindIndex(u => u.Contents.OfType<FunctionCallContent>().Any());
+            Assert.Equal(updates.Count - 1, callUpdate);
+            Assert.True(updates.FindIndex(u => u.Text.Length > 0) < callUpdate);
+            Assert.Contains(updates.Take(callUpdate), u => u.FinishReason == ChatFinishReason.ToolCalls);
+            var response = updates.ToChatResponse();
+            Assert.Equal("toolu_1", Assert.Single(response.Messages.SelectMany(m => m.Contents).OfType<FunctionCallContent>()).CallId);
+            Assert.Equal(["thinking", "text", "tool_use"], ContentTypes(response));
+        }
+
+        [Fact]
+        [DisplayName("A stream that was refused throws after its last update and yields no tool call")]
+        public async Task GetStreamingResponseAsync_Refusal_ThrowsRefused()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(Sse.MessageStart() + Sse.Text(0, "Partial") + Sse.MessageEnd("refusal", "cyber"));
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+            var updates = new List<ChatResponseUpdate>();
+
+            var ex = await Assert.ThrowsAsync<ClaudeChatException>(async () =>
+            {
+                await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hello")]))
+                    updates.Add(update);
+            });
+
+            Assert.Equal(ClaudeFailureKind.Refused, ex.Kind);
+            Assert.Equal("cyber", ex.RefusalCategory);
+            Assert.Equal("Partial", updates.ToChatResponse().Text);
+        }
+
+        [Fact]
+        [DisplayName("A stream cut off at the output limit throws and never yields its partial tool call")]
+        public async Task GetStreamingResponseAsync_MaxTokens_YieldsNoPartialToolCall()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(Sse.MessageStart()
+                + Sse.ToolUse(0, "toolu_1", "upsert_field", "{\"table\":\"mas")
+                + Sse.MessageEnd("max_tokens"));
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+            var updates = new List<ChatResponseUpdate>();
+
+            var ex = await Assert.ThrowsAsync<ClaudeChatException>(async () =>
+            {
+                await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hello")]))
+                    updates.Add(update);
+            });
+
+            Assert.Equal(ClaudeFailureKind.OutputLimitReached, ex.Kind);
+            Assert.DoesNotContain(updates.SelectMany(u => u.Contents), c => c is FunctionCallContent);
+        }
+
+        [Fact]
+        [DisplayName("A stream with a mid-output fallback never yields the declined tool call, and the next request drops the declined thinking")]
+        public async Task GetStreamingResponseAsync_MidOutputFallback_DropsDeclinedAttempt()
+        {
+            var handler = new FakeAnthropicHandler()
+                .ThenStream(Sse.MessageStart()
+                    + Sse.Thinking(0, "Declined reasoning.", "sig-declined")
+                    + Sse.Text(1, "Partial ")
+                    + Sse.ToolUse(2, "toolu_declined", "get_draft", "{}")
+                    + Sse.Fallback(3, "claude-opus-5-5", "claude-opus-5")
+                    + Sse.Thinking(4, "Fallback reasoning.", "sig-fallback")
+                    + Sse.Text(5, "Answer.")
+                    + Sse.ToolUse(6, "toolu_kept", "get_draft", "{}")
+                    + Sse.MessageEnd("tool_use"))
+                .ThenStream(s_endTurn);
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+            var history = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+
+            var updates = await Collect(client, history);
+
+            var calls = updates.SelectMany(u => u.Contents).OfType<FunctionCallContent>().ToList();
+            Assert.Equal("toolu_kept", Assert.Single(calls).CallId);
+            history.AddRange(updates.ToChatResponse().Messages);
+            history.Add(new ChatMessage(ChatRole.Tool, [new FunctionResultContent("toolu_kept", "{}")]));
+            await client.GetResponseAsync(history);
+
+            var echoed = handler.Requests[1].Body.GetProperty("messages")[1].GetProperty("content")
+                .EnumerateArray().Select(block => block.GetProperty("type").GetString()).ToList();
+            Assert.Equal(["text", "fallback", "thinking", "text", "tool_use"], echoed);
+            Assert.Equal(2, history[1].Contents.OfType<TextReasoningContent>().Count());
+        }
+
+        [Fact]
+        [DisplayName("A stream passes the token usage through, so the collected response reports it")]
+        public async Task GetStreamingResponseAsync_Usage_ReachesTheResponse()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(s_endTurn);
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+
+            var response = (await Collect(client, [new ChatMessage(ChatRole.User, "Hello")])).ToChatResponse();
+
+            Assert.Equal(10, response.Usage?.InputTokenCount);
+            Assert.Equal(5, response.Usage?.OutputTokenCount);
+        }
+
+        [Fact]
+        [DisplayName("Cached input tokens are reported separately and are part of the input token count")]
+        public async Task GetStreamingResponseAsync_CacheRead_IsPartOfInputTokens()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(
+                Sse.MessageStart(cacheReadInputTokens: 1000) + Sse.Text(0, "Done.") + Sse.MessageEnd("end_turn"));
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+
+            var response = (await Collect(client, [new ChatMessage(ChatRole.User, "Hello")])).ToChatResponse();
+
+            Assert.Equal(1010, response.Usage?.InputTokenCount);
+            Assert.Equal(1000, response.Usage?.CachedInputTokenCount);
+        }
+
+        private static async Task<List<ChatResponseUpdate>> Collect(IChatClient client, List<ChatMessage> messages)
+        {
+            var updates = new List<ChatResponseUpdate>();
+            await foreach (var update in client.GetStreamingResponseAsync(messages))
+                updates.Add(update);
+            return updates;
+        }
+
+        private static List<string> ContentTypes(ChatResponse response) => [.. response.Messages
+            .SelectMany(m => m.Contents)
+            .Select(c => c switch
+            {
+                TextReasoningContent => "thinking",
+                TextContent => "text",
+                FunctionCallContent => "tool_use",
+                _ => c.GetType().Name,
+            })];
+
+        [Fact]
         [DisplayName("Disposing a chat client over a caller's SDK client leaves that client usable")]
         public async Task Dispose_CallerClient_IsNotDisposed()
         {

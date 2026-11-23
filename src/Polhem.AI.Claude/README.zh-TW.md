@@ -53,6 +53,10 @@ Console 組織支付。Max、Ultra 或 Team 方案可以把每月附送的 API �
   SDK 的轉接器會丟掉標示切換點的區塊；本 client 保留它，並移除被拒的那次嘗試，這是 API 在下一個請求前的要求。
 
 因拒答或輸出上限而停止的回應，以及 401，會轉成 `ClaudeChatException`，而不是被截斷的回答或原始的 HTTP 錯誤。
+
+`GetStreamingResponseAsync` 做同樣的檢查：文字邊寫邊送，工具呼叫在最後一段文字之後才送出（確認回答完整、
+且沒有被 fallback 取代之後），拒答或達到輸出上限時在最後一個 update 之後擲出 `ClaudeChatException`。
+邊收邊顯示文字的呼叫端，遇到這種情況時要把已顯示的文字移除。
 rate limit、伺服器過載與網路失敗由 SDK 自行重試；重試用盡時，SDK 自己的例外會傳到呼叫端。
 
 ## 背景

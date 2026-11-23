@@ -14,7 +14,7 @@ namespace Polhem.AI.Claude.UnitTests
             return $"event: {type}\ndata: {json}\n\n";
         }
 
-        public static string MessageStart(string model = "claude-opus-5-5") => Event(new
+        public static string MessageStart(string model = "claude-opus-5-5", int cacheReadInputTokens = 0) => Event(new
         {
             type = "message_start",
             message = new
@@ -26,7 +26,7 @@ namespace Polhem.AI.Claude.UnitTests
                 content = Array.Empty<object>(),
                 stop_reason = (string?)null,
                 stop_sequence = (string?)null,
-                usage = new { input_tokens = 10, output_tokens = 0 },
+                usage = new { input_tokens = 10, output_tokens = 0, cache_read_input_tokens = cacheReadInputTokens },
             },
         });
 

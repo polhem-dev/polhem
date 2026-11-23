@@ -574,6 +574,10 @@ The requests are charged to the Claude Console organization of this credential.<
   <data name="Drafting_ColumnRelation" xml:space="preserve"><value>Relation</value></data>
   <data name="Drafting_ColumnSource" xml:space="preserve"><value>From the Document</value></data>
   <data name="Drafting_SentDocuments" xml:space="preserve"><value>Sent {0}.</value></data>
+  <data name="Drafting_UsageRunning" xml:space="preserve"><value>Call {0} · {1} s</value></data>
+  <data name="Drafting_Usage" xml:space="preserve"><value>{0} calls · {1} input tokens · {2} output tokens · {3} s</value></data>
+  <data name="Drafting_UsageCached" xml:space="preserve"><value>{0} calls · {1} input tokens ({2} cached) · {3} output tokens · {4} s</value></data>
+  <data name="Drafting_UsageNoTokens" xml:space="preserve"><value>{0} calls · tokens not reported · {1} s</value></data>
   <data name="Drafting_Stopped" xml:space="preserve"><value>Stopped. The draft is as it was before this message.</value></data>
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>The request failed: {0}
 The draft is as it was before this message; send it again to retry.</value></data>
