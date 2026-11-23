@@ -10,15 +10,54 @@ public sealed class DraftChatEntry : DraftChatItem
     public DraftChatEntry(bool isUser, string text, bool isError = false)
     {
         IsUser = isUser;
-        Text = text;
+        _text = text;
         IsError = isError;
     }
+
+    /// <summary>Creates a reply of the model that is still arriving; <see cref="Complete"/> ends it.</summary>
+    /// <returns>The entry, with no text yet.</returns>
+    public static DraftChatEntry Streaming() => new(isUser: false, string.Empty) { IsStreaming = true };
+
+    private string _text;
 
     /// <summary>Gets whether the user wrote it.</summary>
     public bool IsUser { get; }
 
-    /// <summary>Gets the text of the message.</summary>
-    public string Text { get; }
+    /// <summary>Gets the text of the message; it grows while <see cref="IsStreaming"/>.</summary>
+    public string Text
+    {
+        get => _text;
+        private set => SetProperty(ref _text, value);
+    }
+
+    /// <summary>Gets whether the reply is still arriving.</summary>
+    public bool IsStreaming
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(CanCopy));
+        }
+    }
+
+    /// <summary>Gets whether the copy button shows: for a finished reply of the model.</summary>
+    public bool CanCopy => RendersMarkdown && !IsStreaming;
+
+    /// <summary>Shows the part of a streaming reply that has arrived so far.</summary>
+    /// <param name="text">The reply so far.</param>
+    public void ShowPartial(string text)
+    {
+        if (IsStreaming) Text = text;
+    }
+
+    /// <summary>Ends a streaming reply with its whole text.</summary>
+    /// <param name="text">The whole reply.</param>
+    public void Complete(string text)
+    {
+        Text = text;
+        IsStreaming = false;
+    }
 
     /// <summary>Gets whether it reports a failed turn.</summary>
     public bool IsError { get; }

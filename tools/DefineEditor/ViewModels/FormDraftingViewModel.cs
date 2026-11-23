@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
@@ -27,6 +28,16 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     private readonly List<DraftActivityCard> _turnCards = [];
     private DraftActivityCard? _activity;
     private DraftQuestionCard? _pendingQuestions;
+    private readonly StringBuilder _streamText = new();
+    private DraftChatEntry? _streaming;
+    private bool _redrawPending;
+    private FormDraftUsage? _turnUsage;
+
+    /// <summary>
+    /// How often a streaming reply is redrawn. Each redraw parses the Markdown again, so the pieces that arrive in
+    /// between are gathered rather than drawn one by one.
+    /// </summary>
+    internal static TimeSpan StreamRedrawInterval { get; set; } = TimeSpan.FromMilliseconds(80);
 
     /// <summary>Initializes a new instance of the <see cref="FormDraftingViewModel"/> class.</summary>
     /// <param name="session">The conversation; this view-model runs every turn of it.</param>
@@ -49,6 +60,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         DocumentsLabel = documentsLabel;
         CredentialText = credentialText;
         _session.AssistantMessage += OnAssistantMessage;
+        _session.AssistantMessageDelta += OnAssistantMessageDelta;
+        _session.UsageChanged += OnUsageChanged;
         _session.DraftChanged += OnSessionDraftChanged;
         _session.Activity += OnSessionActivity;
         _session.QuestionsAsked += OnSessionQuestionsAsked;
@@ -108,6 +121,14 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private bool _isPreviewViewMode;
+
+    /// <summary>Gets the time and tokens of the turn in progress, or of the last turn once it ended.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUsage))]
+    private string _usageText = string.Empty;
+
+    /// <summary>Gets whether there is a turn to report the cost of.</summary>
+    public bool HasUsage => UsageText.Length > 0;
 
     /// <summary>Gets whether the preview could not be drawn.</summary>
     public bool HasPreviewError => PreviewError.Length > 0;
@@ -220,6 +241,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     {
         _cancellation?.Cancel();
         _session.AssistantMessage -= OnAssistantMessage;
+        _session.AssistantMessageDelta -= OnAssistantMessageDelta;
+        _session.UsageChanged -= OnUsageChanged;
         _session.DraftChanged -= OnSessionDraftChanged;
         _session.Activity -= OnSessionActivity;
         _session.QuestionsAsked -= OnSessionQuestionsAsked;
@@ -231,6 +254,11 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _cancellation = cancellation;
         IsBusy = true;
         var completed = false;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        _turnUsage = null;
+        UsageText = DescribeProgress(null, clock.Elapsed);
+        using var ticking = new CancellationTokenSource();
+        _ = TickAsync(clock, ticking.Token);
         try
         {
             await turn(cancellation.Token);
@@ -250,6 +278,11 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         finally
         {
             _cancellation = null;
+            // NOTE: the ticker is cancelled, not awaited. Awaiting it adds a real asynchronous hop at the end of every turn,
+            // so the caller resumes after the turn off the thread that created this view-model, and a session event it
+            // causes next (DraftChanged after a field edit) is then posted instead of handled at once.
+            ticking.Cancel();
+            UsageText = DescribeUsage(_session.LastTurnUsage, clock.Elapsed);
             // The session's events were posted before the turn's task completed, so they have all been handled here.
             EndTurn(completed);
             IsBusy = false;
@@ -271,17 +304,115 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         }
         _turnCards.Clear();
         _activity = null;
+        // A reply still arriving when the turn ended belongs to no answer: the session has removed the turn.
+        if (_streaming is not null)
+            Messages.Remove(_streaming);
+        _streaming = null;
+        _streamText.Clear();
         if (completed && _pendingQuestions is { } questions)
             Messages.Add(questions);
         _pendingQuestions = null;
     }
 
     private void OnAssistantMessage(object? sender, AssistantMessageEventArgs e)
-        => Post(() => Messages.Add(new DraftChatEntry(isUser: false, e.Text.Trim())));
+        => Post(() =>
+        {
+            var text = e.Text.Trim();
+            if (_streaming is { } entry)
+                entry.Complete(text);
+            else
+                Messages.Add(new DraftChatEntry(isUser: false, text));
+            _streaming = null;
+            _streamText.Clear();
+        });
+
+    private void OnAssistantMessageDelta(object? sender, AssistantMessageDeltaEventArgs e)
+        => Post(() =>
+        {
+            _streamText.Append(e.Text);
+            if (_streaming is null)
+            {
+                // Leading whitespace opens no bubble: a reply that turns out to be only whitespace is never shown.
+                if (_streamText.ToString().Trim().Length == 0) return;
+                _streaming = DraftChatEntry.Streaming();
+                Messages.Add(_streaming);
+                ShowStreamText();
+                return;
+            }
+            if (_redrawPending) return;
+            _redrawPending = true;
+            _ = RedrawLaterAsync();
+        });
+
+    private async Task RedrawLaterAsync()
+    {
+        await Task.Delay(StreamRedrawInterval);
+        Post(() =>
+        {
+            _redrawPending = false;
+            ShowStreamText();
+        });
+    }
+
+    private void ShowStreamText() => _streaming?.ShowPartial(_streamText.ToString().Trim());
+
+    private void OnUsageChanged(object? sender, FormDraftUsageEventArgs e)
+        => Post(() => _turnUsage = e.Usage);
+
+    // Runs on the thread that started the turn, as the turn does, so the usage line changes there.
+    private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500, cancellationToken);
+                // The turn may have ended while the delay completed; its final line must stay.
+                if (cancellationToken.IsCancellationRequested) return;
+                UsageText = DescribeProgress(_turnUsage, clock.Elapsed);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The turn ended; the caller writes the final usage.
+        }
+    }
+
+    /// <summary>The call in progress and the seconds so far, while a turn runs.</summary>
+    /// <param name="usage">What the turn has cost so far, or <see langword="null"/> before its first call.</param>
+    /// <param name="elapsed">The time since the turn began.</param>
+    /// <returns>The line.</returns>
+    public static string DescribeProgress(FormDraftUsage? usage, TimeSpan elapsed)
+        => L("Drafting_UsageRunning", Math.Max(usage?.Calls ?? 1, 1), (int)elapsed.TotalSeconds);
+
+    /// <summary>The calls, the tokens and the time a finished turn took, in one line.</summary>
+    /// <param name="usage">What the turn cost.</param>
+    /// <param name="elapsed">The time the turn took, as the window measured it.</param>
+    /// <returns>The line.</returns>
+    public static string DescribeUsage(FormDraftUsage usage, TimeSpan elapsed)
+    {
+        ArgumentNullException.ThrowIfNull(usage);
+        var seconds = (int)Math.Round(elapsed.TotalSeconds);
+        if (usage.InputTokens == 0 && usage.OutputTokens == 0)
+            return L("Drafting_UsageNoTokens", usage.Calls, seconds);
+        var input = usage.InputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+        var output = usage.OutputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+        return usage.CachedInputTokens == 0
+            ? L("Drafting_Usage", usage.Calls, input, output, seconds)
+            : L("Drafting_UsageCached", usage.Calls, input,
+                usage.CachedInputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), output, seconds);
+    }
 
     private void OnSessionActivity(object? sender, DraftActivityEventArgs e)
         => Post(() =>
         {
+            // A response's reasoning is reported once the response has ended, after its reply streamed in below the
+            // card; it still belongs to the card the response started in.
+            if (e.Kind == DraftActivityKind.Reasoning && _activity is not null)
+            {
+                _activity.Apply(e);
+                return;
+            }
             // A reply the model wrote between tool calls ends the card above it; the next steps start a new one below.
             if (_activity is null || !ReferenceEquals(Messages.LastOrDefault(), _activity))
             {

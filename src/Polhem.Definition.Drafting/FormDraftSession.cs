@@ -78,9 +78,29 @@ namespace Polhem.Definition.Drafting
         public event EventHandler? DraftChanged;
 
         /// <summary>
-        /// Occurs when the model replies to the user with text.
+        /// Occurs when the model replies to the user with text, once the response that holds the reply has ended.
         /// </summary>
+        /// <remarks>
+        /// The text is the whole reply of that response. A host that shows <see cref="AssistantMessageDelta"/> replaces
+        /// the pieces it showed with this text.
+        /// </remarks>
         public event EventHandler<AssistantMessageEventArgs>? AssistantMessage;
+
+        /// <summary>
+        /// Occurs as the text of a reply arrives, before <see cref="AssistantMessage"/> reports the whole reply.
+        /// </summary>
+        /// <remarks>
+        /// The pieces of a response, joined, are the text <see cref="AssistantMessage"/> then reports for it, as long as
+        /// the provider puts the response in one message (Claude does). When the turn fails or is cancelled before that,
+        /// the pieces shown so far belong to no reply, and the host should remove them.
+        /// </remarks>
+        public event EventHandler<AssistantMessageDeltaEventArgs>? AssistantMessageDelta;
+
+        /// <summary>
+        /// Occurs when a call to the model begins, with <see cref="FormDraftUsage.Calls"/> counting it, and when it
+        /// returns, with the tokens it reported added.
+        /// </summary>
+        public event EventHandler<FormDraftUsageEventArgs>? UsageChanged;
 
         /// <summary>
         /// Occurs at each step of a turn: before each request to the model, when its response carries a reasoning summary,
@@ -117,6 +137,12 @@ namespace Polhem.Definition.Drafting
         /// Gets the messages of the conversation so far, starting with the instructions. It only grows.
         /// </summary>
         public IReadOnlyList<ChatMessage> History { get; }
+
+        /// <summary>
+        /// Gets what the last finished turn cost, or <see cref="FormDraftUsage.None"/> before the first one. A turn that
+        /// failed or was cancelled counts too: the tokens it used were spent.
+        /// </summary>
+        public FormDraftUsage LastTurnUsage { get; private set; } = FormDraftUsage.None;
 
         /// <summary>
         /// Sends the documents and asks the model for a first draft.
@@ -193,6 +219,7 @@ namespace Polhem.Definition.Drafting
             var editsBefore = _pendingEdits.ToList();
             var draftTouched = false;
             var completed = false;
+            var usage = new TurnUsage();
             try
             {
                 if (_pendingEdits.Count > 0)
@@ -201,11 +228,12 @@ namespace Polhem.Definition.Drafting
                     _pendingEdits.Clear();
                 }
                 _history.Add(new ChatMessage(ChatRole.User, contents));
-                await RunToolLoopAsync(() => draftTouched = true, cancellationToken).ConfigureAwait(false);
+                await RunToolLoopAsync(usage, () => draftTouched = true, cancellationToken).ConfigureAwait(false);
                 completed = true;
             }
             finally
             {
+                LastTurnUsage = usage.Snapshot();
                 if (!completed)
                 {
                     _history.RemoveRange(historyCount, _history.Count - historyCount);
@@ -221,7 +249,7 @@ namespace Polhem.Definition.Drafting
             }
         }
 
-        private async Task RunToolLoopAsync(Action onDraftChanged, CancellationToken cancellationToken)
+        private async Task RunToolLoopAsync(TurnUsage usage, Action onDraftChanged, CancellationToken cancellationToken)
         {
             var questionsAsked = false;
             for (var round = 0; ; round++)
@@ -229,8 +257,12 @@ namespace Polhem.Definition.Drafting
                 // Once the model has asked the user something, it may only reply: the answers come with the next message.
                 var lastRound = round >= _maxToolRounds || questionsAsked;
                 Activity?.Invoke(this, new DraftActivityEventArgs(DraftActivityKind.Thinking));
-                var response = await _chatClient.GetResponseAsync(_history.ToList(), lastRound ? _finalOptions : _toolOptions,
-                    cancellationToken).ConfigureAwait(false);
+                usage.Calls++;
+                UsageChanged?.Invoke(this, new FormDraftUsageEventArgs(usage.Snapshot()));
+                var response = await StreamResponseAsync(lastRound ? _finalOptions : _toolOptions, cancellationToken)
+                    .ConfigureAwait(false);
+                usage.Add(response.Usage);
+                UsageChanged?.Invoke(this, new FormDraftUsageEventArgs(usage.Snapshot()));
 
                 var calls = RecordResponse(response);
                 if (calls.Count == 0) return;
@@ -241,6 +273,21 @@ namespace Polhem.Definition.Drafting
                 _history.Add(new ChatMessage(ChatRole.Tool, results));
                 if (lastRound) return;
             }
+        }
+
+        // Streams one response, raising its text as it arrives, and returns it whole once it has ended.
+        private async Task<ChatResponse> StreamResponseAsync(ChatOptions options, CancellationToken cancellationToken)
+        {
+            var updates = new List<ChatResponseUpdate>();
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(_history.ToList(), options, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                updates.Add(update);
+                var text = update.Text;
+                if (text.Length > 0 && (update.Role is null || update.Role == ChatRole.Assistant))
+                    AssistantMessageDelta?.Invoke(this, new AssistantMessageDeltaEventArgs(text));
+            }
+            return updates.ToChatResponse();
         }
 
         // Adds the response to the history, reports its reasoning and its reply, and returns the tool calls it makes.
@@ -355,5 +402,26 @@ namespace Polhem.Definition.Drafting
 
         private static FunctionResultContent Refused(FunctionCallContent call, string message)
             => new(call.CallId, "Error: " + message);
+
+        // What the turn in progress has cost; the clock starts with the turn.
+        private sealed class TurnUsage
+        {
+            private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+            private long _inputTokens;
+            private long _outputTokens;
+            private long _cachedInputTokens;
+
+            public int Calls { get; set; }
+
+            public void Add(UsageDetails? details)
+            {
+                if (details is null) return;
+                _inputTokens += details.InputTokenCount ?? 0;
+                _outputTokens += details.OutputTokenCount ?? 0;
+                _cachedInputTokens += details.CachedInputTokenCount ?? 0;
+            }
+
+            public FormDraftUsage Snapshot() => new(Calls, _inputTokens, _outputTokens, _cachedInputTokens, _clock.Elapsed);
+        }
     }
 }

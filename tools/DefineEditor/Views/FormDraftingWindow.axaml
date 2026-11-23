@@ -54,6 +54,9 @@
                                  MinHeight="64" MaxHeight="160" PlaceholderText="{loc:Loc Drafting_InputWatermark}"
 />
                     </DockPanel>
+                    <!-- The time and tokens of the turn in progress, then of the last turn. -->
+                    <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="12" Margin="2,6,0,0" TextWrapping="Wrap"
+                               Text="{Binding UsageText}" IsVisible="{Binding HasUsage}"/>
                     <Border Classes="surface-sunken" CornerRadius="4">
                         <ScrollViewer x:Name="ChatScroller" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding Messages}" Margin="10">
@@ -75,7 +78,7 @@
                                                                    LinkForeground="{DynamicResource SemiColorLink}"
                                                                    RuleBrush="{DynamicResource SemiColorBorder}"
                                                                    CopyCodeLabel="{loc:Loc Drafting_Copy}"/>
-                                                <Button Classes="copyMessage" IsVisible="{Binding RendersMarkdown}"
+                                                <Button Classes="copyMessage" IsVisible="{Binding CanCopy}"
                                                         ToolTip.Tip="{loc:Loc Drafting_Copy}"
                                                         AutomationProperties.Name="{loc:Loc Drafting_Copy}"
                                                         Click="OnCopyMessage">

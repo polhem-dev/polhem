@@ -23,6 +23,12 @@ namespace Polhem.AI.Claude
     /// a later request that echoes thinking from both sides of that point without it. This client keeps the block in
     /// the response and removes the declined attempt's thinking and tool calls before it, as the API asks.
     /// </para>
+    /// <para>
+    /// <see cref="GetStreamingResponseAsync"/> and <see cref="GetResponseAsync"/> apply the same checks. A stream passes
+    /// text through as it arrives, holds tool calls back until it ends, throws <see cref="ClaudeChatException"/> after
+    /// the last update when the answer was refused or cut short, and never yields a declined attempt's tool calls. The
+    /// declined attempt's thinking has already gone out by then, so the next request removes it from the history.
+    /// </para>
     /// </remarks>
     internal sealed class ClaudeChatClient : DelegatingChatClient
     {
@@ -42,34 +48,10 @@ namespace Polhem.AI.Claude
             ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var updates = new List<ChatResponseUpdate>();
-            string? refusalCategory = null;
             await foreach (var update in GetStreamingResponseAsync(messages, options, cancellationToken).ConfigureAwait(false))
-            {
                 updates.Add(update);
-                if (update.RawRepresentation is BetaRawMessageStreamEvent raw
-                    && raw.TryPickDelta(out var delta)
-                    && delta.Delta.StopDetails is { } details)
-                {
-                    refusalCategory = details.Category?.Raw();
-                }
-            }
 
             var response = updates.ToChatResponse();
-            if (response.FinishReason == ChatFinishReason.ContentFilter)
-            {
-                throw new ClaudeChatException(ClaudeFailureKind.Refused,
-                    refusalCategory is null
-                        ? "Claude declined the request."
-                        : $"Claude declined the request (category: {refusalCategory}).",
-                    refusalCategory);
-            }
-            if (response.FinishReason == ChatFinishReason.Length)
-            {
-                // A tool call cut off here has partial arguments; running it would act on input the model never finished.
-                throw new ClaudeChatException(ClaudeFailureKind.OutputLimitReached,
-                    "Claude's answer reached the output token limit and was cut short.");
-            }
-
             foreach (var message in response.Messages)
                 DropDeclinedAttempt(message);
             return response;
@@ -80,8 +62,17 @@ namespace Polhem.AI.Claude
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(messages);
-            var request = WithDocumentBreakpoint(messages);
+            var request = WithoutDeclinedAttempts(WithDocumentBreakpoint(messages));
             var requestOptions = Configure(options);
+
+            // NOTE: tool calls are held back until the stream ends. Only then is it known whether a fallback model replaced
+            // the attempt that made them, or whether the output limit cut their arguments short; a caller that ran one as
+            // soon as it arrived would act on a call the model never finished or later abandoned. Text passes straight
+            // through, and a tool call is already the last block of a Claude answer, so holding it keeps the order.
+            var heldCalls = new List<(FunctionCallContent Call, bool Declined)>();
+            ChatResponseUpdate? last = null;
+            ChatFinishReason? finishReason = null;
+            string? refusalCategory = null;
 
             await using var enumerator = base.GetStreamingResponseAsync(request, requestOptions, cancellationToken)
                 .GetAsyncEnumerator(cancellationToken);
@@ -91,7 +82,7 @@ namespace Polhem.AI.Claude
                 try
                 {
                     if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
-                        yield break;
+                        break;
                     update = enumerator.Current;
                 }
                 catch (AnthropicUnauthorizedException ex)
@@ -102,13 +93,59 @@ namespace Polhem.AI.Claude
                         innerException: ex);
                 }
 
-                if (update.RawRepresentation is BetaRawMessageStreamEvent raw
-                    && raw.TryPickContentBlockStart(out var start)
-                    && start.ContentBlock.TryPickBetaFallback(out var fallback))
+                if (update.RawRepresentation is BetaRawMessageStreamEvent raw)
                 {
-                    update.Contents.Add(FallbackMarker(fallback));
+                    if (raw.TryPickContentBlockStart(out var start) && start.ContentBlock.TryPickBetaFallback(out var fallback))
+                    {
+                        update.Contents.Add(FallbackMarker(fallback));
+                        for (var i = 0; i < heldCalls.Count; i++)
+                            heldCalls[i] = (heldCalls[i].Call, true);
+                    }
+                    if (raw.TryPickDelta(out var delta) && delta.Delta.StopDetails is { } details)
+                        refusalCategory = details.Category?.Raw();
+                }
+
+                last = update;
+                finishReason = update.FinishReason ?? finishReason;
+                var calls = update.Contents.OfType<FunctionCallContent>().ToList();
+                if (calls.Count > 0)
+                {
+                    heldCalls.AddRange(calls.Select(call => (call, false)));
+                    update.Contents = [.. update.Contents.Where(content => content is not FunctionCallContent)];
                 }
                 yield return update;
+            }
+
+            ThrowOnIncompleteAnswer(finishReason, refusalCategory);
+
+            var kept = heldCalls.Where(held => !held.Declined).Select(held => (AIContent)held.Call).ToList();
+            if (kept.Count > 0)
+            {
+                yield return new ChatResponseUpdate(ChatRole.Assistant, kept)
+                {
+                    MessageId = last?.MessageId,
+                    ResponseId = last?.ResponseId,
+                    ModelId = last?.ModelId,
+                    CreatedAt = last?.CreatedAt,
+                };
+            }
+        }
+
+        private static void ThrowOnIncompleteAnswer(ChatFinishReason? finishReason, string? refusalCategory)
+        {
+            if (finishReason == ChatFinishReason.ContentFilter)
+            {
+                throw new ClaudeChatException(ClaudeFailureKind.Refused,
+                    refusalCategory is null
+                        ? "Claude declined the request."
+                        : $"Claude declined the request (category: {refusalCategory}).",
+                    refusalCategory);
+            }
+            if (finishReason == ChatFinishReason.Length)
+            {
+                // A tool call cut off here has partial arguments; running it would act on input the model never finished.
+                throw new ClaudeChatException(ClaudeFailureKind.OutputLimitReached,
+                    "Claude's answer reached the output token limit and was cut short.");
             }
         }
 
@@ -228,6 +265,24 @@ namespace Polhem.AI.Claude
                 .Where((content, i) => i >= boundary || content is not (TextReasoningContent or FunctionCallContent))
                 .ToList();
             message.Contents = kept;
+        }
+
+        /// <summary>
+        /// Copies the messages with each declined attempt removed, without changing the caller's messages. A caller that
+        /// streamed the answer built its history from the updates, which still hold the declined attempt's thinking.
+        /// </summary>
+        internal static List<ChatMessage> WithoutDeclinedAttempts(List<ChatMessage> messages)
+        {
+            for (var i = 0; i < messages.Count; i++)
+            {
+                if (!messages[i].Contents.Any(IsFallbackMarker))
+                    continue;
+                var copy = messages[i].Clone();
+                copy.Contents = [.. messages[i].Contents];
+                DropDeclinedAttempt(copy);
+                messages[i] = copy;
+            }
+            return messages;
         }
 
         internal static bool IsFallbackMarker(AIContent content)

@@ -61,7 +61,12 @@ An environment variable wins over a signed-in profile, so a key left in a shell 
   attempt, which the API requires before the next request.
 
 A response that stops because of a refusal or the output limit, and a 401, become `ClaudeChatException` instead of a
-truncated answer or a raw HTTP error. The SDK retries rate limits, overloaded servers and network failures itself;
+truncated answer or a raw HTTP error.
+
+`GetStreamingResponseAsync` applies the same checks: text arrives as it is written, tool calls arrive after the last
+text (once the answer is known to be complete and not replaced by a fallback), and a refusal or the output limit
+throws `ClaudeChatException` after the last update. A caller that shows the text as it streams removes it when that
+happens. The SDK retries rate limits, overloaded servers and network failures itself;
 when its retries run out, its own exception reaches the caller.
 
 ## Background

@@ -884,9 +884,14 @@ internal static class Smoke
         private static Microsoft.Extensions.AI.FunctionCallContent Call(string id, string name, Dictionary<string, object?> arguments)
             => new(id, name, arguments);
 
-        public IAsyncEnumerable<Microsoft.Extensions.AI.ChatResponseUpdate> GetStreamingResponseAsync(
+        public async IAsyncEnumerable<Microsoft.Extensions.AI.ChatResponseUpdate> GetStreamingResponseAsync(
             IEnumerable<Microsoft.Extensions.AI.ChatMessage> messages, Microsoft.Extensions.AI.ChatOptions? options = null,
-            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var response = await GetResponseAsync(messages, options, cancellationToken);
+            foreach (var update in response.ToChatResponseUpdates())
+                yield return update;
+        }
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 

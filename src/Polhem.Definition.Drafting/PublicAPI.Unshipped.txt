@@ -1,3 +1,33 @@
 #nullable enable
 Polhem.Definition.Drafting.Rules.RuleDraftingOptions.MarkdownReplies.get -> bool
 Polhem.Definition.Drafting.Rules.RuleDraftingOptions.MarkdownReplies.set -> void
+Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs
+Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs.AssistantMessageDeltaEventArgs(string! text) -> void
+Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs.Text.get -> string!
+Polhem.Definition.Drafting.FormDraftSession.AssistantMessageDelta -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs!>?
+Polhem.Definition.Drafting.FormDraftSession.LastTurnUsage.get -> Polhem.Definition.Drafting.FormDraftUsage!
+Polhem.Definition.Drafting.FormDraftSession.UsageChanged -> System.EventHandler<Polhem.Definition.Drafting.FormDraftUsageEventArgs!>?
+Polhem.Definition.Drafting.FormDraftUsage
+Polhem.Definition.Drafting.FormDraftUsage.<Clone>$() -> Polhem.Definition.Drafting.FormDraftUsage!
+Polhem.Definition.Drafting.FormDraftUsage.CachedInputTokens.get -> long
+Polhem.Definition.Drafting.FormDraftUsage.CachedInputTokens.init -> void
+Polhem.Definition.Drafting.FormDraftUsage.Calls.get -> int
+Polhem.Definition.Drafting.FormDraftUsage.Calls.init -> void
+Polhem.Definition.Drafting.FormDraftUsage.Deconstruct(out int Calls, out long InputTokens, out long OutputTokens, out long CachedInputTokens, out System.TimeSpan Elapsed) -> void
+Polhem.Definition.Drafting.FormDraftUsage.Elapsed.get -> System.TimeSpan
+Polhem.Definition.Drafting.FormDraftUsage.Elapsed.init -> void
+Polhem.Definition.Drafting.FormDraftUsage.Equals(Polhem.Definition.Drafting.FormDraftUsage? other) -> bool
+Polhem.Definition.Drafting.FormDraftUsage.FormDraftUsage(int Calls, long InputTokens, long OutputTokens, long CachedInputTokens, System.TimeSpan Elapsed) -> void
+Polhem.Definition.Drafting.FormDraftUsage.InputTokens.get -> long
+Polhem.Definition.Drafting.FormDraftUsage.InputTokens.init -> void
+Polhem.Definition.Drafting.FormDraftUsage.OutputTokens.get -> long
+Polhem.Definition.Drafting.FormDraftUsage.OutputTokens.init -> void
+Polhem.Definition.Drafting.FormDraftUsageEventArgs
+Polhem.Definition.Drafting.FormDraftUsageEventArgs.FormDraftUsageEventArgs(Polhem.Definition.Drafting.FormDraftUsage! usage) -> void
+Polhem.Definition.Drafting.FormDraftUsageEventArgs.Usage.get -> Polhem.Definition.Drafting.FormDraftUsage!
+override Polhem.Definition.Drafting.FormDraftUsage.Equals(object? obj) -> bool
+override Polhem.Definition.Drafting.FormDraftUsage.GetHashCode() -> int
+override Polhem.Definition.Drafting.FormDraftUsage.ToString() -> string!
+static Polhem.Definition.Drafting.FormDraftUsage.None.get -> Polhem.Definition.Drafting.FormDraftUsage!
+static Polhem.Definition.Drafting.FormDraftUsage.operator !=(Polhem.Definition.Drafting.FormDraftUsage? left, Polhem.Definition.Drafting.FormDraftUsage? right) -> bool
+static Polhem.Definition.Drafting.FormDraftUsage.operator ==(Polhem.Definition.Drafting.FormDraftUsage? left, Polhem.Definition.Drafting.FormDraftUsage? right) -> bool
