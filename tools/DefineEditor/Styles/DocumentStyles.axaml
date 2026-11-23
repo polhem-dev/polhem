@@ -1,7 +1,8 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:Polhem.DefineEditor.Models"
-        xmlns:cc="using:AvaloniaEdit.CodeCompletion">
+        xmlns:cc="using:AvaloniaEdit.CodeCompletion"
+        xmlns:md="using:Polhem.Markdown.Avalonia">
 
     <Styles.Resources>
         <!-- =================================================================
@@ -453,6 +454,14 @@
     <Style Selector="UserControl">
         <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default"/>
         <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <!-- Markdown replies start with a font that has Chinese glyphs, so their Latin text is not in Inter.
+         WARNING: with Inter first, Avalonia shapes Chinese text through its font fallback, which keeps the weight of the
+         previous run (AvaloniaUI/Avalonia#18199): bold Chinese text shows regular, or regular text bold. Listing a
+         Chinese font after Inter does not help, because only the first installed font is the primary one. -->
+    <Style Selector="md|MarkdownViewer">
+        <Setter Property="TextElement.FontFamily" Value="PingFang TC, Microsoft JhengHei, Noto Sans CJK TC, $Default"/>
     </Style>
 
     <!-- =================================================================
